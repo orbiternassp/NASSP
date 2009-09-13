@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.7  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -1607,6 +1610,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LMSIGNALSTRENGTH,				_R( 1053, 1083, 1144, 1173), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_PITCH_KNOB,		_R( 974,  1171, 1058, 1255), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_YAW_KNOB,		_R( 1128, 1171, 1213, 1255), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_TRACK_MODE_SWITCH,_R( 976, 1092, 1010, 1123), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_VHF_SEL_KNOB,	_R( 1252,  994, 1337, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_SBD_SEL_KNOB,	_R( 1252, 1158, 1337, 1243), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 	
@@ -1991,6 +1995,7 @@ void LEM::SetSwitches(int panel) {
 
 			Panel12AntTrackModeSwitchRow.Init(AID_LM_P12_COMM_ANT_TRACK_MODE_SWITCH,MainPanel);
 			Panel12AntTrackModeSwitch.Init(0, 0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel12AntTrackModeSwitchRow);
+			
 			Panel12VHFAntSelSwitchRow.Init(AID_LM_P12_COMM_ANT_VHF_SEL_KNOB,MainPanel);
 			Panel12VHFAntSelKnob.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel12VHFAntSelSwitchRow);
 			Panel12SBandAntSelSwitchRow.Init(AID_LM_P12_COMM_ANT_SBD_SEL_KNOB,MainPanel);

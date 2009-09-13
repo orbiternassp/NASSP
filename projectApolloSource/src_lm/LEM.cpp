@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.10  2009/09/08 19:46:35  vrouleau
   *	More fixes in reading config files
   *	
@@ -1065,16 +1068,6 @@ void LEM::SetGimbal(bool setting)
 {
 	agc.SetInputChannelBit(032, 9, setting);
 	GMBLswitch = setting;
-}
-
-//
-// Get Mission Time
-//
-
-void LEM::GetMissionTime(double &Met)
-{
-	Met = MissionTime;
-	return;
 }
 
 //

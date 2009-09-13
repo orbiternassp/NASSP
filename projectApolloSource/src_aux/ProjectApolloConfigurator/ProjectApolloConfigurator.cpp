@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/03 19:22:48  vrouleau
+  *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
+  *	
   *	Revision 1.4  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -644,6 +647,7 @@ DLLCLBK bool pacRenderViewportIsWideScreen()
 }
 
 static SOCKET close_Socket = INVALID_SOCKET;
+static SOCKET close_Socket_LM = INVALID_SOCKET;
 
 DLLCLBK bool pacDefineSocket(SOCKET sockettoclose)
 {
@@ -659,10 +663,28 @@ DLLCLBK bool pacDefineSocket(SOCKET sockettoclose)
 	return true;
 }
 
+DLLCLBK bool pacDefineSocketLM(SOCKET sockettoclose)
+{
+	close_Socket_LM = sockettoclose;
+	HMODULE hpamfd = GetModuleHandle("modules//plugin//ProjectApolloMFD.dll");
+	if (hpamfd)	{
+		bool (__cdecl *defineSocketext)(SOCKET);
+		defineSocketext = (bool (_cdecl *)(SOCKET))GetProcAddress(hpamfd, "pacDefineSocketLM");
+		if (defineSocketext) {
+			defineSocketext(sockettoclose);
+		}
+	}
+	return true;
+}
+
 DLLCLBK void opcCloseRenderViewport()
 {
 	if (close_Socket != INVALID_SOCKET)	{
 		shutdown(close_Socket, 2);	//Shutdown, NOW!!!
 		closesocket(close_Socket);
+	}
+	if (close_Socket_LM != INVALID_SOCKET)	{
+		shutdown(close_Socket_LM, 2);	// LM socket too
+		closesocket(close_Socket_LM);
 	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.9  2009/09/03 19:22:48  vrouleau
   *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
   *	
@@ -1060,6 +1063,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
 	SBandSteerable.TimeStep(simdt);							// Back to work...
 	VHF.SystemTimestep(simdt);
+	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 

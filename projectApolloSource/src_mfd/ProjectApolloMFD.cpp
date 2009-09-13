@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.13  2009/07/11 18:59:51  tschachim
   *	Epoch corrections by Jarmo.
   *	
@@ -168,9 +171,11 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "lemcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "LEM.h"
 #include "Crawler.h"
 #include "papi.h"
 #include <stdio.h>
@@ -217,6 +222,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
 	int progState;  
 	Saturn *progVessel;
+	LEM *gorpVessel;
 
 	double nextRequestTime;
 	IMFD_BURN_DATA burnData;
@@ -232,6 +238,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int uplinkDataType;
 	int updateClockReady;
 	int uplinkState;
+	int uplinkLEM;
 	queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
 	OBJHANDLE planet;
@@ -263,7 +270,9 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.prog = PROG_NONE;
 	g_Data.progState = 0;
 	g_Data.progVessel = NULL;
+	g_Data.gorpVessel = NULL;
 	g_Data.nextRequestTime = 0;
+	g_Data.uplinkLEM = 0;
 
 	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
 	g_Data.isRequesting = false;
@@ -333,7 +342,11 @@ void send_agc_key(char key)	{
 	int bytesXmit = SOCKET_ERROR;
 	unsigned char cmdbuf[4];
 
-	cmdbuf[0] = 043; // VA,SA
+	if(g_Data.uplinkLEM > 0){
+		cmdbuf[0] = 031; // VA,SA for LEM
+	}else{
+		cmdbuf[0] = 043; // VA,SA for CM
+	}
 
 	switch(key) {
 		case 'V': // 11-000-101 11-010-001										
@@ -426,7 +439,7 @@ void uplink_word(char *data)
 	send_agc_key('E');
 }
 
-void UplinkData(void)
+void UplinkData()
 {
 	if (g_Data.connStatus == 0) {
 		int bytesRecv = SOCKET_ERROR;
@@ -442,7 +455,7 @@ void UplinkData(void)
 		sprintf(addr, "127.0.0.1");
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr(addr);
-		clientService.sin_port = htons( 14242 );
+		if(g_Data.uplinkLEM > 0){	clientService.sin_port = htons( 14243 ); }else{ clientService.sin_port = htons( 14242 ); }
 		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
 			g_Data.uplinkDataReady = 0;
 			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
@@ -473,7 +486,7 @@ void UplinkData(void)
 	}
 }
 
-void UpdateClock(void)
+void UpdateClock()
 {		
 	if (g_Data.connStatus == 0)
 	{
@@ -490,7 +503,7 @@ void UpdateClock(void)
 		sprintf(addr, "127.0.0.1");
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr(addr);
-		clientService.sin_port = htons( 14242 );
+		if(g_Data.uplinkLEM > 0){ clientService.sin_port = htons( 14243 ); }else{ clientService.sin_port = htons( 14242 ); }
 		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
 			g_Data.updateClockReady = 0;
 			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
@@ -525,7 +538,8 @@ void UpdateClock(void)
 		// increment clock
 		g_Data.updateClockReady = 0;
 		char buffer[8];	
-		double mt = g_Data.progVessel->GetMissionTime();
+		double mt;
+		if(g_Data.uplinkLEM > 0){ mt = g_Data.gorpVessel->GetMissionTime(); }else{ mt = g_Data.progVessel->GetMissionTime(); }
 		char sign = '+';
 		if (mt < 0)
 			sign = '-';
@@ -684,6 +698,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 {
 	saturn = NULL;
 	crawler = NULL;
+	lem = NULL;
 	width = w;
 	height = h;
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
@@ -711,6 +726,17 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			crawler = (Crawler *)vessel;
 			g_Data.planet = crawler->GetGravityRef();
 	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+			lem = (LEM *)vessel;
+			g_Data.vessel = vessel;
+			g_Data.gorpVessel = lem;
+			oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
+			if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+				g_Data.planet = lem->GetGravityRef();
+			else
+				g_Data.planet = oapiGetGbodyByName("Earth");
+	}
 }
 
 // Destructor
@@ -735,7 +761,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
 	//If we are working with an unsupported vehicle, we don't want to return any button labels.
-	if (!saturn) {
+	if (!saturn && !lem) {
 		return 0;
 	}
 	if (screen == PROG_GNC) {
@@ -831,7 +857,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Back",0,'B'}
 	};
 	// We don't want to display a menu if we are in an unsupported vessel.
-	if (!saturn) {
+	if (!saturn && !lem) {
 		menu = 0;
 		return 0;
 	}
@@ -874,7 +900,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key) 
 {
 	//We don't want to accept keyboard commands from the wrong vessels.
-	if (!saturn)
+	if (!saturn && !lem)
 		return false;
 
 	if (screen == PROG_NONE) {
@@ -883,12 +909,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-		} else if (key == OAPI_KEY_E) {
+		} else if (key == OAPI_KEY_E && saturn != NULL) {
+			// ECS is not supported for the LEM yet.
 			screen = PROG_ECS;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-		} else if (key == OAPI_KEY_I) {
+		} else if (key == OAPI_KEY_I && saturn != NULL) {
 			screen = PROG_IMFD;
 			InvalidateDisplay();
 			InvalidateButtons();
@@ -938,12 +965,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			}
 			return true;
 		} else if (key == OAPI_KEY_U) {
-			if (saturn) {
+			if (saturn || lem) {
 				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
 					g_Data.uplinkDataReady = 1;
 					g_Data.uplinkDataType = 0;
 				}
-				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 0) {		
+				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 0) {
+					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
 					GetStateVector();
 				}
 			}
@@ -988,25 +1016,26 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				}
 			}
 			return true;
-		} else if (key == OAPI_KEY_I && !g_Data.isRequestingManually) {						
+		} else if (key == OAPI_KEY_I && !g_Data.isRequestingManually && saturn != NULL) {						
 			if (!saturn->GetIMFDClient()->IsBurnDataRequesting()) {
 				saturn->GetIMFDClient()->StartBurnDataRequests();
 				g_Data.hasError = false;
 				g_Data.isRequestingManually = true;
 			}
-		} else if (key == OAPI_KEY_I && g_Data.isRequestingManually) {
+		} else if (key == OAPI_KEY_I && g_Data.isRequestingManually && saturn != NULL) {
 			if (!g_Data.isRequesting && g_Data.connStatus == 0) {
 				saturn->GetIMFDClient()->StopBurnDataRequests();	
 				g_Data.hasError = false;
 				g_Data.isRequestingManually = false;
 			}
 		} else if (key == OAPI_KEY_C) {
-			if (saturn) {
+			if (saturn || lem) {
 				if (g_Data.updateClockReady == 0 && g_Data.uplinkDataReady == 0) {
 					g_Data.updateClockReady = 1;
 				}
 				else if (g_Data.updateClockReady == 1) {
 					g_Data.updateClockReady = 2;
+					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
 					UpdateClock();
 				}
 			}
@@ -1058,7 +1087,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				saturn->GetIMFDClient()->StartBurnDataRequests();
 			}
 			g_Data.isRequestingManually = true;
-
 		} else if (key == OAPI_KEY_R && g_Data.isRequestingManually) {
 			if (!g_Data.isRequesting) {
 				saturn->GetIMFDClient()->StopBurnDataRequests();
@@ -1175,9 +1203,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 	SetBkMode (hDC, TRANSPARENT);
 	SetTextAlign (hDC, TA_CENTER);
 
-	if (!saturn) {
+	if (!saturn && !lem) {
 		SetTextColor (hDC, RGB(255, 0, 0));
-		TextOut(hDC, width / 2, (int) (height * 0.5), "Unsupported vessel", 18);
+		TextOut(hDC, width / 2, (int) (height * 0.5), "Unsupported vessel", 18); 
 		if (!crawler)
 			return;
 	}
@@ -1187,10 +1215,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 	TextOut(hDC, width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
 
 	double mt = 0;
-	if (!crawler)
-		mt = saturn->GetMissionTime();
-	else
-		mt = crawler->GetMissionTime();
+	if (saturn){ mt = saturn->GetMissionTime(); }
+	if (crawler){ mt = crawler->GetMissionTime(); }
+	if (lem){ mt = lem->GetMissionTime(); }
 
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);
@@ -1203,7 +1230,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
 	TextOut(hDC, width / 2, (int) (height * 0.15), buffer, strlen(buffer));
 	//If this is the crawler and not the actual Saturn, do NOTHING else!
-	if (!saturn)
+	if (!saturn && !lem)
 		return;
 
 	SelectDefaultPen(hDC, 1);
@@ -1224,13 +1251,24 @@ void ProjectApolloMFD::Update (HDC hDC)
 		VECTOR3 vel, hvel;
 		double vvel = 0, apDist, peDist;
 
-		OBJHANDLE planet = saturn->GetGravityRef();
-		saturn->GetRelativeVel(planet, vel); 
-		if (saturn->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
+		OBJHANDLE planet;
+		if(saturn){
+			planet = saturn->GetGravityRef();
+			saturn->GetRelativeVel(planet, vel); 
+			if (saturn->GetHorizonAirspeedVector(hvel)) {
+				vvel = hvel.y * 3.2808399;
+			}
+			saturn->GetApDist(apDist);
+			saturn->GetPeDist(peDist);
+		}else if(lem){
+			planet = lem->GetGravityRef();
+			lem->GetRelativeVel(planet, vel); 
+			if (lem->GetHorizonAirspeedVector(hvel)) {
+				vvel = hvel.y * 3.2808399;
+			}
+			lem->GetApDist(apDist);
+			lem->GetPeDist(peDist);
 		}
-		saturn->GetApDist(apDist);
-		saturn->GetPeDist(peDist);
 
 		oapiGetObjectName(planet, planetName, 16);
 		if (strcmp(planetName, "Earth") == 0) {
@@ -1246,7 +1284,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));
 		sprintf(buffer, "%.0lfft/s", vvel);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", saturn->GetAltitude() * 0.000539957);
+		if(saturn){ sprintf(buffer, "%.1lfnm", saturn->GetAltitude() * 0.000539957); }
+		if(lem){    sprintf(buffer, "%.1lfnm", lem->GetAltitude() * 0.000539957); }
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lfnm", apDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
@@ -1424,17 +1463,21 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.3), "Telemetry:", 10);
 		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.3), debugWinsock, strlen(debugWinsock));
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 15);
-		if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
-		} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
-			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
-			SetTextColor (hDC, RGB(0, 255, 0));
-		} else {
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
+		if(saturn){
+			if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
+			} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
+				SetTextColor (hDC, RGB(255, 0, 0));
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
+				SetTextColor (hDC, RGB(0, 255, 0));
+			} else {
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
+			}
+		}else{
+			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "N/A", 3);
 		}
 		if (g_Data.hasError) {
-			if (saturn->GetIMFDClient()->IsBurnDataValid()) {
+			if (saturn && saturn->GetIMFDClient()->IsBurnDataValid()) {
 				IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();				
 				if (!bd.p30mode || bd.impulsive)
 					g_Data.errorMessage ="IMFD not in Off-Axis, P30 Mode";
@@ -1448,19 +1491,33 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, width / 2, (int) (height * 0.45), "ERROR", 5);
 			TextOut(hDC, width / 2, (int) (height * 0.5), g_Data.errorMessage, strlen(g_Data.errorMessage));
 		} else if (g_Data.uplinkDataReady == 1 || g_Data.updateClockReady == 1) {
-			SetTextAlign (hDC, TA_CENTER);
-			sprintf(buffer, "Checklist");
-			TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-			SetTextAlign (hDC, TA_LEFT);
-			sprintf(buffer, "DSKY - V37E 00E");
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "UPTLM CM - ACCEPT (up)   2, 122");
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.60), buffer, strlen(buffer));
-			sprintf(buffer, "UP TLM - DATA (up)            3");
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
-			SetTextAlign (hDC, TA_CENTER);
+			if(lem){
+				SetTextAlign (hDC, TA_CENTER);
+				sprintf(buffer, "Checklist");
+				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
+				SetTextAlign (hDC, TA_LEFT);
+				sprintf(buffer, "LGC: IDLE (P00 DESIRED)");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+				sprintf(buffer, "P12: UPDATA LINK - DATA (down)");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.60), buffer, strlen(buffer));
+				sprintf(buffer, "P11: UP DATA LINK CB - IN");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
+				SetTextAlign (hDC, TA_CENTER);				
+			}else{
+				SetTextAlign (hDC, TA_CENTER);
+				sprintf(buffer, "Checklist");
+				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
+				SetTextAlign (hDC, TA_LEFT);
+				sprintf(buffer, "DSKY - V37E 00E");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+				sprintf(buffer, "UPTLM CM - ACCEPT (up)   2, 122");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.60), buffer, strlen(buffer));
+				sprintf(buffer, "UP TLM - DATA (up)            3");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
+				sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
+				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
+				SetTextAlign (hDC, TA_CENTER);
+			}
 			if (g_Data.uplinkDataReady == 1) {
 				if (g_Data.uplinkDataType == 0)
 					sprintf(buffer, "Press SV to start upload");
@@ -1597,8 +1654,9 @@ void ProjectApolloMFD::GetStateVector (void)
 	double get;
 	VECTOR3 pos, vel;
 
-	if (!crawler) get = fabs(saturn->GetMissionTime());
-	else		  get = fabs(crawler->GetMissionTime());
+	if (saturn){ get = fabs(saturn->GetMissionTime()); }
+	if (crawler){get = fabs(crawler->GetMissionTime()); }
+	if (lem){    get = fabs(lem->GetMissionTime()); }
 
 	g_Data.vessel->GetRelativePos(g_Data.planet, pos); 
 	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
@@ -1687,8 +1745,9 @@ void ProjectApolloMFD::IMFDP30Uplink(void)
 		return;
 	}
 
-	if (!crawler) get = fabs(saturn->GetMissionTime());
-	else		  get = fabs(crawler->GetMissionTime());
+	if (saturn){ get = fabs(saturn->GetMissionTime()); }
+	if(crawler){ get = fabs(crawler->GetMissionTime()); }
+	if(lem){     get = fabs(lem->GetMissionTime()); }
 
 	double liftoff = oapiGetSimMJD()-get/86400.0;
 	double getign  = (pbd->IgnMJD - liftoff) * 86400.0;
@@ -1725,8 +1784,9 @@ void ProjectApolloMFD::IMFDP31Uplink(void)
 		return;
 	}
 
-	if (!crawler) get = fabs(saturn->GetMissionTime());
-	else		  get = fabs(crawler->GetMissionTime());
+	if (saturn){ get = fabs(saturn->GetMissionTime()); }
+	if(crawler){ get = fabs(crawler->GetMissionTime()); }
+	if(lem){     get = fabs(lem->GetMissionTime()); }
 
 	double liftoff    = oapiGetSimMJD()-get/86400.0;
 	double getign     = (pbd->IgnMJD - liftoff) * 86400.0;
@@ -1764,6 +1824,8 @@ void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "PROGSTATE", g_Data.progState);
 	if (g_Data.progVessel)
 		oapiWriteScenario_string(scn, "PROGVESSEL", g_Data.progVessel->GetName());
+	if (g_Data.gorpVessel)
+		oapiWriteScenario_string(scn, "GORPVESSEL", g_Data.gorpVessel->GetName());
 	papiWriteScenario_double(scn, "NEXTREQUESTTIME", g_Data.nextRequestTime);
 	papiWriteScenario_double(scn, "BURNDATA_IGNMJD", g_Data.burnData.IgnMJD);
 	papiWriteScenario_double(scn, "BURNDATA_BT", g_Data.burnData.BT);
@@ -1785,6 +1847,12 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 			OBJHANDLE h = oapiGetVesselByName(name);
 			if (h != NULL)
 				g_Data.progVessel = (Saturn *) oapiGetVesselInterface(h);
+		} 
+		if (!strnicmp (line, "GORPVESSEL", 10)) {
+			sscanf (line + 10, "%s", name);
+			OBJHANDLE h = oapiGetVesselByName(name);
+			if (h != NULL)
+				g_Data.gorpVessel = (LEM *) oapiGetVesselInterface(h);
 		} 
 		papiReadScenario_int(line, "SCREEN", screen);
 		papiReadScenario_int(line, "PROGNO", g_Data.prog);

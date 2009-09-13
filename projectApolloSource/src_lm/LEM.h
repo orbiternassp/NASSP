@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.10  2009/09/03 19:22:48  vrouleau
   *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
   *	
@@ -432,7 +435,7 @@ public:
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
 	void SetGimbal(bool setting);
-	void GetMissionTime(double &Met);
+	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	void AbortStage();
 	void StartAscent();
 	void CheckRCS();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/05/31 01:47:30  bluedragon8144
+  *	removed ClockUpdate() declaration
+  *	
   *	Revision 1.4  2009/05/04 22:59:39  bluedragon8144
   *	Renamed external dv to P30, renamed lambert back to P31, added updateclock
   *	
@@ -112,6 +115,7 @@ protected:
 	//We can link to the Saturn OR the Crawler.  Only the Saturn has full funcionality.  The Crawler can ONLY read the mission time.
 	Saturn *saturn;
 	Crawler *crawler;
+	LEM *lem;
 	int screen;
 	bool debug_frozen;
 
