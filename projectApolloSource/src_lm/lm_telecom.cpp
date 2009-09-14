@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.2  2009/09/13 15:20:15  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -55,7 +58,6 @@
 
 #include "connector.h"
 #include "ioChannels.h"
-#include "lm_channels.h"
 
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){
