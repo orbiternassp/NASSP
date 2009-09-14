@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/09/13 20:31:33  dseagrav
+  *	Joystick Z-axis detection fixes
+  *	
   *	Revision 1.12  2009/09/13 15:20:14  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -421,6 +424,8 @@ public:
 		SRF_AOTRETICLEKNOB,
 		SRF_AOTSHAFTKNOB,
 		SRF_FIVE_POS_SWITCH,
+		SRF_DEDA_KEY,
+		SRF_DEDA_LIGHTS,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE

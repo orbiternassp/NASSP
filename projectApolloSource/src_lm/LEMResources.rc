@@ -7,10 +7,49 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winresrc.h"
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_DEDA_KEY            BITMAP                  "..\\Bitmaps\\ags_keys.bmp"
+IDB_DEDA_LIGHTS         BITMAP                  "..\\Bitmaps\\ags_lights.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "lmresource.\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////
 // French (France) resources
@@ -29,7 +68,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 IDB_LEM_AOT_VIEW        BITMAP                  "..\\Bitmaps\\lem_aot_panel_wide.bmp"
 IDB_LEM_LEFT_PANEL      BITMAP                  "..\\Bitmaps\\lem_left_panel.bmp"
 IDB_LEM_RIGHT_PANEL     BITMAP                  "..\\Bitmaps\\lem_right_panel.bmp"
-IDB_LEM_RENDEZVOUS_WINDOW BITMAP                "..\\Bitmaps\\lem_rendezvous_window.bmp"
+IDB_LEM_RENDEZVOUS_WINDOW BITMAP                  "..\\Bitmaps\\lem_rendezvous_window.bmp"
 IDB_HORIZON             BITMAP                  "..\\Bitmaps\\Horizon.bmp"
 IDB_NEEDLE1             BITMAP                  "..\\Bitmaps\\Needle1.bmp"
 IDB_DIGITAL             BITMAP                  "..\\Bitmaps\\digitaldisp.bmp"
@@ -63,43 +102,56 @@ IDB_LMTHREEPOSSWITCH    BITMAP                  "..\\Bitmaps\\threeposswitch.bmp
 IDB_DSKY_DISP           BITMAP                  "..\\Bitmaps\\dsky_disp.bmp"
 IDB_DSKY_KEY            BITMAP                  "..\\Bitmaps\\dsky_keys.bmp"
 IDB_LEMROTARY           BITMAP                  "..\\Bitmaps\\LemRotationalSwitch.bmp"
-IDB_CIRCUITBRAKER		BITMAP					"..\\Bitmaps\\circuit_breaker.bmp"
+IDB_CIRCUITBRAKER       BITMAP                  "..\\Bitmaps\\circuit_breaker.bmp"
 IDB_FDAI_ROLL           BITMAP                  "..\\Bitmaps\\FDAIRoll.bmp"
 IDB_FDAIOFFFLAG         BITMAP                  "..\\Bitmaps\\FDAI_off_flag.bmp"
 IDB_FDAI_ROLLINDICATOR  BITMAP                  "..\\Bitmaps\\FDAIRollindicator.bmp"
-IDB_BORDER_34x29		BITMAP					"..\\Bitmaps\\border34x29.bmp"
-IDB_BORDER_34x39		BITMAP					"..\\Bitmaps\\border34x39.bmp"
-IDB_BORDER_34x61		BITMAP					"..\\Bitmaps\\border34x61.bmp"
-IDB_BORDER_55x111		BITMAP					"..\\Bitmaps\\border55x111.bmp"
-IDB_BORDER_46x75		BITMAP					"..\\Bitmaps\\border46x75.bmp"
-IDB_BORDER_39x38		BITMAP					"..\\Bitmaps\\border39x38.bmp"
-IDB_BORDER_92x40		BITMAP					"..\\Bitmaps\\border92x40.bmp"
-IDB_BORDER_34x33		BITMAP					"..\\Bitmaps\\border34x33.bmp"
-IDB_BORDER_29x29		BITMAP					"..\\Bitmaps\\border29x29.bmp"
-IDB_BORDER_34x31		BITMAP					"..\\Bitmaps\\border34x31.bmp"
-IDB_BORDER_50x158		BITMAP					"..\\Bitmaps\\border50x158.bmp"
-IDB_BORDER_38x52		BITMAP					"..\\Bitmaps\\border38x52.bmp"
-IDB_BORDER_34x34		BITMAP					"..\\Bitmaps\\border34x34.bmp"
-IDB_BORDER_90x90		BITMAP					"..\\Bitmaps\\border90x90.bmp"
-IDB_BORDER_84x84		BITMAP					"..\\Bitmaps\\border84x84.bmp"
-IDB_BORDER_70x70		BITMAP					"..\\Bitmaps\\border70x70.bmp"
-IDB_BORDER_23x20		BITMAP					"..\\Bitmaps\\border23x20.bmp"
-IDB_BORDER_78x78		BITMAP					"..\\Bitmaps\\border78x78.bmp"
-IDB_BORDER_72x72		BITMAP					"..\\Bitmaps\\border72x72.bmp"
-IDB_BORDER_75x64		BITMAP					"..\\Bitmaps\\border75x64.bmp"
-IDB_BORDER_32x160		BITMAP					"..\\Bitmaps\\border32x160.bmp"
-IDB_LEM_COAS1			BITMAP					"..\\Bitmaps\\coas_lem1.bmp"
-IDB_LEM_COAS2 			BITMAP 					"..\\Bitmaps\\coas_lem2.bmp" 
+IDB_BORDER_34x29        BITMAP                  "..\\Bitmaps\\border34x29.bmp"
+IDB_BORDER_34x39        BITMAP                  "..\\Bitmaps\\border34x39.bmp"
+IDB_BORDER_34x61        BITMAP                  "..\\Bitmaps\\border34x61.bmp"
+IDB_BORDER_55x111       BITMAP                  "..\\Bitmaps\\border55x111.bmp"
+IDB_BORDER_46x75        BITMAP                  "..\\Bitmaps\\border46x75.bmp"
+IDB_BORDER_39x38        BITMAP                  "..\\Bitmaps\\border39x38.bmp"
+IDB_BORDER_92x40        BITMAP                  "..\\Bitmaps\\border92x40.bmp"
+IDB_BORDER_34x33        BITMAP                  "..\\Bitmaps\\border34x33.bmp"
+IDB_BORDER_29x29        BITMAP                  "..\\Bitmaps\\border29x29.bmp"
+IDB_BORDER_34x31        BITMAP                  "..\\Bitmaps\\border34x31.bmp"
+IDB_BORDER_50x158       BITMAP                  "..\\Bitmaps\\border50x158.bmp"
+IDB_BORDER_38x52        BITMAP                  "..\\Bitmaps\\border38x52.bmp"
+IDB_BORDER_34x34        BITMAP                  "..\\Bitmaps\\border34x34.bmp"
+IDB_BORDER_90x90        BITMAP                  "..\\Bitmaps\\border90x90.bmp"
+IDB_BORDER_84x84        BITMAP                  "..\\Bitmaps\\border84x84.bmp"
+IDB_BORDER_70x70        BITMAP                  "..\\Bitmaps\\border70x70.bmp"
+IDB_BORDER_23x20        BITMAP                  "..\\Bitmaps\\border23x20.bmp"
+IDB_BORDER_78x78        BITMAP                  "..\\Bitmaps\\border78x78.bmp"
+IDB_BORDER_72x72        BITMAP                  "..\\Bitmaps\\border72x72.bmp"
+IDB_BORDER_75x64        BITMAP                  "..\\Bitmaps\\border75x64.bmp"
+IDB_BORDER_32x160       BITMAP                  "..\\Bitmaps\\border32x160.bmp"
+IDB_LEM_COAS1           BITMAP                  "..\\Bitmaps\\coas_lem1.bmp"
+IDB_LEM_COAS2           BITMAP                  "..\\Bitmaps\\coas_lem2.bmp"
 IDB_INDICATOR           BITMAP                  "..\\Bitmaps\\Indicator.bmp"
 IDB_FDAINEEDLES         BITMAP                  "..\\Bitmaps\\FDAI_needles.bmp"
-IDB_LMDCVOLTS           BITMAP					"..\\Bitmaps\\LMDCVolts.bmp"
-IDB_LMDCAMPS            BITMAP					"..\\Bitmaps\\LMDCAmps.bmp"
-IDB_LMYAWDEGS		BITMAP		"..\\Bitmaps\\lem_yaw_degs.bmp"
-IDB_LMPITCHDEGS		BITMAP		"..\\Bitmaps\\lem_pitch_degs.bmp"
-IDB_LMSIGNALSTRENGTH	BITMAP		"..\\Bitmaps\\lem_signal_strength.bmp"
-IDB_AOT_RETICLE_KNOB    BITMAP          "..\\Bitmaps\\aot_reticle_knob.bmp"
-IDB_AOT_SHAFT_KNOB      BITMAP          "..\\Bitmaps\\aot_shaft_knob.bmp"
-IDB_THUMBWHEEL_LARGEFONTSINV BITMAP  "..\\Bitmaps\\thumbwheel_large_fonts_inv.bmp"
-IDB_FIVE_POS_SWITCH		BITMAP	"..\\Bitmaps\\fiveposswitch.bmp"
-#endif    // Französisch (Frankreich) resources
+IDB_LMDCVOLTS           BITMAP                  "..\\Bitmaps\\LMDCVolts.bmp"
+IDB_LMDCAMPS            BITMAP                  "..\\Bitmaps\\LMDCAmps.bmp"
+IDB_LMYAWDEGS           BITMAP                  "..\\Bitmaps\\lem_yaw_degs.bmp"
+IDB_LMPITCHDEGS         BITMAP                  "..\\Bitmaps\\lem_pitch_degs.bmp"
+IDB_LMSIGNALSTRENGTH    BITMAP                  "..\\Bitmaps\\lem_signal_strength.bmp"
+IDB_AOT_RETICLE_KNOB    BITMAP                  "..\\Bitmaps\\aot_reticle_knob.bmp"
+IDB_AOT_SHAFT_KNOB      BITMAP                  "..\\Bitmaps\\aot_shaft_knob.bmp"
+IDB_THUMBWHEEL_LARGEFONTSINV BITMAP                  "..\\Bitmaps\\thumbwheel_large_fonts_inv.bmp"
+IDB_FIVE_POS_SWITCH     BITMAP                  "..\\Bitmaps\\fiveposswitch.bmp"
+#endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
 

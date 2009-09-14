@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/09/13 20:31:33  dseagrav
+  *	Joystick Z-axis detection fixes
+  *	
   *	Revision 1.11  2009/09/13 15:20:15  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -647,7 +650,7 @@ void LEM::SystemsInit()
 	// AGS stuff
 	asa.Init(this);
 	aea.Init(this);
-	deda.Init(this);
+	deda.Init(&SCS_AEA_CB);
 
 	// IMU OPERATE power (Logic DC power)
 	IMU_OPR_CB.MaxAmps = 20.0;

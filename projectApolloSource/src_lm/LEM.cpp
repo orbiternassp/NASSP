@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/09/13 20:31:32  dseagrav
+  *	Joystick Z-axis detection fixes
+  *	
   *	Revision 1.12  2009/09/13 15:20:14  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -323,7 +326,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	MFDToPanelConnector(MainPanel, checkControl),
 	imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
-	imu(agc, Panelsdk)
+	imu(agc, Panelsdk),
+	deda(this,soundlib, aea, 015)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 

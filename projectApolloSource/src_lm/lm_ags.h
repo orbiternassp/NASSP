@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   **************************************************************************/
 
 // ABORT SENSOR ASSEMBLY (ASA)
@@ -49,13 +52,190 @@ public:
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
-class LEM_DEDA{
+
+class LEM_DEDA : public e_object
+{
 public:
-	LEM_DEDA();							// Cons
-	void Init(LEM *s); // Init
+	LEM_DEDA(LEM *lem, SoundLib &s, LEM_AEA &computer, int IOChannel = 015);
+	virtual ~LEM_DEDA();
+
+	void Init(e_object *powered);
+	void Reset();
+
+	//
+	// Light status.
+	//
+
+	bool OprErrLit()	{ return OprErrLight; };
+	bool HoldLit()		{ return HoldLight; };
+	//
+	// Set light status.
+	//
+
+	void SetOprErr(bool val)		{ OprErrLight = val; };
+	void SetHold(bool val)			{ HoldLight = val; };
+
+	void ClearOprErr()		{ OprErrLight = false; };
+	void ClearHold()		{ HoldLight = false; };
+
+	//
+	// Timestep to run programs.
+	//
+
+	void TimeStep(double simt);
+	void SystemTimestep(double simdt);
+
+	//
+	// Keypad interface.
+	//
+
+	void KeyRel();
+	void EnterPressed();
+	void ClearPressed();
+	void ReadOutPressed();
+	void PlusPressed();
+	void MinusPressed();
+	void NumberPressed(int n);
+
+	void EnterCallback(PanelSwitchItem* s);
+	void ClearCallback(PanelSwitchItem* s);
+	void ReadOutCallback(PanelSwitchItem* s);
+	void PlusCallback(PanelSwitchItem* s);
+	void MinusCallback(PanelSwitchItem* s);
+	void zeroCallback(PanelSwitchItem* s);
+	void oneCallback(PanelSwitchItem* s);
+	void twoCallback(PanelSwitchItem* s);
+	void threeCallback(PanelSwitchItem* s);
+	void fourCallback(PanelSwitchItem* s);
+	void fiveCallback(PanelSwitchItem* s);
+	void sixCallback(PanelSwitchItem* s);
+	void sevenCallback(PanelSwitchItem* s);
+	void eightCallback(PanelSwitchItem* s);
+	void nineCallback(PanelSwitchItem* s);
+
+	void ProcessKeyPress(int mx, int my);
+	void ProcessKeyRelease(int mx, int my);
+	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
+	void RenderHold(SURFHANDLE surf, SURFHANDLE lights);
+	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
+	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
+
+	void KeyClick();
+	bool IsPowered() { return Voltage() > 25.0; };
+
+	//
+	// Helper functions.
+	//
+
+	void LightsOff();
+
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+
+protected:
+	//
+	// Lights.
+	//
+
+	void LightOprErrLight()		{ OprErrLight = true; };
+	void ClearOprErrLight()		{ OprErrLight = false; };
+	void LightHoldLight()		{ HoldLight = true; };
+	void ClearHoldLight()		{ HoldLight = false; };
+
+	//
+	// Light power consumption.
+	//
+
+	int LightsLit;
+	int SegmentsLit;
+
+	//
+	// Lights state.
+	//
+
+	bool OprErrLight;
+	bool HoldLight;
+
+	//
+	// Keyboard state.
+	//
+
+	bool KbInUse;
+
+	bool KeyDown_Plus;
+	bool KeyDown_Minus;
+	bool KeyDown_0;
+	bool KeyDown_1;
+	bool KeyDown_2;
+	bool KeyDown_3;
+	bool KeyDown_4;
+	bool KeyDown_5;
+	bool KeyDown_6;
+	bool KeyDown_7;
+	bool KeyDown_8;
+	bool KeyDown_9;
+	bool KeyDown_Clear;
+	bool KeyDown_ReadOut;
+	bool KeyDown_Enter;
+
+	//
+	// Current program state.
+	//
+
+	int State;
+	//
+	// Internal variables.
+	//
+
+	char Adr[3];
+	char Data[6];
+
+	int	EnterPos;
+	int EnterVal;
+
+	//
+	// AGC we're connected to.
+	//
+
+	LEM_AEA &ags;
+
+	//
+	// I/O channel to use for key-codes.
+	//
+
+	int KeyCodeIOChannel;
+
+	//
+	// Sound library.
+	//
+
+	SoundLib &soundlib;
+	Sound Sclick;
+
+	bool FirstTimeStep;
+
+	//
+	// Local helper functions.
+	//
+
+	char ValueChar(unsigned val);
+	void ResetKeyDown();
+	void SendKeyCode(int val);
+
+	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
+	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
+	int ThreeDigitDisplaySegmentsLit(char *Str);
+	int SixDigitDisplaySegmentsLit(char *Str);
 	LEM *lem;					// Pointer at LEM
 };
+
+//
+// Strings for state saving.
+//
+
+#define DEDA_START_STRING	"DEDA_BEGIN"
+#define DEDA_END_STRING		"DEDA_END"
+
 

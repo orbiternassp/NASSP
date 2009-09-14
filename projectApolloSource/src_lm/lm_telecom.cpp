@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/13 15:20:15  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.1  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -52,6 +55,7 @@
 
 #include "connector.h"
 #include "ioChannels.h"
+#include "lm_channels.h"
 
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
@@ -48,6 +51,10 @@
 #include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
+
+static char ThreeSpace[] = "   ";
+static char SixSpace[] = "      ";
+static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 
 // Abort Sensor Assembly
 LEM_ASA::LEM_ASA() : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
@@ -123,16 +130,38 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 // Data Entry and Display Assembly
-LEM_DEDA::LEM_DEDA(){
-	lem = NULL;	
+
+LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer, int IOChannel) :  lem(lm), soundlib(s), ags(computer)
+
+{
+	Reset();
+	ResetKeyDown();
+	KeyCodeIOChannel = IOChannel;
 }
 
-void LEM_DEDA::Init(LEM *s){
-	lem = s;
+LEM_DEDA::~LEM_DEDA()
+{
+	//
+	// Nothing for now.
+	//
+}
+
+void LEM_DEDA::Init(e_object *powered)
+
+{
+	WireTo(powered);
+	Reset();
+	FirstTimeStep = true;
 }
 
 void LEM_DEDA::TimeStep(double simdt){
 	if(lem == NULL){ return; }
+
+	if(FirstTimeStep)
+	{
+		FirstTimeStep = false;
+	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
+	}
 }
 
 void LEM_DEDA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -141,4 +170,462 @@ void LEM_DEDA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 
 void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 
+}
+
+void LEM_DEDA::KeyClick()
+
+{
+	Sclick.play(NOLOOP, 255);
+}
+
+void LEM_DEDA::Reset()
+
+{
+	OprErrLight = false;
+	HoldLight = false;
+	LightsLit = 0;
+	SegmentsLit = 0;
+	State = 0;
+
+	strcpy (Adr, ThreeSpace);
+	strcpy (Data, SixSpace);
+}
+
+void LEM_DEDA::ResetKeyDown() 
+
+{
+	// Reset KeyDown-flags
+	KeyDown_Plus = false;
+	KeyDown_Minus = false;
+	KeyDown_0 = false;
+	KeyDown_1 = false;
+	KeyDown_2 = false;
+	KeyDown_3 = false;
+	KeyDown_4 = false;
+	KeyDown_5 = false;
+	KeyDown_6 = false;
+	KeyDown_7 = false;
+	KeyDown_8 = false;
+	KeyDown_9 = false;
+	KeyDown_Clear = false;
+	KeyDown_ReadOut = false;
+	KeyDown_Enter = false;
+}
+
+void LEM_DEDA::SystemTimestep(double simdt)
+
+{
+	if (!IsPowered())
+		return;
+	
+	// We will use a similar scan as the DSKY power consumption
+
+	// The DSYK power consumption is a little bit hard to figure out. According 
+	// to the Systems Handbook the complete interior lightning draws about 30W, so
+	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
+	// track the number of lights that are lit, because during pause the still called render 
+	// code causes wrong power loads
+	//
+
+	//
+	// Check the lights.
+	//
+
+	LightsLit = 0;
+	if (OprErrLit()) LightsLit++;
+	if (HoldLit()) LightsLit++;
+	//
+	// Check the segments
+	//
+
+	SegmentsLit += ThreeDigitDisplaySegmentsLit(Adr);
+	SegmentsLit += SixDigitDisplaySegmentsLit(Data);
+
+	// 10 lights with together max. 6W, 184 segments with together max. 4W  
+	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
+
+	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
+}
+
+int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)
+
+{
+	int Curdigit, s = 0;
+
+	if (Str[0] >= '0' && Str[0] <= '9') {
+		Curdigit = Str[0] - '0';
+		s += SegmentCount[Curdigit];
+	}
+
+	if (Str[1] >= '0' && Str[1] <= '9') {
+		Curdigit = Str[1] - '0';
+		s += SegmentCount[Curdigit];
+	}
+
+	if (Str[2] >= '0' && Str[2] <= '9') {
+		Curdigit = Str[1] - '0';
+		s += SegmentCount[Curdigit];
+	}
+	return s;
+}
+
+void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+
+{
+	int Curdigit;
+
+	if (Str[0] >= '0' && Str[0] <= '9') {
+		Curdigit = Str[0] - '0';
+		oapiBlt(surf,digits,dstx+4,dsty,16*Curdigit,0,16,19);
+	}
+
+	if (Str[1] >= '0' && Str[1] <= '9') {
+		Curdigit = Str[1] - '0';
+		oapiBlt(surf,digits,dstx+22,dsty,16*Curdigit,0,16,19);
+	}
+
+	if (Str[2] >= '0' && Str[2] <= '9') {
+		Curdigit = Str[2] - '0';
+		oapiBlt(surf,digits,dstx+40,dsty,16*Curdigit,0,16,19);
+	}
+}
+
+int LEM_DEDA::SixDigitDisplaySegmentsLit(char *Str)
+{
+	int	Curdigit;
+	int i, s = 0;
+
+	if (Str[0] == '-') 
+		s += 1;
+	else if (Str[0] == '+') 
+		s += 2;
+
+	for (i = 1; i < 6; i++) {
+		if (Str[i] >= '0' && Str[i] <= '9') {
+			Curdigit = Str[i] - '0';
+			s += SegmentCount[Curdigit];
+		}
+	}
+	return s;
+}
+
+void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+
+{
+	int	Curdigit;
+	int i;
+
+	if (Str[0] == '-') {
+		oapiBlt(surf,digits,dstx+4,dsty,161,0,10,19);
+	}
+	else if (Str[0] == '+') {
+		oapiBlt(surf,digits,dstx+4,dsty,174,0,12,19);
+	}
+
+	for (i = 1; i < 6; i++) {
+		if (Str[i] >= '0' && Str[i] <= '9') {
+			Curdigit = Str[i] - '0';
+			oapiBlt(surf, digits, dstx + (18*i)+ 4, dsty, 16*Curdigit, 0, 16,19);
+		}
+		else {
+//			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
+		}
+	}
+}
+
+
+void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+
+{
+	if (!IsPowered())
+		return;
+
+	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
+}
+
+void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+
+{
+	if (!IsPowered())
+		return;
+
+	//
+	// Register contents.
+	//
+
+	RenderSixDigitDisplay(surf, digits, xOffset, yOffset, Data);
+}
+
+void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
+
+{
+	if (!IsPowered())
+		return;
+
+	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 1,  48 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 49, 48 * 0, 48, KeyDown_Minus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 98, 48 * 0, 96, KeyDown_0, xOffset, yOffset);
+
+	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 1,  48 * 1, 0,  KeyDown_7, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 49, 48 * 1, 48, KeyDown_4, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 98, 48 * 1, 96, KeyDown_1, xOffset, yOffset);
+
+	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 1,  48 * 2, 0,  KeyDown_8, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 49, 48 * 2, 48, KeyDown_5, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 98, 48 * 2, 96, KeyDown_2, xOffset, yOffset);
+
+	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 1,  48 * 3, 0,  KeyDown_9, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 49, 48 * 3, 48, KeyDown_6, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 98, 48 * 3, 96, KeyDown_3, xOffset, yOffset);
+
+	DEDAKeyBlt(surf, keys, 1 + 48 * 4, 1,  48 * 4, 0,  KeyDown_Clear, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 48 * 4, 49, 48 * 4, 48, KeyDown_ReadOut, xOffset, yOffset);
+    DEDAKeyBlt(surf, keys, 1 + 48 * 4, 98, 48 * 4, 96, KeyDown_Enter, xOffset, yOffset);
+}
+
+void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
+
+{
+	if (lit) {
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 46, 45);
+	}
+	else {
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 144, 46, 45);
+	}
+}
+
+
+void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
+
+{
+	if (!IsPowered())
+		return;
+
+	//
+	// Check the lights.
+	//
+
+	if (OprErrLit()) {
+		oapiBlt(surf, lights, 0, 0, 48, 0, 48, 22);
+	}
+	else {
+		oapiBlt(surf, lights, 0, 0, 0, 0, 48, 22);
+	}
+
+}
+
+void LEM_DEDA::RenderHold(SURFHANDLE surf, SURFHANDLE lights)
+
+{
+	if (!IsPowered())
+		return;
+
+	//
+	// Check the lights.
+	//
+
+	if (HoldLit()) {
+		oapiBlt(surf, lights, 0, 0, 48, 24, 48, 31);
+	}
+	else {
+		oapiBlt(surf, lights, 0, 0,  0, 24, 48, 31);
+	}
+}
+
+
+//
+// Process a keypress based on the X and Y coords.
+//
+
+void LEM_DEDA::ProcessKeyPress(int mx, int my)
+
+{
+	if (!IsPowered())
+		return;
+
+	KeyClick();
+
+	if (mx > 2+0*48 && mx < 47+0*48) {
+		if (OprErrLit())
+				return;
+
+		if (my > 1 && my < 47) {
+			KeyDown_Plus = true;
+			PlusPressed();
+		}
+		if (my > 49 && my < 95) {
+			KeyDown_Minus = true;
+			MinusPressed();
+		}
+		if (my > 97 && my < 143) {
+			KeyDown_0 = true;
+			NumberPressed(0);
+		}
+	}
+
+	if (mx > 2+1*48 && mx < 47+1*48) {
+		if (OprErrLit())
+				return;
+
+		if (my > 1 && my < 47) {
+			KeyDown_7 = true;
+			NumberPressed(7);
+		}
+		if (my > 49 && my < 95) {
+			KeyDown_4 = true;
+			NumberPressed(4);
+		}
+		if (my > 97 && my < 143) {
+			KeyDown_1 = true;
+			NumberPressed(1);
+		}
+	}
+
+	if (mx > 2+2*48 && mx < 47+2*48) {
+		if (OprErrLit())
+				return;
+
+		if (my > 1 && my < 47) {
+			KeyDown_8 = true;
+			NumberPressed(8);
+		}
+		if (my > 49 && my < 95) {
+			KeyDown_5 = true;
+			NumberPressed(5);
+		}
+		if (my > 97 && my < 143) {
+			KeyDown_2 = true;
+			NumberPressed(2);
+		}
+	}
+
+	if (mx > 2+3*48 && mx < 47+3*48) {
+		if (OprErrLit())
+				return;
+
+		if (my > 1 && my < 47) {
+			KeyDown_9 = true;
+			NumberPressed(9);
+		}
+		if (my > 49 && my < 95) {
+			KeyDown_6 = true;
+			NumberPressed(6);
+		}
+		if (my > 97 && my < 143) {
+			KeyDown_3 = true;
+			NumberPressed(3);
+		}
+	}
+
+	if (mx > 2+4*48 && mx < 47+4*48) {
+		if (my > 1 && my < 47) {
+			KeyDown_Clear = true;
+			ClearPressed();
+		}
+		if (OprErrLit())
+				return;
+
+		if (my > 49 && my < 95) {
+			KeyDown_ReadOut = true;
+			ReadOutPressed();
+		}
+		if (my > 97 && my < 143) {
+			KeyDown_Enter = true;
+			EnterPressed();
+		}
+	}
+
+
+}
+
+void LEM_DEDA::ProcessKeyRelease(int mx, int my)
+
+{
+	ResetKeyDown();
+}
+
+void LEM_DEDA::SendKeyCode(int val)
+
+{
+	//agc.SetInputChannel(KeyCodeIOChannel, val);
+}
+
+void LEM_DEDA::KeyRel()
+
+{
+	SendKeyCode(25);
+}
+
+void LEM_DEDA::EnterPressed()
+
+{
+	if (State == 9)
+		SendKeyCode(28);
+	else
+		SetOprErr(true);
+}
+
+void LEM_DEDA::ClearPressed()
+
+{
+	Reset();
+	ResetKeyDown();
+}
+
+void LEM_DEDA::PlusPressed()
+
+{
+	if (State == 3){
+			State++;
+			Data[0] = '+';
+	} else 
+		SetOprErr(true);
+}
+
+void LEM_DEDA::MinusPressed()
+
+{
+	if (State == 3){
+			State++;
+			Data[0] = '-';
+	} else 
+		SetOprErr(true);
+}
+
+void LEM_DEDA::ReadOutPressed()
+
+{
+	if (State == 3){
+		SendKeyCode(18);
+	} else 
+		SetOprErr(true);
+}
+
+void LEM_DEDA::NumberPressed(int n)
+
+{
+
+	switch(State){
+		case 0:
+		case 1:
+		case 2:
+			if (n > 7){
+				SetOprErr(true);
+				return;
+			}
+			Adr[State] = '0' + n;
+			State++;
+			return;
+		case 3:
+			SetOprErr(true);
+			return;
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+			Data[State-3] = '0' + n;
+			State++;
+			return;
+	}
 }
