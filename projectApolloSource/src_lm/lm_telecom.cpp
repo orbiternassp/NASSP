@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/14 00:38:30  trebonian
+  *	Fix bad edit of include "lm_channels.h" - Merge issues with AGS commit
+  *	
   *	Revision 1.3  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -57,7 +60,7 @@
 #include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
-#include "ioChannels.h"
+#include "lm_channels.h"
 
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){
