@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by LEMResources.rc
 //
+
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
 #define AID_ALTITUDE1                   13
