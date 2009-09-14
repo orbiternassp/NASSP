@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.1  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -440,10 +443,10 @@ void LEM_DEDA::RenderHold(SURFHANDLE surf, SURFHANDLE lights)
 void LEM_DEDA::ProcessKeyPress(int mx, int my)
 
 {
+	KeyClick();
+
 	if (!IsPowered())
 		return;
-
-	KeyClick();
 
 	if (mx > 2+0*48 && mx < 47+0*48) {
 		if (OprErrLit())
