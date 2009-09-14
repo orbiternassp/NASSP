@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/09/13 15:20:14  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.8  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -1329,6 +1332,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
+		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
+		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
 
 
 
@@ -1613,6 +1618,11 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_TRACK_MODE_SWITCH,_R( 976, 1092, 1010, 1123), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_VHF_SEL_KNOB,	_R( 1252,  994, 1337, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_SBD_SEL_KNOB,	_R( 1252, 1158, 1337, 1243), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_DISP,					_R(  207, 1394,  361, 1418), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_ADR,						_R(  227, 1344,  304, 1368), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_KEYS,					_R(  128, 1443,  369, 1586), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_LIGHTS,					_R(  135, 1393,  183, 1415), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_HOLD,					_R(  225, 1597,  273, 1628), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 	
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
@@ -2249,6 +2259,14 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			dsky.ProcessKeyPress(mx, my);
 		} else if (event & PANEL_MOUSE_LBUP) {
 			dsky.ProcessKeyRelease(mx, my);
+		}
+		return true;
+
+	case AID_LM_DEDA_KEYS:
+		if (event & PANEL_MOUSE_LBDOWN) {
+			deda.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			deda.ProcessKeyRelease(mx, my);
 		}
 		return true;
 
@@ -3208,6 +3226,26 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_DSKY_KEY:
 		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
+		return true;
+
+	case AID_LM_DEDA_LIGHTS:
+		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTS]);
+		return true;
+
+	case AID_LM_DEDA_HOLD:
+		deda.RenderHold(surf, srf[SRF_DEDA_LIGHTS]);
+		return true;
+
+	case AID_LM_DEDA_DISP:
+		deda.RenderData(surf, srf[SRF_DIGITAL]);
+		return true;
+
+	case AID_LM_DEDA_ADR:
+		deda.RenderAdr(surf, srf[SRF_DIGITAL]);
+		return true;
+
+	case AID_LM_DEDA_KEYS:
+		deda.RenderKeys(surf, srf[SRF_DEDA_KEY]);
 		return true;
 
 	case AID_MFDLEFT:
