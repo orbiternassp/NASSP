@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -851,6 +854,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_PANEL_382_COVER]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_382_COVER));
 	srf[SRF_CSM_WASTE_DISPOSAL_ROTARY]				= oapiCreateSurface (LOADBMP (IDB_CSM_WASTE_DISPOSAL_ROTARY));
 	srf[SRF_THREEPOSSWITCH90_LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH90_LEFT));
+	srf[SRF_EMS_SCROLL_BUG]							= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_BUG));
 	
 	//
 	// Flashing borders.
@@ -892,6 +896,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_17x36]			= oapiCreateSurface (LOADBMP (IDB_BORDER_17x36));
 	srf[SRF_BORDER_33x43]			= oapiCreateSurface (LOADBMP (IDB_BORDER_33x43));
 	srf[SRF_BORDER_36x17]			= oapiCreateSurface (LOADBMP (IDB_BORDER_36x17));
+	srf[SRF_BORDER_38x37]			= oapiCreateSurface (LOADBMP (IDB_BORDER_38x37));
 	srf[SRF_BORDER_150x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_150x80));
 	srf[SRF_BORDER_200x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_200x80));
 	srf[SRF_BORDER_72x109]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x109));
@@ -1001,6 +1006,9 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_382_COVER],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_WASTE_DISPOSAL_ROTARY],			g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH90_LEFT],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_DSKYKEY],								g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_EMS_SCROLL_BUG],						g_Param.col[4]);
+	
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1042,6 +1050,8 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_17x36],		g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_33x43],		g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_36x17],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_38x37],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_38x38],		g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_150x80],	g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_200x80],	g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x109],	g_Param.col[4]);	
@@ -1842,7 +1852,7 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 	// Display & keyboard (DSKY), main panel uses the main DSKY.
 	oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239 + offset,  589, 1344 + offset,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095 + offset,  594, 1197 + offset,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075 + offset,  784, 1363 + offset,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1077 + offset,  785, 1363 + offset,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 	// FDAI
 	fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090 + offset, 284);
@@ -1990,7 +2000,7 @@ void Saturn::AddRightCenterLowerPanelAreas(int offset)
 	//
 	oapiRegisterPanelArea (AID_DSKY2_DISPLAY,								_R(2602 + offset,  700, 2707 + offset,  876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DSKY2_LIGHTS,								_R(2458 + offset,  705, 2560 + offset,  825), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(2438 + offset,  895, 2725 + offset, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(2440 + offset,  896, 2725 + offset, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 }
 void Saturn::AddRightLowerPanelAreas(int offset)
 {
@@ -3610,6 +3620,59 @@ void Saturn::SetSwitches(int panel) {
 
 	HatchPanel600RightRow.Init(AID_CSM_HATCH_600_RIGHT, MainPanel);
 	HatchRepressO2ValveSwitch.Init(61, 34, 62, 129, srf[SRF_CSM_PANEL_600_SWITCH], NULL, HatchPanel600RightRow, 186, 0);
+
+	//
+	// DSKYs
+	//
+
+	DskySwitchRow.Init(AID_DSKY_KEY, MainPanel);
+	DskySwitchVerb.Init(0, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 20);
+	DskySwitchNoun.Init(0, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 60);
+	DskySwitchPlus.Init(41, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 0);
+	DskySwitchMinus.Init(41, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 40);
+	DskySwitchZero.Init(41, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 80);
+	DskySwitchSeven.Init(82, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 0);
+	DskySwitchFour.Init(82, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 40);
+	DskySwitchOne.Init(82, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 80);
+	DskySwitchEight.Init(123, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 0);
+	DskySwitchFive.Init(123, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 40);
+	DskySwitchTwo.Init(123, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 80);
+	DskySwitchNine.Init(164, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 0);
+	DskySwitchSix.Init(164, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 40);
+	DskySwitchThree.Init(164, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 80);
+	DskySwitchClear.Init(205, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 0);
+	DskySwitchProg.Init(205, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 40);
+	DskySwitchKeyRel.Init(205, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 80);
+	DskySwitchEnter.Init(246, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 20);
+	DskySwitchReset.Init(246, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 60);
+
+	int dx = 0, dy = 0;
+	if (panel == SATPANEL_SEXTANT || panel == SATPANEL_TELESCOPE) {
+		dx = 9;
+		dy = 219;
+		Dsky2SwitchRow.Init(AID_OPTICS_DSKY, MainPanel);
+	} else {
+		Dsky2SwitchRow.Init(AID_DSKY2_KEY, MainPanel);
+	}
+	Dsky2SwitchVerb.Init(0 + dx, 20 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 0, 20);
+	Dsky2SwitchNoun.Init(0 + dx, 60 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 0, 60);
+	Dsky2SwitchPlus.Init(41 + dx, 0 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 41, 0);
+	Dsky2SwitchMinus.Init(41 + dx, 40 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 41, 40);
+	Dsky2SwitchZero.Init(41 + dx, 80 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 41, 80);
+	Dsky2SwitchSeven.Init(82 + dx, 0 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 82, 0);
+	Dsky2SwitchFour.Init(82 + dx, 40 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 82, 40);
+	Dsky2SwitchOne.Init(82 + dx, 80 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 82, 80);
+	Dsky2SwitchEight.Init(123 + dx, 0 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 123, 0);
+	Dsky2SwitchFive.Init(123 + dx, 40 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 123, 40);
+	Dsky2SwitchTwo.Init(123 + dx, 80 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 123, 80);
+	Dsky2SwitchNine.Init(164 + dx, 0 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 164, 0);
+	Dsky2SwitchSix.Init(164 + dx, 40 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 164, 40);
+	Dsky2SwitchThree.Init(164 + dx, 80 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 164, 80);
+	Dsky2SwitchClear.Init(205 + dx, 0 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 205, 0);
+	Dsky2SwitchProg.Init(205 + dx, 40 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 205, 40);
+	Dsky2SwitchKeyRel.Init(205 + dx, 80 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 205, 80);
+	Dsky2SwitchEnter.Init(246 + dx, 20 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 246, 20);
+	Dsky2SwitchReset.Init(246 + dx, 60 + dy, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], Dsky2SwitchRow, 246, 60);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3629,7 +3692,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
 	g_Param.pen[0] = CreatePen (PS_SOLID, 3, RGB(224, 224, 224));
 	g_Param.pen[1] = CreatePen (PS_SOLID, 4, RGB(  0,   0,   0));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB( 77,  77,  77));
+	g_Param.pen[2] = CreatePen (PS_SOLID, 2, RGB(  0,   0,   0));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
 }
@@ -3650,9 +3713,24 @@ void DeletegParam() {
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
-	//double dx,dy;
-
 	static int ctrl = 0;
+
+	//
+	// Special handling optics DSKY
+	//
+
+	if (id == AID_OPTICS_DSKY) {
+		if (mx >= 285 && my <= 100 && event == PANEL_MOUSE_LBDOWN) { 
+			if (opticsDskyEnabled == 0)
+				opticsDskyEnabled = 1;
+			else
+				opticsDskyEnabled = -1;
+			SwitchClick();
+			return true;
+		}
+		if (opticsDskyEnabled == 0)
+			return false;
+	}
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
 		return true;
@@ -3692,23 +3770,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	case AID_MASTER_ALARM2:
 	case AID_MASTER_ALARM3:
 		return cws.CheckMasterAlarmMouseClick(event);
-
-	case AID_DSKY_KEY:
-
-		if (event & PANEL_MOUSE_LBDOWN) {
-			dsky.ProcessKeyPress(mx, my);
-		} else if (event & PANEL_MOUSE_LBUP) {
-			dsky.ProcessKeyRelease(mx, my);
-		}
-		return true;
-
-	case AID_DSKY2_KEY:
-		if (event & PANEL_MOUSE_LBDOWN) {
-			dsky2.ProcessKeyPress(mx, my);
-		} else if (event & PANEL_MOUSE_LBUP) {
-			dsky2.ProcessKeyRelease(mx, my);
-		}
-		return true;
 
 	case AID_MFDMAINLEFT:
 		MousePanel_MFDButton(MFD_LEFT, event, mx, my);
@@ -3790,21 +3851,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		else
 			coasEnabled = true;
 		SwitchClick();
-		return true;
-
-	case AID_OPTICS_DSKY:
-		if (mx >= 285 && my <= 100 && event == PANEL_MOUSE_LBDOWN) { 
-			if (opticsDskyEnabled)
-				opticsDskyEnabled = false;
-			else
-				opticsDskyEnabled = true;
-			SwitchClick();
-		}
-		if (event & PANEL_MOUSE_LBDOWN) {
-			dsky2.ProcessKeyPress(mx - 7, my - 218);
-		} else if (event & PANEL_MOUSE_LBUP) {
-			dsky2.ProcessKeyRelease(mx - 7, my - 218);
-		}
 		return true;
 
 	case AID_CSM_HATCH_600_LEFT:
@@ -4360,11 +4406,9 @@ void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 {
-
 	HDC hDC;
 	HGDIOBJ brush = NULL;
 	HGDIOBJ pen = NULL;
-
 
 	// Enable this to trace the redraws, but then it's running horrible slow!
 	// char tracebuffer[100];
@@ -4381,15 +4425,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// \todo This should really be moved into the switch code.
 	//
 
-	if (LAUNCHIND[0])
-	{
+	if (LAUNCHIND[0]) {
 		if (EDSSwitch.GetState())
 			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
 		else
 			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);
-	}
-	else 
-	{
+	} else {
 		LiftoffNoAutoAbortSwitch.SetOffset(0, 81);
 	}
 
@@ -4408,7 +4449,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		} else {
 			OrbiterAttitudeToggle.SetVisible(true);
 		}
-
 	}
 
 	//
@@ -4448,6 +4488,22 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 	}
 
+	//
+	// Special handling optics DSKY
+	//
+
+	if (id == AID_OPTICS_DSKY) {
+		if (opticsDskyEnabled == -1) {
+			opticsDskyEnabled = 0;
+			return true;
+		}
+		if (opticsDskyEnabled == 0) {
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_OPTICS_DSKY], 0, 0, 0, 0, 303, 349);
+		dsky2.RenderLights(surf, srf[SRF_DSKY], 27, 28, false);
+		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP], 171, 23);
+	}
 
 	//
 	// Process all the generic switches.
@@ -4493,10 +4549,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_DSKY_DISPLAY:
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
-		return true;
-
-	case AID_DSKY_KEY:
-		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
 	// ASCP
@@ -4631,10 +4683,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_DSKY2_DISPLAY:
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
-		return true;
-
-	case AID_DSKY2_KEY:
-		dsky2.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
 	case AID_ABORT_BUTTON:
@@ -4890,18 +4938,20 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_EMS_SCROLL_LEO:
-		if(!(GTASwitch.IsUp())) {
-			hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
-			SetBkMode (hDC, TRANSPARENT);
-			pen = SelectObject(hDC,GetStockObject(BLACK_PEN));
-			Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
-			SelectObject(hDC,pen);
-			oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
-		}
+	case AID_EMS_SCROLL_LEO: {
+		hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
+		SetBkMode (hDC, TRANSPARENT);			
+		HGDIOBJ oldObj = SelectObject(hDC,g_Param.pen[2]);
+
+		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
+	
+		SelectObject(hDC, oldObj);
+		oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
+
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
+		oapiBlt(surf, srf[SRF_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 1, 0, 0, 5, 5, SURF_PREDEF_CK);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
-		return true;
+		return true; }
 
 	case AID_EMS_RSI_BKGRND:
 		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
@@ -4948,16 +4998,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 				break;
 		}
 		return true;
-
-	case AID_OPTICS_DSKY:
-		if (opticsDskyEnabled) {
-			oapiBlt(surf, srf[SRF_OPTICS_DSKY], 0, 0, 0, 0, 303, 349);
-			dsky2.RenderLights(surf, srf[SRF_DSKY], 27, 28, false);
-			dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP], 171, 23);
-			dsky2.RenderKeys(surf, srf[SRF_DSKYKEY], 7, 218);
-		}
-		return true;
-
 	}
 	return false;
 }
@@ -5028,7 +5068,7 @@ void Saturn::InitSwitches() {
 	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_UP);
 	CautionWarningCMCSMSwitch.Register(PSH, "CautionWarningCMCSMSwitch", 1);
 	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_CENTER);
-	CautionWarningLightTestSwitch.Register(PSH, "CautionWarningLightTestSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER, NULL, true, 6);
+	CautionWarningLightTestSwitch.Register(PSH, "CautionWarningLightTestSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER, NULL, true, 28);
 
 	CabinFan1Switch.Register(PSH, "CabinFan1Switch", false);
 	CabinFan2Switch.Register(PSH, "CabinFan2Switch", false);
@@ -6446,4 +6486,84 @@ void Saturn::InitSwitches() {
 	HatchEmergencyO2ValveSwitch.Register(PSH, "HatchEmergencyO2ValveSwitch", 0);
 	HatchRepressO2ValveSwitch.Register(PSH, "HatchRepressO2ValveSwitch", THREEPOSSWITCH_DOWN);
 	HatchOxygenRepressPressMeter.Register(PSH, "HatchOxygenRepressPressMeter", 0, 1200, 1, 900);
+
+	DskySwitchVerb.Register(PSH, "DskySwitchVerb", false);
+	DskySwitchNoun.Register(PSH, "DskySwitchNoun", false);
+	DskySwitchPlus.Register(PSH, "DskySwitchPlus", false);
+	DskySwitchMinus.Register(PSH, "DskySwitchMinus", false);
+	DskySwitchZero.Register(PSH, "DskySwitchZero", false);
+	DskySwitchOne.Register(PSH, "DskySwitchOne", false);
+	DskySwitchTwo.Register(PSH, "DskySwitchTwo", false);
+	DskySwitchThree.Register(PSH, "DskySwitchThree", false);
+	DskySwitchFour.Register(PSH, "DskySwitchFour", false);
+	DskySwitchFive.Register(PSH, "DskySwitchFive", false);
+	DskySwitchSix.Register(PSH, "DskySwitchSix", false);
+	DskySwitchSeven.Register(PSH, "DskySwitchSeven", false);
+	DskySwitchEight.Register(PSH, "DskySwitchEight", false);
+	DskySwitchNine.Register(PSH, "DskySwitchNine", false);
+	DskySwitchClear.Register(PSH, "DskySwitchClear", false);
+	DskySwitchProg.Register(PSH, "DskySwitchProg", false);
+	DskySwitchKeyRel.Register(PSH, "DskySwitchKeyRel", false);
+	DskySwitchEnter.Register(PSH, "DskySwitchEnter", false);
+	DskySwitchReset.Register(PSH, "DskySwitchReset", false);
+
+	DskySwitchVerb.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::VerbCallback));
+	DskySwitchNoun.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::NounCallback));
+	DskySwitchPlus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::PlusCallback));
+	DskySwitchMinus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::MinusCallback));
+	DskySwitchZero.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::zeroCallback));
+	DskySwitchOne.SetCallback( new PanelSwitchCallback<DSKY>(&dsky, &DSKY::oneCallback));
+	DskySwitchTwo.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::twoCallback));
+	DskySwitchThree.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::threeCallback));
+	DskySwitchFour.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fourCallback));
+	DskySwitchFive.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fiveCallback));
+	DskySwitchSix.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sixCallback));
+	DskySwitchSeven.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sevenCallback));
+	DskySwitchEight.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::eightCallback));
+	DskySwitchNine.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::nineCallback));
+	DskySwitchProg.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ProgCallback));
+	DskySwitchClear.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ClearCallback));
+	DskySwitchKeyRel.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::KeyRelCallback));
+	DskySwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::EnterCallback));
+	DskySwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ResetCallback));
+
+	Dsky2SwitchVerb.Register(PSH, "Dsky2SwitchVerb", false);
+	Dsky2SwitchNoun.Register(PSH, "Dsky2SwitchNoun", false);
+	Dsky2SwitchPlus.Register(PSH, "Dsky2SwitchPlus", false);
+	Dsky2SwitchMinus.Register(PSH, "Dsky2SwitchMinus", false);
+	Dsky2SwitchZero.Register(PSH, "Dsky2SwitchZero", false);
+	Dsky2SwitchOne.Register(PSH, "Dsky2SwitchOne", false);
+	Dsky2SwitchTwo.Register(PSH, "Dsky2SwitchTwo", false);
+	Dsky2SwitchThree.Register(PSH, "Dsky2SwitchThree", false);
+	Dsky2SwitchFour.Register(PSH, "Dsky2SwitchFour", false);
+	Dsky2SwitchFive.Register(PSH, "Dsky2SwitchFive", false);
+	Dsky2SwitchSix.Register(PSH, "Dsky2SwitchSix", false);
+	Dsky2SwitchSeven.Register(PSH, "Dsky2SwitchSeven", false);
+	Dsky2SwitchEight.Register(PSH, "Dsky2SwitchEight", false);
+	Dsky2SwitchNine.Register(PSH, "Dsky2SwitchNine", false);
+	Dsky2SwitchClear.Register(PSH, "Dsky2SwitchClear", false);
+	Dsky2SwitchProg.Register(PSH, "Dsky2SwitchProg", false);
+	Dsky2SwitchKeyRel.Register(PSH, "Dsky2SwitchKeyRel", false);
+	Dsky2SwitchEnter.Register(PSH, "Dsky2SwitchEnter", false);
+	Dsky2SwitchReset.Register(PSH, "Dsky2SwitchReset", false);
+
+	Dsky2SwitchVerb.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::VerbCallback));
+	Dsky2SwitchNoun.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::NounCallback));
+	Dsky2SwitchPlus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::PlusCallback));
+	Dsky2SwitchMinus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::MinusCallback));
+	Dsky2SwitchZero.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::zeroCallback));
+	Dsky2SwitchOne.SetCallback( new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::oneCallback));
+	Dsky2SwitchTwo.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::twoCallback));
+	Dsky2SwitchThree.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::threeCallback));
+	Dsky2SwitchFour.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::fourCallback));
+	Dsky2SwitchFive.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::fiveCallback));
+	Dsky2SwitchSix.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::sixCallback));
+	Dsky2SwitchSeven.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::sevenCallback));
+	Dsky2SwitchEight.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::eightCallback));
+	Dsky2SwitchNine.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::nineCallback));
+	Dsky2SwitchProg.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::ProgCallback));
+	Dsky2SwitchClear.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::ClearCallback));
+	Dsky2SwitchKeyRel.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::KeyRelCallback));
+	Dsky2SwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::EnterCallback));
+	Dsky2SwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::ResetCallback));
 }

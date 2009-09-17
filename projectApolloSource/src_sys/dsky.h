@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.17  2008/04/15 20:17:52  lassombra
   *	Implementing callbacks into DSKY for use by panel switch system (specifically geared towards checklist mfd compatibility
   *	
@@ -177,6 +180,7 @@ public:
 	void ClearCallback(PanelSwitchItem* s);
 	void ResetCallback(PanelSwitchItem* s);
 	void ProgCallback(PanelSwitchItem* s);
+	void KeyRelCallback(PanelSwitchItem* s);
 	void PlusCallback(PanelSwitchItem* s);
 	void MinusCallback(PanelSwitchItem* s);
 	void zeroCallback(PanelSwitchItem* s);

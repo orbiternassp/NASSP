@@ -120,13 +120,20 @@ STYLE DS_3DLOOK | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "Time Acceleration",IDC_STATIC,7,7,219,47
-    LTEXT           "Max. vAGC Time Acceleration (0=unlimited):",IDC_STATIC_TIMEACC,13,21,140,10
-    EDITTEXT        IDC_EDIT_TIMEACC,155,19,19,13,ES_RIGHT | ES_AUTOHSCROLL | 
+    LTEXT           "Max. time acceleration (0=unlimited):",
+                    IDC_STATIC_TIMEACC,13,19,116,10
+    EDITTEXT        IDC_EDIT_TIMEACC,134,17,20,13,ES_RIGHT | ES_AUTOHSCROLL | 
                     ES_NUMBER
-    CONTROL         "Multi-Threading in Time Acceleration",
-                    IDC_CHECK_MULTITHREAD,"Button",
-                    BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,35,150,10
-
+    CONTROL         "Multi-Threading in time acceleration",
+                    IDC_CHECK_MULTITHREAD,"Button",BS_AUTOCHECKBOX | 
+                    BS_NOTIFY | WS_TABSTOP,13,35,150,10
+    GROUPBOX        "Checklists",IDC_STATIC,7,57,219,42
+    CONTROL         "Slow automatic checklist execution (e.g. for demonstrations)",
+                    IDC_CHECK_VAGCCHECKLISTAUTOSLOW,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,83,207,10
+    CONTROL         "Enable automatic checklist execution",
+                    IDC_CHECK_VAGCCHECKLISTAUTOENABLED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,70,149,10
 END
 
 

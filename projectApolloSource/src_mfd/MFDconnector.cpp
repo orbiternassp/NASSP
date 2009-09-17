@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2008/05/24 17:30:40  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -194,7 +197,7 @@ int MFDConnector::GetState(char *n)
 	return (-1);
 }
 
-bool MFDConnector::SetState(char *n, int value)
+bool MFDConnector::SetState(char *n, int value, bool guard)
 
 {
 	ConnectorMessage cm;
@@ -203,6 +206,7 @@ bool MFDConnector::SetState(char *n, int value)
 	cm.messageType = PanelConnector::MFD_PANEL_SET_ITEM_STATE;
 	cm.val1.pValue = n;
 	cm.val2.iValue = value;
+	cm.val3.bValue = guard;
 
 	if (SendMessage(cm))
 	{
@@ -287,17 +291,18 @@ bool MFDConnector::GetChecklistFlashing()
 	return false;
 }
 
-bool MFDConnector::GetChecklistItem(ChecklistItem *in)
+ChecklistItem *MFDConnector::GetChecklistItem(int group, int index)
 {
 	ConnectorMessage cm;
 
 	cm.destination = type;
 	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_ITEM;
-	cm.val1.pValue = in;
+	cm.val1.iValue = group;
+	cm.val2.iValue = index;
 
 	if (SendMessage(cm))
 	{
-		return cm.val2.bValue;
+		return (ChecklistItem *)cm.val1.pValue;
 	}
 
 	return NULL;

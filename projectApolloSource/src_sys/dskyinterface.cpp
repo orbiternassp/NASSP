@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2008/04/11 11:49:35  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -253,6 +256,7 @@ void ApolloGuidance::ProcessChannel13(int val)
 
 {
 	dsky.ProcessChannel13(OutputChannel[013]);
+	if (dsky2) dsky2->ProcessChannel13(OutputChannel[013]);
 }
 
 void ApolloGuidance::LightsOff()
@@ -262,12 +266,14 @@ void ApolloGuidance::LightsOff()
 	ClearUplink();
 	ClearNoAtt();
 	dsky.SetStby(false);
+	if (dsky2) dsky2->SetStby(false);
 	ClearKbRel();
 	ClearOprErr();
 	ClearTemp();
 	ClearGimbalLock();
 	ClearProg();
 	dsky.SetRestart(false);
+	if (dsky2) dsky2->SetRestart(false);
 	ClearTracker();
 	ClearAlt();
 	ClearVel();
@@ -1441,17 +1447,20 @@ void ApolloGuidance::ProcessChannel10(int val)
 
 {
 	dsky.ProcessChannel10(val);
+	if (dsky2) dsky2->ProcessChannel10(val);
 }
 
 void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
 
 {
 	dsky.ProcessChannel11Bit(bit, val);
+	if (dsky2) dsky2->ProcessChannel11Bit(bit, val);
 }
 
 void ApolloGuidance::ProcessChannel11(int val)
 
 {
 	dsky.ProcessChannel11(val);
+	if (dsky2) dsky2->ProcessChannel11(val);
 }
 

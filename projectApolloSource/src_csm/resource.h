@@ -724,12 +724,15 @@
 #define AID_CSM_WASTE_DISPOSAL                             1008
 #define AID_CSM_PANEL_306                                  1009
 #define IDB_THREEPOSSWITCH90_LEFT                          1010
+#define IDB_BORDER_38x37                                   1011
+#define IDB_EMS_SCROLL_BUG                                 1012
+
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1011
+#define _APS_NEXT_RESOURCE_VALUE                            1013
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

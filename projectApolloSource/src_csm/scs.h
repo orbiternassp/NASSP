@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/03 18:34:28  tschachim
+  *	Bugfixes BMAGs and hatch.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -353,6 +356,7 @@ public:
 	void SetRSIRotation(double angle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
+	int GetGScribe() { return GScribe; };
 	void SwitchChanged();
 	bool SPSThrustLight();
 	bool pt05GLight();

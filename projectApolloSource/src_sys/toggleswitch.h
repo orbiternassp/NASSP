@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -477,6 +480,11 @@ public:
 	/// \brief Unguard
 	///
 	virtual void Unguard() {};
+
+	///
+	/// \brief Guard
+	///
+	virtual void Guard() {};
 	
 protected:
 	///
@@ -1095,8 +1103,7 @@ public:
 	void SetGuardState(bool s) { guardState = s; };
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
 	void Unguard() { guardState = 1; };
-
-//	int operator=(const int b) { state = b; return state; };
+	void Guard();
 
 protected:
 	int	guardX;
@@ -1200,11 +1207,10 @@ public:
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
 	void Unguard() { guardState = 1; };
+	void Guard();
 
 	void SetLit(bool l) { lit = l; };
 	bool IsLit() { return lit; };
-
-//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	int	guardX;
@@ -1245,8 +1251,7 @@ public:
 	void SetGuardState(bool s) { guardState = s; };
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
 	void Unguard() { guardState = 1; };
-
-//	int operator=(const int b) { state = b; return state; };
+	void Guard();
 
 protected:
 	int	guardX;
@@ -1561,7 +1566,7 @@ public:
 	bool SetFlashing(char *n, bool flash);
 
 	int GetState(char *n);
-	bool SetState(char *n, int value);
+	bool SetState(char *n, int value, bool guard = false);
 	bool GetFailedState(char *n);
 
 protected:
@@ -1757,6 +1762,11 @@ public:
 	/// \return Current voltage.
 	///
 	double QueryValue();
+};
+
+class DSKYPushSwitch: public PushSwitch {
+protected:
+	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 };
 
 ///

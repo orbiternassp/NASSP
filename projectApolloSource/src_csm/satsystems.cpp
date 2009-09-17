@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/13 20:31:32  dseagrav
+  *	Joystick Z-axis detection fixes
+  *	
   *	Revision 1.6  2009/09/03 19:22:48  vrouleau
   *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
   *	
@@ -568,6 +571,7 @@ void Saturn::SystemsInit() {
 
 	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
+	agc.SetDSKY2(&dsky2);
 	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNPowerIMUSwitch);
 	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
 	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
@@ -687,7 +691,6 @@ void Saturn::SystemsInit() {
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
 	RHCDirect2Power.WireToBuses(&ContrDirectMnA2CircuitBraker, &ContrDirectMnB2CircuitBraker);
 	
-
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
 	rhc_rot_id = -1; // Disabled
@@ -706,8 +709,6 @@ void Saturn::SystemsInit() {
 	rhc_auto = false;
 	thc_auto = false;
 	rhc_thctoggle_pressed = false;
-
-
 }
 
 void Saturn::SetPipeMaxFlow(char *pipe, double flow) {

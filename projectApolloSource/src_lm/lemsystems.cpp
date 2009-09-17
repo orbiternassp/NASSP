@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.12  2009/09/13 20:31:33  dseagrav
   *	Joystick Z-axis detection fixes
   *	
@@ -830,7 +833,6 @@ void LEM::SystemsInit()
 	eds.Init(this);
 
 	// DS20060413 Initialize joystick
-	HRESULT         hr;
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
 	rhc_rot_id = -1; // Disabled

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/02 19:21:07  spacex15
+  *	agc socket version reenabled
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -1191,6 +1194,18 @@ void DSKY::ProgCallback(PanelSwitchItem* s)
 	else
 	{
 		ProgReleased();
+		ResetKeyDown();
+	}
+}
+void DSKY::KeyRelCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_KeyRel = true;
+		KeyRel();
+	}
+	else
+	{
 		ResetKeyDown();
 	}
 }

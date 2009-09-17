@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -90,6 +93,7 @@ struct SaturnEvents;
 /// -------------------------------------------------------------
 enum RelativeEvent
 {
+	HIDDEN_DELAY = -4, /// < like LAST_ITEM_RELATIVE, but not visible in the MFD.  WARNING! Not valid for groups.
 	LAST_ITEM_RELATIVE = -3, /// < check item time is relative to the completion of the last item.  WARNING! Not valid for groups.
 	CHECKLIST_RELATIVE = -2, /// < check item time is relative to the beginning of the checklist.  WARNING! Not valid for groups.
 	MISSION_TIME = -1, /// < check item happens at specific MJD WARNING! could cause unexpected results if items after this become scheduled to operate before it based on a checklist event starting late.  Should primarily only be used for primary checklists!
@@ -206,34 +210,40 @@ struct ChecklistGroup
 /// -------------------------------------------------------------
 	bool called;
 };
+
+struct DSKYChecklistItem
+{
+	DSKYChecklistItem()
+	{
+		key[0] = 0;
+	};
+
+	void init(char *k);
+
+	char key[10];
+/// -------------------------------------------------------------
+/// reference to the panel switch that must be thrown, used to
+/// spawn reference box
+/// -------------------------------------------------------------
+	char item[100];
+	char item2[100];
+};
+
+
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
 /// can be triggered as complete either by the user or the auto
 /// complete code.  In quickstart mode, the element will be
 /// switched automatically if enabled.
 /// -------------------------------------------------------------
+class MFDConnector;
+
 struct ChecklistItem
 {
 /// -------------------------------------------------------------
 /// Default constructor, does a proper "empty" construction
 /// -------------------------------------------------------------
-	ChecklistItem()
-	{
-		group = -1;
-		index = -1;
-		time = 0;
-		relativeEvent = NO_TIME_DEF;
-		failEvent = -1;
-		text[0] = 0;
-		panel[0] = 0;
-		heading1[0] = 0;
-		heading2[0] = 0;
-		info[0] = 0;
-		automatic = false;
-		item[0] = 0;
-		position = 0;
-		status = PENDING;
-	}
+	ChecklistItem();
 /// -------------------------------------------------------------
 /// Load ChecklistItem from excel file
 /// -------------------------------------------------------------
@@ -243,6 +253,11 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 	void load(FILEHANDLE);
 	void save(FILEHANDLE);
+
+	bool iterate(MFDConnector *conn, bool autoexec);
+	void setFlashing(MFDConnector *conn, bool flashing);
+	double getAutoexecuteSlowDelay(MFDConnector *conn);
+
 /// -------------------------------------------------------------
 /// Check whether this item should be executed in this timestep
 /// -------------------------------------------------------------
@@ -309,11 +324,17 @@ struct ChecklistItem
 /// of checklist complete.
 /// -------------------------------------------------------------
 	int position;
+	bool guard;
 /// -------------------------------------------------------------
 /// This is the status of the class.  It is saved and loaded when
 /// this item is active or pending.
 /// -------------------------------------------------------------
 	Status status;
+	
+	vector<DSKYChecklistItem> dskyItemsSet;
+	int dskyIndex;
+	int dskyNo;
+
 /// -------------------------------------------------------------
 /// This is an internal operator for the class.  The output should
 /// not be expected to be representative of true equality between
@@ -422,7 +443,7 @@ public:
 /// In the event that an essential checklist is running, a selected
 /// checklist will not actually start running but get placed at the
 /// top of the stack to be run when the essential checklist is done.
-	bool getChecklistItem(ChecklistItem*);
+	ChecklistItem *getChecklistItem(int group, int index);
 /// -------------------------------------------------------------
 /// Basic accessor for the list of available checklist items.
 /// Access only when needed.  Not responsible for maintaining the
@@ -536,6 +557,7 @@ private:
 	bool autoexecute;
 	///This determines the checklist execution speed.
 	bool autoexecuteSlow;
+	double autoexecuteSlowDelay;
 	///Used to spawn new "program"
 	bool spawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel
@@ -549,7 +571,10 @@ private:
 	/// flashing the current switch
 	bool flashing;
 	/// Mission time when the last item was completed 
-	double lastItemTime; 
+	double lastItemTime;
+	
+	bool iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec = false);
+
 protected:	
 	/// Access to the vessels sound handler
 	SoundLib soundLib;

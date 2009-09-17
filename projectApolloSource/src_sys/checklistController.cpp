@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -70,25 +73,23 @@ ChecklistController::~ChecklistController()
 {
 }
 // Todo: Verify
-bool ChecklistController::getChecklistItem(ChecklistItem* input)
+ChecklistItem *ChecklistController::getChecklistItem(int group, int index)
 {
-	if (input->group != -1)
+	if (group != -1)
 	{
-		spawnCheck(input->group,false);
+		spawnCheck(group, false);
 	}
 
 	if (active.program.group == -1)
-		return false;
+		return NULL;
 
-	if (input->index != -1)
+	if (index != -1)
 	{
-		if (input->index + active.sequence->index >= active.set.size())
-			return false;
-		*input = active.set[active.sequence->index + input->index];
-		return true;
+		if (index + active.sequence->index >= active.set.size())
+			return NULL;
+		return &(active.set[active.sequence->index + index]);
 	}
-	*input = *active.sequence;
-	return true;
+	return &(*active.sequence);
 }
 // Todo: Verify
 vector<ChecklistGroup> *ChecklistController::getChecklistList()
@@ -110,7 +111,7 @@ bool ChecklistController::failChecklistItem(ChecklistItem* input)
 	if (input->index >= active.set.size())
 		return false;
 	active.set[input->index].status = FAILED;
-	conn.SetFlashing(active.set[input->index].item,false);
+	active.set[input->index].setFlashing(&conn, false);
 	iterate();
 
 	if (failure != -1)
@@ -126,7 +127,7 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 		return false;
 
 	active.set[input->index].status = COMPLETE;
-	conn.SetFlashing(active.set[input->index].item,false);
+	active.set[input->index].setFlashing(&conn, false);
 	lastItemTime = lastMissionTime;
 	iterate();
 	return true;
@@ -194,6 +195,7 @@ void ChecklistController::save(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "COMPLETE", (complete ? 1 : 0));
 	oapiWriteScenario_int(scn, "FLASHING", (flashing ? 1 : 0));
 	oapiWriteScenario_float(scn, "LASTITEMTIME", lastItemTime);
+	oapiWriteScenario_float(scn, "AUTOEXECUTESLOWDELAY", autoexecuteSlowDelay);
 
 	if (active.program.group != -1)
 		active.save(scn);
@@ -242,6 +244,13 @@ void ChecklistController::load(FILEHANDLE scn)
 			lastItemTime = flt;
 			found = true;
 		}
+		if (!found && !strnicmp(line, "AUTOEXECUTESLOWDELAY", 20))
+		{
+			float flt = 0;
+            sscanf (line + 20, "%f", &flt);
+			autoexecuteSlowDelay = flt;
+			found = true;
+		}
 		if (!found && !strnicmp(line,ChecklistContainerStartString,strlen(ChecklistContainerStartString)))
 		{
 			ChecklistContainer temp;
@@ -259,7 +268,8 @@ void ChecklistController::load(FILEHANDLE scn)
 			if (!strnicmp(line,"INDEX",5))
 			{
 				sscanf(line+5,"%d",&i);
-				groups[i].load(scn);
+				if (i < groups.size())
+					groups[i].load(scn);
 			}
 			found = true;
 		}
@@ -305,6 +315,7 @@ bool ChecklistController::init(bool input)
 	lastItemTime = MINUS_INFINITY;
 	autoexecute = false;
 	autoexecuteSlow = false;
+    autoexecuteSlowDelay = 4;
 	playSound = false;
 
 	return true;
@@ -361,7 +372,7 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 		else
 		{
 			// Stop flashing just in case 
-			conn.SetFlashing(active.sequence->item, false);
+			active.sequence->setFlashing(&conn, false);
 			action.push_front(active);
 			active = temp;
 			return true;
@@ -395,7 +406,7 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 			else
 			{
 				// Stop flashing just in case 
-				conn.SetFlashing(active.sequence->item, false);
+				active.sequence->setFlashing(&conn, false);
 				action.push_front(active);
 				active = temp;
 				return true;
@@ -421,7 +432,7 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 		if (!active.program.essential)
 		{
 			// Stop flashing just in case 
-			conn.SetFlashing(active.sequence->item, false);
+			active.sequence->setFlashing(&conn, false);
 			action.push_front(active);
 			active = temp;
 			return true;
@@ -444,40 +455,65 @@ void ChecklistController::iterate()
 			else
 				active = ChecklistContainer();
 		}
-		else
+		else {
 			active.sequence ++;
+			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+		}
 	}
 }
+
+bool ChecklistController::iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec) {
+
+	if (active.program.group != -1 && active.sequence->checkExec(missiontime, active.startTime, lastItemTime, eventController)) {
+		if (active.sequence->iterate(&conn, autoexec)) {
+			completeChecklistItem(&(*active.sequence));
+			return true;
+		}
+	}
+	return false;
+}
+
 // Todo: Verify
 void ChecklistController::timestep(double missiontime, SaturnEvents eventController)
 {
 	// Play Sound
-	if (playSound)
-	{
+	if (playSound) {
 		if (checkSound.play())
 			playSound = false;
 	}
 
 	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
-		conn.SetFlashing(active.sequence->item, flashing);
+	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController)) {
+		active.sequence->setFlashing(&conn, flashing);
 	}
 
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
-	if (complete)
-	{
-		if (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position &&
-			active.sequence->checkExec(missiontime, active.startTime, lastItemTime, eventController)) {
-			completeChecklistItem(&(*active.sequence));
-		}
+	if (complete && !(autoexecute && autoexecuteSlow)) {
+		iterateChecklistItem(missiontime, eventController);
 	}
 
 	//Exit if less than one second
 	if (missiontime < (lastMissionTime + 1.0))
 		return;
-	if (autoexecute && autoexecuteSlow && missiontime < (lastMissionTime + 2.0))
+	if (complete && autoexecute && autoexecuteSlow && missiontime < (lastMissionTime + autoexecuteSlowDelay))
 		return;
 	lastMissionTime = missiontime;
+
+	//Do checklist items
+	if (complete) {
+		if (autoexecute) {
+			if (autoexecuteSlow) {
+				iterateChecklistItem(missiontime, eventController, true);
+			} else {
+				while (iterateChecklistItem(missiontime, eventController, true));
+			}
+		}
+
+		//Check for complete checklist items
+		if (!(autoexecute && autoexecuteSlow)) {
+			while (iterateChecklistItem(missiontime, eventController));
+		}
+	}
 
 	//Check for groups needing spawn
 	for (int i = 0; i < groups.size(); i++)
@@ -488,37 +524,6 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			{
 				spawnCheck(i,false,true);
 			}
-		}
-	}
-
-	//Do checklist items
-	if (autoexecute)
-	{
-		if (autoexecuteSlow) {
-			if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
-			{
-				if (active.sequence->position < 0)
-					completeChecklistItem(&(*active.sequence));
-				else if (conn.SetState(active.sequence->item,active.sequence->position))
-					completeChecklistItem(&(*active.sequence));
-			}
-		} else {
-			while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
-			{
-				if (active.sequence->position < 0)
-					completeChecklistItem(&(*active.sequence));
-				else if (conn.SetState(active.sequence->item,active.sequence->position))
-					completeChecklistItem(&(*active.sequence));
-			}
-		}
-	}
-
-	//Check for complete checklist items
-	if (complete)
-	{
-		while (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position &&
-			   active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
-			completeChecklistItem(&(*active.sequence));
 		}
 	}
 }
@@ -541,35 +546,5 @@ bool ChecklistController::retrieveChecklistContainer(ChecklistContainer *input)
 	*input = ChecklistContainer(groups[input->program.group],*this,lastMissionTime,true);
 	return true;
 }
-/*
-bool complete;
-bool initCalled;
-deque<ChecklistContainer> action;
-ChecklistContainer active;
-vector<ChecklistGroup> groups;
-double lastMissionTime;
-bool autoexecute;
-MFDConnector conn;
-char FileName[100];
-BasicExcel file;
-vector<ChecklistGroup> groups_manual;
-SoundLib soundLib;
-Sound checkSound;
-bool playSound;
 
-complete
-initCalled
-action
-active
-groups
-lastMissionTime
-autoexecute
-conn
-FileName
-file
-groups_manual
-soundLib
-checkSound
-playSound
-*/
 #pragma warning ( pop )

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -1519,7 +1522,7 @@ bool PanelSwitches::GetFailedState(char *n)
 	return false;
 }
 
-bool PanelSwitches::SetState(char *n, int value)
+bool PanelSwitches::SetState(char *n, int value, bool guard)
 
 {
 	PanelSwitchItem *p;
@@ -1531,6 +1534,8 @@ bool PanelSwitches::SetState(char *n, int value)
 		{
 			p->Unguard();
 			p->SetState(value);
+			if (guard)
+				p->Guard();
 			return true;
 		}
 
@@ -1625,6 +1630,26 @@ void GuardedToggleSwitch::DrawFlash(SURFHANDLE DrawSurface)
 		ToggleSwitch::DrawFlash(DrawSurface);
 }
 
+void GuardedToggleSwitch::Guard() {
+
+	if (guardState) {
+		guardState = 0;
+
+		// reset by guard
+		if (guardResetsState) { 
+			if (Active && state) {
+				SwitchTo(TOGGLESWITCH_DOWN);
+			}
+		}
+		// reset by spring
+		if (IsSpringLoaded()) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP,true);
+		}
+
+	} 
+}
+
 bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (!visible) return false;
@@ -1633,21 +1658,7 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (mx >= guardX && mx <= guardX + guardWidth && 
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
-				guardState = 0;
-
-				int OldState = state;
-				// reset by guard
-				if (guardResetsState) { 
-					if (Active && state) {
-						SwitchTo(TOGGLESWITCH_DOWN);
-					}
-				}
-				// reset by spring
-				if (IsSpringLoaded()) {
-					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN,true);
-					if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP,true);
-				}
-
+				Guard();
 			} 
 			else {
 				guardState = 1;
@@ -1777,19 +1788,25 @@ void GuardedPushSwitch::DrawFlash(SURFHANDLE DrawSurface)
 		ToggleSwitch::DrawFlash(DrawSurface);
 }
 
+void GuardedPushSwitch::Guard() {
+			
+	if (guardState) {
+		guardState = 0;
+		if (Active && state) 
+			SwitchTo(0,true);
+	}
+}
+
 bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-
 	if (!visible) return false;
 
 	if (event & PANEL_MOUSE_RBDOWN) {
 		if (mx >= guardX && mx <= guardX + guardWidth && 
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
-				guardState = 0;
-				if (Active && state) 
-					SwitchTo(0,true);
+				Guard();
 			}
 			else {
 				guardState = 1;
@@ -1899,6 +1916,31 @@ void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void GuardedThreePosSwitch::Guard() {
+
+	if (guardState) {
+		guardState = 0;
+		// reset by guard
+		if (guardResetsState) { 
+			if (Active && state) {
+				SwitchTo(THREEPOSSWITCH_DOWN,true);
+			}
+		}
+		// reset by spring
+		if (IsSpringLoaded()) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
+				SwitchTo(THREEPOSSWITCH_CENTER,true);
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+				SwitchTo(THREEPOSSWITCH_CENTER,true);
+		}
+	}
+}
+
 bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (!visible) return false;
@@ -1907,35 +1949,7 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (mx >= guardX && mx <= guardX + guardWidth && 
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
-				guardState = 0;
-
-				int OldState = state;
-				// reset by guard
-				if (guardResetsState) { 
-					if (Active && state) {
-						SwitchTo(THREEPOSSWITCH_DOWN,true);
-					}
-				}
-				// reset by spring
-				if (IsSpringLoaded()) {
-					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
-					if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
-					if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
-
-					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
-						SwitchTo(THREEPOSSWITCH_CENTER,true);
-
-					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
-						SwitchTo(THREEPOSSWITCH_CENTER,true);
-				}
-				/*
-				if (state != OldState) {
-					SwitchToggled = true;
-					if (switchRow) {
-						if (switchRow->panelSwitches->listener) 
-							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-					}
-				}*/
+				Guard();
 			} else {
 				guardState = 1;
 			}
@@ -3844,22 +3858,6 @@ bool CWSSourceSwitch::SwitchTo(int newState, bool dontspring)
 // Switch that controls AGC input channels.
 //
 
-/*bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
-		if (agc) {
-			if (IsUp()) {
-				agc->SetInputChannelBit(Channel, Bit, UpValue);
-			}
-			else if (IsDown()) {
-				agc->SetInputChannelBit(Channel, Bit, !UpValue);
-			}
-		}
-		return true;
-	}
-	return false;
-}*/
 bool AGCIOSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (ToggleSwitch::SwitchTo(newState,dontspring)) {
@@ -3880,29 +3878,6 @@ bool AGCIOSwitch::SwitchTo(int newState, bool dontspring)
 // CMC Hold/Free/Auto mode.
 //
 
-/*bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
-		if (agc) {
-			bool Hold = false;
-			bool Free = false;
-
-			if (IsCenter()) {
-				Hold = true;
-			}
-			else if (IsDown()) {
-				Free = true;
-			}
-
-			agc->SetInputChannelBit(031, 13, Hold);
-			agc->SetInputChannelBit(031, 14, Free);
-		}
-		return true;
-	}
-
-	return false;
-}*/
 bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
@@ -4177,7 +4152,7 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		return true;
 
 	case MFD_PANEL_SET_ITEM_STATE:
-		m.val1.bValue = panel.SetState(static_cast<char *>(m.val1.pValue), m.val2.iValue);
+		m.val1.bValue = panel.SetState(static_cast<char *>(m.val1.pValue), m.val2.iValue, m.val3.bValue);
 		return true;
 
 	case MFD_PANEL_GET_FAILED_STATE:
@@ -4188,7 +4163,7 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		m.val1.bValue = checklist.autoComplete(m.val1.bValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_ITEM:
-		m.val2.bValue = checklist.getChecklistItem(static_cast<ChecklistItem *>(m.val1.pValue));
+		m.val1.pValue = checklist.getChecklistItem(m.val1.iValue, m.val2.iValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_LIST:
 		m.val1.pValue = checklist.getChecklistList();
@@ -4233,3 +4208,12 @@ int MasterAlarmSwitch::GetState() {
 	return TOGGLESWITCH_UP;
 }
 
+
+void DSKYPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (IsUp())	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+	} else {
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 120, width, height, SURF_PREDEF_CK);
+	}
+}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.12  2008/05/24 17:30:40  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -149,7 +152,7 @@ public:
 	/// \param value Value to set state to.
 	/// \return True if call succeeded, false if failed.
 	///
-	bool SetState(char *n, int value);
+	bool SetState(char *n, int value, bool guard = false);
 
 	///
 	/// Get the failure state of a panel item.
@@ -174,7 +177,7 @@ public:
 	/// \return ChecklistItem returned by controller or false if connector isn't connected.
 	///
 
-	bool GetChecklistItem (ChecklistItem *in);
+	ChecklistItem *GetChecklistItem(int group, int index);
 
 	///
 	/// Get a list of all allowed checklist items.
