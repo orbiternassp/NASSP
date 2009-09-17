@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -290,65 +293,7 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 }
 bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 {
-	/*
-	// Starts the group 0 (which is right now a testing group)
-	if (bt == 0)
-	{
-		item.group = item.index = -1;
-		item.group = 0;
-		if (conn.GetChecklistItem(&item))
-			return true;
-		return true;
-	}
-	// Fails the current checklist item if possible.
-	if (bt == 1)
-	{
-		item.group = item.index = -1;
-		if (conn.GetChecklistItem(&item))
-			conn.failChecklistItem(&item);
-		return true;
-	}
-	// Completes the current checklist item if possible.
-	if (bt == 2)
-	{
-		item.group = item.index = -1;
-		if (conn.GetChecklistItem(&item))
-			conn.completeChecklistItem(&item);
-		return true;
-	}
-	// Gets the current list of available checklists.
-	if (bt == 3)
-	{
-		vector<ChecklistGroup> *temp = conn.GetChecklistList();
-		if (temp)
-			groups = *temp;
-		return true;
-	}
-	// Gets the current checklist item (not sure why it would be useful here).
-	if (bt == 4)
-	{
-		item.group = item.index = -1;
-		if (conn.GetChecklistItem(&item))
-			return true;
-		return true;
-	}
-	if (bt == 6)
-	{
-		item.group = 1;
-		item.index = -1;
-		if (conn.GetChecklistItem(&item))
-			return true;
-		return true;
-	}
-	if (bt == 11)
-	{
-		item.group = -1;
-		item.index = 0;
-		if (conn.GetChecklistItem(&item))
-			conn.SetFlashing(item.item,true);
-		return true;
-	}
-	*/
+	ChecklistItem *item;
 
 	if (screen == PROG_CHKLST)
 	{
@@ -400,10 +345,9 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_S)
 		{
-			item.group = -1; 
-			item.index = CurrentStep;
-			if (conn.GetChecklistItem(&item))
-				conn.completeChecklistItem(&item);
+			item = conn.GetChecklistItem(-1, CurrentStep);
+			if (item)
+				conn.completeChecklistItem(item);
 			return true;
 
 			InvalidateDisplay();
@@ -412,10 +356,9 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_F)
 		{
-			item.group = -1; 
-			item.index = CurrentStep;
-			if (conn.GetChecklistItem(&item))
-				conn.failChecklistItem(&item);
+			item = conn.GetChecklistItem(-1, CurrentStep);
+			if (item)
+				conn.failChecklistItem(item);
 			return true;
 
 			InvalidateDisplay();
@@ -508,9 +451,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		if (key == OAPI_KEY_S)
 		{			
 			// This spawns the group, if possible
-			item.group = CurrentStep;
-			item.index = 0;			
-			conn.GetChecklistItem(&item);
+			conn.GetChecklistItem(CurrentStep, 0);
 
 			screen = PROG_CHKLST;
 			CurrentStep = 0;
@@ -654,10 +595,9 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_F)
 		{
-			item.group = -1; 
-			item.index = CurrentStep;
-			if (conn.GetChecklistItem(&item))
-				conn.SetFlashing(item.item, true);
+			item = conn.GetChecklistItem(-1, CurrentStep);
+			if (item)
+				conn.SetFlashing(item->item, true);	// TODO DSKY
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -669,6 +609,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 void ProjectApolloChecklistMFD::Update (HDC hDC)
 {
 	static RECT ShadedBox;
+	ChecklistItem *item;
 	HBRUSH hBr;
 
 	HDC hDCTemp = CreateCompatibleDC(hDC);
@@ -726,33 +667,34 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		int StepCnt = 0;
 		bool linebreakpanel = false;
 		for (cnt = 0 ; cnt < 20 ; cnt++) {
-			item.group = -1;
-			item.index = CurrentStep + StepCnt;
-			if (item.index >= 0){
-				if (conn.GetChecklistItem(&item)) {
-
+			if (CurrentStep + StepCnt >= 0){
+				item = conn.GetChecklistItem(-1, CurrentStep + StepCnt);
+				if (item) {
 					//Heading 1
-					if (strlen(item.heading1) > 0) {
+					if (strlen(item->heading1) > 0) {
 						if (StepCnt != 0)
 							cnt++; //go to next line
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_CENTER);
-						TextOut(hDC, (int) (width * .5), (int) (height * (LINE0+cnt*HLINE)), item.heading1, strlen(item.heading1));
+						TextOut(hDC, (int) (width * .5), (int) (height * (LINE0+cnt*HLINE)), item->heading1, strlen(item->heading1));
+						cnt++;
 						cnt++; //go to next line to write information
 					}
+					if (cnt >= 20) break;
 
 					//Heading 2
-					if (strlen(item.heading2) > 0) {
-						if (strlen(item.heading1) > 0 || (StepCnt != 0 && !linebreakpanel))
+					if (strlen(item->heading2) > 0) {
+						if (strlen(item->heading1) == 0 && StepCnt != 0 && !linebreakpanel)
 							cnt++; //go to next line
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
-						TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.heading2, strlen(item.heading2));
+						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), item->heading2, strlen(item->heading2));
 						cnt++; //go to next line to write information
 					}
+					if (cnt >= 20) break;
 
 					//Check to see if step is time dependent and print time if so
-					if (item.relativeEvent != NO_TIME_DEF) {
+					if (item->relativeEvent != NO_TIME_DEF && item->relativeEvent != HIDDEN_DELAY) {
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
 						//display Current Checklist Mission Time
@@ -760,6 +702,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 						cnt++; //go to next line to write information
 					}
+					if (cnt >= 20) break;
 
 					//Display Highlighted box
 					if (StepCnt == 0) {
@@ -772,17 +715,18 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					//Print Step
 					SetTextColor (hDC, RGB(0, 255, 0));
 					SetTextAlign (hDC, TA_LEFT);
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
+					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item->text, strlen(item->text));
 
 					//Print panel
 					linebreakpanel = false;
-					if (strlen(item.panel) > 0) {
-						if (strlen(item.panel) + strlen(item.text) > 33) {
+					if (strlen(item->panel) > 0) {
+						if (strlen(item->panel) + strlen(item->text) > 33) {
 							cnt++; //go to next line
+							if (cnt >= 20) break;
 							linebreakpanel = true;
 						}
 						SetTextAlign (hDC, TA_RIGHT);
-						TextOut(hDC, (int) (width * .95), (int) (height * (LINE0+cnt*HLINE)), item.panel, strlen(item.panel));
+						TextOut(hDC, (int) (width * .95), (int) (height * (LINE0+cnt*HLINE)), item->panel, strlen(item->panel));
 					}
 				}
 			}
@@ -909,32 +853,14 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	}
 	else if (screen == PROG_CHKLSTINFO)
 	{
-		/*
-		//TODO: Read and Display Info on current checklist step
-		SelectDefaultFont(hDC, 0);				
-		Title(hDC, "Checklist INFORMATION");
-
-		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
-
-		//Following is the display loop:
-		//		Compares Lines displayed (NumChkLsts - TopStep) to Lines able to display (NLINES)
-		//		
-		TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + 0)),"PANEL INFORMATION:",18);
-		TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + 1)),"GO TO PANEL 130",15);
-
-		*/
-
-		item.group = -1; 
-		item.index = CurrentStep;
-		if (conn.GetChecklistItem(&item)){
+		item = conn.GetChecklistItem(-1, CurrentStep);
+		if (item) {
 			SelectDefaultFont(hDC, 0);
 			Title(hDC, "Checklist Information");
 			SetTextColor(hDC,RGB(225, 225, 255)); 
 			SetTextAlign (hDC, TA_LEFT);
 			//display Current Checklist Mission Time
-			if (item.relativeEvent != NO_TIME_DEF) {
+			if (item->relativeEvent != NO_TIME_DEF) {
 				line = DisplayChecklistMissionTime(item);
 				TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+(0*HLINE))), line.c_str(), line.size());
 			}
@@ -949,26 +875,12 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			SelectDefaultFont(hDC, 0);
 			SetTextColor (hDC, RGB(0, 255, 0));
 			SetTextAlign (hDC, TA_LEFT);
-			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (1 * HLINE))), item.text, strlen(item.text));
-			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (2 * HLINE))), item.info, strlen(item.info));
+			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (1 * HLINE))), item->text, strlen(item->text));
+			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (2 * HLINE))), item->info, strlen(item->info));
 		}
-      // item is now valid, output item.info
 	}
-
-	/*
-	// An example of how to simply output the text element of the "current" item.  Outputs nothing if no checklists are active yet.
-	if ((item.group = item.index = -1,conn.GetChecklistItem(&item)))
-		TextOut(hDC, 0,0,item.text,strlen(item.text));
-	// Further output the 2nd, 3rd, and 4th items.
-	if ((item.group = -1, item.index = 1,conn.GetChecklistItem(&item)))
-		TextOut(hDC, 0, (int)(height*0.05), item.text,strlen(item.text));
-	if ((item.group = -1, item.index = 2,conn.GetChecklistItem(&item)))
-		TextOut(hDC, 0, (int)(height*0.1), item.text,strlen(item.text));
-	if ((item.group = -1, item.index = 3,conn.GetChecklistItem(&item)))
-		TextOut(hDC, 0, (int)(height*0.15), item.text,strlen(item.text));
-	*/
 }
-std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime (ChecklistItem item)
+std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem *item)
 {
 	char buffer[100];
 
@@ -976,12 +888,12 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime (ChecklistIte
 	temptime.y = 0;
 	temptime.z = 0;
 
-	switch (item.relativeEvent) {
+	switch (item->relativeEvent) {
 		case MISSION_TIME:
-			temptime.x = floor(fabs(item.time)/3600);
-			temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
-			temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
-			if (item.time >= 0.0) {
+			temptime.x = floor(fabs(item->time)/3600);
+			temptime.y = floor((fabs(item->time)-(temptime.x*3600))/60);
+			temptime.z = fabs(item->time)-(temptime.x*3600)-(temptime.y*60);
+			if (item->time >= 0.0) {
 				sprintf(buffer, "T+%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
 			} else {
 				sprintf(buffer, "T-%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
@@ -989,8 +901,8 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime (ChecklistIte
 			break;
 
 		case LAST_ITEM_RELATIVE:
-			temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
-			temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
+			temptime.y = floor((fabs(item->time)-(temptime.x*3600))/60);
+			temptime.z = fabs(item->time)-(temptime.x*3600)-(temptime.y*60);
 			if (temptime.y >= 1.0){
 				sprintf(buffer, "After %d min %02d sec",(int) temptime.y,(int) temptime.z);
 			} else {

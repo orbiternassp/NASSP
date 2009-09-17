@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.2  2009/08/02 19:21:07  spacex15
   *	agc socket version reenabled
   *	
@@ -753,6 +756,8 @@ public:
 	///
 	bool IsPowered();
 
+	void SetDSKY2(DSKY *d2) { dsky2 = d2; };
+
 protected:
 
 	//
@@ -1261,6 +1266,7 @@ protected:
 	/// \brief The primary DSKY attached to this AGC.
 	///
 	DSKY &dsky;
+	DSKY *dsky2;
 
 	///
 	/// \brief The IMU attached to this AGC.

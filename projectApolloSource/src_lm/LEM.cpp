@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.13  2009/09/13 20:31:32  dseagrav
   *	Joystick Z-axis detection fixes
   *	
@@ -1417,60 +1420,59 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
 	if (!strnicmp (line, "MULTITHREAD", 10)) {
-			int value;
-			sscanf (line+10, "%d", &value);
-			isMultiThread=(value>0)?true:false;
+		int value;
+		sscanf (line+10, "%d", &value);
+		isMultiThread=(value>0)?true:false;
 	}
-	else if (!strnicmp (line, "RHC", 3)) {
-			sscanf (line + 3, "%i", &rhc_id);
-			if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
+	else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
+		sscanf (line + 12, "%i", &rhc_id);
+		if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
 	}
-	else if (!strnicmp (line, "RTTID", 5)) {
-			sscanf (line + 5, "%i", &rhc_thctoggle_id);
+	else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
+		sscanf (line + 14, "%i", &rhc_thctoggle_id);
 		if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
 	}
-	else if (!strnicmp (line, "RRT", 3)) {
-			sscanf (line + 3, "%i", &rhc_rot_id);
-			if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
+	else if (!strnicmp (line, "JOYSTICK_RRT", 12)) {
+		sscanf (line + 12, "%i", &rhc_rot_id);
+		if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp (line, "RSL", 3)) {
-			sscanf (line + 3, "%i", &rhc_sld_id);
-			if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
+	else if (!strnicmp (line, "JOYSTICK_RSL", 12)) {
+		sscanf (line + 12, "%i", &rhc_sld_id);
+		if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp (line, "RZX", 3)) {
-		sscanf (line + 3, "%i", &rhc_rzx_id);
+	else if (!strnicmp (line, "JOYSTICK_RZX", 12)) {
+		sscanf (line + 12, "%i", &rhc_rzx_id);
 	}
-	else if (!strnicmp (line, "THC", 3)) {
-		sscanf (line + 3, "%i", &thc_id);
+	else if (!strnicmp (line, "JOYSTICK_THC", 12)) {
+		sscanf (line + 12, "%i", &thc_id);
 		if(thc_id > 1){ thc_id = 1; } // Be paranoid
 	}
-	else if (!strnicmp (line, "TRT", 3)) {
-		sscanf (line + 3, "%i", &thc_rot_id);
+	else if (!strnicmp (line, "JOYSTICK_TRT", 12)) {
+		sscanf (line + 12, "%i", &thc_rot_id);
 		if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp (line, "TSL", 3)) {
-		sscanf (line + 3, "%i", &thc_sld_id);
+	else if (!strnicmp (line, "JOYSTICK_TSL", 12)) {
+		sscanf (line + 12, "%i", &thc_sld_id);
 		if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp (line, "TZX", 3)) {
+	else if (!strnicmp (line, "JOYSTICK_TZX", 12)) {
 		thc_rzx_id = 1;
 	}
-	else if (!strnicmp (line, "RDB", 3)) {
+	else if (!strnicmp (line, "JOYSTICK_RDB", 12)) {
 		rhc_debug = 1;
 	}
-	else if (!strnicmp (line, "TDB", 3)) {
+	else if (!strnicmp (line, "JOYSTICK_TDB", 12)) {
 		thc_debug = 1;
 	}
-	else if (!strnicmp (line, "RAUTO", 5)) {
+	else if (!strnicmp (line, "JOYSTICK_RAUTO", 14)) {
 		rhc_auto = 1;
 	}
-	else if (!strnicmp (line, "TAUTO", 5)) {
+	else if (!strnicmp (line, "JOYSTICK_TAUTO", 14)) {
 		thc_auto = 1;
 	}
-	else if (!strnicmp (line, "RTT", 3)) {
+	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 		rhc_thctoggle = true;
 	}
-
 	return true;
 }
 

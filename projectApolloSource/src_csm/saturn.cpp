@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/09/13 20:31:32  dseagrav
+  *	Joystick Z-axis detection fixes
+  *	
   *	Revision 1.11  2009/09/08 19:46:35  vrouleau
   *	More fixes in reading config files
   *	
@@ -1311,6 +1314,13 @@ void Saturn::initSaturn()
 	ChecklistAutoDisabled = false;
 	OrbiterAttitudeDisabled = false;
 	SequencerSwitchLightingDisabled = false;
+
+	//
+	// VAGC Mode settings
+	//
+
+	VAGCChecklistAutoSlow = false;
+	VAGCChecklistAutoEnabled = false;
 
 	//
 	// LM landing data.
@@ -2852,6 +2862,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf (line + 21, "%i", &i);
 			ChecklistAutoDisabled = (i != 0);
 		} 
+		else if (!strnicmp (line, "VAGCCHECKLISTAUTOSLOW", 21)) {
+			sscanf (line + 21, "%i", &i);
+			VAGCChecklistAutoSlow = (i != 0);
+		} 
+		else if (!strnicmp (line, "VAGCCHECKLISTAUTOENABLED", 24)) {
+			sscanf (line + 24, "%i", &i);
+			VAGCChecklistAutoEnabled = (i != 0);
+		} 
 		else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
 			sscanf (line + 23, "%i", &i);
 			OrbiterAttitudeDisabled = (i != 0);
@@ -2883,53 +2901,53 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
 		}
-		else if (!strnicmp (line, "RHC", 3)) {
-			sscanf (line + 3, "%i", &rhc_id);
+		else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
+			sscanf (line + 12, "%i", &rhc_id);
 			if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
 		}
-		else if (!strnicmp (line, "RTTID", 5)) {
-			sscanf (line + 5, "%i", &rhc_thctoggle_id);
+		else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
+			sscanf (line + 14, "%i", &rhc_thctoggle_id);
 			if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
 		}
-		else if (!strnicmp (line, "RRT", 3)) {
-			sscanf (line + 3, "%i", &rhc_rot_id);
+		else if (!strnicmp (line, "JOYSTICK_RRT", 12)) {
+			sscanf (line + 12, "%i", &rhc_rot_id);
 			if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
 		}
-		else if (!strnicmp (line, "RSL", 3)) {
-			sscanf (line + 3, "%i", &rhc_sld_id);
+		else if (!strnicmp (line, "JOYSTICK_RSL", 12)) {
+			sscanf (line + 12, "%i", &rhc_sld_id);
 			if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
 		}
-		else if (!strnicmp (line, "RZX", 3)) {
-			sscanf (line + 3, "%i", &rhc_rzx_id);
+		else if (!strnicmp (line, "JOYSTICK_RZX", 12)) {
+			sscanf (line + 12, "%i", &rhc_rzx_id);
 		}
-		else if (!strnicmp (line, "THC", 3)) {
-			sscanf (line + 3, "%i", &thc_id);
+		else if (!strnicmp (line, "JOYSTICK_THC", 12)) {
+			sscanf (line + 12, "%i", &thc_id);
 			if(thc_id > 1){ thc_id = 1; } // Be paranoid
 		}
-		else if (!strnicmp (line, "TRT", 3)) {
-			sscanf (line + 3, "%i", &thc_rot_id);
+		else if (!strnicmp (line, "JOYSTICK_TRT", 12)) {
+			sscanf (line + 12, "%i", &thc_rot_id);
 			if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
 		}
-		else if (!strnicmp (line, "TSL", 3)) {
-			sscanf (line + 3, "%i", &thc_sld_id);
+		else if (!strnicmp (line, "JOYSTICK_TSL", 12)) {
+			sscanf (line + 12, "%i", &thc_sld_id);
 			if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
 		}
-		else if (!strnicmp (line, "TZX", 3)) {
+		else if (!strnicmp (line, "JOYSTICK_TZX", 12)) {
 			thc_rzx_id = 1;
 		}
-		else if (!strnicmp (line, "RDB", 3)) {
+		else if (!strnicmp (line, "JOYSTICK_RDB", 12)) {
 			rhc_debug = 1;
 		}
-		else if (!strnicmp (line, "TDB", 3)) {
+		else if (!strnicmp (line, "JOYSTICK_TDB", 12)) {
 			thc_debug = 1;
 		}
-		else if (!strnicmp (line, "RAUTO", 5)) {
+		else if (!strnicmp (line, "JOYSTICK_RAUTO", 14)) {
 			rhc_auto = 1;
 		}
-		else if (!strnicmp (line, "TAUTO", 5)) {
+		else if (!strnicmp (line, "JOYSTICK_TAUTO", 14)) {
 			thc_auto = 1;
 		}
-		else if (!strnicmp (line, "RTT", 3)) {
+		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 			rhc_thctoggle = true;
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
@@ -2968,31 +2986,28 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		} else {
 			found = false;
 		}
-			
-
 	}
-
 	return found;
 }
 
 void Saturn::GetPayloadSettings(PayloadSettings &ls)
 
 {
-		ls.AutoSlow = AutoSlow;
-		ls.Crewed = Crewed;
-		ls.LandingAltitude = LMLandingAltitude;
-		ls.LandingLatitude = LMLandingLatitude;
-		ls.LandingLongitude = LMLandingLongitude;
-		ls.AscentFuelKg = LMAscentFuelMassKg;
-		ls.DescentFuelKg = LMDescentFuelMassKg;
-		strncpy (ls.language, AudioLanguage, 63);
-		strncpy (ls.CSMName, GetName(), 63);
-		ls.MissionNo = ApolloNo;
-		ls.MissionTime = MissionTime;
-		ls.Realism = Realism;
-		ls.Yaagc = agc.IsVirtualAGC();
-		strncpy (ls.checklistFile, LEMCheck, 100);
-		ls.checkAutoExecute = LEMCheckAuto;
+	ls.AutoSlow = AutoSlow;
+	ls.Crewed = Crewed;
+	ls.LandingAltitude = LMLandingAltitude;
+	ls.LandingLatitude = LMLandingLatitude;
+	ls.LandingLongitude = LMLandingLongitude;
+	ls.AscentFuelKg = LMAscentFuelMassKg;
+	ls.DescentFuelKg = LMDescentFuelMassKg;
+	strncpy (ls.language, AudioLanguage, 63);
+	strncpy (ls.CSMName, GetName(), 63);
+	ls.MissionNo = ApolloNo;
+	ls.MissionTime = MissionTime;
+	ls.Realism = Realism;
+	ls.Yaagc = agc.IsVirtualAGC();
+	strncpy (ls.checklistFile, LEMCheck, 100);
+	ls.checkAutoExecute = LEMCheckAuto;
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
@@ -3078,21 +3093,27 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	if (!Crewed) {
 		OrbiterAttitudeDisabled = false;
-		ChecklistAutoDisabled = false;
-		ChecklistAutoSlow = false;
+
+		checkControl.autoExecute(true);
+		checkControl.autoExecuteSlow(false);
 	}
 	
-	// Disable it and check some other settings when not in 
+	// Disable it and do some other settings when not in 
 	// Quickstart mode
 
 	else if (Realism) {
 		OrbiterAttitudeDisabled = true;
-		ChecklistAutoDisabled = true;
-		ChecklistAutoSlow = false;
 		SequencerSwitchLightingDisabled = true;
+
+		checkControl.autoExecute(VAGCChecklistAutoEnabled);
+		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
+	
+	// Quickstart mode
+
+	} else {
+		checkControl.autoExecute(!ChecklistAutoDisabled);
+		checkControl.autoExecuteSlow(ChecklistAutoSlow);
 	}
-	checkControl.autoExecute(!ChecklistAutoDisabled);
-	checkControl.autoExecuteSlow(ChecklistAutoSlow);
 }
 
 //
@@ -4864,8 +4885,11 @@ void Saturn::GenericLoadStateSetup()
 
 	CheckSMSystemsState();
 
-	
-	HRESULT         hr;
+	//
+	// Set up joysticks.
+	//
+
+	HRESULT hr;
 	// Having read the configuration file, set up DirectX...	
 	hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
 	if(!FAILED(hr)){
@@ -4879,10 +4903,10 @@ void Saturn::GenericLoadStateSetup()
 		}else{
 			while(x < js_enabled){                                // For each joystick
 				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-				/* Can't do this because we don't own a window.
-				dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
-					DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
-					*/ 
+				// Can't do this because we don't own a window.
+				// dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
+				// 	 DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		 // and we don't need exclusive joystick access.
+
 				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
 				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
 				// Z-axis detection
@@ -4893,12 +4917,10 @@ void Saturn::GenericLoadStateSetup()
 				x++;                                              // Next!
 			}
 		}
-	}else{
+	} else {
 		// We can't print an error message this early in initialization, so save this reason for later investigation.
 		dx8_failure = hr;
 	}
-
-
 }
 
 bool Saturn::CheckForLaunchShutdown()

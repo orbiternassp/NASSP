@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -49,6 +52,8 @@ using namespace std;
 // Todo: Verify
 RelativeEvent checkEvent(const char* input, bool Group)
 {	
+	if (!Group && !strnicmp(input,"HIDDEN_DELAY",12))
+		return HIDDEN_DELAY;
 	if (!Group && !strnicmp(input,"LAST_ITEM_RELATIVE",18))
 		return LAST_ITEM_RELATIVE;
 	if (!Group && !strnicmp(input,"CHECKLIST_RELATIVE",18))
@@ -84,6 +89,27 @@ RelativeEvent checkEvent(const char* input, bool Group)
 	return NO_TIME_DEF;
 }
 //Checklist Item methods.
+
+ChecklistItem::ChecklistItem() 
+{
+	group = -1;
+	index = -1;
+	time = 0;
+	relativeEvent = NO_TIME_DEF;
+	failEvent = -1;
+	text[0] = 0;
+	panel[0] = 0;
+	heading1[0] = 0;
+	heading2[0] = 0;
+	info[0] = 0;
+	automatic = false;
+	item[0] = 0;
+	position = 0;
+	guard = false;
+	status = PENDING;
+	dskyIndex = 0;
+	dskyNo = 0;
+}
 
 // Todo: Verify
 bool ChecklistItem::operator==(ChecklistItem input)
@@ -125,7 +151,15 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 		strncpy(info, cells[6].GetString(),300);
 	if (cells[7].GetString())
 		strncpy(item, cells[7].GetString(),100);
-	position = cells[8].GetInteger();
+
+	const char *c8 = cells[8].GetString(); 
+	if (c8) {
+		sscanf(c8, "%d", &position);
+		if (!strnicmp(c8 + strlen(c8) - 1, "G", 1))
+			guard = true;
+	} else 
+		position = cells[8].GetInteger();
+	
 	automatic = (cells[9].GetInteger() != 0);
 	failEvent = -1;
 	if (cells[10].GetString())
@@ -136,7 +170,112 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 				failEvent = i;
 		}
 	}
+
+	if (strnicmp(item, "DSKY", 4) == 0) {
+		char seps[] = " \t\n";
+		char *token;
+		DSKYChecklistItem temp;
+
+		token = strtok(item, seps);
+		if (token != NULL ) {
+			if (stricmp(token, "DSKY1") == 0) 
+				dskyNo = 1;
+			else if (stricmp(token, "DSKY2") == 0) 
+				dskyNo = 2;
+			else
+				dskyNo = 3;
+
+			token = strtok(NULL, seps );
+			while( token != NULL ) {
+				temp.init(token);
+				dskyItemsSet.push_back(temp);
+				temp = DSKYChecklistItem();
+				token = strtok(NULL, seps );
+			}
+			strcpy(item, "DSKY");
+		}
+	}
 }
+
+void ChecklistItem::setFlashing(MFDConnector *conn, bool flashing) {
+
+	if (!stricmp(item, "DSKY")) {
+		if (dskyItemsSet.size() > 0) {
+			for (int i = 0; i < dskyItemsSet.size(); i++) {
+				conn->SetFlashing(dskyItemsSet[i].item, false);
+				conn->SetFlashing(dskyItemsSet[i].item2, false);
+			}
+			if (dskyNo & 1)
+				conn->SetFlashing(dskyItemsSet[dskyIndex].item, flashing);
+			if (dskyNo & 2)
+				conn->SetFlashing(dskyItemsSet[dskyIndex].item2, flashing);
+		}
+	} else {
+		conn->SetFlashing(item, flashing);
+	}
+}
+
+bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
+
+	if (!autoexec) {
+		if (!stricmp(item, "DSKY")) {
+			if (dskyItemsSet.size() > 0) {
+				if ((((dskyNo & 1) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item) == position) ||
+					(((dskyNo & 2) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item2) == position)) {
+					dskyIndex++;
+				}
+			}
+			if (dskyIndex >= dskyItemsSet.size()) {
+				dskyIndex = 0;
+				return true;
+			}
+		} else {
+			if (conn->GetState(item) == position) {
+				return true;
+			}
+		}
+	} else {
+		if (!stricmp(item, "DSKY") ) {
+			if (dskyItemsSet.size() > 0) {
+				if (dskyNo & 1) {
+					if (conn->SetState(dskyItemsSet[dskyIndex].item, position)) {
+						dskyIndex++;
+					} 
+				} else {
+					if (conn->SetState(dskyItemsSet[dskyIndex].item2, position)) {
+						dskyIndex++;
+					} 
+				}
+			}
+			if (dskyIndex >= dskyItemsSet.size()) {
+				dskyIndex = 0;
+				return true;
+			}
+		} else {
+			if (position < 0) {
+				return true;
+			} else if (conn->SetState(item, position, guard)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
+
+	if (!stricmp(item, "DSKY")) {
+		return 1;
+	}
+	if (position == -1) {
+		return 2;
+	}
+	if (conn->GetState(item) == position) {
+		return 2;
+	}
+	return 4;
+}
+
 // Todo: Verify
 void ChecklistItem::load(FILEHANDLE scn)
 {
@@ -154,6 +293,11 @@ void ChecklistItem::load(FILEHANDLE scn)
 			status = static_cast<Status> (i);
 			found = true;
 		}
+		if (!found && !strnicmp(line,"DSKYINDEX",9))
+		{
+			sscanf(line+9,"%d",&dskyIndex);
+			found = true;
+		}
 		oapiReadScenario_nextline(scn, line);
 	}
 }
@@ -163,6 +307,7 @@ void ChecklistItem::save(FILEHANDLE scn)
 	oapiWriteScenario_string(scn,ChecklistItemStartString,"");
 	oapiWriteScenario_int(scn,"INDEX",index);
 	oapiWriteScenario_int(scn,"STATUS",status);
+	oapiWriteScenario_int(scn,"DSKYINDEX",dskyIndex);
 
 	oapiWriteScenario_string(scn,ChecklistItemEndString,"");
 }
@@ -171,12 +316,11 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, dou
 {
 	if (!automatic)
 		return false;
-	if (position == -1)
-		return true;
 	double t = 0;
 	switch(relativeEvent)
 	{
 	case LAST_ITEM_RELATIVE:
+	case HIDDEN_DELAY:
 		t = lastMissionTime - lastItemTime;
 		if (time > t)
 			return false;
@@ -284,6 +428,70 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, dou
 	}
 	return true;
 }
+
+void DSKYChecklistItem::init(char *k) {
+
+	strncpy(key, k, 10);
+	if (!stricmp(key, "V")) {
+		strcpy(item, "DskySwitchVerb");
+		strcpy(item2, "Dsky2SwitchVerb");
+	} else if (!stricmp(key, "N")) {
+		strcpy(item, "DskySwitchNoun");
+		strcpy(item2, "Dsky2SwitchNoun");
+	} else if (!stricmp(key, "+")) {
+		strcpy(item, "DskySwitchPlus");
+		strcpy(item2, "Dsky2SwitchPlus");	
+	} else if (!stricmp(key, "-")) {
+		strcpy(item, "DskySwitchMinus");
+		strcpy(item2, "Dsky2SwitchMinus");
+	} else if (!stricmp(key, "0")) {
+		strcpy(item, "DskySwitchZero");
+		strcpy(item2, "Dsky2SwitchZero");
+	} else if (!stricmp(key, "1")) {
+		strcpy(item, "DskySwitchOne");
+		strcpy(item2, "Dsky2SwitchOne");
+	} else if (!stricmp(key, "2")) {
+		strcpy(item, "DskySwitchTwo");
+		strcpy(item2, "Dsky2SwitchTwo");
+	} else if (!stricmp(key, "3")) {
+		strcpy(item, "DskySwitchThree");
+		strcpy(item2, "Dsky2SwitchThree");
+	} else if (!stricmp(key, "4")) {
+		strcpy(item, "DskySwitchFour");
+		strcpy(item2, "Dsky2SwitchFour");
+	} else if (!stricmp(key, "5")) {
+		strcpy(item, "DskySwitchFive");
+		strcpy(item2, "Dsky2SwitchFive");
+	} else if (!stricmp(key, "6")) {
+		strcpy(item, "DskySwitchSix");
+		strcpy(item2, "Dsky2SwitchSix");
+	} else if (!stricmp(key, "7")) {
+		strcpy(item, "DskySwitchSeven");
+		strcpy(item2, "Dsky2SwitchSeven");
+	} else if (!stricmp(key, "8")) {
+		strcpy(item, "DskySwitchEight");
+		strcpy(item2, "Dsky2SwitchEight");
+	} else if (!stricmp(key, "9")) {
+		strcpy(item, "DskySwitchNine");
+		strcpy(item2, "Dsky2SwitchNine");
+	} else if (!stricmp(key, "C")) {
+		strcpy(item, "DskySwitchClear");
+		strcpy(item2, "Dsky2SwitchClear");
+	} else if (!stricmp(key, "P")) {
+		strcpy(item, "DskySwitchProg");
+		strcpy(item2, "Dsky2SwitchProg");
+	} else if (!stricmp(key, "K")) {
+		strcpy(item, "DskySwitchKeyRel");
+		strcpy(item2, "Dsky2SwitchKeyRel");
+	} else if (!stricmp(key, "E")) {
+		strcpy(item, "DskySwitchEnter");
+		strcpy(item2, "Dsky2SwitchEnter");
+	} else if (!stricmp(key, "R")) {
+		strcpy(item, "DskySwitchReset");
+		strcpy(item2, "Dsky2SwitchReset");
+	}
+}
+
 //ChecklistGroup methods.
 
 // Todo: Verify
@@ -509,7 +717,7 @@ void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistI
 			temp.index = set.size();
 			set.push_back(temp);
 			vec_temp = vector<BasicExcelCell>();
-			temp = ChecklistItem();
+			temp = ChecklistItem();		
 		}
 	}
 }

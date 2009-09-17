@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/13 15:20:14  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.5  2009/09/03 19:22:48  vrouleau
   *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
   *	
@@ -129,6 +132,8 @@ static struct {
 	int Saturn_SequencerSwitchLightingDisabled;
 	int Saturn_MaxTimeAcceleration;
 	int Saturn_MultiThread;
+	int Saturn_VAGCChecklistAutoSlow;
+	int Saturn_VAGCChecklistAutoEnabled;
 } gParams;
 
 
@@ -181,22 +186,25 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 31, "%i", &gParams.Saturn_SequencerSwitchLightingDisabled);
 		} else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &gParams.Saturn_GNSplit);
-		} else if (!strnicmp (line, "RHC", 3)) {
-			sscanf (line + 3, "%i", &gParams.Saturn_RHC);
-		} else if (!strnicmp (line, "THC", 3)) {
-			sscanf (line + 3, "%i", &gParams.Saturn_THC);
-		} else if (!strnicmp (line, "RTTID", 5)) {
-			sscanf (line + 5, "%i", &gParams.Saturn_RHCTHCToggleId);
-		} else if (!strnicmp (line, "RTT", 3)) {
-			sscanf (line + 3, "%i", &gParams.Saturn_RHCTHCToggle);
 		} else if (!strnicmp (line, "MAXTIMEACC", 10)) {
 			sscanf (line + 10, "%i", &gParams.Saturn_MaxTimeAcceleration);
 		} else if (!strnicmp (line, "MULTITHREAD", 11)) {
 			sscanf (line + 11, "%i", &gParams.Saturn_MultiThread);
+		} else if (!strnicmp (line, "VAGCCHECKLISTAUTOSLOW", 21)) {
+			sscanf (line + 21, "%i", &gParams.Saturn_VAGCChecklistAutoSlow);
+		} else if (!strnicmp (line, "VAGCCHECKLISTAUTOENABLED", 24)) {
+			sscanf (line + 24, "%i", &gParams.Saturn_VAGCChecklistAutoEnabled);
+		} else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
+			sscanf (line + 12, "%i", &gParams.Saturn_RHC);
+		} else if (!strnicmp (line, "JOYSTICK_THC", 12)) {
+			sscanf (line + 12, "%i", &gParams.Saturn_THC);
+		} else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
+			sscanf (line + 14, "%i", &gParams.Saturn_RHCTHCToggleId);
+		} else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
+			sscanf (line + 12, "%i", &gParams.Saturn_RHCTHCToggle);
 		}
-	}
+	}	
 	oapiCloseFile (hFile, FILE_IN);
-
 }
 
 bool ProjectApolloConfigurator::clbkOpen (HWND hLaunchpad)
@@ -208,8 +216,6 @@ bool ProjectApolloConfigurator::clbkOpen (HWND hLaunchpad)
 
 int ProjectApolloConfigurator::clbkWriteConfig ()
 {
-	char cbuf[1000];
-
 	// called when orbiter needs to write its configuration to disk
 	WriteConfig(oapiOpenFile(cfgfile, FILE_OUT, CONFIG));
 	WriteConfig(oapiOpenFile("ProjectApollo/Saturn1b.launchpad.cfg", FILE_OUT, CONFIG));
@@ -249,28 +255,34 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "SEQUENCERSWITCHLIGHTINGDISABLED %d", gParams.Saturn_SequencerSwitchLightingDisabled);
 	oapiWriteLine(hFile, cbuf);
 
-	sprintf(cbuf, "RHC %d", gParams.Saturn_RHC);
-	oapiWriteLine(hFile, cbuf);
-	oapiWriteLine(hFile, "RAUTO");	// Not configurable currently
-
-	sprintf(cbuf, "RTT %d", gParams.Saturn_RHCTHCToggle);
-	oapiWriteLine(hFile, cbuf);
-	
-	sprintf(cbuf, "RTTID %d", gParams.Saturn_RHCTHCToggleId);
-	oapiWriteLine(hFile, cbuf);
-	
-	sprintf(cbuf, "THC %d", gParams.Saturn_THC);
-	oapiWriteLine(hFile, cbuf);
-	
-	oapiWriteLine(hFile, "TAUTO");	// Not configurable currently
-	oapiWriteLine(hFile, "TJT");	// Not configurable currently
-
-
-    sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
+	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "MULTITHREAD %d", gParams.Saturn_MultiThread);
 	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "VAGCCHECKLISTAUTOSLOW %d", gParams.Saturn_VAGCChecklistAutoSlow);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "VAGCCHECKLISTAUTOENABLED %d", gParams.Saturn_VAGCChecklistAutoEnabled);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "JOYSTICK_RHC %d", gParams.Saturn_RHC);
+	oapiWriteLine(hFile, cbuf);
+
+	oapiWriteLine(hFile, "JOYSTICK_RAUTO");	// Not configurable currently
+
+	sprintf(cbuf, "JOYSTICK_RTT %d", gParams.Saturn_RHCTHCToggle);
+	oapiWriteLine(hFile, cbuf);
+	
+	sprintf(cbuf, "JOYSTICK_RTTID %d", gParams.Saturn_RHCTHCToggleId);
+	oapiWriteLine(hFile, cbuf);
+	
+	sprintf(cbuf, "JOYSTICK_THC %d", gParams.Saturn_THC);
+	oapiWriteLine(hFile, cbuf);
+	
+	oapiWriteLine(hFile, "JOYSTICK_TAUTO");	// Not configurable currently
+	oapiWriteLine(hFile, "JOYSTICK_TJT");	// Not configurable currently
 
 	oapiCloseFile (hFile, FILE_OUT);
 }
@@ -301,7 +313,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		tabitem.pszText = "Quickstart Mode";
 		SendMessage(hTab, TCM_INSERTITEM, 2, (LPARAM) &tabitem);
 
-		tabitem.pszText = "Virtual AGC";
+		tabitem.pszText = "Virtual AGC Mode";
 		SendMessage(hTab, TCM_INSERTITEM, 3, (LPARAM) &tabitem);
 
 		// set tab control display area
@@ -426,6 +438,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					gParams.Saturn_SequencerSwitchLightingDisabled = 0;
 				}
 
+				// VAGC Tab
 				SendDlgItemMessage(gParams.hDlgTabs[3], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
 				if (sscanf(buffer, "%i", &i) == 1) {
 					gParams.Saturn_MaxTimeAcceleration = i;
@@ -436,6 +449,16 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					gParams.Saturn_MultiThread = 1;
 				} else {
 					gParams.Saturn_MultiThread = 0;
+				}
+				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_VAGCCHECKLISTAUTOSLOW, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_VAGCChecklistAutoSlow = 1;
+				} else {
+					gParams.Saturn_VAGCChecklistAutoSlow = 0;
+				}
+				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_VAGCCHECKLISTAUTOENABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_VAGCChecklistAutoEnabled = 1;
+				} else {
+					gParams.Saturn_VAGCChecklistAutoEnabled = 0;
 				}
 
 				EndDialog (hWnd, 0);
@@ -518,6 +541,10 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		SendDlgItemMessage(hWnd, IDC_EDIT_TIMEACC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 
 		SendDlgItemMessage(hWnd, IDC_CHECK_MULTITHREAD, BM_SETCHECK, gParams.Saturn_MultiThread?BST_CHECKED:BST_UNCHECKED, 0);
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_VAGCCHECKLISTAUTOSLOW, BM_SETCHECK, gParams.Saturn_VAGCChecklistAutoSlow?BST_CHECKED:BST_UNCHECKED, 0);
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_VAGCCHECKLISTAUTOENABLED, BM_SETCHECK, gParams.Saturn_VAGCChecklistAutoEnabled?BST_CHECKED:BST_UNCHECKED, 0);
 
 		UpdateControlState(hWnd);
 		return TRUE;

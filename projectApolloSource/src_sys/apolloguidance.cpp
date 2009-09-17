@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.2  2009/08/02 19:21:07  spacex15
   *	agc socket version reenabled
   *	
@@ -474,6 +477,8 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	// Dsky interface.
 	//
 
+	dsky2 = NULL;
+
 	Prog = 0;
 	Verb = 0;
 	Noun = 0;
@@ -629,6 +634,7 @@ void ApolloGuidance::Startup()
 
 	Standby = false;
 	dsky.ClearStby();
+	if (dsky2) dsky2->ClearStby();
 
 	//
 	// Light NO ATT if the IMU isn't running.
@@ -682,6 +688,7 @@ void ApolloGuidance::GoStandby()
 	BlankAll();
 	ClearVerbNounFlashing();
 	dsky.LightStby();
+	if (dsky2) dsky2->LightStby();
 	Standby = true;
 }
 
@@ -911,6 +918,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 		Reset = false;
 		BlankAll();
 		dsky.LightRestart();
+		if (dsky2) dsky2->LightRestart();
 		RunProgram(0);
 		break;
 
@@ -3956,11 +3964,13 @@ void ApolloGuidance::ResetProg(double simt)
 		LightUplink();
 		LightNoAtt();
 		dsky.LightStby();
+		if (dsky2) dsky2->LightStby();
 		LightKbRel();
 		LightOprErr();
 		LightTemp();
 		LightGimbalLock();
 		dsky.LightRestart();
+		if (dsky2) dsky2->LightRestart();
 		LightTracker();
 		LightProg();
 
@@ -3991,6 +4001,7 @@ void ApolloGuidance::ResetProg(double simt)
 	case 8:
 		NextEventTime = simt;
 		dsky.ClearStby();
+		if (dsky2) dsky2->ClearStby();
 		ResetCountdown();
 		ProgState++;
 		break;
@@ -4033,6 +4044,7 @@ void ApolloGuidance::ResetProg(double simt)
 	case 20:
 		NextEventTime = simt;
 		dsky.ClearRestart();
+		if (dsky2) dsky2->ClearRestart();
 		ResetCountdown();
 
 		SetVerbNounFlashing();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -56,17 +59,10 @@ public:
 	void StoreStatus (void) const;
 	void RecallStatus (void);
 
-	MFDConnector conn;
-
-	
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
-	//int SelectedGroup;
-
-	ChecklistItem item;
-
+	MFDConnector conn;
 	vector<ChecklistGroup> groups;
-
 	DWORD width;
 	DWORD height;
 
@@ -86,5 +82,5 @@ protected:
 	int HiLghtdLine;
 	HBITMAP hBmpLogo;
 
-	std::string DisplayChecklistMissionTime (ChecklistItem item);
+	std::string DisplayChecklistMissionTime (ChecklistItem *item);
 };

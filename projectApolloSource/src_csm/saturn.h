@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.6  2009/08/21 17:52:18  vrouleau
   *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
   *	
@@ -768,6 +771,7 @@ public:
 		SRF_BORDER_17x36,                         
 		SRF_BORDER_33x43,                        
 		SRF_BORDER_36x17,                         
+		SRF_BORDER_38x37,                         
 		SRF_BORDER_150x80,                      
 		SRF_BORDER_200x80,                   
 		SRF_BORDER_72x109,        
@@ -786,6 +790,7 @@ public:
 		SRF_CSM_PANEL_382_COVER,
 		SRF_CSM_WASTE_DISPOSAL_ROTARY,
 		SRF_THREEPOSSWITCH90_LEFT,
+		SRF_EMS_SCROLL_BUG,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -3492,6 +3497,54 @@ protected:
 	SwitchRow HatchPanel600RightRow;
 	ThreePosSwitch HatchRepressO2ValveSwitch;
 
+	///////////////////////
+	// DSKYs             //
+	///////////////////////
+
+	SwitchRow DskySwitchRow;
+	DSKYPushSwitch DskySwitchVerb;
+	DSKYPushSwitch DskySwitchNoun;
+	DSKYPushSwitch DskySwitchPlus;
+	DSKYPushSwitch DskySwitchMinus;
+	DSKYPushSwitch DskySwitchZero;
+	DSKYPushSwitch DskySwitchOne;
+	DSKYPushSwitch DskySwitchTwo;
+	DSKYPushSwitch DskySwitchThree;
+	DSKYPushSwitch DskySwitchFour;
+	DSKYPushSwitch DskySwitchFive;
+	DSKYPushSwitch DskySwitchSix;
+	DSKYPushSwitch DskySwitchSeven;
+	DSKYPushSwitch DskySwitchEight;
+	DSKYPushSwitch DskySwitchNine;
+	DSKYPushSwitch DskySwitchClear;
+	DSKYPushSwitch DskySwitchProg;
+	DSKYPushSwitch DskySwitchKeyRel;
+	DSKYPushSwitch DskySwitchEnter;
+	DSKYPushSwitch DskySwitchReset;
+
+	SwitchRow Dsky2SwitchRow;
+	DSKYPushSwitch Dsky2SwitchVerb;
+	DSKYPushSwitch Dsky2SwitchNoun;
+	DSKYPushSwitch Dsky2SwitchPlus;
+	DSKYPushSwitch Dsky2SwitchMinus;
+	DSKYPushSwitch Dsky2SwitchZero;
+	DSKYPushSwitch Dsky2SwitchOne;
+	DSKYPushSwitch Dsky2SwitchTwo;
+	DSKYPushSwitch Dsky2SwitchThree;
+	DSKYPushSwitch Dsky2SwitchFour;
+	DSKYPushSwitch Dsky2SwitchFive;
+	DSKYPushSwitch Dsky2SwitchSix;
+	DSKYPushSwitch Dsky2SwitchSeven;
+	DSKYPushSwitch Dsky2SwitchEight;
+	DSKYPushSwitch Dsky2SwitchNine;
+	DSKYPushSwitch Dsky2SwitchClear;
+	DSKYPushSwitch Dsky2SwitchProg;
+	DSKYPushSwitch Dsky2SwitchKeyRel;
+	DSKYPushSwitch Dsky2SwitchEnter;
+	DSKYPushSwitch Dsky2SwitchReset;
+
+
+
 
 
 	///
@@ -3942,6 +3995,13 @@ protected:
 	bool ChecklistAutoDisabled;
 	bool OrbiterAttitudeDisabled;
 	bool SequencerSwitchLightingDisabled;
+
+	//
+	// VAGC Mode settings
+	//
+
+	bool VAGCChecklistAutoSlow;
+	bool VAGCChecklistAutoEnabled;
 
 	//
 	// Misc. settings

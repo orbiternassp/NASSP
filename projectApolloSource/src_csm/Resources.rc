@@ -192,6 +192,7 @@ IDB_BORDER_45x36                            BITMAP  "..\\Bitmaps\\border45x36.bm
 IDB_BORDER_17x36                            BITMAP  "..\\Bitmaps\\border17x36.bmp"
 IDB_BORDER_33x43                            BITMAP  "..\\Bitmaps\\border33x43.bmp"
 IDB_BORDER_36x17                            BITMAP  "..\\Bitmaps\\border36x17.bmp"
+IDB_BORDER_38x37                            BITMAP  "..\\Bitmaps\\border38x37.bmp"
 IDB_BORDER_150x80                           BITMAP  "..\\Bitmaps\\border150x80.bmp"
 IDB_BORDER_200x80                           BITMAP  "..\\Bitmaps\\border200x80.bmp"
 IDB_BORDER_72x109                           BITMAP  "..\\Bitmaps\\border72x109.bmp"
@@ -214,7 +215,7 @@ IDB_CSM_PANEL_600_SWITCH                    BITMAP  "..\\Bitmaps\\csm_panel_600_
 IDB_CSM_PANEL_382_COVER                     BITMAP  "..\\Bitmaps\\csm_panel_382_cover.bmp"
 IDB_CSM_WASTE_DISPOSAL_ROTARY               BITMAP  "..\\Bitmaps\\csm_waste_disposal_rotary.bmp"
 IDB_THREEPOSSWITCH90_LEFT                   BITMAP  "..\\Bitmaps\\threeposswitch90_left.bmp"
-
+IDB_EMS_SCROLL_BUG                          BITMAP  "..\\Bitmaps\\EMSscroll_bug.bmp"
 
 
 #endif    // French (France) resources
