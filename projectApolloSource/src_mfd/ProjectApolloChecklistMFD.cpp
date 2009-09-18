@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -686,6 +689,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					if (strlen(item->heading2) > 0) {
 						if (strlen(item->heading1) == 0 && StepCnt != 0 && !linebreakpanel)
 							cnt++; //go to next line
+						if (cnt >= 20) break;
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
 						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), item->heading2, strlen(item->heading2));
