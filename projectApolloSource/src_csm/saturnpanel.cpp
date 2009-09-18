@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.6  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -3692,7 +3695,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
 	g_Param.pen[0] = CreatePen (PS_SOLID, 3, RGB(224, 224, 224));
 	g_Param.pen[1] = CreatePen (PS_SOLID, 4, RGB(  0,   0,   0));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 2, RGB(  0,   0,   0));
+	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(  0,   0,   0));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
 }
@@ -4941,7 +4944,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_EMS_SCROLL_LEO: {
 		hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
 		SetBkMode (hDC, TRANSPARENT);			
-		HGDIOBJ oldObj = SelectObject(hDC,g_Param.pen[2]);
+		HGDIOBJ oldObj = SelectObject(hDC, g_Param.pen[2]);
 
 		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
 	
@@ -4949,7 +4952,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
 
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
-		oapiBlt(surf, srf[SRF_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 1, 0, 0, 5, 5, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 2, 0, 0, 5, 5, SURF_PREDEF_CK);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
 		return true; }
 

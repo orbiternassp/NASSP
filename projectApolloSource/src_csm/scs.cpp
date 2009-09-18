@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/03 18:34:28  tschachim
+  *	Bugfixes BMAGs and hatch.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -2717,7 +2720,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVTestTime = 0;
 	sat = NULL;
 	SlewScribe = 0;
-	GScribe = 0;
+	GScribe = 1;
 	xacc = 9.81;
 	xaccG = 1.0;
 	constG = 9.7939; //Set initial value
@@ -2738,8 +2741,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	InitialTrip = false;
 
 	ScribePntCnt = 1;
-	ScribePntArray[0].x = 0;
-	ScribePntArray[0].y = 0;
+	ScribePntArray[0].x = 40;
+	ScribePntArray[0].y = 1;
 
 	//Initial position of RSI Triangle
 	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*28);
@@ -2915,13 +2918,13 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			if (TenSecTimer > 0.0) {
 				xaccG = 9*(1.0-(TenSecTimer/10.0));
 				TenSecTimer -= simdt;
-				dV = 2.25*constG * simdt * FPS;
+				dV = 2.3*constG * simdt * FPS;
 				ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
 				dVRangeCounter -= dV*simdt;
 			} else {
+				xaccG = 9;
 				TenSecTimer -= simdt;
-				if (TenSecTimer > -19.5) {
-					xaccG = 9;
+				if (TenSecTimer > -20.5) {
 					dV = 2.3*constG * simdt * FPS;
 					ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
 					dVRangeCounter -= dV*simdt;
@@ -2941,33 +2944,39 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
 				ScrollPosition -= 30*ScrollScaling * simdt;
 			pt05GLightOn = true;
+			xaccG = 0.28;
 			if ((TenSecTimer -= simdt) < 0.0) LiftVectLightOn = 1;
 			break;
 	}
 
 	// If powered, drive Glevel
-	GScribe = (int)(xaccG*13.6); // 13.6 vertical pixels per G
+	if (status == EMS_STATUS_ENTRY || 
+		status == EMS_STATUS_EMS_TEST1 || status == EMS_STATUS_EMS_TEST4 || status == EMS_STATUS_EMS_TEST5 || 
+		status == EMS_STATUS_RNG_SET) {
 
-	// Limit readouts
-	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
-	ScrollPosition = max(0.0, min(ScrollBitmapLength, ScrollPosition));
+		GScribe = (int)(xaccG * 14.) + 1; // 13.6 vertical pixels per G
 
-	// Limit reversing of scroll when in nominal operation by tracking Max position
-	if (sat->GTASwitch.IsUp() && sat->GetStage() >= CM_STAGE) {
-		MaxScrollPosition = ScrollPosition;
-	}else{
-		if (ScrollPosition > MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+		// Limit readouts
+		dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+		ScrollPosition = max(0.0, min(ScrollBitmapLength, ScrollPosition));
+
+		// Limit reversing of scroll when in nominal operation by tracking Max position
+		if (sat->GTASwitch.IsUp() && sat->GetStage() >= CM_STAGE) {
+			MaxScrollPosition = ScrollPosition;
+		}else{
+			if (ScrollPosition > MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+		}
+
+		SlewScribe = (int)(ScrollPosition) + 40; //Offset of 40 to shift the drawing correctly
+
+		if (SlewScribe != ScribePntArray[ScribePntCnt-1].x || GScribe != ScribePntArray[ScribePntCnt-1].y) { //If either x or y has changed, add new point to trace
+			if (ScribePntCnt < EMS_SCROLL_LENGTH_PX*3) ScribePntCnt++;
+		}
+		ScribePntArray[ScribePntCnt-1].y = GScribe;
+		ScribePntArray[ScribePntCnt-1].x = SlewScribe;
+
+		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 	}
-
-	SlewScribe = (int)(ScrollPosition) + 40; //Offset of 40 to shift the drawing correctly
-
-	if (SlewScribe != ScribePntArray[ScribePntCnt-1].x || GScribe != ScribePntArray[ScribePntCnt-1].y) { //If either x or y has changed, add new point to trace
-		if (ScribePntCnt < EMS_SCROLL_LENGTH_PX*3) ScribePntCnt++;
-	}
-	ScribePntArray[ScribePntCnt-1].y = GScribe;
-	ScribePntArray[ScribePntCnt-1].x = SlewScribe;
-
-	//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 
 	if (sat->GSwitch.IsUp()) {
 		SetRSIRotation(RSITarget + sat->gdc.rates.z*simdt);
