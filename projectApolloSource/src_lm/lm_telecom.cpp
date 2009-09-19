@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/14 23:38:40  dseagrav
+  *	Used wrong channel file.
+  *	
   *	Revision 1.4  2009/09/14 00:38:30  trebonian
   *	Fix bad edit of include "lm_channels.h" - Merge issues with AGS commit
   *	
@@ -375,12 +378,15 @@ void LM_VHF::perform_io(double simt){
 								lgc_uplink_wd <<= 8;
 								lgc_uplink_wd |= rx_data[rx_offset];
 								// Must be in vAGC mode
+#ifndef AGC_SOCKET_ENABLED
 								if(lem->agc.Yaagc){
 									// Move to INLINK
 									lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
 									// Cause UPRUPT
 									lem->agc.GenerateUprupt();
+
 								}
+#endif
 								//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
 								rx_offset = 0; uplink_state = 0;
 							}
