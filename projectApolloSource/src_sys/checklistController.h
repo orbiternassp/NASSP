@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -334,6 +337,7 @@ struct ChecklistItem
 	vector<DSKYChecklistItem> dskyItemsSet;
 	int dskyIndex;
 	int dskyNo;
+	bool dskyPressed;
 
 /// -------------------------------------------------------------
 /// This is an internal operator for the class.  The output should

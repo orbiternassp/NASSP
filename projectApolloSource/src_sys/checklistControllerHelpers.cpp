@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -109,6 +112,7 @@ ChecklistItem::ChecklistItem()
 	status = PENDING;
 	dskyIndex = 0;
 	dskyNo = 0;
+	dskyPressed = false;
 }
 
 // Todo: Verify
@@ -220,9 +224,17 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 	if (!autoexec) {
 		if (!stricmp(item, "DSKY")) {
 			if (dskyItemsSet.size() > 0) {
-				if ((((dskyNo & 1) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item) == position) ||
-					(((dskyNo & 2) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item2) == position)) {
-					dskyIndex++;
+				if (!dskyPressed) {
+					if ((((dskyNo & 1) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item) == position) ||
+						(((dskyNo & 2) != 0) && conn->GetState(dskyItemsSet[dskyIndex].item2) == position)) {
+						dskyPressed = true;
+					} 
+				} else {
+					if (conn->GetState(dskyItemsSet[dskyIndex].item) != position && 
+						conn->GetState(dskyItemsSet[dskyIndex].item2) != position) {
+						dskyPressed = false;
+						dskyIndex++;
+					}
 				}
 			}
 			if (dskyIndex >= dskyItemsSet.size()) {
