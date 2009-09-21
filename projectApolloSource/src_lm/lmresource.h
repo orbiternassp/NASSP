@@ -705,7 +705,7 @@
 #define AID_ASC_BATTERY_SWITCHES        979
 #define AID_LEM_P16_CB_ROW3             980
 #define AID_LEM_P16_CB_ROW1             981
-#define AID_MPS_REG_CONTROLS            982
+#define AID_MPS_REG_CONTROLS_LEFT       982
 #define AID_LEM_PANEL_5                 983
 #define AID_RCS_ASC_FEED_TALKBACKS      984
 #define AID_RCS_ASC_FEED_SWITCHES       985
@@ -736,6 +736,10 @@
 #define AID_LM_DEDA_DISP                1010
 #define AID_LM_DEDA_HOLD                1011
 #define AID_LM_DEDA_ADR                 1012
+#define IDB_LEM_STAGESWITCH				1013
+#define IDB_DIGITALDISP2				1014
+#define AID_MPS_REG_CONTROLS_RIGHT      1015
+#define AID_RR_GYRO_SEL_SWITCH			1016
 
 // Next default values for new objects
 // 
