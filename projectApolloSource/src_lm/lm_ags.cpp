@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/14 16:47:03  trebonian
+  *	Made DEDA keys click even if powered down
+  *	
   *	Revision 1.2  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -279,17 +282,17 @@ void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int d
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx+4,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf,digits,dstx+0,dsty,19*Curdigit,0,19,21);
 	}
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+22,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf,digits,dstx+20,dsty,19*Curdigit,0,19,21);
 	}
 
 	if (Str[2] >= '0' && Str[2] <= '9') {
 		Curdigit = Str[2] - '0';
-		oapiBlt(surf,digits,dstx+40,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf,digits,dstx+39,dsty,19*Curdigit,0,19,21);
 	}
 }
 
@@ -319,16 +322,16 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx+4,dsty,161,0,10,19);
+		oapiBlt(surf,digits,dstx+4,dsty,191,0,19,21);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx+4,dsty,174,0,12,19);
+		oapiBlt(surf,digits,dstx+4,dsty,210,0,19,21);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (18*i)+ 4, dsty, 16*Curdigit, 0, 16,19);
+			oapiBlt(surf, digits, dstx + (20*i)+ 4, dsty, 19*Curdigit, 0, 19,21);
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
@@ -365,25 +368,25 @@ void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOf
 	if (!IsPowered())
 		return;
 
-	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 1,  48 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 49, 48 * 0, 48, KeyDown_Minus, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 0, 98, 48 * 0, 96, KeyDown_0, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 1,  41 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 49, 41 * 0, 48, KeyDown_Minus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 98, 41 * 0, 96, KeyDown_0, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 1,  48 * 1, 0,  KeyDown_7, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 49, 48 * 1, 48, KeyDown_4, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 1, 98, 48 * 1, 96, KeyDown_1, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 1,  41 * 1, 0,  KeyDown_7, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 49, 41 * 1, 48, KeyDown_4, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 98, 41 * 1, 96, KeyDown_1, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 1,  48 * 2, 0,  KeyDown_8, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 49, 48 * 2, 48, KeyDown_5, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 2, 98, 48 * 2, 96, KeyDown_2, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 1,  41 * 2, 0,  KeyDown_8, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 49, 41 * 2, 48, KeyDown_5, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 98, 41 * 2, 96, KeyDown_2, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 1,  48 * 3, 0,  KeyDown_9, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 49, 48 * 3, 48, KeyDown_6, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 3, 98, 48 * 3, 96, KeyDown_3, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 1,  41 * 3, 0,  KeyDown_9, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 49, 41 * 3, 48, KeyDown_6, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 98, 41 * 3, 96, KeyDown_3, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 48 * 4, 1,  48 * 4, 0,  KeyDown_Clear, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 48 * 4, 49, 48 * 4, 48, KeyDown_ReadOut, xOffset, yOffset);
-    DEDAKeyBlt(surf, keys, 1 + 48 * 4, 98, 48 * 4, 96, KeyDown_Enter, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 4, 1,  41 * 4, 0,  KeyDown_Clear, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 41 * 4, 49, 41 * 4, 48, KeyDown_ReadOut, xOffset, yOffset);
+    DEDAKeyBlt(surf, keys, 1 + 41 * 4, 98, 41 * 4, 96, KeyDown_Enter, xOffset, yOffset);
 }
 
 void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
@@ -409,10 +412,10 @@ void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 	//
 
 	if (OprErrLit()) {
-		oapiBlt(surf, lights, 0, 0, 48, 0, 48, 22);
+		oapiBlt(surf, lights, 0, 0, 48, 0, 47, 26);
 	}
 	else {
-		oapiBlt(surf, lights, 0, 0, 0, 0, 48, 22);
+		oapiBlt(surf, lights, 0, 0, 0, 0, 47, 26);
 	}
 
 }
@@ -428,10 +431,10 @@ void LEM_DEDA::RenderHold(SURFHANDLE surf, SURFHANDLE lights)
 	//
 
 	if (HoldLit()) {
-		oapiBlt(surf, lights, 0, 0, 48, 24, 48, 31);
+		oapiBlt(surf, lights, 0, 0, 48, 0, 47, 26);
 	}
 	else {
-		oapiBlt(surf, lights, 0, 0,  0, 24, 48, 31);
+		oapiBlt(surf, lights, 0, 0,  0, 0, 47, 26);
 	}
 }
 
