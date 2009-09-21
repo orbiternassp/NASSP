@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/01 06:18:32  dseagrav
+  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -236,35 +239,35 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	// Hour display on three digit
 	Curdigit = hours / 100;
 	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+	oapiBlt(surf, digits, 0,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 
 	Curdigit = hours / 10;
 	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+	oapiBlt(surf, digits, 0+20,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 
 	Curdigit = hours;
 	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits,0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-	oapiBlt(surf, digits,0+54,0, 192,0,4,19);
+	oapiBlt(surf, digits,0+39,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	//oapiBlt(surf, digits,0+54,0, 192,0,4,19);
 
 	// Minute display on two digit
 	Curdigit = minutes / 10;
 	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits,0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+	oapiBlt(surf, digits,0+62,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits,0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-	oapiBlt(surf, digits,0+98,0, 192,0,4,19);
+	oapiBlt(surf, digits,0+81,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	//oapiBlt(surf, digits,0+98,0, 192,0,4,19);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits,0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+	oapiBlt(surf, digits,0+104,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits,0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 
 }
 
@@ -284,22 +287,22 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	// Minute display on two digit
 	Curdigit = minutes / 10;
 	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+	oapiBlt(surf, digits, 0, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 17, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 
-	oapiBlt(surf, digits, 37,0, 192,0,4,19);
+	//oapiBlt(surf, digits, 37,0, 192,0,4,19);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 44, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+	oapiBlt(surf, digits, 43, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits, 61, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+	oapiBlt(surf, digits, 62, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 }
 
 EventTimer::EventTimer()
