@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.13  2009/09/13 20:31:33  dseagrav
   *	Joystick Z-axis detection fixes
   *	
@@ -426,6 +429,8 @@ public:
 		SRF_FIVE_POS_SWITCH,
 		SRF_DEDA_KEY,
 		SRF_DEDA_LIGHTS,
+		SRF_LEM_STAGESWITCH,
+		SRF_DIGITALDISP2,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -616,6 +621,10 @@ protected:
 	PushSwitch AbortStageSwitch;
 	bool AbortStageSwitchLight;
 
+	
+	SwitchRow RRGyroSelSwitchRow;
+	ThreePosSwitch RRGyroSelSwitch;
+	
 	/////////////////
 	// LEM panel 1 //
 	/////////////////
@@ -638,14 +647,16 @@ protected:
 	ToggleSwitch RateErrorMonSwitch;
 	ToggleSwitch AttitudeMonSwitch;
 
-	SwitchRow MPSRegControlSwitchRow;
+	SwitchRow MPSRegControlLeftSwitchRow;
 	IndicatorSwitch ASCHeReg1TB;
-	IndicatorSwitch ASCHeReg2TB;
 	IndicatorSwitch DESHeReg1TB;
-	IndicatorSwitch DESHeReg2TB;
-	ThreePosSwitch ASCHeReg1Switch;
-	ThreePosSwitch ASCHeReg2Switch;
+	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
+	
+	SwitchRow MPSRegControlRightSwitchRow;
+	IndicatorSwitch ASCHeReg2TB;
+	IndicatorSwitch DESHeReg2TB;
+	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
 
 	SwitchRow FDAILowerSwitchRow;

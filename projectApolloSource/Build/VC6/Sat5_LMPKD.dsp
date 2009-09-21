@@ -486,6 +486,10 @@ SOURCE=..\Bitmaps\digitaldisp.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\Bitmaps\digitaldisp_2.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=..\Bitmaps\dsky_disp.bmp
 # End Source File
 # Begin Source File
@@ -563,6 +567,10 @@ SOURCE=..\Bitmaps\lem_right_panel.bmp
 # Begin Source File
 
 SOURCE=..\Bitmaps\lem_right_window.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\Bitmaps\lem_stage_switch.bmp
 # End Source File
 # Begin Source File
 
