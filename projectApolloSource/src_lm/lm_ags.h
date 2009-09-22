@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/14 00:19:41  trebonian
+  *	Stage commit for AGS - DEDA keyboard and display
+  *	
   *	Revision 1.1  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -67,17 +70,12 @@ public:
 	//
 
 	bool OprErrLit()	{ return OprErrLight; };
-	bool HoldLit()		{ return HoldLight; };
 	//
 	// Set light status.
 	//
 
 	void SetOprErr(bool val)		{ OprErrLight = val; };
-	void SetHold(bool val)			{ HoldLight = val; };
-
 	void ClearOprErr()		{ OprErrLight = false; };
-	void ClearHold()		{ HoldLight = false; };
-
 	//
 	// Timestep to run programs.
 	//
@@ -92,6 +90,7 @@ public:
 	void KeyRel();
 	void EnterPressed();
 	void ClearPressed();
+	void HoldPressed();
 	void ReadOutPressed();
 	void PlusPressed();
 	void MinusPressed();
@@ -116,7 +115,6 @@ public:
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
 	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
-	void RenderHold(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
@@ -140,8 +138,6 @@ protected:
 
 	void LightOprErrLight()		{ OprErrLight = true; };
 	void ClearOprErrLight()		{ OprErrLight = false; };
-	void LightHoldLight()		{ HoldLight = true; };
-	void ClearHoldLight()		{ HoldLight = false; };
 
 	//
 	// Light power consumption.
@@ -155,13 +151,13 @@ protected:
 	//
 
 	bool OprErrLight;
-	bool HoldLight;
 
 	//
 	// Keyboard state.
 	//
 
 	bool KbInUse;
+	bool Held;
 
 	bool KeyDown_Plus;
 	bool KeyDown_Minus;
@@ -178,6 +174,7 @@ protected:
 	bool KeyDown_Clear;
 	bool KeyDown_ReadOut;
 	bool KeyDown_Enter;
+	bool KeyDown_Hold;
 
 	//
 	// Current program state.
