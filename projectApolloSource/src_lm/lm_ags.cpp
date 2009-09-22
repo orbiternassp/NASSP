@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/22 11:40:14  trebonian
+  *	Support new DEDA bitmaps and digits
+  *	
   *	Revision 1.4  2009/09/21 19:17:15  flydba
   *	New DEDA bitmaps available.
   *	
@@ -368,9 +371,6 @@ void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int y
 void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
-		return;
-
 	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 1,  44 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
 	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 45, 44 * 0, 44, KeyDown_Minus, xOffset, yOffset);
 	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 90, 44 * 0, 88, KeyDown_0, xOffset, yOffset);
@@ -435,82 +435,94 @@ void LEM_DEDA::ProcessKeyPress(int mx, int my)
 {
 	KeyClick();
 
-	if (!IsPowered())
-		return;
-
 	if (mx > 2+0*44 && mx < 43+0*44) {
-		if (OprErrLit())
-				return;
 
 		if (my > 1 && my < 43) {
 			KeyDown_Plus = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			PlusPressed();
 		}
 		if (my > 44 && my < 88) {
 			KeyDown_Minus = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			MinusPressed();
 		}
 		if (my > 88 && my < 132) {
 			KeyDown_0 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(0);
 		}
 	}
 
 	if (mx > 2+1*43 && mx < 43+1*44) {
-		if (OprErrLit())
-				return;
-
 		if (my > 1 && my < 43) {
 			KeyDown_7 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(7);
 		}
 		if (my > 44 && my < 88) {
 			KeyDown_4 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(4);
 		}
 		if (my > 88 && my < 132) {
 			KeyDown_1 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(1);
 		}
 	}
 
 	if (mx > 2+2*44 && mx < 43+2*44) {
-		if (OprErrLit())
-				return;
-
 		if (my > 1 && my < 43) {
 			KeyDown_8 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(8);
 		}
 		if (my > 44 & my < 88) {
 			KeyDown_5 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(5);
 		}
 		if (my > 88 && my < 132) {
 			KeyDown_2 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(2);
 		}
 
 		if (my > 132 && my < 176) {
 			KeyDown_Hold = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			HoldPressed();
 		}
 	}
 
 	if (mx > 2+3*44 && mx < 43+3*44) {
-		if (OprErrLit())
-				return;
-
 		if (my > 1 && my < 43) {
 			KeyDown_9 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(9);
 		}
 		if (my > 44 && my < 88) {
 			KeyDown_6 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(6);
 		}
 		if (my > 88 && my < 132) {
 			KeyDown_3 = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			NumberPressed(3);
 		}
 	}
@@ -520,15 +532,17 @@ void LEM_DEDA::ProcessKeyPress(int mx, int my)
 			KeyDown_Clear = true;
 //			ClearPressed();
 		}
-		if (OprErrLit())
-				return;
-
 		if (my > 44 && my < 88) {
 			KeyDown_ReadOut = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			ReadOutPressed();
 		}
+
 		if (my > 88 && my < 132) {
 			KeyDown_Enter = true;
+			if (OprErrLit() || !IsPowered())
+					return;
 			EnterPressed();
 		}
 	}
