@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/21 19:17:15  flydba
+  *	New DEDA bitmaps available.
+  *	
   *	Revision 1.3  2009/09/14 16:47:03  trebonian
   *	Made DEDA keys click even if powered down
   *	
@@ -188,10 +191,10 @@ void LEM_DEDA::Reset()
 
 {
 	OprErrLight = false;
-	HoldLight = false;
 	LightsLit = 0;
 	SegmentsLit = 0;
 	State = 0;
+	Held = false;
 
 	strcpy (Adr, ThreeSpace);
 	strcpy (Data, SixSpace);
@@ -216,6 +219,7 @@ void LEM_DEDA::ResetKeyDown()
 	KeyDown_Clear = false;
 	KeyDown_ReadOut = false;
 	KeyDown_Enter = false;
+	KeyDown_Hold = false;
 }
 
 void LEM_DEDA::SystemTimestep(double simdt)
@@ -239,7 +243,6 @@ void LEM_DEDA::SystemTimestep(double simdt)
 
 	LightsLit = 0;
 	if (OprErrLit()) LightsLit++;
-	if (HoldLit()) LightsLit++;
 	//
 	// Check the segments
 	//
@@ -368,35 +371,37 @@ void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOf
 	if (!IsPowered())
 		return;
 
-	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 1,  41 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 49, 41 * 0, 48, KeyDown_Minus, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 0, 98, 41 * 0, 96, KeyDown_0, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 1,  44 * 0, 0,  KeyDown_Plus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 45, 44 * 0, 44, KeyDown_Minus, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 0, 90, 44 * 0, 88, KeyDown_0, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 1,  41 * 1, 0,  KeyDown_7, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 49, 41 * 1, 48, KeyDown_4, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 1, 98, 41 * 1, 96, KeyDown_1, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 1, 1,  44 * 1, 0,  KeyDown_7, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 1, 45, 44 * 1, 44, KeyDown_4, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 1, 90, 44 * 1, 88, KeyDown_1, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 1,  41 * 2, 0,  KeyDown_8, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 49, 41 * 2, 48, KeyDown_5, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 2, 98, 41 * 2, 96, KeyDown_2, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 2, 1,  44 * 2, 0,  KeyDown_8, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 2, 45, 44 * 2, 44, KeyDown_5, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 2, 90, 44 * 2, 88, KeyDown_2, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 1,  41 * 3, 0,  KeyDown_9, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 49, 41 * 3, 48, KeyDown_6, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 3, 98, 41 * 3, 96, KeyDown_3, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 3, 1,  44 * 3, 0,  KeyDown_9, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 3, 45, 44 * 3, 44, KeyDown_6, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 3, 90, 44 * 3, 88, KeyDown_3, xOffset, yOffset);
 
-	DEDAKeyBlt(surf, keys, 1 + 41 * 4, 1,  41 * 4, 0,  KeyDown_Clear, xOffset, yOffset);
-	DEDAKeyBlt(surf, keys, 1 + 41 * 4, 49, 41 * 4, 48, KeyDown_ReadOut, xOffset, yOffset);
-    DEDAKeyBlt(surf, keys, 1 + 41 * 4, 98, 41 * 4, 96, KeyDown_Enter, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 4, 1,  44 * 4, 0,  KeyDown_Clear, xOffset, yOffset);
+	DEDAKeyBlt(surf, keys, 1 + 44 * 4, 45, 44 * 4, 44, KeyDown_ReadOut, xOffset, yOffset);
+    DEDAKeyBlt(surf, keys, 1 + 44 * 4, 90, 44 * 4, 88, KeyDown_Enter, xOffset, yOffset);
+
+	DEDAKeyBlt(surf, keys, 1 + 44 * 2, 134, 44 * 2, 132, KeyDown_Hold, xOffset, yOffset);
 }
 
 void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
 
 {
 	if (lit) {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 46, 45);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 40, 40);
 	}
 	else {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 144, 46, 45);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 173, 40, 40);
 	}
 }
 
@@ -412,30 +417,12 @@ void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 	//
 
 	if (OprErrLit()) {
-		oapiBlt(surf, lights, 0, 0, 48, 0, 47, 26);
+		oapiBlt(surf, lights, 0, 0, 46, 0, 45, 25);
 	}
 	else {
-		oapiBlt(surf, lights, 0, 0, 0, 0, 47, 26);
+		oapiBlt(surf, lights, 0, 0, 0, 0, 45, 25);
 	}
 
-}
-
-void LEM_DEDA::RenderHold(SURFHANDLE surf, SURFHANDLE lights)
-
-{
-	if (!IsPowered())
-		return;
-
-	//
-	// Check the lights.
-	//
-
-	if (HoldLit()) {
-		oapiBlt(surf, lights, 0, 0, 48, 0, 47, 26);
-	}
-	else {
-		oapiBlt(surf, lights, 0, 0,  0, 0, 47, 26);
-	}
 }
 
 
@@ -451,102 +438,110 @@ void LEM_DEDA::ProcessKeyPress(int mx, int my)
 	if (!IsPowered())
 		return;
 
-	if (mx > 2+0*48 && mx < 47+0*48) {
+	if (mx > 2+0*44 && mx < 43+0*44) {
 		if (OprErrLit())
 				return;
 
-		if (my > 1 && my < 47) {
+		if (my > 1 && my < 43) {
 			KeyDown_Plus = true;
 			PlusPressed();
 		}
-		if (my > 49 && my < 95) {
+		if (my > 44 && my < 88) {
 			KeyDown_Minus = true;
 			MinusPressed();
 		}
-		if (my > 97 && my < 143) {
+		if (my > 88 && my < 132) {
 			KeyDown_0 = true;
 			NumberPressed(0);
 		}
 	}
 
-	if (mx > 2+1*48 && mx < 47+1*48) {
+	if (mx > 2+1*43 && mx < 43+1*44) {
 		if (OprErrLit())
 				return;
 
-		if (my > 1 && my < 47) {
+		if (my > 1 && my < 43) {
 			KeyDown_7 = true;
 			NumberPressed(7);
 		}
-		if (my > 49 && my < 95) {
+		if (my > 44 && my < 88) {
 			KeyDown_4 = true;
 			NumberPressed(4);
 		}
-		if (my > 97 && my < 143) {
+		if (my > 88 && my < 132) {
 			KeyDown_1 = true;
 			NumberPressed(1);
 		}
 	}
 
-	if (mx > 2+2*48 && mx < 47+2*48) {
+	if (mx > 2+2*44 && mx < 43+2*44) {
 		if (OprErrLit())
 				return;
 
-		if (my > 1 && my < 47) {
+		if (my > 1 && my < 43) {
 			KeyDown_8 = true;
 			NumberPressed(8);
 		}
-		if (my > 49 && my < 95) {
+		if (my > 44 & my < 88) {
 			KeyDown_5 = true;
 			NumberPressed(5);
 		}
-		if (my > 97 && my < 143) {
+		if (my > 88 && my < 132) {
 			KeyDown_2 = true;
 			NumberPressed(2);
 		}
+
+		if (my > 132 && my < 176) {
+			KeyDown_Hold = true;
+			HoldPressed();
+		}
 	}
 
-	if (mx > 2+3*48 && mx < 47+3*48) {
+	if (mx > 2+3*44 && mx < 43+3*44) {
 		if (OprErrLit())
 				return;
 
-		if (my > 1 && my < 47) {
+		if (my > 1 && my < 43) {
 			KeyDown_9 = true;
 			NumberPressed(9);
 		}
-		if (my > 49 && my < 95) {
+		if (my > 44 && my < 88) {
 			KeyDown_6 = true;
 			NumberPressed(6);
 		}
-		if (my > 97 && my < 143) {
+		if (my > 88 && my < 132) {
 			KeyDown_3 = true;
 			NumberPressed(3);
 		}
 	}
 
-	if (mx > 2+4*48 && mx < 47+4*48) {
-		if (my > 1 && my < 47) {
+	if (mx > 2+4*44 && mx < 43+4*44) {
+		if (my > 1 && my < 43) {
 			KeyDown_Clear = true;
-			ClearPressed();
+//			ClearPressed();
 		}
 		if (OprErrLit())
 				return;
 
-		if (my > 49 && my < 95) {
+		if (my > 44 && my < 88) {
 			KeyDown_ReadOut = true;
 			ReadOutPressed();
 		}
-		if (my > 97 && my < 143) {
+		if (my > 88 && my < 132) {
 			KeyDown_Enter = true;
 			EnterPressed();
 		}
 	}
-
-
 }
 
 void LEM_DEDA::ProcessKeyRelease(int mx, int my)
 
 {
+	if (mx > 2+4*44 && mx < 43+4*44) {
+		if (my > 1 && my < 43) {
+			ClearPressed();
+		}
+	}
 	ResetKeyDown();
 }
 
@@ -569,6 +564,8 @@ void LEM_DEDA::EnterPressed()
 		SendKeyCode(28);
 	else
 		SetOprErr(true);
+
+	Held = false;
 }
 
 void LEM_DEDA::ClearPressed()
@@ -605,6 +602,19 @@ void LEM_DEDA::ReadOutPressed()
 		SendKeyCode(18);
 	} else 
 		SetOprErr(true);
+
+	Held = false;
+}
+
+void LEM_DEDA::HoldPressed()
+
+{
+	if (State == 3 || State == 9){
+		SendKeyCode(18);
+	} else 
+		SetOprErr(true);
+
+	Held = true;
 }
 
 void LEM_DEDA::NumberPressed(int n)
@@ -632,6 +642,9 @@ void LEM_DEDA::NumberPressed(int n)
 		case 8:
 			Data[State-3] = '0' + n;
 			State++;
+			return;
+		case 9:
+			SetOprErr(true);
 			return;
 	}
 }

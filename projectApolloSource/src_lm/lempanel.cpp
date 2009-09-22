@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/09/21 19:19:40  flydba
+  *	New LEM bitmaps available. Positions changed to fit everything to the new panels.
+  *	
   *	Revision 1.10  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -1644,11 +1647,10 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_TRACK_MODE_SWITCH,_R( 976, 1092, 1010, 1123), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_VHF_SEL_KNOB,	_R( 1252,  994, 1337, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_SBD_SEL_KNOB,	_R( 1252, 1158, 1337, 1243), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_DEDA_DISP,					_R(  227, 1408,  341, 1430), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_DISP,					_R(  207, 1408,  341, 1430), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_DEDA_ADR,						_R(  231, 1363,  289, 1385), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_DEDA_KEYS,					_R(  136, 1446,  355, 1622), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_KEYS,					_R(  136, 1446,  360, 1623), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_DEDA_LIGHTS,					_R(  144, 1406,  191, 1432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_DEDA_HOLD,					_R(  225, 1597,  273, 1628), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 	
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
@@ -1841,7 +1843,6 @@ void LEM::SetSwitches(int panel) {
 			DeadBandSwitch.Init     (  0, 5, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], StabContSwitchesRow);
 			GyroTestLeftSwitch.Init ( 93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], StabContSwitchesRow);
 			GyroTestRightSwitch.Init(191, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], StabContSwitchesRow);
-
 			AttitudeControlSwitchesRow.Init(AID_ATTITUDECONTROLSWITCHES, MainPanel);
 			RollSwitch.Init (  0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], AttitudeControlSwitchesRow);
 			PitchSwitch.Init( 93, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], AttitudeControlSwitchesRow);
@@ -3271,10 +3272,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_LM_DEDA_LIGHTS:
 		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTS]);
-		return true;
-
-	case AID_LM_DEDA_HOLD:
-		deda.RenderHold(surf, srf[SRF_DEDA_LIGHTS]);
 		return true;
 
 	case AID_LM_DEDA_DISP:
