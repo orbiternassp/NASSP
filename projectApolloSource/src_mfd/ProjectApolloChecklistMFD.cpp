@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/26 21:49:15  coussini
+  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
+  *	
   *	Revision 1.5  2009/09/26 18:56:48  coussini
   *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
   *	
@@ -219,7 +222,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	static const MFDBUTTONMENU mnuCHKLST[12] = {
 		{"Go to","Checklist Navigation",'N'},
-		{"Toggle Display Mission Elapsed Time",0,'M'},
+		{"Toggle Display","Mission Elapsed Time",'M'},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
 		{"Toggle Flashing",0,'L'},
@@ -233,7 +236,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTNAV[12] = {
 		{"Go back to","the Current Checklist",'C'},
-		{"Toggle Display Mission Elapsed Time",0,'M'},
+		{"Toggle Display","Mission Elapsed Time",'M'},
 		{"More Information","About This Checklist",'N'},
 		{0,0,0},
 		{"Toggle Flashing",0,'L'},
@@ -247,7 +250,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTREV[12] = {
 		{"Return to","Checklist Navigation",'C'},
-		{"Toggle Display Mission Elapsed Time",0,'M'},
+		{"Toggle Display","Mission Elapsed Time",'M'},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
 		{0,0,0},
@@ -261,7 +264,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTINFO[12] = {
 		{"Back to","Checklist",'B'},
-		{"Toggle Display Mission Elapsed Time",0,'M'},
+		{"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{0,0,0},
 		{0,0,0},
