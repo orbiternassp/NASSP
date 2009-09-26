@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/26 18:57:07  coussini
+  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
+  *	
   *	Revision 1.3  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -91,5 +94,6 @@ protected:
 	HBITMAP hBmpLogo;
 
 	std::string DisplayChecklistMissionTime (ChecklistItem *item);
+	bool bDisplayMET; // Coussini 
 	std::string DisplayMissionElapsedTime (void); // Coussini
 };

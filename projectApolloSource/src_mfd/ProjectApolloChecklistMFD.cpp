@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/26 18:56:48  coussini
+  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
+  *	
   *	Revision 1.4  2009/09/18 18:29:21  tschachim
   *	Bugfix
   *	
@@ -148,6 +151,7 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	TopStep = 0;
 	HiLghtdLine = 0;
 	//SelectedGroup = -1;
+	bDisplayMET = true;
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
@@ -191,10 +195,10 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 
-	static char *labelCHKLST[12] = {"NAV","","INFO","","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
-	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
-	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
-	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","FLSH","","",""};
+	static char *labelCHKLST[12] = {"NAV","MET","INFO","","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
+	static char *labelCHKLSTNAV[12] = {"BCK","MET","INFO","","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
+	static char *labelCHKLSTREV[12] = {"NAV","MET","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
+	static char *labelCHKLSTINFO[12] = {"BCK","MET","","","","","","","FLSH","","",""};
 
 	if (screen == PROG_CHKLST) {
 		return (bt < 12 ? labelCHKLST[bt] : 0);
@@ -215,7 +219,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	static const MFDBUTTONMENU mnuCHKLST[12] = {
 		{"Go to","Checklist Navigation",'N'},
-		{0,0,0},
+		{"Toggle Display Mission Elapsed Time",0,'M'},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
 		{"Toggle Flashing",0,'L'},
@@ -229,7 +233,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTNAV[12] = {
 		{"Go back to","the Current Checklist",'C'},
-		{0,0,0},
+		{"Toggle Display Mission Elapsed Time",0,'M'},
 		{"More Information","About This Checklist",'N'},
 		{0,0,0},
 		{"Toggle Flashing",0,'L'},
@@ -243,7 +247,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTREV[12] = {
 		{"Return to","Checklist Navigation",'C'},
-		{0,0,0},
+		{"Toggle Display Mission Elapsed Time",0,'M'},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
 		{0,0,0},
@@ -257,7 +261,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	};
 	static const MFDBUTTONMENU mnuCHKLSTINFO[12] = {
 		{"Back to","Checklist",'B'},
-		{0,0,0},
+		{"Toggle Display Mission Elapsed Time",0,'M'},
 		{0,0,0},
 		{0,0,0},
 		{0,0,0},
@@ -295,10 +299,10 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 	
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,0,0,0,0,0,0,0,OAPI_KEY_F,0,0,0};
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,OAPI_KEY_M,0,0,0,0,0,0,OAPI_KEY_F,0,0,0};
 
 	if (screen == PROG_CHKLST)
 	{
@@ -413,6 +417,19 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		{
 			bool fl = conn.GetChecklistFlashing();
 			conn.SetChecklistFlashing(!fl);
+			InvalidateDisplay();
+			return true;
+		}
+		if (key == OAPI_KEY_M)
+		{
+			if (bDisplayMET)
+			{
+				bDisplayMET = false;
+			}
+			else
+			{
+				bDisplayMET = true;
+			}
 			InvalidateDisplay();
 			return true;
 		}
@@ -544,6 +561,19 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
+		if (key == OAPI_KEY_M)
+		{
+			if (bDisplayMET)
+			{
+				bDisplayMET = false;
+			}
+			else
+			{
+				bDisplayMET = true;
+			}
+			InvalidateDisplay();
+			return true;
+		}
 	}
 	else if (screen == PROG_CHKLSTREV)
 	{
@@ -611,6 +641,19 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
+		if (key == OAPI_KEY_M)
+		{
+			if (bDisplayMET)
+			{
+				bDisplayMET = false;
+			}
+			else
+			{
+				bDisplayMET = true;
+			}
+			InvalidateDisplay();
+			return true;
+		}
 	}
 	else if (screen == PROG_CHKLSTINFO)
 	{
@@ -628,6 +671,19 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 				conn.SetFlashing(item->item, true);	// TODO DSKY
 			InvalidateDisplay();
 			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_M)
+		{
+			if (bDisplayMET)
+			{
+				bDisplayMET = false;
+			}
+			else
+			{
+				bDisplayMET = true;
+			}
+			InvalidateDisplay();
 			return true;
 		}
 	}
@@ -661,10 +717,13 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			Title(hDC, cn);
 		
 		// Display the MET after the header
-		SetTextColor (hDC, RGB(0, 128, 228)); // blue 
-		SetTextAlign (hDC, TA_CENTER);
-		line = DisplayMissionElapsedTime();
-		TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+		if (bDisplayMET)
+		{
+			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+			SetTextAlign (hDC, TA_CENTER);
+			line = DisplayMissionElapsedTime();
+			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+		}
 
 		SetTextAlign (hDC, TA_LEFT);
 		SelectDefaultPen(hDC, 1);
@@ -774,10 +833,13 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		Title(hDC, "Checklist Navigation");
 		
 		// Display the MET after the header
-		SetTextColor (hDC, RGB(0, 128, 228)); // blue 
-		SetTextAlign (hDC, TA_CENTER);
-		line = DisplayMissionElapsedTime();
-		TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+		if (bDisplayMET)
+		{
+			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+			SetTextAlign (hDC, TA_CENTER);
+			line = DisplayMissionElapsedTime();
+			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+		}
 
 		SelectDefaultPen(hDC, 1);
 		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
@@ -898,10 +960,13 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			SelectDefaultFont(hDC, 0);
 			Title(hDC, "Checklist Information");
 			// Display the MET after the header
-			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
-			SetTextAlign (hDC, TA_CENTER);
-			line = DisplayMissionElapsedTime();
-			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+			if (bDisplayMET)
+			{
+				SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+				SetTextAlign (hDC, TA_CENTER);
+				line = DisplayMissionElapsedTime();
+				TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+			}
 			SetTextColor(hDC,RGB(225, 225, 255)); 
 			SetTextAlign (hDC, TA_LEFT);
 			//display Current Checklist Mission Time
