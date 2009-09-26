@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -73,6 +76,11 @@ protected:
 	int NumChkLsts;
 	bool ChkLstAutoOn;
 
+	//We can link to the Saturn OR the Crawler.  Only the Saturn has full funcionality.  The Crawler can ONLY read the mission time.
+	Saturn *saturn;
+	Crawler *crawler;
+	LEM *lem;
+
 	int cnt;
 	VECTOR3 temptime; //x is hr, y is min, z is sec
 	std::string line;	
@@ -83,4 +91,5 @@ protected:
 	HBITMAP hBmpLogo;
 
 	std::string DisplayChecklistMissionTime (ChecklistItem *item);
+	std::string DisplayMissionElapsedTime (void); // Coussini
 };
