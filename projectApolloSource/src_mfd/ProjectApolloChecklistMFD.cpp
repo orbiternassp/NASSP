@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/18 18:29:21  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.3  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -69,9 +72,11 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "lemcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "LEM.h"
 #include "Crawler.h"
 #include "papi.h"
 #include <stdio.h>
@@ -130,6 +135,9 @@ void ProjectApolloChecklistMFDopcTimestep (double simt, double simdt, double mjd
 }
 ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w,h,vessel)
 {
+	saturn = NULL;
+	crawler = NULL;
+	lem = NULL;
 	conn.ConnectToVessel(vessel);
 	width = w;
 	height = h;
@@ -140,6 +148,23 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	TopStep = 0;
 	HiLghtdLine = 0;
 	//SelectedGroup = -1;
+
+	//We need to find out what type of vessel it is, so we check for the class name.
+	//Saturns have different functions than Crawlers.  But we have methods for both.
+	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+		saturn = (Saturn *)vessel;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+			crawler = (Crawler *)vessel;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+			lem = (LEM *)vessel;
+	}
 
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 }
@@ -634,9 +659,14 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		char *cn = conn.checklistName();
 		if (cn)
 			Title(hDC, cn);
+		
+		// Display the MET after the header
+		SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+		SetTextAlign (hDC, TA_CENTER);
+		line = DisplayMissionElapsedTime();
+		TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
 
 		SetTextAlign (hDC, TA_LEFT);
-
 		SelectDefaultPen(hDC, 1);
 		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
 		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
@@ -742,6 +772,12 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	{
 		SelectDefaultFont(hDC, 0);				
 		Title(hDC, "Checklist Navigation");
+		
+		// Display the MET after the header
+		SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+		SetTextAlign (hDC, TA_CENTER);
+		line = DisplayMissionElapsedTime();
+		TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
 
 		SelectDefaultPen(hDC, 1);
 		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
@@ -861,6 +897,11 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		if (item) {
 			SelectDefaultFont(hDC, 0);
 			Title(hDC, "Checklist Information");
+			// Display the MET after the header
+			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+			SetTextAlign (hDC, TA_CENTER);
+			line = DisplayMissionElapsedTime();
+			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
 			SetTextColor(hDC,RGB(225, 225, 255)); 
 			SetTextAlign (hDC, TA_LEFT);
 			//display Current Checklist Mission Time
@@ -952,4 +993,28 @@ int ProjectApolloChecklistMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARA
 		return (int)(new ProjectApolloChecklistMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
 	}
 	return 0;
+}
+// Display MET depending if saturn, crawler or Lem
+std::string ProjectApolloChecklistMFD::DisplayMissionElapsedTime (void)
+{
+	char buffer[20];
+	double mt = 0;
+
+	// Take the mission time from class 
+	if (saturn){ mt = saturn->GetMissionTime(); }
+	if (crawler){ mt = crawler->GetMissionTime(); }
+	if (lem){ mt = lem->GetMissionTime(); }
+
+	int secs = abs((int) mt);
+	int hours = (secs / 3600);
+	secs -= (hours * 3600);
+	int minutes = (secs / 60);
+	secs -= 60 * minutes;
+	if (mt < 0)
+		sprintf(buffer, "-%d:%02d:%02d", hours, minutes, secs);
+	else
+		sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
+	
+	std::string line = buffer;
+	return line;
 }
