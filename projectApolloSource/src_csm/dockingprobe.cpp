@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/07/11 13:40:19  jasonims
+  *	DockingProbe Work
+  *	
   *	Revision 1.2  2009/03/14 12:01:24  tschachim
   *	Bugfix docking handling
   *	
@@ -227,16 +230,15 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 		OurVessel->SetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 	} else {
 		Docked = true;
+		DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+		OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 		if (!Enabled || Status != DOCKINGPROBE_STATUS_EXTENDED) {
 			DockFailedSound.play(NOLOOP, 200);
 			UndockNextTimestep = true;
 		} else {
 			Status = 0.9;
-			CaptureSound.play();
-			
+			CaptureSound.play();			
 			Dockproc = DOCKINGPROBE_PROC_SOFTDOCKED;
-			DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
-			OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 
 			// Retract automatically if REALISM 0
 			if (!Realism) {
@@ -314,7 +316,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 
 			RetractChargesUsed = RetractChargesUsed | ActiveCharges;
 
-			sprintf(oapiDebugString(), "Charge Used: P1%d P2%d S1%d S2%d", RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM2 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC2); 
+			// sprintf(oapiDebugString(), "Charge Used: P1%d P2%d S1%d S2%d", RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM2 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC2); 
 		}
 	}
 
