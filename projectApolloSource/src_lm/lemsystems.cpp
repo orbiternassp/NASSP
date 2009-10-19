@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.13  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -1058,7 +1061,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simdt);								    // Do Work
+	atca.Timestep(simt);								    // Do Work
 	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power

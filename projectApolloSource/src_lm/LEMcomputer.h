@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.4  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -255,6 +258,8 @@ protected:
 	void ProcessChannel13(int val);
 	void ProcessChannel5(int val);
 	void ProcessChannel6(int val);
+	// DS20090919
+	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);
