@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2009/09/21 19:18:38  flydba
+  *	New LEM bitmaps added.
+  *	
   *	Revision 1.14  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -1140,17 +1143,6 @@ protected:
 
 	bool RATE2switch;
 	bool AT2switch;
-
-//	bool DESEswitch;
-#define DESEswitch EngineDescentCommandOverrideSwitch.IsUp()
-
-#define ModeControlPNGSAuto ModeControlPNGSSwitch.IsUp()
-#define ModeControlPNGSAttHold ModeControlPNGSSwitch.IsCenter()
-#define ModeControlPNGSOff ModeControlPNGSSwitch.IsDown()
-
-#define ModeControlAGSAuto ModeControlAGSSwitch.IsUp()
-#define ModeControlAGSAttHold ModeControlAGSSwitch.IsCenter()
-#define ModeControlAGSOff ModeControlAGSSwitch.IsDown()
 
 	bool SLWRswitch;
 

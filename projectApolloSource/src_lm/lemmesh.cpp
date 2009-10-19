@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/11 13:40:19  jasonims
+  *	DockingProbe Work
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -253,8 +256,10 @@ void LEM::SetLmVesselDockStage()
 		fuelmass=8891.;
 	}
 	SetSize (6);
-	SetPMI (_V(2.8,2.29,2.37));
-	SetCrossSections (_V(21,23,17));
+	// SetPMI (_V(2.8,2.29,2.37));
+	// SetCrossSections (_V(21,23,17));
+	SetPMI (_V(3.26,2.22,3.26));
+	SetCrossSections (_V(24.53,21.92,24.40));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
@@ -324,8 +329,10 @@ void LEM::SetLmVesselHoverStage()
 	SetEmptyMass(AscentFuelMassKg + 4374.0);
 
 	SetSize (7);
-	SetPMI (_V(2.8,2.29,2.37));
-	SetCrossSections (_V(21,23,17));
+	SetPMI (_V(3.26,2.22,3.26)); 
+	SetCrossSections (_V(24.53,21.92,24.40));
+	// SetPMI (_V(2.8,2.29,2.37));
+	// SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);

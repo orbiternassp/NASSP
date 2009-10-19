@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/13 15:20:14  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.7  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -225,7 +228,279 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
     timeremaining = 99999.0;
 	timeafterpdi = -1.0;
 
-	InitVirtualAGC("Config/ProjectApollo/Luminary131.bin");
+	/* FIXME LOAD FILE SHOULD BE SET IN SCENARIO */
+	InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
+
+	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
+	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11 */
+	PadLoad( 077, 012000); // FLAGWRD3   - R29 NOT ALLOWED, REFSMMAT GOOD
+	PadLoad( 0104,06000);  // FLAGWRD8   - LM IN LUNAR SOI, CM IN LUNAR SOI
+	PadLoad( 0106,000000); // FLGWRD10   - DESCENT STAGE ATTACHED, NOTHING GOING ON
+	PadLoad(01244,07401);  // MASS       - ???
+	PadLoad(01245,0);      // MASS+1     - ???
+	PadLoad(01331,07401);  // LEMMASS    - MASS OF LEM
+	PadLoad(01332,010246); // CSMMASS    - MASS OF CSM
+	PadLoad(01352,012160); // E3J22R2M   - R2 LUNAR POTENTIAL MODEL (PROBABLY WRONG VALUE)
+	PadLoad(01353,03363);  // E32C31RM   - R2 LUNAR POTENTIAL MODEL (PROBABLY WRONG VALUE)
+	PadLoad(01354,0);      // RADSKAL    - LR ALT DOPPLER BIAS: 2T/LAMBDA SCALED AT 1/(2(7) M/CS)
+	PadLoad(01355,0);
+	PadLoad(01356,0);      // SKALSKAL   - LR ALT SCALE FACTOR RATIO: .2 NOM
+	// Luminary 099 does not have ELBIAS
+	PadLoad(01452,03461);  // PBIASX     - B(1) PIPA BIAS, PIPA SCALE FACTOR TERMS (NEXT SEVERAL WORDS)
+	PadLoad(01453,064417); // PIPASCFX
+	PadLoad(01454,074272); // PBIASY
+	PadLoad(01455,054401); // PIPASCFY
+	PadLoad(01456,03775);  // PBIASZ
+	PadLoad(01457,072727); // PIPASCFZ
+	PadLoad(01460,063);    // NBDX       - GYRO BIAS DRIFT
+	PadLoad(01461,015);    // NBDY
+	PadLoad(01462,077762); // NBDZ
+	PadLoad(01463,077627); // ADIAX      - ACCELERATION SENSITIVE DRIFT ALONG THE INPUT AXES
+	PadLoad(01464,0202);   // ADIAY
+	PadLoad(01465,077713); // ADIAZ
+	PadLoad(01466,077745); // ADSRAX     - ACCELERATION SENSITIVE DRIFT ALONG THE SPIN REFERENCE AXIS
+	PadLoad(01467,0266);   // ADSRAY
+	PadLoad(01470,0);      // ADSRAZ
+	PadLoad(01477,0);      // GCOMPSW    - ???
+	PadLoad(01700,0);      // X789       - ??? (PART OF LM STATE VECTOR?)
+	PadLoad(01701,0);	   // X789+1
+	PadLoad(01702,0);	   // X789+2
+	PadLoad(01703,0);	   // X789+3
+	PadLoad(01704,0);	   // X789+4
+	PadLoad(01705,0);	   // X789+5
+	PadLoad(01706,011);    // TEPHEM     - LM STATE VECTOR - VALUES CERTAINLY WRONG
+	PadLoad(01707,05253);  // TEPHEM+1
+	PadLoad(01710,033560); // TEPHEM+2
+	PadLoad(01711,030623); // AZO
+	PadLoad(01712,037637);
+	PadLoad(01713,0);      // -AYO
+	PadLoad(01714,023066);
+	PadLoad(01715,0);      // AXO
+	PadLoad(01716,026474);
+	PadLoad(01733,011227); // REFSMMAT   - VALUES CERTAINLY WRONG
+	PadLoad(01734,03621);
+	PadLoad(01735,064303);
+	PadLoad(01736,076432);
+	PadLoad(01737,072072);
+	PadLoad(01740,064034);
+	PadLoad(01741,077664);
+	PadLoad(01742,050201);
+	PadLoad(01743,070531);
+	PadLoad(01744,072041);
+	PadLoad(01745,016162);
+	PadLoad(01746,031571);
+	PadLoad(01747,062764);
+	PadLoad(01750,063727);
+	PadLoad(01751,067624);
+	PadLoad(01752,076002);
+	PadLoad(01753,073506);
+	PadLoad(01754,053045); // END OF REFSMMAT
+	PadLoad(01770,01351);  // RANGEVAR   - I(2) RR RANGE ERROR VARIANCE
+	PadLoad(01771,024734);
+	PadLoad(01772,02354);  // RATEVAR    - I(2) RR RANGE RATE ERROR VARIANCE
+	PadLoad(01773,04750);
+	PadLoad(01774,0410);   // RVARMIN    - I(1) MINIMUM RANGE ERROR VARIANCE
+	PadLoad(01775,0165);   // VVARMIN    - I(1) MINIMUM RANGE-RATE ERROR VARIANCE
+	PadLoad(02000,05750);  // WRENDPOS   - B(1)PL KM*2(-7)
+	PadLoad(02001,0763);   // WRENDVEL   - B(1)PL KM(-1/2)*2(11)
+	PadLoad(02002,017270); // WSHAFT     - B(1)PL KM*2(-7)
+	PadLoad(02003,017270); // WTRUN      - B(1)PL KM*2(-7)
+	PadLoad(02004,023);    // RMAX       - B(1)PL METERS*2(-19)
+	PadLoad(02005,01);     // VMAX       - B(1)PL M/CSEC*2(-7)
+	PadLoad(02006,0);      // WSURFPOS   - B(1)PL
+	PadLoad(02007,0);      // WSURFVEL   - B(1)PL
+	PadLoad(02010,0103);   // SHAFTVAR   - B(1)PL RAD SQ*2(12)
+	PadLoad(02011,0103);   // TRUNVAR    - B(1)PL RAD SQ*2(10)
+	PadLoad(02012,077772); // 504LM      - I(6) MOON LIBRATION VECTOR (VALUES CERTAINLY WRONG)
+	PadLoad(02013,046750);
+	PadLoad(02014,077773);
+	PadLoad(02015,057473);
+	PadLoad(02016,06);
+	PadLoad(02017,06361);  // END OF 504LM
+	PadLoad(02020,04225);  // AGSK       - V47 (R47) AGS INITIALIZATION STORAGE
+	PadLoad(02021,010400);
+	PadLoad(02022,0311);   // RLS        - I(6) LANDING SITE VECTOR -- MOON REF (VALUES CERTAINLY WRONG)
+	PadLoad(02023,031177);
+	PadLoad(02024,077700);
+	PadLoad(02025,055774);
+	PadLoad(02026,077762);
+	PadLoad(02027,055732); // END OF RLS
+						   // LANDING SITE DATA -- VALUES CERTAINLY WRONG
+	PadLoad(02400,04347);  // TLAND      - NOMINAL TIME OF LANDING
+	PadLoad(02401,020441);
+	PadLoad(02402,077776); // RBRFG		 - BRAKING PHASE TARGET PARAMETERS: HIGH GATE
+	PadLoad(02403,076044);
+	PadLoad(02404,0);     
+	PadLoad(02405,0);
+	PadLoad(02406,077773);
+	PadLoad(02407,075347); // END OF RBRFG
+	PadLoad(02410,077766); // VBRFG
+	PadLoad(02411,074245);
+	PadLoad(02412,0);
+	PadLoad(02413,0);
+	PadLoad(02414,077773);
+	PadLoad(02415,045722); // END OF VBRFG
+	PadLoad(02416,077774); // ABRFG
+	PadLoad(02417,054701);
+	PadLoad(02420,0);
+	PadLoad(02421,0);
+	PadLoad(02422,077663);
+	PadLoad(02423,077104); // END OF ABRFG
+	PadLoad(02424,077765); // VBRFG*
+	PadLoad(02425,045231);
+	PadLoad(02426,077067); // ABRFG*
+	PadLoad(02427,072634);
+	PadLoad(02430,077545); // JBRFG*
+	PadLoad(02431,063177);
+	PadLoad(02432,037777); // GAINBRAK
+	PadLoad(02433,037777);
+	PadLoad(02434,0567);   // TCGFBRAK
+	PadLoad(02435,025762); // TCGIBRAK   - END OF HIGH GATE PARAMETERS
+	PadLoad(02436,0);      // RAPFG      - APPROACH PHASE TARGET PARAMETERS: LOW GATE
+	PadLoad(02437,0624);
+	PadLoad(02440,0);
+	PadLoad(02441,0);
+	PadLoad(02442,077777);
+	PadLoad(02443,077635); // END OF RAPFG
+	PadLoad(02444,077777); // VAPFG
+	PadLoad(02445,077400);
+	PadLoad(02446,0);
+	PadLoad(02447,0);
+	PadLoad(02450,0);
+	PadLoad(02451,0372);   // END OF VAPFG
+	PadLoad(02452,02);     // AAPFG
+	PadLoad(02453,014522);
+	PadLoad(02454,0);
+	PadLoad(02455,0);
+	PadLoad(02456,077774);
+	PadLoad(02457,071233); // END OF AAPFG
+	PadLoad(02460,0);      // VAPFG*
+	PadLoad(02461,01062);
+	PadLoad(02462,077754); // AAPFG*
+	PadLoad(02463,067645);
+	PadLoad(02464,0612);   // JAPFG*
+	PadLoad(02465,030722);
+	PadLoad(02466,0);      // GAINAPPR
+	PadLoad(02467,0);
+	PadLoad(02470,0113);   // TCGFAPPR
+	PadLoad(02471,04704);  // TCGIAPPR   - END OF LOW GATE PARAMETERS
+	PadLoad(02472,0416);   // VIGN       - I(2)   DESIRED SPEED FOR IGNITION
+	PadLoad(02473,015755); 
+	PadLoad(02474,077730); // RIGNX      - I(2)   DESIRED `ALTITUDE' FOR IGNITION
+	PadLoad(02475,051505);
+	PadLoad(02476,077121); // RIGNZ      - I(2)   DESIRED GROUND RANGE FOR IGNITION
+	PadLoad(02477,073554);
+	PadLoad(02500,077255); // KIGNX/B4
+	PadLoad(02501,041625);
+	PadLoad(02502,073754); // KIGNY/B8
+	PadLoad(02503,052751);
+	PadLoad(02504,072516); // KIGNV/B4
+	PadLoad(02505,057777);
+	PadLoad(02506,04114);  // LOWCRIT
+	PadLoad(02507,04454);  // HIGHCRIT
+	PadLoad(02510,07640);  // V2FG       - I(6) DESIRED VELOCITY FOR P65.
+	PadLoad(02511,014632);
+	PadLoad(02512,017);
+	PadLoad(02513,03);
+	PadLoad(02514,0);
+	PadLoad(02515,0364);   // END OF V2FG
+	PadLoad(02516,0);      // TAUVERT    - I(2) TIME CONSTANT FOR P65 VEL. NULLING.
+	PadLoad(02517,0226);
+	PadLoad(02520,0);      // DELQFIX    - I(2) LR ALTITUDE DATA REASONABLE PARM.
+	PadLoad(02521,01717);
+	PadLoad(02522,01042);  // LRALPHA    - B(1) POS1 X ROTATION           * MUST *
+	PadLoad(02523,04211);  // LRBETA1    - B(1) POS1 Y ROTATION           *  BE  *
+	PadLoad(02524,01042);  // LRALPHA2   - B(1) POS2 X ROTATION           *  IN  *
+	PadLoad(02525,0);      // LRBETA2    - B(1) POS2 Y ROTATION           * ORDER*
+	PadLoad(02526,01414);  // LRVMAX     - B(1) LR VEL WEIGHTING FUNCTIONS (NEXT SEVERAL WORDS)
+	PadLoad(02527,0116);   // LRVF
+	PadLoad(02530,011463); // LRWVZ
+	PadLoad(02531,011463); // LRWVY
+	PadLoad(02532,011463); // LRWVX
+	PadLoad(02533,06315);  // LRWVFZ
+	PadLoad(02534,06315);  // LRWVFY
+	PadLoad(02535,06315);  // LRWVFX
+	PadLoad(02536,03146);  // LRWVFF     - END OF LR VEL WEIGHTING
+	PadLoad(02537,014370); // RODSCALE   - I(1) CLICK SCALE FACTOR FOR ROD
+	PadLoad(02540,011300); // TAUROD     - I(2) TIME CONSTANT FOR R.O.D.
+	PadLoad(02541,0);
+	PadLoad(02542,015164); // LAG/TAU    - I(2) LAG TIME DIVIDED BY TAUROD (P66)
+	PadLoad(02543,01420);
+	PadLoad(02544,01);     // MINFORCE   - I(2) MINIMUM FORCE P66 WILL COMMAND
+	PadLoad(02545,027631);
+	PadLoad(02546,013);    // MAXFORCE   - I(2) MAXIMUM FORCE P66 WILL COMMAND
+	PadLoad(02547,06551);
+	PadLoad(02550,0);      // ABTCOF     - I(16) COEFFICIENTS FOR ABORT TFI POLYS
+	PadLoad(02551,0);      // LUMINARY 131 HAD A BUNCH OF STUFF HERE THAT ISN'T IN 099
+	PadLoad(02552,0);      // THESE VALUES WILL HAVE TO BE DETERMINED
+	PadLoad(02553,0);
+	PadLoad(02554,0);
+	PadLoad(02555,0);
+	PadLoad(02556,0);
+	PadLoad(02557,0);
+	PadLoad(02560,0);
+	PadLoad(02561,0);
+	PadLoad(02562,0);
+	PadLoad(02563,0);
+	PadLoad(02564,0);
+	PadLoad(02565,0);
+	PadLoad(02566,0);
+	PadLoad(02567,0);      // END OF ABTCOF 
+	PadLoad(02570,0);      // VMIN       - I(2) MINIMUM VELOCITY FOR ABORT INJ.
+	PadLoad(02571,0);
+	PadLoad(02572,016);    // YLIM       - I(2) MAXIMUM CROSS-RANGE DIST. IN ABORTS
+	PadLoad(02573,032446);
+	PadLoad(02574,07);     // ABTRDOT    - I(2) DESIRED RADIAL VEL. FOR ABORTS.
+	PadLoad(02575,023346);
+	PadLoad(02576,0);      // COSTHET1   - I(2) COS CONE 1 ANGLE FOR ABORTS.
+	PadLoad(02577,0);
+	PadLoad(02600,06733);  // COSTHET2   - I(2) COS OF CONE 2 ANGLE FOR ABORTS.
+	PadLoad(02601,07535);
+	PadLoad(03000,02324);  // HIASCENT   - (1) MASS AFTER STAGING, SCALE AT B16 KG.
+	PadLoad(03001,05454);  // ROLLTIME   - (1) TIME TO TRIM Z GIMBAL IN R03, CSEC.
+	PadLoad(03002,04513);  // PITTIME    - (1) TIME TO TRIM Y GIMBAL IN R03, CSEC.
+	PadLoad(03003,077001); // DKTRAP     - (1) DAP STATE             (POSSIBLE 77001
+	PadLoad(03004,012);    // DKOMEGAN   - (1)   ESTIMATOR PARA-       (VALUES 00012
+	PadLoad(03005,074);    // DKKAOSN    - (1)     METERS FOR THE              00074
+	PadLoad(03006,077001); // LMTRAP     - (1)       DOCKED AND                77001
+	PadLoad(03007,0);      // LMOMEGAN   - (1)         LEM-ALONE CASES         00000
+	PadLoad(03010,074);    // LMKAOSN    - (1)           RESPECTIVELY          00074
+	PadLoad(03011,0200);   // DKDB       - (1) WIDTH OF DEADBAND FOR DOCKED RCS AUTOPILOT (DB=1.4DEG IN FRESH START, DEADBAND = PI/DKDB RAD.)
+	PadLoad(03012,02555);  // IGNAOSQ    - PADLOAD FOR INTITIALIZATION OF DAP BIAS ACCELERATION (AT P12 IGNITION)
+	PadLoad(03013,0150);   // IGNAOSR    - PADLOAD FOR INTITIALIZATION OF DAP BIAS ACCELERATION (AT P12 IGNITION)
+	PadLoad(03113,0);      // DOWNTORK   - ACCUMULATED JET TORQUE COMMANDED ABOUT +,-p, +,-u, +,-v RESPECTIVELY.
+	PadLoad(03114,0);      //              EMPLOYED EXCLUSIVELY FOR DOWNLIST. NOT INITIALIZED: PERMITTED TO OVERFLOW.
+	PadLoad(03115,0);
+	PadLoad(03116,0);
+	PadLoad(03117,0);
+	PadLoad(03120,0);      // END OF DOWNTORK
+	PadLoad(03400,01);     // ATIGINC    - B(2)PL *MUST BE AT 1400 FOR SYSTEMS TEST
+	PadLoad(03401,03120);
+	PadLoad(03402,01);     // PTIGINC    - B(2)PL
+	PadLoad(03403,03120);
+	PadLoad(03404,065244); // AOTAZ      - AOTMARK STORAGE
+	PadLoad(03405,077770);
+	PadLoad(03406,012514);
+	PadLoad(03407,025247);
+	PadLoad(03410,037775);
+	PadLoad(03411,052521); // END OF AOTAZ
+	PadLoad(03412,010011); // AOTEL
+	PadLoad(03413,010012);
+	PadLoad(03414,010014);
+	PadLoad(03415,010013);
+	PadLoad(03416,010012);
+	PadLoad(03417,010010); // END OF AOTEL
+	PadLoad(03420,035610); // LRHMAX     - LANDING RADAR PAD LOADED
+	PadLoad(03421,013146); // LRWH
+	PadLoad(03422,05050);  // ZOOMTIME   - B(1)PL TIME OF DPS THROTTLE-UP COMMAND
+	PadLoad(03423,01407);  // TENDBRAK   - B(1) LANDING PHASE SWITCHING CRITERION
+	PadLoad(03424,0226);   // TENDAPPR   - B(1) LANDING PHASE SWITCHING CRITERION
+	PadLoad(03425,075632); // DELTTFAP   - B(1) INCREMENT ADDED TO TTF/8 WHEN SWITCHING FROM P63 TO P64
+	PadLoad(03426,077743); // LEADTIME   - B(1) TIME INCREMENT SPECIFYING HOW MUCH GUIDANCE IS PROJECTED FORWARD
+	PadLoad(03427,01407);  // RPCRTIME   - B(1) LR REPOSITIONING CRITERION (TIME)
+	PadLoad(03430,057777); // RPCRTQSW   - B(1) LR REPOSITIONING CRITERION (ANGLE)
+	PadLoad(03431,020000); // TNEWA      - I(2)PL LAMBERT CYCLE PERIOD.
+	PadLoad(03432,0);      //  LOAD SAYS "A LARGE NUMBER TO PREVENT RECYCLING THE LAMBERT SOLUTION"
 
 	thread.Resume();
 }
@@ -1526,8 +1801,6 @@ int LEMcomputer::SetStatus(double simcomputert,
 
 void LEMcomputer::ProcessChannel13(int val){
 	LEM *lem = (LEM *) OurVessel;	
-	// SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
-
 	LMChannelValue13 ch13;
 	ch13.Value = val;
 	if(ch13.Bits.EnableRHCCounter && ch13.Bits.RHCRead){
@@ -1538,7 +1811,7 @@ void LEMcomputer::ProcessChannel13(int val){
 		
 		WriteMemory(042,rhc_count[1]); // PITCH 
 		WriteMemory(043,rhc_count[2]); // YAW   
-		WriteMemory(044,rhc_count[0]); // ROLL  
+		WriteMemory(044,rhc_count[0]); // ROLL  		
 		/*
 		sprintf(oapiDebugString(),"LM CH13: %o RHC: SENT %d %d %d",val,
 			rhc_count[0],rhc_count[1],rhc_count[2]);
@@ -1551,61 +1824,82 @@ void LEMcomputer::ProcessChannel13(int val){
 
 void LEMcomputer::ProcessChannel5(int val){
 	// This is now handled inside the ATCA
-	/*
-	LMChannelValue5 ch5;
-	LEM *lem = (LEM *) OurVessel;
-	ch5.Value = val;
-	*/
-	/* THRUSTER TABLE:
-		0	A1U		8	A3U
-		1	A1F		9	A3R
-		2	B1L		10	B3A
-		3	B1D		11	B3D
-
-		4	B2U		12	B4U
-		5	B2L		13	B4F
-		6	A2A		14	A4R
-		7	A2D		15	A4D
-	*/
-	/*
-	lem->SetRCSJet(12,(ch5.Bits.B4U != 0));
-	lem->SetRCSJet(15,(ch5.Bits.A4D != 0));
-	lem->SetRCSJet(8,(ch5.Bits.A3U != 0));
-	lem->SetRCSJet(11,(ch5.Bits.B3D != 0));
-	lem->SetRCSJet(4,(ch5.Bits.B2U != 0));
-	lem->SetRCSJet(7,(ch5.Bits.A2D != 0));
-	lem->SetRCSJet(0,(ch5.Bits.A1U != 0));
-	lem->SetRCSJet(3,(ch5.Bits.B1D != 0));
-	*/
-	/*
-	if(val != 0){
-		sprintf(oapiDebugString(),"LM CH5: %o CH30: %o CH31: %o",val,GetInputChannel(030),GetInputChannel(031));
-	}
-	*/
+	LEM *lem = (LEM *) OurVessel;	
+	lem->atca.ProcessLGC(5,val);
 }
 
 void LEMcomputer::ProcessChannel6(int val){	
 	// This is now handled inside the ATCA
-	/*
-	LMChannelValue6 ch6;
-	LEM *lem = (LEM *) OurVessel;
-	ch6.Value = val;
-	*/
-	/*
-	lem->SetRCSJet(10,(ch6.Bits.B3A != 0));
-	lem->SetRCSJet(13,(ch6.Bits.B4F != 0));
-	lem->SetRCSJet(1,(ch6.Bits.A1F != 0));
-	lem->SetRCSJet(6,(ch6.Bits.A2A != 0));
-	lem->SetRCSJet(5,(ch6.Bits.B2L != 0));
-	lem->SetRCSJet(9,(ch6.Bits.A3R != 0));
-	lem->SetRCSJet(14,(ch6.Bits.A4R != 0));
-	lem->SetRCSJet(2,(ch6.Bits.B1L != 0));
-	*/
-	/*
-	if(val != 0){
-		sprintf(oapiDebugString(),"LM CH6: %o CH30: %o CH31: %o",val,GetInputChannel(030),GetInputChannel(031));
+	LEM *lem = (LEM *) OurVessel;	
+	lem->atca.ProcessLGC(6,val);
+}
+
+// Process IMU CDU error counters.
+void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+	// FULL NEEDLE DEFLECTION is 16.88 DEGREES
+	// 030 PULSES = MAX IN ONE RELAY EVENT
+	// 22 PULSES IS ONE DEGREE, 384 PULSES = FULL SCALE
+	// 0.10677083 PIXELS PER PULSE
+	LEM *lem = (LEM *) OurVessel;	
+	LMChannelValue12 val12;
+	if(channel != 012){ val12.Value = GetOutputChannel(012); }else{ val12.Value = val; }
+	// 174 = X, 175 = Y, 176 = Z
+	if(val12.Bits.CoarseAlignEnable){ return; } // Does not apply to us here.
+	switch(channel){
+	case 012:
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			if(lem->atca.lgc_err_ena == 0){
+				sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
+				lem->atca.lgc_err_x = 0;
+				lem->atca.lgc_err_y = 0;
+				lem->atca.lgc_err_z = 0;
+				lem->atca.lgc_err_ena = 1;
+			}
+		}else{
+			lem->atca.lgc_err_ena = 0;
+		}
+		break;
+
+	case 0174: // YAW ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			// NEGATIVE = RIGHT
+			if(val&040000){
+				lem->atca.lgc_err_z -= delta;
+			}else{
+				lem->atca.lgc_err_z += delta;
+			}
+		}
+		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		break;
+	
+	case 0175: // PITCH ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			// NEGATIVE = DOWN
+			if(val&040000){
+				lem->atca.lgc_err_y -= delta;
+			}else{
+				lem->atca.lgc_err_y += delta;
+			}
+		}
+		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		break;
+
+	case 0176: // ROLL ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			// NEGATIVE = RIGHT
+			if(val&040000){
+				lem->atca.lgc_err_x += delta;
+			}else{
+				lem->atca.lgc_err_x -= delta;
+			}
+		}
+		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		break;
 	}
-	*/
+
 }
 
 void LEMcomputer::BurnMainEngine(double thrust)

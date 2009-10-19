@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.6  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -3943,17 +3946,17 @@ bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
 	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
 			bool Hold = false;
-			bool Free = false;
+			bool Auto = false;
 
 			if (IsCenter()) {
 				Hold = true;
 			}
 			else if (IsUp()) {
-				Free = true;
+				Auto = true;
 			}
 
 			agc->SetInputChannelBit(031, 13, Hold);
-			agc->SetInputChannelBit(031, 14, Free);
+			agc->SetInputChannelBit(031, 14, Auto);
 		}
 		return true;
 	}

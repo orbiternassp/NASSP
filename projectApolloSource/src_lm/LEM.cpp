@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.14  2009/09/14 00:19:41  trebonian
   *	Stage commit for AGS - DEDA keyboard and display
   *	
@@ -1627,12 +1630,9 @@ void LEM::SetRCSJet(int jet, bool fire) {
 }
 
 
-/// \todo Dirty Hack for the AGC++ attitude control, 
-/// remove this and use I/O channels and pulsed thrusters 
-/// identical to the VAGC instead
+// This gets used by the ATCA to simulate lag of RCS jets.
 
 void LEM::SetRCSJetLevel(int jet, double level) {
-
 	SetThrusterLevel(th_rcs[jet], level);
 }
 

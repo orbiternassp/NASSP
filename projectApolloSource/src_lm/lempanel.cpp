@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/09/22 11:40:12  trebonian
+  *	Support new DEDA bitmaps and digits
+  *	
   *	Revision 1.11  2009/09/21 19:19:40  flydba
   *	New LEM bitmaps available. Positions changed to fit everything to the new panels.
   *	
@@ -1483,10 +1486,10 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterMFD (MFD_LEFT,  mfds_left);
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
-
-		//fdaiLeft.RegisterMe(AID_FDAI_LEFT, 135, 625);
+		
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 233, 625); // Was 135,625
 		//fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1103, 625);
-		//hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1130, 1564, 1555, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
