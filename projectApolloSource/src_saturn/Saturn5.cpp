@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/07/09 13:04:29  dseagrav
+  *	Clobber LVIMU coarse-align flag at boot.
+  *	
   *	Revision 1.2  2009/07/04 21:36:09  dseagrav
   *	LVDC++ update
   *	Should not break anything else
@@ -1522,7 +1525,7 @@ void SaturnV::SetVehicleStats()
 				Interstage_Mass = 5641;
 				SII_EmptyMass = 44050; // Includes S2/S4B interstage, does not include ullage jets
 				SII_FuelMass = 430324; 
-				S4B_EmptyMass = 25512; // Includes S4B stage, IU, LM adapter, and LTA
+				S4B_EmptyMass = 16486; // Includes S4B stage, IU, LM adapter, but NOT the LTA
 				S4B_FuelMass = 107154;
 			}
 		}else{
