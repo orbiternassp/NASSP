@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/18 18:29:56  tschachim
+  *	Minor fixes EMS, needs more fixing...
+  *	
   *	Revision 1.7  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -4943,7 +4946,14 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_EMS_SCROLL_LEO: {
 		hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
-		SetBkMode (hDC, TRANSPARENT);			
+
+		if (EMSScrollSurf == 0) EMSScrollSurf = srf[SRF_EMS_SCROLL_LEO];
+
+		//if (GTASwitch.IsUp()) {
+		//	ems.WriteScrollToFile(srf[SRF_EMS_SCROLL_LEO]);
+		//}
+
+		SetBkMode (hDC, TRANSPARENT);
 		HGDIOBJ oldObj = SelectObject(hDC, g_Param.pen[2]);
 
 		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);

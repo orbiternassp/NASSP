@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.7  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -4126,6 +4129,7 @@ protected:
 	SURFHANDLE CMTex;
 	SURFHANDLE J2Tex;
 	SURFHANDLE SIVBRCSTex;
+	SURFHANDLE EMSScrollSurf;
 
 	/// \todo SURFHANDLEs for VC
 
