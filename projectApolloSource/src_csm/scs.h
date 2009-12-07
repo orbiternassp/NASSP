@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/03/03 18:34:28  tschachim
   *	Bugfixes BMAGs and hatch.
   *	
@@ -339,9 +342,9 @@ public:
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
 #define EMS_SCROLL_LENGTH_PX    2500   //Pixel length of bitmap
+#define EMS_SCROLL_LENGTH_PY    145   //Pixel height of bitmap
 #define EMS_RSI_CENTER_X        42     //Pixel center on bitmap
 #define EMS_RSI_CENTER_Y        41     //Pixel center on bitmap
-
 
 class EMS {
 
@@ -363,6 +366,8 @@ public:
 	int LiftVectLight();
 	bool IsOff();
 	bool IsdVMode();
+	bool WriteScrollToFile();
+	bool WriteScrollToFile(SURFHANDLE surf);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 	
@@ -408,8 +413,12 @@ protected:
 	bool CorridorEvaluated;
 
 	double ScrollBitmapLength;
+	double ScrollBitmapHeight;
 	double ScrollScaling;
 
 	PowerMerge DCPower;
 	Saturn *sat;
 };
+
+PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);
+bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC);

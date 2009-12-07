@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/18 18:29:56  tschachim
+  *	Minor fixes EMS, needs more fixing...
+  *	
   *	Revision 1.2  2009/03/03 18:34:28  tschachim
   *	Bugfixes BMAGs and hatch.
   *	
@@ -154,6 +157,8 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "papi.h"
+
+//#include "afxdlgs.h"  // This header allows file write dialog for Scroll output...  HACKED.
 
 
 /* ATTENTION: The original implementation used an inertial attitude reference 
@@ -2709,6 +2714,14 @@ void ECA::TimeStep(double simdt) {
 #define EMS_STATUS_EMS_TEST4	14
 #define EMS_STATUS_EMS_TEST5	15
 
+extern GDIParams g_Param;
+
+//#define IDS_WINDOWS_BITMAP_FILES			_T("Windows Bitmap Files (*.BMP; *.DIB)|*.BMP; *.DIB||" )
+//#define IDS_FILE_CREATE_ERROR_MESSAGE		_T("Cannot create the requested file. Please ensure that the path name is valid and that you have write access to the destination drive and try again." )
+//#define DEFAULT_BITMAP_FILE_EXTENSION		_T("bmp")
+//#define DEFAULT_BITMAP_FILE_NAME			_T("EMS_Scroll")
+
+
 
 EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 
@@ -2760,12 +2773,14 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 			Therefore, the scaling factor between pixels and inches of scroll length is 0.018263888888888888888888888888889
 			Or...      the scaling factor between pixels and ft/sec is 0.03*/
 	ScrollBitmapLength = 2500; //Pixels
+	ScrollBitmapHeight = 145; //Pixels
 	ScrollScaling = 0.03; // pixels per ft/sec
 }
 
 void EMS::Init(Saturn *vessel) {
 	sat = vessel;
 	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+	sat->EMSScrollSurf = 0;
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -3250,6 +3265,12 @@ bool EMS::IsPowered() {
 
 void EMS::SaveState(FILEHANDLE scn) {
 
+	//  ONLY PRINT SCROLL IF GTA SWITCH IS IN ON POSITION (Debug easter egg)
+
+	if (sat->GTASwitch.IsUp()) {
+		WriteScrollToFile();
+	}
+
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
@@ -3306,4 +3327,172 @@ void EMS::LoadState(FILEHANDLE scn){
 			sscanf(line + 12, "%lf", &LiftVectLightOn);
 		}
 	}
+}
+bool EMS::WriteScrollToFile() {return WriteScrollToFile(NULL);}
+bool EMS::WriteScrollToFile(SURFHANDLE surf){
+	//Special Thanks to computerex at orbiter-forum for assisting in this implementation
+	int width = EMS_SCROLL_LENGTH_PX;
+	int height = EMS_SCROLL_LENGTH_PY;
+
+	if (sat->EMSScrollSurf == 0) return false;
+
+	/////////////////////////////////////////////////////////
+    //Get the drawing surface, apply the scribe line and create a corresponding 
+    //bitmap with the same dimensions
+
+	SURFHANDLE bkgrndsurf;
+
+	if (surf == NULL){
+		bkgrndsurf = sat->EMSScrollSurf;
+	} else {
+		bkgrndsurf = surf;
+	}
+
+	HDC hDCsurf = oapiGetDC (bkgrndsurf);
+	HDC hMemDC = CreateCompatibleDC(hDCsurf);
+	HBITMAP hBitmap = CreateCompatibleBitmap(hDCsurf, width, height);
+	HBITMAP hOld = (HBITMAP) SelectObject(hMemDC, hBitmap);
+	BitBlt(hMemDC, 0, 0, width, height, hDCsurf, 0, 0, SRCCOPY);
+
+	// Draw Commands
+	SetBkMode (hMemDC, TRANSPARENT);
+	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[2]);
+	Polyline(hMemDC, ScribePntArray, ScribePntCnt);
+	SelectObject(hMemDC, oldObj);
+
+	SelectObject(hMemDC, hOld);
+	DeleteDC(hMemDC);
+
+	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
+	bool ret = true;
+	ret = CreateBMPFile("Scroll.bmp", bitmapInfo, hBitmap, hDCsurf);
+	DeleteObject(hBitmap);
+
+	return ret;
+
+}
+// The following code was found and supplied by computerex at orbiter-forum.  The code is from the MSDN sample code library.
+PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp)
+{ 
+	BITMAP      bmp; 
+	PBITMAPINFO pbmi; 
+	WORD        cClrBits; 
+
+	// Retrieve the bitmap color format, width, and height. 
+	if (!GetObject(hBmp, sizeof(BITMAP), (LPSTR)&bmp)) {
+		return NULL;
+	}
+
+	cClrBits = (WORD)(bmp.bmPlanes * bmp.bmBitsPixel); 
+	if (cClrBits == 1) 
+		cClrBits  = 1; 
+	else if (cClrBits <= 4) 
+		cClrBits  = 4; 
+	else if (cClrBits <= 8) 
+		cClrBits  = 8; 
+	else if (cClrBits <= 16) 
+		cClrBits  = 16; 
+	else if (cClrBits <= 24) 
+		cClrBits  = 24; 
+	else cClrBits = 32; 
+
+	if (cClrBits != 24) 
+		pbmi = (PBITMAPINFO) LocalAlloc(LPTR, 
+		sizeof(BITMAPINFOHEADER) + 
+		sizeof(RGBQUAD) * (1<< cClrBits)); 
+	else 
+		pbmi = (PBITMAPINFO) LocalAlloc(LPTR, 
+		sizeof(BITMAPINFOHEADER)); 
+
+	pbmi->bmiHeader.biSize     = sizeof(BITMAPINFOHEADER); 
+	pbmi->bmiHeader.biWidth    = bmp.bmWidth; 
+	pbmi->bmiHeader.biHeight   = bmp.bmHeight; 
+	pbmi->bmiHeader.biPlanes   = bmp.bmPlanes; 
+	pbmi->bmiHeader.biBitCount = bmp.bmBitsPixel; 
+	if (cClrBits < 24) 
+		pbmi->bmiHeader.biClrUsed = (1<<cClrBits); 
+	pbmi->bmiHeader.biCompression = BI_RGB; 
+	pbmi->bmiHeader.biSizeImage = ((pbmi->bmiHeader.biWidth * cClrBits +31) & ~31) /8
+		* pbmi->bmiHeader.biHeight; 
+	pbmi->bmiHeader.biClrImportant = 0; 
+	return pbmi; 
+}
+
+bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC) { 
+					   HANDLE hf;                 // file handle 
+					   BITMAPFILEHEADER hdr;       // bitmap file-header 
+					   PBITMAPINFOHEADER pbih;     // bitmap info-header 
+					   LPBYTE lpBits;              // memory pointer 
+					   DWORD dwTotal;              // total count of bytes 
+					   DWORD cb;                   // incremental count of bytes 
+					   BYTE *hp;                   // byte pointer 
+					   DWORD dwTmp; 
+
+					   pbih = (PBITMAPINFOHEADER) pbi; 
+					   lpBits = (LPBYTE) GlobalAlloc(GMEM_FIXED, pbih->biSizeImage);
+
+					   if (!lpBits) {
+						   return false;
+					   }
+
+					   // Retrieve the color table (RGBQUAD array) and the bits 
+					   // (array of palette indices) from the DIB. 
+					   if (!GetDIBits(hDC, hBMP, 0, (WORD) pbih->biHeight, lpBits, pbi, 
+						   DIB_RGB_COLORS)) {
+							   return false;
+					   }
+
+					   // Create the .BMP file. 
+					   hf = CreateFile(pszFile, 
+						   GENERIC_READ | GENERIC_WRITE, 
+						   (DWORD) 0, 
+						   NULL, 
+						   CREATE_ALWAYS, 
+						   FILE_ATTRIBUTE_NORMAL, 
+						   (HANDLE) NULL); 
+					   if (hf == INVALID_HANDLE_VALUE) {
+						   return false;
+					   }
+					   hdr.bfType = 0x4d42;        // 0x42 = "B" 0x4d = "M" 
+					   // Compute the size of the entire file. 
+					   hdr.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) + 
+						   pbih->biSize + pbih->biClrUsed 
+						   * sizeof(RGBQUAD) + pbih->biSizeImage); 
+					   hdr.bfReserved1 = 0; 
+					   hdr.bfReserved2 = 0; 
+
+					   // Compute the offset to the array of color indices. 
+					   hdr.bfOffBits = (DWORD) sizeof(BITMAPFILEHEADER) + 
+						   pbih->biSize + pbih->biClrUsed 
+						   * sizeof (RGBQUAD); 
+
+					   // Copy the BITMAPFILEHEADER into the .BMP file. 
+					   if (!WriteFile(hf, (LPVOID) &hdr, sizeof(BITMAPFILEHEADER), 
+						   (LPDWORD) &dwTmp,  NULL)) 
+					   {
+						   return false;
+					   }
+
+					   // Copy the BITMAPINFOHEADER and RGBQUAD array into the file. 
+					   if (!WriteFile(hf, (LPVOID) pbih, sizeof(BITMAPINFOHEADER) 
+						   + pbih->biClrUsed * sizeof (RGBQUAD), 
+						   (LPDWORD) &dwTmp, NULL)) {
+							   return false;
+					   }
+
+					   // Copy the array of color indices into the .BMP file. 
+					   dwTotal = cb = pbih->biSizeImage; 
+					   hp = lpBits; 
+					   if (!WriteFile(hf, (LPSTR) hp, (int) cb, (LPDWORD) &dwTmp,NULL)) {
+						   return false;
+					   }
+
+					   // Close the .BMP file. 
+					   if (!CloseHandle(hf)) {
+						   return false;
+					   }
+
+					   // Free memory. 
+					   GlobalFree((HGLOBAL)lpBits);
+					   return true;
 }
