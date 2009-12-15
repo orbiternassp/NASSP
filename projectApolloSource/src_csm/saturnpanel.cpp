@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/12/07 08:34:36  jasonims
+  *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
+  *	
   *	Revision 1.8  2009/09/18 18:29:56  tschachim
   *	Minor fixes EMS, needs more fixing...
   *	
@@ -4946,8 +4949,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_EMS_SCROLL_LEO: {
 		hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
-
-		if (EMSScrollSurf == 0) EMSScrollSurf = srf[SRF_EMS_SCROLL_LEO];
 
 		//if (GTASwitch.IsUp()) {
 		//	ems.WriteScrollToFile(srf[SRF_EMS_SCROLL_LEO]);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/12/07 08:34:36  jasonims
+  *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
+  *	
   *	Revision 1.3  2009/09/18 18:29:56  tschachim
   *	Minor fixes EMS, needs more fixing...
   *	
@@ -2780,7 +2783,6 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 void EMS::Init(Saturn *vessel) {
 	sat = vessel;
 	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
-	sat->EMSScrollSurf = 0;
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -3328,31 +3330,18 @@ void EMS::LoadState(FILEHANDLE scn){
 		}
 	}
 }
-bool EMS::WriteScrollToFile() {return WriteScrollToFile(NULL);}
-bool EMS::WriteScrollToFile(SURFHANDLE surf){
+bool EMS::WriteScrollToFile(){
 	//Special Thanks to computerex at orbiter-forum for assisting in this implementation
 	int width = EMS_SCROLL_LENGTH_PX;
 	int height = EMS_SCROLL_LENGTH_PY;
-
-	if (sat->EMSScrollSurf == 0) return false;
 
 	/////////////////////////////////////////////////////////
     //Get the drawing surface, apply the scribe line and create a corresponding 
     //bitmap with the same dimensions
 
-	SURFHANDLE bkgrndsurf;
-
-	if (surf == NULL){
-		bkgrndsurf = sat->EMSScrollSurf;
-	} else {
-		bkgrndsurf = surf;
-	}
-
-	HDC hDCsurf = oapiGetDC (bkgrndsurf);
-	HDC hMemDC = CreateCompatibleDC(hDCsurf);
-	HBITMAP hBitmap = CreateCompatibleBitmap(hDCsurf, width, height);
-	HBITMAP hOld = (HBITMAP) SelectObject(hMemDC, hBitmap);
-	BitBlt(hMemDC, 0, 0, width, height, hDCsurf, 0, 0, SRCCOPY);
+	HDC hMemDC = CreateCompatibleDC(0);
+	HBITMAP hBitmap = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_EMS_SCROLL_LEO));
+	HGDIOBJ hOld = SelectObject(hMemDC, hBitmap);
 
 	// Draw Commands
 	SetBkMode (hMemDC, TRANSPARENT);
@@ -3361,12 +3350,13 @@ bool EMS::WriteScrollToFile(SURFHANDLE surf){
 	SelectObject(hMemDC, oldObj);
 
 	SelectObject(hMemDC, hOld);
-	DeleteDC(hMemDC);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
 	bool ret = true;
-	ret = CreateBMPFile("Scroll.bmp", bitmapInfo, hBitmap, hDCsurf);
+	ret = CreateBMPFile("EMSScroll.bmp", bitmapInfo, hBitmap, hMemDC);
 	DeleteObject(hBitmap);
+
+	DeleteDC(hMemDC);
 
 	return ret;
 

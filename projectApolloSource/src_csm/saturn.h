@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/12/07 08:34:36  jasonims
+  *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
+  *	
   *	Revision 1.8  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -4129,7 +4132,6 @@ protected:
 	SURFHANDLE CMTex;
 	SURFHANDLE J2Tex;
 	SURFHANDLE SIVBRCSTex;
-	SURFHANDLE EMSScrollSurf;
 
 	/// \todo SURFHANDLEs for VC
 
