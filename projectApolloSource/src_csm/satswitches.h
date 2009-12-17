@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -495,12 +498,14 @@ protected:
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, CircuitBrakerSwitch *cba, CircuitBrakerSwitch *cbb);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	ToggleSwitch *H2oQtyIndSwitch;
+	CircuitBrakerSwitch *CbA;
+	CircuitBrakerSwitch *CbB;
 };
 
 class SaturnAccelGMeter : public SaturnRoundMeter {
@@ -797,10 +802,82 @@ public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
+	int GetState();
+	void SetState(int value);
+
 protected:
 	virtual double AdjustForPower(double val) { return val; };
 
 	SURFHANDLE Digits;
+	Saturn *Sat;
+};
+
+
+// Dummy switches/displays for checklist controller
+
+class SaturnEMSScrollDisplay : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+};
+
+class SaturnPanel382Cover : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+};
+
+class SaturnPanel600 : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+};
+
+class SaturnASCPSwitch : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s, int axis);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+	int Axis;
+};
+
+class SaturnAbortSwitch : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
 	Saturn *Sat;
 };
 
@@ -862,6 +939,7 @@ class SuitTestSwitch: public RotationalSwitch {
 
 public:
 	virtual void DrawSwitch(SURFHANDLE drawSurface);
+	virtual void DrawFlash(SURFHANDLE DrawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
 };
 
@@ -873,22 +951,6 @@ public:
 
 protected:
 	DSE *dse;
-};
-
-class DSEThreePosSwitch : public ThreePosSwitch 
-{
-public:
-	DSEThreePosSwitch() { dse = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, DSE *d);
-
-protected:
-	DSE *dse;
-};
-
-class DSEPlayRecordSwitch : public DSEThreePosSwitch
-{
-public:
-	bool SwitchTo(int newState, bool dontspring);
 };
 
 class SaturnOxygenRepressPressMeter : public SaturnRoundMeter {

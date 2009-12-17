@@ -726,13 +726,26 @@
 #define IDB_THREEPOSSWITCH90_LEFT                          1010
 #define IDB_BORDER_38x37                                   1011
 #define IDB_EMS_SCROLL_BUG                                 1012
-
+#define IDB_BORDER_55x91                                   1013
+#define AID_CSM_PANEL_306_MISSIONTIMERSWITCH               1014
+#define AID_PLVC_SWITCH                                    1015
+#define IDB_SWITCH90                                       1016
+#define IDB_BORDER_673x369                                 1017
+#define IDB_BORDER_673x80                                  1018
+#define IDB_BORDER_110x29                                  1019
+#define IDB_BORDER_29x30                                   1020
+#define IDB_BORDER_62x129                                  1021
+#define IDB_BORDER_194x324                                 1022
+#define IDB_BORDER_36x69                                   1023
+#define IDB_BORDER_62x31                                   1024
+#define IDB_CSM_CABINPRESSTESTSWITCH                       1025
+#define AID_CSM_CABINPRESSTESTSWITCH                       1026
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1013
+#define _APS_NEXT_RESOURCE_VALUE                            1027
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

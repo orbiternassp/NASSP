@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/21 19:22:39  flydba
+  *	Mission Timer now displays the new digits.
+  *	
   *	Revision 1.2  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -228,13 +231,51 @@ void MissionTimer::SetTime(double t)
 	seconds = secs - (60 * minutes);
 }
 
-void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
+void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 {
 	if (!IsPowered())
 		return;
 
 	int Curdigit, Curdigit2;
+
+	/// \todo Remove after CSM panel got updated
+	if (csm) {
+		// Hour display on three digit
+		Curdigit = hours / 100;
+		Curdigit2 = hours / 1000;
+		oapiBlt(surf, digits, 0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+
+		Curdigit = hours / 10;
+		Curdigit2 = hours / 100;
+		oapiBlt(surf, digits, 0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+
+		Curdigit = hours;
+		Curdigit2 = hours / 10;
+		oapiBlt(surf, digits,0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf, digits,0+54,0, 192,0,4,19);
+
+		// Minute display on two digit
+		Curdigit = minutes / 10;
+		Curdigit2 = minutes / 100;
+		oapiBlt(surf, digits,0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+
+		Curdigit = minutes;
+		Curdigit2 = minutes / 10;
+		oapiBlt(surf, digits,0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf, digits,0+98,0, 192,0,4,19);
+
+		// second display on two digit
+		Curdigit = seconds / 10;
+		Curdigit2 = seconds / 100;
+		oapiBlt(surf, digits,0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+
+		Curdigit = seconds;
+		Curdigit2 = seconds/10;
+		oapiBlt(surf, digits,0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		
+		return;
+	}
 
 	// Hour display on three digit
 	Curdigit = hours / 100;
@@ -248,7 +289,6 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit = hours;
 	Curdigit2 = hours / 10;
 	oapiBlt(surf, digits,0+39,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-	//oapiBlt(surf, digits,0+54,0, 192,0,4,19);
 
 	// Minute display on two digit
 	Curdigit = minutes / 10;
@@ -258,7 +298,6 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
 	oapiBlt(surf, digits,0+81,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-	//oapiBlt(surf, digits,0+98,0, 192,0,4,19);
 
 	// second display on two digit
 	Curdigit = seconds / 10;

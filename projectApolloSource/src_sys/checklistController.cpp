@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -75,9 +78,15 @@ ChecklistController::~ChecklistController()
 // Todo: Verify
 ChecklistItem *ChecklistController::getChecklistItem(int group, int index)
 {
-	if (group != -1)
-	{
-		spawnCheck(group, false);
+	if (group != -1) {
+		if (spawnCheck(group, false)) {
+			if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
+				waitForCompletion = true;
+			} else {
+				waitForCompletion = false;
+			}
+			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+		}
 	}
 
 	if (active.program.group == -1)
@@ -104,7 +113,7 @@ vector<ChecklistGroup> *ChecklistController::getChecklistList()
 // Todo: Verify
 bool ChecklistController::failChecklistItem(ChecklistItem* input)
 {
-	int failure = input->failEvent;
+	int failure = input->failGroup;
 
 	if (input->group != active.program.group)
 		return false;
@@ -115,12 +124,14 @@ bool ChecklistController::failChecklistItem(ChecklistItem* input)
 	iterate();
 
 	if (failure != -1)
-		return spawnCheck(failure,true);
+		return spawnCheck(failure, true);
 	return true;
 }
 // Todo: Verify
 bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 {
+	int callGroup = input->callGroup;
+
 	if (input->group != active.program.group)
 		return false;
 	if (input->index >= active.set.size())
@@ -130,6 +141,20 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 	active.set[input->index].setFlashing(&conn, false);
 	lastItemTime = lastMissionTime;
 	iterate();
+
+	if (callGroup != -1) {
+		if (spawnCheck(callGroup, false)) {
+			if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
+				waitForCompletion = true;
+			} else {
+				waitForCompletion = false;
+			}
+			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+			return true;
+		} else {
+			return false;
+		}
+	}
 	return true;
 }
 // Todo: Verify
@@ -316,12 +341,14 @@ bool ChecklistController::init(bool input)
 	autoexecute = false;
 	autoexecuteSlow = false;
     autoexecuteSlowDelay = 4;
+	autoexecuteAllItemsAutomatic = false;
 	playSound = false;
+	waitForCompletion = false;
 
 	return true;
 }
 // Todo: Verify
-bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
+bool ChecklistController::spawnCheck(int group, bool failed, bool automagic)
 {
 	// verify integrity of input.
 	if (group == -1)
@@ -464,7 +491,7 @@ void ChecklistController::iterate()
 
 bool ChecklistController::iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec) {
 
-	if (active.program.group != -1 && active.sequence->checkExec(missiontime, active.startTime, lastItemTime, eventController)) {
+	if (active.program.group != -1 && active.sequence->checkExec(missiontime, active.startTime, lastItemTime, eventController, (complete && autoexecute && autoexecuteAllItemsAutomatic))) {
 		if (active.sequence->iterate(&conn, autoexec)) {
 			completeChecklistItem(&(*active.sequence));
 			return true;
@@ -473,7 +500,6 @@ bool ChecklistController::iterateChecklistItem(double missiontime, SaturnEvents 
 	return false;
 }
 
-// Todo: Verify
 void ChecklistController::timestep(double missiontime, SaturnEvents eventController)
 {
 	// Play Sound
@@ -483,19 +509,23 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	}
 
 	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController)) {
+	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController, (complete && autoexecute && autoexecuteAllItemsAutomatic))) {
 		active.sequence->setFlashing(&conn, flashing);
 	}
 
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
-	if (complete && !(autoexecute && autoexecuteSlow)) {
-		iterateChecklistItem(missiontime, eventController);
+	if (complete && ((autoexecute && !autoexecuteSlow) || (!autoexecute && waitForCompletion))) {
+		waitForCompletion = !iterateChecklistItem(missiontime, eventController);
+		if (!waitForCompletion) {
+			if (active.program.group != -1 && !active.sequence->checkIterate(&conn))
+				waitForCompletion = true;
+		}
 	}
 
 	//Exit if less than one second
 	if (missiontime < (lastMissionTime + 1.0))
 		return;
-	if (complete && autoexecute && autoexecuteSlow && missiontime < (lastMissionTime + autoexecuteSlowDelay))
+	if (complete && ((autoexecute && autoexecuteSlow) || (!autoexecute && !waitForCompletion)) && missiontime < (lastMissionTime + autoexecuteSlowDelay))
 		return;
 	lastMissionTime = missiontime;
 
@@ -507,22 +537,27 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			} else {
 				while (iterateChecklistItem(missiontime, eventController, true));
 			}
-		}
-
-		//Check for complete checklist items
-		if (!(autoexecute && autoexecuteSlow)) {
-			while (iterateChecklistItem(missiontime, eventController));
+		} else {
+			waitForCompletion = !iterateChecklistItem(missiontime, eventController);
+			if (!waitForCompletion) {
+				if (active.program.group != -1 && !active.sequence->checkIterate(&conn))
+					waitForCompletion = true;
+			}
 		}
 	}
 
 	//Check for groups needing spawn
-	for (int i = 0; i < groups.size(); i++)
-	{
-		if (groups[i].autoSelect && !groups[i].called)
-		{
-			if(groups[i].checkExec(lastMissionTime,eventController))
-			{
-				spawnCheck(i,false,true);
+	for (int i = 0; i < groups.size(); i++)	{
+		if (groups[i].autoSelect && !groups[i].called) {
+			if(groups[i].checkExec(lastMissionTime,eventController)) {
+				if (spawnCheck(i, false, true)) {
+					if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
+						waitForCompletion = true;
+					} else {
+						waitForCompletion = false;
+					}
+					autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+				}
 			}
 		}
 	}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.16  2008/04/11 11:49:51  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -475,6 +478,7 @@ DCBusController::DCBusController(char *i_name, PanelSDK &p) :
 	fcDisconnectAlarm[2] = false;
 	fcDisconnectAlarm[3] = false;
 	tieState = 0;
+	tieAuto = false;
 	gseState = 0;
 
 	sdk.AddElectrical(this, false);
@@ -559,7 +563,7 @@ void DCBusController::refresh(double dt)
 
 	} else if (tieState == 1) {
 		// Auto
-		if (fcPower.Voltage() > 0 || (gseState && gseBattery->Voltage() > 0)) {
+		if (!tieAuto) {
 			batPower.WireToBuses(NULL, NULL);
 		} else {
 			batPower.WireToBuses(battery1, battery2);
@@ -605,12 +609,13 @@ void DCBusController::SetGSEState(int s)
 void DCBusController::Load(char *line)
 
 {
-	int fc1, fc2, fc3, gse;
+	int fc1, fc2, fc3, gse, ta;
 	
-	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse);
+	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse, &ta);
 	if (fc1) fcPower.WireToBus(1, fuelcell1);
 	if (fc2) fcPower.WireToBus(2, fuelcell2);
 	if (fc3) fcPower.WireToBus(3, fuelcell3);
+	if (ta) tieAuto = true;
 	// tieState is evaluated in refresh()	
 	SetGSEState(gse);
 }
@@ -619,10 +624,11 @@ void DCBusController::Save(FILEHANDLE scn)
 
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %i %i %i %i %i", name, IsFuelCellConnected(1) ? 1 : 0, 
-								  		      IsFuelCellConnected(2) ? 1 : 0, 
-										      IsFuelCellConnected(3) ? 1 : 0,
-										      tieState, gseState);
+	sprintf (cbuf, "%s %i %i %i %i %i %i", name, IsFuelCellConnected(1) ? 1 : 0, 
+								  		         IsFuelCellConnected(2) ? 1 : 0, 
+										         IsFuelCellConnected(3) ? 1 : 0,
+										         tieState, gseState,
+												 tieAuto ? 1 : 0);
 
 	oapiWriteScenario_string (scn, "    <DCBUSCONTROLLER> ", cbuf);
 }

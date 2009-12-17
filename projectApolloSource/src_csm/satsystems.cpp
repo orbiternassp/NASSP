@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.7  2009/09/13 20:31:32  dseagrav
   *	Joystick Z-axis detection fixes
   *	
@@ -520,7 +523,7 @@ void Saturn::SystemsInit() {
 	CabinPressureRegulator.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR"), 
 								(h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESSVALVE"), 
 								(h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:EMERGENCYCABINPRESSUREREGULATOR"), 
-								&CabinRepressValveRotary, &EmergencyCabinPressureRotary);
+								&CabinRepressValveRotary, &EmergencyCabinPressureRotary, &EmergencyCabinPressureTestSwitch);
 
 	O2DemandRegulator.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR"), 
 		                   (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:SUITRELIEFVALVE"), 
@@ -589,6 +592,7 @@ void Saturn::SystemsInit() {
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);
+	dataRecorder.Init(this);
 	pcm.Init(this);
 
 	// Optics initialization
@@ -807,10 +811,18 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 			if (eventControl.PRIME_CREW_PRELAUNCH == MINUS_INFINITY) {
 				if (systemsState > SATSYSTEMS_NONE && MissionTime >= -9600) {	 // T-2h 40min before launch 
+					
 					// Crew ingress
+					
 					if (Crewed) {
 						SetCrewNumber(3);
 					}
+
+					// According to the AOH the SPS Oxidizer Flow valve is in max. position during backup crew prelaunch, but 
+					// normal during prime crew prelaunch. It's unknown when and how the valve is changed to normal 
+					// (presumably by GSE), so it's done here for now
+					
+					SPSPropellant.ResetOxidFlowValve();
 
 					//
 					// Event handling.
@@ -843,6 +855,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				// GSE provides electrical power
 				MainBusAController.SetGSEState(1);
 				MainBusBController.SetGSEState(1);
+
+				// Enable GSE SM RCS heaters
+				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_AUTO;
+				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_AUTO;
+				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_AUTO;
+				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_AUTO;
 
 				// Reduce fuel cell cooling power because of low fuel cell load
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 3.0;
@@ -936,6 +954,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					// Reference: Apollo 15 Flight Journal (http://history.nasa.gov/ap15fj/01launch_to_earth_orbit.htm)
 					MainBusAController.SetGSEState(0);
 					MainBusBController.SetGSEState(0);
+
+					// Disable GSE SM RCS heaters
+					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
 
 					// Set fuel cell cooling power to normal
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 6.8;

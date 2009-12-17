@@ -136,48 +136,100 @@ void USB::SystemTimestep(double simdt) {
 		if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(6.7); }
 	}
 	// S-Band Power Amplifier #1
-	if(pa_ovr_1 > 0){
+	if (pa_ovr_1 > 0) {
 		// Enabled
-		if(pa_ovr_1 > 1){
+		if (pa_ovr_1 > 1) {
 			// TLM forced on
-			if(pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-		}else{
+			if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
+		} else {
 			// Normal
-			if(sat->SBandNormalPwrAmpl1Switch.GetState() == THREEPOSSWITCH_UP){
-				// Turned on
-				if(pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-			}else{
-				// Turned off
-				if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+			if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
+				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
+					// Turned on
+					if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
+				} else {
+					// Turned off
+					if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+				}
 			}
 		}
-	}else{
+	} else {
 		// TLM commanded off
 		if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
 	}
 	// S-Band Power Amplifier #2
-	if(pa_ovr_2 > 0){ 
+	if (pa_ovr_2 > 0) { 
 		// Enabled
-		if(pa_ovr_2 > 1){
+		if (pa_ovr_2 > 1) {
 			// TLM forced on
-			if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-		}else{
+			if (pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
+		} else {
 			// Normal
-			if(sat->SBandNormalPwrAmpl1Switch.GetState() == THREEPOSSWITCH_DOWN){
-				// Turned on
-				if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-			}else{
-				// Turned off
-				if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+			if (sat->SBandNormalPwrAmpl1Switch.IsDown()) {
+				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
+					// Turned on
+					if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
+				} else {
+					// Turned off
+					if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+				}
 			}
 		}
-	}else{
+	} else {
 		// TLM commanded off
 		if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
 	}
+
+	// Power Amplifier #1 
+	switch(pa_mode_1) {
+		case 2: // STARTING UP
+			// For the remainder of 90 seconds, warm up the tubes
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(15);
+			}
+			break;
+		case 3: // OPERATING AT LOW POWER
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(32);
+			}
+			break;
+		case 4: // OPERATING AT HIGH POWER
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(81);
+			}
+			break;
+	}
+	// Power Amplifier #2 
+	switch(pa_mode_2) {
+		case 2: // STARTING UP
+			// For the remainder of 90 seconds, warm up the tubes
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(15);
+			}
+			break;
+		case 3: // OPERATING AT LOW POWER
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(32);
+			}
+			break;
+		case 4: // OPERATING AT HIGH POWER
+			if (sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100) {
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(81);
+			}
+			break;
+	}
 }
 
-void USB::TimeStep(double simt){
+void USB::TimeStep(double simt) {
+
+	/// \todo Move all DrawPower's to SystemTimestep
+	 
 	// Power Amplifier #1 
 	switch(pa_mode_1){
 		case 0: // OFF
@@ -218,30 +270,24 @@ void USB::TimeStep(double simt){
 				break;
 			}
 			// For the remainder of 90 seconds, warm up the tubes
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup1Switch.DrawPower(15);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100)) {				
 				// Either bus power failed - Start over
 				pa_timer_1 = simt; break;
 			}
 			if(simt > (pa_timer_1+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+				if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
 					// Change to low power
 					pa_mode_1 = 3; pa_timer_1 = 0;
 				}
-				if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+				if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
 					// Change to high power
 					pa_mode_1 = 4; pa_timer_1 = 0;
 				}
 			}
 			break;
 		case 3: // OPERATING AT LOW POWER
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup1Switch.DrawPower(32);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100)) {
 				// Either bus power failed - Start cooling
 				if(pa_timer_1 == 0){
 					pa_timer_1 = simt;
@@ -250,20 +296,17 @@ void USB::TimeStep(double simt){
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+			if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
 				// Change to high power
 				pa_mode_1 = 4;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
 			break;
 		case 4: // OPERATING AT HIGH POWER
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup1Switch.DrawPower(81);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100)) {
 				// Either bus power failed - Start cooling
 				if(pa_timer_1 == 0){
 					pa_timer_1 = simt;
@@ -272,11 +315,11 @@ void USB::TimeStep(double simt){
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+			if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
 				// Change to low power
 				pa_mode_1 = 3;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
@@ -322,30 +365,24 @@ void USB::TimeStep(double simt){
 				break;
 			}
 			// For the remainder of 90 seconds, warm up the tubes
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup2Switch.DrawPower(15);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100)) {
 				// Either bus power failed - Start over
 				pa_timer_2 = simt; break;
 			}
 			if(simt > (pa_timer_2+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+				if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
 					// Change to low power
 					pa_mode_2 = 3; pa_timer_2 = 0;
 				}
-				if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+				if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
 					// Change to high power
 					pa_mode_2 = 4; pa_timer_2 = 0;
 				}
 			}
 			break;
 		case 3: // OPERATING AT LOW POWER
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup2Switch.DrawPower(32);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100)) {
 				// Either bus power failed - Start cooling
 				if(pa_timer_2 == 0){
 					pa_timer_2 = simt;
@@ -354,20 +391,17 @@ void USB::TimeStep(double simt){
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+			if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
 				// Change to high power
 				pa_mode_2 = 4;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
 			break;
 		case 4: // OPERATING AT HIGH POWER
-			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
-				sat->FlightBus.DrawPower(5);
-				sat->TelcomGroup2Switch.DrawPower(81);
-			}else{
+			if (!(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100)) {
 				// Either bus power failed - Start cooling
 				if(pa_timer_2 == 0){
 					pa_timer_2 = simt;
@@ -376,25 +410,57 @@ void USB::TimeStep(double simt){
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+			if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter())){
 				// Change to low power
 				pa_mode_2 = 3;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
 			break;
 	}
+
 	// Update PA TB
 	// CSM-104 HB says that this is on when "either pwr ampl is selected for pm operation".
 	// I assume that means it's actually amplifying and not in warmup.
-	if(pa_mode_1 > 2 || pa_mode_2 > 2){
-		sat->PwrAmplTB.SetState(1);
-	}else{
-		sat->PwrAmplTB.SetState(0);
+	if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
+		if (pa_mode_1 > 2) {
+			sat->PwrAmplTB.SetState(1);
+		} else {
+			sat->PwrAmplTB.SetState(0);
+		}
+	} else {
+		if (pa_mode_2 > 2) {
+			sat->PwrAmplTB.SetState(1);
+		} else {
+			sat->PwrAmplTB.SetState(0);
+		}
 	}
+
+	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
+
+void USB::LoadState(char *line) {
+	int i;
+
+	sscanf(line + 12, "%i %i %i %i %i %lf %lf %i %i", &fm_ena, &xpdr_sel, &i, 
+		&pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2, &pa_ovr_1, &pa_ovr_2);
+	fm_opr  = (i != 0);
+}
+
+
+void USB::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%i %i %i %i %i %lf %lf %i %i", fm_ena, xpdr_sel, (fm_opr ? 1 : 0), 
+		pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2, pa_ovr_1, pa_ovr_2);
+
+	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
+}
+
+
+
 // Socket registration method (registers sockets to be deinitialized
 bool PCM::registerSocket(SOCKET sock)
 {
@@ -3735,10 +3801,16 @@ DSE::DSE() :
 	tapeMotion( 0.0 ),
 	state( STOPPED )
 {
+	lastEventTime = 0;
 }
 
 DSE::~DSE()
 {
+}
+
+void DSE::Init(Saturn *vessel)
+{
+	sat = vessel;
 }
 
 bool DSE::TapeMotion()
@@ -3765,9 +3837,8 @@ void DSE::Play()
 	{
 		desiredTapeSpeed = playSpeed;
 		state = STARTING_PLAY;
-	}
-
-	state = PLAYING;
+	} else
+		state = PLAYING;
 }
 
 void DSE::Stop()
@@ -3776,9 +3847,8 @@ void DSE::Stop()
 	{
 		desiredTapeSpeed = 0.0;
 		state = STOPPING;
-	}
-
-	state = STOPPED;
+	} else
+		state = STOPPED;
 }
 
 void DSE::Record( bool hbr )
@@ -3800,17 +3870,45 @@ void DSE::Record( bool hbr )
 		{
 			state = RECORDING;
 		}
-	}
-
-	state = RECORDING;
+	} else
+		state = RECORDING;
 }
 
 const double tapeAccel = 30.0;
 
 void DSE::TimeStep( double simt, double simdt )
 {
+	/// \todo forward/backward motion
+	/// \todo high/low bitrate
+
 	switch ( state )
 	{
+	case STOPPED:
+		if (!sat->TapeRecorderForwardSwitch.IsCenter()) {
+			if (sat->TapeRecorderRecordSwitch.IsUp()) {
+				Record(true);
+			} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+				Play();
+			}
+		}
+		break;
+
+	case PLAYING:
+		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			Stop();
+		} else if (sat->TapeRecorderRecordSwitch.IsUp()) {
+			Record(true);
+		}
+		break;
+
+	case RECORDING:
+		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			Stop();
+		} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+			Play();
+		}
+		break;
+
 	case STARTING_PLAY:
 		tapeSpeedInchesPerSecond += tapeAccel * simdt;
 		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
@@ -3850,6 +3948,20 @@ void DSE::TimeStep( double simt, double simdt )
 	default:
 		break;
 	}
-
 	lastEventTime = simt;
+	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+}
+
+void DSE::LoadState(char *line) {
+	
+	/// \todo DSE Chunks
+
+	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeedInchesPerSecond, &desiredTapeSpeed, &tapeMotion, &state, &lastEventTime);
+}
+
+void DSE::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime); 
+	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }

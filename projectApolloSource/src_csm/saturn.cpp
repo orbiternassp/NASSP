@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.12  2009/09/13 20:31:32  dseagrav
   *	Joystick Z-axis detection fixes
   *	
@@ -2055,6 +2058,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	O2SMSupply.SaveState(scn);
 	CrewStatus.SaveState(scn);
 	SideHatch.SaveState(scn);
+	usb.SaveState(scn);
+	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
 
@@ -2851,6 +2856,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "SIDEHATCH", 9)) {
 		    SideHatch.LoadState(line);
 	    }
+	    else if (!strnicmp (line, "UNIFIEDSBAND", 12)) {
+		    usb.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "DATARECORDER", 12)) {
+		    dataRecorder.LoadState(line);
+	    }
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
 		} 
@@ -3096,6 +3107,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 		checkControl.autoExecute(true);
 		checkControl.autoExecuteSlow(false);
+		checkControl.autoExecuteAllItemsAutomatic(true);
 	}
 	
 	// Disable it and do some other settings when not in 
@@ -3107,12 +3119,14 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 		checkControl.autoExecute(VAGCChecklistAutoEnabled);
 		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
+		checkControl.autoExecuteAllItemsAutomatic(false);
 	
 	// Quickstart mode
 
 	} else {
 		checkControl.autoExecute(!ChecklistAutoDisabled);
 		checkControl.autoExecuteSlow(ChecklistAutoSlow);
+		checkControl.autoExecuteAllItemsAutomatic(true);
 	}
 }
 
@@ -4612,8 +4626,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			//
 			eventControl.SPLASHDOWN = MissionTime;
 		}
-
-		if (PyrosArmed() && ChutesAttached && ELSActive() && ((MainReleaseSwitch.IsUp()) || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
+		if ((MainReleasePyroACircuitBraker.IsPowered() || MainReleasePyroBCircuitBraker.IsPowered()) && ChutesAttached && ELSActive() && 
+			(MainReleaseSwitch.IsUp() || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
 			// Detach Main 
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			if (GetAttachmentStatus(ah) != NULL) {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/17 17:48:11  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.6  2009/09/13 15:20:14  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -635,9 +638,15 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_THC = -1;
 	gParams.Saturn_RHCTHCToggle = 0;
 	gParams.Saturn_RHCTHCToggleId = -1;
+	gParams.Saturn_ChecklistAutoSlow = 0;
 	gParams.Saturn_ChecklistAutoDisabled = 0;
 	gParams.Saturn_OrbiterAttitudeDisabled = 0;
 	gParams.Saturn_SequencerSwitchLightingDisabled = 0;
+	gParams.Saturn_MaxTimeAcceleration = 0;
+	gParams.Saturn_MultiThread = 0;
+	gParams.Saturn_VAGCChecklistAutoSlow = 1;
+	gParams.Saturn_VAGCChecklistAutoEnabled = 0;
+
 	gParams.item = new ProjectApolloConfigurator;
 	for (i = 0; i < MAX_TABNUM; i++)
 		gParams.hDlgTabs[i] = NULL;

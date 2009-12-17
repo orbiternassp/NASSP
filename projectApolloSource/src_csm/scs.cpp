@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/12/15 08:50:00  jasonims
+  *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
+  *	
   *	Revision 1.4  2009/12/07 08:34:36  jasonims
   *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
   *	
@@ -162,18 +165,6 @@
 #include "papi.h"
 
 //#include "afxdlgs.h"  // This header allows file write dialog for Scroll output...  HACKED.
-
-
-/* ATTENTION: The original implementation used an inertial attitude reference 
-   for the uncaged BMAGs. In my understanding of the AOH this is wrong, each 
-   gyro assemblies is body-mounted along a spacecraft axis. Set the define to
-   true to switch back to the original implementation.
-
-   To see the difference align the GDC to (0,0,0), uncage the pitch BMAG (ATT1/RATE2),
-   Roll 90° and look what happens when you pitch manually
-*/
-
-#define SCS_INERTIAL_BMAGS	false
 
 
 AttitudeReference::AttitudeReference() {
@@ -514,8 +505,10 @@ void BMAG::Timestep(double simdt) {
 	}
 	
 	// If unpowered cage BMAG so that we loose reference for attitude hold
-	if (!powered) 
+	if (!powered) {
 		uncaged = _V(0, 0, 0);
+		errorAttitude = _V(0, 0, 0);
+	}
 
 	heater->WireTo(dc_source);	// Take DC power to heat the gyro
 	AttitudeReference::Timestep(simdt);
@@ -557,6 +550,7 @@ void BMAG::SystemTimestep(double simdt) {
 void BMAG::Cage(int axis) {
 
 	uncaged.data[axis] = 0;
+	errorAttitude.data[axis] = 0;
 }
 
 void BMAG::Uncage(int axis) {
@@ -787,7 +781,6 @@ void GDC::Timestep(double simdt) {
 		yawBmag = &sat->bmag1;
 	}
 
-
 	AttitudeReference::Timestep(simdt);
 
 	rates.x = pitchBmag->GetRates().x;
@@ -795,7 +788,7 @@ void GDC::Timestep(double simdt) {
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
 		rates.y = rollBmag->GetRates().z*tan(21.0*(PI/180)) + yawBmag->GetRates().y;
-//		sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
+		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
 		rates.y = yawBmag->GetRates().y;
@@ -815,33 +808,37 @@ void GDC::Timestep(double simdt) {
 		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
 
 		// Reset Attitude
-		SetAttitude(_V(0, 0, 0));
-		return;
+		SetAttitude(_V(0, 0, 0));		
 	}
+
+	// GDCAlign button
+	if (sat->GDCAlignButton.GetState() == 1) {
+		AlignGDC();
+	}	
 }
 
 bool GDC::AlignGDC() {
 	// User pushed the Align GDC button.
 	// Set the GDC attitude to match what's on the ASCP.
-	if (sat->EMSRollSwitch.IsDown()) {
-		if (sat->FDAIAttSetSwitch.IsDown()) {
-			SetAttitude(_V(sat->ascp.output.x * RAD,
-						   sat->ascp.output.y * RAD,
-						   sat->ascp.output.z * RAD)); // Degrees to radians
+	if (sat->FDAIAttSetSwitch.IsDown()) {
+		SetAttitude(_V(sat->ascp.output.x * RAD,
+					   sat->ascp.output.y * RAD,
+					   sat->ascp.output.z * RAD)); // Degrees to radians
 
 
-			// Align both BMAGs to the GDC as the GDC gets its attitude data from them
-			sat->bmag1.SetAttitude(_V(sat->ascp.output.x * RAD,
-									  sat->ascp.output.y * RAD,
-									  sat->ascp.output.z * RAD));
+		// Align both BMAGs to the GDC as the GDC gets its attitude data from them
+		sat->bmag1.SetAttitude(_V(sat->ascp.output.x * RAD,
+								  sat->ascp.output.y * RAD,
+								  sat->ascp.output.z * RAD));
 
-			sat->bmag2.SetAttitude(_V(sat->ascp.output.x * RAD,
-									  sat->ascp.output.y * RAD,
-									  sat->ascp.output.z * RAD));
-			return true;
+		sat->bmag2.SetAttitude(_V(sat->ascp.output.x * RAD,
+								  sat->ascp.output.y * RAD,
+								  sat->ascp.output.z * RAD));
+
+		if (sat->EMSRollSwitch.IsUp()) {
+			sat->ems.SetRSIRotation(sat->ascp.output.z * RAD);
 		}
-	} else {
-		sat->ems.SetRSIRotation(sat->ascp.output.z * RAD);
+		return true;
 	}
 	return false;	
 }
@@ -1333,64 +1330,62 @@ void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
 	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
 }
 
-bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	char cheat[10];                       // Have plenty of room for this
-	int srx,sry,beta,digit;
-	sprintf(cheat,"%+06.1f",output.x);    // Arithmetic is for suckers!	
-	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
-	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	srx = 8+((cheat[2]-0x30)*25);
-	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
-	if(beta == 0){		
-		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	}else{
-		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
-		if(digit == 9){digit=0;}else{digit++;}
-		srx = 8+(digit*25);			
-		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
+bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
+
+	char cheat[10];                      // Have plenty of room for this
+	int srx, sry, beta, digit, digit0, digit1;
+
+	sprintf(cheat, "%+06.1f", value);    // Arithmetic is for suckers!	
+	digit0 = cheat[1] - 0x30;			 // Hint: 0x30 = ASCII "0"
+	digit1 = cheat[2] - 0x30;
+	digit = cheat[3] - 0x30; 
+	beta = cheat[5] - 0x30; 
+	sry = (int)(beta * 1.2);
+
+	srx = 8 + (digit0 * 25);	 
+	if (!(beta != 0 && digit == 9 && (digit1 == 9 || (digit1 == 5 && digit0 == 3)))) {
+		oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	} else {
+		oapiBlt(surf, digits, 0, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		if (digit0 == 3) digit0 = 0; else digit0++;
+		srx = 8 + (digit0 * 25);			
+		oapiBlt(surf, digits, 0, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+	}
+
+	srx = 8 + (digit1 * 25);
+	if (digit != 9 || beta == 0) {
+		oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	} else {
+		oapiBlt(surf, digits, 10, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+
+		if (digit1 == 9) digit1 = 0; else digit1++;
+		if (digit1 == 6 && (cheat[1] - 0x30) == 3) digit1 = 0;
+		srx = 8 + (digit1 * 25);			
+		oapiBlt(surf, digits, 10, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+	}
+
+	srx = 8 + (digit * 25);
+	if (beta == 0) {		
+		oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	} else {
+		oapiBlt(surf, digits, 20, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		if (digit == 9) digit = 0; else digit++;
+		srx = 8 + (digit * 25);			
+		oapiBlt(surf, digits, 20, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
 	}
 	return true;
 }
 
-bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	char cheat[10];                       // Have plenty of room for this
-	int srx,sry,beta,digit;
-	sprintf(cheat,"%+06.1f",output.y);    // Arithmetic is for suckers!	
-	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
-	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	srx = 8+((cheat[2]-0x30)*25);
-	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
-	if(beta == 0){		
-		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	}else{
-		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
-		if(digit == 9){digit=0;}else{digit++;}
-		srx = 8+(digit*25);			
-		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
-	}
-	return true;
+bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits) {
+	return PaintDisplay(surf, digits, output.x);
+}
+
+bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits) {
+	return PaintDisplay(surf, digits, output.y);
 }
 
 bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	char cheat[10];                       // Have plenty of room for this
-	int srx,sry,beta,digit;
-	sprintf(cheat,"%+06.1f",output.z);    // Arithmetic is for suckers!	
-	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
-	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	srx = 8+((cheat[2]-0x30)*25);
-	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
-	if(beta == 0){		
-		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
-	}else{
-		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
-		if(digit == 9){digit=0;}else{digit++;}
-		srx = 8+(digit*25);			
-		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
-	}
-	return true;
+	return PaintDisplay(surf, digits, output.z);
 }
 
 void ASCP::SaveState(FILEHANDLE scn){
@@ -1624,9 +1619,6 @@ VECTOR3 EDA::CalcErrors(VECTOR3 target)
 VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 
 {
-	if (!SCS_INERTIAL_BMAGS)
-		return errors;
-
 	VECTOR3 output_errors;
 	double input_pitch = errors.y;
 	double input_yaw = errors.z;
@@ -2097,7 +2089,8 @@ void ECA::TimeStep(double simdt) {
 				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
 		}
 		// Now adjust for rotation
-		errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
+		if (SCS_INERTIAL_BMAGS)
+			errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
 
 		// Create demand for rate
 		switch(sat->AttRateSwitch.GetState()){
@@ -2736,6 +2729,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVTestTime = 0;
 	sat = NULL;
 	SlewScribe = 0;
+	ScrollPosition = 0;
 	GScribe = 1;
 	xacc = 9.81;
 	xaccG = 1.0;
@@ -2911,10 +2905,12 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 				ScrollPosition -= 480*ScrollScaling * simdt;
 			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
 				ScrollPosition -= 30*ScrollScaling * simdt;
+			pt05GLightOn = false;
+			dVRangeCounter = 0;
 			break;
 
 		case EMS_STATUS_EMS_TEST2:
-			pt05GLightOn = true;
+			if ((TenSecTimer -= simdt) < 0.0) pt05GLightOn = true;;
 			break;
 
 		case EMS_STATUS_EMS_TEST3:
@@ -2933,19 +2929,13 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 		case EMS_STATUS_EMS_TEST4:
 			if (TenSecTimer > 0.0) {
-				xaccG = 9*(1.0-(TenSecTimer/10.0));
+				xaccG = min(25. * (1. - (TenSecTimer / 10.)), 9.);
 				TenSecTimer -= simdt;
-				dV = 2.3*constG * simdt * FPS;
+				dV = 7. * constG * simdt * FPS;
 				ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
-				dVRangeCounter -= dV*simdt;
+				dVRangeCounter -= 5.8 * simdt;
 			} else {
 				xaccG = 9;
-				TenSecTimer -= simdt;
-				if (TenSecTimer > -20.5) {
-					dV = 2.3*constG * simdt * FPS;
-					ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
-					dVRangeCounter -= dV*simdt;
-				}
 			}
 			pt05GLightOn = true;
 			break;
@@ -2962,6 +2952,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 				ScrollPosition -= 30*ScrollScaling * simdt;
 			pt05GLightOn = true;
 			xaccG = 0.28;
+			dVRangeCounter = 0;
 			if ((TenSecTimer -= simdt) < 0.0) LiftVectLightOn = 1;
 			break;
 	}
@@ -2993,18 +2984,22 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		ScribePntArray[ScribePntCnt-1].x = SlewScribe;
 
 		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
+		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
 	}
 
 	if (sat->GSwitch.IsUp()) {
 		SetRSIRotation(RSITarget + sat->gdc.rates.z*simdt);
 		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
 	}
+
+	/// \todo I didn't find any reference that the RSI is rotating when the GTA Switch is active, so I removed that for now	     
+	/*
 	if (sat->GTASwitch.IsUp()) {
 		SetRSIRotation(RSITarget + PI/360);
 	}
-	
-	RotateRSI(simdt);
+	*/
 
+	RotateRSI(simdt);
 }
 
 void EMS::SystemTimestep(double simdt) {
@@ -3133,6 +3128,7 @@ void EMS::SwitchChanged() {
 			status = EMS_STATUS_EMS_TEST3;
 			break;
 		case 10: // TEST 2
+			TenSecTimer = 10.0;
 			status = EMS_STATUS_EMS_TEST2;
 			break;
 		case 11: // TEST 1
@@ -3330,37 +3326,37 @@ void EMS::LoadState(FILEHANDLE scn){
 		}
 	}
 }
-bool EMS::WriteScrollToFile(){
+bool EMS::WriteScrollToFile() {
+
 	//Special Thanks to computerex at orbiter-forum for assisting in this implementation
 	int width = EMS_SCROLL_LENGTH_PX;
 	int height = EMS_SCROLL_LENGTH_PY;
 
 	/////////////////////////////////////////////////////////
-    //Get the drawing surface, apply the scribe line and create a corresponding 
-    //bitmap with the same dimensions
+    // Get the drawing surface, apply the scribe line and create a corresponding 
+    // bitmap with the same dimensions
 
 	HDC hMemDC = CreateCompatibleDC(0);
 	HBITMAP hBitmap = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_EMS_SCROLL_LEO));
 	HGDIOBJ hOld = SelectObject(hMemDC, hBitmap);
 
 	// Draw Commands
-	SetBkMode (hMemDC, TRANSPARENT);
+	SetBkMode(hMemDC, TRANSPARENT);
 	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[2]);
 	Polyline(hMemDC, ScribePntArray, ScribePntCnt);
-	SelectObject(hMemDC, oldObj);
 
+	SelectObject(hMemDC, oldObj);
 	SelectObject(hMemDC, hOld);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
 	bool ret = true;
-	ret = CreateBMPFile("EMSScroll.bmp", bitmapInfo, hBitmap, hMemDC);
+	ret = CreateBMPFile("ProjectApollo EMSScroll.bmp", bitmapInfo, hBitmap, hMemDC);
+
 	DeleteObject(hBitmap);
-
 	DeleteDC(hMemDC);
-
 	return ret;
-
 }
+
 // The following code was found and supplied by computerex at orbiter-forum.  The code is from the MSDN sample code library.
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp)
 { 
@@ -3409,80 +3405,81 @@ PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp)
 }
 
 bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC) { 
-					   HANDLE hf;                 // file handle 
-					   BITMAPFILEHEADER hdr;       // bitmap file-header 
-					   PBITMAPINFOHEADER pbih;     // bitmap info-header 
-					   LPBYTE lpBits;              // memory pointer 
-					   DWORD dwTotal;              // total count of bytes 
-					   DWORD cb;                   // incremental count of bytes 
-					   BYTE *hp;                   // byte pointer 
-					   DWORD dwTmp; 
 
-					   pbih = (PBITMAPINFOHEADER) pbi; 
-					   lpBits = (LPBYTE) GlobalAlloc(GMEM_FIXED, pbih->biSizeImage);
+	HANDLE hf;                 // file handle 
+	BITMAPFILEHEADER hdr;       // bitmap file-header 
+	PBITMAPINFOHEADER pbih;     // bitmap info-header 
+	LPBYTE lpBits;              // memory pointer 
+	DWORD dwTotal;              // total count of bytes 
+	DWORD cb;                   // incremental count of bytes 
+	BYTE *hp;                   // byte pointer 
+	DWORD dwTmp; 
 
-					   if (!lpBits) {
-						   return false;
-					   }
+	pbih = (PBITMAPINFOHEADER) pbi; 
+	lpBits = (LPBYTE) GlobalAlloc(GMEM_FIXED, pbih->biSizeImage);
 
-					   // Retrieve the color table (RGBQUAD array) and the bits 
-					   // (array of palette indices) from the DIB. 
-					   if (!GetDIBits(hDC, hBMP, 0, (WORD) pbih->biHeight, lpBits, pbi, 
-						   DIB_RGB_COLORS)) {
-							   return false;
-					   }
+	if (!lpBits) {
+	   return false;
+	}
 
-					   // Create the .BMP file. 
-					   hf = CreateFile(pszFile, 
-						   GENERIC_READ | GENERIC_WRITE, 
-						   (DWORD) 0, 
-						   NULL, 
-						   CREATE_ALWAYS, 
-						   FILE_ATTRIBUTE_NORMAL, 
-						   (HANDLE) NULL); 
-					   if (hf == INVALID_HANDLE_VALUE) {
-						   return false;
-					   }
-					   hdr.bfType = 0x4d42;        // 0x42 = "B" 0x4d = "M" 
-					   // Compute the size of the entire file. 
-					   hdr.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) + 
-						   pbih->biSize + pbih->biClrUsed 
-						   * sizeof(RGBQUAD) + pbih->biSizeImage); 
-					   hdr.bfReserved1 = 0; 
-					   hdr.bfReserved2 = 0; 
+	// Retrieve the color table (RGBQUAD array) and the bits 
+	// (array of palette indices) from the DIB. 
+	if (!GetDIBits(hDC, hBMP, 0, (WORD) pbih->biHeight, lpBits, pbi, 
+	   DIB_RGB_COLORS)) {
+		   return false;
+	}
 
-					   // Compute the offset to the array of color indices. 
-					   hdr.bfOffBits = (DWORD) sizeof(BITMAPFILEHEADER) + 
-						   pbih->biSize + pbih->biClrUsed 
-						   * sizeof (RGBQUAD); 
+	// Create the .BMP file. 
+	hf = CreateFile(pszFile, 
+	   GENERIC_READ | GENERIC_WRITE, 
+	   (DWORD) 0, 
+	   NULL, 
+	   CREATE_ALWAYS, 
+	   FILE_ATTRIBUTE_NORMAL, 
+	   (HANDLE) NULL); 
+	if (hf == INVALID_HANDLE_VALUE) {
+	   return false;
+	}
+	hdr.bfType = 0x4d42;        // 0x42 = "B" 0x4d = "M" 
+	// Compute the size of the entire file. 
+	hdr.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) + 
+	   pbih->biSize + pbih->biClrUsed 
+	   * sizeof(RGBQUAD) + pbih->biSizeImage); 
+	hdr.bfReserved1 = 0; 
+	hdr.bfReserved2 = 0; 
 
-					   // Copy the BITMAPFILEHEADER into the .BMP file. 
-					   if (!WriteFile(hf, (LPVOID) &hdr, sizeof(BITMAPFILEHEADER), 
-						   (LPDWORD) &dwTmp,  NULL)) 
-					   {
-						   return false;
-					   }
+	// Compute the offset to the array of color indices. 
+	hdr.bfOffBits = (DWORD) sizeof(BITMAPFILEHEADER) + 
+	   pbih->biSize + pbih->biClrUsed 
+	   * sizeof (RGBQUAD); 
 
-					   // Copy the BITMAPINFOHEADER and RGBQUAD array into the file. 
-					   if (!WriteFile(hf, (LPVOID) pbih, sizeof(BITMAPINFOHEADER) 
-						   + pbih->biClrUsed * sizeof (RGBQUAD), 
-						   (LPDWORD) &dwTmp, NULL)) {
-							   return false;
-					   }
+	// Copy the BITMAPFILEHEADER into the .BMP file. 
+	if (!WriteFile(hf, (LPVOID) &hdr, sizeof(BITMAPFILEHEADER), 
+	   (LPDWORD) &dwTmp,  NULL)) 
+	{
+	   return false;
+	}
 
-					   // Copy the array of color indices into the .BMP file. 
-					   dwTotal = cb = pbih->biSizeImage; 
-					   hp = lpBits; 
-					   if (!WriteFile(hf, (LPSTR) hp, (int) cb, (LPDWORD) &dwTmp,NULL)) {
-						   return false;
-					   }
+	// Copy the BITMAPINFOHEADER and RGBQUAD array into the file. 
+	if (!WriteFile(hf, (LPVOID) pbih, sizeof(BITMAPINFOHEADER) 
+	   + pbih->biClrUsed * sizeof (RGBQUAD), 
+	   (LPDWORD) &dwTmp, NULL)) {
+		   return false;
+	}
 
-					   // Close the .BMP file. 
-					   if (!CloseHandle(hf)) {
-						   return false;
-					   }
+	// Copy the array of color indices into the .BMP file. 
+	dwTotal = cb = pbih->biSizeImage; 
+	hp = lpBits; 
+	if (!WriteFile(hf, (LPSTR) hp, (int) cb, (LPDWORD) &dwTmp,NULL)) {
+	   return false;
+	}
 
-					   // Free memory. 
-					   GlobalFree((HGLOBAL)lpBits);
-					   return true;
+	// Close the .BMP file. 
+	if (!CloseHandle(hf)) {
+	   return false;
+	}
+
+	// Free memory. 
+	GlobalFree((HGLOBAL)lpBits);
+	return true;
 }

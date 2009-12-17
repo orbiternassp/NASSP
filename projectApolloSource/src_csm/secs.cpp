@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/07/13 17:47:13  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -237,6 +240,10 @@ void SECS::Timestep(double simt, double simdt)
 			if (Sat->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
 				Sat->CMRCS1.OpenHeliumValves();
 				Sat->CMRCS2.OpenHeliumValves();
+
+				// Auto Tie Main Buses
+				Sat->MainBusAController.SetTieAuto(true);
+				Sat->MainBusBController.SetTieAuto(true);
 			}
 
 			// Transfer RCS to CM
@@ -254,6 +261,10 @@ void SECS::Timestep(double simt, double simdt)
 			if (Sat->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
 				Sat->CMRCS1.OpenHeliumValves();
 				Sat->CMRCS2.OpenHeliumValves();
+
+				// Auto Tie Main Buses
+				Sat->MainBusAController.SetTieAuto(true);
+				Sat->MainBusBController.SetTieAuto(true);
 			}
 
 			// Transfer RCS to CM

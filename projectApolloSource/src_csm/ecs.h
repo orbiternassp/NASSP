@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -47,7 +50,7 @@ public:
 	CabinPressureRegulator();
 	virtual ~CabinPressureRegulator();
 
-	void Init(h_Pipe *p, h_Pipe *crv, h_Pipe *ecpr, RotationalSwitch *crvs, RotationalSwitch *ecps);
+	void Init(h_Pipe *p, h_Pipe *crv, h_Pipe *ecpr, RotationalSwitch *crvs, RotationalSwitch *ecps, PushSwitch *ecpts);
 	void SystemTimestep(double simdt);
 	void Close();
 	void Reset();
@@ -64,6 +67,7 @@ protected:
 
 	RotationalSwitch *cabinRepressValveSwitch;
 	RotationalSwitch *emergencyCabinPressureSwitch;
+	PushSwitch *emergencyCabinPressureTestSwitch;
 
 	bool closed;
 	double press;

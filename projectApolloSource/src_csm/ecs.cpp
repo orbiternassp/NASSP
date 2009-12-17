@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -74,13 +77,14 @@ CabinPressureRegulator::~CabinPressureRegulator() {
 
 }
 
-void CabinPressureRegulator::Init(h_Pipe* p, h_Pipe *crv, h_Pipe *ecpr, RotationalSwitch *crvs, RotationalSwitch *ecps) {
+void CabinPressureRegulator::Init(h_Pipe* p, h_Pipe *crv, h_Pipe *ecpr, RotationalSwitch *crvs, RotationalSwitch *ecps, PushSwitch *ecpts) {
 
 	pipe = p;	
 	cabinRepressValve = crv;
 	emergencyCabinPressureRegulator = ecpr;
 	cabinRepressValveSwitch = crvs;
 	emergencyCabinPressureSwitch = ecps;
+	emergencyCabinPressureTestSwitch = ecpts;
 }
 
 void CabinPressureRegulator::SystemTimestep(double simdt) {
@@ -113,10 +117,13 @@ void CabinPressureRegulator::SystemTimestep(double simdt) {
 	}
 
 	// Emergency Cabin Pressure Regulator
-	if (emergencyCabinPressureSwitch->GetState() == 3 || cabinpress > 4.6 / PSI) {
+	if (emergencyCabinPressureSwitch->GetState() == 3 || (cabinpress > 4.6 / PSI && emergencyCabinPressureTestSwitch->GetState() == 0)) {
 		emergencyCabinPressureRegulator->P_max = 0;
 	} else {
-		emergencyCabinPressureRegulator->P_max = 4.6 / PSI;
+		if (emergencyCabinPressureTestSwitch->GetState() != 0) 
+			emergencyCabinPressureRegulator->P_max = 1000. / PSI; // i.e. disabled
+		else
+			emergencyCabinPressureRegulator->P_max = 4.6 / PSI;
 		emergencyCabinPressureRegulator->flowMax = 40.2 / LBH; // 0.67 lb/min max, see AOH
 	}
 }
@@ -985,13 +992,13 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// dump heaters
 	bool heaters = false;
-	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSTransducerWastePOTH2OMnACircuitBraker.IsPowered()) {
+	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
 		heaters = true;
-		saturn->ECSTransducerWastePOTH2OMnACircuitBraker.DrawPower(5.7);
+		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
 	}
-	if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.IsPowered()) {
+	if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
 		heaters = true;
-		saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.DrawPower(5.7);
+		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
 	}
 
 	// Pressure relief
@@ -1030,14 +1037,14 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// Urine dump
 	urineDumpLevel = 0;
-	if (saturn->UrineDumpSwitch.IsUp() && saturn->ECSTransducerWastePOTH2OMnACircuitBraker.IsPowered()) {
-		saturn->ECSTransducerWastePOTH2OMnACircuitBraker.DrawPower(5.7);
+	if (saturn->UrineDumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
+		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
 		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
 			urineDumpLevel = 1;
 		}
 	}
-	if (saturn->UrineDumpSwitch.IsDown() && saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.IsPowered()) {
-		saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.DrawPower(5.7);
+	if (saturn->UrineDumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
+		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
 		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
 			urineDumpLevel = 1;
 		}

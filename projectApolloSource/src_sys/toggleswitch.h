@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.6  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -485,6 +488,8 @@ public:
 	/// \brief Guard
 	///
 	virtual void Guard() {};
+
+	virtual	void SetHeld(bool s) {};
 	
 protected:
 	///
@@ -552,7 +557,7 @@ public:
 	ToggleSwitch();
 	virtual ~ToggleSwitch();
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0, bool delay = false, int delayT = 2);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
 		      int xoffset = 0, int yoffset = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
@@ -566,6 +571,7 @@ public:
 	bool IsHeld() { return Held; };
 	void SetActive(bool s);
 	void SetSideways(bool s) { Sideways = s; };
+	void SetDelayTime(double t) { delayTime = t; };
 
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
@@ -593,10 +599,6 @@ protected:
 	virtual unsigned int GetFlags();
 	virtual void SetFlags(unsigned int f);
 
-	bool delayable;
-	int delayTime;
-	double resetTime;
-
 	int	x;
 	int y;
 	int width;
@@ -609,6 +611,9 @@ protected:
 	bool SwitchToggled;
 	bool Held;
 	bool Sideways;
+
+	double delayTime;
+	double resetTime;
 
 	SURFHANDLE SwitchSurface;
 	SURFHANDLE BorderSurface;
@@ -928,7 +933,7 @@ public:
 class PushSwitch: public ToggleSwitch {
 
 public:
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0, bool delay = false, int delayT = 2);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
 
 protected:
@@ -1091,7 +1096,7 @@ public:
 	GuardedToggleSwitch();
 	virtual ~GuardedToggleSwitch();
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE, bool delay = false, int delayT = 2);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1195,7 +1200,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
 		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState,bool delay = false, int delayT = 2);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1240,7 +1245,7 @@ public:
 	virtual ~GuardedThreePosSwitch();
 
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
-				  int springloaded = SPRINGLOADEDSWITCH_NONE, bool delay = false, int delayT = 2);
+				  int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1566,7 +1571,7 @@ public:
 	bool SetFlashing(char *n, bool flash);
 
 	int GetState(char *n);
-	bool SetState(char *n, int value, bool guard = false);
+	bool SetState(char *n, int value, bool guard = false, bool hold = false);
 	bool GetFailedState(char *n);
 
 protected:

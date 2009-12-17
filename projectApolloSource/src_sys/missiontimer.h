@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2006/12/19 15:56:03  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -71,7 +74,7 @@ public:
 	void SetCountUp(int val) { CountUp = val; };
 	int GetCountUp() { return CountUp; };
 
-	virtual void Render(SURFHANDLE surf, SURFHANDLE digits);
+	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
 
 protected:
 

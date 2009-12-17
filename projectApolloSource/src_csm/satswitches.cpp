@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/01 06:18:32  dseagrav
+  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
+  *	
   *	Revision 1.3  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -1071,11 +1074,13 @@ void SaturnAccumQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
-void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch)
+void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, CircuitBrakerSwitch *cba, CircuitBrakerSwitch *cbb)
 
 {
 	SaturnRoundMeter::Init(p0, p1, row, s);
 	H2oQtyIndSwitch = h2oqtyindswitch;
+	CbA = cba;
+	CbB = cbb;
 }
 
 double SaturnH2oQuantityMeter::QueryValue()
@@ -1084,9 +1089,11 @@ double SaturnH2oQuantityMeter::QueryValue()
 	ECSWaterStatus ws;
 	Sat->GetECSWaterStatus(ws);
 
-	if (H2oQtyIndSwitch->IsUp())
+	if (!CbA->IsPowered() && !CbB->IsPowered())
+		return 0;
+	else if (H2oQtyIndSwitch->IsUp())
 		return ws.PotableH2oTankQuantityPercent; 
-	else
+	else 
 		return ws.WasteH2oTankQuantityPercent;
 }
 
@@ -1937,6 +1944,11 @@ void SaturnSCControlSetter::SetSCControl(Saturn *sat) {
 }
 
 
+SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound) {
+
+	position = 0;
+}
+
 void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 
 {
@@ -1966,19 +1978,95 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 			oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
 		}
 	}
- }
+}
 
-double SaturnEMSDvDisplay::QueryValue()
-
-{
+double SaturnEMSDvDisplay::QueryValue() {
 	return Sat->ems.GetdVRangeCounter();
 }
 
-
-SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound) {
-
-	position = 0;
+int SaturnEMSDvDisplay::GetState() {
+	return (int) (Sat->ems.GetdVRangeCounter() * 10.);
 }
+
+void SaturnEMSDvDisplay::SetState(int value) {
+	Sat->ems.dVRangeCounter = value / 10.;
+}
+
+
+void SaturnEMSScrollDisplay::Init(SwitchRow &row, Saturn *s) {
+	MeterSwitch::Init(row);
+	Sat = s;
+}
+
+int SaturnEMSScrollDisplay::GetState() {
+	return (int) (Sat->ems.ScrollPosition);
+}
+
+void SaturnEMSScrollDisplay::SetState(int value) {
+	Sat->ems.ScrollPosition = value;
+}
+
+
+void SaturnPanel382Cover::Init(SwitchRow &row, Saturn *s) {
+	MeterSwitch::Init(row);
+	Sat = s;
+}
+
+int SaturnPanel382Cover::GetState() {
+	return Sat->panel382Enabled;
+}
+
+void SaturnPanel382Cover::SetState(int value) {
+	Sat->panel382Enabled = value;
+}
+
+
+void SaturnPanel600::Init(SwitchRow &row, Saturn *s) {
+	MeterSwitch::Init(row);
+	Sat = s;
+}
+
+int SaturnPanel600::GetState() {
+	return Sat->hatchPanel600EnabledLeft;
+}
+
+void SaturnPanel600::SetState(int value) {
+
+	if (value == 0) value = -1;
+
+	Sat->hatchPanel600EnabledLeft = value;
+	Sat->hatchPanel600EnabledRight = value;
+}
+
+
+void SaturnASCPSwitch::Init(SwitchRow &row, Saturn *s, int axis) {
+	MeterSwitch::Init(row);
+	Sat = s;
+	Axis = axis;
+}
+
+int SaturnASCPSwitch::GetState() {
+	return (int) (Sat->ascp.output.data[Axis] * 10.);
+}
+
+void SaturnASCPSwitch::SetState(int value) {
+	Sat->ascp.output.data[Axis] = value / 10.;
+}
+
+
+void SaturnAbortSwitch::Init(SwitchRow &row, Saturn *s) {
+	MeterSwitch::Init(row);
+	Sat = s;
+}
+
+int SaturnAbortSwitch::GetState() {
+	return (Sat->bAbort ? TOGGLESWITCH_UP : TOGGLESWITCH_DOWN);
+}
+
+void SaturnAbortSwitch::SetState(int value) {
+	// Nothing for now
+}
+
 
 bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
 
@@ -2161,32 +2249,6 @@ int DSEIndicatorSwitch::GetState()
 	return dse->TapeMotion() ? 1 : 0;
 }
 
-void DSEThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, DSE *d)
-{
-	dse = d;
-	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
-}
-
-bool DSEPlayRecordSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if ( ThreePosSwitch::SwitchTo(newState, dontspring) )
-	{
-		if ( IsUp() )
-		{
-			dse->Record( true );
-		}
-		else if ( IsDown() )
-		{
-			dse->Play();
-		}
-		else 
-		{
-			dse->Stop();
-		}
-		return true;
-	}
-	else return false;
-}
 
 //
 // "Special offset" of 130 px to avoid overlapping with the O2DemandRegulatorRotary
@@ -2206,6 +2268,15 @@ void SuitTestSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		}
 		oapiBlt(drawSurface, switchSurface, x, y, (bitmaps[index].xOffset * width) + 130, bitmaps[index].yOffset * height, width - 130, height, SURF_PREDEF_CK);
 	}
+}
+
+void SuitTestSwitch::DrawFlash(SURFHANDLE DrawSurface) {
+
+	if (!visible)
+		return;
+
+	if (switchBorder)
+		oapiBlt(DrawSurface, switchBorder, x, y, 0, 0, width - 130, height, SURF_PREDEF_CK);
 }
 
 bool SuitTestSwitch::CheckMouseClick(int event, int mx, int my) {

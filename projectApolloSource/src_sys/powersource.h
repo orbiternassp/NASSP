@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2008/04/11 11:49:53  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -172,6 +175,7 @@ public:
 	bool IsFuelCellDisconnectAlarm();
 	e_object *GetBusSource() { return &busPower; };
 	void SetTieState(int s) { tieState = s; };
+	void SetTieAuto(bool s) { tieAuto = s; };
 	void SetGSEState(int s);
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
@@ -188,6 +192,7 @@ protected:
 	PowerMerge batPower;
 	bool fcDisconnectAlarm[4];
 	int tieState;
+	bool tieAuto;
 	int gseState;
 };
 

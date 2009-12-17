@@ -25,6 +25,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.7  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -490,16 +497,15 @@ ToggleSwitch::ToggleSwitch() {
 	Active = true;
 	Held = false;
 	Sideways = false;
-
-	delayable = false;
-	delayTime = 2;
+	delayTime = 0;
+	resetTime = 0;
 }
 
 ToggleSwitch::~ToggleSwitch() {
 	Sclick.done();
 }
 
-void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname, bool delay, int delayT) {
+void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname) {
 
 	name = n;
 	state = defaultState;
@@ -507,9 +513,6 @@ void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defau
 	scnh.RegisterSwitch(this);
 
 	DisplayName = dname;
-
-	delayable = delay;
-	delayTime = delayT;
 }
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset)
@@ -727,15 +730,11 @@ void ToggleSwitch::LoadState(char *line)
 
 void ToggleSwitch::SetState(int value)
 {
-	if (!delayable)
-	{
-		if(SwitchTo(value))
+	if (!delayTime) {
+		if (SwitchTo(value))
 			Sclick.play();
-	}
-	else
-	{
-		if (SwitchTo(value,true))
-		{
+	} else {
+		if (SwitchTo(value, true)) {
 			Sclick.play();
 			doTimeStep = true;
 			resetTime = switchRow->panelSwitches->lastexecutedtime + delayTime;
@@ -997,9 +996,9 @@ bool FivePosSwitch::SwitchTo(int newState, bool dontspring)
 //
 // Push button like switch.  Now implemented as a special case of toggle switch (springloaded and special sound)
 //
-void PushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname, bool delay, int delayT)
+void PushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname)
 {
-	ToggleSwitch::Register(scnh,n,defaultState,1,dname,delay,delayT);
+	ToggleSwitch::Register(scnh, n, defaultState, 1, dname);
 }
 
 // Special case check mouse click, same result top and Bottom.
@@ -1011,13 +1010,18 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (mx < x || my < y) return false;
 	if (mx > (x + width) || my > (y + height)) return false;
 
-	if (event == PANEL_MOUSE_LBDOWN) {
-		SwitchTo(1,true);
-		Sclick.play();
-	} else if (event == PANEL_MOUSE_LBUP) {
-		SwitchTo(0,true);
-	}
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	SetHeld((ctrlState & 0x8000) != 0);
 
+	if (event == PANEL_MOUSE_LBDOWN) {
+		SwitchTo(1, true);
+		Sclick.play();
+	} else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+		SwitchTo(0, true);
+	}
 	return true;
 }
 
@@ -1525,7 +1529,7 @@ bool PanelSwitches::GetFailedState(char *n)
 	return false;
 }
 
-bool PanelSwitches::SetState(char *n, int value, bool guard)
+bool PanelSwitches::SetState(char *n, int value, bool guard, bool hold)
 
 {
 	PanelSwitchItem *p;
@@ -1533,15 +1537,14 @@ bool PanelSwitches::SetState(char *n, int value, bool guard)
 
 	while (row) {
 		p = row->GetItemByName(n);
-		if (p)
-		{
+		if (p) {
 			p->Unguard();
+			p->SetHeld(hold);
 			p->SetState(value);
 			if (guard)
-				p->Guard();
+				p->Guard();			
 			return true;
 		}
-
 		row = row->GetNext();
 	}
 
@@ -1571,9 +1574,9 @@ GuardedToggleSwitch::~GuardedToggleSwitch() {
 	guardClick.done();
 }
 
-void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded, bool delay, int delayT) 
+void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded) 
 {
-	ToggleSwitch::Register(scnh, n, defaultState, springloaded,0,delay,delayT);
+	ToggleSwitch::Register(scnh, n, defaultState, springloaded, 0);
 	guardState = defaultGuardState;
 }
 
@@ -1729,9 +1732,9 @@ GuardedPushSwitch::~GuardedPushSwitch() {
 	guardClick.done();
 }
 
-void GuardedPushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, bool delay, int delayT) {
+void GuardedPushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState) {
 
-	PushSwitch::Register(scnh,n,defaultState,0,delay,delayT);
+	PushSwitch::Register(scnh, n, defaultState, 0);
 	guardState = defaultGuardState;
 }
 
@@ -1872,9 +1875,9 @@ GuardedThreePosSwitch::~GuardedThreePosSwitch() {
 }
 
 void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
-									 int springloaded, bool delay, int delayT) 
+									 int springloaded) 
 {
-	ThreePosSwitch::Register(scnh,n,defaultState,springloaded,0,delay,delayT);
+	ThreePosSwitch::Register(scnh, n, defaultState, springloaded, 0);
 	guardState = defaultGuardState;
 }
 
@@ -3467,15 +3470,6 @@ void TimerControlSwitch::SetTimer()
 // nothing.
 //
 
-/*bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
-		return true;
-
-	return false;
-}*/
-
 bool EventTimerControlSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (MissionTimerSwitch::SwitchTo(newState,dontspring))
@@ -4155,7 +4149,7 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		return true;
 
 	case MFD_PANEL_SET_ITEM_STATE:
-		m.val1.bValue = panel.SetState(static_cast<char *>(m.val1.pValue), m.val2.iValue, m.val3.bValue);
+		m.val1.bValue = panel.SetState(static_cast<char *>(m.val1.pValue), m.val2.iValue, m.val3.bValue, m.val4.bValue);
 		return true;
 
 	case MFD_PANEL_GET_FAILED_STATE:
