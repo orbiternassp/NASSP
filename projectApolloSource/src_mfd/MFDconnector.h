@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -152,7 +155,7 @@ public:
 	/// \param value Value to set state to.
 	/// \return True if call succeeded, false if failed.
 	///
-	bool SetState(char *n, int value, bool guard = false);
+	bool SetState(char *n, int value, bool guard = false, bool hold = false);
 
 	///
 	/// Get the failure state of a panel item.

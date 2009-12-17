@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/24 02:20:20  dseagrav
+  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
+  *	
   *	Revision 1.2  2009/08/10 14:38:26  tschachim
   *	ECS enhancements
   *	
@@ -503,8 +506,8 @@ void FCell::UpdateFlow(double dt)
 	double thrust = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
-	if ((purge_handle == 1) && (status == 0)) status = 3; //H2 purging;
-	if ((purge_handle == 2) && (status == 0)) status = 4; //O2 purging;
+	if ((purge_handle == 1) && (status == 0 || status == 4)) status = 3; //H2 purging;
+	if ((purge_handle == 2) && (status == 0 || status == 3)) status = 4; //O2 purging;
 	if ((purge_handle == -1) && (status == 3 || status == 4)) status = 0; //no purging;
 
 	// stopping if colder than the critical temperature (300 °F)

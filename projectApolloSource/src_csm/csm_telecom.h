@@ -241,6 +241,8 @@ public:
 	DSE();
 	virtual ~DSE();
 
+	void Init(Saturn *vessel);	       // Initialization
+
 	///
 	/// \brief Tape motion indicator.
 	///
@@ -266,7 +268,11 @@ public:
 	///
 	void TimeStep( double simt, double simdt );
 
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
 protected:
+	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
 	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
@@ -338,12 +344,15 @@ public:
 	void Init(Saturn *vessel);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
 	Saturn *sat;					   // Ship we're installed in
-	int fm_ena;                       // FM transmitter enable relays from uptelemetry
+	int fm_ena;                        // FM transmitter enable relays from uptelemetry
 	int xpdr_sel;                      // Transponder select
 	bool fm_opr;                       // FM transmitter operating
-	int pa_mode_1,pa_mode_2;           // Power amplifier mode
-	double pa_timer_1,pa_timer_2;	   // Tube heater timer
-	int pa_ovr_1,pa_ovr_2;			   // PA mode override for uptelemetry channel
+	int pa_mode_1, pa_mode_2;          // Power amplifier mode
+	double pa_timer_1, pa_timer_2;	   // Tube heater timer
+	int pa_ovr_1, pa_ovr_2;			   // PA mode override for uptelemetry channel
 };
 

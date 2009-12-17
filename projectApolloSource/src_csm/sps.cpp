@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/04/11 11:50:06  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -88,7 +91,7 @@ SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	PropellantSource(ph), DCPower(0, p) {
 
 	oxidMass = -1;
-	primOxidFlowValve = 0;
+	primOxidFlowValve = 0.03;
 	secOxidFlowValve = 0;
 	primTestStatus = 0;
 	auxTestStatus = 0;
@@ -691,7 +694,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		}
 	}
 	// Now adjust for rotation
-	error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
+	if (SCS_INERTIAL_BMAGS)
+		error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
 
 	// TVC SCS automatic mode only when BMAG 1 uncaged and powered
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().x == 0) error.x = 0;

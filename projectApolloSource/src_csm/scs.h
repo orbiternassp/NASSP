@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/12/15 08:50:00  jasonims
+  *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
+  *	
   *	Revision 1.4  2009/12/07 08:34:36  jasonims
   *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
   *	
@@ -102,6 +105,21 @@
   *	DirectO2 valve added.
   *	
   **************************************************************************/
+
+
+
+/* ATTENTION: The original implementation used an inertial attitude reference 
+   for the uncaged BMAGs. In my understanding of the AOH this is wrong, each 
+   gyro assemblies is body-mounted along a spacecraft axis. Set the define to
+   true to switch back to the original implementation.
+
+   To see the difference align the GDC to (0,0,0), uncage the pitch BMAG (ATT1/RATE2),
+   Roll 90° and look what happens when you pitch manually
+*/
+
+#define SCS_INERTIAL_BMAGS	false
+
+
 
 class Saturn;
 
@@ -246,6 +264,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 	double pitchdisplay;
 	double yawdisplay;
 	Sound &ClickSound;
+
+protected:
+	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value);
 };
 
 class EDA {
@@ -420,6 +441,9 @@ protected:
 
 	PowerMerge DCPower;
 	Saturn *sat;
+
+	friend class SaturnEMSDvDisplay;
+	friend class SaturnEMSScrollDisplay;
 };
 
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/20 17:52:01  tschachim
+  *	Bugfix DSKY
+  *	
   *	Revision 1.3  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -99,7 +102,8 @@ ChecklistItem::ChecklistItem()
 	index = -1;
 	time = 0;
 	relativeEvent = NO_TIME_DEF;
-	failEvent = -1;
+	failGroup = -1;
+	callGroup = -1;
 	text[0] = 0;
 	panel[0] = 0;
 	heading1[0] = 0;
@@ -109,6 +113,8 @@ ChecklistItem::ChecklistItem()
 	item[0] = 0;
 	position = 0;
 	guard = false;
+	hold = false;
+	lineFeed = false;
 	status = PENDING;
 	dskyIndex = 0;
 	dskyNo = 0;
@@ -151,27 +157,40 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 		strncpy(heading1, cells[4].GetString(),100);
 	if (cells[5].GetString())
 		strncpy(heading2, cells[5].GetString(),100);
-	if (cells[6].GetString())
-		strncpy(info, cells[6].GetString(),300);
-	if (cells[7].GetString())
-		strncpy(item, cells[7].GetString(),100);
 
-	const char *c8 = cells[8].GetString(); 
-	if (c8) {
-		sscanf(c8, "%d", &position);
-		if (!strnicmp(c8 + strlen(c8) - 1, "G", 1))
+	if (cells[6].GetString())
+		lineFeed = true;
+
+	if (cells[7].GetString())
+		strncpy(info, cells[7].GetString(),300);
+	if (cells[8].GetString())
+		strncpy(item, cells[8].GetString(),100);
+
+	const char *c9 = cells[9].GetString(); 
+	if (c9) {
+		sscanf(c9, "%d", &position);
+		if (!strnicmp(c9 + strlen(c9) - 1, "G", 1))
 			guard = true;
+		if (!strnicmp(c9 + strlen(c9) - 1, "H", 1))
+			hold = true;
 	} else 
-		position = cells[8].GetInteger();
+		position = cells[9].GetInteger();
 	
-	automatic = (cells[9].GetInteger() != 0);
-	failEvent = -1;
-	if (cells[10].GetString())
-	{
-		for (int i = 0; i < groups.size(); i ++)
-		{
-			if (!strnicmp(cells[10].GetString(),groups[i].name,strlen(cells[10].GetString())))
-				failEvent = i;
+	automatic = (cells[10].GetInteger() != 0);
+
+	callGroup = -1;
+	if (cells[11].GetString()) {
+		for (int i = 0; i < groups.size(); i ++) {
+			if (!stricmp(cells[11].GetString(), groups[i].name))
+				callGroup = groups[i].group;
+		}
+	}
+
+	failGroup = -1;
+	if (cells[12].GetString()) {
+		for (int i = 0; i < groups.size(); i ++) {
+			if (!stricmp(cells[12].GetString(), groups[i].name))
+				failGroup = groups[i].group;
 		}
 	}
 
@@ -266,13 +285,28 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 		} else {
 			if (position < 0) {
 				return true;
-			} else if (conn->SetState(item, position, guard)) {
+			} else if (conn->SetState(item, position, guard, hold)) {
 				return true;
 			}
 		}
 	}
 	return false;
 }
+
+double ChecklistItem::checkIterate(MFDConnector *conn) {
+
+	if (!stricmp(item, "DSKY")) {
+		return false;
+	}
+	if (position == -1) {
+		return true;
+	}
+	if (conn->GetState(item) == position) {
+		return true;
+	}
+	return false;
+}
+
 
 double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
 
@@ -324,9 +358,9 @@ void ChecklistItem::save(FILEHANDLE scn)
 	oapiWriteScenario_string(scn,ChecklistItemEndString,"");
 }
 // Todo: Verify
-bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, double lastItemTime, SaturnEvents &eventController)
+bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, double lastItemTime, SaturnEvents &eventController, bool autoexecuteAllItemsAutomatic)
 {
-	if (!automatic)
+	if (!automatic && !autoexecuteAllItemsAutomatic)
 		return false;
 	double t = 0;
 	switch(relativeEvent)
@@ -720,7 +754,7 @@ void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistI
 	{
 		// Ignore empty texts
 		if (sheet->Cell(i,0)->GetString() != 0) {
-			for (int ii = 0; ii < 11; ii++)
+			for (int ii = 0; ii < 13; ii++)
 			{
 				vec_temp.push_back(*(sheet->Cell(i,ii)));
 			}
@@ -760,7 +794,10 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 	if (!strnicmp(line,"INDEX",5))
 	{
 		sscanf (line+5,"%d",&integer);
-		*this = ChecklistContainer(controller.groups[integer],controller,0);
+		if (integer < controller.groups.size()) { 
+			*this = ChecklistContainer(controller.groups[integer],controller,0);
+		} else
+			return;
 	}
 	else
 		return;
@@ -770,7 +807,8 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 		if (!found && !strnicmp(line,"SEQUENCE",8))
 		{
 			sscanf(line+8,"%d",&integer);
-			sequence+= integer;
+			if (integer < set.size())			
+				sequence+= integer;
 			found = true;
 		}
 		if (!found && !strnicmp(line,"TIME",4))
@@ -781,9 +819,10 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 		}
 		if (!found && !strnicmp(line,ChecklistItemStartString,strlen(ChecklistItemStartString)))
 		{
-			oapiReadScenario_nextline(scn,line);
-			sscanf(line+5,"%d",&integer);
-			set[integer].load(scn);
+			oapiReadScenario_nextline(scn, line);
+			sscanf(line+5,"%d", &integer);
+			if (integer < set.size())
+				set[integer].load(scn);
 		}
 		oapiReadScenario_nextline(scn,line);
 	}

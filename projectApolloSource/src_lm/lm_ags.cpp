@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/22 12:36:10  trebonian
+  *	DEDA buttons animate even if unpowered or in error
+  *	
   *	Revision 1.5  2009/09/22 11:40:14  trebonian
   *	Support new DEDA bitmaps and digits
   *	
@@ -485,7 +488,7 @@ void LEM_DEDA::ProcessKeyPress(int mx, int my)
 					return;
 			NumberPressed(8);
 		}
-		if (my > 44 & my < 88) {
+		if (my > 44 && my < 88) {
 			KeyDown_5 = true;
 			if (OprErrLit() || !IsPowered())
 					return;

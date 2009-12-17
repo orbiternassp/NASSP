@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -197,7 +200,7 @@ int MFDConnector::GetState(char *n)
 	return (-1);
 }
 
-bool MFDConnector::SetState(char *n, int value, bool guard)
+bool MFDConnector::SetState(char *n, int value, bool guard, bool hold)
 
 {
 	ConnectorMessage cm;
@@ -207,6 +210,7 @@ bool MFDConnector::SetState(char *n, int value, bool guard)
 	cm.val1.pValue = n;
 	cm.val2.iValue = value;
 	cm.val3.bValue = guard;
+	cm.val4.bValue = hold;
 
 	if (SendMessage(cm))
 	{

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2007/12/04 20:26:38  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -73,6 +76,8 @@ public:
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
 	bool IsOxidFlowValveMax();
+	void ResetOxidFlowValve() { primOxidFlowValve = 0; }
+
 	void SPSTestSwitchToggled();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/26 22:12:29  coussini
+  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
+  *	
   *	Revision 1.6  2009/09/26 21:49:15  coussini
   *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
   *	
@@ -722,7 +725,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		// Display the MET after the header
 		if (bDisplayMET)
 		{
-			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+			SetTextColor (hDC, RGB(225, 225, 255)); // blue 
 			SetTextAlign (hDC, TA_CENTER);
 			line = DisplayMissionElapsedTime();
 			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
@@ -730,14 +733,14 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 		SetTextAlign (hDC, TA_LEFT);
 		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
+		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
+		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
 
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
-		if (!conn.ChecklistAutocomplete()){
+		if (!conn.ChecklistAutocomplete()) {
 			SetRect(&ShadedBox,(int) (width * 0.34),(int) (height * 0.955),(int) (width * 0.47),(int) (height*.999));
-		}else{
+		} else {
 			SetRect(&ShadedBox,(int) (width * 0.24),(int) (height * 0.955),(int) (width * 0.34),(int) (height*.999));
 		}
 		FillRect(hDC, &ShadedBox, hBr);
@@ -746,9 +749,9 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
 
 		//display flashing selection box. 
-		if (!conn.GetChecklistFlashing()){
+		if (!conn.GetChecklistFlashing()) {
 			SetRect(&ShadedBox,(int) (width * 0.82),(int) (height * 0.955),(int) (width * 0.95),(int) (height*.999));
-		}else{
+		} else {
 			SetRect(&ShadedBox,(int) (width * 0.72),(int) (height * 0.955),(int) (width * 0.82),(int) (height*.999));
 		}
 		FillRect(hDC, &ShadedBox, hBr);
@@ -769,6 +772,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					if (strlen(item->heading1) > 0) {
 						if (StepCnt != 0)
 							cnt++; //go to next line
+						if (cnt >= 20) break;
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_CENTER);
 						TextOut(hDC, (int) (width * .5), (int) (height * (LINE0+cnt*HLINE)), item->heading1, strlen(item->heading1));
@@ -777,27 +781,35 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					}
 					if (cnt >= 20) break;
 
-					//Heading 2
-					if (strlen(item->heading2) > 0) {
+					//Check to see if step is time dependent and print time if so
+					if (item->relativeEvent != NO_TIME_DEF && item->relativeEvent != HIDDEN_DELAY) {
 						if (strlen(item->heading1) == 0 && StepCnt != 0 && !linebreakpanel)
 							cnt++; //go to next line
 						if (cnt >= 20) break;
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
-						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), item->heading2, strlen(item->heading2));
+						//display Current Checklist Mission Time
+						line = DisplayChecklistMissionTime(item);
+						TextOut(hDC, (int) (width * .01), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 						cnt++; //go to next line to write information
 					}
 					if (cnt >= 20) break;
 
-					//Check to see if step is time dependent and print time if so
-					if (item->relativeEvent != NO_TIME_DEF && item->relativeEvent != HIDDEN_DELAY) {
+					//Heading 2
+					if (strlen(item->heading2) > 0) {
+						if (strlen(item->heading1) == 0 && (item->relativeEvent == NO_TIME_DEF || item->relativeEvent == HIDDEN_DELAY) && StepCnt != 0 && !linebreakpanel)
+							cnt++; //go to next line
+						if (cnt >= 20) break;
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
-						//display Current Checklist Mission Time
-						line = DisplayChecklistMissionTime(item);
-						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+						TextOut(hDC, (int) (width * .03), (int) (height * (LINE0+cnt*HLINE)), item->heading2, strlen(item->heading2));
 						cnt++; //go to next line to write information
 					}
+					if (cnt >= 20) break;
+
+					//Line feed
+					if (item->lineFeed)
+						cnt++;
 					if (cnt >= 20) break;
 
 					//Display Highlighted box
@@ -809,20 +821,58 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					}
 
 					//Print Step
-					SetTextColor (hDC, RGB(0, 255, 0));
+					if (item->callGroup == -1) {
+						if (item->automatic) {
+							SetTextColor (hDC, RGB(0, 255, 0));
+						} else {
+							SetTextColor (hDC, RGB(255, 255, 0));
+						}
+					} else {
+						SetTextColor (hDC, RGB(0, 255, 255));
+					}
 					SetTextAlign (hDC, TA_LEFT);
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item->text, strlen(item->text));
+
+					// Line break
+					char buffer[1000];
+					strcpy(buffer, item->text);
+					if (strlen(buffer) > 34) {
+						while (strlen(buffer) > 34) {
+							int i, breakpos = 0;
+							for (i = 33; i >= 0; i--) {
+								if (buffer[i] == ' ') {
+									breakpos = i;
+									break;
+								}
+							}
+							if (breakpos == 0) breakpos = 30;
+
+							TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, breakpos);
+							cnt++; //go to next line
+							if (cnt >= 20) break;
+
+							char tmp[1000];
+							tmp[0] = '\0';
+							strcat(tmp, "    ");
+							strcat(tmp, buffer + breakpos + 1);
+							strcpy(buffer, tmp);
+						}
+						if (cnt >= 20) break;
+						TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, strlen(buffer));
+
+					} else {
+						TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, strlen(buffer));
+					}
 
 					//Print panel
 					linebreakpanel = false;
 					if (strlen(item->panel) > 0) {
-						if (strlen(item->panel) + strlen(item->text) > 33) {
+						if (strlen(item->panel) + strlen(buffer) > 33) {
 							cnt++; //go to next line
 							if (cnt >= 20) break;
 							linebreakpanel = true;
 						}
 						SetTextAlign (hDC, TA_RIGHT);
-						TextOut(hDC, (int) (width * .95), (int) (height * (LINE0+cnt*HLINE)), item->panel, strlen(item->panel));
+						TextOut(hDC, (int) (width * .98), (int) (height * (LINE0+cnt*HLINE)), item->panel, strlen(item->panel));
 					}
 				}
 			}
@@ -838,15 +888,15 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		// Display the MET after the header
 		if (bDisplayMET)
 		{
-			SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+			SetTextColor (hDC, RGB(225, 225, 255)); // blue 
 			SetTextAlign (hDC, TA_CENTER);
 			line = DisplayMissionElapsedTime();
 			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
 		}
 
 		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
+		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
+		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
 
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
@@ -913,8 +963,8 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 
 		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.95), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.95));
+		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.95), 0);
+		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.95));
 
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
@@ -965,7 +1015,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			// Display the MET after the header
 			if (bDisplayMET)
 			{
-				SetTextColor (hDC, RGB(0, 128, 228)); // blue 
+				SetTextColor (hDC, RGB(225, 225, 255)); // blue 
 				SetTextAlign (hDC, TA_CENTER);
 				line = DisplayMissionElapsedTime();
 				TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
@@ -983,8 +1033,8 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			FillRect(hDC, &ShadedBox, hBr);
 			DeleteObject(hBr);
 			SelectDefaultPen(hDC, 1);
-			MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
-			LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
+			MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
+			LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
 			SelectDefaultFont(hDC, 0);
 			SetTextColor (hDC, RGB(0, 255, 0));
 			SetTextAlign (hDC, TA_LEFT);
@@ -1016,10 +1066,14 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 		case LAST_ITEM_RELATIVE:
 			temptime.y = floor((fabs(item->time)-(temptime.x*3600))/60);
 			temptime.z = fabs(item->time)-(temptime.x*3600)-(temptime.y*60);
-			if (temptime.y >= 1.0){
-				sprintf(buffer, "After %d min %02d sec",(int) temptime.y,(int) temptime.z);
+			if (temptime.y >= 1.0) {
+				if (((int) temptime.z) == 0) {
+					sprintf(buffer, "After %d min", (int) temptime.y);
+				} else {
+					sprintf(buffer, "After %d min %02d sec", (int) temptime.y, (int) temptime.z);
+				}
 			} else {
-				sprintf(buffer, "After %d sec",(int) temptime.z);
+				sprintf(buffer, "After %d sec", (int) temptime.z);
 			}
 			break;
 

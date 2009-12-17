@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/12/15 08:50:00  jasonims
+  *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
+  *	
   *	Revision 1.9  2009/12/07 08:34:36  jasonims
   *	Added feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called Scroll.bmp.
   *	
@@ -797,6 +800,17 @@ public:
 		SRF_CSM_WASTE_DISPOSAL_ROTARY,
 		SRF_THREEPOSSWITCH90_LEFT,
 		SRF_EMS_SCROLL_BUG,
+		SRF_BORDER_55x91,
+		SRF_SWITCH90,
+		SRF_BORDER_673x369,
+		SRF_BORDER_673x80,
+		SRF_BORDER_110x29,
+		SRF_BORDER_29x30,
+		SRF_BORDER_62x129,
+		SRF_BORDER_194x324,
+		SRF_BORDER_36x69,
+		SRF_BORDER_62x31,
+		SRF_CSM_CABINPRESSTESTSWITCH,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1928,6 +1942,7 @@ protected:
 
 	SwitchRow EMSDvDisplayRow;
 	SaturnEMSDvDisplay EMSDvDisplay;
+	SaturnEMSScrollDisplay EMSScrollDisplay;	// dummy switch/display for checklist controller
 
 	SwitchRow IMUCageSwitchRow;
 	SwitchRow CautionWarningRow;
@@ -2160,7 +2175,7 @@ protected:
 	DSEIndicatorSwitch DseTapeTB;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
-	ThreePosSwitch SBandNormalPwrAmpl1Switch;
+	ToggleSwitch SBandNormalPwrAmpl1Switch;
 	ThreePosSwitch SBandNormalPwrAmpl2Switch;
 	ThreePosSwitch SBandNormalMode1Switch;
 	ThreePosSwitch SBandNormalMode2Switch;
@@ -2190,9 +2205,9 @@ protected:
 	ToggleSwitch VHFRangingSwitch;
 
 	SwitchRow TapeRecorderSwitchesRow;
-	ToggleSwitch TapeRecorder1Switch;
-	DSEPlayRecordSwitch TapeRecorder2Switch;
-	ThreePosSwitch TapeRecorder3Switch;
+	ToggleSwitch TapeRecorderPCMSwitch;
+	ThreePosSwitch TapeRecorderRecordSwitch;
+	ThreePosSwitch TapeRecorderForwardSwitch;
 
 	SwitchRow PowerSwitchesRow;
 	ThreePosSwitch SCESwitch;
@@ -2347,15 +2362,12 @@ protected:
 	// ToggleSwitch FCSMSPSASwitch;
 	// ToggleSwitch FCSMSPSBSwitch;
 	EventTimerResetSwitch EventTimerUpDownSwitch;
-	EventTimerControlSwitch EventTimerControlSwitch;
+	EventTimerControlSwitch EventTimerContSwitch;
 	TimerUpdateSwitch EventTimerMinutesSwitch;
 	TimerUpdateSwitch EventTimerSecondsSwitch;
 
 	//
 	// Main chute release switch.
-	//
-	// Currently this does nothing, as the parachutes automatically release from the CM
-	// after landing.
 	//
 
 	SwitchRow MainReleaseRow;
@@ -2781,8 +2793,8 @@ protected:
 	SwitchRow AudioControlSwitchRow;
 	ToggleSwitch AudioControlSwitch;
 
-	SwitchRow SuidPowerSwitchRow;
-	ToggleSwitch SuidPowerSwitch;
+	SwitchRow SuitPowerSwitchRow;
+	ToggleSwitch SuitPowerSwitch;
 
 	///////////////////////
 	// Panel 16 switches //
@@ -3285,14 +3297,32 @@ protected:
 	// Panel 227 //
 	///////////////
 
-	//SwitchRow SCIInstSwitchRow;
-	//ToggleSwitch SCIInstSwitch;
+	SwitchRow SCIInstSwitchRow;
+	ToggleSwitch SCIInstSwitch;
 
 	////////////////////////////////////////
 	// Panel 229 - Right Instrument Panel //
 	////////////////////////////////////////
 
 	SwitchRow Panel229CircuitBreakersRow;
+	CircuitBrakerSwitch TimersMnACircuitBraker;
+	CircuitBrakerSwitch TimersMnBCircuitBraker;
+	CircuitBrakerSwitch EPSMnAGroup1CircuitBraker;
+	CircuitBrakerSwitch EPSMnBGroup1CircuitBraker;
+	CircuitBrakerSwitch SPSLineHtrsMnACircuitBraker;
+	CircuitBrakerSwitch SPSLineHtrsMnBCircuitBraker;
+	CircuitBrakerSwitch EPSMnAGroup2CircuitBraker;
+	CircuitBrakerSwitch EPSMnBGroup2CircuitBraker;
+	CircuitBrakerSwitch O2VacIonPumpsMnACircuitBraker;
+	CircuitBrakerSwitch O2VacIonPumpsMnBCircuitBraker;
+	CircuitBrakerSwitch EPSMnAGroup3CircuitBraker;
+	CircuitBrakerSwitch EPSMnBGroup3CircuitBraker;
+	CircuitBrakerSwitch MainReleasePyroACircuitBraker;
+	CircuitBrakerSwitch MainReleasePyroBCircuitBraker;
+	CircuitBrakerSwitch EPSMnAGroup4CircuitBraker;
+	CircuitBrakerSwitch EPSMnBGroup4CircuitBraker;
+	CircuitBrakerSwitch EPSMnAGroup5CircuitBraker;
+	CircuitBrakerSwitch EPSMnBGroup5CircuitBraker;
 	CircuitBrakerSwitch UtilityCB1;
 	CircuitBrakerSwitch UtilityCB2;
 	CircuitBrakerSwitch EPSBatBusACircuitBraker;
@@ -3364,6 +3394,10 @@ protected:
 	
 	SwitchRow Panel306Row;
 	EventTimerResetSwitch EventTimerUpDown306Switch;
+	EventTimerControlSwitch EventTimerControl306Switch;
+
+	SwitchRow MissionTimer306SwitchRow;
+	TimerControlSwitch MissionTimer306Switch;
 
 
 	////////////////////////
@@ -3420,6 +3454,10 @@ protected:
 	SwitchRow GlycolRotaryRow;
 	RotationalSwitch GlycolRotary;
 
+	SwitchRow PLVCSwitchRow;
+	ToggleSwitch PLVCSwitch;
+
+
 	///////////////////////////
 	// Panel 382             //
 	///////////////////////////
@@ -3433,6 +3471,7 @@ protected:
 	RotationalSwitch SuitFlowReliefRotary;
 	RotationalSwitch SuitHeatExchangerPrimaryGlycolRotary;
 	RotationalSwitch SuitHeatExchangerSecondaryGlycolRotary;
+	SaturnPanel382Cover Panel382Cover;		// Dummy switch/display for checklist controller
 
 	///////////////
 	// Panel 351 //
@@ -3451,6 +3490,9 @@ protected:
 
 	SwitchRow EmergencyCabinPressureRotaryRow;
 	RotationalSwitch EmergencyCabinPressureRotary;
+
+	SwitchRow EmergencyCabinPressureTestSwitchRow;
+	PushSwitch EmergencyCabinPressureTestSwitch;
 
 	///////////////
 	// Panel 352 //
@@ -3503,6 +3545,9 @@ protected:
 	SwitchRow HatchPanel600RightRow;
 	ThreePosSwitch HatchRepressO2ValveSwitch;
 
+	SaturnPanel600 Panel600;		// Dummy switch/display for checklist controller
+
+
 	///////////////////////
 	// DSKYs             //
 	///////////////////////
@@ -3549,8 +3594,10 @@ protected:
 	DSKYPushSwitch Dsky2SwitchEnter;
 	DSKYPushSwitch Dsky2SwitchReset;
 
-
-
+	SaturnASCPSwitch ASCPRollSwitch;		// Dummy switch/display for checklist controller
+	SaturnASCPSwitch ASCPPitchSwitch;
+	SaturnASCPSwitch ASCPYawSwitch;
+	SaturnAbortSwitch  AbortSwitch;
 
 
 	///
@@ -4205,7 +4252,7 @@ protected:
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
+	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, int *start);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
@@ -4660,6 +4707,7 @@ protected:
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class PMP;
 	friend class USB;
+	friend class DSE;
 	friend class EMS;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
@@ -4669,6 +4717,7 @@ protected:
 	friend class CMACInverterSwitch;
 	friend class SaturnSCControlSetter;
 	friend class SaturnEMSDvDisplay;
+	friend class SaturnEMSScrollDisplay;
 	friend class SECS;
 	friend class ELS;
 	friend class CrewStatus;
@@ -4679,6 +4728,10 @@ protected:
 	friend class SaturnWaterController;
 	friend class SaturnGlycolCoolingController;
 	friend class CSMLMPowerSwitch;
+	friend class SaturnPanel382Cover;
+	friend class SaturnPanel600;
+	friend class SaturnASCPSwitch;
+	friend class SaturnAbortSwitch;
 };
 
 extern void BaseInit();

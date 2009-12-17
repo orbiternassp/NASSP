@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/20 17:52:01  tschachim
+  *	Bugfix DSKY
+  *	
   *	Revision 1.3  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -258,13 +261,17 @@ struct ChecklistItem
 	void save(FILEHANDLE);
 
 	bool iterate(MFDConnector *conn, bool autoexec);
+
 	void setFlashing(MFDConnector *conn, bool flashing);
+	
 	double getAutoexecuteSlowDelay(MFDConnector *conn);
+
+	double checkIterate(MFDConnector *conn);
 
 /// -------------------------------------------------------------
 /// Check whether this item should be executed in this timestep
 /// -------------------------------------------------------------
-	bool checkExec(double,double,double,SaturnEvents &);
+	bool checkExec(double, double, double, SaturnEvents &, bool autoexecuteAllItemsAutomatic);
 /// -------------------------------------------------------------
 /// index defined dynaimcally at runtime.  All available
 /// checklists have a group id retrieved from the ChecklistGroup
@@ -291,7 +298,9 @@ struct ChecklistItem
 /// group id to go to in the event of a failure of this check step.
 /// always null when received by the MFD.
 /// -------------------------------------------------------------
-	int failEvent;
+	int failGroup;
+
+	int callGroup;
 /// -------------------------------------------------------------
 /// Text to display describing the checklist.
 /// -------------------------------------------------------------
@@ -328,6 +337,9 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 	int position;
 	bool guard;
+	bool hold;
+	bool lineFeed;
+
 /// -------------------------------------------------------------
 /// This is the status of the class.  It is saved and loaded when
 /// this item is active or pending.
@@ -516,6 +528,10 @@ public:
 /// -------------------------------------------------------------
 	bool autoExecuteSlow(bool input);
 /// -------------------------------------------------------------
+/// Do manual items like automatic (for Quickstart Mode)
+/// -------------------------------------------------------------
+	void autoExecuteAllItemsAutomatic(bool input) { autoexecuteAllItemsAutomatic = input; };
+/// -------------------------------------------------------------
 /// Used to link checklist controller to a vessel, required to
 /// Allow automated checklists as well as automatic checklist
 /// selection and automatic completion detection.
@@ -562,6 +578,8 @@ private:
 	///This determines the checklist execution speed.
 	bool autoexecuteSlow;
 	double autoexecuteSlowDelay;
+	// Do manual items like automatic (for Quickstart Mode)
+	bool autoexecuteAllItemsAutomatic;
 	///Used to spawn new "program"
 	bool spawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel
@@ -576,6 +594,8 @@ private:
 	bool flashing;
 	/// Mission time when the last item was completed 
 	double lastItemTime;
+
+	bool waitForCompletion;
 	
 	bool iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec = false);
 
