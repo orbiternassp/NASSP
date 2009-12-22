@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.25  2008/05/24 17:30:41  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -490,7 +493,6 @@ bool CautionWarningSystem::IsFailed(int lightnum)
 void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 {
-	oapiWriteLine(scn, CWS_START_STRING);
 	oapiWriteScenario_int (scn, "MODE", Mode);
 	oapiWriteScenario_int (scn, "TEST", TestState);
 
@@ -517,60 +519,50 @@ void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 	if (LightsFailedRight)
 		oapiWriteScenario_int (scn, "RFAIL", LightsFailedRight);
-
-	oapiWriteLine(scn, CWS_END_STRING);
 }
 
-
-void CautionWarningSystem::LoadState(FILEHANDLE scn)
+void CautionWarningSystem::LoadState(char *line)
 
 {
-	char *line;
 	int lights;
 
-	while (oapiReadScenario_nextline (scn, line))
+	if (!strnicmp (line, "MODE", 4))
 	{
-		if (!strnicmp(line, CWS_END_STRING, sizeof(CWS_END_STRING)))
-			return;
-		if (!strnicmp (line, "MODE", 4))
-		{
-			sscanf (line+4, "%d", &lights);
-			Mode = (CWSOperationMode) lights;
-		}
-		else if (!strnicmp (line, "TEST", 4))
-		{
-			sscanf (line+4, "%d", &lights);
-			TestState = (LightTestState) lights;
-		}
-		else if (!strnicmp (line, "LLIGHTS", 7))
-		{
-			sscanf (line+7, "%d", &lights);
-			SetLightStates(LeftLights, lights);
-		}
-		else if (!strnicmp (line, "RLIGHTS", 7))
-		{
-			sscanf (line+7, "%d", &lights);
-			SetLightStates(RightLights, lights);
-		}
-		else if (!strnicmp (line, "LFAIL", 5))
-		{
-			sscanf (line+5, "%d", &LightsFailedLeft);
-		}
-		else if (!strnicmp (line, "RFAIL", 5))
-		{
-			sscanf (line+5, "%d", &LightsFailedRight);
-		}
-		else if (!strnicmp (line, "STATE", 5))
-		{
-			CWSState state;
-			sscanf (line+5, "%d", &state.word);
+		sscanf (line+4, "%d", &lights);
+		Mode = (CWSOperationMode) lights;
+	}
+	else if (!strnicmp (line, "TEST", 4))
+	{
+		sscanf (line+4, "%d", &lights);
+		TestState = (LightTestState) lights;
+	}
+	else if (!strnicmp (line, "LLIGHTS", 7))
+	{
+		sscanf (line+7, "%d", &lights);
+		SetLightStates(LeftLights, lights);
+	}
+	else if (!strnicmp (line, "RLIGHTS", 7))
+	{
+		sscanf (line+7, "%d", &lights);
+		SetLightStates(RightLights, lights);
+	}
+	else if (!strnicmp (line, "LFAIL", 5))
+	{
+		sscanf (line+5, "%d", &LightsFailedLeft);
+	}
+	else if (!strnicmp (line, "RFAIL", 5))
+	{
+		sscanf (line+5, "%d", &LightsFailedRight);
+	}
+	else if (!strnicmp (line, "STATE", 5))
+	{
+		CWSState state;
+		sscanf (line+5, "%d", &state.word);
 
-			MasterAlarm = (state.u.MasterAlarm != 0);
-			MasterAlarmLightEnabled = (state.u.MasterAlarmLightEnabled != 0);
-			Source = (CSWSource) state.u.Source;
-			PowerBus = (CSWPowerSource) state.u.PowerBus;
-			InhibitNextMasterAlarm = (state.u.InhibitNextMasterAlarm != 0);
-		}
+		MasterAlarm = (state.u.MasterAlarm != 0);
+		MasterAlarmLightEnabled = (state.u.MasterAlarmLightEnabled != 0);
+		Source = (CSWSource) state.u.Source;
+		PowerBus = (CSWPowerSource) state.u.PowerBus;
+		InhibitNextMasterAlarm = (state.u.InhibitNextMasterAlarm != 0);
 	}
 }
-

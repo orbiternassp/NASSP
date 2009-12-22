@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.5  2009/12/15 08:50:00  jasonims
   *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
   *	
@@ -3342,7 +3345,7 @@ bool EMS::WriteScrollToFile() {
 
 	// Draw Commands
 	SetBkMode(hMemDC, TRANSPARENT);
-	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[2]);
+	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[5]);
 	Polyline(hMemDC, ScribePntArray, ScribePntCnt);
 
 	SelectObject(hMemDC, oldObj);

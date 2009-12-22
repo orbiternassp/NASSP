@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.3  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -495,6 +498,18 @@ bool ChecklistController::iterateChecklistItem(double missiontime, SaturnEvents 
 		if (active.sequence->iterate(&conn, autoexec)) {
 			completeChecklistItem(&(*active.sequence));
 			return true;
+		} else {
+			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+		}
+	}
+	return false;
+}
+
+bool ChecklistController::isDSKYChecklistItem() {
+	
+	if (active.program.group != -1) {
+		if (!stricmp(active.sequence->item, "DSKY")) {
+			return true;
 		}
 	}
 	return false;
@@ -535,7 +550,9 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			if (autoexecuteSlow) {
 				iterateChecklistItem(missiontime, eventController, true);
 			} else {
-				while (iterateChecklistItem(missiontime, eventController, true));
+				while (iterateChecklistItem(missiontime, eventController, true)) {
+					if (isDSKYChecklistItem()) break;
+				}
 			}
 		} else {
 			waitForCompletion = !iterateChecklistItem(missiontime, eventController);

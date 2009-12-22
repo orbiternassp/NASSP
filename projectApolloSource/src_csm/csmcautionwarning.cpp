@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.39  2008/04/11 12:19:00  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -172,6 +175,7 @@
 #include "lvimu.h"
 
 #include "saturn.h"
+#include "papi.h"
 
 CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &buttonsound, PanelSDK &p) : 
 	CautionWarningSystem(mastersound, buttonsound, p)
@@ -181,7 +185,6 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 
 	NextO2FlowCheckTime = MINUS_INFINITY;
 	LastO2FlowCheckHigh = false;
-	O2FlowCheckCount = 0;
 	SPSPressCheckCount = 0;
 	CryoPressCheckCount = 0;
 	GlycolTempCheckCount = 0;
@@ -334,8 +337,8 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// warnings.
 	//
 
-	if (TimeStepCount < 100) {
-		if (TimeStepCount == 0) NextUpdateTime = simt + 10.0;
+	if (TimeStepCount < 5) {
+		if (TimeStepCount == 0) NextUpdateTime = simt + 0.1;
 		TimeStepCount++;
 		return;
 	}
@@ -667,39 +670,27 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// the fact that the oxygen flow rate is greater than is normally required."
 		//
 
-		if (simt > NextO2FlowCheckTime) {
-			//
-			// Use displyed value instead of the PanelSDK to make use of the "damping" 
-			// of the O2 flow meter to pervent alarms because of the fluctuations during 
-			// high time acceleration.
-			//
-			double cf = datm.DisplayedO2FlowLBH;
-			bool LightO2Warning = false;
+		//
+		// Use displyed value instead of the PanelSDK to make use of the "damping" 
+		// of the O2 flow meter to pervent alarms because of the fluctuations during 
+		// high time acceleration.
+		//
+		double cf = datm.DisplayedO2FlowLBH;
+		bool LightO2Warning = false;
 
-			//
-			// Skip the first few flow checks to give the panel SDK time to stabilise when
-			// starting a scenario.
-			//
-
-			if (O2FlowCheckCount > 1) {
-				if (cf > 1.0) {
-					if (LastO2FlowCheckHigh) {
-						LightO2Warning = true;
-					}
-					LastO2FlowCheckHigh = true;
+		if (cf > 1.0) {
+			if (LastO2FlowCheckHigh) {
+				if (simt > NextO2FlowCheckTime) {
+					LightO2Warning = true;
 				}
-				else {
-					LastO2FlowCheckHigh = false;
-				}
+			} else {
+				LastO2FlowCheckHigh = true;
+				NextO2FlowCheckTime = simt + 16.5;
 			}
-			else {
-				O2FlowCheckCount++;
-			}
-
-			SetLight(CSM_CWS_O2_FLOW_HIGH_LIGHT, LightO2Warning);
-
-			NextO2FlowCheckTime = simt + 16.5;
+		} else {
+			LastO2FlowCheckHigh = false;
 		}
+		SetLight(CSM_CWS_O2_FLOW_HIGH_LIGHT, LightO2Warning);
 
 		//
 		// CO2: "A carbon dioxide sensor is connected between the suit inlet and return manifold. It 
@@ -734,7 +725,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			SetLight(CSM_CWS_CM_RCS_1, false);
 			SetLight(CSM_CWS_CM_RCS_2, false);
 		}
-		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());
+		NextUpdateTime = simt + 0.1;
 	}
 }
 
@@ -805,3 +796,32 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 		}
 	}
 }
+
+void CSMCautionWarningSystem::SaveState(FILEHANDLE scn)
+
+{
+	oapiWriteLine(scn, CWS_START_STRING);
+
+	papiWriteScenario_bool(scn, "LASTO2FLOWCHECKHIGH", LastO2FlowCheckHigh);
+	papiWriteScenario_double(scn, "NEXTO2FLOWCHECKTIME", NextO2FlowCheckTime);
+
+	CautionWarningSystem::SaveState(scn);
+	oapiWriteLine(scn, CWS_END_STRING);
+}
+
+void CSMCautionWarningSystem::LoadState(FILEHANDLE scn)
+
+{
+	char *line;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, CWS_END_STRING, sizeof(CWS_END_STRING)))
+			return;
+
+		papiReadScenario_bool(line, "LASTO2FLOWCHECKHIGH", LastO2FlowCheckHigh);
+		papiReadScenario_double(line, "NEXTO2FLOWCHECKTIME", NextO2FlowCheckTime);
+
+		CautionWarningSystem::LoadState(line);
+	}
+}
+

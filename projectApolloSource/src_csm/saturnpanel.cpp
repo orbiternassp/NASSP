@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.10  2009/12/15 08:50:00  jasonims
   *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
   *	
@@ -3149,8 +3152,8 @@ void Saturn::SetSwitches(int panel) {
 		EPSMnAGroup5CircuitBraker.Init    (281, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		UtilityCB2.Init                   (352,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		UtilityCB1.Init                   (352, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSBatBusBCircuitBraker.Init      (489,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSBatBusACircuitBraker.Init      (489, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		EPSBatBusBCircuitBraker.Init      (489,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusB, 20.0);
+		EPSBatBusACircuitBraker.Init      (489, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusA, 20.0);
 	}
 
 	Panel250CircuitBreakersRow.Init(AID_PANEL250CIRCUITBRAKERS, MainPanel);
@@ -3778,6 +3781,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(  0,   0,   0));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
+	g_Param.pen[5] = CreatePen (PS_SOLID, 1, RGB(255,   0,   0));
 }
 
 void DeletegParam() {
@@ -3790,7 +3794,7 @@ void DeletegParam() {
 
 	for (i = 0; i < 3; i++) DeleteObject (g_Param.font[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
-	for (i = 0; i < 5; i++) DeleteObject (g_Param.pen[i]);
+	for (i = 0; i < 6; i++) DeleteObject (g_Param.pen[i]);
 }
 
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
@@ -5262,7 +5266,7 @@ void Saturn::InitSwitches() {
 	PostLDGVentValveLever.Register(PSH, "PostLDGVentValveLever", 1);
 
 	GDCAlignButton.Register(PSH, "GDCAlignButton", false);
-	GDCAlignButton.SetDelayTime(0.5);
+	GDCAlignButton.SetDelayTime(2);
 
 	GHATrackSwitch.Register(PSH, "GHATrackSwitch", THREEPOSSWITCH_UP);
 	GHABeamSwitch.Register(PSH, "GHABeamSwitch", THREEPOSSWITCH_UP);
@@ -5678,8 +5682,10 @@ void Saturn::InitSwitches() {
 	LVRateAutoSwitch.Register(PSH, "LVRateAutoSwitch", 1);
 	TowerJett1Switch.Register(PSH, "TowerJett1Switch", THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	TowerJett1Switch.SetGuardResetsState(false);
+	TowerJett1Switch.SetDelayTime(1);
 	TowerJett2Switch.Register(PSH, "TowerJett2Switch", THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	TowerJett2Switch.SetGuardResetsState(false);
+	TowerJett2Switch.SetDelayTime(1);
 
 	CmSmSep1Switch.Register(PSH, "CmSmSep1Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
 	CmSmSep1Switch.SetDelayTime(1);
@@ -6755,8 +6761,11 @@ void Saturn::InitSwitches() {
 	Dsky2SwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::EnterCallback));
 	Dsky2SwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::ResetCallback));
 
-	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch",0, 0, 0, 0);	// dummy switch/display for checklist controller
-	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch",0, 0, 0, 0);
-	ASCPYawSwitch.Register(PSH, "ASCPYawSwitch",0, 0, 0, 0);
-	AbortSwitch.Register(PSH, "AbortSwitch",0, 0, 0, 0);
+	DskySwitchProg.SetDelayTime(1);
+	Dsky2SwitchProg.SetDelayTime(1);
+
+	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch", 0, 0, 0, 0);	// dummy switch/display for checklist controller
+	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch", 0, 0, 0, 0);
+	ASCPYawSwitch.Register(PSH, "ASCPYawSwitch", 0, 0, 0, 0);
+	AbortSwitch.Register(PSH, "AbortSwitch", 0, 0, 0, 0);
 }

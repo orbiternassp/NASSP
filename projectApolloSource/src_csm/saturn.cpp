@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.13  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -4973,15 +4976,10 @@ bool Saturn::CheckForLaunchShutdown()
 			// Reset autopilot commands
 			AtempP  = 0;
 			AtempY  = 0;
-			AtempR  = 0;
-
-			if (!Realism)
-				cws.SetInhibitNextMasterAlarm(true);
-			
+			AtempR  = 0;			
 		}
 		return true;
 	}
-
 	elemPREV = elemSaturn1B;
 	refPREV = refSaturn1B;
 

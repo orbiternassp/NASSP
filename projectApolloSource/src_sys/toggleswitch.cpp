@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.8  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -2757,6 +2760,11 @@ void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 }
 
 double MeterSwitch::GetDisplayValue() {
+
+	// Prevent problems if the simulation is started paused and 
+	// a lot of values are zero in that case
+	if (oapiGetPause())
+		return displayValue;
 
 	if (lastDrawTime == -1) {
 		lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();

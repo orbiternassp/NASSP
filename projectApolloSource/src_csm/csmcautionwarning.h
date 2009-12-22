@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.24  2008/10/16 00:48:45  movieman523
   *	More telemetry: some of these are dummy values for now.
   *	
@@ -176,6 +179,10 @@ public:
 	///
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 
+	void SaveState(FILEHANDLE scn);
+
+	void LoadState(FILEHANDLE scn);
+
 protected:
 
 	//
@@ -204,9 +211,8 @@ protected:
 	bool LastO2FlowCheckHigh;
 
 	///
-	/// How many times have we checked the O2 flow rate?
+	/// How many times have we checked the data?
 	///
-	int O2FlowCheckCount;
 	int SPSPressCheckCount;
 	int CryoPressCheckCount;
 	int GlycolTempCheckCount;
