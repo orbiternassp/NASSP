@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.8  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -871,10 +874,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				// Event handling.
 				//
 				eventControl.BACKUP_CREW_PRELAUNCH = MissionTime;
-
-				//Inhibit Suit Circuit alarm in Quickstart Mode
-				if (!Realism)
-					cws.SetInhibitNextMasterAlarm(true);
 
 				// Next state
 				systemsState = SATSYSTEMS_PRELAUNCH;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2009/09/13 15:20:15  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.14  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -1246,13 +1249,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Altitude:", 9);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), "Latitude:", 9);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Logitude:", 9);
 
 		char planetName[255];
 		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
+		double vvel = 0, apDist, peDist, lat, lon, radius;
 
 		OBJHANDLE planet;
-		if(saturn){
+		if (saturn) {
 			planet = saturn->GetGravityRef();
 			saturn->GetRelativeVel(planet, vel); 
 			if (saturn->GetHorizonAirspeedVector(hvel)) {
@@ -1260,7 +1265,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 			}
 			saturn->GetApDist(apDist);
 			saturn->GetPeDist(peDist);
-		}else if(lem){
+			saturn->GetEquPos(lon, lat, radius);
+		} else if (lem) {
 			planet = lem->GetGravityRef();
 			lem->GetRelativeVel(planet, vel); 
 			if (lem->GetHorizonAirspeedVector(hvel)) {
@@ -1268,6 +1274,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			}
 			lem->GetApDist(apDist);
 			lem->GetPeDist(peDist);
+			lem->GetEquPos(lon, lat, radius);
 		}
 
 		oapiGetObjectName(planet, planetName, 16);
@@ -1280,22 +1287,26 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 
 		SetTextAlign (hDC, TA_RIGHT);
-		sprintf(buffer, "%.0lfft/s", length(vel) * 3.2808399);
+		sprintf(buffer, "%.0lf ft/s", length(vel) * 3.2808399);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfft/s", vvel);
+		sprintf(buffer, "%.0lf ft/s", vvel);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-		if(saturn){ sprintf(buffer, "%.1lfnm", saturn->GetAltitude() * 0.000539957); }
-		if(lem){    sprintf(buffer, "%.1lfnm", lem->GetAltitude() * 0.000539957); }
+		if(saturn){ sprintf(buffer, "%.1lf nm ", saturn->GetAltitude() * 0.000539957); }
+		if(lem){    sprintf(buffer, "%.1lf nm ", lem->GetAltitude() * 0.000539957); }
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", apDist * 0.000539957);
+		sprintf(buffer, "%.1lf nm ", apDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
+		sprintf(buffer, "%.1lf nm ", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+		sprintf(buffer, "%.2lf°   ", lat * DEG);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.75), buffer, strlen(buffer));
+		sprintf(buffer, "%.2lf°   ", lon * DEG);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
 
 		if (g_Data.killrot) {
 			SetTextColor (hDC, RGB(255, 0, 0));
 			SetTextAlign (hDC, TA_CENTER);
-			TextOut(hDC, width / 2, (int) (height * 0.8), "*** KILL ROTATION ACTIVE ***", 28);
+			TextOut(hDC, width / 2, (int) (height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
 		}
 
 	//Draw Socket details.

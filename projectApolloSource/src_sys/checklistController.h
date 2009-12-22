@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.4  2009/09/20 17:52:01  tschachim
   *	Bugfix DSKY
   *	
@@ -598,6 +601,8 @@ private:
 	bool waitForCompletion;
 	
 	bool iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec = false);
+
+	bool isDSKYChecklistItem();
 
 protected:	
 	/// Access to the vessels sound handler

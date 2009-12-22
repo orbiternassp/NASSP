@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.20  2008/05/24 17:30:41  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -285,13 +288,16 @@ public:
 	/// \brief Save the CWS state to a scenario file.
 	/// \param scn Scenario file to save to.
 	///
-	void SaveState(FILEHANDLE scn);
+	virtual void SaveState(FILEHANDLE scn);
 
 	///
 	/// \brief Load the CWS state from a scenario file.
 	/// \param scn Scenario file to load from.
 	///
-	void LoadState(FILEHANDLE scn);
+
+	virtual void LoadState(FILEHANDLE scn) = 0;
+
+	void LoadState(char *line);
 
 	///
 	/// \brief Is the CWS powered?

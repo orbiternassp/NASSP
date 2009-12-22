@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.4  2009/09/20 17:52:01  tschachim
   *	Bugfix DSKY
   *	
@@ -266,7 +269,7 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 			}
 		}
 	} else {
-		if (!stricmp(item, "DSKY") ) {
+		if (!stricmp(item, "DSKY")) {
 			if (dskyItemsSet.size() > 0) {
 				if (dskyNo & 1) {
 					if (conn->SetState(dskyItemsSet[dskyIndex].item, position)) {
@@ -311,7 +314,11 @@ double ChecklistItem::checkIterate(MFDConnector *conn) {
 double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
 
 	if (!stricmp(item, "DSKY")) {
-		return 1;
+		if (dskyIndex == 0) {
+			return 4;
+		} else {
+			return 1;
+		}
 	}
 	if (position == -1) {
 		return 2;

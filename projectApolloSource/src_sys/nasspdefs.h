@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.96  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -531,7 +534,7 @@ typedef struct {
 	HFONT font[3];		///< GDI fonts.
 	DWORD col[6];		///< GDI colors.
 	HBRUSH brush[4];	///< GDI brushes.
-	HPEN pen[5];		///< GDI pens.
+	HPEN pen[6];		///< GDI pens.
 } GDIParams;
 
 //

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.7  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -698,9 +701,6 @@ public:
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
-//	virtual void SetState(int value);
-
-//	int operator=(const int b) { state = b; return state; };
 };
 
 ///
@@ -735,7 +735,6 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
-	//virtual void SetState(int value);
 
 protected:
 	virtual void UpdateSourceState();
