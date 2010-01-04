@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.14  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -1755,6 +1758,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	}
 	checkControl.timestep(MissionTime,eventControl);
 	MainPanel.timestep(MissionTime);
+
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
 
@@ -2048,6 +2052,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		papiWriteScenario_double (scn, "TOAPO", agc.GetDesiredApogee());
 		papiWriteScenario_double (scn, "TOPER", agc.GetDesiredPerigee());
 		papiWriteScenario_double (scn, "TOHDG", agc.GetDesiredAzimuth());
+		papiWriteScenario_double (scn, "TOINCLINATION", agc.GetDesiredInclination());
 	}
 
 	// save the internal systems 
@@ -2335,11 +2340,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		strncpy (StagesString, line + 12, 256);
 	}
 	else if (papiReadScenario_double(line, "TOHDG", d)) { 
-
-		//
-		// Tell the AGC the heading we want.
-		//
-
 		agc.SetDesiredAzimuth(d);
 	}
 	else if (!strnicmp (line, "VECHNO", 6)) {
@@ -2915,6 +2915,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
 		}
+		else if (papiReadScenario_double(line, "TOINCLINATION", d)) { 
+			agc.SetDesiredInclination(d);
+		}
 		else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
 			sscanf (line + 12, "%i", &rhc_id);
 			if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
@@ -3167,7 +3170,7 @@ void Saturn::UpdatePayloadMass()
 		break;
 
 	case PAYLOAD_TARGET:
-		S4PL_Mass = 1000; // Guess
+		S4PL_Mass = 1789;
 		break;
 
 	case PAYLOAD_DOCKING_ADAPTER:

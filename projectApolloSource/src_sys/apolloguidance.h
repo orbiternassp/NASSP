@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.3  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -1358,6 +1361,11 @@ protected:
 	/// \brief Desired Azimuth for launch.
 	///
 	double DesiredAzimuth;
+
+	///
+	/// \brief Desired Inclination for launch.
+	///
+	double DesiredInclination;
 
 	///
 	/// \brief Desired latitude for landing (Earth for CSM or Moon for LEM).

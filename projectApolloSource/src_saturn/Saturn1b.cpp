@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.86  2008/05/24 17:29:19  tschachim
   *	Improved autopilot/pitch table
   *	
@@ -341,14 +344,6 @@ static int refcount = 0;
 static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
-const double N   = 1.0;
-const double kN  = 1000.0;
-const double KGF = N*G;
-const double SEC = 1.0*G;
-const double KG  = 1.0;
-const double  CSM_THRUST_ATT   = 200.34*KGF;
-const double  CSM_ISP          = 773*SEC;
-
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 : Saturn (hObj, fmodel)
 
@@ -367,8 +362,8 @@ Saturn1b::~Saturn1b()
 // Default pitch program (according to the Apollo 7 Saturn IB Report, NTRS ID 19900067467)
 //
 
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 10, 20, 30, 40, 60, 80, 100, 120, 130, 135, 145, 200, 300, 400, 500};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 89, 88, 85, 80, 70, 58,  47,  38,  33,  31,  31,  35,  35,  35,  35};	// Commanded pitch in °
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 10, 20, 30, 40, 60, 80, 100, 120, 130,  135,  145,  200,  300,  400,  500};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 89, 88, 85, 80, 70, 58,  47,  38,  33, 30.7, 30.7, 30.7, 30.7, 30.7, 30.7};   // Commanded pitch in °
 
 
 void Saturn1b::initSaturn1b()
@@ -424,34 +419,31 @@ void Saturn1b::initSaturn1b()
 	IGMStartTime = 170;
 
 	//
-	// Default ISP and thrust values.
-	//
-
-	ISP_FIRST_SL    = 262*G;
-	ISP_FIRST_VAC   = 292*G;
-	THRUST_FIRST_VAC= 1030200;
-
-	ISP_SECOND_SL   = 300*G;
-	ISP_SECOND_VAC  = 419*G;
-
-	//
+	// Apollo 7 ISP and thrust values.
 	// Note: thrust values are _per engine_, not per stage.
+	/// \todo other Saturn 1b missions
 	//
 
-	THRUST_SECOND_VAC  = 1001000;
+	ISP_FIRST_SL     = 262*G;	// See Apollo 7 Saturn IB Report, NTRS ID 19900067467
+	ISP_FIRST_VAC    = 294*G; 
+	THRUST_FIRST_VAC = 1008000;  // between 875.000-1.025.000 N, calibrated to meet staging target
+
+	ISP_SECOND_SL   = 424*G;
+	ISP_SECOND_VAC  = 424*G;
+
+	THRUST_SECOND_VAC  = 1009902;
 
 	SM_EmptyMass = 3900;						// Calculated from Apollo 7 Mission Report and "Apollo by the numbers"
 	SM_FuelMass = 4430;							// Apollo 7 (according to Mission Report), 
-												/// \todo other Saturn 1b missions
 
 	CM_EmptyMass = 5430;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
 	CM_FuelMass = CM_RCS_FUEL_PER_TANK * 2.;	// The CM has 2 tanks
 
-	SII_EmptyMass = 12900;
-	SII_FuelMass = 105900;
+	SII_EmptyMass = 12495;
+	SII_FuelMass = 105795;
 
-	SI_EmptyMass = 41594;
-	SI_FuelMass = 407100;
+	SI_EmptyMass = 41874;
+	SI_FuelMass = 411953;
 
 	CalculateStageMass();
 
@@ -607,11 +599,10 @@ void Saturn1b::StageOne(double simt, double simdt)
 	case 0:
 
 		//
-		// Shut down center engine at 2% fuel or if acceleration goes
-		// over 3.98g, or at specified time.
+		// Shut down center engine at 2% fuel or at specified time.
 		//
 
-		if ((actualFUEL <= 2) || (MissionTime >= FirstStageCentreShutdownTime)) { // || (aHAcc > (3.98*G)))) {
+		if ((actualFUEL <= 2) || (MissionTime >= FirstStageCentreShutdownTime)) {
 			SetEngineIndicator(5);
 			SetEngineIndicator(6);
 			SetEngineIndicator(7);
@@ -682,25 +673,12 @@ void Saturn1b::StageOne(double simt, double simdt)
 		}
 		return;
 	}
-
-	if (autopilot) {
-		AutoPilot(MissionTime);
-	} else {
-		AttitudeLaunch1();
-	}
 }
 
 void Saturn1b::StageLaunchSIVB(double simt)
 
 {
-    if (autopilot) {
-		AutoPilot(MissionTime);
-	} else {
-		AttitudeLaunchSIVB();
-	}
-
-	switch (StageState)
-	{
+	switch (StageState)	{
 	case 0:
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
@@ -728,21 +706,17 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 2:
-		if (MissionTime  < NextMissionEventTime)
-		{
+		if (MissionTime  < NextMissionEventTime) {
 			double deltat = MissionTime - LastMissionEventTime;
 			SetThrusterLevel(th_main[0], 0.9 * (deltat / 2.5));
-		}
-		else
-		{
+		} else {
 			SetThrusterLevel(th_main[0], 0.9);
 			SetThrusterGroupLevel(thg_ver, 0.0);
 			LastMissionEventTime = NextMissionEventTime;
 			NextMissionEventTime += 2.1;
 			StageState++;
 		}
-		if (GetThrusterLevel(th_main[0]) > 0.65) 
-		{
+		if (GetThrusterLevel(th_main[0]) > 0.65) {
 			ClearEngineIndicator(1);
 		}
 		break;
@@ -752,13 +726,10 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 3:
-		if (MissionTime  < NextMissionEventTime)
-		{
+		if (MissionTime  < NextMissionEventTime) {
 			double deltat = MissionTime - LastMissionEventTime;
 			SetThrusterLevel(th_main[0], 0.9 + (deltat / 21.0));
-		}
-		else
-		{
+		} else {
 			SetThrusterLevel(th_main[0], 1.0);
 			SepS.stop();
 			AddRCS_S4B();
@@ -773,8 +744,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 4:
-		if (MissionTime >= NextMissionEventTime)
-		{
+		if (MissionTime >= NextMissionEventTime) {
 			SetSIVBThrusters(true);
 			SetSIVBMixtureRatio(5.5);
 
@@ -787,10 +757,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 5:
-		if (MissionTime >= SecondStagePUShiftTime)
-		{
-			if (Crewed)
-			{
+		if (MissionTime >= SecondStagePUShiftTime) {
+			if (Crewed)	{
 				SPUShiftS.play();
 				SPUShiftS.done();
 			}
@@ -800,12 +768,34 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		break;
 
 	//
+	// Throttle down engine to achieve a more precise shutdown
+
+	case 6: {
+		double apDist, peDist;
+		GetApDist(apDist);
+		GetPeDist(peDist);
+		OBJHANDLE ref = GetGravityRef();
+		if (apDist - oapiGetSize(ref) >= agc.GetDesiredApogee() * 1000. - 30000. && peDist - oapiGetSize(ref) >= agc.GetDesiredPerigee() * 1000. - 1000.) {
+			LastMissionEventTime = MissionTime;
+			StageState++;
+		} }
+		break;
+
+	case 7:
+		if (GetThrusterLevel(th_main[0]) <= 0.05) {
+			StageState++;
+		} else {
+			double deltat = MissionTime - LastMissionEventTime;
+			SetThrusterLevel(th_main[0], max(0.05, 1. - (deltat / 0.4)));
+		}
+		break;
+
+	//
 	// Shutdown.
 	//
 
-	case 6:
-		if (GetEngineLevel(ENGINE_MAIN) <= 0)
-		{
+	case 8:
+		if (GetThrusterLevel(th_main[0]) <= 0) {
 			NextMissionEventTime = MissionTime + 10.0;
 			S4CutS.play();
 			S4CutS.done();
@@ -824,8 +814,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	}
 
 	// Abort handling
-	if (CSMLVPyros.Blown() || (bAbort && !LESAttached))
-	{		
+	if (CSMLVPyros.Blown() || (bAbort && !LESAttached))	{		
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort) {
@@ -835,7 +824,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 			autopilot = false;
 		}
 	}
-
+	// sprintf(oapiDebugString(), "state %d thrust %f", StageState, GetThrusterLevel(th_main[0]));
 }
 
 
@@ -847,17 +836,35 @@ void Saturn1b::StageLaunchSIVB(double simt)
 void Saturn1b::SetSIVBMixtureRatio (double ratio)
 
 {
-	double isp;
+	double isp, thrust;
 
-	isp = GetJ2ISP(ratio);
+	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
+
+	if (ratio >= 5.0) {
+		thrust = 1009902;
+		isp = 424*G;
+	
+	} else {
+		thrust = 770000.;
+		isp = 428*G;
+	}
 
 	//
-	// For simplicity assume no ISP change at sea-level: SII stage should always
+	// For simplicity assume no ISP change at sea-level: SIVb stage should always
 	// be in near-vacuum anyway.
 	//
 
-	SetThrusterIsp (th_main[0], isp, ISP_SECOND_SL);
-	SetThrusterMax0 (th_main[0], THRUST_SECOND_VAC * ThrustAdjust);
+	SetThrusterIsp (th_main[0], isp, isp);
+	SetThrusterMax0 (th_main[0], thrust);
+
+	//
+	// Give the AGC our new stats.
+	//
+
+	agc.SetVesselStats(isp, thrust, false);
+	iu.SetVesselStats(isp, thrust);
+
+	MixtureRatio = ratio;
 }
 
 void Saturn1b::Timestep (double simt, double simdt, double mjd)
@@ -917,6 +924,30 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	}
 
 	LastTimestep = simt;
+}
+
+void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
+
+	Saturn::clbkPostStep(simt, simdt, mjd);
+
+	// Run the autopilot post step to have stable dynamic data
+	switch (stage) {
+	case LAUNCH_STAGE_ONE:
+		if (autopilot) {
+			AutoPilot(MissionTime);
+		} else {
+			AttitudeLaunch1();
+		}
+		break;
+
+	case LAUNCH_STAGE_SIVB:
+		if (autopilot) {
+			AutoPilot(MissionTime);
+		} else {
+			AttitudeLaunchSIVB();
+		}
+		break;
+	}
 }
 
 //
@@ -1122,7 +1153,7 @@ void Saturn1b::CalculateStageMass()
 {
 	SI_Mass = SI_EmptyMass + SI_FuelMass;
 	SII_Mass = SII_EmptyMass + SII_FuelMass;
-	SM_Mass = SM_EmptyMass + SM_FuelMass;
+	SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 	CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 	//

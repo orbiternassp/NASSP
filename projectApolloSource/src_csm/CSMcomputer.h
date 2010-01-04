@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -400,6 +403,11 @@ public:
 	double GetDesiredAzimuth() { return DesiredAzimuth; };
 
 	///
+	/// \brief Get the desired launch inclination for the autopilot.
+	///
+	double GetDesiredInclination() { return DesiredInclination; };
+
+	///
 	/// \brief Set the desired apogee for the autopilot.
 	///
 	void SetDesiredApogee(double val) { DesiredApogee = val; };
@@ -413,6 +421,12 @@ public:
 	/// \brief Set the desired launch azimuth for the autopilot.
 	///
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
+
+	///
+	/// \brief Set the desired inclination for the autopilot.
+	///
+	void SetDesiredInclination(double val) { DesiredInclination = val; };
+
 	void SetBurnTime(double val) { BurnTime = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);

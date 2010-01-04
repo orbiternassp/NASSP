@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.26  2008/05/24 17:29:19  tschachim
   *	Improved autopilot/pitch table
   *	
@@ -133,6 +136,14 @@ public:
 	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
+	void clbkPostStep (double simt, double simdt, double mjd);
 
 protected:
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2008/05/24 17:29:19  tschachim
   *	Improved autopilot/pitch table
   *	
@@ -281,16 +284,44 @@ void Saturn1b::AutoPilot(double autoT)
 		StopRot = true;
 	}
 
+	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
+	HorizonRot(_V(1,0,0), rhoriz);
+
 	//
 	// Shut down the engines when we reach the desired
 	// orbit.
 	//
-	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
 
-	HorizonRot(_V(1,0,0),rhoriz);
+	double apogee, perigee;
+	OBJHANDLE ref = GetGravityRef();
+	GetApDist(apogee);
+	GetPeDist(perigee);
+	apogee = (apogee - oapiGetSize(ref)) / 1000.;
+	perigee = (perigee - oapiGetSize(ref)) / 1000.;
 
-	if (altitude >= 120000 && CheckForLaunchShutdown())
+	// We're aiming for periapsis and shutdown when apoapsis is reached at the opposite side of the orbit
+	if (apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.1) {
+		// See Saturn::CheckForLaunchShutdown()
+		if (GetThrusterLevel(th_main[0]) > 0){
+			SetThrusterLevel(th_main[0], 0);
+			
+			if (oapiGetTimeAcceleration() > 1.0)
+				oapiSetTimeAcceleration(1.0);
+
+			S4CutS.play(NOLOOP, 255);
+			S4CutS.done();
+
+			ActivateNavmode(NAVMODE_KILLROT);
+
+			agc.LaunchShutdown();
+
+			// Reset autopilot commands
+			AtempP  = 0;
+			AtempY  = 0;
+			AtempR  = 0;			
+		}
 		return;
+	}
 
 	// navigation
 	pitch = GetPitch();
@@ -302,34 +333,32 @@ void Saturn1b::AutoPilot(double autoT)
 	if (altitude > 4500) {
 		// Damp roll motion
 		bank = GetBank();
-		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180;
-		else if(bank < -90) bank = bank + 180;
-
-		AtempR=-bank/20.0;
-		if(fabs(bank) < 0.3) AtempR=0.0;
+		bank = bank *180. / PI;
+		if (bank > 90) bank = bank - 180.;
+		else if (bank < -90) bank = bank + 180.;
+		AtempR = -bank / 20.0;
+		if (fabs(bank) < 0.3) AtempR = 0;
 
 		// navigation
 		pitch = GetPitch();
-		pitch = pitch*180./PI;
+		pitch = pitch * 180. / PI;
 
 		if (IGMEnabled) {
 			VECTOR3 target;
 			double pit, yaw;
-			OBJHANDLE hbody=GetGravityRef();
-			double bradius=oapiGetSize(hbody);
-			double bmass=oapiGetMass(hbody);
-			double mu=GRAVITY*bmass;
-			double altco=agc.GetDesiredApogee()*1000.0;
-			double velo=sqrt(mu/(bradius+altco));
-			target.x=velo-0.234;
-			target.y=0.0;
-			target.z=altco;
+			double bradius = oapiGetSize(ref);
+			double bmass = oapiGetMass(ref);
+			double mu = GRAVITY * bmass;
+			// Aim for periapsis
+			double altco = agc.GetDesiredPerigee() * 1000.;
+			double velo = sqrt(mu / (bradius + altco));
+			target.x = velo;
+			target.y = 0.0;
+			target.z = altco;
 			LinearGuidance(target, pit, yaw);
-			AtempP=(pit*DEG-pitch)/30.0;
-			if (AtempP < -0.2) AtempP = -0.2;
-			if (AtempP >  0.2) AtempP =  0.2;
-			// sprintf(oapiDebugString(), "IGM - Alt %f Pitch %f autoT %f", altitude, AtempP, autoT);
+			AtempP=(pit * DEG - pitch) / 30.0;
+			if (AtempP < -0.15) AtempP = -0.15;
+			if (AtempP >  0.15) AtempP =  0.15;
 		}
 		else {
 			 // guidance
@@ -394,7 +423,38 @@ void Saturn1b::AutoPilot(double autoT)
 	oapiGetHeading(GetHandle(),&heading);
 	heading = heading*180./PI;
 
+	// Inclination control
+	static double incinit = false; 
+	static ELEMENTS elemlast; 
+	static double incratelast;
 
+	ELEMENTS elem;
+	GetElements(ref, elem, 0, 0, FRAME_EQU);
+	double incrate = (elem.i - elemlast.i) / oapiGetSimStep();
+	double incraterate = (incrate - incratelast) / oapiGetSimStep();	
+	double target = (agc.GetDesiredInclination() - elem.i * DEG) / (FirstStageShutdownTime - MissionTime);
+
+	if (agc.GetDesiredInclination() != 0 && autoT > 45) {	
+		if (!incinit) {
+			incinit = true;
+			AtempY = 0;
+		} else {
+			if (autoT < FirstStageShutdownTime - 10) {	
+				AtempY = (incrate * DEG - target) / 0.7 + incraterate * DEG / 2.;
+			} else if (autoT < FirstStageShutdownTime + 10) {	
+				AtempY = 0;
+			} else {
+				AtempY = (elem.i * DEG - agc.GetDesiredInclination()) / 7. + (incrate * DEG ) / 1.;
+				if (AtempY < -0.01) AtempY = -0.01;
+				if (AtempY >  0.01) AtempY =  0.01;
+			}
+		}
+	}
+	
+	elemlast = elem;
+	incratelast = incrate;
+
+	// stage handling
 	switch (stage){
 		case LAUNCH_STAGE_ONE:
 			GetRelativePos(hbody, up);
@@ -434,8 +494,12 @@ void Saturn1b::AutoPilot(double autoT)
 			pitch = GetPitch();
 			pitch=pitch*180./PI;
 			pitch_c=GetCPitch(autoT);
-			AtempP = (pitch - pitch_c);
-			if(rhoriz.z>0) AtempP= -AtempP;
+			AtempP = (pitch_c - pitch);
+
+			// Fix for LC 39
+			if (autoT < 10 && heading > 180)
+				AtempP = -(180. - pitch_c - pitch);
+
 			if (AtempP > 1.0) AtempP = 1.0;
 			if (AtempP < -1.0) AtempP = -1.0;
 
@@ -446,22 +510,12 @@ void Saturn1b::AutoPilot(double autoT)
 				//double aoa=GetAOA()*DEG;
 				//pitch_c=pitch+aoa-0.3;
 
-				AtempP=(pitch_c-pitch)/5.0;
-				if(AtempP < -0.2) AtempP=-0.2;
-				if(AtempP >  0.2) AtempP= 0.2;
+				AtempP=(pitch_c - pitch) / 5.0;
+				if(AtempP < -0.2) AtempP = -0.2;
+				if(AtempP >  0.2) AtempP = 0.2;
 				// sprintf(oapiDebugString(), " pitch=%.3f pc=%.3f ap=%.3f", pitch, pitch_c, AtempP);
-				if(autoT < 50.0) {
-					// AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
-					AtempY=(TO_HDG-(heading+slip))/20.0;
-					// try this...
-					AtempR=asin(ygl*normal)*DEG/20.0;
-				} else {
-					//	AtempY=slip/10.0;
-					AtempY=(TO_HDG-(heading+slip))/20.0;
-				}
 			}
 			if (autoT > 115.0) {
-				AtempY=0.0;
 				if (autoT < 120.0) {
 					if (AtempP < -0.1) AtempP = -0.1;
 					if (AtempP >  0.1) AtempP =  0.1;
@@ -483,4 +537,7 @@ void Saturn1b::AutoPilot(double autoT)
 			AttitudeLaunchSIVB();
 			break;
 	}
+
+	// sprintf(oapiDebugString(), "AP - inc %f rate %f target %f raterate %f AtempP %f AtempR %f AtempY %f", elem.i * DEG, incrate * DEG, target, incraterate * DEG, AtempP, AtempR, AtempY);
+	// sprintf(oapiDebugString(), "AP - pitch %f pitch_c %f heading %f AtempP %f AtempR %f AtempY %f", pitch, pitch_c, heading, AtempP, AtempR, AtempY);
 }

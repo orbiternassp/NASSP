@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.11  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -5682,10 +5685,10 @@ void Saturn::InitSwitches() {
 	LVRateAutoSwitch.Register(PSH, "LVRateAutoSwitch", 1);
 	TowerJett1Switch.Register(PSH, "TowerJett1Switch", THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	TowerJett1Switch.SetGuardResetsState(false);
-	TowerJett1Switch.SetDelayTime(1);
+	TowerJett1Switch.SetDelayTime(2);
 	TowerJett2Switch.Register(PSH, "TowerJett2Switch", THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	TowerJett2Switch.SetGuardResetsState(false);
-	TowerJett2Switch.SetDelayTime(1);
+	TowerJett2Switch.SetDelayTime(2);
 
 	CmSmSep1Switch.Register(PSH, "CmSmSep1Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
 	CmSmSep1Switch.SetDelayTime(1);
