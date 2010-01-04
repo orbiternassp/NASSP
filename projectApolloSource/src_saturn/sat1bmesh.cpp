@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.78  2008/05/24 17:27:52  tschachim
   *	Bugfix for Orbiter 2008
   *	
@@ -256,7 +259,7 @@ void Saturn1b::SetFirstStage ()
 	SetSize (45);
 	SetEmptyMass (Stage1Mass);
 	SetPMI (_V(140,145,28));
-	SetCrossSections (_V(395,380,115));
+	SetCrossSections (_V(395, 380, 40));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);

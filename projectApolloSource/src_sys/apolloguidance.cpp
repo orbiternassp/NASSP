@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/17 17:48:41  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.3  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -407,6 +410,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	DesiredPerigee = 0.0;
 	DesiredDeltaV = 0.0;
 	DesiredAzimuth = 0.0;
+	DesiredInclination = 0.0;
 	DesiredDeltaVx = 0.0;
 	DesiredDeltaVy = 0.0;
 	DesiredDeltaVz = 0.0;

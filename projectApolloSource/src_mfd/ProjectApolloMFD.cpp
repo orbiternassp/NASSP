@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.15  2009/09/13 15:20:15  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -1250,7 +1253,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), "Latitude:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Logitude:", 9);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Longitude:", 10);
 
 		char planetName[255];
 		VECTOR3 vel, hvel;
@@ -1291,12 +1294,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));
 		sprintf(buffer, "%.0lf ft/s", vvel);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-		if(saturn){ sprintf(buffer, "%.1lf nm ", saturn->GetAltitude() * 0.000539957); }
-		if(lem){    sprintf(buffer, "%.1lf nm ", lem->GetAltitude() * 0.000539957); }
+		if(saturn){ sprintf(buffer, "%.1lf nm  ", saturn->GetAltitude() * 0.000539957); }
+		if(lem){    sprintf(buffer, "%.1lf nm  ", lem->GetAltitude() * 0.000539957); }
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lf nm ", apDist * 0.000539957);
+		sprintf(buffer, "%.1lf nm  ", apDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lf nm ", peDist * 0.000539957);
+		sprintf(buffer, "%.1lf nm  ", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
 		sprintf(buffer, "%.2lf°   ", lat * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.75), buffer, strlen(buffer));
