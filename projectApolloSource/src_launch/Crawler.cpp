@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -394,8 +397,12 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	if(vs.vdata[0].z < 0) vs.vdata[0].z += 2.0 * PI;
 	if(vs.vdata[0].z >= 2.0 * PI) vs.vdata[0].z -= -2.0 * PI;
 
-	lon += sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
-	lat += cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
+	// Bugfix by SiameseCat
+	VECTOR3 dir = _V(sin(head), cos(lat) * cos(head), 0);
+	dir /= length(dir);
+	lon += dir.x * velocity * simdt / oapiGetSize(GetGravityRef());
+	lat += dir.y * velocity * simdt / oapiGetSize(GetGravityRef());
+
 	vs.vdata[0].x = lon;
 	vs.vdata[0].y = lat;
 	vs.status = 1;
