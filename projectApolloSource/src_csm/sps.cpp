@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -505,6 +508,7 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	engineOnCommanded = false;
 	nitrogenPressureAPSI = 2500.0;
 	nitrogenPressureBPSI = 2500.0;
+	cmcErrorCountersEnabled = false;
 }
 
 SPSEngine::~SPSEngine() {
@@ -709,8 +713,14 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
 		VECTOR3 spsvector;
-		spsvector.x = yawGimbalActuator.GetPosition() * RAD; // Convert deg to rad
-		spsvector.y = pitchGimbalActuator.GetPosition() * RAD;
+		// Main engine offset only in Virtual AGC mode
+		if (saturn->Realism) {
+			spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
+			spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
+		} else {
+			spsvector.x = yawGimbalActuator.GetPosition() * RAD; // Convert deg to rad
+			spsvector.y = pitchGimbalActuator.GetPosition() * RAD;
+		}
 		spsvector.z = 1;
 		saturn->SetThrusterDir(spsThruster, spsvector);
 	}
@@ -754,6 +764,7 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
 	papiWriteScenario_double(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
 	papiWriteScenario_double(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
+	papiWriteScenario_bool(scn, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
 	oapiWriteLine(scn, SPSENGINE_END_STRING);
 }
 
@@ -792,6 +803,7 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "NITROGENPRESSUREBPSI", 20)) {
 			sscanf (line+20, "%lf", &nitrogenPressureBPSI);
 		}
+		papiReadScenario_bool(line, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
 	}
 }
 

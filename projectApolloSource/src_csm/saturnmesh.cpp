@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -571,23 +574,26 @@ void Saturn::SetCSMStage ()
 
 	// *********************** thruster definitions ********************************
 
+	// Main engine offset only in Virtual AGC mode
+	if (Realism) {
+		th_main[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
+	} else {
+		th_main[0] = CreateThruster(_V(0, 0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
+	}
+
+	DelThrusterGroup(THGROUP_MAIN, true);
+	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
+
+	AddExhaust(th_main[0], 20.0, 2.25, SMExhaustTex);
+	SetPMI(_V(12, 12, 7));
+	SetCrossSections(_V(40,40,14));
+	SetCW(0.1, 0.3, 1.4, 1.4);
+	SetRotDrag(_V(0.7,0.7,0.3));
+	SetPitchMomentScale(0);
+	SetBankMomentScale(0);
+	SetLiftCoeffFunc(0);
+
 	const double CGOffset = 12.25+21.5-1.8+0.35;
-
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
-	// orbiter main thrusters
-	th_main[0] = CreateThruster(_V(0,0,-5.0), _V(0,0,1), SPS_THRUST , ph_sps, SPS_ISP);
-	DelThrusterGroup(THGROUP_MAIN,true);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
-	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
-	SetPMI (_V(12, 12, 7));
-	SetCrossSections (_V(40,40,14));
-	SetCW (0.1, 0.3, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,0.3));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
-
 	AddSM(30.25 - CGOffset, true);
 
 	VECTOR3 mesh_dir;

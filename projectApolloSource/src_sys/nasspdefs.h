@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -619,6 +622,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define SPS_ISP						 3080.0
 #define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
+#define SPS_PITCH_OFFSET            -2.15		// in deg
+#define SPS_YAW_OFFSET               0.95		// in deg
 
 #define APS_THRUST		15600
 #define APS_ISP			2840
