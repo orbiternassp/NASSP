@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -127,6 +130,7 @@ public:
 	void LoadState(FILEHANDLE scn);
 	double GetPosition() { return position; }
 	void ChangeCMCPosition(double delta);
+	void ZeroCMCPosition() { cmcPosition = 0; }
 
 protected:
 	bool IsSystem1Powered();
@@ -174,6 +178,7 @@ public:
 
 	SPSGimbalActuator pitchGimbalActuator;
 	SPSGimbalActuator yawGimbalActuator;
+	bool cmcErrorCountersEnabled;
 
 protected:
 	bool thrustOn;

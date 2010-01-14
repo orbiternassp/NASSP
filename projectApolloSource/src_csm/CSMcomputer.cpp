@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.3  2009/08/21 17:52:18  vrouleau
   *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
   *	
@@ -3081,7 +3084,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0320] = 037777;
 
 				// set DAP data to CSM mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8 and 11 have proper scenarios
@@ -3113,7 +3116,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0316] = 037777;	
 
 				// set DAP data to CSM mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 010002;
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 			}
 #endif
@@ -4238,17 +4241,32 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	if(val12.Bits.CoarseAlignEnable){ return; } // Does not apply to us here.
 	switch(channel){
 	case 012:
-		if(val12.Bits.EnableIMUCDUErrorCounters){
-			if(sat->gdc.fdai_err_ena == 0){
+		// Reset FDAI
+		if (val12.Bits.EnableIMUCDUErrorCounters) {
+			if (sat->gdc.fdai_err_ena == 0) {
 				// sprintf(oapiDebugString(),"FDAI: RESET");						
 				sat->gdc.fdai_err_x = 0;
 				sat->gdc.fdai_err_y = 0;
 				sat->gdc.fdai_err_z = 0;
 				sat->gdc.fdai_err_ena = 1;
 			}
-		}else{
+		} else {
 			sat->gdc.fdai_err_ena = 0;
 		}
+
+		// Reset TVC
+		if (val12.Bits.TVCEnable) {
+			if (val12.Bits.EnableOpticsCDUErrorCounters) {
+				if (!sat->SPSEngine.cmcErrorCountersEnabled) {
+					sat->SPSEngine.pitchGimbalActuator.ZeroCMCPosition();
+					sat->SPSEngine.yawGimbalActuator.ZeroCMCPosition();
+					sat->SPSEngine.cmcErrorCountersEnabled = true;
+				}
+			} else {
+				sat->SPSEngine.cmcErrorCountersEnabled = false;
+			}
+		}
+
 		// If OPTICS TRACKER switch is not up
 		if(sat->ControllerTrackerSwitch.GetState() != THREEPOSSWITCH_UP){
 			// leave
