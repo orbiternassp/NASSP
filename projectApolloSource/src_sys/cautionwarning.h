@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -411,11 +414,6 @@ protected:
 	/// \brief Is the master alarm lit?
 	///
 	bool MasterAlarmLit;
-
-	///
-	/// \brief Is the crew alarm buzzer on?
-	///
-	bool CrewAlarmBuzz;
 
 	///
 	/// \brief MET of next master alarm light cycle.
