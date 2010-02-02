@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -138,7 +141,6 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
-	CrewAlarmBuzz = false;
 	MasterAlarmPressed = false;
 	InhibitNextMasterAlarm = false;
 	PlaySounds = true;
@@ -243,17 +245,18 @@ void CautionWarningSystem::TimeStep(double simt)
 	//
 
 	if (simt > MasterAlarmCycleTime){
-		if(MasterAlarm) {
+		if (MasterAlarm) {
 			MasterAlarmLit = !MasterAlarmLit;
 		}
-		if(MasterAlarm){ // || (UplinkTestState&010) != 0){ -- Incorrect?
-			CrewAlarmBuzz = !CrewAlarmBuzz;
+		if (MasterAlarm) { // || (UplinkTestState&010) != 0){ -- Incorrect?
 			MasterAlarmCycleTime = simt + 0.25;
-		}else{
-			CrewAlarmBuzz = false;
 		}
-		if (CrewAlarmBuzz && IsPowered() && PlaySounds) {
-			MasterAlarmSound.play(NOLOOP,255);
+		if (MasterAlarm && IsPowered() && PlaySounds) {
+			if (!MasterAlarmSound.isPlaying()) {
+				MasterAlarmSound.play(LOOP, 255);
+			}
+		} else {
+			MasterAlarmSound.stop();
 		}
 	}
 }
@@ -287,7 +290,6 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 		//
 
 		MasterAlarmLit = false;
-		CrewAlarmBuzz = false;
 		MasterAlarmCycleTime = MINUS_INFINITY;
 	}
 }
@@ -338,7 +340,6 @@ void CautionWarningSystem::PushMasterAlarm()
 	MasterAlarmSound.stop();
 	SetMasterAlarm(false); 
 	ButtonSound.play(NOLOOP, 255);
-
 }
 
 
