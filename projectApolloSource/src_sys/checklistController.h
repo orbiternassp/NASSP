@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.5  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -148,6 +151,7 @@ struct ChecklistGroup
 		autoSelect = false;
 		essential = false;
 		name[0] = 0;
+		heading[0] = 0;
 		autoSlow = false;
 		soundFile[0] = 0;
 		called = false;
@@ -206,6 +210,10 @@ struct ChecklistGroup
 /// Name of the group as should be displayed on the checklist.
 /// -------------------------------------------------------------
 	char name[100];
+/// -------------------------------------------------------------
+/// Heading
+/// -------------------------------------------------------------
+	char heading[100];
 /// -------------------------------------------------------------
 /// Auto slow when this group is spawned.
 /// -------------------------------------------------------------
@@ -585,6 +593,7 @@ private:
 	bool autoexecuteAllItemsAutomatic;
 	///Used to spawn new "program"
 	bool spawnCheck(int, bool, bool automagic = false);
+	bool doSpawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel
 	MFDConnector conn;
 	/// Used to move forward through the elements.

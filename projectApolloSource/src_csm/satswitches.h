@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.3  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -854,6 +857,19 @@ protected:
 	Saturn *Sat;
 };
 
+class SaturnPanelOrdeal : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+};
+
 class SaturnASCPSwitch : public MeterSwitch {
 public:
 	void Init(SwitchRow &row, Saturn *s, int axis);
@@ -969,4 +985,20 @@ public:
 	bool CSMLMPowerSwitch::SwitchTo(int newState);
 protected:
 	Saturn *sat;
+};
+
+class OrdealRotationalSwitch: public RotationalSwitch {
+
+public:
+	OrdealRotationalSwitch() { value = 100; lastX = 0; mouseDown = false; };
+	virtual void DrawSwitch(SURFHANDLE drawSurface);
+	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual void SaveState(FILEHANDLE scn);
+	virtual void LoadState(char *line);
+	int GetValue() { return value; }
+
+protected:
+	int value;
+	int lastX;
+	bool mouseDown;
 };

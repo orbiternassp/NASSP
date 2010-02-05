@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.5  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -547,7 +550,6 @@ void DSKYChecklistItem::init(char *k) {
 
 //ChecklistGroup methods.
 
-// Todo: Verify
 void ChecklistGroup::init(std::vector<BasicExcelCell> &cells)
 {
 	if (cells[0].GetString())
@@ -556,12 +558,14 @@ void ChecklistGroup::init(std::vector<BasicExcelCell> &cells)
 	deadline = cells[2].GetDouble();
 	if (cells[3].GetString())
 		relativeEvent = checkEvent(cells[3].GetString(),true);
-	autoSelect = (cells[4].GetInteger() != 0);
-	manualSelect = (cells[5].GetInteger() != 0);
-	essential = (cells[6].GetInteger() != 0);
-	if (cells[7].GetString())
-		strncpy(soundFile,cells[7].GetString(),100);
-	autoSlow = (cells[8].GetInteger() != 0);
+	if (cells[4].GetString())
+		strncpy(heading, cells[4].GetString(), 100);
+	autoSelect = (cells[5].GetInteger() != 0);
+	manualSelect = (cells[6].GetInteger() != 0);
+	essential = (cells[7].GetInteger() != 0);
+	if (cells[8].GetString())
+		strncpy(soundFile,cells[8].GetString(),100);
+	autoSlow = (cells[9].GetInteger() != 0);
 }
 // Todo: Verify
 void ChecklistGroup::load(FILEHANDLE scn)
