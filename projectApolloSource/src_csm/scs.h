@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.5  2009/12/15 08:50:00  jasonims
   *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
   *	
@@ -223,11 +226,14 @@ public: // We use these inside a timestep, so everything is public to make data 
 	friend class CSMcomputer; // Needs to write FDAI error indications, which are really not on the GDC, but meh.
 };
 
+
+// Attitude Set Control Panel
+
 #define ASCP_START_STRING	"ASCP_BEGIN"
 #define ASCP_END_STRING		"ASCP_END"
 
 class ASCP {
-	// Attitude Set Control Panel
+	
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
 	ASCP(Sound &clicksound);									   // Cons
 	void Init(Saturn *vessel);									   // Initialization
@@ -269,10 +275,13 @@ protected:
 	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value);
 };
 
+
+// Electronic Display Assembly
+// This really just serves as a placeholder right now, and does some of the FDAI sourcing
+// so the FDAI redraw is less messy.
+
 class EDA {
-	// Electronic Display Assembly
-	// This really just serves as a placeholder right now, and does some of the FDAI sourcing
-	// so the FDAI redraw is less messy.
+
 public: // Same stuff about speed and I'm lazy too.
 	EDA();															// Cons
 	void Init(Saturn *vessel);										// Initialization
@@ -286,11 +295,13 @@ public: // Same stuff about speed and I'm lazy too.
 };
 
 
+// Reaction Jet Engine Control
+
 #define RJEC_START_STRING	"RJEC_BEGIN"
 #define RJEC_END_STRING		"RJEC_END"
 
 class RJEC {
-	// Reaction Jet Engine Control
+	
 public: // Same stuff about speed and I'm lazy too.
 	RJEC();															// Cons
 	void Init(Saturn *vessel);										// Initialization
@@ -338,8 +349,11 @@ protected:
 	bool IsThrusterPowered(ThreePosSwitch *s);
 };
 
+
+// Electronic Control Assembly
+
 class ECA {
-	// Electronic Control Assembly
+	
 public:
 	ECA();
 	void Init(Saturn *vessel);										// Initialization
@@ -362,6 +376,9 @@ public:
 	Saturn *sat;
 	VECTOR3 pseudorate;
 };
+
+
+// EMS
 
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
@@ -444,6 +461,33 @@ protected:
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
+};
+
+
+// ORDEAL
+
+#define ORDEAL_START_STRING		"ORDEAL_BEGIN"
+#define ORDEAL_END_STRING		"ORDEAL_END"
+
+class ORDEAL {
+	
+public:
+	ORDEAL();
+	void Init(Saturn *vessel);										// Initialization
+	void Timestep(double simdt);                                    // Timestep
+	void SystemTimestep(double simdt);
+
+	double GetFDAI1PitchAngle();
+	double GetFDAI2PitchAngle();
+
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+private:
+	bool IsPowered();
+
+	double pitchOffset;
+	Saturn *sat;
 };
 
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.9  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -591,6 +594,7 @@ void Saturn::SystemsInit() {
 	rjec.Init(this);
 	eca.Init(this);
 	ems.Init(this);
+	ordeal.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
@@ -771,6 +775,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		dockingprobe.TimeStep(MissionTime, simdt);
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
+		ordeal.Timestep(simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
@@ -1403,6 +1408,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		usb.SystemTimestep(tFactor);
 		ems.SystemTimestep(tFactor);
 		els.SystemTimestep(tFactor);
+		ordeal.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
 		CabinPressureRegulator.SystemTimestep(tFactor);

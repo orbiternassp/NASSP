@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.15  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -1974,6 +1977,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
+	oapiWriteScenario_int (scn, "ORDEALENABLED", ordealEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
 	oapiWriteScenario_int (scn, "HATCHPANEL600ENABLED", hatchPanel600EnabledLeft);
 	oapiWriteScenario_int (scn, "PANEL382ENABLED", panel382Enabled);
@@ -2003,6 +2007,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	rjec.SaveState(scn);
 	ascp.SaveState(scn);
 	ems.SaveState(scn);
+	ordeal.SaveState(scn);
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
@@ -2895,6 +2900,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "OPTICSDSKYENABLED", 17)) {
 			sscanf (line + 17, "%i", &opticsDskyEnabled);
 		}
+		else if (!strnicmp (line, "ORDEALENABLED", 13)) {
+			sscanf (line + 13, "%i", &ordealEnabled);
+		}
 		else if (!strnicmp (line, "HATCHPANEL600ENABLED", 20)) {
 			sscanf (line + 20, "%i", &hatchPanel600EnabledLeft);
 			hatchPanel600EnabledRight = hatchPanel600EnabledLeft;
@@ -3000,6 +3008,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			eventControl.load(scn);
 		} else if (!strnicmp(line, RJEC_START_STRING, sizeof(RJEC_START_STRING))) {
 			rjec.LoadState(scn);
+		} else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
+			ordeal.LoadState(scn);
 		} else {
 			found = false;
 		}

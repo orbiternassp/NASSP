@@ -547,7 +547,6 @@
 #define AID_LEMCOAS1SWITCH                                  830
 #define IDB_ORDEAL_ROTARY                                   831
 #define AID_ORDEALSWITCHES                                  832
-#define AID_ORDEALROTARY                                    833
 #define AID_LM_EPS_LEFT_CONTROLS                            834
 #define AID_LEM_P11_CB_ROW2                                 835
 #define AID_LEM_P11_CB_ROW1                                 836
@@ -740,12 +739,14 @@
 #define IDB_BORDER_62x31                                   1024
 #define IDB_CSM_CABINPRESSTESTSWITCH                       1025
 #define AID_CSM_CABINPRESSTESTSWITCH                       1026
+#define IDB_ORDEAL_PANEL                                   1027
+
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1027
+#define _APS_NEXT_RESOURCE_VALUE                            1028
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

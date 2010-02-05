@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/26 21:49:38  coussini
+  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
+  *	
   *	Revision 1.4  2009/09/26 18:57:07  coussini
   *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
   *	
@@ -91,6 +94,7 @@ protected:
 	int TopStep;
 	int CurrentStep;
 	int HiLghtdLine;
+	bool HiLghtdLineDown;
 	HBITMAP hBmpLogo;
 
 	std::string DisplayChecklistMissionTime (ChecklistItem *item);

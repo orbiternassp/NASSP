@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.7  2009/09/26 22:12:29  coussini
   *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
   *	
@@ -156,7 +159,7 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	CurrentStep = 0;
 	TopStep = 0;
 	HiLghtdLine = 0;
-	//SelectedGroup = -1;
+	HiLghtdLineDown = false;
 	bDisplayMET = true;
 
 	//We need to find out what type of vessel it is, so we check for the class name.
@@ -470,8 +473,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_PRIOR)
 		{
-			TopStep -= NLINES;
-			CurrentStep -= NLINES;
+			TopStep -= NLINES/2;
+			CurrentStep -= NLINES/2;
 			// Limit Movement
 			if(TopStep < 0) {
 				TopStep = 0;
@@ -526,7 +529,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_D)
 		{
-			if (HiLghtdLine < NLINES - 1){
+			if (!HiLghtdLineDown) {
 				HiLghtdLine++;
 			} else {
 				TopStep++;
@@ -534,7 +537,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			CurrentStep++;
 			if (CurrentStep > NumChkLsts - 1) {
 				CurrentStep--;
-				if (HiLghtdLine < NLINES){
+				if (!HiLghtdLineDown) {
 					HiLghtdLine--;
 				} else {
 					TopStep--;
@@ -546,8 +549,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_NEXT)
 		{
-			TopStep = TopStep + NLINES;
-			CurrentStep = CurrentStep + NLINES;
+			TopStep = TopStep + NLINES/2;
+			CurrentStep = CurrentStep + NLINES/2;
 			if (CurrentStep >= NumChkLsts) {
 				CurrentStep = NumChkLsts - 1;
 				HiLghtdLine = CurrentStep - TopStep;
@@ -922,14 +925,6 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
 		
-		//display Highlighted box
-		hBr = CreateSolidBrush( RGB(0, 100, 0));
-		SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + HiLghtdLine * HLINE + .01)),(int) (width * .99), (int) (height * (LINE1 + HiLghtdLine * HLINE + .01)));
-		FillRect(hDC, &ShadedBox, hBr);
-		DeleteObject(hBr);
-
-		SelectDefaultFont(hDC, 0);
-
 		//TODO: Handle Writing Text
 		/*
 		sprintf(buffer, "%d", groups.size());
@@ -942,17 +937,46 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 
 		//sprintf(oapiDebugString(), "TopStep: %d  CurrentStep: %d  HighLightedStep: %d", TopStep,CurrentStep,HiLghtdLine);
-		int cnt;
+		int cnt, grpcnt = 0;
+		HiLghtdLineDown = false;
 
 		//Following is the display loop:
 		//		Compares Lines displayed (NumChkLsts - TopStep) to Lines able to display (NLINES)
 		//		
-		for (cnt = 0; cnt < (((NumChkLsts-TopStep) < NLINES) ? (NumChkLsts-TopStep) : NLINES); cnt++) {
+		for (cnt = 0; cnt < NLINES; cnt++) {
+			if (grpcnt + TopStep >= NumChkLsts) break;
+			ChecklistGroup *grp = &(groups[grpcnt + TopStep]);
 
-			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (cnt * HLINE))),groups[cnt+TopStep].name,strlen(groups[cnt+TopStep].name));
+			//Heading
+			if (strlen(grp->heading) > 0) {
+				if (grpcnt != 0)
+					cnt++; //go to next line
+				if (cnt >= NLINES) break;
+				SetTextColor(hDC, RGB(225, 225, 255)); 
+				SetTextAlign(hDC, TA_CENTER);
+				TextOut(hDC, (int) (width * .5), (int) (height * (LINE0 + cnt * HLINE)), grp->heading, strlen(grp->heading));
+				cnt++;
+				cnt++; //go to next line to write information
+			}
+			if (cnt >= NLINES) break;
 
+			//display Highlighted box
+			if (grpcnt == HiLghtdLine) {
+				hBr = CreateSolidBrush( RGB(0, 100, 0));
+				SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + cnt * HLINE + .01)),(int) (width * .99), (int) (height * (LINE1 + cnt * HLINE + .01)));
+				FillRect(hDC, &ShadedBox, hBr);
+				DeleteObject(hBr);
+				HiLghtdLineDown = true;
+			} else {
+				HiLghtdLineDown = false;
+			}
+
+			SetTextColor (hDC, RGB(0, 255, 0));
+			SetTextAlign (hDC, TA_LEFT);
+			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (cnt * HLINE))), grp->name, strlen(grp->name));
+
+			grpcnt++;
 		}
-
 	}
 	else if (screen == PROG_CHKLSTREV)
 	{

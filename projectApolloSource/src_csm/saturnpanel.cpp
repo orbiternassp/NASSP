@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.12  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -875,6 +878,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_EMS_SCROLL_BUG]							= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_BUG));
 	srf[SRF_SWITCH90]								= oapiCreateSurface (LOADBMP (IDB_SWITCH90));
 	srf[SRF_CSM_CABINPRESSTESTSWITCH]				= oapiCreateSurface (LOADBMP (IDB_CSM_CABINPRESSTESTSWITCH));
+	srf[SRF_ORDEAL_PANEL]							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
 	
 	//
 	// Flashing borders.
@@ -1039,6 +1043,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_EMS_SCROLL_BUG],						g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCH90],								g_Param.col[4]);	
 	oapiSetSurfaceColourKey (srf[SRF_CSM_CABINPRESSTESTSWITCH],				g_Param.col[4]);	
+	oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],							g_Param.col[4]);	
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1590,28 +1595,27 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1488,   46, 1520,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER1,		_R(1544,  412, 1695,  492), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER2,		_R(1431,  547, 1697,  635), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1496,  705, 1574,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1498, 1146, 1788, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R( 503,   44,  746,  162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 794,   64,  878,  148), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_OXYGEN_SURGE_TANK_VALVE,			_R(1150,  201, 1184,  235), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_GLYCOL_TO_RADIATORS_KNOB,		_R( 273,  362,  304,  393), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SUITCIRCUITRETURNVALVE,			_R(1094, 1252, 1254, 1284), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_CSM_SUIT_TEST_LEVER,				_R(1235, 1334, 1429, 1658), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_CSM_DEMAND_REG_ROTARY,			_R(1163, 1438, 1233, 1508), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);					
-		oapiRegisterPanelArea (AID_GLYCOL_ROTARY,					_R( 117,  978,  189, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ACCUM_ROTARY,					_R( 669, 1025,  727, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PLVC_SWITCH,						_R( 999,  110, 1028,  141), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_PANEL_352,						_R(  91, 2973,  390, 3200), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABIN_REPRESS_VALVE,				_R( 612, 3096,  660, 3144), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_WATER_GLYCOL_TANKS_ROTARIES,		_R(1001, 2965, 1085, 3182), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_EMERGENCY_CABIN_PRESSURE_ROTARY,	_R( 773, 3130,  838, 3195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MAIN_REGULATOR_SWITCHES,			_R(1197, 3037, 1307, 3145), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CSM_PANEL_382,					_R( 112, 1198,  785, 1567), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CSM_CABINPRESSTESTSWITCH,		_R( 786, 3221,  786+38, 3221+38), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1488,   46, 1520,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER1,		_R(1544,  412, 1695,  492), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER2,		_R(1431,  547, 1697,  635), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1496,  705, 1574,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1498, 1146, 1788, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R( 448,    1,  925,  203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OXYGEN_SURGE_TANK_VALVE,			_R(1150,  201, 1184,  235), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOL_TO_RADIATORS_KNOB,		_R( 273,  362,  304,  393), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCIRCUITRETURNVALVE,			_R(1094, 1252, 1254, 1284), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_CSM_SUIT_TEST_LEVER,				_R(1235, 1334, 1429, 1658), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_CSM_DEMAND_REG_ROTARY,			_R(1163, 1438, 1233, 1508), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);					
+		oapiRegisterPanelArea (AID_GLYCOL_ROTARY,					_R( 117,  978,  189, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACCUM_ROTARY,					_R( 669, 1025,  727, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PLVC_SWITCH,						_R( 999,  110, 1028,  141), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_PANEL_352,						_R(  91, 2973,  390, 3200), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABIN_REPRESS_VALVE,				_R( 612, 3096,  660, 3144), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_WATER_GLYCOL_TANKS_ROTARIES,		_R(1001, 2965, 1085, 3182), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_EMERGENCY_CABIN_PRESSURE_ROTARY,	_R( 773, 3130,  838, 3195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_REGULATOR_SWITCHES,			_R(1197, 3037, 1307, 3145), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_PANEL_382,					_R( 112, 1198,  785, 1567), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_CABINPRESSTESTSWITCH,		_R( 786, 3221,  824, 3259), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1868,6 +1872,8 @@ void Saturn::AddLeftMainPanelAreas() {
 	// FDAI
 	fdaiLeft.RegisterMe(AID_FDAI_LEFT, 533, 612);
 	if (!hBmpFDAIRollIndicator)	hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
+	// ORDEAL
+	oapiRegisterPanelArea (AID_ORDEALSWITCHES,								_R( 359,   28,  836,  230), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 }
 
 void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
@@ -3331,8 +3337,8 @@ void Saturn::SetSwitches(int panel) {
 	YawMnBCircuitBraker.Init(532,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB, 15);
 
 	StabilizationControlSystem2CircuitBrakerRow.Init(AID_STABILIZATIONCONTROLSYSTEMCIRCUITBREAKERS2, MainPanel);
-	OrdealAc2CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow);
-	OrdealMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow);
+	OrdealAc2CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &ACBus2);
+	OrdealMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
 	ContrAutoMnACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA);
 	ContrAutoMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
 	LogicBus12MnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA);
@@ -3586,15 +3592,15 @@ void Saturn::SetSwitches(int panel) {
 	OxygenRepressPackageRotary.Init (212, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
 
 	ORDEALSwitchesRow.Init(AID_ORDEALSWITCHES, MainPanel);
-	ORDEALFDAI1Switch.Init	 (  0,  0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
-	ORDEALFDAI2Switch.Init	 (113,  0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
-	ORDEALEarthSwitch.Init	 (209,  0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
-	ORDEALLightingSwitch.Init(  0, 89, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow); 
-	ORDEALModeSwitch.Init	 (160, 89, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);	
-	ORDEALSlewSwitch.Init	 (209, 89, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALFDAI1Switch.Init	 ( 55,  43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALFDAI2Switch.Init	 (168,  43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALEarthSwitch.Init	 (264,  43, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALLightingSwitch.Init( 55, 132, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow); 
+	ORDEALModeSwitch.Init	 (215, 132, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);	
+	ORDEALSlewSwitch.Init	 (264, 132, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALAltSetRotary.Init  (346,  63, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALSwitchesRow);
 
-	ORDEALRotaryRow.Init(AID_ORDEALROTARY, MainPanel);
-	ORDEALAltSetRotary.Init(  0, 0, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALRotaryRow);
+	PanelOrdeal.Init(ORDEALSwitchesRow, this); 	// dummy switch/display for checklist controller
 
 	///////////////
 	// Panel 380 //
@@ -3821,6 +3827,30 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		if (opticsDskyEnabled == 0)
 			return false;
 	}
+
+	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == SATPANEL_MAIN) {
+		if (event & PANEL_MOUSE_LBDOWN) { 
+			if (ordealEnabled == 0) {
+				ordealEnabled = 1;
+				SwitchClick();
+				return true;
+			} else if (mx <= 50) {
+				ordealEnabled = -1;
+				SwitchClick();
+				return true;
+			}
+		}
+		if (ordealEnabled == 0)
+			return false;
+	}
+
+	//
+	// Panel
+	//
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
 		return true;
@@ -4637,6 +4667,32 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == SATPANEL_MAIN) {
+		if (ordealEnabled == -1) {
+			ordealEnabled = 0;
+			return true;
+		}
+		if (ordealEnabled == 0) { 
+			if (PanelOrdeal.IsFlashing()) {
+				if (PanelFlashOn) {
+					oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+				}
+				return true;
+			}
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_ORDEAL_PANEL], 0, 0, 0, 0, 477, 202, SURF_PREDEF_CK);
+		if (PanelOrdeal.IsFlashing()) {
+			if (PanelFlashOn) {
+				oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+			}
+		}
+	}
+
+	//
 	// Process all the generic switches.
 	//
 
@@ -4743,7 +4799,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 							errors = eda.ReturnCMCErrorNeedles();
 							break;
 						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							// Get attutude
+							// Get attitude
 							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
 								attitude = imu.GetTotalAttitude();
 							}else{
@@ -4765,6 +4821,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 					no_att = 1;
 					break;
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI1PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
@@ -4815,6 +4878,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 					no_att = 1;
 					break;
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI2PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
@@ -4940,8 +5010,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	// OPTICS
 	case AID_OPTICSCLKAREASEXT:
-		//write update stuff here
-
 		if (optics.SextDualView && optics.SextDVLOSTog){
 			oapiCameraSetCockpitDir (0.0,-PI/2.,true); //when both are true show fixed line of sight
 		}
@@ -4954,8 +5022,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
-		//write update stuff here
-		
 		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
 		return true;
@@ -5194,6 +5260,7 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 void Saturn::InitSwitches() {
 
 	coasEnabled = false;
+	ordealEnabled = 0;
 	opticsDskyEnabled = false;
 	hatchPanel600EnabledLeft = 0;
 	hatchPanel600EnabledRight = 0;
@@ -6050,7 +6117,7 @@ void Saturn::InitSwitches() {
 	ORDEALAltSetRotary.AddPosition(4,  60);
 	ORDEALAltSetRotary.AddPosition(5,  90);
 	ORDEALAltSetRotary.AddPosition(6, 150);
-	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 3);
+	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 2);
 
 	LeftSystemTestRotarySwitch.AddPosition(0,  240);
 	LeftSystemTestRotarySwitch.AddPosition(1,  270);
@@ -6497,7 +6564,8 @@ void Saturn::InitSwitches() {
 	ORDEALEarthSwitch.Register(PSH, "ORDEALEarthSwitch", THREEPOSSWITCH_CENTER);
 	ORDEALLightingSwitch.Register(PSH, "ORDEALLightingSwitch", THREEPOSSWITCH_CENTER);
 	ORDEALModeSwitch.Register(PSH, "ORDEALModeSwitch", false);	
-	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	PanelOrdeal.Register(PSH, "PanelOrdeal",0, 0, 0, 0);	// dummy switch/display for checklist controller
 
 	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", false);
 

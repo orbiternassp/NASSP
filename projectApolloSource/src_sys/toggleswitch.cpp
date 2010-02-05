@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.9  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -640,7 +643,7 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 	// off click.
 	//
 
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		if ((!Sideways && my > (y + (height / 2.0))) || (Sideways && mx < (x + (width / 2.0)))) {
 			if (state != TOGGLESWITCH_DOWN) {
 				SwitchTo(TOGGLESWITCH_DOWN,true);
@@ -654,7 +657,7 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 			}
 		}
 	}
-	else if (IsSpringLoaded() && (event & PANEL_MOUSE_LBUP) && !IsHeld()) {
+	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
 	}
@@ -784,7 +787,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	// Yes, so now we just need to check whether it's an on or
 	// off click.
 	//
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		if ((!Sideways && my > (y + (height / 2.0))) || (Sideways && mx < (x + (width / 2.0)))) {
 			if (state > 0) {
 				SwitchTo(state - 1, true);
@@ -799,7 +802,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 		}
 
 	}
-	else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {		
+	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {		
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);

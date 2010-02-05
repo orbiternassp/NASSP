@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.10  2009/12/15 08:50:00  jasonims
   *	Edited feature where EMS scroll can be output as a bitmap file for post-mission analysis and reference.  To use feature, just make sure GTASwitch is in the up-position and ungarded when Simulation is saved or exited.  EMS might need to be powered as well.   Currently this creates a file in Orbiter's root directory called EMSScroll.bmp.
   *	
@@ -811,6 +814,7 @@ public:
 		SRF_BORDER_36x69,
 		SRF_BORDER_62x31,
 		SRF_CSM_CABINPRESSTESTSWITCH,
+		SRF_ORDEAL_PANEL,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1906,6 +1910,7 @@ protected:
 	//
 
 	int coasEnabled;
+	int ordealEnabled;
 	int opticsDskyEnabled;
 	int hatchPanel600EnabledLeft;
 	int hatchPanel600EnabledRight;
@@ -3515,9 +3520,10 @@ protected:
 	ThreePosSwitch ORDEALLightingSwitch; 
 	ToggleSwitch ORDEALModeSwitch;	
 	ThreePosSwitch ORDEALSlewSwitch;
+	OrdealRotationalSwitch ORDEALAltSetRotary;
 
-	SwitchRow ORDEALRotaryRow;
-	RotationalSwitch ORDEALAltSetRotary;
+	SaturnPanelOrdeal PanelOrdeal;		// Dummy switch/display for checklist controller
+
 
 	///////////////////////
 	// Hatch             //
@@ -3834,6 +3840,7 @@ protected:
 	EDA  eda;
 	RJEC rjec;
 	ECA  eca;
+	ORDEAL ordeal;
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
@@ -4709,6 +4716,7 @@ protected:
 	friend class USB;
 	friend class DSE;
 	friend class EMS;
+	friend class ORDEAL;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class SPSGimbalActuator;
@@ -4732,6 +4740,7 @@ protected:
 	friend class SaturnPanel600;
 	friend class SaturnASCPSwitch;
 	friend class SaturnAbortSwitch;
+	friend class SaturnPanelOrdeal;
 };
 
 extern void BaseInit();

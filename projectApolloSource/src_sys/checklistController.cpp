@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.4  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -82,14 +85,7 @@ ChecklistController::~ChecklistController()
 ChecklistItem *ChecklistController::getChecklistItem(int group, int index)
 {
 	if (group != -1) {
-		if (spawnCheck(group, false)) {
-			if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
-				waitForCompletion = true;
-			} else {
-				waitForCompletion = false;
-			}
-			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
-		}
+		spawnCheck(group, false);
 	}
 
 	if (active.program.group == -1)
@@ -146,17 +142,7 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 	iterate();
 
 	if (callGroup != -1) {
-		if (spawnCheck(callGroup, false)) {
-			if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
-				waitForCompletion = true;
-			} else {
-				waitForCompletion = false;
-			}
-			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
-			return true;
-		} else {
-			return false;
-		}
+		return spawnCheck(callGroup, false);
 	}
 	return true;
 }
@@ -202,7 +188,7 @@ bool ChecklistController::init(char *checkFile)
 	{
 		for (int i = 1; i < sheet->GetTotalRows(); i++)
 		{
-			for (int ii = 0; ii < 9/*Number of columns in accepted sheet*/; ii++)
+			for (int ii = 0; ii < 10 /* Number of columns in accepted sheet */; ii++)
 				cells.push_back(*sheet->Cell(i,ii));
 			temp.init(cells);
 			temp.group = groups.size();
@@ -350,8 +336,18 @@ bool ChecklistController::init(bool input)
 
 	return true;
 }
-// Todo: Verify
+
 bool ChecklistController::spawnCheck(int group, bool failed, bool automagic)
+{
+	if (doSpawnCheck(group, failed, automagic)) {
+		waitForCompletion = (active.program.group != -1 && !active.sequence->checkIterate(&conn));
+		autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+		return true;
+	}
+	return false;
+}
+
+bool ChecklistController::doSpawnCheck(int group, bool failed, bool automagic)
 {
 	// verify integrity of input.
 	if (group == -1)
@@ -489,6 +485,7 @@ void ChecklistController::iterate()
 			active.sequence ++;
 			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
 		}
+		waitForCompletion = (active.program.group != -1 && !active.sequence->checkIterate(&conn));
 	}
 }
 
@@ -524,17 +521,13 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	}
 
 	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController, (complete && autoexecute && autoexecuteAllItemsAutomatic))) {
+	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController, true)) {
 		active.sequence->setFlashing(&conn, flashing);
 	}
 
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
 	if (complete && ((autoexecute && !autoexecuteSlow) || (!autoexecute && waitForCompletion))) {
-		waitForCompletion = !iterateChecklistItem(missiontime, eventController);
-		if (!waitForCompletion) {
-			if (active.program.group != -1 && !active.sequence->checkIterate(&conn))
-				waitForCompletion = true;
-		}
+		iterateChecklistItem(missiontime, eventController);
 	}
 
 	//Exit if less than one second
@@ -555,11 +548,7 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 				}
 			}
 		} else {
-			waitForCompletion = !iterateChecklistItem(missiontime, eventController);
-			if (!waitForCompletion) {
-				if (active.program.group != -1 && !active.sequence->checkIterate(&conn))
-					waitForCompletion = true;
-			}
+			iterateChecklistItem(missiontime, eventController);
 		}
 	}
 
@@ -567,14 +556,7 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	for (int i = 0; i < groups.size(); i++)	{
 		if (groups[i].autoSelect && !groups[i].called) {
 			if(groups[i].checkExec(lastMissionTime,eventController)) {
-				if (spawnCheck(i, false, true)) {
-					if (active.program.group != -1 && !active.sequence->checkIterate(&conn)) {
-						waitForCompletion = true;
-					} else {
-						waitForCompletion = false;
-					}
-					autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
-				}
+				spawnCheck(i, false, true);
 			}
 		}
 	}
