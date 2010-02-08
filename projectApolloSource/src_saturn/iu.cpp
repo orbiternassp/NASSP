@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/07/15 22:51:07  bluedragon8144
+  *	Added provisions for future sivb attiude ap control.
+  *	
   *	Revision 1.2  2009/03/01 23:41:54  tschachim
   *	By Jarmonik: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2021.msg17533#msg17533
   *	
@@ -703,7 +706,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		} else {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-			//OrientAxis(Normalize(vel), 2, 0, 1);
+			OrientAxis(Normalize(vel), 2, 0, 1);
 		}
 	} else {
 		if (State >= 101 && State < 200) {
@@ -713,13 +716,13 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				OrientAxis(GNC.Get_uTD(), 2, 0, 1);
 			} else {
 				lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-				//OrientAxis(Normalize(vel), 2, 0, 1);
+				OrientAxis(Normalize(vel), 2, 0, 1);
 			}
 		} else if (State >= 201 && State <= 202) {			
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		} else {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-			//OrientAxis(Normalize(vel), 2, 0, 1);
+			OrientAxis(Normalize(vel), 2, 0, 1);
 		}
 	}
 	//sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
