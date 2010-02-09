@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.16  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -5269,6 +5272,14 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		if (GetThrusterLevel(th_main[0]) < 0.5)
 			SIVBBoiloff();
 		NextMissionEventTime = MissionTime + 10.0;
+	}
+
+	//
+	// LVLH Attitude
+	//
+	if (MissionTime >= SIVBCutoffTime)
+	{
+		iu.SetAttitude();
 	}
 
 	//

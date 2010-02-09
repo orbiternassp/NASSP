@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/02/08 22:36:02  bluedragon8144
+  *	added heads down attitude autopilot for the sivb
+  *	
   *	Revision 1.3  2009/07/15 22:51:07  bluedragon8144
   *	Added provisions for future sivb attiude ap control.
   *	
@@ -704,10 +707,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			OrientAxis(Normalize(vel), 2, 0, (State == 200 ? 5 : 1));
 		} else if (State >= 201 && State <= 202) {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-		} else {
-			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-			OrientAxis(Normalize(vel), 2, 0, 1);
-		}
+		} 
 	} else {
 		if (State >= 101 && State < 200) {
 			OrientAxis(GNC.Get_uTD(), 2, 0, 1);
@@ -716,14 +716,10 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				OrientAxis(GNC.Get_uTD(), 2, 0, 1);
 			} else {
 				lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-				OrientAxis(Normalize(vel), 2, 0, 1);
 			}
 		} else if (State >= 201 && State <= 202) {			
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-		} else {
-			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-			OrientAxis(Normalize(vel), 2, 0, 1);
-		}
+		} 
 	}
 	//sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
 }
@@ -814,6 +810,18 @@ void IU::SIVBStop()
 
 	TLIBurnStart = false;
 	TLIBurnDone = true;
+}
+
+void IU::SetAttitude()
+{
+	if (State <= 100 || State >= 203)
+	{
+		VECTOR3 vel;
+		OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
+		lvCommandConnector.GetRelativeVel(hbody, vel);
+		lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0)); 
+		OrientAxis(Normalize(vel), 2, 0, 1);
+	}
 }
 
 bool IU::StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn) 

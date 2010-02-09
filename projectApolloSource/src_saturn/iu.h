@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/15 22:46:10  bluedragon8144
+  *	Added a few more default orbiter functions for use with telecom for usage for SIVB autopilot
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -354,6 +357,7 @@ public:
 	void SetVesselStats(double ISP, double Thrust);
 	void GetVesselStats(double &ISP, double &Thrust);
 	void SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee);
+	void SetAttitude();
 	bool IsTLICapable() { return TLICapable; };
 	virtual bool StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn);
 	bool IsTLIInProgress() { return (TLIBurnState != 0); }
