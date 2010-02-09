@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -797,6 +800,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	case 8:
 		if (GetThrusterLevel(th_main[0]) <= 0) {
 			NextMissionEventTime = MissionTime + 10.0;
+			SIVBCutoffTime = MissionTime + 20.0;
 			S4CutS.play();
 			S4CutS.done();
 

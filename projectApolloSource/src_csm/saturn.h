@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.11  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -1724,6 +1727,14 @@ protected:
 	/// \brief Time of last event.
 	///
 	double LastMissionEventTime;
+
+	///
+	/// The time in seconds of when the SIVB booster cutoff. This
+	/// is a generic value used by the autopilot code.
+	/// \brief Time of SIVB cutoff
+	///
+
+	double SIVBCutoffTime;
 
 	///
 	/// The time in seconds of the next check for destroying old stages. We destroy them when

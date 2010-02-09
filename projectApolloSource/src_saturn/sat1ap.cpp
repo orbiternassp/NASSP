@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -312,6 +315,7 @@ void Saturn1b::AutoPilot(double autoT)
 			S4CutS.done();
 
 			ActivateNavmode(NAVMODE_KILLROT);
+			SIVBCutoffTime = autoT + 20.0;
 
 			agc.LaunchShutdown();
 
