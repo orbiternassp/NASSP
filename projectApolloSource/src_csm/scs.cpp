@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.7  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -1437,9 +1440,19 @@ void EDA::Init(Saturn *vessel){
 
 VECTOR3 EDA::ReturnCMCErrorNeedles(){
 	VECTOR3 errors;
-	errors.x = sat->gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
-	errors.y = sat->gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
-	errors.z = sat->gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
+
+	if (sat->FDAIScaleSwitch.IsDown()) {
+		// 15 degree max
+		///\todo should be 50/15/15 degree max, i.e. fdai_err_x * 0.032031, but for unknown reasons the AGC stops at 15 deg (Colossus version dependent?)
+		errors.x = sat->gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
+		errors.y = sat->gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
+		errors.z = sat->gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
+	} else {
+		// 5 degree max
+		errors.x = sat->gdc.fdai_err_x * 0.32031; // CMC error value, CMC-scaled
+		errors.y = sat->gdc.fdai_err_y * 0.32031; // CMC error value, CMC-scaled
+		errors.z = sat->gdc.fdai_err_z * 0.32031; // CMC error value, CMC-scaled
+	}	
 	return(errors);
 }
 

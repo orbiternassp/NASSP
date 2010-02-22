@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/09 02:39:37  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.2  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -306,16 +309,9 @@ void Saturn1b::AutoPilot(double autoT)
 	if (apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.1) {
 		// See Saturn::CheckForLaunchShutdown()
 		if (GetThrusterLevel(th_main[0]) > 0){
-			SetThrusterLevel(th_main[0], 0);
-			
+			SetThrusterLevel(th_main[0], 0);			
 			if (oapiGetTimeAcceleration() > 1.0)
 				oapiSetTimeAcceleration(1.0);
-
-			S4CutS.play(NOLOOP, 255);
-			S4CutS.done();
-
-			ActivateNavmode(NAVMODE_KILLROT);
-			SIVBCutoffTime = autoT + 20.0;
 
 			agc.LaunchShutdown();
 

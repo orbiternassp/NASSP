@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/11 13:40:19  jasonims
+  *	DockingProbe Work
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -595,11 +598,9 @@ void SIVB::SetS4b()
 		//
 
 		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
-		iu.ConnectToLV(&IUCommandConnector);
-
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
-
+	iu.ConnectToLV(&IUCommandConnector);
 	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
@@ -841,6 +842,25 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 			}
 		}
 	}
+
+	//
+	// Attitude control
+	//
+
+	// Special handling Apollo 7
+	if (VehicleNo == 205) {
+		if (MissionTime >= 11820) {
+			// retrograde
+			iu.SetLVLHAttitude(_V(-1, 0, 0));
+			
+		} else {
+			iu.HoldAttitude();
+		}
+	} else {
+		// In all other missions maintain initial attitude for now
+		// \todo Correct behaviour of the S-IVB 
+		iu.HoldAttitude();
+	}	
 
 	//
 	// Now update whatever needs updating.
@@ -2096,6 +2116,31 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 			return true;
 		}
 		break;
+
+	case IULV_GET_PITCH:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetPitch();
+			return true;
+		}
+		break;
+			
+	case IULV_GET_BANK:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetBank();
+			return true;
+		}
+		break;
+			
+	case IULV_GET_SLIP_ANGLE:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetSlipAngle();
+			return true;
+		}
+		break;
+
 
 	case IULV_ACTIVATE_NAVMODE:
 		if (OurVessel)

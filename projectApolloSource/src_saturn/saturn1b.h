@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -144,6 +147,11 @@ public:
 	/// \param mjd Current MJD.
 	///
 	void clbkPostStep (double simt, double simdt, double mjd);
+
+	///
+	/// \brief Set up J2 engines as fuel venting thruster.
+	///
+	virtual void SetVentingJ2Thruster();
 
 protected:
 

@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/01/14 16:54:13  tschachim
+  *	SPS TVC reset and trim angles bugfix.
+  *	
   *	Revision 1.2  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -640,6 +643,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define CM_RCS_ISP				(340.0 * G) // AOH, dumping takes 88s with 10 of 12 thrusters
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			413.7		// AOH
+
+#define SIVB_RCS_PITCH_THRUST	20740.0		///\todo probably wrong
 
 //
 // Mission times for specific events.
