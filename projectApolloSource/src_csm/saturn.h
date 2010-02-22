@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2010/02/09 02:38:53  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.12  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -1354,6 +1357,11 @@ public:
 	void EnableDisableJ2(bool Enable);
 
 	///
+	/// \brief Set up J2 engines as fuel venting thruster.
+	///
+	virtual void SetVentingJ2Thruster() = 0;
+
+	///
 	/// \brief Set thrust level of the SIVb J2 engine.
 	/// \param thrust Thrust level 0.0 - 1.0.
 	///
@@ -1370,6 +1378,10 @@ public:
 	/// \param thrust Thrust level 0.0 - 1.0.
 	///
 	void SetAPSThrustLevel(double thrust);
+
+	void SetSaturnAttitudeRotLevel(VECTOR3 th);
+
+	double GetSaturnMaxThrust(ENGINETYPE eng);
 
 	///
 	/// \brief Get propellant mass in the SIVb stage.
@@ -1733,8 +1745,14 @@ protected:
 	/// is a generic value used by the autopilot code.
 	/// \brief Time of SIVB cutoff
 	///
-
 	double SIVBCutoffTime;
+
+	///
+	/// Is the S-IVB J2 engine active for burns or venting
+	/// \brief Is the S-IVB J2 engine active for burns or venting
+	///
+	bool J2IsActive; 
+
 
 	///
 	/// The time in seconds of the next check for destroying old stages. We destroy them when
@@ -4249,6 +4267,7 @@ protected:
 
 	void AddRCSJets(double TRANZ,double MaxThrust);
 	void AddRCS_S4B();
+	void SaturnTakeoverMode();
 	void SetRecovery();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);

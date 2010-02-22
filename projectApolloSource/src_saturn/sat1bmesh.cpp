@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -252,6 +255,21 @@ static PARTICLESTREAMSPEC stagingvent_spec = {
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
+};
+
+// "fuel venting" particle streams
+static PARTICLESTREAMSPEC fuel_venting_spec = {
+	0,		// flag
+	0.8,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	20,		// lifetime
+	0.15,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 void Saturn1b::SetFirstStage ()
@@ -568,9 +586,20 @@ void Saturn1b::SetSecondStageEngines ()
 	// orbiter main thrusters
 	//
 
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 30.0, 2.9 ,J2Tex);
+	if (J2IsActive) {
+		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
+		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+		AddExhaust (th_main[0], 30.0, 2.9, J2Tex);
+
+		//
+		// Set the actual stats.
+		//
+
+		SetSIVBMixtureRatio(MixtureRatio);
+
+	} else {
+		SetVentingJ2Thruster();
+	}
 
 	//
 	//  Ullage rockets (3)
@@ -595,13 +624,27 @@ void Saturn1b::SetSecondStageEngines ()
 		AddExhaustStream(th_ver[i], &solid_exhaust);
 	}
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
+}
+
+void Saturn1b::SetVentingJ2Thruster() {
+
+	if (stage != STAGE_ORBIT_SIVB || !ph_3rd)
+		return;
 
 	//
-	// Give the AGC our new stats.
+	// Clear old thrusters.
 	//
+	if (thg_main)
+		DelThrusterGroup(THGROUP_MAIN, true);
 
-	agc.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC, false);
-	iu.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC);
+	VECTOR3 m_exhaust_pos1= {0, 0, -9. - STG1O + 10};
+	th_main[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 325., ph_3rd, 300., 300.);
+	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
+
+	fuel_venting_spec.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_SaturnVenting");
+	AddExhaustStream(th_main[0], &fuel_venting_spec);
+
+	J2IsActive = false;
 }
 
 void Saturn1b::SeparateStage (int new_stage)

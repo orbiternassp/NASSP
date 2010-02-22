@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/12/05 17:28:29  tschachim
+  *	Bugfix Apollo 8 S4B_EmptyMass
+  *	
   *	Revision 1.3  2009/07/09 13:04:29  dseagrav
   *	Clobber LVIMU coarse-align flag at boot.
   *	
@@ -1893,6 +1896,8 @@ void SaturnV::StageLaunchSIVB(double simt)
 
 			SepS.stop();
 			SetThrusterGroupLevel(thg_aps, 0);
+			SIVBCutoffTime = MissionTime;
+
 			NextMissionEventTime = MissionTime + 10.0;
 			SetStage(STAGE_ORBIT_SIVB);
 		}

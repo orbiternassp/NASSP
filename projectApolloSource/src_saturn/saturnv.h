@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/04 21:36:09  dseagrav
+  *	LVDC++ update
+  *	Should not break anything else
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -188,6 +192,11 @@ public:
 	void LaunchVehicleRolloutEnd();		// after arrival on launch pad
 	void LaunchVehicleBuild();			// build/unbuild during assembly
 	void LaunchVehicleUnbuild();
+
+	///
+	/// \brief Set up J2 engines as fuel venting thruster.
+	/// \todo Not implemented yet, see Saturn1b
+	virtual void SetVentingJ2Thruster() {};
 
 	//
 	// Functions that external code shouldn't need to access.

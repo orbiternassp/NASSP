@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/09 02:40:23  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.2  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -800,7 +803,10 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	case 8:
 		if (GetThrusterLevel(th_main[0]) <= 0) {
 			NextMissionEventTime = MissionTime + 10.0;
-			SIVBCutoffTime = MissionTime + 20.0;
+			SIVBCutoffTime = MissionTime;
+
+			ActivateNavmode(NAVMODE_KILLROT);
+
 			S4CutS.play();
 			S4CutS.done();
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/15 22:51:45  bluedragon8144
+  *	added a few more default orbiter functions for connector usage.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -289,7 +292,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_GET_MAXTHRUST:
 		if (OurVessel)
 		{
-			m.val2.dValue = OurVessel->GetMaxThrust((ENGINETYPE) m.val1.iValue);
+			m.val2.dValue = OurVessel->GetSaturnMaxThrust((ENGINETYPE) m.val1.iValue);
 			return true;
 		}
 		break;
@@ -367,11 +370,13 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	//
-	// For now we don't do anything when disabling the J2 for good.
-	//
 	case IULV_J2_DONE:
-		return true;
+		if (OurVessel) 
+		{
+			OurVessel->SetVentingJ2Thruster();
+			return true;
+		}
+		break;
 
 	case IULV_SET_J2_THRUST_LEVEL:
 		if (OurVessel) 
@@ -400,7 +405,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_ATTITUDE_ROT_LEVEL:
 		if (OurVessel) 
 		{
-			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
+			OurVessel->SetSaturnAttitudeRotLevel(m.val1.vValue);
 			return true;
 		}
 		break;

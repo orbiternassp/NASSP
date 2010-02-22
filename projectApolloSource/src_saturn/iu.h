@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/09 02:39:29  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.2  2009/07/15 22:46:10  bluedragon8144
   *	Added a few more default orbiter functions for use with telecom for usage for SIVB autopilot
   *	
@@ -345,25 +348,34 @@ class IU {
 public:
 	IU();
 	virtual ~IU();
-
-	///
-	/// \brief Timestep function.
-	/// \param simt The current Mission Elapsed Time in seconds from launch.
-	/// \param simdt The time in seconds since the last timestep call.
-	///
-	void Timestep(double simt, double simdt, double mjd);
-	void PostStep(double simt, double simdt, double mjd);
-	void ChannelOutput(int address, int value);
+	
 	void SetVesselStats(double ISP, double Thrust);
 	void GetVesselStats(double &ISP, double &Thrust);
 	void SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee);
-	void SetAttitude();
-	bool IsTLICapable() { return TLICapable; };
-	virtual bool StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn);
-	bool IsTLIInProgress() { return (TLIBurnState != 0); }
 
-	void LoadState(FILEHANDLE scn);
-	void SaveState(FILEHANDLE scn);
+	///
+	/// \brief Move to or hold attitude v in LVLH coordinates (by setting attitude thrusters, call each timestep)
+	///
+	void SetLVLHAttitude(VECTOR3 v);
+
+	///
+	/// \brief Hold attitude stored at first call, reset by SetLVLHAttitude (by setting attitude thrusters, call each timestep)
+	///
+	void HoldAttitude();
+
+	///
+	/// \brief Start TLI burn sequence or update burn data
+	///
+	virtual bool StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn);
+
+	///
+	/// \brief Legacy support for Simple AGC P15, very unprecise and not recommended
+	///
+	void ChannelOutput(int address, int value);
+
+
+	bool IsTLICapable() { return TLICapable; };
+	bool IsTLIInProgress() { return (TLIBurnState != 0); }
 
 	///
 	/// \brief Get vessel mass.
@@ -380,6 +392,17 @@ public:
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
+
+	///
+	/// \brief Timestep function.
+	/// \param simt The current Mission Elapsed Time in seconds from launch.
+	/// \param simdt The time in seconds since the last timestep call.
+	///
+	void Timestep(double simt, double simdt, double mjd);
+	void PostStep(double simt, double simdt, double mjd);
+
+	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn);
 
 protected:
 	bool SIVBStart();
@@ -434,6 +457,12 @@ protected:
 	///
 	IUGNC GNC;
 	bool ExternalGNC;
+
+	///
+	/// \brief Attitude control
+	///
+	bool AttitudeHold;
+	VECTOR3 AttitudeToHold;
 };
 
 //

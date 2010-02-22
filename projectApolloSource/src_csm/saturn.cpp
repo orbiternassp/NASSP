@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/02/09 02:38:43  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.17  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -862,6 +865,8 @@ void Saturn::initSaturn()
 
 	ThrustAdjust = 1.0;
 	MixtureRatio = 5.5;
+	SIVBCutoffTime = -MINUS_INFINITY;
+	J2IsActive = true;
 
 	DockAngle = 0;
 	SeparationSpeed = 0;
@@ -1791,6 +1796,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
+	papiWriteScenario_double (scn, "SIVBCUTOFFTIME", SIVBCutoffTime);
+	papiWriteScenario_bool (scn, "J2ISACTIVE", J2IsActive);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -2994,6 +3001,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (papiReadScenario_double(line, "TLIOFFSETLON", TransLunarInjectionOffsetLon)); 
 		else if (papiReadScenario_double(line, "TLIOFFSETLAT", TransLunarInjectionOffsetLat)); 
 		else if (papiReadScenario_double(line, "TLIOFFSETRAD", TransLunarInjectionOffsetRad)); 
+		else if (papiReadScenario_double(line, "SIVBCUTOFFTIME", SIVBCutoffTime)); 
+		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		}
@@ -4296,13 +4305,11 @@ void Saturn::AddRCS_S4B()
 	if (SaturnType == SAT_SATURN1B)
 		offset=7.7;
 
-	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), 20740.0, ph_3rd,5000000, 4000000);
-	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0),20740.0, ph_3rd,5000000, 4000000);
+	th_att_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25 + offset), _V(0, -1, 0), SIVB_RCS_PITCH_THRUST, ph_3rd,5000000, 4000000);
+	th_att_rot[1] = CreateThruster(_V(0, -ATTCOOR2 - 0.15, TRANZ - 0.25 + offset), _V(0, 1, 0), SIVB_RCS_PITCH_THRUST, ph_3rd,5000000, 4000000);
 	
 	AddExhaust (th_att_rot[0], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[1], 0.6, 0.078, SIVBRCSTex);
-	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
-	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
 
 	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
 	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
@@ -4313,8 +4320,6 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_rot[3], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[4], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[5], 0.6, 0.078, SIVBRCSTex);
-	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
 
 	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
 	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
@@ -4326,9 +4331,6 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_rot[8], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[9], 0.6, 0.078, SIVBRCSTex);
 
-	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
-
 	//
 	// APS thrusters are only 320N (72 pounds) thrust
 	//
@@ -4338,9 +4340,73 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_lin[0], 7, 0.15, SIVBRCSTex);
 	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
 
-	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
+	//
+	// Orbiter's attitude control
+	//
+
+	if (!OrbiterAttitudeDisabled) { 
+		CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
+		CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
+
+		CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
+		CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
+
+		CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+		CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
+
+		thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
+
+	} else {
+		thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_USER);
+	}
 }
 
+void Saturn::SetSaturnAttitudeRotLevel(VECTOR3 th) {
+
+	if (stage == STAGE_ORBIT_SIVB && OrbiterAttitudeDisabled) { 
+		if (th.x >= 0) {
+			SetThrusterLevel(th_att_rot[0], th.x);
+			SetThrusterLevel(th_att_rot[1], 0);
+		} else {
+			SetThrusterLevel(th_att_rot[0], 0);
+			SetThrusterLevel(th_att_rot[1], -th.x);
+		}
+		if (th.y >= 0) {
+			SetThrusterLevel(th_att_rot[6], th.y);
+			SetThrusterLevel(th_att_rot[7], th.y);
+			SetThrusterLevel(th_att_rot[8], 0);
+			SetThrusterLevel(th_att_rot[9], 0);
+		} else {
+			SetThrusterLevel(th_att_rot[6], 0);
+			SetThrusterLevel(th_att_rot[7], 0);
+			SetThrusterLevel(th_att_rot[8], -th.y);
+			SetThrusterLevel(th_att_rot[9], -th.y);
+		}
+		if (th.z >= 0) {
+			SetThrusterLevel(th_att_rot[5], th.z);
+			SetThrusterLevel(th_att_rot[4], th.z);
+			SetThrusterLevel(th_att_rot[3], 0);
+			SetThrusterLevel(th_att_rot[2], 0);
+		} else {
+			SetThrusterLevel(th_att_rot[5], 0);
+			SetThrusterLevel(th_att_rot[4], 0);
+			SetThrusterLevel(th_att_rot[3], -th.z);
+			SetThrusterLevel(th_att_rot[2], -th.z);
+		}
+	} else {
+		SetAttitudeRotLevel(th);
+	}
+}
+
+double Saturn::GetSaturnMaxThrust(ENGINETYPE eng) {
+
+	if (stage == STAGE_ORBIT_SIVB && OrbiterAttitudeDisabled && eng == ENGINE_ATTITUDE) { 
+		// thrust of the THGROUP_ATT_PITCHUP thruster (Orbiter API manual)
+		return SIVB_RCS_PITCH_THRUST;
+	} else {
+		return GetMaxThrust(eng);
+	}
+}
 
 void Saturn::FireSeperationThrusters(THRUSTER_HANDLE *pth)
 
@@ -5249,12 +5315,54 @@ void Saturn::SIVBBoiloff()
 void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 {
-	// We get here at around T5+9.8 or so. The engine and ullage have both shut down.
+	// We get here after orbit insertion util CSM/LV separation. The engine and ullage have both shut down.
 
 	//
-	// Post-shutdown, pre-TLI code goes here.
+	// Attitude control
 	//
-	AttitudeLaunchSIVB();
+
+	if (LVGuidanceSwitch.IsUp()) {
+		if (ApolloNo == 7) {
+			if (MissionTime >= 10275) {
+				iu.HoldAttitude();
+				
+			} else if (MissionTime >= 9780) {
+				iu.SetLVLHAttitude(_V(cos(20. * RAD), -sin(20. * RAD), 0));
+
+			} else if (MissionTime >= SIVBCutoffTime + 20)	{
+				iu.SetLVLHAttitude(_V(1, 0, 0));
+			}
+		} else {
+			// In all other missions maintain LVLH attitude for now
+			// \todo Correct behaviour of the S-IVB 
+			
+			if (MissionTime >= SIVBCutoffTime + 20)	{
+				iu.SetLVLHAttitude(_V(1, 0, 0));
+			}
+		}
+	} else {
+		// Manual S-IVB control via CMC
+		SaturnTakeoverMode();
+	}
+
+	//
+	// Venting, see Apollo 7 Saturn IB Report, NTRS ID 19900067467
+	// \todo other missions?
+	//
+
+	if (ApolloNo == 7) {
+		if (MissionTime >= SIVBCutoffTime + 5773) {
+			if (GetThrusterLevel(th_main[0]) > 0) {
+				SetJ2ThrustLevel(0);
+				if (Realism) EnableDisableJ2(false);
+			}
+		} else if (MissionTime >= SIVBCutoffTime + 5052) {
+			if (GetThrusterLevel(th_main[0]) == 0) {
+				EnableDisableJ2(true);
+				SetJ2ThrustLevel(1);
+			}
+		}
+	}
 
 	//
 	// Enable random ATC chatter.
@@ -5272,14 +5380,6 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		if (GetThrusterLevel(th_main[0]) < 0.5)
 			SIVBBoiloff();
 		NextMissionEventTime = MissionTime + 10.0;
-	}
-
-	//
-	// LVLH Attitude
-	//
-	if (MissionTime >= SIVBCutoffTime)
-	{
-		iu.SetAttitude();
 	}
 
 	//
@@ -5318,6 +5418,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 	}
+
+	//
+	// CSM/LV separation
+	//
 
 	if (CSMLVPyros.Blown() || bAbort)
 	{
@@ -5358,6 +5462,75 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 
 		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
 	*/
+}
+
+void Saturn::SaturnTakeoverMode() {
+
+	// see GSOP 3.5
+
+	VECTOR3 PMI;
+	double Mass, Size, MaxThrust, Thrust;
+
+	const double RATE_FINE = RAD*(0.001);
+	const double GAIN_FACTOR = 10.;
+
+	VECTOR3 lvl = _V(0, 0, 0);
+	if (SCContSwitch.IsUp()) {
+		VESSELSTATUS status;
+		GetStatus(status);
+		GetPMI(PMI); 
+		Mass = GetMass();
+		Size = GetSize();
+		MaxThrust = GetSaturnMaxThrust(ENGINE_ATTITUDE);
+
+		VECTOR3 target = _V(0, 0, 0);
+		// roll
+		if (gdc.fdai_err_x > 40)
+			target.z = 0.5 * RAD;
+		if (gdc.fdai_err_x < -40)
+			target.z = -0.5 * RAD;
+		// pitch
+		if (gdc.fdai_err_y > 40)
+			target.x = -0.3 * RAD;
+		if (gdc.fdai_err_y < -40)
+			target.x = 0.3 * RAD;
+		// yaw
+		if (gdc.fdai_err_z > 40)
+			target.y = -0.3 * RAD;
+		if (gdc.fdai_err_z < -40)
+			target.y = 0.3 * RAD;
+		target = target - status.vrot;
+
+		// x axis
+		Thrust = GAIN_FACTOR * (Mass * PMI.x * target.x) / Size;
+		if (target.x > RATE_FINE) {
+			lvl.x = min((Thrust / MaxThrust), 1);
+		} else if (target.x < -RATE_FINE) {
+			lvl.x = max((Thrust / MaxThrust), -1);
+		} else {
+			lvl.x = 0;
+		}
+		// y axis
+		Thrust = GAIN_FACTOR * (Mass * PMI.y * target.y) / Size;
+		if (target.y > RATE_FINE) {
+			lvl.y = min((Thrust / MaxThrust), 1);
+		} else if (target.y < -RATE_FINE) {
+			lvl.y = max((Thrust / MaxThrust), -1);
+		} else {
+			lvl.y = 0;
+		}
+		// z axis
+		Thrust = GAIN_FACTOR * (Mass * PMI.z * target.z) / Size;
+		if (target.z > RATE_FINE) {
+			lvl.z = min((Thrust/MaxThrust), 1);
+		} else if (target.z < -RATE_FINE) {
+			lvl.z = max((Thrust/MaxThrust), -1);
+		} else {
+			lvl.z = 0;
+		}
+		//sprintf(oapiDebugString(), "Z rate %f target %f level %f", status.vrot.z * DEG, target.z * DEG, lvl.z);
+	}
+	SetSaturnAttitudeRotLevel(lvl);
 }
 
 void Saturn::StageSix(double simt)

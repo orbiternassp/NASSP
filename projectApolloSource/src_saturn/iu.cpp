@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/02/09 02:39:23  bluedragon8144
+  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
+  *	
   *	Revision 1.4  2010/02/08 22:36:02  bluedragon8144
   *	added heads down attitude autopilot for the sivb
   *	
@@ -150,6 +153,9 @@ IU::IU()
 	commandConnector.SetIU(this);
 	GNC.Configure(&lvCommandConnector, 0);
 	ExternalGNC = false;
+
+	AttitudeHold = false;
+	AttitudeToHold = _V(0, 0, 0);
 }
 
 IU::~IU()
@@ -208,15 +214,11 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		// Disable the engines if we're waiting for
 		// the user to start the TLI burn or if it's been done.
 		//
-		if (Realism && !commandConnector.IsVirtualAGC() && (State <= 107 || State >= 202))
-		{
+		if (Realism && (State <= 107 || State >= 202))	{
 			lvCommandConnector.EnableDisableJ2(false);
-		}
-		else
-		{
+		} else {
 			lvCommandConnector.EnableDisableJ2(true);
 		}
-		
 		FirstTimeStepDone = true;
 		return;
 	}
@@ -687,11 +689,19 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		}
 	}
 	else {
-		if (lvCommandConnector.GetJ2ThrustLevel() <= 0) {
-			if (Realism && !commandConnector.IsVirtualAGC())
-			{
-				lvCommandConnector.EnableDisableJ2(false);
-			}
+		switch (State) {
+
+		case 0:
+			lvCommandConnector.SetJ2ThrustLevel(0.0);
+			lvCommandConnector.SetVentingThruster();
+		
+			if (Realism) lvCommandConnector.EnableDisableJ2(false);
+
+			//
+			// Engine is now dead.
+			//
+			State = 203; 
+			break;
 		}
 	}
 
@@ -740,10 +750,7 @@ void IU::TLIInhibit()
 {
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
 	lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-	if (Realism && !commandConnector.IsVirtualAGC())
-	{
-		lvCommandConnector.EnableDisableJ2(false);
-	}
+	if (Realism) lvCommandConnector.EnableDisableJ2(false);
 
 	TLIBurnStart = false;
 	State = 100;
@@ -800,10 +807,7 @@ void IU::SIVBStop()
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
 	lvCommandConnector.SetVentingThruster();
 
-	if (Realism && !commandConnector.IsVirtualAGC())
-	{
-		lvCommandConnector.EnableDisableJ2(false);
-	}
+	if (Realism) lvCommandConnector.EnableDisableJ2(false);
 
 	commandConnector.PlaySecoSound(true);
 	commandConnector.ClearTLISounds();
@@ -812,15 +816,27 @@ void IU::SIVBStop()
 	TLIBurnDone = true;
 }
 
-void IU::SetAttitude()
+void IU::SetLVLHAttitude(VECTOR3 v)
 {
-	if (State <= 100 || State >= 203)
-	{
-		VECTOR3 vel;
-		OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
-		lvCommandConnector.GetRelativeVel(hbody, vel);
-		lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0)); 
-		OrientAxis(Normalize(vel), 2, 0, 1);
+	AttitudeHold = false;
+	if (State <= 100 || State >= 203) {
+		OrientAxis(v, 2, 1, 1);
+	}
+}
+
+void IU::HoldAttitude()
+{
+	if (!AttitudeHold) {
+		VECTOR3 zerogl, zgl;	
+		// Store current attitude
+		lvCommandConnector.Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+		lvCommandConnector.Local2Global(_V(0.0, 0.0, 1.0), zgl);
+		AttitudeToHold = zgl - zerogl;
+		AttitudeHold = true;
+	}
+
+	if (State <= 100 || State >= 203) {
+		OrientAxis(AttitudeToHold, 2, 0, 1);
 	}
 }
 
@@ -856,7 +872,7 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 	//ref =0 body coordinates 1=local vertical
 	//orients a vessel axis with a body-relative normalized vector
 	//allows rotation about the axis being oriented
-	const double RATE_MAX = RAD*(5.0);
+	const double RATE_MAX = RAD*(0.5);
 	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
 	const double RATE_NULL = RAD*(0.0001);
@@ -942,8 +958,9 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 		delatt.y=-xa;
 		delatt.z=-za;
 	}
-//	sprintf(oapiDebugString(), "norm=%.3f %.3f %.3f x=%.3f y=%.3f z=%.3f ax=%d", 
-//		norm, xa*DEG, ya*DEG, za*DEG, axis);
+
+	// sprintf(oapiDebugString(), "norm=%.6f %.6f %.6f x=%.6f y=%.6f z=%.6f", 
+	// 	norm.x, norm.y, norm.z, zgl.x, zgl.y, zgl.z);
 
 
 //X axis
@@ -1072,6 +1089,10 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 		}
 	}
 	lvCommandConnector.SetAttitudeRotLevel(Level);	
+
+	// sprintf(oapiDebugString(),"IU Level x %.10lf y %.10lf z %.10lf Rate x %lf y %lf z %lf", 
+	//	Level.x, Level.y, Level.z, status2.vrot.x*DEG, status2.vrot.y*DEG, status2.vrot.z*DEG);
+
 	return Level;
 }
 
@@ -1087,6 +1108,8 @@ void IU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	papiWriteScenario_bool(scn, "EXTERNALGNC", ExternalGNC);
+	papiWriteScenario_bool(scn, "ATTITUDEHOLD", AttitudeHold);
+	papiWriteScenario_vec(scn, "ATTITUDETOHOLD", AttitudeToHold);
 	GNC.SaveState(scn);
 
 	oapiWriteLine(scn, IU_END_STRING);
@@ -1108,6 +1131,8 @@ void IU::LoadState(FILEHANDLE scn)
 		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime)); 
 		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime)); 
 		else if (papiReadScenario_bool(line, "EXTERNALGNC", ExternalGNC)); 
+		else if (papiReadScenario_bool(line, "ATTITUDEHOLD", AttitudeHold)); 
+		else if (papiReadScenario_vec(line, "ATTITUDETOHOLD", AttitudeToHold)); 
 		else if (!strnicmp(line, IUGNC_START_STRING, sizeof(IUGNC_START_STRING))) {
 			GNC.LoadState(scn);
 		}
