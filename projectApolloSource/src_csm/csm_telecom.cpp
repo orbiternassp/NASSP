@@ -525,7 +525,7 @@ void PCM::Init(Saturn *vessel){
 	service.sin_addr.s_addr = htonl(INADDR_ANY);
 	service.sin_port = htons( 14242 );
 
-	if ( bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
+	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
 		sprintf(wsk_emsg,"TELECOM: bind() failed: %ld", WSAGetLastError());
 		wsk_error = 1;
 		closesocket(m_socket);

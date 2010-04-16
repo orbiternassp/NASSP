@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/19 14:10:14  spacex15
+  *	reenable SOCKET_AGC mode
+  *	
   *	Revision 1.5  2009/09/14 23:38:40  dseagrav
   *	Used wrong channel file.
   *	
@@ -128,7 +131,7 @@ void LM_VHF::Init(LEM *vessel){
 	service.sin_addr.s_addr = htonl(INADDR_ANY);
 	service.sin_port = htons( 14243 ); // CM on 14242, LM on 14243
 
-	if ( bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
+	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
 		sprintf(wsk_emsg,"LM-TELECOM: bind() failed: %ld", WSAGetLastError());
 		wsk_error = 1;
 		closesocket(m_socket);
