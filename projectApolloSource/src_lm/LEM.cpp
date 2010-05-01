@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.15  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -388,6 +395,7 @@ void LEM::Init()
 
 	fdaiDisabled = false;
 	fdaiSmooth = false;
+	DebugLineClearTimer = 0;
 
 	InitPanel();
 
@@ -463,9 +471,11 @@ void LEM::Init()
 	// For now we'll turn on the mission timer. We don't yet have a switch to control
 	// it.
 	//
+	// Switch added -- DS20100501
+	//
 
-	MissionTimerDisplay.SetRunning(true);
-	MissionTimerDisplay.SetEnabled(true);
+	// MissionTimerDisplay.SetRunning(true);
+	// MissionTimerDisplay.SetEnabled(true);
 
 	//
 	// And Event Timer.

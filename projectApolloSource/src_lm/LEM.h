@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.15  2009/09/21 19:18:38  flydba
   *	New LEM bitmaps added.
   *	
@@ -456,6 +463,7 @@ public:
 	void StartAscent();
 	void CheckRCS();
 
+
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
@@ -500,6 +508,8 @@ public:
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
+	double DebugLineClearTimer;			// Timer for clearing debug line
+		
 	// DS20060413 DirectInput stuff
 	// Handle to DLL instance
 	HINSTANCE dllhandle;
@@ -576,7 +586,7 @@ protected:
 	void InitPanel();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
-	void GetDockStatus();
+	// void GetDockStatus();
 
 	bool CabinFansActive();
 	bool AscentEngineArmed();
@@ -961,10 +971,10 @@ protected:
 	/////////////////
 
 	SwitchRow Panel5SwitchRow;
-	ThreePosSwitch TimerContSwitch;
-	ThreePosSwitch TimerSlewHours;
-	ThreePosSwitch TimerSlewMinutes;
-	ThreePosSwitch TimerSlewSeconds;
+	LEMMissionTimerSwitch TimerContSwitch;
+	LEMMissionTimerSwitch TimerSlewHours;
+	LEMMissionTimerSwitch TimerSlewMinutes;
+	LEMMissionTimerSwitch TimerSlewSeconds;
 	ToggleSwitch LtgORideAnunSwitch;
 	ToggleSwitch LtgORideNumSwitch;
 	ToggleSwitch LtgORideIntegralSwitch;
@@ -1612,6 +1622,7 @@ protected:
 	friend class LEM_SteerableAnt;
 	friend class LM_VHF;
 	friend class LM_SBAND;
+	friend class LEMMissionTimerSwitch;
 };
 
 extern void LEMLoadMeshes();

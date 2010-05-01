@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.14  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -856,6 +863,15 @@ void LEM::SystemsInit()
 void LEM::SystemsTimestep(double simt, double simdt) 
 
 {
+	// Clear debug line when timer runs out
+	if(DebugLineClearTimer > 0){
+		DebugLineClearTimer -= simdt;
+		if(DebugLineClearTimer < 1){
+			sprintf(oapiDebugString(),"");
+			DebugLineClearTimer = 0;
+		}
+	}
+
 	// Zero ACA and TTCA bits in channel 31
 	LMChannelValue31 val31;
 	val31.Value = agc.GetInputChannel(031);

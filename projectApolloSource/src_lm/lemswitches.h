@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.2  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -57,6 +60,17 @@ public:
 
 protected:
 	LEM *lem;
+};
+
+class LEMMissionTimerSwitch : public LEMThreePosSwitch {
+public:
+	LEMMissionTimerSwitch() { lem = 0; sw = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int id);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	LEM *lem;
+	int sw;
 };
 
 class LEMValveSwitch: public LEMThreePosSwitch {
