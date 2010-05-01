@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -73,13 +76,14 @@ public:
 	bool IsEnabled() { return Enabled; };
 	void SetCountUp(int val) { CountUp = val; };
 	int GetCountUp() { return CountUp; };
+	int GetHours(){ return hours; }
+	int GetMinutes(){ return minutes; }
+	int GetSeconds(){ return seconds; }
+	bool IsPowered() { return Voltage() > 25.0; };
 
 	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
 
 protected:
-
-	bool IsPowered() { return Voltage() > 25.0; };
-
 	//
 	// These are expected to be saved by the owning class.
 	//

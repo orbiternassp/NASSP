@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.12  2009/09/22 11:40:12  trebonian
   *	Support new DEDA bitmaps and digits
   *	
@@ -697,7 +704,7 @@ void LEM::InitPanel() {
 	CDRDCBusVoltCB.Register(PSH, "CDRDCBusVoltCB", 1);
 	CDRInverter1CB.Register(PSH,"CDRInverter1CB",0);
 
-	TimerContSwitch.Register(PSH,"TimerContSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
+	TimerContSwitch.Register(PSH,"TimerContSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
 	TimerSlewHours.Register(PSH,"TimerSlewHours",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	TimerSlewMinutes.Register(PSH,"TimerSlewMinutes",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	TimerSlewSeconds.Register(PSH,"TimerSlewSeconds",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
@@ -2107,10 +2114,10 @@ void LEM::SetSwitches(int panel) {
 			
 			// Panel 5 is 1000,1300 to 1560, 1620
 			Panel5SwitchRow.Init(AID_LEM_PANEL_5, MainPanel);
-			TimerContSwitch.Init(233, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow);
-			TimerSlewHours.Init(333, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow);
-			TimerSlewMinutes.Init(405, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow);
-			TimerSlewSeconds.Init(477, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow);
+			TimerContSwitch.Init(233, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 0);
+			TimerSlewHours.Init(333, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 1);
+			TimerSlewMinutes.Init(405, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 2);
+			TimerSlewSeconds.Init(477, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
 			LtgORideAnunSwitch.Init(323, 147, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 			LtgORideNumSwitch.Init(380, 147, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 			LtgORideIntegralSwitch.Init(437, 147, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);

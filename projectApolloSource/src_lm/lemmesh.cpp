@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.2  2009/07/11 13:40:19  jasonims
   *	DockingProbe Work
   *	
@@ -537,6 +544,7 @@ void LEMLoadMeshes()
 // Debug routine.
 //
 
+/*
 void LEM::GetDockStatus()
 
 {
@@ -555,4 +563,4 @@ void LEM::GetDockStatus()
 
 //	GetStatusEx(&vslm);
 }
-
+*/

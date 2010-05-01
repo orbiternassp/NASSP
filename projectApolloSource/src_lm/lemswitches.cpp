@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/10 02:12:37  dseagrav
+  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
+  *	
   *	Revision 1.3  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -93,6 +96,70 @@ void LEMThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	lem = s;
+}
+
+// This is like a normal switch, except it shows the mission timer values (since we can't see it, it's on the other panel)
+void LEMMissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int id)
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	lem = s;
+	sw = id;
+}
+
+bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
+{
+	bool rv;
+	// Is the event timer powered?
+	if(lem->MissionTimerDisplay.IsPowered()){
+		// Yes, print the time
+		sprintf(oapiDebugString(),"LM MT: %.2d:%.2d:%.2d",
+			lem->MissionTimerDisplay.GetHours(),
+			lem->MissionTimerDisplay.GetMinutes(),
+			lem->MissionTimerDisplay.GetSeconds());		
+	}
+	if(event & PANEL_MOUSE_RBDOWN || event & PANEL_MOUSE_RBUP){
+		return false; // Disregard this
+	}
+	// Animate switch
+	rv = LEMThreePosSwitch::CheckMouseClick(event, mx, my);
+	// Perform function
+	switch(sw){
+		case 0: // Run-Stop-Reset
+			switch(GetState()){
+				case THREEPOSSWITCH_UP: // RUN
+					lem->MissionTimerDisplay.SetRunning(true); break;
+				case THREEPOSSWITCH_CENTER: // STOP
+					lem->MissionTimerDisplay.SetRunning(false); break;
+				case THREEPOSSWITCH_DOWN: // RESET
+					lem->MissionTimerDisplay.Reset(); break;
+			}
+			break;
+		case 1: // Hours Inc
+			switch(GetState()){
+				case THREEPOSSWITCH_UP: // RUN
+					lem->MissionTimerDisplay.UpdateHours(10); break;
+				case THREEPOSSWITCH_DOWN: // RESET
+					lem->MissionTimerDisplay.UpdateHours(1); break;
+			}
+			break;
+		case 2: // Minutes Inc
+			switch(GetState()){
+				case THREEPOSSWITCH_UP: // RUN
+					lem->MissionTimerDisplay.UpdateMinutes(10); break;
+				case THREEPOSSWITCH_DOWN: // RESET
+					lem->MissionTimerDisplay.UpdateMinutes(1); break;
+			}
+			break;
+		case 3: // Seconds Inc
+			switch(GetState()){
+				case THREEPOSSWITCH_UP: // RUN
+					lem->MissionTimerDisplay.UpdateSeconds(10); break;
+				case THREEPOSSWITCH_DOWN: // RESET
+					lem->MissionTimerDisplay.UpdateSeconds(1); break;
+			}
+			break;
+	}
+	return rv;
 }
 
 LEMValveTalkback::LEMValveTalkback()
