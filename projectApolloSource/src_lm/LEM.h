@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/05/01 12:55:15  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.16  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -268,6 +275,9 @@ public:
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
 };
+
+// ENVIRONMENTAL CONTROL SYSTEM
+
 
 // EXPLOSIVE DEVICES SYSTEM
 class LEM_EDS{
@@ -695,6 +705,27 @@ protected:
 	/////////////////
 
 	FDAI fdaiRight;
+
+	SwitchRow RCSIndicatorRow;
+	LMRCSATempInd LMRCSATempInd;
+	LMRCSBTempInd LMRCSBTempInd;
+	LMRCSAPressInd LMRCSAPressInd;
+	LMRCSBPressInd LMRCSBPressInd;
+	LMRCSAQtyInd LMRCSAQtyInd;
+	LMRCSBQtyInd LMRCSBQtyInd;
+
+	SwitchRow ECSUpperIndicatorRow;
+	LMSuitTempMeter LMSuitTempMeter;
+	LMCabinTempMeter LMCabinTempMeter;
+	LMSuitPressMeter LMSuitPressMeter;
+	LMCabinPressMeter LMCabinPressMeter;
+	LMCabinCO2Meter LMCabinCO2Meter;
+
+	SwitchRow ECSLowerIndicatorRow;
+	LMGlycolTempMeter LMGlycolTempMeter;
+	LMGlycolPressMeter LMGlycolPressMeter;
+	LMOxygenQtyMeter LMOxygenQtyMeter;
+	LMWaterQtyMeter LMWaterQtyMeter;
 
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;

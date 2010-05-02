@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/05/01 12:55:15  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.3  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -172,4 +179,184 @@ public:
 
 protected:
 	double AdjustForPower(double val) { return val; } // These are always powered by definition.	
+};
+
+class LMSuitTempMeter : public MeterSwitch {
+public:
+	LMSuitTempMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMCabinTempMeter : public MeterSwitch {
+public:
+	LMCabinTempMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMSuitPressMeter : public MeterSwitch {
+public:
+	LMSuitPressMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMCabinPressMeter : public MeterSwitch {
+public:
+	LMCabinPressMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMCabinCO2Meter : public MeterSwitch {
+public:
+	LMCabinCO2Meter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMGlycolTempMeter : public MeterSwitch {
+public:
+	LMGlycolTempMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMGlycolPressMeter : public MeterSwitch {
+public:
+	LMGlycolPressMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMOxygenQtyMeter : public MeterSwitch {
+public:
+	LMOxygenQtyMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMWaterQtyMeter : public MeterSwitch {
+public:
+	LMWaterQtyMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSATempInd : public MeterSwitch {
+public:
+	LMRCSATempInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSBTempInd : public MeterSwitch {
+public:
+	LMRCSBTempInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSAPressInd : public MeterSwitch {
+public:
+	LMRCSAPressInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSBPressInd : public MeterSwitch {
+public:
+	LMRCSBPressInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSAQtyInd : public MeterSwitch {
+public:
+	LMRCSAQtyInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class LMRCSBQtyInd : public MeterSwitch {
+public:
+	LMRCSBQtyInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
 };

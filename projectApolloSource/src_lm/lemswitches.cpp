@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/05/01 12:55:15  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.4  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -161,6 +168,442 @@ bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 	return rv;
 }
+
+// ECS indicator, suit temp
+LMSuitTempMeter::LMSuitTempMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMSuitTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMSuitTempMeter::QueryValue()
+
+{
+	return 70.0;
+}
+
+void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  3, 115-((int)((v-40)*1.7)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, cabin temp
+LMCabinTempMeter::LMCabinTempMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMCabinTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMCabinTempMeter::QueryValue()
+
+{
+	return 70.0;
+}
+
+void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  58, 115-((int)((v-40)*1.7)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, suit pressure
+LMSuitPressMeter::LMSuitPressMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMSuitPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMSuitPressMeter::QueryValue()
+
+{
+	return 5.0;
+}
+
+void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  94, 115-((int)(v*10.2)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, cabin pressure
+LMCabinPressMeter::LMCabinPressMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMCabinPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMCabinPressMeter::QueryValue()
+
+{
+	return 5.0;
+}
+
+void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  149, 115-((int)(v*10.2)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, cabin CO2 level
+LMCabinCO2Meter::LMCabinCO2Meter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMCabinCO2Meter::QueryValue()
+
+{
+	return 5.0;
+}
+
+void LMCabinCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	double cf,sf; // Correction Factor, Scale factor
+	int btm;      // Bottom of this segment
+	// Determine needle range and scale factor
+	if(v <= 5){
+		btm = 114;
+		sf = 8.0;
+		cf = 0;
+	}else{
+		if(v <= 10){
+			btm = 74;
+			cf = 5;
+			sf = 4.0;
+		}else{
+			if(v <= 15){
+				btm = 54;
+				cf = 10;
+				sf = 3.0;
+			}else{
+				if(v <= 20){
+					btm = 39;
+					cf = 15;
+					sf = 2;
+				}else{
+					btm = 29;
+					cf = 20;
+					sf = 1.5;
+				}
+			}
+		}
+	}
+	oapiBlt(drawSurface, NeedleSurface,  267, btm-((int)((v-cf)*sf)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, Glycol Temp Meter
+LMGlycolTempMeter::LMGlycolTempMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMGlycolTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMGlycolTempMeter::QueryValue()
+
+{
+	return 40.0;
+}
+
+void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  3, 111-((int)(v*1.2)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, Glycol Pressure Meter
+LMGlycolPressMeter::LMGlycolPressMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMGlycolPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMGlycolPressMeter::QueryValue()
+
+{
+	return 30.0;
+}
+
+void LMGlycolPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  58, 111-((int)(v*1.2)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, Oxygen Quantity Meter
+LMOxygenQtyMeter::LMOxygenQtyMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMOxygenQtyMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMOxygenQtyMeter::QueryValue()
+
+{
+	return 50.0;
+}
+
+void LMOxygenQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  94, 113-((int)(v*1.01)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// ECS indicator, Water Quantity Meter
+LMWaterQtyMeter::LMWaterQtyMeter()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMWaterQtyMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMWaterQtyMeter::QueryValue()
+
+{
+	return 50.0;
+}
+
+void LMWaterQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  149, 113-((int)(v*1.01)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS A Temp
+LMRCSATempInd::LMRCSATempInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSATempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSATempInd::QueryValue()
+
+{
+	return 70.0;
+}
+
+void LMRCSATempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  3, 114-((int)((v-20)*1.01)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS B Temp
+LMRCSBTempInd::LMRCSBTempInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSBTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSBTempInd::QueryValue()
+
+{
+	return 70.0;
+}
+
+void LMRCSBTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)((v-20)*1.01)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS A Press
+LMRCSAPressInd::LMRCSAPressInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSAPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSAPressInd::QueryValue()
+
+{
+	return 200.0;
+}
+
+void LMRCSAPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  94, 101-((int)(v*0.22)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS B Press
+LMRCSBPressInd::LMRCSBPressInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSBPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSBPressInd::QueryValue()
+
+{
+	return 200.0;
+}
+
+void LMRCSBPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  149, 101-((int)(v*0.22)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS A Qty
+LMRCSAQtyInd::LMRCSAQtyInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSAQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSAQtyInd::QueryValue()
+
+{
+	return 50.0;
+}
+
+void LMRCSAQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  185, 97-((int)(v*0.8)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// RCS indicator, RCS B Qty
+LMRCSBQtyInd::LMRCSBQtyInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void LMRCSBQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double LMRCSBQtyInd::QueryValue()
+
+{
+	return 50.0;
+}
+
+void LMRCSBQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  240, 97-((int)(v*0.8)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
 
 LEMValveTalkback::LEMValveTalkback()
 

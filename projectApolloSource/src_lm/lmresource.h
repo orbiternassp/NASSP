@@ -740,6 +740,9 @@
 #define IDB_DIGITALDISP2				1014
 #define AID_MPS_REG_CONTROLS_RIGHT      1015
 #define AID_RR_GYRO_SEL_SWITCH			1016
+#define AID_LM_ECSIND_UPPER				1017
+#define AID_LM_ECSIND_LOWER				1018
+#define AID_LM_RCSIND					1019
 
 // Next default values for new objects
 // 
