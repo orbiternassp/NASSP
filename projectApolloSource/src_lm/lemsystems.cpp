@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2010/05/01 12:55:15  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.15  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -604,10 +611,16 @@ void LEM::SystemsInit()
 	LMPDesECAMainCB.MaxAmps = 3.0;
 	LMPDesECAMainCB.WireTo(&LMPs28VBus);
 
-	// RCS stuff
+	// REACTION CONTROL SYSTEM
 	RCS_B_PQGS_DISP_CB.MaxAmps = 2.0;
 	RCS_B_PQGS_DISP_CB.WireTo(&LMPs28VBus);
-
+	LMRCSATempInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSBTempInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSAPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSBPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSAQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSBQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	
 	// CDR and LMP 28V DC busses.
 	// Wire to ficticious bus tie block
 	CDRs28VBus.WireTo(&BTB_CDR_E); 
@@ -789,6 +802,15 @@ void LEM::SystemsInit()
 	// ENVIRONMENTAL CONTROL SYSTEM
 	ECS_DISP_CB.MaxAmps = 2.0;
 	ECS_DISP_CB.WireTo(&LMPs28VBus);
+	LMSuitTempMeter.WireTo(&ECS_DISP_CB);
+	LMCabinTempMeter.WireTo(&ECS_DISP_CB);
+	LMSuitPressMeter.WireTo(&ECS_DISP_CB);
+	LMCabinPressMeter.WireTo(&ECS_DISP_CB);
+	LMCabinCO2Meter.WireTo(&ECS_DISP_CB);
+	LMGlycolTempMeter.WireTo(&ECS_DISP_CB);
+	LMGlycolPressMeter.WireTo(&ECS_DISP_CB);
+	LMOxygenQtyMeter.WireTo(&ECS_DISP_CB);
+	LMWaterQtyMeter.WireTo(&ECS_DISP_CB);
 	ECS_CABIN_REPRESS_CB.MaxAmps = 2.0;
 	ECS_CABIN_REPRESS_CB.WireTo(&LMPs28VBus);
 	ECS_GLYCOL_PUMP_2_CB.MaxAmps = 5.0;

@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2010/05/01 12:55:15  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.13  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -500,6 +507,22 @@ void LEM::InitPanel() {
 	RadarTestSwitch.Register(PSH, "RadarTestSwitch",  THREEPOSSWITCH_CENTER);
 	SlewRateSwitch.Register(PSH, "SlewRateSwitch", true);
 	DeadBandSwitch.Register(PSH, "DeadBandSwitch", false);
+	LMSuitTempMeter.Register(PSH,"LMSuitTempMeter",40,100,2);
+	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",40,100,2);
+	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,10,2);
+	LMCabinPressMeter.Register(PSH,"LMCabinPressMeter",0,10,2);
+	LMCabinCO2Meter.Register(PSH,"LMCabinCO2Meter",0,30,2);
+	LMGlycolTempMeter.Register(PSH,"LMGlycolTempMeter",0,80,2);
+	LMGlycolPressMeter.Register(PSH,"LMGlycolPressMeter",0,80,2);
+	LMOxygenQtyMeter.Register(PSH,"LMOxygenQtyMeter",0,100,2);
+	LMWaterQtyMeter.Register(PSH,"LMWaterQtyMeter",0,100,2);
+	LMRCSATempInd.Register(PSH,"LMRCSATempInd",20,120,2);
+	LMRCSBTempInd.Register(PSH,"LMRCSBTempInd",20,120,2);
+	LMRCSAPressInd.Register(PSH,"LMRCSAPressInd",0,400,2);
+	LMRCSBPressInd.Register(PSH,"LMRCSBPressInd",0,400,2);
+	LMRCSAQtyInd.Register(PSH,"LMRCSAQtyInd",0,100,2);
+	LMRCSBQtyInd.Register(PSH,"LMRCSBQtyInd",0,100,2);
+
 	GyroTestLeftSwitch.Register(PSH, "GyroTestLeftSwitch",  THREEPOSSWITCH_UP);
 	GyroTestRightSwitch.Register(PSH, "GyroTestRightSwitch",  THREEPOSSWITCH_CENTER);
 	RollSwitch.Register(PSH, "RollSwitch",  THREEPOSSWITCH_UP);
@@ -1277,7 +1300,7 @@ void LEM::InitPanel (int panel)
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		//srf[1]					= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
-		srf[2]						= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
+		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
 		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
@@ -1500,6 +1523,11 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1130, 1564, 1555, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
+
+		oapiRegisterPanelArea (AID_LM_RCSIND,					    _R( 898,  245, 1147,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1202,  245, 1478,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(1199,  439, 1357,  564), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+
 		//oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
 	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 263,  1078, 297, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1710,6 +1738,27 @@ void LEM::SetSwitches(int panel) {
 		case LMPANEL_MAIN:
 		case LMPANEL_LEFTWINDOW:
 		case LMPANEL_RIGHTWINDOW:
+
+			RCSIndicatorRow.Init(AID_LM_RCSIND, MainPanel);
+			LMRCSATempInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+			LMRCSBTempInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+			LMRCSAPressInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+			LMRCSBPressInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+			LMRCSAQtyInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+			LMRCSBQtyInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
+
+			ECSUpperIndicatorRow.Init(AID_LM_ECSIND_UPPER, MainPanel);
+			LMSuitTempMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+			LMCabinTempMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+			LMSuitPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+			LMCabinPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+			LMCabinCO2Meter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+
+			ECSLowerIndicatorRow.Init(AID_LM_ECSIND_LOWER, MainPanel);
+			LMGlycolTempMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
+			LMGlycolPressMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
+			LMOxygenQtyMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
+			LMWaterQtyMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
 
 			AbortSwitchesRow.Init(AID_ABORT, MainPanel);
 			AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 64);
