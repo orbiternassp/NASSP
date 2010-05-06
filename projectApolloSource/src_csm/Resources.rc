@@ -228,6 +228,7 @@ IDB_BORDER_36x69                            BITMAP  "..\\Bitmaps\\border36x69.bm
 IDB_BORDER_62x31                            BITMAP  "..\\Bitmaps\\border62x31.bmp"
 IDB_CSM_CABINPRESSTESTSWITCH                BITMAP  "..\\Bitmaps\\csm_cabinpresstestswitch.bmp"
 IDB_ORDEAL_PANEL                            BITMAP  "..\\Bitmaps\\ordeal_panel.bmp"
+IDB_DIGITAL2                                BITMAP  "..\\Bitmaps\\digitaldisp_2.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
