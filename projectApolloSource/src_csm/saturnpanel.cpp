@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.13  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -759,6 +762,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_INDICATOR]								= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 	srf[SRF_NEEDLE]									= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
 	srf[SRF_DIGITAL]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+	srf[SRF_DIGITAL2]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL2));
 	srf[SRF_SWITCHUP]								= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 	srf[SRF_SWITCHLEVER]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 	srf[SRF_SWITCHGUARDS]							= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
@@ -1336,7 +1340,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, SATPANEL_LOWER_LEFT);
 
-		oapiRegisterPanelArea (AID_CSM_LEFT_WDW_LES,							_R( 553,  244, 1062,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_LEFT_WDW_LES,							_R( 552,  243, 1062,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_LEFTCOASSWITCH,								_R(1316,   63, 1350,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTTUTILITYPOWERSWITCH,						_R(1425,   81, 1459,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1407,7 +1411,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, SATPANEL_RIGHT_CB);
 
-		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 621,  244, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 620,  243, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1462,7 +1466,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_INTERIORLIGHTSFLOODSSWITCHES,				_R( 570, 1003,  649, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPSGAUGINGSWITCH,							_R( 626, 1401,  660, 1434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTINTERIORLIGHTROTARIES,					_R( 319,  974,  542, 1064), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS,				        _R(1467, 1092, 1496, 1717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS,				        _R(1467, 1092, 1496, 1464), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS_LOWER,				_R(1467, 1494, 1496, 1717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL276,									_R(1399,  878, 1490,  996), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL278,									_R(1422,  549, 1527,  628), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL227,									_R(1237,  206, 1267,  236), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1503,8 +1508,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 979 + xoffset1,  773 + yoffset1, 1280 + xoffset1, 1024 + yoffset1), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 958 + xoffset , 1004 + yoffset,   978 + xoffset,  1019 + yoffset),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,				       PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R(1205 + xoffset1,  700 + yoffset1, 1280 + xoffset1,  773 + yoffset1), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_COAS,		    _R( 533 + xoffset,     0 + yoffset,  1216 + xoffset,   620 + yoffset),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ALTIMETER2,		_R( 787 + xoffset,   863 + yoffset1,  948 + xoffset,  1024 + yoffset1), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_COAS,		    _R( 527 + xoffset,     0 + yoffset,  1210 + xoffset,   627 + yoffset),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ALTIMETER2,		_R( 787 + xoffset,   860 + yoffset1,  948 + xoffset,  1021 + yoffset1), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					   PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1533,7 +1538,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN);
 
-		oapiRegisterPanelArea (AID_CSM_RNDZ_WDW_LES, _R( 464 + xoffset, 103 + yoffset, 1105 + xoffset, 840 + yoffset), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_RNDZ_WDW_LES, _R( 463 + xoffset, 102 + yoffset, 1105 + xoffset, 840 + yoffset), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1571,7 +1576,7 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea (AID_CSM_HATCH_600_LEFT,				_R(  0          ,  54,  150          , 768), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_HATCH_600_RIGHT,				_R(875 + xoffset, 466, 1024 + xoffset, 768), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		} else {
-			oapiRegisterPanelArea (AID_CSM_GEAR_BOX_ROTARY,				_R(1409,  45, 1649,  285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+			oapiRegisterPanelArea (AID_CSM_GEAR_BOX_ROTARY,				_R(1405,  50, 1649,  290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 			oapiRegisterPanelArea (AID_CSM_PUMP_HANDLE_ROTARY,			_R(1275, 534, 1515,  774), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_VENT_VALVE_HANDLE,			_R(  64, 703,  328,  967), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_HATCH_TOGGLE,				_R(1340, 790, 1540, 1090), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1615,7 +1620,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_EMERGENCY_CABIN_PRESSURE_ROTARY,	_R( 773, 3130,  838, 3195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_REGULATOR_SWITCHES,			_R(1197, 3037, 1307, 3145), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_382,					_R( 112, 1198,  785, 1567), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CSM_CABINPRESSTESTSWITCH,		_R( 786, 3221,  824, 3259), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_CABINPRESSTESTSWITCH,		_R( 785, 3220,  825, 3260), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1709,6 +1714,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL226CIRCUITBRAKERS,			_R( 572, 1097,  994, 1437), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL229CIRCUITBRAKERS,			_R(  64,   79,  582,  232), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL250CIRCUITBRAKERS,			_R(1203, 1735, 1758, 1764), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS_LOWER,	_R(1232,   28, 1261,  251), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_OVBD_DUMP,			_R(1521, 1483, 1637, 1599), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_BATT_VENT,			_R(1920, 1470, 2036, 1586), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_STOAGE_VENT,			_R(1920, 1304, 2036, 1420), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1832,7 +1838,7 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_THRUSTMETER,									_R( 498,  920,  593, 1011), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   85,  973,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_ALTIMETER,									_R( 835,   86,  972,  223), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ELS_SWITCHES,								_R( 702, 1150,  957, 1219), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EVENT_TIMER_SWITCHES,						_R( 701, 1260,  950, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ROT_PWR,										_R( 104,  948,  324,  977), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1854,8 +1860,8 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);	
 	oapiRegisterPanelArea (AID_EMSDVSETSWITCH,								_R( 906,  428,  961,  519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMSDVDISPLAY,								_R( 743,  518,  900,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 816,  467,  846,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_PT05G_LIGHT,									_R( 758,  467,  788,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 815,  456,  856,  472), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_PT05G_LIGHT,									_R( 749,  456,  790,  472), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMS_SCROLL_LEO,								_R( 731,  296,  875,  448), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMS_RSI_BKGRND,								_R( 602,  463,  690,  550), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 	// ASCP
@@ -1915,7 +1921,7 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 
 void Saturn::AddRightMiddleMainPanelAreas(int offset) {
 
-	oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835 + offset,  305, 1973 + offset,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1834 + offset,  303, 1977 + offset,  326), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912 + offset,  490, 2488 + offset,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173 + offset,  315, 2495 + offset,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SUITCOMPRDELTAPMETER,       					_R(2069 + offset,  726, 2115 + offset,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -2554,7 +2560,6 @@ void Saturn::SetSwitches(int panel) {
 
 	PCMBitRateSwitchRow.Init(AID_PCMBITRATESWITCH, MainPanel);
 	PCMBitRateSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], PCMBitRateSwitchRow);
-	DummySwitch.Init     (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], PCMBitRateSwitchRow);
 
 	ACInverterSwitchesRow.Init(AID_ACINVERTERSWITCHES, MainPanel);
 	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ACInverterSwitchesRow, &InverterPower1MainACircuitBraker, 0);
@@ -3202,11 +3207,13 @@ void Saturn::SetSwitches(int panel) {
 	FlightPostLandingMainACircuitBraker.Init  (  0, 253, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, MainBusA, 10.0);
 	FlightPostLandingBatCCircuitBraker.Init   (  0, 298, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, EntryBatteryC,  7.5);
 	FlightPostLandingBatBusBCircuitBraker.Init(  0, 343, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, &BatteryBusB,   7.5);
-	FlightPostLandingBatBusACircuitBraker.Init(  0, 402, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, &BatteryBusA,   7.5);
-	MainBBatBusBCircuitBraker.Init            (  0, 447, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, &BatteryBusB,  80.0);
-	MainBBatCCircuitBraker.Init               (  0, 492, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, EntryBatteryC, 80.0);
-	MainABatCCircuitBraker.Init               (  0, 537, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, EntryBatteryC, 80.0);
-	MainABatBusACircuitBraker.Init            (  0, 596, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, &BatteryBusA,  80.0);
+	
+	Panel275CircuitBrakersLowerRow.Init(AID_PANEL275CIRCUITBRAKERS_LOWER, MainPanel);
+	FlightPostLandingBatBusACircuitBraker.Init(  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersLowerRow, &BatteryBusA,   7.5);
+	MainBBatBusBCircuitBraker.Init            (  0,  45, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersLowerRow, &BatteryBusB,  80.0);
+	MainBBatCCircuitBraker.Init               (  0,  90, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersLowerRow, EntryBatteryC, 80.0);
+	MainABatCCircuitBraker.Init               (  0, 135, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersLowerRow, EntryBatteryC, 80.0);
+	MainABatBusACircuitBraker.Init            (  0, 194, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersLowerRow, &BatteryBusA,  80.0);
 	
 	//
 	// Panel 276
@@ -3664,7 +3671,7 @@ void Saturn::SetSwitches(int panel) {
 	O2MainRegulatorBSwitch.SetOffset(220, 0);
 
 	EmergencyCabinPressureTestSwitchRow.Init(AID_CSM_CABINPRESSTESTSWITCH, MainPanel);
-	EmergencyCabinPressureTestSwitch.Init(0, 0, 38, 38, srf[SRF_CSM_CABINPRESSTESTSWITCH], srf[SRF_BORDER_38x38], EmergencyCabinPressureTestSwitchRow); 
+	EmergencyCabinPressureTestSwitch.Init(0, 0, 40, 40, srf[SRF_CSM_CABINPRESSTESTSWITCH], srf[SRF_BORDER_38x38], EmergencyCabinPressureTestSwitchRow); 
 
 	///////////////////////////
 	// Panel 382             //
@@ -4708,25 +4715,25 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	
 	case AID_CSM_MNPNL_WDW_LES:
 		if (LESAttached) {
-			oapiBlt(surf,srf[SRF_CSM_MNPNL_WDW_LES], 0, 0, 0, 0, 355, 155, SURF_PREDEF_CK);
+			oapiBlt(surf,srf[SRF_CSM_MNPNL_WDW_LES], 0, 0, 0, 0, 356, 156, SURF_PREDEF_CK);
 		}
 		return true;
 
 	case AID_CSM_RNDZ_WDW_LES:
 		if (LESAttached) {
-			oapiBlt(surf,srf[SRF_CSM_RNDZ_WDW_LES], 0, 0, 0, 0, 638, 732, SURF_PREDEF_CK);
+			oapiBlt(surf,srf[SRF_CSM_RNDZ_WDW_LES], 0, 0, 0, 0, 641, 735, SURF_PREDEF_CK);
 		}
 		return true;
 
 	case AID_CSM_RIGHT_WDW_LES:
 		if (LESAttached) {
-			oapiBlt(surf,srf[SRF_CSM_RIGHT_WDW_LES], 0, 0, 0, 0, 506, 483, SURF_PREDEF_CK);
+			oapiBlt(surf,srf[SRF_CSM_RIGHT_WDW_LES], 0, 0, 0, 0, 508, 484, SURF_PREDEF_CK);
 		}
 		return true;
 
 	case AID_CSM_LEFT_WDW_LES:
 		if (LESAttached) {
-			oapiBlt(surf,srf[SRF_CSM_LEFT_WDW_LES], 0, 0, 0, 0, 506, 483, SURF_PREDEF_CK);
+			oapiBlt(surf,srf[SRF_CSM_LEFT_WDW_LES], 0, 0, 0, 0, 508, 484, SURF_PREDEF_CK);
 		}
 		return true;
 
@@ -5027,7 +5034,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL], true);
+		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL2], true);
 		return true;
 
 	case AID_EVENT_TIMER:
@@ -5133,25 +5140,25 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_COAS:
 		if (coasEnabled) {
-			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 0, 683, 620, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 0, 683, 627, SURF_PREDEF_CK);
 		} else {
-			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 620, 683, 620, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 627, 683, 627, SURF_PREDEF_CK);
 		}
 		return true;
 
 	case AID_SPS_LIGHT:
 		if (ems.SPSThrustLight()) {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 30, 16, 30, 16);
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
 		} else {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 30, 16);
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 41, 16);
 		}
 		return true;
 
 	case AID_PT05G_LIGHT:
 		if (ems.pt05GLight()) {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 30, 0, 30, 16);
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 0, 41, 16);
 		} else {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 0, 30, 16);
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 0, 41, 16);
 		}
 		return true;
 
@@ -5175,14 +5182,14 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
 		switch (ems.LiftVectLight()) {
 			case 1:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 60, 6, 20, 6);
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 6, 20, 6);
 				break;
 			case -1:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 60, 22, 22, 10);
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 22, 22, 10);
 				break;
 			case 0:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 60, 0, 20, 6);
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 60, 12, 22, 10);
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 0, 20, 6);
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
 				break;
 		}
 		
@@ -5548,7 +5555,6 @@ void Saturn::InitSwitches() {
 	PMPSwitch.Register(PSH, "PMPSwitch", THREEPOSSWITCH_UP);
 
 	PCMBitRateSwitch.Register(PSH, "PCMBitRateSwitch", TOGGLESWITCH_UP);
-	DummySwitch.Register(PSH, "DummySwitch", THREEPOSSWITCH_CENTER);
 
 	MnA1Switch.Register(PSH, "MnA1Switch", true);
 	MnB2Switch.Register(PSH, "MnB2Switch", true);

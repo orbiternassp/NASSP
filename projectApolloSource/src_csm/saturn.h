@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2010/02/22 14:23:30  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.13  2010/02/09 02:38:53  bluedragon8144
   *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
   *	
@@ -821,6 +824,7 @@ public:
 		SRF_BORDER_62x31,
 		SRF_CSM_CABINPRESSTESTSWITCH,
 		SRF_ORDEAL_PANEL,
+		SRF_DIGITAL2,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -2249,7 +2253,6 @@ protected:
 
 	SwitchRow PCMBitRateSwitchRow;
 	ToggleSwitch PCMBitRateSwitch;
-	ThreePosSwitch DummySwitch;
 	
 	//
 	// VHF antenna rotary
@@ -2896,6 +2899,8 @@ protected:
 	CircuitBrakerSwitch FlightPostLandingMainACircuitBraker;
 	CircuitBrakerSwitch FlightPostLandingBatCCircuitBraker;
 	CircuitBrakerSwitch FlightPostLandingBatBusBCircuitBraker;
+	
+	SwitchRow Panel275CircuitBrakersLowerRow;
 	CircuitBrakerSwitch FlightPostLandingBatBusACircuitBraker;
 	CircuitBrakerSwitch MainBBatBusBCircuitBraker;
 	CircuitBrakerSwitch MainBBatCCircuitBraker;

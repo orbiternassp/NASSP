@@ -740,6 +740,8 @@
 #define IDB_CSM_CABINPRESSTESTSWITCH                       1025
 #define AID_CSM_CABINPRESSTESTSWITCH                       1026
 #define IDB_ORDEAL_PANEL                                   1027
+#define IDB_DIGITAL2									   1028
+#define AID_PANEL275CIRCUITBRAKERS_LOWER				   1029
 
 
 // Next default values for new objects
