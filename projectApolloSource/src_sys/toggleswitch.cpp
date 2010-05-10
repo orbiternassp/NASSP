@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.10  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -2807,6 +2810,9 @@ double MeterSwitch::AdjustForPower(double val)
 
 	if (volts >= 26.0)
 		return val;
+
+	if (volts == 0)      // Hack to make meters with minimums below zero show properly
+		return minValue; // when the power is out. DS20100509
 
 	// sprintf(oapiDebugString(), "MeterSwitch::AdjustForPower %s undervolt", name);
 	return ((val * (volts - 1.0)) / 25.0);

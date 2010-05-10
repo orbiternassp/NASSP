@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/05/02 16:04:04  dseagrav
+  *	Added RCS and ECS indicators. Values are not yet provided.
+  *	
   *	Revision 1.17  2010/05/01 12:55:15  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -661,6 +664,14 @@ protected:
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
 
+	SwitchRow MainPropAndEngineIndRow;
+	EngineThrustInd EngineThrustInd;
+	CommandedThrustInd CommandedThrustInd;
+	MainFuelTempInd MainFuelTempInd;
+	MainFuelPressInd MainFuelPressInd;
+	MainOxidizerTempInd MainOxidizerTempInd;
+	MainOxidizerPressInd MainOxidizerPressInd;
+
 	SwitchRow GuidContSwitchRow;
 	ToggleSwitch GuidContSwitch;
 	ThreePosSwitch ModeSelSwitch;
@@ -835,6 +846,9 @@ protected:
 	ThreePosSwitch RollSwitch;
 	ThreePosSwitch PitchSwitch;
 	ThreePosSwitch YawSwitch;
+
+	SwitchRow TempMonitorIndRow;
+	TempMonitorInd TempMonitorInd;
 
 	SwitchRow TempMonitorRotaryRow;
 	RotationalSwitch TempMonitorRotary;

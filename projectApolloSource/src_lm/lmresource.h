@@ -743,6 +743,8 @@
 #define AID_LM_ECSIND_UPPER				1017
 #define AID_LM_ECSIND_LOWER				1018
 #define AID_LM_RCSIND					1019
+#define AID_TEMPMONITORIND              1020
+#define AID_MAIN_PROP_AND_ENGINE_IND	1021
 
 // Next default values for new objects
 // 
