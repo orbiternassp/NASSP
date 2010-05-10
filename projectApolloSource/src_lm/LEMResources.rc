@@ -1,13 +1,13 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "lmresource."
+#include "lmresource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "winresrc.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -28,7 +28,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDB_DEDA_KEY            BITMAP                  "..\\Bitmaps\\ags_keys.bmp"
 IDB_DEDA_LIGHTS         BITMAP                  "..\\Bitmaps\\ags_lights.bmp"
-IDB_CWS_LIGHTS          BITMAP                  "C:\\ProjectApollo090219\\Orbitersdk\\samples\\ProjectApollo\\Bitmaps\\lem_cw_lights.bmp"
+IDB_CWS_LIGHTS          BITMAP                  "..\\Bitmaps\\lem_cw_lights.bmp"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
