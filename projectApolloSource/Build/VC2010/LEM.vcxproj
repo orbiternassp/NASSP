@@ -386,11 +386,13 @@
     <ClInclude Include="..\..\src_lm\yaAGS\yaAEA.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Bitmaps\abort.bmp" />
     <None Include="..\..\Abort.bmp" />
+    <None Include="..\..\Bitmaps\abort.bmp" />
+    <None Include="..\..\Bitmaps\ags_keys.bmp" />
+    <None Include="..\..\Bitmaps\ags_lights.bmp" />
     <None Include="..\..\alignment_optical_telescope_view.bmp" />
-    <None Include="..\..\Altimeter.bmp" />
     <None Include="..\..\Bitmaps\Altimeter.bmp" />
+    <None Include="..\..\Altimeter.bmp" />
     <None Include="..\..\Bitmaps\Annonciators.bmp" />
     <None Include="..\..\Annonciators.bmp" />
     <None Include="..\..\Bitmaps\aot_reticle_knob.bmp" />
@@ -422,10 +424,11 @@
     <None Include="..\..\circuit_breaker_lem.bmp" />
     <None Include="..\..\Bitmaps\coas_lem1.bmp" />
     <None Include="..\..\Bitmaps\coas_lem2.bmp" />
-    <None Include="..\..\contact.bmp" />
     <None Include="..\..\Bitmaps\contact.bmp" />
-    <None Include="..\..\digitaldisp.bmp" />
+    <None Include="..\..\contact.bmp" />
     <None Include="..\..\Bitmaps\digitaldisp.bmp" />
+    <None Include="..\..\digitaldisp.bmp" />
+    <None Include="..\..\Bitmaps\digitaldisp_2.bmp" />
     <None Include="..\..\dsky_1.bmp" />
     <None Include="..\..\dsky_3.bmp" />
     <None Include="..\..\Bitmaps\dsky_disp.bmp" />
@@ -446,8 +449,8 @@
     <None Include="..\..\Bitmaps\Gmeter.bmp" />
     <None Include="..\..\Gmeter.bmp" />
     <None Include="..\..\heading.bmp" />
-    <None Include="..\..\Horizon.bmp" />
     <None Include="..\..\Bitmaps\Horizon.bmp" />
+    <None Include="..\..\Horizon.bmp" />
     <None Include="..\..\Horizon2.bmp" />
     <None Include="..\..\ilmabort.bmp" />
     <None Include="..\..\ilmAnnonciators.bmp" />
@@ -474,22 +477,26 @@
     <None Include="..\..\LaunchLight.bmp" />
     <None Include="..\..\lem3poslever.bmp" />
     <None Include="..\..\Bitmaps\lem_aot_panel_wide.bmp" />
+    <None Include="..\..\Bitmaps\lem_cw_lights.bmp" />
     <None Include="..\..\lem_left_panel.bmp" />
     <None Include="..\..\Bitmaps\lem_left_panel.bmp" />
-    <None Include="..\..\Bitmaps\lem_left_window.bmp" />
     <None Include="..\..\lem_left_window.bmp" />
+    <None Include="..\..\Bitmaps\lem_left_window.bmp" />
     <None Include="..\..\Bitmaps\lem_lpd_window.bmp" />
     <None Include="..\..\lem_lpd_window.bmp" />
-    <None Include="..\..\Bitmaps\lem_main_panel.bmp" />
     <None Include="..\..\lem_main_panel.bmp" />
+    <None Include="..\..\Bitmaps\lem_main_panel.bmp" />
     <None Include="..\..\Bitmaps\lem_pitch_degs.bmp" />
-    <None Include="..\..\Bitmaps\lem_rendezvous_window.bmp" />
     <None Include="..\..\lem_rendezvous_window.bmp" />
+    <None Include="..\..\Bitmaps\lem_rendezvous_window.bmp" />
     <None Include="..\..\lem_right_panel.bmp" />
     <None Include="..\..\Bitmaps\lem_right_panel.bmp" />
-    <None Include="..\..\Bitmaps\lem_right_window.bmp" />
     <None Include="..\..\lem_right_window.bmp" />
+    <None Include="..\..\Bitmaps\lem_right_window.bmp" />
     <None Include="..\..\Bitmaps\lem_signal_strength.bmp" />
+    <None Include="..\..\Bitmaps\lem_stage_switch.bmp" />
+    <None Include="..\..\Bitmaps\lem_switchup.bmp" />
+    <None Include="..\..\Bitmaps\lem_threeposswitch.bmp" />
     <None Include="..\..\Bitmaps\lem_yaw_degs.bmp" />
     <None Include="..\..\lemleftwindow-ilm.bmp" />
     <None Include="..\..\lemleftwindow.bmp" />
@@ -497,11 +504,11 @@
     <None Include="..\..\Bitmaps\LemRotationalSwitch.bmp" />
     <None Include="..\..\Bitmaps\lemswitch2.bmp" />
     <None Include="..\..\lemswitch2.bmp" />
-    <None Include="..\..\Bitmaps\lemswitch3.bmp" />
     <None Include="..\..\lemswitch3.bmp" />
+    <None Include="..\..\Bitmaps\lemswitch3.bmp" />
     <None Include="..\..\lemswitchup.bmp" />
-    <None Include="..\..\lights2.bmp" />
     <None Include="..\..\Bitmaps\lights2.bmp" />
+    <None Include="..\..\lights2.bmp" />
     <None Include="..\..\lm3posswitch.bmp" />
     <None Include="..\..\Bitmaps\LMAbortButton.bmp" />
     <None Include="..\..\LMAbortButton.bmp" />
@@ -512,8 +519,8 @@
     <None Include="..\..\LV_ENG.bmp" />
     <None Include="..\..\Bitmaps\lv_eng.bmp" />
     <None Include="..\..\masteralarm.bmp" />
-    <None Include="..\..\Bitmaps\masteralarmbright.bmp" />
     <None Include="..\..\masteralarmbright.bmp" />
+    <None Include="..\..\Bitmaps\masteralarmbright.bmp" />
     <None Include="..\..\Bitmaps\needle1.bmp" />
     <None Include="..\..\Needle1.bmp" />
     <None Include="..\..\Panel1.bmp" />
@@ -524,17 +531,18 @@
     <None Include="..\..\Rot_Knob.bmp" />
     <None Include="..\..\Bitmaps\switch1.bmp" />
     <None Include="..\..\switch1.bmp" />
-    <None Include="..\..\switch_lever.bmp" />
     <None Include="..\..\Bitmaps\switch_lever.bmp" />
-    <None Include="..\..\SwitchUP.bmp" />
+    <None Include="..\..\switch_lever.bmp" />
     <None Include="..\..\Bitmaps\switchup.bmp" />
+    <None Include="..\..\SwitchUP.bmp" />
     <None Include="..\..\switchup2.bmp" />
-    <None Include="..\..\Bitmaps\switchup3.bmp" />
     <None Include="..\..\switchup3.bmp" />
+    <None Include="..\..\Bitmaps\switchup3.bmp" />
     <None Include="..\..\Bitmaps\threeposswitch.bmp" />
     <None Include="..\..\Bitmaps\Thrustmeter.bmp" />
     <None Include="..\..\Thrustmeter.bmp" />
     <None Include="..\..\Bitmaps\thumbwheel_large_fonts.bmp" />
+    <None Include="..\..\src_lm\lmresource" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_lm\LEMResources.rc">
@@ -543,12 +551,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\Program Files\orbiter-nassp\Orbitersdk\samples\ProjectApollo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="PanelSDK.vcxproj">
-      <Project>{98ec3bf0-c9ff-4c38-91e1-159d8f3700c1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

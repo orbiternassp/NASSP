@@ -2,25 +2,25 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{2d79ab4e-5ef5-4e0a-9a36-c5fd36908762}</UniqueIdentifier>
+      <UniqueIdentifier>{2ea1a653-1c99-4f46-84f5-b32224d14608}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{cfe5ba4c-ad4e-4ad9-b6ac-8407af10cf7a}</UniqueIdentifier>
+      <UniqueIdentifier>{4a5d7b95-4d3a-40da-ab2e-5b469b90b762}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{2563e521-a795-430e-a612-b3910818062f}</UniqueIdentifier>
+      <UniqueIdentifier>{39a61da7-e963-4058-bdd9-e3f9f4904ee5}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
     <Filter Include="yaAGC">
-      <UniqueIdentifier>{7bb04132-119b-40ac-ab9e-33437942b823}</UniqueIdentifier>
+      <UniqueIdentifier>{415d3395-e435-43fc-ac24-2d8af6501bb5}</UniqueIdentifier>
     </Filter>
     <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{2bd8cdfb-ac62-4435-825e-0dd0f881bc90}</UniqueIdentifier>
+      <UniqueIdentifier>{77ee6e82-07f2-4368-9f75-0d4532ca3c7e}</UniqueIdentifier>
     </Filter>
     <Filter Include="yaAGS">
-      <UniqueIdentifier>{b2bb2466-a9e8-4d93-8e4e-93396d060e7e}</UniqueIdentifier>
+      <UniqueIdentifier>{980b600a-ff7d-422f-9b94-d6b839a598e2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -280,19 +280,25 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\Abort.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\Bitmaps\abort.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Abort.bmp">
+    <None Include="..\..\Bitmaps\ags_keys.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Bitmaps\ags_lights.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\alignment_optical_telescope_view.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Altimeter.bmp">
+    <None Include="..\..\Bitmaps\Altimeter.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\Altimeter.bmp">
+    <None Include="..\..\Altimeter.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\Annonciators.bmp">
@@ -388,16 +394,19 @@
     <None Include="..\..\Bitmaps\coas_lem2.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Bitmaps\contact.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\contact.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\contact.bmp">
+    <None Include="..\..\Bitmaps\digitaldisp.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\digitaldisp.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\digitaldisp.bmp">
+    <None Include="..\..\Bitmaps\digitaldisp_2.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\dsky_1.bmp">
@@ -460,10 +469,10 @@
     <None Include="..\..\heading.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Horizon.bmp">
+    <None Include="..\..\Bitmaps\Horizon.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\Horizon.bmp">
+    <None Include="..\..\Horizon.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Horizon2.bmp">
@@ -544,16 +553,19 @@
     <None Include="..\..\Bitmaps\lem_aot_panel_wide.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Bitmaps\lem_cw_lights.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\lem_left_panel.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\lem_left_panel.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lem_left_window.bmp">
+    <None Include="..\..\lem_left_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\lem_left_window.bmp">
+    <None Include="..\..\Bitmaps\lem_left_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\lem_lpd_window.bmp">
@@ -562,19 +574,19 @@
     <None Include="..\..\lem_lpd_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lem_main_panel.bmp">
+    <None Include="..\..\lem_main_panel.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\lem_main_panel.bmp">
+    <None Include="..\..\Bitmaps\lem_main_panel.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\lem_pitch_degs.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lem_rendezvous_window.bmp">
+    <None Include="..\..\lem_rendezvous_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\lem_rendezvous_window.bmp">
+    <None Include="..\..\Bitmaps\lem_rendezvous_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\lem_right_panel.bmp">
@@ -583,13 +595,22 @@
     <None Include="..\..\Bitmaps\lem_right_panel.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lem_right_window.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\..\lem_right_window.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Bitmaps\lem_right_window.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\Bitmaps\lem_signal_strength.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Bitmaps\lem_stage_switch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Bitmaps\lem_switchup.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Bitmaps\lem_threeposswitch.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\lem_yaw_degs.bmp">
@@ -613,19 +634,19 @@
     <None Include="..\..\lemswitch2.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lemswitch3.bmp">
+    <None Include="..\..\lemswitch3.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\lemswitch3.bmp">
+    <None Include="..\..\Bitmaps\lemswitch3.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\lemswitchup.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\lights2.bmp">
+    <None Include="..\..\Bitmaps\lights2.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\lights2.bmp">
+    <None Include="..\..\lights2.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\lm3posswitch.bmp">
@@ -658,10 +679,10 @@
     <None Include="..\..\masteralarm.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\masteralarmbright.bmp">
+    <None Include="..\..\masteralarmbright.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\masteralarmbright.bmp">
+    <None Include="..\..\Bitmaps\masteralarmbright.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\needle1.bmp">
@@ -694,25 +715,25 @@
     <None Include="..\..\switch1.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\switch_lever.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\..\Bitmaps\switch_lever.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\SwitchUP.bmp">
+    <None Include="..\..\switch_lever.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\switchup.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\SwitchUP.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\switchup2.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\Bitmaps\switchup3.bmp">
+    <None Include="..\..\switchup3.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\switchup3.bmp">
+    <None Include="..\..\Bitmaps\switchup3.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\Bitmaps\threeposswitch.bmp">
@@ -727,6 +748,7 @@
     <None Include="..\..\Bitmaps\thumbwheel_large_fonts.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\src_lm\lmresource" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_lm\LEMResources.rc">
