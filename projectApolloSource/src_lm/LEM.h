@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/05/10 01:49:25  dseagrav
+  *	Added more LM indicators.
+  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
+  *	
   *	Revision 1.18  2010/05/02 16:04:04  dseagrav
   *	Added RCS and ECS indicators. Values are not yet provided.
   *	
@@ -323,6 +327,21 @@ public:
 	LEM *lem;					// Pointer at LEM
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+};
+
+// Caution and Warning Electronics Assembly
+class LEM_CWEA{
+public:
+	LEM_CWEA();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
+	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
+
+	int LightStatus[5][8];		// 1 = lit, 2 = not
+	LEM *lem;					// Pointer at LEM
 };
 
 ///
@@ -1631,6 +1650,7 @@ protected:
 	ATCA atca;
 	LEM_LR LR;
 	LEM_RR RR;
+	LEM_CWEA CWEA;
 
 	// COMM
 	LEM_SteerableAnt SBandSteerable;
@@ -1668,6 +1688,7 @@ protected:
 	friend class LM_VHF;
 	friend class LM_SBAND;
 	friend class LEMMissionTimerSwitch;
+	friend class LEM_CWEA;
 };
 
 extern void LEMLoadMeshes();
