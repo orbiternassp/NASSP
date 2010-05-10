@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/05/02 16:04:05  dseagrav
+  *	Added RCS and ECS indicators. Values are not yet provided.
+  *	
   *	Revision 1.5  2010/05/01 12:55:15  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -604,6 +607,194 @@ void LMRCSBQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  240, 97-((int)(v*0.8)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
+// Temperature Monitor Indicator
+TempMonitorInd::TempMonitorInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void TempMonitorInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double TempMonitorInd::QueryValue()
+
+{
+	return 50.0;
+}
+
+void TempMonitorInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  35, 112-((int)((v+100)*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Engine Thrust Indicator
+EngineThrustInd::EngineThrustInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double EngineThrustInd::QueryValue()
+
+{
+	return 50.0;
+}
+
+void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  3, 114-((int)v), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Commanded Thrust Indicator
+CommandedThrustInd::CommandedThrustInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double CommandedThrustInd::QueryValue()
+
+{
+	return 50.0;
+}
+
+void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Main Fuel Temperature Indicator
+MainFuelTempInd::MainFuelTempInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void MainFuelTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double MainFuelTempInd::QueryValue()
+
+{
+	return 70.0;
+}
+
+void MainFuelTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  94, 115-((int)((v-40)*1.7)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Main Fuel Pressure Indicator
+MainFuelPressInd::MainFuelPressInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double MainFuelPressInd::QueryValue()
+
+{
+	return 150.0;
+}
+
+void MainFuelPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  185, 115-((int)(v*0.34)), 0, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Main Oxidizer Temperature Indicator
+MainOxidizerTempInd::MainOxidizerTempInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void MainOxidizerTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double MainOxidizerTempInd::QueryValue()
+
+{
+	return 70.0;
+}
+
+void MainOxidizerTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  149, 115-((int)((v-40)*1.7)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+// Main Oxidizer Pressure Indicator
+MainOxidizerPressInd::MainOxidizerPressInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double MainOxidizerPressInd::QueryValue()
+
+{
+	return 150.0;
+}
+
+void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{	
+	oapiBlt(drawSurface, NeedleSurface,  240, 115-((int)(v*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
 
 LEMValveTalkback::LEMValveTalkback()
 

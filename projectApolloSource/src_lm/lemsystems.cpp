@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/05/02 16:04:05  dseagrav
+  *	Added RCS and ECS indicators. Values are not yet provided.
+  *	
   *	Revision 1.16  2010/05/01 12:55:15  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -696,6 +699,18 @@ void LEM::SystemsInit()
 	imuheater.Enable();
 	imuheater.SetPumpAuto();
 
+	// Main Propulsion
+	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
+	PROP_DISP_ENG_OVRD_LOGIC_CB.WireTo(&LMPs28VBus);
+	THRUST_DISP_CB.MaxAmps = 2.0;
+	THRUST_DISP_CB.WireTo(&CDRs28VBus);
+	MainFuelTempInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	MainFuelPressInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	MainOxidizerTempInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	MainOxidizerPressInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	EngineThrustInd.WireTo(&THRUST_DISP_CB);
+	CommandedThrustInd.WireTo(&THRUST_DISP_CB);
+
 	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
 	// CDR FDAI
 	CDR_FDAI_DC_CB.MaxAmps = 2.0;
@@ -717,8 +732,11 @@ void LEM::SystemsInit()
 	HTR_RR_STBY_CB.WireTo(&CDRs28VBus);
 	HTR_LR_CB.MaxAmps = 5.0;
 	HTR_LR_CB.WireTo(&CDRs28VBus);
+	HTR_DISP_CB.MaxAmps = 2.0;
+	HTR_DISP_CB.WireTo(&LMPs28VBus);
 	HTR_SBD_ANT_CB.MaxAmps = 5.0;
 	HTR_SBD_ANT_CB.WireTo(&LMPs28VBus);
+	TempMonitorInd.WireTo(&HTR_DISP_CB);
 
 	// Landing Radar
 	LR.Init(this);

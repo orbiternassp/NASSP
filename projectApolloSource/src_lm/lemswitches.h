@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/05/02 16:04:05  dseagrav
+  *	Added RCS and ECS indicators. Values are not yet provided.
+  *	
   *	Revision 1.4  2010/05/01 12:55:15  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -352,6 +355,90 @@ protected:
 class LMRCSBQtyInd : public MeterSwitch {
 public:
 	LMRCSBQtyInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class TempMonitorInd : public MeterSwitch {
+public:
+	TempMonitorInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class EngineThrustInd : public MeterSwitch {
+public:
+	EngineThrustInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class CommandedThrustInd : public MeterSwitch {
+public:
+	CommandedThrustInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class MainFuelTempInd : public MeterSwitch {
+public:
+	MainFuelTempInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class MainFuelPressInd : public MeterSwitch {
+public:
+	MainFuelPressInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class MainOxidizerTempInd : public MeterSwitch {
+public:
+	MainOxidizerTempInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
+class MainOxidizerPressInd : public MeterSwitch {
+public:
+	MainOxidizerPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);

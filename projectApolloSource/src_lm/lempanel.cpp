@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2010/05/02 16:04:04  dseagrav
+  *	Added RCS and ECS indicators. Values are not yet provided.
+  *	
   *	Revision 1.14  2010/05/01 12:55:15  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -522,6 +525,13 @@ void LEM::InitPanel() {
 	LMRCSBPressInd.Register(PSH,"LMRCSBPressInd",0,400,2);
 	LMRCSAQtyInd.Register(PSH,"LMRCSAQtyInd",0,100,2);
 	LMRCSBQtyInd.Register(PSH,"LMRCSBQtyInd",0,100,2);
+	TempMonitorInd.Register(PSH,"TempMonitorInd",-100.0,200,2);
+	EngineThrustInd.Register(PSH,"EngineThrustInd",0,100,2);
+	CommandedThrustInd.Register(PSH,"CommandedThrustInd",0,100,2);
+	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
+	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
+	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
+	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);
 
 	GyroTestLeftSwitch.Register(PSH, "GyroTestLeftSwitch",  THREEPOSSWITCH_UP);
 	GyroTestRightSwitch.Register(PSH, "GyroTestRightSwitch",  THREEPOSSWITCH_CENTER);
@@ -704,8 +714,10 @@ void LEM::InitPanel() {
 	LMPDesECAContCB.Register(PSH, "LMPDesECAContCB", 0);
 	LMPDesECAMainCB.Register(PSH, "LMPDesECAMainCB", 1);
 	RCS_B_PQGS_DISP_CB.Register(PSH, "RCS_B_PQGS_DISP_CB", 0);
+	PROP_DISP_ENG_OVRD_LOGIC_CB.Register(PSH,"PROP_DISP_ENG_OVRD_LOGIC_CB",0);
 	LMPAscECAContCB.Register(PSH, "LMPAscECAContCB", 0);
 	LMPAscECAMainCB.Register(PSH, "LMPAscECAMainCB", 0);
+	HTR_DISP_CB.Register(PSH,"HTR_DISP_CB",0);
 	HTR_SBD_ANT_CB.Register(PSH, "HTR_SBD_ANT_CB", 1);
 	EPS_DISP_CB.Register(PSH,"EPS_DISP_CB",0);
 	LMPDCBusVoltCB.Register(PSH, "LMPDCBusVoltCB", 1);
@@ -836,6 +848,7 @@ void LEM::InitPanel() {
 
 	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",0);
 	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",0);
+	THRUST_DISP_CB.Register(PSH,"THRUST_DISP_CB",0);
 	MISSION_TIMER_CB.Register(PSH,"MISSION_TIMER_CB",0);
 
 	LMP_EVT_TMP_FDAI_DC_CB.Register(PSH,"LMP_EVT_TMP_FDAI_DC_CB",0);
@@ -1527,6 +1540,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_RCSIND,					    _R( 898,  245, 1147,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1202,  245, 1478,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(1199,  439, 1357,  564), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_PROP_AND_ENGINE_IND,	    _R( 535,  428,  784,  553), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
 		//oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
@@ -1577,6 +1591,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SATBCONTSWITCHES,				_R( 627, 1221,  852, 1260), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ATTITUDECONTROLSWITCHES,			_R( 627, 1322,  852, 1351), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPMONITORROTARY,				_R( 906, 1387,  990, 1471), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_TEMPMONITORIND,					_R( 928, 1219,  976, 1344), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCSSYSQUADSWITCHES,				_R(1069, 1331, 1161, 1455), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LIGHTINGSWITCHES,				_R(1248, 1222, 1282, 1319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FLOODROTARY,						_R(1338, 1263, 1422, 1347), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1738,6 +1753,14 @@ void LEM::SetSwitches(int panel) {
 		case LMPANEL_MAIN:
 		case LMPANEL_LEFTWINDOW:
 		case LMPANEL_RIGHTWINDOW:
+
+			MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
+			EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+			CommandedThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+			MainFuelTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+			MainFuelPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+			MainOxidizerTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+			MainOxidizerPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 
 			RCSIndicatorRow.Init(AID_LM_RCSIND, MainPanel);
 			LMRCSATempInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
@@ -1907,6 +1930,9 @@ void LEM::SetSwitches(int panel) {
 			PitchSwitch.Init( 93, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], AttitudeControlSwitchesRow);
 			YawSwitch.Init  (191, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], AttitudeControlSwitchesRow);
 
+			TempMonitorIndRow.Init(AID_TEMPMONITORIND, MainPanel);
+			TempMonitorInd.Init(srf[SRF_NEEDLE], TempMonitorIndRow, this);
+
 			TempMonitorRotaryRow.Init(AID_TEMPMONITORROTARY, MainPanel);
 			TempMonitorRotary.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], TempMonitorRotaryRow);
 
@@ -1959,6 +1985,7 @@ void LEM::SetSwitches(int panel) {
 			Panel16CB1SwitchRow.Init(AID_LEM_P16_CB_ROW1, MainPanel);
 			LMP_EVT_TMP_FDAI_DC_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
 			RCS_B_PQGS_DISP_CB.Init( 704, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
+			PROP_DISP_ENG_OVRD_LOGIC_CB.Init( 832, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
 
 			Panel16CB2SwitchRow.Init(AID_LEM_P16_CB_ROW2, MainPanel);
 			LTG_FLOOD_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 5.0);
@@ -1983,6 +2010,7 @@ void LEM::SetSwitches(int panel) {
 			ECS_CABIN_REPRESS_CB.Init( 896,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB3SwitchRow, &LMPs28VBus, 2.0);
 
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
+			HTR_DISP_CB.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
 			HTR_SBD_ANT_CB.Init( 320, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 5.0);
 			EPS_DISP_CB.Init(448, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
 			LMPDCBusVoltCB.Init( 512, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
@@ -2123,6 +2151,7 @@ void LEM::SetSwitches(int panel) {
 			AC_A_BUS_VOLT_CB.Init(830, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusA, 2.0);			
 
 			Panel11CB2SwitchRow.Init(AID_LEM_P11_CB_ROW2, MainPanel);
+			THRUST_DISP_CB.Init( 574, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &CDRs28VBus, 2.0); 
 			MISSION_TIMER_CB.Init( 638, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &CDRs28VBus, 2.0); 
 			CDR_FDAI_DC_CB.Init( 894, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &CDRs28VBus, 2.0);
 			CDR_FDAI_AC_CB.Init( 1214, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &ACBusA, 2.0);
