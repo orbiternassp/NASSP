@@ -745,6 +745,8 @@
 #define AID_LM_RCSIND					1019
 #define AID_TEMPMONITORIND              1020
 #define AID_MAIN_PROP_AND_ENGINE_IND	1021
+#define AID_LM_CWS_LEFT					1022
+#define AID_LM_CWS_RIGHT				1023
 
 // Next default values for new objects
 // 

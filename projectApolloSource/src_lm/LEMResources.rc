@@ -1,13 +1,13 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "lmresource.h"
+#include "lmresource."
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winresrc.h"
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -28,6 +28,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDB_DEDA_KEY            BITMAP                  "..\\Bitmaps\\ags_keys.bmp"
 IDB_DEDA_LIGHTS         BITMAP                  "..\\Bitmaps\\ags_lights.bmp"
+IDB_CWS_LIGHTS          BITMAP                  "C:\\ProjectApollo090219\\Orbitersdk\\samples\\ProjectApollo\\Bitmaps\\lem_cw_lights.bmp"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -43,6 +44,12 @@ END
 3 TEXTINCLUDE 
 BEGIN
     "\r\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -140,8 +147,8 @@ IDB_AOT_RETICLE_KNOB    BITMAP                  "..\\Bitmaps\\aot_reticle_knob.b
 IDB_AOT_SHAFT_KNOB      BITMAP                  "..\\Bitmaps\\aot_shaft_knob.bmp"
 IDB_THUMBWHEEL_LARGEFONTS BITMAP                  "..\\Bitmaps\\thumbwheel_large_fonts.bmp"
 IDB_FIVE_POS_SWITCH     BITMAP                  "..\\Bitmaps\\fiveposswitch.bmp"
-IDB_LEM_STAGESWITCH	BITMAP			"..\\Bitmaps\\lem_stage_switch.bmp"
-IDB_DIGITALDISP2	BITMAP			"..\\Bitmaps\\digitaldisp_2.bmp"
+IDB_LEM_STAGESWITCH     BITMAP                  "..\\Bitmaps\\lem_stage_switch.bmp"
+IDB_DIGITALDISP2        BITMAP                  "..\\Bitmaps\\digitaldisp_2.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -152,7 +159,6 @@ IDB_DIGITALDISP2	BITMAP			"..\\Bitmaps\\digitaldisp_2.bmp"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

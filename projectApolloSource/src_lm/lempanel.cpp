@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2010/05/10 01:49:25  dseagrav
+  *	Added more LM indicators.
+  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
+  *	
   *	Revision 1.15  2010/05/02 16:04:04  dseagrav
   *	Added RCS and ECS indicators. Values are not yet provided.
   *	
@@ -531,7 +535,7 @@ void LEM::InitPanel() {
 	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
 	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
-	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);
+	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);	
 
 	GyroTestLeftSwitch.Register(PSH, "GyroTestLeftSwitch",  THREEPOSSWITCH_UP);
 	GyroTestRightSwitch.Register(PSH, "GyroTestRightSwitch",  THREEPOSSWITCH_CENTER);
@@ -698,6 +702,7 @@ void LEM::InitPanel() {
 	SCS_ASA_CB.Register(PSH,"SCS_ASA_CB",1);
 	CDR_SCS_AEA_CB.Register(PSH,"CDR_SCS_AEA_CB",0);
 	SCS_ATCA_AGS_CB.Register(PSH,"SCS_ATCA_AGS_CB",0);
+	INST_CWEA_CB.Register(PSH,"INST_CWEA_CB",0);
 	INST_SIG_SENSOR_CB.Register(PSH,"INST_SIG_SENSOR_CB",0);
 	INST_PCMTEA_CB.Register(PSH,"INST_PCMTEA_CB",0);
 	INST_SIG_CONDR_2_CB.Register(PSH,"INST_SIG_CONDR_2_CB",0);
@@ -1311,11 +1316,10 @@ void LEM::InitPanel (int panel)
 //	switch (panel) {
 //	case LMPANEL_MAIN: // LEM Main Panel
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
-		//srf[1]					= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
-		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
 		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
 		srf[6]						= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
 		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
@@ -1340,8 +1344,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
 		srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));
 		srf[SRF_FDAIROLL]       	= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
+		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
-		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
 		srf[SRF_FDAIOFFFLAG]       	= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
@@ -1541,6 +1545,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1202,  245, 1478,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(1199,  439, 1357,  564), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_PROP_AND_ENGINE_IND,	    _R( 535,  428,  784,  553), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_CWS_LEFT,					    _R( 349,   54,  670,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_CWS_RIGHT,				    _R(1184,   54, 1484,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
 		//oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
@@ -1993,6 +1999,7 @@ void LEM::SetSwitches(int panel) {
 			SCS_AEA_CB.Init(320, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 10.0);
 			SCS_ASA_CB.Init(448, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 20.0);
 			SCS_ATCA_AGS_CB.Init(704, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 3.0);
+			INST_CWEA_CB.Init(832, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			INST_SIG_SENSOR_CB.Init( 896,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			INST_PCMTEA_CB.Init( 1019,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			INST_SIG_CONDR_2_CB.Init( 1083,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
@@ -3346,6 +3353,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	//
 	switch (id) {
 	// panel 0 events:
+	case AID_LM_CWS_LEFT:
+		CWEA.RedrawLeft(surf,srf[SRF_CWSLIGHTS]);
+		return true;
+
+	case AID_LM_CWS_RIGHT:
+		CWEA.RedrawRight(surf,srf[SRF_CWSLIGHTS]);
+		return true;
+		
 	case AID_DSKY_LIGHTS:
 		dsky.RenderLights(surf, srf[SRF_DSKY]);
 		return true;

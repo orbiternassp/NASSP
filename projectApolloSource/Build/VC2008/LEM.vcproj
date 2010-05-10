@@ -882,11 +882,19 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
+				RelativePath="..\..\Abort.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Bitmaps\abort.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Abort.bmp"
+				RelativePath="..\..\Bitmaps\ags_keys.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\ags_lights.bmp"
 				>
 			</File>
 			<File
@@ -894,11 +902,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Altimeter.bmp"
+				RelativePath="..\..\Bitmaps\Altimeter.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Altimeter.bmp"
+				RelativePath="..\..\Altimeter.bmp"
 				>
 			</File>
 			<File
@@ -1026,11 +1034,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\contact.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\contact.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\contact.bmp"
+				RelativePath="..\..\Bitmaps\digitaldisp.bmp"
 				>
 			</File>
 			<File
@@ -1038,7 +1050,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\digitaldisp.bmp"
+				RelativePath="..\..\Bitmaps\digitaldisp_2.bmp"
 				>
 			</File>
 			<File
@@ -1122,11 +1134,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Horizon.bmp"
+				RelativePath="..\..\Bitmaps\Horizon.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Horizon.bmp"
+				RelativePath="..\..\Horizon.bmp"
 				>
 			</File>
 			<File
@@ -1234,6 +1246,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lem_cw_lights.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lem_left_panel.bmp"
 				>
 			</File>
@@ -1242,11 +1258,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_left_window.bmp"
+				RelativePath="..\..\lem_left_window.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_left_window.bmp"
+				RelativePath="..\..\Bitmaps\lem_left_window.bmp"
 				>
 			</File>
 			<File
@@ -1258,11 +1274,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_main_panel.bmp"
+				RelativePath="..\..\lem_main_panel.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_main_panel.bmp"
+				RelativePath="..\..\Bitmaps\lem_main_panel.bmp"
 				>
 			</File>
 			<File
@@ -1270,11 +1286,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_rendezvous_window.bmp"
+				RelativePath="..\..\lem_rendezvous_window.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_rendezvous_window.bmp"
+				RelativePath="..\..\Bitmaps\lem_rendezvous_window.bmp"
 				>
 			</File>
 			<File
@@ -1286,15 +1302,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_right_window.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\lem_right_window.bmp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lem_right_window.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Bitmaps\lem_signal_strength.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_stage_switch.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_switchup.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_threeposswitch.bmp"
 				>
 			</File>
 			<File
@@ -1348,11 +1376,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lemswitch3.bmp"
+				RelativePath="..\..\lemswitch3.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lemswitch3.bmp"
+				RelativePath="..\..\Bitmaps\lemswitch3.bmp"
 				>
 			</File>
 			<File
@@ -1360,11 +1388,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lights2.bmp"
+				RelativePath="..\..\Bitmaps\lights2.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lights2.bmp"
+				RelativePath="..\..\lights2.bmp"
 				>
 			</File>
 			<File
@@ -1408,11 +1436,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\masteralarmbright.bmp"
+				RelativePath="..\..\masteralarmbright.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\masteralarmbright.bmp"
+				RelativePath="..\..\Bitmaps\masteralarmbright.bmp"
 				>
 			</File>
 			<File
@@ -1456,15 +1484,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\switch_lever.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Bitmaps\switch_lever.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\SwitchUP.bmp"
+				RelativePath="..\..\switch_lever.bmp"
 				>
 			</File>
 			<File
@@ -1472,15 +1496,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\SwitchUP.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\switchup2.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\switchup3.bmp"
+				RelativePath="..\..\switchup3.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\switchup3.bmp"
+				RelativePath="..\..\Bitmaps\switchup3.bmp"
 				>
 			</File>
 			<File
@@ -1752,6 +1780,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\src_lm\lmresource"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

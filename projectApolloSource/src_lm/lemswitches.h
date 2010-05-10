@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/05/10 01:49:25  dseagrav
+  *	Added more LM indicators.
+  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
+  *	
   *	Revision 1.5  2010/05/02 16:04:05  dseagrav
   *	Added RCS and ECS indicators. Values are not yet provided.
   *	
@@ -447,3 +451,4 @@ protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
+

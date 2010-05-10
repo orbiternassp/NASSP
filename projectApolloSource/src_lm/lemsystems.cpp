@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/05/10 01:49:25  dseagrav
+  *	Added more LM indicators.
+  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
+  *	
   *	Revision 1.17  2010/05/02 16:04:05  dseagrav
   *	Added RCS and ECS indicators. Values are not yet provided.
   *	
@@ -743,6 +747,9 @@ void LEM::SystemsInit()
 	// Rdz Radar
 	RR.Init(this);
 
+	// CWEA
+	CWEA.Init(this);
+
 	// COMM
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this);
@@ -775,6 +782,8 @@ void LEM::SystemsInit()
 	COMM_CDR_AUDIO_CB.WireTo(&CDRs28VBus);
 	COMM_SE_AUDIO_CB.MaxAmps = 2.0;
 	COMM_SE_AUDIO_CB.WireTo(&LMPs28VBus);
+	INST_CWEA_CB.MaxAmps = 2.0;
+	INST_CWEA_CB.WireTo(&LMPs28VBus);
 	INST_SIG_SENSOR_CB.MaxAmps = 2.0;
 	INST_SIG_SENSOR_CB.WireTo(&LMPs28VBus);
 	INST_PCMTEA_CB.MaxAmps = 2.0;
@@ -1133,6 +1142,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
+	// Do this toward the end so we can see current system state
+	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
 	
@@ -1953,3 +1964,85 @@ double LEM_RR::GetAntennaTempF(){
 	return(0);
 }
 
+// CWEA 
+
+LEM_CWEA::LEM_CWEA(){
+	lem = NULL;	
+}
+
+void LEM_CWEA::Init(LEM *s){
+	int row=0,col=0;
+	while(col < 8){
+		while(row < 5){
+			LightStatus[row][col] = 0;
+			row++;
+		}
+		row = 0; col++;
+	}
+	lem = s;
+}
+
+void LEM_CWEA::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// See LM7-9 DIAGRAMS pg 398 for light activation reasons
+}
+
+void LEM_CWEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_CWEA::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf){
+	int row=0,col=0,dx=0,dy=0;
+	while(col < 4){
+		switch(col){
+			case 0:
+				dx = 0; break;
+			case 1:
+				dx = 71; break;
+			case 2:
+				dx = 167; break;
+			case 3:
+				dx = 238; break;
+		}
+		while(row < 5){
+			if(LightStatus[row][col] == 1 && lem->INST_CWEA_CB.Voltage() > 24){
+				dy=134;
+			}else{
+				dy=7;
+			}
+			oapiBlt(sf, ssf, 8+dx, 7+(row*23), 8+dx, dy+(row*23), 67, 19);
+			row++;
+		}
+		row = 0; col++;
+	}
+}
+
+void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
+	int row=0,col=0,dx=0,dy=0;
+	while(col < 4){
+		switch(col){
+			case 0:
+				dx = 0; break;
+			case 1:
+				dx = 71; break;
+			case 2:
+				dx = 146; break;
+			case 3:
+				dx = 217; break;
+		}
+		while(row < 5){
+			if(LightStatus[row][col+4] == 1 && lem->INST_CWEA_CB.Voltage() > 24){
+				dy = 134;
+			}else{
+				dy = 7;
+			}
+			oapiBlt(sf, ssf, 8+dx, 7+(row*23), 330+dx, dy+(row*23), 67, 19);
+			row++;
+		}
+		row = 0; col++;
+	}
+}
