@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/05/10 06:45:25  dseagrav
+  *	Started on LM CWEA
+  *	
   *	Revision 1.18  2010/05/10 01:49:25  dseagrav
   *	Added more LM indicators.
   *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
@@ -1984,8 +1987,186 @@ void LEM_CWEA::Init(LEM *s){
 
 void LEM_CWEA::TimeStep(double simdt){
 	if(lem == NULL){ return; }
-	// See LM7-9 DIAGRAMS pg 398 for light activation reasons
-}
+	// 6DS2 ASC PROP LOW
+	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
+	// Blanket pressure in fuel or oxi lines at the bi-propellant valves of the ascent stage below 120 psia
+	LightStatus[1][0] = 1;
+
+	// 6DS3 HI/LO HELIUM REG OUTLET PRESS
+	// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
+	// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
+	LightStatus[2][0] = 1;
+
+	// 6DS4 DESCENT PROPELLANT LOW
+	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
+	// Master Alarm and Tone are disabled if this is active.
+	LightStatus[3][0] = 1;
+
+	// 6DS6 CES AC VOLTAGE FAILURE
+	// Either CES AC voltage (26V or 28V) out of tolerance.
+	// Disabled by Gyro Test Control in POS RT or NEG RT position.
+	LightStatus[0][1] = 1;
+
+	// 6DS7 CES DC VOLTAGE FAILURE
+	// Any CES DC voltage out of tolerance.
+	// Disabled by Gyro Test Control in POS RT or NEG RT position.
+	LightStatus[1][1] = 1;
+
+	// 6DS8 AGS FAILURE
+	// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
+	// Disabled when AGS status switch is OFF.
+	LightStatus[2][1] = 1;
+
+	// 6DS9 LGC FAILURE
+	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
+	// Disabled by Guidance Control switch in AGS position.
+	LightStatus[3][1] = 1;
+
+	// 6DS10 ISS FAILURE
+	// On when ISS power supply fails, PIPA fails while main engine thrusting, gimbal servo fails, CDU fails.
+	// Disabled by Guidance Control switch in AGS position.
+	LightStatus[4][1] = 1;
+
+	// 6DS11 RCS TCA WARNING
+	// RCS fire command exists with no resulting chamber pressure,
+	// chamber pressure present when no fire command exists,
+	// opposing colinear jets on simultaneously
+	// Disabled when failing TCA isol valve closes.
+	LightStatus[0][2] = 1;
+
+	// 6DS12 RCS A REGULATOR FAILURE
+	// 6DS13 RCS B REGULATOR FAILURE
+	// RCS helium line pressure above 205 pisa or below 165 psia. Disabled when main shutoff solenoid valves close.
+	LightStatus[1][2] = 1;
+	LightStatus[2][2] = 1;
+
+	// 6DS14 DC BUS VOLTAGE FAILURE
+	// On when CDR or SE DC bus below 26.5 V.
+	if(lem->CDRs28VBus.Voltage() < 26.5 || lem->LMPs28VBus.Voltage() < 26.5){
+		LightStatus[3][2] = 1;
+	}else{
+		LightStatus[3][2] = 0;
+	}
+
+	// 6DS16 CABIN LOW PRESSURE WARNING
+	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
+	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
+	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
+	LightStatus[0][3] = 1;
+
+	// 6DS17 SUIT/FAN LOW PRESSURE WARNING
+	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
+	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
+	LightStatus[1][3] = 1;
+
+	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
+	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
+	LightStatus[0][4] = 1;
+
+	// 6DS22 ASCENT PROPELLANT LOW QUANTITY CAUTION
+	// On when less than 10 seconds of ascent propellant/oxidizer remains.
+	// Disabled when ascent engine is not firing.
+	LightStatus[1][4] = 1;
+
+	// 6DS23 AUTOMATIC GIMBAL FAILURE CAUTION
+	// On when difference in commanded and actual descent engine trim position is detected.
+	// Enabled when descent engine armed and engine gimbal switch is enabled.
+	// Disabled by stage deadface open.
+	LightStatus[2][4] = 1;
+
+	// 6DS26 INVERTER FAILURE CAUTION
+	// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
+	// Disabled when AC Power switch is off.
+	if(lem->EPSInverterSwitch.GetState() != THREEPOSSWITCH_DOWN){
+		if(lem->ACBusA.Voltage() < 112 || lem->ACBusB.Voltage() < 112){
+			LightStatus[0][5] = 1;
+		}else{
+			LightStatus[0][5] = 0;
+		}
+	}else{
+		LightStatus[0][5] = 0;
+	}
+
+	// 6DS27 BATTERY FAILURE CAUTION
+	// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
+	// Disabled if affected battery is turned off.
+	LightStatus[1][5] = 1;
+
+	// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
+	// On when RR indicates Data-Not-Good.
+	// Disabled when RR mode switch is not set to AUTO TRACK.
+	LightStatus[2][5] = 1;
+
+	// 6DS29 LANDING RADAR was not present on LM-7 thru LM-9!
+	LightStatus[3][5] = 2;
+
+	// 6DS30 PRE-AMPLIFIER POWER FAILURE CAUTION
+	// On when either ATCA solenoid driver power supply fails.
+	// Disabled by stage deadface open or Abort PB press.
+	LightStatus[4][5] = 1;
+
+	// 6DS31 EDS RELAY FAILURE
+	// On when any EDS relay fails.
+	// Failures of stage relays disabled when stage relay switch in RESET position.
+	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
+	LightStatus[0][6] = 1;
+
+	// 6DS32 RCS FAILURE CAUTION
+	// On when helium pressure in either RCS system below 1700 psia.
+	// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
+	LightStatus[1][6] = 1;
+
+	// 6DS33 HEATER FAILURE CAUTION
+	// On when:
+	// S-Band Antenna Electronic Drive Assembly < -64.08F or > 153.63F
+	// RR Assembly < -57.07F or > 147.69F
+	// LR Assembly < -19.26F or > 147.69F
+	// Disabled when Temperature Monitor switch selects affected assembly.
+	LightStatus[2][6] = 1;
+
+	// 6DS34 CWEA POWER FAILURE CAUTION
+	// On when any CWEA power supply indicates failure.
+	// Not dimmable. Master Alarm associated with this failure cannot be silenced.
+	LightStatus[3][6] = 1;
+
+	// 6DS36 ECS FAILURE CAUTION
+	// On when:
+	// Glycol Pump Failure
+	// CO2 Partial Pressure > 7.6mm
+	// Water Separator Failure
+	// Suit Fan #1 Failure
+	// Off when (in order of failure):
+	// Glycol pump pressure restored by selection of pump 2, or selecting INST(SEC) if #2 has failed
+	// Restoration of normal CO2 pressure
+	// Restoration of normal water separator speed
+	// Selection of #2 suit fan
+	LightStatus[0][7] = 1;
+
+	// 6DS37 OXYGEN QUANTITY CAUTION
+	// On when:
+	// < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
+	// Less than 99.6 psia in ascent oxygen tank #1
+	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
+	LightStatus[1][7] = 1;
+
+	// 6DS38 GLYCOL FAILURE CAUTION
+	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
+	// Disabled by Glycol Pump to INST(SEC) position
+	LightStatus[2][7] = 1;
+
+	// 6DS39 WATER QUANTITY CAUTION
+	// On when:
+	// NOT STAGED: Descent water tank < 10% or less than full in either ascent tank
+	// Unequal levels in either ascent tank
+	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
+	LightStatus[3][7] = 1;
+
+	// 6DS40 S-BAND RECEIVER FAILURE CAUTION
+	// On when AGC signal lost.
+	// Off when Range/TV function switch to OFF/RESET
+	// Disabled when Range/TV switch is not in TV/CWEA ENABLE position
+	LightStatus[4][7] = 1;
+}	
 
 void LEM_CWEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 
@@ -2014,7 +2195,12 @@ void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf){
 			}else{
 				dy=7;
 			}
-			oapiBlt(sf, ssf, 8+dx, 7+(row*23), 8+dx, dy+(row*23), 67, 19);
+			if(LightStatus[row][col] == 2){
+				// Special Hack: This Lamp Doesn't Exist
+				oapiBlt(sf, ssf, 8+dx, 7+(row*23), 8, 7, 67, 19);
+			}else{
+				oapiBlt(sf, ssf, 8+dx, 7+(row*23), 8+dx, dy+(row*23), 67, 19);
+			}
 			row++;
 		}
 		row = 0; col++;
@@ -2040,7 +2226,12 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
 			}else{
 				dy = 7;
 			}
-			oapiBlt(sf, ssf, 8+dx, 7+(row*23), 330+dx, dy+(row*23), 67, 19);
+			if(LightStatus[row][col+4] == 2){
+				// Special Hack: This Lamp Doesn't Exist
+				oapiBlt(sf, ssf, 8+dx, 7+(row*23), 8, 7, 67, 19);
+			}else{
+				oapiBlt(sf, ssf, 8+dx, 7+(row*23), 330+dx, dy+(row*23), 67, 19);
+			}
 			row++;
 		}
 		row = 0; col++;
