@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2010/02/19 00:55:43  dseagrav
+  *	Add Apollo 11 LM Pad Load (this was the flown pad load; It will be correct.)
+  *	
   *	Revision 1.9  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -1274,7 +1277,8 @@ void LEMcomputer::Timestep(double simt, double simdt)
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
+				// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it
+				// Those two bits are what causes the CWEA to notice.
 				InputChannel[033] &= 017777;
 				vagc.InputChannel[033] &= 017777;				
 				OutputChannel[033] &= 017777;				
