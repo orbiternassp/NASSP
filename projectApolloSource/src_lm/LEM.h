@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2010/05/10 06:45:25  dseagrav
+  *	Started on LM CWEA
+  *	
   *	Revision 1.19  2010/05/10 01:49:25  dseagrav
   *	Added more LM indicators.
   *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
@@ -284,7 +287,17 @@ public:
 };
 
 // ENVIRONMENTAL CONTROL SYSTEM
+class LEM_ECS{
+public:
+	LEM_ECS();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
 
+	LEM *lem;					// Pointer at LEM
+
+};
 
 // EXPLOSIVE DEVICES SYSTEM
 class LEM_EDS{
@@ -1656,6 +1669,9 @@ protected:
 	LEM_SteerableAnt SBandSteerable;
 	LM_VHF VHF;
 	LM_SBAND SBand;
+
+	// ECS
+	LEM_ECS ecs;
 
 	// EDS
 	LEM_EDS eds;

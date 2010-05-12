@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2010/05/11 01:33:15  dseagrav
+  *	More CWEA work. Light constantly on = Detection conditions for that light are not yet implemented.
+  *	
   *	Revision 1.19  2010/05/10 06:45:25  dseagrav
   *	Started on LM CWEA
   *	
@@ -891,6 +894,9 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ECA_4a, false);
 	Panelsdk.AddElectrical(&ECA_4b, false);
 
+	// ECS
+	ecs.Init(this);
+
 	// EDS initialization
 	eds.Init(this);
 
@@ -1145,6 +1151,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
+	ecs.TimeStep(simdt);
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
@@ -1986,7 +1993,17 @@ void LEM_CWEA::Init(LEM *s){
 }
 
 void LEM_CWEA::TimeStep(double simdt){
+	LMChannelValue11 val11;
+	LMChannelValue13 val13;
+	LMChannelValue30 val30;
+	LMChannelValue33 val33;		
+
 	if(lem == NULL){ return; }
+	val11.Value = lem->agc.GetOutputChannel(011);
+	val13.Value = lem->agc.GetOutputChannel(013);
+	val30.Value = lem->agc.GetInputChannel(030);
+	val33.Value = lem->agc.GetInputChannel(033);
+
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
 	// Blanket pressure in fuel or oxi lines at the bi-propellant valves of the ascent stage below 120 psia
@@ -2020,12 +2037,20 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 	// Disabled by Guidance Control switch in AGS position.
-	LightStatus[3][1] = 1;
+	if((val13.Bits.TestAlarms || val33.Bits.LGC || val33.Bits.OscillatorAlarm) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+		LightStatus[3][1] = 1;
+	}else{
+		LightStatus[3][1] = 0;
+	}
 
 	// 6DS10 ISS FAILURE
 	// On when ISS power supply fails, PIPA fails while main engine thrusting, gimbal servo fails, CDU fails.
 	// Disabled by Guidance Control switch in AGS position.
-	LightStatus[4][1] = 1;
+	if ((val11.Bits.ISSWarning || val33.Bits.PIPAFailed || val30.Bits.IMUCDUFailure || val30.Bits.IMUFailure) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+		LightStatus[4][1] = 1;
+	}else{
+		LightStatus[4][1] = 0;
+	}
 
 	// 6DS11 RCS TCA WARNING
 	// RCS fire command exists with no resulting chamber pressure,
@@ -2236,4 +2261,49 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
 		}
 		row = 0; col++;
 	}
+}
+
+// Environmental Control System
+LEM_ECS::LEM_ECS()
+{
+	lem = NULL;
+}
+
+void LEM_ECS::Init(LEM *s){
+	lem = s;
+}
+
+void LEM_ECS::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// **** Atmosphere Revitalization Section ****
+	// First, get air from the suits and/or the cabin into the system.
+	// Second, remove oxygen for and add CO2 from the crew.
+	// Third, remove CO2 from the air and simulate the reaction in the LiOH can
+	// Fourth, use the fans to move the resulting air through the suits and/or the cabin.
+	// Fifth, use the heat exchanger to move heat from the air to the HTS if enabled (emergency ops)
+	// Sixth, use the water separators to remove water from the air and add it to the WMS and surge tank.
+	// Seventh, use the OSCPCS to add pressure if required
+	// Eighth, use the regenerative heat exchanger to add heat to the air if required
+	// Ninth and optionally, simulate the system behavior if a PGA failure is detected.
+	// Tenth, simulate the LCG water movement operation.
+
+	// **** Oxygen Supply and Cabin Pressure Control Section ****
+	// Simple, move air from tanks to the cabin as required, and move air from the cabin to space as required.
+
+	// **** Water Management Section ****
+	// Also relatively simple, move water from tanks to the HTS / crew / etc as required.
+
+	// **** Heat Transport Section ****
+	// First, operate pumps to move glycol/water through the loops.
+	// Second, move heat from the equipment to the glycol.
+	// Third, move heat from the glycol to the sublimators.
+	// Fourth, vent steam from the sublimators overboard.
+}
+
+void LEM_ECS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_ECS::LoadState(FILEHANDLE scn,char *end_str){
+
 }
