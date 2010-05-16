@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2010/05/12 05:01:30  dseagrav
+  *	CWEA stuff for LGC and ISS, beginnings of ECS
+  *	
   *	Revision 1.20  2010/05/11 01:33:15  dseagrav
   *	More CWEA work. Light constantly on = Detection conditions for that light are not yet implemented.
   *	
@@ -900,6 +903,10 @@ void LEM::SystemsInit()
 	// EDS initialization
 	eds.Init(this);
 
+	// DPS and APS
+	DPS.Init(this);
+	APS.Init(this);
+
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -1152,6 +1159,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);
+	DPS.TimeStep(simdt);
+	APS.TimeStep(simdt);
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
@@ -1978,6 +1987,8 @@ double LEM_RR::GetAntennaTempF(){
 
 LEM_CWEA::LEM_CWEA(){
 	lem = NULL;	
+	CabinLowPressLt = 0;
+	WaterWarningDisabled = 0;
 }
 
 void LEM_CWEA::Init(LEM *s){
@@ -2012,12 +2023,22 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS3 HI/LO HELIUM REG OUTLET PRESS
 	// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 	// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
-	LightStatus[2][0] = 1;
+	LightStatus[2][0] = 0; // Default
+	if(lem->DPS.EngineOn){ // This should be forced off at staging
+		if(lem->DPS.HePress[1] > 260 || lem->DPS.HePress[1] < 220){
+			LightStatus[2][0] = 1;
+		}
+	}
 
 	// 6DS4 DESCENT PROPELLANT LOW
 	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
+	// (This turns out to be 5.6%)
 	// Master Alarm and Tone are disabled if this is active.
-	LightStatus[3][0] = 1;
+	if(lem->stage < 2 && lem->GetPropellantMass(lem->ph_Dsc) < 190.305586){
+		LightStatus[3][0] = 1;
+	}else{
+		LightStatus[3][0] = 0;
+	}
 
 	// 6DS6 CES AC VOLTAGE FAILURE
 	// Either CES AC voltage (26V or 28V) out of tolerance.
@@ -2032,7 +2053,12 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS8 AGS FAILURE
 	// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
 	// Disabled when AGS status switch is OFF.
-	LightStatus[2][1] = 1;
+	// FIXME: Finish this!
+	if(lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_DOWN){
+		LightStatus[2][1] = 0;
+	}else{
+		LightStatus[2][1] = 1;
+	}
 
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
@@ -2057,7 +2083,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	// chamber pressure present when no fire command exists,
 	// opposing colinear jets on simultaneously
 	// Disabled when failing TCA isol valve closes.
-	LightStatus[0][2] = 1;
+	// FIXME: Implement this test.
+	LightStatus[0][2] = 0;
 
 	// 6DS12 RCS A REGULATOR FAILURE
 	// 6DS13 RCS B REGULATOR FAILURE
@@ -2077,27 +2104,51 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
 	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
 	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
-	LightStatus[0][3] = 1;
+	if(lem->ecs.Cabin_Press < 4.15){
+		CabinLowPressLt = 1;
+	}
+	if(lem->ecs.Cabin_Press > 4.65 && CabinLowPressLt){
+		CabinLowPressLt = 0;
+	}
+	// FIXME: Need to check valve when enabled
+	if(CabinLowPressLt){
+		LightStatus[0][3] = 1;
+	}else{
+		LightStatus[0][3] = 0;
+	}
 
 	// 6DS17 SUIT/FAN LOW PRESSURE WARNING
 	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
 	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
-	LightStatus[1][3] = 1;
+	// FIXME: IMPLEMENT #2 SUIT CIRC FAN TEST
+	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.Suit_Press < 3.12){
+		LightStatus[1][3] = 1;
+	}
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-	LightStatus[0][4] = 1;
+	if(lem->APS.HePress[1] > 220){
+		LightStatus[0][4] = 1;
+	}else{
+		LightStatus[0][4] = 0;
+	}
 
 	// 6DS22 ASCENT PROPELLANT LOW QUANTITY CAUTION
 	// On when less than 10 seconds of ascent propellant/oxidizer remains.
 	// Disabled when ascent engine is not firing.
-	LightStatus[1][4] = 1;
+	// FIXME: This test probably used a fixed setpoint instead of division. Investigate.
+	if(lem->APS.EngineOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc)/lem->GetPropellantFlowrate(lem->ph_Asc) < 10)){
+		LightStatus[1][4] = 1;
+	}else{
+		LightStatus[1][4] = 0;
+	}
 
 	// 6DS23 AUTOMATIC GIMBAL FAILURE CAUTION
 	// On when difference in commanded and actual descent engine trim position is detected.
 	// Enabled when descent engine armed and engine gimbal switch is enabled.
 	// Disabled by stage deadface open.
-	LightStatus[2][4] = 1;
+	// FIXME: We'll ignore this for now.
+	LightStatus[2][4] = 0;
 
 	// 6DS26 INVERTER FAILURE CAUTION
 	// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
@@ -2115,12 +2166,17 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS27 BATTERY FAILURE CAUTION
 	// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
 	// Disabled if affected battery is turned off.
-	LightStatus[1][5] = 1;
+	// FIXME: We'll ignore this for now.
+	LightStatus[1][5] = 0;
 
 	// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 	// On when RR indicates Data-Not-Good.
 	// Disabled when RR mode switch is not set to AUTO TRACK.
-	LightStatus[2][5] = 1;
+	if(lem->RendezvousRadarRotary.GetState() != 0){
+		LightStatus[2][5] = 0;
+	}else{
+		LightStatus[2][5] = 1;
+	}
 
 	// 6DS29 LANDING RADAR was not present on LM-7 thru LM-9!
 	LightStatus[3][5] = 2;
@@ -2134,12 +2190,16 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when any EDS relay fails.
 	// Failures of stage relays disabled when stage relay switch in RESET position.
 	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-	LightStatus[0][6] = 1;
+	// FIXME: We'll ignore this for now.
+	LightStatus[0][6] = 0;
 
 	// 6DS32 RCS FAILURE CAUTION
 	// On when helium pressure in either RCS system below 1700 psia.
 	// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-	LightStatus[1][6] = 1;
+	LightStatus[1][6] = 0;
+	if(lem->TempPressMonRotary.GetState() != 0){
+		LightStatus[1][6] = 1;
+	}
 
 	// 6DS33 HEATER FAILURE CAUTION
 	// On when:
@@ -2147,12 +2207,22 @@ void LEM_CWEA::TimeStep(double simdt){
 	// RR Assembly < -57.07F or > 147.69F
 	// LR Assembly < -19.26F or > 147.69F
 	// Disabled when Temperature Monitor switch selects affected assembly.
-	LightStatus[2][6] = 1;
+	LightStatus[2][6] = 0;
+	if(lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 153.63)){
+		LightStatus[2][6] = 1;
+	}
+	if(lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -57.07 || lem->RR.GetAntennaTempF() > 147.60)){
+		LightStatus[2][6] = 1;
+	}
+	if(lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -19.27 || lem->LR.GetAntennaTempF() > 147.60)){
+		LightStatus[2][6] = 1;
+	}
 
 	// 6DS34 CWEA POWER FAILURE CAUTION
 	// On when any CWEA power supply indicates failure.
 	// Not dimmable. Master Alarm associated with this failure cannot be silenced.
-	LightStatus[3][6] = 1;
+	// FIXME: We'll ignore this for now.
+	LightStatus[3][6] = 0;
 
 	// 6DS36 ECS FAILURE CAUTION
 	// On when:
@@ -2172,7 +2242,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
 	// Less than 99.6 psia in ascent oxygen tank #1
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-	LightStatus[1][7] = 1;
+	LightStatus[1][7] = 0;
+	if(lem->stage < 2 && (lem->ecs.Asc_Oxygen[0] < 2.43 || lem->ecs.Asc_Oxygen[1] < 2.43)){ LightStatus[1][7] = 1; }
+	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressure(0) < 135 || lem->ecs.DescentOxyTankPressure(1) < 135)){ LightStatus[1][7] = 1; }
+	if(lem->ecs.AscentOxyTankPressure(0) < 99.6){ LightStatus[1][7] = 1; }
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
@@ -2184,13 +2257,24 @@ void LEM_CWEA::TimeStep(double simdt){
 	// NOT STAGED: Descent water tank < 10% or less than full in either ascent tank
 	// Unequal levels in either ascent tank
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-	LightStatus[3][7] = 1;
+	LightStatus[3][7] = 0;
+	if(WaterWarningDisabled == 0){
+		if(lem->stage < 2 && (lem->ecs.Des_Water[0] < 33 || lem->ecs.Des_Water[1] < 33)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.Asc_Water[0] < 42.5 || lem->ecs.Asc_Water[1] < 42.5)){ LightStatus[3][7] = 1; }
+		if((int)lem->ecs.Asc_Water[0] != (int)lem->ecs.Asc_Water[1]){ LightStatus[3][7] = 1; }
+	}
+	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
+		WaterWarningDisabled = 1;
+	}
 
 	// 6DS40 S-BAND RECEIVER FAILURE CAUTION
 	// On when AGC signal lost.
 	// Off when Range/TV function switch to OFF/RESET
 	// Disabled when Range/TV switch is not in TV/CWEA ENABLE position
-	LightStatus[4][7] = 1;
+	LightStatus[4][7] = 0;
+	if(lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN){
+		LightStatus[4][7] = 1;
+	}
 }	
 
 void LEM_CWEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -2266,11 +2350,31 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
 // Environmental Control System
 LEM_ECS::LEM_ECS()
 {
-	lem = NULL;
+	lem = NULL;	
+	// Initialize
+	Asc_Oxygen[0] = 2.43; Asc_Oxygen[1] = 2.43;
+	Des_Oxygen[0] = 48.01; Des_Oxygen[1] = 48.01;
+	Asc_Water[0] = 42.5; Asc_Water[1] = 42.5;
+	Des_Water[0] = 333; Des_Water[1] = 333;
+	Primary_CL_Glycol_Press[0] = 0; Primary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
+	Secondary_CL_Glycol_Press[0] = 0; Secondary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
+	Primary_CL_Glycol_Temp[0] = 40; Primary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
+	Secondary_CL_Glycol_Temp[0] = 40; Secondary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
+	Primary_Glycol_Accu = 46; // Cubic inches of coolant
+	Secondary_Glycol_Accu = 46; // Cubic inches of coolant
+	Primary_Glycol = 0;
+	Secondary_Glycol = 0;
+	// Open valves as would be for IVT
+	Des_O2 = 1; 
+	Des_H2O_To_PLSS = 1;
+	Cabin_Repress = 2; // Auto
+	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
+	Cabin_Press = 4.8; Cabin_Temp = 55; Cabin_CO2 = 1;
+	Suit_Press = 4.8; Suit_Temp = 55; Suit_CO2 = 1;
 }
 
 void LEM_ECS::Init(LEM *s){
-	lem = s;
+	lem = s;	
 }
 
 void LEM_ECS::TimeStep(double simdt){
@@ -2307,3 +2411,66 @@ void LEM_ECS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 void LEM_ECS::LoadState(FILEHANDLE scn,char *end_str){
 
 }
+
+double LEM_ECS::AscentOxyTankPressure(int tank){
+	// 2.43 is a full tank, at 840 psia.
+	// 0.14 is an empty tank, at 50 psia.
+	// So 790 psia and 2.29 pounds of oxygen.
+	// That's 344.9781659388646 psia per pound
+	return(344.9781659388646*Asc_Oxygen[tank]);
+}
+
+double LEM_ECS::DescentOxyTankPressure(int tank){
+	// 48.01 is a full tank, at 2690 psia.
+	// 0.84 is an empty tank, at 50 psia.
+	// So 2640 psia and 47.17 pounds of oxygen.
+	// That's 55.96777612889548 psia per pound
+	return(55.96777612889548*Des_Oxygen[tank]);
+}
+
+// Descent Propulsion System
+LEM_DPS::LEM_DPS(){
+	lem = NULL;	
+	EngineOn = 0;
+	HePress[0] = 0; HePress[1] = 0;
+}
+
+void LEM_DPS::Init(LEM *s){
+	lem = s;
+}
+
+void LEM_DPS::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+}
+
+void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+// Ascent Propulsion System
+LEM_APS::LEM_APS(){
+	lem = NULL;	
+	EngineOn = 0;
+	HePress[0] = 0; HePress[1] = 0;
+}
+
+void LEM_APS::Init(LEM *s){
+	lem = s;
+}
+
+void LEM_APS::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+}
+
+void LEM_APS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_APS::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+

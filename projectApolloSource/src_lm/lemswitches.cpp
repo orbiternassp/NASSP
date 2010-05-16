@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2010/05/10 06:45:25  dseagrav
+  *	Started on LM CWEA
+  *	
   *	Revision 1.7  2010/05/10 01:49:25  dseagrav
   *	Added more LM indicators.
   *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
@@ -194,7 +197,8 @@ void LMSuitTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMSuitTempMeter::QueryValue()
 
 {
-	return 70.0;
+	if(!lem){ return 0; }
+	return lem->ecs.Suit_Temp;
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -221,7 +225,8 @@ void LMCabinTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMCabinTempMeter::QueryValue()
 
 {
-	return 70.0;
+	if(!lem){ return 0; }
+	return lem->ecs.Cabin_Temp;
 }
 
 void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -248,7 +253,8 @@ void LMSuitPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMSuitPressMeter::QueryValue()
 
 {
-	return 5.0;
+	if(!lem){ return 0; }
+	return lem->ecs.Suit_Press;
 }
 
 void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -275,7 +281,8 @@ void LMCabinPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMCabinPressMeter::QueryValue()
 
 {
-	return 5.0;
+	if(!lem){ return 0; }
+	return lem->ecs.Cabin_Press;
 }
 
 void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -302,7 +309,9 @@ void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMCabinCO2Meter::QueryValue()
 
 {
-	return 5.0;
+	if(!lem){ return 0; }
+	// FIXME: NEED TO HANDLE SUIT GAS DIVERTER HERE
+	return lem->ecs.Cabin_CO2;
 }
 
 void LMCabinCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -359,7 +368,14 @@ void LMGlycolTempMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMGlycolTempMeter::QueryValue()
 
 {
-	return 40.0;
+	if(!lem){ return 0; }
+	if(lem->ClycolRotary.GetState() == 0){
+		// Secondary
+		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
+	}else{
+		// Primary
+		return(lem->ecs.Primary_CL_Glycol_Temp[0]);
+	}
 }
 
 void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -386,7 +402,14 @@ void LMGlycolPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMGlycolPressMeter::QueryValue()
 
 {
-	return 30.0;
+	if(!lem){ return 0; }
+	if(lem->ClycolRotary.GetState() == 0){
+		// Secondary
+		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
+	}else{
+		// Primary
+		return(lem->ecs.Primary_CL_Glycol_Press[1]);
+	}
 }
 
 void LMGlycolPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -413,7 +436,18 @@ void LMOxygenQtyMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMOxygenQtyMeter::QueryValue()
 
 {
-	return 50.0;
+	if(!lem){ return 0; }
+	switch(lem->QtyMonRotary){
+		case 0: // RESET
+		default:
+			return 0;
+		case 1: // DES
+			return(((lem->ecs.Des_Oxygen[0] + lem->ecs.Des_Oxygen[1])/(48.01*2))*100);
+		case 2: // ASC 1
+			return((lem->ecs.Asc_Oxygen[0]/2.43)*100);
+		case 3: // ASC 2
+			return((lem->ecs.Asc_Oxygen[1]/2.43)*100);
+	}
 }
 
 void LMOxygenQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -440,7 +474,18 @@ void LMWaterQtyMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMWaterQtyMeter::QueryValue()
 
 {
-	return 50.0;
+	if(!lem){ return 0; }
+	switch(lem->QtyMonRotary){
+		case 0: // RESET
+		default:
+			return 0;
+		case 1: // DES
+			return(((lem->ecs.Des_Water[0] + lem->ecs.Des_Water[1])/(333*2))*100);
+		case 2: // ASC 1
+			return((lem->ecs.Asc_Water[0]/42.5)*100);
+		case 3: // ASC 2
+			return((lem->ecs.Asc_Water[1]/42.5)*100);
+	}
 }
 
 void LMWaterQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
