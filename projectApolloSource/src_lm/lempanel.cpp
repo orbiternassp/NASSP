@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/05/10 06:45:25  dseagrav
+  *	Started on LM CWEA
+  *	
   *	Revision 1.16  2010/05/10 01:49:25  dseagrav
   *	Added more LM indicators.
   *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
@@ -707,6 +710,10 @@ void LEM::InitPanel() {
 	INST_PCMTEA_CB.Register(PSH,"INST_PCMTEA_CB",0);
 	INST_SIG_CONDR_2_CB.Register(PSH,"INST_SIG_CONDR_2_CB",0);
 	ECS_DISP_CB.Register(PSH,"ECS_DISP_CB",0);
+	ECS_GLYCOL_PUMP_1_CB.Register(PSH,"ECS_GLYCOL_PUMP_1_CB",0);
+	ECS_GLYCOL_PUMP_2_CB.Register(PSH,"ECS_GLYCOL_PUMP_2_CB",0);
+	ECS_GLYCOL_PUMP_AUTO_XFER_CB.Register(PSH,"ECS_GLYCOL_PUMP_AUTO_XFER_CB",0);
+	LTG_MASTER_ALARM_CB.Register(PSH,"LTG_MASTER_ALARM_CB",0);
 	COMM_DISP_CB.Register(PSH,"COMM_DISP_CB",0);
 	COMM_PMP_CB.Register(PSH,"COMM_PMP_CB",0);
 	COMM_SE_AUDIO_CB.Register(PSH,"COMM_SE_AUDIO_CB",0);
@@ -873,7 +880,6 @@ void LEM::InitPanel() {
 	COMM_VHF_XMTR_B_CB.Register(PSH,"COMM_VHF_XMTR_B_CB",0);
 	COMM_VHF_RCVR_A_CB.Register(PSH,"COMM_VHF_RCVR_A_CB",0);
 	COMM_CDR_AUDIO_CB.Register(PSH,"COMM_CDR_AUDIO_CB",0);
-	ECS_GLYCOL_PUMP_2_CB.Register(PSH,"ECS_GLYCOL_PUMP_2_CB",0);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 0);
 	IMU_SBY_CB.Register(PSH, "IMU_SBY_CB", 1);
 	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 0);
@@ -1995,6 +2001,7 @@ void LEM::SetSwitches(int panel) {
 
 			Panel16CB2SwitchRow.Init(AID_LEM_P16_CB_ROW2, MainPanel);
 			LTG_FLOOD_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 5.0);
+			LTG_MASTER_ALARM_CB.Init(192, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			EDS_CB_LOGIC_B.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			SCS_AEA_CB.Init(320, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 10.0);
 			SCS_ASA_CB.Init(448, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 20.0);
@@ -2175,6 +2182,8 @@ void LEM::SetSwitches(int panel) {
 
 			Panel11CB4SwitchRow.Init(AID_LEM_P11_CB_ROW4, MainPanel);
 			ECS_GLYCOL_PUMP_2_CB.Init(446, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 5.0);
+			ECS_GLYCOL_PUMP_1_CB.Init(510, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 5.0);
+			ECS_GLYCOL_PUMP_AUTO_XFER_CB.Init(574, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 2.0);
 			COMM_SEC_SBAND_XCVR_CB.Init( 702, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 5.0);
 			COMM_SEC_SBAND_PA_CB.Init( 766, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 7.5);
 			COMM_VHF_XMTR_B_CB.Init(830, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 5.0);

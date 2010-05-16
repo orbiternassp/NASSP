@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2010/05/12 05:01:30  dseagrav
+  *	CWEA stuff for LGC and ISS, beginnings of ECS
+  *	
   *	Revision 1.20  2010/05/10 06:45:25  dseagrav
   *	Started on LM CWEA
   *	
@@ -254,7 +257,6 @@ public:
 	void SetVoltage(double v);
 };
 
-
 // Bus cross-tie balancer object
 class LEM_BusCrossTie : public e_object {
 public:
@@ -294,9 +296,35 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	double AscentOxyTankPressure(int tank);
+	double DescentOxyTankPressure(int tank);
 
 	LEM *lem;					// Pointer at LEM
-
+	double Cabin_Press,Cabin_Temp,Cabin_CO2;	// Cabin Atmosphere
+	double Suit_Press,Suit_Temp,Suit_CO2;		// Suit Circuit Atmosphere
+	double Asc_Water[2],Des_Water[2];			// Water tanks
+	double Asc_Oxygen[2],Des_Oxygen[2];			// Oxygen tanks
+	double Primary_CL_Glycol_Press[2];			// Pressure before and after pumps
+	double Secondary_CL_Glycol_Press[2];		// Pressure before and after pumps
+	double Primary_CL_Glycol_Temp[2];			// Teperature before and after pumps
+	double Secondary_CL_Glycol_Temp[2];			// Teperature before and after pumps
+	double Primary_Glycol_Accu;					// Glycol Accumulator
+	double Secondary_Glycol_Accu;				// Glycol Accumulator
+	double Primary_Glycol;						// Glycol in system
+	double Secondary_Glycol;					// Glycol in system
+	int Asc_H2O_To_PLSS,Des_H2O_To_PLSS;		// PLSS Water Fill valves
+	int Water_Tank_Selector;					// WT selection valve
+	int Pri_Evap_Flow_1,Pri_Evap_Flow_2;		// Primary evaporator flow valves
+	int Sec_Evap_Flow;							// Secondary evaporator flow valve
+	int Water_Sep_Selector;						// WS Select Valve
+	int Asc_O2_To_PLSS,Des_O2_To_PLSS;			// PLSS Oxygen Fill Valves
+	int Des_O2;									// Descent O2 Valve
+	int Asc_O2[2];								// Ascent O2 Valves
+	int Cabin_Repress;							// Cabin Repress Valve
+	int CO2_Can_Select;
+	int Suit_Gas_Diverter;
+	int Suit_Circuit_Relief;
+	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
 
 // EXPLOSIVE DEVICES SYSTEM
@@ -354,7 +382,37 @@ public:
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
 	int LightStatus[5][8];		// 1 = lit, 2 = not
+	int CabinLowPressLt;		// FF for this
+	int WaterWarningDisabled;   // FF for this
 	LEM *lem;					// Pointer at LEM
+};
+
+// Descent Engine
+class LEM_DPS{
+public:
+	LEM_DPS();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	
+	LEM *lem;					// Pointer at LEM
+	double HePress[2];			// Helium pressure above and below the regulator
+	int EngineOn;				// Engine "On" Command
+};
+
+// Ascent Engine
+class LEM_APS{
+public:
+	LEM_APS();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	
+	LEM *lem;					// Pointer at LEM
+	double HePress[2];			// Helium pressure above and below the regulator
+	int EngineOn;				// Engine "On" Command
 };
 
 ///
@@ -1406,6 +1464,7 @@ protected:
 	CircuitBrakerSwitch LTG_FLOOD_CB;
 	CircuitBrakerSwitch LTG_TRACK_CB;
 	CircuitBrakerSwitch LTG_ANUN_DOCK_COMPNT_CB;
+	CircuitBrakerSwitch LTG_MASTER_ALARM_CB;
 	CircuitBrakerSwitch EDS_CB_LOGIC_B;
 	CircuitBrakerSwitch SCS_AEA_CB;
 	CircuitBrakerSwitch SCS_ENG_ARM_CB;
@@ -1676,6 +1735,10 @@ protected:
 	// EDS
 	LEM_EDS eds;
 
+	// DPS and APS
+	LEM_DPS DPS;
+	LEM_APS APS;
+
 	// Abort Guidance System stuff
 	LEM_ASA asa;
 	LEM_AEA aea;
@@ -1705,6 +1768,15 @@ protected:
 	friend class LM_SBAND;
 	friend class LEMMissionTimerSwitch;
 	friend class LEM_CWEA;
+	friend class LMWaterQtyMeter;
+	friend class LMOxygenQtyMeter;
+	friend class LMGlycolPressMeter;
+	friend class LMGlycolTempMeter;
+	friend class LMCabinCO2Meter;
+	friend class LMCabinPressMeter;
+	friend class LMSuitPressMeter;
+	friend class LMCabinTempMeter;
+	friend class LMSuitTempMeter;
 };
 
 extern void LEMLoadMeshes();
