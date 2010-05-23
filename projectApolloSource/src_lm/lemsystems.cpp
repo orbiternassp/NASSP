@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2010/05/16 04:54:12  dseagrav
+  *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
+  *	
   *	Revision 1.21  2010/05/12 05:01:30  dseagrav
   *	CWEA stuff for LGC and ISS, beginnings of ECS
   *	
@@ -733,12 +736,12 @@ void LEM::SystemsInit()
 	// And the CDR FDAI itself	
 	fdaiLeft.WireTo(&CDR_FDAI_DC_CB,&CDR_FDAI_AC_CB);
 	// LMP FDAI stuff
-	LMP_EVT_TMP_FDAI_DC_CB.MaxAmps = 2.0;
-	LMP_EVT_TMP_FDAI_DC_CB.WireTo(&LMPs28VBus);
+	LMP_EVT_TMR_FDAI_DC_CB.MaxAmps = 2.0;
+	LMP_EVT_TMR_FDAI_DC_CB.WireTo(&LMPs28VBus);
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
-	fdaiRight.WireTo(&LMP_EVT_TMP_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.WireTo(&LMP_EVT_TMP_FDAI_DC_CB);
+	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
+	EventTimerDisplay.WireTo(&LMP_EVT_TMR_FDAI_DC_CB);
 
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
@@ -931,7 +934,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Clear debug line when timer runs out
 	if(DebugLineClearTimer > 0){
 		DebugLineClearTimer -= simdt;
-		if(DebugLineClearTimer < 1){
+		if(DebugLineClearTimer < 0){
 			sprintf(oapiDebugString(),"");
 			DebugLineClearTimer = 0;
 		}
@@ -2274,6 +2277,44 @@ void LEM_CWEA::TimeStep(double simdt){
 	LightStatus[4][7] = 0;
 	if(lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN){
 		LightStatus[4][7] = 1;
+	}
+
+	// CWEA TEST SWITCH FUNCTIONALITY
+	if(lem->LTG_MASTER_ALARM_CB.Voltage() > 0){
+		switch(lem->LampToneTestRotary.GetState()){
+			case 0: // OFF
+			case 7: // OFF
+			default:
+				break;
+			case 1: // ALARM/TONE
+				// Light MASTER ALARM and sound tone
+				// FIXME: IMPLEMENT THIS
+				break;
+			case 2: // C/W 1
+				// Light Panel 1 first bank warning lamps
+				LightStatus[0][0] = 1; LightStatus[1][0] = 1; LightStatus[2][0] = 1; LightStatus[3][0] = 1; LightStatus[4][0] = 1;
+				LightStatus[0][1] = 1; LightStatus[1][1] = 1; LightStatus[2][1] = 1; LightStatus[3][1] = 1; LightStatus[4][1] = 1;
+				break;
+			case 3: // ENG PB & C/W 2
+				// Light engine START/STOP lights and Panel 1 second bank warning lamps
+				LightStatus[0][2] = 1; LightStatus[1][2] = 1; LightStatus[2][2] = 1; LightStatus[3][2] = 1; LightStatus[4][2] = 1;
+				LightStatus[0][3] = 1; LightStatus[1][3] = 1; LightStatus[2][3] = 1; LightStatus[3][3] = 1; LightStatus[4][3] = 1;
+				break;
+			case 4: // C/W 3
+				// Light Panel 2 first bank warning lamps;
+				LightStatus[0][4] = 1; LightStatus[1][4] = 1; LightStatus[2][4] = 1; LightStatus[3][4] = 1; LightStatus[4][4] = 1;
+				LightStatus[0][5] = 1; LightStatus[1][5] = 1; LightStatus[2][5] = 1; /* LightStatus[3][5] = 1; */ LightStatus[4][5] = 1; // LDG RDR lamp only for LM10+
+				break;
+			case 5: // C/W 4
+				// Light Panel 2 second bank warning lamps;
+				LightStatus[0][6] = 1; LightStatus[1][6] = 1; LightStatus[2][6] = 1; LightStatus[3][6] = 1; LightStatus[4][6] = 1;
+				LightStatus[0][7] = 1; LightStatus[1][7] = 1; LightStatus[2][7] = 1; LightStatus[3][7] = 1; LightStatus[4][7] = 1;
+				break;
+			case 6: // COMPNT
+				// Light component caution and Lunar Contact lights
+				// FIXME: IMPLEMENT THIS
+				break;
+		}
 	}
 }	
 

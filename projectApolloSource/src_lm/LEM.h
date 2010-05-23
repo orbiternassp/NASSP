@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2010/05/16 04:54:12  dseagrav
+  *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
+  *	
   *	Revision 1.21  2010/05/12 05:01:30  dseagrav
   *	CWEA stuff for LGC and ISS, beginnings of ECS
   *	
@@ -1443,7 +1446,7 @@ protected:
 	//////////////////
 
 	SwitchRow Panel16CB1SwitchRow;
-	CircuitBrakerSwitch LMP_EVT_TMP_FDAI_DC_CB;
+	CircuitBrakerSwitch LMP_EVT_TMR_FDAI_DC_CB;
 	CircuitBrakerSwitch SE_XPTR_DC_CB;
 	CircuitBrakerSwitch RCS_B_ASC_FEED_1_CB;
 	CircuitBrakerSwitch RCS_B_ASC_FEED_2_CB;
