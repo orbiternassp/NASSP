@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2010/05/16 04:54:12  dseagrav
+  *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
+  *	
   *	Revision 1.8  2010/05/10 06:45:25  dseagrav
   *	Started on LM CWEA
   *	
@@ -132,7 +135,8 @@ bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
 		sprintf(oapiDebugString(),"LM MT: %.2d:%.2d:%.2d",
 			lem->MissionTimerDisplay.GetHours(),
 			lem->MissionTimerDisplay.GetMinutes(),
-			lem->MissionTimerDisplay.GetSeconds());		
+			lem->MissionTimerDisplay.GetSeconds());	
+		lem->DebugLineClearTimer = 5;
 	}
 	if(event & PANEL_MOUSE_RBDOWN || event & PANEL_MOUSE_RBUP){
 		return false; // Disregard this
