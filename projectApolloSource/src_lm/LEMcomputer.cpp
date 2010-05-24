@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2010/05/12 05:01:30  dseagrav
+  *	CWEA stuff for LGC and ISS, beginnings of ECS
+  *	
   *	Revision 1.10  2010/02/19 00:55:43  dseagrav
   *	Add Apollo 11 LM Pad Load (this was the flown pad load; It will be correct.)
   *	
@@ -1989,7 +1992,7 @@ void LEMcomputer::AddAttitudeRotLevel(VECTOR3 level) {
 	// Set thrust
 	LEM *lem = (LEM *) OurVessel;
 	for (i = 0; i < 16; i++) {
-		lem->SetRCSJetLevel(i, RCSCommand[i]);
+		lem->SetRCSJetLevelPrimary(i, RCSCommand[i]);
 	}
 }
 
@@ -2056,7 +2059,7 @@ void LEMcomputer::AddAttitudeLinLevel(VECTOR3 level) {
 	// Set thrust
 	LEM *lem = (LEM *) OurVessel;
 	for (i = 0; i < 16; i++) {
-		lem->SetRCSJetLevel(i, RCSCommand[i]);
+		lem->SetRCSJetLevelPrimary(i, RCSCommand[i]);
 	}
 }
 

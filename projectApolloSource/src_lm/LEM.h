@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2010/05/23 05:34:04  dseagrav
+  *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
+  *	
   *	Revision 1.22  2010/05/16 04:54:12  dseagrav
   *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
   *	
@@ -567,8 +570,6 @@ public:
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	void AbortStage();
 	void StartAscent();
-	void CheckRCS();
-
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
@@ -594,7 +595,9 @@ public:
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
-	void SetRCSJetLevel(int jet, double level);
+	void SetRCSJetLevelPrimary(int jet, double level);
+	void CheckRCS();
+
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//

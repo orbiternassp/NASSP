@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2010/05/23 05:34:04  dseagrav
+  *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
+  *	
   *	Revision 1.22  2010/05/16 04:54:12  dseagrav
   *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
   *	
@@ -1746,66 +1749,6 @@ void LEM_INV::UpdateFlow(double dt){
 	e_object::UpdateFlow(dt);
 }
 
-
-void LEM::CheckRCS()
-{
-	/* THRUSTER TABLE:
-		0	A1U		8	A3U
-		1	A1F		9	A3R
-		2	B1L		10	B3A
-		3	B1D		11	B3D
-
-		4	B2U		12	B4U
-		5	B2L		13	B4F
-		6	A2A		14	A4R
-		7	A2D		15	A4D
-	*/
-
-	/*
-	sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
-		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */	
-
-	if(GetValveState(LEM_RCS_MAIN_SOV_A)){
-		SetThrusterResource(th_rcs[0],ph_RCSA);
-		SetThrusterResource(th_rcs[1],ph_RCSA);
-		SetThrusterResource(th_rcs[6],ph_RCSA);
-		SetThrusterResource(th_rcs[7],ph_RCSA);
-		SetThrusterResource(th_rcs[8],ph_RCSA);
-		SetThrusterResource(th_rcs[9],ph_RCSA);
-		SetThrusterResource(th_rcs[14],ph_RCSA);
-		SetThrusterResource(th_rcs[15],ph_RCSA);
-	}else{
-		SetThrusterResource(th_rcs[0],NULL);
-		SetThrusterResource(th_rcs[1],NULL);
-		SetThrusterResource(th_rcs[6],NULL);
-		SetThrusterResource(th_rcs[7],NULL);
-		SetThrusterResource(th_rcs[8],NULL);
-		SetThrusterResource(th_rcs[9],NULL);
-		SetThrusterResource(th_rcs[14],NULL);
-		SetThrusterResource(th_rcs[15],NULL);
-	}
-	if(GetValveState(LEM_RCS_MAIN_SOV_B)){
-		SetThrusterResource(th_rcs[2],ph_RCSB);
-		SetThrusterResource(th_rcs[3],ph_RCSB);
-		SetThrusterResource(th_rcs[4],ph_RCSB);
-		SetThrusterResource(th_rcs[5],ph_RCSB);
-		SetThrusterResource(th_rcs[10],ph_RCSB);
-		SetThrusterResource(th_rcs[11],ph_RCSB);
-		SetThrusterResource(th_rcs[12],ph_RCSB);
-		SetThrusterResource(th_rcs[13],ph_RCSB);
-	}else{
-		SetThrusterResource(th_rcs[2],NULL);
-		SetThrusterResource(th_rcs[3],NULL);
-		SetThrusterResource(th_rcs[4],NULL);
-		SetThrusterResource(th_rcs[5],NULL);
-		SetThrusterResource(th_rcs[10],NULL);
-		SetThrusterResource(th_rcs[11],NULL);
-		SetThrusterResource(th_rcs[12],NULL);
-		SetThrusterResource(th_rcs[13],NULL);
-	}
-	return;
-}
-
 // EXPLOSIVE DEVICES SYSTEM
 LEM_EDS::LEM_EDS(){
 	lem = NULL;
@@ -2045,13 +1988,23 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS6 CES AC VOLTAGE FAILURE
 	// Either CES AC voltage (26V or 28V) out of tolerance.
+	// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 	// Disabled by Gyro Test Control in POS RT or NEG RT position.
-	LightStatus[0][1] = 1;
+	if(lem->SCS_ATCA_CB.Voltage() > 24 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER){
+		LightStatus[0][1] = 0;
+	}else{ 
+		LightStatus[0][1] = 1;
+	}
 
 	// 6DS7 CES DC VOLTAGE FAILURE
 	// Any CES DC voltage out of tolerance.
+	// All of these are provided by the ATCA main power supply.
 	// Disabled by Gyro Test Control in POS RT or NEG RT position.
-	LightStatus[1][1] = 1;
+	if(lem->SCS_ATCA_CB.Voltage() > 24 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER){
+		LightStatus[1][1] = 0;
+	}else{
+		LightStatus[1][1] = 1;
+	}
 
 	// 6DS8 AGS FAILURE
 	// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
@@ -2187,7 +2140,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS30 PRE-AMPLIFIER POWER FAILURE CAUTION
 	// On when either ATCA solenoid driver power supply fails.
 	// Disabled by stage deadface open or Abort PB press.
-	LightStatus[4][5] = 1;
+	LightStatus[4][5] = 0;
+	if(lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ LightStatus[4][5] = 1; }
+	if(lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24){ LightStatus[4][5] = 1; }
+	// FIXME: Handle stage DF and abort PB disables
 
 	// 6DS31 EDS RELAY FAILURE
 	// On when any EDS relay fails.
