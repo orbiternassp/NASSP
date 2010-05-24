@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.2  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -55,14 +62,21 @@ ATCA::ATCA(){
 
 void ATCA::Init(LEM *vessel){
 	lem = vessel;
-	int x=0; while(x < 16){ jet_start[x] = 0; jet_stop[x] = 0; x++; }
+	int x=0; while(x < 16){ jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
 // GuidContSwitch is the Guidance Control switch
 
 void ATCA::Timestep(double simt){
-	// Which mode are we in?
+	double now = oapiGetSimTime(); // Get time
+	int haspower = 0,hasdriver = 0,balcpl = 0;
 	if(lem == NULL){ return; }
+	// Fetch mode switch setting.
 	int GC_Mode = lem->GuidContSwitch.GetState();
+	// Determine ATCA power situation.
+	if(lem->SCS_ATCA_CB.Voltage() > 24){
+		// ATCA primary power is on.
+		haspower = 1;
+	}
 
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
@@ -76,46 +90,48 @@ void ATCA::Timestep(double simt){
 		7	A2D		15	A4D
 	*/
 
+	// *** Determine jet request source path ***
 	switch(GC_Mode){
-		case TOGGLESWITCH_UP:    // PGNS
-			// If this is vAGC mode
-			if(lem->agc.Yaagc){
-				lem->agc.SetInputChannelBit(030,10,1);    // LGC HAS CONTROL
-				/*
-				// CH5
-				lem->SetRCSJet(12,(ch5.Bits.B4U != 0));
-				lem->SetRCSJet(15,(ch5.Bits.A4D != 0));
-				lem->SetRCSJet(8,(ch5.Bits.A3U != 0));
-				lem->SetRCSJet(11,(ch5.Bits.B3D != 0));
-				lem->SetRCSJet(4,(ch5.Bits.B2U != 0));
-				lem->SetRCSJet(7,(ch5.Bits.A2D != 0));
-				lem->SetRCSJet(0,(ch5.Bits.A1U != 0));
-				lem->SetRCSJet(3,(ch5.Bits.B1D != 0));
-				// CH6
-				lem->SetRCSJet(10,(ch6.Bits.B3A != 0));
-				lem->SetRCSJet(13,(ch6.Bits.B4F != 0));
-				lem->SetRCSJet(1,(ch6.Bits.A1F != 0));
-				lem->SetRCSJet(6,(ch6.Bits.A2A != 0));
-				lem->SetRCSJet(5,(ch6.Bits.B2L != 0));
-				lem->SetRCSJet(9,(ch6.Bits.A3R != 0));
-				lem->SetRCSJet(14,(ch6.Bits.A4R != 0));
-				lem->SetRCSJet(2,(ch6.Bits.B1L != 0));
-				*/
-			}
-			// Otherwise do nothing.
+		case TOGGLESWITCH_UP:    // PGNS MODE
+			// In this case, thruster demand is direct from the LGC. We have nothing to do.
+			if(lem->agc.Yaagc){	lem->agc.SetInputChannelBit(030,10,1); } // Tell the LGC it has control.
+			if(haspower == 1 && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ haspower = 0; } // PNGS path requires this.
+			if(lem->ModeControlPNGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
 			break;
 
-		case TOGGLESWITCH_DOWN:  // AGS
-			lem->agc.SetInputChannelBit(030,10,0);  // LGC Doesn't Have Control
+		case TOGGLESWITCH_DOWN:  // ABORT MODE
+			// In this case, we have to generate thruster demand ourselves, taking "suggestions" from the AGS.
+			// FIXME: Implement this.
+			if(lem->agc.Yaagc){	lem->agc.SetInputChannelBit(030,10,0); } // Tell the LGC it doesn't have control
+			if(haspower == 1 && lem->SCS_ATCA_AGS_CB.Voltage() < 24){ haspower = 0; } // AGS path requires this.
+			if(lem->ModeControlAGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
 			break;
 	}
-// LM RCS thrusters take 12.5ms to ramp up to full thrust and 17.5ms to ramp back down. There is a dead time of 10ms before thrust starts.
-// The upshot of this is that full thrust always starts 20ms after commanded and stops 8ms after commanded. 
-// Orbiter has no hope of providing enough resolution to properly map this. It depends on framerate.
-// We can do our best though...
+	// *** Test "Balanced Couples" switch ***
+	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP){ balcpl = 1; }
+
+	// *** THRUSTER MAINTENANCE ***
+	// LM RCS thrusters take 12.5ms to ramp up to full thrust and 17.5ms to ramp back down. There is a dead time of 10ms before thrust starts.
+	// The upshot of this is that full thrust always starts 20ms after commanded and stops 8ms after commanded. 
+	// Orbiter has no hope of providing enough resolution to properly map this. It depends on framerate.
+	// We can do our best though...
 	int x=0;
 	while(x < 16){
 		double power=0;
+		// If the ATCA is not powered or driver voltage is absent, it won't work.
+		if(haspower != 1 || hasdriver != 1){ jet_request[x] = 0; }
+		// If the "Balanced Couples" switch is off, the abort preamps for the four upward-firing thrusters are disabled.
+		if(GC_Mode == TOGGLESWITCH_DOWN && balcpl != 1 && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
+		// Process jet request list to generate start and stop times.
+		if(jet_request[x] == 1 && jet_last_request[x] == 0){
+			// New fire request
+			jet_start[x] = now;
+		}else if(jet_request[x] == 0 && jet_last_request[x] == 1){
+			// New stop request
+			jet_stop[x] = now;
+		}
+		jet_last_request[x] = jet_request[x]; // Keep track of changes
+
 		if(jet_start[x] == 0 && jet_stop[x] == 0){ x++; continue; } // Done
 		// sprintf(oapiDebugString(),"Jet %d fire %f stop %f",x,jet_start[x],jet_stop[x]); 
 		if(simt > jet_start[x]+0.01 && simt < jet_start[x]+0.0125){
@@ -137,41 +153,40 @@ void ATCA::Timestep(double simt){
 		}
 		// FIXME: This is just for testing.
 		// if(power > 0.25){ power = 0.25; }
-		lem->SetRCSJetLevel(x,power);
+		lem->SetRCSJetLevelPrimary(x,power);
 		x++;
 	}
 }
 
 
 // Process thruster commands from LGC
-void ATCA::ProcessLGC(int ch, int val){	
-	double now = oapiGetSimTime();
+void ATCA::ProcessLGC(int ch, int val){		
 	if(lem->GuidContSwitch.GetState() != TOGGLESWITCH_UP){ val = 0; } // If not in primary mode, force jets off (so jets will switch off at programmed times)
 	// When in primary, thruster commands are passed from LGC to jets.
 	switch(ch){
 		case 05:
 			LMChannelValue5 ch5;
 			ch5.Value = val;			
-			if(ch5.Bits.B4U != 0 && jet_start[12] == 0){ jet_start[12] = now; }else if(ch5.Bits.B4U == 0 && (jet_start[12] > 0 && jet_stop[12] == 0)){ jet_stop[12] = now; }
-			if(ch5.Bits.A4D != 0 && jet_start[15] == 0){ jet_start[15] = now; }else if(ch5.Bits.A4D == 0 && (jet_start[15] > 0 && jet_stop[15] == 0)){ jet_stop[15] = now; }
-			if(ch5.Bits.A3U != 0 && jet_start[8]  == 0){ jet_start[8]  = now; }else if(ch5.Bits.A3U == 0 && (jet_start[8]  > 0 && jet_stop[8]  == 0)){ jet_stop[8]  = now; }
-			if(ch5.Bits.B3D != 0 && jet_start[11] == 0){ jet_start[11] = now; }else if(ch5.Bits.B3D == 0 && (jet_start[11] > 0 && jet_stop[11] == 0)){ jet_stop[11] = now; }
-			if(ch5.Bits.B2U != 0 && jet_start[4]  == 0){ jet_start[4]  = now; }else if(ch5.Bits.B2U == 0 && (jet_start[4]  > 0 && jet_stop[4]  == 0)){ jet_stop[4]  = now; }
-			if(ch5.Bits.A2D != 0 && jet_start[7]  == 0){ jet_start[7]  = now; }else if(ch5.Bits.A2D == 0 && (jet_start[7]  > 0 && jet_stop[7]  == 0)){ jet_stop[7]  = now; }
-			if(ch5.Bits.A1U != 0 && jet_start[0]  == 0){ jet_start[0]  = now; }else if(ch5.Bits.A1U == 0 && (jet_start[0]  > 0 && jet_stop[0]  == 0)){ jet_stop[0]  = now; }
-			if(ch5.Bits.B1D != 0 && jet_start[3]  == 0){ jet_start[3]  = now; }else if(ch5.Bits.B1D == 0 && (jet_start[3]  > 0 && jet_stop[3]  == 0)){ jet_stop[3]  = now; }			
+			if(ch5.Bits.B4U != 0){ jet_request[12] = 1; }else{ jet_request[12] = 0; }
+			if(ch5.Bits.A4D != 0){ jet_request[15] = 1; }else{ jet_request[15] = 0; }
+			if(ch5.Bits.A3U != 0){ jet_request[8]  = 1; }else{ jet_request[8]  = 0; }
+			if(ch5.Bits.B3D != 0){ jet_request[11] = 1; }else{ jet_request[11] = 0; }
+			if(ch5.Bits.B2U != 0){ jet_request[4]  = 1; }else{ jet_request[4]  = 0; }
+			if(ch5.Bits.A2D != 0){ jet_request[7]  = 1; }else{ jet_request[7]  = 0; }
+			if(ch5.Bits.A1U != 0){ jet_request[0]  = 1; }else{ jet_request[0]  = 0; }
+			if(ch5.Bits.B1D != 0){ jet_request[3]  = 1; }else{ jet_request[3]  = 0; }			
 			break;
 		case 06:
 			LMChannelValue6 ch6;
 			ch6.Value = val;
-			if(ch6.Bits.B3A != 0 && jet_start[10] == 0){ jet_start[10] = now; }else if(ch6.Bits.B3A == 0 && (jet_start[10] > 0 && jet_stop[10] == 0)){ jet_stop[10] = now; }
-			if(ch6.Bits.B4F != 0 && jet_start[13] == 0){ jet_start[13] = now; }else if(ch6.Bits.B4F == 0 && (jet_start[13] > 0 && jet_stop[13] == 0)){ jet_stop[13] = now; }
-			if(ch6.Bits.A1F != 0 && jet_start[1]  == 0){ jet_start[1]  = now; }else if(ch6.Bits.A1F == 0 && (jet_start[1]  > 0 && jet_stop[1]  == 0)){ jet_stop[1]  = now; }
-			if(ch6.Bits.A2A != 0 && jet_start[6]  == 0){ jet_start[6]  = now; }else if(ch6.Bits.A2A == 0 && (jet_start[6]  > 0 && jet_stop[6]  == 0)){ jet_stop[6]  = now; }
-			if(ch6.Bits.B2L != 0 && jet_start[5]  == 0){ jet_start[5]  = now; }else if(ch6.Bits.B2L == 0 && (jet_start[5]  > 0 && jet_stop[5]  == 0)){ jet_stop[5]  = now; }
-			if(ch6.Bits.A3R != 0 && jet_start[9]  == 0){ jet_start[9]  = now; }else if(ch6.Bits.A3R == 0 && (jet_start[9]  > 0 && jet_stop[9]  == 0)){ jet_stop[9]  = now; }
-			if(ch6.Bits.A4R != 0 && jet_start[14] == 0){ jet_start[14] = now; }else if(ch6.Bits.A4R == 0 && (jet_start[14] > 0 && jet_stop[14] == 0)){ jet_stop[14] = now; }
-			if(ch6.Bits.B1L != 0 && jet_start[2]  == 0){ jet_start[2]  = now; }else if(ch6.Bits.B1L == 0 && (jet_start[2]  > 0 && jet_stop[2]  == 0)){ jet_stop[2]  = now; }			
+			if(ch6.Bits.B3A != 0){ jet_request[10] = 1; }else{ jet_request[10] = 0; }
+			if(ch6.Bits.B4F != 0){ jet_request[13] = 1; }else{ jet_request[13] = 0; }
+			if(ch6.Bits.A1F != 0){ jet_request[1]  = 1; }else{ jet_request[1]  = 0; }
+			if(ch6.Bits.A2A != 0){ jet_request[6]  = 1; }else{ jet_request[6]  = 0; }
+			if(ch6.Bits.B2L != 0){ jet_request[5]  = 1; }else{ jet_request[5]  = 0; }
+			if(ch6.Bits.A3R != 0){ jet_request[9]  = 1; }else{ jet_request[9]  = 0; }
+			if(ch6.Bits.A4R != 0){ jet_request[14] = 1; }else{ jet_request[14] = 0; }
+			if(ch6.Bits.B1L != 0){ jet_request[2]  = 1; }else{ jet_request[2]  = 0; }			
 			break;
 		default:
 			sprintf(oapiDebugString(),"ATCA::ProcessLGC: Bad channel %o",ch);

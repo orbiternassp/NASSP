@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/05/01 12:55:14  dseagrav
+  *	
+  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
+  *	Right-clicking causes the time to be printed but does not flip the switches.
+  *	Left-clicking works as normal and prints the new value.
+  *	The printed value is not updated and is removed after five seconds.
+  *	
   *	Revision 1.16  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -1626,11 +1633,54 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 }
 
 void LEM::PadLoad(unsigned int address, unsigned int value)
-
 { 
 	agc.PadLoad(address, value);
- }
+}
 
+// *** REACTION CONTROL SYSTEM ***
+void LEM::CheckRCS(){
+	/* sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
+		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */	
+	if(GetValveState(LEM_RCS_MAIN_SOV_A)){
+		SetThrusterResource(th_rcs[0],ph_RCSA);
+		SetThrusterResource(th_rcs[1],ph_RCSA);
+		SetThrusterResource(th_rcs[6],ph_RCSA);
+		SetThrusterResource(th_rcs[7],ph_RCSA);
+		SetThrusterResource(th_rcs[8],ph_RCSA);
+		SetThrusterResource(th_rcs[9],ph_RCSA);
+		SetThrusterResource(th_rcs[14],ph_RCSA);
+		SetThrusterResource(th_rcs[15],ph_RCSA);
+	}else{
+		SetThrusterResource(th_rcs[0],NULL);
+		SetThrusterResource(th_rcs[1],NULL);
+		SetThrusterResource(th_rcs[6],NULL);
+		SetThrusterResource(th_rcs[7],NULL);
+		SetThrusterResource(th_rcs[8],NULL);
+		SetThrusterResource(th_rcs[9],NULL);
+		SetThrusterResource(th_rcs[14],NULL);
+		SetThrusterResource(th_rcs[15],NULL);
+	}
+	if(GetValveState(LEM_RCS_MAIN_SOV_B)){
+		SetThrusterResource(th_rcs[2],ph_RCSB);
+		SetThrusterResource(th_rcs[3],ph_RCSB);
+		SetThrusterResource(th_rcs[4],ph_RCSB);
+		SetThrusterResource(th_rcs[5],ph_RCSB);
+		SetThrusterResource(th_rcs[10],ph_RCSB);
+		SetThrusterResource(th_rcs[11],ph_RCSB);
+		SetThrusterResource(th_rcs[12],ph_RCSB);
+		SetThrusterResource(th_rcs[13],ph_RCSB);
+	}else{
+		SetThrusterResource(th_rcs[2],NULL);
+		SetThrusterResource(th_rcs[3],NULL);
+		SetThrusterResource(th_rcs[4],NULL);
+		SetThrusterResource(th_rcs[5],NULL);
+		SetThrusterResource(th_rcs[10],NULL);
+		SetThrusterResource(th_rcs[11],NULL);
+		SetThrusterResource(th_rcs[12],NULL);
+		SetThrusterResource(th_rcs[13],NULL);
+	}
+	return;
+}
 
 void LEM::SetRCSJet(int jet, bool fire) {
 	/// \todo Only for the Virtual AGC for now
@@ -1640,9 +1690,62 @@ void LEM::SetRCSJet(int jet, bool fire) {
 }
 
 
-// This gets used by the ATCA to simulate lag of RCS jets.
+// Set level of RCS thruster, using primary coils
+void LEM::SetRCSJetLevelPrimary(int jet, double level) {
+	/* THRUSTER TABLE:
+		0	A1U		8	A3U
+		1	A1F		9	A3R
+		2	B1L		10	B3A
+		3	B1D		11	B3D
 
-void LEM::SetRCSJetLevel(int jet, double level) {
+		4	B2U		12	B4U
+		5	B2L		13	B4F
+		6	A2A		14	A4R
+		7	A2D		15	A4D
+	*/
+	// The thruster is a Marquardt R-4D, which uses 46 watts @ 28 volts to fire.
+	// This applies to the SM as well, someone should probably tell them about this.
+	// RCS pressurized?
+
+	// Is this thruster on?	
+	switch(jet){
+		// SYS A
+		case 0: // QUAD 1
+		case 1:
+			if(RCS_A_QUAD1_TCA_CB.Voltage() > 24){ RCS_A_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 6: // QUAD 2
+		case 7:
+			if(RCS_A_QUAD2_TCA_CB.Voltage() > 24){ RCS_A_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 8: // QUAD 3
+		case 9:
+			if(RCS_A_QUAD3_TCA_CB.Voltage() > 24){ RCS_A_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 14: // QUAD 4
+		case 15:
+			if(RCS_A_QUAD4_TCA_CB.Voltage() > 24){ RCS_A_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+
+		// SYS B
+		case 2: // QUAD 1
+		case 3:
+			if(RCS_B_QUAD1_TCA_CB.Voltage() > 24){ RCS_B_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 4: // QUAD 2
+		case 5:
+			if(RCS_B_QUAD2_TCA_CB.Voltage() > 24){ RCS_B_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 10: // QUAD 3
+		case 11:
+			if(RCS_B_QUAD3_TCA_CB.Voltage() > 24){ RCS_B_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+		case 12: // QUAD 4
+		case 13:
+			if(RCS_B_QUAD4_TCA_CB.Voltage() > 24){ RCS_B_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
+			break;
+	}
+
 	SetThrusterLevel(th_rcs[jet], level);
 }
 
