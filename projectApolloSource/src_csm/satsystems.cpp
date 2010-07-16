@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.10  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -347,11 +350,11 @@ void Saturn::SystemsInit() {
 	FuelCells[2] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
 
 	FuelCellCooling[0] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING");
-	FuelCellCooling[0]->WireTo(&FuelCellPumps1Switch);
+	FuelCellCooling[0]->WireTo(&FuelCell1PumpsACCB);
 	FuelCellCooling[1] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING");
-	FuelCellCooling[1]->WireTo(&FuelCellPumps2Switch);
+	FuelCellCooling[1]->WireTo(&FuelCell2PumpsACCB);
 	FuelCellCooling[2] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING");
-	FuelCellCooling[2]->WireTo(&FuelCellPumps3Switch);
+	FuelCellCooling[2]->WireTo(&FuelCell3PumpsACCB);
 
 	FuelCellHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1HEATER");
 	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
@@ -445,10 +448,12 @@ void Saturn::SystemsInit() {
 	MainBusB->WireTo(MainBusBController.GetBusSource());
 
 	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo, &SIVBToCSMPowerSource);	
+		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo, &SIVBToCSMPowerSource,
+							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);	
 
 	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo, &SIVBToCSMPowerSource);
+		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo, &SIVBToCSMPowerSource,
+							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
 
@@ -780,6 +785,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
+		EPSTimestep();
 		SMQuadARCS.Timestep(MissionTime, simdt);
 		SMQuadBRCS.Timestep(MissionTime, simdt);
 		SMQuadCRCS.Timestep(MissionTime, simdt);
@@ -2183,6 +2189,19 @@ void Saturn::CabinFansSystemTimestep()
 
 		StopCabinFanSound();
 	}
+
+	//
+	// Suit Compressor sound
+	//
+
+	int vol = 0;
+	if (SuitCompressor1->IsOn()) vol += 32;
+	if (SuitCompressor2->IsOn()) vol += 32;
+
+	if (vol > 0)
+		SuitCompressorSound.play(LOOP, vol + 191);
+	else
+		SuitCompressorSound.stop();
 }
 
 void Saturn::CheckSMSystemsState()
@@ -3380,6 +3399,82 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Enabled_AC_CWS = (AcBus2ResetSwitch.Voltage() > SP_MIN_DCVOLTAGE);
 		as.Reset_AC_CWS = AcBus2ResetSwitch.IsUp();
 		break;
+	}
+}
+
+void Saturn::EPSTimestep() {
+
+	// FuelCell Bus Connect Switches
+
+	if (FuelCell1BusContCB.IsPowered()) {
+		if (MainBusASwitch1.IsUp() && !MainBusAController.IsFuelCellConnected(1)) {
+			MainBusAController.ConnectFuelCell(1, true);
+		}
+		if (MainBusASwitch1.IsDown()) {
+			MainBusAController.ConnectFuelCell(1, false);
+		}
+		if (MainBusBSwitch1.IsUp() && !MainBusBController.IsFuelCellConnected(1)) {
+			MainBusBController.ConnectFuelCell(1, true);
+		}
+		if (MainBusBSwitch1.IsDown()) {
+			MainBusBController.ConnectFuelCell(1, false);
+		}
+	}
+	if (FuelCell2BusContCB.IsPowered()) {
+		if (MainBusASwitch2.IsUp() && !MainBusAController.IsFuelCellConnected(2)) {
+			MainBusAController.ConnectFuelCell(2, true);
+		}
+		if (MainBusASwitch2.IsDown()) {
+			MainBusAController.ConnectFuelCell(2, false);
+		}
+		if (MainBusBSwitch2.IsUp() && !MainBusBController.IsFuelCellConnected(2)) {
+			MainBusBController.ConnectFuelCell(2, true);
+		}
+		if (MainBusBSwitch2.IsDown()) {
+			MainBusBController.ConnectFuelCell(2, false);
+		}
+	}
+	if (FuelCell3BusContCB.IsPowered()) {
+		if (MainBusASwitch3.IsUp() && !MainBusAController.IsFuelCellConnected(3)) {
+			MainBusAController.ConnectFuelCell(3, true);
+		}
+		if (MainBusASwitch3.IsDown()) {
+			MainBusAController.ConnectFuelCell(3, false);
+		}
+		if (MainBusBSwitch3.IsUp() && !MainBusBController.IsFuelCellConnected(3)) {
+			MainBusBController.ConnectFuelCell(3, true);
+		}
+		if (MainBusBSwitch3.IsDown()) {
+			MainBusBController.ConnectFuelCell(3, false);
+		}
+	}
+
+	// FuelCell Purge Switches
+	int *start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:PURGE");	
+	if (FuelCellPurge1Switch.IsDown() && FuelCell1PurgeCB.IsPowered()) {
+		*start = SP_FUELCELL_O2PURGE;
+	} else if (FuelCellPurge1Switch.IsUp() && FuelCell1PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
+		*start = SP_FUELCELL_H2PURGE;
+	} else {
+		*start = SP_FUELCELL_NOPURGE;
+	}
+
+	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:PURGE");	
+	if (FuelCellPurge2Switch.IsDown() && FuelCell2PurgeCB.IsPowered()) {
+		*start = SP_FUELCELL_O2PURGE;
+	} else if (FuelCellPurge2Switch.IsUp() && FuelCell2PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
+		*start = SP_FUELCELL_H2PURGE;
+	} else {
+		*start = SP_FUELCELL_NOPURGE;
+	}
+
+	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:PURGE");	
+	if (FuelCellPurge3Switch.IsDown() && FuelCell3PurgeCB.IsPowered()) {
+		*start = SP_FUELCELL_O2PURGE;
+	} else if (FuelCellPurge3Switch.IsUp() && FuelCell3PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
+		*start = SP_FUELCELL_H2PURGE;
+	} else {
+		*start = SP_FUELCELL_NOPURGE;
 	}
 }
 

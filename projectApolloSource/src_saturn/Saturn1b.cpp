@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/02/22 14:23:30  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.3  2010/02/09 02:40:23  bluedragon8144
   *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
   *	
@@ -584,7 +587,7 @@ void Saturn1b::StageOne(double simt, double simdt)
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10)
+	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10 && MainThrusterGroupLevelBufferTimesteps < -1)
 	{
 		bAbort = true;
 	}
@@ -1022,7 +1025,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
 		}
 	}
-
 }
 
 void Saturn1b::ConfigureStageMeshes(int stage_state)

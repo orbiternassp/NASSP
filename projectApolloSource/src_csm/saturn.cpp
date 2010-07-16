@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/02/22 14:23:30  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.18  2010/02/09 02:38:43  bluedragon8144
   *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
   *	
@@ -710,7 +713,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
 	SystemTestVoltMeter(0.0, 5.0),
-	EMSDvSetSwitch(Sclick)
+	EMSDvSetSwitch(Sclick),
+	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
 
 #pragma warning ( pop ) // disable:4355
 
@@ -749,6 +753,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
+
+	// Bug workaround, see declaration
+	MainThrusterGroupLevelBuffer = 0;
+	MainThrusterGroupLevelBufferTimesteps = -2;
 }
 
 Saturn::~Saturn()
@@ -1009,9 +1017,9 @@ void Saturn::initSaturn()
 	//
 
 	agc.ControlVessel(this);
-	imu.SetVessel(this,FALSE);
-	dsky.Init(&GaugePower);
-	dsky2.Init(&GaugePower);
+	imu.SetVessel(this, false);
+	dsky.Init(&LightingNumIntLMDCCB, &NumericRotarySwitch);
+	dsky2.Init(&LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
 
 	//
 	// Configure SECS.
@@ -1416,6 +1424,9 @@ void Saturn::initSaturn()
 
 		// "dummy" SetSwitches to enable the panel event handling
 		SetSwitches(PanelId);
+
+		// Switch to compatible dock mode 
+		SetDockMode(0);
 	}
 	InitSaturnCalled = true;
 }
@@ -1463,6 +1474,15 @@ void Saturn::clbkPostCreation() {
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
+
+	//  // Bug workaround, see declaration
+	if (thg_main != NULL) {
+		MainThrusterGroupLevelBuffer = GetThrusterGroupLevel(thg_main);
+		if (MainThrusterGroupLevelBuffer != 0) {
+			SetThrusterGroupLevel(thg_main, 0);
+			MainThrusterGroupLevelBufferTimesteps = 3;
+		}
+	}
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -1660,6 +1680,18 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 {
 	TRACESETUP("Saturn::clbkPreStep");
 
+	//  // Bug workaround, see declaration
+	if (MainThrusterGroupLevelBufferTimesteps > 0) {
+		MainThrusterGroupLevelBufferTimesteps--;
+	} else if (MainThrusterGroupLevelBufferTimesteps == 0) {
+		if (thg_main != NULL) { 
+			SetThrusterGroupLevel(thg_main, MainThrusterGroupLevelBuffer);
+		}
+		MainThrusterGroupLevelBufferTimesteps--;
+	} else if (MainThrusterGroupLevelBufferTimesteps == -1) {
+		MainThrusterGroupLevelBufferTimesteps--;
+	}
+
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
 	//
@@ -1767,8 +1799,9 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 		iu.PostStep(simt, simdt, mjd);
 	}
-	checkControl.timestep(MissionTime,eventControl);
+	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
+	checkControl.timestep(MissionTime,eventControl);
 
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
@@ -3696,7 +3729,7 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	/*
 	VESSELSTATUS vs;
 	GetStatus(vs);
-	double moveStep = 1.0e-8;
+	double moveStep = 1.0e-7;
 
 	if (KEYMOD_CONTROL(kstate))
 		moveStep = 1.0e-9;
@@ -5278,6 +5311,7 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(ThumbClick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Psound, PROBE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(CabinFans, CMCABIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SuitCompressorSound, SUITCOMPRESSOR_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SMasterAlarm, MASTERALARM_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SplashS, SPLASH_SOUND);
 	soundlib.LoadSound(StageS, "Stagesep.wav");
@@ -5290,6 +5324,8 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
 	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }

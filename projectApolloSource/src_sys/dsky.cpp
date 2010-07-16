@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.2  2009/08/02 19:21:07  spacex15
   *	agc socket version reenabled
   *	
@@ -136,6 +139,7 @@ static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
 
 {
+	DimmerRotationalSwitch = NULL;
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
@@ -195,12 +199,25 @@ DSKY::~DSKY()
 	//
 }
 
-void DSKY::Init(e_object *powered)
+void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
 
 {
 	WireTo(powered);
+	DimmerRotationalSwitch = dimmer;
 	Reset();
 	FirstTimeStep = true;
+}
+
+bool DSKY::IsPowered() {
+	if (Voltage() < SP_MIN_ACVOLTAGE) 
+		return false;
+
+	if (DimmerRotationalSwitch != NULL) {
+		if (DimmerRotationalSwitch->GetState() == 0) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void DSKY::Timestep(double simt)
@@ -359,10 +376,12 @@ void DSKY::ResetPressed()
 {
 	KeyClick();
 	SendKeyCode(18);
+
 	// DS20061225 If the RESTART light is lit, this resets it externally to the AGC program. CSM 104 SYS HBK pg 399
-	if(RestartLit()){
+	if (RestartLit()) {
 		ClearRestart(); 
 	}
+
 #ifndef AGC_SOCKET_ENABLED
 	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;

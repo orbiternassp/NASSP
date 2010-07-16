@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -484,12 +487,16 @@ DCBusController::DCBusController(char *i_name, PanelSDK &p) :
 	sdk.AddElectrical(this, false);
 }
 
-void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp)
+void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3)
 
 {
 	fuelcell1 = fc1;
 	fuelcell2 = fc2;
 	fuelcell3 = fc3;
+
+	busCont1 = bc1;
+	busCont2 = bc2;
+	busCont3 = bc3;
 
 	battery1 = bat1;
 	battery2 = bat2;
@@ -528,30 +535,30 @@ void DCBusController::refresh(double dt)
 
 {
 	// Disconnect because of to high current
-	if (fuelcell1->Current() > 75.0 && fcPower.IsBusConnected(1)) {
+	if (fuelcell1->Current() > 75.0 && fcPower.IsBusConnected(1) && busCont1->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(1, NULL);
 		fcDisconnectAlarm[1] = true;
 	}
-	if (fuelcell2->Current() > 75.0 && fcPower.IsBusConnected(2)) {
+	if (fuelcell2->Current() > 75.0 && fcPower.IsBusConnected(2) && busCont2->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(2, NULL);
 		fcDisconnectAlarm[2] = true;
 	}
-	if (fuelcell3->Current() > 75.0 && fcPower.IsBusConnected(3)) {
+	if (fuelcell3->Current() > 75.0 && fcPower.IsBusConnected(3) && busCont3->Voltage() > SP_MIN_DCVOLTAGE) {
 		fcPower.WireToBus(3, NULL);
 		fcDisconnectAlarm[3] = true;
 	}
 
 	// Disconnect because of reverse current
 	if (busPower.Voltage() > 0) {
-		if (fuelcell1->Voltage() <= 0 && fcPower.IsBusConnected(1)) {
+		if (fuelcell1->Voltage() <= 0 && fcPower.IsBusConnected(1) && busCont1->Voltage() > SP_MIN_DCVOLTAGE) {
 			fcPower.WireToBus(1, NULL);
 			fcDisconnectAlarm[1] = true;
 		}
-		if (fuelcell2->Voltage() <= 0 && fcPower.IsBusConnected(2)) {
+		if (fuelcell2->Voltage() <= 0 && fcPower.IsBusConnected(2) && busCont2->Voltage() > SP_MIN_DCVOLTAGE) {
 			fcPower.WireToBus(2, NULL);
 			fcDisconnectAlarm[2] = true;
 		}
-		if (fuelcell3->Voltage() <= 0 && fcPower.IsBusConnected(3)) {
+		if (fuelcell3->Voltage() <= 0 && fcPower.IsBusConnected(3) && busCont3->Voltage() > SP_MIN_DCVOLTAGE) {
 			fcPower.WireToBus(3, NULL);
 			fcDisconnectAlarm[3] = true;
 		}
@@ -590,6 +597,18 @@ bool DCBusController::IsFuelCellConnected(int fc)
 	return fcPower.IsBusConnected(fc);
 }
 
+bool DCBusController::IsBusContPowered(int fc)
+
+{
+	if (fc == 1)
+		return (busCont1->Voltage() > SP_MIN_DCVOLTAGE);
+	else if (fc == 2)
+		return (busCont2->Voltage() > SP_MIN_DCVOLTAGE);
+	else
+		return (busCont3->Voltage() > SP_MIN_DCVOLTAGE);
+}
+
+
 bool DCBusController::IsFuelCellDisconnectAlarm()
 
 {
@@ -609,26 +628,33 @@ void DCBusController::SetGSEState(int s)
 void DCBusController::Load(char *line)
 
 {
-	int fc1, fc2, fc3, gse, ta;
+	int fc1, fc2, fc3, gse, ta, fca1, fca2, fca3;
 	
-	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse, &ta);
+	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i %i %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse, &ta, &fca1, &fca2, &fca3);
 	if (fc1) fcPower.WireToBus(1, fuelcell1);
 	if (fc2) fcPower.WireToBus(2, fuelcell2);
 	if (fc3) fcPower.WireToBus(3, fuelcell3);
 	if (ta) tieAuto = true;
 	// tieState is evaluated in refresh()	
 	SetGSEState(gse);
+
+	fcDisconnectAlarm[1] = (fca1 ? true : false);
+	fcDisconnectAlarm[2] = (fca2 ? true : false);
+	fcDisconnectAlarm[3] = (fca3 ? true : false);
 }
 
 void DCBusController::Save(FILEHANDLE scn)
 
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %i %i %i %i %i %i", name, IsFuelCellConnected(1) ? 1 : 0, 
-								  		         IsFuelCellConnected(2) ? 1 : 0, 
-										         IsFuelCellConnected(3) ? 1 : 0,
-										         tieState, gseState,
-												 tieAuto ? 1 : 0);
+	sprintf (cbuf, "%s %i %i %i %i %i %i %i %i %i", name, IsFuelCellConnected(1) ? 1 : 0, 
+								  		                  IsFuelCellConnected(2) ? 1 : 0, 
+										                  IsFuelCellConnected(3) ? 1 : 0,												 
+														  tieState, gseState,
+												          tieAuto ? 1 : 0,
+												          fcDisconnectAlarm[1] ? 1 : 0,
+												          fcDisconnectAlarm[2] ? 1 : 0,
+												          fcDisconnectAlarm[3] ? 1 : 0);
 
 	oapiWriteScenario_string (scn, "    <DCBUSCONTROLLER> ", cbuf);
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -245,7 +248,7 @@ protected:
 class SaturnSideHatch {
 
 public:
-	SaturnSideHatch();
+	SaturnSideHatch(Sound &opensound, Sound &closesound);
 	virtual ~SaturnSideHatch();
 
 	void Init(Saturn *s, RotationalSwitch *gbs, RotationalSwitch *ahs, RotationalSwitch *ahso, RotationalSwitch *vvr);
@@ -267,6 +270,8 @@ protected:
 	RotationalSwitch *actuatorHandleSelectorOpen;
 	RotationalSwitch *ventValveRotary;
 
+	Sound &OpenSound;
+	Sound &CloseSound;
 };
 
 ///

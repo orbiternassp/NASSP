@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.12  2007/08/13 16:06:13  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -78,6 +81,7 @@
 #define MASTERALARM_SOUND			"alarm.wav"
 #define PROBE_SOUND					"probe.wav"
 #define CMCABIN_SOUND				"cabin.wav"
+#define SUITCOMPRESSOR_SOUND		"suitcompr.wav"
 #define BUTTON_SOUND				"button.wav"
 #define GUARD_SOUND					"guard.wav"
 #define VOX_SOUND					"vox.wav"
@@ -116,5 +120,7 @@
 #define CREWDEAD_SOUND				"crewdead.wav"
 #define RCSFIRE_SOUND				"attfire.wav"
 #define RCSSUSTAIN_SOUND			"attsustain.WAV"
+#define HATCHOPEN_SOUND				"hatch_open.wav"
+#define HATCHCLOSE_SOUND			"hatch_close.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

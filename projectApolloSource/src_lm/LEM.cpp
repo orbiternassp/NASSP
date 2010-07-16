@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/05/24 03:50:34  dseagrav
+  *	Updates to RCS, CWEA, ATCA
+  *	
   *	Revision 1.17  2010/05/01 12:55:14  dseagrav
   *	
   *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
@@ -1419,6 +1422,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 	VSEnableCollisions(GetHandle(),"ProjectApollo");
+	// Switch to compatible dock mode 
+	SetDockMode(0);
+
 	SetLmVesselDockStage();
 
 	//

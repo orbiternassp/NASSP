@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2008/04/11 11:49:10  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -472,10 +475,12 @@ int LC34::clbkConsumeDirectKey(char *kstate) {
 
 	sprintf(oapiDebugString(), "x %f y %f z %f", pos.x, pos.y, pos.z);
 */
-
-/*	VESSELSTATUS vs;
+/*
+	VESSELSTATUS vs;
 	GetStatus(vs);
-	double moveStep = 1.0e-8;
+	double moveStep = 1.0e-7;
+	if (KEYMOD_CONTROL(kstate))
+		moveStep = 1.0e-9;
 
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
 		vs.vdata[0].x += moveStep;
@@ -517,6 +522,7 @@ int LC34::clbkConsumeDirectKey(char *kstate) {
 	}
 	sprintf(oapiDebugString(), "GetCOG_elev %f", GetCOG_elev());
 */
+
 	return 0;
 }
 

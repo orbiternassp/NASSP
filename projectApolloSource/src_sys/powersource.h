@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -168,10 +171,11 @@ class DCBusController : public e_object {
 
 public:
 	DCBusController(char *i_name, PanelSDK &p);
-	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp);
+	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3);
 	void refresh(double dt);
 	void ConnectFuelCell(int fc, bool connect);
 	bool IsFuelCellConnected(int fc);
+	bool IsBusContPowered(int fc);
 	bool IsFuelCellDisconnectAlarm();
 	e_object *GetBusSource() { return &busPower; };
 	void SetTieState(int s) { tieState = s; };
@@ -186,6 +190,7 @@ protected:
 	e_object *fuelcell1, *fuelcell2, *fuelcell3;
 	e_object *battery1, *battery2;
 	e_object *gseBattery;
+	e_object *busCont1, *busCont2, *busCont3;
 
 	NWayPowerMerge busPower;
 	ThreeWayPowerMerge fcPower;

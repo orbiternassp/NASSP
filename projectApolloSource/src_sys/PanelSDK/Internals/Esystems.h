@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.25  2008/04/11 11:58:12  tschachim
   *	Cleanup of e_object, DCBus and FuelCell.
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
@@ -556,7 +559,9 @@ public:
 	double fan_cap;
 	h_Valve* in;
 	h_Valve* out;
-	h_Valve *H20waste;	
+	h_Valve *H20waste;
+
+	bool IsOn() { return (pumping != 0); }
 	virtual void refresh(double dt);
 	virtual void Load(char *line);
 	virtual void Save(FILEHANDLE scn);
