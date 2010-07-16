@@ -25,6 +25,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2010/05/10 01:49:25  dseagrav
+  *	Added more LM indicators.
+  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
+  *	
   *	Revision 1.11  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -415,6 +419,8 @@
 #include "scs.h"
 #include "connector.h"
 #include "checklistController.h"
+
+#include "tracer.h"
 
 //
 // Generic panel switch item.

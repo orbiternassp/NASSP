@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2010/05/06 01:44:46  flydba
+  *	Final CM bitmaps update and corresponding changes (basically related to switch/gauge positions).
+  *	
   *	Revision 1.14  2010/02/22 14:23:30  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -1316,6 +1319,7 @@ public:
 	void GetSECSStatus( SECSStatus &ss );
 	void GetPyroStatus( PyroStatus &ps );
 	void DisconnectInverter(bool disc, int busno);
+	void EPSTimestep();
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	void GetRCSStatus(int index, RCSStatus &rs);
 	double GetAccelG() { return aZAcc / G; };
@@ -2327,13 +2331,13 @@ protected:
 	DCBusIndicatorSwitch MainBusAIndicator1;
 	DCBusIndicatorSwitch MainBusAIndicator2;
 	DCBusIndicatorSwitch MainBusAIndicator3;
-	SaturnFuelCellConnectSwitch MainBusBSwitch1;
-	SaturnFuelCellConnectSwitch MainBusBSwitch2;
-	SaturnFuelCellConnectSwitch MainBusBSwitch3;
+	ThreePosSwitch MainBusBSwitch1;
+	ThreePosSwitch MainBusBSwitch2;
+	ThreePosSwitch MainBusBSwitch3;
 	ThreeSourceSwitch MainBusBResetSwitch;
-	SaturnFuelCellConnectSwitch MainBusASwitch1;
-	SaturnFuelCellConnectSwitch MainBusASwitch2;
-	SaturnFuelCellConnectSwitch MainBusASwitch3;
+	ThreePosSwitch MainBusASwitch1;
+	ThreePosSwitch MainBusASwitch2;
+	ThreePosSwitch MainBusASwitch3;
 	ThreeSourceSwitch MainBusAResetSwitch;
 
 	//
@@ -3297,21 +3301,21 @@ protected:
 	CircuitBrakerSwitch FuelCell1PumpsACCB;
 	CircuitBrakerSwitch FuelCell1ReacsCB;
 	CircuitBrakerSwitch FuelCell1BusContCB;
-	CircuitBrakerSwitch FuelCell1PrugeCB;
+	CircuitBrakerSwitch FuelCell1PurgeCB;
 	CircuitBrakerSwitch FuelCell1RadCB;
 	CircuitBrakerSwitch CryogenicH2HTR1CB;
 	CircuitBrakerSwitch CryogenicH2HTR2CB;
 	CircuitBrakerSwitch FuelCell2PumpsACCB;
 	CircuitBrakerSwitch FuelCell2ReacsCB;
 	CircuitBrakerSwitch FuelCell2BusContCB;
-	CircuitBrakerSwitch FuelCell2PrugeCB;
+	CircuitBrakerSwitch FuelCell2PurgeCB;
 	CircuitBrakerSwitch FuelCell2RadCB;
 	CircuitBrakerSwitch CryogenicO2HTR1CB;
 	CircuitBrakerSwitch CryogenicO2HTR2CB;
 	CircuitBrakerSwitch FuelCell3PumpsACCB;
 	CircuitBrakerSwitch FuelCell3ReacsCB;
 	CircuitBrakerSwitch FuelCell3BusContCB;
-	CircuitBrakerSwitch FuelCell3PrugeCB;
+	CircuitBrakerSwitch FuelCell3PurgeCB;
 	CircuitBrakerSwitch FuelCell3RadCB;
 	CircuitBrakerSwitch CryogenicQTYAmpl1CB;
 	CircuitBrakerSwitch CryogenicQTYAmpl2CB;
@@ -4293,8 +4297,7 @@ protected:
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, int *start);
+	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
@@ -4455,6 +4458,7 @@ protected:
 	Sound CrashBumpS;
 	Sound Psound;
 	Sound CabinFans;
+	Sound SuitCompressorSound;
 	Sound SwindowS;
 	Sound SKranz;
 	Sound SExploded;
@@ -4474,6 +4478,8 @@ protected:
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
 	Sound SCorrection;
+	Sound HatchOpenSound;
+	Sound HatchCloseSound;
 
 	///
 	/// Drogue deployment message.
@@ -4643,8 +4649,15 @@ protected:
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-
 	bool LEMCheckAuto;
+
+	///
+	/// \todo Workaround for a possible Orbiter 2010 bug: Loading a scenario saved shortly after liftoff 
+	/// leads to a wildly spinning around Saturn. A workaround is to shutdown the main engines for 
+	/// the first 3 timesteps. This problem isn't discussed with Martin yet...
+	///
+	double MainThrusterGroupLevelBuffer;
+	int MainThrusterGroupLevelBufferTimesteps;
 
 	//
 	// Connectors.

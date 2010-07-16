@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.4  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -605,19 +608,6 @@ public:
 protected:
 	DCBusController *dcbus;
 	int fuelcell;
-};
-
-class SaturnFuelCellConnectSwitch: public SaturnThreePosSwitch {
-public:
-	SaturnFuelCellConnectSwitch() { fuelCell = 0; dcBusController = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int fc, DCBusController *dcController);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckFuelCell(int s);
-
-	int fuelCell;
-	DCBusController *dcBusController;
 };
 
 class BMAGPowerRotationalSwitch: public RotationalSwitch {

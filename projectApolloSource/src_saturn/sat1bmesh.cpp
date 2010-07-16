@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/22 14:23:31  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.2  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -271,6 +274,22 @@ static PARTICLESTREAMSPEC fuel_venting_spec = {
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
+
+// "prelaunch tank venting" particle streams
+static PARTICLESTREAMSPEC prelaunchvent_spec = {
+	0,		// flag
+	0.4,	// size
+	200,	// rate
+	2,	    // velocity
+	0.6,    // velocity distribution
+	0.5,	// lifetime
+	0.2,	// growthrate
+	0.9,    // atmslowdown
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
+};
+
 
 void Saturn1b::SetFirstStage ()
 {
@@ -944,6 +963,33 @@ void Saturn1b::CreateStageOne() {
 	// Load only the necessary meshes
 	S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
 	stage1->LoadMeshes(LowRes);
+}
+
+void Saturn1b::ActivatePrelaunchVenting()
+
+{
+	//
+	// "tank venting" particle streams
+	//
+	static double lvl = 1.0;
+
+	if (!prelaunchvent[0]) prelaunchvent[0] = AddParticleStream(&prelaunchvent_spec, _V(2, 1.5, 20 + STG0O), _V(1, 1, 0), &lvl);
+	if (!prelaunchvent[1]) prelaunchvent[1] = AddParticleStream(&prelaunchvent_spec, _V(2, 2, 8 + STG0O), _V(1, 1, 0), &lvl);
+	if (!prelaunchvent[2]) prelaunchvent[2] = AddParticleStream(&prelaunchvent_spec, _V(2, 2, 0.5 + STG0O), _V(1, 1, 0), &lvl);
+}
+
+void Saturn1b::DeactivatePrelaunchVenting()
+
+{
+	// "tank venting" particle streams
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		if (prelaunchvent[i]) {
+			DelExhaustStream(prelaunchvent[i]);
+			prelaunchvent[i] = NULL;
+		}
+	}
 }
 
 void Saturn1b::ActivateStagingVent()

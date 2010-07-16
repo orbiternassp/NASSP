@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.5  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -1255,56 +1258,12 @@ void DCBusIndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, S
 int DCBusIndicatorSwitch::GetState()
 
 {
-	if (dcbus->IsFuelCellConnected(fuelcell))
+	if (dcbus->IsFuelCellConnected(fuelcell) || !dcbus->IsBusContPowered(fuelcell))
 		return 1;
 	else
 		return 0;
 }
 
-
-void SaturnFuelCellConnectSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int fc, DCBusController *dcController)
-
-{
-	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-
-	fuelCell = fc;
-	dcBusController = dcController;
-}
-
-/*bool SaturnFuelCellConnectSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		CheckFuelCell(GetState());
-		return true;
-	}
-
-	return false;
-}*/
-
-bool SaturnFuelCellConnectSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (SaturnThreePosSwitch::SwitchTo(newState,dontspring)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		CheckFuelCell(newState);
-		return true;
-	}
-
-	return false;
-}
-
-void SaturnFuelCellConnectSwitch::CheckFuelCell(int s) 
-
-{
-	if (s == THREEPOSSWITCH_UP) {
-		dcBusController->ConnectFuelCell(fuelCell, true);
-	}
-	else if (s == THREEPOSSWITCH_DOWN) {
-		dcBusController->ConnectFuelCell(fuelCell, false);
-	}
-}
 
 SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :
 	ElectricMeter(minVal, maxVal, vMin, vMax)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -96,7 +99,7 @@ public:
 	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
 	virtual ~DSKY();
 
-	void Init(e_object *powered);
+	void Init(e_object *powered, RotationalSwitch *dimmer);
 	void Reset();
 
 	//
@@ -204,8 +207,6 @@ public:
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
 
-	bool IsPowered() { return Voltage() > 25.0; };
-
 	//
 	// Helper functions.
 	//
@@ -217,6 +218,7 @@ public:
 
 protected:
 
+	bool IsPowered();
 	void SendKeyCode(int val);
 
 	//
@@ -329,6 +331,7 @@ protected:
 	Sound Sclick;
 
 	bool FirstTimeStep;
+	RotationalSwitch *DimmerRotationalSwitch;
 
 	//
 	// Local helper functions.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/05/06 01:45:55  flydba
+  *	Final CM bitmaps update and corresponding changes (basically related to switch/gauge positions).
+  *	
   *	Revision 1.4  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -242,42 +245,6 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 	int Curdigit, Curdigit2;
 
-	/// \todo Remove after CSM panel got updated
-	if (csm) {
-		// Hour display on three digit
-		Curdigit = hours / 100;
-	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	Curdigit = hours / 10;
-	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0+20,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	Curdigit = hours;
-	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits,0+39,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	// Minute display on two digit
-	Curdigit = minutes / 10;
-	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits,0+62,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	Curdigit = minutes;
-	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits,0+81,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	// second display on two digit
-	Curdigit = seconds / 10;
-	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits,0+104,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
-	Curdigit = seconds;
-	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-		
-		return;
-	}
-
 	// Hour display on three digit
 	Curdigit = hours / 100;
 	Curdigit2 = hours / 1000;
@@ -308,7 +275,6 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
-
 }
 
 void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)

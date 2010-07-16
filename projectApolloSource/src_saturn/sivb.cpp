@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/22 14:23:31  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.2  2009/07/11 13:40:19  jasonims
   *	DockingProbe Work
   *	
@@ -1377,6 +1380,9 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 
 {
 	VESSEL2::clbkSetClassCaps (cfg);
+	// Switch to compatible dock mode 
+	SetDockMode(0);
+
 	InitS4b();
     
     // Define all animations here and delete the unneeded later,

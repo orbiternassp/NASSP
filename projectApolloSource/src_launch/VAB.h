@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.6  2007/03/01 18:24:33  tschachim
   *	Fixed Saturn V assembly
   *	
@@ -55,7 +58,7 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSaveState(FILEHANDLE scn);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
-	//int clbkConsumeDirectKey(char *kstate);
+	int clbkConsumeDirectKey(char *kstate);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 	void clbkPostCreation();

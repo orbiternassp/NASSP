@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -870,7 +873,8 @@ void CrewStatus::SaveState(FILEHANDLE scn) {
 }
 
 
-SaturnSideHatch::SaturnSideHatch() {
+SaturnSideHatch::SaturnSideHatch(Sound &opensound, Sound &closesound) :
+	OpenSound(opensound), CloseSound(closesound) {
 	open = true;	// Hatch open at prelaunch
 	toggle = 0;
 }
@@ -896,6 +900,7 @@ void SaturnSideHatch::Toggle(bool enforce) {
 				saturn->SetSideHatchMesh();
 				// Set switches on the open panel
 				actuatorHandleSelectorOpen->SetState(0);
+				OpenSound.play();
 			}
 		} else {
 			if (enforce || actuatorHandleSelectorOpen->GetState() == 2) {
@@ -905,6 +910,7 @@ void SaturnSideHatch::Toggle(bool enforce) {
 				// Set switches on the open panel
 				actuatorHandleSelector->SetState(2);
 				gearBoxSelector->SetState(2);
+				CloseSound.play();
 			}
 		}
 	}

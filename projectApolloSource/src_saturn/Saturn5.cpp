@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/02/22 14:23:30  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.4  2009/12/05 17:28:29  tschachim
   *	Bugfix Apollo 8 S4B_EmptyMass
   *	
@@ -885,7 +888,7 @@ void SaturnV::StageOne(double simt, double simdt)
 		MoveEVA();
 	}
 
-	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10) {
+	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10 && MainThrusterGroupLevelBufferTimesteps < -1) {
 		bAbort = true;
 	}
 

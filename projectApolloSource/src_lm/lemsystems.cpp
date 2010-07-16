@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2010/05/24 03:50:34  dseagrav
+  *	Updates to RCS, CWEA, ATCA
+  *	
   *	Revision 1.23  2010/05/23 05:34:04  dseagrav
   *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
   *	
@@ -693,7 +696,7 @@ void LEM::SystemsInit()
 	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
 	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
-	dsky.Init(&LGC_DSKY_CB);
+	dsky.Init(&LGC_DSKY_CB, NULL);
 
 	// AGS stuff
 	asa.Init(this);
