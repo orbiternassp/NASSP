@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:26  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:22:01  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -1082,11 +1085,9 @@ h_Evaporator::h_Evaporator(char *i_name, int i_pump, therm_obj *i_target, double
 
 void h_Evaporator::refresh(double dt) {
 
-
 	double steamUnderPressure = 0;
 
 	if (!h_pump) {
-		throttle = 0;
 		steamUnderPressure = -0.11;
 	}
 	if (h_pump == -1) {
@@ -1107,8 +1108,12 @@ void h_Evaporator::refresh(double dt) {
 	if (throttle < 0) throttle = 0;
 	if (throttle > 1) throttle = 1;
 
-	if (throttle) {
-		double targetFlow = 1.1 * dt * throttle; //???
+	// Throttle simulates the valve which remains unchanged when the evaporator is turned off
+	double throttle_temp = throttle;
+	if (!h_pump) throttle_temp = 0;
+
+	if (throttle_temp) {
+		double targetFlow = 1.1 * dt * throttle_temp; //???
 	
 		/// get liquid from sources
 		/// \todo Only H2O at the moment!
@@ -1140,7 +1145,7 @@ void h_Evaporator::refresh(double dt) {
 		}
 	}
 	//steam pressure is not simulated physically at the moment
-	steamPressure = (-0.05 * throttle + 0.14 - steamUnderPressure) / 0.000145038;
+	steamPressure = (-0.05 * throttle_temp + 0.14 - steamUnderPressure) / 0.000145038;
 }
 
 void h_Evaporator::Save(FILEHANDLE scn) {
