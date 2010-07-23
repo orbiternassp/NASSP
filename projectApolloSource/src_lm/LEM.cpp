@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.18  2010/05/24 03:50:34  dseagrav
   *	Updates to RCS, CWEA, ATCA
   *	
@@ -1445,9 +1448,9 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
-	if (!strnicmp (line, "MULTITHREAD", 10)) {
+	if (!strnicmp (line, "MULTITHREAD", 11)) {
 		int value;
-		sscanf (line+10, "%d", &value);
+		sscanf (line+11, "%d", &value);
 		isMultiThread=(value>0)?true:false;
 	}
 	else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
