@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.19  2010/02/22 14:23:30  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -2841,9 +2844,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "MAXTIMEACC", 10)) {
 			sscanf (line+10, "%d", &maxTimeAcceleration);
 		}
-		else if (!strnicmp (line, "MULTITHREAD", 10)) {
+		else if (!strnicmp (line, "MULTITHREAD", 11)) {
 			int value;
-			sscanf (line+10, "%d", &value);
+			sscanf (line+11, "%d", &value);
 			IsMultiThread=(value>0)?true:false;
 		}
 
