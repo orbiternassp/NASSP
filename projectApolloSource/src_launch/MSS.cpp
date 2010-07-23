@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.6  2008/04/11 11:49:19  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -72,11 +75,11 @@ HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo MSS.log";
 
 // Pad and park coordinates
-#define PARK_LON -80.6236987
-#define PARK_LAT 28.5882240
+#define PARK_LON -80.6208052
+#define PARK_LAT 28.5948584
 
-#define PAD_LON -80.6069644
-#define PAD_LAT 28.6009201
+#define PAD_LON -80.604151
+#define PAD_LAT 28.60839
  
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
