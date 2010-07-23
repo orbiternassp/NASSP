@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.10  2008/04/11 11:49:19  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -98,14 +101,14 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_POSTLIFTOFF		8
 
 // Pad and VAB coordinates
-#define VAB_LON -80.6526938
-#define VAB_LAT 28.5793921
+#define VAB_LON -80.6509353
+#define VAB_LAT 28.5860469
 
-#define PAD_LON -80.6069608 
-#define PAD_LAT 28.6013186
+#define PAD_LON -80.604151
+#define PAD_LAT 28.60839
 
-#define PAD_LV_LON -80.6069645 
-#define PAD_LV_LAT 28.6012355
+#define PAD_LV_LON -80.604151 
+#define PAD_LV_LAT 28.60831
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {

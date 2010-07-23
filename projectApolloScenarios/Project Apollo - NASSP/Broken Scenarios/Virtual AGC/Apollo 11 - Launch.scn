@@ -1,11 +1,11 @@
 BEGIN_DESC
 Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar
-Landing at July 16, 1969. The scenario starts at T-3h00min, launch azimuth is +72.06°.
+Landing at July 16, 1969. The scenario starts at T-4h00min, launch azimuth is +72.06°.
 END_DESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
-  Date MJD 40418.43889
+  Date MJD 40418.397223
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -27,7 +27,7 @@ BEGIN_SHIPS
 Columbia:ProjectApollo\Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
-  POS -80.604071 28.6078699
+  POS -80.604151 28.608310
   HEADING 270.00
   FUEL 1.000
   APOLLONO 11
@@ -37,7 +37,7 @@ Columbia:ProjectApollo\Saturn5
   STAGESTATUS 0
   NOHGA 1
   DOCKSTATE 0
-  MISSNTIME -10800
+  MISSNTIME -14400
   TOAPO 185.94
   TOPER 183.16
   TOHDG 72.058  
@@ -528,7 +528,7 @@ Crawler-Transporter:ProjectApollo\Crawler
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
-  POS -80.6040673 28.607953
+  POS -80.6041510 28.6083900
   HEADING 0.64
   LVNAME Columbia
 END
