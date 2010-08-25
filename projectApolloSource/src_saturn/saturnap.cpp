@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.9  2008/04/11 11:50:00  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -149,9 +152,9 @@ void Saturn::AttitudeLaunchSIVB()
 		rollvectorl = _V(0.0, 0.99 * ang_vel.z * 10., 0.0);
 	}
 
-	if (oapiGetSimStep() < 1 && !OrbitStabilised()) {
-		SetAttitudeRotLevel(2, -rollvectorl.y / oapiGetTimeAcceleration());
-	}
+//**************************************************************
+// Roll control
+	SetSaturnAttitudeRotLevel(_V(0, 0, -rollvectorl.y));
 
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the

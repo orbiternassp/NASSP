@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/02/22 14:23:31  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.3  2010/02/09 02:39:37  bluedragon8144
   *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
   *	
@@ -94,8 +97,10 @@
 #include "lvimu.h"
 
 #include "saturn.h"
-
 #include "saturn1b.h"
+
+#include "tracer.h"
+
 
 void Saturn1b::AttitudeLaunch1()
 {
@@ -267,6 +272,8 @@ void Saturn1b::AttitudeLaunch4()
 
 void Saturn1b::AutoPilot(double autoT)
 {
+	TRACESETUP("Saturn1b::AutoPilot");
+
 	const double GRAVITY=6.67259e-11;
 	static int first_time=1;
 	static int t = 0;
@@ -424,7 +431,7 @@ void Saturn1b::AutoPilot(double autoT)
 	heading = heading*180./PI;
 
 	// Inclination control
-	static double incinit = false; 
+	static int incinit = 0; 
 	static ELEMENTS elemlast; 
 	static double incratelast;
 
@@ -435,12 +442,14 @@ void Saturn1b::AutoPilot(double autoT)
 	double target = (agc.GetDesiredInclination() - elem.i * DEG) / (FirstStageShutdownTime - MissionTime);
 
 	if (agc.GetDesiredInclination() != 0 && autoT > 45) {	
-		if (!incinit) {
-			incinit = true;
+		if (incinit < 2) {
+			incinit++;
 			AtempY = 0;
 		} else {
 			if (autoT < FirstStageShutdownTime - 10) {	
 				AtempY = (incrate * DEG - target) / 0.7 + incraterate * DEG / 2.;
+				if (AtempY < -0.1) AtempY = -0.1;
+				if (AtempY >  0.1) AtempY =  0.1;
 			} else if (autoT < FirstStageShutdownTime + 10) {	
 				AtempY = 0;
 			} else {
@@ -529,6 +538,11 @@ void Saturn1b::AutoPilot(double autoT)
 			//     asin(ygl*normal)*DEG, asin(zgl*normal)*DEG, slip, slip+asin(zgl*normal)*DEG, heading+slip, heading, AtempY);
 			// sprintf(oapiDebugString(), "autoT %f AtempP %f AtempR %f AtempY %f altitude %f pitch %f pitch_c %f rhoriz.z %f", 
 			//     autoT, AtempP, AtempR, AtempY, altitude, pitch, pitch_c, rhoriz.z);
+			/*
+			char buffer[80];
+			sprintf(buffer,"AtempP %f AtempR %f AtempY %f", AtempP, AtempR, AtempY);	
+			TRACE(buffer);
+			*/
 
 			AttitudeLaunch1();
 			break;

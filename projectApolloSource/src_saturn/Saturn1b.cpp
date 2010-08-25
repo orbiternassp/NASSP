@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.4  2010/02/22 14:23:30  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -587,7 +590,7 @@ void Saturn1b::StageOne(double simt, double simdt)
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10 && MainThrusterGroupLevelBufferTimesteps < -1)
+	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10)
 	{
 		bAbort = true;
 	}
@@ -741,7 +744,9 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		} else {
 			SetThrusterLevel(th_main[0], 1.0);
 			SepS.stop();
-			AddRCS_S4B();
+			if (th_att_rot[0] == 0) {
+				AddRCS_S4B();
+			}
 
 			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;
@@ -837,7 +842,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 			autopilot = false;
 		}
 	}
-	// sprintf(oapiDebugString(), "state %d thrust %f", StageState, GetThrusterLevel(th_main[0]));
+	// sprintf(oapiDebugString(), "StageLaunchSIVB state %d thrust %f", StageState, GetThrusterLevel(th_main[0]));
 }
 
 
