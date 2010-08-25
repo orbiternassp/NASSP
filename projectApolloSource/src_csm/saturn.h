@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.15  2010/05/06 01:44:46  flydba
   *	Final CM bitmaps update and corresponding changes (basically related to switch/gauge positions).
   *	
@@ -4650,14 +4653,6 @@ protected:
 	///
 	char LEMCheck[100];
 	bool LEMCheckAuto;
-
-	///
-	/// \todo Workaround for a possible Orbiter 2010 bug: Loading a scenario saved shortly after liftoff 
-	/// leads to a wildly spinning around Saturn. A workaround is to shutdown the main engines for 
-	/// the first 3 timesteps. This problem isn't discussed with Martin yet...
-	///
-	double MainThrusterGroupLevelBuffer;
-	int MainThrusterGroupLevelBufferTimesteps;
 
 	//
 	// Connectors.

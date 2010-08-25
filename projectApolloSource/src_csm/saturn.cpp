@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2010/07/23 01:34:05  vrouleau
+  *	Bug fix on reading Multithread value (...again... after a Year!!)
+  *	
   *	Revision 1.20  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -756,10 +759,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
-
-	// Bug workaround, see declaration
-	MainThrusterGroupLevelBuffer = 0;
-	MainThrusterGroupLevelBufferTimesteps = -2;
 }
 
 Saturn::~Saturn()
@@ -1477,15 +1476,6 @@ void Saturn::clbkPostCreation() {
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
-
-	//  // Bug workaround, see declaration
-	if (thg_main != NULL) {
-		MainThrusterGroupLevelBuffer = GetThrusterGroupLevel(thg_main);
-		if (MainThrusterGroupLevelBuffer != 0) {
-			SetThrusterGroupLevel(thg_main, 0);
-			MainThrusterGroupLevelBufferTimesteps = 3;
-		}
-	}
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -1682,18 +1672,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 {
 	TRACESETUP("Saturn::clbkPreStep");
-
-	//  // Bug workaround, see declaration
-	if (MainThrusterGroupLevelBufferTimesteps > 0) {
-		MainThrusterGroupLevelBufferTimesteps--;
-	} else if (MainThrusterGroupLevelBufferTimesteps == 0) {
-		if (thg_main != NULL) { 
-			SetThrusterGroupLevel(thg_main, MainThrusterGroupLevelBuffer);
-		}
-		MainThrusterGroupLevelBufferTimesteps--;
-	} else if (MainThrusterGroupLevelBufferTimesteps == -1) {
-		MainThrusterGroupLevelBufferTimesteps--;
-	}
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
@@ -4399,35 +4377,37 @@ void Saturn::AddRCS_S4B()
 
 void Saturn::SetSaturnAttitudeRotLevel(VECTOR3 th) {
 
-	if (stage == STAGE_ORBIT_SIVB && OrbiterAttitudeDisabled) { 
-		if (th.x >= 0) {
-			SetThrusterLevel(th_att_rot[0], th.x);
-			SetThrusterLevel(th_att_rot[1], 0);
-		} else {
-			SetThrusterLevel(th_att_rot[0], 0);
-			SetThrusterLevel(th_att_rot[1], -th.x);
-		}
-		if (th.y >= 0) {
-			SetThrusterLevel(th_att_rot[6], th.y);
-			SetThrusterLevel(th_att_rot[7], th.y);
-			SetThrusterLevel(th_att_rot[8], 0);
-			SetThrusterLevel(th_att_rot[9], 0);
-		} else {
-			SetThrusterLevel(th_att_rot[6], 0);
-			SetThrusterLevel(th_att_rot[7], 0);
-			SetThrusterLevel(th_att_rot[8], -th.y);
-			SetThrusterLevel(th_att_rot[9], -th.y);
-		}
-		if (th.z >= 0) {
-			SetThrusterLevel(th_att_rot[5], th.z);
-			SetThrusterLevel(th_att_rot[4], th.z);
-			SetThrusterLevel(th_att_rot[3], 0);
-			SetThrusterLevel(th_att_rot[2], 0);
-		} else {
-			SetThrusterLevel(th_att_rot[5], 0);
-			SetThrusterLevel(th_att_rot[4], 0);
-			SetThrusterLevel(th_att_rot[3], -th.z);
-			SetThrusterLevel(th_att_rot[2], -th.z);
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && OrbiterAttitudeDisabled) {
+		if (th_att_rot[0] != 0) {
+			if (th.x >= 0) {
+				SetThrusterLevel(th_att_rot[0], th.x);
+				SetThrusterLevel(th_att_rot[1], 0);
+			} else {
+				SetThrusterLevel(th_att_rot[0], 0);
+				SetThrusterLevel(th_att_rot[1], -th.x);
+			}
+			if (th.y >= 0) {
+				SetThrusterLevel(th_att_rot[6], th.y);
+				SetThrusterLevel(th_att_rot[7], th.y);
+				SetThrusterLevel(th_att_rot[8], 0);
+				SetThrusterLevel(th_att_rot[9], 0);
+			} else {
+				SetThrusterLevel(th_att_rot[6], 0);
+				SetThrusterLevel(th_att_rot[7], 0);
+				SetThrusterLevel(th_att_rot[8], -th.y);
+				SetThrusterLevel(th_att_rot[9], -th.y);
+			}
+			if (th.z >= 0) {
+				SetThrusterLevel(th_att_rot[5], th.z);
+				SetThrusterLevel(th_att_rot[4], th.z);
+				SetThrusterLevel(th_att_rot[3], 0);
+				SetThrusterLevel(th_att_rot[2], 0);
+			} else {
+				SetThrusterLevel(th_att_rot[5], 0);
+				SetThrusterLevel(th_att_rot[4], 0);
+				SetThrusterLevel(th_att_rot[3], -th.z);
+				SetThrusterLevel(th_att_rot[2], -th.z);
+			}
 		}
 	} else {
 		SetAttitudeRotLevel(th);
@@ -5498,7 +5478,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		oapiDeleteVessel(GetHandle(), hs4bM);
 	}
 
-	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 
+	/* sprintf(oapiDebugString(), "StageOrbitSIVB SIVB thrust %.1f isp %.2f propellant %.1f", 
 		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
 	*/
 }
