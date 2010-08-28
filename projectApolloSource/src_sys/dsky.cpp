@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.3  2009/09/17 17:48:42  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -209,8 +212,7 @@ void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
 }
 
 bool DSKY::IsPowered() {
-	if (Voltage() < SP_MIN_ACVOLTAGE) 
-		return false;
+	if (Voltage() < SP_MIN_ACVOLTAGE){ return false; }
 
 	if (DimmerRotationalSwitch != NULL) {
 		if (DimmerRotationalSwitch->GetState() == 0) {
@@ -243,11 +245,9 @@ void DSKY::Timestep(double simt)
 void DSKY::SystemTimestep(double simdt)
 
 {
-	if (!IsPowered())
-		return;
-	
+	if (!IsPowered()){ return; }
 	//
-	// The DSYK power consumption is a little bit hard to figure out. According 
+	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
 	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
 	// track the number of lights that are lit, because during pause the still called render 
