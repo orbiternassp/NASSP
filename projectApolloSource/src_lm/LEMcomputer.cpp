@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2010/05/24 03:50:34  dseagrav
+  *	Updates to RCS, CWEA, ATCA
+  *	
   *	Revision 1.11  2010/05/12 05:01:30  dseagrav
   *	CWEA stuff for LGC and ISS, beginnings of ECS
   *	
@@ -1247,7 +1250,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		// HARDWARE MUST RESTART
 		if( !IsPowered() ) {
 #ifndef AGC_SOCKET_ENABLED
-			if(vagc.Erasable[0][05] != 04000){				
+			if(vagc.Erasable[0][05] != 04000){		
 				// Clear flip-flop based registers
 				vagc.Erasable[0][00] = 0;     // A
 				vagc.Erasable[0][01] = 0;     // L
@@ -1300,16 +1303,14 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
 		// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
 		//
-		
-		if( lem->isMultiThread && oapiGetTimeAcceleration() > 1.0)
-		{
+		if(lem->isMultiThread && oapiGetTimeAcceleration() > 1.0){
 			Lock lock(agcCycleMutex);
 			thread_simt = simt;
 			thread_simdt = simdt;
 			timeStepEvent.Raise();
-		}
-		else
+		}else{
 			agcTimestep(simt,simdt);
+		}
 		return;
 	}
 	if (GenericTimestep(simt, simdt))

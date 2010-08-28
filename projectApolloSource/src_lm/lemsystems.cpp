@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.24  2010/05/24 03:50:34  dseagrav
   *	Updates to RCS, CWEA, ATCA
   *	
@@ -692,11 +695,25 @@ void LEM::SystemsInit()
 	RCSMainSovBTB.WireTo(&LMPs28VBus);
 	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
 
+	// Lighting
+	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
+	CDR_LTG_UTIL_CB.WireTo(&CDRs28VBus);
+	CDR_LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
+	CDR_LTG_ANUN_DOCK_COMPNT_CB.WireTo(&CDRs28VBus);
+	LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
+	LTG_ANUN_DOCK_COMPNT_CB.WireTo(&LMPs28VBus);
+	LTG_FLOOD_CB.MaxAmps = 5.0;
+	LTG_FLOOD_CB.WireTo(&LMPs28VBus);
+	NUM_LTG_AC_CB.MaxAmps = 2.0;
+	NUM_LTG_AC_CB.WireTo(&ACBusB);
+
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
 	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
-	dsky.Init(&LGC_DSKY_CB, NULL);
+	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
+	// The source of the isolated section may be from the LGC supply or AC bus. So this may not be correct. If the CB pops, investigate!
+	dsky.Init(&NUM_LTG_AC_CB, &LtgAnunNumKnob);
 
 	// AGS stuff
 	asa.Init(this);
@@ -823,16 +840,6 @@ void LEM::SystemsInit()
 
 	// EXPLOSIVE DEVICES SYSTEMS
 	EDLGTB.WireTo(&EDS_CB_LG_FLAG);
-
-	// Lighting
-	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
-	CDR_LTG_UTIL_CB.WireTo(&CDRs28VBus);
-	CDR_LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
-	CDR_LTG_ANUN_DOCK_COMPNT_CB.WireTo(&CDRs28VBus);
-	LTG_FLOOD_CB.MaxAmps = 5.0;
-	LTG_FLOOD_CB.WireTo(&LMPs28VBus);
-	NUM_LTG_AC_CB.MaxAmps = 2.0;
-	NUM_LTG_AC_CB.WireTo(&ACBusB);
 
 	// ABORT GUIDANCE SYSTEM
 	SCS_ASA_CB.MaxAmps = 20.0;
@@ -1129,7 +1136,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	agc.Timestep(MissionTime, simdt);						// Do work
 	agc.SystemTimestep(simdt);								// Draw power
 	dsky.Timestep(MissionTime);								// Do work
-	//dsky.SystemTimestep(simdt);						    // DSKY power draw is broken.
+	dsky.SystemTimestep(simdt);								// This can draw power now.
 	asa.TimeStep(simdt);									// Do work
 	aea.TimeStep(simdt);
 	deda.TimeStep(simdt);
