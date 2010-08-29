@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.15  2010/05/06 01:45:17  flydba
   *	Final CM bitmaps update and corresponding changes (basically related to switch/gauge positions).
   *	
@@ -2971,7 +2974,7 @@ void Saturn::SetSwitches(int panel) {
 	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], ModeIntercomVOXSensThumbwheelSwitchRow);
 
 	PowerMasterVolumeThumbwheelSwitchRow.Init(AID_POWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], PowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
+	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], PowerMasterVolumeThumbwheelSwitchRow); // , VOLUME_COMMS, &soundlib);
 
 	PadCommVolumeThumbwheelSwitchRow.Init(AID_PADCOMMVOLUMETHUMBWHEEL, MainPanel);
 	PadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], PadCommVolumeThumbwheelSwitchRow);
@@ -3266,7 +3269,7 @@ void Saturn::SetSwitches(int panel) {
 	LeftModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftModeIntercomVOXSensThumbwheelSwitchRow);
 
 	LeftPowerMasterVolumeThumbwheelSwitchRow.Init(AID_LEFTPOWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS2, &soundlib);
+	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftPowerMasterVolumeThumbwheelSwitchRow); // , VOLUME_COMMS2, &soundlib);
 
 	LeftPadCommVolumeThumbwheelSwitchRow.Init(AID_LEFTPADCOMMVOLUMETHUMBWHEEL, MainPanel);
 	LeftPadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftPadCommVolumeThumbwheelSwitchRow);

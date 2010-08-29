@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/08/25 17:48:42  tschachim
+  *	Bugfixes Saturn autopilot.
+  *	
   *	Revision 1.16  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -2798,7 +2801,8 @@ protected:
 	ThumbwheelSwitch ModeIntercomVOXSensThumbwheelSwitch;
 
 	SwitchRow PowerMasterVolumeThumbwheelSwitchRow;
-	VolumeThumbwheelSwitch PowerMasterVolumeThumbwheelSwitch;
+	/// \todo was VolumeThumbwheelSwitch and controlled mission sound volume unrealistically
+	ThumbwheelSwitch PowerMasterVolumeThumbwheelSwitch;
 
 	SwitchRow PadCommVolumeThumbwheelSwitchRow;
 	ThumbwheelSwitch PadCommVolumeThumbwheelSwitch;
@@ -3024,7 +3028,8 @@ protected:
 	ThumbwheelSwitch LeftModeIntercomVOXSensThumbwheelSwitch;
 
 	SwitchRow LeftPowerMasterVolumeThumbwheelSwitchRow;
-	VolumeThumbwheelSwitch LeftPowerMasterVolumeThumbwheelSwitch;
+	/// \todo was VolumeThumbwheelSwitch and controlled mission sound volume unrealistically
+	ThumbwheelSwitch LeftPowerMasterVolumeThumbwheelSwitch;
 
 	SwitchRow LeftPadCommVolumeThumbwheelSwitchRow;
 	ThumbwheelSwitch LeftPadCommVolumeThumbwheelSwitch;
