@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.16  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -1252,14 +1255,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Altitude:", 9);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), "Latitude:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Longitude:", 10);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), "Inclination:", 12);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Latitude:", 9);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.85), "Longitude:", 10);
 
+		OBJHANDLE planet;
+		ELEMENTS elem;
 		char planetName[255];
 		VECTOR3 vel, hvel;
 		double vvel = 0, apDist, peDist, lat, lon, radius;
 
-		OBJHANDLE planet;
 		if (saturn) {
 			planet = saturn->GetGravityRef();
 			saturn->GetRelativeVel(planet, vel); 
@@ -1269,6 +1274,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			saturn->GetApDist(apDist);
 			saturn->GetPeDist(peDist);
 			saturn->GetEquPos(lon, lat, radius);
+			saturn->GetElements(planet, elem, 0, 0, FRAME_EQU);
 		} else if (lem) {
 			planet = lem->GetGravityRef();
 			lem->GetRelativeVel(planet, vel); 
@@ -1278,6 +1284,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			lem->GetApDist(apDist);
 			lem->GetPeDist(peDist);
 			lem->GetEquPos(lon, lat, radius);
+			lem->GetElements(planet, elem, 0, 0, FRAME_EQU);
 		}
 
 		oapiGetObjectName(planet, planetName, 16);
@@ -1301,10 +1308,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+		sprintf(buffer, "%.2lf°   ", elem.i * DEG);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
 		sprintf(buffer, "%.2lf°   ", lat * DEG);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.75), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", lon * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
+		sprintf(buffer, "%.2lf°   ", lon * DEG);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.85), buffer, strlen(buffer));
 
 		if (g_Data.killrot) {
 			SetTextColor (hDC, RGB(255, 0, 0));
