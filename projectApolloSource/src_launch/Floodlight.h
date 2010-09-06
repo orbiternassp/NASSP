@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.2  2006/07/24 19:24:50  tschachim
   *	Bugfix
   *	
@@ -57,6 +60,7 @@ protected:
 
 	int exhausts;
 	UINT exhaust[MAXEXHAUST];
+	LightEmitter *exhaustLight[MAXEXHAUST];
 	VECTOR3 exhaustPos[MAXEXHAUST];
 	double exhaustDir[MAXEXHAUST][2];
 	double exhaustSize[MAXEXHAUST][2];

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.5  2008/04/11 11:49:10  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -86,6 +89,7 @@ Floodlight::Floodlight(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	int i;
 	for (i = 0; i < MAXEXHAUST; i++) {
 		exhaust[i] = -1;
+		exhaustLight[i] = NULL;
 		exhaustPos[i] = _V(0, 0, 0);
 		exhaustDir[i][0] = 0;
 		exhaustDir[i][1] = 0;
@@ -147,9 +151,14 @@ void Floodlight::clbkPreStep(double simt, double simdt, double mjd) {
 	// Turn lights on or off
 	if (angle > 0 && exhaustsEnabled) {
 		for (i = 0; i < exhausts; i++) {
-			if (exhaust[i] != -1) 
+			if (exhaust[i] != -1) {
 				DelExhaust(exhaust[i]);
+			}
 			exhaust[i] = -1;
+			if (exhaustLight[i] != NULL) {
+				DelLightEmitter(exhaustLight[i]);
+			}
+			exhaustLight[i] = NULL;
 		}
 		exhaustsEnabled = false;
 	}
@@ -185,9 +194,18 @@ void Floodlight::SetExhaust(int index) {
 
 	if (exhaust[index] != -1) 
 		DelExhaust(exhaust[index]);
+	if (exhaustLight[index] != NULL) 
+		DelLightEmitter(exhaustLight[index]);
 
 	VECTOR3 dir = mul(GetRotationMatrixY(exhaustDir[index][0]), mul(GetRotationMatrixZ(exhaustDir[index][1]), _V(1, 0, 0)));
 	exhaust[index] = AddExhaust(th, exhaustSize[index][0], exhaustSize[index][1], exhaustPos[index], dir, tex);
+
+	COLOUR4 white = {1, 1, 1, 0};
+	COLOUR4 black = {0, 0, 0, 0};
+	COLOUR4 spec = {0.5, 0.5, 0.5, 0};
+	exhaustLight[index] = AddSpotLight(exhaustPos[index], dir, exhaustSize[index][0], 1, 0, 0, 
+		3. * atan(exhaustSize[index][1] / exhaustSize[index][0]), 5. * atan(exhaustSize[index][1] / exhaustSize[index][0]), 
+		white, spec, black);
 }
 
 MATRIX3 Floodlight::GetRotationMatrixY(double angle) {

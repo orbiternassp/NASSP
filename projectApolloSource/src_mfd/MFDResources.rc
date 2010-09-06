@@ -27,6 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 //
 
 IDB_LOGO             BITMAP  DISCARDABLE     "..\\Bitmaps\\Logo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    1000          "PROJECT APOLLO MFD:\r\n\r\nAdds 2 new MFD modes, ""Project Apollo"" MFD and ""Project Apollo Checklist"" MFD for Project Apollo - NASSP. Project Apollo MFD is used to do Mission Control tasks, with Project Apollo Checklist MFD checklists are displayed and executed in-game.\r\n\r\nSee http://nassp.sf.net for more details."
+    1001          "MFD modes"
+END
+
 #endif    // Englisch (GB) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -41,4 +53,5 @@ IDB_LOGO             BITMAP  DISCARDABLE     "..\\Bitmaps\\Logo.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

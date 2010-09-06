@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/08/29 18:51:01  tschachim
+  *	Display inclination
+  *	
   *	Revision 1.17  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -267,9 +270,10 @@ static char debugWinsock[100];
 void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
-	MFDMODESPEC spec;
+	MFDMODESPECEX spec;
 	spec.name = name;
 	spec.key = OAPI_KEY_A;					   // MFD mode selection key is obsolete
+	spec.context = NULL;
 	spec.msgproc = ProjectApolloMFD::MsgProc;  // MFD mode callback function
 
 	// Register the new MFD mode with Orbiter
