@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.8  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -131,9 +134,10 @@ static HINSTANCE g_hDLL;
 void ProjectApolloChecklistMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char* name = "Project Apollo Checklist";
-	MFDMODESPEC spec;
+	MFDMODESPECEX spec;
 	spec.key = OAPI_KEY_C;
 	spec.name = name;
+	spec.context = NULL;
 	spec.msgproc = ProjectApolloChecklistMFD::MsgProc;
 	hMFD = oapiRegisterMFDMode(spec);
 	g_hDLL = hDLL;
