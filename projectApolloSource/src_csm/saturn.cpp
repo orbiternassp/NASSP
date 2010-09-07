@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2010/08/25 17:48:42  tschachim
+  *	Bugfixes Saturn autopilot.
+  *	
   *	Revision 1.21  2010/07/23 01:34:05  vrouleau
   *	Bug fix on reading Multithread value (...again... after a Year!!)
   *	
@@ -5355,9 +5358,6 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			// In all other missions maintain LVLH attitude for now
 			// \todo Correct behaviour of the S-IVB 
 			
-			if (MissionTime >= SIVBCutoffTime + 20)	{
-				iu.SetLVLHAttitude(_V(1, 0, 0));
-			}
 		}
 	} else {
 		// Manual S-IVB control via CMC
