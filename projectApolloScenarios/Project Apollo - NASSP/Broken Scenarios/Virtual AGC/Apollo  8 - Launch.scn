@@ -1,10 +1,10 @@
 BEGIN_DESC
-Join Frank Borman, James Lovell and Bill Anders on Mankind's first trek a quater of a million miles to the moon at December 21, 1968. The scenario starts at T-3h00min, crew ingress is at T-1h40min, launch azimuth is +72.12°.
+Join Frank Borman, James Lovell and Bill Anders on Mankind's first trek a quater of a million miles to the moon at December 21, 1968. The scenario starts at T-4h00min, crew ingress is at T-1h40min, launch azimuth is +72.12°.
 END_DESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
-  Date MJD 40211.4104282407
+  Date MJD 40211.3686157403
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -26,7 +26,7 @@ BEGIN_SHIPS
 AS-503:ProjectApollo\Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
-  POS -80.604151 28.608310
+  POS -80.6041110 28.6082300
   HEADING 270.00
   FUEL 1.000
   APOLLONO 8
@@ -36,12 +36,27 @@ AS-503:ProjectApollo\Saturn5
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
-  MISSNTIME -10800
-  TOAPO 185.181
-  TOPER 184.403
+  MISSNTIME -14400
+  ATTACHSTATE 59
+  LMDSCFUEL 9026.4808
+  LMASCFUEL 0
+  TOAPO 191.3
+  TOPER 181.5
   TOHDG 72.124
   SICSHUT 126.0
-  SIIPUT 443.45
+  SISHUT 154.000000000000
+  SIIPUT 43.450012207031
+  SIICSHUT 1000.000000000000
+  SIISHUT 524.000000000000
+  ISTGJT 184.000000000000
+  LESJT 189.000000000000
+  IGMST 204.100000000000
+  SIFUELMASS 2035312.6632
+  SIIFUELMASS 429324.828
+  S4FUELMASS 101733.8817
+  SIEMPTYMASS 138390.9192
+  SIIEMPTYMASS 40097.5328
+  S4EMPTYMASS 17243.2999
   LANG English
   AUTOSLOW 1  
 AGC_BEGIN
@@ -220,7 +235,7 @@ Crawler-Transporter:ProjectApollo\Crawler
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
-  POS -80.6041510 28.6083900  
+  POS -80.6041110 28.6083100  
   HEADING 0.64
   LVNAME AS-503
 END
@@ -237,7 +252,7 @@ MSS:ProjectApollo\MSS
 END
 Floodlight:ProjectApollo\Floodlight
   STATUS Landed Earth
-  POS -80.604121 28.608300
+  POS -80.6041210 28.6082800
   HEADING 0.00
   LIGHTS 6
   LIGHT 0 51.500000 40.500000 -50.200000 3.937463 0.703367 250.000000 8.500000
