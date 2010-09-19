@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/01/14 16:54:13  tschachim
+  *	SPS TVC reset and trim angles bugfix.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -1312,6 +1315,7 @@ bool Saturn::clbkLoadGenericCockpit ()
 
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+	oapiCameraSetCockpitDir(0,0);
 	InVC = false;
 	InPanel = false;
 

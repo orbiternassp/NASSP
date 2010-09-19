@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2010/07/23 01:34:05  vrouleau
+  *	Bug fix on reading Multithread value (...again... after a Year!!)
+  *	
   *	Revision 1.19  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -1597,6 +1600,7 @@ bool LEM::clbkLoadGenericCockpit ()
 {
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+	oapiCameraSetCockpitDir(0,0);
 
 	InVC = false;
 	InPanel = false;
