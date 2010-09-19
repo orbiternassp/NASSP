@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/07/23 20:05:57  vrouleau
+  *	Orbiter2010 Pad location changes. ML & MSS had some hardcored locations.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -101,14 +104,14 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_POSTLIFTOFF		8
 
 // Pad and VAB coordinates
-#define VAB_LON -80.6509353
+#define VAB_LON -80.6509353	///\todo fix for Orbiter 2010-P1
 #define VAB_LAT 28.5860469
 
-#define PAD_LON -80.604151
-#define PAD_LAT 28.60839
+#define PAD_LON -80.6041122 
+#define PAD_LAT 28.6083723
 
-#define PAD_LV_LON -80.604151 
-#define PAD_LV_LAT 28.60831
+#define PAD_LV_LON -80.6041140 
+#define PAD_LV_LAT 28.6082888
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {
@@ -151,7 +154,7 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	moveToPad = false;
 	moveToVab = false;
 	moveLVToPad = false;
-	touchdownPointHeight = -85.287; // pad height
+	touchdownPointHeight = -86.677; // pad height
 	hLV = 0;
 	state = STATE_ROLLOUT;
 
@@ -459,7 +462,7 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 		vs.status = 1;
 		vs.vdata[0].x = PAD_LON * RAD;
 		vs.vdata[0].y = PAD_LAT * RAD;
-		vs.vdata[0].z = 0.43 * RAD; 
+		vs.vdata[0].z = 0.58 * RAD; 
 		DefSetState(&vs);
 		moveToPad = false;
 	}
@@ -525,7 +528,7 @@ bool ML::Detach() {
 	// Is the pad near?
 	if (GetDistanceTo(PAD_LON, PAD_LAT) < 10.0) {
 		
-		SetTouchdownPointHeight(-85.287);
+		SetTouchdownPointHeight(-86.677);	// pad height
 		moveToPad = true;
 		return true;
 	}
@@ -733,11 +736,13 @@ int ML::clbkConsumeDirectKey(char *kstate) {
 	}
 
 	sprintf(oapiDebugString(), "x %f y %f z %f", pos.x, pos.y, pos.z);
-
-
+*/
+/*
     VESSELSTATUS vs;
 	GetStatus(vs);
 	double moveStep = 1.0e-8;
+	if (KEYMOD_CONTROL(kstate))
+		moveStep = 1.0e-9;
 
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
 		vs.vdata[0].x += moveStep;

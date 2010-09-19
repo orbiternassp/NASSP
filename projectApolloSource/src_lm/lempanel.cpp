@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/05/23 05:34:04  dseagrav
+  *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
+  *	
   *	Revision 1.18  2010/05/16 04:54:12  dseagrav
   *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
   *	
@@ -1716,6 +1719,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_EVENT_TIMER_SWITCHES,			_R(1013, 1233, 1214, 1264), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;	
 		
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window
@@ -1727,6 +1731,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_QTYMONROTARY,				_R( 215, 806, 300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_LEFTWINDOW: // LEM Left Window
@@ -1738,7 +1743,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,				_R(1584,  246, 1633,  295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,			_R(1592,  335, 1627,  365), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,			_R(1313,  532, 1347,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_XPOINTERCDR,					_R(1327,  246, 1464,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTERCDR,					_R(1327,  246, 1464,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,			_R(1400,  740, 1576,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,	_R(1472,  826, 1582,  938), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,		_R(1616,  738, 1652,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1746,6 +1751,7 @@ bool LEM::clbkLoadPanel (int id) {
 	    oapiRegisterPanelArea (AID_ENG_ARM,						_R(1427,  898, 1461,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_LPDWINDOW: // LDP Window
@@ -1755,6 +1761,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,	_R(955, 713, 1004, 762), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));			
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
@@ -1763,6 +1770,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEM_COAS1,				_R( 739, 0, 1570, 831), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
@@ -1777,6 +1785,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_RIGHTPANEL: // LEM Right Panel
@@ -1815,6 +1824,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_DEDA_LIGHTS,					_R(  144, 1406,  191, 1432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 	
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
@@ -1826,6 +1836,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RR_GYRO_SEL_SWITCH,               _R( 207,  66,  242,   96),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,						PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		break;
 	}
 

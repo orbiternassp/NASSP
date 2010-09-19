@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.15  2008/04/11 11:49:59  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -183,6 +186,7 @@ void S1C::SetS1c()
 
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(v2);
+	oapiCameraSetCockpitDir(0,0);
 	SetCameraOffset(v);
 }
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/03 18:34:28  tschachim
+  *	Bugfixes BMAGs and hatch.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -516,6 +519,7 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		SetCameraDefaultDirection(cd);
+		oapiCameraSetCockpitDir(0,0);
 	}
 
 	// 
@@ -589,6 +593,7 @@ void Saturn::SetView(double offset, bool update_direction)
 			} else {
 				SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			}
+			oapiCameraSetCockpitDir(0,0);
 		}
 
 		v.x += ViewOffsetx;

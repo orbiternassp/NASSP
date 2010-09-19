@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/07/23 20:06:03  vrouleau
+  *	Orbiter2010 Pad location changes. ML & MSS had some hardcored locations.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -75,10 +78,10 @@ HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo MSS.log";
 
 // Pad and park coordinates
-#define PARK_LON -80.6208052
-#define PARK_LAT 28.5948584
+#define PARK_LON -80.6199329
+#define PARK_LAT 28.5953797
 
-#define PAD_LON -80.604151
+#define PAD_LON -80.604151	///\todo fix for Orbiter 2010-P1
 #define PAD_LAT 28.60839
  
 
@@ -107,7 +110,7 @@ MSS::MSS(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	moveToPad = false;
 	moveToVab = false;
 	moveLVToPad = false;
-	touchdownPointHeight = -65.85;		// park height
+	touchdownPointHeight = -67.25;		// park height
 	hLV = 0;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
@@ -167,7 +170,7 @@ void MSS::clbkPostStep (double simt, double simdt, double mjd) {
 		vs.status = 1;
 		vs.vdata[0].x = PARK_LON * RAD;
 		vs.vdata[0].y = PARK_LAT * RAD;
-		vs.vdata[0].z = 244.99 * RAD; 
+		vs.vdata[0].z = 245.34 * RAD; 
 		DefSetState(&vs);
 		moveToVab = false;
 	}
@@ -204,7 +207,7 @@ bool MSS::Detach() {
 	// Is the pad near?
 	if (GetDistanceTo(PAD_LON, PAD_LAT) < 10.0) {
 		
-		SetTouchdownPointHeight(-79.3);
+		SetTouchdownPointHeight(-79.3);		// pad height
 		moveToPad = true;
 		return true;
 	}
@@ -212,7 +215,7 @@ bool MSS::Detach() {
 	// Is the parking near?
 	if (GetDistanceTo(PARK_LON, PARK_LAT) < 10.0) {
 		
-		SetTouchdownPointHeight(-65.85);
+		SetTouchdownPointHeight(-67.25);	// park height
 		moveToVab = true;
 		return true;
 	}
@@ -315,11 +318,13 @@ int MSS::clbkConsumeDirectKey(char *kstate) {
 
 	sprintf(oapiDebugString(), "x %f y %f z %f", pos.x, pos.y, pos.z);
 */
-
-/*	VESSELSTATUS vs;
+/*
+	VESSELSTATUS vs;
 	GetStatus(vs);
 	double moveStep = 1.0e-8;
 	double heightStep = 0.1;
+	if (KEYMOD_CONTROL(kstate))
+		moveStep = 1.0e-9;
 
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
 		vs.vdata[0].x += moveStep;

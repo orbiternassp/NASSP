@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2010/08/29 18:51:47  tschachim
+  *	Bugfix mission sound
+  *	
   *	Revision 1.16  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -1177,6 +1180,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddRightLowerPanelAreas(0);
 
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 	if (id == SATPANEL_GN_LEFT && GNSplit) { // guidance & navigation lower equipment bay Left third (split)
@@ -1195,6 +1199,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddLeftCenterLowerPanelAreas(0);
 		
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1216,6 +1221,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		
 
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1235,6 +1241,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddRightLowerPanelAreas(-2397);
 		
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1262,6 +1269,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterMFD(MFD_RIGHT, mfds_right);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1281,6 +1289,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddRightMiddleMainPanelAreas(-1022);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1301,6 +1310,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddRightMainPanelAreas(-1772);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1328,6 +1338,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterMFD(MFD_USER2, mfds_user2);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1399,6 +1410,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_OXYGEN_SURGE_TANK_VALVE,						_R( 121,  201,  155,  235), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1480,6 +1492,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL229CIRCUITBRAKERS,						_R( 288, 1550,  456, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1519,6 +1532,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ALTIMETER2,		_R( 788 + xoffset,   860 + yoffset2,  949 + xoffset,  1021 + yoffset2), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					   PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1548,6 +1562,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_RNDZ_WDW_LES, _R( 463 + xoffset, 102 + yoffset, 1105 + xoffset, 840 + yoffset), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1593,6 +1608,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		}
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1630,6 +1646,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_CABINPRESSTESTSWITCH,		_R( 785, 3220,  825, 3260), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1661,6 +1678,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_PANEL_306_MISSIONTIMERSWITCH,	_R(1211, 1619, 1240, 1650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1699,6 +1717,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_TUNNEL_VENT_VALVE,			_R(1709, 297, 1747, 335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1728,6 +1747,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_WASTE_DISPOSAL,			    _R( 765,  738, 1063, 1008), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -1768,6 +1788,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,		_R(   0,    0,   10,   10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
 
@@ -1807,6 +1828,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE, _R(0, 0, 10, 10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);			
 	}
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/01/11 19:02:57  tschachim
+  *	Bugfix for  http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=1091.msg10325#msg10325 by SiameseCat
+  *	
   *	Revision 1.2  2009/06/15 16:11:32  tschachim
   *	New CollisionSDK.
   *	
@@ -760,7 +763,7 @@ void Crawler::Attach() {
 		// Is the crawler close enough to the MSS?
 		VECTOR3 pos;
 		GetRelativePos(hMSS, pos);
-		if (length(pos) < 67) {
+		if (length(pos) < 68) {
 			if (mss->Attach()) {
 				AttachChild(hMSS, ah, mss->GetAttachmentHandle(true, 0));
 			}
@@ -811,36 +814,43 @@ void Crawler::SetView(int viewpos) {
 	if (viewPos == VIEWPOS_REARCABIN) {
 		SetCameraOffset(_V(-14.97, 5.3, -14.534));
 		SetCameraDefaultDirection(_V(0, -0.309017, -0.951057));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_FRONTCABIN) {
 		SetCameraOffset(_V(16.5, 5.3, 19.6));
 		SetCameraDefaultDirection(_V(0, -0.309017, 0.951057));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_ML) {
 		SetCameraOffset(_V(19.9, 15.4, -25.6));
 		SetCameraDefaultDirection(_V(-0.630037, 0.453991, 0.630037));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 
 	} else if (viewPos == VIEWPOS_GROUND) {
 		SetCameraOffset(_V(21.5, 1.75, 1));
 		SetCameraDefaultDirection(_V(0, 0, 1));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 
 	} else if (viewPos == VIEWPOS_FRONTGANGWAY) {
 		SetCameraOffset(_V(0, 4.1, 21.3));
 		SetCameraDefaultDirection(_V(0, 0, 1));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_REARGANGWAY) {
 		SetCameraOffset(_V(0, 4.1, -16.234));
 		SetCameraDefaultDirection(_V(0, 0, -1));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_RIGHTREARGANGWAY) {
 		SetCameraOffset(_V(16.4, 5.7, -11.434));
 		SetCameraDefaultDirection(_V(0, 0, -1));
+		oapiCameraSetCockpitDir(0,0);
 		SetMeshesVisibility(MESHVIS_ALWAYS);
 	}	
 }
