@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2009/01/17 23:58:11  tschachim
   *	Bugfix for docked vessels, GetForceVector isn't working in this case.
   *	
@@ -86,7 +89,7 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v, bool LEMFlag) { OurVessel = v; LEM = LEMFlag; };
+	void SetVessel(VESSEL *v, bool LEMFlag);
 	VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
@@ -184,7 +187,7 @@ protected:
 	Boiler *IMUHeater;
 	GuardedToggleSwitch *PowerSwitch;
 
-
+	double pipaRate;	// PIPA pulse representation of speed change
 	double LastTime;	// in seconds
 };
 
