@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.32  2009/01/17 23:58:12  tschachim
   *	Bugfix for docked vessels, GetForceVector isn't working in this case.
   *	
@@ -215,6 +218,16 @@ void IMU::Init()
 	
 	LogInit();
 }
+
+void IMU::SetVessel(VESSEL *v, bool LEMFlag) 
+{
+	OurVessel = v;
+	LEM = LEMFlag;
+	if ( LEM ) 
+		pipaRate = 0.01;	// LM: 1 pulse = 1 cm/s
+	else
+		pipaRate = 0.0585; // CSM: 1 pulse = 5.85 cm/s
+};
 
 bool IMU::IsCaged()
 
@@ -522,15 +535,15 @@ void IMU::Timestep(double simt)
 			//sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f l %.10f", accel.x, accel.y, accel.z, length(accel));								
 
 			// pulse PIPAs
-			pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
+			pulses = RemainingPIPA.X + (accel.x * deltaTime / pipaRate);
 			PulsePIPA(RegPIPAX, (int) pulses);
 			RemainingPIPA.X = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
+			pulses = RemainingPIPA.Y + (accel.y * deltaTime / pipaRate);
 			PulsePIPA(RegPIPAY, (int) pulses);
 			RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
+			pulses = RemainingPIPA.Z + (accel.z * deltaTime / pipaRate);
 			PulsePIPA(RegPIPAZ, (int) pulses);
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
