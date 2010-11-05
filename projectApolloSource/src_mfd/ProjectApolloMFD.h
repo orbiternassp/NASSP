@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/13 15:20:15  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.5  2009/05/31 01:47:30  bluedragon8144
   *	removed ClockUpdate() declaration
   *	
@@ -93,6 +96,7 @@ public:
 	bool ConsumeButton (int bt, int event);
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
+	void UpLinkRefsmmat (void);	
 	void GetStateVector (void);	
 	void IMFDP30Uplink (void);
 	void IMFDP31Uplink (void);
