@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2010/09/06 16:23:21  tschachim
+  *	Changes for Orbiter 2010-P1
+  *	
   *	Revision 1.18  2010/08/29 18:51:01  tschachim
   *	Display inclination
   *	
@@ -227,6 +230,47 @@ static int g_MFDmode; // identifier for new MFD mode
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 
+#define  UPLINK_SV				0
+#define  UPLINK_P30				1
+#define  UPLINK_P31				2
+#define  UPLINK_REFSMMAT		3
+
+
+int apolloLandSiteRefsmmat[7][18] = 
+{
+	// Apollo 11 - These values gotten from EMEM 1735 after P51 execution on CSM above landing site pointing up on Jul 20th 1969 20:17. Not the actual values
+	{14417,31562, 11111, 14164 , 3727 , 27344, 77640, 53206, 71722, 53530, 16626, 36644, 11744, 33312, 64274, 40123, 73254, 77567},
+	// Apollo 12
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 13 
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 14
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 15
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 16
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 17
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};
+
+int apolloLandSiteLiftOffRefsmmat[7][18] = 
+{
+	// Apollo 11
+	{14417,31562, 11111, 14164 , 3727 , 27344, 77640, 53206, 71722, 53530, 16626, 36644, 11744, 33312, 64274, 40123, 73254, 77567},
+	// Apollo 12
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 13
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 14
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 15
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 16
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	// Apollo 17
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};
 // Time to ejection when the IU is programmed
 #define IUSTARTTIME 900
 
@@ -769,7 +813,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[8] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK"};
+	static char *labelTELE[9] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK","LS"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
@@ -790,7 +834,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
 	}
 	else if(screen == PROG_TELE) {
-		return (bt < 8 ? labelTELE[bt] : 0);
+		return (bt < 9 ? labelTELE[bt] : 0);
 	}
 	else if (screen == PROG_SOCK) {
 		return (bt < 1 ? labelSOCK[bt] : 0);
@@ -841,7 +885,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Request Burn Data", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'}
 	};
-	static const MFDBUTTONMENU mnuTELE[8] = {
+	static const MFDBUTTONMENU mnuTELE[9] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
 		{"P30 - External DV Uplink", 0, 'D'},
@@ -849,7 +893,8 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Change Source",0,'S'},
 		{"Change Reference Body", 0, 'R'},
 		{"Toggle burn data requests", 0, 'I'},
-		{"Clock Update", 0, 'C'}
+		{"Clock Update", 0, 'C'},
+		{"Refsmmat Update", 0, 'F'}
 	};
 	//This menu set is just for the Socket program, remove before release.
 	static const MFDBUTTONMENU mnuSOCK[1] = {
@@ -981,9 +1026,9 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			if (saturn || lem) {
 				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
 					g_Data.uplinkDataReady = 1;
-					g_Data.uplinkDataType = 0;
+					g_Data.uplinkDataType = UPLINK_SV;
 				}
-				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 0) {
+				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_SV) {
 					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
 					GetStateVector();
 				}
@@ -999,12 +1044,12 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 						} else {
 							g_Data.hasError = false;							
 							g_Data.uplinkDataReady = 1;
-							g_Data.uplinkDataType = 1;
+							g_Data.uplinkDataType = UPLINK_P30;
 						}
 					} else {
 						g_Data.hasError = true;
 					}
-				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 1) {		
+				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_P30) {		
 					IMFDP30Uplink();
 				}
 			}
@@ -1019,12 +1064,12 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 						} else {
 							g_Data.hasError = false;
 							g_Data.uplinkDataReady = 1;							
-							g_Data.uplinkDataType = 2;
+							g_Data.uplinkDataType = UPLINK_P31;
 						}
 					} else {
 						g_Data.hasError = true;
 					}
-				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 2) {
+				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_P31) {
 					IMFDP31Uplink();		
 				}
 			}
@@ -1065,7 +1110,20 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				oapiOpenInputBox("Set Reference", ReferencePlanetInput, 0, 20, (void*)this);
 			}
 			return true;
+		} else if (key == OAPI_KEY_F) {
+			if (saturn || lem) {
+				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
+					g_Data.uplinkDataReady = 1;
+					g_Data.uplinkDataType = UPLINK_REFSMMAT;
+				}
+				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_REFSMMAT) {
+					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
+					UpLinkRefsmmat();
+				}
+			}
+			return true;
 		}
+
 	} else if (screen == PROG_ECS) {
 		if (key == OAPI_KEY_B) {
 			screen = PROG_NONE;
@@ -1170,7 +1228,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyGNC[3] = { OAPI_KEY_B, OAPI_KEY_D, OAPI_KEY_K};
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[8] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C };
+	static const DWORD btkeyTELE[9] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
@@ -1181,7 +1239,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	} else if (screen == PROG_IMFD) {
 		if (bt < 3) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
 	} else if (screen == PROG_TELE) {
-		if (bt < 8) return ConsumeKeyBuffered (btkeyTELE[bt]);
+		if (bt < 9) return ConsumeKeyBuffered (btkeyTELE[bt]);
 	}
 	// This program is the socket data.  Remove before release.
 	else if (screen == PROG_SOCK)
@@ -1487,21 +1545,21 @@ void ProjectApolloMFD::Update (HDC hDC)
 	else if (screen == PROG_TELE) {
 		SetTextAlign (hDC, TA_LEFT);
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.3), "Telemetry:", 10);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.3), debugWinsock, strlen(debugWinsock));
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 15);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.25), "Telemetry:", 10);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.25), debugWinsock, strlen(debugWinsock));
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "IMFD Burn Data:", 15);
 		if(saturn){
 			if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "REQUESTING", 10);
 			} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
 				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "NO DATA", 7);	
 				SetTextColor (hDC, RGB(0, 255, 0));
 			} else {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "NONE", 4);
 			}
 		}else{
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "N/A", 3);
+			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "N/A", 3);
 		}
 		if (g_Data.hasError) {
 			if (saturn && saturn->GetIMFDClient()->IsBurnDataValid()) {
@@ -1546,56 +1604,79 @@ void ProjectApolloMFD::Update (HDC hDC)
 				SetTextAlign (hDC, TA_CENTER);
 			}
 			if (g_Data.uplinkDataReady == 1) {
-				if (g_Data.uplinkDataType == 0)
+				if (g_Data.uplinkDataType == UPLINK_SV)
 					sprintf(buffer, "Press SV to start upload");
-				else if (g_Data.uplinkDataType == 1)
+				else if (g_Data.uplinkDataType == UPLINK_P30)
 					sprintf(buffer, "Press P30 to start upload");
-				else
+				else if (g_Data.uplinkDataType == UPLINK_P31)
 					sprintf(buffer, "Press P31 to start upload");
+				else if (g_Data.uplinkDataType == UPLINK_REFSMMAT) {
+					if( saturn )
+						sprintf(buffer, "LS Desired REFSMMAT");
+					else {
+						if ( lem->GetAltitude() < 1 ) // Landed on the moon, Upload the Lift off REFSMMAT
+							sprintf(buffer, "LiftOff REFSMMAT");
+						else
+							sprintf(buffer, "LS REFSMMAT");
+					}
+					TextOut(hDC, width / 2, (int) (height * 0.75), buffer, strlen(buffer));
+					sprintf(buffer, "Press LS to start upload");
+				}
 			}
 			else
 				sprintf(buffer, "Press CLK to start upload");
 			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
 		}
 		else if(g_Data.uplinkDataReady == 2) {
+			double linepos = .30;
 			SetTextAlign (hDC, TA_LEFT);
 			sprintf(buffer, "304   %ld", g_Data.emem[0]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "305   %ld", g_Data.emem[1]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "306   %ld", g_Data.emem[2]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "307   %ld", g_Data.emem[3]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "310   %ld", g_Data.emem[4]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "311   %ld", g_Data.emem[5]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "312   %ld", g_Data.emem[6]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "313   %ld", g_Data.emem[7]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "314   %ld", g_Data.emem[8]);		
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.85), buffer, strlen(buffer));
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "315   %ld", g_Data.emem[9]);
-			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.45), buffer, strlen(buffer));		
-			if (g_Data.uplinkDataType != 1) {
+			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));		
+			linepos = 0.30;
+			if (g_Data.uplinkDataType != UPLINK_P30) {
 				sprintf(buffer, "316   %ld", g_Data.emem[10]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.5), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "317   %ld", g_Data.emem[11]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.55), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "320   %ld", g_Data.emem[12]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.6), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			}
-			if (g_Data.uplinkDataType == 0) {
+			if (g_Data.uplinkDataType >= UPLINK_SV) {
 				sprintf(buffer, "321   %ld", g_Data.emem[13]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.65), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "322   %ld", g_Data.emem[14]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.7), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "323   %ld", g_Data.emem[15]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.75), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "324   %ld", g_Data.emem[16]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.8), buffer, strlen(buffer));
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			}
+			if (g_Data.uplinkDataType >= UPLINK_REFSMMAT) {
+				sprintf(buffer, "325   %ld", g_Data.emem[17]);
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				sprintf(buffer, "326   %ld", g_Data.emem[18]);
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				sprintf(buffer, "327   %ld", g_Data.emem[19]);
+				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+
 			}
 		}
 		SetTextAlign (hDC, TA_LEFT);
@@ -1674,6 +1755,33 @@ MATRIX3 J2000EclToBRCS(double mjd)
 	double obl = 0.40909280422;
 
 	return mul( mul(_MRz(rot),_MRx(inc)), mul(_MRz(lan),_MRx(-obl)) );
+}
+
+void ProjectApolloMFD::UpLinkRefsmmat ()
+{
+		g_Data.emem[0] = 24;
+		// 
+		// If in CSM or in LM landed, upload Desired RESFMMAT
+		//
+		if( saturn || (lem && ( lem->GetAltitude() < 1) ) ) {
+				g_Data.emem[1] = 306; // XSMD	
+				g_Data.uplinkDataType = UPLINK_REFSMMAT;
+		} else {
+			//
+			// Upload REFSMMAT  ( LM powerup )
+			g_Data.uplinkDataType = UPLINK_REFSMMAT;
+			g_Data.emem[1] = 1733;	// Luminary99 REFSMMAT
+		}
+
+		if (lem && ( lem->GetAltitude() < 1) ) // In LEM and Landed on the moon, Upload the Lift off REFSMMAT
+			for(int i = 0 ; i<18 ; i++)
+				g_Data.emem[2+i] = apolloLandSiteLiftOffRefsmmat[saturn->GetApolloNo()-11][i];
+		else
+			for(int i = 0 ; i<18 ; i++)
+				g_Data.emem[2+i] = apolloLandSiteRefsmmat[saturn->GetApolloNo()-11][i];
+		g_Data.uplinkDataType = UPLINK_REFSMMAT;
+		g_Data.uplinkDataReady = 2;
+		UplinkData(); // Go for uplink
 }
 
 void ProjectApolloMFD::GetStateVector (void)
