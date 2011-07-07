@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/10/19 12:24:49  dseagrav
+  *	LM checkpoint commit.
+  *	Put back one FDAI for testing purposes (graphic is wrong)
+  *	Messed around with mass properties
+  *	LGC now runs Luminary 099 instead of 131
+  *	Added LGC pad load, values need worked but addresses are checked.
+  *	
   *	Revision 1.5  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -253,6 +260,7 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 
+	VESSEL *GetCSM();
 protected:
 	// DS20060413
 	void ProcessChannel13(int val);
@@ -260,6 +268,8 @@ protected:
 	void ProcessChannel6(int val);
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+	void ProcessChannel160(int val);
+	void ProcessChannel161(int val);
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);

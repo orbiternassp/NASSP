@@ -1,7 +1,7 @@
 /**************************************************************************
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
-
+  Copyright 2002-2005 Chris Knestrick
 
 
   Project Apollo is free software; you can redistribute it and/or modify
@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2010/05/24 03:50:34  dseagrav
+  *	Updates to RCS, CWEA, ATCA
+  *	
   *	Revision 1.23  2010/05/23 05:34:04  dseagrav
   *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
   *	
@@ -362,18 +365,31 @@ public:
 };
 
 // Rendezvous Radar
-class LEM_RR{
+class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s);
+	void Init(LEM *s,e_object *src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	void SystemTimeStep(double simdt);
 	double GetAntennaTempF();
+	void RRTrunionDrive(int val,int ch12);
+	void RRShaftDrive(int val,int ch12);
+	void RadarData(double &range, double &rate,double &pitch, double &yaw);
+	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
+	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
+	bool IsPowered();
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+    e_object *dc_source;
+	int    isTracking;
+	double trunnionAngle;
+	double trunnionMoved;
+	double shaftAngle;
+	double shaftMoved;
 };
 
 // Caution and Warning Electronics Assembly
