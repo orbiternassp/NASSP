@@ -153,6 +153,12 @@
     <ClCompile Include="..\..\src_lm\yaAGS\OutputAPI_AGS.c">
       <Filter>yaAGS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\CDK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">

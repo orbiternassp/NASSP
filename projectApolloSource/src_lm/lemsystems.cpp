@@ -1,6 +1,8 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant
+  Copyright 2002-2005 Chris Knestrick
+
 
   ORBITER vessel module: LEM systems code
 
@@ -22,6 +24,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2010/08/28 16:16:33  dseagrav
+  *	Fixed LM DSKY to use dimmer. (Dimmer source may be wrong)
+  *	Corrected a typo and did some bracketization in DSKY source.
+  *	Wasted a lot of time figuring out our copy of Luminary had been garbaged.
+  *	Your Luminary 99 binary should be overwritten by the commit before this one.
+  *	If your binary is 700 bytes in size you have the garbaged version.
+  *	
   *	Revision 1.25  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -206,10 +215,17 @@
 #include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "PanelSDK/Internals/Esystems.h"
+#include "ioChannels.h"
 
 #include "LEM.h"
 
 #include "CollisionSDK/CollisionSDK.h"
+
+
+#define RR_SHAFT_STEP 0.000191747598876953125 
+#define RR_TRUNNION_STEP 0.00004793689959716796875
+
 
 void LEM::ResetThrusters()
 
@@ -780,7 +796,11 @@ void LEM::SystemsInit()
 	// Landing Radar
 	LR.Init(this);
 	// Rdz Radar
-	RR.Init(this);
+	RDZ_RDR_AC_CB.MaxAmps = 5.0;
+	RDZ_RDR_AC_CB.WireTo(&CDRs28VBus);
+
+
+	RR.Init(this,&CDRs28VBus);
 
 	// CWEA
 	CWEA.Init(this);
@@ -1901,7 +1921,7 @@ LEM_RR::LEM_RR() : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04
 	lem = NULL;	
 }
 
-void LEM_RR::Init(LEM *s){
+void LEM_RR::Init(LEM *s,e_object *src){
 	lem = s;
 	// Set up antenna.
 	// LR antenna is designed to operate between ??F and 75F
@@ -1912,6 +1932,10 @@ void LEM_RR::Init(LEM *s){
 	antenna.Area = 9187.8912; // Area of reflecting dish, probably good enough
 	antenna.mass = 10000;
 	antenna.SetTemp(255.1); 
+	trunnionAngle = 0 * RAD; 
+	trunnionMoved = 0 * RAD;
+	shaftAngle = -180 * RAD;  // Stow
+	shaftMoved = -180 * RAD;
 	if(lem != NULL){
 		antheater.WireTo(&lem->HTR_RR_STBY_CB);
 		lem->Panelsdk.AddHydraulic(&antenna);
@@ -1919,19 +1943,266 @@ void LEM_RR::Init(LEM *s){
 		antheater.Enable();
 		antheater.SetPumpAuto();
 	}
+	dc_source = src;
+
+
 }
 
+
+void LEM_RR::RRTrunionDrive(int val,int ch12) {
+
+	int pulses;
+	LMChannelValue12 val12;
+	val12.Value = ch12;
+
+	if (IsPowered() == 0) { return; }
+
+	if (val&040000){ // Negative
+		pulses = -((~val)&07777); 
+	} else {
+		pulses = val&07777; 
+	}
+	if (val12.Bits.EnableRRCDUErrorCounter){
+		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
+		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+	}
+	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
+	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+}
+
+
+bool LEM_RR::IsPowered()
+
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) { 
+		return false;
+	}
+	return true;
+}
+
+void LEM_RR::RRShaftDrive(int val,int ch12) {
+
+	int pulses;
+	LMChannelValue12 val12;
+	val12.Value = ch12;
+	
+	if (!IsPowered()) { return; }
+
+	if (val&040000){ // Negative
+		pulses = -((~val)&07777); 
+	} else {
+		pulses = val&07777; 
+	}
+	shaftAngle += (RR_SHAFT_STEP*pulses);
+	if (val12.Bits.EnableRRCDUErrorCounter){
+		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
+		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+	}
+	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+}
+
+
+VECTOR3 LEM_RR::GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll)
+{	
+	VECTOR3 Res = { 0, 0, 0 };
+
+	// Normalize the vectors
+	Pitch = Normalize(Pitch);
+	YawRoll = Normalize(YawRoll);
+	VECTOR3 H = Normalize(CrossProduct(Pitch, YawRoll));
+
+	Res.data[YAW] = asin(Pitch.x);
+	Res.data[ROLL] = -atan2(H.x, YawRoll.x);
+	Res.data[PITCH] = -atan2(Pitch.y, Pitch.z);
+	return Res;
+
+}
+
+
+VECTOR3 LEM_RR::GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll)
+{	
+	VECTOR3 Res = { 0, 0, 0 };
+
+	// Normalize the vectors
+	Pitch = Normalize(Pitch);
+	YawRoll = Normalize(YawRoll);
+	VECTOR3 H = Normalize(CrossProduct(Pitch, YawRoll));
+
+	Res.data[YAW] = -asin(Pitch.x);
+	Res.data[ROLL] = atan2(H.x, YawRoll.x);
+	Res.data[PITCH] = atan2(Pitch.y, Pitch.z);
+	return Res;
+
+}
+
+
+void LEM_RR::RadarData(double &range, double &rate, double &pitch, double &yaw)
+{
+	VECTOR3 csmpos,  lmpos,  csmori, lmori,direction;
+	VECTOR3 RelPos, RelVel;
+    VECTOR3 RefAttitude,PitchYawRoll; //Reference attitude
+	VESSELSTATUS Status;
+
+	VESSEL *csm=lem->agc.GetCSM();
+	VECTOR3 SpacecraftPos, TargetPos,  GVel;
+	VECTOR3 GRelPos, H;
+
+	lem->GetGlobalPos(lmpos);
+	csm->GetGlobalPos(csmpos);
+	lem->Global2Local(lmpos, SpacecraftPos); // Convert to positions to local coordinates
+	lem->Global2Local(csmpos, TargetPos);
+	RelPos = TargetPos - SpacecraftPos; // Calculate relative position of target in local coordinates
+	lem->GetRelativePos(csm->GetHandle(), GRelPos); // Get position of spacecraft relative to target
+	GRelPos = -GRelPos; // Reverse vector so that the it points from spacecraft to target
+	lem->GetStatus(Status);
+	if ( (Mag(CrossProduct(Normalize(-Status.rvel), Normalize(GRelPos)))) < 0.1 ) { // Check to see if target is too close to velocity vector. Corresponds to approx 5deg.
+		H = CrossProduct(Status.rpos, GRelPos); // Use local vectical as roll reference
+	}
+	else {
+		H = CrossProduct(Status.rvel, GRelPos); // Use velocity vector as roll reference
+	}
+
+	RefAttitude = GetPYR2(GRelPos, H);
+	
+    VECTOR3 GlobalPts_Pitch,GlobalPts_Yaw, LocalPts_Pitch, LocalPts_Yaw;
+	VECTOR3 PitchUnit = {0, 0, 1.0}, YawRollUnit = {1.0, 0, 0};
+
+	RotateVector(PitchUnit, RefAttitude, GlobalPts_Pitch);
+	RotateVector(YawRollUnit, RefAttitude, GlobalPts_Yaw);
+
+	GlobalPts_Pitch = lmpos + GlobalPts_Pitch;
+	GlobalPts_Yaw = lmpos + GlobalPts_Yaw;	
+
+	lem->Global2Local(GlobalPts_Pitch, LocalPts_Pitch);
+	lem->Global2Local(GlobalPts_Yaw, LocalPts_Yaw);
+
+	PitchYawRoll = GetPYR(LocalPts_Pitch, LocalPts_Yaw);
+
+	// Calculate relative velocity
+	lem->GetRelativeVel(csm->GetHandle(), GVel);
+	lem->Global2Local((GVel + lmpos), RelVel);
+	range =  Mag(RelPos);
+	// Compute the radial component
+	rate = (RelPos * RelVel) / Mag(RelPos);
+
+	pitch = PitchYawRoll.x ; 
+	yaw = PitchYawRoll.y ;
+//	sprintf(oapiDebugString(),"range = %f, rate=%f, CSM pitch=%f,CSM yaw=%f,Shaft=%f,Trun=%f",range,rate,PitchYawRoll.x * DEG,PitchYawRoll.y* DEG,shaftAngle*DEG,trunnionAngle*DEG);
+}
+
+
 void LEM_RR::TimeStep(double simdt){
-	if(lem == NULL){ return; }
+
+	LMChannelValue33 val33;
+	val33.Value = lem->agc.GetInputChannel(033);
+	
+
+	double ShaftRate = 0;
+	double TrunRate = 0;
+
+	if (!IsPowered() ) { 
+		val33.Bits.RRPowerOnAuto = 0;
+		val33.Bits.RRDataGood = 0;
+		lem->agc.SetInputChannel(033,val33.Value);
+		return;
+	}
+	// Max power used based on LM GNCStudyGuide. Is this good
+	dc_source->DrawPower(130);
+
+	
+	switch(lem->SlewRateSwitch.GetState()) {
+		case TOGGLESWITCH_UP:       // HI
+			ShaftRate = 1775. * simdt;
+			TrunRate  = 3640. * simdt;
+			break;
+		case TOGGLESWITCH_DOWN:     // LOW
+			ShaftRate = 18. * simdt;
+			TrunRate  = 36. * simdt;
+			break;
+	}
+
+	double range,rate,angle,pitch,yaw;
+	RadarData(range,rate,pitch,yaw);
+	
+	if((fabs(shaftAngle-pitch) < 2*RAD ) &&  fabs(trunnionAngle-yaw) < 2*RAD) {
+
+	}
+
+
+	switch(lem->RendezvousRadarRotary.GetState()) {
+		case 0: // Auto
+			break;
+		case 1: // Slew
+			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle < (RAD*-180)){
+				trunnionAngle += RR_TRUNNION_STEP * TrunRate;				
+				while(fabs(fabs(trunnionAngle)-fabs(trunnionMoved)) >= RR_TRUNNION_STEP){					
+					lem->agc.vagc.Erasable[0][RegOPTY]++;
+					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+					trunnionMoved += RR_TRUNNION_STEP;
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle > RAD*90){
+				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;				
+				while(fabs(fabs(trunnionAngle)-fabs(trunnionMoved)) >= RR_TRUNNION_STEP){					
+					lem->agc.vagc.Erasable[0][RegOPTY]--;
+					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+					trunnionMoved -= RR_TRUNNION_STEP;
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*90)){
+				shaftAngle -= RR_SHAFT_STEP * ShaftRate;					
+				while(fabs(fabs(shaftAngle)-fabs(shaftMoved)) >= RR_SHAFT_STEP){
+					lem->agc.vagc.Erasable[0][RegOPTX]--;
+					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					shaftMoved -= RR_SHAFT_STEP;
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
+				shaftAngle += RR_SHAFT_STEP * ShaftRate;					
+				while(fabs(fabs(shaftAngle)-fabs(shaftMoved)) >= RR_SHAFT_STEP){
+					lem->agc.vagc.Erasable[0][RegOPTX]++;
+					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					shaftMoved += RR_SHAFT_STEP;
+				}
+			}
+			break;
+		case 2: // LGC
+			val33.Bits.RRPowerOnAuto = 1;
+			break;
+	}
+
+	lem->agc.SetInputChannel(033,val33.Value);
+
 	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_float(scn, "RR_TRUN", trunnionAngle);
+	trunnionMoved = trunnionAngle;
+	oapiWriteScenario_float(scn, "RR_SHAFT", shaftAngle);
+	shaftMoved = shaftAngle;
+	oapiWriteScenario_float(scn, "RR_ANTTEMP", GetAntennaTempF());
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
+		char *line;
+	double dec = 0;
+	int end_len = strlen(end_str);
 
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp (line, "RR_TRUN", 7)) {
+			sscanf(line + 7, "%f", &dec);
+			trunnionAngle = dec;
+		}
+		if (!strnicmp (line, "RR_SHAFT", 7)) {
+			sscanf(line + 7, "%f", &dec);
+			shaftAngle = dec;
+		}
+	}
 }
 
 double LEM_RR::GetAntennaTempF(){

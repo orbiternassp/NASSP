@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -2226,13 +2229,19 @@ void LEMcomputer::Phase(double &phase, double &delta)
 	delta=2.0*PI*((csmperiod-lmperiod)/(lmperiod*lmperiod));
 }
 
+VESSEL * LEMcomputer::GetCSM()
+{
+	OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
+	VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
+	return CSMVessel;
+}
+
 void LEMcomputer::Radar(double &range, double &rate)
 {
 	VECTOR3 csmpos, csmvel, lmpos, lmvel;
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
 
-	OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
-	VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
+	VESSEL *CSMVessel=GetCSM();
 	CSMVessel->GetRelativePos(hbody, csmpos);
 	CSMVessel->GetRelativeVel(hbody, csmvel);
 	OurVessel->GetRelativePos(hbody, lmpos);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.20  2010/07/23 01:34:05  vrouleau
   *	Bug fix on reading Multithread value (...again... after a Year!!)
   *	
@@ -1311,6 +1314,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LEM_EDS_START",sizeof("LEM_EDS_START"))) {
 			eds.LoadState(scn,"LEM_EDS_END");
 		}
+		else if (!strnicmp (line, "LEM_RR_START",sizeof("LEM_RR_START"))) {
+			eds.LoadState(scn,"LEM_RR_END");
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1592,6 +1598,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
+	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	checkControl.save(scn);
 }
 

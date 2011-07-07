@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2010/08/28 16:16:33  dseagrav
+  *	Fixed LM DSKY to use dimmer. (Dimmer source may be wrong)
+  *	Corrected a typo and did some bracketization in DSKY source.
+  *	Wasted a lot of time figuring out our copy of Luminary had been garbaged.
+  *	Your Luminary 99 binary should be overwritten by the commit before this one.
+  *	If your binary is 700 bytes in size you have the garbaged version.
+  *	
   *	Revision 1.12  2010/05/24 03:50:34  dseagrav
   *	Updates to RCS, CWEA, ATCA
   *	
@@ -203,7 +210,7 @@
 #include "lemcomputer.h"
 #include "papi.h"
 #include "saturn.h"
-
+#include "ioChannels.h"
 #include "LEM.h"
 
 #include "lm_channels.h"
@@ -1837,6 +1844,26 @@ void LEMcomputer::ProcessChannel6(int val){
 	LEM *lem = (LEM *) OurVessel;	
 	lem->atca.ProcessLGC(6,val);
 }
+
+
+void LEMcomputer::ProcessChannel160(int val) {
+	
+	ChannelValue12 val12;
+	val12.Value = GetOutputChannel(012);
+	LEM *lem = (LEM *) OurVessel;
+	
+	lem->RR.RRShaftDrive(val,val12.Value);
+	
+}
+
+void LEMcomputer::ProcessChannel161(int val) {
+
+	ChannelValue12 val12;
+	val12.Value = GetOutputChannel(012);
+	LEM *lem = (LEM *) OurVessel;
+	lem->RR.RRTrunionDrive(val,val12.Value);
+}
+
 
 // Process IMU CDU error counters.
 void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
