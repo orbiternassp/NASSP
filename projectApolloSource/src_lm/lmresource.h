@@ -747,6 +747,8 @@
 #define AID_MAIN_PROP_AND_ENGINE_IND	1021
 #define AID_LM_CWS_LEFT					1022
 #define AID_LM_CWS_RIGHT				1023
+#define IDB_RR_NOTRACK					1024
+#define AID_RR_NOTRACK					1025
 
 // Next default values for new objects
 // 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/10/04 13:36:55  vrouleau
+  *	PIPA rate for the LM is 1 cm/s. Not the same as CSM ( 5.85 cm/s)
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -144,24 +147,13 @@
 #include "ioChannels.h"
 #include "IMU.h"
 #include "lvimu.h"
-#ifndef AGC_SOCKET_ENABLED
 #include "yaAGC/agc_engine.h"
-#endif
 
 #include "toggleswitch.h"
 #include "saturn.h"
 #include "tracer.h"
 #include "papi.h"
 
-#ifdef AGC_SOCKET_ENABLED
-#define RegPIPAX 037
-#define RegPIPAY 040
-#define RegPIPAZ 041
-
-#define RegCDUX 032
-#define RegCDUY 033
-#define RegCDUZ 034
-#endif
 
 
 
@@ -321,11 +313,9 @@ void IMU::ChannelOutput(int address, int value)
     
     	if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
-#ifndef AGC_SOCKET_ENABLED
 			agc.SetErasable(0, RegCDUX, 0);
 			agc.SetErasable(0, RegCDUY, 0);
 			agc.SetErasable(0, RegCDUZ, 0);
-#endif
 		}
 	}
     	 
@@ -618,32 +608,10 @@ void IMU::DriveGimbal(int index, int RegCDU, double angle)
 	if(delta < - PI)
 		delta += TWO_PI;
 	
-#ifdef AGC_SOCKET_ENABLED
-
-    int channel,i;
-
-    channel = RegCDU | 0x80;
-	pulses = (int)(((double)radToGyroPulses(fabs(delta))) / 64.0);
-	pulses = pulses & 077777;
-	   
-	LogState( channel, "inG", pulses);
-	// sprintf(oapiDebugString(),"PCDU %d CHANNEL %o ", pulses,channel);
-
-	if (delta >= 0) {
- 		for (i = 0; i < pulses; i++) {
-			agc.SetInputChannel(channel,1); // PCDU 
-		}
-	} else {
- 		for (i = 0; i < pulses; i++) {
-			agc.SetInputChannel(channel,3); // MCDU 
-		}
-	}
-#else
 	// Gyro pulses to CDU pulses
 	pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);	
 	agc.SetErasable(0, RegCDU, (pulses & 077777));
 
-#endif
 	char buffers[80];
 	sprintf(buffers,"DRIVE GIMBAL index %o REGCDU %o angle %f pulses %o",index,RegCDU,angle,pulses);
 	if (pulses)

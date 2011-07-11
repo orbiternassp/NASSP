@@ -1,4 +1,3 @@
-#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2005 Ronald S. Burkey <info@sandroid.org>
   
@@ -225,5 +224,4 @@ ChannelInputAGS (ags_t * State)
   return (0);
 }
 
-#endif
 

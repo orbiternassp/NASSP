@@ -146,7 +146,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../src_aux,../../src_sys,../../src_mfd,../../src_lm,../../src_moon,../../src_csm,../../src_launch,../../src_landing,../../src_saturn,../../../../include,../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project"
-				PreprocessorDefinitions="_DEBUG;AGC_SOCKET_ENABLEDD;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -1072,6 +1072,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Bitmaps\circuit_breaker.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_notrack.bmp"
 				>
 			</File>
 			<File

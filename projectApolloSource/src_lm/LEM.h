@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2011/07/07 11:58:45  vrouleau
+  *	Checkpoint commit for LEM rendezvous radar:
+  *	 - Added range,rate and CSM direction calculation.
+  *	 - Slewing of the shaft & trunnion
+  *	 - IO from/to AGC.
+  *	
   *	Revision 1.24  2010/05/24 03:50:34  dseagrav
   *	Updates to RCS, CWEA, ATCA
   *	
@@ -380,12 +386,15 @@ public:
 	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
 	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 	bool IsPowered();
+	bool IsRadarDataGood() { return radarDataGood;};
+private:
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;
 	int    isTracking;
+	bool   radarDataGood;
 	double trunnionAngle;
 	double trunnionMoved;
 	double shaftAngle;
@@ -566,7 +575,7 @@ public:
 		SRF_DEDA_LIGHTS,
 		SRF_LEM_STAGESWITCH,
 		SRF_DIGITALDISP2,
-
+		SRF_RR_NOTRACK,
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
 		//

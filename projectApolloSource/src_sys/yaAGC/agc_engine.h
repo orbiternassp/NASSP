@@ -1,4 +1,3 @@
-#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2003-2005 Ronald S. Burkey <info@sandroid.org>
   
@@ -683,9 +682,11 @@ void ShiftToDeda (agc_t *State, int Data);
 void GenerateDOWNRUPT(agc_t * State);
 // DS20070101 And UPRUPT
 void GenerateUPRUPT(agc_t * State);
+void GenerateRADARUPT(agc_t * State);
 int IsUPRUPTActive (agc_t * State);
 // DS20060827 Change bits in channel 33
 void SetCh33Bits(agc_t * State, int16_t Value);
+void SetLMCh33Bits(agc_t * State, int16_t Value);
 // DS20060903 Make these available externally
 int CounterPINC (int16_t * Counter);
 int CounterPCDU (int16_t * Counter);
@@ -696,7 +697,5 @@ int CounterDINC (agc_t *State, int CounterNum, int16_t * Counter);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
 

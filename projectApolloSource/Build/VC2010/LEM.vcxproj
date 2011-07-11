@@ -106,7 +106,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;AGC_SOCKET_ENABLEDD;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -422,6 +422,7 @@
     <None Include="..\..\Bitmaps\border90x90.bmp" />
     <None Include="..\..\Bitmaps\border92x40.bmp" />
     <None Include="..\..\Bitmaps\circuit_breaker.bmp" />
+    <None Include="..\..\Bitmaps\lem_notrack.bmp" />
     <None Include="..\..\circuit_breaker.bmp" />
     <None Include="..\..\circuit_breaker_lem.bmp" />
     <None Include="..\..\Bitmaps\coas_lem1.bmp" />

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.4  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -344,11 +347,7 @@
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
-#ifdef AGC_SOCKET_ENABLED
-#include "yaAGC/yaAGC.h"
-#else
 #include "yaAGC/agc_engine.h"
-#endif
 #include "ioChannels.h"
 
 #include "nasspdefs.h"
@@ -526,17 +525,13 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	//
 	// Virtual AGC.
 	//
-#ifndef AGC_SOCKET_ENABLED
 	memset(&vagc, 0, sizeof(vagc));
 	vagc.agc_clientdata = this;
 	agc_engine_init(&vagc, NULL, NULL, 0);
-#endif
 
 #ifdef _DEBUG
 	out_file = fopen("ProjectApollo AGC.log", "wt");
-#ifndef AGC_SOCKET_ENABLED
 	vagc.out_file = out_file;
-#endif
 #endif
 
 	PowerConnected = false;
@@ -554,11 +549,7 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 
 {
 
-#ifdef AGC_SOCKET_ENABLED
-    ConnectionSocket = -1;
-#else
 	(void) agc_load_binfile(&vagc, binfile);
-#endif
 
 	// Set channels only once, otherwise this code overwrites the channel values in the scenario
 	if (!PadLoaded) { 
@@ -583,25 +574,19 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		//
 		val30.Bits.IMUOperate = 1;
 
-#ifndef AGC_SOCKET_ENABLED
 		vagc.InputChannel[030] = val30.Value;
-#endif
 		InputChannel[030] = (val30.Value ^ 077777);
 
 		val31.Value = 077777;
 		// Default position of the CMC MODE switch is FREE
 		val31.Bits.FreeFunction = 0;
 
-#ifndef AGC_SOCKET_ENABLED
 		vagc.InputChannel[031] = val31.Value;
-#endif
 		InputChannel[031] = (val31.Value ^ 077777);
 
 
 		val32.Value = 077777;
-#ifndef AGC_SOCKET_ENABLED
 		vagc.InputChannel[032] = val32.Value;
-#endif
 		InputChannel[032] = (val32.Value ^ 077777);
 
 		val33.Value = 077777;
@@ -619,9 +604,7 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 
 		val33.Bits.AGCWarning = 0;
 		
-#ifndef AGC_SOCKET_ENABLED
 		vagc.InputChannel[033] = val33.Value;
-#endif
 		InputChannel[033] = (val33.Value ^ 077777);
 	}
 }
@@ -1463,108 +1446,6 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 }
 
 
-#ifdef AGC_SOCKET_ENABLED
-bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4])
-{
-
-    int maxstep = 0;
-
-//	TRACESETUP("RECEIVEFROMSOCKET");
-// RECEIVE from the External AGC
-	
-	int nread =0;
-	int count;
-	unsigned char ch;
-
-char buffers[80];
-
-
-    if (ConnectionSocket == -2)
-		return(false);
-
-	if(ConnectionSocket == -1)
-	{
-	    ConnectionSocket = CallSocket ("localhost", (unsigned short) 19801);
-		if (ConnectionSocket == -1)
-		{
-			ConnectionSocket = -2;
-			return(false);
-		}
-		else
-        {
-			int sndbufsize;
-			int size ;
-			size = sizeof(sndbufsize);
-if (getsockopt(ConnectionSocket, SOL_SOCKET, SO_SNDBUF, (char*)&sndbufsize, &size) != SOCKET_ERROR) {
-    sprintf(buffers, "SO_KEEPALIVE Value: %ld\n", sndbufsize);
-//	TRACE(buffers);
-  }
-
-sndbufsize = 50000;
-  if (setsockopt(ConnectionSocket, SOL_SOCKET, SO_SNDBUF, (char*)&sndbufsize, size) != SOCKET_ERROR) {
-    sprintf(buffers,"Set SO_KEEPALIVE: ON\n");
-//	TRACE(buffers);
-  }
-
-  if (getsockopt(ConnectionSocket, SOL_SOCKET, SO_SNDBUF, (char*)&sndbufsize, &size) != SOCKET_ERROR) {
-    sprintf(buffers, "SO_KEEPALIVE Value: %ld\n", sndbufsize);
-//	TRACE(buffers);
-  }
-
-		}
-	}
-
-int i;
-int saverr;
-	nread = recv(ConnectionSocket,(char *)packet,1,0);
-	if(nread != 1)
-	{
-		saverr = WSAGetLastError() ;
-
-	    if (saverr != WSAEWOULDBLOCK)
-		{
-    		ConnectionSocket = -2;
-		}
-  		return(false);
-	}
-
-    if (packet[0] == 255)
-	{
-		return(false);
-	}
-
-
-	count = nread;
-	
-    while(count<4)
-	{
-
-		
-		nread =recv(ConnectionSocket,(char *)&ch,1,0);
-		if (nread == 1)
-		{
-
-		    packet[count]= ch;
-		    count++;
-		}
-		else
-		{
-		    saverr = WSAGetLastError() ;
-
-			if (saverr != WSAEWOULDBLOCK)
-			{
-    		    ConnectionSocket = -2;
-  		        return(false);
-			}
-        }
-
-	}
-
-
-	
-	return(true);
-}
-#endif
 
 // Do a single timestep - Used by CM to maintain sync between telemetry and vAGC.
 bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
@@ -1579,17 +1460,13 @@ bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
 
 bool ApolloGuidance::SingleTimestep() {
 
-#ifndef AGC_SOCKET_ENABLED
 	agc_engine(&vagc);
-#endif
 	return TRUE;
 }
 
 void ApolloGuidance::VirtualAGCCoreDump(char *fileName) {
 
-#ifndef AGC_SOCKET_ENABLED
 	MakeCoreDump(&vagc, fileName); 
-#endif
 }
 
 bool ApolloGuidance::GenericTimestep(double simt, double simdt)
@@ -1609,41 +1486,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 	GetPosVel();
 
 	if (Yaagc) {
-#ifdef AGC_SOCKET_ENABLED
-// RECEIVE from the External AGC and process
-	unsigned char packet[4];
-	int  value;
-	int channel;
-	int uBit;
-	char buffers[80];
-	
-    int maxstep = 0;
-
-    
-	while(ReceiveFromSocket(packet))
-	{	
-		maxstep++;
-		
-        if(!ParseIoPacket (packet, &channel, &value, &uBit))
-        {
-//		    sprintf(oapiDebugString(),"RECEIVED FROM AGC %d READ %d %d", nread,channel,value);
-//			sprintf(buffers,"RECEIVED FROM AGC %d READ %d %d", nread,channel,value);
-//			TRACE(buffers);
-            SetOutputChannel(channel, value);
-
-        }
-		else
-		{
-			sprintf(oapiDebugString(),"RECEIVE ERROR PARSE");
-//			TRACE("RECEIVE ERROR PARSE");
-//  		    sprintf(buffers," %d PAQUET RECU %d %d %d %d",countpacket, packet[0],packet[1],packet[2],packet[3]);
-//		    TRACE(buffers);
-		}
-		if (maxstep >60)
-			break;
-
-	}
-#else
 		// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
 		// This resulted in a machine cycle of just over 11.7 microseconds.
 		int cycles = (long) ((simdt) * 1024000 / 12);
@@ -1651,7 +1493,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 		for (i = 0; i < cycles; i++) {
 			agc_engine(&vagc);
 		}
-#endif
 
 		return true;
 	}
@@ -4133,30 +3974,23 @@ void ApolloGuidance::DisplayEMEM(unsigned int addr)
 int ApolloGuidance::GetErasable(int bank, int address)
 
 {
-#ifdef AGC_SOCKET_ENABLED
-// TODOX15
-	return 0;
-#else
 	if (bank < 0 || bank > 8)
 		return 0;
 	if (address < 0 || address > 0400)
 		return 0;
 
 	return vagc.Erasable[bank][address];
-#endif
 }
 
 void ApolloGuidance::SetErasable(int bank, int address, int value)
 
 {
-#ifndef AGC_SOCKET_ENABLED
 	if (bank < 0 || bank > 8)
 		return;
 	if (address < 0 || address > 0400)
 		return;
 
 	vagc.Erasable[bank][address] = value;
-#endif
 }
 
 void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses) 
@@ -4173,28 +4007,15 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 
 	Lock lock(agcCycleMutex);
 
-#ifdef AGC_SOCKET_ENABLED
-    int channel;
-
-	channel = RegPIPA | 0x80;
-#endif
 
 	if (pulses >= 0) {
     	for (i = 0; i < pulses; i++) {
-#ifdef AGC_SOCKET_ENABLED
-			SetInputChannel(channel,0);
-#else
 			UnprogrammedIncrement(&vagc, RegPIPA, 0);	// PINC
-#endif
 
     	}
 	} else {
     	for (i = 0; i < -pulses; i++) {
-#ifdef AGC_SOCKET_ENABLED
-			SetInputChannel(channel,2);
-#else
 			UnprogrammedIncrement(&vagc, RegPIPA, 2);	// MINC
-#endif
     	}
 	}
 
@@ -4432,7 +4253,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.R3Blanked = R3Blanked;
 	state.u.KbInUse = KbInUse;
 	state.u.isFirstTimestep = isFirstTimestep;
-#ifndef AGC_SOCKET_ENABLED
 	state.u.ExtraCode = vagc.ExtraCode;
 	state.u.AllowInterrupt = vagc.AllowInterrupt;
 	state.u.InIsr = vagc.InIsr;
@@ -4441,7 +4261,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.PendDelay = vagc.PendDelay;
 	state.u.ExtraDelay = vagc.ExtraDelay;
 	state.u.DownruptTimeValid = vagc.DownruptTimeValid;
-#endif
 	state.u.PadLoaded = PadLoaded;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
@@ -4450,7 +4269,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	// Write out any non-zero EMEM state.
 	//
 
-#ifndef AGC_SOCKET_ENABLED
 	for (i = 0; i < EMEM_ENTRIES; i++) {
 		// Always save RegZ because it's set in agc_engine_init, so we have to store 0, too
 		if (ReadMemory(i, val) && (val != 0 || i == RegZ)) {
@@ -4459,7 +4277,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 			oapiWriteScenario_string (scn, fname, str);
 		}
 	}
-#endif
 
 	//
 	// And non-zero I/O state.
@@ -4483,7 +4300,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 
 	if (Yaagc) {
-#ifndef AGC_SOCKET_ENABLED
 		for (i = 0; i < NUM_CHANNELS; i++) {
 			val = vagc.InputChannel[i];
 			// Always save channel 030 - 033 because they're set in agc_engine_init, so we have to store 0, too
@@ -4511,7 +4327,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 			sprintf(fname, "VINT%03d", i);
 			oapiWriteScenario_int (scn, fname, val);
 		}
-#endif
 	}
 
 	oapiWriteLine(scn, AGC_END_STRING);
@@ -4607,18 +4422,14 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			unsigned int val;
 			sscanf(line+6, "%d", &num);
 			sscanf(line+10, "%d", &val);
-#ifndef AGC_SOCKET_ENABLED
 			vagc.InputChannel[num] = val;
-#endif
 		}
 		else if (!strnicmp (line, "V10CHAN", 7)) {
 			int num;
 			unsigned int val;
 			sscanf(line+7, "%d", &num);
 			sscanf(line+11, "%d", &val);
-#ifndef AGC_SOCKET_ENABLED
 			vagc.OutputChannel10[num] = val;
-#endif
 		}
 		else if (!strnicmp (line, "OCHAN", 5)) {
 			int num;
@@ -4628,43 +4439,29 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			OutputChannel[num] = val;
 		}
 		else if (!strnicmp (line, "VOC7", 4)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+4, "%d", &vagc.OutputChannel7);
-#endif
 		}
 		else if (!strnicmp (line, "IDXV", 4)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+4, "%d", &vagc.IndexValue);
-#endif
 		}
 		else if (!strnicmp (line, "NEXTZ", 5)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+5, "%d", &NextZ);
-#endif
 		}
 		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+13, "%d", &ScalerCounter);
-#endif
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+7, "%d", &ChannelRoutineCount);
-#endif
 		}
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
-#ifndef AGC_SOCKET_ENABLED
 			sscanf (line+12, "%d", &vagc.Ch33Switches);
-#endif
 		}
 		else if (!strnicmp (line, "VINT", 4)) {
 			int num;
 			unsigned int val;
 			sscanf(line+4, "%d", &num);
 			sscanf(line+8, "%d", &val);
-#ifndef AGC_SOCKET_ENABLED
 			vagc.InterruptRequests[num] = val;
-#endif
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			AGCState state;
@@ -4689,7 +4486,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			R3Blanked = (state.u.R3Blanked != 0);
 			KbInUse = (state.u.KbInUse != 0);
 			isFirstTimestep = (state.u.isFirstTimestep != 0);
-#ifndef AGC_SOCKET_ENABLED
 			vagc.ExtraCode = state.u.ExtraCode;
 			vagc.AllowInterrupt = state.u.AllowInterrupt;
 			vagc.InIsr = state.u.InIsr;
@@ -4698,7 +4494,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.PendDelay = state.u.PendDelay;
 			vagc.ExtraDelay = state.u.ExtraDelay;
 			vagc.DownruptTimeValid = state.u.DownruptTimeValid;
-#endif
 			PadLoaded = state.u.PadLoaded;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
@@ -4827,24 +4622,6 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		return;
 
 	if (Yaagc) {
-#ifdef AGC_SOCKET_ENABLED
-    // here we send the message to the external AGC DOTOX15
-
-	unsigned char Packet[4];
-	int ret,saverr;
-	
-	if (channel >= 030 && channel <= 034)
-		val ^= 077777;
-
-    FormIoPacket (channel, val, (unsigned char *)Packet);
-	ret = send(ConnectionSocket,(char *)Packet,4,0);
-	if (ret != 4)
-	{
-		saverr = WSAGetLastError();
-	    sprintf(oapiDebugString(),"SEND ERRRRRRRRRRRR  %d %d", ret,saverr);
-	}
-
-#else
 
 #ifdef _DEBUG
 	//
@@ -4876,7 +4653,6 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 			}
 			WriteIO(&vagc, channel, val);
 		}
-#endif
 	}
 	else {
 		switch (channel) {
@@ -4901,9 +4677,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	int	data = InputChannel[channel];
 
 	if (Yaagc) {
-#ifdef AGC_SOCKET_ENABLED
-// nothing to do
-#else
 
 		data = vagc.InputChannel[channel];
 		//
@@ -4915,7 +4688,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 #ifdef _DEBUG
 		fprintf(out_file, "Set bit %d of input channel %04o to %d\n", bit, channel, val ? 1 : 0); 
-#endif
 #endif
 	}
 
@@ -4951,18 +4723,12 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 				// Update channel 33 switch bits
 				int ch33bits = GetCh33Switches();
 				if(val != 0){ ch33bits |= 001000; }else{ ch33bits &= 076777; }
-				SetCh33Switches(ch33bits);
+					SetCh33Switches(ch33bits);
 				// We're done here. SetCh33Switches rewrites the IO channel.
 				return;
 			}
 		}
 
-#ifdef AGC_SOCKET_ENABLED
-	unsigned char packet[4];
-// sending the packet to external YAAGC
-    FormIoPacket (channel, data, (unsigned char *) packet);
-	send(ConnectionSocket,(char *)packet,4,0);
-#else
 		// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 		if (channel == 015 && val != 0){
 			vagc.InterruptRequests[5] = 1;
@@ -4971,7 +4737,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 		}}
 
 		WriteIO(&vagc, channel, data);
-#endif
 
 	}
 	else {
@@ -5126,43 +4891,36 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 // DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
-#ifndef AGC_SOCKET_ENABLED
 	GenerateDOWNRUPT(&vagc);
-#endif
 }
 
 void ApolloGuidance::GenerateUprupt(){
-#ifndef AGC_SOCKET_ENABLED
 	GenerateUPRUPT(&vagc);
-#endif
 }
+
+void ApolloGuidance::GenerateRadarupt(){
+	GenerateRADARUPT(&vagc);
+}
+
 
 bool ApolloGuidance::IsUpruptActive() {
 	if (!Yaagc) return false;
-#ifndef AGC_SOCKET_ENABLED
 	return (IsUPRUPTActive(&vagc) == 1);
-#else
-	return 0;
-#endif
 }
 
 // DS200608xx CH33 SWITCHES
 void ApolloGuidance::SetCh33Switches(unsigned int val){
-#ifndef AGC_SOCKET_ENABLED
-	SetCh33Bits(&vagc,val);
-#endif
+	if( isLGC)
+		SetLMCh33Bits(&vagc,val);
+	else 
+		SetCh33Bits(&vagc,val);
 }
 
 unsigned int ApolloGuidance::GetCh33Switches(){
-#ifndef AGC_SOCKET_ENABLED
 	return vagc.Ch33Switches; 
-#else
-	return 0;
-#endif
 }
 
 
-#ifndef AGC_SOCKET_ENABLED
 // DS20060903 PINC, DINC, ETC
 int ApolloGuidance::DoPINC(int16_t *Counter){
 	return(CounterPINC(Counter));
@@ -5180,7 +4938,6 @@ int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
 	return(CounterDINC(&vagc,CounterNum,Counter));
 }
 
-#endif
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
@@ -5240,12 +4997,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 {
 	if (Yaagc) {
 
-#ifdef AGC_SOCKET_ENABLED
-		if (channel < 0 || channel > MAX_INPUT_CHANNELS)
-			return 0;
-
-		return InputChannel[channel];
-#else
 		if (channel < 0 || channel >= NUM_CHANNELS)
 			return 0;
 
@@ -5260,7 +5011,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 			val ^= 077777;
 
 		return val;
-#endif
 	}
 	else {
 		if (channel < 0 || channel > MAX_INPUT_CHANNELS){
@@ -5360,9 +5110,6 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 
 {
 	if (Yaagc) {
-#ifdef AGC_SOCKET_ENABLED
-// TODOX15
-#else
 		int bank, addr;
 
 		bank = (loc / 0400);
@@ -5374,7 +5121,6 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 		}
 
 		val = 0;
-#endif
 		return true;
 
 	}
@@ -5502,9 +5248,6 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 {
 	if (Yaagc) {
-#ifdef AGC_SOCKET_ENABLED
-// TODOX15
-#else
 		int bank, addr;
 
 		bank = (loc / 0400);
@@ -5512,7 +5255,6 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 		if (bank >= 0 && bank < 8)
 			vagc.Erasable[bank][addr] = val;
-#endif
 		return;
 	}
 
@@ -5633,7 +5375,6 @@ void ApolloGuidance::UpdateBurnTime(int R1, int R2, int R3)
 }
 
 
-#ifndef AGC_SOCKET_ENABLED
 int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte) 
 
 {
@@ -5675,7 +5416,6 @@ int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte)
 	else
 		return i;
 }
-#endif
 
 
 //
@@ -5686,7 +5426,6 @@ int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte)
 //-----------------------------------------------------------------------------
 // Function for broadcasting "output channel" data to all connected clients.
 
-#ifndef AGC_SOCKET_ENABLED
 void ChannelOutput (agc_t * State, int Channel, int Value) 
 
 {
@@ -5728,4 +5467,3 @@ void ChannelRoutine (agc_t *State)
 {
 }
 
-#endif
