@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2011/07/07 11:58:45  vrouleau
+  *	Checkpoint commit for LEM rendezvous radar:
+  *	 - Added range,rate and CSM direction calculation.
+  *	 - Slewing of the shaft & trunnion
+  *	 - IO from/to AGC.
+  *	
   *	Revision 1.5  2010/01/14 16:54:13  tschachim
   *	SPS TVC reset and trim angles bugfix.
   *	
@@ -322,6 +328,7 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i), lv(sivb)
 
 {
+	isLGC = false;
 	BurnTime = 0;
 	BurnStartTime = 0;
 	CutOffVel = 0;
@@ -3053,7 +3060,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(!PadLoaded) {
 
-#ifndef AGC_SOCKET_ENABLED		
 			double latitude, longitude, radius, heading;
 
 			// init pad load
@@ -3122,7 +3128,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 			}
-#endif
 			PadLoaded = true;
 		}
 

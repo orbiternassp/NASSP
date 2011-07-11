@@ -1,4 +1,3 @@
-#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2003-2005 Ronald S. Burkey <info@sandroid.org>
   
@@ -452,6 +451,13 @@ CpuWriteIO (agc_t * State, int Address, int Value)
 	*/
 }
 
+void
+GenerateRADARUPT (agc_t * State)
+{
+	State->InterruptRequests[9] = 1;	// RADARUPT
+}
+
+
 // DS20060402 Allow external DOWNRUPT generation
 void
 GenerateDOWNRUPT (agc_t * State)
@@ -486,6 +492,15 @@ SetCh33Bits (agc_t * State, int16_t Value)
 {
 	State->Ch33Switches = (Value&001032);            // Save here
     Value = (State->InputChannel[033] & 076745);     // Clear protected bits
+	Value |= State->Ch33Switches;                    // and write their values back	
+	State->InputChannel[033] = Value;                // Commit
+}
+
+void
+SetLMCh33Bits (agc_t * State, int16_t Value)
+{
+	State->Ch33Switches = (Value&010776);            // Save here
+    Value = (State->InputChannel[033] & 027001);         // Clear protected bits
 	Value |= State->Ch33Switches;                    // and write their values back	
 	State->InputChannel[033] = Value;                // Commit
 }
@@ -2871,4 +2886,3 @@ AllDone:
     }
   return (0);
 }
-#endif

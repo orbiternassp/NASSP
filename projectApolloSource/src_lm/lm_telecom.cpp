@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/04/16 18:04:54  vrouleau
+  *	Compilation support under Visual Studio 2010
+  *	
   *	Revision 1.6  2009/09/19 14:10:14  spacex15
   *	reenable SOCKET_AGC mode
   *	
@@ -381,7 +384,6 @@ void LM_VHF::perform_io(double simt){
 								lgc_uplink_wd <<= 8;
 								lgc_uplink_wd |= rx_data[rx_offset];
 								// Must be in vAGC mode
-#ifndef AGC_SOCKET_ENABLED
 								if(lem->agc.Yaagc){
 									// Move to INLINK
 									lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
@@ -389,7 +391,6 @@ void LM_VHF::perform_io(double simt){
 									lem->agc.GenerateUprupt();
 
 								}
-#endif
 								//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
 								rx_offset = 0; uplink_state = 0;
 							}

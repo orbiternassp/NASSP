@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2008/04/11 11:49:37  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -98,22 +101,6 @@ void IMU::LogState(int channel, char *device, int value)
 	
 	intToBinaryString(buffer1, value);
 
-#ifdef AGC_SOCKET_ENABLED
-	fprintf(logFile, "%.8s.%03hu Ch %03o %s %s PIPA N/A N/A N/A CDUCMD N/A N/A N/A GYRO N/A IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, channel, device, buffer1,
-//		    agc.GetErasable(0, RegPIPAX), 
-//		    agc.GetErasable(0, RegPIPAY), 
-//			agc.GetErasable(0, RegPIPAZ), 
-//			agc.GetErasable(0, RegCDUXCMD),
-//			agc.GetErasable(0, RegCDUYCMD),
-//			agc.GetErasable(0, RegCDUZCMD),
-			//state->Erasable[0][RegCDUX],
-			//state->Erasable[0][RegCDUY],
-			//state->Erasable[0][RegCDUZ],			
-//			agc.GetErasable(0, RegGYROCTR),
-			radToDeg(Gimbal.X),
-			radToDeg(Gimbal.Y),
-			radToDeg(Gimbal.Z));
-#else
 		fprintf(logFile, "%.8s.%03hu Ch %03o %s %s PIPA %o %o %o CDUCMD %o %o %o GYRO %o IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, channel, device, buffer1,
 		    agc.GetErasable(0, RegPIPAX), 
 		    agc.GetErasable(0, RegPIPAY), 
@@ -128,7 +115,6 @@ void IMU::LogState(int channel, char *device, int value)
 			radToDeg(Gimbal.X),
 			radToDeg(Gimbal.Y),
 			radToDeg(Gimbal.Z));
-#endif
 			
 	fflush(logFile);
 #endif

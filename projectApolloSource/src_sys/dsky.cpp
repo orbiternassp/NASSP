@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/08/28 16:16:33  dseagrav
+  *	Fixed LM DSKY to use dimmer. (Dimmer source may be wrong)
+  *	Corrected a typo and did some bracketization in DSKY source.
+  *	Wasted a lot of time figuring out our copy of Luminary had been garbaged.
+  *	Your Luminary 99 binary should be overwritten by the commit before this one.
+  *	If your binary is 700 bytes in size you have the garbaged version.
+  *	
   *	Revision 1.4  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -160,13 +167,11 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
-#ifndef AGC_SOCKET_ENABLED
 	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
 		RestartLight = true;
 	}else{
 		RestartLight = false;
 	}
-#endif
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
@@ -382,11 +387,9 @@ void DSKY::ResetPressed()
 		ClearRestart(); 
 	}
 
-#ifndef AGC_SOCKET_ENABLED
 	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;
 	}
-#endif
 }
 
 void DSKY::NumberPressed(int n)
@@ -458,7 +461,6 @@ void DSKY::ProcessChannel13(int val)
 	}
 
 	/// \todo Other conditions restart light
-#ifndef AGC_SOCKET_ENABLED
 	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);
@@ -467,7 +469,6 @@ void DSKY::ProcessChannel13(int val)
 	{
 		SetRestart(false);
 	}
-#endif
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)

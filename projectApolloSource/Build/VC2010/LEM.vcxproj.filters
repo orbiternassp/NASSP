@@ -755,6 +755,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\..\src_lm\lmresource" />
+    <None Include="..\..\Bitmaps\lem_notrack.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_lm\LEMResources.rc">

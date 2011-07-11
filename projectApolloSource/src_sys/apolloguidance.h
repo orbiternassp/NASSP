@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.4  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -218,9 +221,7 @@ class PanelSDK;
 #include "powersource.h"
 
 #include "control.h"
-#ifndef AGC_SOCKET_ENABLED
 #include "yaAGC/agc_engine.h"
-#endif
 #include "thread.h"
 //
 // Velocity in feet per second or meters per second?
@@ -868,15 +869,14 @@ protected:
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
 	public: virtual void GenerateUprupt();
+    public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
 	public: virtual void SetCh33Switches(unsigned int val);
 	public: unsigned int GetCh33Switches();
-#ifndef AGC_SOCKET_ENABLED
 	public: virtual int DoPINC(int16_t *Counter);
 	public: virtual int DoPCDU(int16_t *Counter);
 	public: virtual int DoMCDU(int16_t *Counter);
 	public: virtual int DoDINC(int CounterNum, int16_t *Counter);
-#endif
 
 	///
 	/// \brief Set the Uplink Activity light on the DSKY.
@@ -1087,9 +1087,7 @@ protected:
 	/// \param R3 Partial time in hundredths of seconds.
 	///
 	void UpdateBurnTime(int R1, int R2, int R3);
-#ifndef AGC_SOCKET_ENABLED
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
-#endif
 
 	///
 	/// \brief Is the AGC in power-saving Standby mode?
@@ -1181,9 +1179,6 @@ protected:
 
 	bool KbInUse;
 
-#ifdef AGC_SOCKET_ENABLED
-	int ConnectionSocket;
-#endif
 
 	//
 	// DSKY interface functions.
@@ -1325,6 +1320,7 @@ protected:
 
 	bool isFirstTimestep;
 
+	bool isLGC;
 	///
 	/// \brief Have we loaded the initial startup data into the Virtual AGC?
 	///
@@ -1455,9 +1451,6 @@ protected:
 	FILE *out_file;
 #endif
 
-#ifdef AGC_SOCKET_ENABLED
-bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4]);
-#else
 
 	
 	///
@@ -1469,7 +1462,6 @@ bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4]);
 	/// \brief Virtual AGC state.
 	///
 	agc_t vagc;
-#endif
 	Mutex agcCycleMutex;
 	Event timeStepEvent;
 	double thread_simt;

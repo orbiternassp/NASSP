@@ -1,4 +1,3 @@
-#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2005 Ronald S. Burkey <info@sandroid.org>
 
@@ -233,4 +232,3 @@ MakeCoreDumpAGS (ags_t * State, const char *CoreDump)
   return;
 
 }
-#endif
