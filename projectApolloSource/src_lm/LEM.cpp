@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2011/07/07 11:58:45  vrouleau
+  *	Checkpoint commit for LEM rendezvous radar:
+  *	 - Added range,rate and CSM direction calculation.
+  *	 - Slewing of the shaft & trunnion
+  *	 - IO from/to AGC.
+  *	
   *	Revision 1.21  2010/09/19 14:24:24  tschachim
   *	Fixes for Orbiter 2010 (positions, camera handling).
   *	
@@ -733,6 +739,15 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_DECIMAL:
 					dsky.ProgReleased();
 					break;
+				case OAPI_KEY_Q: 
+					agc.SetInputChannelBit(016,3,0);  // Mark X
+					return 1;
+				case OAPI_KEY_Y: 
+					agc.SetInputChannelBit(016,4,0);  // Mark Y
+					return 1;
+				case OAPI_KEY_E: 
+					agc.SetInputChannelBit(016,5,0);  // Mark Reject
+					return 1;
 			}
 		}
 		return 0;
