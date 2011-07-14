@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2010/02/22 14:23:30  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.8  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -2176,26 +2179,28 @@ void ECA::TimeStep(double simdt) {
 		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().y == 0) cmd_rate.y = 0;
 		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().z == 0) cmd_rate.z = 0;
 
-		// Proportional Rate Demand
+		// Proportional Rate Demand 
+		// The proportional rate commands are powered by AC, the signals are routed through the breakout switches, 
+		// so the breakout switches must be set, too (see AOH fig. 2.3-19)
 		int x_def = 0, y_def = 0, z_def = 0;
 
-		if(rhc_ac_x < 28673){ // MINUS 
-			x_def = 28673-rhc_ac_x; 
+		if (rhc_ac_x < 28673 && rhc_x < 28673) { // MINUS 
+			x_def = 28673 - rhc_ac_x; 
 		}
-		if(rhc_ac_x > 36863){ // PLUS 
-			x_def = (36863-rhc_ac_x);
+		if (rhc_ac_x > 36863 && rhc_x > 36863) { // PLUS 
+			x_def = (36863 - rhc_ac_x);
 		}
-		if(rhc_ac_y < 28673){ // MINUS 
-			y_def = 28673-rhc_ac_y; 
+		if (rhc_ac_y < 28673 && rhc_y < 28673) { // MINUS 
+			y_def = 28673 - rhc_ac_y; 
 		}
-		if(rhc_ac_y > 36863){ // PLUS 
-			y_def = (36863-rhc_ac_y);
+		if (rhc_ac_y > 36863 && rhc_y > 36863) { // PLUS 
+			y_def = (36863 - rhc_ac_y);
 		}
-		if(rhc_ac_z < 28673){ // MINUS 
-			z_def = 28673-rhc_ac_z; 
+		if (rhc_ac_z < 28673 && rhc_z < 28673) { // MINUS 
+			z_def = 28673 - rhc_ac_z; 
 		}
-		if(rhc_ac_z > 36863){ // PLUS 
-			z_def = (36863-rhc_ac_z);
+		if (rhc_ac_z > 36863 && rhc_z > 36863) { // PLUS 
+			z_def = (36863 - rhc_ac_z);
 		}
 
 		double axis_percent=0;
