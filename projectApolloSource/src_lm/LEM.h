@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.25  2011/07/07 11:58:45  vrouleau
   *	Checkpoint commit for LEM rendezvous radar:
   *	 - Added range,rate and CSM direction calculation.
@@ -382,12 +387,20 @@ public:
 	double GetAntennaTempF();
 	void RRTrunionDrive(int val,int ch12);
 	void RRShaftDrive(int val,int ch12);
+	double GetRadarTrunnionVel() { return trunnionVel ; } ;
+	double GetRadarShaftVel() { return shaftVel ; } ;
+	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
+	double GetRadarShaftPos() { return shaftAngle ; } ;
+	double GetRadarRange() { return range; } ;
+	double GetRadarRangeRate() { return rangeRate ; };
+	
+	bool IsPowered();
+	bool IsRadarDataGood() { return radarDataGood;};
+
+private:
 	void RadarData(double &range, double &rate,double &pitch, double &yaw);
 	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
 	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
-	bool IsPowered();
-	bool IsRadarDataGood() { return radarDataGood;};
-private:
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator antenna;			// Antenna (loses heat into space)
@@ -399,6 +412,10 @@ private:
 	double trunnionMoved;
 	double shaftAngle;
 	double shaftMoved;
+	double trunnionVel;
+	double shaftVel;
+	double range;
+	double rangeRate;
 };
 
 // Caution and Warning Electronics Assembly
