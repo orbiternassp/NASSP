@@ -24,6 +24,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.27  2011/07/07 11:58:45  vrouleau
   *	Checkpoint commit for LEM rendezvous radar:
   *	 - Added range,rate and CSM direction calculation.
@@ -1972,6 +1977,7 @@ void LEM_RR::RRTrunionDrive(int val,int ch12) {
 		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 	}
+	trunnionVel = (RR_TRUNNION_STEP*pulses);
 	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
 	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
@@ -1999,6 +2005,7 @@ void LEM_RR::RRShaftDrive(int val,int ch12) {
 	} else {
 		pulses = val&07777; 
 	}
+	shaftVel = (RR_SHAFT_STEP*pulses);
 	shaftAngle += (RR_SHAFT_STEP*pulses);
 	if (val12.Bits.EnableRRCDUErrorCounter){
 		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
@@ -2157,16 +2164,18 @@ void LEM_RR::TimeStep(double simdt){
 
 
 	if( lem->RendezvousRadarRotary.GetState()==1 ) { // Slew
-			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle < (RAD*-90)){
+			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){
 				trunnionAngle += RR_TRUNNION_STEP * TrunRate;				
+				trunnionVel = RR_TRUNNION_STEP * TrunRate;
 				while(fabs(fabs(trunnionAngle)-fabs(trunnionMoved)) >= RR_TRUNNION_STEP){					
 					lem->agc.vagc.Erasable[0][RegOPTY]++;
 					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 					trunnionMoved += RR_TRUNNION_STEP;
 				}
 			}
-			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle > RAD*90){
+			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){
 				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;				
+				trunnionVel = -RR_TRUNNION_STEP * TrunRate;
 				while(fabs(fabs(trunnionAngle)-fabs(trunnionMoved)) >= RR_TRUNNION_STEP){					
 					lem->agc.vagc.Erasable[0][RegOPTY]--;
 					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
@@ -2175,6 +2184,7 @@ void LEM_RR::TimeStep(double simdt){
 			}
 			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
 				shaftAngle -= RR_SHAFT_STEP * ShaftRate;					
+				shaftVel = -RR_SHAFT_STEP * ShaftRate;					
 				while(fabs(fabs(shaftAngle)-fabs(shaftMoved)) >= RR_SHAFT_STEP){
 					lem->agc.vagc.Erasable[0][RegOPTX]--;
 					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
@@ -2183,6 +2193,7 @@ void LEM_RR::TimeStep(double simdt){
 			}
 			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
 				shaftAngle += RR_SHAFT_STEP * ShaftRate;					
+				shaftVel =RR_SHAFT_STEP * ShaftRate;					
 				while(fabs(fabs(shaftAngle)-fabs(shaftMoved)) >= RR_SHAFT_STEP){
 					lem->agc.vagc.Erasable[0][RegOPTX]++;
 					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
@@ -2199,6 +2210,7 @@ void LEM_RR::TimeStep(double simdt){
     if( ((val12.Bits.RRAutoTrackOrEnable == 1) || (lem->RendezvousRadarRotary.GetState()== 0  ) ) && radarDataGood == 1 ) {
 		// Auto track within reach of trunnion/shaft
 		if( ( pitch > -(RAD*180) ) && (pitch < (RAD * 90 ) && ( yaw > (RAD * -90) ) && (yaw < (RAD * 90))) ) {
+			trunnionVel = (yaw-trunnionAngle) / simdt;					
 			trunnionAngle = yaw;
 			while(fabs(fabs(trunnionAngle)-fabs(trunnionMoved)) >= RR_TRUNNION_STEP){					
 				if ( trunnionAngle < trunnionMoved ) {
@@ -2210,6 +2222,7 @@ void LEM_RR::TimeStep(double simdt){
 				}
 				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 			}
+			shaftVel = (pitch-shaftAngle) / simdt;					
 			shaftAngle = pitch;
 			while(fabs(fabs(shaftAngle)-fabs(shaftMoved)) >= RR_SHAFT_STEP){
 				if( shaftAngle < shaftMoved ) {

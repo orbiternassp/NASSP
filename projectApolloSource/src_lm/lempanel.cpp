@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.20  2010/09/19 14:24:24  tschachim
   *	Fixes for Orbiter 2010 (positions, camera handling).
   *	
@@ -1364,7 +1369,12 @@ void LEM::RedrawPanel_XPointer (SURFHANDLE surf) {
 	HDC hDC;
 
 	//draw the crosspointers
-	agc.GetHorizVelocity(vx, vy);
+	if((RateErrorMonSwitch.GetState() == 1) && (RR.IsPowered()) )
+	{
+		vx = RR.GetRadarTrunnionVel();
+		vy = RR.GetRadarShaftVel();
+	} else
+		agc.GetHorizVelocity(vx, vy);
 	ix = (int)(-3.0 * vx);
 	if(ix < -60) ix = -60;
 	if(ix > 60) ix = 60;
@@ -3727,6 +3737,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
 			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 			*/
+			if((RateErrorMonSwitch.GetState() == 1 ) && (RR.IsPowered()) ) {
+				errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD) ;
+				errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD) ;
+			}
 			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
 		return true;
