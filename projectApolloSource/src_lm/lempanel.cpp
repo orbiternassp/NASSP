@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2011/07/15 00:50:21  vrouleau
+  *	FDAI error needles displays the RR trunnion/shart angles
+  *	
   *	Revision 1.21  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -3655,10 +3658,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}return true;
 
 	case AID_RR_NOTRACK:
-		if (!RR.IsRadarDataGood() && RR.IsPowered()){
-			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,34,34,34, SURF_PREDEF_CK);//
-		} else {
-			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,0,34,34, SURF_PREDEF_CK);//
+		if(RR.IsDCPowered() && !RR.IsRadarDataGood()){ // The AC side is only needed for the transmitter
+			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,34,34,34, SURF_PREDEF_CK); // Light On
+		}else{
+			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,0,34,34, SURF_PREDEF_CK); // Light Off
 		}
 		return true;
 

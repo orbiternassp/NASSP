@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2011/07/15 00:50:20  vrouleau
+  *	FDAI error needles displays the RR trunnion/shart angles
+  *	
   *	Revision 1.26  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -379,7 +382,7 @@ public:
 class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s,e_object *src);
+	void Init(LEM *s,e_object *dc_src, e_object *ac_src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -394,7 +397,8 @@ public:
 	double GetRadarRange() { return range; } ;
 	double GetRadarRangeRate() { return rangeRate ; };
 	
-	bool IsPowered();
+	bool IsPowered(); 
+	bool IsDCPowered(); 
 	bool IsRadarDataGood() { return radarDataGood;};
 
 private:
@@ -406,6 +410,7 @@ private:
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;
+	e_object *ac_source;
 	int    isTracking;
 	bool   radarDataGood;
 	double trunnionAngle;
