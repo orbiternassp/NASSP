@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2011/07/15 00:50:21  vrouleau
+  *	FDAI error needles displays the RR trunnion/shart angles
+  *	
   *	Revision 1.28  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -810,8 +813,12 @@ void LEM::SystemsInit()
 	RDZ_RDR_AC_CB.MaxAmps = 5.0;
 	RDZ_RDR_AC_CB.WireTo(&CDRs28VBus);
 
+	PGNS_RNDZ_RDR_CB.MaxAmps = 15.0; // Primary DC power
+	PGNS_RNDZ_RDR_CB.WireTo(&CDRs28VBus);
 
-	RR.Init(this,&CDRs28VBus);
+	RDZ_RDR_AC_CB.MaxAmps = 2.0; // Primary AC power
+	RDZ_RDR_AC_CB.WireTo(&ACBusA);
+	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB); // This goes to the CB instead.
 
 	// CWEA
 	CWEA.Init(this);
@@ -1932,13 +1939,14 @@ LEM_RR::LEM_RR() : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04
 	lem = NULL;	
 }
 
-void LEM_RR::Init(LEM *s,e_object *src){
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
 	lem = s;
 	// Set up antenna.
 	// LR antenna is designed to operate between ??F and 75F
 	// The heater switches on if the temperature gets below ??F and turns it off again when the temperature reaches ??F
 	// The CWEA complains if the temperature is outside of -54F to +148F
 	// Values in the constructor are name, pos, vol, isol
+	// The DC side of the RR is most of it, the AC provides the transmit source.
 	antenna.isolation = 1.0; 
 	antenna.Area = 9187.8912; // Area of reflecting dish, probably good enough
 	antenna.mass = 10000;
@@ -1954,7 +1962,8 @@ void LEM_RR::Init(LEM *s,e_object *src){
 		antheater.Enable();
 		antheater.SetPumpAuto();
 	}
-	dc_source = src;
+	dc_source = dc_src;
+	ac_source = ac_src;
 
 
 }
@@ -1984,6 +1993,15 @@ void LEM_RR::RRTrunionDrive(int val,int ch12) {
 
 
 bool LEM_RR::IsPowered()
+
+{
+	if (IsDCPowered() && ac_source->Voltage() > 100) { 
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RR::IsDCPowered()
 
 {
 	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) { 
@@ -2123,7 +2141,7 @@ void LEM_RR::TimeStep(double simdt){
 	}
 	// Max power used based on LM GNCStudyGuide. Is this good
 	dc_source->DrawPower(130);
-
+	// FIXME: Do you have a number for the AC side?
 	
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
