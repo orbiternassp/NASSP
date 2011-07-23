@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2008/04/11 11:50:25  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -217,7 +220,7 @@ void Thermal_engine::Radiative(double dt) {
 	therm_obj *runner;
 	runner=List.next_t;
 
-	while (runner){
+	while (runner) {
 		if (planetIsEarth) {
 			Q = (float) (190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
 		} else {

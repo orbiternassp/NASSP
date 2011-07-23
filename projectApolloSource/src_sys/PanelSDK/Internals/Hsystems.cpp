@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/07/19 13:56:58  tschachim
+  *	Bugfix evaporator valve
+  *	
   *	Revision 1.2  2009/08/10 14:38:26  tschachim
   *	ECS enhancements
   *	
@@ -795,7 +798,7 @@ void h_Tank::Save(FILEHANDLE scn) {
 		int test = 0;
 	}*/
 
-	sprintf(text," %s %f %i %i %i %i %.8f %.8f %.8f %.8f", 
+	sprintf(text," %s %lf %i %i %i %i %.8f %.8f %.8f %.8f", 
 		    name, space.Volume, 
 		    IN_valve.open, OUT_valve.open, OUT2_valve.open, LEAK_valve.open, 
 			IN_valve.size, OUT_valve.size, OUT2_valve.size, LEAK_valve.size);
@@ -803,7 +806,7 @@ void h_Tank::Save(FILEHANDLE scn) {
 
 	for (int i=0;i<MAX_SUB;i++)
 		if (space.composition[i].mass) {
-			sprintf(text,"   %i %8.4f %8.4f %8.4f",
+			sprintf(text,"   %i %.12lf %.12lf %.12lf",
 				space.composition[i].subst_type,
 				space.composition[i].mass,
 				space.composition[i].vapor_mass,
