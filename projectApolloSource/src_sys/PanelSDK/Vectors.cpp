@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.1  2005/04/22 14:22:37  tschachim
   *	Initial version
   *	
@@ -140,12 +143,21 @@ double vector3::selfdot()
 }
 vector3 vector3::normalize()
 { vector3 temp;
-  temp=*this * (double)(1.0/sqrt(selfdot()));
+  double sd = selfdot();
+  if (sd > 0)
+	temp=*this * (double)(1.0/sqrt(sd));
+  else
+	temp=*this * (double)(1.0);
   return temp;
 }
 
 void vector3::selfnormalize()
-{ *this*=(double)1.0/sqrt(selfdot());
+{ 
+  double sd = selfdot();
+  if (sd > 0)	
+	*this*=(double)1.0/sqrt(sd);
+  else
+	*this*=(double)1.0;
 }
 double vector3::length()
 { return sqrt(x*x+y*y+z*z);
