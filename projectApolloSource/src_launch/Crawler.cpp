@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.3  2010/01/11 19:02:57  tschachim
   *	Bugfix for  http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=1091.msg10325#msg10325 by SiameseCat
   *	
@@ -459,8 +462,10 @@ void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
 	Saturn *lv = NULL;
 	if (!standalone) {
 		// Updating internal mission time from Launch Vehichle.
-		lv = (Saturn *)oapiGetVesselInterface(hLV);
-		MissionTime = lv -> GetMissionTime();
+		if (hLV) {
+			lv = (Saturn *)oapiGetVesselInterface(hLV);
+			MissionTime = lv -> GetMissionTime();
+		}
 	}
 }
 
