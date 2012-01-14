@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.2  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -174,6 +177,23 @@ bool MFDConnector::SetFlashing(char *n, bool flash)
 	cm.messageType = PanelConnector::MFD_PANEL_FLASH_ITEM;
 	cm.val1.pValue = n;
 	cm.val2.bValue = flash;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool MFDConnector::GetFlashing(char *n)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_ITEM_FLASHING;
+	cm.val1.pValue = n;
 
 	if (SendMessage(cm))
 	{

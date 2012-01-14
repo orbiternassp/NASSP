@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.2  2009/09/17 17:48:41  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -229,6 +232,8 @@ public:
 	bool GetChecklistFlashing();
 
 	void SetChecklistFlashing(bool f);
+
+	bool GetFlashing(char *n);
 
 protected:
 };
