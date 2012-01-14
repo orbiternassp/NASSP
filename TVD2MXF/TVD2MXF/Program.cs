@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using System.Data.OleDb;
 
 using Microsoft.MediaCenter.Guide;
 
@@ -10,24 +11,25 @@ namespace TVD2MXF {
   class Program {
     private static log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-    // TODO TEST
-    //public static string WorkingDir = @"C:\Program Files (x86)\TVTools\TVD2MXF";
-    public static string WorkingDir = @"C:\Dokumente und Einstellungen\MJoachim\Eigene Dateien\TV\TVD2MXF\TVD2MXF\bin\Debug";
+    public static string WorkingDir = @"C:\Program Files (x86)\TVTools\TVD2MXF";
+    //public static string WorkingDir = @"C:\Dokumente und Einstellungen\MJoachim\Eigene Dateien\TV\TVD2MXF\TVD2MXF\bin\Debug";
 
     static void Main(string[] args) {
 
       try {
         log.Info("*** START ***");
 
-        // TODO TEST
-        //string feedDir = "C:\\ProgramData\\TV DIGITAL\\OnGuide\\DataFeed";
-
-        string feedDir = "C:\\Dokumente und Einstellungen\\All Users\\Anwendungsdaten\\TV DIGITAL\\OnGuide\\DataFeed";
+        string feedDir = "C:\\ProgramData\\TV DIGITAL\\OnGuide\\DataFeed";
+        //string feedDir = "C:\\Dokumente und Einstellungen\\All Users\\Anwendungsdaten\\TV DIGITAL\\OnGuide\\DataFeed";
         //string feedDir = "C:\\Dokumente und Einstellungen\\MJoachim\\Eigene Dateien\\TV\\TVD";
         //string feedDir = "C:\\Dokumente und Einstellungen\\MJoachim\\Eigene Dateien\\TV\\TVD2MXF\\BUG";
-        
 
+        string tvmovieDb = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\tvdaten.mdb";
+        //string tvmovieDb = "C:\\Programme\\TV Movie\\TV Movie ClickFinder\\tvdaten.mdb";
+        
         string imageDir = "C:\\ProgramData\\TV DIGITAL\\OnGuide\\DataFeed";
+        string tvmovieImageDir = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\Hyperlinks";
+        string tvbrowserFile = WorkingDir + "\\TVBData.xml";
 
         // Get last read daydir
         TextReader tr = new StreamReader(WorkingDir + "\\TVD2MXF.config");
@@ -52,25 +54,24 @@ namespace TVD2MXF {
         }
         log.Info("New data, importing...");
 
+        // TVMovie database connection
+        //string connectionString = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + tvmovieDb + ";";
+        string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + tvmovieDb + ";";
+        OleDbConnection tvmovieConnection = new OleDbConnection(connectionString);
+        tvmovieConnection.Open();
+ 
         // Start actual import
-
-
-        // TODO TEST
-        //MCConnection connection = new MCConnection();
-        //Dictionary<string, Dictionary<string, string>> backupRolesForProgram = BeforeImport(connection);        
+        MCConnection connection = new MCConnection();
+        Dictionary<string, Dictionary<string, string>> backupRolesForProgram = BeforeImport(connection);        
         
-  
         TVDReader reader = new TVDReader();
-        MXFData data = reader.Read(feedDir);
+        MXFData data = reader.Read(feedDir, tvmovieConnection, imageDir, tvmovieImageDir, tvbrowserFile);
 
-        MXFWriter writer = new MXFWriter(data, imageDir);
+        MXFWriter writer = new MXFWriter(data);
         writer.Write(WorkingDir + "\\tvd.mxf.xml");
         log.Info("MXF File written.");
         
-
-        // TODO TEST
-        return;
-
+        tvmovieConnection.Close();
 
         // Call loadmxf
         Process p = new Process();
@@ -84,10 +85,7 @@ namespace TVD2MXF {
         // Wait 60s
         System.Threading.Thread.Sleep(60 * 1000);
        
-
-        // TODO TEST
-        //AfterImport(connection, data, backupRolesForProgram);
-
+        AfterImport(connection, data, backupRolesForProgram);
 
         // Wait 60s
         System.Threading.Thread.Sleep(60 * 1000);

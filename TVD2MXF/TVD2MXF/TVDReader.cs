@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text;
 using System.Xml;
 using System.IO;
+using System.Data.OleDb;
 
 using Microsoft.MediaCenter.Guide;
 
@@ -11,7 +12,7 @@ namespace TVD2MXF {
   class TVDReader {
     private static log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-    public MXFData Read(string feedDir) {
+    public MXFData Read(string feedDir, OleDbConnection tvmovieConnection, string imageDir, string tvmImageDir, string tvbrowserFile) {
 
       // Load channels
       XmlDocument xmlChannelDoc = new XmlDocument();
@@ -32,7 +33,7 @@ namespace TVD2MXF {
           data.Channels.Add(ch.Id, ch);
 
           // Channel image
-          MXFGuideImage img = new MXFGuideImage(data.GuideImages.Count, "\\images\\logos\\ch" + ch.Id + ".png");
+          MXFGuideImage img = new MXFGuideImage(data.GuideImages.Count, imageDir + "\\images\\logos\\ch" + ch.Id + ".png");
           ch.GuideImage = img;
           data.GuideImages.Add(img);
         }
@@ -349,9 +350,6 @@ namespace TVD2MXF {
       // Load existing persons from EPG DB
       //
 
-
-      // TODO TEST
-      /*
       log.Info("Loading people from EPG DB...");
       MCConnection connection = new MCConnection();
 
@@ -377,12 +375,13 @@ namespace TVD2MXF {
           }
         }
       }      
-       */
-
 
       //
       // Load programs
       //
+
+      XmlDocument xmlTVBrowserDoc = new XmlDocument();
+      xmlTVBrowserDoc.Load(tvbrowserFile);
 
       List<string> cats = new List<string>();
       List<string> chrs = new List<string>();
@@ -399,8 +398,8 @@ namespace TVD2MXF {
           ns.AddNamespace("ns", "http://www.as-guides.com/schema/epg");
 
           foreach (XmlNode xmlProg in xmlProgDoc.DocumentElement.ChildNodes) {
-            MXFProgram p = new MXFProgram(xmlProg, ns, data);
-            MXFScheduleEntry se = new MXFScheduleEntry(xmlProg, ns);
+            MXFProgram p = new MXFProgram(xmlProg, ns, data, tvmovieConnection, imageDir, tvmImageDir);
+            MXFScheduleEntry se = new MXFScheduleEntry(xmlProg, ns, xmlTVBrowserDoc, data);
             p.DebugInfo = ddi.Name + "\\" + fi.Name;
             if (data.Channels.ContainsKey(se.ChannelId)) {
               if (!data.Programs.ContainsKey(p.Id)) {

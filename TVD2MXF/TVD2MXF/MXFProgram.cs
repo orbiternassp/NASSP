@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using System.Data.OleDb;
+
 
 namespace TVD2MXF {
   class MXFProgram {
@@ -16,9 +18,16 @@ namespace TVD2MXF {
     private MXFSeriesInfo seriesInfo;
     private MXFGuideImage guideImage;
 
+    private string tvmTitel = "";
+    private string tvmKurzBeschreibung = "";
+    private string tvmBilddateiname = "";
+    private string tvmKurzkritik = "";
+    private string tvmBewertungen = "";
+    private string tvmBeschreibung = "";
+
     public string DebugInfo;
 
-    public MXFProgram(XmlNode p, XmlNamespaceManager n, MXFData data) {
+    public MXFProgram(XmlNode p, XmlNamespaceManager n, MXFData data, OleDbConnection tvmovieConnection, string imageDir, string tvmImageDir) {
       xmlProgram = p;
       ns = n;
 
@@ -110,13 +119,68 @@ namespace TVD2MXF {
         }
       }
 
+      // TVMovie Data
+      string chid = xmlProgram.Attributes.GetNamedItem("chid").Value;
+      if (data.Channels.ContainsKey(chid)) {
+        string chName = data.Channels[chid].TVMovieName;
+        if (chName != "") {
+          XmlNode timeNode = xmlProgram.SelectSingleNode("ns:time", ns);
+          if (timeNode != null) {
+            string startTime = timeNode.Attributes.GetNamedItem("strt").Value;
+            startTime = startTime.Substring(0, startTime.Length - 3);
+            DateTime start = new DateTime(int.Parse(startTime.Substring(0, 4)),
+                                          int.Parse(startTime.Substring(5, 2)),
+                                          int.Parse(startTime.Substring(8, 2)),
+                                          int.Parse(startTime.Substring(11, 2)),
+                                          int.Parse(startTime.Substring(14, 2)),
+                                          int.Parse(startTime.Substring(17, 2)), 
+                                          DateTimeKind.Utc);
+            start = start.ToLocalTime();
+            startTime = start.ToString("MM\\/dd\\/yyyy HH:mm:ss");
+            string sqlTime = "#" + startTime + "#";
+
+            OleDbCommand command = new OleDbCommand("Select * from Sendungen where SenderKennung = '" + chName + "' and Beginn = " + sqlTime, tvmovieConnection);
+            OleDbDataReader reader = command.ExecuteReader();
+            if (reader.Read()) {
+              tvmTitel = (string) reader["Titel"];
+              tvmKurzBeschreibung = (string) reader["KurzBeschreibung"];
+              tvmBilddateiname = (string) reader["Bilddateiname"];
+              tvmKurzkritik = (string) reader["Kurzkritik"];
+              tvmBewertungen = (string) reader["Bewertungen"];
+
+              //tvmBeschreibung = (string)reader["Titel"];
+              OleDbCommand commandDetail = new OleDbCommand("Select * from SendungenDetails where Pos = " + reader["Pos"].ToString(), tvmovieConnection);
+              OleDbDataReader readerDetail = commandDetail.ExecuteReader();
+              if (readerDetail.Read()) {
+                tvmBeschreibung = (string)readerDetail["Beschreibung"];
+                // \n und <br> ersetzen
+                tvmBeschreibung = tvmBeschreibung.Replace("\n", Environment.NewLine);
+                tvmBeschreibung = tvmBeschreibung.Replace("<br>", Environment.NewLine); 
+              }
+              readerDetail.Close();
+            } else {
+              // TODO auskommentieren?
+              log.Debug("TVMovie Sendung not found: " + chName + " at " + startTime + ": " + Title);
+            }
+            reader.Close();
+          }
+        }
+      }
+
       // GuideImages
       guideImage = null;
-      XmlNode xmlImg = xmlProgram.SelectSingleNode("ns:brdcst/ns:media/ns:url", ns);
-      if (xmlImg != null) {
-        MXFGuideImage img = new MXFGuideImage(data.GuideImages.Count, "\\images\\events\\" + xmlImg.InnerText);
+      if (tvmBilddateiname != "") {
+        MXFGuideImage img = new MXFGuideImage(data.GuideImages.Count, tvmImageDir + "\\" + tvmBilddateiname);
         guideImage = img;
         data.GuideImages.Add(img);
+
+      } else {
+        XmlNode xmlImg = xmlProgram.SelectSingleNode("ns:brdcst/ns:media/ns:url", ns);
+        if (xmlImg != null) {
+          MXFGuideImage img = new MXFGuideImage(data.GuideImages.Count, imageDir + "\\images\\events\\" + xmlImg.InnerText);
+          guideImage = img;
+          data.GuideImages.Add(img);
+        }
       }
     }
 
@@ -164,6 +228,7 @@ namespace TVD2MXF {
 
     public string Title {
       get {
+        string tit = string.Empty;
         XmlNode n = xmlProgram.SelectSingleNode("ns:tit[@dflt='1']", ns);
         if (n != null) {
           if (n.Attributes.GetNamedItem("lang").Value != "deu") {
@@ -182,15 +247,22 @@ namespace TVD2MXF {
             n = xmlProgram.SelectSingleNode("ns:tit", ns);
           }
         }
-        if (n != null) return n.InnerText;
+        if (n != null) 
+          tit = n.InnerText;
 
-        log.Warn("No title found, id " + this.Id + ", " + this.DebugInfo);              
-        return string.Empty;
+        if (tit == "")
+          tit = tvmTitel;
+
+        if (tit == "")
+          log.Warn("No title found, id " + this.Id + ", " + this.DebugInfo);              
+        
+        return tit;
       }
     }
 
     public string EpisodeTitle {
       get {
+        string st = string.Empty;
         XmlNode n = xmlProgram.SelectSingleNode("ns:stit[@dflt='1']", ns);
         if (n != null) {
           if (n.Attributes.GetNamedItem("lang").Value != "deu") {
@@ -209,12 +281,56 @@ namespace TVD2MXF {
             n = xmlProgram.SelectSingleNode("ns:stit", ns);
           }
         }
-        if (n != null) return n.InnerText;
-        return string.Empty;
+        if (n != null) 
+          st = n.InnerText;
+
+        // TVMovie EpisodeTitle?
+      
+        return st;
       }
     }
 
     public string Description {
+      get {
+        string desc = TVDDescription;
+
+        if (desc.Length < tvmBeschreibung.Length)
+          desc = tvmBeschreibung;
+
+        if (tvmKurzkritik != "") {
+          if (desc != "") {
+            desc += Environment.NewLine;
+          }
+          desc += "\"" + tvmKurzkritik + "\"";
+        }
+
+        string desc2 = "";
+        XmlNode n = xmlProgram.SelectSingleNode("ns:chr[@dflt='1']", ns);
+        if (n != null) {
+          desc2 += n.InnerText;
+        }
+        n = xmlProgram.SelectSingleNode("ns:prdct", ns);
+        if (n != null && n.Attributes.GetNamedItem("cntr") != null) {
+          if (desc2 != "") desc2 += " - ";
+          desc2 += n.Attributes.GetNamedItem("cntr").Value.Replace("|", ", ");
+          if (Year != string.Empty) desc2 += " " + Year;
+        }
+        n = xmlProgram.SelectSingleNode("ns:tit[@orig='1']", ns);
+        if (n != null && n.InnerText != Title) {
+          if (desc2 != "") desc2 += " - ";
+          desc2 += "OT: " + n.InnerText;
+        }
+        if (desc2 != "") {
+          if (desc != "") {
+            desc += Environment.NewLine;
+          }        
+          desc += "(" + desc2 + ")";
+        }
+        return desc;
+      }
+    }
+
+    private string TVDDescription {
       get {
         string desc = string.Empty;
         XmlNode n = xmlProgram.SelectSingleNode("ns:losyn[@dflt='1']", ns);
@@ -251,32 +367,28 @@ namespace TVD2MXF {
         }
         if (n != null) {
           desc = n.InnerText;
-        }        
-
-        string desc2 = "";
-        n = xmlProgram.SelectSingleNode("ns:chr[@dflt='1']", ns);
-        if (n != null) {
-          desc2 += n.InnerText;
-        }
-        n = xmlProgram.SelectSingleNode("ns:prdct", ns);
-        if (n != null && n.Attributes.GetNamedItem("cntr") != null) {
-          if (desc2 != "") desc2 += " - ";
-          desc2 += n.Attributes.GetNamedItem("cntr").Value.Replace("|", ", ");          
-          if (Year != string.Empty) desc2 += " " + Year;
-        }
-        n = xmlProgram.SelectSingleNode("ns:tit[@orig='1']", ns);
-        if (n != null && n.InnerText != Title) {
-          if (desc2 != "") desc2 += " - ";
-          desc2 += "OT: " + n.InnerText;
-        }
-        if (desc2 != "")
-          desc += " (" + desc2 + ")";
-        
+        }                
         return desc;
       }
     }
 
     public string ShortDescription {
+      get {
+        string sd = TVDShortDescription;
+        if (sd == "") {
+          sd = tvmBeschreibung;
+        }
+        if (sd == "") {
+          sd = tvmKurzBeschreibung;
+        }
+        if (sd.Length > 512) {
+          sd = sd.Substring(0, 512 - 3) + "...";
+        }
+        return sd;
+      }
+    }
+
+    private string TVDShortDescription {
       get {
         XmlNode n = xmlProgram.SelectSingleNode("ns:shsyn[@dflt='1']", ns);
         if (n != null) {
@@ -311,11 +423,7 @@ namespace TVD2MXF {
           }
         }
         if (n != null) {
-          string desc = n.InnerText;
-          if (desc.Length > 512) {
-            desc = desc.Substring(0, 512-3) + "...";
-          }
-          return desc;
+          return n.InnerText;
         }
         return string.Empty;
       }

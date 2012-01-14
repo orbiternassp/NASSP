@@ -1,4 +1,4 @@
-TVD2MXF.vshost.exe
+TVD2MXF.vshost.exe*
 TVD2MXF.vshost.exe.log
 TVD2MXF.pdb
 log4net.dll
@@ -8,3 +8,4 @@ tvd.mxf.bug.xml
 tvd.mxf.org.xml
 tvd.mxf.xml
 TVD2MXF.exe
+TVBData.xml
