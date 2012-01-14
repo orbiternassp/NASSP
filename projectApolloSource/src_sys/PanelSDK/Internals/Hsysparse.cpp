@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.10  2008/04/11 11:50:24  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -125,10 +128,11 @@ void H_system::Create_h_Radiator(char *line) {
 	new_one = (h_Radiator*)AddSystem(new h_Radiator(name, pos, volume, isol));
 
 	// Debugging thermal management
-	/* if (!strcmp(name, "CMRCSHELIUM1"))
-		P_thermal->AddThermalObject(new_one, true);
-	else */
-		P_thermal->AddThermalObject(new_one);
+	//if (!strcmp(name, "ECSRADIATOR1"))
+	//	P_thermal->AddThermalObject(new_one, true);
+	//else 
+
+	P_thermal->AddThermalObject(new_one);
 
 	new_one->isolation = 1.0;
 	new_one->Area = (1.0 / 4.0 * volume);
@@ -160,6 +164,7 @@ void H_system::Create_h_Evaporator(char *line) {
 	char name[100], liquidSourceName[100], targetName[100], tempControlName[100];
 	int pump;
 	double targetTemp, turnOnTemp;
+	h_Evaporator *new_one;
 
 	sscanf(line + 12, " %s %i %s %lf %s %lf %s",
 		   name, &pump, targetName, &targetTemp, liquidSourceName, &turnOnTemp, tempControlName);
@@ -172,7 +177,8 @@ void H_system::Create_h_Evaporator(char *line) {
 	so = (ship_object*) GetPointerByString(tempControlName) ;
 	therm_obj *tempControl = so->GetThermalInterface();
 	
-	AddSystem(new h_Evaporator(name, pump, target, targetTemp, liquidSource, turnOnTemp, tempControl));
+	new_one = (h_Evaporator*) AddSystem(new h_Evaporator(name, pump, target, targetTemp, liquidSource, turnOnTemp, tempControl));
+	new_one->parent = this;
 }
 
 void H_system::Create_h_MixingPipe(char *line) {
