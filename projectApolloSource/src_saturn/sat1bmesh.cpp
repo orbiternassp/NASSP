@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.3  2010/02/22 14:23:31  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -471,6 +474,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	cmpidx = -1;
 	sidehatchidx = -1;
 	sidehatchopenidx = -1;
+	opticscoveridx = -1;
 
 	if (SaturnHasCSM()) {
 
@@ -529,9 +533,12 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		sidehatchidx = AddMesh (hFHC, &mesh_dir);
 		sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 		SetSideHatchMesh();
-	}
-	else if (NosecapAttached)
-	{
+
+		// Optics Cover
+		opticscoveridx = AddMesh (hopticscover, &mesh_dir);
+		SetOpticsCoverMesh();
+
+	} else if (NosecapAttached) {
 		//
 		// Add nosecap.
 		//
@@ -657,7 +664,9 @@ void Saturn1b::SetVentingJ2Thruster() {
 		DelThrusterGroup(THGROUP_MAIN, true);
 
 	VECTOR3 m_exhaust_pos1= {0, 0, -9. - STG1O + 10};
-	th_main[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 325., ph_3rd, 300., 300.);
+	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
+	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
+	th_main[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
 
 	fuel_venting_spec.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_SaturnVenting");

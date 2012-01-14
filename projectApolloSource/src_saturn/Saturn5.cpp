@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/08/25 17:48:42  tschachim
+  *	Bugfixes Saturn autopilot.
+  *	
   *	Revision 1.6  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -1361,6 +1364,8 @@ void SaturnV::DoFirstTimestep(double simt)
 	hDrogueChute = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-MAINCHUTE");
 	hMainChute = oapiGetVesselByName(VName);	
+	strcpy (VName, ApolloName); strcat (VName, "-OPTICSCOVER");
+	hOpticsCover = oapiGetVesselByName(VName);	
 	
 	habort = oapiGetVesselByName("Saturn_Abort");
 }

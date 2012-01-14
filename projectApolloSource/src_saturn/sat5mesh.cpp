@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.93  2008/05/24 17:20:11  tschachim
   *	Bugfix for Orbiter 2008
   *	
@@ -1072,6 +1075,10 @@ void SaturnV::SetThirdStageMesh (double offset)
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 	SetSideHatchMesh();
+
+	// Optics Cover
+	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
+	SetOpticsCoverMesh();
 
 	probeidx = -1;
 	probeextidx = -1;
