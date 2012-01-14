@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2011/07/14 17:47:08  tschachim
+  *	Bugfix: The proportional rate commands are powered by AC, the signals are routed through the breakout switches, so the breakout switches must be set, too: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2715.msg20936#msg20936
+  *	
   *	Revision 1.9  2010/02/22 14:23:30  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -159,6 +162,7 @@
 
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
+
 #include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
@@ -175,6 +179,8 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "papi.h"
+
+#include <time.h>
 
 //#include "afxdlgs.h"  // This header allows file write dialog for Scroll output...  HACKED.
 
@@ -685,6 +691,8 @@ GDC::GDC()
 	fdai_err_x = 0;
 	fdai_err_y = 0;
 	fdai_err_z = 0;
+	rsiRotationOn = false;
+	rsiRotationStart = 0;
 }
 
 void GDC::Init(Saturn *v)
@@ -799,7 +807,7 @@ void GDC::Timestep(double simdt) {
 	// Special Logic for Entry .05 Switch
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
-		rates.y = rollBmag->GetRates().z*tan(21.0*(PI/180)) + yawBmag->GetRates().y;
+		rates.y = rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
 		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
@@ -826,7 +834,9 @@ void GDC::Timestep(double simdt) {
 	// GDCAlign button
 	if (sat->GDCAlignButton.GetState() == 1) {
 		AlignGDC();
-	}	
+	} else {
+		rsiRotationOn = false;
+	}
 }
 
 bool GDC::AlignGDC() {
@@ -847,10 +857,20 @@ bool GDC::AlignGDC() {
 								  sat->ascp.output.y * RAD,
 								  sat->ascp.output.z * RAD));
 
-		if (sat->EMSRollSwitch.IsUp()) {
-			sat->ems.SetRSIRotation(sat->ascp.output.z * RAD);
+		// The RSI isn't set to the yaw ASCP setting, but changing when the ASCP yaw setting changes (and the Align GDC button is held down etc.)
+		if (sat->EMSRollSwitch.IsUp() && !sat->ems.IsOff()) {
+			if (rsiRotationOn) {
+				sat->ems.SetRSIRotation((sat->ascp.output.z * RAD) - rsiRotationStart);
+			} else {
+				rsiRotationOn = true;
+				rsiRotationStart = (sat->ascp.output.z * RAD) - sat->ems.GetRSIRotation(); 
+			}
+		} else {
+			rsiRotationOn = false;
 		}
 		return true;
+	} else {
+		rsiRotationOn = false;
 	}
 	return false;	
 }
@@ -862,7 +882,9 @@ void GDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "FDAIERRX", fdai_err_x);
 	oapiWriteScenario_int(scn, "FDAIERRY", fdai_err_y);
 	oapiWriteScenario_int(scn, "FDAIERRZ", fdai_err_z);
-	
+	papiWriteScenario_bool(scn, "RSIROTATIONON", rsiRotationOn);	
+	papiWriteScenario_double(scn, "RSIROTATIONSTART", rsiRotationStart);
+
 	AttitudeReference::SaveState(scn);
 
 	oapiWriteLine(scn, GDC_END_STRING);
@@ -888,7 +910,9 @@ void GDC::LoadState(FILEHANDLE scn){
 		}
 		else if (!strnicmp (line, "FDAIERRZ", 8)) {
 			sscanf(line + 8, "%i", &fdai_err_z);
-		}
+		} 
+		else if (papiReadScenario_bool(line, "RSIROTATIONON", rsiRotationOn));
+		else if (papiReadScenario_double(line, "RSIROTATIONSTART", rsiRotationStart));
 		else {
 			AttitudeReference::LoadState(line);
 		}
@@ -2832,16 +2856,12 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	switch (status) {
 		case EMS_STATUS_DV:
 		case EMS_STATUS_DV_BACKUP:
-			{
-
-				// dV/Range display
-				if (xacc > 0 || status == EMS_STATUS_DV) {
-					dVRangeCounter -= dV;
-					dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
-				}				
-				//sprintf(oapiDebugString(), "xacc %.10f", xacc);
-
-			}
+			// dV/Range display
+			if (xacc > 0 || status == EMS_STATUS_DV) {
+				dVRangeCounter -= dV;
+				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+			}				
+			//sprintf(oapiDebugString(), "xacc %.10f", xacc);
 			break;
 
 		case EMS_STATUS_DVSET:
@@ -2875,8 +2895,8 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 				if (pt02GComparator(simdt)) ThresholdBreeched = false;
 
-				ScrollPosition=ScrollPosition+(dV*ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
-				dVRangeCounter -= dV*simdt;
+				ScrollPosition = ScrollPosition + (dV * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
+				dVRangeCounter -= dV * simdt;
 
 				pt05GLightOn = true;
 				if (!CorridorEvaluated){
@@ -2984,9 +3004,12 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	// If powered, drive Glevel
 	if (status == EMS_STATUS_ENTRY || 
 		status == EMS_STATUS_EMS_TEST1 || status == EMS_STATUS_EMS_TEST4 || status == EMS_STATUS_EMS_TEST5 || 
-		status == EMS_STATUS_RNG_SET) {
+		status == EMS_STATUS_RNG_SET || status == EMS_STATUS_Vo_SET) {
 
-		GScribe = (int)(xaccG * 14.) + 1; // 13.6 vertical pixels per G
+		// AOH SCS fig. 2.3-34
+		if (status != EMS_STATUS_Vo_SET && status != EMS_STATUS_EMS_TEST1) {
+			GScribe = (int)(xaccG * 14.) + 1; // 13.6 vertical pixels per G
+		}
 
 		// Limit readouts
 		dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
@@ -3011,8 +3034,8 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
 	}
 
-	if (sat->GSwitch.IsUp()) {
-		SetRSIRotation(RSITarget + sat->gdc.rates.z*simdt);
+	if (status != EMS_STATUS_OFF && sat->EMSRollSwitch.IsUp()) {
+		SetRSIRotation(RSITarget + sat->gdc.rates.y * simdt);
 		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
 	}
 
@@ -3131,7 +3154,11 @@ void EMS::SwitchChanged() {
 			break;
 
 		case 4: // ENTRY
-			status = EMS_STATUS_ENTRY;
+			if (sat->EMSModeSwitch.IsCenter()) {
+				status = EMS_STATUS_STANDBY;
+			} else {
+				status = EMS_STATUS_ENTRY;
+			}
 			break;
 		case 5: // Vo SET
 			status = EMS_STATUS_Vo_SET;
@@ -3169,12 +3196,17 @@ void EMS::SwitchChanged() {
 }
 void EMS::SetRSIRotation(double angle) { 
 
-	angle = fmod(angle+(2*PI),2*PI); //remove unwanted multiples of 2PI and avoid negative numbers
+	angle = fmod(angle + TWO_PI, TWO_PI); //remove unwanted multiples of 2PI and avoid negative numbers
 
 	//sprintf(oapiDebugString(),"RSITarget:%f  RSIRotation:%f ", angle,RSIRotation);
 
 	RSITarget = angle;
 }
+
+double EMS::GetRSIRotation() {
+	return RSITarget;
+}
+
 void EMS::RotateRSI(double simdt) {
 
 	double cRSIrot,sRSIrot;
@@ -3286,13 +3318,8 @@ bool EMS::IsPowered() {
 }
 
 void EMS::SaveState(FILEHANDLE scn) {
-
-	//  ONLY PRINT SCROLL IF GTA SWITCH IS IN ON POSITION (Debug easter egg)
-
-	if (sat->GTASwitch.IsUp()) {
-		WriteScrollToFile();
-	}
-
+	char buffer[100];
+	
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
@@ -3306,14 +3333,19 @@ void EMS::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "CORRIDOREVALUATED", (CorridorEvaluated ? 1 : 0));
 	papiWriteScenario_double(scn, "TENSECTIMER", TenSecTimer);
 	oapiWriteScenario_int(scn, "LIFTVECTLTON", LiftVectLightOn);
-
+	oapiWriteScenario_int(scn, "SCRIBEPNTCNT", ScribePntCnt);
+	for (int i = 0; i < ScribePntCnt; i++) {
+		sprintf(buffer, "SCRIBEPNTARRAY%i %i %i", i, ScribePntArray[i].x, ScribePntArray[i].y);
+		oapiWriteScenario_string(scn, buffer, "");
+	}	
 	oapiWriteLine(scn, EMS_END_STRING);
 }
 
-void EMS::LoadState(FILEHANDLE scn){
+void EMS::LoadState(FILEHANDLE scn) {
 
 	int i;
-	char *line;
+	long j, k;
+	char *line;	
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, EMS_END_STRING, sizeof(EMS_END_STRING))){
@@ -3347,10 +3379,20 @@ void EMS::LoadState(FILEHANDLE scn){
 			sscanf(line + 11, "%lf", &TenSecTimer);
 		} else if (!strnicmp (line, "LIFTVECTLTON", 12)) {
 			sscanf(line + 12, "%lf", &LiftVectLightOn);
+		} 
+		else if (papiReadScenario_int(line, "SCRIBEPNTCNT", ScribePntCnt));
+		else if (!strnicmp (line, "SCRIBEPNTARRAY", 14)) {
+			sscanf(line + 14, "%i %li %li", &i, &j, &k);
+			ScribePntArray[i].x = j;
+			ScribePntArray[i].y = k;
 		}
 	}
 }
+
 bool EMS::WriteScrollToFile() {
+	char sdate[9];
+	char stime[9];
+	char buffer[100];
 
 	//Special Thanks to computerex at orbiter-forum for assisting in this implementation
 	int width = EMS_SCROLL_LENGTH_PX;
@@ -3373,8 +3415,18 @@ bool EMS::WriteScrollToFile() {
 	SelectObject(hMemDC, hOld);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
+
+	_strdate(sdate);
+	_strtime(stime);
+	sprintf(buffer, "ProjectApollo EMSScroll %s_%s.bmp", sdate, stime);
+	for (unsigned int i = 0; i < strlen(buffer); i++) {
+		if (buffer[i] == '/' || buffer[i] == ':') {
+			buffer[i] = '-';
+		}
+	}
+
 	bool ret = true;
-	ret = CreateBMPFile("ProjectApollo EMSScroll.bmp", bitmapInfo, hBitmap, hMemDC);
+	ret = CreateBMPFile(buffer, bitmapInfo, hBitmap, hMemDC);
 
 	DeleteObject(hBitmap);
 	DeleteDC(hMemDC);
