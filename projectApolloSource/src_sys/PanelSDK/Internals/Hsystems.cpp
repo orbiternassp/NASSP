@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2011/07/23 22:48:33  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.3  2010/07/19 13:56:58  tschachim
   *	Bugfix evaporator valve
   *	
@@ -1000,6 +1003,7 @@ h_Radiator::~h_Radiator() {
 }
 
 void h_Radiator::refresh(double dt) {
+
 	double Q = rad * size * 5.67e-8 * dt * pow(Temp - 3.0, 4);	//aditional cooling from the radiator??
 
 	// if (!strcmp(name, "SPSPROPELLANTLINE")) 
@@ -1114,6 +1118,12 @@ void h_Evaporator::refresh(double dt) {
 	// Throttle simulates the valve which remains unchanged when the evaporator is turned off
 	double throttle_temp = throttle;
 	if (!h_pump) throttle_temp = 0;
+
+	// The evaporators don't work inside the atmosphere, they stop working shortly before apex cover jettison
+	if (parent->Vessel->GetAtmPressure() > 30000.0) {
+		throttle_temp = 0;
+		steamUnderPressure = -0.11;
+	}
 
 	if (throttle_temp) {
 		double targetFlow = 1.1 * dt * throttle_temp; //???
