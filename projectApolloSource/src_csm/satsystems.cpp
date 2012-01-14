@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.11  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -863,8 +866,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				// ECS radiators in prelaunch configuration
 				PrimEcsRadiatorExchanger1->SetLength(8.0);
 				PrimEcsRadiatorExchanger2->SetLength(8.0);
-				SecEcsRadiatorExchanger1->SetLength(8.0);
-				SecEcsRadiatorExchanger2->SetLength(8.0);
+				SecEcsRadiatorExchanger1->SetLength(0);
+				SecEcsRadiatorExchanger2->SetLength(0);
 
 				// GSE provides electrical power
 				MainBusAController.SetGSEState(1);
@@ -3533,6 +3536,20 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 		aws.CMCWarning = true;
 	else
 		aws.CMCWarning = false;
+		
+	aws.PGNSWarning = false;
+	// Restart alarm
+	if (agc.Yaagc && agc.vagc.VoltageAlarm != 0) 
+		aws.PGNSWarning = true;
+	// Gimbal Lock 
+	if (agc.GetGimbalLockAlarm()) 
+		aws.PGNSWarning = true;
+	// Prog alarm
+	if (agc.GetProgAlarm()) 
+		aws.PGNSWarning = true;
+	// Temp alarm
+	if (val11.Bits.LightTempCaution)
+		aws.PGNSWarning = true;
 }
 
 //
