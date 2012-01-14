@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.6  2011/07/07 11:58:45  vrouleau
   *	Checkpoint commit for LEM rendezvous radar:
   *	 - Added range,rate and CSM direction calculation.
@@ -4086,6 +4091,16 @@ void CSMcomputer::ProcessChannel10(int val)
 {
 	dsky.ProcessChannel10(val);
 	dsky2.ProcessChannel10(val);
+
+	// Gimbal Lock & Prog alarm
+	ChannelValue10 val10;
+	val10.Value = val;
+	if (val10.Bits.a == 12) {
+		// Gimbal Lock
+		GimbalLockAlarm = ((val10.Value & (1 << 5)) != 0);
+		// Prog alarm
+		ProgAlarm = ((val10.Value & (1 << 8)) != 0);
+	}
 }
 
 void CSMcomputer::ProcessChannel11Bit(int bit, bool val)
@@ -4460,6 +4475,7 @@ CMOptics::CMOptics() {
 	SextDualView = false;
 	SextDVLOSTog = false;
 	SextDVTimer = 0.0;
+	OpticsCovered = true;
 
 	TargetShaft = 0;
 	TargetTrunion = 0;
@@ -4554,6 +4570,15 @@ void CMOptics::TimeStep(double simdt) {
 	if (SextDVTimer >= 0.06666){
 		SextDVTimer = 0.0;
 		SextDVLOSTog=!SextDVLOSTog;
+	}
+
+	// Optics cover handling
+	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {
+		if (OpticsShaft > 150. * RAD) {
+			OpticsCovered = false;			
+			sat->SetOpticsCoverMesh();
+			sat->JettisonOpticsCover();
+		}
 	}
 
 	if (Powered == 0) { return; }
@@ -4684,7 +4709,7 @@ void CMOptics::TimeStep(double simdt) {
 		}				
 	}
 
-	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
+	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 }
 
 void CMOptics::SaveState(FILEHANDLE scn) {
@@ -4699,6 +4724,7 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "TARGETTRUNION", TargetTrunion);
 	papiWriteScenario_double(scn, "SHAFTMOVED", ShaftMoved);
 	papiWriteScenario_double(scn, "TRUNIONMOVED", TrunionMoved);
+	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
 }
 
@@ -4735,6 +4761,7 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 		}
 		else if (!strnicmp (line, "TRUNIONMOVED", 12)) {
 			sscanf (line+12, "%lf", &TrunionMoved);
-		}
+		} 
+		papiReadScenario_bool(line, "OPTICSCOVERED", OpticsCovered); 
 	}
 }

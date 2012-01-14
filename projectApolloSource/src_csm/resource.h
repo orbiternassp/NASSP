@@ -740,15 +740,23 @@
 #define IDB_CSM_CABINPRESSTESTSWITCH                       1025
 #define AID_CSM_CABINPRESSTESTSWITCH                       1026
 #define IDB_ORDEAL_PANEL                                   1027
-#define IDB_DIGITAL2									   1028
-#define AID_PANEL275CIRCUITBRAKERS_LOWER				   1029
+#define IDB_DIGITAL2                                       1028
+#define AID_PANEL275CIRCUITBRAKERS_LOWER                   1029
+#define IDB_CSM_TELESCOPECOVER                             1030
+#define AID_CSM_TELESCOPECOVER                             1031
+#define IDB_CSM_SEXTANTCOVER                               1032
+#define AID_CSM_SEXTANTCOVER                               1033
+#define IDB_CWS_GNLIGHTS                                   1034
+#define AID_CWS_GNLIGHTS                                   1035
+#define IDB_BORDER_45x49                                   1036
+#define IDB_BORDER_28x32                                   1037
 
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1028
+#define _APS_NEXT_RESOURCE_VALUE                            1038
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

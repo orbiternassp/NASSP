@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/01/04 12:31:15  tschachim
+  *	Improved Saturn IB launch autopilot, bugfixes
+  *	
   *	Revision 1.2  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -683,7 +686,6 @@ protected:
 	CSMToSIVBControlConnector &lv;
 
 	Saturn *sat;
-
 };
 //constants
 	const double ACONST = 0.159;
@@ -798,6 +800,7 @@ public:
 	bool SextDualView;												// Toggle logical for sextant dual-view
 	bool SextDVLOSTog;												// Alternating flag that controls LineOfSight cycling in Dual-View mode
 	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second
+	bool OpticsCovered;												// Are optics covers in place?
 };
 
 
