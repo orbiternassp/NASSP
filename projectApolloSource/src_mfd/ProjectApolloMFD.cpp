@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2010/11/05 03:10:00  vrouleau
+  *	Added CSM/LM Landing Site REFSMMAT Uplink to AGC. Contains hardcoded REFSMMAT per mission.
+  *	
   *	Revision 1.19  2010/09/06 16:23:21  tschachim
   *	Changes for Orbiter 2010-P1
   *	
@@ -809,7 +812,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
 	//Additional button added at the bottom right of none for the debug string.
 	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","SOCK","","","","","","","DBG"};
-	static char *labelGNC[3] = {"BCK", "DMP", "KILR"};
+	static char *labelGNC[4] = {"BCK", "KILR", "EMS", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
@@ -822,7 +825,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		return 0;
 	}
 	if (screen == PROG_GNC) {
-		return (bt < 3 ? labelGNC[bt] : 0);
+		return (bt < 4 ? labelGNC[bt] : 0);
 	}
 	else if (screen == PROG_ECS) {
 		return (bt < 4 ? labelECS[bt] : 0);
@@ -863,11 +866,11 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{0,0,0},
 		{"Debug String",0,'D'}
 	};
-	static const MFDBUTTONMENU mnuGNC[3] = {
+	static const MFDBUTTONMENU mnuGNC[4] = {
 		{"Back", 0, 'B'},
-		{"Virtual AGC core dump", 0, 'D'},
-		{"Kill rotation", 0, 'K'}
-
+		{"Kill rotation", 0, 'K'},
+		{"Save EMS scroll", 0, 'E'},
+		{"Virtual AGC core dump", 0, 'D'}
 	};
 	static const MFDBUTTONMENU mnuECS[4] = {
 		{"Back", 0, 'B'},
@@ -922,7 +925,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 
 	if (screen == PROG_GNC) {
 		if (menu) *menu = mnuGNC;
-		return 3; 
+		return 4; 
 	} else if (screen == PROG_ECS) {
 		if (menu) *menu = mnuECS;
 		return 4; 
@@ -1006,6 +1009,10 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		} else if (key == OAPI_KEY_K) {
 			g_Data.killrot ? g_Data.killrot = 0 : g_Data.killrot = 1;				
+			return true;
+		} else if (key == OAPI_KEY_E) {
+			if (saturn)
+				saturn->SaveEMSScroll(); 			
 			return true;
 		} 		
 	} else if (screen == PROG_TELE) {
@@ -1225,7 +1232,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
 	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
-	static const DWORD btkeyGNC[3] = { OAPI_KEY_B, OAPI_KEY_D, OAPI_KEY_K};
+	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
 	static const DWORD btkeyTELE[9] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F };
@@ -1233,7 +1240,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
 	if (screen == PROG_GNC) {
-		if (bt < 3) return ConsumeKeyBuffered (btkeyGNC[bt]);
+		if (bt < 4) return ConsumeKeyBuffered (btkeyGNC[bt]);
 	} else if (screen == PROG_ECS) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else if (screen == PROG_IMFD) {
@@ -1545,21 +1552,21 @@ void ProjectApolloMFD::Update (HDC hDC)
 	else if (screen == PROG_TELE) {
 		SetTextAlign (hDC, TA_LEFT);
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.25), "Telemetry:", 10);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.25), debugWinsock, strlen(debugWinsock));
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "IMFD Burn Data:", 15);
-		if(saturn){
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "Telemetry:", 10);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), debugWinsock, strlen(debugWinsock));
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 15);
+		if (saturn){
 			if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "REQUESTING", 10);
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
 			} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
 				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "NO DATA", 7);	
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
 				SetTextColor (hDC, RGB(0, 255, 0));
 			} else {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "NONE", 4);
+				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
 			}
-		}else{
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), "N/A", 3);
+		} else {
+			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "N/A", 3);
 		}
 		if (g_Data.hasError) {
 			if (saturn && saturn->GetIMFDClient()->IsBurnDataValid()) {
@@ -1576,7 +1583,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, width / 2, (int) (height * 0.45), "ERROR", 5);
 			TextOut(hDC, width / 2, (int) (height * 0.5), g_Data.errorMessage, strlen(g_Data.errorMessage));
 		} else if (g_Data.uplinkDataReady == 1 || g_Data.updateClockReady == 1) {
-			if(lem){
+			if (lem) {
 				SetTextAlign (hDC, TA_CENTER);
 				sprintf(buffer, "Checklist");
 				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
@@ -1588,7 +1595,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 				sprintf(buffer, "P11: UP DATA LINK CB - IN");
 				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
 				SetTextAlign (hDC, TA_CENTER);				
-			}else{
+			} else {
 				SetTextAlign (hDC, TA_CENTER);
 				sprintf(buffer, "Checklist");
 				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
@@ -1628,7 +1635,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
 		}
 		else if(g_Data.uplinkDataReady == 2) {
-			double linepos = .30;
+			double linepos = 0.4;
 			SetTextAlign (hDC, TA_LEFT);
 			sprintf(buffer, "304   %ld", g_Data.emem[0]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
@@ -1650,7 +1657,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "315   %ld", g_Data.emem[9]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));		
-			linepos = 0.30;
+			linepos = 0.4;
 			if (g_Data.uplinkDataType != UPLINK_P30) {
 				sprintf(buffer, "316   %ld", g_Data.emem[10]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
@@ -1682,9 +1689,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		SetTextColor (hDC, RGB(128, 128, 128));
 		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 100);
-		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.9), buffer, strlen(buffer));
-		oapiGetObjectName(g_Data.planet, buffer, 100);
 		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.95), buffer, strlen(buffer));
+		SetTextAlign (hDC, TA_RIGHT);
+		oapiGetObjectName(g_Data.planet, buffer, 100);
+		TextOut(hDC, (int) (width * 0.95), (int) (height * 0.95), buffer, strlen(buffer));
 	}
 	else if (screen == PROG_DEBUG)
 	{
