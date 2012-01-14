@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.5  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -924,7 +927,7 @@ protected:
 class OpticsHandcontrollerSwitch: public HandcontrollerSwitch {
 
 public:
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
 	bool CheckMouseClick(int event, int mx, int my);
 
 protected:
@@ -934,7 +937,7 @@ protected:
 class MinImpulseHandcontrollerSwitch: public HandcontrollerSwitch {
 
 public:
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
 	bool CheckMouseClick(int event, int mx, int my);
 
 protected:
