@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.2  2009/03/03 18:34:28  tschachim
   *	Bugfixes BMAGs and hatch.
   *	
@@ -537,7 +540,8 @@ void Saturn::SetView(double offset, bool update_direction)
 			v = _V(0, 0, offset + 1.0);
 
 		} else {
-			v = _V(0, 0, offset - 3.0);
+			// "Calibrated" for optics cover jettison as seen through the scanning telescope 
+			v = _V(0, 0, offset + 0.2);
 		}
 
 		if (PanelId == SATPANEL_SEXTANT) { // Sextant

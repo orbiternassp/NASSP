@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.3  2010/01/14 16:54:13  tschachim
   *	SPS TVC reset and trim angles bugfix.
   *	
@@ -165,6 +168,7 @@ MESHHANDLE hFHC2;
 MESHHANDLE hsat5tower;
 MESHHANDLE hFHO2;
 MESHHANDLE hCMPEVA;
+MESHHANDLE hopticscover;
 
 extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,double *cd);
 
@@ -279,6 +283,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hsat5tower, "ProjectApollo/BoostCover");
 	LOAD_MESH(hFHO2, "ProjectApollo/CMB-HatchO");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
+	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	let_exhaust.tex = contrail_tex;
@@ -637,21 +642,21 @@ void Saturn::SetCSMStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
 
-	//
 	// Docking probe
-	//
-
-	if (HasProbe)
-	{
+	if (HasProbe) {
 		probeidx = AddMesh(hprobe, &mesh_dir);
 		probeextidx = AddMesh(hprobeext, &mesh_dir);
 		SetDockingProbeMesh();
-	} else
-	{
+	} else {
 		probeidx = -1;
 		probeextidx = -1;
 	}
 
+	// Optics Cover
+	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
+	SetOpticsCoverMesh();
+
+	// Docking port
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
@@ -660,19 +665,16 @@ void Saturn::SetCSMStage ()
 	//
 	// SM RCS
 	//
-
 	AddRCSJets(-0.18, SM_RCS_THRUST);
 
 	//
 	// CM RCS
 	//
-
 	AddRCS_CM(CM_RCS_THRUST, 34.4 - CGOffset, false);
 
 	//
 	// Waste dump streams
 	//
-
 	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
 	if (wastewaterdump) DelExhaustStream(wastewaterdump);
 	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
@@ -684,7 +686,6 @@ void Saturn::SetCSMStage ()
 	//
 	// Apollo 13 special handling
 	//
-
 	if (ApolloExploded) {
 		VECTOR3 vent_pos = {0, 1.5, 30.25 - CGOffset};
 		VECTOR3 vent_dir = {0.5, 1, 0};
@@ -694,8 +695,8 @@ void Saturn::SetCSMStage ()
 	}
 
 	SetView(0.4 + 1.8 - 0.35);
-	// **************************** NAV radios *************************************
 
+	// **************************** NAV radios *************************************
 	InitNavRadios (4);
 	EnableTransponder (true);
 	OrbiterAttitudeToggle.SetActive(true);
@@ -820,6 +821,18 @@ void Saturn::SetCrewMesh() {
 		} else {
 			SetMeshVisibilityMode(crewidx, MESHVIS_NEVER);
 		}
+	}
+}
+
+void Saturn::SetOpticsCoverMesh() {
+
+	if (opticscoveridx == -1)
+		return;
+	
+	if (optics.OpticsCovered) {
+		SetMeshVisibilityMode(opticscoveridx, MESHVIS_EXTERNAL);
+	} else {
+		SetMeshVisibilityMode(opticscoveridx, MESHVIS_NEVER);
 	}
 }
 
@@ -1485,4 +1498,23 @@ void Saturn::JettisonDockingProbe()
 	GetApolloName(VName); 
 	strcat (VName, "-DCKPRB");
 	hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
+}
+
+void Saturn::JettisonOpticsCover() 
+
+{
+	char VName[256];
+
+	// Use VC offset to calculate the optics cover offset
+	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 vel = {0.0, -0.16, 0.1};
+	VESSELSTATUS vs4b;
+	GetStatus (vs4b);
+	StageTransform(this, &vs4b, ofs, vel);
+	vs4b.vrot.x = 0.05;
+	vs4b.vrot.y = 0.0;
+	vs4b.vrot.z = 0.0;
+	GetApolloName(VName); 
+	strcat (VName, "-OPTICSCOVER");
+	hOpticsCover = oapiCreateVessel(VName, "ProjectApollo/CMOpticsCover", vs4b);
 }
