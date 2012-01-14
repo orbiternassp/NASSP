@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2010/09/07 12:05:12  vrouleau
+  *	Remove LVLH attitude hold mode for SIVB for non-Apollo 7 cases. Allows S-IVB maneuvering for TLI in AP 8-11.
+  *	
   *	Revision 1.22  2010/08/25 17:48:42  tschachim
   *	Bugfixes Saturn autopilot.
   *	
@@ -931,6 +934,7 @@ void Saturn::initSaturn()
 	hApex = 0;
 	hDrogueChute = 0;
 	hMainChute = 0;
+	hOpticsCover = 0;
 
 	//
 	// Apollo 13 flags.
@@ -1336,6 +1340,7 @@ void Saturn::initSaturn()
 	sidehatchopenidx = -1;
 	sidehatchburnedidx = -1;
 	sidehatchburnedopenidx = -1;
+	opticscoveridx = -1;
 
 	Scorrec = false;
 
@@ -1674,7 +1679,10 @@ void Saturn::Undocking(int port)
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 {
+	char buffer[100];
 	TRACESETUP("Saturn::clbkPreStep");
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %d", MissionTime, simt, simdt, time(0)); 
+	TRACE(buffer);
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
@@ -1756,12 +1764,19 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	Timestep(simt, simdt, mjd);
+
+	sprintf(buffer, "End time(0) %d", time(0)); 
+	TRACE(buffer);
 }
 
 void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
+	char buffer[100];
 	TRACESETUP("Saturn::clbkPostStep");
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %d", MissionTime, simt, simdt, time(0)); 
+	TRACE(buffer);
+
 	if (debugConnected == false)
 	{
 		sprintf(debugString(), "Please enable the Project Apollo MFD on the modules tab of the launchpad.");
@@ -1787,7 +1802,8 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime,eventControl);
 
-	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
+	sprintf(buffer, "End time(0) %d", time(0)); 
+	TRACE(buffer);
 }
 
 void Saturn::clbkSaveState(FILEHANDLE scn)
@@ -3247,6 +3263,10 @@ void Saturn::DestroyStages(double simt)
 
 	if (hPROBE) {
 		KillDist(hPROBE);
+	}
+
+	if (hOpticsCover) {
+		KillDist(hOpticsCover);
 	}
 
 	if (hApex) {

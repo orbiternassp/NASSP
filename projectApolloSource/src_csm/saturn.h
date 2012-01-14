@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/08/29 18:51:47  tschachim
+  *	Bugfix mission sound
+  *	
   *	Revision 1.17  2010/08/25 17:48:42  tschachim
   *	Bugfixes Saturn autopilot.
   *	
@@ -592,6 +595,7 @@ typedef struct {
 	bool CMCWarning;
 	bool ISSWarning;
 	bool TestAlarms;
+	bool PGNSWarning;
 } AGCWarningStatus;
 
 ///
@@ -834,6 +838,11 @@ public:
 		SRF_CSM_CABINPRESSTESTSWITCH,
 		SRF_ORDEAL_PANEL,
 		SRF_DIGITAL2,
+		SRF_CSM_TELESCOPECOVER,
+		SRF_CSM_SEXTANTCOVER,
+		SRF_CWS_GNLIGHTS,
+		SRF_BORDER_45x49,
+		SRF_BORDER_28x32,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1271,6 +1280,11 @@ public:
 	virtual void VirtualAGCCoreDump() { agc.VirtualAGCCoreDump("ProjectApollo CMC.core"); }
 
 	///
+	/// \brief Triggers EMS scroll saving
+	///
+	virtual void SaveEMSScroll() { ems.WriteScrollToFile(); }
+
+	///
 	/// Get a pointer to the Saturn Instrument Unit, which controls the autopilot prior to SIVb/CSM
 	/// seperation.
 	/// \brief Access the Saturn IU.
@@ -1487,6 +1501,11 @@ public:
 	void SetCrewMesh();
 
 	///
+	/// \brief Set optics cover mesh
+	///
+	void SetOpticsCoverMesh();
+
+	///
 	/// Check whether the Launch Escape Tower is attached.
 	/// \brief Is the LET still attached?
 	/// \return True if attached, false if not.
@@ -1644,6 +1663,8 @@ protected:
 	bool SaturnHasCSM();
 
 	void JettisonDockingProbe();
+
+	void JettisonOpticsCover();
 
 	//
 	// State that needs to be saved.
@@ -4146,6 +4167,7 @@ protected:
 	int sidehatchopenidx;
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
+	int opticscoveridx;
 
 	bool ASTPMission;
 
@@ -4260,6 +4282,7 @@ protected:
 	OBJHANDLE hApex;
 	OBJHANDLE hDrogueChute;
 	OBJHANDLE hMainChute;
+	OBJHANDLE hOpticsCover;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -4321,6 +4344,7 @@ protected:
 	void SetView(double offset);
 	void SetView(bool update_direction);
 	void SetView(double offset, bool update_direction);
+	bool GetRenderViewportIsWideScreen();
 	void MasterAlarm();
 	void StopMasterAlarm();
 	void GenericTimestep(double simt, double simdt, double mjd);
@@ -4812,6 +4836,7 @@ extern MESHHANDLE hprobe;
 extern MESHHANDLE hprobeext;
 extern MESHHANDLE hsat5tower;
 extern MESHHANDLE hFHO2;
+extern MESHHANDLE hopticscover;
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();
