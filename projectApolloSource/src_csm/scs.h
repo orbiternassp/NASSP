@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.6  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -223,6 +226,10 @@ public: // We use these inside a timestep, so everything is public to make data 
 	int fdai_err_x;
 	int fdai_err_y;
 	int fdai_err_z;
+	// RSI
+	bool rsiRotationOn;
+	double rsiRotationStart;
+
 	friend class CSMcomputer; // Needs to write FDAI error indications, which are really not on the GDC, but meh.
 };
 
@@ -398,6 +405,7 @@ public:
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
 	void SetRSIRotation(double angle);
+	double GetRSIRotation();
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	int GetGScribe() { return GScribe; };
