@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -197,6 +200,9 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 	ACBus2Alarm = false;
 	ACBus1Reset = false;
 	ACBus2Reset = false;
+
+	GNLampState = 1;	// on
+	GNPGNSAlarm = false;
 }
 
 //
@@ -404,10 +410,29 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		}
 	}
 
+	//
+	// PGNS warning
+	//
+
+	if (aws.PGNSWarning && !GNPGNSAlarm) {
+		// No Master Alarm during lamp test
+		if (!aws.TestAlarms) {
+			if (InhibitNextMasterAlarm) {
+				InhibitNextMasterAlarm = false;
+			} else {
+				SetMasterAlarm(true);
+			}
+		}
+	}
+	GNPGNSAlarm = aws.PGNSWarning;
+
+	//
 	// CREW ALERT
-	if((UplinkTestState&010) != 0){
+	//
+
+	if ((UplinkTestState & 010) != 0) {
 		SetLight(CSM_CWS_CREW_ALERT,true);		
-	}else{
+	} else {
 		SetLight(CSM_CWS_CREW_ALERT,false);
 	}
 
@@ -740,6 +765,36 @@ void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf
 	}
 }
 
+void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf)
+
+{
+	if (!LightsPowered() || GNLampState == 0)
+		return;
+
+	// PGNS
+	if (GNLampState == 2 || GNPGNSAlarm) {
+		oapiBlt(surf, lightsurf, 0, 0, 54, 2, 49, 21);
+	}
+	// CMC
+	if (GNLampState == 2 || RightLights[CSM_CWS_CMC_LIGHT - CWS_LIGHTS_PER_PANEL]) {
+		oapiBlt(surf, lightsurf, 0, 25, 54, 27, 49, 21);
+	}
+	// ISS
+	if (GNLampState == 2 || RightLights[CSM_CWS_ISS_LIGHT - CWS_LIGHTS_PER_PANEL]) {
+		oapiBlt(surf, lightsurf, 0, 50, 54, 52, 49, 21);
+	}
+}
+
+void CSMCautionWarningSystem::GNLampSwitchToggled(PanelSwitchItem *s) {
+	if (s->GetState() == THREEPOSSWITCH_CENTER) {
+		GNLampState = 0;	// off
+	} else if (s->GetState() == THREEPOSSWITCH_UP) {
+		GNLampState = 1;	// on
+	} else if (s->GetState() == THREEPOSSWITCH_DOWN) {
+		GNLampState = 2;	// test
+	}
+}
+
 bool CSMCautionWarningSystem::LightPowered(int i)
 
 {
@@ -804,6 +859,8 @@ void CSMCautionWarningSystem::SaveState(FILEHANDLE scn)
 
 	papiWriteScenario_bool(scn, "LASTO2FLOWCHECKHIGH", LastO2FlowCheckHigh);
 	papiWriteScenario_double(scn, "NEXTO2FLOWCHECKTIME", NextO2FlowCheckTime);
+	oapiWriteScenario_int(scn, "GNLAMPSTATE", GNLampState);
+	papiWriteScenario_bool(scn, "GNPGNSALARM", GNPGNSAlarm);
 
 	CautionWarningSystem::SaveState(scn);
 	oapiWriteLine(scn, CWS_END_STRING);
@@ -820,6 +877,8 @@ void CSMCautionWarningSystem::LoadState(FILEHANDLE scn)
 
 		papiReadScenario_bool(line, "LASTO2FLOWCHECKHIGH", LastO2FlowCheckHigh);
 		papiReadScenario_double(line, "NEXTO2FLOWCHECKTIME", NextO2FlowCheckTime);
+		papiReadScenario_int(line, "GNLAMPSTATE", GNLampState);
+		papiReadScenario_bool(line, "GNPGNSALARM", GNPGNSAlarm);
 
 		CautionWarningSystem::LoadState(line);
 	}

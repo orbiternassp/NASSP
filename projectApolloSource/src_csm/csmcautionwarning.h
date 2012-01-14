@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -179,6 +182,10 @@ public:
 	///
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 
+	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf);
+
+	void GNLampSwitchToggled(PanelSwitchItem *s);
+
 	void SaveState(FILEHANDLE scn);
 
 	void LoadState(FILEHANDLE scn);
@@ -219,6 +226,9 @@ protected:
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;
+
+	int GNLampState;
+	bool GNPGNSAlarm;
 
 	//
 	// Helper functions.
