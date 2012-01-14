@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2010/07/16 17:14:43  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.12  2010/05/10 01:49:25  dseagrav
   *	Added more LM indicators.
   *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
@@ -1503,6 +1506,21 @@ bool PanelSwitches::SetFlashing(char *n, bool flash)
 		row = row->GetNext();
 	}
 
+	return false;
+}
+
+bool PanelSwitches::GetFlashing(char *n) {
+
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p) {
+			return p->IsFlashing();
+		}
+		row = row->GetNext();
+	}
 	return false;
 }
 
@@ -4021,6 +4039,7 @@ HandcontrollerSwitch::HandcontrollerSwitch() {
 	height = 0;
 	state = 0;
 	switchSurface = 0;
+	borderSurface = 0;
 	switchRow = 0;
 }
 
@@ -4035,13 +4054,14 @@ void HandcontrollerSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, b
 	scnh.RegisterSwitch(this);
 }
 
-void HandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+void HandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, 	SURFHANDLE bsurf, SwitchRow &row) {
 
 	x = xp;
 	y = yp;
 	width = w;
 	height = h;
 	switchSurface = surf;
+	borderSurface = bsurf;
 	
 	row.AddSwitch(this);
 	switchRow = &row;
@@ -4110,7 +4130,20 @@ bool HandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) {
 
 void HandcontrollerSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
+	if (!visible)
+		return;
+
 	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
+}
+
+void HandcontrollerSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (borderSurface)
+		oapiBlt(DrawSurface, borderSurface, x, y, 0, 0, width, height, SURF_PREDEF_CK);
 }
 
 void HandcontrollerSwitch::SaveState(FILEHANDLE scn) {
@@ -4169,6 +4202,10 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 	case MFD_PANEL_GET_ITEM_STATE:
 		m.val1.iValue = panel.GetState(static_cast<char *>(m.val1.pValue));
+		return true;
+
+	case MFD_PANEL_GET_ITEM_FLASHING:
+		m.val1.bValue = panel.GetFlashing(static_cast<char *>(m.val1.pValue));
 		return true;
 
 	case MFD_PANEL_SET_ITEM_STATE:

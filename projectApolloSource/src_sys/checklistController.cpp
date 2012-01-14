@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.5  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -91,13 +94,12 @@ ChecklistItem *ChecklistController::getChecklistItem(int group, int index)
 	if (active.program.group == -1)
 		return NULL;
 
-	if (index != -1)
-	{
-		if (index + active.sequence->index >= active.set.size())
-			return NULL;
-		return &(active.set[active.sequence->index + index]);
-	}
-	return &(*active.sequence);
+	if (index + active.sequence->index >= active.set.size())
+		return NULL;
+	if (index + active.sequence->index < 0)
+		return NULL;
+
+	return &(active.set[active.sequence->index + index]);
 }
 // Todo: Verify
 vector<ChecklistGroup> *ChecklistController::getChecklistList()
@@ -188,13 +190,16 @@ bool ChecklistController::init(char *checkFile)
 	{
 		for (int i = 1; i < sheet->GetTotalRows(); i++)
 		{
-			for (int ii = 0; ii < 10 /* Number of columns in accepted sheet */; ii++)
-				cells.push_back(*sheet->Cell(i,ii));
-			temp.init(cells);
-			temp.group = groups.size();
-			groups.push_back(temp);
-			temp = ChecklistGroup();
-			cells = vector<BasicExcelCell>();
+			// Ignore empty texts
+			if (sheet->Cell(i,0)->GetString() != 0) {
+				for (int ii = 0; ii < 10 /* Number of columns in accepted sheet */; ii++)
+					cells.push_back(*sheet->Cell(i,ii));
+				temp.init(cells);
+				temp.group = groups.size();
+				groups.push_back(temp);
+				temp = ChecklistGroup();
+				cells = vector<BasicExcelCell>();
+			}
 		}
 	}
 	return true;
@@ -210,6 +215,7 @@ void ChecklistController::save(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "FLASHING", (flashing ? 1 : 0));
 	oapiWriteScenario_float(scn, "LASTITEMTIME", lastItemTime);
 	oapiWriteScenario_float(scn, "AUTOEXECUTESLOWDELAY", autoexecuteSlowDelay);
+	oapiWriteScenario_int(scn, "WAITFORCOMPLETION", (waitForCompletion ? 1 : 0));  
 
 	if (active.program.group != -1)
 		active.save(scn);
@@ -263,6 +269,13 @@ void ChecklistController::load(FILEHANDLE scn)
 			float flt = 0;
             sscanf (line + 20, "%f", &flt);
 			autoexecuteSlowDelay = flt;
+			found = true;
+		}
+		if (!found && !strnicmp(line, "WAITFORCOMPLETION", 17))
+		{
+			int i;
+            sscanf (line + 17, "%d", &i);
+			waitForCompletion = (i != 0);
 			found = true;
 		}
 		if (!found && !strnicmp(line,ChecklistContainerStartString,strlen(ChecklistContainerStartString)))

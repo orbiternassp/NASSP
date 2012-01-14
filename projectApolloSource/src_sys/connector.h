@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.19  2008/05/24 17:30:42  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -341,6 +344,7 @@ public:
 		MFD_PANEL_RETRIEVE_CHECKLIST,			///< Get an entire, non-controlled, checklist
 		MFD_PANEL_CHECKLIST_FLASHING,			///< Checklist item flashing.
 		MFD_PANEL_CHECKLIST_FLASHING_QUERY,		///< Checklist item flashing.
+		MFD_PANEL_GET_ITEM_FLASHING,			///< Get the item's current flashing.
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);
