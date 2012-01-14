@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/12/17 17:47:44  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.7  2009/09/17 17:48:11  tschachim
   *	DSKY support and enhancements of ChecklistMFD / ChecklistController
   *	
@@ -631,7 +634,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 
 	gParams.Saturn_LowRes = 0;
 	gParams.Saturn_MainPanelSplit = 0;
-	gParams.Saturn_GNSplit = 0;
+	gParams.Saturn_GNSplit = 1;
 	gParams.Saturn_FDAIDisabled = 0;
 	gParams.Saturn_FDAISmooth = 0;
 	gParams.Saturn_RHC = -1;
