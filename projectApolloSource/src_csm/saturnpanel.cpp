@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.17  2010/08/29 18:51:47  tschachim
   *	Bugfix mission sound
   *	
@@ -892,7 +895,10 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SWITCH90]								= oapiCreateSurface (LOADBMP (IDB_SWITCH90));
 	srf[SRF_CSM_CABINPRESSTESTSWITCH]				= oapiCreateSurface (LOADBMP (IDB_CSM_CABINPRESSTESTSWITCH));
 	srf[SRF_ORDEAL_PANEL]							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
-	
+	srf[SRF_CSM_TELESCOPECOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_TELESCOPECOVER));	
+	srf[SRF_CSM_SEXTANTCOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_SEXTANTCOVER));
+	srf[SRF_CWS_GNLIGHTS]      						= oapiCreateSurface (LOADBMP (IDB_CWS_GNLIGHTS));
+
 	//
 	// Flashing borders.
 	//
@@ -949,6 +955,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_194x324]			= oapiCreateSurface (LOADBMP (IDB_BORDER_194x324));
 	srf[SRF_BORDER_36x69]			= oapiCreateSurface (LOADBMP (IDB_BORDER_36x69));
 	srf[SRF_BORDER_62x31]			= oapiCreateSurface (LOADBMP (IDB_BORDER_62x31));
+	srf[SRF_BORDER_45x49]			= oapiCreateSurface (LOADBMP (IDB_BORDER_45x49));
+	srf[SRF_BORDER_28x32]			= oapiCreateSurface (LOADBMP (IDB_BORDER_28x32));
 
 	//
 	// Set color keys where appropriate.
@@ -1115,8 +1123,23 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_194x324],	g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_36x69],	    g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_62x31],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_45x49],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_28x32],		g_Param.col[4]);	
 
 	SetSwitches(panel);
+}
+
+bool Saturn::GetRenderViewportIsWideScreen() {
+
+	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
+	if (hpac) {
+		bool (*pacRenderViewportIsWideScreen)();
+		pacRenderViewportIsWideScreen = (bool (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
+		if (pacRenderViewportIsWideScreen) {
+			return pacRenderViewportIsWideScreen();
+		}
+	}
+	return false;
 }
 
 bool Saturn::clbkLoadPanel (int id) {
@@ -1131,30 +1154,19 @@ bool Saturn::clbkLoadPanel (int id) {
 	//
 	// Should we display a panel for unmanned flights?
 	//
-
 	if (!Crewed)
 		return false;
 
 	//
 	// No panel in engineering camera view.
 	//
-
 	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2 || viewpos == SATVIEW_ENG3)
 		return false;
 
 	//
 	// Get screen info from the configurator
 	//
-
-	bool renderViewportIsWideScreen = false;
-	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		bool (*pacRenderViewportIsWideScreen)();
-		pacRenderViewportIsWideScreen = (bool (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
-		if (pacRenderViewportIsWideScreen) {
-			renderViewportIsWideScreen = pacRenderViewportIsWideScreen();
-		}
-	}
+	bool renderViewportIsWideScreen = GetRenderViewportIsWideScreen();
 
 	//
 	// Load panel background image
@@ -1215,9 +1227,9 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiSetPanelNeighbours(SATPANEL_GN_LEFT, SATPANEL_GN_RIGHT, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
 
-		AddLeftCenterLowerPanelAreas(-1140);
-		AddCenterLowerPanelAreas(-1140);
-		AddRightCenterLowerPanelAreas(-1140);
+		AddLeftCenterLowerPanelAreas(-1019);
+		AddCenterLowerPanelAreas(-1019);
+		AddRightCenterLowerPanelAreas(-1019);
 		
 
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
@@ -1357,7 +1369,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, SATPANEL_LOWER_LEFT);
 
-		oapiRegisterPanelArea (AID_CSM_LEFT_WDW_LES,							_R( 552,  243, 1062,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_LEFT_WDW_LES,							_R( 552,  243, 1062,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_LEFTCOASSWITCH,								_R(1316,   63, 1350,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTTUTILITYPOWERSWITCH,						_R(1425,   81, 1459,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1429,7 +1441,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, SATPANEL_RIGHT_CB);
 
-		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 620,  243, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 620,  243, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1767,6 +1779,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		if (renderViewportIsWideScreen) {
+			oapiRegisterPanelArea (AID_CSM_SEXTANTCOVER,			_R( 347,  115,  882,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
 			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 982,  637, 1027,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKBUTTON,					_R(1031,  639, 1059,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKREJECT,					_R(1064,  655, 1087,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -1776,6 +1790,8 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 926,    0, 1229,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 206,  637,  251,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		} else {
+			oapiRegisterPanelArea (AID_CSM_SEXTANTCOVER,			_R( 244,  115,  779,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
 			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879,  637,  924,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928,  639,  956,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961,  655,  984,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -1807,6 +1823,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (renderViewportIsWideScreen) {
+			oapiRegisterPanelArea (AID_CSM_TELESCOPECOVER,			_R( 347,  115,  883,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
 			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 982,  637, 1027,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKBUTTON,					_R(1031,  639, 1059,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKREJECT,					_R(1064,  655, 1087,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -1816,6 +1834,8 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 926,    0, 1229,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 206,  637,  251,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		} else {
+			oapiRegisterPanelArea (AID_CSM_TELESCOPECOVER,			_R( 244,  115,  780,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
 			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879,  637,  924,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928,  639,  956,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961,  655,  984,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -2032,11 +2052,11 @@ void Saturn::AddLeftLowerPanelAreas()
 	// Panel 100
 	oapiRegisterPanelArea (AID_PANEL100SWITCHES,      						_R( 613,  678,  964,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL100LIGHTINGROTARIES,					_R( 602,  813,  946,  903), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		
-		
+				
 	// Panel 163
 	oapiRegisterPanelArea (AID_SCIUTILPOWERSWITCH,      					_R( 300, 1953,  334, 1982), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 }
+
 void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 {
 	// Panel 101
@@ -2044,39 +2064,50 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_SYSTEMTESTROTARIES,							_R(1069 + offset,  213, 1280 + offset,  304), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(1093 + offset,  486, 1251 + offset,  515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-}
-void Saturn::AddCenterLowerPanelAreas(int offset)
-{
-	MFDSPEC mfds_gnleft  =     {{ 1140 + 49 + offset,  1780 + 15, 1140 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnuser1 =     {{ 1510 + 49 + offset,  1780 + 15, 1510 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnuser2 =     {{ 1880 + 49 + offset,  1780 + 15, 1880 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnright =     {{ 2250 + 49 + offset,  1780 + 15, 2250 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
-	oapiRegisterMFD(MFD_LEFT, mfds_gnleft);
-	oapiRegisterMFD(MFD_USER1, mfds_gnuser1);
-	oapiRegisterMFD(MFD_USER2, mfds_gnuser2);
-	oapiRegisterMFD(MFD_RIGHT, mfds_gnright);		
-	oapiRegisterPanelArea (AID_MFDGNLEFT,									_R(1140 + offset, 1780, 1140 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_MFDGNUSER1,									_R(1510 + offset, 1780, 1510 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_MFDGNUSER2,									_R(1880 + offset, 1780, 1880 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_MFDGNRIGHT,									_R(2250 + offset, 1780, 2250 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-
-	oapiRegisterPanelArea (AID_MASTER_ALARM3,								_R(2104 + offset, 1036, 2149 + offset, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 	oapiRegisterPanelArea (AID_GNMODESWITCH,								_R(1365 + offset,  951, 1399 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,						_R(1496 + offset,  951, 1530 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,					_R(1605 + offset,  951, 1639 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CONTORLLERSWITCHES,							_R(1496 + offset, 1090, 1639 + offset, 1119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_CONDITIONLAMPSSWITCH,						_R(2230 + offset,  966, 2264 + offset,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_UPLINKTELEMETRYSWITCH,						_R(2230 + offset, 1106, 2264 + offset, 1153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYCWLIGHTS,					_R(2100 + offset,  923, 2154 + offset,  999), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYOPTICSLIGHTS,				_R(1363 + offset, 1054, 1437 + offset, 1153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
+
+	MFDSPEC mfds_gnleft  =     {{ 1140 + 49 + offset,  1780 + 15, 1140 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnuser1 =     {{ 1510 + 49 + offset,  1780 + 15, 1510 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
+
+	oapiRegisterMFD(MFD_LEFT, mfds_gnleft);
+	oapiRegisterMFD(MFD_USER1, mfds_gnuser1);
+
+	oapiRegisterPanelArea (AID_MFDGNLEFT,									_R(1140 + offset, 1780, 1140 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNUSER1,									_R(1510 + offset, 1780, 1510 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+
+	// "Accelerator" areas
+	oapiRegisterPanelArea (AID_SWITCHTO_SEXTANT1,	     				    _R(1620 + offset,  585, 1760 + offset,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_SWITCHTO_SEXTANT2,	      				    _R(1340 + offset, 1190, 1605 + offset, 1445), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+}
+
+void Saturn::AddCenterLowerPanelAreas(int offset)
+{
+	MFDSPEC mfds_gnuser2 =     {{ 1880 + 49 + offset,  1780 + 15, 1880 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnright =     {{ 2250 + 49 + offset,  1780 + 15, 2250 + 308 + offset, 1780 + 270}, 6, 6, 37, 37};
+
+	oapiRegisterMFD(MFD_USER2, mfds_gnuser2);
+	oapiRegisterMFD(MFD_RIGHT, mfds_gnright);		
+
+	oapiRegisterPanelArea (AID_MFDGNUSER2,									_R(1880 + offset, 1780, 1880 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNRIGHT,									_R(2250 + offset, 1780, 2250 + 359 + offset, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+
+	oapiRegisterPanelArea (AID_CWS_GNLIGHTS,								_R(2102 + offset,  925, 2102+53 + offset, 925+76), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MASTER_ALARM3,								_R(2104 + offset, 1036, 2149 + offset, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
+	oapiRegisterPanelArea (AID_CONDITIONLAMPSSWITCH,						_R(2230 + offset,  966, 2264 + offset,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_UPLINKTELEMETRYSWITCH,						_R(2230 + offset, 1106, 2264 + offset, 1153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYCWLIGHTS,					_R(2100 + offset,  923, 2154 + offset,  999), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYOPTICSLIGHTS,				_R(1363 + offset, 1054, 1437 + offset, 1153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 	// "Accelerator" areas
 	oapiRegisterPanelArea (AID_SWITCHTO_TELESCOPE1,      				    _R(2030 + offset,  580, 2165 + offset,  700), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SWITCHTO_TELESCOPE2,      				    _R(2100 + offset, 1190, 2360 + offset, 1445), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_SWITCHTO_SEXTANT1,	     				    _R(1620 + offset,  585, 1760 + offset,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_SWITCHTO_SEXTANT2,	      				    _R(1340 + offset, 1190, 1605 + offset, 1445), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 }
+
 void Saturn::AddRightCenterLowerPanelAreas(int offset)
 {
 	//
@@ -2086,6 +2117,7 @@ void Saturn::AddRightCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_DSKY2_LIGHTS,								_R(2458 + offset,  705, 2560 + offset,  825), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(2440 + offset,  896, 2725 + offset, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 }
+
 void Saturn::AddRightLowerPanelAreas(int offset)
 {
 	return;
@@ -3531,16 +3563,16 @@ void Saturn::SetSwitches(int panel) {
 	UPTLMSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], UPTLMSwitchRow);
 
 	OpticsHandcontrollerSwitchRow.Init(AID_OPTICS_HANDCONTROLLER, MainPanel);
-	OpticsHandcontrollerSwitch.Init(0, 0, 45, 49, srf[SRF_OPTICS_HANDCONTROLLER], OpticsHandcontrollerSwitchRow, this);
+	OpticsHandcontrollerSwitch.Init(0, 0, 45, 49, srf[SRF_OPTICS_HANDCONTROLLER], srf[SRF_BORDER_45x49], OpticsHandcontrollerSwitchRow, this);
 
 	OpticsMarkButtonRow.Init(AID_MARKBUTTON, MainPanel);
-	OpticsMarkButton.Init(0, 0, 28, 32, srf[SRF_MARK_BUTTONS], NULL, OpticsMarkButtonRow);
+	OpticsMarkButton.Init(0, 0, 28, 32, srf[SRF_MARK_BUTTONS], srf[SRF_BORDER_28x32], OpticsMarkButtonRow);
 
 	OpticsMarkRejectButtonRow.Init(AID_MARKREJECT, MainPanel);
 	OpticsMarkRejectButton.Init(0, 0, 23, 26, srf[SRF_MARK_BUTTONS], NULL, OpticsMarkRejectButtonRow, 0, 32);
 
 	MinImpulseHandcontrollerSwitchRow.Init(AID_MINIMPULSE_HANDCONTROLLER, MainPanel);
-	MinImpulseHandcontrollerSwitch.Init(0, 0, 45, 49, srf[SRF_MINIMPULSE_HANDCONTROLLER], MinImpulseHandcontrollerSwitchRow, this);
+	MinImpulseHandcontrollerSwitch.Init(0, 0, 45, 49, srf[SRF_MINIMPULSE_HANDCONTROLLER], srf[SRF_BORDER_45x49], MinImpulseHandcontrollerSwitchRow, this);
 
 	///////////////////////////////////
 	// Panel 300/301/302/303/305/306 //
@@ -3846,6 +3878,23 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
 	static int ctrl = 0;
+
+	//
+	// Foreward the mouse clicks on the optics cover to the DSKYs 
+	// because of overlapping
+	//
+
+	if (id == AID_CSM_SEXTANTCOVER || id == AID_CSM_TELESCOPECOVER) {
+		if (!GetRenderViewportIsWideScreen()) {
+			int tx = mx + 244 - 721;
+			int ty = my + 115 - 0;
+
+			if (tx >= 0 && ty <= 349) {
+				return clbkPanelMouseEvent(AID_OPTICS_DSKY, event, tx, ty);
+			}		
+		}
+	}
+
 
 	//
 	// Special handling optics DSKY
@@ -4738,6 +4787,20 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+	case AID_CSM_TELESCOPECOVER:
+		// No optics cover on pad in order to be able to use P03
+		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
+			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
+		}
+		return true;
+
+	case AID_CSM_SEXTANTCOVER:
+		// No optics cover on pad in order to be able to use P03
+		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
+			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
+		}
+		return true;
+
 	case AID_DSKY_LIGHTS:
 		dsky.RenderLights(surf, srf[SRF_DSKY]);
 		return true;
@@ -5068,6 +5131,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_CWS_LIGHTS_RIGHT:
 		cws.RenderLights(surf, srf[SRF_CWSLIGHTS], false);
+		return true;
+
+	case AID_CWS_GNLIGHTS:
+		cws.RenderGNLights(surf, srf[SRF_CWS_GNLIGHTS]);
 		return true;
 
 	case AID_MFDMAINLEFT:
@@ -6547,12 +6614,15 @@ void Saturn::InitSwitches() {
 	ControllerSpeedSwitch.Register(PSH, "ControllerSpeedSwitch", THREEPOSSWITCH_DOWN);
 	ControllerCouplingSwitch.Register(PSH, "ControllerCouplingSwitch", TOGGLESWITCH_UP);
 	ControllerTrackerSwitch.Register(PSH, "ControllerTrackerSwitch", THREEPOSSWITCH_DOWN);
-	ControllerTelescopeTrunnionSwitch.Register(PSH, "ControllerTelescopeTrunnionSwitch", THREEPOSSWITCH_UP);
-	ConditionLampsSwitch.Register(PSH, "ConditionLampsSwitch", THREEPOSSWITCH_UP);
+	ControllerTelescopeTrunnionSwitch.Register(PSH, "ControllerTelescopeTrunnionSwitch", THREEPOSSWITCH_UP);	
+	ConditionLampsSwitch.Register(PSH, "ConditionLampsSwitch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
+	ConditionLampsSwitch.SetCallback(new PanelSwitchCallback<CSMCautionWarningSystem>(&cws, &CSMCautionWarningSystem::GNLampSwitchToggled));
 	UPTLMSwitch.Register(PSH, "UPTLMSwitch", TOGGLESWITCH_UP);
 	OpticsHandcontrollerSwitch.Register(PSH, "OpticsHandcontrollerSwitch");
 	OpticsMarkButton.Register(PSH, "OpticsMarkButton", false);
+	OpticsMarkButton.SetDelayTime(1);
 	OpticsMarkRejectButton.Register(PSH, "OpticsMarkRejectButton", false);
+	OpticsMarkRejectButton.SetDelayTime(1);
 	MinImpulseHandcontrollerSwitch.Register(PSH, "MinImpulseHandcontrollerSwitch", true);
 
 	GlycolToRadiatorsLever.Register(PSH, "GlycolToRadiatorsLever", 1);
@@ -6845,8 +6915,8 @@ void Saturn::InitSwitches() {
 	Dsky2SwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::EnterCallback));
 	Dsky2SwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky2, &DSKY::ResetCallback));
 
-	DskySwitchProg.SetDelayTime(1);
-	Dsky2SwitchProg.SetDelayTime(1);
+	DskySwitchProg.SetDelayTime(1.5);
+	Dsky2SwitchProg.SetDelayTime(1.5);
 
 	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch", 0, 0, 0, 0);
