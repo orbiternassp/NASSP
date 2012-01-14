@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.6  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -2152,10 +2155,10 @@ void SaturnCabinPressureReliefLever::LoadState(char *line) {
 }
 
 
-void OpticsHandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s) {
+void OpticsHandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s) {
 
 	sat = s;
-	HandcontrollerSwitch::Init(xp, yp, w, h, surf, row);
+	HandcontrollerSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 }
 
 bool OpticsHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) {
@@ -2181,10 +2184,10 @@ bool OpticsHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) {
 }
 
 
-void MinImpulseHandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s) {
+void MinImpulseHandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s) {
 
 	sat = s;
-	HandcontrollerSwitch::Init(xp, yp, w, h, surf, row);
+	HandcontrollerSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 }
 
 bool MinImpulseHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) {
