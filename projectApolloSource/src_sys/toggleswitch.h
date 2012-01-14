@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/12/22 18:14:47  tschachim
+  *	More bugfixes related to the prelaunch/launch checklists.
+  *	
   *	Revision 1.8  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -1459,14 +1462,13 @@ public:
 	virtual ~HandcontrollerSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, bool hasyawaxis = false);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetState();
-//	int operator=(const int b);
-//	operator int();
 
 protected:
 	bool hasYawAxis;
@@ -1476,6 +1478,7 @@ protected:
 	int height;
 	int state;
 	SURFHANDLE switchSurface;
+	SURFHANDLE borderSurface;
 	Sound sclick;
 	SwitchRow *switchRow;
 };
@@ -1572,6 +1575,7 @@ public:
 	int GetState(char *n);
 	bool SetState(char *n, int value, bool guard = false, bool hold = false);
 	bool GetFailedState(char *n);
+	bool GetFlashing(char *n);
 
 protected:
 	VESSEL *vessel;

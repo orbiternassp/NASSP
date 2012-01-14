@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.6  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -600,7 +603,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 	switch (relativeEvent)
 	{	
 	case MISSION_TIME:
-		if (time <= lastMissionTime && lastMissionTime <= deadline)
+		if (time <= lastMissionTime && lastMissionTime - time <= deadline)
 			return true;
 		break;
 	case EARTH_ORBIT_INSERTION:
