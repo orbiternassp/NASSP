@@ -26,6 +26,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.5  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -762,6 +767,12 @@ public:
 
 	void SetDSKY2(DSKY *d2) { dsky2 = d2; };
 
+	///
+	/// \brief alarm flags for CWS
+	///
+	bool GetProgAlarm() { return ProgAlarm; };
+	bool GetGimbalLockAlarm() { return GimbalLockAlarm; };
+
 protected:
 
 	//
@@ -1466,6 +1477,12 @@ protected:
 	Event timeStepEvent;
 	double thread_simt;
 	double thread_simdt;
+
+	///
+	/// \brief alarm flags for CWS
+	///
+	bool ProgAlarm;
+	bool GimbalLockAlarm;
 };
 
 extern char TwoSpaceTwoFormat[];

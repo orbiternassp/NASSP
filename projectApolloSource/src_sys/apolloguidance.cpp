@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.5  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -355,6 +360,7 @@
 #include "dsky.h"
 #include "IMU.h"
 #include "powersource.h"
+#include "papi.h"
 
 #include "tracer.h"
 
@@ -521,6 +527,9 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 
 	isFirstTimestep = true;
 	PadLoaded = false;
+
+	ProgAlarm = false;
+	GimbalLockAlarm = false;
 
 	//
 	// Virtual AGC.
@@ -4328,6 +4337,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 			oapiWriteScenario_int (scn, fname, val);
 		}
 	}
+	papiWriteScenario_bool(scn, "PROGALARM", ProgAlarm);
+	papiWriteScenario_bool(scn, "GIMBALLOCKALARM", GimbalLockAlarm);
 
 	oapiWriteLine(scn, AGC_END_STRING);
 }
@@ -4549,6 +4560,8 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "E5", 2)) {
 			strncpy (FiveDigitEntry, line + 3, 6);
 		}
+		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
+		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
 	}
 
 	//
