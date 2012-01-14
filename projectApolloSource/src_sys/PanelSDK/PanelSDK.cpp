@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/24 02:20:20  dseagrav
+  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
+  *	
   *	Revision 1.1  2009/02/18 23:22:01  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -86,29 +89,34 @@ PanelSDK::PanelSDK() {
 
 PanelSDK::~PanelSDK()
 {
-
-if (GDI_res) delete GDI_res;
-
-if (InstDescriptor)
-{InstrumentDescriptor *runner;
-  runner=InstDescriptor;
-  while (runner) {
-	   InstDescriptor=runner;
-	   runner=runner->next;
-	   delete  InstDescriptor;
-	};
-};
-if (NumPanels)
-	for (int i=0;i<NumPanels;i++)
+	if (GDI_res) delete GDI_res;
+	if (InstDescriptor)	{
+		InstrumentDescriptor *runner;
+		runner = InstDescriptor;
+		while (runner) {
+			InstDescriptor=runner;
+			runner = runner->next;
+			delete InstDescriptor;
+		}
+	}
+	if (NumPanels)
+		for (int i=0; i < NumPanels; i++)
 			delete panels[i];
-delete ELECTRIC;
-delete HYDRAULIC;
-delete THERMAL;
-delete VESSELMGMT;
-};
+	
+	delete ELECTRIC;
+	delete HYDRAULIC;
+	delete THERMAL;
+	delete VESSELMGMT;
+}
+
 void PanelSDK::RegisterVessel(VESSEL *vessel)
-{v=vessel;
-VESSELMGMT->vs=vessel;}
+{
+	v = vessel;
+	VESSELMGMT->vs = vessel;
+	ELECTRIC->Vessel = vessel;
+	HYDRAULIC->Vessel = vessel;
+}
+
 void PanelSDK::RegisterCustomPointer(char *PointerName, void *point)
 {
 CustomVariable *runner= new CustomVariable();

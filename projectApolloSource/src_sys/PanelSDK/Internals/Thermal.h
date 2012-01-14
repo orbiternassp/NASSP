@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.9  2008/04/11 11:50:26  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -182,6 +185,8 @@ class ship_system
 	~ship_system();
 
 	Thermal_engine *P_thermal;
+	VESSEL* Vessel;
+
 	ship_object* AddSystem(ship_object *object);
 	void DeleteSystem(ship_object *object);
 	void BroadcastDemision(ship_object * gonner);
