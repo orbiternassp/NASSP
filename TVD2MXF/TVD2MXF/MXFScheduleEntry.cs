@@ -9,10 +9,56 @@ namespace TVD2MXF {
 
     private XmlNode xmlProgram;
     private XmlNamespaceManager ns;
+    private bool? tvbrowserWidescreen = null;
+    private bool? tvbrowserHd = null;
 
-    public MXFScheduleEntry(XmlNode p, XmlNamespaceManager n) {
+    public MXFScheduleEntry(XmlNode p, XmlNamespaceManager n, XmlDocument xmlTVBrowserDoc, MXFData data) {
       xmlProgram = p;
       ns = n;
+
+      // TVBrowser Data
+      string chid = xmlProgram.Attributes.GetNamedItem("chid").Value;
+      if (data.Channels.ContainsKey(chid)) {
+        string chName = data.Channels[chid].TVBrowserName;
+        if (chName != "") {
+          XmlNode timeNode = xmlProgram.SelectSingleNode("ns:time", ns);
+          if (timeNode != null) {
+            string startTime = timeNode.Attributes.GetNamedItem("strt").Value;
+            startTime = startTime.Substring(0, startTime.Length - 3);
+            DateTime start = new DateTime(int.Parse(startTime.Substring(0, 4)),
+                                          int.Parse(startTime.Substring(5, 2)),
+                                          int.Parse(startTime.Substring(8, 2)),
+                                          int.Parse(startTime.Substring(11, 2)),
+                                          int.Parse(startTime.Substring(14, 2)),
+                                          int.Parse(startTime.Substring(17, 2)),
+                                          DateTimeKind.Utc);
+            start = start.ToLocalTime();
+            startTime = start.ToString("yyyy-MM-dd HH:mm");
+
+            XmlNode chNode = xmlTVBrowserDoc.DocumentElement.SelectSingleNode("channel[name='" + chName + "']");
+            if (chNode != null) {
+              XmlNode progNode = chNode.SelectSingleNode("programs/program[@starttime='" + startTime + "']");
+              if (progNode != null) {
+                if (progNode.Attributes.GetNamedItem("widescreen").Value == "1") {
+                  tvbrowserWidescreen = true;
+                } else {
+                  tvbrowserWidescreen = false;
+                }
+                if (progNode.Attributes.GetNamedItem("hd").Value == "1") {
+                  tvbrowserHd = true;
+                } else {
+                  tvbrowserHd = false;
+                }
+              } else {
+                // TODO auskommentieren?
+                log.Debug("TV Browser program not found: " + chName + " at " + startTime);
+              }
+            } else {
+              log.Warn("TV Browser channel " + chName + " not found.");
+            }
+          }
+        }
+      }
     }
 
     public string Id {
@@ -106,6 +152,11 @@ namespace TVD2MXF {
 
     public bool IsHdtv {
       get {
+        // TODO Wie gut sind die TV Browser Daten?
+        if (tvbrowserWidescreen.HasValue && tvbrowserHd.HasValue) {
+          return (tvbrowserWidescreen.Value || tvbrowserHd.Value);
+        }
+
         // ARD (71), arte (58) are always HD as the EPG data is for SD. NOT ZDF (37), "Reich und Schön" is in 4:3 on ZDF HD!
         if (ChannelId == "71" || ChannelId == "58") {
           return true;

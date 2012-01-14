@@ -9,11 +9,9 @@ namespace TVD2MXF {
     private static log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
     private MXFData data;
-    private string imageDir;
 
-    public MXFWriter(MXFData dta, string imagedir) {
+    public MXFWriter(MXFData dta) {
       data = dta;
-      imageDir = imagedir;
     }
 
     public void Write(string fileName) {
@@ -200,7 +198,7 @@ namespace TVD2MXF {
       foreach (MXFGuideImage img in data.GuideImages) {
         xmlTextWriter.WriteStartElement("GuideImage");
         xmlTextWriter.WriteAttributeString("id", "i" + img.Id);
-        xmlTextWriter.WriteAttributeString("imageUrl", "file://" + imageDir + img.FileName);
+        xmlTextWriter.WriteAttributeString("imageUrl", "file://" + img.FileName);
         xmlTextWriter.WriteEndElement(); // Guide Image
       }
       xmlTextWriter.WriteEndElement(); // Guide Images
