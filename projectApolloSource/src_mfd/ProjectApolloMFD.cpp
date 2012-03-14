@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2012/01/14 22:31:32  tschachim
+  *	Save EMS scroll
+  *	
   *	Revision 1.20  2010/11/05 03:10:00  vrouleau
   *	Added CSM/LM Landing Site REFSMMAT Uplink to AGC. Contains hardcoded REFSMMAT per mission.
   *	
@@ -237,6 +240,7 @@ static int g_MFDmode; // identifier for new MFD mode
 #define  UPLINK_P30				1
 #define  UPLINK_P31				2
 #define  UPLINK_REFSMMAT		3
+#define  UPLINK_OSV				4
 
 
 int apolloLandSiteRefsmmat[7][18] = 
@@ -816,7 +820,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[9] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK","LS"};
+	static char *labelTELE[10] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK","LS","OSV"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
@@ -837,7 +841,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
 	}
 	else if(screen == PROG_TELE) {
-		return (bt < 9 ? labelTELE[bt] : 0);
+		return (bt < 10 ? labelTELE[bt] : 0);
 	}
 	else if (screen == PROG_SOCK) {
 		return (bt < 1 ? labelSOCK[bt] : 0);
@@ -888,7 +892,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Request Burn Data", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'}
 	};
-	static const MFDBUTTONMENU mnuTELE[9] = {
+	static const MFDBUTTONMENU mnuTELE[10] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
 		{"P30 - External DV Uplink", 0, 'D'},
@@ -897,7 +901,8 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Change Reference Body", 0, 'R'},
 		{"Toggle burn data requests", 0, 'I'},
 		{"Clock Update", 0, 'C'},
-		{"Refsmmat Update", 0, 'F'}
+		{"Refsmmat Update", 0, 'F'},
+		{"Other Veh. State Vector Update", 0, 'O'}
 	};
 	//This menu set is just for the Socket program, remove before release.
 	static const MFDBUTTONMENU mnuSOCK[1] = {
@@ -1038,6 +1043,18 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_SV) {
 					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
 					GetStateVector();
+				}
+			}
+			return true;
+		} else if (key == OAPI_KEY_O) {
+			if (saturn || lem) {
+				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
+					g_Data.uplinkDataReady = 1;
+					g_Data.uplinkDataType = UPLINK_OSV;
+				}
+				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_OSV) {
+					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
+					GetOtherVehiculeStateVector();
 				}
 			}
 			return true;
@@ -1235,7 +1252,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[9] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F };
+	static const DWORD btkeyTELE[10] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F, OAPI_KEY_O };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
@@ -1246,7 +1263,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	} else if (screen == PROG_IMFD) {
 		if (bt < 3) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
 	} else if (screen == PROG_TELE) {
-		if (bt < 9) return ConsumeKeyBuffered (btkeyTELE[bt]);
+		if (bt < 10) return ConsumeKeyBuffered (btkeyTELE[bt]);
 	}
 	// This program is the socket data.  Remove before release.
 	else if (screen == PROG_SOCK)
@@ -1613,6 +1630,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 			if (g_Data.uplinkDataReady == 1) {
 				if (g_Data.uplinkDataType == UPLINK_SV)
 					sprintf(buffer, "Press SV to start upload");
+				if (g_Data.uplinkDataType == UPLINK_OSV)
+					sprintf(buffer, "Press OSV to start upload");
 				else if (g_Data.uplinkDataType == UPLINK_P30)
 					sprintf(buffer, "Press P30 to start upload");
 				else if (g_Data.uplinkDataType == UPLINK_P31)
@@ -1792,18 +1811,67 @@ void ProjectApolloMFD::UpLinkRefsmmat ()
 		UplinkData(); // Go for uplink
 }
 
+void ProjectApolloMFD::GetOtherVehiculeStateVector (void)
+{
+	double get,otherVesselGet;
+	char *otherVesselName = NULL;
+	VESSEL *otherVessel = NULL;
+	if (saturn) {
+		get = fabs(saturn->GetMissionTime());
+		otherVesselName = saturn->getOtherVesselName();
+		OBJHANDLE hcsm=oapiGetVesselByName(otherVesselName);
+		otherVessel=oapiGetVesselInterface(hcsm);		
+		otherVesselGet = ((LEM *)otherVessel)->GetMissionTime();
+	}
+	if (crawler){get = fabs(crawler->GetMissionTime()); }
+	if (lem) {
+		get = fabs(lem->GetMissionTime());
+		otherVesselName = lem->getOtherVesselName();
+		OBJHANDLE hcsm=oapiGetVesselByName(otherVesselName);
+		otherVessel = oapiGetVesselInterface(hcsm);
+		otherVesselGet = ((Saturn *)otherVessel)->GetMissionTime();
+	}
+
+	if( otherVesselName != NULL )
+		UploadStateVector(otherVessel,otherVesselGet);
+
+}
+
+
 void ProjectApolloMFD::GetStateVector (void)
 {
-	double get;
+	double get,otherVesselGet;
+	char *otherVesselName = NULL;
+	VESSEL *otherVessel = NULL;
+	if (saturn) {
+		get = fabs(saturn->GetMissionTime());
+		otherVesselName = saturn->getOtherVesselName();
+		OBJHANDLE hcsm=oapiGetVesselByName(otherVesselName);
+		otherVessel=oapiGetVesselInterface(hcsm);		
+		otherVesselGet = ((LEM *)otherVessel)->GetMissionTime();
+	}
+	if (crawler){get = fabs(crawler->GetMissionTime()); }
+	if (lem) {
+		get = fabs(lem->GetMissionTime());
+		otherVesselName = lem->getOtherVesselName();
+		OBJHANDLE hcsm=oapiGetVesselByName(otherVesselName);
+		otherVessel = oapiGetVesselInterface(hcsm);
+		otherVesselGet = ((Saturn *)otherVessel)->GetMissionTime();
+	}
+
+	UploadStateVector(g_Data.vessel,get);
+	if( otherVesselName != NULL )
+		UploadStateVector(otherVessel,otherVesselGet);
+
+}
+
+void ProjectApolloMFD::UploadStateVector (VESSEL *vessel,double get)
+{
 	VECTOR3 pos, vel;
 
-	if (saturn){ get = fabs(saturn->GetMissionTime()); }
-	if (crawler){get = fabs(crawler->GetMissionTime()); }
-	if (lem){    get = fabs(lem->GetMissionTime()); }
+	vessel->GetRelativePos(g_Data.planet, pos); 
+	vessel->GetRelativeVel(g_Data.planet, vel);
 
-	g_Data.vessel->GetRelativePos(g_Data.planet, pos); 
-	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
-	
 	OBJHANDLE hMoon  = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
@@ -1817,7 +1885,7 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;	
 
-		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 2;
+		if (vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 2;
 		else g_Data.emem[2] = 77775;	// Octal coded decimal
 		
 		g_Data.emem[3]  = DoubleToBuffer(pos.x, 27, 1);
@@ -1845,7 +1913,7 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;
 
-		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 1;
+		if (vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 1;
 		else g_Data.emem[2] = 77776;	// Octal coded decimal
 		
 		g_Data.emem[3]  = DoubleToBuffer(pos.x, 29, 1);

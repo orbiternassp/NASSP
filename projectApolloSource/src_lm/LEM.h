@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2011/07/16 18:46:47  dseagrav
+  *	LM RR work, first part
+  *	
   *	Revision 1.27  2011/07/15 00:50:20  vrouleau
   *	FDAI error needles displays the RR trunnion/shart angles
   *	
@@ -652,6 +655,8 @@ public:
 	virtual bool SetupPayload(PayloadSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
+
+	char *getOtherVesselName() { return agc.OtherVesselName;};
 
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources

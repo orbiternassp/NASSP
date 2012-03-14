@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/11/05 03:10:00  vrouleau
+  *	Added CSM/LM Landing Site REFSMMAT Uplink to AGC. Contains hardcoded REFSMMAT per mission.
+  *	
   *	Revision 1.6  2009/09/13 15:20:15  dseagrav
   *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
   *	
@@ -98,6 +101,8 @@ public:
 	void Update (HDC hDC);
 	void UpLinkRefsmmat (void);	
 	void GetStateVector (void);	
+	void GetOtherVehiculeStateVector (void);	
+	void UploadStateVector (VESSEL *vessel,double get);	
 	void IMFDP30Uplink (void);
 	void IMFDP31Uplink (void);
 	bool SetSource(char *rstr);

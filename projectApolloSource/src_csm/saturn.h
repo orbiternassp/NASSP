@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2012/01/14 22:41:40  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.18  2010/08/29 18:51:47  tschachim
   *	Bugfix mission sound
   *	
@@ -1136,6 +1139,7 @@ public:
 
 	bool GetCMRCSStateCommanded(THRUSTER_HANDLE th);
 
+	char *getOtherVesselName() { return agc.OtherVesselName;};
 
 	//
 	// RHC/THC 
