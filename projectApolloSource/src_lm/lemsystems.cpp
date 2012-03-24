@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2011/07/16 18:46:48  dseagrav
+  *	LM RR work, first part
+  *	
   *	Revision 1.29  2011/07/15 00:50:21  vrouleau
   *	FDAI error needles displays the RR trunnion/shart angles
   *	
@@ -820,6 +823,7 @@ void LEM::SystemsInit()
 	RDZ_RDR_AC_CB.WireTo(&ACBusA);
 	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB); // This goes to the CB instead.
 
+	RadarTape.Init(this);
 	// CWEA
 	CWEA.Init(this);
 
@@ -1207,6 +1211,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	optics.TimeStep(simdt);									// Do Work
 	LR.TimeStep(simdt);										// I don't wanna work
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
+	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
 	SBandSteerable.TimeStep(simdt);							// Back to work...
 	VHF.SystemTimestep(simdt);
 	VHF.TimeStep(simt);
@@ -1965,7 +1970,6 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
 	dc_source = dc_src;
 	ac_source = ac_src;
 
-
 }
 
 
@@ -2067,7 +2071,7 @@ VECTOR3 LEM_RR::GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll)
 }
 
 
-void LEM_RR::RadarData(double &range, double &rate, double &pitch, double &yaw)
+void LEM_RR::CalculateRadarData(double &pitch, double &yaw)
 {
 	VECTOR3 csmpos,  lmpos;
 	VECTOR3 RelPos, RelVel;
@@ -2133,6 +2137,7 @@ void LEM_RR::TimeStep(double simdt){
 	double ShaftRate = 0;
 	double TrunRate = 0;
 
+	radarDataGood = 0;
 	if (!IsPowered() ) { 
 		val33.Bits.RRPowerOnAuto = 0;
 		val33.Bits.RRDataGood = 0;
@@ -2154,10 +2159,9 @@ void LEM_RR::TimeStep(double simdt){
 			break;
 	}
 
-	double range,rate,pitch,yaw;
-	RadarData(range,rate,pitch,yaw);
-	
-	radarDataGood = 0;
+	double pitch,yaw;
+	CalculateRadarData(pitch,yaw);
+
 	if((fabs(shaftAngle-pitch) < 2*RAD ) &&  (fabs(trunnionAngle-yaw) < 2*RAD) && ( range < 740800.0) ) {
 		radarDataGood = 1;
 		val33.Bits.RRDataGood = radarDataGood;
@@ -2174,10 +2178,11 @@ void LEM_RR::TimeStep(double simdt){
 		} else if (val13.Bits.RadarActivity && val13.Bits.RadarB) {
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) rate;
 				lem->agc.GenerateRadarupt();
-		}
-//  	    sprintf(oapiDebugString(),"range = %f, rate=%f, CSM pitch=%f,CSM yaw=%f,Shaft=%f,Trun=%f",range,rate,pitch * DEG, yaw * DEG,shaftAngle*DEG,trunnionAngle*DEG);
+	}
+//		  	    sprintf(oapiDebugString(),"range = %f, rate=%f, CSM pitch=%f,CSM yaw=%f,Shaft=%f,Trun=%f",range,rate,pitch * DEG, yaw * DEG,shaftAngle*DEG,trunnionAngle*DEG);
 	}// else
 //		sprintf(oapiDebugString(),"NO TRACK, Shaft=%f,Trun=%f",shaftAngle*DEG,trunnionAngle*DEG);
+
 
 
 
@@ -2285,6 +2290,76 @@ void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
 			shaftAngle = dec;
 		}
 	}
+}
+
+LEM_RadarTape::LEM_RadarTape()
+{
+
+}
+
+void LEM_RadarTape::Init(LEM *s){
+	lem = s;
+}
+
+void LEM_RadarTape::TimeStep(double simdt) {
+	if( lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP ) {
+		if( lem->RR.IsRadarDataGood() ){
+			setRange(lem->RR.GetRadarRange());
+			setRate(lem->RR.GetRadarRate());
+		} else {
+			setRange(0);
+			setRate(0);
+		}
+	} else {
+		// LR
+		setRange(0);
+		setRate(0);
+	}
+	//
+	//  Missing code to smooth out tape scrolling
+	if( reqRange < (120000 *3.2808399) ) {
+		dispRange = 6443 - 82 - (reqRange * 3.2808399) * 40 / 1000 ;
+	} else {
+		dispRange = 1642 - 82 - (reqRange * 0.000539956803)  * 40 / 1000 ;
+	}
+	dispRate  = 2881 - 82 -  reqRate * 3.3 * 40 / 1000 ; 
+}
+
+
+void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_int(scn, "RDRTAPE_RANGE", dispRange);
+	oapiWriteScenario_float(scn, "RDRTAPE_RATE", dispRate);
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
+	int value = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp (line, "RDRTAPE_RANGE", 13)) {
+			sscanf(line + 13, "%d", &value);
+			dispRange = value;
+		}
+		if (!strnicmp (line, "RDRTAPE_RATE", 12)) {
+			sscanf(line + 12, "%d", &value);
+			dispRate = value;
+		}
+	}
+}
+
+void LEM_RadarTape::RenderRange(SURFHANDLE surf, SURFHANDLE tape)
+{
+    oapiBlt(surf,tape,0,0,0, dispRange ,43,163, SURF_PREDEF_CK); 
+}
+
+void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
+{
+    oapiBlt(surf,tape,0,0,42, dispRate ,35,163, SURF_PREDEF_CK); 
 }
 
 double LEM_RR::GetAntennaTempF(){

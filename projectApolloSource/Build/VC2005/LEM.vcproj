@@ -1077,6 +1077,9 @@
 			<File
 				RelativePath="..\..\Bitmaps\lem_notrack.bmp"
 				>
+			<File
+				RelativePath="..\..\Bitmaps\lm_range_rate_indicator_scales.bmp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\circuit_breaker_lem.bmp"
