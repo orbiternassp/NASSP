@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/01/14 22:24:06  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.7  2010/08/25 17:48:42  tschachim
   *	Bugfixes Saturn autopilot.
   *	
@@ -1394,113 +1397,130 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	// DS20070205 LVDC++
-	if(use_lvdc){
-		// For other stages
-		if(stage < CSM_LEM_STAGE){
-			lvdc_timestep(simt,simdt);
-			return;
-		}
-	}
+	if (stage < CSM_LEM_STAGE) {
 
-	// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING BELOW THIS LINE
-	// SHOULD BE SAFE TO DELETE. DO NOT ADD ANY LVDC++ CODE BELOW THIS LINE.
+		// LVDC++
+		if (use_lvdc) {
+			// Nothing for now, the LVDC is called in PostStep
+		
+		} else {
 
-	if (bAbort && MissionTime > -300 && LESAttached) {
-		SetEngineLevel(ENGINE_MAIN, 0);
-		SeparateStage(CM_STAGE);
-		SetStage(CM_STAGE);
-		StartAbort();
-		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
-		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
-		bAbort = false;
-		return;
-	}
+			// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING IN THIS BLOCK
+			// SHOULD BE SAFE TO DELETE. DO NOT ADD ANY LVDC++ CODE IN THIS BLOCK.
 
-	//
-	// Do stage-specific processing.
-	//
-
-	if (hintstg) {
-		//
-		// Really we want to model the effect of the engine force on the
-		// interstage, so it spins as it moves away. Currently we just throw
-		// on a random rotation.
-		//
-
-		VECTOR3 posr;
-		oapiGetRelativePos (GetHandle(), hintstg, &posr);
-
-		double dist2 = (posr.x * posr.x) + (posr.y * posr.y) + (posr.z * posr.z);
-
-		if (dist2 > 25 && dist2 < 5000) {
-			VECTOR3 f;
+			if (bAbort && MissionTime > -300 && LESAttached) {
+				SetEngineLevel(ENGINE_MAIN, 0);
+				SeparateStage(CM_STAGE);
+				SetStage(CM_STAGE);
+				StartAbort();
+				agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+				agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+				bAbort = false;
+				return;
+			}
 
 			//
-			// Scale distance appropriately for timestep time.
+			// Do stage-specific processing.
 			//
 
-			dist2 *= (2.5 / simdt);
+			if (hintstg) {
+				//
+				// Really we want to model the effect of the engine force on the
+				// interstage, so it spins as it moves away. Currently we just throw
+				// on a random rotation.
+				//
 
-			f.x = (double)(rand() & 1023 - 512) / dist2;
-			f.y = (double)(rand() & 1023 - 512) / dist2;
+				VECTOR3 posr;
+				oapiGetRelativePos (GetHandle(), hintstg, &posr);
 
-			VESSEL *vistg = oapiGetVesselInterface (hintstg);
+				double dist2 = (posr.x * posr.x) + (posr.y * posr.y) + (posr.z * posr.z);
 
-			VESSELSTATUS vsistg;
-			vistg->GetStatus(vsistg);
+				if (dist2 > 25 && dist2 < 5000) {
+					VECTOR3 f;
 
-			//
-			// And add random amounts to rotation.
-			//
+					//
+					// Scale distance appropriately for timestep time.
+					//
 
-			vsistg.vrot.x += f.x;
-			vsistg.vrot.y += f.y;
-			vistg->DefSetState(&vsistg);
-		}
-	}
+					dist2 *= (2.5 / simdt);
 
-	switch (stage) {
+					f.x = (double)(rand() & 1023 - 512) / dist2;
+					f.y = (double)(rand() & 1023 - 512) / dist2;
 
-	case LAUNCH_STAGE_ONE:
-		StageOne(simt, simdt);
-		break;
+					VESSEL *vistg = oapiGetVesselInterface (hintstg);
 
-	case LAUNCH_STAGE_TWO:
-		StageTwo(simt);
-		break;
+					VESSELSTATUS vsistg;
+					vistg->GetStatus(vsistg);
 
-	case LAUNCH_STAGE_TWO_ISTG_JET:
-		StageFour(simt, simdt);
-		break;
+					//
+					// And add random amounts to rotation.
+					//
 
-	case LAUNCH_STAGE_SIVB:
-		StageLaunchSIVB(simt);
-		break;
+					vsistg.vrot.x += f.x;
+					vsistg.vrot.y += f.y;
+					vistg->DefSetState(&vsistg);
+				}
+			}
 
-	case STAGE_ORBIT_SIVB:
-		// We get here at around T5+9.8 or so.
+			switch (stage) {
 
-		//
-		// J-2 mixture ratio
-		//
+			case LAUNCH_STAGE_ONE:
+				StageOne(simt, simdt);
+				break;
 
-		if (GetPropellantMass(ph_3rd) / GetPropellantMaxMass(ph_3rd) > 0.51)
-			SetSIVbCMixtureRatio(4.5);
-		else
-			/// \todo PU-Shift during burn disabled until the IU GNC (i.e. IMFD) can handle that
-			// SetSIVbCMixtureRatio(4.9);
-			SetSIVbCMixtureRatio(4.5);
+			case LAUNCH_STAGE_TWO:
+				StageTwo(simt);
+				break;
+
+			case LAUNCH_STAGE_TWO_ISTG_JET:
+				StageFour(simt, simdt);
+				break;
+
+			case LAUNCH_STAGE_SIVB:
+				StageLaunchSIVB(simt);
+				break;
+
+			case STAGE_ORBIT_SIVB:
+				// We get here at around T5+9.8 or so.
+
+				//
+				// J-2 mixture ratio
+				//
+
+				if (GetPropellantMass(ph_3rd) / GetPropellantMaxMass(ph_3rd) > 0.51)
+					SetSIVbCMixtureRatio(4.5);
+				else
+					/// \todo PU-Shift during burn disabled until the IU GNC (i.e. IMFD) can handle that
+					// SetSIVbCMixtureRatio(4.9);
+					SetSIVbCMixtureRatio(4.5);
 			
-		StageOrbitSIVB(simt, simdt);
-		break;
+				StageOrbitSIVB(simt, simdt);
+				break;
 
-	default:
+			default:
+				GenericTimestepStage(simt, simdt);
+				break;
+			}
+		}
+
+	} else {
+
 		GenericTimestepStage(simt, simdt);
-		break;
 	}
 
 	LastTimestep = simt;
+}
+
+void SaturnV::clbkPostStep (double simt, double simdt, double mjd) {
+
+	Saturn::clbkPostStep(simt, simdt, mjd);
+
+	if (stage < CSM_LEM_STAGE) {
+		// LVDC++
+		if (use_lvdc) {
+			lvdc_timestep(simt, simdt);
+		}
+	}
 }
 
 void SaturnV::SetVehicleStats()
