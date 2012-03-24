@@ -1070,6 +1070,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lm_range_rate_indicator_scales.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\circuit_breaker_lem.bmp"
 				>
 			</File>

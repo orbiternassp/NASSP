@@ -758,6 +758,9 @@
     <None Include="..\..\Bitmaps\lem_notrack.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Bitmaps\lm_range_rate_indicator_scales.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_lm\LEMResources.rc">

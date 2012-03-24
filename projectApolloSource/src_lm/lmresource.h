@@ -749,6 +749,9 @@
 #define AID_LM_CWS_RIGHT				1023
 #define IDB_RR_NOTRACK					1024
 #define AID_RR_NOTRACK					1025
+#define IDB_RADAR_TAPE                  1026
+#define AID_RANGE_TAPE                  1027
+#define AID_RATE_TAPE                   1028
 
 // Next default values for new objects
 // 

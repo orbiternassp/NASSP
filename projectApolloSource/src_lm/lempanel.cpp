@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2011/07/16 18:46:47  dseagrav
+  *	LM RR work, first part
+  *	
   *	Revision 1.22  2011/07/15 00:50:21  vrouleau
   *	FDAI error needles displays the RR trunnion/shart angles
   *	
@@ -1488,6 +1491,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_RR_NOTRACK]         = oapiCreateSurface (LOADBMP (IDB_RR_NOTRACK));
 		//srf[SRF_LEM_STAGESWITCH]	= oapiCreateSurface (LOADBMP (IDB_LEM_STAGESWITCH));
 		srf[SRF_DIGITALDISP2]		= oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
+		srf[SRF_RADAR_TAPE]        = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
 
 		//
 		// Flashing borders.
@@ -1552,6 +1556,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTS],g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FIVE_POS_SWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_RR_NOTRACK],	     	g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_RADAR_TAPE],	     	g_Param.col[4]);
 		//oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
 
 		//		break;
@@ -1736,6 +1741,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LMRADARSLEWSWITCH,			    _R( 367, 1433,  408, 1472), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_EVENT_TIMER_SWITCHES,			_R(1013, 1233, 1214, 1264), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RR_NOTRACK,    					_R( 490,  1300, 524, 1334), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RANGE_TAPE,    					_R( 542,  660,  586,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RATE_TAPE,    					_R( 593,  660,  628,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -4448,6 +4455,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			Sswitch2=false;
 		}
 		return true;
+	case AID_RANGE_TAPE:
+		RadarTape.RenderRange(surf, srf[SRF_RADAR_TAPE]);
+		return true;
+	case AID_RATE_TAPE:
+		RadarTape.RenderRate(surf, srf[SRF_RADAR_TAPE]);
+		return true;
+
 	}
 	return false;
 }

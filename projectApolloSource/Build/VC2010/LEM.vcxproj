@@ -423,6 +423,7 @@
     <None Include="..\..\Bitmaps\border92x40.bmp" />
     <None Include="..\..\Bitmaps\circuit_breaker.bmp" />
     <None Include="..\..\Bitmaps\lem_notrack.bmp" />
+    <None Include="..\..\Bitmaps\lm_range_rate_indicator_scales.bmp" />
     <None Include="..\..\circuit_breaker.bmp" />
     <None Include="..\..\circuit_breaker_lem.bmp" />
     <None Include="..\..\Bitmaps\coas_lem1.bmp" />

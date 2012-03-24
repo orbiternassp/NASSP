@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2012/03/14 23:48:34  vrouleau
+  *	Add 'Other Vehicule State Vetocr' option in PAMFD
+  *	
   *	Revision 1.28  2011/07/16 18:46:47  dseagrav
   *	LM RR work, first part
   *	
@@ -365,6 +368,7 @@ public:
 	bool LG_Deployed;           // Landing Gear Deployed Flag	
 };
 
+
 // Landing Radar
 class LEM_LR{
 public:
@@ -398,14 +402,14 @@ public:
 	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
 	double GetRadarShaftPos() { return shaftAngle ; } ;
 	double GetRadarRange() { return range; } ;
-	double GetRadarRangeRate() { return rangeRate ; };
+	double GetRadarRate() { return rate ; };
 	
 	bool IsPowered(); 
 	bool IsDCPowered(); 
 	bool IsRadarDataGood() { return radarDataGood;};
 
 private:
-	void RadarData(double &range, double &rate,double &pitch, double &yaw);
+	void CalculateRadarData(double &pitch, double &yaw);
 	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
 	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 
@@ -423,8 +427,32 @@ private:
 	double trunnionVel;
 	double shaftVel;
 	double range;
-	double rangeRate;
+	double rate;
 };
+
+
+class LEM_RadarTape : public e_object {
+public:
+	LEM_RadarTape();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	void SystemTimeStep(double simdt);
+	void setRange(int range) { reqRange = range; };
+	void setRate(int rate) { reqRate = rate ; }; 
+	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
+	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
+
+
+private:
+	LEM *lem;					// Pointer at LEM
+	int  reqRange;
+	int	 reqRate;
+	int  dispRange;
+	int  dispRate;
+};
+
 
 // Caution and Warning Electronics Assembly
 class LEM_CWEA{
@@ -601,6 +629,7 @@ public:
 		SRF_LEM_STAGESWITCH,
 		SRF_DIGITALDISP2,
 		SRF_RR_NOTRACK,
+		SRF_RADAR_TAPE,
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
 		//
@@ -1780,6 +1809,8 @@ protected:
 	ATCA atca;
 	LEM_LR LR;
 	LEM_RR RR;
+
+	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
 
 	// COMM
@@ -1818,6 +1849,8 @@ protected:
 	friend class LEM_XLBControl;
 	friend class LEM_LR;
 	friend class LEM_RR;
+	friend class LEM_RadarTape;
+
 	friend class LEM_ASA;
 	friend class LEM_AEA;
 	friend class LEM_DEDA;
