@@ -242,6 +242,7 @@ namespace TVD2MXF {
         case "Lust Pur":
         case "sonnenklar.tv":
         case "Spreekanal":
+        case "Oberpfalz TV":
           return true;
 
       }

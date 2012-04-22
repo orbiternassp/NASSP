@@ -15,6 +15,9 @@ namespace TVD2MXF {
     public Dictionary<string, string> KeywordMapping;
     public int PersonId;
 
+    public int tvmovieEntriesNotFound;
+    public int tvbrowserEntriesNotFound;
+
     public MXFData() {
       Channels = new Dictionary<string, MXFChannel>();
       Keywords = new Dictionary<string, MXFKeyword>();

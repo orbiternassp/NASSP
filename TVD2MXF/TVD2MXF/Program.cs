@@ -141,10 +141,21 @@ namespace TVD2MXF {
               } else {
                 //log.Debug(r.Character + "|" + (r.Character == null ? "NULL" : "NN") + "|" + (r.Character == string.Empty ? "EMPTY" : "NE"));
                 if (!string.IsNullOrEmpty(r.Character)) {
+                  string oldChar = r.Character;
                   backupRole.Add(r.Person.Name + "#1", r.Character);
                   if (clearCharacter) {
                     r.Character = string.Empty;
-                    r.Update();
+                    try {
+                      r.Update();
+                    } catch (Exception e) {
+                      log.Error("ERROR " + r.Person.Name + ":" + oldChar + "|" + (oldChar == null ? "NULL" : "NN") + "|" + (oldChar == string.Empty ? "EMPTY" : "NE"));
+                      log.Error(e.Message, e);
+
+                      // terminate...
+                      throw e;
+
+                      backupRole.Remove(r.Person.Name + "#1");
+                    }
                   }
                 }
                 check.Add(r.Person.Name);
