@@ -390,6 +390,9 @@ namespace TVD2MXF {
       DirectoryInfo di = new DirectoryInfo(feedDir + "\\epg");
       foreach (DirectoryInfo ddi in di.GetDirectories()) {
         log.Info("Reading directory " + ddi.FullName);
+        // Reset error counter
+        data.tvmovieEntriesNotFound = 0;
+        data.tvbrowserEntriesNotFound = 0;
         foreach (FileInfo fi in ddi.GetFiles()) {
           XmlDocument xmlProgDoc = new XmlDocument();
           xmlProgDoc.Load(fi.FullName);
@@ -432,6 +435,7 @@ namespace TVD2MXF {
             }
           }
         }
+        log.Info("TV Movie entries not found: " + data.tvmovieEntriesNotFound + ", TV Browser: " + data.tvbrowserEntriesNotFound);
       }
 
       // Collect cats and chrs for testing

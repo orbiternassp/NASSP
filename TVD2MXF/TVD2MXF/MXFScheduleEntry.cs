@@ -50,8 +50,8 @@ namespace TVD2MXF {
                   tvbrowserHd = false;
                 }
               } else {
-                // TODO auskommentieren?
-                log.Debug("TV Browser program not found: " + chName + " at " + startTime);
+                data.tvbrowserEntriesNotFound++;
+                //log.Debug("TV Browser program not found: " + chName + " at " + startTime);
               }
             } else {
               log.Warn("TV Browser channel " + chName + " not found.");
@@ -152,6 +152,14 @@ namespace TVD2MXF {
 
     public bool IsHdtv {
       get {
+
+        // TODO WDR HD, ATV auch HD, Kinowelt TV oft HD
+
+        // Sat1 (39), Pro7 (40), ATV (115) are wrongly not HD/16:9 in all EPG data
+        if (ChannelId == "39" || ChannelId == "40" || ChannelId == "115") {
+          return true;
+        }
+
         // TODO Wie gut sind die TV Browser Daten?
         if (tvbrowserWidescreen.HasValue && tvbrowserHd.HasValue) {
           return (tvbrowserWidescreen.Value || tvbrowserHd.Value);

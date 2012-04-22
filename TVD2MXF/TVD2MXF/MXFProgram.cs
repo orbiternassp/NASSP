@@ -155,12 +155,13 @@ namespace TVD2MXF {
                 tvmBeschreibung = (string)readerDetail["Beschreibung"];
                 // \n und <br> ersetzen
                 tvmBeschreibung = tvmBeschreibung.Replace("\n", Environment.NewLine);
+                tvmBeschreibung = tvmBeschreibung.Replace("<br><br>", Environment.NewLine);
                 tvmBeschreibung = tvmBeschreibung.Replace("<br>", Environment.NewLine); 
               }
               readerDetail.Close();
             } else {
-              // TODO auskommentieren?
-              log.Debug("TVMovie Sendung not found: " + chName + " at " + startTime + ": " + Title);
+              data.tvmovieEntriesNotFound++;
+              //log.Debug("TVMovie Sendung not found: " + chName + " at " + startTime + ": " + Title);
             }
             reader.Close();
           }
