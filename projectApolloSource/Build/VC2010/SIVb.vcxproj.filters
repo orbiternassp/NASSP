@@ -41,9 +41,6 @@
     <ClInclude Include="..\..\src_sys\powersource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CDK\Prediction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_saturn\sivb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
