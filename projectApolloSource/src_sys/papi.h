@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -30,6 +33,8 @@
   *	Additional CSM panels.
   *	
   **************************************************************************/
+
+#pragma warning(disable : 4996 ) 
 
 #include "CollisionSDK/CollisionSDK.h"
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2012/01/14 22:09:25  tschachim
+  *	GN panel split as default
+  *	
   *	Revision 1.8  2009/12/17 17:47:44  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -95,6 +98,8 @@
   *	Fixed and changed camera and FOV handling.
   *	
   **************************************************************************/
+
+#pragma warning(disable : 4996 ) 
 
 #define STRICT 1
 #define ORBITER_MODULE
@@ -671,16 +676,23 @@ DLLCLBK void opcDLLExit (HINSTANCE hDLL)
 	delete gParams.item;
 }
 
-static bool renderViewportIsWideScreen = false;
+// 0 = 4:3
+// 1 = 16:10
+// 2 = 16:9
+static int renderViewportIsWideScreen = 0;
 
 DLLCLBK void opcOpenRenderViewport(HWND renderWnd, DWORD width, DWORD height, BOOL fullscreen)
 
 {
-	if (((double) width) / ((double) height) > 1.47) 
-		renderViewportIsWideScreen = true;
+	if (((double) width) / ((double) height) < 1.47) 
+		renderViewportIsWideScreen = 0;
+	else if (((double) width) / ((double) height) < 1.69) 
+		renderViewportIsWideScreen = 1;
+	else
+		renderViewportIsWideScreen = 2;
 }
 
-DLLCLBK bool pacRenderViewportIsWideScreen() 
+DLLCLBK int pacRenderViewportIsWideScreen() 
 {
 	return renderViewportIsWideScreen;
 }
