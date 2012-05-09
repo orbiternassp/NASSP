@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2012/03/14 23:48:34  vrouleau
+  *	Add 'Other Vehicule State Vetocr' option in PAMFD
+  *	
   *	Revision 1.19  2012/01/14 22:41:40  tschachim
   *	CM Optics cover
   *	
@@ -4348,7 +4351,7 @@ protected:
 	void SetView(double offset);
 	void SetView(bool update_direction);
 	void SetView(double offset, bool update_direction);
-	bool GetRenderViewportIsWideScreen();
+	int GetRenderViewportIsWideScreen();
 	void MasterAlarm();
 	void StopMasterAlarm();
 	void GenericTimestep(double simt, double simdt, double mjd);

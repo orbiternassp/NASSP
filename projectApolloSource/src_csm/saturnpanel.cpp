@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2012/01/14 22:45:13  tschachim
+  *	GN CWS lights, CM Optics cover
+  *	
   *	Revision 1.18  2010/09/19 14:24:24  tschachim
   *	Fixes for Orbiter 2010 (positions, camera handling).
   *	
@@ -1129,17 +1132,17 @@ void Saturn::InitPanel (int panel)
 	SetSwitches(panel);
 }
 
-bool Saturn::GetRenderViewportIsWideScreen() {
+int Saturn::GetRenderViewportIsWideScreen() {
 
 	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
 	if (hpac) {
-		bool (*pacRenderViewportIsWideScreen)();
-		pacRenderViewportIsWideScreen = (bool (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
+		int (*pacRenderViewportIsWideScreen)();
+		pacRenderViewportIsWideScreen = (int (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
 		if (pacRenderViewportIsWideScreen) {
 			return pacRenderViewportIsWideScreen();
 		}
 	}
-	return false;
+	return 0;
 }
 
 bool Saturn::clbkLoadPanel (int id) {
@@ -1166,7 +1169,7 @@ bool Saturn::clbkLoadPanel (int id) {
 	//
 	// Get screen info from the configurator
 	//
-	bool renderViewportIsWideScreen = GetRenderViewportIsWideScreen();
+	int renderViewportIsWideScreen = GetRenderViewportIsWideScreen();
 
 	//
 	// Load panel background image
@@ -1510,20 +1513,24 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_LEFT_RNDZ_WINDOW) { // left rendezvous window
 		int xoffset = 0, xoffset1 = 0, yoffset = 0, yoffset1 = 0, yoffset2 = 0;
-		if (renderViewportIsWideScreen) {
-			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW_WIDE));
-			
+		if (renderViewportIsWideScreen == 1) {			
 			xoffset = 200;
 			yoffset = 13;
 			xoffset1 = 400;
 			yoffset1 = 26;
 			yoffset2 = 19;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW_WIDE));
+		} else if (renderViewportIsWideScreen == 2) {
+			xoffset = 293;
+			yoffset = 13;
+			xoffset1 = 586;
+			yoffset1 = 26;
+			yoffset2 = 19;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW_16_9));
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
 		}
-
-		if ( !hBmp )
-		{
+		if (!hBmp) {
 			return false;
 		}
 
@@ -1550,17 +1557,18 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_RIGHT_RNDZ_WINDOW) { // right rendezvous window
 		int xoffset = 0, yoffset = 0;
-		if (renderViewportIsWideScreen) {
-			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW_WIDE));
-
+		if (renderViewportIsWideScreen == 1) {			
 			xoffset = 200;
 			yoffset = 13;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW_WIDE));
+		} else if (renderViewportIsWideScreen == 2) {
+			xoffset = 293;
+			yoffset = 13;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW_16_9));
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
 		}
-
-		if ( !hBmp )
-		{
+		if (!hBmp) {
 			return false;
 		}
 
@@ -1581,18 +1589,19 @@ bool Saturn::clbkLoadPanel (int id) {
 	if (id == SATPANEL_HATCH_WINDOW) { // hatch window
 		int xoffset = 0;
 		if (SideHatch.IsOpen()) {
-			if (renderViewportIsWideScreen) {
-				hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW_OPEN_WIDE));
+			if (renderViewportIsWideScreen == 1) {			
 				xoffset = 205;
+				hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW_OPEN_WIDE));
+			} else if (renderViewportIsWideScreen == 2) {
+				xoffset = 205 + 137;
+				hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW_OPEN_16_9));
 			} else {
 				hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW_OPEN));
 			}
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		}
-
-		if ( !hBmp )
-		{
+		if (!hBmp) {
 			return false;
 		}
 
@@ -1626,9 +1635,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_CABIN_PRESS_PANEL) { // cabin pressurization controls panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_CABIN_PRESS_PANEL));
-
-		if ( !hBmp )
-		{
+		if (!hBmp) {
 			return false;
 		}
 
@@ -1764,44 +1771,38 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 
 	if (id == SATPANEL_SEXTANT) { // Sextant
-		if (renderViewportIsWideScreen) {
+
+		int offset1 = 0, offset2 = 0;
+		if (renderViewportIsWideScreen == 1) {
+			offset1 = 103;
+			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
+		} else if (renderViewportIsWideScreen == 2) {
+			offset1 = 171;
+			offset2 = 342;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_16_9));
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
 		}
-
-		if ( !hBmp )
-		{
+		if ( !hBmp ) {
 			return false;
 		}
 
 		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_GN, SATPANEL_GN);
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-		
-		if (renderViewportIsWideScreen) {
-			oapiRegisterPanelArea (AID_CSM_SEXTANTCOVER,			_R( 347,  115,  882,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 982,  637, 1027,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKBUTTON,					_R(1031,  639, 1059,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKREJECT,					_R(1064,  655, 1087,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 604,  719,  627,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 503,  719,  526,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 687,  719,  710,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 926,    0, 1229,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 206,  637,  251,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		} else {
-			oapiRegisterPanelArea (AID_CSM_SEXTANTCOVER,			_R( 244,  115,  779,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_SEXTANTCOVER,			_R( 244 + offset1,  115,  780 + offset1,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879,  637,  924,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928,  639,  956,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961,  655,  984,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502,  719,  525,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401,  719,  424,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585,  719,  608,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721,    0, 1024,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103,  637,  148,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		}
-		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,		_R(   0,    0,   10,   10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879 + offset1,  637,  924 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928 + offset1,  639,  956 + offset1,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961 + offset1,  655,  984 + offset1,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401 + offset1,  719,  424 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585 + offset1,  719,  608 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721 + offset2,    0, 1024 + offset2,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103 + offset1,  637,  148 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+
+		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		oapiCameraSetCockpitDir(0,0);
@@ -1809,43 +1810,37 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 
 	if (id == SATPANEL_TELESCOPE) { // Telescope
-		if (renderViewportIsWideScreen)
+		int offset1 = 0, offset2 = 0;
+		if (renderViewportIsWideScreen == 1) {
+			offset1 = 103;
+			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
-		else
+		} else if (renderViewportIsWideScreen == 2) {
+			offset1 = 171;
+			offset2 = 342;
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_16_9));
+		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
-
-		if ( !hBmp )
-		{
+		}
+		if ( !hBmp ) {
 			return false;
 		}
 
-		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		oapiSetPanelNeighbours(SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
+		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (renderViewportIsWideScreen) {
-			oapiRegisterPanelArea (AID_CSM_TELESCOPECOVER,			_R( 347,  115,  883,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_TELESCOPECOVER,			_R( 244 + offset1,  115,  780 + offset1,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 982,  637, 1027,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKBUTTON,					_R(1031,  639, 1059,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKREJECT,					_R(1064,  655, 1087,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 604,  719,  627,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 503,  719,  526,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 687,  719,  710,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 926,    0, 1229,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 206,  637,  251,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		} else {
-			oapiRegisterPanelArea (AID_CSM_TELESCOPECOVER,			_R( 244,  115,  780,  650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879 + offset1,  637,  924 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928 + offset1,  639,  956 + offset1,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961 + offset1,  655,  984 + offset1,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401 + offset1,  719,  424 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585 + offset1,  719,  608 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721 + offset2,    0, 1024 + offset2,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103 + offset1,  637,  148 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 
-			oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879,  637,  924,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928,  639,  956,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961,  655,  984,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502,  719,  525,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401,  719,  424,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585,  719,  608,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721,    0, 1024,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103,  637,  148,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		}
-		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE, _R(0, 0, 10, 10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		oapiCameraSetCockpitDir(0,0);
@@ -3885,7 +3880,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	//
 
 	if (id == AID_CSM_SEXTANTCOVER || id == AID_CSM_TELESCOPECOVER) {
-		if (!GetRenderViewportIsWideScreen()) {
+		if (GetRenderViewportIsWideScreen() == 0) {
 			int tx = mx + 244 - 721;
 			int ty = my + 115 - 0;
 
