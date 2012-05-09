@@ -66,12 +66,12 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Lib>
-      <OutputFile>../../src_sys/PanelSDK/PanelSDK.lib</OutputFile>
+      <OutputFile>.\Debug\PanelSDK\PanelSDK.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>../../src_sys/PanelSDK/PanelSDK.bsc</OutputFile>
+      <OutputFile>.\Debug\PanelSDK\PanelSDK.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -96,13 +96,13 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Lib>
-      <OutputFile>../../src_sys/PanelSDK/PanelSDK.lib</OutputFile>
+      <OutputFile>.\Release\PanelSDK\PanelSDK.lib</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>../../src_sys/PanelSDK/PanelSDK.bsc</OutputFile>
+      <OutputFile>.\Release\PanelSDK\PanelSDK.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>

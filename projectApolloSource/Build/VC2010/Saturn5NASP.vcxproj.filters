@@ -165,9 +165,6 @@
     <ClCompile Include="..\..\src_sys\yaAGC\agc_engine_init.c">
       <Filter>yaAGC</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_sys\yaAGC\agc_utilities.c">
-      <Filter>yaAGC</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\Backtrace.c">
       <Filter>yaAGC</Filter>
     </ClCompile>
@@ -228,9 +225,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_saturn\iu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\landervessel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\LEM.h">
@@ -329,10 +323,10 @@
     <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
       <Filter>CollisionSDK</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\IMFD_Client.h">
+    <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
       <Filter>IMFD</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
+    <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h">
       <Filter>IMFD</Filter>
     </ClInclude>
   </ItemGroup>

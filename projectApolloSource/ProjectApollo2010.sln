@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C++ Express 2010
+# Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2010\ASTP.vcxproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "Build\VC2010\Crawler.vcxproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
@@ -14,6 +14,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PanelSDK", "Build\VC2010\PanelSDK.vcxproj", "{98EC3BF0-C9FF-4C38-91E1-159D8F3700C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LEM", "Build\VC2010\LEM.vcxproj", "{1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98EC3BF0-C9FF-4C38-91E1-159D8F3700C1} = {98EC3BF0-C9FF-4C38-91E1-159D8F3700C1}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SIVb", "Build\VC2010\SIVb.vcxproj", "{1FD6B39B-FC9F-4219-AB56-4F7D698EEEC4}"
 EndProject
