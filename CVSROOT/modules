@@ -52,3 +52,5 @@ projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound \
                  projectApolloHtml
 				 
 telemetryClient telemetryClient
+
+projectApolloSourceOnly projectApolloSource
