@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/03/14 23:48:34  vrouleau
+  *	Add 'Other Vehicule State Vetocr' option in PAMFD
+  *	
   *	Revision 1.7  2010/11/05 03:10:00  vrouleau
   *	Added CSM/LM Landing Site REFSMMAT Uplink to AGC. Contains hardcoded REFSMMAT per mission.
   *	
@@ -101,8 +104,6 @@ public:
 	void Update (HDC hDC);
 	void UpLinkRefsmmat (void);	
 	void GetStateVector (void);	
-	void GetOtherVehiculeStateVector (void);	
-	void UploadStateVector (VESSEL *vessel,double get);	
 	void IMFDP30Uplink (void);
 	void IMFDP31Uplink (void);
 	bool SetSource(char *rstr);
