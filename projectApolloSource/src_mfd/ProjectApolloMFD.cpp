@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2012/08/07 20:37:33  tschachim
+  *	Removed the "Other SV" feature as it was buggy and obsolete, use the Change Source button instead.
+  *	
   *	Revision 1.21  2012/01/14 22:31:32  tschachim
   *	Save EMS scroll
   *	
@@ -301,6 +304,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int updateClockReady;
 	int uplinkState;
 	int uplinkLEM;
+	int uplinkSlot;
 	queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
 	OBJHANDLE planet;
@@ -336,6 +340,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.gorpVessel = NULL;
 	g_Data.nextRequestTime = 0;
 	g_Data.uplinkLEM = 0;
+	g_Data.uplinkSlot = 0;
 
 	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
 	g_Data.isRequesting = false;
@@ -814,12 +819,12 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	// The labels for the buttons used by our MFD mode
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
 	//Additional button added at the bottom right of none for the debug string.
-	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","SOCK","","","","","","","DBG"};
+	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","","","","","","","SOCK","DBG"};
 	static char *labelGNC[4] = {"BCK", "KILR", "EMS", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[9] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK","LS"};
+	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "LS", "", "SLT"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
@@ -840,7 +845,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
 	}
 	else if(screen == PROG_TELE) {
-		return (bt < 9 ? labelTELE[bt] : 0);
+		return (bt < 11 ? labelTELE[bt] : 0);
 	}
 	else if (screen == PROG_SOCK) {
 		return (bt < 1 ? labelSOCK[bt] : 0);
@@ -860,13 +865,13 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Environmental Control System", 0, 'E'},
 		{"IMFD Support", 0, 'I'},
 		{"Telemetry",0,'T'},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
 		{"Socket info", 0, 'S'},
-		{0,0,0},
-		{0,0,0},
-		{0,0,0},
-		{0,0,0},
-		{0,0,0},
-		{0,0,0},
 		{"Debug String",0,'D'}
 	};
 	static const MFDBUTTONMENU mnuGNC[4] = {
@@ -891,7 +896,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Request Burn Data", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'}
 	};
-	static const MFDBUTTONMENU mnuTELE[9] = {
+	static const MFDBUTTONMENU mnuTELE[11] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
 		{"P30 - Ext. DV Uplink", 0, 'D'},
@@ -900,7 +905,9 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Change Reference Body", 0, 'R'},
 		{"Toggle burn data requests", 0, 'I'},
 		{"Clock Update", 0, 'C'},
-		{"REFSMMAT Upd.", 0, 'F'}
+		{"REFSMMAT Upd.", 0, 'F'},
+		{0,0,0},
+		{"State Vector Slot", 0, 'T'}
 	};
 	//This menu set is just for the Socket program, remove before release.
 	static const MFDBUTTONMENU mnuSOCK[1] = {
@@ -943,7 +950,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	}	
 	else if (screen == PROG_TELE) {
 		if (menu) *menu = mnuTELE;
-		return 9;
+		return 11;
 	}
 	else if (screen == PROG_SOCK)
 	{
@@ -1109,13 +1116,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			}
 			return true;
 		} else if (key == OAPI_KEY_S) {
-			if(g_Data.uplinkDataReady == 0) {
+			if (g_Data.uplinkDataReady == 0) {
 				bool SourceInput (void *id, char *str, void *data);
 				oapiOpenInputBox("Set Source", SourceInput, 0, 20, (void*)this);
 			}
 			return true;
 		} else if (key == OAPI_KEY_R) {
-			if(g_Data.uplinkDataReady == 0) {
+			if (g_Data.uplinkDataReady == 0) {
 				bool ReferencePlanetInput (void *id, char *str, void *data);
 				oapiOpenInputBox("Set Reference", ReferencePlanetInput, 0, 20, (void*)this);
 			}
@@ -1132,7 +1139,17 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				}
 			}
 			return true;
+		} else if (key == OAPI_KEY_T) {
+			if (g_Data.uplinkDataReady == 0) {
+				if (g_Data.uplinkSlot == 0) {
+					g_Data.uplinkSlot = 1;
+				} else {
+					g_Data.uplinkSlot = 0;
+				}
+			}
+			return true;
 		}
+
 
 	} else if (screen == PROG_ECS) {
 		if (key == OAPI_KEY_B) {
@@ -1234,11 +1251,11 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	//We only want to accept left mouse button clicks.
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
+	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, 0, 0, 0, 0, 0, 0, OAPI_KEY_S, OAPI_KEY_D };
 	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[9] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F };
+	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
@@ -1249,7 +1266,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	} else if (screen == PROG_IMFD) {
 		if (bt < 3) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
 	} else if (screen == PROG_TELE) {
-		if (bt < 9) return ConsumeKeyBuffered (btkeyTELE[bt]);
+		if (bt < 11) return ConsumeKeyBuffered (btkeyTELE[bt]);
 	}
 	// This program is the socket data.  Remove before release.
 	else if (screen == PROG_SOCK)
@@ -1693,9 +1710,17 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextColor (hDC, RGB(128, 128, 128));
 		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 100);
 		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.95), buffer, strlen(buffer));
-		SetTextAlign (hDC, TA_RIGHT);
+		SetTextAlign (hDC, TA_CENTER);
 		oapiGetObjectName(g_Data.planet, buffer, 100);
+		TextOut(hDC, (int) (width * 0.5), (int) (height * 0.95), buffer, strlen(buffer));
+		SetTextAlign (hDC, TA_RIGHT);
+		if (g_Data.uplinkSlot == 0) {
+			sprintf(buffer, "This");
+		} else {
+			sprintf(buffer, "Other");
+		}		
 		TextOut(hDC, (int) (width * 0.95), (int) (height * 0.95), buffer, strlen(buffer));
+
 	}
 	else if (screen == PROG_DEBUG)
 	{
@@ -1820,8 +1845,11 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;	
 
-		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 2;
-		else g_Data.emem[2] = 77775;	// Octal coded decimal
+		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+		if (g_Data.uplinkSlot == 0)
+			g_Data.emem[2] = 2;
+		else 
+			g_Data.emem[2] = 77775;	// Octal coded decimal
 		
 		g_Data.emem[3]  = DoubleToBuffer(pos.x, 27, 1);
 		g_Data.emem[4]  = DoubleToBuffer(pos.x, 27, 0);
@@ -1848,8 +1876,11 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;
 
-		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 1;
-		else g_Data.emem[2] = 77776;	// Octal coded decimal
+		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+		if (g_Data.uplinkSlot == 0)
+			g_Data.emem[2] = 1;
+		else 
+			g_Data.emem[2] = 77776;	// Octal coded decimal
 		
 		g_Data.emem[3]  = DoubleToBuffer(pos.x, 29, 1);
 		g_Data.emem[4]  = DoubleToBuffer(pos.x, 29, 0);
