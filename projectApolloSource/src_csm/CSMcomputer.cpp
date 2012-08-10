@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/01/14 22:36:18  tschachim
+  *	GN CWS lights, CM Optics cover
+  *	
   *	Revision 1.7  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -4643,7 +4646,40 @@ void CMOptics::TimeStep(double simdt) {
 			}
 			break;
 		case THREEPOSSWITCH_CENTER: // MANUAL
-			if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*90)){
+
+			/* About "SextTrunion < (RAD*59.0)":
+
+			# Page 711
+			# PROGRAM NAME -- PICAPAR   DATE: DEC 20 66
+			# MOD 1            LOG SECTION: P51-P53
+			#            ASSEMBLY:  SUNDISK REV40
+			# BY KEN VINCENT
+			#
+			# FUNCTION
+			#   THIS PROGRAM READS THE IMU-CDUS AND COMPUTES THE VEHICLE ORIENTATION
+			#   WITH RESPECT TO INERTIAL SPACE.  IT THEN COMPUTES THE SHAFT AXIS (SAX)
+			#   WITH RESPECT TO REFERENCE INTERTIAL.  EACH STAR IN THE CATALOG IS TESTED
+			#    TO DETERMINE IF IT IS OCCULTED BY EITHER EARTH, SUN OR MOON.  IF A
+			#    STAR IS NOT OCCULTED THEN IT IS PARIED WITH ALL STARS OF LOWER INDEX.
+			#    THE PAIRED STAR IS TESTED FOR OCCULTATION.  PAIRS OF STARS THAT PASS
+			#   THE OCCULTATION TESTS ARE TESTED FOR GOOD SEPARATION.  A PAIR OF STARS
+			#   HAVE GOOD SEPARATION IF THE ANGLE BETWEEN THEM IS LESS THAN 66 DEGREES
+			#   AND MORE THAN 40 DEGREES.  THOSE PAIRS WITH GOOD SEPARATION
+			#   ARE THEN TESTED TO SEE IF THEY LIE IN CURRENT FIELD OF VIEW.  (WITHIN
+			#   33 DEGREES OF SAX).  THE PAIR WITH MAX SEPARATION IS CHOSEN FROM
+			#   THOSE WITH GOOD SEPARATION, AND IN FIELD OF VIEW.
+
+			As you can see, the angular difference between the 2 stars should be 40°-66°, a rather tight margin. 
+			Greater than 66° isn't working at all, but smaller than 40° is at least possible (i.e. no errors) however less precise.
+
+			Also, in reality the max. field of view = max trunnion angle seems to be 33°. 
+			We don't have that restriction, but for trunnion angles greater than 60° P51 isn't working anymore (as I figured out by testing). 
+			This restriction is irrelevant in reality obviously, so it isn't denoted in the docs I suppose.
+
+			http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
+			*/
+
+			if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*59.0)){
 				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;				
 				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
 					sat->agc.vagc.Erasable[0][RegOPTY]++;
@@ -4659,7 +4695,7 @@ void CMOptics::TimeStep(double simdt) {
 					TrunionMoved -= OCDU_TRUNNION_STEP;
 				}
 			}
-			if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270)){
+			if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270.0)){
 				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;					
 				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
 					sat->agc.vagc.Erasable[0][RegOPTX]--;
@@ -4667,7 +4703,7 @@ void CMOptics::TimeStep(double simdt) {
 					ShaftMoved -= OCDU_SHAFT_STEP;
 				}
 			}
-			if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270)){
+			if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270.0)){
 				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;					
 				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
 					sat->agc.vagc.Erasable[0][RegOPTX]++;
