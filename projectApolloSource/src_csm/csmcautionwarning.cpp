@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2012/01/14 22:34:48  tschachim
+  *	GN CWS lights
+  *	
   *	Revision 1.2  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -403,27 +406,18 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// No Master Alarm during lamp test
 		SetMasterAlarm(false);
 	} else {
-		if(aws.CMCWarning){
+		if (aws.CMCWarning) {
 			SetLight(CSM_CWS_CMC_LIGHT, true); // The real thing
-		}else{
+		} else {
 			SetLight(CSM_CWS_CMC_LIGHT, false);
 		}
 	}
 
 	//
-	// PGNS warning
+	// PGNS warning, does NOT trigger master alarm 
+	// CSM Systems HandbooK (NTRS 19730060780) pg. 278 
 	//
 
-	if (aws.PGNSWarning && !GNPGNSAlarm) {
-		// No Master Alarm during lamp test
-		if (!aws.TestAlarms) {
-			if (InhibitNextMasterAlarm) {
-				InhibitNextMasterAlarm = false;
-			} else {
-				SetMasterAlarm(true);
-			}
-		}
-	}
 	GNPGNSAlarm = aws.PGNSWarning;
 
 	//
