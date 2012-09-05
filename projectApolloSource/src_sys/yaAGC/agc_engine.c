@@ -633,7 +633,7 @@ CollectCoverage (agc_t * State, int Address12, int Read, int Write, int Instruct
 ///
 
 //static int NextZ;
-int NextZ;
+int NextZ = 0;
 
 static void
 Assign (agc_t * State, int Bank, int Offset, int Value)
