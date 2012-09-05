@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2012/08/10 18:55:19  tschachim
+  *	Optics trunnion limitation
+  *	http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
+  *	
   *	Revision 1.8  2012/01/14 22:36:18  tschachim
   *	GN CWS lights, CM Optics cover
   *	
@@ -4669,43 +4673,44 @@ void CMOptics::TimeStep(double simdt) {
 			#   33 DEGREES OF SAX).  THE PAIR WITH MAX SEPARATION IS CHOSEN FROM
 			#   THOSE WITH GOOD SEPARATION, AND IN FIELD OF VIEW.
 
-			As you can see, the angular difference between the 2 stars should be 40°-66°, a rather tight margin. 
+			As stated above, the angular difference between the 2 stars should be 40°-66°, a rather tight margin. 
 			Greater than 66° isn't working at all, but smaller than 40° is at least possible (i.e. no errors) however less precise.
 
-			Also, in reality the max. field of view = max trunnion angle seems to be 33°. 
-			We don't have that restriction, but for trunnion angles greater than 60° P51 isn't working anymore (as I figured out by testing). 
-			This restriction is irrelevant in reality obviously, so it isn't denoted in the docs I suppose.
+			But the stated max. field of view = max. trunnion angle of 33° seems to be wrong. 
+			With trunnion angles greater than 60°, P51 isn't working anymore (as I figured out by testing). 
+			But PICAPAR does choose stars with a trunnion angle greater than 33° (current "record" 45°), so restricting the max. trunnion
+			angle to 33° is NO option. AOH 2.2.3.3.1 seems to state a max. trunnion angle of 50°.
 
 			http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
 			*/
 
-			if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*59.0)){
+			if ((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*59.0)) {
 				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;				
-				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+				while (fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {					
 					sat->agc.vagc.Erasable[0][RegOPTY]++;
 					sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 					TrunionMoved += OCDU_TRUNNION_STEP;
 				}
 			}
-			if((OpticsManualMovement&0x02) != 0 && SextTrunion > 0){
+			if ((OpticsManualMovement&0x02) != 0 && SextTrunion > 0) {
 				SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;				
-				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {					
 					sat->agc.vagc.Erasable[0][RegOPTY]--;
 					sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 					TrunionMoved -= OCDU_TRUNNION_STEP;
 				}
 			}
-			if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270.0)){
+			if ((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
 				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;					
-				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
 					sat->agc.vagc.Erasable[0][RegOPTX]--;
 					sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 					ShaftMoved -= OCDU_SHAFT_STEP;
 				}
 			}
-			if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270.0)){
+			if ((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270.0)) {
 				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;					
-				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
 					sat->agc.vagc.Erasable[0][RegOPTX]++;
 					sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 					ShaftMoved += OCDU_SHAFT_STEP;
@@ -4746,6 +4751,7 @@ void CMOptics::TimeStep(double simdt) {
 	}
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
+	//sprintf(oapiDebugString(), "Sext Trunion EMEM %o", sat->agc.vagc.Erasable[0][RegOPTY]);
 }
 
 void CMOptics::SaveState(FILEHANDLE scn) {
