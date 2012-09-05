@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2012/01/14 22:16:21  tschachim
+  *	GN CWS lights
+  *	
   *	Revision 1.6  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -4186,7 +4189,7 @@ extern "C" {
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
-	char fname[32], str[32];
+	char fname[32], str[32], buffer[256];
 	int i;
 	int val;
 
@@ -4324,6 +4327,9 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
 		oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
 		oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
+
+		sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
+		oapiWriteLine(scn, buffer);
 		
 		for (i = 0; i < 16; i++) {
 			val = vagc.OutputChannel10[i];
@@ -4467,6 +4473,12 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
 			sscanf (line+12, "%d", &vagc.Ch33Switches);
 		}
+		/*
+		TODO Do NOT load CycleCounter until CduFifos are saved/loaded, too
+		else if (!strnicmp (line, "CYCLECOUNTER", 12)) {
+			sscanf (line+12, "%I64d", &vagc.CycleCounter);
+		}
+		*/
 		else if (!strnicmp (line, "VINT", 4)) {
 			int num;
 			unsigned int val;
