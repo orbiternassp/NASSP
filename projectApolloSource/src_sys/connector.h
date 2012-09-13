@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2012/01/14 22:21:57  tschachim
+  *	Bugfixes, flash handling, flashing for handcontroller
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -362,7 +365,9 @@ private:
 /// while docked.
 /// \ingroup Connectors
 ///
-class ProjectApolloConnectorVessel : public VESSEL2
+
+// SCHNECI changed Vessel2 to Vessel3 for LUA api
+class ProjectApolloConnectorVessel : public VESSEL3
 {
 public:
 
