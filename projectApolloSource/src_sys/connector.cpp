@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/04/11 11:49:32  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -282,7 +285,8 @@ void MultiConnector::Disconnect()
 	Connector::Disconnect();
 }
 
-ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
+//SCHNECI modified Vessel2 to Vessel3 for LUA API handling
+ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL3(hObj, fmodel)
 
 {
 	int i;
