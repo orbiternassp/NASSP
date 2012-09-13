@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2012/05/09 21:28:24  tschachim
+  *	16:9 panels
+  *	
   *	Revision 1.20  2012/03/14 23:48:34  vrouleau
   *	Add 'Other Vehicule State Vetocr' option in PAMFD
   *	
@@ -1197,6 +1200,18 @@ public:
 	/// \param scn Scenario file to save to.
 	///
 	void clbkSaveState (FILEHANDLE scn);
+	
+	//SCHNECI
+	// LUA functions
+	int clbkGeneric (int msgid, int prm, void *context);
+	int Lua_InitInterpreter (void *context);
+	int Lua_InitInstance (void *context);
+	int GetAgc(int page, int addr);
+	int GetCh(int ch);
+	void SetAgc(int page, int addr, int value);
+	int UplinkStatus();
+	void SetProg(int stat);
+	void Saturn::SwitchOptics(int pos);
 
 	///
 	/// \brief Orbiter timestep function.
