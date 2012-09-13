@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2012/01/14 22:40:48  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.23  2010/09/07 12:05:12  vrouleau
   *	Remove LVLH attitude hold mode for SIVB for non-Apollo 7 cases. Allows S-IVB maneuvering for TLI in AP 8-11.
   *	
@@ -578,6 +581,11 @@
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
 
+extern "C" {
+#include <lua\lua.h>
+#include <lua\lualib.h>
+#include <lua\lauxlib.h>
+}
 
 //
 // Random functions from Yaagc.
@@ -1440,6 +1448,199 @@ void Saturn::initSaturn()
 	}
 	InitSaturnCalled = true;
 }
+
+//SCHNECI
+// Init lua callback interpreter
+
+int Saturn::clbkGeneric (int msgid, int prm, void *context)
+{
+	switch (msgid) {
+	case VMSG_LUAINTERPRETER:
+		return Saturn::Lua_InitInterpreter (context);
+	case VMSG_LUAINSTANCE:
+		return Saturn::Lua_InitInstance (context);
+	}
+	return 0;
+}
+
+int Saturn::GetAgc(int page, int addr)
+{
+	return agc.GetErasable(page,addr);
+}
+
+int Saturn::GetCh(int ch)
+{
+	return agc.GetOutputChannel(ch);
+}
+
+void Saturn::SetAgc(int page, int addr, int value)
+{
+	agc.SetErasable(page, addr, value);
+	agc.GenerateUprupt();
+
+	return;
+}
+
+void Saturn::SetProg(int stat)
+{
+	switch (stat) {
+		case 0:
+			agc.SetInputChannelBit(032, 14, false);
+			break;
+		case 0xff:
+			agc.SetInputChannelBit(032, 14, true);
+			break;
+	}
+	return;
+}
+
+void Saturn::SwitchOptics(int pos)
+{
+	unsigned int SwitchBits;
+	SwitchBits = agc.GetCh33Switches();
+	SwitchBits &= 077707;  // Clear bits
+	switch (pos) {
+		case THREEPOSSWITCH_UP:
+			SwitchBits |= 010; // CMC MODE, ZERO OFF				
+			agc.SetCh33Switches(SwitchBits);
+			break;
+		case THREEPOSSWITCH_CENTER:
+			SwitchBits |= 030; // MANUAL MODE, ZERO OFF		
+			agc.SetCh33Switches(SwitchBits);
+			break;
+		case THREEPOSSWITCH_DOWN:
+			SwitchBits |= 020; // MANUAL MODE, ZERO ON
+			agc.SetCh33Switches(SwitchBits);
+			break;
+	}
+	return;
+}
+
+int Saturn::UplinkStatus()
+{
+	int st = 0;
+	if (agc.IsUpruptActive()){
+		st = 1;
+	}
+	return st;
+}
+
+int Saturn::Lua_InitInterpreter(void *context)
+{
+	lua_State *L = (lua_State*)context;
+
+	// add interpreter initialisation here
+	// load init script
+	luaL_dofile (L, "..\\A7\\luatest\\init.lua");
+
+	return 0;
+}
+
+int Saturn_geterasable (lua_State *L);
+int Saturn_inlink (lua_State *L);
+int Saturn_isuplink (lua_State *L);
+int Saturn_prog (lua_State *L);
+int Saturn_getchannel (lua_State *L);
+int Saturn_switch (lua_State *L);
+
+int Saturn::Lua_InitInstance (void *context)
+{
+  lua_State *L = (lua_State*)context;
+  luaL_getmetatable (L, "VESSEL.Saturn");
+  if (lua_isnil(L,-1)) { // class not yet registered
+    lua_pop(L,1);
+    static const struct luaL_reg SaturnLib[] = {
+      {"geterasable", Saturn_geterasable},
+	  {"inlink", Saturn_inlink},
+	  {"isuplink", Saturn_isuplink},
+	  {"prog", Saturn_prog},
+	  {"getchannel", Saturn_getchannel},
+	  {"switch", Saturn_switch},
+      {NULL, NULL}
+    };
+    luaL_newmetatable (L, "VESSEL.vtable");
+    luaL_openlib (L, "Saturn.method", SaturnLib, 0);
+    luaL_newmetatable (L, "Saturn.base");
+    lua_pushstring (L, "__index");
+    luaL_getmetatable (L, "VESSEL.vtable");
+    lua_settable (L, -3);
+    lua_setmetatable (L, -2);
+    lua_pushstring (L, "__index");
+    lua_pushvalue (L, -2);
+    lua_settable (L, -4);
+    lua_pop (L, 1);
+  }
+  lua_setmetatable (L, -2);
+
+  return 0;
+}
+
+static int Saturn_geterasable (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+
+  int page = lua_tointeger(L,2);
+  int addr = lua_tointeger(L,3);
+
+  int outparam = v->GetAgc(page,addr);
+  //int outparam = v->GetErasable(page,addr);
+
+  lua_pushnumber(L, outparam);
+  //int a = v->vagc.Erasable[page][addr];
+  return 1;
+}
+
+static int Saturn_inlink (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+  int charin = lua_tointeger(L,2);
+  v->SetAgc(0,045,charin);
+  return 0;
+}
+
+static int Saturn_isuplink (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+  int uplinkstatus = v->UplinkStatus();
+  lua_pushnumber(L, uplinkstatus);
+  return 1;
+}
+
+static int Saturn_prog (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+  int stat = lua_tointeger(L,2);
+  
+  v->SetProg(stat);
+  return 0;
+}
+
+static int Saturn_getchannel (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+
+  int chnum = lua_tointeger(L,2);
+
+  int outword = v->GetCh(chnum);
+
+  lua_pushnumber(L, outword);
+
+  return 1;
+}
+
+static int Saturn_switch (lua_State *L)
+{
+  VESSEL **pv = (VESSEL**)lua_touserdata(L,1);
+  Saturn *v = (Saturn*) *pv;
+  int pos = lua_tointeger(L,2);
+  v->SwitchOptics(pos);
+  return 0;
+}	
 
 void Saturn::clbkPostCreation() {
 
