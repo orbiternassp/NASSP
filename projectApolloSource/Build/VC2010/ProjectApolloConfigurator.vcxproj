@@ -127,7 +127,7 @@
       <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/Startup/ProjectApolloConfigurator.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>../../../../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>;../../../../lib/Lua;../../../../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MSVCRT;msvcirt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug\ProjectApolloConfigurator/ProjectApolloConfigurator.pdb</ProgramDatabaseFile>
