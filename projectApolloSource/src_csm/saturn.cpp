@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2012/09/13 18:31:40  schneci
+  *	SCHNECI create the LUA API environment
+  *	
   *	Revision 1.24  2012/01/14 22:40:48  tschachim
   *	CM Optics cover
   *	
@@ -1531,7 +1534,7 @@ int Saturn::Lua_InitInterpreter(void *context)
 
 	// add interpreter initialisation here
 	// load init script
-	luaL_dofile (L, "..\\A7\\luatest\\init.lua");
+	//luaL_dofile (L, "..\\A7\\luatest\\init.lua");
 
 	return 0;
 }
