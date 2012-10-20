@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2012/01/14 22:50:41  tschachim
+  *	Save EMS scroll, Bugfix entry scroll and rsi roll
+  *	
   *	Revision 1.10  2011/07/14 17:47:08  tschachim
   *	Bugfix: The proportional rate commands are powered by AC, the signals are routed through the breakout switches, so the breakout switches must be set, too: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2715.msg20936#msg20936
   *	
@@ -1769,19 +1772,19 @@ bool RJEC::IsThrusterPowered(ThreePosSwitch *s) {
 	return false;
 }
 
-void RJEC::SetRCSState(int thruster, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout) {
+void RJEC::SetRCSState(int thruster, bool td, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout) {
 
 	if (IsThrusterPowered(s) && !lockout) {
-		if (ThrusterDemand[thruster] != 0) { 
+		if (td != 0) { 
 			PoweredSwitch[thruster] = s;
 		}			
 		if (!cm || cmthruster < 0) {
-			sat->SetRCSState(smquad, smthruster, ThrusterDemand[thruster]); 
+			sat->SetRCSState(smquad, smthruster, td); 
 			if (cmthruster >= 0) {
 				sat->SetCMRCSState(cmthruster, false);
 			}
 		} else {
-			sat->SetCMRCSState(cmthruster, ThrusterDemand[thruster]);
+			sat->SetCMRCSState(cmthruster, td);
 			sat->SetRCSState(smquad, smthruster, false); 
 		}
 	} else {
@@ -1856,32 +1859,99 @@ void RJEC::TimeStep(double simdt){
 		return;
 	}
 
-	// Ensure AC logic power, see Systems Handbook 8.2 
-	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
-		ThrusterDemand[1] = false;
-		ThrusterDemand[2] = false;
-		ThrusterDemand[4] = false;
-		ThrusterDemand[6] = false;
-		ThrusterDemand[8] = false;
-		ThrusterDemand[9] = false;
-		ThrusterDemand[12] = false;
-		ThrusterDemand[14] = false;
-	}
-	if (!sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
-		ThrusterDemand[3] = false;
-		ThrusterDemand[5] = false;
-		ThrusterDemand[7] = false;
-		ThrusterDemand[10] = false;
-		ThrusterDemand[11] = false;
-		ThrusterDemand[13] = false;
-		ThrusterDemand[15] = false;
-		ThrusterDemand[16] = false;
-	}
-
 	// Reset thruster power demand
+	bool td[20];
 	int i;
 	for (i = 0; i < 17; i++) {
+		td[i] = false;
 		PoweredSwitch[i] = NULL;
+	}
+
+
+	//
+	// ACCEL CMD: ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
+	//
+
+	// Roll
+	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
+		if (sat->eca.rhc_x < 28673) {  // MINUS
+			td[10] = true;
+			td[12] = true;
+			td[14] = true;
+			td[16] = true;
+		}
+		if (sat->eca.rhc_x > 36863) { // PLUS
+			td[9] = true;
+			td[11] = true;
+			td[13] = true;
+			td[15] = true;
+		}
+	} else {
+		td[9] = ThrusterDemand[9];
+		td[10] = ThrusterDemand[10];
+		td[11] = ThrusterDemand[11];
+		td[12] = ThrusterDemand[12];
+		td[13] = ThrusterDemand[13];
+		td[14] = ThrusterDemand[14];
+		td[15] = ThrusterDemand[15];
+		td[16] = ThrusterDemand[16];	
+	}
+
+	// Pitch
+	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
+		if (sat->eca.rhc_y < 28673) {  // MINUS
+			td[2] = true;
+			td[4] = true;
+		}
+		if (sat->eca.rhc_y > 36863) { // PLUS
+			td[1] = true;
+			td[3] = true;
+		}
+	} else {
+		td[1] = ThrusterDemand[1];
+		td[2] = ThrusterDemand[2];
+		td[3] = ThrusterDemand[3];
+		td[4] = ThrusterDemand[4];
+	}
+
+	// Yaw
+	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
+		if (sat->eca.rhc_z < 28673) {  // MINUS
+			td[6] = true;
+			td[8] = true;
+		}
+		if (sat->eca.rhc_z > 36863) { // PLUS
+			td[5] = true;
+			td[7] = true;
+		}
+	} else {
+		td[5] = ThrusterDemand[5];
+		td[6] = ThrusterDemand[6];
+		td[7] = ThrusterDemand[7];
+		td[8] = ThrusterDemand[8];
+	}
+
+
+	// Ensure AC logic power, see Systems Handbook 8.2 
+	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
+		td[1] = false;
+		td[2] = false;
+		td[4] = false;
+		td[6] = false;
+		td[8] = false;
+		td[9] = false;
+		td[12] = false;
+		td[14] = false;
+	}
+	if (!sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
+		td[3] = false;
+		td[5] = false;
+		td[7] = false;
+		td[10] = false;
+		td[11] = false;
+		td[13] = false;
+		td[15] = false;
+		td[16] = false;
 	}
 
 	int thruster = 1;
@@ -1900,30 +1970,30 @@ void RJEC::TimeStep(double simdt){
 		} 
 		if (thruster > 4 && thruster < 9 && DirectYawActive) {
 			thruster++; 
-			continue; 
+			continue; // Skip entirely
 		} 
 		if (thruster > 8 && DirectRollActive) {
 			thruster++; 
-			continue; 
+			continue; // Skip entirely
 		} 
 		// THRUSTER PROCESSING
 		switch(thruster) {
-			case 1:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_C, 3,  0, &sat->PitchC3Switch,  thruster_lockout); break;
-			case 2:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_A, 4,  2, &sat->PitchA4Switch,  thruster_lockout); break;
-			case 3:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_A, 3,  1, &sat->PitchA3Switch,  thruster_lockout); break;
-			case 4:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_C, 4,  3, &sat->PitchC4Switch,  thruster_lockout); break;
-			case 5:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 3,  5, &sat->YawD3Switch,    thruster_lockout); break;
-			case 6:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_B, 4,  6, &sat->YawB4Switch,    thruster_lockout); break;
-			case 7:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 3,  4, &sat->YawB3Switch,    thruster_lockout); break;
-			case 8:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_D, 4,  7, &sat->YawD4Switch,    thruster_lockout); break;
-			case 9:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 1,  8, &sat->BdRollB1Switch, thruster_lockout); break;
-			case 10: SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 2, 10, &sat->BdRollD2Switch, thruster_lockout);	break;
-			case 11: SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 1,  9, &sat->BdRollD1Switch, thruster_lockout);	break;
-			case 12: SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 2, 11, &sat->BdRollB2Switch, thruster_lockout);	break;
-			case 13: SetRCSState(thruster, false,            RCS_SM_QUAD_A, 1, -1, &sat->AcRollA1Switch, thruster_lockout);	break;
-			case 14: SetRCSState(thruster, false,            RCS_SM_QUAD_A, 2, -1, &sat->AcRollA2Switch, thruster_lockout);	break;
-			case 15: SetRCSState(thruster, false,            RCS_SM_QUAD_C, 1, -1, &sat->AcRollC1Switch, thruster_lockout);	break;
-			case 16: SetRCSState(thruster, false,            RCS_SM_QUAD_C, 2, -1, &sat->AcRollC2Switch, thruster_lockout);	break;
+			case 1:	 SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_C, 3,  0, &sat->PitchC3Switch,  thruster_lockout); break;
+			case 2:	 SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_A, 4,  2, &sat->PitchA4Switch,  thruster_lockout); break;
+			case 3:	 SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_A, 3,  1, &sat->PitchA3Switch,  thruster_lockout); break;
+			case 4:	 SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_C, 4,  3, &sat->PitchC4Switch,  thruster_lockout); break;
+			case 5:	 SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_D, 3,  5, &sat->YawD3Switch,    thruster_lockout); break;
+			case 6:	 SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_B, 4,  6, &sat->YawB4Switch,    thruster_lockout); break;
+			case 7:	 SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_B, 3,  4, &sat->YawB3Switch,    thruster_lockout); break;
+			case 8:	 SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_D, 4,  7, &sat->YawD4Switch,    thruster_lockout); break;
+			case 9:	 SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_B, 1,  8, &sat->BdRollB1Switch, thruster_lockout); break;
+			case 10: SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_D, 2, 10, &sat->BdRollD2Switch, thruster_lockout);	break;
+			case 11: SetRCSState(thruster, td[thruster], CMTransferMotor2, RCS_SM_QUAD_D, 1,  9, &sat->BdRollD1Switch, thruster_lockout);	break;
+			case 12: SetRCSState(thruster, td[thruster], CMTransferMotor1, RCS_SM_QUAD_B, 2, 11, &sat->BdRollB2Switch, thruster_lockout);	break;
+			case 13: SetRCSState(thruster, td[thruster], false,            RCS_SM_QUAD_A, 1, -1, &sat->AcRollA1Switch, thruster_lockout);	break;
+			case 14: SetRCSState(thruster, td[thruster], false,            RCS_SM_QUAD_A, 2, -1, &sat->AcRollA2Switch, thruster_lockout);	break;
+			case 15: SetRCSState(thruster, td[thruster], false,            RCS_SM_QUAD_C, 1, -1, &sat->AcRollC1Switch, thruster_lockout);	break;
+			case 16: SetRCSState(thruster, td[thruster], false,            RCS_SM_QUAD_C, 2, -1, &sat->AcRollC2Switch, thruster_lockout);	break;
 		}
 		thruster++;
 	}		
@@ -2383,23 +2453,11 @@ void ECA::TimeStep(double simdt) {
 		//
 		// ROTATION
 		//
+
+		// Roll
 		switch(sat->ManualAttRollSwitch.GetState()){
-			case THREEPOSSWITCH_UP:      // ACCEL CMD
-				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if (rhc_x < 28673) {  // MINUS
-					sat->rjec.SetThruster(10,1);
-					sat->rjec.SetThruster(12,1);
-					sat->rjec.SetThruster(14,1);
-					sat->rjec.SetThruster(16,1);
-					accel_roll_trigger=1; accel_roll_flag=-1;
-				}
-				if (rhc_x > 36863) { // PLUS
-					sat->rjec.SetThruster(9,1);
-					sat->rjec.SetThruster(11,1);
-					sat->rjec.SetThruster(13,1);
-					sat->rjec.SetThruster(15,1);
-					accel_roll_trigger=1; accel_roll_flag=1;
-				}
+			case THREEPOSSWITCH_UP:
+				// ACCEL CMD is handled in RJEC
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
@@ -2459,6 +2517,7 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
+				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
 				if (rhc_x < 28673) {  // MINUS
 					if(!mnimp_roll_trigger){
 						sat->rjec.SetThruster(10,1);
@@ -2477,22 +2536,13 @@ void ECA::TimeStep(double simdt) {
 					}
 					mnimp_roll_trigger=1; mnimp_roll_flag=1;
 				}
-				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
 				break;
 		}
+
+		// Pitch
 		switch(sat->ManualAttPitchSwitch.GetState()){
-			case THREEPOSSWITCH_UP:      // ACCEL CMD
-				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if (rhc_y < 28673) {  // MINUS
-					sat->rjec.SetThruster(2,1);
-					sat->rjec.SetThruster(4,1);
-					accel_pitch_trigger=1; accel_pitch_flag=-1;
-				}
-				if (rhc_y > 36863) { // PLUS
-					sat->rjec.SetThruster(1,1);
-					sat->rjec.SetThruster(3,1);
-					accel_pitch_trigger=1; accel_pitch_flag=1;
-				}
+			case THREEPOSSWITCH_UP:
+				// ACCEL CMD is handled in RJEC
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
@@ -2536,6 +2586,7 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
+				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
 				if (rhc_y < 28673) {  // MINUS
 					if(!mnimp_pitch_trigger){
 						sat->rjec.SetThruster(2,1);
@@ -2550,22 +2601,13 @@ void ECA::TimeStep(double simdt) {
 					}
 					mnimp_pitch_trigger=1; mnimp_pitch_flag=1;
 				}
-				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
 				break;
 		}
+
+		// Yaw
 		switch(sat->ManualAttYawSwitch.GetState()){
-			case THREEPOSSWITCH_UP:      // ACCEL CMD
-				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if (rhc_z < 28673) {  // MINUS
-					sat->rjec.SetThruster(6,1);
-					sat->rjec.SetThruster(8,1);
-					accel_yaw_trigger=1; accel_yaw_flag=-1;
-				}
-				if (rhc_z > 36863) { // PLUS
-					sat->rjec.SetThruster(5,1);
-					sat->rjec.SetThruster(7,1);
-					accel_yaw_trigger=1; accel_yaw_flag=1;
-				}
+			case THREEPOSSWITCH_UP:
+				// ACCEL CMD is handled in RJEC
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
