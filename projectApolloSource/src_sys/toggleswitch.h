@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2012/01/14 22:21:57  tschachim
+  *	Bugfixes, flash handling, flashing for handcontroller
+  *	
   *	Revision 1.9  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -1520,7 +1523,7 @@ public:
 	/// \param n String for panel item name.
 	/// \return Item if found, NULL if not.
 	///
-	PanelSwitchItem *GetItemByName(char *n);
+	PanelSwitchItem *GetItemByName(const char *n);
 
 protected:
 	PanelSwitchItem *SwitchList;
@@ -1570,12 +1573,12 @@ public:
 	/// \param flash True for flashing, false for not.
 	/// \return True if we found the item, false if not.
 	///
-	bool SetFlashing(char *n, bool flash);
+	bool SetFlashing(const char *n, bool flash);
 
-	int GetState(char *n);
-	bool SetState(char *n, int value, bool guard = false, bool hold = false);
-	bool GetFailedState(char *n);
-	bool GetFlashing(char *n);
+	int GetState(const char *n);
+	bool SetState(const char *n, int value, bool guard = false, bool hold = false);
+	bool GetFailedState(const char *n);
+	bool GetFlashing(const char *n);
 
 protected:
 	VESSEL *vessel;

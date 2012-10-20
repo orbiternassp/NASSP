@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2012/01/14 22:21:57  tschachim
+  *	Bugfixes, flash handling, flashing for handcontroller
+  *	
   *	Revision 1.13  2010/07/16 17:14:43  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -1395,7 +1398,7 @@ void SwitchRow::AddSwitch(PanelSwitchItem *s)
 		s->WireTo(RowPower);
 }
 
-PanelSwitchItem *SwitchRow::GetItemByName(char *n)
+PanelSwitchItem *SwitchRow::GetItemByName(const char *n)
 
 {
 	if (!n)
@@ -1489,7 +1492,7 @@ bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 	return false;
 }
 
-bool PanelSwitches::SetFlashing(char *n, bool flash)
+bool PanelSwitches::SetFlashing(const char *n, bool flash)
 
 {
 	PanelSwitchItem *p;
@@ -1509,7 +1512,7 @@ bool PanelSwitches::SetFlashing(char *n, bool flash)
 	return false;
 }
 
-bool PanelSwitches::GetFlashing(char *n) {
+bool PanelSwitches::GetFlashing(const char *n) {
 
 	PanelSwitchItem *p;
 	SwitchRow *row = RowList;
@@ -1524,7 +1527,7 @@ bool PanelSwitches::GetFlashing(char *n) {
 	return false;
 }
 
-int PanelSwitches::GetState(char *n)
+int PanelSwitches::GetState(const char *n)
 
 {
 	PanelSwitchItem *p;
@@ -1543,7 +1546,7 @@ int PanelSwitches::GetState(char *n)
 	return -1;
 }
 
-bool PanelSwitches::GetFailedState(char *n)
+bool PanelSwitches::GetFailedState(const char *n)
 
 {
 	PanelSwitchItem *p;
@@ -1562,7 +1565,7 @@ bool PanelSwitches::GetFailedState(char *n)
 	return false;
 }
 
-bool PanelSwitches::SetState(char *n, int value, bool guard, bool hold)
+bool PanelSwitches::SetState(const char *n, int value, bool guard, bool hold)
 
 {
 	PanelSwitchItem *p;
@@ -3941,6 +3944,8 @@ bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
 
 //
 // CMC Optics Mode Switch
+//
+
 bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 
 {
