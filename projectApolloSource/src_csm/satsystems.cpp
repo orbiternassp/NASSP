@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2012/01/14 22:38:58  tschachim
+  *	GN CWS lights
+  *	Bugfix sec glycol loop during prelaunch
+  *	
   *	Revision 1.12  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -1619,25 +1623,24 @@ void Saturn::JoystickTimestep()
 		// stop at 11. So from 36863 to 62798, we trigger plus, and from 28673 to 2738 we trigger minus.
 		// The last degree of travel is reserved for the DIRECT control switches.
 		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
-			if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-				if (rhc_x_pos < 28673) {
-					val31.Bits.MinusRollManualRotation = 1;
-				}					
-				if (rhc_y_pos < 28673) {
-					val31.Bits.MinusPitchManualRotation = 1;
-				}
-				if (rhc_x_pos > 36863) {
-					val31.Bits.PlusRollManualRotation = 1;
-				}
-				if (rhc_y_pos > 36863) {
-					val31.Bits.PlusPitchManualRotation = 1;
-				}
-				if (rhc_rot_pos < 28673) {
-					val31.Bits.MinusYawManualRotation = 1;
-				}
-				if (rhc_rot_pos > 36863) {
-					val31.Bits.PlusYawManualRotation = 1;
-				}
+			// CMC
+			if (rhc_x_pos < 28673) {
+				val31.Bits.MinusRollManualRotation = 1;
+			}					
+			if (rhc_y_pos < 28673) {
+				val31.Bits.MinusPitchManualRotation = 1;
+			}
+			if (rhc_x_pos > 36863) {
+				val31.Bits.PlusRollManualRotation = 1;
+			}
+			if (rhc_y_pos > 36863) {
+				val31.Bits.PlusPitchManualRotation = 1;
+			}
+			if (rhc_rot_pos < 28673) {
+				val31.Bits.MinusYawManualRotation = 1;
+			}
+			if (rhc_rot_pos > 36863) {
+				val31.Bits.PlusYawManualRotation = 1;
 			}
 		}
 
