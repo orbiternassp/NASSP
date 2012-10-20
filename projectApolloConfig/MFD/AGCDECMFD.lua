@@ -29,7 +29,8 @@ p22.stage = 0
 
 -- Connect to vessel
 v = {}
-v = vessel.get_interface(vesselname)
+-- v = vessel.get_interface(vesselname)
+v = vessel.get_focusinterface()
 
 -- Frontend menu list
 page = 1
@@ -83,7 +84,7 @@ for rindex, ki, be in pairs(Rate) do
 end
 
 function load_errors()
-	for linesx in io.lines("d:/Orbiter2010/Config/MFD/agcerrors.csv") do
+	for linesx in io.lines("Config/MFD/agcerrors.csv") do
 		for v1, z1 in string.gmatch(linesx, "([0-9]+);(.+);") do
 			errors[tostring(v1)] = z1
 		end
@@ -91,7 +92,7 @@ function load_errors()
 end
 
 function load_dsky()
-	for linesx in io.lines("d:/Orbiter2010/Config/MFD/dsky.csv") do
+	for linesx in io.lines("Config/MFD/dsky.csv") do
 		for v, z1, z2, z3, z4, z5, z6, z7 in string.gmatch(linesx, "([0-9]+);(.*);(.+);(.*);(.*);(.*);(.*);(.*)") do
 			dsky[tostring(v)] = {}
 			dsky[tostring(v)]["Description"] = z1
@@ -279,7 +280,7 @@ function update2(skp)
 	skp:text(cw*10,ch*17.5,"PROGRAM STATUS",#"PROGRAM STATUS")
 
 	FlashMask = 0x20
-	OutChWord = bit.band(v:getchannel(tonumber("11",8)), 0x7fff)
+	OutChWord = bit.band(v:get_agcchannel(tonumber("11",8)), 0x7fff)
     Flash = bit.rshift(bit.band(OutChWord, FlashMask), 5)
 	skp:text(cw*2,ch*5,"VERB",#"VERB")
 	skp:text(cw*8,ch*5,"NOUN",#"NOUN")
@@ -389,7 +390,7 @@ function update3(skp)
 	-- skp:text(cw*10,ch*17.5,"PROGRAM STATUS",#"PROGRAM STATUS")
 
 	FlashMask = 0x20
-	OutChWord = bit.band(v:getchannel(tonumber("11",8)), 0x7fff)
+	OutChWord = bit.band(v:get_agcchannel(tonumber("11",8)), 0x7fff)
     Flash = bit.rshift(bit.band(OutChWord, FlashMask), 5)
 	skp:text(cw*2,ch*5,"VERB",#"VERB")
 	skp:text(cw*8,ch*5,"NOUN",#"NOUN")
@@ -543,7 +544,7 @@ function debout (str)
 end
 
 function readmem (addr)
-	return v:geterasable(math.modf(addr/256), bit.band(addr,0xff))
+	return v:get_agcerasable(math.modf(addr/256), bit.band(addr,0xff))
 end
 
 
