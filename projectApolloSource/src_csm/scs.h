@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/01/14 22:50:41  tschachim
+  *	Save EMS scroll, Bugfix entry scroll and rsi roll
+  *	
   *	Revision 1.7  2010/02/05 17:31:46  tschachim
   *	Added ORDEAL.
   *	
@@ -352,7 +355,7 @@ protected:
 	Saturn *sat;
 	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
 
-	void SetRCSState(int thruster, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout);
+	void SetRCSState(int thruster, bool td, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout);
 	bool IsThrusterPowered(ThreePosSwitch *s);
 };
 
@@ -371,11 +374,11 @@ public:
 	long rhc_x,rhc_y,rhc_z;											// RHC position
 	long rhc_ac_x,rhc_ac_y,rhc_ac_z;								// RHC AC powered position
 	long thc_x,thc_y,thc_z;											// THC position
-	int accel_roll_trigger;                                         // Joystick triggered roll thrust in ACCEL CMD mode
+	int accel_roll_trigger;                                         // Joystick triggered roll thrust in RATE CMD mode
 	int mnimp_roll_trigger;                                         // Joystick triggered roll thrust in MIN IMP mode
-	int accel_pitch_trigger;                                        // Joystick triggered pitch thrust in ACCEL CMD mode
+	int accel_pitch_trigger;                                        // Joystick triggered pitch thrust in RATE CMD mode
 	int mnimp_pitch_trigger;                                        // Joystick triggered pitch thrust in MIN IMP mode
-	int accel_yaw_trigger;                                          // Joystick triggered yaw thrust in ACCEL CMD mode
+	int accel_yaw_trigger;                                          // Joystick triggered yaw thrust in RATE CMD mode
 	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
 	int trans_x_trigger;                                            // Translation triggers
 	int trans_y_trigger;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2012/05/09 21:28:24  tschachim
+  *	16:9 panels
+  *	
   *	Revision 1.19  2012/01/14 22:45:13  tschachim
   *	GN CWS lights, CM Optics cover
   *	
@@ -5795,6 +5798,7 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 2);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
+	LVGuidanceSwitch.SetCallback(new PanelSwitchCallback<CSMcomputer>(&agc, &CSMcomputer::LVGuidanceSwitchToggled));
 	LVGuidanceSwitch.SetGuardResetsState(false);
 
 	if (!SkylabCM) {

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2012/09/13 18:32:11  schneci
+  *	SCHNECI create the LUA API environment
+  *	
   *	Revision 1.21  2012/05/09 21:28:24  tschachim
   *	16:9 panels
   *	
@@ -1200,18 +1203,6 @@ public:
 	/// \param scn Scenario file to save to.
 	///
 	void clbkSaveState (FILEHANDLE scn);
-	
-	//SCHNECI
-	// LUA functions
-	int clbkGeneric (int msgid, int prm, void *context);
-	int Lua_InitInterpreter (void *context);
-	int Lua_InitInstance (void *context);
-	int GetAgc(int page, int addr);
-	int GetCh(int ch);
-	void SetAgc(int page, int addr, int value);
-	int UplinkStatus();
-	void SetProg(int stat);
-	void Saturn::SwitchOptics(int pos);
 
 	///
 	/// \brief Orbiter timestep function.
@@ -1543,6 +1534,23 @@ public:
 	/// \brief TLI event management
 	///
 	void TLI_Begun();
+
+	//
+	// LUA Interface
+	//
+	int clbkGeneric(int msgid, int prm, void *context);
+	int Lua_InitInterpreter(void *context);
+	int Lua_InitInstance(void *context);
+
+	int Lua_GetPanelSwitch(const char *name);
+	void Lua_SetPanelSwitch(const char *name, int state);
+	bool Lua_GetPanelSwitchFlashing(const char *name);
+	void Lua_SetPanelSwitchFlashing(const char *name, bool flash);
+	int Lua_GetAGCErasable(int page, int addr);
+	int Lua_GetAGCChannel(int ch);
+	void Lua_SetAGCErasable(int page, int addr, int value);
+	int Lua_GetAGCUplinkStatus();
+
 
 protected:
 
