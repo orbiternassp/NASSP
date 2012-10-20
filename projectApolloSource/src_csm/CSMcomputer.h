@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2012/01/14 22:36:18  tschachim
+  *	GN CWS lights, CM Optics cover
+  *	
   *	Revision 1.3  2010/01/04 12:31:15  tschachim
   *	Improved Saturn IB launch autopilot, bugfixes
   *	
@@ -437,6 +440,8 @@ public:
 	void SetOutputChannel(int channel, unsigned int val);
 
 	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+
+	void LVGuidanceSwitchToggled(PanelSwitchItem *s);
 
 protected:
 

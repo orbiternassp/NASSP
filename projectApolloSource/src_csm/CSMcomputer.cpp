@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2012/09/05 21:17:58  tschachim
+  *	 max trunnion angle comments
+  *	
   *	Revision 1.9  2012/08/10 18:55:19  tschachim
   *	Optics trunnion limitation
   *	http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
@@ -4463,6 +4466,20 @@ void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 		}
 	}
 }
+
+void CSMcomputer::LVGuidanceSwitchToggled(PanelSwitchItem *s) {
+	ChannelValue30 val30;
+
+	val30.Value = GetInputChannel(030); // Get current data
+
+	if (s->GetState() == TOGGLESWITCH_UP) {
+		val30.Bits.SCControlOfSaturn = 0;
+	} else {
+		val30.Bits.SCControlOfSaturn = 1;
+	}
+	SetInputChannel(030, val30.Value);
+}
+
 
 
 //
