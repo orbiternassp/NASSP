@@ -43,12 +43,14 @@ projectApolloSource -d Orbitersdk orbiterSource &util.projectApolloSource
 
 projectApolloScenarios -d Scenarios projectApolloScenarios
 
+projectApolloScript -d Script projectApolloScript
+
 projectApolloDoc -d Doc projectApolloDoc
 
 projectApolloHtml -d Html projectApolloHtml
 
 projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound \
                  projectApolloSource projectApolloScenarios projectApolloDoc \
-                 projectApolloHtml
-				 
+                 projectApolloHtml projectApolloScript
+
 telemetryClient telemetryClient
