@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2012/10/20 19:02:13  tschachim
+  *	Lua changes
+  *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
+  *	
   *	Revision 1.26  2012/09/19 09:57:25  schneci
   *	SCHNECI deleted the calling of  init.lua from Lua_InitInterpreter method. It was only test purpose.
   *	
@@ -3805,10 +3809,13 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		// Do DSKY stuff
 		if(down){
 			switch(key){
+				case OAPI_KEY_DECIMAL:
+					dsky.ClearPressed();
+					break;
 				case OAPI_KEY_PRIOR:
 					dsky.ResetPressed();
 					break;
-				case OAPI_KEY_NEXT:
+				case OAPI_KEY_HOME:
 					dsky.KeyRel();
 					break;
 				case OAPI_KEY_NUMPADENTER:
@@ -3826,7 +3833,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				case OAPI_KEY_SUBTRACT:
 					dsky.MinusPressed();
 					break;
-				case OAPI_KEY_DECIMAL:
+				case OAPI_KEY_END:
 					dsky.ProgPressed();
 					break;
 				case OAPI_KEY_NUMPAD1:
@@ -3881,7 +3888,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}else{
 			// KEY UP
 			switch(key){
-				case OAPI_KEY_DECIMAL:
+				case OAPI_KEY_END:
 					dsky.ProgReleased();
 					break;
 				case OAPI_KEY_W: // Minimum impulse controller, pitch down
@@ -4377,7 +4384,7 @@ void Saturn::AddRCS_S4B()
 	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
 	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
 	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
-
+		
 	AddExhaust (th_att_rot[6], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[7], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_att_rot[8], 0.6, 0.078, SIVBRCSTex);

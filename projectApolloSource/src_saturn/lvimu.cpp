@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.5  2008/04/11 11:49:46  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -269,28 +272,45 @@ void LVIMU::Timestep(double simt)
 			// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
 
 			// pulse PIPAs			
-			pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
-			PulsePIPA(LVRegPIPAX, (int) pulses);
-			RemainingPIPA.X = pulses - (int) pulses;
+			//pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
+			//PulsePIPA(LVRegPIPAX, (int) pulses);
+			//RemainingPIPA.X = pulses - (int) pulses;
 			
-			pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
-			PulsePIPA(LVRegPIPAY, (int) pulses);
-			RemainingPIPA.Y = pulses - (int) pulses;
+			//pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
+			//PulsePIPA(LVRegPIPAY, (int) pulses);
+			//RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
-			PulsePIPA(LVRegPIPAZ, (int) pulses);
-			RemainingPIPA.Z = pulses - (int) pulses;			
+			//pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
+			//PulsePIPA(LVRegPIPAZ, (int) pulses);
+			//RemainingPIPA.Z = pulses - (int) pulses;			
+			pulses = (accel.x * deltaTime);
+			PulsePIPA(LVRegPIPAX, pulses);
+						
+			pulses = (accel.y * deltaTime);
+			PulsePIPA(LVRegPIPAY, pulses);
+			
+
+			pulses = (accel.z * deltaTime);
+			PulsePIPA(LVRegPIPAZ, pulses);
+			
 		}
 		LastTime = simt;
 	}	
 }
 
-void LVIMU::PulsePIPA(int RegPIPA, int pulses) 
+void LVIMU::PulsePIPA(int RegPIPA, double pulses) 
 
 {
-	CDURegisters[RegPIPA] = pulses;
+	CDURegisters[RegPIPA] += pulses;
 }
 
+void LVIMU::zeropipacounters()
+
+{
+	CDURegisters[LVRegPIPAX]=0;
+	CDURegisters[LVRegPIPAY]=0;
+	CDURegisters[LVRegPIPAZ]=0;
+}
 void LVIMU::DriveGimbals(double x, double y, double z) 
 
 {

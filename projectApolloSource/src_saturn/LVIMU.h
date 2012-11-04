@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.4  2007/10/18 00:23:17  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -71,11 +74,11 @@ public:
 	bool IsCaged();
 	bool IsPowered();
 	void SetCaged(bool val);
-
+	void zeropipacounters();
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
-	int CDURegisters[6]; // CDU output registers
+	double CDURegisters[6]; // CDU output registers
 
 protected:
 	
@@ -87,7 +90,7 @@ protected:
 	void DriveGimbalY(double angle);
 	void DriveGimbalZ(double angle);
 	void DriveGimbal(int index, int RegCDU, double angle);
-	void PulsePIPA(int RegPIPA, int pulses);
+	void PulsePIPA(int RegPIPA, double pulses);
 	void SetOrbiterAttitudeReference();
 	void ZeroIMUCDUs();
 
@@ -151,7 +154,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	} Orbiter;
 
 	VECTOR3 LastWeightAcceleration;
-
+	VECTOR3 LastGlobalVel;
 	VECTOR3 Velocity;
 
 	double LastTime;	// in seconds
