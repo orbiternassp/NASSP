@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2012/11/04 13:33:13  meik84
+  *	LVDC++
+  *	
   *	Revision 1.4  2012/03/24 19:14:26  tschachim
   *	Moved LVDC++ to PostStep
   *	
@@ -437,8 +440,7 @@ protected:
 	double eps_4;									// Time for cutoff logic entry
 	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double mu;										// Product of G and Earth's mass
-	double sin_phi_L;								// Geodetic latitude of launch site: sin
-	double cos_phi_L;								// Geodetic latitude of launch site: cos
+	double phi_L;								// Geodetic latitude of launch site: cos
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double dotM_3;									// Mass flowrate of S4B during first burn
