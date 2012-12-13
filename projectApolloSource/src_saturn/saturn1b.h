@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.3  2010/02/22 14:23:31  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -113,13 +116,15 @@
   *	Initial version
   *	
   **************************************************************************/
-
+#pragma once
+#include "LVDC.h"
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
 ///
-class Saturn1b: public Saturn {
 
+class Saturn1b: public Saturn {
+friend class LVDC1B;
 public:
 	///
 	/// \brief Standard constructor with the usual Orbiter parameters.
@@ -162,7 +167,7 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-
+	LVDC1B lvdc;
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
@@ -194,6 +199,7 @@ protected:
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
 };
+
 
 const VECTOR3 OFS_STAGE1 = { 0, 0, -14};
 const VECTOR3 OFS_STAGE12 = { 0, 0, -9.935};

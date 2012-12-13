@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2012/11/04 13:33:13  meik84
+  *	LVDC++
+  *	
   *	Revision 1.27  2012/10/20 19:02:13  tschachim
   *	Lua changes
   *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
@@ -2062,7 +2065,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu.SaveState(scn);
-		lvimu.SaveState(scn); // Save this here also
 	}
 
 	gdc.SaveState(scn);
@@ -2778,9 +2780,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 		imu.LoadState(scn);
-	}
-	else if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-		lvimu.LoadState(scn);
 	}
 	else if (!strnicmp(line, GDC_START_STRING, sizeof(GDC_START_STRING))) {
 		gdc.LoadState(scn);

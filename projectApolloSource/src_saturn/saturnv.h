@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2012/11/22 18:08:40  meik84
+  *	LVDC++ Various improvements & bug-fixes
+  *	
   *	Revision 1.5  2012/11/04 13:33:13  meik84
   *	LVDC++
   *	
@@ -323,7 +326,8 @@ protected:
 	// Right now it only affects the Saturn V, so it's here. Later as it improves it can be applied to the S1B
 	// and moved to somewhere more appropriate.
 	// If it's here, I don't have to wait for everything saturn-derived to rebuild if I modify it.
-
+	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
+	LVRG lvrg;										// LV rate gyro package
 	FILE* lvlog;									// LV Log file
 
 	int LVDC_Timebase;								// Time Base
