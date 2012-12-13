@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2012/11/22 18:08:40  meik84
+  *	LVDC++ Various improvements & bug-fixes
+  *	
   *	Revision 1.10  2012/11/04 13:33:13  meik84
   *	LVDC++
   *	
@@ -2101,9 +2104,9 @@ void SaturnV::lvdc_init(){
 	gx[0] = 123.1935; gx[1] = -55.06485; gx[2] = -35.26208; gx[3] = 26.01324;
 	gx[4] = -1.47591; gx[5] = 0;         gx[6] = 0;			
 	MRS = false;							// MR Shift
-	dotM_1 = 1219.3;						// Mass flowrate of S2 from approximately LET jettison to second MRS
-	dotM_2 = 961.808;						// Mass flowrate of S2 after second MRS
-	dotM_3 = 248.882;						// Mass flowrate of S4B during first burn
+	dotM_1 = 1219.299283;						// Mass flowrate of S2 from approximately LET jettison to second MRS
+	dotM_2 = 961.8088872;						// Mass flowrate of S2 after second MRS
+	dotM_3 = 222.4339038;					// Mass flowrate of S4B during first burn
 	ROT = false;
 	dV_B = 0.02; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	ROV = 1.48119724870249;//0.75-17
@@ -2126,18 +2129,18 @@ void SaturnV::lvdc_init(){
 	t_B3 = 0;								// Time from second S2 MRS signal
 	//dt: not set; dependend on cycle time
 	dT_LIM = 90;							// Limit to dT_4;
-	V_ex1 = 4152.39;// V_ex1 = 4175.4524;
-	V_ex2 = 4172.35;//V_ex2 = 4248.2287;
-	V_ex3 = 4130;//V_ex3 = 4198.1678;
+	V_ex1 = 4148.668555;
+	V_ex2 = 4158.852692;
+	V_ex3 = 4130.010682;
 	V_S2T = 7007.18;
 	V_TC = 300;
 	eps_1 = 0;								// IGM range angle calculation selection
 	eps_2 = 32;								// Time to begin chi bar steering
 	eps_3 = 10000;							// Terminal condition freeze time
 	eps_4 = 3;								// Time to enable HSL loop & chi freeze
-	mu =398600420000000;					// Product of G and Earth's mass
-	tau2 = 308.95;//tau2 = 722.67;				// Time to consume all fuel between MRS and S2 Cutoff
-	tau3 = 749.7;//tau3 = 769.4;			// Time to consume all fuel of SIVB
+	mu = 398600420000000;					// Product of G and Earth's mass
+	tau2 = 308.95;							// Time to consume all fuel between MRS and S2 Cutoff
+	tau3 = 748.7;							// Time to consume all fuel of SIVB
 	tau3N = tau3;							// artificial tau3
 	//rate limits: set in pre-igm
 	alpha_1 = 0;									//orbital guidance pitch
@@ -2267,7 +2270,7 @@ void SaturnV::lvdc_init(){
 	LVDC_EI_On = false;
 	S1C_Sep_Time = 0;
 	CountPIPA = false;
-	lvlog = fopen("lvlog.txt","w+");
+	lvlog = fopen("lvlog5.txt","w+");
 }
 	
 // DS20070205 LVDC++ EXECUTION
@@ -2279,8 +2282,8 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 	// Note that GenericTimestep will update MissionTime.
 
 	/* **** LVDC GUIDANCE PROGRAM **** */
-	switch(LVDC_GP_PC){
-		case 0: // LOOP WAITING FOR PTL
+	switch(LVDC_Timebase){//this is the sequential event control logic
+		case -1: // LOOP WAITING FOR PTL
 			// Lock time accel to 100x
 			if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
 
@@ -2303,16 +2306,8 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 				break;
 			}
-			// Otherwise fall into next step
-			LVDC_GP_PC = 1;
+		
 
-		case 1: // "PREPARE TO LAUNCH" INTERRUPT RECIEVED FROM GCC
-			{
-			}
-			// The IMU is STILL CAGED until GRR is released.
-			LVDC_GP_PC = 2;
-
-		case 2: // WAIT FOR GRR
 			// Engine lights on at T-00:04:10
 			if (MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
@@ -2325,10 +2320,13 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 				break;
-			}			
-			LVDC_GP_PC = 3; // Fall into next
+			}else{LVDC_Timebase = 0;
+				  LVDC_TB_ETime = 0;
+				  break;}
+			
 
-		case 3: 
+		case 0: 
+			if(LVDC_GRR == false){
 			lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
 			lvimu.DriveGimbals((Azimuth - 90)*RAD,0,0);		// Now bring to alignment 
 			lvimu.SetCaged(false);							// Release IMU
@@ -2344,11 +2342,8 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				}
 			}
 			CreateStageOne();								// Create hidden stage one, for later use in staging
-			LVDC_Timebase = 0;								// Start TB0
-			LVDC_TB_ETime = 0;
-			LVDC_GP_PC = 10;								// FALL INTO TB0
+			}
 
-		case 10: // MORE TB0
 			double thrst[3];	// Thrust Settings for 1-2-2 start (see below)
 
 			// At 10 seconds, play the countdown sound.
@@ -2429,24 +2424,22 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				}
 			}else{
 				// Get 100% thrust on all engines.
-				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",MissionTime,LVDC_TB_ETime);
 				SetThrusterGroupLevel(thg_main,1);
 				contrailLevel = 1;				
 				AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0));
 			}
 
-			if(MissionTime < 0){
-				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | p %f R_T %f Inc %f e %f ups_T %f",
-					MissionTime,LVDC_TB_ETime,
-					p,R_T,Inclination*DEG,e,ups_T); 
+			if(MissionTime >= 0){
+				TB1 = -simdt;
+				LVDC_Timebase = 1;
+				LVDC_TB_ETime = 0;
 				break;
 			}
-			LVDC_GP_PC = 15;
+			break;
 
-		case 15: // LIFTOFF TIME
+		case 1: // LIFTOFF TIME
+			if(liftoff == false){
 			liftoff = true;
-			
-			//IMUGuardedCageSwitch.SwitchTo(TOGGLESWITCH_DOWN);		// Uncage CM IMU
 			SetLiftoffLight();										// And light liftoff lamp
 			SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
 			// Start mission and event timers
@@ -2463,36 +2456,21 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				LaunchS.play(NOLOOP,255);
 				LaunchS.done();
 			}
-			
 			// Fall into TB1
-			TB1 = - simdt;
-			LVDC_Timebase = 1;
-			LVDC_TB_ETime = 0;
 			sinceLastIGM = 1.7-simdt; // Rig to pass on fall-in
-			LVDC_GP_PC = 20;		  // GO TO PRE-IGM
+			}
 
-		case 20: // PRE-IGM PROGRAM
 			// Soft-Release Pin Dragging
 			if(MissionTime < 0.5){
 			  double PinDragFactor = 1 - (MissionTime*2);
 		      AddForce(_V(0, 0, -(THRUST_FIRST_VAC * PinDragFactor)), _V(0, 0, 0));
 			}
 
-			// Below here are timed events that must not be dependent on the iteration delay.
-
-			/*
-			// ENGINE FAIL TEST:
-			if(MissionTime > 22.5 && S1C_Engine_Out == false){
-				SetThrusterResource(th_main[1], NULL); // Should stop the engine
-				S1C_Engine_Out = true;
-			}
-			*/
-
 			// S1C CECO TRIGGER:
 			// I have multiple conflicting leads as to the CECO trigger.
 			// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5
 			
-			if(LVDC_Timebase == 1 && MissionTime > 125.9){ // Apollo 11
+			if(MissionTime > 125.9){ // Apollo 11
 				SetThrusterResource(th_main[4], NULL); // Should stop the engine
 				SShutS.play(NOLOOP,235);
 				SShutS.done();
@@ -2503,12 +2481,14 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				TB2 = -simdt;
 				LVDC_Timebase = 2;
 				LVDC_TB_ETime = 0;
+				break;
 			}
-
+			break;
+		case 2:
 			// S1C OECO TRIGGER
 			// Done by low-level sensor.
 			// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
-			if (stage == LAUNCH_STAGE_ONE && LVDC_Timebase == 2 && GetFuelMass() <= 0){ // Apollo 11
+			if (GetFuelMass() <= 0){
 				// For S1C thruster calibration
 				fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
 					MissionTime,GetThrusterMax(th_main[0]),GetAltitude());
@@ -2531,9 +2511,11 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				TB3 = - simdt;
 				LVDC_Timebase = 3;
 				LVDC_TB_ETime = 0;
-			}
+				}
+			break;
+		case 3:
 			// S1C SEPARATION TRIGGER
-			if(stage == LAUNCH_STAGE_ONE && LVDC_Timebase == 3 && LVDC_TB_ETime >= 0.5){
+			if(stage == LAUNCH_STAGE_ONE  && LVDC_TB_ETime >= 0.5){
 				// Drop old stage
 				
 				SeparateStage(LAUNCH_STAGE_TWO);
@@ -2547,7 +2529,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				S2_Startup = false;
 			}
 			// S2 ENGINE STARTUP
-			if(stage == LAUNCH_STAGE_TWO && LVDC_Timebase == 3 && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
+			if(stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
 				S2_Startup = true;
 				SIISepState = true;
 				SetSIICMixtureRatio(5.5);
@@ -2555,7 +2537,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				SetThrusterGroupLevel(thg_main, ((LVDC_TB_ETime-2.4)*0.45));
 			}
 
-			if(stage == LAUNCH_STAGE_TWO && LVDC_Timebase == 3 && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
+			if(stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 				SetThrusterGroupLevel(thg_main, 1); // Full power
 				if (SII_UllageNum)
 					SetThrusterGroupLevel(thg_ull,0.0);
@@ -2565,28 +2547,22 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			}
 
 			// Drop Interstage Ring
-			if(stage == LAUNCH_STAGE_TWO && LVDC_Timebase == 3 && LVDC_TB_ETime >= 30.7 && SIISepState == true)
+			if(stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && SIISepState == true)
 			{
 				SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
 				SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 				SIISepState = false;
-				LVDC_GP_PC = 25;
 			}
 
 			// And jettison LET
-			if(stage == LAUNCH_STAGE_TWO_ISTG_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > dt_LET && LESAttached){
+			if(stage == LAUNCH_STAGE_TWO_ISTG_JET  && LVDC_TB_ETime > dt_LET && LESAttached){
 				T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
 										// will start IGM anyway.
 				JettisonLET();
-				
-			}			
-			break;
-
-		case 25: 
-			// STAGE CHANGE AND FLAG SET LOGIC
-
-			// Should happen at 289.62 for Apollo 8			
-			if(LVDC_Timebase == 3 && LVDC_TB_ETime > 284.4 && stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
+				}			
+			
+			
+			if(LVDC_TB_ETime > 284.4 && stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
 				// MR Shift
 				fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 				// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
@@ -2597,7 +2573,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			}
 
 			// After MRS, check for S2 OECO (was allowed to happen by itself)
-			if(MRS == true && LVDC_Timebase == 3){
+			if(MRS == true){
 				double oetl = GetThrusterLevel(th_main[0])+GetThrusterLevel(th_main[1])+GetThrusterLevel(th_main[2])+GetThrusterLevel(th_main[3]);
 				if(oetl == 0){
 					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
@@ -2616,9 +2592,10 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				...
 			}
 			*/
-
+			break;
+		case 4:
 			// S2 STAGE SEP
-			if(LVDC_Timebase == 4 && LVDC_TB_ETime > 0.07 && stage == LAUNCH_STAGE_TWO_ISTG_JET){
+			if(LVDC_TB_ETime > 0.07 && stage == LAUNCH_STAGE_TWO_ISTG_JET){
 				// S2ShutS.done(); No CECO on AP8
 				fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
 				SPUShiftS.done(); // Make sure it's done
@@ -2632,37 +2609,29 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				SetSIVbCMixtureRatio(5.0);
 			}
 			
-			if(LVDC_Timebase == 4 && LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && stage == LAUNCH_STAGE_SIVB){
+			if(LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && stage == LAUNCH_STAGE_SIVB){
 			SetThrusterGroupLevel(thg_main, ((LVDC_TB_ETime-4)*0.36));
 			}
-			if(LVDC_Timebase == 4 && LVDC_TB_ETime >= 8.6 && S4B_IGN == false && stage == LAUNCH_STAGE_SIVB){
+			if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && stage == LAUNCH_STAGE_SIVB){
 			SetThrusterGroupLevel(thg_main, 1.0);
 			SetThrusterGroupLevel(thg_ver, 0.0);
 			S4B_IGN=true;
 			}
-			if(LVDC_Timebase == 5){
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){LVDC_EI_On = false;}
-				if(LVDC_TB_ETime < 87 && GetThrusterLevel(th_att_lin[0]) < 1){//ullage thrust on
-				SetThrusterLevel(th_att_lin[0],1);
-				SetThrusterLevel(th_att_lin[1],1);}
-				if(LVDC_TB_ETime >= 87 &&GetThrusterLevel(th_att_lin[0]) > 0){//ullage thrust off
-				SetThrusterLevel(th_att_lin[0],0);
-				SetThrusterLevel(th_att_lin[1],0);}
+			break;
+		case 5:
+				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
+																SetStage(STAGE_ORBIT_SIVB);
+																LVDC_EI_On = false;}
+				//if(LVDC_TB_ETime < 87 && GetThrusterLevel(th_att_lin[0]) < 1){//ullage thrust on
+				//SetThrusterLevel(th_att_lin[0],1);
+				//SetThrusterLevel(th_att_lin[1],1);}
+				//if(LVDC_TB_ETime >= 87 &&GetThrusterLevel(th_att_lin[0]) > 0){//ullage thrust off
+				//SetThrusterLevel(th_att_lin[0],0);
+				//SetThrusterLevel(th_att_lin[1],0);}
 				if(LVDC_TB_ETime > 100){
 					poweredflight = false;}//powered flight nav off
-
-			}
-			
 			break;
 
-			case 30:
-			// FREEZE FRAME
-			if(lvlog != NULL){
-				fprintf(lvlog,"[%d+%f] LVDC PROGRAM CRASH\r\n",LVDC_Timebase,LVDC_TB_ETime);
-				fclose(lvlog);
-				lvlog = NULL;
-			}
-			break;
 	}
 	lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 	lvrg.Timestep(simdt);								// and RG
@@ -2799,7 +2768,6 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 		sinceLastIGM += simdt;
 		if(sinceLastIGM < 1.7){ goto minorloop;}
 		dt_c = sinceLastIGM;
-		IGMInterval = sinceLastIGM;
 		sinceLastIGM = 0;
 		IGMCycle++;				// For debugging
 		fprintf(lvlog,"[%d+%f] *** Major Loop %d ***\r\n",LVDC_Timebase,LVDC_TB_ETime,IGMCycle);
@@ -2990,7 +2958,7 @@ IGM:		if(HSL == false){		// If we are not in the high-speed loop
 						fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm,GetMass());
 					}else{
 						// This is the "ARTIFICIAL TAU" code.
-						t_B3 += IGMInterval; 
+						t_B3 += dt_c; 
 						tau2 = tau2+(T_1*(dotM_1/dotM_2));
 						fprintf(lvlog,"Art. Tau: tau2 = %f, T_1 = %f, dotM_1 = %f dotM_2 = %f \r\n",tau2,T_1,dotM_1,dotM_2);
 						fprintf(lvlog,"Diff: %f \r\n",(tau2-V_ex2/Fm));
@@ -3518,22 +3486,29 @@ minorloop://minor loop; TBD: move IGM steering angles & HSL logic here
 		TB5 = - simdt;
 		LVDC_Timebase = 5;
 		LVDC_TB_ETime = 0;
-		fprintf(lvlog,"SIVB CUTOFF! TAS = %f",TAS);
+		fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
 		};
 	
 	
-	if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD;}
+	if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD;}//yaw limits
 	if(CommandedAttitude.z > 45 * RAD){CommandedAttitude.z = 45 * RAD;}
-	if(abs((CommandedAttitude.x - PCommandedAttitude.x)/dt_c) > CommandRateLimits.x){
-		if(CommandedAttitude.x > PCommandedAttitude.x){
+	double diff;//aux variable for limit test
+	diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
+	if (diff > PI) {diff -= TWO_PI;} ;
+	if(abs(diff/dt_c) > CommandRateLimits.x){
+		if(diff > 0){
 			CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_c;}
 		else{CommandedAttitude.x = PCommandedAttitude.x - CommandRateLimits.x * dt_c;}}
-	if(abs((CommandedAttitude.y - PCommandedAttitude.y)/dt_c) > CommandRateLimits.y){
-		if(CommandedAttitude.y > PCommandedAttitude.y){
+	diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
+	if (diff > PI) {diff -= TWO_PI;} ;
+	if(abs(diff/dt_c) > CommandRateLimits.y){
+		if(diff > 0){
 			CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_c;}
 		else{CommandedAttitude.y = PCommandedAttitude.y - CommandRateLimits.y * dt_c;}}
-	if(abs((CommandedAttitude.z - PCommandedAttitude.z)/dt_c) > CommandRateLimits.z){
-		if(CommandedAttitude.z > PCommandedAttitude.z){
+	diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
+	if (diff > PI) {diff -= TWO_PI;} ;
+	if(abs(diff/dt_c) > CommandRateLimits.z){
+		if(diff > 0){
 			CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_c;}
 		else{CommandedAttitude.z = PCommandedAttitude.z - CommandRateLimits.z * dt_c;}}
 	PCommandedAttitude = CommandedAttitude;

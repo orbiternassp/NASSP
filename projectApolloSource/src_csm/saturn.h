@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2012/10/20 19:02:13  tschachim
+  *	Lua changes
+  *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
+  *	
   *	Revision 1.22  2012/09/13 18:32:11  schneci
   *	SCHNECI create the LUA API environment
   *	
@@ -388,6 +392,7 @@
 
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
+
 
 //
 // I hate nested includes, but this is much easier than adding them to all the files
@@ -1983,8 +1988,7 @@ protected:
 	// *** LVDC++ ITEMS ***
 	//
 	bool use_lvdc; // LVDC use flag
-	LVIMU lvimu;   // ST-124-M3 IMU (LV version)
-	LVRG lvrg;	   // LV rate gyro package
+	
 
 	//
 	// Ground Systems

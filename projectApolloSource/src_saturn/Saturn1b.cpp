@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2012/01/14 22:24:06  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.6  2010/08/25 17:48:42  tschachim
   *	Bugfixes Saturn autopilot.
   *	
@@ -336,7 +339,7 @@
 #include "csmcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
+
 
 #include "saturn.h"
 #include "saturn1b.h"
@@ -482,6 +485,7 @@ void Saturn1b::initSaturn1b()
 	// Default to not separating SLA panels.
 	//
 	SLAWillSeparate = false;
+	lvdc.init(this);
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -915,7 +919,9 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	//
 	// Abort handling
 	//
-
+	if (use_lvdc) {
+			// Nothing for now, the LVDC is called in PostStep
+		} else {
 	if (bAbort && MissionTime > -300 && LESAttached) {
 		SetEngineLevel(ENGINE_MAIN, 0);
 		SeparateStage(CM_STAGE);
@@ -945,31 +951,16 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		GenericTimestepStage(simt, simdt);
 		break;
 	}
-
+	}
 	LastTimestep = simt;
 }
 
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
-
-	// Run the autopilot post step to have stable dynamic data
-	switch (stage) {
-	case LAUNCH_STAGE_ONE:
-		if (autopilot) {
-			AutoPilot(MissionTime);
-		} else {
-			AttitudeLaunch1();
-		}
-		break;
-
-	case LAUNCH_STAGE_SIVB:
-		if (autopilot) {
-			AutoPilot(MissionTime);
-		} else {
-			AttitudeLaunchSIVB();
-		}
-		break;
+	if (use_lvdc) {
+			lvdc.timestep(simt, simdt);
+	
 	}
 }
 
