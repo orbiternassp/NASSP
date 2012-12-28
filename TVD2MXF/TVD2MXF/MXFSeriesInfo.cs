@@ -6,20 +6,28 @@ using System.Xml;
 namespace TVD2MXF {
   class MXFSeriesInfo {
 
-    private string id;
+    private long id;
     private string title;
 
     public Dictionary<string, MXFProgram> AdditionalTitles;
 
-    public MXFSeriesInfo(string i, string t) {
+    public MXFSeriesInfo(long i, string t) {
       id = i;
       title = t;
 
       AdditionalTitles = new Dictionary<string, MXFProgram>(StringComparer.CurrentCultureIgnoreCase);
     }
 
-    public string Id {
-      get { return "si" + id; }
+    public long Id {
+      get { 
+        return id;
+      }
+    }
+
+    public string XmlId {
+      get {
+       return "si" + id;
+      }
     }
 
     public string Title {

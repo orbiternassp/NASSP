@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using System.Data.OleDb;
 
 namespace TVD2MXF {
   class MXFChannel {
+    private static log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
     private XmlNode xmlChannel;
     private XmlNamespaceManager ns;
@@ -21,7 +23,7 @@ namespace TVD2MXF {
 
     public string Id {
       get { return xmlChannel.Attributes.GetNamedItem("id").Value; }
-    }    
+    }
 
     public string Name {
       get {
@@ -31,8 +33,28 @@ namespace TVD2MXF {
       }
     }
 
+    public void VerifyTVMovie(OleDbConnection tvmConnection) {
+      if (string.IsNullOrEmpty(this.TVMovieName)) {
+        log.Error("TVMovie channel not mapped: " + this.Name);
+      } else {
+        if (this.Name == "ORF III" || this.Name == "Nickelodeon / Comedy Central" || this.Name == "ATV2" || this.Name == "Sport1+") {
+          log.Info("TVMovie channel doesn't exist: " + this.Name);
+        } else {
+          OleDbCommand command = new OleDbCommand("Select count(*) from Sendungen where SenderKennung = '" + this.TVMovieName + "'", tvmConnection);
+          int count = (int)command.ExecuteScalar();
+          if (count == 0) {
+            log.Error("TVMovie channel doesn't have Sendungen: " + this.Name);
+          }
+        }
+      }
+    }
+
     public string TVMovieName {
       get {
+
+        // TODO TEST
+        // return string.Empty;
+
         if (IgnoreChannel(Name)) {
           return string.Empty;
         }
@@ -74,8 +96,6 @@ namespace TVD2MXF {
             return "B3";
           case "Passion":
             return "RTL Passion";
-          case "Nickelodeon / Comedy Central":
-            return "";  // passt garnicht?
           case "Sky Sport HD 1":
             return "SKY Sport HD";
           case "National Geographic Channel HD":
@@ -84,12 +104,20 @@ namespace TVD2MXF {
             return "National Geographic Wild";
           case "TNT Film":
             return "Turner Classic Movies";
-          case "SPORT1":
+          case "Sport1":
             return "DSF";
           case "n-tv":
             return "NTV";
           case "Servus TV":
             return "ServusTV";
+          case "FOX":
+            return "FOX Channel";
+          case "KiKA":
+            return "Ki.Ka";
+          case "ORF eins":
+            return "ORF 1";
+          case "tagesschau24":
+            return "EinsExtra";
         }
         return Name;
       }
@@ -100,6 +128,46 @@ namespace TVD2MXF {
         if (IgnoreChannel(Name)) {
           return string.Empty;
         }
+
+        
+        // TODO TEST
+        /*
+        if (Name == "History")
+          return Name;
+
+        return string.Empty;
+        */
+        
+        /*
+        if (Name == "TNT Film")
+          return "TNT FILM";
+
+        if (Name == "Nat Geo Wild")
+          return "NatGeo Wild";
+
+        return string.Empty;
+        */
+
+        // TODO TEST
+        /*
+        if (Name == "History" || Name == "History HD" || Name == "ZDF" || Name == "ProSieben" || Name == "Syfy" || Name == "Tele 5")
+          return Name;
+
+        if (Name == "Phoenix")
+          return "PHOENIX"; 
+
+        if (Name == "TNT Film")
+          return "TNT FILM";
+
+        if (Name == "TNT Serie")
+          return "TNT SERIE";
+
+        if (Name == "Nat Geo Wild")
+          return "NatGeo Wild";
+
+        return string.Empty;
+        */
+
 
         switch (Name) {
           case "Das Erste":
@@ -153,7 +221,7 @@ namespace TVD2MXF {
           case "Arte":
             return "arte";
           case "Nickelodeon / Comedy Central":
-            return "";  // gibts nicht?
+            return "Nickelodeon";
           case "TNT Serie":
             return "TNT SERIE";
           case "NICK Jr.":
@@ -168,16 +236,16 @@ namespace TVD2MXF {
             return "NatGeo Wild";
           case "TNT Film":
             return "TNT FILM";
-          case "SPORT1":
-            return "Sport1";
           case "Servus TV":
-            return "ServusTV";
+            return "ServusTV Deutschland";
           case "BBC Entertainment":
             return "";
           case "Euronews":
             return "";
           case "Sixx":
-            return "";
+            return "sixx";
+          case "Sat.1 Emotions":
+            return "SAT.1 emotions";
         }
         return Name;
       }
@@ -219,7 +287,6 @@ namespace TVD2MXF {
         case "3plus":
         case "Nicktoons":
         case "sportdigital":
-        case "FOX":
         case "yourfamily":
         case "Austria 9":
         case "SF1":
@@ -235,7 +302,6 @@ namespace TVD2MXF {
         case "auto motor und sport channel":
         case "HD suisse":
         case "Classica HD":
-        case "Puls 4":
         case "QVC":
         case "KidsCo":
         case "TIMM":
