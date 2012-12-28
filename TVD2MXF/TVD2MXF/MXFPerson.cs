@@ -10,15 +10,22 @@ namespace TVD2MXF {
     public int Id;
     public bool Used;
 
-    private XmlNode xmlPerson;
-    private XmlNamespaceManager ns;
+    //private XmlNode xmlPerson;
+    //private XmlNamespaceManager ns;
 
     private string uid;
     private string name;    
 
+    /*
     public MXFPerson(XmlNode p, XmlNamespaceManager n) {
       xmlPerson = p;
       ns = n;
+      Used = false;
+    }
+    */
+
+    public MXFPerson(string n) {
+      name = n;
       Used = false;
     }
 
@@ -42,19 +49,21 @@ namespace TVD2MXF {
 
     public string Name {
       get {
+        /*
         if (string.IsNullOrEmpty(name)) {
           XmlNode n = xmlPerson.SelectSingleNode("ns:n[@dflt='1']", ns);
           if (n != null) return n.InnerText;
           return string.Empty;
         } else {
+        */ 
           return name;
-        }
+        //}
       }
     }
 
     public static string CreateUid(string name) {
 
-      // TODO NOT REALLY CORRECT, remove only space between first names and surnames
+      // FIXME NOT REALLY CORRECT, remove only space between first names and surnames
       string[] npart = name.Split(' ');
       string newKey;
       if (npart.Length == 0) {

@@ -9,3 +9,5 @@ tvd.mxf.org.xml
 tvd.mxf.xml
 TVD2MXF.exe
 TVBData.xml
+*.dll
+SimMetrics.xml

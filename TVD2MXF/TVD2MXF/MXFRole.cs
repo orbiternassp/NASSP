@@ -5,15 +5,23 @@ using System.Xml;
 
 namespace TVD2MXF {
   class MXFRole {
-    private XmlNode xmlRole;
-    private XmlNamespaceManager ns;
 
+    public static readonly string TYPE_ActorRole = "ActorRole";
+    public static readonly string TYPE_WriterRole = "WriterRole";
+    public static readonly string TYPE_GuestActorRole = "GuestActorRole";
+    public static readonly string TYPE_HostRole = "HostRole";
+    public static readonly string TYPE_ProducerRole = "ProducerRole";
+    public static readonly string TYPE_DirectorRole = "DirectorRole";
+    public static readonly string TYPE_Special = "(Special)";
+  
     private MXFPerson person;
+    private string roleType;
+    private string character;
 
-    public MXFRole(MXFPerson p, XmlNode r, XmlNamespaceManager n) {
+    public MXFRole(MXFPerson p, string rt, string c) {
       person = p;
-      xmlRole = r;
-      ns = n;
+      roleType = rt;
+      character = c;
     }
 
     public MXFPerson Person {
@@ -21,19 +29,11 @@ namespace TVD2MXF {
     }
 
     public string RoleType {
-      get { return xmlRole.Attributes.GetNamedItem("rt").Value; }
-    }
-
-    public string Rank {
-      get { return xmlRole.Attributes.GetNamedItem("ord").Value; }
+      get { return roleType; }
     }
 
     public string Character {
-      get {
-        XmlNode n = xmlRole.SelectSingleNode("ns:r[@dflt='1']", ns);
-        if (n != null) return n.InnerText;
-        return string.Empty;
-      }
+      get { return character; }
     }
   }
 }

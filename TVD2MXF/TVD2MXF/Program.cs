@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Data.OleDb;
+using System.Data.SqlClient;
 
 using Microsoft.MediaCenter.Guide;
 
@@ -11,26 +12,24 @@ namespace TVD2MXF {
   class Program {
     private static log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-    public static string WorkingDir = @"C:\Program Files (x86)\TVTools\TVD2MXF";
-    //public static string WorkingDir = @"C:\Dokumente und Einstellungen\MJoachim\Eigene Dateien\TV\TVD2MXF\TVD2MXF\bin\Debug";
+    public static readonly string WorkingDir = @"C:\Program Files (x86)\TVTools\TVD2MXF";
 
     static void Main(string[] args) {
 
+      log.Info("*** START ***");
+
+      MXFData data = null;
+
+      // Media Center connection
+      MCConnection mcconnection = new MCConnection();
+
       try {
-        log.Info("*** START ***");
-
-        string feedDir = "C:\\ProgramData\\TV DIGITAL\\OnGuide\\DataFeed";
-        //string feedDir = "C:\\Dokumente und Einstellungen\\All Users\\Anwendungsdaten\\TV DIGITAL\\OnGuide\\DataFeed";
-        //string feedDir = "C:\\Dokumente und Einstellungen\\MJoachim\\Eigene Dateien\\TV\\TVD";
-        //string feedDir = "C:\\Dokumente und Einstellungen\\MJoachim\\Eigene Dateien\\TV\\TVD2MXF\\BUG";
-
         string tvmovieDb = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\tvdaten.mdb";
-        //string tvmovieDb = "C:\\Programme\\TV Movie\\TV Movie ClickFinder\\tvdaten.mdb";
-        
-        string imageDir = "C:\\ProgramData\\TV DIGITAL\\OnGuide\\DataFeed";
         string tvmovieImageDir = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\Hyperlinks";
-        string tvbrowserFile = WorkingDir + "\\TVBData.xml";
 
+        /*
+         * Check for new data?
+         * 
         // Get last read daydir
         TextReader tr = new StreamReader(WorkingDir + "\\TVD2MXF.config");
         int lastDateDir = int.Parse(tr.ReadLine());
@@ -53,25 +52,53 @@ namespace TVD2MXF {
           return;
         }
         log.Info("New data, importing...");
-
+        */
+ 
         // TVMovie database connection
-        //string connectionString = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + tvmovieDb + ";";
         string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + tvmovieDb + ";";
         OleDbConnection tvmovieConnection = new OleDbConnection(connectionString);
         tvmovieConnection.Open();
- 
-        // Start actual import
-        MCConnection connection = new MCConnection();
-        Dictionary<string, Dictionary<string, string>> backupRolesForProgram = BeforeImport(connection);        
-        
-        TVDReader reader = new TVDReader();
-        MXFData data = reader.Read(feedDir, tvmovieConnection, imageDir, tvmovieImageDir, tvbrowserFile);
 
+
+        // TODO SQL Server connection
+        // Development
+        // connectionString = @"Initial Catalog=TVTools; Data Source=WILES\SQLExpress; user=sa; MultipleActiveResultSets=True";
+        // Release
+        connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
+
+
+        SqlConnection connection = new SqlConnection(connectionString);
+        connection.Open();
+
+        // Read data
+        TVBReader tvbReader = new TVBReader();
+        data = tvbReader.Read(connection, tvmovieConnection, tvmovieImageDir, mcconnection);
+
+        // Create MXF File
         MXFWriter writer = new MXFWriter(data);
         writer.Write(WorkingDir + "\\tvd.mxf.xml");
         log.Info("MXF File written.");
-        
+
         tvmovieConnection.Close();
+        connection.Close();
+
+      } catch (Exception e) {
+        log.Error("Error while preparing data, aborting...");
+        log.Error(e.Message, e);
+        return;
+      }
+
+
+      // Stop before import
+      // return;
+
+
+      try {
+        // Start actual import
+        Dictionary<string, Dictionary<string, string>> backupRolesForProgram = BeforeImport(mcconnection);
+
+        // Wait 60s
+        System.Threading.Thread.Sleep(60 * 1000);
 
         // Call loadmxf
         Process p = new Process();
@@ -85,7 +112,7 @@ namespace TVD2MXF {
         // Wait 60s
         System.Threading.Thread.Sleep(60 * 1000);
        
-        AfterImport(connection, data, backupRolesForProgram);
+        AfterImport(mcconnection, data, backupRolesForProgram);
 
         // Wait 60s
         System.Threading.Thread.Sleep(60 * 1000);
@@ -102,23 +129,26 @@ namespace TVD2MXF {
         process.WaitForExit();
         log.Info("Reindex Search Root done.");
 
+        /*
         // Write config file
         TextWriter tw = new StreamWriter(WorkingDir + "\\TVD2MXF.config");
         tw.WriteLine(curDateDir);
         tw.Close();
-
+        */
+        
         // Delete old log files
         LogCleaner.LogCleaner.Clean();        
 
         log.Info("*** FINISHED ***");
       } catch (Exception e) {
+        log.Error("Error while importing data.");
         log.Error(e.Message, e);
       }
     }
 
     private static Dictionary<string, Dictionary<string, string>> BeforeImport(MCConnection connection) {
 
-      // TODO for debugging, is normally true
+      // For debugging, is normally true
       bool clearCharacter = true;
       //bool clearCharacter = false;
 
@@ -128,7 +158,7 @@ namespace TVD2MXF {
       foreach (Microsoft.MediaCenter.Guide.Program p in progs) {
         //log.Debug("Handling program " + p.GetUIdValue());
         if (p.GetUIdValue() != null) {
-          if (p.GetUIdValue().StartsWith("!Program!tvd2mxf_")) {
+          if (p.GetUIdValue().StartsWith("!Program!tvtools_")) {
             Dictionary<string, string> backupRole = new Dictionary<string, string>();
             List<string> check = new List<string>();
             foreach (ActorRole r in p.ActorRoles) {
@@ -150,11 +180,10 @@ namespace TVD2MXF {
                     } catch (Exception e) {
                       log.Error("ERROR " + r.Person.Name + ":" + oldChar + "|" + (oldChar == null ? "NULL" : "NN") + "|" + (oldChar == string.Empty ? "EMPTY" : "NE"));
                       log.Error(e.Message, e);
-
                       // terminate...
                       throw e;
 
-                      backupRole.Remove(r.Person.Name + "#1");
+                      // backupRole.Remove(r.Person.Name + "#1");
                     }
                   }
                 }
@@ -198,36 +227,33 @@ namespace TVD2MXF {
         if (p.GetUIdValue() != null) {
           string uid = p.GetUIdValue();
           //log.Debug("Servicing " + uid);
-          if (uid.StartsWith("!Program!tvd2mxf_")) {
-            uid = uid.Replace("!Program!tvd2mxf_", "");
-            if (data.Programs.ContainsKey(uid)) {
+          if (uid.StartsWith("!Program!tvtools_")) {
+            uid = uid.Replace("!Program!tvtools_", "");
+            long luid = long.Parse(uid);
+            if (data.Programs.ContainsKey(luid)) {
               //log.Debug("TVD program found");
-              MXFProgram mxfProg = data.Programs[uid];
-
+              MXFProgram mxfProg = data.Programs[luid];
               foreach (ActorRole r in p.ActorRoles.ToList()) {
                 foreach (MXFRole role in mxfProg.Roles) {
-                  if (role.RoleType == "1" && r.Person.Name == role.Person.Name && r.Character != role.Character && !string.IsNullOrEmpty(role.Character)) {
+                  if (role.RoleType == MXFRole.TYPE_ActorRole && r.Person.Name == role.Person.Name && r.Character != role.Character && !string.IsNullOrEmpty(role.Character)) {
                     //log.Debug("Character update: " + r.Person.Name + " (" + role.Character + ") in " + p.Title);
                     r.Character = role.Character;
                     r.Update();
                   }
                 }
               }
-
               foreach (GuestActorRole r in p.GuestActorRoles.ToList()) {
                 foreach (MXFRole role in mxfProg.Roles) {
-                  if (role.RoleType == "5" && r.Person.Name == role.Person.Name && r.Character != role.Character && !string.IsNullOrEmpty(role.Character)) {
+                  if (role.RoleType == MXFRole.TYPE_GuestActorRole && r.Person.Name == role.Person.Name && r.Character != role.Character && !string.IsNullOrEmpty(role.Character)) {
                     //log.Debug("Character update: " + r.Person.Name + " (" + role.Character + ") in " + p.Title);
                     r.Character = role.Character;
                     r.Update();
                   }
                 }
               }
-
             } else if (backupRolesForProgram.ContainsKey(p.GetUIdValue())) {
               //log.Debug("Program found in backup");
               Dictionary<string, string> backupRoles = backupRolesForProgram[p.GetUIdValue()];
-
               foreach (ActorRole r in p.ActorRoles.ToList()) {
                 if (backupRoles.ContainsKey(r.Person.Name + "#1")) {
                   string chara = backupRoles[r.Person.Name + "#1"];
@@ -238,7 +264,6 @@ namespace TVD2MXF {
                   }
                 }
               }
-
               foreach (GuestActorRole r in p.GuestActorRoles.ToList()) {
                 if (backupRoles.ContainsKey(r.Person.Name + "#5")) {
                   string chara = backupRoles[r.Person.Name + "#5"];
@@ -259,8 +284,8 @@ namespace TVD2MXF {
 
       // Check if we found all MXFPrograms
       foreach (MXFProgram prog in data.Programs.Values) {
-        if (!servicedProgs.Contains("!Program!tvd2mxf_" + prog.Id)) {
-          log.Error("Not serviced program: " + "!Program!tvd2mxf_" + prog.Id + " " + prog.Title + " " + prog.DebugInfo);
+        if (!servicedProgs.Contains("!Program!tvtools_" + prog.Id)) {
+          log.Error("Not serviced program: " + "!Program!tvtools_" + prog.Id + " " + prog.Title + " " + prog.DebugInfo);
         }
       }
       log.Info("AfterImport done.");

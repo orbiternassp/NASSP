@@ -29,7 +29,9 @@ namespace TVD2MXF {
         return this.store;
       }
     }
- 
+
+    //public void Close() {
+    
     private ObjectStore GetObjectStore(bool defaultSingleton) {
       useDefaultSingleton = defaultSingleton;
       try {
@@ -56,6 +58,7 @@ namespace TVD2MXF {
     private string GetEpgID() {
       string str = null;
       RegistryKey localMachine = Registry.LocalMachine;
+      //RegistryKey localMachine = RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, RegistryView.Registry64);
       if (localMachine == null) {
         throw new InvalidOperationException("Unable to access the registry.");
       }

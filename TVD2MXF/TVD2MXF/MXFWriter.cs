@@ -224,20 +224,11 @@ namespace TVD2MXF {
 
       foreach (MXFSeriesInfo si in data.SeriesInfos.Values) {
         xmlTextWriter.WriteStartElement("SeriesInfo");
-        xmlTextWriter.WriteAttributeString("id", si.Id);
-        xmlTextWriter.WriteAttributeString("uid", "!Series!tvd2mxf_" + si.Id);
+        xmlTextWriter.WriteAttributeString("id", si.XmlId);
+        xmlTextWriter.WriteAttributeString("uid", "!Series!tvtools_" + si.XmlId);
         xmlTextWriter.WriteAttributeString("title", si.Title);
         xmlTextWriter.WriteAttributeString("shortTitle", si.Title);
         xmlTextWriter.WriteEndElement();
-
-        if (si.AdditionalTitles.Count > 100) {
-          log.Warn(si.AdditionalTitles.Count + " additional titles of series: " + si.Id + " - " + si.Title);
-          /*
-          foreach (MXFProgram p in si.AdditionalTitles.Values) {
-            log.Warn("    " + p.Title + ", id: " + p.Id + ", " + p.DebugInfo);
-          }
-          */
-        }
       }
       xmlTextWriter.WriteEndElement(); // Series Infos
     }
@@ -272,28 +263,33 @@ namespace TVD2MXF {
       // Dummy program to fill schedule holes
       xmlTextWriter.WriteStartElement("Program");
       xmlTextWriter.WriteAttributeString("id", "0");
-      xmlTextWriter.WriteAttributeString("uid", "!Program!tvd2mxf_0");
+      xmlTextWriter.WriteAttributeString("uid", "!Program!tvtools_0");
       xmlTextWriter.WriteAttributeString("title", "(Unbekannt)");
       xmlTextWriter.WriteEndElement();
       
       foreach (MXFProgram prog in data.Programs.Values) {
         xmlTextWriter.WriteStartElement("Program");
 
-        xmlTextWriter.WriteAttributeString("id", prog.Id);
-        xmlTextWriter.WriteAttributeString("uid", "!Program!tvd2mxf_" + prog.Id);
+        xmlTextWriter.WriteAttributeString("id", prog.Id.ToString());
+        xmlTextWriter.WriteAttributeString("uid", "!Program!tvtools_" + prog.Id);
 
         xmlTextWriter.WriteAttributeString("title", prog.Title);
-        xmlTextWriter.WriteAttributeString("episodeTitle", prog.EpisodeTitle);
+        MXFEpisodeInfo ei = prog.EpisodeInfo;
+        if (ei != null)
+          xmlTextWriter.WriteAttributeString("episodeTitle",ei.Episode);
+        else
+          xmlTextWriter.WriteAttributeString("episodeTitle", "");
+
         xmlTextWriter.WriteAttributeString("description", prog.Description);
         xmlTextWriter.WriteAttributeString("shortDescription", prog.ShortDescription);
 
-        if (!prog.Year.Equals(string.Empty))
-          xmlTextWriter.WriteAttributeString("year", prog.Year);
+        if (prog.ProductionYear != null)
+          xmlTextWriter.WriteAttributeString("year", prog.ProductionYear.ToString());
 
-        if (prog.SeriesInfo != null) {
-          xmlTextWriter.WriteAttributeString("series", prog.SeriesInfo.Id);
-          xmlTextWriter.WriteAttributeString("seasonNumber", prog.SeasonNumber);          
-          xmlTextWriter.WriteAttributeString("episodeNumber", prog.EpisodeNumber);
+        if (ei != null) {
+          xmlTextWriter.WriteAttributeString("series", ei.SeriesInfo.XmlId);
+          xmlTextWriter.WriteAttributeString("seasonNumber", TVUtils.N2V(ei.SeasonNo, "0").ToString());
+          xmlTextWriter.WriteAttributeString("episodeNumber", TVUtils.N2V(ei.EpisodeNo, "0").ToString());
           xmlTextWriter.WriteAttributeString("isSeries", "true");
         }
 
@@ -305,54 +301,69 @@ namespace TVD2MXF {
           xmlTextWriter.WriteAttributeString("keywords", kw.Substring(0, kw.Length - 1));
         }
 
-        if (!prog.HalfStars.Equals(string.Empty))
+        if (!string.IsNullOrEmpty(prog.HalfStars))
           xmlTextWriter.WriteAttributeString("halfStars", prog.HalfStars);
 
         if (prog.IsMovie) {
           xmlTextWriter.WriteAttributeString("isMovie", "true");
-        } else if (prog.IsNews) {
+        } else {
+          xmlTextWriter.WriteAttributeString("isMovie", "false");
+        }
+        if (prog.IsNews) {
           xmlTextWriter.WriteAttributeString("isNews", "true");
-        } else if (prog.IsSports) {
+        } else {
+          xmlTextWriter.WriteAttributeString("isNews", "false");
+        }
+        if (prog.IsSports) {
           xmlTextWriter.WriteAttributeString("isSports", "true");
-        } else if (prog.IsKids) {
+        } else {
+          xmlTextWriter.WriteAttributeString("isSports", "false");
+        }
+        if (prog.IsKids) {
           xmlTextWriter.WriteAttributeString("isKids", "true");
+        } else {
+          xmlTextWriter.WriteAttributeString("isKids", "false");
+        }
+        if (prog.IsSpecial) {
+          xmlTextWriter.WriteAttributeString("isSpecial", "true");
+        } else {
+          xmlTextWriter.WriteAttributeString("isSpecial", "false");
         } 
-        // TODO isSpecial, use "Tagestipps" in the tips directory?  
 
         // Guide Image
         if (prog.GuideImage != null)
           xmlTextWriter.WriteAttributeString("guideImage", "i" + prog.GuideImage.Id);
 
-        // Write director and actor information
-        // Use order in document, rank is bogus
+        // Write role information
+        // Use order in list as rank
         int rank = 0;
         foreach (MXFRole role in prog.Roles) {
-          if (role.RoleType == "1") {
+          if (role.RoleType == MXFRole.TYPE_ActorRole) {
             xmlTextWriter.WriteStartElement("ActorRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
             xmlTextWriter.WriteEndElement();
-          } else if (role.RoleType == "3" || role.RoleType == "6") {
+          } else if (role.RoleType == MXFRole.TYPE_WriterRole) {
             xmlTextWriter.WriteStartElement("WriterRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
             xmlTextWriter.WriteEndElement();
-          } else if (role.RoleType == "5") {
+          } else if (role.RoleType == MXFRole.TYPE_GuestActorRole) {
             xmlTextWriter.WriteStartElement("GuestActorRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
             xmlTextWriter.WriteEndElement();
-          } else if (role.RoleType == "4") {
+          } else if (role.RoleType == MXFRole.TYPE_HostRole) {
             xmlTextWriter.WriteStartElement("HostRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
             xmlTextWriter.WriteEndElement();
-          } else if (role.RoleType == "17" || role.RoleType == "27") {
+          } else if (role.RoleType == MXFRole.TYPE_ProducerRole) {
             xmlTextWriter.WriteStartElement("ProducerRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
             xmlTextWriter.WriteEndElement();
-          } else  if (role.RoleType == "2") {
+          } else  if (role.RoleType == MXFRole.TYPE_DirectorRole) {
             xmlTextWriter.WriteStartElement("DirectorRole");
             xmlTextWriter.WriteAttributeString("person", "p" + role.Person.Id);
             xmlTextWriter.WriteAttributeString("rank", rank.ToString());
@@ -371,120 +382,46 @@ namespace TVD2MXF {
         xmlTextWriter.WriteStartElement("ScheduleEntries");
         xmlTextWriter.WriteAttributeString("service", "s" + channel.Id);
 
+        bool startTimeWritten = false;
         for (int i = 0; i < channel.ScheduleEntries.Count; i++) {
           MXFScheduleEntry entry = channel.ScheduleEntries[i];
 
           // Last entry
           if (i == channel.ScheduleEntries.Count - 1) {
-            xmlTextWriter.WriteStartElement("ScheduleEntry");
-            if (i == 0) {
-              xmlTextWriter.WriteAttributeString("startTime", entry.StartTime);
-            }
-            WriteScheduleEntryAttributes(xmlTextWriter, entry, int.Parse(entry.Duration));
+            // not writable as duration can't be calculated
 
-            // Normal entry
+          // Normal entry
           } else {
             MXFScheduleEntry nextEntry = channel.ScheduleEntries[i + 1];
-            TimeSpan duration = entry.ConvertToDateTime(nextEntry.StartTime).Subtract(entry.ConvertToDateTime(entry.StartTime));
+            TimeSpan duration = nextEntry.StartTime.ToUniversalTime().Subtract(entry.StartTime.ToUniversalTime());
             if (duration.TotalSeconds > 0) {
               xmlTextWriter.WriteStartElement("ScheduleEntry");
-              if (i == 0) {
-                xmlTextWriter.WriteAttributeString("startTime", entry.StartTime);
+              if (!startTimeWritten) {
+                xmlTextWriter.WriteAttributeString("startTime", entry.XmlStartTime);
+                startTimeWritten = true;
               }
-              int entryDuration = int.Parse(entry.Duration);
-              if (duration.TotalSeconds <= entryDuration) {
-                WriteScheduleEntryAttributes(xmlTextWriter, entry, Convert.ToInt32(duration.TotalSeconds));
-              } else {
-                // Gap to next entry
-                WriteScheduleEntryAttributes(xmlTextWriter, entry, entryDuration);
-
-                // Add dummy entry
-                xmlTextWriter.WriteStartElement("ScheduleEntry");
-                xmlTextWriter.WriteAttributeString("program", "0");
-                xmlTextWriter.WriteAttributeString("duration", (duration.TotalSeconds - entryDuration).ToString());
-                xmlTextWriter.WriteEndElement();
-              }
+              WriteScheduleEntryAttributes(xmlTextWriter, entry, Convert.ToInt32(duration.TotalSeconds));
             } else {
               //log.Debug("Skipping entry. Start: " + entry.StartTime + ", program: " + entry.ProgramId + ", channel: " + channel.Id + " " + channel.Name);
             }
           }
         }
-
-
-        // Old stuff
-        /*
-        string lastEndTime = "";
-        bool isFirst = true;  // we need to know this so that we output the start time for the first entry only
-        bool skip = false;
-        int shortenDuration = 0; 
-        foreach (MXFScheduleEntry entry in channel.ScheduleEntries) {
-          if (isFirst) {  // write out the starttime for the first entry only
-            xmlTextWriter.WriteStartElement("ScheduleEntry");
-            xmlTextWriter.WriteAttributeString("startTime", entry.StartTime);
-            isFirst = false;
-          } else {
-            if (entry.StartTime != lastEndTime) {
-              // log.Debug("Start/End mismatch. Start: " + entry.StartTime + ", channel: " + channel.Id + " " + channel.Name);
-              // Special case simultaneous entries (Sky Sport subchannels)
-              if (entry.ConvertToDateTime(lastEndTime).CompareTo(entry.ConvertToDateTime(entry.EndTime)) >= 0) {
-                skip = true;
-              } else {
-                TimeSpan dur = entry.ConvertToDateTime(entry.StartTime).Subtract(entry.ConvertToDateTime(lastEndTime));
-                if (dur.TotalSeconds < 0) {
-                  shortenDuration = (int) -dur.TotalSeconds;
-                } else {
-                  // Add dummy entry
-                  xmlTextWriter.WriteStartElement("ScheduleEntry");
-                  xmlTextWriter.WriteAttributeString("program", "0");
-                  xmlTextWriter.WriteAttributeString("duration", dur.TotalSeconds.ToString());
-                  xmlTextWriter.WriteEndElement();
-                }
-              }
-            }
-            if (!skip) xmlTextWriter.WriteStartElement("ScheduleEntry");            
-          }
-          if (!skip) {
-            int duration = int.Parse(entry.Duration);
-            if (shortenDuration != 0) {
-              duration -= shortenDuration;
-              shortenDuration = 0;
-              if (duration < 0) 
-                throw new Exception("Negative dummy duration.");
-            }
-            xmlTextWriter.WriteAttributeString("program", entry.ProgramId);
-            xmlTextWriter.WriteAttributeString("duration", duration.ToString());
-            if (entry.IsLive) {
-              xmlTextWriter.WriteAttributeString("isLive", "true");
-            } else {
-              xmlTextWriter.WriteAttributeString("isLive", "false");
-            }
-            // TODO LiveSports
-            if (entry.IsHdtv) {
-              xmlTextWriter.WriteAttributeString("isHdtv", "true");
-            } else {
-              xmlTextWriter.WriteAttributeString("isHdtv", "false");
-            }
-            xmlTextWriter.WriteEndElement();
-          }
-          skip = false;
-          lastEndTime = entry.EndTime;
-        }
-        */
-
-
         xmlTextWriter.WriteEndElement(); // ScheduleEntries
       }
     }
 
     private void WriteScheduleEntryAttributes(XmlTextWriter xmlTextWriter, MXFScheduleEntry entry, int duration) {
-      xmlTextWriter.WriteAttributeString("program", entry.ProgramId);
+      xmlTextWriter.WriteAttributeString("program", entry.Program.Id.ToString());
       xmlTextWriter.WriteAttributeString("duration", duration.ToString());
+      xmlTextWriter.WriteAttributeString("audioFormat", entry.AudioFormat);
       if (entry.IsLive) {
         xmlTextWriter.WriteAttributeString("isLive", "true");
       } else {
         xmlTextWriter.WriteAttributeString("isLive", "false");
       }
-      // TODO LiveSports
+
+      // isLiveSports?
+      
       if (entry.IsHdtv) {
         xmlTextWriter.WriteAttributeString("isHdtv", "true");
       } else {

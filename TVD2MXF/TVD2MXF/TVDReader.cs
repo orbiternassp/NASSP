@@ -50,6 +50,7 @@ namespace TVD2MXF {
       ns.AddNamespace("ns", "http://www.as-guides.com/schema/terms");
 
       // MS Keywords
+      /*
       MXFKeyword msKey = new MXFKeyword("MSEPGC_MOVIES", "Film");
       data.Keywords.Add(msKey.RefId, msKey);
       MXFKeywordGroup msKeyGrp = new MXFKeywordGroup(msKey);
@@ -210,7 +211,7 @@ namespace TVD2MXF {
 			AddKeyword("C901", "Nachrichten", msKeyGrp, data);
 			AddKeyword("C902", "Sonstiges", msKeyGrp, data);
 
-      // TODO MSEPGC_SPECIAL?
+      // MSEPGC_SPECIAL?
 
       // Keyword mapping
       data.KeywordMapping.Add("100.101", "C116,C209");
@@ -380,6 +381,8 @@ namespace TVD2MXF {
       // Load programs
       //
 
+      /* OLD STUFF
+
       XmlDocument xmlTVBrowserDoc = new XmlDocument();
       xmlTVBrowserDoc.Load(tvbrowserFile);
 
@@ -421,7 +424,6 @@ namespace TVD2MXF {
                     }
                   }
                 }
-
                 // Collect cats and chrs for testing
                 if (!cats.Contains(p.Cat)) {
                   cats.Add(p.Cat);
@@ -437,6 +439,7 @@ namespace TVD2MXF {
         }
         log.Info("TV Movie entries not found: " + data.tvmovieEntriesNotFound + ", TV Browser: " + data.tvbrowserEntriesNotFound);
       }
+      */
 
       // Collect cats and chrs for testing
       /*
@@ -455,12 +458,12 @@ namespace TVD2MXF {
       MXFKeyword msKey = new MXFKeyword(id, name);
       msKey.Group = group;
       group.Keywords.Add(msKey);
-      data.Keywords.Add(msKey.RefId, msKey);
+      data.Keywords.Add(msKey.Id, msKey);
     }
 
     private MXFPerson DeleteDuplicates(string name, MCConnection connection) {
 
-      // TODO for debugging 
+      // For debugging 
       bool deleteDuplicate = true;
       //bool deleteDuplicate = false;
 
