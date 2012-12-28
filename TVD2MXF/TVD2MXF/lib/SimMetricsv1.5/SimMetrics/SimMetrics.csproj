@@ -1,0 +1,109 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F32FB1E4-BA2C-4732-AA06-07AE9DAC3CF2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SimMetrics</RootNamespace>
+    <AssemblyName>SimMetrics</AssemblyName>
+    <ApplicationIcon>otheroptions.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\SimMetrics.XML</DocumentationFile>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\SimMetrics.XML</DocumentationFile>
+    <RegisterForComInterop>false</RegisterForComInterop>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseClasses\Abstract\AbstractAffineGapCost.cs" />
+    <Compile Include="BaseClasses\Abstract\AbstractStringMetric.cs" />
+    <Compile Include="BaseClasses\Abstract\AbstractSubstitutionCost.cs" />
+    <Compile Include="BaseClasses\Interfaces\IAffineGapCost.cs" />
+    <Compile Include="BaseClasses\Interfaces\IStringMetric.cs" />
+    <Compile Include="BaseClasses\Interfaces\ISubstitutionCost.cs" />
+    <Compile Include="BaseClasses\Interfaces\ITermHandler.cs" />
+    <Compile Include="BaseClasses\Interfaces\ITokeniser.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimilarityClasses\Edit Distance\Levenstein.cs" />
+    <Compile Include="SimilarityClasses\Edit Distance\NeedlemanWunch.cs" />
+    <Compile Include="SimilarityClasses\Edit Distance\SmithWaterman.cs" />
+    <Compile Include="SimilarityClasses\Edit Distance\SmithWatermanGotoh.cs" />
+    <Compile Include="SimilarityClasses\Edit Distance\SmithWatermanGotohWindowedAffine.cs" />
+    <Compile Include="SimilarityClasses\Jaro and JaroWinkler\Jaro.cs" />
+    <Compile Include="SimilarityClasses\Jaro and JaroWinkler\JaroWinkler.cs" />
+    <Compile Include="SimilarityClasses\Length Based\ChapmanLengthDeviation.cs" />
+    <Compile Include="SimilarityClasses\Length Based\ChapmanMeanLength.cs" />
+    <Compile Include="SimilarityClasses\QGram\QGramsDistance.cs" />
+    <Compile Include="SimilarityClasses\Token Based\BlockDistance.cs" />
+    <Compile Include="SimilarityClasses\Token Based\CosineSimilarity.cs" />
+    <Compile Include="SimilarityClasses\Token Based\DiceSimilarity.cs" />
+    <Compile Include="SimilarityClasses\Token Based\EuclideanDistance.cs" />
+    <Compile Include="SimilarityClasses\Token Based\JaccardSimilarity.cs" />
+    <Compile Include="SimilarityClasses\Token Based\MatchingCoefficient.cs" />
+    <Compile Include="SimilarityClasses\Token Based\MongeElkan.cs" />
+    <Compile Include="SimilarityClasses\Token Based\OverlapCoefficient.cs" />
+    <Compile Include="UtilityClasses\CostFunctions\AffineGapRange1To0Multiplier1Over3.cs" />
+    <Compile Include="UtilityClasses\CostFunctions\AffineGapRange5To0Multiplier1.cs" />
+    <Compile Include="UtilityClasses\CostFunctions\SubCostRange0To1.cs" />
+    <Compile Include="UtilityClasses\CostFunctions\SubCostRange1ToMinus2.cs" />
+    <Compile Include="UtilityClasses\CostFunctions\SubCostRange5ToMinus3.cs" />
+    <Compile Include="UtilityClasses\MathFuncs.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserQGram2.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserQGram2Extended.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserQGram3.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserQGram3Extended.cs" />
+    <Compile Include="BaseClasses\Abstract\AbstractTokeniserQGramN.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserSGram2.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserSGram2Extended.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserSGram3.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserSGram3Extended.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserUtilities.cs" />
+    <Compile Include="UtilityClasses\Tokenisers\TokeniserWhitespace.cs" />
+    <Compile Include="UtilityClasses\WordHandlers\DummyStopTermHandler.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="otheroptions.ico" />
+    <Content Include="ReadMeFirst.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SimMetrics - QGram Classes.cd" />
+    <None Include="SimMetrics - Main Classes.cd" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

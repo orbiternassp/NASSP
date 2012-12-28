@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE HelpCollection SYSTEM "MS-Help://Hx/Resources/HelpCollection.DTD">
+<HelpCollection
+   Id = "SimMetrics-v1.5"
+   DTDVersion = "1.0"
+   Title = "SimMetrics library v 1.5 for .NET 2.0 "
+   Copyright = "Copyright (c) 2006. All rights reserved."
+>
+<CompilerOptions
+    CompileResult = "HxiHxs "
+    OutputFile = "SimMetrics-v1.5.HxS"
+    CreateFullTextIndex = "Yes" >
+<IncludeFile File = "SimMetrics-v1.5.HxF" />
+</CompilerOptions>
+<TOCDef File = "SimMetrics-v1.5.HxT" />
+<KeywordIndexDef File = "SimMetrics-v1.5_K.HxK" />
+<KeywordIndexDef File = "SimMetrics-v1.5_F.HxK" />
+<KeywordIndexDef File = "SimMetrics-v1.5_A.HxK" />
+<KeywordIndexDef File = "SimMetrics-v1.5_NamedURL.HxK" />
+    <ItemMoniker Name="!DefaultToc" ProgId="HxDs.HxHierarchy" InitData=""/>
+    <ItemMoniker Name="!DefaultFullTextSearch" ProgId="HxDs.HxFullTextSearch" InitData=""/>
+    <ItemMoniker Name="!DefaultKeywordIndex" ProgId="HxDs.HxIndex" InitData="K"/>
+    <ItemMoniker Name="!DefaultAssociativeIndex" ProgId="HxDs.HxIndex" InitData="A" />
+    <ItemMoniker Name="!DefaultContextWindowIndex" ProgId="HxDs.HxIndex" InitData="F" />
+    <ItemMoniker Name="!DefaultNamedUrlIndex" ProgId="HxDs.HxIndex" InitData="NamedURLIndex"/>
+</HelpCollection>

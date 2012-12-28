@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN">
+<html>
+<head>
+<title>Body Source</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <meta name="generator" content="Doc-O-Matic">
+    <link rel="STYLESHEET" href="default.css" type="text/css">
+
+<SCRIPT LANGUAGE="JavaScript1.2" SRC="scripts.js"></SCRIPT>
+</head>
+<body class="Element57">
+<div class="Element92">
+<table class="Element92" border="0" bgcolor="#99CCFF" width="100%" cellspacing="0" cellpadding="0">
+<tr><td class="Element92" valign="middle" align="left" width="33%">
+<div class="Element1">
+SimMetrics library v 1.5 for .NET 2.0</div>
+</td><td class="Element92" valign="middle" align="center" width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx">Contents</a> | <a href="idx.html" target="tocidx">Index</a> | <a href="!!SYMREF.html" target="topic">Reference</a></div>
+</td><td class="Element92" valign="middle" align="left" width="33%">
+</td></tr></table><div class="Element39">
+Body Source</div>
+<div class="Element40">
+<a href="SimMetricsMetricUtilities_SmithWaterman_GetUnnormalisedSimilarity@string@string.html" target="topic">SmithWaterman.GetUnnormalisedSimilarity</a></div>
+</div>
+<div class="Element58">
+<div class="Element14">
+Body Source</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element13">
+<div class="Element12">
+<pre class="Element12"><strong>public</strong> <strong>override</strong> <strong>double</strong> GetUnnormalisedSimilarity(<strong>string</strong> firstWord, <strong>string</strong> secondWord) {
+    <strong>if</strong> ((firstWord != <strong>null</strong>) &amp;&amp; (secondWord != <strong>null</strong>)) {
+        <strong>int</strong> n = firstWord.Length;
+        <strong>int</strong> m = secondWord.Length;
+        <strong>if</strong> (n == 0) {
+            <strong>return</strong> m;
+        }
+        <strong>if</strong> (m == 0) {
+            <strong>return</strong> n;
+        }
+        <strong>double</strong>[][] d = <strong>new</strong> <strong>double</strong>[n][];
+        <strong>for</strong> (<strong>int</strong> i = 0; i &lt; n; i++) {
+            d[i] = <strong>new</strong> <strong>double</strong>[m];
+        }
+        <strong>double</strong> maxSoFar = defaultMismatchScore;
+        <strong>for</strong> (<strong>int</strong> i = 0; i &lt; n; i++) {
+            <strong>double</strong> cost = dCostFunction.GetCost(firstWord, i, secondWord, 0);
+            <strong>if</strong> (i == 0) {
+                d[0][0] = MathFunctions.MaxOf3(defaultMismatchScore, -gapCost, cost);
+            }
+            <strong>else</strong> {
+                d[i][0] = MathFunctions.MaxOf3(defaultMismatchScore, d[i - 1][0] - gapCost, cost);
+            }
+            <strong>if</strong> (d[i][0] &gt; maxSoFar) {
+                maxSoFar = d[i][0];
+            }
+        }
+
+        <strong>for</strong> (<strong>int</strong> j = 0; j &lt; m; j++) {
+            <strong>double</strong> cost = dCostFunction.GetCost(firstWord, 0, secondWord, j);
+            <strong>if</strong> (j == 0) {
+                d[0][0] = MathFunctions.MaxOf3(defaultMismatchScore, -gapCost, cost);
+            }
+            <strong>else</strong> {
+                d[0][j] = MathFunctions.MaxOf3(defaultMismatchScore, d[0][j - 1] - gapCost, cost);
+            }
+            <strong>if</strong> (d[0][j] &gt; maxSoFar) {
+                maxSoFar = d[0][j];
+            }
+        }
+
+        <strong>for</strong> (<strong>int</strong> i = 1; i &lt; n; i++) {
+            <strong>for</strong> (<strong>int</strong> j = 1; j &lt; m; j++) {
+                <strong>double</strong> cost = dCostFunction.GetCost(firstWord, i, secondWord, j);
+                d[i][j] =
+                    MathFunctions.MaxOf4(defaultMismatchScore, d[i - 1][j] - gapCost, d[i][j - 1] - gapCost,
+                                         d[i - 1][j - 1] + cost);
+                <strong>if</strong> (d[i][j] &gt; maxSoFar) {
+                    maxSoFar = d[i][j];
+                }
+            }
+        }
+
+        <strong>return</strong> maxSoFar;
+    }
+    <strong>return</strong> 0.0;
+}
+</pre></div>
+</div>
+</div>
+</div>
+</div><div class="Element93">
+<table class="Element93" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr><td class="Element93" valign="middle" align="center" width="100%">
+<div class="Element3">
+Copyright (c) 2006. All rights reserved.</div>
+</td></tr><tr><td class="Element93" valign="middle" align="center" width="100%">
+<div class="Element4">
+<a href="contents.html" target="tocidx">Contents</a> | <a href="idx.html" target="tocidx">Index</a> | <a href="!!SYMREF.html" target="topic">Reference</a></div>
+</td></tr></table></div>
+</body></html>
