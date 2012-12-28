@@ -1,0 +1,10 @@
+bin\Debug\SimMetrics.XML
+bin\Debug\SimMetrics.dll
+bin\Debug\SimMetrics.pdb
+obj\Debug\ResolveAssemblyReference.cache
+obj\Debug\SimMetrics.dll
+obj\Debug\SimMetrics.pdb
+bin\Release\SimMetrics.XML
+bin\Release\SimMetrics.dll
+obj\Release\ResolveAssemblyReference.cache
+obj\Release\SimMetrics.dll

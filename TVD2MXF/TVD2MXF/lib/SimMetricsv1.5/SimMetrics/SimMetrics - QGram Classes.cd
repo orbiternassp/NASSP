@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Class Name="SimMetricsUtilities.TokeniserQGram2">
+    <Position X="7.25" Y="3.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserQGram2.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAIAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserQGram2Extended">
+    <Position X="5.75" Y="6.25" Width="2" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserQGram2Extended.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAIAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserQGram3">
+    <Position X="2" Y="3.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserQGram3.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAIAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserSGram2">
+    <Position X="8.5" Y="6.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserSGram2.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserSGram2Extended">
+    <Position X="5.75" Y="8.75" Width="2" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserSGram2Extended.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsApi.AbstractTokeniserQGramN">
+    <Position X="4.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>BaseClasses\Abstract\AbstractTokeniserQGramN.cs</FileName>
+      <HashCode>QAAAAEAAAkAAAAJAAAAIAAAAFCAAAIRAAAAAQAAAACA=</HashCode>
+    </TypeIdentifier>
+    <Members>
+      <Field Name="characterCombinationIndex" Hidden="true" />
+      <Field Name="defaultEndPadCharacter" Hidden="true" />
+      <Field Name="defaultStartPadCharacter" Hidden="true" />
+      <Field Name="qGramLength" Hidden="true" />
+      <Field Name="stopWordHandler" Hidden="true" />
+      <Field Name="suppliedWord" Hidden="true" />
+      <Field Name="tokenUtilities" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserSGram3">
+    <Position X="3.25" Y="6.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserSGram3.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserSGram3Extended">
+    <Position X="0.5" Y="8.75" Width="2" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserSGram3Extended.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SimMetricsUtilities.TokeniserQGram3Extended">
+    <Position X="0.5" Y="6.25" Width="2" />
+    <TypeIdentifier>
+      <FileName>UtilityClasses\Tokenisers\TokeniserQGram3Extended.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAEAAAIAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+</ClassDiagram>

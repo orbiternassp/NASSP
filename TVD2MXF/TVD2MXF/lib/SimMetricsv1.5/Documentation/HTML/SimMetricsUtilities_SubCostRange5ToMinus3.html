@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN">
+<html>
+<head>
+<title>SubCostRange5ToMinus3</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <meta name="generator" content="Doc-O-Matic">
+    <link rel="STYLESHEET" href="default.css" type="text/css">
+
+<SCRIPT LANGUAGE="JavaScript1.2" SRC="scripts.js"></SCRIPT>
+<xml>
+    <MSHelp:Attr Name="Locale" Value="kbEnglish"/>
+    <MSHelp:Attr Name="TopicType" Value="kbSyntax"/>
+</xml>
+</head>
+<body class="Element57" onload="loadFrameSetOrTitle('frames.html', 'topic', 'SimMetricsUtilities_SubCostRange5ToMinus3.html', '', '');">
+<div class="Element92">
+<table class="Element92" border="0" bgcolor="#99CCFF" width="100%" cellspacing="0" cellpadding="0">
+<tr><td class="Element92" valign="middle" align="left" width="33%">
+<div class="Element1">
+SimMetrics library v 1.5 for .NET 2.0</div>
+</td><td class="Element92" valign="middle" align="center" width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx">Contents</a> | <a href="idx.html" target="tocidx">Index</a> | <a href="!!SYMREF.html" target="topic">Reference</a></div>
+</td><td class="Element92" valign="middle" align="right" width="33%">
+<div class="Element90">
+<a href="SimMetricsUtilities.html" target="topic">Up</a> | <a href="SimMetricsUtilities_SubCostRange1ToMinus2.html" target="topic">Previous</a> | <a href="SimMetricsUtilities_TokeniserQGram2.html" target="topic">Next</a></div>
+</td></tr></table><div class="Element5">
+SubCostRange5ToMinus3</div>
+<div class="Element7">
+<a href="SimMetricsUtilities.html" target="topic">SimMetricsUtilities</a> | <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Members.html" target="topic">Members</a> | <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Methods.html" target="topic">Methods</a> | <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Properties.html" target="topic">Properties</a> | <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_17_Class_Hierarchy.html" target="topic">Class Hierarchy</a></div>
+</div>
+<div class="Element58">
+<div class="Element11">
+<div class="Element10">
+SubCostRange5ToMinus3 implements a cost function as used in Monge Elkan where by an exact match no match or an approximate match whereby a set of characters are in an approximate range. for pairings in {dt} {gj} {lr} {mn} {bpv} {aeiou} {,.} </div>
+</div>
+<div class="Element14">
+Class Hierarchy</div>
+<div class="Element151">
+<div class="Element150">
+<pre class="Element150">AbstractSubstitutionCost
+    <strong>SubCostRange5ToMinus3</strong></pre></div>
+</div>
+<div class="Element101">
+<div class="Element100">
+<pre class="Element100">[Serializable]
+<strong>public</strong> <strong>sealed</strong> <strong>class</strong> SubCostRange5ToMinus3 : AbstractSubstitutionCost;</pre></div>
+</div>
+<div class="Element14">
+File</div>
+<div class="Element11">
+<div class="Element10">
+SubCostRange5ToMinus3.cs</div>
+</div>
+<div class="Element214">
+Namespace</div>
+<div class="Element11">
+<div class="Element10">
+<a href="SimMetricsUtilities.html" target="topic">SimMetricsUtilities</a></div>
+</div>
+<div class="Element214">
+Members</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element215">
+Properties</div>
+<div class="Element212">
+<table cellspacing="0" cellpadding="3" border="1">
+<tr>
+<td class="Element201" valign="top" width="50%">
+Property</td><td class="Element205" valign="top" width="50%">
+Description</td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_property.gif" border="0" alt=""> <a href="SimMetricsUtilities_SubCostRange5ToMinus3_MaxCost.html" target="topic">MaxCost</a></td><td class="Element207" valign="top" width="50%">
+returns the maximum possible cost. </td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_property.gif" border="0" alt=""> <a href="SimMetricsUtilities_SubCostRange5ToMinus3_MinCost.html" target="topic">MinCost</a></td><td class="Element207" valign="top" width="50%">
+returns the minimum possible cost. </td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_property.gif" border="0" alt=""> <a href="SimMetricsUtilities_SubCostRange5ToMinus3_ShortDescriptionString.html" target="topic">ShortDescriptionString</a></td><td class="Element207" valign="top" width="50%">
+returns the name of the cost function. </td></tr></table></div>
+<div class="Element215">
+Methods</div>
+<div class="Element212">
+<table cellspacing="0" cellpadding="3" border="1">
+<tr>
+<td class="Element201" valign="top" width="50%">
+Method</td><td class="Element205" valign="top" width="50%">
+Description</td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_method.gif" border="0" alt=""> <a href="SimMetricsUtilities_SubCostRange5ToMinus3_GetCost@String@int@String@int.html" target="topic">GetCost</a></td><td class="Element207" valign="top" width="50%">
+get cost between characters where d(i,j) = charExactMatchScore if i equals j, charApproximateMatchScore if i approximately equals j or charMismatchMatchScore if i does not equal j. </td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_method.gif" border="0" alt=""> <a href="SimMetricsUtilities_SubCostRange5ToMinus3_SubCostRange5ToMinus3.html" target="topic">SubCostRange5ToMinus3</a></td><td class="Element207" valign="top" width="50%">
+constructor Sets up the matching sets approximate match = +3, for pairings in {dt} {gj} {lr} {mn} {bpv} {aeiou} {,.}. </td></tr></table></div>
+</div>
+</div>
+<div class="Element214">
+Legend</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<table cellspacing="0" cellpadding="3" border="1">
+<tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_property.gif" border="0" alt=""></td><td class="Element207" valign="top" width="50%">
+Property</td></tr><tr>
+<td class="Element203" valign="top" width="50%">
+<img src="indicator_method.gif" border="0" alt=""></td><td class="Element207" valign="top" width="50%">
+Method</td></tr></table></div>
+</div>
+</div>
+<div class="Element14">
+Links</div>
+<div class="Element11">
+<div class="Element10">
+<a href="SimMetricsUtilities.html" target="topic">SimMetricsUtilities</a>, <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Members.html" target="topic">Members</a>, <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Methods.html" target="topic">Methods</a>, <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_14_Properties.html" target="topic">Properties</a>, <a href="_SimMetricsUtilities_SubCostRange5ToMinus3_17_Class_Hierarchy.html" target="topic">Class Hierarchy</a></div>
+</div>
+</div><div class="Element93">
+<table class="Element93" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr><td class="Element93" valign="middle" align="center" width="100%">
+<div class="Element3">
+Copyright (c) 2006. All rights reserved.</div>
+</td></tr><tr><td class="Element93" valign="middle" align="center" width="100%">
+<div class="Element4">
+<a href="contents.html" target="tocidx">Contents</a> | <a href="idx.html" target="tocidx">Index</a> | <a href="!!SYMREF.html" target="topic">Reference</a></div>
+</td></tr></table></div>
+</body></html>
