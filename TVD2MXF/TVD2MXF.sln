@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVD2MXF", "TVD2MXF\TVD2MXF.csproj", "{C78EAE9C-07C5-4F3A-9E60-096614074929}"
 EndProject
 Global
