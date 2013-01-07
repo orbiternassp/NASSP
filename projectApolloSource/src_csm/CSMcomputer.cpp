@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2012/11/04 21:19:29  meik84
+  *	ICDU error counters now held at 0 when bit 6 of chan 12 is reset
+  *	
   *	Revision 1.11  2012/10/20 18:38:26  tschachim
   *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
   *	
@@ -4287,12 +4290,12 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 				sat->gdc.fdai_err_ena = 1;
 			}
 		} else {
-			 if (sat->gdc.fdai_err_ena == 1) {
-			 // sprintf(oapiDebugString(),"FDAI: RESET");
-			 sat->gdc.fdai_err_x = 0;
-			 sat->gdc.fdai_err_y = 0;
-			 sat->gdc.fdai_err_z = 0;
-			 }
+			if (sat->gdc.fdai_err_ena == 1) {
+				// sprintf(oapiDebugString(),"FDAI: RESET");
+				sat->gdc.fdai_err_x = 0;
+				sat->gdc.fdai_err_y = 0;
+				sat->gdc.fdai_err_z = 0;
+			}
 			sat->gdc.fdai_err_ena = 0;
 		}
 
