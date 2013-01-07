@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.23  2012/10/20 19:02:13  tschachim
   *	Lua changes
   *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
@@ -4463,6 +4466,7 @@ protected:
 	virtual void SetVehicleStats() = 0;
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
+	virtual void SaveLVDC(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

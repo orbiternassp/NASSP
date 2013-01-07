@@ -1,4 +1,6 @@
 #pragma once
+#define LVDC_START_STRING "LVDC_BEGIN"
+#define LVDC_END_STRING "LVDC_END"
 #include "LVIMU.h"
 class Saturn1b;
 
@@ -6,6 +8,8 @@ class LVDC1B {
 public:
 	void init(Saturn1b* own);
 	void timestep(double simt, double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 private:
 	FILE* lvlog;									// LV Log file
 	Saturn1b* owner;
@@ -29,6 +33,9 @@ private:
 	//double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
 	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
+	VECTOR3 DeltaAtt;
+	double A1,A2,A3,A4,A5;
+	double K_p,K_y,K_r;
 	//double Velocity[3];								// Velocity
 	//double Position[3];								// Position
 	//VECTOR3 WV;										// Gravity
@@ -86,10 +93,6 @@ private:
 	double Fm;										// Sensed acceleration
 	double Tt_T;									// Time-To-Go computed using Tt_3
 	double Tt_2;									// Estimated second stage burn time
-	double TB1;										// Time of TB1
-	double TB2;										// Time of TB2
-	double TB3;										// Time of TB3
-	double TB4;										// Time of TB4
 	//double eps_1;									// IGM range angle calculation selection
 	double eps_2;									// Guidance option selection time
 	double eps_3;									// Terminal condition freeze time
@@ -98,6 +101,8 @@ private:
 	double mu;										// Product of G and Earth's mass
 	double sin_phi_L;								// Geodetic latitude of launch site: sin
 	double cos_phi_L;								// Geodetic latitude of launch site: cos
+	double phi_lng;
+	double phi_lat;
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double t_B1;									// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
@@ -167,6 +172,7 @@ private:
 	VECTOR3 ddotG_last;								// last computed acceleration from gravity
 	VECTOR3 ddotM_last;								// last sensed acceleration from platform
 	VECTOR3 DotG_last;								// last computed velocity from gravity
+	VECTOR3 Dot0;									// initial velocity
 	double Y_u;										// position component south of equator
 	double S,P;										// intermediate variables for gravity calculation
 	double a;										// earth equatorial radius

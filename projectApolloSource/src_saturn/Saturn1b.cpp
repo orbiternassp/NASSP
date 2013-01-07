@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2013/01/07 13:01:00  tschachim
+  *	LVDC fixes
+  *	
   *	Revision 1.8  2012/12/13 19:45:05  meik84
   *	LVDC++: SIB- LVDC++ & new LVDC.cpp
   *	
@@ -922,21 +925,22 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	//
 	// Abort handling
 	//
+
 	if (use_lvdc) {
 			// Nothing for now, the LVDC is called in PostStep
-	} else {
-		if (bAbort && MissionTime > -300 && LESAttached) {
-			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(CM_STAGE);
-			SetStage(CM_STAGE);
-			StartAbort();
-			agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
-			agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
-			bAbort = false;
-			return;
-		}
+		} else {
+	if (bAbort && MissionTime > -300 && LESAttached) {
+		SetEngineLevel(ENGINE_MAIN, 0);
+		SeparateStage(CM_STAGE);
+		SetStage(CM_STAGE);
+		StartAbort();
+		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+		bAbort = false;
+		return;
+	}
+	switch (stage) {
 
-		switch (stage) {
 
 		case LAUNCH_STAGE_ONE:
 			StageOne(simt, simdt);
@@ -955,13 +959,14 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 			break;
 		}
 	}
+
+	
 	LastTimestep = simt;
 }
 
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
-
 	if (use_lvdc) {
 		lvdc.timestep(simt, simdt);	
 	} else {
@@ -983,6 +988,7 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 			}
 			break;
 		}
+
 	}
 }
 
@@ -1007,7 +1013,10 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 }
-
+void Saturn1b::SaveLVDC(FILEHANDLE scn)
+{
+	if (use_lvdc){lvdc.SaveState(scn);}
+}
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 {

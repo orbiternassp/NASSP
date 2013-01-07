@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2013/01/07 13:01:00  tschachim
+  *	LVDC fixes
+  *	
   *	Revision 1.12  2012/12/13 19:45:05  meik84
   *	LVDC++: SIB- LVDC++ & new LVDC.cpp
   *	
@@ -1628,7 +1631,10 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
 }
+void SaturnV::SaveLVDC(FILEHANDLE scn)
+{
 
+}
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {
@@ -3630,7 +3636,7 @@ minorloop://minor loop; TBD: move IGM steering angles & HSL logic here
 		}else{SetThrusterLevel(th_att_rot[4],0);}
 		if(eps_ypr < -1){
 			//fire-yaw-roll;
-			if(eps_p <= -1.6){SetThrusterLevel(th_att_rot[2],1);}else{SetThrusterLevel(th_att_rot[2],(-eps_ypr-1)/0.6);}
+			if(eps_ypr <= -1.6){SetThrusterLevel(th_att_rot[2],1);}else{SetThrusterLevel(th_att_rot[2],(-eps_ypr-1)/0.6);}
 		}else{SetThrusterLevel(th_att_rot[2],0);}
 	}
 	// Debug if we're launched

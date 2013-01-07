@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.28  2012/11/04 13:33:13  meik84
   *	LVDC++
   *	
@@ -2028,6 +2031,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (SIVBPayload != PAYLOAD_LEM) {
 		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
 	}
+	if (use_lvdc){oapiWriteScenario_string(scn,"USE_LVDC","PLEASE");};
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	
 	if (PayloadName[0])
@@ -2076,7 +2080,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
 	optics.SaveState(scn);
-
+	
 	oapiWriteLine(scn, SMRCSPROPELLANT_A_START_STRING);
 	SMQuadARCS.SaveState(scn);
 
@@ -2109,7 +2113,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
-
+	SaveLVDC(scn);
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
 	// Both should be saving the same information, but this is human-readable
@@ -5384,7 +5388,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	// Attitude control
 	//
 
-	if (LVGuidanceSwitch.IsUp()) {
+	if (LVGuidanceSwitch.IsUp() && use_lvdc == false) {
 		if (ApolloNo == 7) {
 			if (MissionTime >= 10275) {
 				iu.HoldAttitude();
