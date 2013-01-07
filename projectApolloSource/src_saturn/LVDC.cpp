@@ -661,7 +661,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 			PCommandedAttitude.x = (1.5* PI) + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
-			lvimu.zeropipacounters();
+			lvimu.ZeroPIPACounters();
 			sinceLastIGM = 0;
 			GRR_init = true;
 			fprintf(lvlog,"Initialization completed.\r\n\r\n",owner->MissionTime);
@@ -722,7 +722,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 		fprintf(lvlog,"Dist. from Earth's Center: %f \r\n",R);
 		fprintf(lvlog,"S: %f \r\n",S);
 		fprintf(lvlog,"P: %f \r\n",P);
-		lvimu.zeropipacounters();
+		lvimu.ZeroPIPACounters();
 		};
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 				CommandedAttitude.x =  (360-100)*RAD + Azimuth;

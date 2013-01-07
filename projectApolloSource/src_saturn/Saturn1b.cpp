@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.7  2012/01/14 22:24:06  tschachim
   *	CM Optics cover
   *	
@@ -921,36 +924,36 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	//
 	if (use_lvdc) {
 			// Nothing for now, the LVDC is called in PostStep
-		} else {
-	if (bAbort && MissionTime > -300 && LESAttached) {
-		SetEngineLevel(ENGINE_MAIN, 0);
-		SeparateStage(CM_STAGE);
-		SetStage(CM_STAGE);
-		StartAbort();
-		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
-		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
-		bAbort = false;
-		return;
-	}
+	} else {
+		if (bAbort && MissionTime > -300 && LESAttached) {
+			SetEngineLevel(ENGINE_MAIN, 0);
+			SeparateStage(CM_STAGE);
+			SetStage(CM_STAGE);
+			StartAbort();
+			agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+			agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+			bAbort = false;
+			return;
+		}
 
-	switch (stage) {
+		switch (stage) {
 
-	case LAUNCH_STAGE_ONE:
-		StageOne(simt, simdt);
-		break;
+		case LAUNCH_STAGE_ONE:
+			StageOne(simt, simdt);
+			break;
 
-	case LAUNCH_STAGE_SIVB:
-		StageLaunchSIVB(simt);
-		break;
+		case LAUNCH_STAGE_SIVB:
+			StageLaunchSIVB(simt);
+			break;
 
-	case STAGE_ORBIT_SIVB:
-		StageOrbitSIVB(simt, simdt);
-		break;
+		case STAGE_ORBIT_SIVB:
+			StageOrbitSIVB(simt, simdt);
+			break;
 
-	default:
-		GenericTimestepStage(simt, simdt);
-		break;
-	}
+		default:
+			GenericTimestepStage(simt, simdt);
+			break;
+		}
 	}
 	LastTimestep = simt;
 }
@@ -958,9 +961,28 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
+
 	if (use_lvdc) {
-			lvdc.timestep(simt, simdt);
-	
+		lvdc.timestep(simt, simdt);	
+	} else {
+		// Run the autopilot post step to have stable dynamic data
+		switch (stage) {
+		case LAUNCH_STAGE_ONE:
+			if (autopilot) {
+				AutoPilot(MissionTime);
+			} else {
+				AttitudeLaunch1();
+			}
+			break;
+
+		case LAUNCH_STAGE_SIVB:
+			if (autopilot) {
+				AutoPilot(MissionTime);
+			} else {
+				AttitudeLaunchSIVB();
+			}
+			break;
+		}
 	}
 }
 

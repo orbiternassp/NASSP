@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.11  2012/11/22 18:08:40  meik84
   *	LVDC++ Various improvements & bug-fixes
   *	
@@ -1510,12 +1513,9 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 				break;
 			}
 		}
-
 	} else {
-
 		GenericTimestepStage(simt, simdt);
 	}
-
 	LastTimestep = simt;
 }
 
@@ -2748,7 +2748,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			PCommandedAttitude.x = (1.5* PI) + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
-			lvimu.zeropipacounters();
+			lvimu.ZeroPIPACounters();
 			sinceLastIGM = 0;
 			init = true;
 			goto minorloop;
@@ -2812,7 +2812,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 		fprintf(lvlog,"Dist. from Earth's Center: %f \r\n",R);
 		fprintf(lvlog,"S: %f \r\n",S);
 		fprintf(lvlog,"P: %f \r\n",P);
-		lvimu.zeropipacounters();
+		lvimu.ZeroPIPACounters();
 		};
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 				CommandedAttitude.x =  (1.5* PI) + Azimuth;

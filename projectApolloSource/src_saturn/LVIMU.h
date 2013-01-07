@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2012/11/04 13:33:13  meik84
+  *	LVDC++
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -74,7 +77,8 @@ public:
 	bool IsCaged();
 	bool IsPowered();
 	void SetCaged(bool val);
-	void zeropipacounters();
+	void ZeroPIPACounters();
+
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
