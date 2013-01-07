@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2012/11/04 13:33:13  meik84
+  *	LVDC++
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -109,7 +112,17 @@ void LVIMU::Init()
 	Velocity.y = 0;
 	Velocity.z = 0;
 
+	LastWeightAcceleration = _V(0, 0, 0);
+	LastGlobalVel = _V(0, 0, 0);
+
 	OurVessel = 0;
+
+	CDURegisters[LVRegCDUX]=0;
+	CDURegisters[LVRegCDUY]=0;
+	CDURegisters[LVRegCDUZ]=0;
+	CDURegisters[LVRegPIPAX]=0;
+	CDURegisters[LVRegPIPAY]=0;
+	CDURegisters[LVRegPIPAZ]=0;
 
 	ZeroIMUCDUs();
 	LastTime = -1;
@@ -207,10 +220,11 @@ void LVIMU::Timestep(double simt)
 		// Get current weight vector in vessel coordinates
 		VECTOR3 w;
 		OurVessel->GetWeightVector(w);
-
 		// Transform to Orbiter global and calculate weight acceleration
 		w = mul(tinv, w) / OurVessel->GetMass();
 		LastWeightAcceleration = w;
+
+		OurVessel->GetGlobalVel(LastGlobalVel);
 
 		LastTime = simt;
 		Initialized = true;
@@ -218,22 +232,24 @@ void LVIMU::Timestep(double simt)
 	else {
 		deltaTime = (simt - LastTime);
 
+
 		// Calculate accelerations
-		VECTOR3 w, f;
+		VECTOR3 w, vel;
 		OurVessel->GetWeightVector(w);
-		OurVessel->GetForceVector(f);
-
 		// Transform to Orbiter global and calculate accelerations
-		f = mul(tinv, f) / OurVessel->GetMass();
 		w = mul(tinv, w) / OurVessel->GetMass();
+		OurVessel->GetGlobalVel(vel);
+		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
 
-		// Measurements with the 2006-P1 version showed that the average of the weight
+		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
-		// The force vector matches the global velocity change of the last timestep exactly
-		VECTOR3 dw1 = w - f;
-		VECTOR3 dw2 = LastWeightAcceleration - f;	
+		// The force vector matches the global velocity change of the last timestep exactly,
+		// but isn't used because GetForceVector isn't working while docked
+		VECTOR3 dw1 = w - dvel;
+		VECTOR3 dw2 = LastWeightAcceleration - dvel;	
 		VECTOR3 accel = -(dw1 + dw2) / 2.0;
 		LastWeightAcceleration = w;
+		LastGlobalVel = vel;
 
 		// orbiter earth rotation
 		// imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);		
@@ -283,16 +299,15 @@ void LVIMU::Timestep(double simt)
 			//pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
 			//PulsePIPA(LVRegPIPAZ, (int) pulses);
 			//RemainingPIPA.Z = pulses - (int) pulses;			
+
 			pulses = (accel.x * deltaTime);
 			PulsePIPA(LVRegPIPAX, pulses);
 						
 			pulses = (accel.y * deltaTime);
 			PulsePIPA(LVRegPIPAY, pulses);
 			
-
 			pulses = (accel.z * deltaTime);
-			PulsePIPA(LVRegPIPAZ, pulses);
-			
+			PulsePIPA(LVRegPIPAZ, pulses);			
 		}
 		LastTime = simt;
 	}	
@@ -304,13 +319,14 @@ void LVIMU::PulsePIPA(int RegPIPA, double pulses)
 	CDURegisters[RegPIPA] += pulses;
 }
 
-void LVIMU::zeropipacounters()
+void LVIMU::ZeroPIPACounters()
 
 {
 	CDURegisters[LVRegPIPAX]=0;
 	CDURegisters[LVRegPIPAY]=0;
 	CDURegisters[LVRegPIPAZ]=0;
 }
+
 void LVIMU::DriveGimbals(double x, double y, double z) 
 
 {
