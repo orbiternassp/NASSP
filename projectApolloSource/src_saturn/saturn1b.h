@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.4  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -184,7 +187,7 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
-
+	void SaveLVDC(FILEHANDLE scn);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);

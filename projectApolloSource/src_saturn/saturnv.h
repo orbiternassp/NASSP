@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2012/12/13 19:45:05  meik84
+  *	LVDC++: SIB- LVDC++ & new LVDC.cpp
+  *	
   *	Revision 1.6  2012/11/22 18:08:40  meik84
   *	LVDC++ Various improvements & bug-fixes
   *	
@@ -275,7 +278,7 @@ protected:
 	//
 
 	void SaveVehicleStats(FILEHANDLE scn);
-
+	void SaveLVDC(FILEHANDLE scn);
 	//
 	// Odds and ends.
 	//
