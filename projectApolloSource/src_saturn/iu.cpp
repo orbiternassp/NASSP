@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2010/02/22 14:23:31  tschachim
+  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
+  *	
   *	Revision 1.5  2010/02/09 02:39:23  bluedragon8144
   *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
   *	
@@ -156,6 +159,7 @@ IU::IU()
 
 	AttitudeHold = false;
 	AttitudeToHold = _V(0, 0, 0);
+	AttitudeToHold2 = _V(0, 0, 0);
 }
 
 IU::~IU()
@@ -714,16 +718,16 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	lvCommandConnector.GetRelativeVel(hbody, vel);
 	if (ExternalGNC) { 
 		if (State >= 101 && State <= 200) {			
-			OrientAxis(Normalize(vel), 2, 0, (State == 200 ? 5 : 1));
+			OrientAxis(Normalize(vel), 2, 0, (State == 200 ? 5 : 1), _V(0, 0, 0));
 		} else if (State >= 201 && State <= 202) {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		} 
 	} else {
 		if (State >= 101 && State < 200) {
-			OrientAxis(GNC.Get_uTD(), 2, 0, 1);
+			OrientAxis(GNC.Get_uTD(), 2, 0, 1, _V(0, 0, 0));
 		} else if (State == 200) {
 			if (GNC.Get_tGO() > 5) {
-				OrientAxis(GNC.Get_uTD(), 2, 0, 1);
+				OrientAxis(GNC.Get_uTD(), 2, 0, 1, _V(0, 0, 0));
 			} else {
 				lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 			}
@@ -820,23 +824,25 @@ void IU::SetLVLHAttitude(VECTOR3 v)
 {
 	AttitudeHold = false;
 	if (State <= 100 || State >= 203) {
-		OrientAxis(v, 2, 1, 1);
+		OrientAxis(v, 2, 1, 1, _V(0, -1, 0));
 	}
 }
 
 void IU::HoldAttitude()
 {
 	if (!AttitudeHold) {
-		VECTOR3 zerogl, zgl;	
+		VECTOR3 zerogl, zgl, ygl;	
 		// Store current attitude
 		lvCommandConnector.Local2Global(_V(0.0, 0.0, 0.0), zerogl);
 		lvCommandConnector.Local2Global(_V(0.0, 0.0, 1.0), zgl);
+		lvCommandConnector.Local2Global(_V(0.0, 1.0, 0.0), ygl);
 		AttitudeToHold = zgl - zerogl;
+		AttitudeToHold2 = ygl - zerogl;
 		AttitudeHold = true;
 	}
 
 	if (State <= 100 || State >= 203) {
-		OrientAxis(AttitudeToHold, 2, 0, 1);
+		OrientAxis(AttitudeToHold, 2, 0, 1, AttitudeToHold2);
 	}
 }
 
@@ -866,12 +872,13 @@ bool IU::StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn)
 	return true;
 }
 
-VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
+VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor, VECTOR3 &vec2)
 {
 	//axis=0=x, 1=y, 2=z
 	//ref =0 body coordinates 1=local vertical
 	//orients a vessel axis with a body-relative normalized vector
-	//allows rotation about the axis being oriented
+	//allows rotation about the axis being oriented for axis = x or y
+	//for axis = z vec2 defines the roll angle w.r.t the y axis
 	const double RATE_MAX = RAD*(0.5);
 	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
@@ -902,6 +909,7 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 	ygl = ygl - zerogl;
 	zgl = zgl - zerogl;
 	norm = Normalize(vec);
+	VECTOR3 norm2 = Normalize(vec2);
 	if(ref == 1) {
 		// vec is in local vertical reference, change to body rel coords
 		// vec.x=forward component
@@ -914,6 +922,7 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 		left = Normalize(CrossProduct(pos, vel));
 		forward = Normalize(CrossProduct(left, up));
 		norm = forward * vec.x + up * vec.y + left * vec.z;	
+		norm2 = forward * vec2.x + up * vec2.y + left * vec2.z;	
 	}
 	if(axis == 0) {
 		xa=norm*xgl;
@@ -952,11 +961,18 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 			xa=(xa/fabs(xa))*PI-xa;
 			ya=(ya/fabs(ya))*PI-ya;
 		}
-		za=lvCommandConnector.GetBank();
-		za=(za/fabs(za))*PI-za;
 		delatt.x=ya;
 		delatt.y=-xa;
-		delatt.z=-za;
+
+		xa=asin(norm2*xgl);
+		ya=norm2*ygl;
+		ya=ya/fabs(ya);
+		if(ya < 0.0) {
+			xa=(xa/fabs(xa))*PI-xa;
+		}
+		delatt.z=xa;
+
+		// sprintf(oapiDebugString(), "delatt=%.3f %.3f %.3f", delatt.x*DEG, delatt.y*DEG, delatt.z*DEG);
 	}
 
 	// sprintf(oapiDebugString(), "norm=%.6f %.6f %.6f x=%.6f y=%.6f z=%.6f", 
@@ -1110,6 +1126,7 @@ void IU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_bool(scn, "EXTERNALGNC", ExternalGNC);
 	papiWriteScenario_bool(scn, "ATTITUDEHOLD", AttitudeHold);
 	papiWriteScenario_vec(scn, "ATTITUDETOHOLD", AttitudeToHold);
+	papiWriteScenario_vec(scn, "ATTITUDETOHOLD2", AttitudeToHold2);
 	GNC.SaveState(scn);
 
 	oapiWriteLine(scn, IU_END_STRING);
@@ -1133,6 +1150,7 @@ void IU::LoadState(FILEHANDLE scn)
 		else if (papiReadScenario_bool(line, "EXTERNALGNC", ExternalGNC)); 
 		else if (papiReadScenario_bool(line, "ATTITUDEHOLD", AttitudeHold)); 
 		else if (papiReadScenario_vec(line, "ATTITUDETOHOLD", AttitudeToHold)); 
+		else if (papiReadScenario_vec(line, "ATTITUDETOHOLD2", AttitudeToHold2)); 
 		else if (!strnicmp(line, IUGNC_START_STRING, sizeof(IUGNC_START_STRING))) {
 			GNC.LoadState(scn);
 		}
