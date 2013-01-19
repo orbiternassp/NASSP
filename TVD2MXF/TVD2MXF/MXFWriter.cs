@@ -383,8 +383,10 @@ namespace TVD2MXF {
         xmlTextWriter.WriteAttributeString("service", "s" + channel.Id);
 
         bool startTimeWritten = false;
+        MXFScheduleEntry lastEntry = null;
         for (int i = 0; i < channel.ScheduleEntries.Count; i++) {
-          MXFScheduleEntry entry = channel.ScheduleEntries[i];
+          if (lastEntry == null)
+            lastEntry = channel.ScheduleEntries[i];
 
           // Last entry
           if (i == channel.ScheduleEntries.Count - 1) {
@@ -393,14 +395,15 @@ namespace TVD2MXF {
           // Normal entry
           } else {
             MXFScheduleEntry nextEntry = channel.ScheduleEntries[i + 1];
-            TimeSpan duration = nextEntry.StartTime.ToUniversalTime().Subtract(entry.StartTime.ToUniversalTime());
+            TimeSpan duration = nextEntry.StartTime.ToUniversalTime().Subtract(lastEntry.StartTime.ToUniversalTime());
             if (duration.TotalSeconds > 0) {
               xmlTextWriter.WriteStartElement("ScheduleEntry");
               if (!startTimeWritten) {
-                xmlTextWriter.WriteAttributeString("startTime", entry.XmlStartTime);
+                xmlTextWriter.WriteAttributeString("startTime", lastEntry.XmlStartTime);
                 startTimeWritten = true;
               }
-              WriteScheduleEntryAttributes(xmlTextWriter, entry, Convert.ToInt32(duration.TotalSeconds));
+              WriteScheduleEntryAttributes(xmlTextWriter, lastEntry, Convert.ToInt32(duration.TotalSeconds));
+              lastEntry = nextEntry;
             } else {
               //log.Debug("Skipping entry. Start: " + entry.StartTime + ", program: " + entry.ProgramId + ", channel: " + channel.Id + " " + channel.Name);
             }
