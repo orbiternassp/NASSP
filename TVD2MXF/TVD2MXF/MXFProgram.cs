@@ -315,6 +315,12 @@ namespace TVD2MXF {
         if (pids.Count == 0 && !string.IsNullOrEmpty(this.NormalizedEpisode)) {
           pids = FindPrograms("SELECT * from ProgramDetailView where NormalizedOriginalTitle='" + this.NormalizedOriginalTitle + "' and NormalizedEpisode='" + this.NormalizedEpisode + "'");
           isSeries = true;
+          // NormalizedEpisode not unique
+          if (pids.Count > 1) {
+            SqlCommand fix = new SqlCommand("Update ProgramDetail set NormalizedEpisode = Null where NormalizedOriginalTitle='" + this.NormalizedOriginalTitle + "' and NormalizedEpisode='" + this.NormalizedEpisode + "'", connection);
+            fix.ExecuteNonQuery();
+            pids = new List<long>();
+          }
         }
         if (pids.Count == 0 && this.SeasonNo != null && this.EpisodeNo != null) {
           pids = FindPrograms("SELECT * from ProgramDetailView where NormalizedOriginalTitle='" + this.NormalizedOriginalTitle + "' and SeasonNo=" + this.SeasonNo + " and EpisodeNo=" + this.EpisodeNo);
@@ -344,6 +350,12 @@ namespace TVD2MXF {
       if (pids.Count == 0 && !string.IsNullOrEmpty(this.NormalizedEpisode)) {
         pids = FindPrograms("SELECT * from ProgramDetailView where NormalizedTitle='" + this.NormalizedTitle + "' and NormalizedEpisode='" + this.NormalizedEpisode + "'");
         isSeries = true;
+        // NormalizedEpisode not unique
+        if (pids.Count > 1) {
+          SqlCommand fix = new SqlCommand("Update ProgramDetail set NormalizedEpisode = Null where NormalizedTitle='" + this.NormalizedTitle + "' and NormalizedEpisode='" + this.NormalizedEpisode + "'", connection);
+          fix.ExecuteNonQuery();
+          pids = new List<long>();
+        }
       }
       if (pids.Count == 0 && this.SeasonNo != null && this.EpisodeNo != null) {
         pids = FindPrograms("SELECT * from ProgramDetailView where NormalizedTitle='" + this.NormalizedTitle + "' and SeasonNo=" + this.SeasonNo + " and EpisodeNo=" + this.EpisodeNo);
