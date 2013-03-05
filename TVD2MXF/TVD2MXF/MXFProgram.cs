@@ -191,7 +191,7 @@ namespace TVD2MXF {
 
       // TV Browser with character names
       } else if (!string.IsNullOrEmpty(GetTVBField("actor list")) && GetTVBField("actor list").Contains("\t\t-\t\t")) {
-        string[] drs = GetTVBField("actor list").Split(new string[] {",\n"}, StringSplitOptions.RemoveEmptyEntries);
+        string[] drs = GetTVBField("actor list").Split(new string[] {",\n", "\n", ","}, StringSplitOptions.RemoveEmptyEntries);
         foreach (string dr in drs) {
           string[] dar = dr.Split(new string[] {"\t\t-\t\t"}, StringSplitOptions.RemoveEmptyEntries);
           string d = dar[0].Trim();
@@ -203,16 +203,41 @@ namespace TVD2MXF {
         }
         AddTVBRoles(data);
 
+      // TV Browser with character names 2
+      } else if (!string.IsNullOrEmpty(GetTVBField("actor list")) && GetTVBField("actor list").Contains("(")) {
+        string[] drs = GetTVBField("actor list").Split(new string[] {",\n", "\n", ","}, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string dr in drs) {
+          string[] dar = dr.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries);
+          if (dar.Length > 1) {
+            string d1 = dar[0].Trim();
+            string d2 = dar[1].Trim(); ;
+            if (d1.Length > 0 && d2.Length > 0) {
+              // Sometimes d1 is the actor, sometimes d2...
+              if (data.Persons.ContainsKey(d1)) {
+                AddRole(d1, MXFRole.TYPE_ActorRole, d2, data);
+              } else if (data.Persons.ContainsKey(d2)) {
+                AddRole(d2, MXFRole.TYPE_ActorRole, d1, data);
+              } else {
+                AddRole(d1, MXFRole.TYPE_ActorRole, d2, data);
+              }
+            } else {
+              log.Warn("Malformed TV Browser Darsteller: " + dr);
+            }
+          }
+        }
+        AddTVBRoles(data);
+
       } else if (!string.IsNullOrEmpty(tvmDarsteller)) {
         string[] drs = tvmDarsteller.Split(';');
         foreach (string dr in drs) {
           AddRole(dr.Trim(), MXFRole.TYPE_ActorRole, null, data);
         }
       } else if (!string.IsNullOrEmpty(GetTVBField("actor list"))) {
-        string[] drs = GetTVBField("actor list").Split(',');
+        string[] drs = GetTVBField("actor list").Split(new string[] {",\n", "\n", ","}, StringSplitOptions.RemoveEmptyEntries);
         foreach (string dr in drs) {
           AddRole(dr.Trim(), MXFRole.TYPE_ActorRole, null, data);
         }
+        AddTVBRoles(data);
       }
 
 
@@ -238,13 +263,14 @@ namespace TVD2MXF {
         if (inputKeywords.Contains("Thriller")) 
           AddMovieOrSeriesKeyword("C102", "C205", data);
 
-        if (inputKeywords.Contains("Fantasy/Action") || inputKeywords.Contains("Horror") || inputKeywords.Contains("Fantasyabenteuer") || inputKeywords.Contains("Fantasykomödie"))
+        if (inputKeywords.Contains("Fantasy/Action") || inputKeywords.Contains("Horror") || inputKeywords.Contains("Fantasyabenteuer") || inputKeywords.Contains("Fantasykomödie") ||
+            inputKeywords.Contains("Fantasy-Action") || inputKeywords.Contains("Mysterythriller"))
           AddMovieOrSeriesKeyword("C104", "C203", data);
 
         if (inputKeywords.Contains("Abenteuer"))
           AddMovieOrSeriesKeyword("C103", "C205", data);
 
-        if (inputKeywords.Contains("Familienkomödie"))
+        if (inputKeywords.Contains("Familienkomödie") || inputKeywords.Contains("Komoedie"))
           AddMovieOrSeriesKeyword("C105", "C209", data);
       }
 

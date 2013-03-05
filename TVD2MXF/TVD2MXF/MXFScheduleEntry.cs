@@ -84,10 +84,10 @@ namespace TVD2MXF {
     public bool IsHdtv {
       get {
 
-        // TODO WDR HD, ATV auch NICHT HD, Kinowelt TV oft HD
+        // TODO WDR HD, ATV auch NICHT HD
 
-        // Sat1 (39), Pro7 (40), ATV (115) are wrongly not HD/16:9 in all EPG data
-        if (Channel.Id == "39" || Channel.Id == "40" || Channel.Id == "115") {
+        // Sat1 (39), Pro7 (40), ATV (115),  Kinowelt TV (450) are wrongly not HD/16:9 in all EPG data
+        if (Channel.Id == "39" || Channel.Id == "40" || Channel.Id == "115" || Channel.Id == "450") {
           return true;
         }
 
@@ -98,9 +98,11 @@ namespace TVD2MXF {
 
         return false;
 
+        //
+        // Old stuff
+        //
 
-
-        // TODO Passen Daten so?
+        /*
 
         // ARD (71), arte (58) are always HD as the EPG data is for SD. NOT ZDF (37), "Reich und Schön" is in 4:3 on ZDF HD!
         if (Channel.Id == "71" || Channel.Id == "58") {
@@ -115,6 +117,8 @@ namespace TVD2MXF {
           return true;
         }
         return false;
+          
+        */
       }
     }
   }
