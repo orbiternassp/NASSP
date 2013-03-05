@@ -15,44 +15,14 @@ namespace TVD2MXF {
     public static readonly string WorkingDir = @"C:\Program Files (x86)\TVTools\TVD2MXF";
 
     static void Main(string[] args) {
-
       log.Info("*** START ***");
-
       MXFData data = null;
-
       // Media Center connection
       MCConnection mcconnection = new MCConnection();
 
       try {
         string tvmovieDb = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\tvdaten.mdb";
         string tvmovieImageDir = "C:\\Program Files (x86)\\TV Movie\\TV Movie ClickFinder\\Hyperlinks";
-
-        /*
-         * Check for new data?
-         * 
-        // Get last read daydir
-        TextReader tr = new StreamReader(WorkingDir + "\\TVD2MXF.config");
-        int lastDateDir = int.Parse(tr.ReadLine());
-        tr.Close();
-
-        // Get greatest daydir
-        int curDateDir = 0;
-        DirectoryInfo di = new DirectoryInfo(feedDir + "\\epg");
-        foreach (DirectoryInfo ddi in di.GetDirectories()) {
-          int ddin = int.Parse(ddi.Name);
-          if (ddin > curDateDir) curDateDir = ddin;
-        }
-        if (lastDateDir >= curDateDir) {
-          log.Info("No new data, terminating.");
-
-          // Delete old log files
-          LogCleaner.LogCleaner.Clean();
-
-          log.Info("*** FINISHED ***");
-          return;
-        }
-        log.Info("New data, importing...");
-        */
  
         // TVMovie database connection
         string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + tvmovieDb + ";";
@@ -90,7 +60,10 @@ namespace TVD2MXF {
 
 
       // Stop before import
-      // return;
+      /*
+      log.Warn("Actual import disabled.");
+      return;
+      */
 
 
       try {
@@ -128,13 +101,6 @@ namespace TVD2MXF {
         process.Start();
         process.WaitForExit();
         log.Info("Reindex Search Root done.");
-
-        /*
-        // Write config file
-        TextWriter tw = new StreamWriter(WorkingDir + "\\TVD2MXF.config");
-        tw.WriteLine(curDateDir);
-        tw.Close();
-        */
         
         // Delete old log files
         LogCleaner.LogCleaner.Clean();        
