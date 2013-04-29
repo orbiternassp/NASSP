@@ -118,6 +118,8 @@ namespace TVD2MXF {
             return "ORF 1";
           case "tagesschau24":
             return "EinsExtra";
+          case "Sky Hits HD":
+            return "SKY Cinema Hits HD";
         }
         return Name;
       }
@@ -246,6 +248,8 @@ namespace TVD2MXF {
             return "sixx";
           case "Sat.1 Emotions":
             return "SAT.1 emotions";
+          case "Sky Hits HD":
+            return "Sky Hits";
         }
         return Name;
       }
