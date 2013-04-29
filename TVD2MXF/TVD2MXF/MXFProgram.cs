@@ -267,15 +267,26 @@ namespace TVD2MXF {
             inputKeywords.Contains("Fantasy-Action") || inputKeywords.Contains("Mysterythriller"))
           AddMovieOrSeriesKeyword("C104", "C203", data);
 
+        if (inputKeywords.Contains("SciFi-Action") || inputKeywords.Contains("Science Fiction") || inputKeywords.Contains("Science-fiction") || inputKeywords.Contains("Science-Fiction") || inputKeywords.Contains("Science-Fiction-Action") ||
+            inputKeywords.Contains("Science-Fiction-Horror") || inputKeywords.Contains("Science-Fiction-Komödie") || inputKeywords.Contains("Science-Fiction-Thriller") || inputKeywords.Contains("SciFi-Thriller") || inputKeywords.Contains("Sci-Fi-Abenteuer"))
+          AddMovieOrSeriesKeyword("C104", "C202", data);
+
         if (inputKeywords.Contains("Abenteuer"))
           AddMovieOrSeriesKeyword("C103", "C205", data);
 
-        if (inputKeywords.Contains("Familienkomödie") || inputKeywords.Contains("Komoedie"))
+        if (inputKeywords.Contains("TV-Drama") || inputKeywords.Contains("Liebesdrama"))
+          AddMovieOrSeriesKeyword("C101", "C201", data);
+
+        if (inputKeywords.Contains("Familienkomödie") || inputKeywords.Contains("Komoedie") || inputKeywords.Contains("Kultkomödie") || inputKeywords.Contains("TV-Komödie"))
           AddMovieOrSeriesKeyword("C105", "C209", data);
       }
 
       if (keywords.Count == 0 && inputKeywords.Count != 0) {
-        log.Warn("No Keywords: " + ch.Name + " at " + StartTime.ToString() + ": " + Title + "(" + tvmGenre + ", " + tvmKategorie + ", " + GetTVBField("genre") + ")");
+        if (StartTime <= DateTime.Now.AddDays(8)) {
+          log.Warn("No Keywords: " + ch.Name + " at " + StartTime.ToString() + ": " + Title + "(" + tvmGenre + ", " + tvmKategorie + ", " + GetTVBField("genre") + ")");
+        } else {
+          log.Info("No Keywords: " + ch.Name + " at " + StartTime.ToString() + ": " + Title + "(" + tvmGenre + ", " + tvmKategorie + ", " + GetTVBField("genre") + ")");
+        }
       }
     }
 
@@ -297,6 +308,8 @@ namespace TVD2MXF {
     }
 
     private void AddRole(String name, String roleType, string character, MXFData data) {
+      // Check for invalid names
+      if (name == ")" || name == "(") return;
       // Check for duplicates
       foreach (MXFRole r in roles) {
         if (r.Person.Name == name && r.RoleType == roleType)
@@ -858,6 +871,11 @@ namespace TVD2MXF {
       if (reader.Read()) {
         long? id = (long?)reader["IDProgramDetail"];
         reader.Close();
+
+        SqlCommand update = new SqlCommand("Update ProgramDetail set LastUse = GETDATE() where IDProgramDetail = @a", connection);
+        update.Parameters.Add(new SqlParameter("@a", id));
+        update.ExecuteNonQuery();
+
         return id;
       }
       reader.Close();
@@ -902,7 +920,7 @@ namespace TVD2MXF {
       SqlCommand insert = new SqlCommand("Insert into ProgramDetail(ProgramDetailIDProgram, OriginalTitle, NormalizedOriginalTitle, " +
                                                                    "Title, NormalizedTitle, OriginalEpisode, NormalizedOriginalEpisode, " +
                                                                    "Episode, NormalizedEpisode, SeasonNo, EpisodeNo, AbsoluteEpisodeNo, " +
-                                                                   "ProductionYear, Description, CreatedByChannel) Values (@a, @b, @c, @d, @e, @f, @g, @h, @i, @j, @k, @l, @m, @n, @o)", connection);
+                                                                   "ProductionYear, Description, CreatedByChannel, LastUse) Values (@a, @b, @c, @d, @e, @f, @g, @h, @i, @j, @k, @l, @m, @n, @o, GETDATE())", connection);
       AddProgramDetailParameters(insert, pid, description, channel);
       insert.ExecuteNonQuery();
     }
