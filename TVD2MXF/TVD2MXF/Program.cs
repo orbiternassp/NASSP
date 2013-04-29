@@ -16,6 +16,18 @@ namespace TVD2MXF {
 
     static void Main(string[] args) {
       log.Info("*** START ***");
+
+      LogEpgDBFileSize();
+
+      // Immer Samstag DB warten
+      if (DateTime.Now.DayOfWeek == DayOfWeek.Saturday) {
+        EpgDbMaintenance();
+        LogEpgDBFileSize();
+
+        log.Info("*** FINISHED ***");
+        return;
+      }
+
       MXFData data = null;
       // Media Center connection
       MCConnection mcconnection = new MCConnection();
@@ -32,9 +44,9 @@ namespace TVD2MXF {
 
         // TODO SQL Server connection
         // Development
-        // connectionString = @"Initial Catalog=TVTools; Data Source=WILES\SQLExpress; user=sa; MultipleActiveResultSets=True";
+        connectionString = @"Initial Catalog=TVTools; Data Source=WILES\SQLExpress; user=sa; MultipleActiveResultSets=True";
         // Release
-        connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
+        // connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
 
 
         SqlConnection connection = new SqlConnection(connectionString);
@@ -101,6 +113,8 @@ namespace TVD2MXF {
         process.Start();
         process.WaitForExit();
         log.Info("Reindex Search Root done.");
+
+        LogEpgDBFileSize();
         
         // Delete old log files
         LogCleaner.LogCleaner.Clean();        
@@ -255,6 +269,32 @@ namespace TVD2MXF {
         }
       }
       log.Info("AfterImport done.");
+    }
+
+    private static void EpgDbMaintenance() {
+      log.Info("Starting EPG DB maintenance...");
+
+      // Logging on
+      Microsoft.Win32.Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Debug\mcstore", "TraceLevel", 3);
+
+      // Call mcupdate
+      Process p = new Process();
+      p.StartInfo.FileName = @"C:\Windows\eHome\mcupdate.exe";
+      p.StartInfo.Arguments = " -dbgc";
+      p.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
+      p.Start();
+      p.WaitForExit();
+      log.Info("MCUpdate done");
+
+      // Logging off
+      Microsoft.Win32.Registry.SetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Debug\mcstore", "TraceLevel", 0);
+    }
+
+    private static void LogEpgDBFileSize() {
+      int epgDbNo = (int)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\EPG", "EPG.instance", 0);
+      string epgDbFile = @"C:\ProgramData\Microsoft\eHome\mcepg2-" + epgDbNo + ".db";
+      FileInfo epgFile = new FileInfo(epgDbFile);
+      log.Warn("EPG DB file size: " + epgFile.Length.ToString("n0") + " byte");
     }
   }
 }
