@@ -56,6 +56,7 @@ namespace TVD2MXF {
       SqlCommand sql = new SqlCommand("Update Keyword set ProgramCount = 0", connection);
       sql.ExecuteNonQuery();
 
+
       /*
       KeywordGroups kwgs = new KeywordGroups(mcconnection.Store);
       foreach (KeywordGroup kwg in kwgs) {
@@ -66,29 +67,9 @@ namespace TVD2MXF {
       }
       */
 
+  
       // Removing wrong keywords     
-      bool finished = false;
-      do {
-        finished = true;
-        Programs progs = new Programs(mcconnection.Store);
-        foreach (Microsoft.MediaCenter.Guide.Program p in progs) {
-          //log.Debug("Handling program " + p.Title + ", " + p.GetUIdValue());
-          bool clear = false;
-          if (p.GetUIdValue() == null) {
-            clear = true;
-          } else if (!p.GetUIdValue().StartsWith("!Loaders!Glid!Programs!") && !p.GetUIdValue().StartsWith("!Program!tvtools")) {
-            clear = true;
-          }
-          if (clear) {
-            if (p.Keywords.First != null) {
-              p.Keywords.Clear();
-              p.Update();
-              finished = false;
-            }
-          }
-        }
-      } while (finished == false);
-      
+      CleanupPrograms(mcconnection);
 
       //
       // Load existing persons from EPG DB
@@ -105,14 +86,19 @@ namespace TVD2MXF {
           } else {
             //log.Debug("Loading [" + epgperson.GetUIdValue() + "] " + epgperson.Name); 
             MXFPerson pers = new MXFPerson(epgperson.GetUIdValue(), epgperson.Name);
-            if (data.Persons.ContainsKey(pers.Name)) {
-              data.Persons.Remove(pers.Name);
-              MXFPerson persNeu = DeleteDuplicates(pers.Name, mcconnection);
-              data.Persons.Add(persNeu.Name, persNeu);
-              persNeu.Id = data.PersonId++;
+            // Delete invalid persons
+            if ((pers.Name.Contains("(") || pers.Name.Contains(")")) && !(pers.Name.Contains("(I)") || pers.Name.Contains("(II)") || pers.Name.Contains("(III)"))) {
+              DeletePerson(epgperson, mcconnection);
             } else {
-              data.Persons.Add(pers.Name, pers);
-              pers.Id = data.PersonId++;
+              if (data.Persons.ContainsKey(pers.Name)) {
+                data.Persons.Remove(pers.Name);
+                MXFPerson persNeu = DeleteDuplicates(pers.Name, mcconnection);
+                data.Persons.Add(persNeu.Name, persNeu);
+                persNeu.Id = data.PersonId++;
+              } else {
+                data.Persons.Add(pers.Name, pers);
+                pers.Id = data.PersonId++;
+              }
             }
           }
         }
@@ -192,6 +178,52 @@ namespace TVD2MXF {
     }
     */
 
+    private void DeletePerson(Person p, MCConnection connection) {
+      log.Warn("Deleting Person [" + p.GetUIdValue() + "]: " + p.Name);
+
+      foreach (ActorRole r in p.ActorRoles.ToList()) {
+        log.Debug("ActorRole " + r.Id + " " + r.Rank + " " + r.Character + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Character = string.Empty;
+        r.Update();
+      }      
+      foreach (DirectorRole r in p.DirectorRoles.ToList()) {
+        log.Debug("DirectorRole " + r.Id + " " + r.Rank + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Update();
+      }      
+      foreach (GuestActorRole r in p.GuestActorRoles.ToList()) {
+        log.Debug("GuestActorRole " + r.Id + " " + r.Rank + " " + r.Character + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Character = string.Empty;
+        r.Update();
+      }      
+      foreach (HostRole r in p.HostRoles.ToList()) {
+        log.Debug("HostRole " + r.Id + " " + r.Rank + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Update();
+      }
+      foreach (ProducerRole r in p.ProducerRoles.ToList()) {
+        log.Debug("ProducerRole " + r.Id + " " + r.Rank + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Update();
+      }
+      foreach (WriterRole r in p.WriterRoles.ToList()) {
+        log.Debug("WriterRole " + r.Id + " " + r.Rank + " " + r.Program.Title + " " + r.Program.GetUIdValue());
+        r.Person = null;
+        r.Program = null;
+        r.Update();
+      }
+      
+      p.Name = string.Empty;
+      p.Update();
+    }
+
     private MXFPerson DeleteDuplicates(string name, MCConnection connection) {
 
       bool deleteDuplicate = true;
@@ -242,14 +274,17 @@ namespace TVD2MXF {
       }
 
       if (personToStay == null || personToRemove == null) {
-        log.Warn("Cannot distinguish persons!");
+        log.Warn("Cannot distinguish persons, keeping first person...");
         personToStay = dupl.ToList()[0];
-        if (personToStay == null) throw new Exception("I lost myself again");
-        return new MXFPerson(personToStay.GetUIdValue(), personToStay.Name);
+        personToRemove = dupl.ToList()[1];
+        if (personToStay == null) throw new Exception("I lost myself again (stay)");
+        if (personToRemove == null) throw new Exception("I lost myself again (remove)");
+
+        //return new MXFPerson(personToStay.GetUIdValue(), personToStay.Name);
       }
 
       log.Info("*** REMOVE Person [" + personToRemove.GetUIdValue() + "]: " + personToRemove.Name);
-      log.Debug("Keep Person [" + personToStay.GetUIdValue() + "]: " + personToStay.Name);
+      log.Info("Keep Person [" + personToStay.GetUIdValue() + "]: " + personToStay.Name);
 
       if (deleteDuplicate) {
         foreach (ActorRole r in personToRemove.ActorRoles.ToList()) {
@@ -449,5 +484,191 @@ namespace TVD2MXF {
       group.Keywords.Add(msKey);
       data.Keywords.Add(msKey.Id, msKey);
     }
+
+    private void CleanupPrograms(MCConnection mcconnection) {
+      bool finished = false;
+      do {
+        finished = true;
+        Programs progs = new Programs(mcconnection.Store);
+        foreach (Microsoft.MediaCenter.Guide.Program p in progs) {
+          /*
+          log.Debug("Handling program " + p.Title + ", " + p.GetUIdValue());
+          foreach (ScheduleEntry se in p.ScheduleEntries) {
+            log.Debug("    SE " + se.StartTime.ToString());
+          }
+          */
+          bool clear = false;
+          if (p.GetUIdValue() == null) {
+            clear = true;
+          } else if (!p.GetUIdValue().StartsWith("!Loaders!Glid!Programs!") && !p.GetUIdValue().StartsWith("!Program!tvtools")) {
+            clear = true;
+          }
+          if (clear) {
+            if (p.Keywords.First != null) {
+              p.Keywords.Clear();
+              p.Update();
+              finished = false;
+            }
+          }
+        }
+      } while (finished == false);
+
+      /*
+      Services ss = new Services(mcconnection.Store);
+      foreach (Service service in ss) {
+        if (service.GetUIdValue() != null) {
+          if (service.GetUIdValue().EndsWith(".tvd2mxf.org")) {
+            log.Debug(service.Name + " - " + service.ScheduleEntries.ToArray().Length);
+
+            //DateTime dtEnd = DateTime.Now.Subtract(new TimeSpan(TimeSpan.TicksPerDay)).ToUniversalTime();
+            //DateTime dtEnd = DateTime.MaxValue;
+            DateTime dtEnd = DateTime.Now.Add(new TimeSpan(2 * TimeSpan.TicksPerDay)).ToUniversalTime();
+
+            ScheduleEntry[] scheduleEntriesBetween = service.GetScheduleEntriesBetween(DateTime.MinValue, dtEnd);
+            log.Debug("SEs: " + scheduleEntriesBetween.Length);
+            List<ScheduleEntry> entries = new List<ScheduleEntry>();
+            foreach (ScheduleEntry entry in scheduleEntriesBetween) {
+              if (entry.EndTime <= dtEnd) {
+                entries.Add(entry);
+              }
+            }
+            CleanupService(service, entries);
+
+            return;
+          }
+        }
+      }
+      */
+
+    }
+
+    /*
+    private void CleanupService(Service channel_service, List<ScheduleEntry> entries) {
+      using (List<ScheduleEntry>.Enumerator enumerator = entries.GetEnumerator()) {
+        while (enumerator.MoveNext()) {
+          ScheduleEntry entry = enumerator.Current;
+          if ((entry.ProgramContent == null) && entry.Program.ProgramContents.Empty) {
+            ClearProgram(entry.Program);
+          }
+          
+          UpdateDelegate operation = delegate
+          {
+            entry.Service = null;
+            if (entry.ProgramContent == null) {
+              entry.Program = null;
+            }
+            entry.Unlock();
+          };
+          entry.Update(operation);
+          
+          //entry.Service = null;
+          //entry.Program = null;
+          //entry.Update();
+
+        }
+        channel_service.Update();
+      }
+    }
+
+    private void ClearProgram(Microsoft.MediaCenter.Guide.Program program) {
+
+      log.Debug("Program: " + program.Title);
+
+      program.Title = string.Empty;
+      program.ShortDescription = string.Empty;
+      program.Description = string.Empty;
+      program.EpisodeTitle = string.Empty;
+      program.Actors = string.Empty;
+      IEnumerator enumerator = program.ActorRoles.GetEnumerator();
+      if (enumerator != null) {
+        while (enumerator.MoveNext()) {
+          ActorRole role = enumerator.Current as ActorRole;
+          UpdateDelegate operation = delegate
+          {
+            role.Program = null;
+          };
+          role.Update(operation);
+        }
+      }
+      program.Directors = string.Empty;
+      enumerator = program.DirectorRoles.GetEnumerator();
+      if (enumerator != null) {
+        while (enumerator.MoveNext()) {
+          DirectorRole role = enumerator.Current as DirectorRole;
+          UpdateDelegate delegate3 = delegate
+          {
+            role.Program = null;
+          };
+          role.Update(delegate3);
+        }
+      }
+      program.GuestActors = string.Empty;
+      enumerator = program.GuestActorRoles.GetEnumerator();
+      if (enumerator != null) {
+        while (enumerator.MoveNext()) {
+          GuestActorRole role = enumerator.Current as GuestActorRole;
+          UpdateDelegate delegate4 = delegate
+          {
+            role.Program = null;
+          };
+          role.Update(delegate4);
+        }
+      }
+      program.Producers = string.Empty;
+      enumerator = program.ProducerRoles.GetEnumerator();
+      if (enumerator != null) {
+        while (enumerator.MoveNext()) {
+          ProducerRole role = enumerator.Current as ProducerRole;
+          UpdateDelegate delegate5 = delegate
+          {
+            role.Program = null;
+          };
+          role.Update(delegate5);
+        }
+      }
+      program.Writers = string.Empty;
+      enumerator = program.WriterRoles.GetEnumerator();
+      if (enumerator != null) {
+        while (enumerator.MoveNext()) {
+          WriterRole role = enumerator.Current as WriterRole;
+          UpdateDelegate delegate6 = delegate
+          {
+            role.Program = null;
+          };
+          role.Update(delegate6);
+        }
+      }
+      program.Keywords.Clear();
+      program.Language = string.Empty;
+      program.GuideImage = null;
+      program.Year = 0;
+      program.EpisodeNumber = 0;
+      program.SeasonNumber = 0;
+      program.HalfStars = 0;
+      program.Series = null;
+      program.IsSeries = false;
+      program.OriginalAirdate = new DateTime();
+      program.IsAction = false;
+      program.HasAdult = false;
+      program.IsComedy = false;
+      program.IsDocumentary = false;
+      program.IsDrama = false;
+      program.IsEducational = false;
+      program.IsHorror = false;
+      program.IsKids = false;
+      program.IsMovie = false;
+      program.IsMusic = false;
+      program.IsNews = false;
+      program.IsReality = false;
+      program.IsRomance = false;
+      program.IsSerial = false;
+      program.IsScienceFiction = false;
+      program.IsSoap = false;
+      program.IsSpecial = false;
+      program.IsSports = false;
+      program.IsThriller = false;
+      program.Update();
+    }
+    */
   }
 }
