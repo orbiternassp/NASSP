@@ -44,9 +44,9 @@ namespace TVD2MXF {
 
         // TODO SQL Server connection
         // Development
-        connectionString = @"Initial Catalog=TVTools; Data Source=WILES\SQLExpress; user=sa; MultipleActiveResultSets=True";
+        // connectionString = @"Initial Catalog=TVTools; Data Source=WILES\SQLExpress; user=sa; MultipleActiveResultSets=True";
         // Release
-        // connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
+        connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
 
 
         SqlConnection connection = new SqlConnection(connectionString);
