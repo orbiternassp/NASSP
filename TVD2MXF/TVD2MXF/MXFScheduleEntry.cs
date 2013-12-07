@@ -86,8 +86,8 @@ namespace TVD2MXF {
 
         // TODO WDR HD, ATV auch NICHT HD
 
-        // Sat1 (39), Pro7 (40), ATV (115),  Kinowelt TV (450) are wrongly not HD/16:9 in all EPG data
-        if (Channel.Id == "39" || Channel.Id == "40" || Channel.Id == "115" || Channel.Id == "450") {
+        // Sat1 (39), Pro7 (40), ATV (115),  Kinowelt TV (450), ZDFInfo (276) are wrongly not HD/16:9 in all EPG data
+        if (Channel.Id == "39" || Channel.Id == "40" || Channel.Id == "115" || Channel.Id == "450" || Channel.Id == "276") {
           return true;
         }
 
