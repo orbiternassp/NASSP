@@ -34,17 +34,15 @@ namespace TVD2MXF {
     }
 
     public void VerifyTVMovie(OleDbConnection tvmConnection) {
-      if (string.IsNullOrEmpty(this.TVMovieName)) {
+      if (this.Name == "ESPN America" || this.Name == "ORF III" || this.Name == "Nickelodeon / Comedy Central" || this.Name == "ATV2" || this.Name == "Sport1+") {
+        log.Info("TVMovie channel doesn't exist: " + this.Name);
+      } else if (string.IsNullOrEmpty(this.TVMovieName)) {
         log.Error("TVMovie channel not mapped: " + this.Name);
       } else {
-        if (this.Name == "ORF III" || this.Name == "Nickelodeon / Comedy Central" || this.Name == "ATV2" || this.Name == "Sport1+") {
-          log.Info("TVMovie channel doesn't exist: " + this.Name);
-        } else {
-          OleDbCommand command = new OleDbCommand("Select count(*) from Sendungen where SenderKennung = '" + this.TVMovieName + "'", tvmConnection);
-          int count = (int)command.ExecuteScalar();
-          if (count == 0) {
-            log.Error("TVMovie channel doesn't have Sendungen: " + this.Name);
-          }
+        OleDbCommand command = new OleDbCommand("Select count(*) from Sendungen where SenderKennung = '" + this.TVMovieName + "'", tvmConnection);
+        int count = (int)command.ExecuteScalar();
+        if (count == 0) {
+          log.Error("TVMovie channel doesn't have Sendungen: " + this.Name);
         }
       }
     }
@@ -120,6 +118,15 @@ namespace TVD2MXF {
             return "EinsExtra";
           case "Sky Hits HD":
             return "SKY Cinema Hits HD";
+          case "ESPN America":
+            return "";  // Programm falsch
+          case "Sky Comedy":
+            return "SKY Comedy";
+          case "Sky Nostalgie":
+            return "SKY Nostalgie";
+          case "Sky Emotion":
+            return "SKY Emotion";
+
         }
         return Name;
       }
@@ -294,7 +301,6 @@ namespace TVD2MXF {
         case "yourfamily":
         case "Austria 9":
         case "SF1":
-        case "ESPN America":
         case "Baby TV":
         case "BabyFirstTV":
         case "SF2":

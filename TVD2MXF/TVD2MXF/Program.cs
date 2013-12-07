@@ -17,6 +17,24 @@ namespace TVD2MXF {
     static void Main(string[] args) {
       log.Info("*** START ***");
 
+      /*
+      System.Data.SqlServerCe.SqlCeEngine sqlce = new System.Data.SqlServerCe.SqlCeEngine(@"Data Source=D:\Dokumente\TV\TVD2MXF\BUG\mcepg2-4.db; SSCE:Max Database Size=2048; SSCE:Encrypt Database=True; SSCE:Database Password=4d9295ee850f4cd49281ecfe16b22817");
+      sqlce.Repair(@"Data Source=D:\Dokumente\TV\TVD2MXF\BUG\mcepg2-4.db; SSCE:Max Database Size=2048; SSCE:Encrypt Database=True; SSCE:Database Password=4d9295ee850f4cd49281ecfe16b22817", System.Data.SqlServerCe.RepairOption.RecoverCorruptedRows);
+      return;
+      */
+      
+      /*
+      System.Data.SqlServerCe.SqlCeConnection cecon = new System.Data.SqlServerCe.SqlCeConnection(@"Data Source=D:\Dokumente\TV\TVD2MXF\BUG\mcepg2-4.db; password = 4d9295ee850f4cd49281ecfe16b22817; Max Database Size=2048; Encrypt=True; ");
+      cecon.Open();
+      System.Data.SqlServerCe.SqlCeCommand sql = new System.Data.SqlServerCe.SqlCeCommand("select * from INFORMATION_SCHEMA.Tables", cecon);
+      System.Data.SqlServerCe.SqlCeDataReader reader = sql.ExecuteReader();
+      while (reader.Read()) {
+        log.Info(reader["TABLE_NAME"]);
+      }
+      return;
+      */
+
+
       LogEpgDBFileSize();
 
       // Immer Samstag DB warten
@@ -255,7 +273,7 @@ namespace TVD2MXF {
                 }
               }
             } else {
-              log.Error("Program not found: " + p.GetUIdValue() + " " + p.Title);
+              log.Warn("Program not found: " + p.GetUIdValue() + " " + p.Title);
             }
             servicedProgs.Add(p.GetUIdValue());
           }
