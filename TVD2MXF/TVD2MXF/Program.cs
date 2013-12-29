@@ -133,7 +133,22 @@ namespace TVD2MXF {
         log.Info("Reindex Search Root done.");
 
         LogEpgDBFileSize();
-        
+
+        // Delete old Programs/Series
+        string connectionString = @"Initial Catalog=TVTools; Data Source=HTPC\MYMOVIES; user=tvtools; Password=tvtools; MultipleActiveResultSets=True";
+        SqlConnection connection = new SqlConnection(connectionString);
+        connection.Open();
+
+        SqlCommand delete = new SqlCommand("Delete from ProgramDetail where DateDiff(month, LastUse, GETDATE()) >= 6", connection);
+        delete.ExecuteNonQuery();
+        delete = new SqlCommand("Delete from Program where IDProgram not in (Select ProgramDetailIDProgram from ProgramDetail)", connection);
+        delete.ExecuteNonQuery();
+        delete = new SqlCommand("Delete from Series where IDSeries not in (Select ProgramIDSeries from Program)", connection);
+        delete.ExecuteNonQuery();
+
+        connection.Close();
+        log.Info("Old programs deleted.");
+
         // Delete old log files
         LogCleaner.LogCleaner.Clean();        
 

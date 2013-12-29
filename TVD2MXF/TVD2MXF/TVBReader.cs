@@ -117,6 +117,16 @@ namespace TVD2MXF {
             ch.VerifyTVMovie(tvmovieConnection);
 
             XmlNodeList xmlProgs = xmlChannel.SelectNodes("programs/program");
+
+            // Special Hack Sky Hits -> Sky Christmas
+            if (ch.TVBrowserName == "Sky Hits" && xmlProgs.Count == 0) {
+              log.Info("Using Sky Christmas instead of Sky Hits");
+              xmlChannel = xmlTvb.DocumentElement.SelectSingleNode("channel[name='Sky Christmas']");
+              if (xmlChannel != null) {
+                xmlProgs = xmlChannel.SelectNodes("programs/program");
+              }
+            }
+
             foreach (XmlNode xmlProg in xmlProgs) {
               MXFProgram prog = new MXFProgram(ch, xmlProg, connection, tvmovieConnection, data, tvmImageDir);
               if (!data.Programs.ContainsKey(prog.Id)) {
