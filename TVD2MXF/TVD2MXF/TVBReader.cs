@@ -152,7 +152,7 @@ namespace TVD2MXF {
 
         } else {
           // München TV etc. gibt es wirklich nicht
-          if (ch.Name == "München TV" || ch.Name == "VH1 Classic") {
+          if (ch.Name == "München TV" || ch.Name == "VH1 Classic" || ch.Name == "Das VIERTE") {
             log.Info("TV Browser channel doesn't exist: " + ch.Name);
           } else {
             log.Error("TV Browser channel not mapped: " + ch.Name);
