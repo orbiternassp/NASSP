@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2015/06/29 15:52:04  dseagrav
+  *	Patch missing EPS gauges
+  *	
   *	Revision 1.24  2012/03/24 02:29:36  vrouleau
   *	Check point commit for Radar Tape Range & Range Rate.
   *	
