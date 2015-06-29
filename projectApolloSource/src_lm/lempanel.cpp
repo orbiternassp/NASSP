@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2012/03/24 02:29:36  vrouleau
+  *	Check point commit for Radar Tape Range & Range Rate.
+  *	
   *	Revision 1.23  2011/07/16 18:46:47  dseagrav
   *	LM RR work, first part
   *	
@@ -1817,8 +1820,8 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_RIGHTPANEL: // LEM Right Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		oapiRegisterPanelArea (AID_LM_EPS_DC_VOLTMETER,             _R( 110,  706, 209,  805), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_EPS_DC_AMMETER,               _R( 110,  818, 209,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_EPS_DC_VOLTMETER,             _R( 110,  706, 209,  804), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_EPS_DC_AMMETER,               _R( 110,  818, 209,  916), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW1,					_R( 174,  85,  1223, 115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW2,					_R( 174,  258, 1351, 288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
@@ -2209,11 +2212,11 @@ void LEM::SetSwitches(int panel) {
 
 			EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER,MainPanel);			
 			EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, &EPSMonitorSelectRotary);
-			EPSDCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
+			EPSDCVoltMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 99, 98); // Should be SRF_DCVOLTS but that is invalid for some reason?
 
 			EPSP14AmMeterSwitchRow.Init(AID_LM_EPS_DC_AMMETER,MainPanel);
 			EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, &EPSMonitorSelectRotary);
-			EPSDCAmMeter.SetSurface(srf[SRF_DCAMPS], 99, 98);
+			EPSDCAmMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 99, 98); // Should be SRF_DCAMPS but that is invalid for some reason?
 
 			EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS,MainPanel);
 			EPSInverterSwitch.Init( 142, 135, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39],EPSLeftControlArea, this, &INV_1, &INV_2);
