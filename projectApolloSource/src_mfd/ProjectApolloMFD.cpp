@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2012/08/09 18:55:44  tschachim
+  *	State vector slot selection button instead of "focus automatic"
+  *	
   *	Revision 1.23  2012/08/07 20:37:33  tschachim
   *	Removed the "Other SV" feature as it was buggy and obsolete, use the Change Source button instead.
   *	
@@ -227,6 +230,8 @@ static int g_MFDmode; // identifier for new MFD mode
 //This program displays info on the current telcom socket.  For debugging only.
 #define PROG_SOCK		6		
 #define PROG_DEBUG		7
+// This screen pulls data from the CMC to be used for initializing the LGC
+#define PROG_LGC		8
 
 #define PROGSTATE_NONE				0
 #define PROGSTATE_TLI_START			1
@@ -819,7 +824,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	// The labels for the buttons used by our MFD mode
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
 	//Additional button added at the bottom right of none for the debug string.
-	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","","","","","","","SOCK","DBG"};
+	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","LGC","","","","","","SOCK","DBG"};
 	static char *labelGNC[4] = {"BCK", "KILR", "EMS", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
@@ -827,6 +832,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "LS", "", "SLT"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
+	static char *labelLGC[1] = {"BCK"};
 
 	//If we are working with an unsupported vehicle, we don't want to return any button labels.
 	if (!saturn && !lem) {
@@ -853,6 +859,9 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	else if (screen == PROG_DEBUG) {
 		return (bt < 12 ? labelDEBUG[bt] : 0);
 	}
+	else if (screen == PROG_LGC) {
+		return (bt < 1 ? labelLGC[bt] : 0);
+	}
 	return (bt < 12 ? labelNone[bt] : 0);
 }
 
@@ -865,7 +874,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Environmental Control System", 0, 'E'},
 		{"IMFD Support", 0, 'I'},
 		{"Telemetry",0,'T'},
-		{0,0,0},
+		{"LGC Initialization Data",0,'L'},
 		{0,0,0},
 		{0,0,0},
 		{0,0,0},
@@ -927,6 +936,9 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Freeze debug line",0,'F'},
 		{"Back",0,'B'}
 	};
+	static const MFDBUTTONMENU mnuLGC[1] = {
+		{"Back", 0, 'B'}
+	};
 	// We don't want to display a menu if we are in an unsupported vessel.
 	if (!saturn && !lem) {
 		menu = 0;
@@ -961,6 +973,11 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	{
 		if (menu) *menu = mnuDebug;
 		return 12;
+	}
+	else if (screen == PROG_LGC)
+	{
+		if (menu) *menu = mnuLGC;
+		return 1;
 	}
 	else {
 		if (menu) *menu = mnuNone;
@@ -1003,6 +1020,11 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		} else if (key == OAPI_KEY_D) {
 			screen = PROG_DEBUG;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		} else if (key == OAPI_KEY_L) {
+			screen = PROG_LGC;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -1242,6 +1264,16 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		}
 	}
+	else if (screen == PROG_LGC)
+	{
+		if (key == OAPI_KEY_B)
+		{
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -1251,13 +1283,14 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	//We only want to accept left mouse button clicks.
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, 0, 0, 0, 0, 0, 0, OAPI_KEY_S, OAPI_KEY_D };
+	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, OAPI_KEY_L, 0, 0, 0, 0, 0, OAPI_KEY_S, OAPI_KEY_D };
 	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
 	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
+	static const DWORD btkeyLgc[1] = { OAPI_KEY_B };	
 
 	if (screen == PROG_GNC) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyGNC[bt]);
@@ -1276,6 +1309,10 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	else if (screen == PROG_DEBUG)
 	{
 		if (bt < 12) return ConsumeKeyBuffered (btkeyDEBUG[bt]);
+	}
+	else if (screen == PROG_LGC)
+	{
+		if (bt < 1) return ConsumeKeyBuffered (btkeyLgc[bt]);
 	}
 	else {		
 		if (bt < 12) return ConsumeKeyBuffered (btkeyNone[bt]);
@@ -1753,6 +1790,93 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		else TextOut(hDC, width / 2, (int) (height * 0.4), debugString, strlen(debugString));
 	}
+	// Draw LGC Setup screen
+	else if (screen == PROG_LGC) {
+		OBJHANDLE object;
+		VESSEL *vessel;
+		TextOut(hDC, width / 2, (int) (height * 0.3), "LGC Docked Init Data", 20);
+		// What's our status?
+		if(saturn == NULL){
+			// TextOut(hDC, width / 2, (int) (height * 0.4), "We are in the LM", 16);
+			// We need to find the CM.
+			// In all of the scenarios in which the LM is present and selectable, the CM is already separated from the S4B.
+			object = oapiGetVesselByName("Gumdrop"); // A9
+			if(object == NULL){
+				object = oapiGetVesselByName("Charlie Brown"); // A10
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Columbia"); // A11
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Yankee Clipper"); // A12
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Odyssey"); // A13
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Kitty Hawk"); // A14
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Endeavour"); // A15
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("Casper"); // A16
+			}
+			if(object == NULL){
+				object = oapiGetVesselByName("America"); // A17
+			}
+			if(object != NULL){
+				vessel = oapiGetVesselInterface(object);
+				// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
+				if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+					!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+						saturn = (Saturn *)vessel;
+						// Is this a vAGC CM?
+						if(saturn->IsVirtualAGC() == FALSE){
+							TextOut(hDC, width / 2, (int) (height * 0.4), "Only for Virtual AGC mode", 25);
+						}else{
+							// Yes
+							VECTOR3 CMattitude,LMattitude;
+							unsigned short tephem[3]; 
+							// Obtain CM attitude.
+							// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
+							CMattitude.x = saturn->imu.Gimbal.X*DEG; // OUTER
+							CMattitude.y = saturn->imu.Gimbal.Y*DEG; // INNER
+							CMattitude.z = saturn->imu.Gimbal.Z*DEG; // MIDDLE
+							// Docking tunnel angle is assumed to be zero.
+							LMattitude.x = 300-CMattitude.x; if(LMattitude.x < 0){ LMattitude.x += 360; }
+							LMattitude.y = 180+CMattitude.y; if(LMattitude.y > 360){ LMattitude.y -= 360; }
+							LMattitude.z = 360-CMattitude.z; if(LMattitude.z < 0){ LMattitude.x += 360; }
+							// We should obtain and print CSM time, but...
+							// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
+							// Just initialize from the mission timer.
+							// Obtain TEPHEM
+							tephem[0] = saturn->agc.vagc.Erasable[0][01706];
+							tephem[1] = saturn->agc.vagc.Erasable[0][01707];
+							tephem[2] = saturn->agc.vagc.Erasable[0][01710];
+							sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
+							TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
+							// Format gimbal angles and print them
+							sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x, CMattitude.y, CMattitude.z);
+							TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
+							sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x, LMattitude.y, LMattitude.z);
+							TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
+
+						}
+						saturn = NULL; // Clobber
+				}
+			}
+		}else{
+			TextOut(hDC, width / 2, (int) (height * 0.4), "Do this from the LM", 19);
+		}
+		/*
+		sprintf(buffer, "Socket: %i", close_Socket);
+		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
+		*/
+	}
+
 }
 
 // =============================================================================================
