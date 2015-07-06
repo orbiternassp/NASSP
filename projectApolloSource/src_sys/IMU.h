@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/10/04 13:36:55  vrouleau
+  *	PIPA rate for the LM is 1 cm/s. Not the same as CSM ( 5.85 cm/s)
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -189,6 +192,9 @@ protected:
 
 	double pipaRate;	// PIPA pulse representation of speed change
 	double LastTime;	// in seconds
+
+	// Allow the MFD to touch our privates
+	friend class ProjectApolloMFD;
 };
 
 //

@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2013/01/07 18:41:05  meik84
+  *	SIB LVDC++ :
+  *	loading/saving, new nav init, attitude error calcs now with euler correction, added SIVB-takeover mode
+  *	
   *	Revision 1.24  2012/12/13 19:45:05  meik84
   *	LVDC++: SIB- LVDC++ & new LVDC.cpp
   *	
@@ -4851,6 +4855,8 @@ protected:
 	friend class SaturnASCPSwitch;
 	friend class SaturnAbortSwitch;
 	friend class SaturnPanelOrdeal;
+	// Friend class the MFD too so it can steal our data
+	friend class ProjectApolloMFD;
 };
 
 extern void BaseInit();
