@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2015/07/13 12:09:30  dseagrav
+  *	LM radar interface work. LR wired to systems and now consumes power.
+  *	Neither LR nor RR actually work, but the computer interfaces should be complete.
+  *	
   *	Revision 1.30  2012/03/24 02:29:36  vrouleau
   *	Check point commit for Radar Tape Range & Range Rate.
   *	
