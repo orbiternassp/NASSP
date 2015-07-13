@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2012/03/24 02:29:36  vrouleau
+  *	Check point commit for Radar Tape Range & Range Rate.
+  *	
   *	Revision 1.29  2012/03/14 23:48:34  vrouleau
   *	Add 'Other Vehicule State Vetocr' option in PAMFD
   *	
@@ -370,19 +373,24 @@ public:
 
 
 // Landing Radar
-class LEM_LR{
+class LEM_LR : public e_object{
 public:
 	LEM_LR();
-	void Init(LEM *s);
+	void Init(LEM *s,e_object *dc_src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	double GetAntennaTempF();
 	double lastTemp;
 
+	bool IsPowered(); 
+
 	LEM *lem;					// Pointer at LEM
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+    e_object *dc_source;		// Source of DC power
+	double antennaAngle;		// Antenna angle
+	int ruptSent;				// Rupt sent
 };
 
 // Rendezvous Radar
@@ -428,6 +436,9 @@ private:
 	double shaftVel;
 	double range;
 	double rate;
+	int ruptSent;				// Rupt sent
+	int scratch[2];             // Scratch data
+
 };
 
 

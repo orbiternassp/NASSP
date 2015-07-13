@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2012/03/24 02:29:36  vrouleau
+  *	Check point commit for Radar Tape Range & Range Rate.
+  *	
   *	Revision 1.30  2011/07/16 18:46:48  dseagrav
   *	LM RR work, first part
   *	
@@ -811,7 +814,9 @@ void LEM::SystemsInit()
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
 
 	// Landing Radar
-	LR.Init(this);
+	PGNS_LDG_RDR_CB.MaxAmps = 10.0; // Primary DC power
+	PGNS_LDG_RDR_CB.WireTo(&CDRs28VBus);
+	LR.Init(this,&PGNS_LDG_RDR_CB);
 	// Rdz Radar
 	RDZ_RDR_AC_CB.MaxAmps = 5.0;
 	RDZ_RDR_AC_CB.WireTo(&CDRs28VBus);
@@ -1894,9 +1899,10 @@ LEM_LR::LEM_LR() : antenna("LEM-LR-Antenna",_vector3(0.013, -3.0, -0.03),0.03,0.
 {
 	lem = NULL;
 	lastTemp = 0;
+	antennaAngle = 24; // Position 1
 }
 
-void LEM_LR::Init(LEM *s){
+void LEM_LR::Init(LEM *s,e_object *dc_src){
 	lem = s;
 	// Set up antenna.
 	// LR antenna is designed to operate between 0F and 185F
@@ -1915,12 +1921,195 @@ void LEM_LR::Init(LEM *s){
 		antheater.Enable();
 		antheater.SetPumpAuto();
 	}
+	dc_source = dc_src;
 }
+
+// Are we on?
+bool LEM_LR::IsPowered()
+
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) { 
+		return false;
+	}
+	return true;
+}
+
 
 void LEM_LR::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 	// sprintf(oapiDebugString(),"LR Antenna Temp: %f DT %f Change: %f, AH %f",antenna.Temp,simdt,(lastTemp-antenna.Temp)/simdt,antheater.pumping);
 	lastTemp = antenna.Temp;
+	// char debugmsg[256];
+	LMChannelValue12 val12;
+	LMChannelValue13 val13;
+	LMChannelValue14 val14;
+	LMChannelValue33 val33;
+	val12.Value = lem->agc.GetInputChannel(012);
+	val13.Value = lem->agc.GetInputChannel(013);
+	val14.Value = lem->agc.GetInputChannel(014);
+	val33.Value = lem->agc.GetCh33Switches();
+
+	if (!IsPowered() ) { 
+		// Clobber data. Values inverted.
+		bool clobber = FALSE;
+		if(!val33.Bits.LRDataGood){ clobber = TRUE; val33.Bits.LRDataGood = 1; } 
+		if(!val33.Bits.LRVelocityDataGood){ clobber = TRUE; val33.Bits.LRVelocityDataGood = 1; }
+		if(!val33.Bits.LRPos1){ clobber = TRUE; val33.Bits.LRPos1 = 1; }
+		if(!val33.Bits.LRPos2){ clobber = TRUE; val33.Bits.LRPos2 = 1; }
+		if(!val33.Bits.LRRangeLowScale){ clobber = TRUE; val33.Bits.LRRangeLowScale = 1; }
+		if(clobber == TRUE){ lem->agc.SetCh33Switches(val33.Value); }
+		return;
+	}	
+
+	// The altimeter works up to 40,000 feet.
+	// The velocity data should be working by 24,000 feet.
+	// Velocity Z is forward, Velocity X is lateral, meaning Velocity Y must be vertical.
+	// Below 500 feet, the radar may lose lock due to zero doppler.
+	// Below 50 feet, the LGC starts ignoring the radar.
+
+	// Follow drive commands and use power
+	// The antenna takes 10 seconds to move, and draws 15 watts while doing so.
+	if(val12.Bits.LRPositionCommand == 1 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_DOWN){
+		if(antennaAngle != 0){
+			// Drive to Position 2
+			antennaAngle -= (2.4*simdt);
+			if(antennaAngle < 0){ antennaAngle = 0; }
+			dc_source->DrawPower(140);
+			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
+		}else{
+			// At position 2
+			dc_source->DrawPower(125);
+		}
+	}else{
+		if((val12.Bits.LRPositionCommand == 0 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_CENTER) && antennaAngle != 24){
+			// Drive to Position 1
+			antennaAngle += (2.4*simdt);
+			if(antennaAngle > 24){ antennaAngle = 24; }
+			dc_source->DrawPower(140);
+			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
+		}else{
+			// At position 1
+			dc_source->DrawPower(125);
+		}
+	}
+	// Maintain antenna angle discretes
+	// If at Pos 1
+	if(antennaAngle == 24){
+		// Light Pos 1
+		if(val33.Bits.LRPos1 == 1){
+			val33.Bits.LRPos1 = 0;
+			lem->agc.SetCh33Switches(val33.Value);
+		}
+	}else{
+		// Otherwise
+		// Clobber Pos 1 flag
+		if(val33.Bits.LRPos1 == 0){
+			val33.Bits.LRPos1 = 1;
+			lem->agc.SetCh33Switches(val33.Value);
+		}
+		// If at Pos 2
+		if(antennaAngle == 0){
+			// Light Pos 2
+			if(val33.Bits.LRPos2 == 1){
+				val33.Bits.LRPos2 = 0;
+				lem->agc.SetCh33Switches(val33.Value);
+			}
+		}else{
+			// Otherwise clobber Pos 2 flag
+			if(val33.Bits.LRPos2 == 0){
+				val33.Bits.LRPos2 = 1;
+				lem->agc.SetCh33Switches(val33.Value);
+			}
+		}
+	}
+	// Computer interface
+	/*
+	sprintf(debugmsg,"LR STATUS: ");
+	if(val12.Bits.LRPositionCommand != 0){ sprintf(debugmsg,"%s LRPos2",debugmsg); }
+	if(val13.Bits.RadarA != 0){ sprintf(debugmsg,"%s RadarA",debugmsg); }
+	if(val13.Bits.RadarB != 0){ sprintf(debugmsg,"%s RadarB",debugmsg); }
+	if(val13.Bits.RadarC != 0){ sprintf(debugmsg,"%s RadarC",debugmsg); }
+	if(val13.Bits.RadarActivity != 0){ sprintf(debugmsg,"%s RdrActy",debugmsg); }			
+	sprintf(oapiDebugString(),debugmsg);
+	*/
+
+	// Let's fake out some data
+	// None of this seems to have any effect?
+	// Altitude data good
+	if(val33.Bits.LRDataGood == 1){ sprintf(oapiDebugString(),"LRDG SET"); val33.Bits.LRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+	// RANGE SCALE:
+	// C++ VALUE OF 1 = HIGH RANGE
+	// C++ VALUE OF 0 = LOW RANGE
+	// Range scale affects only the altimeter, velocity is not affected.
+	if(val33.Bits.LRRangeLowScale == 0){ sprintf(oapiDebugString(),"LRSC SET"); val33.Bits.LRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value); }
+	// Velocity data no good
+	if(val33.Bits.LRVelocityDataGood == 1){ sprintf(oapiDebugString(),"LRVDG SET"); val33.Bits.LRVelocityDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+	// All that looks good!
+
+	// The computer wants something from the radar.
+	if(val13.Bits.RadarActivity == 1){
+		int radarBits = 0;
+		if(val13.Bits.RadarA == 1){ radarBits |= 1; }
+		if(val13.Bits.RadarB == 1){ radarBits |= 2; }
+		if(val13.Bits.RadarC == 1){ radarBits |= 4; }
+		switch(radarBits){
+		case 1: 
+			// LR (LR VEL X)
+			if(ruptSent != 1){
+				// 12288 COUNTS = -000000 F/S
+				// -0.643966 F/S PER COUNT
+				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				lem->agc.GenerateRadarupt();
+				ruptSent = 1;
+			}
+			break;
+		case 2:
+			// RR RANGE RATE
+			// Not our problem
+			break;
+		case 3:
+			// LR (LR VEL Z)
+			if(ruptSent != 3){
+				// 12288 COUNTS = +00000 F/S
+				// 0.866807 F/S PER COUNT
+				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				lem->agc.GenerateRadarupt();
+				ruptSent = 3;
+			}
+			break;
+		case 4:
+			// RR RANGE
+			// Not our problem
+			break;
+		case 5:
+			// LR (LR VEL Y)
+			if(ruptSent != 5){
+				// 12288 COUNTS = +000000 F/S
+				// 1.211975 F/S PER COUNT
+				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				lem->agc.GenerateRadarupt();
+				ruptSent = 5;
+			}
+			break;
+		case 7: 
+			// LR (LR RANGE)
+			if(ruptSent != 7){
+				// High range is 5.395 feet per count
+				// Low range is 1.079 feet per count
+				lem->agc.vagc.Erasable[0][RegRNRAD] = 1853;
+				lem->agc.GenerateRadarupt();
+				ruptSent = 7;
+			}
+			break;
+			/*
+		default:
+			sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
+			*/
+		}
+	}else{
+		ruptSent = 0; 
+	}
+
 }
 
 void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -2127,24 +2316,37 @@ void LEM_RR::CalculateRadarData(double &pitch, double &yaw)
 
 void LEM_RR::TimeStep(double simdt){
 
-	LMChannelValue33 val33;
 	LMChannelValue12 val12;
 	LMChannelValue13 val13;
-	val33.Value = lem->agc.GetCh33Switches();
+	LMChannelValue14 val14;
+	LMChannelValue30 val30;
+	LMChannelValue33 val33;
 	val12.Value = lem->agc.GetInputChannel(012);
 	val13.Value = lem->agc.GetInputChannel(013);
+	val14.Value = lem->agc.GetInputChannel(014);
+	val30.Value = lem->agc.GetInputChannel(030);
+	val33.Value = lem->agc.GetCh33Switches();
 
 	double ShaftRate = 0;
 	double TrunRate = 0;
 
+	/*
+	This is backwards?
+	if(val30.Bits.RRCDUFailure != 1){
+		val30.Bits.RRCDUFailure = 1; // No failure
+		lem->agc.SetInputChannel(030,val30.Value);
+		sprintf(oapiDebugString(),"RR CDU Failure Flag Cleared");
+	}
+	*/
+
 	radarDataGood = 0;
 	if (!IsPowered() ) { 
-		val33.Bits.RRPowerOnAuto = 0;
-		val33.Bits.RRDataGood = 0;
-		lem->agc.SetInputChannel(033,val33.Value);
+		val33.Bits.RRPowerOnAuto = 1; // Inverted
+		val33.Bits.RRDataGood = 1;    // Also inverted
+		lem->agc.SetCh33Switches(val33.Value);
 		return;
 	}
-	// Max power used based on LM GNCStudyGuide. Is this good
+	// Max power used based on LM GNCStudyGuide. Is this good?
 	dc_source->DrawPower(130);
 	// FIXME: Do you have a number for the AC side?
 	
@@ -2159,7 +2361,177 @@ void LEM_RR::TimeStep(double simdt){
 			break;
 	}
 
-	double pitch,yaw;
+	double range,rate,pitch,yaw;
+
+	// If we are in test mode...
+	if(lem->RadarTestSwitch.GetState() == TOGGLESWITCH_UP){
+		// Do what now?
+	}
+
+	// Let's test.
+	// First, manage the status bit.
+	if(lem->RendezvousRadarRotary.GetState() == 2){
+		if(val33.Bits.RRPowerOnAuto != 0){
+			val33.Bits.RRPowerOnAuto = 0;
+			lem->agc.SetCh33Switches(val33.Value);
+			sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
+		}
+	}else{
+		if(val33.Bits.RRPowerOnAuto != 1){
+			val33.Bits.RRPowerOnAuto = 1;
+			lem->agc.SetCh33Switches(val33.Value);
+			sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
+		}
+	}
+
+	/*
+	if(val33.Bits.LRPos1 != 0){
+		val33.Bits.LRPos1 = 0;
+		lem->agc.SetCh33Switches(val33.Value);
+	} */
+
+	// Handle mode switch
+	switch(lem->RendezvousRadarRotary.GetState()){
+		case 0:	// AUTO TRACK
+			break;
+
+		case 1: // SLEW
+		case 2:
+			// Watch the SLEW switch. The LGC gets told when we move.
+			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
+			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){	// Can we move up?
+				trunnionAngle += RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
+				trunnionMoved += RR_TRUNNION_STEP * TrunRate;						// Keep track of how far we moved it so far
+				int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;				// How many (positive) steps is that?
+				while(trunnionSteps > 0){											// Is it more than one?
+					lem->agc.vagc.Erasable[0][RegOPTY]++;							// MINC the LGC
+					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;					// Ensure it doesn't overflow
+					trunnionMoved -= RR_TRUNNION_STEP;								// Take away a step
+					trunnionSteps--;												// Loop
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){	// Can we move down?
+				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
+				trunnionMoved -= RR_TRUNNION_STEP * TrunRate;						// Keep track of how far we moved it so far
+				int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;				// How many steps is that?
+				while(trunnionSteps < 0){											// Is it more than one?
+					lem->agc.vagc.Erasable[0][RegOPTY]--;							// DINC the LGC
+					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;					// Ensure it doesn't overflow
+					trunnionMoved += RR_TRUNNION_STEP;								// Take away a (negative) step
+					trunnionSteps++;												// Loop
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
+				shaftAngle -= RR_SHAFT_STEP * ShaftRate;
+				shaftMoved -= RR_SHAFT_STEP * ShaftRate;
+				int shaftSteps = shaftMoved / RR_SHAFT_STEP;
+				while(shaftSteps < 0){
+					lem->agc.vagc.Erasable[0][RegOPTX]--;
+					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					shaftMoved += RR_SHAFT_STEP;
+					shaftSteps++;
+				}
+			}
+			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
+				shaftAngle += RR_SHAFT_STEP * ShaftRate;
+				shaftMoved += RR_SHAFT_STEP * ShaftRate;
+				int shaftSteps = shaftMoved / RR_SHAFT_STEP;
+				while(shaftSteps > 0){
+					lem->agc.vagc.Erasable[0][RegOPTX]++;
+					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					shaftMoved -= RR_SHAFT_STEP;
+					shaftSteps--;
+				}
+			}
+			sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG);
+			if(lem->RendezvousRadarRotary.GetState() == 1){ break; }
+
+		// case 2: // AGC
+			// Print status
+			/*
+			char debugmsg[256];
+			sprintf(debugmsg,"RADAR STATUS: ");
+			if(val12.Bits.ZeroRRCDU != 0){ sprintf(debugmsg,"%s ZeroRRCDU",debugmsg); }
+			if(val12.Bits.EnableRRCDUErrorCounter != 0){ sprintf(debugmsg,"%s EnableEC",debugmsg); }
+			if(val12.Bits.LRPositionCommand != 0){ sprintf(debugmsg,"%s LRPos2",debugmsg); }
+			if(val12.Bits.RRAutoTrackOrEnable != 0){ sprintf(debugmsg,"%s RRAutoTrk",debugmsg); }
+			if(val13.Bits.RadarA != 0){ sprintf(debugmsg,"%s RadarA",debugmsg); }
+			if(val13.Bits.RadarB != 0){ sprintf(debugmsg,"%s RadarB",debugmsg); }
+			if(val13.Bits.RadarC != 0){ sprintf(debugmsg,"%s RadarC",debugmsg); }
+			if(val13.Bits.RadarActivity != 0){ sprintf(debugmsg,"%s RdrActy",debugmsg); }
+			
+			if(val14.Bits.ShaftAngleCDUDrive != 0){ sprintf(debugmsg,"%s DriveS(%f)",debugmsg,shaftAngle*DEG); }
+			if(val14.Bits.TrunnionAngleCDUDrive != 0){ sprintf(debugmsg,"%s DriveT(%f)",debugmsg,trunnionAngle*DEG); }
+			sprintf(oapiDebugString(),debugmsg);
+			*/
+
+			// The computer wants something from the radar.
+			if(val13.Bits.RadarActivity == 1){
+				int radarBits = 0;
+				if(val13.Bits.RadarA == 1){ radarBits |= 1; }
+				if(val13.Bits.RadarB == 1){ radarBits |= 2; }
+				if(val13.Bits.RadarC == 1){ radarBits |= 4; }
+				switch(radarBits){
+				case 1: 
+					// LR (LR VEL X)
+					// Not our problem
+					break;
+				case 2:
+					// RR RANGE RATE
+					if(ruptSent != 2){
+						lem->agc.vagc.Erasable[0][RegRNRAD] = scratch[0];
+						scratch[0] += 10;
+						lem->agc.GenerateRadarupt();
+						ruptSent = 2;
+					}
+					break;
+				case 3:
+					// LR (LR VEL Z)
+					// Not our problem
+					break;
+				case 4:
+					// RR RANGE
+					if(ruptSent != 4){
+						lem->agc.vagc.Erasable[0][RegRNRAD] = scratch[1];
+						scratch[1] += 10;
+						if(scratch[1] > 100){ val33.Bits.RRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+						lem->agc.GenerateRadarupt();
+						ruptSent = 4;
+					}
+					break;
+				case 5:
+					// LR (LR VEL Y)
+					// Not our problem
+					break;
+				case 7: 
+					// LR (LR RANGE)
+					// Not our problem
+					break;
+					/*
+				default:
+					sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
+					*/
+				}
+			}else{
+				ruptSent = 0; 
+			}
+			// Watch for CDU Zero
+			if(val12.Bits.ZeroRRCDU != 0){
+				// Clear shaft and trunnion read counters 
+				// Incrementing pulses are inhibited
+			}else{
+				// Look for RR Error Counter Enable
+				if(val12.Bits.EnableRRCDUErrorCounter != 0){
+					// sprintf(oapiDebugString(),"RR CDU Error Counters Enabled");
+					// If this is enabled, the LGC wants to drive the positioner.
+				}
+			}
+			break;
+	}
+	return;
+
+	// Old stuff here for reference
+	radarDataGood = 0;
 	CalculateRadarData(pitch,yaw);
 
 	if((fabs(shaftAngle-pitch) < 2*RAD ) &&  (fabs(trunnionAngle-yaw) < 2*RAD) && ( range < 740800.0) ) {
