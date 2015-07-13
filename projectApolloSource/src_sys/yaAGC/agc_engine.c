@@ -409,7 +409,7 @@ WriteIO (agc_t * State, int Address, int Value)
   // SGM: But I need to write switch values here! Whine, whine...
 
   if (Address == 033){	
-    Value = (State->InputChannel[Address] & 076745); // Clear protected bits
+    Value = (State->InputChannel[Address] & 076777); // Clear protected bits (Was 076745, needed to be less permissive for LM)
 	Value |= State->Ch33Switches;                    // and write their true values back
 	// Any write pulse here resets 11-15, but it does so on a delay.
 	State->Ch33Switches |= 076000;
@@ -500,7 +500,7 @@ void
 SetLMCh33Bits (agc_t * State, int16_t Value)
 {
 	State->Ch33Switches = (Value&010776);            // Save here
-    Value = (State->InputChannel[033] & 027001);         // Clear protected bits
+    Value = (State->InputChannel[033] & 027001);     // Clear protected bits
 	Value |= State->Ch33Switches;                    // and write their values back	
 	State->InputChannel[033] = Value;                // Commit
 }

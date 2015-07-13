@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.14  2011/07/07 11:58:45  vrouleau
   *	Checkpoint commit for LEM rendezvous radar:
   *	 - Added range,rate and CSM direction calculation.
@@ -1629,7 +1634,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	case 012:
 		if(val12.Bits.EnableIMUCDUErrorCounters){
 			if(lem->atca.lgc_err_ena == 0){
-				sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
+				// sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
 				lem->atca.lgc_err_x = 0;
 				lem->atca.lgc_err_y = 0;
 				lem->atca.lgc_err_z = 0;
@@ -1650,7 +1655,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 				lem->atca.lgc_err_z += delta;
 			}
 		}
-		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		// sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
 		break;
 	
 	case 0175: // PITCH ERROR
@@ -1663,7 +1668,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 				lem->atca.lgc_err_y += delta;
 			}
 		}
-		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		// sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
 		break;
 
 	case 0176: // ROLL ERROR
@@ -1676,7 +1681,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 				lem->atca.lgc_err_x -= delta;
 			}
 		}
-		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		// sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
 		break;
 	}
 
