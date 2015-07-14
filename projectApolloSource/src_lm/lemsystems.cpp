@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2015/07/14 06:52:45  dseagrav
+  *	LR test mode implemented
+  *	
   *	Revision 1.34  2015/07/14 03:36:26  dseagrav
   *	RR test mode implemented
   *	
@@ -1985,6 +1988,7 @@ void LEM_LR::TimeStep(double simdt){
 
 	// Follow drive commands and use power
 	// The antenna takes 10 seconds to move, and draws 15 watts while doing so.
+	// The computer can command position 2, but it can't command position 1 from position 2.
 	if(val12.Bits.LRPositionCommand == 1 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_DOWN){
 		if(antennaAngle != 0){
 			// Drive to Position 2
@@ -1997,7 +2001,7 @@ void LEM_LR::TimeStep(double simdt){
 			dc_source->DrawPower(125);
 		}
 	}else{
-		if((val12.Bits.LRPositionCommand == 0 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_CENTER) && antennaAngle != 24){
+		if(lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_CENTER && antennaAngle != 24){
 			// Drive to Position 1
 			antennaAngle += (2.4*simdt);
 			if(antennaAngle > 24){ antennaAngle = 24; }
