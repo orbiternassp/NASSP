@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2015/07/13 12:13:20  dseagrav
+  *	Allowed MSVS to normalize line endings (Unix -> MSDOS)
+  *	
   *	Revision 1.32  2015/07/13 12:09:30  dseagrav
   *	LM radar interface work. LR wired to systems and now consumes power.
   *	Neither LR nor RR actually work, but the computer interfaces should be complete.
@@ -2149,9 +2152,9 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
 	antenna.Area = 9187.8912; // Area of reflecting dish, probably good enough
 	antenna.mass = 10000;
 	antenna.SetTemp(255.1); 
-	trunnionAngle = 0 * RAD; 
+	trunnionAngle = 0 * RAD; lastTrunnionAngle = trunnionAngle; 
 	trunnionMoved = 0 * RAD;
-	shaftAngle = -180 * RAD;  // Stow
+	shaftAngle = -180 * RAD; lastShaftAngle = shaftAngle; // Stow
 	shaftMoved = -180 * RAD;
 	if(lem != NULL){
 		antheater.WireTo(&lem->HTR_RR_STBY_CB);
@@ -2185,6 +2188,7 @@ void LEM_RR::RRTrunionDrive(int val,int ch12) {
 	}
 	trunnionVel = (RR_TRUNNION_STEP*pulses);
 	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
+	lastTrunnionAngle = trunnionAngle;
 	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
 
@@ -2222,6 +2226,7 @@ void LEM_RR::RRShaftDrive(int val,int ch12) {
 	}
 	shaftVel = (RR_SHAFT_STEP*pulses);
 	shaftAngle += (RR_SHAFT_STEP*pulses);
+	lastShaftAngle = shaftAngle;
 	if (val12.Bits.EnableRRCDUErrorCounter){
 		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
@@ -2343,10 +2348,11 @@ void LEM_RR::TimeStep(double simdt){
 	}
 	*/
 
-	radarDataGood = 0;
 	if (!IsPowered() ) { 
 		val33.Bits.RRPowerOnAuto = 1; // Inverted
 		val33.Bits.RRDataGood = 1;    // Also inverted
+		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
+		lastShaftAngle = shaftAngle;
 		lem->agc.SetCh33Switches(val33.Value);
 		return;
 	}
@@ -2354,6 +2360,7 @@ void LEM_RR::TimeStep(double simdt){
 	dc_source->DrawPower(130);
 	// FIXME: Do you have a number for the AC side?
 	
+	// Determine slew rate
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
 			ShaftRate = 1775. * simdt;
@@ -2365,11 +2372,81 @@ void LEM_RR::TimeStep(double simdt){
 			break;
 	}
 
-	double range,rate,pitch,yaw;
-
 	// If we are in test mode...
-	if(lem->RadarTestSwitch.GetState() == TOGGLESWITCH_UP){
-		// Do what now?
+	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP){
+		double trunnionTarget = 0,shaftTarget = 0;
+		// TEST MODE:
+		// NO TRACK light on
+		// Range Rate to -500 FPS,
+		// Shaft/Trunnion varies between +/- 5 degrees (at 0.015 d/s)
+		// After 12 seconds, Range to 195.5nm and NO TRACK light out
+		rate = -152.4;
+		// CONTROL MOVEMENT
+		// If we will run into a stop, bias the "start" angle.
+		if(tstate[0] == 0){
+			tsangle[0] = trunnionAngle;
+			if(tsangle[0] > (RAD*85)){ tsangle[0] -= (RAD*5); }
+			if(tsangle[0] < (RAD*-85)){ tsangle[0] += (RAD*5); }
+			tstate[0] = 2;
+		}
+		if(tstate[1] == 0){
+			tsangle[1] = shaftAngle;
+			if(tsangle[1] < -(RAD*175)){ tsangle[1] += (RAD*5); }
+			if(tsangle[1] > (RAD*85)){ tsangle[1] -= (RAD*5); }
+			tstate[1] = 2;
+		}
+		if(tstate[0] == 1){
+			trunnionTarget = tsangle[0]+(RAD*5);
+		}
+		if(tstate[1] == 1){
+			shaftTarget += tsangle[1]+(RAD*5);
+		}
+		if(tstate[0] == 2){
+			trunnionTarget = tsangle[0]-(RAD*5);;
+		}
+		if(tstate[1] == 2){
+			shaftTarget = tsangle[1]-(RAD*5);;
+		}
+		if(trunnionAngle > trunnionTarget){
+			trunnionAngle -= ((RAD*0.015)*simdt);
+			if(trunnionAngle < trunnionTarget){ trunnionAngle = trunnionTarget; } // Don't overshoot
+		}else{
+			if(trunnionAngle < trunnionTarget){
+				trunnionAngle += ((RAD*0.015)*simdt);
+				if(trunnionAngle > trunnionTarget){ trunnionAngle = trunnionTarget; } // Don't overshoot
+			}
+		}
+		if(shaftAngle > shaftTarget){
+			shaftAngle -= ((RAD*0.015)*simdt);
+			if(shaftAngle < shaftTarget){ shaftAngle = shaftTarget; } // Don't overshoot
+		}else{
+			if(shaftAngle < shaftTarget){
+				shaftAngle += ((RAD*0.015)*simdt);
+				if(shaftAngle > shaftTarget){ shaftAngle = shaftTarget; } // Don't overshoot
+			}
+		}
+		// Position state advancement
+		if(trunnionAngle == trunnionTarget && shaftAngle == shaftTarget){
+			tstate[0]++; tstate[1]++;
+			if(tstate[0] > 2){ tstate[0] = 1; }
+			if(tstate[1] > 2){ tstate[1] = 1; }
+		}
+		// Range state advancement
+		if(tstime < 12){
+			tstime += simdt;
+			radarDataGood = 0;
+		}else{
+			radarDataGood = 1;
+			range = 362066; // 195.5 nautical miles in meters
+		}
+		sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
+	}else{
+		// Clobber test data if not already zero
+		if(tstime > 0){ tstime = 0; tstate[0] = 0; tstate[1] = 0; }
+		// We must be in normal operation.
+		radarDataGood = 0;
+		range = 0;
+		rate = 0;
 	}
 
 	// Let's test.
@@ -2388,69 +2465,79 @@ void LEM_RR::TimeStep(double simdt){
 		}
 	}
 
-	/*
-	if(val33.Bits.LRPos1 != 0){
-		val33.Bits.LRPos1 = 0;
-		lem->agc.SetCh33Switches(val33.Value);
-	} */
-
 	// Handle mode switch
 	switch(lem->RendezvousRadarRotary.GetState()){
 		case 0:	// AUTO TRACK
 			break;
 
 		case 1: // SLEW
-		case 2:
-			// Watch the SLEW switch. The LGC gets told when we move.
-			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
+			// Watch the SLEW switch. 
 			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){	// Can we move up?
 				trunnionAngle += RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionMoved += RR_TRUNNION_STEP * TrunRate;						// Keep track of how far we moved it so far
-				int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;				// How many (positive) steps is that?
-				while(trunnionSteps > 0){											// Is it more than one?
-					lem->agc.vagc.Erasable[0][RegOPTY]++;							// MINC the LGC
-					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;					// Ensure it doesn't overflow
-					trunnionMoved -= RR_TRUNNION_STEP;								// Take away a step
-					trunnionSteps--;												// Loop
-				}
 			}
 			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){	// Can we move down?
 				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionMoved -= RR_TRUNNION_STEP * TrunRate;						// Keep track of how far we moved it so far
-				int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;				// How many steps is that?
-				while(trunnionSteps < 0){											// Is it more than one?
-					lem->agc.vagc.Erasable[0][RegOPTY]--;							// DINC the LGC
-					lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;					// Ensure it doesn't overflow
-					trunnionMoved += RR_TRUNNION_STEP;								// Take away a (negative) step
-					trunnionSteps++;												// Loop
-				}
 			}
 			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
 				shaftAngle -= RR_SHAFT_STEP * ShaftRate;
-				shaftMoved -= RR_SHAFT_STEP * ShaftRate;
-				int shaftSteps = shaftMoved / RR_SHAFT_STEP;
-				while(shaftSteps < 0){
-					lem->agc.vagc.Erasable[0][RegOPTX]--;
-					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-					shaftMoved += RR_SHAFT_STEP;
-					shaftSteps++;
-				}
 			}
 			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
 				shaftAngle += RR_SHAFT_STEP * ShaftRate;
-				shaftMoved += RR_SHAFT_STEP * ShaftRate;
-				int shaftSteps = shaftMoved / RR_SHAFT_STEP;
-				while(shaftSteps > 0){
-					lem->agc.vagc.Erasable[0][RegOPTX]++;
-					lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-					shaftMoved -= RR_SHAFT_STEP;
-					shaftSteps--;
-				}
 			}
-			sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG);
-			if(lem->RendezvousRadarRotary.GetState() == 1){ break; }
+			if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
+			// FALL INTO
+		case 2: // AGC
+			// Watch shaft/trunnion movement. The LGC gets told when we move.
+			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
+			trunnionMoved += (trunnionAngle-lastTrunnionAngle);						// Keep track of how far we moved it so far
+			lastTrunnionAngle = trunnionAngle;										// Update
+			int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;					// How many (positive) steps is that?
+			while(trunnionSteps > 0){												// Is it more than one?
+				lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
+				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
+				trunnionMoved -= RR_TRUNNION_STEP;									// Take away a step
+				trunnionSteps--;													// Loop
+			}																		// Other direction
+			while(trunnionSteps < 0){												// Is it more than one?
+				lem->agc.vagc.Erasable[0][RegOPTY]--;								// DINC the LGC
+				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
+				trunnionMoved += RR_TRUNNION_STEP;									// Take away a (negative) step
+				trunnionSteps++;													// Loop
+			}
+			// Now for the shaft			
+			shaftMoved += (shaftAngle-lastShaftAngle);
+			lastShaftAngle = shaftAngle;
+			int shaftSteps = shaftMoved / RR_SHAFT_STEP;
+			while(shaftSteps < 0){
+				lem->agc.vagc.Erasable[0][RegOPTX]--;
+				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				shaftMoved += RR_SHAFT_STEP;
+				shaftSteps++;
+			}
+			while(shaftSteps > 0){
+				lem->agc.vagc.Erasable[0][RegOPTX]++;
+				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				shaftMoved -= RR_SHAFT_STEP;
+				shaftSteps--;
+			}
+			
+			if(lem->RendezvousRadarRotary.GetState() == 1){ break; } // Don't update the other stuff in slew mode.
+			sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
-		// case 2: // AGC
+			// Maintain RADAR GOOD state
+			if(radarDataGood == 1 && val33.Bits.RRDataGood == 1){ val33.Bits.RRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+			if(radarDataGood == 0 && val33.Bits.RRDataGood == 0){ val33.Bits.RRDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
+			// Maintain radar scale indicator
+			// We use high scale above 50.6nm, and low scale below that.
+			if(range > 93700 && val33.Bits.RRRangeLowScale == 0){ 
+				// HI SCALE
+				val33.Bits.RRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value);
+			}
+			if(range < 93701 && val33.Bits.RRRangeLowScale == 1){
+				// LO SCALE
+				val33.Bits.RRRangeLowScale = 0; lem->agc.SetCh33Switches(val33.Value);
+			}
+
 			// Print status
 			/*
 			char debugmsg[256];
@@ -2483,8 +2570,9 @@ void LEM_RR::TimeStep(double simdt){
 				case 2:
 					// RR RANGE RATE
 					if(ruptSent != 2){
-						lem->agc.vagc.Erasable[0][RegRNRAD] = scratch[0];
-						scratch[0] += 10;
+						// Our center point is at 17000 counts.
+						// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate						
+						lem->agc.vagc.Erasable[0][RegRNRAD] = 17000-(rate/0.191361);
 						lem->agc.GenerateRadarupt();
 						ruptSent = 2;
 					}
@@ -2496,9 +2584,16 @@ void LEM_RR::TimeStep(double simdt){
 				case 4:
 					// RR RANGE
 					if(ruptSent != 4){
-						lem->agc.vagc.Erasable[0][RegRNRAD] = scratch[1];
-						scratch[1] += 10;
-						if(scratch[1] > 100){ val33.Bits.RRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+						// We use high scale above 50.6nm, and low scale below that.
+						if(range > 93700){ 
+							// HI SCALE
+							// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+							lem->agc.vagc.Erasable[0][RegRNRAD] = range/22.8722;
+						}else{
+							// LO SCALE
+							// Should be 9.38 feet/bit
+							lem->agc.vagc.Erasable[0][RegRNRAD] = range/2.85902;
+						}
 						lem->agc.GenerateRadarupt();
 						ruptSent = 4;
 					}
@@ -2535,6 +2630,8 @@ void LEM_RR::TimeStep(double simdt){
 	return;
 
 	// Old stuff here for reference
+	double range,rate,pitch,yaw;
+
 	radarDataGood = 0;
 	CalculateRadarData(pitch,yaw);
 

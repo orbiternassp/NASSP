@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2015/07/13 12:13:20  dseagrav
+  *	Allowed MSVS to normalize line endings (Unix -> MSDOS)
+  *	
   *	Revision 1.31  2015/07/13 12:09:30  dseagrav
   *	LM radar interface work. LR wired to systems and now consumes power.
   *	Neither LR nor RR actually work, but the computer interfaces should be complete.
@@ -430,12 +433,17 @@ private:
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;
 	e_object *ac_source;
+	double tstime;
+	int	   tstate[2];
+	double tsangle[2];
 	int    isTracking;
 	bool   radarDataGood;
 	double trunnionAngle;
 	double trunnionMoved;
 	double shaftAngle;
 	double shaftMoved;
+	double lastTrunnionAngle;
+	double lastShaftAngle;
 	double trunnionVel;
 	double shaftVel;
 	double range;
