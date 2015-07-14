@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2015/07/14 03:36:26  dseagrav
+  *	RR test mode implemented
+  *	
   *	Revision 1.32  2015/07/13 12:13:20  dseagrav
   *	Allowed MSVS to normalize line endings (Unix -> MSDOS)
   *	
@@ -396,8 +399,12 @@ public:
 	h_Radiator antenna;			// Antenna (loses heat into space)
 	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;		// Source of DC power
+	double range;				// Range in feet
+	double rate[3];				// Velocity X/Y/Z in feet/second
 	double antennaAngle;		// Antenna angle
 	int ruptSent;				// Rupt sent
+	int rangeGood;				// RDG flag
+	int velocityGood;			// VDG flag
 };
 
 // Rendezvous Radar
