@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2015/07/14 03:36:26  dseagrav
+  *	RR test mode implemented
+  *	
   *	Revision 1.33  2015/07/13 12:13:20  dseagrav
   *	Allowed MSVS to normalize line endings (Unix -> MSDOS)
   *	
@@ -1928,7 +1931,13 @@ void LEM_LR::Init(LEM *s,e_object *dc_src){
 		antheater.Enable();
 		antheater.SetPumpAuto();
 	}
+	// Attach power source
 	dc_source = dc_src;
+	// Clear flags
+	range = 0;
+	rate[0] = rate[1] = rate[2] = 0;
+	rangeGood = 0;
+	velocityGood = 0;
 }
 
 // Are we on?
@@ -2029,6 +2038,27 @@ void LEM_LR::TimeStep(double simdt){
 			}
 		}
 	}
+
+	// Data Determination
+	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN){
+		// Test Mode
+		// Drive to:
+		// Alt 8287 ft
+		// Vel -494,1861,1331 ft/sec
+		// on the LGC
+		// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
+		range = 8287;
+		rate[0] = -494;
+		rate[1] = 1861;
+		rate[2] = 1331;
+		rangeGood = 1;
+		velocityGood = 1;
+	}else{
+		// Operate Mode
+		rangeGood = 0;
+		velocityGood = 0;
+	}
+
 	// Computer interface
 	/*
 	sprintf(debugmsg,"LR STATUS: ");
@@ -2040,18 +2070,20 @@ void LEM_LR::TimeStep(double simdt){
 	sprintf(oapiDebugString(),debugmsg);
 	*/
 
-	// Let's fake out some data
-	// None of this seems to have any effect?
-	// Altitude data good
-	if(val33.Bits.LRDataGood == 1){ sprintf(oapiDebugString(),"LRDG SET"); val33.Bits.LRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+	// Maintain discretes
+	// Range data good
+	if(rangeGood == 1 && val33.Bits.LRDataGood == 1){ val33.Bits.LRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+	if(rangeGood == 0 && val33.Bits.LRDataGood == 0){ val33.Bits.LRDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
 	// RANGE SCALE:
 	// C++ VALUE OF 1 = HIGH RANGE
 	// C++ VALUE OF 0 = LOW RANGE
+	// We switch from high range to low range at 2500 feet
 	// Range scale affects only the altimeter, velocity is not affected.
-	if(val33.Bits.LRRangeLowScale == 0){ sprintf(oapiDebugString(),"LRSC SET"); val33.Bits.LRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value); }
-	// Velocity data no good
-	if(val33.Bits.LRVelocityDataGood == 1){ sprintf(oapiDebugString(),"LRVDG SET"); val33.Bits.LRVelocityDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
-	// All that looks good!
+	if((rangeGood == 1 && range < 2500) && val33.Bits.LRRangeLowScale == 1){ val33.Bits.LRRangeLowScale = 0; lem->agc.SetCh33Switches(val33.Value); }
+	if((rangeGood == 0 || range > 2500) && val33.Bits.LRRangeLowScale == 0){ val33.Bits.LRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value); }
+	// Velocity data good
+	if(velocityGood == 1 && val33.Bits.LRVelocityDataGood == 1){ val33.Bits.LRVelocityDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
+	if(velocityGood == 0 && val33.Bits.LRVelocityDataGood == 0){ val33.Bits.LRVelocityDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
 
 	// The computer wants something from the radar.
 	if(val13.Bits.RadarActivity == 1){
@@ -2064,8 +2096,9 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR VEL X)
 			if(ruptSent != 1){
 				// 12288 COUNTS = -000000 F/S
-				// -0.643966 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				// SIGN REVERSED				
+				// 0.643966 F/S PER COUNT
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288-(rate[0]/0.643966));
 				lem->agc.GenerateRadarupt();
 				ruptSent = 1;
 			}
@@ -2079,7 +2112,7 @@ void LEM_LR::TimeStep(double simdt){
 			if(ruptSent != 3){
 				// 12288 COUNTS = +00000 F/S
 				// 0.866807 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[2]/0.866807));
 				lem->agc.GenerateRadarupt();
 				ruptSent = 3;
 			}
@@ -2093,7 +2126,7 @@ void LEM_LR::TimeStep(double simdt){
 			if(ruptSent != 5){
 				// 12288 COUNTS = +000000 F/S
 				// 1.211975 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = 12288;
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[1]/1.211975));
 				lem->agc.GenerateRadarupt();
 				ruptSent = 5;
 			}
@@ -2103,7 +2136,14 @@ void LEM_LR::TimeStep(double simdt){
 			if(ruptSent != 7){
 				// High range is 5.395 feet per count
 				// Low range is 1.079 feet per count
-				lem->agc.vagc.Erasable[0][RegRNRAD] = 1853;
+				if(val33.Bits.LRRangeLowScale == 1){
+					// Hi Range
+					lem->agc.vagc.Erasable[0][RegRNRAD] = range/5.395;
+				}else{
+					// Lo Range
+					lem->agc.vagc.Erasable[0][RegRNRAD] = range/1.079;
+				}
+				
 				lem->agc.GenerateRadarupt();
 				ruptSent = 7;
 			}
