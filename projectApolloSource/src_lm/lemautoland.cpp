@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2011/07/07 11:58:45  vrouleau
+  *	Checkpoint commit for LEM rendezvous radar:
+  *	 - Added range,rate and CSM direction calculation.
+  *	 - Slewing of the shaft & trunnion
+  *	 - IO from/to AGC.
+  *	
   *	Revision 1.2  2009/06/15 16:11:32  tschachim
   *	New CollisionSDK.
   *	
@@ -178,7 +184,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "nasspdefs.h"
 

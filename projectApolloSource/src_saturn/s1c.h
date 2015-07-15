@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -182,7 +185,12 @@ protected:
 	///
 	/// \brief Orbiter sound library.
 	///
+#if 0
+	/// \todo The sound initialization seems to take a lot of time (up to 5s on my system) 
+	/// causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
+	/// it's disabled for the moment. 
 	SoundLib soundlib;
+#endif
 
 	void SetS1c();
 	void InitS1c();

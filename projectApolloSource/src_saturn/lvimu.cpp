@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2013/01/07 13:01:00  tschachim
+  *	LVDC fixes
+  *	
   *	Revision 1.2  2012/11/04 13:33:13  meik84
   *	LVDC++
   *	
@@ -56,7 +59,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

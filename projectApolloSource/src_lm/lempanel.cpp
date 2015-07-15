@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2015/07/15 01:35:08  dseagrav
+  *	Attempt to resolve LM initialization issues
+  *	
   *	Revision 1.26  2015/06/29 16:41:41  dseagrav
   *	Clean up mess made by previous commit
   *	
@@ -345,7 +348,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "lmresource.h"
 
 #include "nasspdefs.h"

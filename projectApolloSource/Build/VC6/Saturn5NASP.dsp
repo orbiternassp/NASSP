@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"../../../../../Modules/ProjectApollo/Saturn5NASP.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 "..\..\src_aux\dsound.lib" winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib /nologo /dll /machine:I386 /nodefaultlib:"LIBCMT" /out:"../../../../../Modules/ProjectApollo/Saturn5.dll" /libpath:"../../src_sys/PanelSDK" /libpath:"../../../../lib" /libpath:"../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project"
+# ADD LINK32 "..\..\src_aux\dsound.lib" winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib /nologo /dll /machine:I386 /nodefaultlib:"LIBCMT" /out:"../../../../../Modules/ProjectApollo/Saturn5.dll" /libpath:"../../src_sys/PanelSDK" /libpath:"../../../../lib" /libpath:"../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project"
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "Saturn5NASP - Win32 Debug"
@@ -83,7 +83,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /nodefaultlib:"libc"
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 "..\..\src_aux\dsound.lib" winmm.lib wsock32.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib /nologo /dll /incremental:yes /debug /machine:I386 /nodefaultlib:"LIBCMT" /out:"../../../../../Modules/ProjectApollo/Saturn5.dll" /libpath:"../../src_sys/PanelSDK" /libpath:"../../../../lib" /libpath:"../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project"
+# ADD LINK32 "..\..\src_aux\dsound.lib" winmm.lib wsock32.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib /nologo /dll /incremental:yes /debug /machine:I386 /nodefaultlib:"LIBCMT" /out:"../../../../../Modules/ProjectApollo/Saturn5.dll" /libpath:"../../src_sys/PanelSDK" /libpath:"../../../../lib" /libpath:"../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 

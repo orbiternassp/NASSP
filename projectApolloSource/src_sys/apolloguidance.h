@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2012/01/14 22:16:21  tschachim
+  *	GN CWS lights
+  *	
   *	Revision 1.6  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -237,7 +240,7 @@ class PanelSDK;
 /// \brief Measurement units type.
 /// Used to specify whether the C++ AGC is using Imperial or Metric units.
 ///
-typedef enum MeasurementUnits
+enum MeasurementUnits
 { 
 	UnitImperial,	///< Use Imperial units for velocity, altitude, etc.
 	UnitMetric		///< Use Metric units for velocity, altitude, etc.

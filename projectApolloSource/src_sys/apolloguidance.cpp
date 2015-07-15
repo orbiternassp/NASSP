@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2012/09/05 21:20:47  tschachim
+  *	Save CycleCounter, but do NOT load it for now as the CduFifos aren't saved/loaded
+  *	
   *	Revision 1.7  2012/01/14 22:16:21  tschachim
   *	GN CWS lights
   *	
@@ -352,7 +355,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "yaAGC/agc_engine.h"

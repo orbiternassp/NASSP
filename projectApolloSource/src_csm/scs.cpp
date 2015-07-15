@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2012/10/20 19:02:13  tschachim
+  *	Lua changes
+  *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
+  *	
   *	Revision 1.11  2012/01/14 22:50:41  tschachim
   *	Save EMS scroll, Bugfix entry scroll and rsi roll
   *	
@@ -167,7 +171,6 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"

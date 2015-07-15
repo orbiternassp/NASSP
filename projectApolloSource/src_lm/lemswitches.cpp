@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2010/05/23 05:34:04  dseagrav
+  *	CWEA test switch partially implemented, reorganized CBs and added the remaining CBs to the panels (but not systems yet)
+  *	
   *	Revision 1.9  2010/05/16 04:54:12  dseagrav
   *	LM Checkpoint Commit. More CWEA stuff, ECS stuff, etc.
   *	
@@ -95,7 +98,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "lmresource.h"

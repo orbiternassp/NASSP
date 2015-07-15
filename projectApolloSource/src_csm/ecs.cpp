@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/07/16 17:14:41  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.3  2009/12/17 17:47:18  tschachim
   *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
   *	
@@ -50,7 +53,6 @@
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Hsystems.h"
 
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "nasspdefs.h"
 #include "toggleswitch.h"

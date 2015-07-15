@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/28 23:12:31  tschachim
+  *	Bugfix failed docking
+  *	
   *	Revision 1.3  2009/07/11 13:40:19  jasonims
   *	DockingProbe Work
   *	
@@ -89,7 +92,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

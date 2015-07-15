@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2015/07/15 01:35:08  dseagrav
+  *	Attempt to resolve LM initialization issues
+  *	
   *	Revision 1.23  2011/07/11 13:01:56  vrouleau
   *	- Allow LM AOT marking with 'q', 'y' and 'e' keys.
   *	
@@ -183,7 +186,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "lmresource.h"
 
 #include "nasspdefs.h"

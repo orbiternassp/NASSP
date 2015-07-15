@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2013/01/07 19:20:22  tschachim
+  *	Code formatting
+  *	
   *	Revision 1.12  2012/11/04 21:19:29  meik84
   *	ICDU error counters now held at 0 when bit 6 of chan 12 is reset
   *	
@@ -328,7 +331,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

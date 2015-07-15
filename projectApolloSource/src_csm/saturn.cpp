@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2013/01/07 18:41:05  meik84
+  *	SIB LVDC++ :
+  *	loading/saving, new nav init, attitude error calcs now with euler correction, added SIVB-takeover mode
+  *	
   *	Revision 1.29  2012/12/13 19:45:05  meik84
   *	LVDC++: SIB- LVDC++ & new LVDC.cpp
   *	
@@ -574,7 +578,6 @@
 #include <math.h>
 #include <time.h>
 
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"

@@ -75,7 +75,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib"
+				AdditionalDependencies="orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/s1c.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -175,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib"
+				AdditionalDependencies="orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/s1c.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2011/12/07 21:58:01  tschachim
+  *	https://sourceforge.net/tracker/?func=detail&aid=3392682&group_id=129726&atid=716072
+  *	
   *	Revision 1.4  2010/09/19 14:24:24  tschachim
   *	Fixes for Orbiter 2010 (positions, camera handling).
   *	
@@ -132,7 +135,6 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 

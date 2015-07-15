@@ -75,7 +75,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="PanelSDK.lib orbiter.lib orbitersdk.lib opengl32.lib glu32.lib OrbiterSoundSDK35.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="PanelSDK.lib orbiter.lib orbitersdk.lib opengl32.lib glu32.lib OrbiterSoundSDK40.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/SIVb.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -172,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="PanelSDK.lib orbiter.lib orbitersdk.lib opengl32.lib glu32.lib OrbiterSoundSDK35.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="PanelSDK.lib orbiter.lib orbitersdk.lib opengl32.lib glu32.lib OrbiterSoundSDK40.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/SIVb.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.5  2006/07/31 12:23:17  tschachim
   *	Smoother staging.
   *	
@@ -102,7 +105,7 @@ typedef struct {
 /// \brief S1b state.
 /// \ingroup SepStageSettings
 ///
-typedef enum S1bState
+enum S1bState
 {
 	SIB_STATE_HIDDEN = -1,				///< S1b is waiting for setup call.
 	S1B_STATE_SHUTTING_DOWN,			///< S1b is firing motors to jettison.
