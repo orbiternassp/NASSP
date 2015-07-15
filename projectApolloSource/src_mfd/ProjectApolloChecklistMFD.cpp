@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2012/01/14 22:31:14  tschachim
+  *	Scrolling, bugfixes
+  *	
   *	Revision 1.10  2010/09/06 16:23:21  tschachim
   *	Changes for Orbiter 2010-P1
   *	
@@ -82,7 +85,6 @@
 #include "math.h"
 #include "windows.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"

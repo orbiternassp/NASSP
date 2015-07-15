@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.9  2008/04/11 11:49:31  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -57,7 +60,6 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 

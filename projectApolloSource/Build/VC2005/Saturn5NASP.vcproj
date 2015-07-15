@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../src_aux/dsound.lib winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="../../src_aux/dsound.lib winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/Saturn5.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../src_aux/dsound.lib winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="../../src_aux/dsound.lib winmm.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK40.lib opengl32.lib glu32.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/Saturn5.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

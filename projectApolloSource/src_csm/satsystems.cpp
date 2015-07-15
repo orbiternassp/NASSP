@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2012/10/20 18:50:27  tschachim
+  *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
+  *	
   *	Revision 1.13  2012/01/14 22:38:58  tschachim
   *	GN CWS lights
   *	Bugfix sec glycol loop during prelaunch
@@ -268,7 +271,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"

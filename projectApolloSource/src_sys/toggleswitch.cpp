@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2012/10/20 18:33:28  tschachim
+  *	Lua changes
+  *	
   *	Revision 1.14  2012/01/14 22:21:57  tschachim
   *	Bugfixes, flash handling, flashing for handcontroller
   *	
@@ -409,7 +412,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

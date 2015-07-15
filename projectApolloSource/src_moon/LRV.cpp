@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/06/17 10:08:59  tschachim
+  *	New version of CollisionSDK.
+  *	
   *	Revision 1.3  2009/06/15 16:11:32  tschachim
   *	New CollisionSDK.
   *	
@@ -101,7 +104,6 @@
 
 #include "nasspsound.h"
 #include "nasspdefs.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "OrbiterMath.h"
 

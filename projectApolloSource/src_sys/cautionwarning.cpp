@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/02/02 14:48:19  tschachim
+  *	New correct master alarm sound by Bunyap.
+  *	
   *	Revision 1.2  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -112,7 +115,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

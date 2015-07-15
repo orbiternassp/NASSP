@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/05/24 03:50:34  dseagrav
+  *	Updates to RCS, CWEA, ATCA
+  *	
   *	Revision 1.3  2009/10/19 12:24:49  dseagrav
   *	LM checkpoint commit.
   *	Put back one FDAI for testing purposes (graphic is wrong)
@@ -40,7 +43,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "lmresource.h"
 #include "nasspdefs.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2010/02/05 17:31:46  tschachim
+  *	Added ORDEAL.
+  *	
   *	Revision 1.6  2009/12/22 18:14:47  tschachim
   *	More bugfixes related to the prelaunch/launch checklists.
   *	
@@ -81,7 +84,6 @@
 #include "nasspdefs.h"
 #include "connector.h"
 #include "BasicExcelVC6.hpp"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 using namespace std;
 using namespace YExcel;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/11 13:40:19  jasonims
+  *	DockingProbe Work
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -275,7 +278,7 @@ public:
 	/// \brief SIVb state.
 	/// \ingroup SepStageSettings
 	///
-	typedef enum SIVbState
+	enum SIVbState
 	{
 		SIVB_STATE_SETUP = -1,				///< SII is waiting for setup call.
 		SIVB_STATE_WAITING					///< SII is idle after motor burnout.

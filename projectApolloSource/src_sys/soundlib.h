@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.15  2008/05/24 17:25:53  tschachim
   *	Bugfix in case of OrbiterSound not loaded.
   *	
@@ -72,6 +75,8 @@
 
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H
+
+#include "OrbiterSoundSDK40.h"
 
 ///
 /// \ingroup Sound

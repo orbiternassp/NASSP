@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/09/06 16:23:21  tschachim
+  *	Changes for Orbiter 2010-P1
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -53,7 +56,6 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 #include "Floodlight.h"

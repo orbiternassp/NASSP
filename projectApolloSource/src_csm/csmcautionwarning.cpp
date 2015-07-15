@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2012/09/05 21:16:26  tschachim
+  *	PGNS warning does NOT trigger master alarm
+  *	
   *	Revision 1.3  2012/01/14 22:34:48  tschachim
   *	GN CWS lights
   *	
@@ -165,7 +168,6 @@
 #include <math.h>
 #include <time.h>
 
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"

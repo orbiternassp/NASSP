@@ -4,7 +4,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"

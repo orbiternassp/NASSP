@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/12/17 17:47:18  tschachim
+  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
+  *	
   *	Revision 1.6  2009/09/22 12:36:10  trebonian
   *	DEDA buttons animate even if unpowered or in error
   *	
@@ -47,7 +50,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "lmresource.h"
 
 #include "nasspdefs.h"

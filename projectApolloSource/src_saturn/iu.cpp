@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2013/01/12 15:16:45  tschachim
+  *	Bugfix OrientAxis: Roll orientation as parameter instead of hardcoded heads down position.
+  *	
   *	Revision 1.6  2010/02/22 14:23:31  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -111,7 +114,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

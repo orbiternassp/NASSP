@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
   *	Revision 1.7  2010/04/16 18:04:54  vrouleau
   *	Compilation support under Visual Studio 2010
   *	
@@ -50,7 +55,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "lmresource.h"
 
 #include "nasspdefs.h"

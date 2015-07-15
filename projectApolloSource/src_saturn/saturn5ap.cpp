@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.22  2008/05/24 17:21:57  tschachim
   *	Removed useless "if".
   *	
@@ -96,7 +99,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"

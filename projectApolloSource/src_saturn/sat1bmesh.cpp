@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2012/01/14 22:24:06  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.4  2010/07/16 17:14:42  tschachim
   *	Changes for Orbiter 2010 and bugfixes
   *	
@@ -138,7 +141,6 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"

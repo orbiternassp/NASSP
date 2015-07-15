@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.16  2008/05/24 17:25:53  tschachim
   *	Bugfix in case of OrbiterSound not loaded.
   *	
@@ -81,7 +84,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "soundlib.h"
@@ -129,7 +131,7 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume)
 
 {
 	if (valid) {
-		if (!PlayVesselWave3(SoundlibId, id, flags, playvolume))
+		if (!PlayVesselWave(SoundlibId, id, flags, playvolume))
 		{
 			return false;
 		}
@@ -160,7 +162,7 @@ void SoundData::stop()
 	if (!isPlaying())
 		return;
 
-	StopVesselWave3(SoundlibId, id);
+	StopVesselWave(SoundlibId, id);
 }
 
 bool SoundData::isPlaying()
@@ -169,7 +171,7 @@ bool SoundData::isPlaying()
 	if (id < 0)
 		return false;
 
-	return (IsPlaying3(SoundlibId, id) != 0);
+	return (IsPlaying(SoundlibId, id) != 0);
 }
 
 bool SoundData::matches(char *s)
@@ -225,7 +227,7 @@ void SoundLib::InitSoundLib(OBJHANDLE h, char *soundclass)
 {
 	_snprintf(basepath, 255, "Sound/%s", soundclass);
 
-	SoundlibId = ConnectToOrbiterSoundDLL3(h);
+	SoundlibId = ConnectToOrbiterSoundDLL(h);
 	OrbiterSoundActive = (SoundlibId >= 0);
 }
 
@@ -324,7 +326,7 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 	// So the file exists and we have a free slot. Try to load it.
 	//
 
-	if (RequestLoadVesselWave3(SoundlibId, id, s->GetFilename(), extended) == 0)
+	if (RequestLoadVesselWave(SoundlibId, id, s->GetFilename(), extended) == 0)
 		return 0;
 
 
@@ -462,10 +464,10 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 	s.SetSoundData(DoLoadSound(SoundPath, extended));
 }
 
-void SoundLib::SoundOptionOnOff(int option, int onoff)
+void SoundLib::SoundOptionOnOff(int option,BOOL status)
 
 {
-	SoundOptionOnOff3(SoundlibId, option, onoff);
+	::SoundOptionOnOff(SoundlibId, option, status);
 }
 
 void SoundLib::SetLanguage(char *language)

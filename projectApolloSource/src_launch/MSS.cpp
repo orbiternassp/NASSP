@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.2  2010/07/23 20:06:03  vrouleau
   *	Orbiter2010 Pad location changes. ML & MSS had some hardcored locations.
   *	
@@ -59,7 +62,6 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 

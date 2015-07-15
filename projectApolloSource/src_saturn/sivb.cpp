@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
   *	Revision 1.3  2010/02/22 14:23:31  tschachim
   *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
   *	
@@ -169,7 +172,6 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
-#include "OrbiterSoundSDK35.h"
 
 #include "nasspdefs.h"
 #include "soundlib.h"

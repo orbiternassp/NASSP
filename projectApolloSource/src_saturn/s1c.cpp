@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2010/09/19 14:24:24  tschachim
+  *	Fixes for Orbiter 2010 (positions, camera handling).
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -76,7 +79,6 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
-#include "orbiterSoundSDK35.h"
 
 #include "nasspdefs.h"
 #include "nasspsound.h"

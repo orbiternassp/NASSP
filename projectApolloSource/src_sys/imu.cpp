@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2012/10/20 18:35:15  tschachim
+  *	GNC fixes: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2443.msg21463#msg21463
+  *	
   *	Revision 1.3  2011/07/11 01:42:36  vrouleau
   *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
   *	
@@ -141,7 +144,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

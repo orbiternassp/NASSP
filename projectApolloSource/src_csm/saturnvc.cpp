@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2012/01/14 22:47:28  tschachim
+  *	CM Optics cover
+  *	
   *	Revision 1.3  2010/09/19 14:24:24  tschachim
   *	Fixes for Orbiter 2010 (positions, camera handling).
   *	
@@ -122,7 +125,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2015/07/06 05:52:24  dseagrav
+  *	Add button to PAMFD for initializing LGC from CM state.
+  *	
   *	Revision 1.24  2012/08/09 18:55:44  tschachim
   *	State vector slot selection button instead of "focus automatic"
   *	
@@ -190,7 +193,6 @@
 #include "math.h"
 #include "windows.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"
