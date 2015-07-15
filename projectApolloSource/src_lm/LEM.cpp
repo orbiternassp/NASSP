@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2011/07/11 13:01:56  vrouleau
+  *	- Allow LM AOT marking with 'q', 'y' and 'e' keys.
+  *	
   *	Revision 1.22  2011/07/07 11:58:45  vrouleau
   *	Checkpoint commit for LEM rendezvous radar:
   *	 - Added range,rate and CSM direction calculation.
@@ -368,6 +371,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	deda(this,soundlib, aea, 015)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
+	InitLEMCalled = false;
+	SystemsInitialized = 0;
 
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
@@ -378,12 +383,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 		pLEMValves[x] = NULL;
 		ValveState[x] = FALSE;
 	}
-
-	//
-	// Do systems init first as other code may rely on some
-	// of the variables it sets up.
-	//
-	SystemsInit();
 
 	// Init further down
 	Init();
@@ -418,11 +417,7 @@ void LEM::Init()
 	Eds=true;	
 	toggleRCS =false;
 
-	fdaiDisabled = false;
-	fdaiSmooth = false;
 	DebugLineClearTimer = 0;
-
-	InitPanel();
 
 	ABORT_IND=false;
 
@@ -444,7 +439,6 @@ void LEM::Init()
 
 	InVC = false;
 	InPanel = false;
-	PanelId = LMPANEL_MAIN;	// default panel
 	CheckPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
@@ -486,13 +480,6 @@ void LEM::Init()
 	PanelFlashOn = false;
 
 	//
-	// Default channel setup.
-	//
-
-	agc.SetInputChannelBit(030, 2, true);	// Descent stage attached.
-	agc.SetInputChannelBit(030, 15, true);	// Temperature in limits.
-
-	//
 	// For now we'll turn on the mission timer. We don't yet have a switch to control
 	// it.
 	//
@@ -531,6 +518,29 @@ void LEM::Init()
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &LEMToCSMConnector);
+
+	// Do this stuff only once
+	if(!InitLEMCalled){
+		SystemsInit();
+
+		// Panel items
+		fdaiDisabled = false;
+		fdaiSmooth = false;
+
+		PanelId = LMPANEL_MAIN;	// default panel
+		InitSwitches();
+		// "dummy" SetSwitches to enable the panel event handling
+		SetSwitches(PanelId);
+
+		//
+		// Default channel setup.
+		//
+		agc.SetInputChannelBit(030, 2, true);	// Descent stage attached.
+		agc.SetInputChannelBit(030, 15, true);	// Temperature in limits.
+
+
+		InitLEMCalled = true;
+	}
 }
 
 void LEM::DoFirstTimestep()

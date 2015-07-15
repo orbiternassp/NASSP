@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2015/07/14 07:42:00  dseagrav
+  *	Bugfix: LGC cannot command position 1 from position 2, there is a blocking relay to prevent it.
+  *	
   *	Revision 1.35  2015/07/14 06:52:45  dseagrav
   *	LR test mode implemented
   *	
@@ -1191,6 +1194,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// to perform internal computations on the 
 	// systems.
 	Panelsdk.Timestep(simt);
+
+	// Wait for systems init.
+	// This takes 4 timesteps.
+	if(SystemsInitialized < 4){ SystemsInitialized++; return; }
 
 	// After that come all other systems simesteps	
 	agc.Timestep(MissionTime, simdt);						// Do work
