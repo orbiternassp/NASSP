@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2015/06/29 16:41:41  dseagrav
+  *	Clean up mess made by previous commit
+  *	
   *	Revision 1.25  2015/06/29 15:52:04  dseagrav
   *	Patch missing EPS gauges
   *	
@@ -471,7 +474,7 @@ void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
 // Initialise panel to default state.
 //
 
-void LEM::InitPanel() {
+void LEM::InitSwitches() {
 
 	AbortSwitch.Register     (PSH, "AbortSwitch", false);
 	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);

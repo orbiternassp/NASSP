@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2015/07/14 06:52:45  dseagrav
+  *	LR test mode implemented
+  *	
   *	Revision 1.33  2015/07/14 03:36:26  dseagrav
   *	RR test mode implemented
   *	
@@ -803,7 +806,7 @@ protected:
 	void ButtonClick();
 	void GuardClick();
 	void AbortFire();
-	void InitPanel();
+	void InitSwitches();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	// void GetDockStatus();
@@ -1702,6 +1705,10 @@ protected:
 	h_Radiator imucase; // IMU Case
 	IMU imu;	
 	LMOptics optics;
+
+	// Some stuff on init should be done only once
+	bool InitLEMCalled;
+	int SystemsInitialized;
 
 	MissionTimer MissionTimerDisplay;
 	LEMEventTimer EventTimerDisplay;
