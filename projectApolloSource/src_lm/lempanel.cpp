@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2015/07/15 18:53:44  vrouleau
+  *	Adaptation For OrbiterSoundSDK40
+  *	
   *	Revision 1.27  2015/07/15 01:35:08  dseagrav
   *	Attempt to resolve LM initialization issues
   *	
@@ -1343,16 +1346,16 @@ POINT pt[4];
 	for (iphi = (int)phi0+4, i = 0; i < 8; i++, iphi--) {
 		if (iphi) {
 			int lb = abs(iphi)-1; if (lb >= 9) lb = 16-lb;
-			oapiBlt (surf, srf[3], size-5+(int)xlr, size-3+(int)ylr, 9*lb, 96, 9, 7, SURF_PREDEF_CK);
-			oapiBlt (surf, srf[3], size-5+(int)xll, size-3+(int)yll, 9*lb, 96, 9, 7, SURF_PREDEF_CK);
+			oapiBlt (surf, srf[SRF_DIGITAL], size-5+(int)xlr, size-3+(int)ylr, 9*lb, 96, 9, 7, SURF_PREDEF_CK);
+			oapiBlt (surf, srf[SRF_DIGITAL], size-5+(int)xll, size-3+(int)yll, 9*lb, 96, 9, 7, SURF_PREDEF_CK);
 		}
 		xlr -= dsinb, ylr += dcosb;
 		xll -= dsinb, yll += dcosb;
 	}
 
 	// now overlay markings with transparent blt
-	oapiBlt (surf, srf[3], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
-	oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
+	oapiBlt (surf, srf[SRF_DIGITAL], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
+	// oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
 void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
@@ -1375,8 +1378,8 @@ void LEM::RedrawPanel_Thrust (SURFHANDLE surf)
 
 	DispValue = GetEngineLevel(ENGINE_HOVER);
 
-	oapiBlt(surf,srf[2],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
-	oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
+	oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
+	oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 }
 
 void LEM::RedrawPanel_XPointer (SURFHANDLE surf) {
@@ -1456,23 +1459,31 @@ void LEM::InitPanel (int panel)
 		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
-		srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
-		srf[6]						= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
-		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
-		srf[8]						= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
-		srf[9]						= oapiCreateSurface (LOADBMP (IDB_ABORT));
-		srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
-		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
-		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
-		srf[13]						= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
-		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
-		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
-		//srf[17]					= oapiCreateSurface (LOADBMP (IDB_HEADING));
-		srf[18]						= oapiCreateSurface (LOADBMP (IDB_CONTACT));
+		// Unused surface 5 was
+		// srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
+		srf[SRF_LIGHTS2]			= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
+		srf[SRF_LEMSWITCH1]			= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
+		srf[SRF_LEMSWTICH3]			= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
+		// Unused surface 7 was
+		// srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
+		srf[SRF_SECSWITCH]			= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
+		// srf[9]						= oapiCreateSurface (LOADBMP (IDB_ABORT));
+		// srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
+		// srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));		
 		srf[SRF_LMTWOPOSLEVER]		= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
-		srf[20]						= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
+		// srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
+		// There was a conflict here between hardcoded index 13 and SRF_DSKY
+		// Hardcoded index 13 was moved to SRF_LIGHTS2 (index 5)
 		srf[SRF_DSKY]				= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
+		// srf[14]						= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
+		// srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
+		// srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		// srf[17]					= oapiCreateSurface (LOADBMP (IDB_HEADING));
+		srf[SRF_CONTACTLIGHT]		= oapiCreateSurface (LOADBMP (IDB_CONTACT));
+		// srf[19] (SRF_THREEPOSSWITCH305) was hardcoded in several places but never actually loaded?
+		// srf[SRF_THREEPOSSWITCH305]	= oapiCreateSurface (LOADBMP (IDB_CONTACT));
+		// There was a conflict here between hardcoded index 20 and SRF_LMABORTBUTTON
+		// Hardcoded index 20 was moved to SRF_LEMSWITCH3 (index 7)		
 		srf[SRF_LMABORTBUTTON]		= oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
 		srf[SRF_LMMFDFRAME]			= oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
@@ -1540,13 +1551,13 @@ void LEM::InitPanel (int panel)
 		//
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[3], 0);
-		oapiSetSurfaceColourKey (srf[5], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[14], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[18], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_NEEDLE], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_DIGITAL], 0);
+		// oapiSetSurfaceColourKey (srf[5], g_Param.col[4]);
+		// oapiSetSurfaceColourKey (srf[14], g_Param.col[4]);
+		// oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
+		// oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_CONTACTLIGHT], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTWOPOSLEVER],		g_Param.col[4]);
@@ -2479,15 +2490,16 @@ void LEM::SetSwitches(int panel) {
 			CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
-
 			break;
 
-			case LMPANEL_AOTVIEW:
-			
+		case LMPANEL_AOTVIEW:			
 			RRGyroSelSwitchRow.Init(AID_RR_GYRO_SEL_SWITCH, MainPanel);
 			RRGyroSelSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], RRGyroSelSwitchRow);
-
 			break;
+
+		case LMPANEL_LPDWINDOW:
+			break;
+
 	}
 }
 
@@ -3672,7 +3684,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_CONTACTLIGHT1:
 		if (GroundContact()&& stage ==1){
-			oapiBlt(surf,srf[18],0,0,0,0,48,48, SURF_PREDEF_CK);//
+			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
 
 	case AID_RR_NOTRACK:
@@ -3685,19 +3697,19 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_CONTACTLIGHT2:
 		if (GroundContact()&& stage ==1){
-			oapiBlt(surf,srf[18],0,48,0,0,48,48, SURF_PREDEF_CK);//
+			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,48,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
 
 	case AID_SWITCH_SEP:
 		if(Cswitch1){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
+			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,25,0,25,45);
 			if(Sswitch1){
-			oapiBlt(surf,srf[20],1,16,0,0,23,20);
+				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,0,0,23,20);
 			}else{
-			oapiBlt(surf,srf[20],1,16,23,0,23,20);
+				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,23,0,23,20);
 			}
 		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
+			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,0,0,25,45);
 			Sswitch1=false;
 		}
 		return true;
@@ -3819,20 +3831,20 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_DESCENT_HE:
 		if(DESHE1switch){
-			oapiBlt(surf,srf[6],1,30,0,0,23,20);
-			oapiBlt(surf,srf[13],3,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,30,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,0,0,19,20);
 		}
 		else{
-			oapiBlt(surf,srf[6],1,30,23,0,23,20);
-			oapiBlt(surf,srf[13],3,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,30,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,38,0,19,20);
 		}
 		if(DESHE2switch){
-			oapiBlt(surf,srf[6],44,30,0,0,23,20);
-			oapiBlt(surf,srf[13],46,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,30,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,0,0,0,19,20);
 		}
 		else{
-			oapiBlt(surf,srf[6],44,30,23,0,23,20);
-			oapiBlt(surf,srf[13],46,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,30,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,0,38,0,19,20);
 		}
 		return true;
 /*
@@ -3851,91 +3863,99 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 */
 	case AID_LGC_THRUSTER_QUADS:
 		if(QUAD1switch){
-			oapiBlt(surf,srf[6],1,36,0,0,23,20);
-			oapiBlt(surf,srf[13],3,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,36,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],1,36,23,0,23,20);
-			oapiBlt(surf,srf[13],3,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,36,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,38,0,19,20);
 		}
 		if(QUAD2switch){
-			oapiBlt(surf,srf[6],44,36,0,0,23,20);
-			oapiBlt(surf,srf[13],46,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,36,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],44,36,23,0,23,20);
-			oapiBlt(surf,srf[13],46,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,36,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,0,38,0,19,20);
 		}
 		if(QUAD3switch){
-			oapiBlt(surf,srf[6],92,36,0,0,23,20);
-			oapiBlt(surf,srf[13],94,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],92,36,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],94,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],92,36,23,0,23,20);
-			oapiBlt(surf,srf[13],94,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],92,36,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],94,0,38,0,19,20);
 		}
 		if(QUAD4switch){
-			oapiBlt(surf,srf[6],135,36,0,0,23,20);
-			oapiBlt(surf,srf[13],137,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],135,36,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],137,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],135,36,23,0,23,20);
-			oapiBlt(surf,srf[13],137,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],135,36,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],137,0,38,0,19,20);
 		}
 		if(QUAD5switch){
-			oapiBlt(surf,srf[6],1,116,0,0,23,20);
-			oapiBlt(surf,srf[13],3,80,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,116,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,80,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],1,116,23,0,23,20);
-			oapiBlt(surf,srf[13],3,80,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,116,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,80,38,0,19,20);
 		}
 		if(QUAD6switch){
-			oapiBlt(surf,srf[6],44,116,0,0,23,20);
-			oapiBlt(surf,srf[13],46,80,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,116,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,80,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],44,116,23,0,23,20);
-			oapiBlt(surf,srf[13],46,80,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],44,116,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],46,80,38,0,19,20);
 		}
 		if(QUAD7switch){
-			oapiBlt(surf,srf[6],92,116,0,0,23,20);
-			oapiBlt(surf,srf[13],94,80,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],92,116,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],94,80,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],92,116,23,0,23,20);
-			oapiBlt(surf,srf[13],94,80,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],92,116,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],94,80,38,0,19,20);
 		}
 		if(QUAD8switch){
-			oapiBlt(surf,srf[6],135,116,0,0,23,20);
-			oapiBlt(surf,srf[13],137,80,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],135,116,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],137,80,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],135,116,23,0,23,20);
-			oapiBlt(surf,srf[13],137,80,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],135,116,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],137,80,38,0,19,20);
 		}
 		return true;
 
 	case AID_RCS_SYSTEMA_SYSTEMB:
 		if(AFEED1switch){
-			oapiBlt(surf,srf[19],0,33,0,0,23,30);
-			oapiBlt(surf,srf[13],2,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,33,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],0,33,23,0,23,30);
-			oapiBlt(surf,srf[13],2,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,33,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,38,0,19,20);
 		}
 		if(AFEED2switch){
-			oapiBlt(surf,srf[19],43,33,0,0,23,30);
-			oapiBlt(surf,srf[13],45,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],43,33,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],45,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],43,33,23,0,23,30);
-			oapiBlt(surf,srf[13],45,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],43,33,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],45,0,38,0,19,20);
 		}
 		if(AFEED3switch){
-			oapiBlt(surf,srf[19],91,33,0,0,23,30);
-			oapiBlt(surf,srf[13],93,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],91,33,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],93,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],91,33,23,0,23,30);
-			oapiBlt(surf,srf[13],93,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],91,33,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],93,0,38,0,19,20);
 		}
 		if(AFEED4switch){
-			oapiBlt(surf,srf[19],134,33,0,0,23,30);
-			oapiBlt(surf,srf[13],136,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],134,33,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],136,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],134,33,23,0,23,30);
-			oapiBlt(surf,srf[13],136,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],134,33,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],136,0,38,0,19,20);
 		}
 		return true;
 
@@ -3943,107 +3963,125 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_MAIN_SOV_SWITCHES:
 		if(MSOV1switch){
 			oapiBlt(surf,srf[19],0,30,0,0,23,30);
-			oapiBlt(surf,srf[13],2,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,0,0,19,20);
 		}else{
 			oapiBlt(surf,srf[19],0,30,23,0,23,30);
-			oapiBlt(surf,srf[13],2,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,38,0,19,20);
 		}
 		if(MSOV2switch){
 			oapiBlt(surf,srf[19],55,30,0,0,23,30);
-			oapiBlt(surf,srf[13],57,0,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],57,0,0,0,19,20);
 		}else{
 			oapiBlt(surf,srf[19],55,30,23,0,23,30);
-			oapiBlt(surf,srf[13],57,0,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],57,0,38,0,19,20);
 		}
 		return true;
 	*/
 
 	case AID_EXPLOSIVE_DEVICES1:
 		if(ED1switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		if(ED2switch){
-			oapiBlt(surf,srf[19],47,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],47,0,23,0,23,30);
-			}
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,0,23,0,23,30);
+		}
 		if(ED4switch){
-			oapiBlt(surf,srf[19],00,68,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],00,68,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],00,68,23,0,23,30);
-			}
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],00,68,23,0,23,30);
+		}
 		if(ED5switch){
-			oapiBlt(surf,srf[19],47,68,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,68,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],47,68,23,0,23,30);
-			}
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,68,23,0,23,30);
+		}
 		if(ED6switch){
-			oapiBlt(surf,srf[19],94,68,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],94,68,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],94,68,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],94,68,23,0,23,30);
 		}
 		return true;
 
 	case AID_ATTITUDE_CONTROL_SWITCHES:
 		if(ATT1switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		if(ATT2switch){
-			oapiBlt(surf,srf[6],57,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],57,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],57,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],57,0,23,0,23,20);
 			}
 		if(ATT3switch){
-			oapiBlt(surf,srf[6],114,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],114,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],114,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],114,0,23,0,23,20);
 			}
 		return true;
 
 	case AID_ENGINE_GIMBAL_SWITCH:
 		if(GMBLswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_ASCENT_HE:
 		if(ASCHE1switch){
-			oapiBlt(surf,srf[6],2,32,0,0,23,20);
-			oapiBlt(surf,srf[13],4,1,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],2,32,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],4,1,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],2,32,23,0,23,20);
-			oapiBlt(surf,srf[13],4,1,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],2,32,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],4,1,38,0,19,20);
 		}
 		if(ASCHE2switch){
-			oapiBlt(surf,srf[6],45,32,0,0,23,20);
-			oapiBlt(surf,srf[13],47,1,0,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],45,32,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],47,1,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[6],45,32,23,0,23,20);
-			oapiBlt(surf,srf[13],47,1,38,0,19,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],45,32,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LIGHTS2],47,1,38,0,19,20);
 		}
 		return true;
 
 	case AID_EXPLOSIVE_DEVICES2:
-			if(ED7switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+		if(ED7switch){
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		if(ED8switch){
-			oapiBlt(surf,srf[19],48,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],48,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],48,0,23,0,23,30);
-			}
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],48,0,23,0,23,30);
+		}
 		if(ED9switch){
-			oapiBlt(surf,srf[19],94,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],94,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],94,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],94,0,23,0,23,30);
 		}
 		return true;
 
@@ -4059,14 +4097,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 				DispValue =0;
 		}
-		oapiBlt(surf,srf[2],1,(int)(47-(DispValue)*47),0,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(47-(DispValue)*47),0,0,7,7, SURF_PREDEF_CK);//
 		if(ph_Asc){
 		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
 		}else{
 			DispValue =1;
 		}
 
-		oapiBlt(surf,srf[2],29,(int)(47-(DispValue)*47),8,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(47-(DispValue)*47),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 	case AID_ENG_FUEL_PRESS:
@@ -4075,14 +4113,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 				DispValue =0;
 		}
-		oapiBlt(surf,srf[2],1,(int)(62-(DispValue)*62),0,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(62-(DispValue)*62),0,0,7,7, SURF_PREDEF_CK);//
 		if(ph_Asc){
 		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
 		}else{
 			DispValue =1;
 		}
 
-		oapiBlt(surf,srf[2],29,(int)(62-(DispValue)*62),8,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(62-(DispValue)*62),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 		/* DEPRECIATED 
@@ -4093,13 +4131,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 			DispValue =0;
 		}
-		oapiBlt(surf,srf[2],1,(int)(49-(DispValue)*49),0,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(49-(DispValue)*49),0,0,7,7, SURF_PREDEF_CK);//
 		if(ph_rcslm1){
 		DispValue = GetPropellantMass(ph_rcslm1)/100;
 		}else{
 			DispValue =1;
 		}
-		oapiBlt(surf,srf[2],29,(int)(49-(DispValue)*49),8,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(49-(DispValue)*49),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 	case AID_RCS_PRESS:
@@ -4109,13 +4147,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 			DispValue =0;
 		}
-		oapiBlt(surf,srf[2],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
 		if(ph_rcslm1){
 		DispValue = GetPropellantMass(ph_rcslm1)/100;
 		}else{
 			DispValue =1;
 		}
-		oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 	case AID_RCS_QTY:
@@ -4125,174 +4163,190 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 			DispValue =0;
 		}
-		oapiBlt(surf,srf[2],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
 		if(ph_rcslm1){
 		DispValue = GetPropellantMass(ph_rcslm1)/100;
 		}else{
 			DispValue =1;
 		}
-		oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
+		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 	*/
 
 	case AID_LANDING_GEAR_SWITCH:
 		if(LDGswitch){
-			oapiBlt(surf,srf[19],1,37,0,0,23,30);
-			oapiBlt(surf,srf[13],3,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],1,37,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],1,37,23,0,23,30);
-			oapiBlt(surf,srf[13],3,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],1,37,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,38,0,19,20);
 		}
 		return true;
 
 	case AID_CRSFD_SWITCH:
 		if(CRSFDswitch){
-			oapiBlt(surf,srf[19],0,29,0,0,23,30);
-			oapiBlt(surf,srf[13],2,0,0,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,29,0,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,0,0,19,20);
 		}else{
-			oapiBlt(surf,srf[19],0,29,23,0,23,30);
-			oapiBlt(surf,srf[13],2,0,38,0,19,20);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,29,23,0,23,30);
+			oapiBlt(surf,srf[SRF_LIGHTS2],2,0,38,0,19,20);
 		}
 		return true;
 
 	case AID_CABIN_FAN_SWITCH:
 		if(CABFswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_PTT_SWITCH:
 		if(PTTswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_RCS_SYS_AB:
 		if(RCSS1switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		if(RCSS2switch){
-			oapiBlt(surf,srf[6],46,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],46,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],46,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],46,0,23,0,23,20);
 		}
 		if(RCSS3switch){
-			oapiBlt(surf,srf[6],0,59,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,59,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,59,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,59,23,0,23,20);
 		}
 		if(RCSS4switch){
-			oapiBlt(surf,srf[6],46,59,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],46,59,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],46,59,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],46,59,23,0,23,20);
 		}
 		return true;
 
 	case AID_XPOINTER_SWITCH:
 		if(X1switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_PANEL1_1:
 		if(RATE1switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		if(AT1switch){
-			oapiBlt(surf,srf[6],0,58,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,58,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,58,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,58,23,0,23,20);
 		}
 		return true;
 
 	case AID_GUID_CONT_SWITCH:
 		if(GUIDswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_ALT_RNG_MON:
 		if(ALTswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_SHIFT_SWITCH:
 		if(SHFTswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_ENGINE_THRUST_CONT:
 		if(ETC1switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		if(ETC2switch){
-			oapiBlt(surf,srf[19],47,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],47,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],47,0,23,0,23,30);
 		}
 		if(ETC3switch){
-			oapiBlt(surf,srf[6],14,58,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],14,58,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],14,58,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],14,58,23,0,23,20);
 		}
 		if(ETC4switch){
-			oapiBlt(surf,srf[19],52,53,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],52,53,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],52,53,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],52,53,23,0,23,30);
 		}
 		return true;
 
 	case AID_PROP_MON_SWITCHES:
 		if(PMON1switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		if(PMON2switch){
-			oapiBlt(surf,srf[6],14,55,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],14,55,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],14,55,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],14,55,23,0,23,20);
 		}
 		return true;
 
 	case AID_ACA_PROP_SWITCH:
 		if(ACAPswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_PANEL2_1:
 		if(RATE2switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		if(AT2switch){
-			oapiBlt(surf,srf[6],0,58,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,58,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,58,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,58,23,0,23,20);
 		}
 		return true;
 /*
@@ -4307,120 +4361,138 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_SLEW_RATE_SWITCH:
 		if(SLWRswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_DEAD_BAND_SWITCH:
 		if(DBswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_IMU_CAGE_SWITCH:
 		if(IMUCswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_SIDE_PANEL_SWITCH:
 		if(SPLswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_XPOINTER2_SWITCH:
 		if(X2switch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_PANEL4_SWITCH1:
 		if(P41switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_PANEL4_SWITCH2:
 		if(P42switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_PANEL4_SWITCH3:
 		if(P43switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_PANEL4_SWITCH4:
 		if(P44switch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_AUDIO_CONT_SWITCH:
 		if(AUDswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,0,0,23,20);
 		}
 		else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
+			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,0,23,0,23,20);
 		}
 		return true;
 
 	case AID_RELAY_AUDIO_SWITCH:
 		if(RELswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_CABIN_PRESS_SWITCH:
 		if(CPswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_HATCH_SWITCH:
 		if(HATCHswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
 	case AID_EVA_SWITCH:
 		if(EVAswitch){
-			oapiBlt(surf,srf[19],0,0,0,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
 		}
 		else{
-			oapiBlt(surf,srf[19],0,0,23,0,23,30);
+			// UNINITIALIZED USE OF srf[19]
+			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
 
@@ -4455,14 +4527,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_SWITCH_JET:
 		if(Cswitch2){
-			oapiBlt(surf,srf[8],0,0,75,0,25,45);
+			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,75,0,25,45);
 			if(Sswitch2){
-			oapiBlt(surf,srf[20],1,16,0,0,23,20);
+				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,0,0,23,20);
 			}else{
-			oapiBlt(surf,srf[20],1,16,23,0,23,20);
+				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,23,0,23,20);
 			}
 		}else{
-			oapiBlt(surf,srf[8],0,0,50,0,25,45);
+			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,50,0,25,45);
 			Sswitch2=false;
 		}
 		return true;
