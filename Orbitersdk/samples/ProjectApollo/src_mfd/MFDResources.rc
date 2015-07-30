@@ -1,0 +1,57 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "MFDResource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winresrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Englisch (GB) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO             BITMAP  DISCARDABLE     "..\\Bitmaps\\Logo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    1000          "PROJECT APOLLO MFD:\r\n\r\nAdds 2 new MFD modes, ""Project Apollo"" MFD and ""Project Apollo Checklist"" MFD for Project Apollo - NASSP. Project Apollo MFD is used to do Mission Control tasks, with Project Apollo Checklist MFD checklists are displayed and executed in-game.\r\n\r\nSee http://nassp.sf.net for more details."
+    1001          "MFD modes"
+END
+
+#endif    // Englisch (GB) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+

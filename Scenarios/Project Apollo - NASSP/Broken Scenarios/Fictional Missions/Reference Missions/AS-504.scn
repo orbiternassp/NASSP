@@ -1,0 +1,84 @@
+BEGIN_DESC
+AS-504 (February 01, 1968). Alfred Davidson (CDR), Turnage Lindsey (CMP), Lloyd Reeder (LMP). CSM: Apollo 504. In the lead up to the first Apollo lunar flights NASA created a series of simulated missions for testing, training and study purposes. This mission is a simple free-return trajectory with a flyby of the lunar surface. Unlike the historic Apollo 8 mission there is no requirement to break into or out of lunar orbit. 
+
+After launch there are two opportunities for TLI.
+
+1. TLI occurs at GET 02:39:54. Perycynthion occurs at approximately GET 77:30:46.
+
+2. TLI occurs at GET 04:08:26. Perycynthion occurs at approximately GET 79:06:36
+
+Launch Date & TLI details come from "Saturn V, AS-504 Launch Vehicle Reference Trajectory", May 1967. (AS-504)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo\Sol
+  Date MJD 39887.5676854168
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Sagitta
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Apollo 504
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+Apollo 504:ProjectApollo\Saturn5
+  STATUS Landed Earth  
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  REALISM 0
+  NASSPVER 70000
+  S4PL 6
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -7200
+  TOAPO 185.94
+  TOPER 183.16
+  TOHDG 72
+LANG English
+ <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+END
+Crawler-Transporter:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6227729 28.5885195
+  HEADING 69.50
+  LVNAME Apollo 504
+END
+ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME Apollo 504
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6532730 28.5795280
+  HEADING 75.04
+  LVNAME Apollo 504
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6236987 28.5882240
+  HEADING 244.99
+END
+END_SHIPS

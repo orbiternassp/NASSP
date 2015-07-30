@@ -1,0 +1,74 @@
+BEGIN_DESC
+Join Frank Borman James Lovell and Bill Anders on Mankind's first trek a quater 
+of a million miles to the moon. Dec 21 1968. (AS-503)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40211.4104282407
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-503
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-503
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+AS-503:ProjectApollo/Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 8
+  REALISM 0
+  S4PL 4
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -10800
+  TOAPO 185.181
+  TOPER 184.403
+  TOHDG 72.124
+  SICSHUT 126.0
+  SIIPUT 443.45
+  TCP 0.5
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+END
+AS-503-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6227729 28.5885195
+  HEADING 69.50
+  NAVFREQ 0 0
+  LVNAME AS-503
+END
+AS-503-ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME AS-503
+END
+END_SHIPS

@@ -1,9 +1,0 @@
-BEGIN_DESC
-Project Apollo - NASSP (also known as NASSP or NCPP) simulates the Apollo missions to Earth orbit and the Moon, and is planned to be expanded to simulate planned post-Apollo missions that never flew. 
-
-
-Project Apollo features a near-full implementation of the control panels in the Command Module and Lunar Module, and an increasingly accurate simulation of the internal systems (e.g. electrical distribution, fuel cells). Also the Virtual AGC software is supported, which allows you to run precisely the same on-board guidance software as used by the real Apollo Guidance Computer.
-
-
-See http://nassp.sf.net for more details.
-END_DESC

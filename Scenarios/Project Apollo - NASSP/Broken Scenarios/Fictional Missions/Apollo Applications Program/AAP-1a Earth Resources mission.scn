@@ -1,0 +1,83 @@
+BEGIN_DESC
+AAP - Mission 1a. CDR:Donald R. Garrett, CMP:Joel M. Rosenweig, LMP:Neil B. Anderson. Manned Earth Resources survey mission using slightly modified CSM & carrier to hold the instrumentation. Launch will carry the spacecraft to a elliptical orbit 160-260km. After transposition & docking the SPS will be used to change the orbit into orbit with an altitude 260-280km for the remainder of the flight.  Re-entry is into the Atlantic after 14 days in orbit. 
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40312.5838078704
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AAP-1a
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AAP-1a
+  MODE Extern
+  POS 2.04 -0.03 -94.77
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Orbit
+  PROJ Ship
+  REF Earth
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+AAP-1a:ProjectApollo/Saturn1b
+  STATUS Landed Earth
+  BASE Cape Canaveral:3
+  POS -80.5643392 28.5150791
+  HEADING 270.00
+  FUEL 1.000
+  REALISM 0
+  HASPROBE 1
+  S4PL 7
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  NOHGA 1
+  DOCKSTATE 0
+  MISSNTIME -7200
+  TOAPO 260
+  TOPER 160
+  TOHDG 44.92
+  SICSHUT 140.3
+  SISHUT 143.3
+  SIICSHUT 459.8
+  IGMST 170.93
+  LESJT 166.54
+  SIIPUT 455.77
+  LANG English
+ <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+END
+LC34:ProjectApollo\LC34
+  STATUS Landed Earth
+  POS -80.5643399 28.5150804
+  HEADING 180.05
+  LVNAME AAP-1a
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6532730 28.5795280
+  HEADING 75.04
+  LVNAME AAP-1a
+END
+END_SHIPS
+
+; TOAPO and TOPER are fine!
+; Don't know what that means:
+; ??? Remember, burn more after insert, apo at 283.356 ???

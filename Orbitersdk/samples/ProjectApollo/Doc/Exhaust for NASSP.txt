@@ -1,0 +1,30 @@
+	// orbiter main thrusters
+
+	PARTICLESTREAMSPEC contrail = 
+	{
+		0, 5.0, 5, 250, 0.3, 4.0, 16, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
+		PARTICLESTREAMSPEC::LVL_SQRT, 0, 1,
+		PARTICLESTREAMSPEC::ATM_PLOG, 1e-4, 1
+	};
+
+	PARTICLESTREAMSPEC exhaust_main = {
+		0, 2.8, 40, 250, 0.1, 0.2, 42, 1.0, PARTICLESTREAMSPEC::EMISSIVE,
+		PARTICLESTREAMSPEC::LVL_SQRT, 0, 1,
+		PARTICLESTREAMSPEC::ATM_PLOG, 1e-8, 0.1
+	};
+	exhaust_main.tex = oapiRegisterParticleTexture ("Contrail2");
+
+	th_main[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	AddExhaustStream (th_main[0], &exhaust_main);
+
+	th_main[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	AddExhaustStream (th_main[1], &exhaust_main);
+	
+	th_main[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	AddExhaustStream (th_main[2], &exhaust_main);
+	
+	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	AddExhaustStream (th_main[3], &exhaust_main);
+	
+	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	AddExhaustStream (th_main[4], &exhaust_main);

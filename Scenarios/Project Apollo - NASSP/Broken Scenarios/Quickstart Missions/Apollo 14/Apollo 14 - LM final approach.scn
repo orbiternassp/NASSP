@@ -1,0 +1,1409 @@
+BEGIN_DESC
+You're in the LM at about 30 seconds before "high gate", use the landing point designation feature to land the LM where you like to.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo\Sol
+  Date MJD 40987.2245756945
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Antares
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Antares
+  MODE Cockpit
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Moon
+  BTARGET Fra Mauro-Base
+  TRACK ON
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Orbit
+  PROJ Ship
+  FRAME Equator
+  ALT
+  REF Moon
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+
+BEGIN_SHIPS
+Kitty-Hawk:ProjectApollo/Saturn5
+  STATUS Orbiting Moon
+  RPOS -1010388.30 -93366.12 -1522338.82
+  RVEL -1348.614 -224.904 902.917
+  AROT -39.38 38.78 83.34
+  VROT 0.05 0.08 -0.00
+  RCSMODE 2
+  PRPLEVEL 0:0.378 1:0.917 2:0.871 3:0.803 4:0.757
+  NAVFREQ 0 0 0 0
+  XPDR 0
+  NASSPVER 70000
+  STAGE 30
+  VECHNO 509
+  APOLLONO 14
+  SATTYPE 1
+  DOCKSTATE 4
+  PANEL_ID 0
+  TCP 0.500
+  MISSNTIME 375621.269
+  NMISSNTIME 10554.858
+  LMISSNTIME 563.040
+  NFAILTIME -1000000000.000
+  MTD 375621.206
+  ETD 0.000
+  THRUSTA 1.000
+  MR 4.900
+  DLS 1
+  LOWRES 0
+  CHECKLISTS 0
+  REALISM 0
+  STAGESTATUS 0
+  MAINSTATE 316425
+  ATTACHSTATE 2147483647
+  LIGHTSTATE 106528
+  CSWITCH 0
+  SSWITCH 0
+  LPSWITCH 4096
+  RPSWITCH 65536
+  SIFUELMASS 2117000.000
+  SIIFUELMASS 441600.000
+  S4FUELMASS 106100.000
+  SIEMPTYMASS 148000.000
+  SIIEMPTYMASS 34390.000
+  S4EMPTYMASS 14880.000
+  SMFUELLOAD 20500.000
+  SMMASS 6100.000
+  CMFUELLOAD 75.000
+  CMMASS 5700.000
+  VALVESTATE 65535
+  LANG English
+  LEMN Antares
+  COASENABLED 1
+  FDAIDISABLED 0
+  FDAISMOOTH 0
+DSKY_BEGIN
+  PROG 16
+  VERB 37
+  NOUN 00
+  R1 
+  R2 
+  R3 
+  STATE 5120
+DSKY_END
+DSKY2_BEGIN
+  PROG 16
+  VERB 37
+  NOUN 00
+  R1 
+  R2 
+  R3 
+  STATE 5120
+DSKY2_END
+AGC_BEGIN
+  YAAGC 0
+  BRNTIME 0.000
+  BRNSTIME 280771.250
+  BRNETIME 280771.250
+  EVTTIME 280773.250
+  CUTFVEL 0.000
+  LALT 0.000
+  TGTDV 1.000
+  PROG 16
+  VERB 37
+  NOUN 0
+  R1 -33
+  R2 965
+  R3 -1057
+  EPOS 2
+  EVAL 16
+  EDAT 0
+  ECNT 0
+  E2 16
+  E5 
+  R1FMT XXX XX
+  R2FMT XXXXXX
+  R3FMT XXXXXX
+  TGTA 185.385
+  TGTP 183.163
+  TGTZ 75.558
+  ONAME Antares
+  STATE 377971
+  EMEM0000 2
+  EMEM0005 20
+  EMEM0006 45
+  EMEM0010 1
+  EMEM0014 16
+  EMEM0016 37730012537
+  EMEM0025 11110
+  EMEM0030 1450221
+  EMEM0031 3324707
+  EMEM0032 1142
+  EMEM0074 205
+  EMEM0075 2121
+  EMEM0076 2
+  EMEM0077 40004
+  EMEM0101 40000
+  ICHAN013 28
+  ICHAN024 16388
+  ICHAN025 8192
+  ICHAN027 8192
+  OCHAN009 32
+AGC_END
+IMU_BEGIN
+  RPX 0.915325
+  RPY 0.412539
+  RPZ -0.162101
+  GMX 0.616841
+  GMY 5.650872
+  GMZ 0.129039
+  OAX -0.688210
+  OAY 0.677149
+  OAZ 1.453938
+  LAX -0.688210
+  LAY 0.677149
+  LAZ 1.453938
+  VLX -2326.524868
+  VLY -258.911304
+  VLZ 1155.916321
+  M11 -0.213000
+  M12 0.437000
+  M13 -0.874000
+  M21 -0.178000
+  M22 -0.897000
+  M23 -0.405000
+  M31 0.961000
+  M32 -0.069000
+  M33 -0.269000
+  LTM 375621.268750
+  STATE 7
+IMU_END
+CWS_BEGIN
+  MODE 0
+  TEST 0
+  STATE 3
+  LLIGHTS 0
+  RLIGHTS 526350
+CWS_END
+SECS_BEGIN
+  STATE 0
+  NEXTMISSIONEVENTTIME -1000000000.000
+  LASTMISSIONEVENTTIME -1000000000.000
+SECS_END
+ELS_BEGIN
+  STATE 0
+  NEXTMISSIONEVENTTIME -1000000000.000
+  LASTMISSIONEVENTTIME -1000000000.000
+ELS_END
+GDC_BEGIN
+  FDAIERRENA 0
+  FDAIERRX 0
+  FDAIERRY 0
+  FDAIERRZ 0
+  ATTITUDEINITIALIZED 0
+  ATTITUDEX 0.000000
+  ATTITUDEY 0.000000
+  ATTITUDEZ 0.000000
+  LASTATTITUDEX 0.000000
+  LASTATTITUDEY 0.000000
+  LASTATTITUDEZ 0.000000
+  ORBITERATTITUDEX 0.000000
+  ORBITERATTITUDEY 0.000000
+  ORBITERATTITUDEZ 0.000000
+  ORBITERATTITUDEM11 0.000000
+  ORBITERATTITUDEM12 0.000000
+  ORBITERATTITUDEM13 0.000000
+  ORBITERATTITUDEM21 0.000000
+  ORBITERATTITUDEM22 0.000000
+  ORBITERATTITUDEM23 0.000000
+  ORBITERATTITUDEM31 0.000000
+  ORBITERATTITUDEM32 0.000000
+  ORBITERATTITUDEM33 0.000000
+GDC_END
+ASCP_BEGIN
+  OPX 0.000
+  OPY 0.000
+  OPZ 0.000
+ASCP_END
+DOCKINGPROBE_BEGIN
+  ENABLED 1
+  STATUS 1.000
+  EXTENDINGRETRACTING 0
+DOCKINGPROBE_END
+FDAI_BEGIN
+  TGX 5.884
+  TGY -1.163
+  TGZ 1.632
+  NWX 5.884
+  NWY -1.162
+  NWZ 1.630
+  RATESX 0.000
+  RATESY 0.000
+  RATESZ 0.000
+  ERRORSX 0.000
+  ERRORSY 0.000
+  ERRORSZ 0.000
+FDAI_END
+FDAI2_BEGIN
+  TGX 5.884
+  TGY -1.163
+  TGZ 1.632
+  NWX 5.884
+  NWY -1.162
+  NWZ 1.630
+  RATESX 0.000
+  RATESY 0.000
+  RATESZ 0.000
+  ERRORSX 0.000
+  ERRORSY 0.000
+  ERRORSZ 0.000
+FDAI2_END
+BMAG1_BEGIN
+  UNCAGEDX 0.000000
+  UNCAGEDY 0.000000
+  UNCAGEDZ 0.000000
+  TARGETATTITUDEX 0.000000
+  TARGETATTITUDEY 0.000000
+  TARGETATTITUDEZ 0.000000
+  RATESX 0.000000
+  RATESY 0.000000
+  RATESZ 0.000000
+  ATTITUDEINITIALIZED 1
+  ATTITUDEX 0.639110
+  ATTITUDEY 1.119263
+  ATTITUDEZ 5.307291
+  LASTATTITUDEX 0.638303
+  LASTATTITUDEY 1.118289
+  LASTATTITUDEZ 5.307512
+  ORBITERATTITUDEX -0.688210
+  ORBITERATTITUDEY 0.677149
+  ORBITERATTITUDEZ 1.453938
+  ORBITERATTITUDEM11 -0.470250
+  ORBITERATTITUDEM12 0.818556
+  ORBITERATTITUDEM13 -0.329894
+  ORBITERATTITUDEM21 -0.639009
+  ORBITERATTITUDEM22 -0.057982
+  ORBITERATTITUDEM23 0.767011
+  ORBITERATTITUDEM31 -0.608714
+  ORBITERATTITUDEM32 -0.571493
+  ORBITERATTITUDEM33 -0.550330
+BMAG_END
+BMAG2_BEGIN
+  UNCAGEDX 0.000000
+  UNCAGEDY 0.000000
+  UNCAGEDZ 0.000000
+  TARGETATTITUDEX 0.000000
+  TARGETATTITUDEY 0.000000
+  TARGETATTITUDEZ 0.000000
+  RATESX 0.000000
+  RATESY 0.000000
+  RATESZ 0.000000
+  ATTITUDEINITIALIZED 1
+  ATTITUDEX 0.639110
+  ATTITUDEY 1.119263
+  ATTITUDEZ 5.307291
+  LASTATTITUDEX 0.638303
+  LASTATTITUDEY 1.118289
+  LASTATTITUDEZ 5.307512
+  ORBITERATTITUDEX -0.688210
+  ORBITERATTITUDEY 0.677149
+  ORBITERATTITUDEZ 1.453938
+  ORBITERATTITUDEM11 -0.470250
+  ORBITERATTITUDEM12 0.818556
+  ORBITERATTITUDEM13 -0.329894
+  ORBITERATTITUDEM21 -0.639009
+  ORBITERATTITUDEM22 -0.057982
+  ORBITERATTITUDEM23 0.767011
+  ORBITERATTITUDEM31 -0.608714
+  ORBITERATTITUDEM32 -0.571493
+  ORBITERATTITUDEM33 -0.550330
+BMAG_END
+  SYSTEMSSTATE 700
+  LSYSTEMSMISSNTIME 374778.500
+  <INTERNALS> 
+  <VERSION> 1.9.9
+  <HYDRAULIC> 
+     <TANK>  O2TANK1 102.000000 1 1 0 0 0.00000010 0.00000010 0.00100000 0.00100000
+        CHM    0 145077.6202   0.0000 18183110.5769
+     </TANK> 
+     <TANK>  O2TANK2 102.000000 1 1 0 0 0.00000010 0.00000010 0.00100000 0.00100000
+        CHM    0 145083.9802   0.0000 18171856.4107
+     </TANK> 
+     <TANK>  H2TANK1 168.900000 1 1 0 0 0.00000100 0.00000100 0.00100000 0.00100000
+        CHM    1 12686.2086   0.0000 2482586.6350
+     </TANK> 
+     <TANK>  H2TANK2 168.900000 1 1 0 0 0.00000100 0.00000100 0.00100000 0.00100000
+        CHM    1 12690.9015   0.0000 2468230.6571
+     </TANK> 
+     <TANK>  O2FUELCELLMANIFOLD 0.010000 1 1 0 0 0.00000010 0.00000010 0.00100000 0.00100000
+        CHM    0  13.9506   0.0000 1747.9369
+     </TANK> 
+     <TANK>  H2FUELCELLMANIFOLD 0.100000 1 1 0 0 0.00000010 0.00000010 0.00100000 0.00100000
+        CHM    1   7.4615   0.0000 1457.7154
+     </TANK> 
+     <TANK>  CABIN 6170.000000 1 1 0 1 0.10000000 0.30000001 0.00100000 0.00100000
+        CHM    0 8035.2233 8035.1224 3969781.4732
+        CHM    2   0.4260   0.0000 527.1356
+        CHM    4   0.0919   0.0919  23.3388
+     </TANK> 
+     <TANK>  SUIT 1000.000000 1 1 0 0 0.10000000 2.00000000 0.00100000 0.00100000
+        CHM    0 1375.8484 1375.7481 661096.2500
+        CHM    2  36.7981   0.0293 44283.2007
+        CHM    4   4.9847   4.9847 1231.3004
+     </TANK> 
+     <CREW>  CREW 3
+     <TANK>  SUITCIRCUITRETURNVALVE 1000.000000 1 1 0 0 0.00500000 0.10000000 0.00100000 0.00100000
+        CHM    0 1340.2613 1340.1639 641772.4530
+        CHM    2  29.5238   0.0000 35406.7811
+        CHM    4   4.7023   4.7023 1157.5210
+     </TANK> 
+     <TANK>  O2SURGETANK 1.188000 0 0 0 0 0.00000010 0.00000010 0.00100000 0.00100000
+        CHM    0 1678.2920   0.0000 210216.6624
+     </TANK> 
+     <TANK>  O2SMSUPPLY 10.000000 1 1 0 0 0.00000010 0.01000000 0.00100000 0.00100000
+        CHM    0 200.1000 200.0000 133799.3987
+     </TANK> 
+     <TANK>  O2MAINREGULATOR 15.000000 1 1 0 0 0.10000000 0.10000000 0.10000000 0.00010000
+        CHM    0 200.1000 200.0000 108361.5352
+     </TANK> 
+     <TANK>  CABINVENT 0.000000 1 1 0 0 0.00100000 0.00100000 0.00100000 0.00100000
+     </TANK> 
+     <PIPE>  SUITCIRCUITRETURNINLET 34129.062000 0.000000 0.000000
+     <PIPE>  CABINPRESSUREREGULATOR 34473.800000 0.000000 0.000000
+     <PIPE>  O2DEMANDREGULATOR 34129.062000 0.000000 0.000000
+     <PIPE>  DIRECTO2VALVE 0.000000 0.000000 0.000000
+     <PIPE>  SUITRELIEFVALVE 101975.675000 101970.000000 0.000000
+     <RADIATOR>  FUELCELLRADIATOR1 216.569505 6.800000
+     <RADIATOR>  FUELCELLRADIATOR2 190.632692 6.800000
+     <RADIATOR>  FUELCELLRADIATOR3 185.329327 6.800000
+     <RADIATOR>  FUELCELLRADIATOR4 211.254680 6.800000
+     <TANK>  POTABLEH2OTANK 16.000000 1 1 0 0 0.00100000 0.00100000 0.00100000 0.00100000
+        CHM    2 12937.8776   0.0000 10413245.7707
+     </TANK> 
+     <TANK>  WASTEH2OTANK 26.500000 1 1 0 0 0.00100000 0.00100000 0.00100000 0.00100000
+        CHM    2 10000.0000   6.5090 11985529.7675
+     </TANK> 
+     <RADIATOR>  ECSRADIATOR1 108.942789 5.000000
+     <RADIATOR>  ECSRADIATOR2 105.348638 5.000000
+     <TANK>  PRIMGLYCOLACCUMULATOR 10.000000 1 1 0 0 0.10000000 0.10000000 0.00100000 0.00100000
+        CHM    2 5132.9341   2.1376 6289672.8659
+     </TANK> 
+     <TANK>  PRIMRADIATORINLET 10.000000 1 1 0 0 0.10000000 0.00030000 0.00100000 0.00100000
+        CHM    2 11626.4051   0.0008 14288108.7113
+     </TANK> 
+     <TANK>  PRIMRADIATOROUTLET 1.000000 1 1 0 0 0.10000000 0.00030000 0.00100000 0.00100000
+        CHM    2 1117.9670   0.0000 1373603.6435
+     </TANK> 
+     <TANK>  PRIMEVAPORATORINLET 1.000000 1 1 0 0 0.10000000 0.00050000 0.00100000 0.00100000
+        CHM    2 1074.7820   0.0000 1320590.3964
+     </TANK> 
+     <TANK>  PRIMEVAPORATOROUTLET 1.000000 1 1 0 0 0.10000000 0.00050000 0.00100000 0.00100000
+        CHM    2 1046.9119   0.0000 1286391.1464
+     </TANK> 
+     <HEATEXCHANGER>  PRIMECSRADIATOREXCHANGER1 0 0.000000 0.000000 10.000000 0
+     <HEATEXCHANGER>  PRIMECSRADIATOREXCHANGER2 0 0.000000 0.000000 10.000000 0
+     <HEATEXCHANGER>  PRIMSUITHEATEXCHANGER 0 283.000000 284.000000 5.000000 0
+     <HEATEXCHANGER>  PRIMSUITCIRCUITHEATEXCHANGER 0 283.000000 284.000000 5.000000 0
+     <HEATEXCHANGER>  PRIMCABINHEATEXCHANGER 1 297.000000 297.500000 5.000000 0
+     <MIXINGPIPE>  PRIMGLYCOLEVAPINLETTEMPVALVE -1 0.000000
+     <EVAPORATOR>  PRIMEVAPORATOR 0 0 0.000000
+     <TANK>  SECGLYCOLACCUMULATOR 10.000000 1 1 0 0 0.10000000 0.10000000 0.00100000 0.00100000
+        CHM    2 11604.9089   0.0000 13811470.6591
+     </TANK> 
+     <TANK>  SECRADIATORINLET 10.000000 1 1 0 0 0.10000000 0.00030000 0.00100000 0.00100000
+        CHM    2 6458.0277   1.7732 7932936.7241
+     </TANK> 
+     <TANK>  SECRADIATOROUTLET 1.000000 1 1 0 0 0.10000000 0.00030000 0.00100000 0.00100000
+        CHM    2 571.8642   0.0110 700546.2250
+     </TANK> 
+     <TANK>  SECEVAPORATORINLET 1.000000 1 1 0 0 0.10000000 0.00050000 0.00100000 0.00100000
+        CHM    2 397.1142   0.0110 485071.2791
+     </TANK> 
+     <TANK>  SECEVAPORATOROUTLET 1.000000 1 1 0 0 0.10000000 0.00050000 0.00100000 0.00100000
+        CHM    2 967.0850   0.0110 1177335.9720
+     </TANK> 
+     <HEATEXCHANGER>  SECECSRADIATOREXCHANGER1 0 0.000000 0.000000 10.000000 0
+     <HEATEXCHANGER>  SECECSRADIATOREXCHANGER2 0 0.000000 0.000000 10.000000 0
+     <HEATEXCHANGER>  SECSUITHEATEXCHANGER 0 283.000000 284.000000 5.000000 0
+     <HEATEXCHANGER>  SECSUITCIRCUITHEATEXCHANGER 0 283.000000 284.000000 5.000000 0
+     <HEATEXCHANGER>  SECCABINHEATEXCHANGER 1 297.000000 297.500000 5.000000 0
+     <EVAPORATOR>  SECEVAPORATOR 0 0 0.000000
+     <RADIATOR>  GSERADIATOR 94.515881 20.000000
+     <HEATEXCHANGER>  PRIMGSEHEATEXCHANGER 1 293.000000 294.000000 100.000000 0
+     <HEATEXCHANGER>  SECGSEHEATEXCHANGER 1 293.000000 294.000000 100.000000 0
+  </HYDRAULIC> 
+  <ELECTRIC> 
+      <DCBUSCONTROLLER>  MainBusAController 0 1 0 0 0
+      <DCBUSCONTROLLER>  MainBusBController 0 0 0 0 0
+      <BATTERYCHARGER>  BatteryCharger 0
+      <PYRO>  CM-SM-Pyros 0 0.0000
+      <BATTERY>  BATTERY_A 5508000.0000
+      <BATTERY>  BATTERY_B 5508000.0000
+      <BATTERY>  BATTERY_C 5508000.0000
+      <BATTERY>  BATTERY_PYRO_A 100440.0000
+      <BATTERY>  BATTERY_PYRO_B 100440.0000
+      <FCELL>  FUELCELL1 0 0.0000 471.5327 0.0000
+      <FCELL>  FUELCELL2 0 0.0000 1028.8786 1109.5665
+      <FCELL>  FUELCELL3 0 0.0000 542.7545 0.0000
+      <DC>  DC_A 3.0000 0 1
+      <DC>  DC_B 3.0000 0 1
+      <AC>  AC_1 6.0000 0 1
+      <AC>  AC_2 6.0000 0 1
+      <INVERTER>  INV_1 0
+      <INVERTER>  INV_2 0
+      <INVERTER>  INV_3 0
+      <BATTERY>  BATTERY_GSE 10000000000.0000
+      <BATTERY>  BATTERY_DUMMY 9999999998.2192
+      <DC>  DC_DUMMY 3.0000 0 1
+      <BOILER>  O2TANK1HEATER 1 0 0.0000 5963967.4000 6446600.6000
+      <BOILER>  O2TANK2HEATER 1 0 0.0000 5963967.4000 6446600.6000
+      <BOILER>  O2TANK1FAN 1 0 0.0000 5963967.4000 6446600.6000
+      <BOILER>  O2TANK2FAN 1 0 0.0000 5963967.4000 6446600.6000
+      <BOILER>  H2TANK1HEATER 1 0 0.0000 1551321.0000 1792637.6000
+      <BOILER>  H2TANK2HEATER 1 0 0.0000 1551321.0000 1792637.6000
+      <BOILER>  H2TANK1FAN 1 0 0.0000 1551321.0000 1792637.6000
+      <BOILER>  H2TANK2FAN 1 0 0.0000 1551321.0000 1792637.6000
+      <BOILER>  FUELCELL1HEATER 1 0 0.0000 470.0000 472.0000
+      <BOILER>  FUELCELL2HEATER 1 0 0.0000 470.0000 472.0000
+      <BOILER>  FUELCELL3HEATER 1 0 0.0000 470.0000 472.0000
+      <BOILER>  PRIMECSRADIATORSHEATER 0 0 0.0000 247.0000 250.0000
+      <BOILER>  SECECSRADIATORSHEATER 0 0 0.0000 280.0000 282.0000
+      <BOILER>  IMUHEATER -1 0 1.0000 0.0000 0.0000
+      <BOILER>  BMAGHEATER1 -1 0 0.0000 0.0000 0.0000
+      <BOILER>  BMAGHEATER2 -1 0 0.0000 0.0000 0.0000
+      <BOILER>  O2SMSUPPLYHEATER 1 0 0.0000 400.0000 400.0000
+      <BOILER>  CABINHEATER 1 0 0.0000 296.0000 297.0000
+      <BOILER>  SUITHEATER 0 0 0.0000 282.0000 283.0000
+      <BOILER>  SUITCIRCUITHEATER 0 0 0.0000 282.0000 283.0000
+      <BOILER>  ECSTESTHEATER1 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER2 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER3 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER4 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER5 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER6 0 0 0.0000 0.0000 0.0000
+      <BOILER>  ECSTESTHEATER7 0 0 0.0000 0.0000 0.0000
+      <PUMP>  PRIMGLYCOLPUMP 1 0 250000.000000
+      <PUMP>  SECGLYCOLPUMP 1 0 250000.000000
+      <ATMREGEN>  SUITCOMPRESSORCO2ABSORBER1 1 0 0 65000.000000
+      <ATMREGEN>  SUITCOMPRESSORCO2ABSORBER2 1 0 0 65000.000000
+      <COOLING>  FUELCELL1COOLING 1 0 505.0000 470.0000 0.7000
+           0 0
+           1 0
+           2 0
+           3 0
+           4 0
+      </COOLING>  
+      <COOLING>  FUELCELL2COOLING 1 0 505.0000 470.0000 0.7000
+           0 0
+           1 0
+           2 0
+           3 0
+           4 0
+      </COOLING>  
+      <COOLING>  FUELCELL3COOLING 1 0 505.0000 470.0000 0.7000
+           0 0
+           1 0
+           2 0
+           3 0
+           4 0
+      </COOLING>  
+      <AC>  AC-Bus1-PhaseA 6.0000 0 1
+      <AC>  AC-Bus1-PhaseB 6.0000 0 1
+      <AC>  AC-Bus1-PhaseC 6.0000 0 1
+      <AC>  AC-Bus2-PhaseA 6.0000 0 1
+      <AC>  AC-Bus2-PhaseB 6.0000 0 1
+      <AC>  AC-Bus2-PhaseC 6.0000 0 1
+  </ELECTRIC> 
+  </INTERNALS> 
+PANELSWITCHES_BEGIN
+  UrineDumpSwitch 1
+  WasteH2ODumpSwitch 1
+  CMRCSHTRSSwitch 0
+  RNDZXPDRSwitch 0
+  ORDEALSlewSwitch 0
+  ORDEALModeSwitch 0
+  ORDEALLightingSwitch 1
+  ORDEALEarthSwitch 1
+  ORDEALFDAI2Switch 0
+  ORDEALFDAI1Switch 0
+  GlycolToRadiatorsLever 1
+  UPTLMSwitch 0
+  ConditionLampsSwitch 2
+  ControllerTelescopeTrunnionSwitch 2
+  ControllerTrackerSwitch 0
+  ControllerCouplingSwitch 0
+  ControllerSpeedSwitch 2
+  ModeSwitch 0
+  VHFAMVolumeThumbwheelSwitch 2
+  SBandVolumeThumbwheelSwitch 2
+  IntercomVolumeThumbwheelSwitch 2
+  PadCommVolumeThumbwheelSwitch 2
+  PowerMasterVolumeThumbwheelSwitch 2
+  ModeIntercomVOXSensThumbwheelSwitch 2
+  FLTPLCircuitBraker 1
+  ELSBatBCircuitBraker 1
+  ELSBatACircuitBraker 1
+  EDS3BatCCircuitBraker 1
+  EDS2BatBCircuitBraker 1
+  EDS1BatACircuitBraker 1
+  ArmBatBCircuitBraker 1
+  ArmBatACircuitBraker 1
+  LogicBatBCircuitBraker 1
+  LogicBatACircuitBraker 1
+  FloatBag3FLTPLCircuitBraker 1
+  FloatBag2BatBCircuitBraker 1
+  FloatBag1BatACircuitBraker 1
+  PilotValveMnBCircuit 1
+  PilotValveMnACircuit 1
+  YawBatBCircuitBraker 1
+  YawBatACircuitBraker 1
+  PitchBatBCircuitBraker 1
+  PitchBatACircuitBraker 1
+  HeValveMnBCircuitBraker 1
+  HeValveMnACircuitBraker 1
+  GaugingAc2CircuitBraker 1
+  GaugingAc1CircuitBraker 1
+  GaugingMnBCircuitBraker 1
+  GaugingMnACircuitBraker 1
+  DockProbeMnBCircuitBraker 1
+  DockProbeMnACircuitBraker 1
+  EMSMnBCircuitBraker 1
+  EMSMnACircuitBraker 1
+  RCSLogicMnBCircuitBraker 1
+  RCSLogicMnACircuitBraker 1
+  PrplntIsolMnBCircuitBraker 1
+  PrplntIsolMnACircuitBraker 1
+  SMHeatersDMnACircuitBraker 1
+  SMHeatersBMnACircuitBraker 1
+  SMHeatersCMnBCircuitBraker 1
+  SMHeatersAMnBCircuitBraker 1
+  CMHeater2MnBCircuitBraker 1
+  CMHeater1MnACircuitBraker 1
+  SystemMnBCircuitBraker 1
+  SystemMnACircuitBraker 1
+  LogicBus23MnBCircuitBraker 1
+  LogicBus14MnBCircuitBraker 1
+  LogicBus34MnACircuitBraker 1
+  LogicBus12MnACircuitBraker 1
+  ContrAutoMnBCircuitBraker 1
+  ContrAutoMnACircuitBraker 1
+  OrdealMnBCircuitBraker 1
+  OrdealAc2CircuitBraker 1
+  YawMnBCircuitBraker 1
+  YawMnACircuitBraker 1
+  PitchMnBCircuitBraker 1
+  PitchMnACircuitBraker 1
+  BDRollMnBCircuitBraker 1
+  BDRollMnACircuitBraker 1
+  ACRollMnBCircuitBraker 1
+  ACRollMnACircuitBraker 1
+  ContrDirectMnB2CircuitBraker 1
+  ContrDirectMnA2CircuitBraker 1
+  ContrDirectMnB1CircuitBraker 1
+  ContrDirectMnA1CircuitBraker 1
+  DirectUllMnBCircuitBraker 1
+  DirectUllMnACircuitBraker 1
+  StabContSystemTVCAc1CircuitBraker 1
+  StabContSystemAc2CircuitBraker 1
+  StabContSystemAc1CircuitBraker 1
+  StabContSystemTVCAc1CircuitBraker 1
+  ECSGlycolPumpsAc2CCircuitBraker 1
+  ECSGlycolPumpsAc2BCircuitBraker 1
+  ECSGlycolPumpsAc2ACircuitBraker 1
+  ECSGlycolPumpsAc1CCircuitBraker 1
+  ECSGlycolPumpsAc1BCircuitBraker 1
+  ECSGlycolPumpsAc1ACircuitBraker 1
+  SuitCompressorsAc2CCircuitBraker 1
+  SuitCompressorsAc2BCircuitBraker 1
+  SuitCompressorsAc2ACircuitBraker 1
+  SuitCompressorsAc1CCircuitBraker 1
+  SuitCompressorsAc1BCircuitBraker 1
+  SuitCompressorsAc1ACircuitBraker 1
+  GNOpticsMnBCircuitBraker 1
+  GNOpticsMnACircuitBraker 1
+  GNComputerMnBCircuitBraker 1
+  GNComputerMnACircuitBraker 1
+  GNIMUHTRMnBCircuitBraker 1
+  GNIMUHTRMnACircuitBraker 1
+  GNIMUMnBCircuitBraker 1
+  GNIMUMnACircuitBraker 1
+  GNPowerAc2CircuitBraker 1
+  GNPowerAc1CircuitBraker 1
+  ECSCabinFanAC2CCircuitBraker 1
+  ECSCabinFanAC2BCircuitBraker 1
+  ECSCabinFanAC2ACircuitBraker 1
+  ECSCabinFanAC1CCircuitBraker 1
+  ECSCabinFanAC1BCircuitBraker 1
+  ECSCabinFanAC1ACircuitBraker 1
+  ECSWasteH2OUrineDumpHTRMnBCircuitBraker 1
+  ECSWasteH2OUrineDumpHTRMnACircuitBraker 1
+  ECSSecCoolLoopXducersMnBCircuitBraker 1
+  ECSSecCoolLoopXducersMnACircuitBraker 1
+  ECSSecCoolLoopRADHTRMnACircuitBraker 1
+  ECSSecCoolLoopAc2CircuitBraker 1
+  ECSSecCoolLoopAc1CircuitBraker 1
+  ECSTransducerTempMnBCircuitBraker 1
+  ECSTransducerTempMnACircuitBraker 1
+  ECSTransducerPressGroup2MnBCircuitBraker 1
+  ECSTransducerPressGroup2MnACircuitBraker 1
+  ECSTransducerPressGroup1MnBCircuitBraker 1
+  ECSTransducerPressGroup1MnACircuitBraker 1
+  ECSTransducerWastePOTH2OMnBCircuitBraker 1
+  ECSTransducerWastePOTH2OMnACircuitBraker 1
+  ECSH2OAccumMnBCircuitBraker 1
+  ECSH2OAccumMnACircuitBraker 1
+  ECSPOTH2OHTRMnBCircuitBraker 1
+  ECSPOTH2OHTRMnACircuitBraker 1
+  InstrumentLightingSCIEquipHatchCircuitBraker 1
+  InstrumentLightingSCIEquipSEP2CircuitBraker 1
+  InstrumentLightingSCIEquipSEP1CircuitBraker 1
+  InstrumentLightingNonESSCircuitBraker 1
+  InstrumentLightingESSMnBCircuitBraker 1
+  InstrumentLightingESSMnACircuitBraker 1
+  BatteryChargerAcPWRCircuitBraker 1
+  BatteryChargerMnBCircuitBraker 1
+  BatteryChargerMnACircuitBraker 1
+  BatteryChargerBatBCircuitBraker 1
+  BatteryChargerBatACircuitBraker 1
+  HTRSOVLDBatBCircuitBraker 1
+  HTRSOVLDBatACircuitBraker 1
+  CONTHTRSMnBCircuitBraker 1
+  CONTHTRSMnACircuitBraker 1
+  ControllerAc2CircuitBraker 1
+  ControllerAc1CircuitBraker 1
+  BATRLYBusBatBCircuitBraker 1
+  BATRLYBusBatACircuitBraker 1
+  EPSSensorUnitAcBus2CircuitBraker 1
+  EPSSensorUnitAcBus1CircuitBraker 1
+  EPSSensorUnitDcBusBCircuitBraker 1
+  EPSSensorUnitDcBusACircuitBraker 1
+  InverterControl3CircuitBraker 1
+  InverterControl2CircuitBraker 1
+  InverterControl1CircuitBraker 1
+  MnbLMPWR2CircuitBraker 1
+  MnbLMPWR1CircuitBraker 1
+  CWMnbCircuitBraker 1
+  CWMnaCircuitBraker 1
+  EpsSensorSignalAc2CircuitBraker 1
+  EpsSensorSignalAc1CircuitBraker 1
+  EpsSensorSignalDcMnbCircuitBraker 1
+  EpsSensorSignalDcMnaCircuitBraker 1
+  RightSystemTestRotarySwitch 0
+  LeftSystemTestRotarySwitch 0
+  ORDEALAltSetRotary 3
+  OxygenRepressPackageRotary 1
+  OxygenSMSupplyRotary 1
+  OxygenSurgeTankRotary 0
+  GlycolReservoirOutletRotary 0
+  GlycolReservoirBypassRotary 0
+  GlycolReservoirInletRotary 0
+  DirectO2RotarySwitch 3
+  BMAGPowerRotary2Switch 0
+  BMAGPowerRotary1Switch 0
+  SCSElectronicsPowerRotarySwitch 0
+  FDAIPowerRotarySwitch 3
+  IntegralRotarySwitch 4
+  FloodRotarySwitch 4
+  NumericRotarySwitch 0
+  DockingProbeBIndicator 1
+  DockingProbeAIndicator 1
+  DockingProbeRetractSecSwitch 1
+  DockingProbeRetractPrimSwitch 1
+  DockingProbeExtdRelSwitch 1 0
+  BatteryChargeRotary 0
+  ACIndicatorRotary 1
+  DCIndicatorsRotary 4
+  VHFAntennaRotarySwitch 0
+  EMSFunctionSwitch 0
+  HighGainAntennaYawPositionSwitch 0
+  HighGainAntennaPitchPositionSwitch 3
+  RightFloodRotarySwitch 4
+  RightIntegralRotarySwitch 4
+  EcsGlycolPumpsSwitch 1
+  SPSTestSwitch 1
+  SquelchBThumbwheel 2
+  SquelchAThumbwheel 2
+  CabinTempAutoControlSwitch 5
+  CabinTempAutoManSwitch 1
+  GlycolEvapH2oFlowSwitch 2
+  GlycolEvapSteamPressIncrDecrSwitch 1
+  GlycolEvapSteamPressAutoManSwitch 1
+  GlycolEvapTempInSwitch 1
+  H2oQtyIndSwitch 0
+  SecCoolantLoopPumpSwitch 1
+  SecCoolantLoopEvapSwitch 1
+  SuitCircuitHeatExchSwitch 1
+  SuitCircuitH2oAccumOnSwitch 1
+  SuitCircuitH2oAccumAutoSwitch 2
+  PotH2oHtrSwitch 2
+  ECSRadiatorsHeaterSecSwitch 0
+  ECSRadiatorsHeaterPrimSwitch 2
+  ECSRadiatorsManSelSwitch 2
+  ECSRadiatorsFlowContPwrSwitch 2
+  ECSRadiatorsFlowContAutoSwitch 2
+  EcsRadiatorIndicator 1
+  H2oQuantityMeter 1.000000 1.000000
+  AccumQuantityMeter 0.518287 0.518287
+  GlycolDischPressMeter 42.605470 42.605470
+  GlyEvapSteamPressMeter 0.140000 0.140000
+  GlyEvapTempOutletMeter 44.321999 44.321999
+  EcsRadTempSecOutletMeter 74.000000 74.000000
+  EcsRadTempPrimOutletMeter 69.418916 69.418916
+  EcsRadTempInletMeter 69.148319 69.148319
+  RightO2FlowMeter 0.100000 0.100000
+  SuitCabinDeltaPMeter -1.974589 -1.974589
+  LeftO2FlowMeter 0.309246 0.309246
+  SuitComprDeltaPMeter 0.439257 0.439257
+  PartPressCO2Meter 2.143626 2.143626
+  CabinPressMeter 4.992701 4.992701
+  SuitPressMeter 5.334878 5.334878
+  CabinTempMeter 74.017193 74.017193
+  SuitTempMeter 53.232560 53.232560
+  FuelCellCondenserTempMeter 162.534955 162.534955
+  FuelCellTempMeter 388.620908 388.620908
+  FuelCellO2FlowMeter 0.070828 0.070828
+  FuelCellH2FlowMeter 0.008924 0.008924
+  DCAmpMeter 0.000000 0.000000
+  DCVoltMeter 17.500000 17.500000
+  ACVoltMeter 85.000000 85.000000
+  O2Quantity2Meter 0.855839 0.855839
+  O2Quantity1Meter 0.855839 0.855839
+  H2Quantity2Meter 0.872683 0.872683
+  H2Quantity1Meter 0.872683 0.872683
+  O2Pressure2Meter 914.666477 914.666477
+  O2Pressure1Meter 914.666444 914.666444
+  H2Pressure2Meter 225.206155 225.206155
+  H2Pressure1Meter 225.206181 225.206181
+  SPSOxidUnbalMeter -600.000000 -600.000000
+  SPSFuelPercentMeter 0.000000 0.000000
+  SPSOxidPercentMeter 0.000000 0.000000
+  SPSswitch 1
+  dVThrust2Switch 0 0
+  dVThrust1Switch 0 0
+  RotPowerDirect2Switch 1
+  RotPowerDirect1Switch 1
+  RotPowerNormal2Switch 1
+  RotPowerNormal1Switch 1
+  CsmLmFinalSep2Switch 0 0
+  CsmLmFinalSep1Switch 0 0
+  EDSSwitch 0
+  CmSmSep2Switch 0 0
+  CmSmSep1Switch 0 0
+  TowerJett2Switch 0 0
+  TowerJett1Switch 0 0
+  LVRateAutoSwitch 0
+  TwoEngineOutAutoSwitch 0
+  PropDumpAutoSwitch 1
+  MainReleaseSwitch 0 0
+  EventTimerSecondsSwitch 1
+  EventTimerMinutesSwitch 1
+  EventTimerControlSwitch 1
+  EventTimerUpDownSwitch 1
+  FCSMSPSBSwitch 0
+  FCSMSPSASwitch 0
+  CPPropPurgeSwitch 0 0
+  CMPropDumpSwitch 0 0
+  CMRCSLogicSwitch 0
+  ELSAutoSwitch 1
+  ELSLogicSwitch 0 0
+  CGSwitch 0
+  ECSIndicatorsSwitch 1
+  TLIEnableSwitch 1
+  SIISIVBSepSwitch 0 0
+  LVGuidanceSwitch 1 0
+  RCSIndicatorsSwitch 4
+  IMUGuardedCageSwitch 0 0
+  FDAIAttSetSwitch 1
+  FDAISelectSwitch 1
+  FDAISourceSwitch 1
+  FDAIScaleSwitch 1
+  CMCAttSwitch 1
+  EntryModeSwitch 1
+  BMAGYawSwitch 1
+  BMAGPitchSwitch 1
+  BMAGRollSwitch 1
+  TransContrSwitch 0
+  AttRateSwitch 0
+  AttDeadbandSwitch 0
+  LimitCycleSwitch 0
+  ManualAttYawSwitch 1
+  ManualAttPitchSwitch 1
+  ManualAttRollSwitch 1
+  CMRCSIsolate2Talkback 0
+  CMRCSIsolate1Talkback 0
+  CMRCSIsolate2 1
+  CMRCSIsolate1 1
+  RCSTrnfrSwitch 1
+  RCSCMDSwitch 1
+  SMRCSHeaterDSwitch 1
+  SMRCSHeaterCSwitch 1
+  SMRCSHeaterBSwitch 1
+  SMRCSHeaterASwitch 1
+  RCSQuantityGauge 0.871000 0.871000
+  SMRCSIndSwitch 0
+  CMRCSPressSwitch 0 0
+  IUUplinkSwitch 1
+  CMUplinkSwitch 1
+  SPSPressIndSwitch 1
+  SPSLineHTRSSwitch 1
+  SPSPugModeSwitch 1
+  SPSOxidFlowValveSelectorSwitch 0
+  SPSOxidFlowValveSwitch 1
+  SPSOxidFlowValveMinIndicator 1
+  SPSOxidFlowValveMaxIndicator 1
+  SMRCSProp2DTalkback 1
+  SMRCSProp2CTalkback 1
+  SMRCSProp2BTalkback 1
+  SMRCSProp2ATalkback 1
+  SMRCSProp2DSwitch 1
+  SMRCSProp2CSwitch 1
+  SMRCSProp2BSwitch 1
+  SMRCSProp2ASwitch 1
+  SMRCSProp1DTalkback 1
+  SMRCSProp1CTalkback 1
+  SMRCSProp1BTalkback 1
+  SMRCSProp1ATalkback 1
+  SMRCSProp1DSwitch 1
+  SMRCSProp1CSwitch 1
+  SMRCSProp1BSwitch 1
+  SMRCSProp1ASwitch 1
+  SMRCSHelium2DTalkback 1
+  SMRCSHelium2CTalkback 1
+  SMRCSHelium2BTalkback 1
+  SMRCSHelium2ATalkback 1
+  SMRCSHelium2DSwitch 1
+  SMRCSHelium2CSwitch 1
+  SMRCSHelium2BSwitch 1
+  SMRCSHelium2ASwitch 1
+  SMRCSHelium1DTalkback 1
+  SMRCSHelium1CTalkback 1
+  SMRCSHelium1BTalkback 1
+  SMRCSHelium1ATalkback 1
+  SMRCSHelium1DSwitch 1
+  SMRCSHelium1CSwitch 1
+  SMRCSHelium1BSwitch 1
+  SMRCSHelium1ASwitch 1
+  MissionTimerSecondsSwitch 1
+  MissionTimerMinutesSwitch 1
+  MissionTimerHoursSwitch 1
+  MainBusAIndicator3 1
+  MainBusAIndicator2 1
+  MainBusAIndicator1 1
+  MainBusBIndicator3 1
+  MainBusBIndicator2 1
+  MainBusBIndicator1 1
+  MainBusBResetSwitch 1
+  MainBusBSwitch3 0
+  MainBusBSwitch2 0
+  MainBusBSwitch1 0
+  MainBusAResetSwitch 1
+  MainBusASwitch3 0
+  MainBusASwitch2 1
+  MainBusASwitch1 0
+  AcBus2ResetSwitch 1
+  AcBus2Switch3 0
+  AcBus2Switch2 1
+  AcBus2Switch1 0
+  AcBus1ResetSwitch 1
+  AcBus1Switch3 0
+  AcBus1Switch2 0
+  AcBus1Switch1 1
+  MnA3Switch 1
+  MnB2Switch 1
+  MnA1Switch 1
+  PMPSwitch 1
+  PCMBitRateSwitch 0
+  PMPSwitch 1
+  SCESwitch 1
+  TapeRecorder3Switch 1
+  TapeRecorder2Switch 1
+  TapeRecorder1Switch 0
+  VHFRangingSwitch 0
+  VHFBeaconSwitch 0
+  RCVOnlySwitch 1
+  VHFAMBSwitch 1
+  VHFAMASwitch 1
+  SBandAntennaSwitch2 1
+  SBandAntennaSwitch1 1
+  UPTLMSwitch2 1
+  UPTLMSwitch1 0
+  SBandAuxSwitch2 1
+  SBandAuxSwitch1 1
+  SBandNormalMode3Switch 0
+  SBandNormalMode2Switch 1
+  SBandNormalMode1Switch 1
+  SBandNormalPwrAmpl2Switch 1
+  SBandNormalPwrAmpl1Switch 1
+  SBandNormalXPDRSwitch 1
+  FloodFixedSwitch 1
+  FloodDimSwitch 0
+  YawD4Switch 1
+  YawB4Switch 1
+  YawD3Switch 1
+  YawB3Switch 1
+  PitchC4Switch 1
+  PitchA4Switch 1
+  PitchC3Switch 1
+  PitchA3Switch 1
+  BdRollD2Switch 1
+  BdRollB2Switch 1
+  BdRollD1Switch 1
+  BdRollB1Switch 1
+  AcRollC2Switch 1
+  AcRollA2Switch 1
+  AcRollC1Switch 1
+  AcRollA1Switch 1
+  VHFRNGSwitch 0
+  LeftSuitPowerSwitch 0
+  LeftAudioControlSwitch 0
+  LeftVHFAMSwitch 1
+  LeftSBandSwitch 1
+  LeftIntercomSwitch 1
+  LeftPadCommSwitch 1
+  LeftAudioPowerSwitch 1
+  LeftModeIntercomSwitch 1
+  LeftVHFAMVolumeThumbwheelSwitch 2
+  LeftSBandVolumeThumbwheelSwitch 2
+  LeftIntercomVolumeThumbwheelSwitch 2
+  LeftPadCommVolumeThumbwheelSwitch 2
+  LeftPowerMasterVolumeThumbwheelSwitch 2
+  LeftModeIntercomVOXSensThumbwheelSwitch 2
+  PostLandingVentSwitch 1
+  GTASwitch 0 0
+  PostLandingDYEMarkerSwitch 0 0
+  PostLandingBCNLTSwitch 1
+  LeftUtilityPowerSwitch 0
+  LeftCOASPowerSwitch 0
+  TelcomGroup2Switch 1
+  TelcomGroup1Switch 1
+  SPSGaugingSwitch 1
+  SIGCondDriverBiasPower2Switch 1
+  SIGCondDriverBiasPower1Switch 1
+  LogicPowerSwitch 0
+  TVCServorPower2Switch 1
+  TVCServorPower1Switch 1
+  EDSPowerSwitch 0
+  PyroArmBSwitch 0
+  PyroArmASwitch 0
+  Logic2Switch 0
+  Logic1Switch 0
+  FloatBagSwitch3 0
+  FloatBagSwitch2 0
+  FloatBagSwitch1 0
+  InteriorLightsFloodFixedSwitch 0
+  InteriorLightsFloodDimSwitch 0
+  NonessBusSwitch 1
+  BatCHGRSwitch 0
+  MainBusTieBatBcSwitch 1
+  MainBusTieBatAcSwitch 1
+  GNPowerSwitch 1
+  RightVHFAMSwitch 1
+  RightSBandSwitch 1
+  RightIntercomSwitch 1
+  RightPadCommSwitch 1
+  RightAudioPowerSwitch 1
+  RightModeIntercomSwitch 1
+  RightDockingTargetSwitch 1
+  RightUtilityPowerSwitch 0
+  SuidPowerSwitch 0
+  AudioControlSwitch 0
+  RightCOASPowerSwitch 0
+  SuitCompressor2Switch 1
+  SuitCompressor1Switch 2
+  FuelCellPumps3Switch 0
+  FuelCellPumps2Switch 0
+  FuelCellPumps1Switch 2
+  H2PurgeLineSwitch 0
+  FCReacsValvesSwitch 1
+  FuelCellReactants3Switch 1
+  FuelCellReactants2Switch 1
+  FuelCellReactants1Switch 1
+  FuelCellReactants3Indicator 1
+  FuelCellReactants2Indicator 1
+  FuelCellReactants1Indicator 1
+  FuelCellPurge3Switch 1
+  FuelCellPurge2Switch 1
+  FuelCellPurge1Switch 1
+  FuelCellHeater3Switch 1
+  FuelCellHeater2Switch 1
+  FuelCellHeater1Switch 1
+  FuelCellIndicatorsSwitch 3
+  FuelCellRadiators3Switch 1
+  FuelCellRadiators2Switch 1
+  FuelCellRadiators1Switch 1
+  FuelCellRadiators3Indicator 0
+  FuelCellRadiators2Indicator 0
+  FuelCellRadiators1Indicator 0
+  FuelCellRadTempIndicator 1
+  FuelCellPhIndicator 1
+  GHAServoElecSwitch 0
+  GHAPowerSwitch 1
+  GHABeamSwitch 1
+  GHATrackSwitch 1
+  GDCAlignButton 0
+  PostLDGVentValveLever 1
+  LMPowerSwitch 1
+  TunnelLightSwitch 0
+  RndzLightSwitch 0
+  RunEVALightSwitch 0
+  TVCGimbalDriveYawSwitch 1
+  TVCGimbalDrivePitchSwitch 1
+  LVFuelTankPressIndicatorSwitch 0
+  LVSPSPcIndicatorSwitch 0
+  GSwitch 0
+  EMSRollSwitch 0
+  Yaw2Switch 0
+  Yaw1Switch 0
+  Pitch2Switch 0
+  Pitch1Switch 0
+  SCSTvcYawSwitch 1
+  SCSTvcPitchSwitch 1
+  CMCModeSwitch 2
+  SCContSwitch 0
+  O2Fan2Switch 2
+  O2Fan1Switch 2
+  H2Fan2Switch 2
+  H2Fan1Switch 2
+  O2PressIndSwitch 1
+  O2Heater2Switch 2
+  O2Heater1Switch 2
+  H2Heater2Switch 2
+  H2Heater1Switch 2
+  CabinFan2Switch 1
+  CabinFan1Switch 1
+  CautionWarningLightTestSwitch 1
+  CautionWarningPowerSwitch 2
+  CautionWarningCMCSMSwitch 1
+  CautionWarningModeSwitch 2
+  MissionTimerSwitch 2
+  MainDeploySwitch 0 0 0
+  DrogueDeploySwitch 0 0 0
+  ApexCoverJettSwitch 0 0 0
+  CanardDeploySwitch 0 0 0
+  LesMotorFireSwitch 0 0 0
+  LiftoffNoAutoAbortSwitch 0 0 0
+  AccelGMeter -1.000000 -1.000000
+PANELSWITCHES_END
+END
+AS-509-S4BSTG:ProjectApollo/sat5stg3
+  STATUS Landed Moon
+  POS -125.0690299 14.2688348
+  HEADING 112.74
+  PRPLEVEL 0:1.000 1:1.000
+  NAVFREQ 0 0
+  S4PL 7
+  MAINSTATE 6
+  VECHNO 509
+  STATE 0
+  REALISM 0
+  EMASS 14880.000
+  PMASS 14696.000
+  FMASS 212.200
+  T3V 1000.000
+  I3V 300.000
+  MISSNTIME 375621.279
+  NMISSNTIME 375621.650
+  LMISSNTIME -1000000000.000
+  CTR 0.000
+  PANELPROC 0.000
+IU_BEGIN
+  STATE 0
+  TLIBURNSTART 0
+  TLIBURNDONE 0
+  NEXTMISSIONEVENTTIME -1000000000.000
+  LASTMISSIONEVENTTIME -1000000000.000
+  TLIBURNSTATE 0
+  TLITIME 0.000
+  TLIDV 0.000
+  TLIBURNSTARTTIME 0.000
+  TLIBURNENDTIME 0.000
+  TLICUTOFFVEL 0.000
+  TLILASTALTITUDE 0.000
+IU_END
+  <INTERNALS> 
+  <VERSION> 1.9.9
+  <HYDRAULIC> 
+  </HYDRAULIC> 
+  <ELECTRIC> 
+      <BATTERY>  POWER_BATTERY 2419200000.0000
+  </ELECTRIC> 
+  </INTERNALS> 
+END
+Antares:ProjectApollo/LEM
+  STATUS Orbiting Moon
+  RPOS -1013903.26 -74725.61 -1413020.53
+  RVEL -108.269 -13.069 132.350
+  AROT -169.48 63.79 102.73
+  PRPLEVEL 0:0.248 1:0.886 2:0.886
+  THLEVEL 0:0.578 1:0.578 2:0.001 9:0.001 13:0.001 14:0.001
+  NAVFREQ 0 0 0 0
+  CONFIGURATION 1
+  CSWITCH 491521
+  SSWITCH 0
+  LPSWITCH 1069612959
+  RPSWITCH 0
+  MISSNTIME 375752.771
+  MTD 375728.011
+  ETD 0.000
+  LANG English
+  PANEL_ID 0
+  REALISM 0
+  APOLLONO 14
+  LANDED 0
+  FDAIDISABLED 0
+  DSCFUEL 8375.000
+  ASCFUEL 2345.000
+  STATE 3
+DSKY_BEGIN
+  PROG 63
+  VERB 16
+  NOUN 68
+  R1 +00094
+  R2 +00 08
+  R3 +00176
+  STATE 536870912
+DSKY_END
+AGC_BEGIN
+  YAAGC 0
+  BRNTIME 375244.705
+  BRNSTIME 375247.450
+  BRNETIME 375761.685
+  EVTTIME 375754.224
+  CUTFVEL 1696.492
+  LALT 0.000
+  TGTDV 0.013
+  PROG 63
+  VERB 16
+  NOUN 68
+  R1 94
+  R2 8
+  R3 176
+  EPOS 2
+  EVAL 63
+  EDAT 0
+  ECNT 0
+  E2 63
+  E5 
+  R1FMT XXXXXX
+  R2FMT XXX XX
+  R3FMT XXXXXX
+  TGTA -436.853
+  TGTP 74.360
+  TGTZ 270.000
+  ONAME Kitty-Hawk
+  STATE 263283
+  EMEM0000 21
+  EMEM0005 77
+  EMEM0006 20
+  EMEM0007 104
+  EMEM0010 1
+  EMEM0014 16
+  EMEM0016 3456136
+  EMEM0020 37777777762
+  EMEM0021 142
+  EMEM0022 3
+  EMEM0023 217117562
+  EMEM0025 27606
+  EMEM0030 1136654
+  EMEM0031 127556
+  EMEM0074 4
+  EMEM0075 1
+  EMEM0110 37777770703
+  EMEM0111 37777735701
+  EMEM0113 37777661674
+  EMEM0114 37777705305
+  ICHAN013 28
+  ICHAN024 17158
+  ICHAN025 8192
+  OCHAN009 2
+AGC_END
+IMU_BEGIN
+  RPX -0.487244286782
+  RPY 0.394281254549
+  RPZ -0.505046510746
+  GMX 1.531997860938
+  GMY 1.607893626687
+  GMZ 0.198849094692
+  OAX -2.958028970907
+  OAY 1.113331969828
+  OAZ 1.793035543772
+  WLX 0.946519565976
+  WLY 0.069312997900
+  WLZ 1.306930058384
+  VLX -22199.169443947849
+  VLY -48.037630493945
+  VLZ -21210.187300383346
+  M11 -0.141110000000
+  M12 0.960236000000
+  M13 -0.240906000000
+  M21 0.989359000000
+  M22 0.128066000000
+  M23 -0.069054000000
+  M31 0.035456000000
+  M32 0.248086000000
+  M33 0.968089000000
+  LTM 375752.770749737860
+  STATE 7
+IMU_END
+  <INTERNALS> 
+  <VERSION> 1.9.10
+  <HYDRAULIC> 
+  </HYDRAULIC> 
+  <ELECTRIC> 
+      <BATTERY>  DSC_BATTERY_A 44820000.0000
+      <BATTERY>  DSC_BATTERY_B 44820000.0000
+      <BATTERY>  DSC_BATTERY_C 44613884.5187
+      <BATTERY>  DSC_BATTERY_D 44613884.5187
+      <BATTERY>  ASC_BATTERY_A 29736000.0000
+      <BATTERY>  ASC_BATTERY_B 29736000.0000
+      <BATTERY>  LUNAR_BATTERY 44820000.0000
+      <DC>  CDR-28V-Bus
+      <DC>  LMP-28V-Bus
+      <DC>  AC-Bus-A
+      <DC>  AC-Bus-B
+  </ELECTRIC> 
+  </INTERNALS> 
+PANELSWITCHES_BEGIN
+  LGC_DSKY_CB 1 0
+  IMU_OPR_CB 1 0
+  EDS_CB_LG_FLAG 1 0
+  EDS_CB_LOGIC_A 1 0
+  CDR_FDAI_AC_CB 1 0
+  CDR_FDAI_DC_CB 1 0
+  AC_B_INV_2_FEED_CB 1 0
+  AC_B_INV_1_FEED_CB 1 0
+  AC_A_INV_2_FEED_CB 1 0
+  AC_A_INV_1_FEED_CB 1 0
+  EDDesOxidVentTB 1
+  EDDesFuelVentTB 1
+  EDLGTB 0
+  EDDesOxidVent 1 0
+  EDDesFuelVent 1 0
+  EDStageRelay 0 0
+  EDStage 0 0
+  EDHePressASC 0 0
+  EDHePressDesStart 0 0
+  EDHePressRCS 0 0
+  EDLGDeploy 0 0
+  EDDesPrpIsol 0 0
+  EDASCHeSel 1 0
+  EDDesVent 0 0
+  EDMasterArm 0 0
+  CDRInverter1CB 1 0
+  CDRBatteryFeedTieCB2 1 0
+  CDRBatteryFeedTieCB1 1 0
+  LMPBatteryFeedTieCB2 1 0
+  LMPBatteryFeedTieCB1 1 0
+  LMPInverter2CB 1 0
+  EDS_CB_LOGIC_B 1 0
+  DSCCDRBat4LVSwitch 1 0
+  DSCCDRBat3LVSwitch 1 0
+  DSCSEBat2LVSwitch 1 0
+  DSCSEBat1LVSwitch 1 0
+  DSCCDRBat4HVSwitch 1 0
+  DSCCDRBat3HVSwitch 1 0
+  DSCSEBat2HVSwitch 1 0
+  DSCSEBat1HVSwitch 1 0
+  EPSEDVoltSelect 1 0
+  EPSInverterSwitch 0 0
+  DSCBattery4TB 1
+  DSCBattery3TB 1
+  DSCBattery2TB 1
+  DSCBattery1TB 1
+  EPSDCAmMeter 0.000000 0.000000
+  EPSDCVoltMeter 19.000000 19.000000
+  EPSMonitorSelectRotary 0
+  LampToneTestRotary 0
+  FloodRotary 0
+  TempMonitorRotary 0
+  RendezvousRadarRotary 0
+  TestMonitorRotary 0
+  QtyMonRotary 1
+  SuitFanRotary 0
+  ClycolRotary 1
+  TempPressMonRotary 0
+  HeliumMonRotary 0
+  RightTTCATranslSwitch 0 0
+  RightACA4JetSwitch 0 0
+  LeftTTCATranslSwitch 0 0
+  LeftACA4JetSwitch 0 0
+  ExteriorLTGSwitch 2 0
+  RightXPointerSwitch 1 0
+  FloodSwitch 1 0
+  SidePanelsSwitch 0 0
+  RCSSysQuad4Switch 1 0
+  RCSSysQuad3Switch 1 0
+  RCSSysQuad2Switch 1 0
+  RCSSysQuad1Switch 1 0
+  YawSwitch 2 0
+  PitchSwitch 2 0
+  RollSwitch 2 0
+  GyroTestRightSwitch 1 0
+  GyroTestLeftSwitch 2 0
+  DeadBandSwitch 0 0
+  SlewRateSwitch 1 0
+  RadarTestSwitch 2 0
+  LandingAntSwitch 2 0
+  RightACAPropSwitch 0 0
+  RightAttitudeMonSwitch 1 0
+  RightRateErrorMonSwitch 1 0
+  TempPressMonSwitch 2 0
+  QTYMonSwitch 0 0
+  BALCPLSwitch 1 0
+  ATTTranslSwitch 1 0
+  MANThrotSwitch 1 0
+  THRContSwitch 1 0
+  RCSMainSOVBSwitch 1 0
+  RCSMainSOVASwitch 1 0
+  RCSMainSovBTB 1
+  RCSMainSovATB 1
+  ACAPropSwitch 1 0
+  RateScaleSwitch 0 0
+  ShiftTruSwitch 1 0
+  AttitudeMonSwitch 1 0
+  RateErrorMonSwitch 1 0
+  AltRngMonSwitch 1 0
+  ModeSelSwitch 1 0
+  GuidContSwitch 1 0
+  LeftXPointerSwitch 1 0
+  IMUCageSwitch 0 0
+  ModeControlAGSSwitch 1 0
+  ModeControlPNGSSwitch 1 0
+  EngineDescentCommandOverrideSwitch 0 0
+  EngineArmSwitch 0 0
+  AbortStageSwitch 0 0
+  AbortSwitch 0 0
+PANELSWITCHES_END
+ECA_1_START
+  INPUT_A 1.000
+  INPUT_B 1.000
+ECA_1_END
+ECA_2_START
+  INPUT_A 1.000
+  INPUT_B 1.000
+ECA_2_END
+LEM_EDS_START
+  LG_DEP 0
+  SOV_A 1
+  SOV_B 1
+LEM_EDS_END
+  <checklist> 
+  FILE 
+  COMPLETE 1
+  FLASHING 0
+  LASTITEMTIME -1000000000.000
+  </checklist> 
+END
+END_SHIPS
+
+BEGIN_ExtMFD
+END

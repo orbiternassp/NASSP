@@ -1,0 +1,133 @@
+7.0:
+----
+
+Lots of changes.
+Added basic Saturn V INT-20 implementation.
+
+6.5:
+----
+
+Some circuit breakers are now wired into the electrical systems.
+Support for naming LEM in scenario file, and renamed CMs and LEMs in historical missions.
+Start of IU emulation.
+Random caution and warning light failures on non-historical missions.
+Initial support for Skylab CM and SM.
+Fixed Saturn 5 interstage fairings.
+Mission timer is now controllable from panel switches.
+Added caution and warning system.
+Integrated Virtual AGC.
+Added IMU simulation from Virtual Apollo, and revised AGC to light 'NO ATT' when appropriate.
+Added I/O channel simulation to AGC to make Virtual AGC implementation easier.
+Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+Brought Saturn 1b mass and performance closer to reality.
+Added Inertial Guidance Mode start time to scenario file.
+Added pitch program to scenario file.
+Added SIC and SII center engine shutdown time to scenario file.
+Added PU shift time to scenario file.
+Fixed weird pitch maneuver after interstage seperation.
+Added variables for pre-entry CSM acceleration for unmanned flights (though currently not fully wired up).
+Updated timings in Apollo 4 scenario to match those in the Mission Report document. Though they were already close!
+Fixed passing of Realism value and audio language from CSM to LEM.
+New LEM autopilot.
+Added roughly correct masses for different payloads.
+Added Apollo 13 O2 tank quantity sensor failure.
+Added support for post-splashdown audio (e.g. Presidential congratulations).
+Updated CSM AGC banksums to match real data from Yaagc. Also, PRO key steps through sums, as well as VERB 33.
+Launch apogee/perigee display now shows negative perigee, rather than zero, as per real AGC. Also apogee and perigee in 1/10 km.
+New CSM and LEM control panels.
+
+6.4:
+----
+
+Revised LEVA code, with 'flag planting' sound support.
+Fixed up the LEM to work around missing sound if we switch to the lunar astronaut immediately after creating them.
+Adjusted astronaut mesh position to make the walk closer to the moon's surface.
+Turned more sounds into mission-specific sounds for NEP.
+Added reentry documentation, cleaned up and added checklists.
+Changed name of help file to Project_Apollo and changed help references in config files.
+Fixed bug that caused CTD when pressing Shift-~.
+Fixed touchdown points on LM ascent stage so it doesn't fall when released.
+Made changes so that the Saturn V launches "heads-down". Scenarios changed as well.
+Moved Pad 39A so it registers better with the tile.
+Added the roads and tanks mesh to Pad 39B.
+Rotated and moved towers so they are to the north.
+Added retro rockets to SII stage.
+Fixed bug that caused the parachute drag to be too low.
+Corrected the position of the separation rockets for the SIVB when separating from the SIB.
+Fixed bug that caused the CSM RCS flames to be in the wrong positions late in the mission.
+Now calculate the axial G force so that the panel gauge works like the real one.
+Fixed the positions of the SIVB RCS thrusters in Saturn V and Saturn IB.
+
+6.3:
+----
+
+Fixed bug preventing time acceleration for a few hours after course correction burn.
+Renamed sound directory again from NCPP to ProjectApollo.
+Wired in new Apollo-13 sounds.
+Reduced volume of SIVB APS sounds and made them internal-only.
+Moved time of course correction burn into header file to make it easy to change.
+Realistic entry aerodynamics are added, documentation will follow soon.
+Splashdown stage is no longer "underwater".
+
+6.2:
+----
+
+Save light state to scenario file to support real operation as documented.
+Hopefully the LV engine lights now work correctly as documented.
+Turn off liftoff light as per documentation.
+Added flags to sounds (in this case, specifying to only play at 1x time acceleration or less)
+Changed CSM/LEM setup interface to pass a structure full of data rather than lots of parameters.
+Added AUTOSLOW option for unmanned flights to stop time acceleration at important events.
+Added lunar ascent sound to ascent autopilot, and made it a mission-specific sound for NEP. Renamed it lunar-ascent.wav for consistency.
+In ascent autopilot, make sure that apogee is greater than perigee and both are at least 18km.
+Added more automation for unmanned flights. You can now fly an Apollo 4 or 6 flight under automatic control.
+Moved program 63 to lemautoland.cpp.
+Changed sound to use NCPP directory rather than NASSP.
+Rationalised soundlib sound loading functions so we now know exactly what each one does :).
+Rewrote sound library interface to eliminate pointers in high-level code: less pointers means less places we can CTD.
+Fixed click on HUD-mode toggle switches.
+Fixed some missing mission sounds.
+Disable ATC playback throughout the launch stage, so we can do our own playback instead.
+
+6.1:
+----
+
+Added code for automated separation of CSM from SIVB in unmanned flights.
+Improved positioning of SLA panels in CSM/SIVB separation: still not perfect yet.
+New vessel configs for SIVB with different payloads: this may invalidate old saved scenarios docked to the SIVB!
+Added SIVBPayload variable specifying what payload we're carrying (LEM or empty only for now).
+Added Crewed variable so we know if the launch is unmanned, and removed the crew from the VC if it is unmanned.
+Updated TCP values in scenarios to approximate values for the moment.
+Added help file to config.
+Hacky fix for the LEM being inside the SIVB when seperated.
+LEM was updated to VESSEL2 but is now no longer a real VESSEL2 as I can't get it to work!
+If cabin fans are enabled, turn the sound on after loading the scenario data.
+Disable default launch sounds for LEM.
+Added LEM ascent autopilot code.
+Now expects all sound files to be in the NASSP directory, and doesn't use any from the Vessel sound directory.
+Added basic multi-language support to soundlib.
+Added AudioLanguage string to CSM and LEM and pass it to soundlib.
+Use the mission time for LEM AGC timestep, not simulator time!
+Moved various nouns from the CSM computer to the generic apollo guidance computer.
+Added 'extended' parameter as an option to sound-loading calls, and set some to be audible internal-only.
+Split out more of the Saturn 1b code into seperate files.
+Split up LEM code into seperate files.
+Initialised more soundlib variables to zero, for safety.
+Try to prevent time acceleration during the first few seconds of launch, as the autopilot can't handle it.
+Added new file for Saturn hardware systems emulation and started moving some of the 'decision' code from the main files into there.
+AGC now calls DSKY through reference rather than pointer to reduce chances of calling through duff pointer.
+DSKY now calls AGC through reference rather than pointer to reduce chances of calling through duff pointer.
+Properly fixed loading of scenarios saved during 'recovery': added setting of touchdown points.
+
+6.0:
+----
+
+Saturn 5/1b are now VESSEL2 class.
+Fixed Saturn 1b SIVB autopilot.
+Fixed virtual cockpit.
+Hopefully full support for virtual cockpit for Saturn V.
+Prevent view rotation in normal cockpit views.
+Added display of 'erasable memory' in AGC.
+Split out autopilot code into seperate files for easier maintenance.
+Tried to fix loading of scenarios saved during 'recovery'.
+Added general jostling of virtual cockpit view based on acceleration.

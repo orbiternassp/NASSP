@@ -1,4 +1,0 @@
-BEGIN_DESC
-This folder contains scenarios using the Virtual AGC, an Apollo Guidance Computer (AGC) emulator running the original, authentic Apollo flight software (at the moment Colossus 1A, build 249 from October 28, 1968, flown with Apollo 9). 
-More informations about the Virtual AGC can be found here: http://www.ibiblio.org/apollo/
-END_DESC

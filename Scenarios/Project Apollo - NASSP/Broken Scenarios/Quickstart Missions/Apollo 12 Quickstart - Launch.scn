@@ -1,0 +1,83 @@
+BEGIN_DESC
+Pete Conrad, Al Bean and Dick Gordon make mans second landing on the moon. Pete's prescision landing near Surveyor III makes future accurate exploration possible. November 14, 1969. The scenario starts at T-3h00min, crew ingress is at T-1h40min. (AS-507)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo\Sol
+  Date MJD 40539.556944
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Yankee-Clipper
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Yankee-Clipper
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+Yankee-Clipper:ProjectApollo\Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 12
+  REALISM 0
+  NASSPVER 70000
+  VECHNO 507
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -10800
+  TOAPO 185.3852
+  TOPER 181.1256
+  TOHDG 72.029
+  MOONLAT -3.01239
+  MOONLONG -23.42157
+  MOONALT 0.0
+  TCP 0.5
+  LANG English
+  LEMN Intrepid
+  AUTOSLOW 1
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+END
+Crawler-Transporter:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6227729 28.5885195
+  HEADING 69.50
+  LVNAME Yankee-Clipper
+END
+ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME Yankee-Clipper
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6532730 28.5795280
+  HEADING 75.04
+  LVNAME Yankee-Clipper
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6236987 28.5882240
+  HEADING 244.99
+END
+END_SHIPS

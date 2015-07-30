@@ -1,0 +1,74 @@
+BEGIN_DESC
+Al Shepard, Stu Roosa and Ed Mitchel make mans fourth landing attempt on the moon at Fra Mauro. Jan 31 1971. The scenario starts at T-3h00min, crew ingress is at T-1h40min. (AS-509)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40982.7521064815
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Kitty-Hawk
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Kitty-Hawk
+  MODE Extern
+  POS 2.44 -180.0 90.0  
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+Kitty-Hawk:ProjectApollo/Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6080702 28.6007244
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 14
+  NASSPVER 70000
+  VECHNO 509
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -10800
+  TOAPO 185.3852
+  TOPER 183.1628
+  TOHDG 75.558
+  MOONLONG -17.4713
+  MOONLAT -3.6454
+  MOONALT 0.0
+  TCP 0.5
+  LANG English
+  LEMN Antares
+END
+AS-509-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  LVNAME Kitty-Hawk
+END
+AS-509-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6080665 28.6008075
+  HEADING 0.75
+  LVNAME Kitty-Hawk
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6540592 28.5785496
+  HEADING 255.04
+  LVNAME Kitty-Hawk
+END
+END_SHIPS

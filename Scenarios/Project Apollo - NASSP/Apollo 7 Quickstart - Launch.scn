@@ -1,0 +1,82 @@
+BEGIN_DESC
+Wally Schirra, Walt Cunningham and Donn Eisele take the most complex machine yet created, the Apollo CSM, on its first test flight, Oct 11th 1968. The scenario starts on the pad LC34 at T-2h00min and uses the quickstart realism mode. (AS-205)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40140.543565
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-205
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-205
+  MODE Extern
+  POS 2.04 -0.03 -94.77
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Orbit
+  PROJ Ship
+  REF Earth
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+AS-205:ProjectApollo/Saturn1b
+  STATUS Landed Earth
+  BASE Cape Canaveral:3
+  POS -80.5612061 28.5217974
+  HEADING 280.00
+  FUEL 1.000
+  APOLLONO 7
+  REALISM 0
+  S4PL 5
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  NOHGA 1
+  DOCKSTATE 0
+  MISSNTIME -7200
+  TOAPO 282.134
+  TOPER 227.852
+  TOHDG 72
+  TOINCLINATION 31.58
+  SICSHUT 140.3
+  SISHUT 143.3
+  IGMST 170.93
+  LESJT 166.54
+  SIIPUT 455.77
+  LANG English
+  ASCP_BEGIN
+    OPX 152.000
+  ASCP_END
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 7 Checklists.xls
+  </Checklist>
+END
+LC34:ProjectApollo\LC34
+  STATUS Landed Earth
+  POS -80.5612068 28.5217987
+  HEADING 180.05
+  LVNAME AS-205
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6509912 28.5860485
+  HEADING 75.04
+  LVNAME AS-205
+END
+END_SHIPS

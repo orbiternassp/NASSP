@@ -1,0 +1,75 @@
+BEGIN_DESC
+Gene Cernan, Ron Evans and the moons first scientist, Jack Schmitt, make mans last exploration of the Moon. Its also the Saturn Vs only night launch. Dec 7 1972. (AS-512)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 41658.189583333
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-512
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-512
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+America:ProjectApollo/Saturn5
+  STATUS Landed Earth
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 17
+  NASSPVER 60050
+  VECHNO 512
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 167.2356
+  TOPER 166.68
+  TOHDG 91.503
+  MOONLAT 30.78
+  MOONLONG 20.19
+  MOONALT 0.0
+  SMMASS 6113.0
+  SMFUELLOAD 18452.0
+  TCP 0.5
+  LANG English
+  LEMN Challenger
+  LMDSCFUEL 8891.0
+END
+AS-512-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+  LVNAME America
+END
+AS-512-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
+END
+END_SHIPS
