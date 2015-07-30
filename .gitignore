@@ -740,3 +740,51 @@ core
 /Scenarios/LunarTransferMFD
 /Scenarios/Vostok\ (Eng)
 /Scenarios/Vostok\ (Rus)
+# Stuff that wasn't previously ignored
+/Config/GC/AMSO_Apollo.cfg
+/Config/GC/AMSO_Apollo_ecam.cfg
+/Config/GC/AMSO_crew_EVA.cfg
+/Config/GC/AMSO_crew_EVA_ecam.cfg
+/Constell.bin
+/Constell2.bin
+/D3D9Client.cfg
+/Device.dat
+/Flights/
+/Images/
+/LuaInline.dll
+/LuaInterpreter.dll
+/Modules/
+/Orbiter.cfg
+/Orbiter.ico
+/Orbiter.log
+/OrbiterSound_Log.txt
+/Orbiter_NG.cfg
+/Orbitersdk/samples/ProjectApollo/ProjectApollo2010.sdf
+/Scenarios/_OrbiterSound 4.0 demo/
+/Sound/_CustomBaseSounds/
+/Sound/_CustomVesselsSounds/
+/Sound/_CustomWindSounds/
+/Star.bin
+/Textures/D3D9LENoise.dds
+/Textures/Disl_Crystal.png
+/Textures/Disl_Lines.png
+/Textures/Disl_Lines2.png
+/Textures/Disl_Noise.png
+/Textures/Saturn_ring_2048.dds
+/Textures/Saturn_ring_4096.dds
+/Textures/Saturn_ring_8192.dds
+/Textures2/
+/Utils/
+/dxdiag.log
+/install.log
+/keymap.cfg
+/keymap2006.cfg
+/lua5.1.dll
+/lvlog1b.txt
+/lvlog5.txt
+/lvlog.txt
+/msvcp71.dll
+/msvcr71.dll
+/patch.txt
+/pkey.ppk
+/readme.txt
