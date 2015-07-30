@@ -20,23 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.16  2008/10/18 07:01:29  movieman523
-  *	More telemetry and rationalisation.
-  *	
-  *	Revision 1.15  2008/10/17 07:16:03  movieman523
-  *	More telemetry.
-  *	
-  *	Revision 1.14  2008/10/17 06:18:05  movieman523
-  *	Moved all decoded data to new display() method.
-  *	
-  *	Revision 1.13  2008/10/17 04:00:47  movieman523
-  *	More LBR support.
-  *	
-  *	Revision 1.12  2008/10/17 03:14:21  movieman523
-  *	More low bit-rate decoding.
-  *	
   **************************************************************************/
 
 #include "stdafx.h"

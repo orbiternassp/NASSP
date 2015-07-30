@@ -21,14 +21,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2008/04/11 11:49:10  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:54  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #ifndef GRAV_BODY_DATA_H

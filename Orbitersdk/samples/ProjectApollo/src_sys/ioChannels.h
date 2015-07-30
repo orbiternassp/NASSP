@@ -20,35 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/09/13 15:20:15  dseagrav
-  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2006/11/30 03:34:25  dseagrav
-  *	Added basic manual optics controls
-  *	
-  *	Revision 1.6  2006/11/24 22:42:44  dseagrav
-  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
-  *	
-  *	Revision 1.5  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.4  2006/01/12 00:09:07  movieman523
-  *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
-  *	
-  *	Revision 1.3  2006/01/11 22:34:20  movieman523
-  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
-  *	
-  *	Revision 1.2  2005/08/19 13:46:56  tschachim
-  *	Added ChannelValue177.
-  *	
-  *	Revision 1.1  2005/08/09 00:21:37  movieman523
-  *	Copied I/O channel definitions from virtual apollo.
-  *	
   **************************************************************************/
 
 ///

@@ -20,60 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/09/19 14:24:24  tschachim
-  *	Fixes for Orbiter 2010 (positions, camera handling).
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.15  2008/04/11 11:49:59  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.14  2007/10/18 00:23:20  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.13  2007/06/06 15:02:16  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.12  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.11  2006/05/26 18:42:54  movieman523
-  *	Updated S1C DLL to support INT-20 stage.
-  *	
-  *	Revision 1.10  2006/05/21 15:42:54  tschachim
-  *	Bugfix S-IC staging
-  *	
-  *	Revision 1.9  2006/05/19 13:46:56  tschachim
-  *	Smoother S-IC staging.
-  *	
-  *	Revision 1.8  2006/04/25 13:35:31  tschachim
-  *	Improved retro-exhaust.
-  *	
-  *	Revision 1.7  2006/01/26 03:07:49  movieman523
-  *	Quick hack to support low-res mesh.
-  *	
-  *	Revision 1.6  2006/01/24 13:45:29  tschachim
-  *	More and longer thrust and exhaust texture for the retros.
-  *	
-  *	Revision 1.5  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.4  2006/01/08 04:00:24  movieman523
-  *	Added first two engineering cameras.
-  *	
-  *	Revision 1.3  2005/11/26 16:30:50  movieman523
-  *	Fixed retros and trying to fix TLI audio.
-  *	
-  *	Revision 1.2  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.1  2005/11/23 00:34:16  movieman523
-  *	S1C dll code.
-  *	
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

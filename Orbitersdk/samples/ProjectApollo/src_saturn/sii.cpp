@@ -20,34 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.8  2008/04/11 11:50:01  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.7  2007/06/06 15:02:20  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.6  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.5  2006/01/26 03:07:50  movieman523
-  *	Quick hack to support low-res mesh.
-  *	
-  *	Revision 1.4  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.3  2005/11/26 16:30:50  movieman523
-  *	Fixed retros and trying to fix TLI audio.
-  *	
-  *	Revision 1.2  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.1  2005/11/23 01:43:13  movieman523
-  *	Added SII stage DLL.
-  *	
-  *	
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

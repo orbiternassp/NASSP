@@ -20,34 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.8  2011/07/11 01:42:36  vrouleau
-  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
-  *	
-  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
-  *	
-  *	Revision 1.7  2010/04/16 18:04:54  vrouleau
-  *	Compilation support under Visual Studio 2010
-  *	
-  *	Revision 1.6  2009/09/19 14:10:14  spacex15
-  *	reenable SOCKET_AGC mode
-  *	
-  *	Revision 1.5  2009/09/14 23:38:40  dseagrav
-  *	Used wrong channel file.
-  *	
-  *	Revision 1.4  2009/09/14 00:38:30  trebonian
-  *	Fix bad edit of include "lm_channels.h" - Merge issues with AGS commit
-  *	
-  *	Revision 1.3  2009/09/14 00:19:41  trebonian
-  *	Stage commit for AGS - DEDA keyboard and display
-  *	
-  *	Revision 1.2  2009/09/13 15:20:15  dseagrav
-  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
-  *	
-  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
-  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

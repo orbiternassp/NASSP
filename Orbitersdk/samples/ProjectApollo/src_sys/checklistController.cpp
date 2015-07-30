@@ -20,42 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2010/02/05 17:31:46  tschachim
-  *	Added ORDEAL.
-  *	
-  *	Revision 1.5  2009/12/22 18:14:47  tschachim
-  *	More bugfixes related to the prelaunch/launch checklists.
-  *	
-  *	Revision 1.4  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.3  2009/09/17 17:48:42  tschachim
-  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
-  *	
-  *	Revision 1.2  2009/08/17 13:27:49  tschachim
-  *	Enhancement of ChecklistMFD
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.22  2008/07/13 17:47:12  tschachim
-  *	Rearranged realism levels, merged Standard and Quickstart Mode.
-  *	
-  *	Revision 1.21  2008/06/17 16:39:07  tschachim
-  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
-  *	
-  *	Revision 1.20  2008/05/27 14:53:30  tschachim
-  *	New event LAST_ITEM_RELATIVE, bugfixes.
-  *	
-  *	Revision 1.19  2008/05/24 17:30:42  tschachim
-  *	Bugfixes, new flash toggle.
-  *	
-  *	Revision 1.18  2008/04/11 12:00:53  tschachim
-  *	Cleanup of the checklist events.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 

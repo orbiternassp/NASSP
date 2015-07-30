@@ -20,27 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2012/11/04 13:33:13  meik84
-  *	LVDC++
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.4  2007/10/18 00:23:17  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.3  2007/09/04 13:51:55  dseagrav
-  *	IGM first stage. It doesn't work yet.
-  *	
-  *	Revision 1.2  2007/06/23 21:20:36  dseagrav
-  *	LVDC++ Update: Now with Pre-IGM guidance
-  *	
-  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	
   **************************************************************************/
 
 // This is an abbreviated ST-124 IMU for the launch vehicle's use.

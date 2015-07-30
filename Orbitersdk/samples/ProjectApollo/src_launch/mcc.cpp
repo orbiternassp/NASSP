@@ -19,37 +19,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.8  2008/04/11 11:49:47  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.7  2007/09/04 14:22:14  jasonims
-  *	Correcting my mistakes...
-  *	
-  *	Revision 1.6  2007/08/25 12:09:30  tschachim
-  *	Bugfix.
-  *	
-  *	Revision 1.5  2007/08/11 16:31:25  jasonims
-  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
-  *	A little more Capcom...
-  *	
-  *	Revision 1.4  2007/07/27 19:57:27  jasonims
-  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
-  *	
-  *	Revision 1.3  2007/06/06 15:02:15  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.2  2007/02/19 16:24:44  tschachim
-  *	VC6 MCC fixes.
-  *	
-  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

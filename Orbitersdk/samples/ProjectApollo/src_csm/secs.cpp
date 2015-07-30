@@ -20,50 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/07/13 17:47:13  tschachim
-  *	Rearranged realism levels, merged Standard and Quickstart Mode.
-  *	
-  *	Revision 1.10  2008/04/11 12:19:20  tschachim
-  *	New SM and CM RCS.
-  *	Improved abort handling.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.9  2007/10/18 00:23:24  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.8  2007/07/17 14:33:10  tschachim
-  *	Added entry and post landing stuff.
-  *	
-  *	Revision 1.7  2007/06/06 15:02:20  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.6  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.5  2006/08/11 21:16:22  movieman523
-  *	Dummy ELS implementation.
-  *	
-  *	Revision 1.4  2006/08/11 19:34:47  movieman523
-  *	Added code to take the docking probe with the LES on a post-abort jettison.
-  *	
-  *	Revision 1.3  2006/08/11 18:44:56  movieman523
-  *	Beginnings of SECS implementation.
-  *	
-  *	Revision 1.2  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.1  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
   **************************** Revision History ****************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

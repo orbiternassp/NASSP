@@ -21,62 +21,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.5  2010/08/25 17:48:42  tschachim
-  *	Bugfixes Saturn autopilot.
-  *	
-  *	Revision 1.4  2010/02/22 14:23:31  tschachim
-  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
-  *	
-  *	Revision 1.3  2010/02/09 02:39:37  bluedragon8144
-  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
-  *	
-  *	Revision 1.2  2010/01/04 12:31:15  tschachim
-  *	Improved Saturn IB launch autopilot, bugfixes
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.13  2008/05/24 17:29:19  tschachim
-  *	Improved autopilot/pitch table
-  *	
-  *	Revision 1.12  2008/04/11 11:49:59  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.11  2007/06/10 20:25:12  tschachim
-  *	Fixed/clarified that center engines aren't gimbaled.
-  *	
-  *	Revision 1.10  2007/06/06 15:02:16  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.9  2007/02/18 01:35:29  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.8  2006/08/01 18:21:51  tschachim
-  *	Some code cleanup.
-  *	
-  *	Revision 1.7  2006/07/27 23:24:11  tschachim
-  *	The Saturn 1b now has the Saturn V IGM autopilot.
-  *	
-  *	Revision 1.6  2006/04/17 19:12:27  movieman523
-  *	Removed some unused switches.
-  *	
-  *	Revision 1.5  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.4  2005/07/30 02:05:47  movieman523
-  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
-  *	
-  *	Revision 1.3  2005/07/29 22:44:05  movieman523
-  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
-  *	
-  *	Revision 1.2  2005/03/24 01:44:05  chode99
-  *	Made changes required by correcting thruster positions. Allow for "heads-down" launch.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

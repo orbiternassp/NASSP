@@ -20,19 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2009/10/19 12:24:49  dseagrav
-  *	LM checkpoint commit.
-  *	Put back one FDAI for testing purposes (graphic is wrong)
-  *	Messed around with mass properties
-  *	LGC now runs Luminary 099 instead of 131
-  *	Added LGC pad load, values need worked but addresses are checked.
-  *	
-  *	Revision 1.2  2009/09/01 06:18:32  dseagrav
-  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
-  *	
-  *
   **************************************************************************/
 
 class LEM;

@@ -20,53 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/09/17 17:48:42  tschachim
-  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.13  2008/04/11 11:49:35  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.12  2007/06/06 15:02:12  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.11  2007/01/11 01:21:34  chode99
-  *	Added ability for correct entry of "extended" verbs like. (verb - ENTER - noun - ENTER)
-  *	
-  *	Revision 1.10  2006/05/17 01:50:45  movieman523
-  *	Fixed DSKY key-clicks (bug 1375310).
-  *	
-  *	Revision 1.9  2006/04/23 04:15:45  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.8  2005/09/22 22:27:40  movieman523
-  *	Updated erasable memory display/edit functions in AGC.
-  *	
-  *	Revision 1.7  2005/08/19 13:58:29  tschachim
-  *	Added Channel 13 handling
-  *	
-  *	Revision 1.6  2005/08/18 22:15:22  movieman523
-  *	Wired up second DSKY, to accurately match the real hardware.
-  *	
-  *	Revision 1.5  2005/08/11 01:27:26  movieman523
-  *	Added initial Virtual AGC support.
-  *	
-  *	Revision 1.4  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.3  2005/08/09 02:28:26  movieman523
-  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
-  *	
-  *	Revision 1.2  2005/08/08 22:32:49  movieman523
-  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
-  *	
-  *	Revision 1.1  2005/08/08 21:46:34  movieman523
-  *	Initial version: this file holds the AGC->DSKY interface code.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

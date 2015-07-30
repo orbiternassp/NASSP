@@ -20,32 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2008/04/11 11:49:05  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.6  2008/01/18 05:57:23  movieman523
-  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
-  *	
-  *	Revision 1.5  2008/01/14 01:17:01  movieman523
-  *	Numerous changes to move payload creation from the CSM to SIVB.
-  *	
-  *	Revision 1.4  2005/11/21 23:08:15  movieman523
-  *	Moved more mesh files into the ProjectApollo directory.
-  *	
-  *	Revision 1.3  2005/08/15 23:42:50  movieman523
-  *	Improved ASTP a bit. Still buggy, but vaguely working.
-  *	
-  *	Revision 1.2  2005/07/04 23:56:46  movieman523
-  *	New C++ version. Totally untested!
-  *	
-  *	Revision 1.1  2005/02/11 12:15:50  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

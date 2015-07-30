@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2007/07/17 14:33:14  tschachim
-  *	Added entry and post landing stuff.
-  *	
   **************************************************************************/
 //############################################################################//
 class CMChute: public VESSEL2{

@@ -20,11 +20,6 @@ Float Bag vessel
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2007/07/17 14:33:13  tschachim
-  *	Added entry and post landing stuff.
-  *	
   **************************************************************************/
 
 class FloatBag: public VESSEL2 {

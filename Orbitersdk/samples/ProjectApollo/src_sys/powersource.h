@@ -20,53 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.13  2008/04/11 11:49:53  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.12  2006/07/27 20:40:06  movieman523
-  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
-  *	
-  *	Revision 1.11  2006/07/21 23:04:35  movieman523
-  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
-  *	
-  *	Revision 1.10  2006/05/30 14:40:21  tschachim
-  *	Fixed fuel cell - dc bus connectivity, added battery charger
-  *	
-  *	Revision 1.9  2006/01/14 20:58:16  movieman523
-  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
-  *	
-  *	Revision 1.8  2005/12/02 19:47:19  movieman523
-  *	Replaced most PowerSource code with e_object.
-  *	
-  *	Revision 1.7  2005/12/02 19:29:24  movieman523
-  *	Started integrating PowerSource code into PanelSDK.
-  *	
-  *	Revision 1.6  2005/11/18 20:38:59  movieman523
-  *	Revised condensor output from fuel cell to eliminate master alarms.
-  *	
-  *	Revision 1.5  2005/11/18 02:40:55  movieman523
-  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
-  *	
-  *	Revision 1.4  2005/11/17 19:19:12  movieman523
-  *	Added three-phase AC bus and battery buses.
-  *	
-  *	Revision 1.3  2005/11/17 01:52:29  movieman523
-  *	Simplified setup for circuit breakers, and added battery buses.
-  *	
-  *	Revision 1.2  2005/11/17 01:23:11  movieman523
-  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
-  *	
-  *	Revision 1.1  2005/11/16 23:14:02  movieman523
-  *	Initial support for wiring in the circuit breakers.
-  *	
   **************************************************************************/
 
 #if !defined(_PA_POWERSOURCE_H)

@@ -20,44 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.12  2008/05/24 17:15:14  tschachim
-  *	Bugfix for Orbiter 2008, exhaust texture.
-  *	
-  *	Revision 1.11  2008/04/11 11:49:59  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.10  2007/10/03 20:24:54  tschachim
-  *	Bugfix rowres interstage mesh.
-  *	
-  *	Revision 1.9  2007/06/06 15:02:15  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.8  2006/08/01 16:05:57  tschachim
-  *	Improved staging exhausts.
-  *	
-  *	Revision 1.7  2006/07/31 12:23:16  tschachim
-  *	Smoother staging.
-  *	
-  *	Revision 1.6  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.5  2006/01/27 22:11:38  movieman523
-  *	Added support for low-res Saturn 1b.
-  *	
-  *	Revision 1.4  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.3  2005/11/26 16:30:50  movieman523
-  *	Fixed retros and trying to fix TLI audio.
-  *	
-  *	Revision 1.2  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.1  2005/11/23 02:21:30  movieman523
-  *	Added S1b stage.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

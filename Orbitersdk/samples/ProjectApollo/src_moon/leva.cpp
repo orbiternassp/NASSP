@@ -20,32 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2009/06/17 10:08:59  tschachim
-  *	New version of CollisionSDK.
-  *	
-  *	Revision 1.3  2009/06/15 16:11:32  tschachim
-  *	New CollisionSDK.
-  *	
-  *	Revision 1.2  2009/06/14 16:20:01  tschachim
-  *	Fixed touchdown points for the new Collision SDK.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.4  2008/04/11 11:49:45  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.3  2007/06/06 15:02:15  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.2  2006/08/13 16:01:52  movieman523
-  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
-  *	
-  *	Revision 1.1  2006/08/12 15:05:35  movieman523
-  *	Renamed EVA and LEVA files.
-  *	
   **************************************************************************/
 
 #define ORBITER_MODULE

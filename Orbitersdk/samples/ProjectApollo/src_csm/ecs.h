@@ -20,20 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.2  2009/08/10 14:38:03  tschachim
-  *	ECS enhancements
-  *	
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.1  2007/07/17 14:33:16  tschachim
-  *	Added entry and post landing stuff.
-  *	
   **************************** Revision History ****************************/
 
 #if !defined(_PA_ECS_H)

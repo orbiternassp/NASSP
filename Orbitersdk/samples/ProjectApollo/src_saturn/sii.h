@@ -20,25 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.5  2007/06/06 15:02:20  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.4  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.3  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.2  2006/01/26 03:07:50  movieman523
-  *	Quick hack to support low-res mesh.
-  *	
-  *	Revision 1.1  2005/11/23 01:43:13  movieman523
-  *	Added SII stage DLL.
-  *	
-  *	
-  *	
   **************************************************************************/
 
 

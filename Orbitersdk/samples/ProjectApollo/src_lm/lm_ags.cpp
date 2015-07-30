@@ -20,29 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.7  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.6  2009/09/22 12:36:10  trebonian
-  *	DEDA buttons animate even if unpowered or in error
-  *	
-  *	Revision 1.5  2009/09/22 11:40:14  trebonian
-  *	Support new DEDA bitmaps and digits
-  *	
-  *	Revision 1.4  2009/09/21 19:17:15  flydba
-  *	New DEDA bitmaps available.
-  *	
-  *	Revision 1.3  2009/09/14 16:47:03  trebonian
-  *	Made DEDA keys click even if powered down
-  *	
-  *	Revision 1.2  2009/09/14 00:19:41  trebonian
-  *	Stage commit for AGS - DEDA keyboard and display
-  *	
-  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
-  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

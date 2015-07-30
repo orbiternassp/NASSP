@@ -20,35 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.5  2009/09/26 21:49:38  coussini
-  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
-  *	
-  *	Revision 1.4  2009/09/26 18:57:07  coussini
-  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
-  *	
-  *	Revision 1.3  2009/09/17 17:48:41  tschachim
-  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
-  *	
-  *	Revision 1.2  2009/08/17 13:27:49  tschachim
-  *	Enhancement of ChecklistMFD
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.9  2008/12/05 13:05:47  tschachim
-  *	New info screen by Coussini.
-  *	
-  *	Revision 1.8  2008/06/28 10:51:30  jasonims
-  *	Updated ChecklistMFD interface to display event times.... only MISSION_TIME and LAST_ITEM_RELATIVE implemented.
-  *	
-  *	Revision 1.7  2008/06/17 16:39:07  tschachim
-  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
-  *	
-  *	Revision 1.6  2008/04/11 11:49:26  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 #include "Connector.h"

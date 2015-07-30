@@ -20,14 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2006/02/24 02:02:43  dseagrav
-  *	Added compiler version check to make builds win on newer VS by "default".
-  *	
-  *	Revision 1.1  2005/04/22 14:22:37  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // DS20060223 Try to do the right thing based on which compiler the user has.

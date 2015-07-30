@@ -20,62 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2010/07/16 17:14:43  tschachim
-  *	Changes for Orbiter 2010 and bugfixes
-  *	
-  *	Revision 1.5  2010/05/06 01:45:55  flydba
-  *	Final CM bitmaps update and corresponding changes (basically related to switch/gauge positions).
-  *	
-  *	Revision 1.4  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.3  2009/09/21 19:22:39  flydba
-  *	Mission Timer now displays the new digits.
-  *	
-  *	Revision 1.2  2009/09/01 06:18:32  dseagrav
-  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.12  2008/04/11 11:49:47  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.11  2007/06/06 15:02:15  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.10  2006/12/19 15:56:03  tschachim
-  *	ECS test stuff, bugfixes.
-  *	
-  *	Revision 1.9  2006/05/30 23:15:14  movieman523
-  *	Mission timer and DSKY now need power to operate.
-  *	
-  *	Revision 1.8  2006/03/08 02:24:21  movieman523
-  *	Added event timer and fuel display.
-  *	
-  *	Revision 1.7  2006/01/05 11:26:56  tschachim
-  *	The missiontimer is now enabled by default.
-  *	
-  *	Revision 1.6  2005/10/11 16:35:35  tschachim
-  *	Improved realism of the switch functionality.
-  *	
-  *	Revision 1.5  2005/08/24 23:29:31  movieman523
-  *	Fixed event timer reset.
-  *	
-  *	Revision 1.4  2005/08/21 17:21:10  movieman523
-  *	Added event timer display.
-  *	
-  *	Revision 1.3  2005/08/18 19:12:21  movieman523
-  *	Added Event Timer switches and null Event Timer class.
-  *	
-  *	Revision 1.2  2005/08/14 15:25:43  movieman523
-  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
-  *	
-  *	Revision 1.1  2005/08/13 22:05:17  movieman523
-  *	Mission timer class.
-  *	
   **************************************************************************/
 
 

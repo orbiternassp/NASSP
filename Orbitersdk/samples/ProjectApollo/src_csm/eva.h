@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2006/08/12 15:05:35  movieman523
-  *	Renamed EVA and LEVA files.
-  *	
   **************************************************************************/
 
 ///

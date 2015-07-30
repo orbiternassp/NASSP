@@ -19,22 +19,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2007/08/25 12:09:30  tschachim
-  *	Bugfix.
-  *	
-  *	Revision 1.3  2007/08/11 16:31:25  jasonims
-  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
-  *	A little more Capcom...
-  *	
-  *	Revision 1.2  2007/07/27 19:57:27  jasonims
-  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
-  *	
-  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	
   **************************************************************************/
 
 #if !defined(_PA_MCC_H)

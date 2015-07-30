@@ -20,68 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/07/16 17:14:42  tschachim
-  *	Changes for Orbiter 2010 and bugfixes
-  *	
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.17  2008/04/11 11:49:31  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.16  2007/08/13 16:06:08  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.15  2007/06/06 15:02:10  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.14  2007/03/02 18:34:37  tschachim
-  *	Improved crawler VC.
-  *	
-  *	Revision 1.13  2007/03/01 18:24:33  tschachim
-  *	Fixed Saturn V assembly
-  *	
-  *	Revision 1.12  2007/02/18 01:35:29  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.11  2007/01/21 00:14:43  orbiter_fan
-  *	Updated VAB.cpp with working High Bay 1 door animation.
-  *	
-  *	Revision 1.10  2006/07/17 19:33:36  tschachim
-  *	Small improvements of LC39.
-  *	
-  *	Revision 1.9  2006/06/07 09:35:37  tschachim
-  *	Saturn 5 assembly disabled until new VAB arrives.
-  *	
-  *	Revision 1.8  2006/04/25 13:46:04  tschachim
-  *	New KSC.
-  *	
-  *	Revision 1.7  2006/02/21 12:18:29  tschachim
-  *	Fixes to make code build with MS C++ 2005
-  *	
-  *	Revision 1.6  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.5  2006/01/04 23:06:03  movieman523
-  *	Moved meshes into ProjectApollo directory and renamed a few.
-  *	
-  *	Revision 1.4  2005/11/21 23:08:15  movieman523
-  *	Moved more mesh files into the ProjectApollo directory.
-  *	
-  *	Revision 1.3  2005/11/21 13:31:34  tschachim
-  *	New Saturn assembly meshes.
-  *	
-  *	Revision 1.2  2005/11/09 18:34:21  tschachim
-  *	New Saturn assembly process.
-  *	
-  *	Revision 1.1  2005/10/31 11:59:22  tschachim
-  *	New VAB.
-  *	
   **************************************************************************/
 
 #define ORBITER_MODULE

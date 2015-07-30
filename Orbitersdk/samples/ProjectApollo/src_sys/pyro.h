@@ -20,15 +20,7 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.1  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
-  **************************** Revision History ****************************/
+  **************************************************************************/
 
 #ifndef __PYRO_H
 #define __PYRO_H

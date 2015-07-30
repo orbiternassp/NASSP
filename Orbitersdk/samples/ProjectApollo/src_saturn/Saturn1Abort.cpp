@@ -20,26 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2008/04/11 11:49:30  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.5  2006/06/13 21:41:37  movieman523
-  *	Removed non-existent (and unused) meshes.
-  *	
-  *	Revision 1.4  2006/01/05 19:40:53  movieman523
-  *	Added Saturn1b abort stages to build.
-  *	
-  *	Revision 1.3  2006/01/04 23:06:03  movieman523
-  *	Moved meshes into ProjectApollo directory and renamed a few.
-  *	
-  *	Revision 1.2  2005/11/21 23:08:15  movieman523
-  *	Moved more mesh files into the ProjectApollo directory.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:06  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

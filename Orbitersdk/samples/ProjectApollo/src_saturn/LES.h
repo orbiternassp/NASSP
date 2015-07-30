@@ -20,20 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2006/08/11 19:34:47  movieman523
-  *	Added code to take the docking probe with the LES on a post-abort jettison.
-  *	
-  *	Revision 1.3  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.2  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.1  2006/06/09 17:43:03  movieman523
-  *	Added LES code and build projects.
-  *	
   **************************************************************************/
 
 #ifndef LES_H

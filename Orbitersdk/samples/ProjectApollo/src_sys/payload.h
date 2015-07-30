@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2008/01/14 01:17:12  movieman523
-  *	Numerous changes to move payload creation from the CSM to SIVB.
-  *	
   **************************************************************************/
 
 #if !defined(_PA_PAYLOAD_H)

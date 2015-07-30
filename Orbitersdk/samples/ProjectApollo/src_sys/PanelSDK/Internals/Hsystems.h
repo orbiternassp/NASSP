@@ -20,42 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:22:01  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.10  2008/04/11 11:50:24  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.9  2006/02/01 18:37:11  tschachim
-  *	Bypassable heat exchanger.
-  *	
-  *	Revision 1.8  2006/01/08 21:43:34  movieman523
-  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
-  *	
-  *	Revision 1.7  2005/12/19 17:46:36  tschachim
-  *	Added pump-functions of the heatexchanger.
-  *	
-  *	Revision 1.6  2005/09/30 11:18:48  tschachim
-  *	New components for the water-glycol cooling.
-  *	
-  *	Revision 1.5  2005/07/30 16:23:18  tschachim
-  *	Loading/saving tanks, pipes, crew
-  *	Added OUT2_valve to tank
-  *	
-  *	Revision 1.4  2005/07/19 17:21:27  tschachim
-  *	Pipe flow, added leak valve to tank
-  *	
-  *	Revision 1.3  2005/06/06 12:42:45  tschachim
-  *	Saving/loading Radiator
-  *	
-  *	Revision 1.2  2005/05/02 13:02:45  tschachim
-  *	changed specific c for H2 and O2
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #ifndef __HSYSTEMS_H

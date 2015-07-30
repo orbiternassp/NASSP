@@ -20,45 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.12  2008/04/11 11:50:26  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.11  2006/05/30 14:40:21  tschachim
-  *	Fixed fuel cell - dc bus connectivity, added battery charger
-  *	
-  *	Revision 1.10  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.9  2006/01/08 21:43:34  movieman523
-  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
-  *	
-  *	Revision 1.8  2005/11/18 22:11:22  movieman523
-  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
-  *	
-  *	Revision 1.7  2005/11/17 22:06:47  movieman523
-  *	Added other electrical buses and revised cabin fan code.
-  *	
-  *	Revision 1.6  2005/11/17 21:04:52  movieman523
-  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
-  *	
-  *	Revision 1.5  2005/09/30 11:18:48  tschachim
-  *	New components for the water-glycol cooling.
-  *	
-  *	Revision 1.4  2005/07/30 16:16:55  tschachim
-  *	Loading/saving Atmregen
-  *	
-  *	Revision 1.3  2005/07/19 16:47:04  tschachim
-  *	Fuel cell status and purge
-  *	
-  *	Revision 1.2  2005/05/26 16:07:49  tschachim
-  *	Now boilers can heat all therm_objs, new components for cooling
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher

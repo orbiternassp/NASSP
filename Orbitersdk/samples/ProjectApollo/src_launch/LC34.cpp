@@ -20,38 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/07/16 17:14:42  tschachim
-  *	Changes for Orbiter 2010 and bugfixes
-  *	
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2008/04/11 11:49:10  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.6  2007/12/02 07:13:39  movieman523
-  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
-  *	
-  *	Revision 1.5  2007/08/13 16:06:03  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.4  2007/06/06 15:02:08  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.3  2007/02/18 01:35:29  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.2  2006/12/19 15:55:54  tschachim
-  *	ECS test stuff, bugfixes.
-  *	
-  *	Revision 1.1  2006/12/07 18:52:43  tschachim
-  *	New LC34, Bugfixes.
-  *	
   **************************************************************************/
 
 #define ORBITER_MODULE

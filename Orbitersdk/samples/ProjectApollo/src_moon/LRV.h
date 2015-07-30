@@ -20,48 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.9  2007/05/12 10:26:15  redburne
-  *	2007-05-12 OP:
-  *	- fixed: wheel spin (tweaked to look more realistic; time acceleration compatible)
-  *	- new: key 2 performs auto-center, just like 5
-  *	- new: CTRL+1, CTRL+3, CTRL+PLUS, CTRL+MINUS act at one tenth the speed (good for driving at 10x)
-  *	- known issues: steering and wheel spin are still not 100% correct. The error, however, is probably smaller than the real differences caused by wheel slip, sliding, etc ...
-  *	
-  *	Revision 1.8  2007/05/10 18:39:36  redburne
-  *	- new: realistic max. wheel deflection of 50 deg for inner wheel (leads to wheel-body intersections in the mesh ...)
-  *	- new: outer wheel deflection calculated accordingly (about 25 deg max)
-  *	- new: realistic wheel deflection speed (lock-to-lock in about 5.5s)
-  *	- new: gradual auto-centering
-  *	- new: "real" turning based on speed and turn radius
-  *	- new: different wheel spins for inner and outer wheels (seems a tiny, tiny bit off,  but better than before)
-  *	- fixed: wheel rotation driving backwards would stop after one turn, max.
-  *	
-  *	Revision 1.7  2006/10/02 22:23:46  jasonims
-  *	Animation updated for Orbiter 2006-P1, LRV @ 80% complete.  Wheels now rotate correctly and steer correctly to a point.  Discreet steering now supported.
-  *	
-  *	Revision 1.6  2006/08/28 14:30:35  jasonims
-  *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
-  *	
-  *	Revision 1.5  2006/08/23 06:31:04  jasonims
-  *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
-  *	
-  *	Revision 1.4  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.3  2006/06/06 17:50:59  redburne
-  *	- New gauges ("working" battery capacity indicator; other values are static)
-  *	- boolean variable GoRover removed
-  *	- more realistic accelleration (much slower, probably still a bit fast)
-  *	- new speed handling: brake to standstill, release and press key again to further increase/decrease speed
-  *	
-  *	Revision 1.2  2006/05/06 06:00:35  jasonims
-  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
-  *	
-  *	Revision 1.1  2006/05/05 21:30:06  movieman523
-  *	Added beginnings of LRV code.
-  *	
   **************************************************************************/
 
 ///

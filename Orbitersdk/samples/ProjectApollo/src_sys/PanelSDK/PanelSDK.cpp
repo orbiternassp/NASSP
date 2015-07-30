@@ -20,39 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/08/24 02:20:20  dseagrav
-  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
-  *	
-  *	Revision 1.1  2009/02/18 23:22:01  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.8  2008/04/11 11:50:18  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.7  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.6  2006/01/08 21:43:34  movieman523
-  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
-  *	
-  *	Revision 1.5  2006/01/08 19:04:28  movieman523
-  *	Wired up AC bus switches in a quick and hacky manner.
-  *	
-  *	Revision 1.4  2005/12/19 17:26:41  tschachim
-  *	Better stability at high time accelerations.
-  *	
-  *	Revision 1.3  2005/11/18 02:40:54  movieman523
-  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
-  *	
-  *	Revision 1.2  2005/08/05 13:19:13  tschachim
-  *	Added version handling, fixed timestep initialization
-  *	
-  *	Revision 1.1  2005/04/22 14:22:37  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher

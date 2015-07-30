@@ -20,56 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2010/01/14 16:54:13  tschachim
-  *	SPS TVC reset and trim angles bugfix.
-  *	
-  *	Revision 1.2  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/04/11 11:50:06  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.10  2007/12/04 20:26:38  tschachim
-  *	IMFD5 communication including a new TLI for the S-IVB IU.
-  *	Additional CSM panels.
-  *	
-  *	Revision 1.9  2007/10/18 00:23:25  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.8  2007/08/13 16:06:23  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.7  2007/06/06 15:02:22  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.6  2007/04/25 18:49:25  tschachim
-  *	SCS dV mode.
-  *	
-  *	Revision 1.5  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.4  2007/01/24 14:21:52  tschachim
-  *	Bugfix He and N2 pressure.
-  *	
-  *	Revision 1.3  2007/01/22 15:48:19  tschachim
-  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
-  *	
-  *	Revision 1.2  2006/11/20 16:38:27  tschachim
-  *	Bugfix CWS CM/SM separation.
-  *	
-  *	Revision 1.1  2006/11/13 14:47:34  tschachim
-  *	New SPS engine.
-  *	New ProjectApolloConfigurator.
-  *	Fixed and changed camera and FOV handling.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

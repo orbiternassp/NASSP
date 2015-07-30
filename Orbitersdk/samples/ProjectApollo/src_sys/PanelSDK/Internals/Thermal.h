@@ -20,40 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:22:01  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.9  2008/04/11 11:50:26  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.8  2006/11/13 14:47:34  tschachim
-  *	New SPS engine.
-  *	New ProjectApolloConfigurator.
-  *	Fixed and changed camera and FOV handling.
-  *	
-  *	Revision 1.7  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.6  2006/06/21 12:52:31  tschachim
-  *	Bugfix.
-  *	
-  *	Revision 1.5  2006/01/08 21:43:34  movieman523
-  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
-  *	
-  *	Revision 1.4  2005/11/18 02:40:54  movieman523
-  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
-  *	
-  *	Revision 1.3  2005/09/30 11:18:48  tschachim
-  *	New components for the water-glycol cooling.
-  *	
-  *	Revision 1.2  2005/05/02 13:04:25  tschachim
-  *	only code formatting
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #ifndef __THERMAL_H_

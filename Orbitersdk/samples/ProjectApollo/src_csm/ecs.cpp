@@ -20,29 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2010/07/16 17:14:41  tschachim
-  *	Changes for Orbiter 2010 and bugfixes
-  *	
-  *	Revision 1.3  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.2  2009/08/10 14:38:03  tschachim
-  *	ECS enhancements
-  *	
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.3  2008/04/11 11:49:35  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.2  2007/10/18 00:23:19  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.1  2007/07/17 14:33:16  tschachim
-  *	Added entry and post landing stuff.
-  *	
   **************************** Revision History ****************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
