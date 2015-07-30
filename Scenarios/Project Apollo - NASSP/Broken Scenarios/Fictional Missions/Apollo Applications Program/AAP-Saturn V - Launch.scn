@@ -1,0 +1,63 @@
+BEGIN_DESC
+AAP - Saturn V - Launch. After launch you will find yourself in a 185.2km 185.2 KM (6.556M) parking orbit. When your spacecraft starts to pass between Australia and Indonesia burn the S-IVb until the Apogee reaches 35,862.1km then coast until the Apogee is reached. Once at Apogee fire the S-IVb to circularize the orbit. Sep 26 1973. (AS-526)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 41951.543565
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AAP-001c
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AAP-001c
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 18.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+
+BEGIN_SHIPS
+AAP-001c:ProjectApollo/Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  REALISM 0
+  NASSPVER 60050
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 185.2
+  TOPER 185.2
+  TOHDG 115
+  LANG English
+  S4PL 0
+  AUTOSLOW 1
+  LEMNM LM-021
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+END
+AAP-001c-ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.75
+  LVNAME AAP-001c
+END
+END_SHIPS

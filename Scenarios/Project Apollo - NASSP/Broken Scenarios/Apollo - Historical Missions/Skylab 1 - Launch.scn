@@ -1,0 +1,65 @@
+BEGIN_DESC
+Join Pete Conrad, Paul Weitz and Joe Kerwin on the mission to rescue Skylab and become its first crew. Launch Skylab station then jump into the Awaiting Apollo AS-206 Ship to command the first Skylab mission. (AS-206)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo\Sol
+  Date MJD 41827.5416666667
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Skylab
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Skylab
+  MODE Extern
+  POS 2.44 178.95 57.37
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_SHIPS
+SKYLAB:ProjectApollo\Saturn5Skylab
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  HEADING 90.00
+  PRPLEVEL 0:1.000
+  NAVFREQ 0 0 0 0
+  XPDR 0
+  CONFIGURATION 0
+  DOCKSTATE 0
+  AUTOTIMER 0
+  TOALT 425
+  TOHDG 72
+  TCP -8.5
+END
+Skylab-2:ProjectApollo\Saturn1b
+  STATUS Landed Earth
+  BASE Cape Canaveral:1
+  HEADING 90.00
+  FUEL 1.000
+  NASSPVER 60050
+  VECHNO 206
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -90000
+  TOAPO 282.13
+  TOPER 227.85
+  TOHDG 65
+  TCP 18.0
+  LANG English
+  ATTACHSTATE 63
+END
+END_SHIPS

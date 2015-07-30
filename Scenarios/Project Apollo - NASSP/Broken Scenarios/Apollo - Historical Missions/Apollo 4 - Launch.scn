@@ -1,0 +1,93 @@
+BEGIN_DESC
+The Saturn V makes its first flight to test itself and carry an unmanned CSM into orbit on Nov 9 1967. This mission is fully computer-controlled, flying a pre-programmed launch, 'TLI' and re-entry trajectory. While not a perfect simulation, this does give a basic idea of what happened on the flight. The scenario starts on the pad at T-1h00min. (AS-501)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 39803.5000115741
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-501
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-501
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_SHIPS
+AS-501:ProjectApollo/Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 4
+  REALISM 0
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 188
+  TOPER 183
+  TOHDG 72
+  SICSHUT 135.5
+  LANG English
+  UNMANNED 1
+  S4PL 2
+  S4APO 17208.0
+  S4BURN 11487.6
+  CSMSEP 12387.0
+  CSMAPO 18092.0
+  CSMPER -83.34
+  CSMBURN 12487.0
+  CSMACCEL 29454.8
+  CSMACCEND 29735.4
+  CSMACCPITCH -49.13
+  CMSEP 29882.6
+  AUTOSLOW 1
+; Apollo 4 SLA panels weren't detached (see Mission Report, NTRS 19750067802, page 535), Apollo 6?
+; Set the state to 45 degree rotation and not detachable.
+  SLASTATE 45
+; The Apollo 4 CSM probably had no docking probe, TODO reference?
+  HASPROBE 0
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>  
+END
+Crawler-Transporter:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6227729 28.5885195
+  HEADING 69.50
+  NAVFREQ 0 0
+  LVNAME AS-501
+END
+ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME AS-501
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6529535 28.5790607
+  HEADING 255.04
+  LVNAME AS-501
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6236987 28.5882240
+  HEADING 244.99
+END
+END_SHIPS

@@ -1,0 +1,7 @@
+Debug
+Release
+*.opt
+*.plg
+*.ncb
+*.lib
+*.bsc

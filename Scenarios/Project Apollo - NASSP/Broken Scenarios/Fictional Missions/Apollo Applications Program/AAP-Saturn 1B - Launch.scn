@@ -1,0 +1,79 @@
+BEGIN_DESC
+AAP - Saturn 1B - Launch. Testing scenario in which a Saturn 1b launches a CSM into a standard parking orbit. Once ther use the SPS to move into a 185.2 KM (6.556M) parking orbit from which you carry out a perigee burn to set up a highly elliptical orbit. I recommend you burn the SPS until you have 10% fuel remaining. This leaves sufficient fuel to re-enter into the North Pacific.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 41951.543565
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AAP-001b
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AAP-001b
+  MODE Extern
+  POS 2.04 -0.03 -94.77
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Orbit
+  PROJ Ship
+  REF Earth
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+AAP-001b:ProjectApollo/Saturn1b
+  STATUS Landed Earth
+  BASE Cape Canaveral:3
+  POS -80.5643392 28.5150791
+  HEADING 270.00
+  FUEL 1.000
+  REALISM 0
+  HASPROBE 1
+  S4PL 7
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  NOHGA 1
+  DOCKSTATE 0
+  MISSNTIME -7200
+  TOAPO 165.458
+  TOPER 160.9344
+  TOHDG 115
+  SICSHUT 140.3
+  SISHUT 143.3
+  SIICSHUT 459.8
+  IGMST 170.93
+  LESJT 166.54
+  SIIPUT 455.77
+  LANG English
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>  
+END
+LC34:ProjectApollo\LC34
+  STATUS Landed Earth
+  POS -80.5643399 28.5150804
+  HEADING 180.05
+  LVNAME AAP-001b
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6532730 28.5795280
+  HEADING 75.04
+  LVNAME AAP-001b
+END
+END_SHIPS

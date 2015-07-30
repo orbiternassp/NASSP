@@ -1,0 +1,81 @@
+BEGIN_DESC
+Al Shepard, Stu Roosa and Ed Mitchel make mans fourth landing attempt on the moon at Fra Mauro. Jan 31 1971. The scenario starts at T-2h00min and uses the quickstart realism mode. (AS-509)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40982.7937731482
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship Kitty-Hawk
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET Kitty-Hawk
+  MODE Extern
+  POS 2.44 0.0 -90.0 
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+Kitty-Hawk:ProjectApollo/Saturn5
+  STATUS Landed Earth
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 14
+  REALISM 0
+  NASSPVER 70000
+  VECHNO 509
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -7200
+  TOAPO 185.3852
+  TOPER 183.1628
+  TOHDG 75.558
+  MOONLONG -17.4713
+  MOONLAT -3.6454
+  MOONALT 0.0
+  LANG English
+  LEMN Antares
+<Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+</Checklist>
+END
+Crawler-Transporter:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6227729 28.5885195
+  HEADING 69.50
+  LVNAME Kitty-Hawk
+END
+ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME Kitty-Hawk
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6532730 28.5795280
+  HEADING 75.04
+  LVNAME Kitty-Hawk
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6236987 28.5882240
+  HEADING 244.99
+END
+END_SHIPS

@@ -1,0 +1,106 @@
+Current Panels and Views in ProjectApollo
+
+2D:CM
+
+Main Control Panel (Panels 1,2,3)
+	Ctrl+Left = Left Main Panel
+	Ctrl+Right = Right Main Panel
+	Ctrl+Up = Hatch Window
+	Ctrl+Down = GNPanel
+Right Main Panel (Panels 4,5,6)
+	Ctrl+Left = Main Control Panel
+	Ctrl+Right = ~~~
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+Left Main Panel (Panels 7,8,9)
+	Ctrl+Left = ECSPanel
+	Ctrl+Right = Main Control Panel
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+ECSPanel (Panels 13 & 325)
+	Ctrl+Left = ~~~
+	Ctrl+Right = Left Main Panel
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+GNPanel (Optics Panel & DSKY2)
+	Ctrl+Left = ~~~
+	Ctrl+Right = ~~~
+	Ctrl+Up = Main Control Panel
+	Ctrl+Down = Telescope View
+Telescope View
+	Ctrl+Left = Sextant View
+	Ctrl+Right = ~~~
+	Ctrl+Up = GNPanel
+	Ctrl+Down = GNPanel
+Sextant View
+	Ctrl+Left = ~~~
+	Ctrl+Right = Telescope View
+	Ctrl+Up = GNPanel
+	Ctrl+Down = GNPanel
+Hatch Window
+	Ctrl+Left = Left Rendevous Window
+	Ctrl+Right = Right Rendevous Window
+	Ctrl+Up = ~~~
+	Ctrl+Down = Main Control Panel
+Left Rendevous Window
+	Ctrl+Left = ~~~
+	Ctrl+Right = Hatch Window
+	Ctrl+Up = ~~~
+	Ctrl+Down = Main Control Panel
+Right Rendevous Window
+	Ctrl+Left = Hatch Window
+	Ctrl+Right = ~~~
+	Ctrl+Up = ~~~
+	Ctrl+Down = Main Control Panel
+
+3D:CM
+
+KEY1: Eng Camera 1 (Launch Only)
+KEY2: Eng Camera 2 (Launch Only)
+KEY3: Eng Camera 3 (Pre-Launch and Launch Only)
+KEY4: ~~~
+KEY5: GNBay
+KEY6: Left Seat
+KEY7: Center Seat
+KEY8: Right Seat
+KEY9: Toggle Left and Right Rendevous Windows
+KEY0: ~~~
+
+
+2D:LM
+
+Main Control Panel (Panels 1,2,3,4)
+	Ctrl+Left = Commander's Window
+	Ctrl+Right = Pilot's Window
+	Ctrl+Up = Upper Rendevous Window
+	Ctrl+Down = ~~~
+Commander's Window
+	Ctrl+Left = Left Control Panels
+	Ctrl+Right = Main Control Panel
+	Ctrl+Up = ~~~
+	Ctrl+Down = Landing View
+Left Control Panels (Panels 5,8,11)
+	Ctrl+Left = ~~~
+	Ctrl+Right = Commander's Window
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+Pilot's Window
+	Ctrl+Left = Main Control Panel
+	Ctrl+Right = Right Control Panels
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+Right Control Panels Panels (6,12,14,16)
+	Ctrl+Left = Pilot's Window
+	Ctrl+Right = ~~~
+	Ctrl+Up = ~~~
+	Ctrl+Down = ~~~
+Upper Rendevous Window
+	Ctrl+Left = ~~~
+	Ctrl+Right = Telescope View
+	Ctrl+Up = ~~~
+	Ctrl+Down = Main Control Panel
+
+3D:LM
+
+KEY6: Commander's Window
+KEY7: Pilot's Window

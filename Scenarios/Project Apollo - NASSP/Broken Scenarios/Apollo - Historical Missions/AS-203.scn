@@ -1,0 +1,67 @@
+BEGIN_DESC
+AS-203 was an unmanned launch test of the Saturn 1b, its primary goal was to test the effects of weightlessness on liquid hydrogen and whether or not it was feasable to restart the J-2 engine in orbit after orbital instertion. The S-IVb stage was fitted with two cameras which pointed into the liquid hydrogen fuel tank and allowed the contents to be monitored during the flight. The mission lasted for five Earth orbits and terminated when the S-IVb stage exploded during a pressurization test.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 39311.62034
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-203
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-203
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_SHIPS
+AS-203:ProjectApollo/Saturn1B
+  STATUS Landed Earth
+  BASE Cape Canaveral:3
+  POS -80.5643392 28.5150791
+  HEADING 270.00
+  FUEL 1.000
+  VECHNO 203
+  REALISM 0
+  NASSPVER 70000
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -100
+  TOAPO 192
+  TOPER 184
+  TOHDG 72
+  SICSHUT 139.2
+  SISSHUT 142.7
+  SIICSHUT 433.4
+  LANG English
+  UNMANNED 1
+  S4PL 7
+  AUTOSLOW 1
+  ATTACHSTATE 93
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+  </Checklist>
+  END
+LC34:ProjectApollo\LC34
+  STATUS Landed Earth
+  POS -80.5643399 28.5150804
+  HEADING 180.05
+  LVNAME AS-203
+END
+END_SHIPS
