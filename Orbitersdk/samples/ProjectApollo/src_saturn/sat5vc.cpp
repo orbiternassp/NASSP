@@ -21,17 +21,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2008/04/11 11:50:00  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.2  2007/06/06 15:02:16  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #include <stdio.h>

@@ -20,53 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.16  2007/12/15 19:48:26  lassombra
-  *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
-  *	
-  *	Revision 1.15  2007/08/16 16:49:53  tschachim
-  *	New meshes.
-  *	
-  *	Revision 1.14  2007/03/03 00:14:41  tschachim
-  *	Bugfix generic cockpit.
-  *	
-  *	Revision 1.13  2007/03/02 18:34:37  tschachim
-  *	Improved crawler VC.
-  *	
-  *	Revision 1.12  2007/03/01 17:58:26  tschachim
-  *	New VC panel
-  *	
-  *	Revision 1.11  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.10  2006/04/25 13:32:50  tschachim
-  *	New KSC.
-  *	
-  *	Revision 1.9  2005/11/23 21:36:55  movieman523
-  *	Allow specification of LV name in scenario file.
-  *	
-  *	Revision 1.8  2005/10/31 19:18:39  tschachim
-  *	Bugfixes.
-  *	
-  *	Revision 1.7  2005/10/31 10:30:35  tschachim
-  *	New VAB.
-  *	
-  *	Revision 1.6  2005/08/05 13:01:49  tschachim
-  *	Saturn detachment handling
-  *	
-  *	Revision 1.5  2005/07/05 17:23:11  tschachim
-  *	Scenario saving/loading
-  *	
-  *	Revision 1.4  2005/07/01 12:23:48  tschachim
-  *	Introduced standalone flag
-  *	
-  *	Revision 1.3  2005/06/29 11:01:18  tschachim
-  *	new dynamics, added attachment management
-  *	
-  *	Revision 1.2  2005/06/14 16:14:41  tschachim
-  *	File header inserted.
-  *	
   **************************************************************************/
 
 ///

@@ -20,13 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2008/04/11 12:19:23  tschachim
-  *	New SM and CM RCS.
-  *	Improved abort handling.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 #if !defined(_PA_CSMRCS_H)

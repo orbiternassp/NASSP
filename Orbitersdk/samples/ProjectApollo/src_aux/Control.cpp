@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2005/02/11 12:54:06  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #include <windows.h>

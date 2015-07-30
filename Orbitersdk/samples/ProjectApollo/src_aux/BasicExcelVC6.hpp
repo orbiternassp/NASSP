@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2008/04/11 11:49:06  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 // Created by Yap Chun Wei

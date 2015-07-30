@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2006/04/25 14:00:22  tschachim
-  *	New KSC.
-  *	
   **************************************************************************/
 
 class MSS: public VESSEL2 {

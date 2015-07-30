@@ -20,26 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2008/04/11 11:49:11  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.5  2007/07/17 14:33:01  tschachim
-  *	Added entry and post landing stuff.
-  *	
-  *	Revision 1.4  2007/06/06 15:02:09  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.3  2006/08/11 19:34:47  movieman523
-  *	Added code to take the docking probe with the LES on a post-abort jettison.
-  *	
-  *	Revision 1.2  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.1  2006/06/09 17:43:03  movieman523
-  *	Added LES code and build projects.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

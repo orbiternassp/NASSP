@@ -20,44 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/04/11 11:49:32  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.10  2008/01/22 05:22:27  movieman523
-  *	Added port number to docking probe.
-  *	
-  *	Revision 1.9  2008/01/22 02:55:08  movieman523
-  *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
-  *	
-  *	Revision 1.8  2008/01/14 04:31:09  movieman523
-  *	Initial tidyup: ASTP should now work too.
-  *	
-  *	Revision 1.7  2007/12/21 18:10:28  movieman523
-  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
-  *	
-  *	Revision 1.6  2007/12/21 02:47:08  movieman523
-  *	Connector cleanup, and fix my build break!
-  *	
-  *	Revision 1.5  2007/12/21 01:00:10  movieman523
-  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
-  *	
-  *	Revision 1.4  2007/12/05 23:07:45  movieman523
-  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
-  *	
-  *	Revision 1.3  2006/07/27 20:40:06  movieman523
-  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
-  *	
-  *	Revision 1.2  2006/07/09 16:09:38  movieman523
-  *	Added Prog 59 for SIVb venting.
-  *	
-  *	Revision 1.1  2006/07/07 19:35:24  movieman523
-  *	First version.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

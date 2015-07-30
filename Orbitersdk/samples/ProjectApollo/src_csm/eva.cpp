@@ -20,17 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.2  2008/04/11 11:49:35  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.1  2006/08/12 15:05:35  movieman523
-  *	Renamed EVA and LEVA files.
-  *	
   **************************************************************************/
 
 #pragma warning(disable : 4996 ) 

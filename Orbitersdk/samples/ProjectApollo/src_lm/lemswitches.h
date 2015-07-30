@@ -20,47 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2010/05/10 01:49:25  dseagrav
-  *	Added more LM indicators.
-  *	Hacked around a bug in toggleswitch where indicators with minimums below zero would float while unpowered.
-  *	
-  *	Revision 1.5  2010/05/02 16:04:05  dseagrav
-  *	Added RCS and ECS indicators. Values are not yet provided.
-  *	
-  *	Revision 1.4  2010/05/01 12:55:15  dseagrav
-  *	
-  *	Cause LM mission timer to print value when adjusted. (Since you can't see it from the switches)
-  *	Right-clicking causes the time to be printed but does not flip the switches.
-  *	Left-clicking works as normal and prints the new value.
-  *	The printed value is not updated and is removed after five seconds.
-  *	
-  *	Revision 1.3  2009/08/16 03:12:38  dseagrav
-  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
-  *	
-  *	Revision 1.2  2009/08/10 02:23:06  dseagrav
-  *	LEM EPS (Part 2)
-  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.6  2007/11/30 16:40:40  movieman523
-  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
-  *	
-  *	Revision 1.5  2006/08/21 03:04:38  dseagrav
-  *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
-  *	
-  *	Revision 1.4  2006/08/13 16:01:52  movieman523
-  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
-  *	
-  *	Revision 1.3  2006/07/24 06:41:29  dseagrav
-  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
-  *	
-  *	Revision 1.2  2006/04/17 18:14:27  movieman523
-  *	Added flashing borders to all switches (I think).
-  *	
   **************************************************************************/
 
 class LEM;

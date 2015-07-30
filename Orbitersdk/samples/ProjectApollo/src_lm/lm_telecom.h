@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
-  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
-  *	
   **************************************************************************/
 
 /* PCM DOWN-TELEMETRY

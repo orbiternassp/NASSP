@@ -20,34 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:22:01  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2008/04/11 11:50:25  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.6  2007/10/18 00:23:28  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.5  2006/11/13 14:47:34  tschachim
-  *	New SPS engine.
-  *	New ProjectApolloConfigurator.
-  *	Fixed and changed camera and FOV handling.
-  *	
-  *	Revision 1.4  2005/09/30 11:18:48  tschachim
-  *	New components for the water-glycol cooling.
-  *	
-  *	Revision 1.3  2005/05/26 16:13:46  tschachim
-  *	Bugfix when leaving earth's SOI
-  *	
-  *	Revision 1.2  2005/05/02 13:03:40  tschachim
-  *	fixed radiative heating
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher

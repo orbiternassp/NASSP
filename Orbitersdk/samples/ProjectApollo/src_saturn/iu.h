@@ -20,61 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2010/02/22 14:23:31  tschachim
-  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
-  *	
-  *	Revision 1.3  2010/02/09 02:39:29  bluedragon8144
-  *	Improved SIVB on orbit autopilot.  Now starts 20 seconds after cutoff.
-  *	
-  *	Revision 1.2  2009/07/15 22:46:10  bluedragon8144
-  *	Added a few more default orbiter functions for use with telecom for usage for SIVB autopilot
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/01/23 01:40:08  lassombra
-  *	Implemented timestep functions and event management
-  *	
-  *	Events for Saturns are now fully implemented
-  *	
-  *	Removed all hardcoded checklists from Saturns.
-  *	
-  *	Automatic Checklists are coded into an excel file.
-  *	
-  *	Added function to get the name of the active checklist.
-  *	
-  *	ChecklistController is now 100% ready for Saturn.
-  *	
-  *	Revision 1.10  2007/12/04 20:26:32  tschachim
-  *	IMFD5 communication including a new TLI for the S-IVB IU.
-  *	Additional CSM panels.
-  *	
-  *	Revision 1.9  2007/10/18 00:23:20  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.8  2006/07/09 16:09:38  movieman523
-  *	Added Prog 59 for SIVb venting.
-  *	
-  *	Revision 1.7  2006/07/09 00:07:07  movieman523
-  *	Initial tidy-up of connector code.
-  *	
-  *	Revision 1.6  2006/07/07 19:44:58  movieman523
-  *	First version of connector support.
-  *	
-  *	Revision 1.5  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.4  2006/06/23 11:56:48  tschachim
-  *	New Project Apollo MFD for TLI burn control.
-  *	
-  *	Revision 1.3  2006/04/25 13:39:15  tschachim
-  *	Removed GetXXXSwitchState.
-  *	
-  *	Revision 1.2  2006/02/21 12:01:47  tschachim
-  *	Moved TLI sequence to the IU.
-  *	
   **************************************************************************/
 
 #if !defined(_PA_IU_H)

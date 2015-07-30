@@ -20,38 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.9  2008/04/11 11:49:31  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.8  2007/06/06 15:02:10  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.7  2007/03/01 18:24:33  tschachim
-  *	Fixed Saturn V assembly
-  *	
-  *	Revision 1.6  2007/02/18 01:35:29  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.5  2006/04/25 13:56:41  tschachim
-  *	New KSC.
-  *	
-  *	Revision 1.4  2005/11/21 13:31:34  tschachim
-  *	New Saturn assembly meshes.
-  *	
-  *	Revision 1.3  2005/11/09 18:35:42  tschachim
-  *	New Saturn assembly process.
-  *	
-  *	Revision 1.2  2005/10/31 19:18:39  tschachim
-  *	Bugfixes.
-  *	
-  *	Revision 1.1  2005/10/31 11:59:22  tschachim
-  *	New VAB.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

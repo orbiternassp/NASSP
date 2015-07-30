@@ -20,26 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.5  2006/07/31 12:23:17  tschachim
-  *	Smoother staging.
-  *	
-  *	Revision 1.4  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.3  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.2  2006/01/27 22:11:38  movieman523
-  *	Added support for low-res Saturn 1b.
-  *	
-  *	Revision 1.1  2005/11/23 02:21:30  movieman523
-  *	Added S1b stage.
-  *	
   **************************************************************************/
 
 //

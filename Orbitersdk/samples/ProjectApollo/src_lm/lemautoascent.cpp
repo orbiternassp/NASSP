@@ -21,41 +21,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.10  2008/04/11 11:49:38  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.9  2007/06/06 15:02:13  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.8  2006/08/13 16:01:52  movieman523
-  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
-  *	
-  *	Revision 1.7  2005/09/05 21:09:45  lazyd
-  *	Changed this to P13
-  *	
-  *	Revision 1.6  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.5  2005/08/09 09:24:34  tschachim
-  *	Introduced toggleswitch lib
-  *	
-  *	Revision 1.4  2005/08/09 02:28:26  movieman523
-  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
-  *	
-  *	Revision 1.3  2005/08/08 22:32:49  movieman523
-  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
-  *	
-  *	Revision 1.2  2005/05/19 20:26:52  movieman523
-  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
-  *	
-  *	Revision 1.1  2005/02/11 12:54:06  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

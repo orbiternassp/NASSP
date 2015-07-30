@@ -20,35 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/07/11 13:40:19  jasonims
-  *	DockingProbe Work
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2008/04/11 11:49:37  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.6  2007/06/06 15:02:13  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.5  2007/04/25 18:48:58  tschachim
-  *	New PIPA implementation.
-  *	
-  *	Revision 1.4  2006/04/25 13:36:06  tschachim
-  *	Comments removed.
-  *	
-  *	Revision 1.3  2006/04/25 08:11:27  dseagrav
-  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
-  *	
-  *	Revision 1.2  2006/04/23 04:15:45  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.1  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
   **************************************************************************/
 
 #define IMUMATH_C

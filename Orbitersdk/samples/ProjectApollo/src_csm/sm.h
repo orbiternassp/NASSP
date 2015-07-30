@@ -20,45 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.12  2006/08/23 06:31:04  jasonims
-  *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
-  *	
-  *	Revision 1.11  2006/06/28 02:08:11  movieman523
-  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
-  *	
-  *	Revision 1.10  2006/06/28 01:23:02  movieman523
-  *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
-  *	
-  *	Revision 1.9  2006/06/27 22:29:43  movieman523
-  *	HGA now breaks off of the SM on re-entry, and fixed a bug on CM/SM seperation.
-  *	
-  *	Revision 1.8  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.7  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.6  2006/05/30 22:34:33  movieman523
-  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
-  *	
-  *	Revision 1.5  2006/05/04 20:46:50  movieman523
-  *	Added re-entry texture and started heat tracking.
-  *	
-  *	Revision 1.4  2006/04/05 19:33:49  movieman523
-  *	Support low-res RCS mesh, saved umbilical animation state so it only happens once, revised Apollo 13 support.
-  *	
-  *	Revision 1.3  2006/04/04 22:00:54  jasonims
-  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
-  *	
-  *	Revision 1.2  2006/03/30 01:59:37  movieman523
-  *	Added RCS to SM DLL.
-  *	
-  *	Revision 1.1  2006/03/30 00:21:37  movieman523
-  *	Pass empty mass correctly and remember to check in SM files :).
-  *	
-  *	
   **************************************************************************/
 
 ///

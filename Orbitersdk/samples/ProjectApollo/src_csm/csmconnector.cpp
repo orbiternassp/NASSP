@@ -20,61 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2010/02/22 14:23:30  tschachim
-  *	Apollo 7 S-IVB on orbit attitude control, venting and Saturn takeover mode for the VAGC.
-  *	
-  *	Revision 1.2  2009/07/15 22:51:45  bluedragon8144
-  *	added a few more default orbiter functions for connector usage.
-  *	
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/04/11 11:49:33  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.10  2008/01/23 01:40:08  lassombra
-  *	Implemented timestep functions and event management
-  *	
-  *	Events for Saturns are now fully implemented
-  *	
-  *	Removed all hardcoded checklists from Saturns.
-  *	
-  *	Automatic Checklists are coded into an excel file.
-  *	
-  *	Added function to get the name of the active checklist.
-  *	
-  *	ChecklistController is now 100% ready for Saturn.
-  *	
-  *	Revision 1.9  2008/01/14 01:17:04  movieman523
-  *	Numerous changes to move payload creation from the CSM to SIVB.
-  *	
-  *	Revision 1.8  2007/12/04 20:26:31  tschachim
-  *	IMFD5 communication including a new TLI for the S-IVB IU.
-  *	Additional CSM panels.
-  *	
-  *	Revision 1.7  2007/06/06 15:02:11  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.6  2007/02/18 01:35:29  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.5  2006/07/27 21:30:47  movieman523
-  *	Added display of SIVb battery voltage and current.
-  *	
-  *	Revision 1.4  2006/07/21 23:04:34  movieman523
-  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
-  *	
-  *	Revision 1.3  2006/07/09 16:09:38  movieman523
-  *	Added Prog 59 for SIVb venting.
-  *	
-  *	Revision 1.2  2006/07/09 00:07:07  movieman523
-  *	Initial tidy-up of connector code.
-  *	
-  *	Revision 1.1  2006/07/07 19:35:04  movieman523
-  *	First version.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

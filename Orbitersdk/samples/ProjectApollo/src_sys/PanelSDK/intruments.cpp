@@ -20,20 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2008/04/11 11:50:23  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.3  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.2  2005/12/30 22:41:48  movieman523
-  *	More attempts to make code build on VC 2005.
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher

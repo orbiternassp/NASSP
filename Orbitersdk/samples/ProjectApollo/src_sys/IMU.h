@@ -20,54 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/10/04 13:36:55  vrouleau
-  *	PIPA rate for the LM is 1 cm/s. Not the same as CSM ( 5.85 cm/s)
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.13  2009/01/17 23:58:11  tschachim
-  *	Bugfix for docked vessels, GetForceVector isn't working in this case.
-  *	
-  *	Revision 1.12  2007/04/25 18:48:58  tschachim
-  *	New PIPA implementation.
-  *	
-  *	Revision 1.11  2006/12/19 15:55:54  tschachim
-  *	ECS test stuff, bugfixes.
-  *	
-  *	Revision 1.10  2006/08/20 08:28:06  dseagrav
-  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
-  *	
-  *	Revision 1.9  2006/06/29 22:38:44  tschachim
-  *	Bugfix saving/loading
-  *	
-  *	Revision 1.8  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.7  2006/04/23 04:15:45  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.6  2006/01/14 20:58:15  movieman523
-  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
-  *	
-  *	Revision 1.5  2005/12/02 19:47:19  movieman523
-  *	Replaced most PowerSource code with e_object.
-  *	
-  *	Revision 1.4  2005/11/17 21:04:52  movieman523
-  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
-  *	
-  *	Revision 1.3  2005/08/19 13:44:24  tschachim
-  *	Fixes because of new Virtual AGC version.
-  *	
-  *	Revision 1.2  2005/08/13 00:09:43  movieman523
-  *	Added IMU Cage switch
-  *	
-  *	Revision 1.1  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
   **************************************************************************/
 
 // IMU

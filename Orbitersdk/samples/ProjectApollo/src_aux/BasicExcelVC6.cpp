@@ -20,16 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2008/04/16 17:26:23  lassombra
-  *	Added warning disable pragmas to remove compile warnings from VS2008.
-  *	
-  *	Watch these warnings, as the fact that they've been blocked means they won't be thrown by new code either.
-  *	
-  *	Revision 1.3  2008/04/11 11:49:06  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 //

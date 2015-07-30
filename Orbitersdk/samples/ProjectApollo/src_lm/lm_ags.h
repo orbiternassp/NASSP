@@ -20,14 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/09/14 00:19:41  trebonian
-  *	Stage commit for AGS - DEDA keyboard and display
-  *	
-  *	Revision 1.1  2009/09/10 02:12:37  dseagrav
-  *	Added lm_ags and lm_telecom files, LM checkpoint commit.
-  *	
   **************************************************************************/
 
 // ABORT SENSOR ASSEMBLY (ASA)

@@ -20,50 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.12  2007/08/13 16:06:13  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.11  2007/07/17 14:33:07  tschachim
-  *	Added entry and post landing stuff.
-  *	
-  *	Revision 1.10  2006/06/28 01:23:02  movieman523
-  *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
-  *	
-  *	Revision 1.9  2006/06/27 18:22:54  movieman523
-  *	Added 'drogues' sound.
-  *	
-  *	Revision 1.8  2006/06/07 09:53:20  tschachim
-  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
-  *	
-  *	Revision 1.7  2006/01/05 12:09:02  tschachim
-  *	New docking sound.
-  *	
-  *	Revision 1.6  2005/11/15 05:43:14  flydba
-  *	*** empty log message ***
-  *	
-  *	Revision 1.5  2005/04/20 17:56:29  movieman523
-  *	Added SECO sound.
-  *	
-  *	Revision 1.4  2005/04/14 23:07:21  movieman523
-  *	Added post-splashdown sound.
-  *	
-  *	Revision 1.3  2005/02/24 00:27:01  movieman523
-  *	Moved more sound file names here from hard-coded files.
-  *	
-  *	Revision 1.2  2005/02/13 02:43:09  movieman523
-  *	Added new sound definitions and moved some hard-coded strings into the file.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #define LAUNCH_COUNT_10_SOUND		"Count10.wav"

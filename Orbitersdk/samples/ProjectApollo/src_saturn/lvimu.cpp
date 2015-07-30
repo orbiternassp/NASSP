@@ -20,36 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2013/01/07 13:01:00  tschachim
-  *	LVDC fixes
-  *	
-  *	Revision 1.2  2012/11/04 13:33:13  meik84
-  *	LVDC++
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.5  2008/04/11 11:49:46  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.4  2007/08/13 16:06:11  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.3  2007/06/23 21:20:37  dseagrav
-  *	LVDC++ Update: Now with Pre-IGM guidance
-  *	
-  *	Revision 1.2  2007/06/06 15:02:15  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	
   **************************************************************************/
 
 // This is an abbreviated ST-124 IMU for the launch vehicle's use.

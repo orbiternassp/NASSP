@@ -22,14 +22,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.6  2008/10/18 07:01:29  movieman523
-  *	More telemetry and rationalisation.
-  *	
-  *	Revision 1.5  2008/10/17 03:14:21  movieman523
-  *	More low bit-rate decoding.
-  *	
   **************************************************************************/
 
 namespace GroundStation

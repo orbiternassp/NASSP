@@ -20,20 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.4  2008/04/11 11:49:24  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.3  2006/09/29 19:35:15  tschachim
-  *	Updated for Orbiter 060929.
-  *	
-  *	Revision 1.2  2006/05/08 02:20:24  movieman523
-  *	Updated for new Orbiter version.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #ifndef ORBITER_MATH_H

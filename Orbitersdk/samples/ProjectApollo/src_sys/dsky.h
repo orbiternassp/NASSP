@@ -20,68 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/09/17 17:48:42  tschachim
-  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.17  2008/04/15 20:17:52  lassombra
-  *	Implementing callbacks into DSKY for use by panel switch system (specifically geared towards checklist mfd compatibility
-  *	
-  *	Revision 1.16  2007/08/13 16:06:11  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.15  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.14  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.13  2006/06/21 13:11:29  tschachim
-  *	Bugfix power drawing.
-  *	
-  *	Revision 1.12  2006/06/10 14:36:44  movieman523
-  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
-  *	
-  *	Revision 1.11  2006/05/30 23:15:14  movieman523
-  *	Mission timer and DSKY now need power to operate.
-  *	
-  *	Revision 1.10  2005/08/29 19:15:03  tschachim
-  *	Rendering of the DSKY keys.
-  *	
-  *	Revision 1.9  2005/08/19 13:43:42  tschachim
-  *	Channel 13 handling
-  *	
-  *	Revision 1.8  2005/08/18 22:15:22  movieman523
-  *	Wired up second DSKY, to accurately match the real hardware.
-  *	
-  *	Revision 1.7  2005/08/18 20:54:16  movieman523
-  *	Added Main Release switch and wired it up to the parachutes.
-  *	
-  *	Revision 1.6  2005/08/18 20:07:19  spacex15
-  *	fixed click sound missing in lm dsky
-  *	
-  *	Revision 1.5  2005/08/18 00:22:53  movieman523
-  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
-  *	
-  *	Revision 1.4  2005/08/11 01:27:26  movieman523
-  *	Added initial Virtual AGC support.
-  *	
-  *	Revision 1.3  2005/08/09 02:28:26  movieman523
-  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
-  *	
-  *	Revision 1.2  2005/08/08 22:32:49  movieman523
-  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 ///

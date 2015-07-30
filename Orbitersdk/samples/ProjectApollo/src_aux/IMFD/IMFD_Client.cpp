@@ -20,16 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2008/04/11 11:53:31  tschachim
-  *	New IMFD interface features.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.1  2007/12/04 20:26:40  tschachim
-  *	IMFD5 communication including a new TLI for the S-IVB IU.
-  *	Additional CSM panels.
-  *	
   **************************************************************************/
   
 // To force orbitersdk.h to use <fstream> in any compiler version

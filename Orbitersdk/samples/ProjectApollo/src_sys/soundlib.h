@@ -20,57 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.15  2008/05/24 17:25:53  tschachim
-  *	Bugfix in case of OrbiterSound not loaded.
-  *	
-  *	Revision 1.14  2007/10/18 00:23:24  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.13  2006/07/06 00:40:08  movieman523
-  *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
-  *	
-  *	Revision 1.12  2006/07/05 20:16:16  movieman523
-  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
-  *	
-  *	Revision 1.11  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.10  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.9  2006/05/17 18:42:35  movieman523
-  *	Partial fix for loading sound volume from scenario.
-  *	
-  *	Revision 1.8  2006/02/21 11:52:26  tschachim
-  *	Fixes to make code build with MS C++ 2005
-  *	
-  *	Revision 1.7  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.6  2005/11/26 16:30:50  movieman523
-  *	Fixed retros and trying to fix TLI audio.
-  *	
-  *	Revision 1.5  2005/11/20 21:50:40  movieman523
-  *	Fixed LEM build break.
-  *	
-  *	Revision 1.4  2005/11/20 21:46:31  movieman523
-  *	Added initial volume control support.
-  *	
-  *	Revision 1.3  2005/08/03 10:44:34  spacex15
-  *	improved audio landing synchro
-  *	
-  *	Revision 1.2  2005/07/14 10:06:14  spacex15
-  *	Added full apollo11 landing sound
-  *	initial release
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #ifndef SOUNDLIB_H

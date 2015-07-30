@@ -20,14 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.1  2006/06/24 15:05:40  movieman523
-  *	New sound event files.
-  *	
   **************************************************************************/
 
 #ifndef SOUNDEVENTS_H

@@ -20,19 +20,7 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.3  2008/04/11 11:49:53  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.2  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.1  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
-  **************************** Revision History ****************************/
-
+  **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )

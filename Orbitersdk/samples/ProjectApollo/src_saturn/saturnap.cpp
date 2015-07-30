@@ -21,41 +21,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/08/25 17:48:42  tschachim
-  *	Bugfixes Saturn autopilot.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.9  2008/04/11 11:50:00  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.8  2007/06/06 15:02:17  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.7  2007/02/18 01:35:30  dseagrav
-  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
-  *	
-  *	Revision 1.6  2006/08/27 21:51:12  tschachim
-  *	Improved SIVB roll damping.
-  *	
-  *	Revision 1.5  2006/07/27 23:24:11  tschachim
-  *	The Saturn 1b now has the Saturn V IGM autopilot.
-  *	
-  *	Revision 1.4  2006/02/05 20:55:09  lazyd
-  *	Added roll control (RCS) to SIVB
-  *	
-  *	Revision 1.3  2005/08/24 00:30:00  movieman523
-  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
-  *	
-  *	Revision 1.2  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

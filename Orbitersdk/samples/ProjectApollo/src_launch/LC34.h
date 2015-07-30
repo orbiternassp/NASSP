@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2006/12/07 18:52:43  tschachim
-  *	New LC34, Bugfixes.
-  *	
   **************************************************************************/
 
 ///

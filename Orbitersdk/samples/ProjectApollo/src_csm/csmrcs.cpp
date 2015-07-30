@@ -20,16 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:20:56  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.1  2008/04/11 12:19:22  tschachim
-  *	New SM and CM RCS.
-  *	Improved abort handling.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

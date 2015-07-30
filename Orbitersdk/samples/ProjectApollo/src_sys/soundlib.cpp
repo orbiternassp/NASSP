@@ -22,60 +22,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.16  2008/05/24 17:25:53  tschachim
-  *	Bugfix in case of OrbiterSound not loaded.
-  *	
-  *	Revision 1.15  2008/04/11 11:50:05  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.14  2007/06/06 15:02:22  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.13  2006/07/06 00:44:29  movieman523
-  *	Oops, don't crash if the file doesn't exist.
-  *	
-  *	Revision 1.12  2006/07/06 00:40:08  movieman523
-  *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
-  *	
-  *	Revision 1.11  2006/07/05 20:16:16  movieman523
-  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
-  *	
-  *	Revision 1.10  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.9  2006/05/17 19:04:13  movieman523
-  *	Wired up both master volume switches.
-  *	
-  *	Revision 1.8  2006/01/09 19:26:03  tschachim
-  *	More attempts to make code build on MS C++ 2005
-  *	
-  *	Revision 1.7  2005/11/26 16:30:50  movieman523
-  *	Fixed retros and trying to fix TLI audio.
-  *	
-  *	Revision 1.6  2005/11/20 21:46:31  movieman523
-  *	Added initial volume control support.
-  *	
-  *	Revision 1.5  2005/08/30 14:53:00  spacex15
-  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
-  *	
-  *	Revision 1.4  2005/08/03 10:44:33  spacex15
-  *	improved audio landing synchro
-  *	
-  *	Revision 1.3  2005/07/15 07:58:54  spacex15
-  *	fixed CTD short while after landing
-  *	
-  *	Revision 1.2  2005/07/14 10:06:14  spacex15
-  *	Added full apollo11 landing sound
-  *	initial release
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

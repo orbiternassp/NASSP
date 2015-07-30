@@ -20,43 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:22:01  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.10  2008/04/11 11:50:24  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.9  2006/11/13 14:47:34  tschachim
-  *	New SPS engine.
-  *	New ProjectApolloConfigurator.
-  *	Fixed and changed camera and FOV handling.
-  *	
-  *	Revision 1.8  2006/05/30 14:40:21  tschachim
-  *	Fixed fuel cell - dc bus connectivity, added battery charger
-  *	
-  *	Revision 1.7  2005/12/19 17:50:02  tschachim
-  *	Bugfixes.
-  *	
-  *	Revision 1.6  2005/10/31 10:01:48  tschachim
-  *	TempMin/Max for HeatExchanger.
-  *	
-  *	Revision 1.5  2005/09/30 11:18:48  tschachim
-  *	New components for the water-glycol cooling.
-  *	
-  *	Revision 1.4  2005/07/30 16:18:54  tschachim
-  *	Loading/saving tanks, pipes.
-  *	
-  *	Revision 1.3  2005/07/19 16:51:19  tschachim
-  *	Vent fixed, added leak valve to tank
-  *	
-  *	Revision 1.2  2005/05/02 12:58:18  tschachim
-  *	new components to query
-  *	
-  *	Revision 1.1  2005/04/22 14:22:38  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher

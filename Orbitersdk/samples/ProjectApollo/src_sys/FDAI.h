@@ -20,48 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.13  2007/10/18 00:23:14  movieman523
-  *	Primarily doxygen changes; minimal functional change.
-  *	
-  *	Revision 1.12  2006/06/17 17:49:33  tschachim
-  *	Bugfix smoother movement.
-  *	
-  *	Revision 1.11  2006/06/01 14:28:25  tschachim
-  *	FDAIs no longer turn immediately (Bug 1448610).
-  *	
-  *	Revision 1.10  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.9  2006/04/23 04:15:45  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.8  2006/03/12 01:13:28  dseagrav
-  *	Added lots of SCS items and FDAI stuff.
-  *	
-  *	Revision 1.7  2006/03/04 22:50:52  dseagrav
-  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
-  *	
-  *	Revision 1.6  2006/02/21 12:02:52  tschachim
-  *	Bugfix FDAI.
-  *	
-  *	Revision 1.5  2006/02/01 18:10:55  tschachim
-  *	Introduced off flag and smooth mode.
-  *	
-  *	Revision 1.4  2006/01/07 03:28:28  movieman523
-  *	Removed a lot of unused switches and wired up the FDAI power switch.
-  *	
-  *	Revision 1.3  2005/10/12 17:55:05  tschachim
-  *	Smarter redraw handing because of performance.
-  *	
-  *	Revision 1.2  2005/08/20 17:50:41  movieman523
-  *	Added FDAI state save and load.
-  *	
-  *	Revision 1.1  2005/08/19 13:34:18  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 /// \bug Avoids bug in VC++

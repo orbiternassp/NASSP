@@ -20,32 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2010/09/06 16:23:21  tschachim
-  *	Changes for Orbiter 2010-P1
-  *	
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.5  2008/04/11 11:49:10  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.4  2007/08/13 16:06:03  tschachim
-  *	Moved bitmaps to subdirectory.
-  *	New VAGC mission time pad load handling.
-  *	New telescope and sextant panels.
-  *	Fixed CSM/LV separation speed.
-  *	
-  *	Revision 1.3  2007/06/06 15:02:07  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.2  2006/07/24 19:24:50  tschachim
-  *	Bugfix
-  *	
-  *	Revision 1.1  2006/07/17 19:33:36  tschachim
-  *	Small improvements of LC39.
-  *
   **************************************************************************/
 
 #define ORBITER_MODULE

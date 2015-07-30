@@ -20,29 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.6  2007/03/01 18:24:33  tschachim
-  *	Fixed Saturn V assembly
-  *	
-  *	Revision 1.5  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.4  2006/04/25 13:44:22  tschachim
-  *	New KSC.
-  *	
-  *	Revision 1.3  2005/11/21 13:31:34  tschachim
-  *	New Saturn assembly meshes.
-  *	
-  *	Revision 1.2  2005/11/09 18:41:03  tschachim
-  *	New Saturn assembly process.
-  *	
-  *	Revision 1.1  2005/10/31 11:59:22  tschachim
-  *	New VAB.
-  *	
   **************************************************************************/
 
 ///

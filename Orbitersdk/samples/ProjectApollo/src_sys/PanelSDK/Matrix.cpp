@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2005/04/22 14:22:37  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #include "matrix.h"

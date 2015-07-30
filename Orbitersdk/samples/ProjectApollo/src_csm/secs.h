@@ -20,31 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.7  2008/04/11 12:19:21  tschachim
-  *	New SM and CM RCS.
-  *	Improved abort handling.
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.6  2007/07/17 14:33:10  tschachim
-  *	Added entry and post landing stuff.
-  *	
-  *	Revision 1.5  2006/08/11 21:16:22  movieman523
-  *	Dummy ELS implementation.
-  *	
-  *	Revision 1.4  2006/08/11 18:44:56  movieman523
-  *	Beginnings of SECS implementation.
-  *	
-  *	Revision 1.3  2006/07/01 23:49:13  movieman523
-  *	Updated more documentation.
-  *	
-  *	Revision 1.2  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.1  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
   **************************** Revision History ****************************/
 
 #if !defined(_PA_SECS_H)

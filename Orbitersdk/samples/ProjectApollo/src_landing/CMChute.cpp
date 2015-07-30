@@ -20,20 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  * $Log$
-  * Revision 1.3  2008/04/11 11:49:20  tschachim
-  * Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  * 
-  * Revision 1.2  2007/08/13 16:06:06  tschachim
-  * Moved bitmaps to subdirectory.
-  * New VAGC mission time pad load handling.
-  * New telescope and sextant panels.
-  * Fixed CSM/LV separation speed.
-  * 
-  * Revision 1.1  2007/07/17 14:33:14  tschachim
-  * Added entry and post landing stuff.
-  * 
   **************************************************************************/
 //############################################################################//
 #define ORBITER_MODULE

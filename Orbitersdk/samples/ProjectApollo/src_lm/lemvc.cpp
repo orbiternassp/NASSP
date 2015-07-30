@@ -20,46 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2009/02/18 23:21:14  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.11  2008/04/11 11:49:45  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
-  *	Revision 1.10  2007/06/06 15:02:14  tschachim
-  *	OrbiterSound 3.5 support, various fixes and improvements.
-  *	
-  *	Revision 1.9  2006/08/13 16:55:35  movieman523
-  *	Removed a bunch of unused files.
-  *	
-  *	Revision 1.8  2006/08/13 16:01:52  movieman523
-  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
-  *	
-  *	Revision 1.7  2005/11/17 03:41:33  darth_vader
-  *	Reset the VC position to the previous value. Lowered the position of the docking window viewpoint, so that the crew will not be visible anymore. However part of the CM is still "cut" ... nothing much can be done for that I'm afraid ...
-  *	
-  *	Revision 1.6  2005/11/12 18:13:03  darth_vader
-  *	Adjusted the camera position for the various 2D panels to something more realistic (I hope).
-  *	
-  *	Revision 1.5  2005/10/31 10:16:54  tschachim
-  *	LEM rendezvous window camera offset.
-  *	
-  *	Revision 1.4  2005/08/14 16:08:20  tschachim
-  *	LM is now a VESSEL2
-  *	Changed panel restore mechanism because the CSM mechanism
-  *	caused CTDs, reason is still unknown.
-  *	
-  *	Revision 1.3  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.2  2005/08/09 09:14:31  tschachim
-  *	Introduced toggleswitch lib
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

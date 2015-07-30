@@ -20,62 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.11  2012/01/14 22:31:14  tschachim
-  *	Scrolling, bugfixes
-  *	
-  *	Revision 1.10  2010/09/06 16:23:21  tschachim
-  *	Changes for Orbiter 2010-P1
-  *	
-  *	Revision 1.9  2010/02/05 17:31:46  tschachim
-  *	Added ORDEAL.
-  *	
-  *	Revision 1.8  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.7  2009/09/26 22:12:29  coussini
-  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
-  *	
-  *	Revision 1.6  2009/09/26 21:49:15  coussini
-  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
-  *	
-  *	Revision 1.5  2009/09/26 18:56:48  coussini
-  *	This is Coussini MET (Mission Elapsed Time) for checklist MFD
-  *	
-  *	Revision 1.4  2009/09/18 18:29:21  tschachim
-  *	Bugfix
-  *	
-  *	Revision 1.3  2009/09/17 17:48:41  tschachim
-  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
-  *	
-  *	Revision 1.2  2009/08/17 13:27:49  tschachim
-  *	Enhancement of ChecklistMFD
-  *	
-  *	Revision 1.1  2009/02/18 23:21:34  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.17  2008/12/05 13:05:47  tschachim
-  *	New info screen by Coussini.
-  *	
-  *	Revision 1.16  2008/07/20 22:08:03  tschachim
-  *	Slightly improved checklist display.
-  *	
-  *	Revision 1.15  2008/06/28 10:51:29  jasonims
-  *	Updated ChecklistMFD interface to display event times.... only MISSION_TIME and LAST_ITEM_RELATIVE implemented.
-  *	
-  *	Revision 1.14  2008/06/17 16:39:07  tschachim
-  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
-  *	
-  *	Revision 1.13  2008/05/27 14:45:39  tschachim
-  *	Enabled manual item completion/failure
-  *	
-  *	Revision 1.12  2008/05/24 17:30:41  tschachim
-  *	Bugfixes, new flash toggle.
-  *	
-  *	Revision 1.11  2008/04/11 11:49:26  tschachim
-  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
-  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

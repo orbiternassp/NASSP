@@ -20,11 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #if !defined(AFX_SATURN1_EVA1_H__6B44AB2B_B8EE_4B71_A1EE_DED911274C28__INCLUDED_)

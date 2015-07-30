@@ -20,18 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/06/15 16:11:32  tschachim
-  *	New CollisionSDK.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.2  2007/12/04 20:14:24  tschachim
-  *	IMFD5 communication including a new TLI for the S-IVB IU.
-  *	Additional CSM panels.
-  *	
   **************************************************************************/
 
 #pragma warning(disable : 4996 ) 

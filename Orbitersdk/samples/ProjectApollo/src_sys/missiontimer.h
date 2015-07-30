@@ -20,35 +20,6 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
-  **************************** Revision History ****************************
-  *	$Log$
-  *	Revision 1.2  2009/12/17 17:47:18  tschachim
-  *	New default checklist for ChecklistMFD together with a lot of related bugfixes and small enhancements.
-  *	
-  *	Revision 1.1  2009/02/18 23:21:48  tschachim
-  *	Moved files as proposed by Artlav.
-  *	
-  *	Revision 1.7  2006/12/19 15:56:03  tschachim
-  *	ECS test stuff, bugfixes.
-  *	
-  *	Revision 1.6  2006/05/30 23:15:14  movieman523
-  *	Mission timer and DSKY now need power to operate.
-  *	
-  *	Revision 1.5  2006/03/08 02:24:21  movieman523
-  *	Added event timer and fuel display.
-  *	
-  *	Revision 1.4  2005/08/24 23:29:31  movieman523
-  *	Fixed event timer reset.
-  *	
-  *	Revision 1.3  2005/08/18 19:12:21  movieman523
-  *	Added Event Timer switches and null Event Timer class.
-  *	
-  *	Revision 1.2  2005/08/14 15:25:43  movieman523
-  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
-  *	
-  *	Revision 1.1  2005/08/13 22:05:17  movieman523
-  *	Mission timer class.
-  *	
   **************************************************************************/
 
 
