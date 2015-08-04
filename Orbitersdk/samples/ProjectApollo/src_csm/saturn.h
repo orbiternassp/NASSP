@@ -285,6 +285,12 @@ typedef struct {
 	double chamberPressurePSI;
 } SPSStatus;
 
+// LVDC save file start/end strings, here temporarily
+// Get used for LVDC or LVDC1B depending on which vehicle this is.
+// Unused for everything else.
+#define LVDC_START_STRING "LVDC_BEGIN"
+#define LVDC_END_STRING "LVDC_END"
+
 ///
 /// \brief Generic Saturn launch vehicle class.
 /// \ingroup Saturns
@@ -4097,6 +4103,7 @@ protected:
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
 	virtual void SaveLVDC(FILEHANDLE scn) = 0;
+	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

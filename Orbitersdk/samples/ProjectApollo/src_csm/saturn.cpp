@@ -2248,6 +2248,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, BMAG2_START_STRING, sizeof(BMAG2_START_STRING))) {
 		bmag2.LoadState(scn);
 	}
+	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+		LoadLVDC(scn);
+	}
 	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
 		ascp.LoadState(scn);
 	}

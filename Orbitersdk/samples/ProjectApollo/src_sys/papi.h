@@ -51,6 +51,14 @@ static inline void papiWriteScenario_vec(FILEHANDLE scn, char *item, VECTOR3 v) 
 	oapiWriteLine(scn, buffer);
 }
 
+static inline void papiWriteScenario_mx(FILEHANDLE scn, char *item, MATRIX3 m) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, m.m11, m.m12, m.m13, m.m21, m.m22, m.m23, m.m31, m.m32, m.m33 );
+	oapiWriteLine(scn, buffer);
+}
+
 static inline bool papiReadScenario_bool(char *line, char *item, bool &b) {
 
 	char buffer[256];

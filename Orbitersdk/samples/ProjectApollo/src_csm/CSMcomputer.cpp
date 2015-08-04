@@ -4307,7 +4307,7 @@ void CMOptics::TimeStep(double simdt) {
 	}
 
 	// Optics cover handling
-	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {
+	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {		
 		if (OpticsShaft > 150. * RAD) {
 			OpticsCovered = false;			
 			sat->SetOpticsCoverMesh();

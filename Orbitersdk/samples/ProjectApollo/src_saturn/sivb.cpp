@@ -707,10 +707,9 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 	// Special handling Apollo 7
 	if (VehicleNo == 205) {
-		if (MissionTime >= 11820) {
-			// retrograde
-			iu.SetLVLHAttitude(_V(-1, 0, 0));
-			
+		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
+			// retrograde LVLH orbital-rate
+			iu.SetLVLHAttitude(_V(-1, 0, 0));			
 		} else {
 			iu.HoldAttitude();
 		}

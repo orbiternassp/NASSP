@@ -605,8 +605,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// engines in a wacky direction and then not be
 	// called again for several seconds.
 	//
-	if (FirstTimestep) 
-	{
+	if (FirstTimestep){
 		DoFirstTimestep(simt);
 		FirstTimestep = false;
 		return;
@@ -620,41 +619,38 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// Abort handling
 	//
 
-	if (use_lvdc) {
+	if(use_lvdc){
 			// Nothing for now, the LVDC is called in PostStep
-		} else {
-	if (bAbort && MissionTime > -300 && LESAttached) {
-		SetEngineLevel(ENGINE_MAIN, 0);
-		SeparateStage(CM_STAGE);
-		SetStage(CM_STAGE);
-		StartAbort();
-		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
-		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
-		bAbort = false;
-		return;
-	}
-	switch (stage) {
+	}else{
+		if (bAbort && MissionTime > -300 && LESAttached) {
+			SetEngineLevel(ENGINE_MAIN, 0);
+			SeparateStage(CM_STAGE);
+			SetStage(CM_STAGE);
+			StartAbort();
+			agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+			agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+			bAbort = false;
+			return;
+		}
+		switch (stage) {
+			case LAUNCH_STAGE_ONE:
+				StageOne(simt, simdt);
+				break;
 
+			case LAUNCH_STAGE_SIVB:
+				StageLaunchSIVB(simt);
+				break;
 
-		case LAUNCH_STAGE_ONE:
-			StageOne(simt, simdt);
-			break;
+			case STAGE_ORBIT_SIVB:
+				StageOrbitSIVB(simt, simdt);
+				break;
 
-		case LAUNCH_STAGE_SIVB:
-			StageLaunchSIVB(simt);
-			break;
-
-		case STAGE_ORBIT_SIVB:
-			StageOrbitSIVB(simt, simdt);
-			break;
-
-		default:
-			GenericTimestepStage(simt, simdt);
-			break;
+			default:
+				GenericTimestepStage(simt, simdt);
+				break;
 		}
 	}
 
-	
 	LastTimestep = simt;
 }
 
@@ -682,7 +678,6 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 			}
 			break;
 		}
-
 	}
 }
 
@@ -710,6 +705,10 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
 void Saturn1b::SaveLVDC(FILEHANDLE scn)
 {
 	if (use_lvdc){lvdc.SaveState(scn);}
+}
+void Saturn1b::LoadLVDC(FILEHANDLE scn)
+{
+	if (use_lvdc){lvdc.LoadState(scn);}
 }
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
