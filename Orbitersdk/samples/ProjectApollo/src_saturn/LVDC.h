@@ -1,47 +1,60 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2005
+
+  Launch Vehicle Digital Computer (C++ Implementation Header)
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************************************************************/
+
 #pragma once
-#define LVDC_START_STRING "LVDC_BEGIN"
-#define LVDC_END_STRING "LVDC_END"
 #include "LVIMU.h"
 class Saturn1b;
 
 class LVDC1B {
 public:
+	LVDC1B();										// Constructor
 	void init(Saturn1b* own);
 	void timestep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 private:
+	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
 	Saturn1b* owner;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
+
+	bool LVDC_Stop;									// Program Stop Flag
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
-
-	int LVDC_GP_PC;									// Guidance Program: Program Counter
-	double S1B_Sep_Time;							// S1C Separation Counter
+	double S1B_Sep_Time;							// S1B Separation Counter
+	int IGMCycle;									// IGM Cycle Counter (for debugging)
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_EI_On;								// Engine Indicator lights on
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
-	bool S2_Startup;								// S2 Engine Start
 	
 	// These are variables that are not really part of the LVDC software.
-	//double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
-	//double OPitch[4],OYaw[4];						// Previous value of above, for rate limitation
-	//double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
 	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
-	double A1,A2,A3,A4,A5;
-	double K_p,K_y,K_r;
-	//double Velocity[3];								// Velocity
-	//double Position[3];								// Position
-	//VECTOR3 WV;										// Gravity
-	double sinceLastIGM;							// Time since last IGM run
-	double IGMInterval;								// IGM Interval
-	int IGMCycle;									// IGM Cycle Counter (for debugging)
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -58,12 +71,12 @@ private:
 	double T_LET;									// LET Jettison Time
 	double dt_LET;									// Nominal interval between S2 ignition and LET jettison
 	// IGM event times
+	double sinceLastIGM;							// Time since last IGM run
+	double IGMInterval;								// IGM Interval
 	double T_1;										// Time left in first-stage IGM
 	double T_2;										// Time left in second and fourth stage IGM
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
-//	bool Azimuth_Inclination_Mode;					// Ground Targeting uses Azimuth to determine Inclination
-//	bool Azimuth_DscNodAngle_Mode;					// Ground Targeting uses Azimuth to determine Descending Nodal Angle
 	bool GRR_init;									// GRR initialization done
 	bool poweredflight;								// Powered flight flag
 	bool liftoff;									// lift-off flag
@@ -79,11 +92,6 @@ private:
 	bool INH,INH1,INH2;								// Dunno yet
 	
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
-	//VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
-	//double IncFromAzPoly[6];						// Inclination-From-Azimuth polynomial
-	//double IncFromTimePoly[6];                      // Inclination-From-Time polynomial
-	//double DNAFromAzPoly[6];						// Descending Nodal Angle from Azimuth polynomial
-	//double DNAFromTimePoly[6];						// Descending Nodal Angle from Time polynomial
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2;								// IGM Exhaust Velocities
@@ -93,7 +101,6 @@ private:
 	double Fm;										// Sensed acceleration
 	double Tt_T;									// Time-To-Go computed using Tt_3
 	double Tt_2;									// Estimated second stage burn time
-	//double eps_1;									// IGM range angle calculation selection
 	double eps_2;									// Guidance option selection time
 	double eps_3;									// Terminal condition freeze time
 	double eps_4;									// Time for cutoff logic entry
@@ -134,6 +141,8 @@ private:
 	VECTOR3 CommandRateLimits;						// Command Rate Limits
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
 	double F;										// Force in Newtons, I assume.	
+	double A1,A2,A3,A4,A5;
+	double K_p,K_y,K_r;
 	double K_Y,K_P,D_P,D_Y;							// Intermediate variables in IGM
 	double P_1,P_2;									// Intermediate variables in IGM
 	double L_1,L_2,dL_2,Lt_2,L_P,L_Y,Lt_Y;			// Intermediate variables in IGM

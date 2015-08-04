@@ -1243,6 +1243,11 @@ void SaturnV::SaveLVDC(FILEHANDLE scn)
 {
 
 }
+void SaturnV::LoadLVDC(FILEHANDLE scn)
+{
+
+}
+
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {

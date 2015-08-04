@@ -133,6 +133,8 @@ protected:
 
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SaveLVDC(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
+
 	//
 	// Odds and ends.
 	//

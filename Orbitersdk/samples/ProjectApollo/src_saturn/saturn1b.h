@@ -90,6 +90,7 @@ protected:
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
 	void SaveLVDC(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
