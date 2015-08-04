@@ -299,328 +299,327 @@ void LVDC1B::timestep(double simt, double simdt) {
 	LVDC_TB_ETime += simdt;
 	
 	// Note that GenericTimestep will update MissionTime.
+	if(LVDC_Stop == false){
+		/* **** LVDC GUIDANCE PROGRAM **** */
+		switch(LVDC_Timebase){
+			case -1: // LOOP WAITING FOR PTL
+				// Lock time accel to 100x
+				if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
 
-	/* **** LVDC GUIDANCE PROGRAM **** */
-	switch(LVDC_Timebase){
-		case -1: // LOOP WAITING FOR PTL
-			// Lock time accel to 100x
-			if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
-
-			// Prelaunch tank venting between -3:00h and engine ignition
-			// No clue if the venting start time is correct
-			if (owner->MissionTime < -10800){
-				owner->DeactivatePrelaunchVenting();
-			}else{
-				owner->ActivatePrelaunchVenting();
-			}
-
-			// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-			{
-				double Source  = fabs(owner->MissionTime);
-				double Minutes = Source/60;
-				double Hours   = (int)Minutes/60;				
-				double Seconds = Source - ((int)Minutes*60);
-				Minutes       -= Hours*60;
-				if (owner->MissionTime < -1200){
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
-					break;
+				// Prelaunch tank venting between -3:00h and engine ignition
+				// No clue if the venting start time is correct
+				if (owner->MissionTime < -10800){
+					owner->DeactivatePrelaunchVenting();
 				}else{
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+					owner->ActivatePrelaunchVenting();
 				}
-			}
-			
-			// WAIT FOR GRR
-			// Engine lights on at T-00:04:10
-			if (owner->MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
-			// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
-			// At GRR we transfer control to the flight program and start TB0.
-
-			// BEFORE GRR (T-00:00:17) STOPS HERE
-			if (owner->MissionTime >= -17){
-				lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-				lvimu.DriveGimbals((Azimuth - 100)*RAD,0,0);	// Now bring to alignment 
-				lvimu.SetCaged(false);							// Release IMU
-				CountPIPA = true;								// Enable PIPA storage			
-				BOOST = true;
-				LVDC_GRR = true;								// Mark event
-				poweredflight = true;
-				oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-				owner->SetThrusterGroupLevel(owner->thg_main, 0);	// Ensure off
+				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
-					int i;
-					for (i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines						
-						owner->SetThrusterResource(owner->th_main[i], owner->ph_1st);
+					double Source  = fabs(owner->MissionTime);
+					double Minutes = Source/60;
+					double Hours   = (int)Minutes/60;				
+					double Seconds = Source - ((int)Minutes*60);
+					Minutes       -= Hours*60;
+					if (owner->MissionTime < -1200){
+						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
+						break;
+					}else{
+						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
-				owner->CreateStageOne();						// Create hidden stage one, for later use in staging
-				LVDC_Timebase = 0;								// Start TB0
-				LVDC_TB_ETime = 0;
-			}
-			break;
-		case 0: // MORE TB0
-			double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
-
-			// At 10 seconds, play the countdown sound.
-			if (owner->MissionTime >= -10.3) { // Was -10.9
-				if (!owner->UseATC && owner->Scount.isValid()) {
-					owner->Scount.play();
-					owner->Scount.done();
-				}
-			}
-
-			// Shut down venting at T - 9
-			if(owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->DeactivatePrelaunchVenting(); }
-
-			// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
 			
-			// Engine 7+5 combustion chamber ignition was at T-2.998,  6+8 at T-2.898, 2+4 at T-2.798, 1+3 at T-2.698
-			// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
-			// and then rose to 93% thrust in 0.085 seconds.
-			// The rise from 93 to 100 percent thrust took 0.75 second.
-			// Total engine startup time was 1.9 seconds.
+				// WAIT FOR GRR
+				// Engine lights on at T-00:04:10
+				if (owner->MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
-			// Source: Apollo 7 LV Flight Evaluation
+				// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
+				// At GRR we transfer control to the flight program and start TB0.
 
-			// Transition from seperate throttles to single throttle
-			if(owner->MissionTime < -0.715){ 
-				int x=0; // Start Sequence Index
-				double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-				double SumThrust=0;
-
-				while(x < 4){
-					thrst[x] = 0;
-					switch(x){
-						case 0: // Engine 7+5
-							tm_1 = -2.998; break;
-						case 1: // Engine 6+8
-							tm_1 = -2.898; break;
-						case 2: // Engine 2+4
-							tm_1 = -2.798; break;
-						case 3: // Engine 1+3
-							tm_1 = -2.698; break;
+				// BEFORE GRR (T-00:00:17) STOPS HERE
+				if (owner->MissionTime >= -17){
+					lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
+					lvimu.DriveGimbals((Azimuth - 100)*RAD,0,0);	// Now bring to alignment 
+					lvimu.SetCaged(false);							// Release IMU
+					CountPIPA = true;								// Enable PIPA storage			
+					BOOST = true;
+					LVDC_GRR = true;								// Mark event
+					poweredflight = true;
+					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
+					owner->SetThrusterGroupLevel(owner->thg_main, 0);	// Ensure off
+					{
+						int i;
+						for (i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines						
+							owner->SetThrusterResource(owner->th_main[i], owner->ph_1st);
+						}
 					}
-					tm_2 = tm_1 + 0.3;  // Start of 1st rise
-					tm_3 = tm_2 + 0.085; // Start of 2nd rise
-					tm_4 = tm_3 + 0.75; // End of 2nd rise
-					if(owner->MissionTime >= tm_1){
-						// Light CC
-						if(owner->MissionTime < tm_2){
-							// Idle at 2.5% thrust
-							thrst[x] = 0.025;
-						}else{
-							if(owner->MissionTime < tm_3){
-								// the actual rise is so fast that any 'smoothing' is pointless
-								thrst[x] = 0.93;
+					owner->CreateStageOne();						// Create hidden stage one, for later use in staging
+					LVDC_Timebase = 0;								// Start TB0
+					LVDC_TB_ETime = 0;
+				}
+				break;
+			case 0: // MORE TB0
+				double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
+
+				// At 10 seconds, play the countdown sound.
+				if (owner->MissionTime >= -10.3) { // Was -10.9
+					if (!owner->UseATC && owner->Scount.isValid()) {
+						owner->Scount.play();
+						owner->Scount.done();
+					}
+				}
+
+				// Shut down venting at T - 9
+				if(owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->DeactivatePrelaunchVenting(); }
+
+				// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
+			
+				// Engine 7+5 combustion chamber ignition was at T-2.998,  6+8 at T-2.898, 2+4 at T-2.798, 1+3 at T-2.698
+				// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
+				// and then rose to 93% thrust in 0.085 seconds.
+				// The rise from 93 to 100 percent thrust took 0.75 second.
+				// Total engine startup time was 1.9 seconds.
+
+				// Source: Apollo 7 LV Flight Evaluation
+
+				// Transition from seperate throttles to single throttle
+				if(owner->MissionTime < -0.715){ 
+					int x=0; // Start Sequence Index
+					double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
+					double SumThrust=0;
+
+					while(x < 4){
+						thrst[x] = 0;
+						switch(x){
+							case 0: // Engine 7+5
+								tm_1 = -2.998; break;
+							case 1: // Engine 6+8
+								tm_1 = -2.898; break;
+							case 2: // Engine 2+4
+								tm_1 = -2.798; break;
+							case 3: // Engine 1+3
+								tm_1 = -2.698; break;
+						}
+						tm_2 = tm_1 + 0.3;  // Start of 1st rise
+						tm_3 = tm_2 + 0.085; // Start of 2nd rise
+						tm_4 = tm_3 + 0.75; // End of 2nd rise
+						if(owner->MissionTime >= tm_1){
+							// Light CC
+							if(owner->MissionTime < tm_2){
+								// Idle at 2.5% thrust
+								thrst[x] = 0.025;
 							}else{
-								if(owner->MissionTime < tm_4){
-									// Rise to 100% at a rate of 9 percent per second.
-									thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
+								if(owner->MissionTime < tm_3){
+									// the actual rise is so fast that any 'smoothing' is pointless
+									thrst[x] = 0.93;
 								}else{
-									// Hold 100%
-									thrst[x] = 1;
+									if(owner->MissionTime < tm_4){
+										// Rise to 100% at a rate of 9 percent per second.
+										thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
+									}else{
+										// Hold 100%
+										thrst[x] = 1;
+									}
 								}
 							}
 						}
+						x++; // Do next
 					}
-					x++; // Do next
+					SumThrust = (thrst[0]*2)+(thrst[1]*2)+(thrst[2]*2)+(thrst[3]*2);
+	//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
+	//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
+					if(SumThrust > 0){ //let's hope that those numberings are right...
+						owner->SetThrusterLevel(owner->th_main[0],thrst[3]); // Engine 1
+						owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
+						owner->SetThrusterLevel(owner->th_main[2],thrst[3]); // Engine 3
+						owner->SetThrusterLevel(owner->th_main[3],thrst[2]); // Engine 4
+						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
+						owner->SetThrusterLevel(owner->th_main[5],thrst[1]); // Engine 6
+						owner->SetThrusterLevel(owner->th_main[6],thrst[0]); // Engine 7
+						owner->SetThrusterLevel(owner->th_main[7],thrst[1]); // Engine 8
+
+						owner->contrailLevel = SumThrust/8;
+						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+					}
+				}else{
+					// Get 100% thrust on all engines.
+					sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",owner->MissionTime,LVDC_TB_ETime);
+					owner->SetThrusterGroupLevel(owner->thg_main,1);
+					owner->contrailLevel = 1;				
+					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
-				SumThrust = (thrst[0]*2)+(thrst[1]*2)+(thrst[2]*2)+(thrst[3]*2);
-//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-				if(SumThrust > 0){ //let's hope that those numberings are right...
-					owner->SetThrusterLevel(owner->th_main[0],thrst[3]); // Engine 1
-					owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
-					owner->SetThrusterLevel(owner->th_main[2],thrst[3]); // Engine 3
-					owner->SetThrusterLevel(owner->th_main[3],thrst[2]); // Engine 4
-					owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
-					owner->SetThrusterLevel(owner->th_main[5],thrst[1]); // Engine 6
-					owner->SetThrusterLevel(owner->th_main[6],thrst[0]); // Engine 7
-					owner->SetThrusterLevel(owner->th_main[7],thrst[1]); // Engine 8
 
-					owner->contrailLevel = SumThrust/8;
-					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+				if(owner->MissionTime >= 0){
+					LVDC_Timebase = 1;
+					LVDC_TB_ETime = 0;	
 				}
-			}else{
-				// Get 100% thrust on all engines.
-				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",owner->MissionTime,LVDC_TB_ETime);
-				owner->SetThrusterGroupLevel(owner->thg_main,1);
-				owner->contrailLevel = 1;				
-				owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
-			}
+				break;
 
-			if(owner->MissionTime >= 0){
-				LVDC_Timebase = 1;
-				LVDC_TB_ETime = 0;	
-			}
-			break;
-
-		case 1: // LIFTOFF TIME
-			if(liftoff == false){
-				liftoff = true;
-				owner->SetLiftoffLight();										// And light liftoff lamp
-				owner->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-				// Start mission and event timers
-				owner->MissionTimerDisplay.Reset();
-				owner->MissionTimerDisplay.SetEnabled(true);
-				owner->EventTimerDisplay.Reset();
-				owner->EventTimerDisplay.SetEnabled(true);
-				owner->EventTimerDisplay.SetRunning(true);
-				owner->agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
-				owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
-				owner->contrailLevel = 1.0;
-				if (owner->LaunchS.isValid() && !owner->LaunchS.isPlaying()){	// And play launch sound
-					owner->LaunchS.play(NOLOOP,255);
-					owner->LaunchS.done();
-				}			
-				sinceLastIGM = 1.7-simdt; // Rig to pass on fall-in
-			}
-
-			// Soft-Release Pin Dragging
-			if(owner->MissionTime < 0.5){
-				double PinDragFactor = 1 - (owner->MissionTime*2);
-				owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC * PinDragFactor)), _V(0, 0, 0));
-			}
-
-			// Below here are timed events that must not be dependent on the iteration delay.
-
-			/*
-			// ENGINE FAIL TEST:
-			if(MissionTime > 22.5 && S1C_Engine_Out == false){
-				SetThrusterResource(th_main[1], NULL); // Should stop the engine
-				S1C_Engine_Out = true;
-			}
-			*/
-
-			// S1B CECO TRIGGER:
-			if(owner->MissionTime > 140.86){ // Apollo 7
-				owner->SetThrusterResource(owner->th_main[4], NULL);
-				owner->SetThrusterResource(owner->th_main[5], NULL);
-				owner->SetThrusterResource(owner->th_main[6], NULL);
-				owner->SetThrusterResource(owner->th_main[7], NULL);
-				owner->SShutS.play(NOLOOP,235);
-				owner->SShutS.done();
-				// Clear liftoff light now - Apollo 15 checklist item
-				owner->ClearLiftoffLight();
-				S1B_Engine_Out = true;
-				// Begin timebase 2
-				LVDC_Timebase = 2;
-				LVDC_TB_ETime = 0;
-			}
-			break;
-
-		case 2:
-			// S1B OECO TRIGGER
-			// Done by low-level sensor.
-			if (owner->stage == LAUNCH_STAGE_ONE && owner->GetFuelMass() <= 0){
-				// For S1C thruster calibration
-				fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-					owner->MissionTime,owner->GetThrusterMax(owner->th_main[0]),owner->GetAltitude());
-
-				// Move hidden S1B
-				if (owner->hstg1) {
-					VESSELSTATUS vs;
-					owner->GetStatus(vs);
-					S1B *stage1 = (S1B *) oapiGetVesselInterface(owner->hstg1);
-					stage1->DefSetState(&vs);
-				}				
-				// Set timer
-				S1B_Sep_Time = owner->MissionTime;
-				// Engine Shutdown
-				int i;
-				for (i = 0; i < 5; i++){
-					owner->SetThrusterResource(owner->th_main[i], NULL);
+			case 1: // LIFTOFF TIME
+				if(liftoff == false){
+					liftoff = true;
+					owner->SetLiftoffLight();										// And light liftoff lamp
+					owner->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+					// Start mission and event timers
+					owner->MissionTimerDisplay.Reset();
+					owner->MissionTimerDisplay.SetEnabled(true);
+					owner->EventTimerDisplay.Reset();
+					owner->EventTimerDisplay.SetEnabled(true);
+					owner->EventTimerDisplay.SetRunning(true);
+					owner->agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
+					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
+					owner->contrailLevel = 1.0;
+					if (owner->LaunchS.isValid() && !owner->LaunchS.isPlaying()){	// And play launch sound
+						owner->LaunchS.play(NOLOOP,255);
+						owner->LaunchS.done();
+					}			
+					sinceLastIGM = 1.7-simdt; // Rig to pass on fall-in
 				}
-				// Begin timebase 3
-				LVDC_Timebase = 3;
-				LVDC_TB_ETime = 0;
-			}
-			break;
 
-		case 3:
-			// S1B SEPARATION TRIGGER
-			if(owner->stage == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
-				// Drop old stage
-				owner->ClearEngineIndicators();
-				owner->SeparateStage(LAUNCH_STAGE_SIVB);
-				owner->SetStage(LAUNCH_STAGE_SIVB);
-				owner->AddRCS_S4B();
-				owner->SetSIVBThrusters(true);
-				owner->SetThrusterGroupLevel(owner->thg_ver,1.0);
-				owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
-				owner->SetSIVBMixtureRatio(5.5);				
-			}
+				// Soft-Release Pin Dragging
+				if(owner->MissionTime < 0.5){
+					double PinDragFactor = 1 - (owner->MissionTime*2);
+					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC * PinDragFactor)), _V(0, 0, 0));
+				}
+
+				// Below here are timed events that must not be dependent on the iteration delay.
+
+				/*
+				// ENGINE FAIL TEST:
+				if(MissionTime > 22.5 && S1C_Engine_Out == false){
+					SetThrusterResource(th_main[1], NULL); // Should stop the engine
+					S1C_Engine_Out = true;
+				}
+				*/
+
+				// S1B CECO TRIGGER:
+				if(owner->MissionTime > 140.86){ // Apollo 7
+					owner->SetThrusterResource(owner->th_main[4], NULL);
+					owner->SetThrusterResource(owner->th_main[5], NULL);
+					owner->SetThrusterResource(owner->th_main[6], NULL);
+					owner->SetThrusterResource(owner->th_main[7], NULL);
+					owner->SShutS.play(NOLOOP,235);
+					owner->SShutS.done();
+					// Clear liftoff light now - Apollo 15 checklist item
+					owner->ClearLiftoffLight();
+					S1B_Engine_Out = true;
+					// Begin timebase 2
+					LVDC_Timebase = 2;
+					LVDC_TB_ETime = 0;
+				}
+				break;
+
+			case 2:
+				// S1B OECO TRIGGER
+				// Done by low-level sensor.
+				if (owner->stage == LAUNCH_STAGE_ONE && owner->GetFuelMass() <= 0){
+					// For S1C thruster calibration
+					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
+						owner->MissionTime,owner->GetThrusterMax(owner->th_main[0]),owner->GetAltitude());
+
+					// Move hidden S1B
+					if (owner->hstg1) {
+						VESSELSTATUS vs;
+						owner->GetStatus(vs);
+						S1B *stage1 = (S1B *) oapiGetVesselInterface(owner->hstg1);
+						stage1->DefSetState(&vs);
+					}				
+					// Set timer
+					S1B_Sep_Time = owner->MissionTime;
+					// Engine Shutdown
+					int i;
+					for (i = 0; i < 5; i++){
+						owner->SetThrusterResource(owner->th_main[i], NULL);
+					}
+					// Begin timebase 3
+					LVDC_Timebase = 3;
+					LVDC_TB_ETime = 0;
+				}
+				break;
+
+			case 3:
+				// S1B SEPARATION TRIGGER
+				if(owner->stage == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
+					// Drop old stage
+					owner->ClearEngineIndicators();
+					owner->SeparateStage(LAUNCH_STAGE_SIVB);
+					owner->SetStage(LAUNCH_STAGE_SIVB);
+					owner->AddRCS_S4B();
+					owner->SetSIVBThrusters(true);
+					owner->SetThrusterGroupLevel(owner->thg_ver,1.0);
+					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
+					owner->SetSIVBMixtureRatio(5.5);				
+				}
 						
-			if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && owner->stage == LAUNCH_STAGE_SIVB){
-				owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-4)*0.36));
-				if(LVDC_TB_ETime >= 5){ owner->SetThrusterGroupLevel(owner->thg_ver,0); }
-			}
-			if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && owner->stage == LAUNCH_STAGE_SIVB){
-				owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
-				S4B_IGN=true;
-			}
-			if(LVDC_TB_ETime > 20 && owner->LESAttached){
-				T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-										// will start IGM anyway.
-				owner->JettisonLET();				
-			}
-			if(LVDC_TB_ETime > 311.5 && MRS == false){
-				// MR Shift
-				fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
-				// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-				owner->SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-				owner->SPUShiftS.play(NOLOOP,255); 
-				owner->SPUShiftS.done();
-				MRS = true;
-			}
-			break;
-
-		case 4:
-			if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
-				owner->SetStage(STAGE_ORBIT_SIVB);
-				fprintf(lvlog,"[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n",LVDC_Timebase,LVDC_TB_ETime);
-				LVDC_EI_On = false;
-			}
-			if(LVDC_TB_ETime > 100){
-				poweredflight = false; //powered flight nav off
-			}
-			// Orbital stage timed events
-			if(owner->stage != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
-			// Venting			
-			if (LVDC_TB_ETime >= 5773) {				
-				if (owner->GetThrusterLevel(owner->th_main[0]) > 0) {
-					owner->SetJ2ThrustLevel(0);
-					if (owner->Realism){ owner->EnableDisableJ2(false); }
+				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && owner->stage == LAUNCH_STAGE_SIVB){
+					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-4)*0.36));
+					if(LVDC_TB_ETime >= 5){ owner->SetThrusterGroupLevel(owner->thg_ver,0); }
 				}
-			}else{
-				if (LVDC_TB_ETime >= 5052) {					
-					if (owner->GetThrusterLevel(owner->th_main[0]) == 0) {
-						owner->EnableDisableJ2(true);
-						owner->SetJ2ThrustLevel(1);
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && owner->stage == LAUNCH_STAGE_SIVB){
+					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
+					S4B_IGN=true;
+				}
+				if(LVDC_TB_ETime > 20 && owner->LESAttached){
+					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
+											// will start IGM anyway.
+					owner->JettisonLET();				
+				}
+				if(LVDC_TB_ETime > 311.5 && MRS == false){
+					// MR Shift
+					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
+					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
+					owner->SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
+					owner->SPUShiftS.play(NOLOOP,255); 
+					owner->SPUShiftS.done();
+					MRS = true;
+				}
+				break;
+
+			case 4:
+				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
+					owner->SetStage(STAGE_ORBIT_SIVB);
+					fprintf(lvlog,"[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n",LVDC_Timebase,LVDC_TB_ETime);
+					LVDC_EI_On = false;
+				}
+				if(LVDC_TB_ETime > 100){
+					poweredflight = false; //powered flight nav off
+				}
+				// Orbital stage timed events
+				if(owner->stage != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
+				// Venting			
+				if (LVDC_TB_ETime >= 5773) {				
+					if (owner->GetThrusterLevel(owner->th_main[0]) > 0) {
+						owner->SetJ2ThrustLevel(0);
+						if (owner->Realism){ owner->EnableDisableJ2(false); }
+					}
+				}else{
+					if (LVDC_TB_ETime >= 5052) {					
+						if (owner->GetThrusterLevel(owner->th_main[0]) == 0) {
+							owner->EnableDisableJ2(true);
+							owner->SetJ2ThrustLevel(1);
+						}
 					}
 				}
-			}
-			// Fuel boiloff every ten seconds.
-			if (owner->MissionTime >= owner->NextMissionEventTime){
-				if (owner->GetThrusterLevel(owner->th_main[0]) < 0.5){
-					owner->SIVBBoiloff();					
+				// Fuel boiloff every ten seconds.
+				if (owner->MissionTime >= owner->NextMissionEventTime){
+					if (owner->GetThrusterLevel(owner->th_main[0]) < 0.5){
+						owner->SIVBBoiloff();					
+					}
+					owner->NextMissionEventTime = owner->MissionTime+10.0;				
 				}
-				owner->NextMissionEventTime = owner->MissionTime+10.0;				
-			}
-			// CSM/LV separation
-			if(owner->CSMLVPyros.Blown()){
-				owner->SeparateStage(CSM_LEM_STAGE);
-				owner->SetStage(CSM_LEM_STAGE);
-			}
-			break;
-	}
-	lvimu.Timestep(simt);								// Give a timestep to the LV IMU
-	lvrg.Timestep(simdt);								// and RG
-	CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
-	AttRate = lvrg.GetRates();							// Get rates	
-	//This is the actual LVDC code & logic; has to be independent from any of the above events
-	if(!LVDC_Stop){
+				// CSM/LV separation
+				if(owner->CSMLVPyros.Blown()){
+					owner->SeparateStage(CSM_LEM_STAGE);
+					owner->SetStage(CSM_LEM_STAGE);
+				}
+				break;
+		}
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
+		lvrg.Timestep(simdt);								// and RG
+		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
+		AttRate = lvrg.GetRates();							// Get rates	
+		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
 			fprintf(lvlog,"[T%f] GRR received!\r\n",owner->MissionTime);
 
@@ -1949,6 +1948,8 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 }
 void LVDC1B::LoadState(FILEHANDLE scn){
 	char *line;	
+	int tmp = 0; // Used in boolean type loader
+
 	if(Initialized){
 		fprintf(lvlog,"LoadState() called\r\n");
 		fflush(lvlog);
@@ -1998,32 +1999,34 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		*/
 		// NEW STUFF
 		// Doing all this in one go makes the MS compiler barf.
-		// BOOL/INT types
+		// INT
 		if (strnicmp(line,"LVDC_IGMCycle",strlen("LVDC_IGMCycle"))==0){ sscanf(line+strlen("LVDC_IGMCycle"),"%i",&IGMCycle);
 		} else if (strnicmp(line,"LVDC_LVDC_Timebase",strlen("LVDC_LVDC_Timebase"))==0){ sscanf(line+strlen("LVDC_LVDC_Timebase"),"%i",&LVDC_Timebase);
 		} else if (strnicmp(line,"LVDC_T_EO1",strlen("LVDC_T_EO1"))==0){ sscanf(line+strlen("LVDC_T_EO1"),"%i",&T_EO1);
 		} else if (strnicmp(line,"LVDC_T_EO2",strlen("LVDC_T_EO2"))==0){ sscanf(line+strlen("LVDC_T_EO2"),"%i",&T_EO2);
 		} else if (strnicmp(line,"LVDC_UP",strlen("LVDC_UP"))==0){ sscanf(line+strlen("LVDC_UP"),"%i",&UP);
-		} else if (strnicmp(line,"LVDC_alpha_D_op",strlen("LVDC_alpha_D_op"))==0){ sscanf(line+strlen("LVDC_alpha_D_op"),"%i",&alpha_D_op);
-		} else if (strnicmp(line,"LVDC_BOOST",strlen("LVDC_BOOST"))==0){ sscanf(line+strlen("LVDC_BOOST"),"%i",&BOOST);
-		} else if (strnicmp(line,"LVDC_CountPIPA",strlen("LVDC_CountPIPA"))==0){ sscanf(line+strlen("LVDC_CountPIPA"),"%i",&CountPIPA);
-		} else if (strnicmp(line,"LVDC_GATE",strlen("LVDC_GATE"))==0){ sscanf(line+strlen("LVDC_GATE"),"%i",&GATE);
-		} else if (strnicmp(line,"LVDC_GATE5",strlen("LVDC_GATE5"))==0){ sscanf(line+strlen("LVDC_GATE5"),"%i",&GATE5);
-		} else if (strnicmp(line,"LVDC_GRR_init",strlen("LVDC_GRR_init"))==0){ sscanf(line+strlen("LVDC_GRR_init"),"%i",&GRR_init);
-		} else if (strnicmp(line,"LVDC_HSL",strlen("LVDC_HSL"))==0){ sscanf(line+strlen("LVDC_HSL"),"%i",&HSL);
-		} else if (strnicmp(line,"LVDC_INH",strlen("LVDC_INH"))==0){ sscanf(line+strlen("LVDC_INH"),"%i",&INH);
-		} else if (strnicmp(line,"LVDC_INH1",strlen("LVDC_INH1"))==0){ sscanf(line+strlen("LVDC_INH1"),"%i",&INH1);
-		} else if (strnicmp(line,"LVDC_INH2",strlen("LVDC_INH2"))==0){ sscanf(line+strlen("LVDC_INH2"),"%i",&INH2);
-		} else if (strnicmp(line,"LVDC_i_op",strlen("LVDC_i_op"))==0){ sscanf(line+strlen("LVDC_i_op"),"%i",&i_op);
-		} else if (strnicmp(line,"LVDC_liftoff",strlen("LVDC_liftoff"))==0){ sscanf(line+strlen("LVDC_liftoff"),"%i",&liftoff);
-		} else if (strnicmp(line,"LVDC_LVDC_EI_On",strlen("LVDC_LVDC_EI_On"))==0){ sscanf(line+strlen("LVDC_LVDC_EI_On"),"%i",&LVDC_EI_On);
-		} else if (strnicmp(line,"LVDC_LVDC_GRR",strlen("LVDC_LVDC_GRR"))==0){ sscanf(line+strlen("LVDC_LVDC_GRR"),"%i",&LVDC_GRR);
-		} else if (strnicmp(line,"LVDC_LVDC_Stop",strlen("LVDC_LVDC_Stop"))==0){ sscanf(line+strlen("LVDC_LVDC_Stop"),"%i",&LVDC_Stop);
-		} else if (strnicmp(line,"LVDC_MRS",strlen("LVDC_MRS"))==0){ sscanf(line+strlen("LVDC_MRS"),"%i",&MRS);
-		} else if (strnicmp(line,"LVDC_poweredflight",strlen("LVDC_poweredflight"))==0){ sscanf(line+strlen("LVDC_poweredflight"),"%i",&poweredflight);
-		} else if (strnicmp(line,"LVDC_S1B_Engine_Out",strlen("LVDC_S1B_Engine_Out"))==0){ sscanf(line+strlen("LVDC_S1B_Engine_Out"),"%i",&S1B_Engine_Out);
-		} else if (strnicmp(line,"LVDC_S4B_IGN",strlen("LVDC_S4B_IGN"))==0){ sscanf(line+strlen("LVDC_S4B_IGN"),"%i",&S4B_IGN);
-		} else if (strnicmp(line,"LVDC_theta_N_op",strlen("LVDC_theta_N_op"))==0){ sscanf(line+strlen("LVDC_theta_N_op"),"%i",&theta_N_op);
+		}
+		// BOOL
+		if (strnicmp(line,"LVDC_alpha_D_op",strlen("LVDC_alpha_D_op"))==0){ sscanf(line+strlen("LVDC_alpha_D_op"),"%i",&tmp); if(tmp == 1){ alpha_D_op = true; }else{ alpha_D_op = false; }
+		} else if (strnicmp(line,"LVDC_BOOST",strlen("LVDC_BOOST"))==0){ sscanf(line+strlen("LVDC_BOOST"),"%i",&tmp); if(tmp == 1){ BOOST = true; }else{ BOOST = false; }
+		} else if (strnicmp(line,"LVDC_CountPIPA",strlen("LVDC_CountPIPA"))==0){ sscanf(line+strlen("LVDC_CountPIPA"),"%i",&tmp); if(tmp == 1){ CountPIPA = true; }else{ CountPIPA = false; }
+		} else if (strnicmp(line,"LVDC_GATE",strlen("LVDC_GATE"))==0){ sscanf(line+strlen("LVDC_GATE"),"%i",&tmp); if(tmp == 1){ GATE = true; }else{ GATE = false; }
+		} else if (strnicmp(line,"LVDC_GATE5",strlen("LVDC_GATE5"))==0){ sscanf(line+strlen("LVDC_GATE5"),"%i",&tmp); if(tmp == 1){ GATE5 = true; }else{ GATE5 = false; }
+		} else if (strnicmp(line,"LVDC_GRR_init",strlen("LVDC_GRR_init"))==0){ sscanf(line+strlen("LVDC_GRR_init"),"%i",&tmp); if(tmp == 1){ GRR_init = true; }else{ GRR_init = false; }
+		} else if (strnicmp(line,"LVDC_HSL",strlen("LVDC_HSL"))==0){ sscanf(line+strlen("LVDC_HSL"),"%i",&tmp); if(tmp == 1){ HSL = true; }else{ HSL = false; }
+		} else if (strnicmp(line,"LVDC_INH",strlen("LVDC_INH"))==0){ sscanf(line+strlen("LVDC_INH"),"%i",&tmp); if(tmp == 1){ INH = true; }else{ INH = false; }
+		} else if (strnicmp(line,"LVDC_INH1",strlen("LVDC_INH1"))==0){ sscanf(line+strlen("LVDC_INH1"),"%i",&tmp); if(tmp == 1){ INH1 = true; }else{ INH1 = false; }
+		} else if (strnicmp(line,"LVDC_INH2",strlen("LVDC_INH2"))==0){ sscanf(line+strlen("LVDC_INH2"),"%i",&tmp); if(tmp == 1){ INH2 = true; }else{ INH2 = false; }
+		} else if (strnicmp(line,"LVDC_i_op",strlen("LVDC_i_op"))==0){ sscanf(line+strlen("LVDC_i_op"),"%i",&tmp); if(tmp == 1){ i_op = true; }else{ i_op = false; }
+		} else if (strnicmp(line,"LVDC_liftoff",strlen("LVDC_liftoff"))==0){ sscanf(line+strlen("LVDC_liftoff"),"%i",&tmp); if(tmp == 1){ liftoff = true; }else{ liftoff = false; }
+		} else if (strnicmp(line,"LVDC_LVDC_EI_On",strlen("LVDC_LVDC_EI_On"))==0){ sscanf(line+strlen("LVDC_LVDC_EI_On"),"%i",&tmp); if(tmp == 1){ LVDC_EI_On = true; }else{ LVDC_EI_On = false; }
+		} else if (strnicmp(line,"LVDC_LVDC_GRR",strlen("LVDC_LVDC_GRR"))==0){ sscanf(line+strlen("LVDC_LVDC_GRR"),"%i",&tmp); if(tmp == 1){ LVDC_GRR = true; }else{ LVDC_GRR = false; }
+		} else if (strnicmp(line,"LVDC_LVDC_Stop",strlen("LVDC_LVDC_Stop"))==0){ sscanf(line+strlen("LVDC_LVDC_Stop"),"%i",&tmp); if(tmp == 1){ LVDC_Stop = true; }else{ LVDC_Stop = false; }
+		} else if (strnicmp(line,"LVDC_MRS",strlen("LVDC_MRS"))==0){ sscanf(line+strlen("LVDC_MRS"),"%i",&tmp); if(tmp == 1){ MRS = true; }else{ MRS = false; }
+		} else if (strnicmp(line,"LVDC_poweredflight",strlen("LVDC_poweredflight"))==0){ sscanf(line+strlen("LVDC_poweredflight"),"%i",&tmp); if(tmp == 1){ poweredflight = true; }else{ poweredflight = false; }
+		} else if (strnicmp(line,"LVDC_S1B_Engine_Out",strlen("LVDC_S1B_Engine_Out"))==0){ sscanf(line+strlen("LVDC_S1B_Engine_Out"),"%i",&tmp); if(tmp == 1){ S1B_Engine_Out = true; }else{ S1B_Engine_Out = false; }
+		} else if (strnicmp(line,"LVDC_S4B_IGN",strlen("LVDC_S4B_IGN"))==0){ sscanf(line+strlen("LVDC_S4B_IGN"),"%i",&tmp); if(tmp == 1){ S4B_IGN = true; }else{ S4B_IGN = false; }
+		} else if (strnicmp(line,"LVDC_theta_N_op",strlen("LVDC_theta_N_op"))==0){ sscanf(line+strlen("LVDC_theta_N_op"),"%i",&tmp); if(tmp == 1){ theta_N_op = true; }else{ theta_N_op = false; }
 		}
 		// DOUBLE
 		if (strnicmp(line,"LVDC_a",strlen("LVDC_a"))==0){ sscanf(line+strlen("LVDC_a"),"%lf",&a);
@@ -2277,13 +2280,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
 			lvimu.LoadState(scn);
 		}
-	}
-	// Being saved in TB4 is the only supported scenario right now.
-	// Reset flags.
-	if(LVDC_Timebase == 4){
-		liftoff = true;
-		lvimu.SetCaged(false);
-		LVDC_GRR = true;
 	}
 	return;
 }
