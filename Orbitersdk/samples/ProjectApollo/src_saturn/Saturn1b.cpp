@@ -658,7 +658,9 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
 	if (use_lvdc) {
-		lvdc.timestep(simt, simdt);	
+		if(stage < CSM_LEM_STAGE){
+			lvdc.timestep(simt, simdt);	
+		}
 	} else {
 		// Run the autopilot post step to have stable dynamic data
 		switch (stage) {
