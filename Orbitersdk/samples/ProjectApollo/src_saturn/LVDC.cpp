@@ -612,6 +612,8 @@ void LVDC1B::timestep(double simt, double simdt) {
 				if(owner->CSMLVPyros.Blown()){
 					owner->SeparateStage(CSM_LEM_STAGE);
 					owner->SetStage(CSM_LEM_STAGE);
+					LVDC_Stop = true;
+					return; // Stop here
 				}
 				break;
 		}
