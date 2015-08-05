@@ -3102,6 +3102,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
 					S2_Startup = true;
 					owner->SwitchSelector(19);
+					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-2.4)*0.45));
 				}
 				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 					owner->SwitchSelector(20);
