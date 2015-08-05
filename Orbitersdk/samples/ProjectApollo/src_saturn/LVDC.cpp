@@ -2882,7 +2882,9 @@ void LVDC::LoadState(FILEHANDLE scn){
 	}
 	if(oapiReadScenario_nextline (scn, line)){
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-			lvimu.LoadState(scn);}}
+			lvimu.LoadState(scn);
+		}
+	}
 	return;
 }
 
@@ -2959,161 +2961,79 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->SwitchSelector(14); }
 
 				// SATURN V ENGINE STARTUP
-				if(owner->SaturnType == SAT_SATURNV){
-					// Engine startup was staggered 1-2-2, with engine 5 starting first, then 1+3, then 2+4. 
-					// This happened by the starter solenoid operating at T-6.585 for engine 5.
+				// Engine startup was staggered 1-2-2, with engine 5 starting first, then 1+3, then 2+4. 
+				// This happened by the starter solenoid operating at T-6.585 for engine 5.
 
-					// Engine 5 combustion chamber ignition was at T-3.315, engines 1+3 at T-3.035, and engines 2+4 at T-2.615
-					// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
-					// and then rose to 93% thrust in 0.85 seconds.
-					// The rise from 93 to 100 percent thrust took 0.75 second.
-					// Total engine startup time was 1.9 seconds.
+				// Engine 5 combustion chamber ignition was at T-3.315, engines 1+3 at T-3.035, and engines 2+4 at T-2.615
+				// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
+				// and then rose to 93% thrust in 0.85 seconds.
+				// The rise from 93 to 100 percent thrust took 0.75 second.
+				// Total engine startup time was 1.9 seconds.
 
-					// Source: Apollo 8 LV Flight Evaluation
+				// Source: Apollo 8 LV Flight Evaluation
 
-					// Transition from seperate throttles to single throttle
-					if(owner->MissionTime < -0.715){ 
-						int x=0; // Start Sequence Index
-						double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-						double SumThrust=0;
-						double thrst[3];	// Thrust Settings for 1-2-2 start (see below)
-						while(x < 3){
-							thrst[x] = 0;
-							switch(x){
-								case 0: // Engine 5
-									tm_1 = -3.315; 
-									break;
-								case 1: // Engine 1+3
-									tm_1 = -3.035; 
-									break;
-								case 2: // Engine 2+4
-									tm_1 = -2.615; 
-									break;
-							}
-							tm_2 = tm_1 + 0.3;  // Start of 1st rise
-							tm_3 = tm_2 + 0.85; // Start of 2nd rise
-							tm_4 = tm_3 + 0.75; // End of 2nd rise
-							if(owner->MissionTime >= tm_1){
-								// Light CC
-								if(owner->MissionTime < tm_2){
-									// Idle at 2.5% thrust
-									thrst[x] = 0.025;
+				// Transition from seperate throttles to single throttle
+				if(owner->MissionTime < -0.715){ 
+					int x=0; // Start Sequence Index
+					double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
+					double SumThrust=0;
+					double thrst[3];	// Thrust Settings for 1-2-2 start (see below)
+					while(x < 3){
+						thrst[x] = 0;
+						switch(x){
+							case 0: // Engine 5
+								tm_1 = -3.315; 
+								break;
+							case 1: // Engine 1+3
+								tm_1 = -3.035; 
+								break;
+							case 2: // Engine 2+4
+								tm_1 = -2.615; 
+								break;
+						}
+						tm_2 = tm_1 + 0.3;  // Start of 1st rise
+						tm_3 = tm_2 + 0.85; // Start of 2nd rise
+						tm_4 = tm_3 + 0.75; // End of 2nd rise
+						if(owner->MissionTime >= tm_1){
+							// Light CC
+							if(owner->MissionTime < tm_2){
+								// Idle at 2.5% thrust
+								thrst[x] = 0.025;
+							}else{
+								if(owner->MissionTime < tm_3){
+									// Rise to 93% at a rate of 106 percent per second
+									thrst[x] = 0.025+(1.06*(owner->MissionTime-tm_2));
 								}else{
-									if(owner->MissionTime < tm_3){
-										// Rise to 93% at a rate of 106 percent per second
-										thrst[x] = 0.025+(1.06*(owner->MissionTime-tm_2));
+									if(owner->MissionTime < tm_4){
+										// Rise to 100% at a rate of 9 percent per second.
+										thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
 									}else{
-										if(owner->MissionTime < tm_4){
-											// Rise to 100% at a rate of 9 percent per second.
-											thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
-										}else{
-											// Hold 100%
-											thrst[x] = 1;
-										}
+										// Hold 100%
+										thrst[x] = 1;
 									}
 								}
 							}
-							x++; // Do next
 						}
-						SumThrust = thrst[0]+(thrst[1]*2)+(thrst[2]*2);
-		//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-		//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-						if(SumThrust > 0){
-							owner->SetThrusterLevel(owner->th_main[2],thrst[1]); // Engine 1
-							owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
-							owner->SetThrusterLevel(owner->th_main[3],thrst[1]); // Engine 3
-							owner->SetThrusterLevel(owner->th_main[0],thrst[2]); // Engine 4
-							owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
-
-							owner->contrailLevel = SumThrust/5;
-							owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						}
-					}else{
-						// Get 100% thrust on all engines.
-						owner->SetThrusterGroupLevel(owner->thg_main,1);
-						owner->contrailLevel = 1;				
-						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+						x++; // Do next
 					}
-				}
-				// SATURN 1B ENGINE STARTUP
-				if(owner->SaturnType == SAT_SATURN1B){
-					// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
-			
-					// Engine 7+5 combustion chamber ignition was at T-2.998,  6+8 at T-2.898, 2+4 at T-2.798, 1+3 at T-2.698
-					// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
-					// and then rose to 93% thrust in 0.085 seconds.
-					// The rise from 93 to 100 percent thrust took 0.75 second.
-					// Total engine startup time was 1.9 seconds.
+					SumThrust = thrst[0]+(thrst[1]*2)+(thrst[2]*2);
+	//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
+	//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
+					if(SumThrust > 0){
+						owner->SetThrusterLevel(owner->th_main[2],thrst[1]); // Engine 1
+						owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
+						owner->SetThrusterLevel(owner->th_main[3],thrst[1]); // Engine 3
+						owner->SetThrusterLevel(owner->th_main[0],thrst[2]); // Engine 4
+						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
 
-					// Source: Apollo 7 LV Flight Evaluation
-
-					// Transition from seperate throttles to single throttle
-					if(owner->MissionTime < -0.715){ 
-						int x=0; // Start Sequence Index
-						double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-						double SumThrust=0;
-						double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
-
-						while(x < 4){
-							thrst[x] = 0;
-							switch(x){
-								case 0: // Engine 7+5
-									tm_1 = -2.998; break;
-								case 1: // Engine 6+8
-									tm_1 = -2.898; break;
-								case 2: // Engine 2+4
-									tm_1 = -2.798; break;
-								case 3: // Engine 1+3
-									tm_1 = -2.698; break;
-							}
-							tm_2 = tm_1 + 0.3;  // Start of 1st rise
-							tm_3 = tm_2 + 0.085; // Start of 2nd rise
-							tm_4 = tm_3 + 0.75; // End of 2nd rise
-							if(owner->MissionTime >= tm_1){
-								// Light CC
-								if(owner->MissionTime < tm_2){
-									// Idle at 2.5% thrust
-									thrst[x] = 0.025;
-								}else{
-									if(owner->MissionTime < tm_3){
-										// the actual rise is so fast that any 'smoothing' is pointless
-										thrst[x] = 0.93;
-									}else{
-										if(owner->MissionTime < tm_4){
-											// Rise to 100% at a rate of 9 percent per second.
-											thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
-										}else{
-											// Hold 100%
-											thrst[x] = 1;
-										}
-									}
-								}
-							}
-							x++; // Do next
-						}
-						SumThrust = (thrst[0]*2)+(thrst[1]*2)+(thrst[2]*2)+(thrst[3]*2);
-		//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-		//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-						if(SumThrust > 0){//let's hope that those numberings are right...
-							owner->SetThrusterLevel(owner->th_main[0],thrst[3]); // Engine 1
-							owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
-							owner->SetThrusterLevel(owner->th_main[2],thrst[3]); // Engine 3
-							owner->SetThrusterLevel(owner->th_main[3],thrst[2]); // Engine 4
-							owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
-							owner->SetThrusterLevel(owner->th_main[5],thrst[1]); // Engine 6
-							owner->SetThrusterLevel(owner->th_main[6],thrst[0]); // Engine 7
-							owner->SetThrusterLevel(owner->th_main[7],thrst[1]); // Engine 8
-
-							owner->contrailLevel = SumThrust/8;
-							owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						}
-					}else{
-						// Get 100% thrust on all engines.
-						sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",owner->MissionTime,LVDC_TB_ETime);
-						owner->SetThrusterGroupLevel(owner->thg_main,1);
-						owner->contrailLevel = 1;				
-						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+						owner->contrailLevel = SumThrust/5;
+						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
+				}else{
+					// Get 100% thrust on all engines.
+					owner->SetThrusterGroupLevel(owner->thg_main,1);
+					owner->contrailLevel = 1;				
+					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				// LIFTOFF
@@ -3142,7 +3062,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
 				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
-				if(owner->SaturnType == SAT_SATURNV && owner->MissionTime > 125.9){ 
+				if(owner->MissionTime > 125.9){ 
 					// Apollo 11
 					owner->SwitchSelector(16);
 					S1_Engine_Out = true;
@@ -3151,16 +3071,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
 					break;
-				}
-
-				// S1B CECO TRIGGER
-				if(owner->SaturnType == SAT_SATURN1B && owner->MissionTime > 140.86){
-					// Apollo 7
-					owner->SwitchSelector(16);
-					S1_Engine_Out = true;
-					// Begin timebase 2
-					LVDC_Timebase = 2;
-					LVDC_TB_ETime = 0;
 				}
 				break;
 
@@ -3188,64 +3098,58 @@ void LVDC::TimeStep(double simt, double simdt) {
 					S2_Startup = false;
 				}
 
-				// SATURN V TB3
-				if(owner->SaturnType == SAT_SATURNV){
-					// S2 ENGINE STARTUP
-					if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
-						S2_Startup = true;
-						owner->SwitchSelector(19);
-					}
-					if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
-						owner->SwitchSelector(20);
-						S2_IGNITION = true;
-						S1_Sep_Time = 0; // All done
-					}
-
-					// Drop Interstage Ring
-					if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && owner->SIISepState == true){
-						owner->SwitchSelector(21);
-						owner->SIISepState = false;
-					}
-
-					// And jettison LET
-					if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET  && LVDC_TB_ETime > dt_LET && owner->LESAttached){
-						T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-												// will start IGM anyway.
-						owner->SwitchSelector(22);					
-					}			
-			
-					// MR Shift
-					if(LVDC_TB_ETime > 284.4 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
-						fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
-						// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-						owner->SwitchSelector(23);
-						MRS = true;
-					}
-
-					// After MRS, check for S2 OECO (was allowed to happen by itself)
-					if(MRS == true){
-						double oetl = owner->GetThrusterLevel(owner->th_main[0])+owner->GetThrusterLevel(owner->th_main[1])+owner->GetThrusterLevel(owner->th_main[2])+owner->GetThrusterLevel(owner->th_main[3]);
-						if(oetl == 0){
-							fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
-							// S2 OECO, start TB4
-							S2_BURNOUT = true;
-							MRS = false;
-							TB4 = - simdt;
-							LVDC_Timebase = 4;
-							LVDC_TB_ETime = 0;					
-						}
-					}
-
-					// TODO: MANUAL S2 STAGING CHECK
-					/*
-					if (SIISIVBSepSwitch.GetState()) { 		
-						...
-					}
-					*/
+				// S2 ENGINE STARTUP
+				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
+					S2_Startup = true;
+					owner->SwitchSelector(19);
+				}
+				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
+					owner->SwitchSelector(20);
+					S2_IGNITION = true;
+					S1_Sep_Time = 0; // All done
 				}
 
-				// SATURN 1B TB3 GOES HERE
+				// Drop Interstage Ring
+				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && owner->SIISepState == true){
+					owner->SwitchSelector(21);
+					owner->SIISepState = false;
+				}
 
+				// And jettison LET
+				if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET  && LVDC_TB_ETime > dt_LET && owner->LESAttached){
+					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
+											// will start IGM anyway.
+					owner->SwitchSelector(22);					
+				}			
+			
+				// MR Shift
+				if(LVDC_TB_ETime > 284.4 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
+					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
+					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
+					owner->SwitchSelector(23);
+					MRS = true;
+				}
+
+				// After MRS, check for S2 OECO (was allowed to happen by itself)
+				if(MRS == true){
+					double oetl = owner->GetThrusterLevel(owner->th_main[0])+owner->GetThrusterLevel(owner->th_main[1])+owner->GetThrusterLevel(owner->th_main[2])+owner->GetThrusterLevel(owner->th_main[3]);
+					if(oetl == 0){
+						fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
+						// S2 OECO, start TB4
+						S2_BURNOUT = true;
+						MRS = false;
+						TB4 = - simdt;
+						LVDC_Timebase = 4;
+						LVDC_TB_ETime = 0;					
+					}
+				}
+
+				// TODO: MANUAL S2 STAGING CHECK
+				/*
+				if (SIISIVBSepSwitch.GetState()) { 		
+					...
+				}
+				*/
 				break;
 
 			case 4:
@@ -4454,7 +4358,7 @@ minorloop:
 	}
 
 	/* **** SATURN 5 ABORT HANDLING **** */
-	if(owner->bAbort && owner->SaturnType == SAT_SATURNV){
+	if(owner->bAbort){
 		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
 		owner->agc.SetInputChannelBit(030, 4, true);	// Notify the AGC of the abort
 		owner->agc.SetInputChannelBit(030, 5, true);	// and the liftoff, if it's not set already
