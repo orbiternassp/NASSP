@@ -464,6 +464,9 @@ protected:
 
 	void lvdc_init();								// Initialization
 	void lvdc_timestep(double simt, double simdt);	// LVDC timestep call
+
+	// DS20150804 LVDC++ ON WHEELS
+	LVDC* lvdc;
 };
 
 extern void LoadSat5Meshes();

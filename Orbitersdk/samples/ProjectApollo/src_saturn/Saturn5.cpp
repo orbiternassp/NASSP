@@ -200,7 +200,8 @@ void SaturnV::initSaturnV()
 		cpitch[i] = default_cpitch[i];
 	}
 
-	lvdc_init();
+	// Moved to instantiation time
+	// lvdc_init();
 }
 
 SaturnV::~SaturnV()
@@ -1136,15 +1137,22 @@ void SaturnV::clbkPostStep (double simt, double simdt, double mjd) {
 
 	if (stage < CSM_LEM_STAGE) {
 		// LVDC++
-		if (use_lvdc) {
-			lvdc_timestep(simt, simdt);
+		if (use_lvdc && lvdc != NULL) {
+			// lvdc_timestep(simt, simdt);
+			lvdc->TimeStep(simt,simdt);
+		}
+	}else{
+		if(use_lvdc && lvdc != NULL){
+			// At this point we are done with the LVDC, we can delete it.
+			// This saves memory and declutters the scenario file.
+			delete lvdc;
+			lvdc = NULL;
+			use_lvdc = false;			
 		}
 	}
 }
 
-void SaturnV::SetVehicleStats()
-
-{
+void SaturnV::SetVehicleStats(){
 	//
 	// Adjust performance as appropriate based on the vehicle number. Early Saturn V rockets
 	// had less thrust than later models, and later models removed some retro and ullage
@@ -1239,13 +1247,20 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
 }
-void SaturnV::SaveLVDC(FILEHANDLE scn)
-{
 
+void SaturnV::SaveLVDC(FILEHANDLE scn){
+	if (use_lvdc && lvdc != NULL){ lvdc->SaveState(scn); }
 }
-void SaturnV::LoadLVDC(FILEHANDLE scn)
-{
 
+void SaturnV::LoadLVDC(FILEHANDLE scn){
+	if (use_lvdc){
+		// If the LVDC does not yet exist, create it.
+		if(lvdc == NULL){
+			lvdc = new LVDC;
+			lvdc->Init(this);
+		}
+		lvdc->LoadState(scn);
+	}
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -1257,6 +1272,14 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	ClearMeshes();
 	SetupMeshes();
+
+	// DS20150720 LVDC++ ON WHEELS
+	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
+	// This happens if the USE_LVDC flag is set but no LVDC section is present.
+	if(use_lvdc && lvdc == NULL){
+		lvdc = new LVDC;
+		lvdc->Init(this);
+	}
 
 	//
 	// This code all needs to be fixed up.

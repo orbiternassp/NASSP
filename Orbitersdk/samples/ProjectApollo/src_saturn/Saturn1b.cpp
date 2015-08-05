@@ -660,18 +660,21 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
-	if (use_lvdc) {
-		if(stage < CSM_LEM_STAGE && lvdc != NULL){
-			lvdc->timestep(simt, simdt);	
+	if(use_lvdc){
+		if(stage < CSM_LEM_STAGE){
+			if(lvdc != NULL){
+				lvdc->timestep(simt, simdt);
+			}
+		}else{
+			if(lvdc != NULL){
+				// At this point we are done with the LVDC, we can delete it.
+				// This saves memory and declutters the scenario file.
+				delete lvdc;
+				lvdc = NULL;
+				use_lvdc = false;
+			}
 		}
-		if(stage >= CSM_LEM_STAGE && lvdc != NULL){
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
-			use_lvdc = false;
-		}
-	} else {
+	}else{
 		// Run the autopilot post step to have stable dynamic data
 		switch (stage) {
 		case LAUNCH_STAGE_ONE:
