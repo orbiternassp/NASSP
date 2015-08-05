@@ -67,6 +67,7 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 
 {
 	hMaster = hObj;
+	lvdc = NULL;
 	initSaturn1b();
 }
 
@@ -185,7 +186,9 @@ void Saturn1b::initSaturn1b()
 	// Default to not separating SLA panels.
 	//
 	SLAWillSeparate = false;
-	lvdc.init(this);
+
+	// Moved to instantiation time
+	// lvdc.init(this);
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -658,8 +661,15 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
 	if (use_lvdc) {
-		if(stage < CSM_LEM_STAGE){
-			lvdc.timestep(simt, simdt);	
+		if(stage < CSM_LEM_STAGE && lvdc != NULL){
+			lvdc->timestep(simt, simdt);	
+		}
+		if(stage >= CSM_LEM_STAGE && lvdc != NULL){
+			// At this point we are done with the LVDC, we can delete it.
+			// This saves memory and declutters the scenario file.
+			delete lvdc;
+			lvdc = NULL;
+			use_lvdc = false;
 		}
 	} else {
 		// Run the autopilot post step to have stable dynamic data
@@ -775,9 +785,7 @@ void Saturn1b::SwitchSelector(int item){
 // Save any state specific to the Saturn 1b.
 //
 
-void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
-
-{
+void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 	//
 	// Fuel mass on launch. This could be made generic in saturn.cpp
 	//
@@ -792,20 +800,34 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 }
-void Saturn1b::SaveLVDC(FILEHANDLE scn)
-{
-	if (use_lvdc){lvdc.SaveState(scn);}
-}
-void Saturn1b::LoadLVDC(FILEHANDLE scn)
-{
-	if (use_lvdc){lvdc.LoadState(scn);}
-}
-void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
-{
+void Saturn1b::SaveLVDC(FILEHANDLE scn){
+	if (use_lvdc && lvdc != NULL){ lvdc->SaveState(scn); }
+}
+
+void Saturn1b::LoadLVDC(FILEHANDLE scn){
+	if (use_lvdc){
+		// If the LVDC does not yet exist, create it.
+		if(lvdc == NULL){
+			lvdc = new LVDC1B;
+			lvdc->init(this);
+		}
+		lvdc->LoadState(scn);
+	}
+}
+
+void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
 	SetupMeshes();
+
+	// DS20150804 LVDC++ ON WHEELS
+	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do it here.
+	// This happens if the USE_LVDC flag is set but there is no LVDC section in the scenario file.
+	if(use_lvdc && lvdc == NULL){
+		lvdc = new LVDC1B;
+		lvdc->init(this);
+	}
 
 	switch (stage) {
 

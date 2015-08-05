@@ -22,6 +22,9 @@
 
   **************************************************************************/
 
+// LVDC moved here
+#include "LVDC.h"
+
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns

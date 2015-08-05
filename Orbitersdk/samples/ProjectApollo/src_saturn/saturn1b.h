@@ -23,6 +23,7 @@
   **************************************************************************/
 #pragma once
 #include "LVDC.h"
+
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -77,7 +78,7 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	LVDC1B lvdc;
+	LVDC1B* lvdc;
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
