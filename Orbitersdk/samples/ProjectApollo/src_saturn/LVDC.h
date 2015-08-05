@@ -52,7 +52,7 @@ private:
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
-	double S1_Sep_Time;								// S1B Separation Counter
+	double S1_Sep_Time;								// S1C Separation Counter
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_EI_On;								// Engine Indicator lights on
@@ -319,14 +319,14 @@ private:
 class LVDC1B {
 public:
 	LVDC1B();										// Constructor
-	void init(Saturn1b* own);
+	void init(Saturn* own);
 	void timestep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
-	Saturn1b* owner;
+	Saturn* owner;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 

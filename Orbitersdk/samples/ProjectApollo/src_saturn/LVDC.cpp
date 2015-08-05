@@ -49,7 +49,7 @@ LVDC1B::LVDC1B(){
 	Initialized = false;					// Reset cloberness flag
 }
 
-void LVDC1B::init(Saturn1b* own){
+void LVDC1B::init(Saturn* own){
 	if(Initialized == true){ 
 		if(owner == own){
 			fprintf(lvlog,"init called after init, ignored\r\n");
@@ -541,14 +541,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 				// S1B SEPARATION TRIGGER
 				if(owner->stage == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
 					// Drop old stage
-					owner->ClearEngineIndicators();
-					owner->SeparateStage(LAUNCH_STAGE_SIVB);
-					owner->SetStage(LAUNCH_STAGE_SIVB);
-					owner->AddRCS_S4B();
-					owner->SetSIVBThrusters(true);
-					owner->SetThrusterGroupLevel(owner->thg_ver,1.0);
-					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
-					owner->SetSIVBMixtureRatio(5.5);				
+					owner->SwitchSelector(18);
 				}
 						
 				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && owner->stage == LAUNCH_STAGE_SIVB){
@@ -568,9 +561,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					// MR Shift
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					owner->SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-					owner->SPUShiftS.play(NOLOOP,255); 
-					owner->SPUShiftS.done();
+					owner->SwitchSelector(23);
 					MRS = true;
 				}
 				break;

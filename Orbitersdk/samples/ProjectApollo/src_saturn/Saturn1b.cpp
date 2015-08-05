@@ -763,7 +763,6 @@ void Saturn1b::SwitchSelector(int item){
 		SetThrusterResource(th_main[0], ph_3rd);
 		SetSIVBMixtureRatio(5.5);				
 		break;
-
 	case 23:
 		SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
 		SPUShiftS.play(NOLOOP,255); 
