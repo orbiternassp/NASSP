@@ -1915,25 +1915,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	if(LVDC_Timebase < 1){ return; }
 	// OLD STUFF
 	oapiWriteLine(scn, LVDC_START_STRING);
-	/*
-	papiWriteScenario_double(scn, "phi_lat", phi_lat);
-	papiWriteScenario_double(scn, "phi_lng", phi_lng);
-	papiWriteScenario_double(scn, "Azimuth", Azimuth);
-	papiWriteScenario_double(scn, "DescNodeAngle", DescNodeAngle);
-	papiWriteScenario_double(scn, "Inclination", Inclination);
-	oapiWriteScenario_int(scn, "TB", LVDC_Timebase);
-	papiWriteScenario_double(scn, "TB_ETime", LVDC_TB_ETime);
-	papiWriteScenario_double(scn, "TAS", TAS);
-	papiWriteScenario_double(scn, "t_clock", t_clock);
-	papiWriteScenario_double(scn, "sinceLastIGM", sinceLastIGM);
-	papiWriteScenario_vec(scn,"DotM_act",DotM_act);
-	papiWriteScenario_vec(scn,"DotM_last",DotM_last);
-	papiWriteScenario_vec(scn,"PsnS",PosS);
-	papiWriteScenario_vec(scn,"Dot0",Dot0);
-	papiWriteScenario_vec(scn,"DotG_last",DotG_last);
-	papiWriteScenario_vec(scn,"ddotG_last",ddotG_last);
-	papiWriteScenario_vec(scn,"PCommandedAttitude",PCommandedAttitude);
-	*/
 	// NEW STUFF
 	// Thank heaven for text processing.
 	// bool
@@ -2047,10 +2028,46 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_f", f);
 	papiWriteScenario_double(scn, "LVDC_F", F);
 	papiWriteScenario_double(scn, "LVDC_Fm", Fm);
-	papiWriteScenario_double(scn, "LVDC_Fx[5][5]", Fx[5][5]);
-	papiWriteScenario_double(scn, "LVDC_fx[7]", fx[7]);
+	papiWriteScenario_double(scn, "LVDC_Fx00", Fx[0][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx01", Fx[0][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx02", Fx[0][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx03", Fx[0][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx04", Fx[0][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx10", Fx[1][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx11", Fx[1][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx12", Fx[1][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx13", Fx[1][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx14", Fx[1][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx20", Fx[2][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx21", Fx[2][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx22", Fx[2][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx23", Fx[2][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx24", Fx[2][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx30", Fx[3][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx31", Fx[3][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx32", Fx[3][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx33", Fx[3][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx34", Fx[3][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx40", Fx[4][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx41", Fx[4][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx42", Fx[4][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx43", Fx[4][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx44", Fx[4][4]);
+	papiWriteScenario_double(scn, "LVDC_fx0", fx[0]);
+	papiWriteScenario_double(scn, "LVDC_fx1", fx[1]);
+	papiWriteScenario_double(scn, "LVDC_fx2", fx[2]);
+	papiWriteScenario_double(scn, "LVDC_fx3", fx[3]);
+	papiWriteScenario_double(scn, "LVDC_fx4", fx[4]);
+	papiWriteScenario_double(scn, "LVDC_fx5", fx[5]);
+	papiWriteScenario_double(scn, "LVDC_fx6", fx[6]);
 	papiWriteScenario_double(scn, "LVDC_G_T", G_T);
-	papiWriteScenario_double(scn, "LVDC_gx[7]", gx[7]);
+	papiWriteScenario_double(scn, "LVDC_gx0", gx[0]);
+	papiWriteScenario_double(scn, "LVDC_gx1", gx[1]);
+	papiWriteScenario_double(scn, "LVDC_gx2", gx[2]);
+	papiWriteScenario_double(scn, "LVDC_gx3", gx[3]);
+	papiWriteScenario_double(scn, "LVDC_gx4", gx[4]);
+	papiWriteScenario_double(scn, "LVDC_gx5", gx[5]);
+	papiWriteScenario_double(scn, "LVDC_gx6", gx[6]);
 	papiWriteScenario_double(scn, "LVDC_IGMInterval", IGMInterval);
 	papiWriteScenario_double(scn, "LVDC_Inclination", Inclination);
 	papiWriteScenario_double(scn, "LVDC_J", J);
@@ -2375,10 +2392,47 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		} else if (strnicmp(line,"LVDC_f",strlen("LVDC_f"))==0){ sscanf(line+strlen("LVDC_f"),"%lf",&f);
 		} else if (strnicmp(line,"LVDC_F",strlen("LVDC_F"))==0){ sscanf(line+strlen("LVDC_F"),"%lf",&F);
 		} else if (strnicmp(line,"LVDC_Fm",strlen("LVDC_Fm"))==0){ sscanf(line+strlen("LVDC_Fm"),"%lf",&Fm);
-		} else if (strnicmp(line,"LVDC_Fx[5][5]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[5][5]);
-		} else if (strnicmp(line,"LVDC_fx[7]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[7]);
+		}
+		if (strnicmp(line,"LVDC_Fx00",strlen("LVDC_Fx00"))==0){ sscanf(line+strlen("LVDC_Fx00"),"%lf",&Fx[0][0]);
+		} else if (strnicmp(line,"LVDC_Fx01",strlen("LVDC_Fx01"))==0){ sscanf(line+strlen("LVDC_Fx01"),"%lf",&Fx[0][1]);
+		} else if (strnicmp(line,"LVDC_Fx01",strlen("LVDC_Fx02"))==0){ sscanf(line+strlen("LVDC_Fx02"),"%lf",&Fx[0][2]);
+		} else if (strnicmp(line,"LVDC_Fx01",strlen("LVDC_Fx03"))==0){ sscanf(line+strlen("LVDC_Fx03"),"%lf",&Fx[0][3]);
+		} else if (strnicmp(line,"LVDC_Fx01",strlen("LVDC_Fx04"))==0){ sscanf(line+strlen("LVDC_Fx04"),"%lf",&Fx[0][4]);
+		} else if (strnicmp(line,"LVDC_Fx10",strlen("LVDC_Fx10"))==0){ sscanf(line+strlen("LVDC_Fx10"),"%lf",&Fx[1][0]);
+		} else if (strnicmp(line,"LVDC_Fx11",strlen("LVDC_Fx11"))==0){ sscanf(line+strlen("LVDC_Fx11"),"%lf",&Fx[1][1]);
+		} else if (strnicmp(line,"LVDC_Fx11",strlen("LVDC_Fx12"))==0){ sscanf(line+strlen("LVDC_Fx12"),"%lf",&Fx[1][2]);
+		} else if (strnicmp(line,"LVDC_Fx11",strlen("LVDC_Fx13"))==0){ sscanf(line+strlen("LVDC_Fx13"),"%lf",&Fx[1][3]);
+		} else if (strnicmp(line,"LVDC_Fx11",strlen("LVDC_Fx14"))==0){ sscanf(line+strlen("LVDC_Fx14"),"%lf",&Fx[1][4]);
+		} else if (strnicmp(line,"LVDC_Fx20",strlen("LVDC_Fx20"))==0){ sscanf(line+strlen("LVDC_Fx20"),"%lf",&Fx[2][0]);
+		} else if (strnicmp(line,"LVDC_Fx21",strlen("LVDC_Fx21"))==0){ sscanf(line+strlen("LVDC_Fx21"),"%lf",&Fx[2][1]);
+		} else if (strnicmp(line,"LVDC_Fx21",strlen("LVDC_Fx22"))==0){ sscanf(line+strlen("LVDC_Fx22"),"%lf",&Fx[2][2]);
+		} else if (strnicmp(line,"LVDC_Fx21",strlen("LVDC_Fx23"))==0){ sscanf(line+strlen("LVDC_Fx23"),"%lf",&Fx[2][3]);
+		} else if (strnicmp(line,"LVDC_Fx21",strlen("LVDC_Fx24"))==0){ sscanf(line+strlen("LVDC_Fx24"),"%lf",&Fx[2][4]);
+		} else if (strnicmp(line,"LVDC_Fx30",strlen("LVDC_Fx30"))==0){ sscanf(line+strlen("LVDC_Fx30"),"%lf",&Fx[3][0]);
+		} else if (strnicmp(line,"LVDC_Fx31",strlen("LVDC_Fx31"))==0){ sscanf(line+strlen("LVDC_Fx31"),"%lf",&Fx[3][1]);
+		} else if (strnicmp(line,"LVDC_Fx31",strlen("LVDC_Fx32"))==0){ sscanf(line+strlen("LVDC_Fx32"),"%lf",&Fx[3][2]);
+		} else if (strnicmp(line,"LVDC_Fx31",strlen("LVDC_Fx33"))==0){ sscanf(line+strlen("LVDC_Fx33"),"%lf",&Fx[3][3]);
+		} else if (strnicmp(line,"LVDC_Fx31",strlen("LVDC_Fx34"))==0){ sscanf(line+strlen("LVDC_Fx34"),"%lf",&Fx[3][4]);
+		} else if (strnicmp(line,"LVDC_Fx40",strlen("LVDC_Fx40"))==0){ sscanf(line+strlen("LVDC_Fx40"),"%lf",&Fx[4][0]);
+		} else if (strnicmp(line,"LVDC_Fx41",strlen("LVDC_Fx41"))==0){ sscanf(line+strlen("LVDC_Fx41"),"%lf",&Fx[4][1]);
+		} else if (strnicmp(line,"LVDC_Fx41",strlen("LVDC_Fx42"))==0){ sscanf(line+strlen("LVDC_Fx42"),"%lf",&Fx[4][2]);
+		} else if (strnicmp(line,"LVDC_Fx41",strlen("LVDC_Fx43"))==0){ sscanf(line+strlen("LVDC_Fx43"),"%lf",&Fx[4][3]);
+		} else if (strnicmp(line,"LVDC_Fx41",strlen("LVDC_Fx44"))==0){ sscanf(line+strlen("LVDC_Fx44"),"%lf",&Fx[4][4]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx0"))==0){ sscanf(line+strlen("LVDC_fx0"),"%lf",&fx[0]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx1"))==0){ sscanf(line+strlen("LVDC_fx1"),"%lf",&fx[1]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx2"))==0){ sscanf(line+strlen("LVDC_fx2"),"%lf",&fx[2]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx3"))==0){ sscanf(line+strlen("LVDC_fx3"),"%lf",&fx[3]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx4"))==0){ sscanf(line+strlen("LVDC_fx4"),"%lf",&fx[4]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx5"))==0){ sscanf(line+strlen("LVDC_fx5"),"%lf",&fx[5]);
+		} else if (strnicmp(line,"LVDC_fx0",strlen("LVDC_fx6"))==0){ sscanf(line+strlen("LVDC_fx6"),"%lf",&fx[6]);
 		} else if (strnicmp(line,"LVDC_G_T",strlen("LVDC_G_T"))==0){ sscanf(line+strlen("LVDC_G_T"),"%lf",&G_T);
-		} else if (strnicmp(line,"LVDC_gx[7]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[7]);
+		} else if (strnicmp(line,"LVDC_gx0",strlen("LVDC_gx0"))==0){ sscanf(line+strlen("LVDC_gx0"),"%lf",&gx[0]);
+		} else if (strnicmp(line,"LVDC_gx1",strlen("LVDC_gx1"))==0){ sscanf(line+strlen("LVDC_gx1"),"%lf",&gx[1]);
+		} else if (strnicmp(line,"LVDC_gx2",strlen("LVDC_gx2"))==0){ sscanf(line+strlen("LVDC_gx2"),"%lf",&gx[2]);
+		} else if (strnicmp(line,"LVDC_gx3",strlen("LVDC_gx3"))==0){ sscanf(line+strlen("LVDC_gx3"),"%lf",&gx[3]);
+		} else if (strnicmp(line,"LVDC_gx4",strlen("LVDC_gx4"))==0){ sscanf(line+strlen("LVDC_gx4"),"%lf",&gx[4]);
+		} else if (strnicmp(line,"LVDC_gx5",strlen("LVDC_gx5"))==0){ sscanf(line+strlen("LVDC_gx5"),"%lf",&gx[5]);
+		} else if (strnicmp(line,"LVDC_gx6",strlen("LVDC_gx6"))==0){ sscanf(line+strlen("LVDC_gx6"),"%lf",&gx[6]);
 		} else if (strnicmp(line,"LVDC_IGMInterval",strlen("LVDC_IGMInterval"))==0){ sscanf(line+strlen("LVDC_IGMInterval"),"%lf",&IGMInterval);
 		} else if (strnicmp(line,"LVDC_Inclination",strlen("LVDC_Inclination"))==0){ sscanf(line+strlen("LVDC_Inclination"),"%lf",&Inclination);
 		} else if (strnicmp(line,"LVDC_J",strlen("LVDC_J"))==0){ sscanf(line+strlen("LVDC_J"),"%lf",&J);
@@ -2813,72 +2867,819 @@ void LVDC::Init(Saturn* vs){
 
 void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
-	//papiWriteScenario_double(scn, "phi_lat", phi_lat);
-	//papiWriteScenario_double(scn, "phi_lng", phi_lng);
-	papiWriteScenario_double(scn, "Azimuth", Azimuth);
-	papiWriteScenario_double(scn, "DescNodeAngle", DescNodeAngle);
-	papiWriteScenario_double(scn, "Inclination", Inclination);
-	oapiWriteScenario_int(scn, "TB", LVDC_Timebase);
-	papiWriteScenario_double(scn, "TB_ETime", LVDC_TB_ETime);
-	papiWriteScenario_double(scn, "TAS", TAS);
-	papiWriteScenario_double(scn, "t_clock", t_clock);
-	papiWriteScenario_double(scn, "sinceLastIGM", sinceLastIGM);
-	papiWriteScenario_vec(scn,"DotM_act",DotM_act);
-	papiWriteScenario_vec(scn,"DotM_last",DotM_last);
-	papiWriteScenario_vec(scn,"PosS",PosS);
-	//papiWriteScenario_vec(scn,"Dot0",Dot0);
-	papiWriteScenario_vec(scn,"DotG_last",DotG_last);
-	papiWriteScenario_vec(scn,"ddotG_last",ddotG_last);
-	papiWriteScenario_vec(scn,"PCommandedAttitude",PCommandedAttitude);
+	// Here we go
+	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
+	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
+	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
+	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
+	oapiWriteScenario_int(scn, "LVDC_directstageint", directstageint);
+	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
+	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
+	oapiWriteScenario_int(scn, "LVDC_GATE0", GATE0);
+	oapiWriteScenario_int(scn, "LVDC_GATE1", GATE1);
+	oapiWriteScenario_int(scn, "LVDC_GATE2", GATE2);
+	oapiWriteScenario_int(scn, "LVDC_GATE3", GATE3);
+	oapiWriteScenario_int(scn, "LVDC_GATE4", GATE4);
+	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
+	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
+	oapiWriteScenario_int(scn, "LVDC_INH", INH);
+	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
+	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
+	oapiWriteScenario_int(scn, "LVDC_init", init);
+	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
+	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
+	oapiWriteScenario_int(scn, "LVDC_LVDC_EI_On", LVDC_EI_On);
+	oapiWriteScenario_int(scn, "LVDC_LVDC_GRR", LVDC_GRR);
+	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
+	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
+	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
+	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
+	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
+	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
+	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
+	oapiWriteScenario_int(scn, "LVDC_S2_Startup", S2_Startup);
+	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
+	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
+	oapiWriteScenario_int(scn, "LVDC_TU", TU);
+	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
+	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
+	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
+	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
+	oapiWriteScenario_int(scn, "LVDC_T_EO1", T_EO1);
+	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
+	oapiWriteScenario_int(scn, "LVDC_UP", UP);
+	papiWriteScenario_double(scn, "LVDC_a", a);
+	papiWriteScenario_double(scn, "LVDC_a_0p", a_0p);
+	papiWriteScenario_double(scn, "LVDC_a_0r", a_0r);
+	papiWriteScenario_double(scn, "LVDC_a_0y", a_0y);
+	papiWriteScenario_double(scn, "LVDC_a_1", a_1);
+	papiWriteScenario_double(scn, "LVDC_a_2", a_2);
+	papiWriteScenario_double(scn, "LVDC_a_1p", a_1p);
+	papiWriteScenario_double(scn, "LVDC_a_1r", a_1r);
+	papiWriteScenario_double(scn, "LVDC_a_1y", a_1y);
+	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
+	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
+	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
+	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
+	papiWriteScenario_double(scn, "LVDC_Azo", Azo);
+	papiWriteScenario_double(scn, "LVDC_Azs", Azs);
+	papiWriteScenario_double(scn, "LVDC_B_11", B_11);
+	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
+	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
+	papiWriteScenario_double(scn, "LVDC_B_22", B_22);
+	papiWriteScenario_double(scn, "LVDC_beta_p1c", beta_p1c);
+	papiWriteScenario_double(scn, "LVDC_beta_p2c", beta_p2c);
+	papiWriteScenario_double(scn, "LVDC_beta_p3c", beta_p3c);
+	papiWriteScenario_double(scn, "LVDC_beta_p4c", beta_p4c);
+	papiWriteScenario_double(scn, "LVDC_beta_pc", beta_pc);
+	papiWriteScenario_double(scn, "LVDC_beta_rc", beta_rc);
+	papiWriteScenario_double(scn, "LVDC_beta_y1c", beta_y1c);
+	papiWriteScenario_double(scn, "LVDC_beta_y2c", beta_y2c);
+	papiWriteScenario_double(scn, "LVDC_beta_y3c", beta_y3c);
+	papiWriteScenario_double(scn, "LVDC_beta_y4c", beta_y4c);
+	papiWriteScenario_double(scn, "LVDC_beta_yc", beta_yc);
+	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
+	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
+	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
+	papiWriteScenario_double(scn, "LVDC_Cf", Cf);
+	papiWriteScenario_double(scn, "LVDC_CG", CG);
+	papiWriteScenario_double(scn, "LVDC_cos_chi_Yit", cos_chi_Yit);
+	papiWriteScenario_double(scn, "LVDC_cos_chi_Zit", cos_chi_Zit);
+	papiWriteScenario_double(scn, "LVDC_Ct", Ct);
+	papiWriteScenario_double(scn, "LVDC_Ct_o", Ct_o);
+	papiWriteScenario_double(scn, "LVDC_d2", d2);
+	papiWriteScenario_double(scn, "LVDC_ddot_xi_G", ddot_xi_G);
+	papiWriteScenario_double(scn, "LVDC_ddot_eta_G", ddot_eta_G);
+	papiWriteScenario_double(scn, "LVDC_ddot_zeta_G", ddot_zeta_G);
+	papiWriteScenario_double(scn, "LVDC_ddot_zeta_GT", ddot_zeta_GT);
+	papiWriteScenario_double(scn, "LVDC_ddot_xi_GT", ddot_xi_GT);
+	papiWriteScenario_double(scn, "LVDC_DescNodeAngle", DescNodeAngle);
+	papiWriteScenario_double(scn, "LVDC_deta", deta);
+	papiWriteScenario_double(scn, "LVDC_dxi", dxi);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[0]", DNAFromAzPoly[0]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[1]", DNAFromAzPoly[1]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[2]", DNAFromAzPoly[2]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[3]", DNAFromAzPoly[3]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[4]", DNAFromAzPoly[4]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromAzPoly[5]", DNAFromAzPoly[5]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[0]", DNAFromTimePoly[0]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[1]", DNAFromTimePoly[1]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[2]", DNAFromTimePoly[2]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[3]", DNAFromTimePoly[3]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[4]", DNAFromTimePoly[4]);
+	papiWriteScenario_double(scn, "LVDC_DNAFromTimePoly[5]", DNAFromTimePoly[5]);
+	papiWriteScenario_double(scn, "LVDC_dot_dxi", dot_dxi);
+	papiWriteScenario_double(scn, "LVDC_dot_deta", dot_deta);
+	papiWriteScenario_double(scn, "LVDC_dot_dzeta", dot_dzeta);
+	papiWriteScenario_double(scn, "LVDC_dot_dxit", dot_dxit);
+	papiWriteScenario_double(scn, "LVDC_dot_detat", dot_detat);
+	papiWriteScenario_double(scn, "LVDC_dot_dzetat", dot_dzetat);
+	papiWriteScenario_double(scn, "LVDC_dotM_1", dotM_1);
+	papiWriteScenario_double(scn, "LVDC_dotM_2", dotM_2);
+	papiWriteScenario_double(scn, "LVDC_dotM_3", dotM_3);
+	papiWriteScenario_double(scn, "LVDC_dot_phi_1", dot_phi_1);
+	papiWriteScenario_double(scn, "LVDC_dot_phi_T", dot_phi_T);
+	papiWriteScenario_double(scn, "LVDC_dot_zeta_T", dot_zeta_T);
+	papiWriteScenario_double(scn, "LVDC_dot_xi_T", dot_xi_T);
+	papiWriteScenario_double(scn, "LVDC_dot_eta_T", dot_eta_T);
+	papiWriteScenario_double(scn, "LVDC_dt", dt);
+	papiWriteScenario_double(scn, "LVDC_dT_3", dT_3);
+	papiWriteScenario_double(scn, "LVDC_dT_4", dT_4);
+	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
+	papiWriteScenario_double(scn, "LVDC_dT_cost", dT_cost);
+	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
+	papiWriteScenario_double(scn, "LVDC_dt_LET", dt_LET);
+	papiWriteScenario_double(scn, "LVDC_dT_LIM", dT_LIM);
+	papiWriteScenario_double(scn, "LVDC_dtt_1", dtt_1);
+	papiWriteScenario_double(scn, "LVDC_dtt_2", dtt_2);
+	papiWriteScenario_double(scn, "LVDC_dTt_4", dTt_4);
+	papiWriteScenario_double(scn, "LVDC_dV", dV);
+	papiWriteScenario_double(scn, "LVDC_dV_B", dV_B);
+	papiWriteScenario_double(scn, "LVDC_e", e);
+	papiWriteScenario_double(scn, "LVDC_eps_1", eps_1);
+	papiWriteScenario_double(scn, "LVDC_eps_2", eps_2);
+	papiWriteScenario_double(scn, "LVDC_eps_3", eps_3);
+	papiWriteScenario_double(scn, "LVDC_eps_4", eps_4);
+	papiWriteScenario_double(scn, "LVDC_eps_p", eps_p);
+	papiWriteScenario_double(scn, "LVDC_eps_ymr", eps_ymr);
+	papiWriteScenario_double(scn, "LVDC_eps_ypr", eps_ypr);
+	papiWriteScenario_double(scn, "LVDC_f", f);
+	papiWriteScenario_double(scn, "LVDC_F", F);
+	papiWriteScenario_double(scn, "LVDC_Fm", Fm);
+	papiWriteScenario_double(scn, "LVDC_Fx[0][0]", Fx[0][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx[0][1]", Fx[0][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx[0][2]", Fx[0][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx[0][3]", Fx[0][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx[0][4]", Fx[0][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx[1][0]", Fx[1][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx[1][1]", Fx[1][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx[1][2]", Fx[1][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx[1][3]", Fx[1][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx[1][4]", Fx[1][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx[2][0]", Fx[2][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx[2][1]", Fx[2][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx[2][2]", Fx[2][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx[2][3]", Fx[2][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx[2][4]", Fx[2][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx[3][0]", Fx[3][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx[3][1]", Fx[3][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx[3][2]", Fx[3][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx[3][3]", Fx[3][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx[3][4]", Fx[3][4]);
+	papiWriteScenario_double(scn, "LVDC_Fx[4][0]", Fx[4][0]);
+	papiWriteScenario_double(scn, "LVDC_Fx[4][1]", Fx[4][1]);
+	papiWriteScenario_double(scn, "LVDC_Fx[4][2]", Fx[4][2]);
+	papiWriteScenario_double(scn, "LVDC_Fx[4][3]", Fx[4][3]);
+	papiWriteScenario_double(scn, "LVDC_Fx[4][4]", Fx[4][4]);
+	papiWriteScenario_double(scn, "LVDC_fx[0]", fx[0]);
+	papiWriteScenario_double(scn, "LVDC_fx[1]", fx[1]);
+	papiWriteScenario_double(scn, "LVDC_fx[2]", fx[2]);
+	papiWriteScenario_double(scn, "LVDC_fx[3]", fx[3]);
+	papiWriteScenario_double(scn, "LVDC_fx[4]", fx[4]);
+	papiWriteScenario_double(scn, "LVDC_fx[5]", fx[5]);
+	papiWriteScenario_double(scn, "LVDC_fx[6]", fx[6]);
+	papiWriteScenario_double(scn, "LVDC_GPitch[0]", GPitch[0]);
+	papiWriteScenario_double(scn, "LVDC_GPitch[1]", GPitch[1]);
+	papiWriteScenario_double(scn, "LVDC_GPitch[2]", GPitch[2]);
+	papiWriteScenario_double(scn, "LVDC_GPitch[3]", GPitch[3]);
+	papiWriteScenario_double(scn, "LVDC_GYaw[0]", GYaw[0]);
+	papiWriteScenario_double(scn, "LVDC_GYaw[1]", GYaw[1]);
+	papiWriteScenario_double(scn, "LVDC_GYaw[2]", GYaw[2]);
+	papiWriteScenario_double(scn, "LVDC_GYaw[3]", GYaw[3]);
+	papiWriteScenario_double(scn, "LVDC_G_T", G_T);
+	papiWriteScenario_double(scn, "LVDC_gx[0]", gx[0]);
+	papiWriteScenario_double(scn, "LVDC_gx[1]", gx[1]);
+	papiWriteScenario_double(scn, "LVDC_gx[2]", gx[2]);
+	papiWriteScenario_double(scn, "LVDC_gx[3]", gx[3]);
+	papiWriteScenario_double(scn, "LVDC_gx[4]", gx[4]);
+	papiWriteScenario_double(scn, "LVDC_gx[5]", gx[5]);
+	papiWriteScenario_double(scn, "LVDC_gx[6]", gx[6]);
+	papiWriteScenario_double(scn, "LVDC_IGMInterval", IGMInterval);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[0]", IncFromAzPoly[0]);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[1]", IncFromAzPoly[1]);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[2]", IncFromAzPoly[2]);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[3]", IncFromAzPoly[3]);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[4]", IncFromAzPoly[4]);
+	papiWriteScenario_double(scn, "LVDC_IncFromAzPoly[5]", IncFromAzPoly[5]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[0]", IncFromTimePoly[0]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[1]", IncFromTimePoly[1]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[2]", IncFromTimePoly[2]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[3]", IncFromTimePoly[3]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[4]", IncFromTimePoly[4]);
+	papiWriteScenario_double(scn, "LVDC_IncFromTimePoly[5]", IncFromTimePoly[5]);
+	papiWriteScenario_double(scn, "LVDC_Inclination", Inclination);
+	papiWriteScenario_double(scn, "LVDC_J", J);
+	papiWriteScenario_double(scn, "LVDC_J_1", J_1);
+	papiWriteScenario_double(scn, "LVDC_J_2", J_2);
+	papiWriteScenario_double(scn, "LVDC_J_3", J_3);
+	papiWriteScenario_double(scn, "LVDC_J_12", J_12);
+	papiWriteScenario_double(scn, "LVDC_Jt_3", Jt_3);
+	papiWriteScenario_double(scn, "LVDC_J_Y", J_Y);
+	papiWriteScenario_double(scn, "LVDC_J_P", J_P);
+	papiWriteScenario_double(scn, "LVDC_K_1", K_1);
+	papiWriteScenario_double(scn, "LVDC_K_2", K_2);
+	papiWriteScenario_double(scn, "LVDC_K_3", K_3);
+	papiWriteScenario_double(scn, "LVDC_K_4", K_4);
+	papiWriteScenario_double(scn, "LVDC_K_5", K_5);
+	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
+	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
+	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
+	papiWriteScenario_double(scn, "LVDC_K_Y2", K_Y2);
+	papiWriteScenario_double(scn, "LVDC_K_Y", K_Y);
+	papiWriteScenario_double(scn, "LVDC_K_P", K_P);
+	papiWriteScenario_double(scn, "LVDC_D_P", D_P);
+	papiWriteScenario_double(scn, "LVDC_D_Y", D_Y);
+	papiWriteScenario_double(scn, "LVDC_L_1", L_1);
+	papiWriteScenario_double(scn, "LVDC_L_2", L_2);
+	papiWriteScenario_double(scn, "LVDC_L_3", L_3);
+	papiWriteScenario_double(scn, "LVDC_dL_3", dL_3);
+	papiWriteScenario_double(scn, "LVDC_Lt_3", Lt_3);
+	papiWriteScenario_double(scn, "LVDC_L_12", L_12);
+	papiWriteScenario_double(scn, "LVDC_L_P", L_P);
+	papiWriteScenario_double(scn, "LVDC_L_Y", L_Y);
+	papiWriteScenario_double(scn, "LVDC_Lt_Y", Lt_Y);
+	papiWriteScenario_double(scn, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
+	papiWriteScenario_double(scn, "LVDC_mu", mu);
+	papiWriteScenario_double(scn, "LVDC_OPitch[0]", OPitch[0]);
+	papiWriteScenario_double(scn, "LVDC_OPitch[1]", OPitch[1]);
+	papiWriteScenario_double(scn, "LVDC_OPitch[2]", OPitch[2]);
+	papiWriteScenario_double(scn, "LVDC_OPitch[3]", OPitch[3]);
+	papiWriteScenario_double(scn, "LVDC_OYaw[0]", OYaw[0]);
+	papiWriteScenario_double(scn, "LVDC_OYaw[1]", OYaw[1]);
+	papiWriteScenario_double(scn, "LVDC_OYaw[2]", OYaw[2]);
+	papiWriteScenario_double(scn, "LVDC_OYaw[3]", OYaw[3]);
+	papiWriteScenario_double(scn, "LVDC_p", p);
+	papiWriteScenario_double(scn, "LVDC_P_1", P_1);
+	papiWriteScenario_double(scn, "LVDC_P_2", P_2);
+	papiWriteScenario_double(scn, "LVDC_P_3", P_3);
+	papiWriteScenario_double(scn, "LVDC_P_12", P_12);
+	papiWriteScenario_double(scn, "LVDC_phi_L", phi_L);
+	papiWriteScenario_double(scn, "LVDC_phi_T", phi_T);
+	papiWriteScenario_double(scn, "LVDC_Position[0]", Position[0]);
+	papiWriteScenario_double(scn, "LVDC_Position[1]", Position[1]);
+	papiWriteScenario_double(scn, "LVDC_Position[2]", Position[2]);
+	papiWriteScenario_double(scn, "LVDC_Q_1", Q_1);
+	papiWriteScenario_double(scn, "LVDC_Q_2", Q_2);
+	papiWriteScenario_double(scn, "LVDC_Q_3", Q_3);
+	papiWriteScenario_double(scn, "LVDC_Q_12", Q_12);
+	papiWriteScenario_double(scn, "LVDC_Q_Y", Q_Y);
+	papiWriteScenario_double(scn, "LVDC_Q_P", Q_P);
+	papiWriteScenario_double(scn, "LVDC_R", R);
+	papiWriteScenario_double(scn, "LVDC_RateGain", RateGain);
+	papiWriteScenario_double(scn, "LVDC_ErrorGain", ErrorGain);
+	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
+	papiWriteScenario_double(scn, "LVDC_ROVs", ROVs);
+	papiWriteScenario_double(scn, "LVDC_R_T", R_T);
+	papiWriteScenario_double(scn, "LVDC_S_1", S_1);
+	papiWriteScenario_double(scn, "LVDC_S_2", S_2);
+	papiWriteScenario_double(scn, "LVDC_S_3", S_3);
+	papiWriteScenario_double(scn, "LVDC_S_12", S_12);
+	papiWriteScenario_double(scn, "LVDC_S_P", S_P);
+	papiWriteScenario_double(scn, "LVDC_S_Y", S_Y);
+	papiWriteScenario_double(scn, "LVDC_S1_Sep_Time", S1_Sep_Time);
+	papiWriteScenario_double(scn, "LVDC_sinceLastIGM", sinceLastIGM);
+	papiWriteScenario_double(scn, "LVDC_sin_chi_Yit", sin_chi_Yit);
+	papiWriteScenario_double(scn, "LVDC_sin_chi_Zit", sin_chi_Zit);
+	papiWriteScenario_double(scn, "LVDC_sin_ups", sin_ups);
+	papiWriteScenario_double(scn, "LVDC_cos_ups", cos_ups);
+	papiWriteScenario_double(scn, "LVDC_SMCG", SMCG);
+	papiWriteScenario_double(scn, "LVDC_S", S);
+	papiWriteScenario_double(scn, "LVDC_P", P);
+	papiWriteScenario_double(scn, "LVDC_t", t);
+	papiWriteScenario_double(scn, "LVDC_T_0", T_0);
+	papiWriteScenario_double(scn, "LVDC_t_1", t_1);
+	papiWriteScenario_double(scn, "LVDC_T_1", T_1);
+	papiWriteScenario_double(scn, "LVDC_T_1c", T_1c);
+	papiWriteScenario_double(scn, "LVDC_t_2", t_2);
+	papiWriteScenario_double(scn, "LVDC_T_2", T_2);
+	papiWriteScenario_double(scn, "LVDC_t_21", t_21);
+	papiWriteScenario_double(scn, "LVDC_t_3", t_3);
+	papiWriteScenario_double(scn, "LVDC_T_3", T_3);
+	papiWriteScenario_double(scn, "LVDC_t_3i", t_3i);
+	papiWriteScenario_double(scn, "LVDC_t_4", t_4);
+	papiWriteScenario_double(scn, "LVDC_T_4N", T_4N);
+	papiWriteScenario_double(scn, "LVDC_t_5", t_5);
+	papiWriteScenario_double(scn, "LVDC_t_6", t_6);
+	papiWriteScenario_double(scn, "LVDC_TA1", TA1);
+	papiWriteScenario_double(scn, "LVDC_TA2", TA2);
+	papiWriteScenario_double(scn, "LVDC_TABLE15_C_3", TABLE15_C_3);
+	papiWriteScenario_double(scn, "LVDC_TABLE15_e", TABLE15_e);
+	papiWriteScenario_double(scn, "LVDC_TABLE15_f", TABLE15_f);
+	papiWriteScenario_double(scn, "LVDC_T_ar", T_ar);
+	papiWriteScenario_double(scn, "LVDC_TAS", TAS);
+	papiWriteScenario_double(scn, "LVDC_tau1", tau1);
+	papiWriteScenario_double(scn, "LVDC_tau2", tau2);
+	papiWriteScenario_double(scn, "LVDC_tau3", tau3);
+	papiWriteScenario_double(scn, "LVDC_tau3N", tau3N);
+	papiWriteScenario_double(scn, "LVDC_t_B1", t_B1);
+	papiWriteScenario_double(scn, "LVDC_TB1", TB1);
+	papiWriteScenario_double(scn, "LVDC_TB2", TB2);
+	papiWriteScenario_double(scn, "LVDC_t_B3", t_B3);
+	papiWriteScenario_double(scn, "LVDC_TB3", TB3);
+	papiWriteScenario_double(scn, "LVDC_TB4", TB4);
+	papiWriteScenario_double(scn, "LVDC_TB4A", TB4A);
+	papiWriteScenario_double(scn, "LVDC_TB5", TB5);
+	papiWriteScenario_double(scn, "LVDC_TB6", TB6);
+	papiWriteScenario_double(scn, "LVDC_TB7", TB7);
+	papiWriteScenario_double(scn, "LVDC_T_c", T_c);
+	papiWriteScenario_double(scn, "LVDC_tchi_y_last", tchi_y_last);
+	papiWriteScenario_double(scn, "LVDC_tchi_p_last", tchi_p_last);
+	papiWriteScenario_double(scn, "LVDC_tchi_y", tchi_y);
+	papiWriteScenario_double(scn, "LVDC_tchi_p", tchi_p);
+	papiWriteScenario_double(scn, "LVDC_t_clock", t_clock);
+	papiWriteScenario_double(scn, "LVDC_T_CO", T_CO);
+	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
+	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
+	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
+	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
+	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
+	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
+	papiWriteScenario_double(scn, "LVDC_T_S3", T_S3);
+	papiWriteScenario_double(scn, "LVDC_TS4BS", TS4BS);
+	papiWriteScenario_double(scn, "LVDC_TSMC1", TSMC1);
+	papiWriteScenario_double(scn, "LVDC_TSMC2", TSMC2);
+	papiWriteScenario_double(scn, "LVDC_T_T", T_T);
+	papiWriteScenario_double(scn, "LVDC_Tt_3", Tt_3);
+	papiWriteScenario_double(scn, "LVDC_Tt_T", Tt_T);
+	papiWriteScenario_double(scn, "LVDC_U_1", U_1);
+	papiWriteScenario_double(scn, "LVDC_U_2", U_2);
+	papiWriteScenario_double(scn, "LVDC_U_3", U_3);
+	papiWriteScenario_double(scn, "LVDC_U_12", U_12);
+	papiWriteScenario_double(scn, "LVDC_ups_T", ups_T);
+	papiWriteScenario_double(scn, "LVDC_V", V);
+	papiWriteScenario_double(scn, "LVDC_Velocity[0]", Velocity[0]);
+	papiWriteScenario_double(scn, "LVDC_Velocity[1]", Velocity[1]);
+	papiWriteScenario_double(scn, "LVDC_Velocity[2]", Velocity[2]);
+	papiWriteScenario_double(scn, "LVDC_V_ex1", V_ex1);
+	papiWriteScenario_double(scn, "LVDC_V_ex2", V_ex2);
+	papiWriteScenario_double(scn, "LVDC_V_ex3", V_ex3);
+	papiWriteScenario_double(scn, "LVDC_V_i", V_i);
+	papiWriteScenario_double(scn, "LVDC_V_0", V_0);
+	papiWriteScenario_double(scn, "LVDC_V_1", V_1);
+	papiWriteScenario_double(scn, "LVDC_V_2", V_2);
+	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
+	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
+	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
+	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
+	papiWriteScenario_double(scn, "LVDC_eta_T", eta_T);
+	papiWriteScenario_double(scn, "LVDC_zeta_T", zeta_T);
+	papiWriteScenario_double(scn, "LVDC_X_S1", X_S1);
+	papiWriteScenario_double(scn, "LVDC_X_S2", X_S2);
+	papiWriteScenario_double(scn, "LVDC_X_S3", X_S3);
+	papiWriteScenario_double(scn, "LVDC_Xtt_y", Xtt_y);
+	papiWriteScenario_double(scn, "LVDC_Xtt_p", Xtt_p);
+	papiWriteScenario_double(scn, "LVDC_X_Zi", X_Zi);
+	papiWriteScenario_double(scn, "LVDC_X_Yi", X_Yi);
+	papiWriteScenario_double(scn, "LVDC_Y_u", Y_u);
+	papiWriteScenario_vec(scn, "LVDC_ACommandedAttitude", ACommandedAttitude);
+	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
+	papiWriteScenario_vec(scn, "LVDC_AttRate", AttRate);
+	papiWriteScenario_vec(scn, "LVDC_CommandedAttitude", CommandedAttitude);
+	papiWriteScenario_vec(scn, "LVDC_CommandRateLimits", CommandRateLimits);
+	papiWriteScenario_vec(scn, "LVDC_CurrentAttitude", CurrentAttitude);
+	papiWriteScenario_vec(scn, "LVDC_ddotG_act", ddotG_act);
+	papiWriteScenario_vec(scn, "LVDC_ddotG_last", ddotG_last);
+	papiWriteScenario_vec(scn, "LVDC_ddotM_act", ddotM_act);
+	papiWriteScenario_vec(scn, "LVDC_ddotM_last", ddotM_last);
+	papiWriteScenario_vec(scn, "LVDC_DDotXEZ_G", DDotXEZ_G);
+	papiWriteScenario_vec(scn, "LVDC_DotG_act", DotG_act);
+	papiWriteScenario_vec(scn, "LVDC_DotG_last", DotG_last);
+	papiWriteScenario_vec(scn, "LVDC_DotM_act", DotM_act);
+	papiWriteScenario_vec(scn, "LVDC_DotM_last", DotM_last);
+	papiWriteScenario_vec(scn, "LVDC_DotS", DotS);
+	papiWriteScenario_vec(scn, "LVDC_DotXEZ", DotXEZ);
+	papiWriteScenario_vec(scn, "LVDC_PCommandedAttitude", PCommandedAttitude);
+	papiWriteScenario_vec(scn, "LVDC_Pos4", Pos4);
+	papiWriteScenario_vec(scn, "LVDC_PosS", PosS);
+	papiWriteScenario_vec(scn, "LVDC_PosXEZ", PosXEZ);
+	papiWriteScenario_vec(scn, "LVDC_WV", WV);
+	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
+	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
+	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
+	papiWriteScenario_mx(scn, "LVDC_MX_G", MX_G);
+	papiWriteScenario_mx(scn, "LVDC_MX_K", MX_K);
+	papiWriteScenario_mx(scn, "LVDC_MX_phi_T", MX_phi_T);
+	// All done
 	oapiWriteLine(scn, LVDC_END_STRING);
 	lvimu.SaveState(scn);
 }
 
 void LVDC::LoadState(FILEHANDLE scn){
 	char *line;	
+	int tmp=0; // for bool loader
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, LVDC_END_STRING, sizeof(LVDC_END_STRING))){
 			break;
 		}
-
-		if (!strnicmp (line, "Stop", 4)) {
-
-		}else if (!strnicmp (line, "phi_lat", 7)) {
-			// sscanf(line + 7, "%lf", &phi_lat);
-		} else if (!strnicmp (line, "phi_lng", 7)) {
-			// sscanf(line + 7, "%lf", &phi_lng);
-		}else if (!strnicmp (line, "Azimuth", 7)) {
-			sscanf(line + 7, "%lf", &Azimuth);
-		}else if (!strnicmp (line, "DescNodeAngle", 13)) {
-			sscanf(line + 13, "%lf", &DescNodeAngle);
-		}else if (!strnicmp (line, "Inclination", 11)) {
-			sscanf(line + 11, "%lf", &Inclination);
-		}else if (!strnicmp (line, "TB", 2)) {
-			sscanf(line + 2, "%i", &LVDC_Timebase);
-		}else if (!strnicmp (line, "TB_ETime", 8)) {
-			sscanf(line + 8, "%lf", &LVDC_TB_ETime);
-		}else if (!strnicmp (line, "TAS", 3)) {
-			sscanf(line + 3, "%lf", &TAS);
-		}else if (!strnicmp (line, "t_clock", 7)) {
-			sscanf(line + 7, "%lf", &t_clock);
-		}else if (!strnicmp (line, "sinceLastIGM", 12)) {
-			sscanf(line + 12, "%lf", &sinceLastIGM);
-		}else if (!strnicmp (line, "DotM_act", 8)) {
-			sscanf(line + 8, "%lf %lf %lf", &DotM_act.x,&DotM_act.y,&DotM_act.z);
-		}else if (!strnicmp (line, "DotM_last", 9)) {
-			sscanf(line + 9, "%lf %lf %lf", &DotM_last.x,&DotM_last.y,&DotM_last.z);
-		}else if (!strnicmp (line, "PosS", 4)) {
-			sscanf(line + 4, "%lf %lf %lf", &PosS.x,&PosS.y,&PosS.z);
-		}else if (!strnicmp (line, "Dot0", 4)) {
-			// sscanf(line + 4, "%lf %lf %lf", &Dot0.x,&Dot0.y,&Dot0.z);
-		}else if (!strnicmp (line, "DotG_last", 9)) {
-			sscanf(line + 9, "%lf %lf %lf", &DotG_last.x,&DotG_last.y,&DotG_last.z);
-		}else if (!strnicmp (line, "ddotG_last", 10)) {
-			sscanf(line + 10, "%lf %lf %lf", &ddotG_last.x,&ddotG_last.y,&ddotG_last.z);
-		}else if (!strnicmp (line, "PCommandedAttitude", 18)) {
-			sscanf(line + 18, "%lf %lf %lf", &PCommandedAttitude.x,&PCommandedAttitude.y,&PCommandedAttitude.z);
+		// are we there yet?
+		if (strnicmp(line,"LVDC_alpha_D_op",strlen("LVDC_alpha_D_op"))==0){ sscanf(line+strlen("LVDC_alpha_D_op"),"%i",&tmp); if(tmp == 1){ alpha_D_op = true; }else{ alpha_D_op = false; }
+		} else if (strnicmp(line,"LVDC_BOOST",strlen("LVDC_BOOST"))==0){ sscanf(line+strlen("LVDC_BOOST"),"%i",&tmp); if(tmp == 1){ BOOST = true; }else{ BOOST = false; }
+		} else if (strnicmp(line,"LVDC_CountPIPA",strlen("LVDC_CountPIPA"))==0){ sscanf(line+strlen("LVDC_CountPIPA"),"%i",&tmp); if(tmp == 1){ CountPIPA = true; }else{ CountPIPA = false; }
+		} else if (strnicmp(line,"LVDC_Direct_Ascent",strlen("LVDC_Direct_Ascent"))==0){ sscanf(line+strlen("LVDC_Direct_Ascent"),"%i",&tmp); if(tmp == 1){ Direct_Ascent = true; }else{ Direct_Ascent = false; }
+		} else if (strnicmp(line,"LVDC_directstageint",strlen("LVDC_directstageint"))==0){ sscanf(line+strlen("LVDC_directstageint"),"%i",&tmp); if(tmp == 1){ directstageint = true; }else{ directstageint = false; }
+		} else if (strnicmp(line,"LVDC_first_op",strlen("LVDC_first_op"))==0){ sscanf(line+strlen("LVDC_first_op"),"%i",&tmp); if(tmp == 1){ first_op = true; }else{ first_op = false; }
+		} else if (strnicmp(line,"LVDC_GATE",strlen("LVDC_GATE"))==0){ sscanf(line+strlen("LVDC_GATE"),"%i",&tmp); if(tmp == 1){ GATE = true; }else{ GATE = false; }
+		} else if (strnicmp(line,"LVDC_GATE0",strlen("LVDC_GATE0"))==0){ sscanf(line+strlen("LVDC_GATE0"),"%i",&tmp); if(tmp == 1){ GATE0 = true; }else{ GATE0 = false; }
+		} else if (strnicmp(line,"LVDC_GATE1",strlen("LVDC_GATE1"))==0){ sscanf(line+strlen("LVDC_GATE1"),"%i",&tmp); if(tmp == 1){ GATE1 = true; }else{ GATE1 = false; }
+		} else if (strnicmp(line,"LVDC_GATE2",strlen("LVDC_GATE2"))==0){ sscanf(line+strlen("LVDC_GATE2"),"%i",&tmp); if(tmp == 1){ GATE2 = true; }else{ GATE2 = false; }
+		} else if (strnicmp(line,"LVDC_GATE3",strlen("LVDC_GATE3"))==0){ sscanf(line+strlen("LVDC_GATE3"),"%i",&tmp); if(tmp == 1){ GATE3 = true; }else{ GATE3 = false; }
+		} else if (strnicmp(line,"LVDC_GATE4",strlen("LVDC_GATE4"))==0){ sscanf(line+strlen("LVDC_GATE4"),"%i",&tmp); if(tmp == 1){ GATE4 = true; }else{ GATE4 = false; }
+		} else if (strnicmp(line,"LVDC_GATE5",strlen("LVDC_GATE5"))==0){ sscanf(line+strlen("LVDC_GATE5"),"%i",&tmp); if(tmp == 1){ GATE5 = true; }else{ GATE5 = false; }
+		} else if (strnicmp(line,"LVDC_HSL",strlen("LVDC_HSL"))==0){ sscanf(line+strlen("LVDC_HSL"),"%i",&tmp); if(tmp == 1){ HSL = true; }else{ HSL = false; }
+		} else if (strnicmp(line,"LVDC_INH",strlen("LVDC_INH"))==0){ sscanf(line+strlen("LVDC_INH"),"%i",&tmp); if(tmp == 1){ INH = true; }else{ INH = false; }
+		} else if (strnicmp(line,"LVDC_INH1",strlen("LVDC_INH1"))==0){ sscanf(line+strlen("LVDC_INH1"),"%i",&tmp); if(tmp == 1){ INH1 = true; }else{ INH1 = false; }
+		} else if (strnicmp(line,"LVDC_INH2",strlen("LVDC_INH2"))==0){ sscanf(line+strlen("LVDC_INH2"),"%i",&tmp); if(tmp == 1){ INH2 = true; }else{ INH2 = false; }
+		} else if (strnicmp(line,"LVDC_init",strlen("LVDC_init"))==0){ sscanf(line+strlen("LVDC_init"),"%i",&tmp); if(tmp == 1){ init = true; }else{ init = false; }
+		} else if (strnicmp(line,"LVDC_i_op",strlen("LVDC_i_op"))==0){ sscanf(line+strlen("LVDC_i_op"),"%i",&tmp); if(tmp == 1){ i_op = true; }else{ i_op = false; }
+		} else if (strnicmp(line,"LVDC_liftoff",strlen("LVDC_liftoff"))==0){ sscanf(line+strlen("LVDC_liftoff"),"%i",&tmp); if(tmp == 1){ liftoff = true; }else{ liftoff = false; }
+		} else if (strnicmp(line,"LVDC_LVDC_EI_On",strlen("LVDC_LVDC_EI_On"))==0){ sscanf(line+strlen("LVDC_LVDC_EI_On"),"%i",&tmp); if(tmp == 1){ LVDC_EI_On = true; }else{ LVDC_EI_On = false; }
+		} else if (strnicmp(line,"LVDC_LVDC_GRR",strlen("LVDC_LVDC_GRR"))==0){ sscanf(line+strlen("LVDC_LVDC_GRR"),"%i",&tmp); if(tmp == 1){ LVDC_GRR = true; }else{ LVDC_GRR = false; }
+		} else if (strnicmp(line,"LVDC_MRS",strlen("LVDC_MRS"))==0){ sscanf(line+strlen("LVDC_MRS"),"%i",&tmp); if(tmp == 1){ MRS = true; }else{ MRS = false; }
+		} else if (strnicmp(line,"LVDC_poweredflight",strlen("LVDC_poweredflight"))==0){ sscanf(line+strlen("LVDC_poweredflight"),"%i",&tmp); if(tmp == 1){ poweredflight = true; }else{ poweredflight = false; }
+		} else if (strnicmp(line,"LVDC_ROT",strlen("LVDC_ROT"))==0){ sscanf(line+strlen("LVDC_ROT"),"%i",&tmp); if(tmp == 1){ ROT = true; }else{ ROT = false; }
+		} else if (strnicmp(line,"LVDC_S1_Engine_Out",strlen("LVDC_S1_Engine_Out"))==0){ sscanf(line+strlen("LVDC_S1_Engine_Out"),"%i",&tmp); if(tmp == 1){ S1_Engine_Out = true; }else{ S1_Engine_Out = false; }
+		} else if (strnicmp(line,"LVDC_S2_BURNOUT",strlen("LVDC_S2_BURNOUT"))==0){ sscanf(line+strlen("LVDC_S2_BURNOUT"),"%i",&tmp); if(tmp == 1){ S2_BURNOUT = true; }else{ S2_BURNOUT = false; }
+		} else if (strnicmp(line,"LVDC_S2_ENGINE_OUT",strlen("LVDC_S2_ENGINE_OUT"))==0){ sscanf(line+strlen("LVDC_S2_ENGINE_OUT"),"%i",&tmp); if(tmp == 1){ S2_ENGINE_OUT = true; }else{ S2_ENGINE_OUT = false; }
+		} else if (strnicmp(line,"LVDC_S2_IGNITION",strlen("LVDC_S2_IGNITION"))==0){ sscanf(line+strlen("LVDC_S2_IGNITION"),"%i",&tmp); if(tmp == 1){ S2_IGNITION = true; }else{ S2_IGNITION = false; }
+		} else if (strnicmp(line,"LVDC_S2_Startup",strlen("LVDC_S2_Startup"))==0){ sscanf(line+strlen("LVDC_S2_Startup"),"%i",&tmp); if(tmp == 1){ S2_Startup = true; }else{ S2_Startup = false; }
+		} else if (strnicmp(line,"LVDC_S4B_IGN",strlen("LVDC_S4B_IGN"))==0){ sscanf(line+strlen("LVDC_S4B_IGN"),"%i",&tmp); if(tmp == 1){ S4B_IGN = true; }else{ S4B_IGN = false; }
+		} else if (strnicmp(line,"LVDC_theta_N_op",strlen("LVDC_theta_N_op"))==0){ sscanf(line+strlen("LVDC_theta_N_op"),"%i",&tmp); if(tmp == 1){ theta_N_op = true; }else{ theta_N_op = false; }
+		} else if (strnicmp(line,"LVDC_TU",strlen("LVDC_TU"))==0){ sscanf(line+strlen("LVDC_TU"),"%i",&tmp); if(tmp == 1){ TU = true; }else{ TU = false; }
+		} else if (strnicmp(line,"LVDC_TU10",strlen("LVDC_TU10"))==0){ sscanf(line+strlen("LVDC_TU10"),"%i",&tmp); if(tmp == 1){ TU10 = true; }else{ TU10 = false; }
 		}
+		// integers
+		if (strnicmp(line,"LVDC_IGMCycle",strlen("LVDC_IGMCycle"))==0){ sscanf(line+strlen("LVDC_IGMCycle"),"%i",&IGMCycle);
+		} else if (strnicmp(line,"LVDC_LVDC_Stop",strlen("LVDC_LVDC_Stop"))==0){ sscanf(line+strlen("LVDC_LVDC_Stop"),"%i",&LVDC_Stop);
+		} else if (strnicmp(line,"LVDC_LVDC_Timebase",strlen("LVDC_LVDC_Timebase"))==0){ sscanf(line+strlen("LVDC_LVDC_Timebase"),"%i",&LVDC_Timebase);
+		} else if (strnicmp(line,"LVDC_T_EO1",strlen("LVDC_T_EO1"))==0){ sscanf(line+strlen("LVDC_T_EO1"),"%i",&T_EO1);
+		} else if (strnicmp(line,"LVDC_T_EO2",strlen("LVDC_T_EO2"))==0){ sscanf(line+strlen("LVDC_T_EO2"),"%i",&T_EO2);
+		} else if (strnicmp(line,"LVDC_UP",strlen("LVDC_UP"))==0){ sscanf(line+strlen("LVDC_UP"),"%i",&UP);
+		}
+		// doubles
+		if (strnicmp(line,"LVDC_a",strlen("LVDC_a"))==0){ sscanf(line+strlen("LVDC_a"),"%lf",&a);
+		} else if (strnicmp(line,"LVDC_a_0p",strlen("LVDC_a_0p"))==0){ sscanf(line+strlen("LVDC_a_0p"),"%lf",&a_0p);
+		} else if (strnicmp(line,"LVDC_a_0r",strlen("LVDC_a_0r"))==0){ sscanf(line+strlen("LVDC_a_0r"),"%lf",&a_0r);
+		} else if (strnicmp(line,"LVDC_a_0y",strlen("LVDC_a_0y"))==0){ sscanf(line+strlen("LVDC_a_0y"),"%lf",&a_0y);
+		} else if (strnicmp(line,"LVDC_a_1",strlen("LVDC_a_1"))==0){ sscanf(line+strlen("LVDC_a_1"),"%lf",&a_1);
+		} else if (strnicmp(line,"LVDC_a_2",strlen("LVDC_a_2"))==0){ sscanf(line+strlen("LVDC_a_2"),"%lf",&a_2);
+		} else if (strnicmp(line,"LVDC_a_1p",strlen("LVDC_a_1p"))==0){ sscanf(line+strlen("LVDC_a_1p"),"%lf",&a_1p);
+		} else if (strnicmp(line,"LVDC_a_1r",strlen("LVDC_a_1r"))==0){ sscanf(line+strlen("LVDC_a_1r"),"%lf",&a_1r);
+		} else if (strnicmp(line,"LVDC_a_1y",strlen("LVDC_a_1y"))==0){ sscanf(line+strlen("LVDC_a_1y"),"%lf",&a_1y);
+		} else if (strnicmp(line,"LVDC_alpha_1",strlen("LVDC_alpha_1"))==0){ sscanf(line+strlen("LVDC_alpha_1"),"%lf",&alpha_1);
+		} else if (strnicmp(line,"LVDC_alpha_2",strlen("LVDC_alpha_2"))==0){ sscanf(line+strlen("LVDC_alpha_2"),"%lf",&alpha_2);
+		} else if (strnicmp(line,"LVDC_alpha_D",strlen("LVDC_alpha_D"))==0){ sscanf(line+strlen("LVDC_alpha_D"),"%lf",&alpha_D);
+		} else if (strnicmp(line,"LVDC_Azimuth",strlen("LVDC_Azimuth"))==0){ sscanf(line+strlen("LVDC_Azimuth"),"%lf",&Azimuth);
+		} else if (strnicmp(line,"LVDC_Azo",strlen("LVDC_Azo"))==0){ sscanf(line+strlen("LVDC_Azo"),"%lf",&Azo);
+		} else if (strnicmp(line,"LVDC_Azs",strlen("LVDC_Azs"))==0){ sscanf(line+strlen("LVDC_Azs"),"%lf",&Azs);
+		} else if (strnicmp(line,"LVDC_B_11",strlen("LVDC_B_11"))==0){ sscanf(line+strlen("LVDC_B_11"),"%lf",&B_11);
+		} else if (strnicmp(line,"LVDC_B_21",strlen("LVDC_B_21"))==0){ sscanf(line+strlen("LVDC_B_21"),"%lf",&B_21);
+		} else if (strnicmp(line,"LVDC_B_12",strlen("LVDC_B_12"))==0){ sscanf(line+strlen("LVDC_B_12"),"%lf",&B_12);
+		} else if (strnicmp(line,"LVDC_B_22",strlen("LVDC_B_22"))==0){ sscanf(line+strlen("LVDC_B_22"),"%lf",&B_22);
+		} else if (strnicmp(line,"LVDC_beta_p1c",strlen("LVDC_beta_p1c"))==0){ sscanf(line+strlen("LVDC_beta_p1c"),"%lf",&beta_p1c);
+		} else if (strnicmp(line,"LVDC_beta_p2c",strlen("LVDC_beta_p2c"))==0){ sscanf(line+strlen("LVDC_beta_p2c"),"%lf",&beta_p2c);
+		} else if (strnicmp(line,"LVDC_beta_p3c",strlen("LVDC_beta_p3c"))==0){ sscanf(line+strlen("LVDC_beta_p3c"),"%lf",&beta_p3c);
+		} else if (strnicmp(line,"LVDC_beta_p4c",strlen("LVDC_beta_p4c"))==0){ sscanf(line+strlen("LVDC_beta_p4c"),"%lf",&beta_p4c);
+		} else if (strnicmp(line,"LVDC_beta_pc",strlen("LVDC_beta_pc"))==0){ sscanf(line+strlen("LVDC_beta_pc"),"%lf",&beta_pc);
+		} else if (strnicmp(line,"LVDC_beta_rc",strlen("LVDC_beta_rc"))==0){ sscanf(line+strlen("LVDC_beta_rc"),"%lf",&beta_rc);
+		} else if (strnicmp(line,"LVDC_beta_y1c",strlen("LVDC_beta_y1c"))==0){ sscanf(line+strlen("LVDC_beta_y1c"),"%lf",&beta_y1c);
+		} else if (strnicmp(line,"LVDC_beta_y2c",strlen("LVDC_beta_y2c"))==0){ sscanf(line+strlen("LVDC_beta_y2c"),"%lf",&beta_y2c);
+		} else if (strnicmp(line,"LVDC_beta_y3c",strlen("LVDC_beta_y3c"))==0){ sscanf(line+strlen("LVDC_beta_y3c"),"%lf",&beta_y3c);
+		} else if (strnicmp(line,"LVDC_beta_y4c",strlen("LVDC_beta_y4c"))==0){ sscanf(line+strlen("LVDC_beta_y4c"),"%lf",&beta_y4c);
+		} else if (strnicmp(line,"LVDC_beta_yc",strlen("LVDC_beta_yc"))==0){ sscanf(line+strlen("LVDC_beta_yc"),"%lf",&beta_yc);
+		} else if (strnicmp(line,"LVDC_C_2",strlen("LVDC_C_2"))==0){ sscanf(line+strlen("LVDC_C_2"),"%lf",&C_2);
+		} else if (strnicmp(line,"LVDC_C_4",strlen("LVDC_C_4"))==0){ sscanf(line+strlen("LVDC_C_4"),"%lf",&C_4);
+		} else if (strnicmp(line,"LVDC_C_3",strlen("LVDC_C_3"))==0){ sscanf(line+strlen("LVDC_C_3"),"%lf",&C_3);
+		} else if (strnicmp(line,"LVDC_Cf",strlen("LVDC_Cf"))==0){ sscanf(line+strlen("LVDC_Cf"),"%lf",&Cf);
+		} else if (strnicmp(line,"LVDC_CG",strlen("LVDC_CG"))==0){ sscanf(line+strlen("LVDC_CG"),"%lf",&CG);
+		} else if (strnicmp(line,"LVDC_cos_chi_Yit",strlen("LVDC_cos_chi_Yit"))==0){ sscanf(line+strlen("LVDC_cos_chi_Yit"),"%lf",&cos_chi_Yit);
+		} else if (strnicmp(line,"LVDC_cos_chi_Zit",strlen("LVDC_cos_chi_Zit"))==0){ sscanf(line+strlen("LVDC_cos_chi_Zit"),"%lf",&cos_chi_Zit);
+		} else if (strnicmp(line,"LVDC_Ct",strlen("LVDC_Ct"))==0){ sscanf(line+strlen("LVDC_Ct"),"%lf",&Ct);
+		} else if (strnicmp(line,"LVDC_Ct_o",strlen("LVDC_Ct_o"))==0){ sscanf(line+strlen("LVDC_Ct_o"),"%lf",&Ct_o);
+		} else if (strnicmp(line,"LVDC_d2",strlen("LVDC_d2"))==0){ sscanf(line+strlen("LVDC_d2"),"%lf",&d2);
+		} else if (strnicmp(line,"LVDC_ddot_xi_G",strlen("LVDC_ddot_xi_G"))==0){ sscanf(line+strlen("LVDC_ddot_xi_G"),"%lf",&ddot_xi_G);
+		} else if (strnicmp(line,"LVDC_ddot_eta_G",strlen("LVDC_ddot_eta_G"))==0){ sscanf(line+strlen("LVDC_ddot_eta_G"),"%lf",&ddot_eta_G);
+		} else if (strnicmp(line,"LVDC_ddot_zeta_G",strlen("LVDC_ddot_zeta_G"))==0){ sscanf(line+strlen("LVDC_ddot_zeta_G"),"%lf",&ddot_zeta_G);
+		} else if (strnicmp(line,"LVDC_ddot_zeta_GT",strlen("LVDC_ddot_zeta_GT"))==0){ sscanf(line+strlen("LVDC_ddot_zeta_GT"),"%lf",&ddot_zeta_GT);
+		} else if (strnicmp(line,"LVDC_ddot_xi_GT",strlen("LVDC_ddot_xi_GT"))==0){ sscanf(line+strlen("LVDC_ddot_xi_GT"),"%lf",&ddot_xi_GT);
+		} else if (strnicmp(line,"LVDC_DescNodeAngle",strlen("LVDC_DescNodeAngle"))==0){ sscanf(line+strlen("LVDC_DescNodeAngle"),"%lf",&DescNodeAngle);
+		} else if (strnicmp(line,"LVDC_deta",strlen("LVDC_deta"))==0){ sscanf(line+strlen("LVDC_deta"),"%lf",&deta);
+		} else if (strnicmp(line,"LVDC_dxi",strlen("LVDC_dxi"))==0){ sscanf(line+strlen("LVDC_dxi"),"%lf",&dxi);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[0]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[0]);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[1]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[1]);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[2]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[2]);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[3]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[3]);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[4]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[4]);
+		} else if (strnicmp(line,"LVDC_DNAFromAzPoly[5]",strlen("LVDC_DNAFromAzPoly[0]"))==0){ sscanf(line+strlen("LVDC_DNAFromAzPoly[0]"),"%lf",&DNAFromAzPoly[5]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[0]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[0]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[1]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[1]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[2]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[2]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[3]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[3]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[4]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[4]);
+		} else if (strnicmp(line,"LVDC_DNAFromTimePoly[5]",strlen("LVDC_DNAFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_DNAFromTimePoly[6]"),"%lf",&DNAFromTimePoly[5]);
+		} else if (strnicmp(line,"LVDC_dot_dxi",strlen("LVDC_dot_dxi"))==0){ sscanf(line+strlen("LVDC_dot_dxi"),"%lf",&dot_dxi);
+		} else if (strnicmp(line,"LVDC_dot_deta",strlen("LVDC_dot_deta"))==0){ sscanf(line+strlen("LVDC_dot_deta"),"%lf",&dot_deta);
+		} else if (strnicmp(line,"LVDC_dot_dzeta",strlen("LVDC_dot_dzeta"))==0){ sscanf(line+strlen("LVDC_dot_dzeta"),"%lf",&dot_dzeta);
+		} else if (strnicmp(line,"LVDC_dot_dxit",strlen("LVDC_dot_dxit"))==0){ sscanf(line+strlen("LVDC_dot_dxit"),"%lf",&dot_dxit);
+		} else if (strnicmp(line,"LVDC_dot_detat",strlen("LVDC_dot_detat"))==0){ sscanf(line+strlen("LVDC_dot_detat"),"%lf",&dot_detat);
+		}
+		if (strnicmp(line,"LVDC_dot_dzetat",strlen("LVDC_dot_dzetat"))==0){ sscanf(line+strlen("LVDC_dot_dzetat"),"%lf",&dot_dzetat);
+		} else if (strnicmp(line,"LVDC_dotM_1",strlen("LVDC_dotM_1"))==0){ sscanf(line+strlen("LVDC_dotM_1"),"%lf",&dotM_1);
+		} else if (strnicmp(line,"LVDC_dotM_2",strlen("LVDC_dotM_2"))==0){ sscanf(line+strlen("LVDC_dotM_2"),"%lf",&dotM_2);
+		} else if (strnicmp(line,"LVDC_dotM_3",strlen("LVDC_dotM_3"))==0){ sscanf(line+strlen("LVDC_dotM_3"),"%lf",&dotM_3);
+		} else if (strnicmp(line,"LVDC_dot_phi_1",strlen("LVDC_dot_phi_1"))==0){ sscanf(line+strlen("LVDC_dot_phi_1"),"%lf",&dot_phi_1);
+		} else if (strnicmp(line,"LVDC_dot_phi_T",strlen("LVDC_dot_phi_T"))==0){ sscanf(line+strlen("LVDC_dot_phi_T"),"%lf",&dot_phi_T);
+		} else if (strnicmp(line,"LVDC_dot_zeta_T",strlen("LVDC_dot_zeta_T"))==0){ sscanf(line+strlen("LVDC_dot_zeta_T"),"%lf",&dot_zeta_T);
+		} else if (strnicmp(line,"LVDC_dot_xi_T",strlen("LVDC_dot_xi_T"))==0){ sscanf(line+strlen("LVDC_dot_xi_T"),"%lf",&dot_xi_T);
+		} else if (strnicmp(line,"LVDC_dot_eta_T",strlen("LVDC_dot_eta_T"))==0){ sscanf(line+strlen("LVDC_dot_eta_T"),"%lf",&dot_eta_T);
+		} else if (strnicmp(line,"LVDC_dt",strlen("LVDC_dt"))==0){ sscanf(line+strlen("LVDC_dt"),"%lf",&dt);
+		} else if (strnicmp(line,"LVDC_dT_3",strlen("LVDC_dT_3"))==0){ sscanf(line+strlen("LVDC_dT_3"),"%lf",&dT_3);
+		} else if (strnicmp(line,"LVDC_dT_4",strlen("LVDC_dT_4"))==0){ sscanf(line+strlen("LVDC_dT_4"),"%lf",&dT_4);
+		} else if (strnicmp(line,"LVDC_dt_c",strlen("LVDC_dt_c"))==0){ sscanf(line+strlen("LVDC_dt_c"),"%lf",&dt_c);
+		} else if (strnicmp(line,"LVDC_dT_cost",strlen("LVDC_dT_cost"))==0){ sscanf(line+strlen("LVDC_dT_cost"),"%lf",&dT_cost);
+		} else if (strnicmp(line,"LVDC_dT_F",strlen("LVDC_dT_F"))==0){ sscanf(line+strlen("LVDC_dT_F"),"%lf",&dT_F);
+		} else if (strnicmp(line,"LVDC_dt_LET",strlen("LVDC_dt_LET"))==0){ sscanf(line+strlen("LVDC_dt_LET"),"%lf",&dt_LET);
+		} else if (strnicmp(line,"LVDC_dT_LIM",strlen("LVDC_dT_LIM"))==0){ sscanf(line+strlen("LVDC_dT_LIM"),"%lf",&dT_LIM);
+		} else if (strnicmp(line,"LVDC_dtt_1",strlen("LVDC_dtt_1"))==0){ sscanf(line+strlen("LVDC_dtt_1"),"%lf",&dtt_1);
+		} else if (strnicmp(line,"LVDC_dtt_2",strlen("LVDC_dtt_2"))==0){ sscanf(line+strlen("LVDC_dtt_2"),"%lf",&dtt_2);
+		} else if (strnicmp(line,"LVDC_dTt_4",strlen("LVDC_dTt_4"))==0){ sscanf(line+strlen("LVDC_dTt_4"),"%lf",&dTt_4);
+		} else if (strnicmp(line,"LVDC_dV",strlen("LVDC_dV"))==0){ sscanf(line+strlen("LVDC_dV"),"%lf",&dV);
+		} else if (strnicmp(line,"LVDC_dV_B",strlen("LVDC_dV_B"))==0){ sscanf(line+strlen("LVDC_dV_B"),"%lf",&dV_B);
+		} else if (strnicmp(line,"LVDC_e",strlen("LVDC_e"))==0){ sscanf(line+strlen("LVDC_e"),"%lf",&e);
+		} else if (strnicmp(line,"LVDC_eps_1",strlen("LVDC_eps_1"))==0){ sscanf(line+strlen("LVDC_eps_1"),"%lf",&eps_1);
+		} else if (strnicmp(line,"LVDC_eps_2",strlen("LVDC_eps_2"))==0){ sscanf(line+strlen("LVDC_eps_2"),"%lf",&eps_2);
+		} else if (strnicmp(line,"LVDC_eps_3",strlen("LVDC_eps_3"))==0){ sscanf(line+strlen("LVDC_eps_3"),"%lf",&eps_3);
+		} else if (strnicmp(line,"LVDC_eps_4",strlen("LVDC_eps_4"))==0){ sscanf(line+strlen("LVDC_eps_4"),"%lf",&eps_4);
+		} else if (strnicmp(line,"LVDC_eps_p",strlen("LVDC_eps_p"))==0){ sscanf(line+strlen("LVDC_eps_p"),"%lf",&eps_p);
+		} else if (strnicmp(line,"LVDC_eps_ymr",strlen("LVDC_eps_ymr"))==0){ sscanf(line+strlen("LVDC_eps_ymr"),"%lf",&eps_ymr);
+		} else if (strnicmp(line,"LVDC_eps_ypr",strlen("LVDC_eps_ypr"))==0){ sscanf(line+strlen("LVDC_eps_ypr"),"%lf",&eps_ypr);
+		} else if (strnicmp(line,"LVDC_f",strlen("LVDC_f"))==0){ sscanf(line+strlen("LVDC_f"),"%lf",&f);
+		} else if (strnicmp(line,"LVDC_F",strlen("LVDC_F"))==0){ sscanf(line+strlen("LVDC_F"),"%lf",&F);
+		} else if (strnicmp(line,"LVDC_Fm",strlen("LVDC_Fm"))==0){ sscanf(line+strlen("LVDC_Fm"),"%lf",&Fm);
+		}
+		if (strnicmp(line,"LVDC_Fx[0][0]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[0][0]);
+		} else if (strnicmp(line,"LVDC_Fx[0][1]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[0][1]);
+		} else if (strnicmp(line,"LVDC_Fx[0][2]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[0][2]);
+		} else if (strnicmp(line,"LVDC_Fx[0][3]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[0][3]);
+		} else if (strnicmp(line,"LVDC_Fx[0][4]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[0][4]);
+		} else if (strnicmp(line,"LVDC_Fx[1][0]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[1][0]);
+		} else if (strnicmp(line,"LVDC_Fx[1][1]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[1][1]);
+		} else if (strnicmp(line,"LVDC_Fx[1][2]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[1][2]);
+		} else if (strnicmp(line,"LVDC_Fx[1][3]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[1][3]);
+		} else if (strnicmp(line,"LVDC_Fx[1][4]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[1][4]);
+		} else if (strnicmp(line,"LVDC_Fx[2][0]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[2][0]);
+		} else if (strnicmp(line,"LVDC_Fx[2][1]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[2][1]);
+		} else if (strnicmp(line,"LVDC_Fx[2][2]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[2][2]);
+		} else if (strnicmp(line,"LVDC_Fx[2][3]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[2][3]);
+		} else if (strnicmp(line,"LVDC_Fx[2][4]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[2][4]);
+		} else if (strnicmp(line,"LVDC_Fx[3][0]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[3][0]);
+		} else if (strnicmp(line,"LVDC_Fx[3][1]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[3][1]);
+		} else if (strnicmp(line,"LVDC_Fx[3][2]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[3][2]);
+		} else if (strnicmp(line,"LVDC_Fx[3][3]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[3][3]);
+		} else if (strnicmp(line,"LVDC_Fx[3][4]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[3][4]);
+		} else if (strnicmp(line,"LVDC_Fx[4][0]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[4][0]);
+		} else if (strnicmp(line,"LVDC_Fx[4][1]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[4][1]);
+		} else if (strnicmp(line,"LVDC_Fx[4][2]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[4][2]);
+		} else if (strnicmp(line,"LVDC_Fx[4][3]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[4][3]);
+		} else if (strnicmp(line,"LVDC_Fx[4][4]",strlen("LVDC_Fx[5][5]"))==0){ sscanf(line+strlen("LVDC_Fx[5][5]"),"%lf",&Fx[4][4]);
+		}
+		if (strnicmp(line,"LVDC_fx[0]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[0]);
+		} else if (strnicmp(line,"LVDC_fx[1]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[1]);
+		} else if (strnicmp(line,"LVDC_fx[2]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[2]);
+		} else if (strnicmp(line,"LVDC_fx[3]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[3]);
+		} else if (strnicmp(line,"LVDC_fx[4]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[4]);
+		} else if (strnicmp(line,"LVDC_fx[5]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[5]);
+		} else if (strnicmp(line,"LVDC_fx[6]",strlen("LVDC_fx[7]"))==0){ sscanf(line+strlen("LVDC_fx[7]"),"%lf",&fx[6]);
+		} else if (strnicmp(line,"LVDC_GPitch[0]",strlen("LVDC_GPitch[4]"))==0){ sscanf(line+strlen("LVDC_GPitch[4]"),"%lf",&GPitch[0]);
+		} else if (strnicmp(line,"LVDC_GPitch[1]",strlen("LVDC_GPitch[4]"))==0){ sscanf(line+strlen("LVDC_GPitch[4]"),"%lf",&GPitch[1]);
+		} else if (strnicmp(line,"LVDC_GPitch[2]",strlen("LVDC_GPitch[4]"))==0){ sscanf(line+strlen("LVDC_GPitch[4]"),"%lf",&GPitch[2]);
+		} else if (strnicmp(line,"LVDC_GPitch[3]",strlen("LVDC_GPitch[4]"))==0){ sscanf(line+strlen("LVDC_GPitch[4]"),"%lf",&GPitch[3]);
+		} else if (strnicmp(line,"LVDC_GYaw[0]",strlen("LVDC_GYaw[4]"))==0){ sscanf(line+strlen("LVDC_GYaw[4]"),"%lf",&GYaw[0]);
+		} else if (strnicmp(line,"LVDC_GYaw[1]",strlen("LVDC_GYaw[4]"))==0){ sscanf(line+strlen("LVDC_GYaw[4]"),"%lf",&GYaw[1]);
+		} else if (strnicmp(line,"LVDC_GYaw[2]",strlen("LVDC_GYaw[4]"))==0){ sscanf(line+strlen("LVDC_GYaw[4]"),"%lf",&GYaw[2]);
+		} else if (strnicmp(line,"LVDC_GYaw[3]",strlen("LVDC_GYaw[4]"))==0){ sscanf(line+strlen("LVDC_GYaw[4]"),"%lf",&GYaw[3]);
+		} else if (strnicmp(line,"LVDC_G_T",strlen("LVDC_G_T"))==0){ sscanf(line+strlen("LVDC_G_T"),"%lf",&G_T);
+		} else if (strnicmp(line,"LVDC_gx[0]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[0]);
+		} else if (strnicmp(line,"LVDC_gx[1]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[1]);
+		} else if (strnicmp(line,"LVDC_gx[2]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[2]);
+		} else if (strnicmp(line,"LVDC_gx[3]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[3]);
+		} else if (strnicmp(line,"LVDC_gx[4]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[4]);
+		} else if (strnicmp(line,"LVDC_gx[5]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[5]);
+		} else if (strnicmp(line,"LVDC_gx[6]",strlen("LVDC_gx[7]"))==0){ sscanf(line+strlen("LVDC_gx[7]"),"%lf",&gx[6]);
+		} else if (strnicmp(line,"LVDC_IGMInterval",strlen("LVDC_IGMInterval"))==0){ sscanf(line+strlen("LVDC_IGMInterval"),"%lf",&IGMInterval);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[0]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[0]);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[1]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[1]);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[2]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[2]);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[3]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[3]);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[4]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[4]);
+		} else if (strnicmp(line,"LVDC_IncFromAzPoly[5]",strlen("LVDC_IncFromAzPoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromAzPoly[6]"),"%lf",&IncFromAzPoly[5]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[0]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[0]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[1]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[1]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[2]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[2]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[3]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[3]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[4]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[4]);
+		} else if (strnicmp(line,"LVDC_IncFromTimePoly[5]",strlen("LVDC_IncFromTimePoly[6]"))==0){ sscanf(line+strlen("LVDC_IncFromTimePoly[6]"),"%lf",&IncFromTimePoly[5]);
+		} else if (strnicmp(line,"LVDC_Inclination",strlen("LVDC_Inclination"))==0){ sscanf(line+strlen("LVDC_Inclination"),"%lf",&Inclination);
+		} else if (strnicmp(line,"LVDC_J",strlen("LVDC_J"))==0){ sscanf(line+strlen("LVDC_J"),"%lf",&J);
+		} else if (strnicmp(line,"LVDC_J_1",strlen("LVDC_J_1"))==0){ sscanf(line+strlen("LVDC_J_1"),"%lf",&J_1);
+		} else if (strnicmp(line,"LVDC_J_2",strlen("LVDC_J_2"))==0){ sscanf(line+strlen("LVDC_J_2"),"%lf",&J_2);
+		} else if (strnicmp(line,"LVDC_J_3",strlen("LVDC_J_3"))==0){ sscanf(line+strlen("LVDC_J_3"),"%lf",&J_3);
+		} else if (strnicmp(line,"LVDC_J_12",strlen("LVDC_J_12"))==0){ sscanf(line+strlen("LVDC_J_12"),"%lf",&J_12);
+		} else if (strnicmp(line,"LVDC_Jt_3",strlen("LVDC_Jt_3"))==0){ sscanf(line+strlen("LVDC_Jt_3"),"%lf",&Jt_3);
+		} else if (strnicmp(line,"LVDC_J_Y",strlen("LVDC_J_Y"))==0){ sscanf(line+strlen("LVDC_J_Y"),"%lf",&J_Y);
+		} else if (strnicmp(line,"LVDC_J_P",strlen("LVDC_J_P"))==0){ sscanf(line+strlen("LVDC_J_P"),"%lf",&J_P);
+		} else if (strnicmp(line,"LVDC_K_1",strlen("LVDC_K_1"))==0){ sscanf(line+strlen("LVDC_K_1"),"%lf",&K_1);
+		} else if (strnicmp(line,"LVDC_K_2",strlen("LVDC_K_2"))==0){ sscanf(line+strlen("LVDC_K_2"),"%lf",&K_2);
+		} else if (strnicmp(line,"LVDC_K_3",strlen("LVDC_K_3"))==0){ sscanf(line+strlen("LVDC_K_3"),"%lf",&K_3);
+		} else if (strnicmp(line,"LVDC_K_4",strlen("LVDC_K_4"))==0){ sscanf(line+strlen("LVDC_K_4"),"%lf",&K_4);
+		}
+		if (strnicmp(line,"LVDC_K_5",strlen("LVDC_K_5"))==0){ sscanf(line+strlen("LVDC_K_5"),"%lf",&K_5);
+		} else if (strnicmp(line,"LVDC_K_P1",strlen("LVDC_K_P1"))==0){ sscanf(line+strlen("LVDC_K_P1"),"%lf",&K_P1);
+		} else if (strnicmp(line,"LVDC_K_P2",strlen("LVDC_K_P2"))==0){ sscanf(line+strlen("LVDC_K_P2"),"%lf",&K_P2);
+		} else if (strnicmp(line,"LVDC_K_Y1",strlen("LVDC_K_Y1"))==0){ sscanf(line+strlen("LVDC_K_Y1"),"%lf",&K_Y1);
+		} else if (strnicmp(line,"LVDC_K_Y2",strlen("LVDC_K_Y2"))==0){ sscanf(line+strlen("LVDC_K_Y2"),"%lf",&K_Y2);
+		} else if (strnicmp(line,"LVDC_K_Y",strlen("LVDC_K_Y"))==0){ sscanf(line+strlen("LVDC_K_Y"),"%lf",&K_Y);
+		} else if (strnicmp(line,"LVDC_K_P",strlen("LVDC_K_P"))==0){ sscanf(line+strlen("LVDC_K_P"),"%lf",&K_P);
+		} else if (strnicmp(line,"LVDC_D_P",strlen("LVDC_D_P"))==0){ sscanf(line+strlen("LVDC_D_P"),"%lf",&D_P);
+		} else if (strnicmp(line,"LVDC_D_Y",strlen("LVDC_D_Y"))==0){ sscanf(line+strlen("LVDC_D_Y"),"%lf",&D_Y);
+		} else if (strnicmp(line,"LVDC_L_1",strlen("LVDC_L_1"))==0){ sscanf(line+strlen("LVDC_L_1"),"%lf",&L_1);
+		} else if (strnicmp(line,"LVDC_L_2",strlen("LVDC_L_2"))==0){ sscanf(line+strlen("LVDC_L_2"),"%lf",&L_2);
+		} else if (strnicmp(line,"LVDC_L_3",strlen("LVDC_L_3"))==0){ sscanf(line+strlen("LVDC_L_3"),"%lf",&L_3);
+		} else if (strnicmp(line,"LVDC_dL_3",strlen("LVDC_dL_3"))==0){ sscanf(line+strlen("LVDC_dL_3"),"%lf",&dL_3);
+		} else if (strnicmp(line,"LVDC_Lt_3",strlen("LVDC_Lt_3"))==0){ sscanf(line+strlen("LVDC_Lt_3"),"%lf",&Lt_3);
+		} else if (strnicmp(line,"LVDC_L_12",strlen("LVDC_L_12"))==0){ sscanf(line+strlen("LVDC_L_12"),"%lf",&L_12);
+		} else if (strnicmp(line,"LVDC_L_P",strlen("LVDC_L_P"))==0){ sscanf(line+strlen("LVDC_L_P"),"%lf",&L_P);
+		} else if (strnicmp(line,"LVDC_L_Y",strlen("LVDC_L_Y"))==0){ sscanf(line+strlen("LVDC_L_Y"),"%lf",&L_Y);
+		} else if (strnicmp(line,"LVDC_Lt_Y",strlen("LVDC_Lt_Y"))==0){ sscanf(line+strlen("LVDC_Lt_Y"),"%lf",&Lt_Y);
+		} else if (strnicmp(line,"LVDC_LVDC_TB_ETime",strlen("LVDC_LVDC_TB_ETime"))==0){ sscanf(line+strlen("LVDC_LVDC_TB_ETime"),"%lf",&LVDC_TB_ETime);
+		} else if (strnicmp(line,"LVDC_mu",strlen("LVDC_mu"))==0){ sscanf(line+strlen("LVDC_mu"),"%lf",&mu);
+		} else if (strnicmp(line,"LVDC_OPitch[1]",strlen("LVDC_OPitch[4]"))==0){ sscanf(line+strlen("LVDC_OPitch[4]"),"%lf",&OPitch[0]);
+		} else if (strnicmp(line,"LVDC_OPitch[2]",strlen("LVDC_OPitch[4]"))==0){ sscanf(line+strlen("LVDC_OPitch[4]"),"%lf",&OPitch[1]);
+		} else if (strnicmp(line,"LVDC_OPitch[3]",strlen("LVDC_OPitch[4]"))==0){ sscanf(line+strlen("LVDC_OPitch[4]"),"%lf",&OPitch[2]);
+		} else if (strnicmp(line,"LVDC_OPitch[4]",strlen("LVDC_OPitch[4]"))==0){ sscanf(line+strlen("LVDC_OPitch[4]"),"%lf",&OPitch[3]);
+		} else if (strnicmp(line,"LVDC_OYaw[0]",strlen("LVDC_OYaw[4]"))==0){ sscanf(line+strlen("LVDC_OYaw[4]"),"%lf",&OYaw[0]);
+		} else if (strnicmp(line,"LVDC_OYaw[1]",strlen("LVDC_OYaw[4]"))==0){ sscanf(line+strlen("LVDC_OYaw[4]"),"%lf",&OYaw[1]);
+		} else if (strnicmp(line,"LVDC_OYaw[2]",strlen("LVDC_OYaw[4]"))==0){ sscanf(line+strlen("LVDC_OYaw[4]"),"%lf",&OYaw[2]);
+		} else if (strnicmp(line,"LVDC_OYaw[3]",strlen("LVDC_OYaw[4]"))==0){ sscanf(line+strlen("LVDC_OYaw[4]"),"%lf",&OYaw[3]);
+		} else if (strnicmp(line,"LVDC_p",strlen("LVDC_p"))==0){ sscanf(line+strlen("LVDC_p"),"%lf",&p);
+		} else if (strnicmp(line,"LVDC_P_1",strlen("LVDC_P_1"))==0){ sscanf(line+strlen("LVDC_P_1"),"%lf",&P_1);
+		} else if (strnicmp(line,"LVDC_P_2",strlen("LVDC_P_2"))==0){ sscanf(line+strlen("LVDC_P_2"),"%lf",&P_2);
+		} else if (strnicmp(line,"LVDC_P_3",strlen("LVDC_P_3"))==0){ sscanf(line+strlen("LVDC_P_3"),"%lf",&P_3);
+		} else if (strnicmp(line,"LVDC_P_12",strlen("LVDC_P_12"))==0){ sscanf(line+strlen("LVDC_P_12"),"%lf",&P_12);
+		} else if (strnicmp(line,"LVDC_phi_L",strlen("LVDC_phi_L"))==0){ sscanf(line+strlen("LVDC_phi_L"),"%lf",&phi_L);
+		} else if (strnicmp(line,"LVDC_phi_T",strlen("LVDC_phi_T"))==0){ sscanf(line+strlen("LVDC_phi_T"),"%lf",&phi_T);
+		} else if (strnicmp(line,"LVDC_Position[0]",strlen("LVDC_Position[3]"))==0){ sscanf(line+strlen("LVDC_Position[3]"),"%lf",&Position[0]);
+		} else if (strnicmp(line,"LVDC_Position[1]",strlen("LVDC_Position[3]"))==0){ sscanf(line+strlen("LVDC_Position[3]"),"%lf",&Position[1]);
+		} else if (strnicmp(line,"LVDC_Position[2]",strlen("LVDC_Position[3]"))==0){ sscanf(line+strlen("LVDC_Position[3]"),"%lf",&Position[2]);
+		} else if (strnicmp(line,"LVDC_Q_1",strlen("LVDC_Q_1"))==0){ sscanf(line+strlen("LVDC_Q_1"),"%lf",&Q_1);
+		} else if (strnicmp(line,"LVDC_Q_2",strlen("LVDC_Q_2"))==0){ sscanf(line+strlen("LVDC_Q_2"),"%lf",&Q_2);
+		} else if (strnicmp(line,"LVDC_Q_3",strlen("LVDC_Q_3"))==0){ sscanf(line+strlen("LVDC_Q_3"),"%lf",&Q_3);
+		} else if (strnicmp(line,"LVDC_Q_12",strlen("LVDC_Q_12"))==0){ sscanf(line+strlen("LVDC_Q_12"),"%lf",&Q_12);
+		} else if (strnicmp(line,"LVDC_Q_Y",strlen("LVDC_Q_Y"))==0){ sscanf(line+strlen("LVDC_Q_Y"),"%lf",&Q_Y);
+		} else if (strnicmp(line,"LVDC_Q_P",strlen("LVDC_Q_P"))==0){ sscanf(line+strlen("LVDC_Q_P"),"%lf",&Q_P);
+		} else if (strnicmp(line,"LVDC_R",strlen("LVDC_R"))==0){ sscanf(line+strlen("LVDC_R"),"%lf",&R);
+		} else if (strnicmp(line,"LVDC_RateGain",strlen("LVDC_RateGain"))==0){ sscanf(line+strlen("LVDC_RateGain"),"%lf",&RateGain);
+		} else if (strnicmp(line,"LVDC_ErrorGain",strlen("LVDC_ErrorGain"))==0){ sscanf(line+strlen("LVDC_ErrorGain"),"%lf",&ErrorGain);
+		} else if (strnicmp(line,"LVDC_ROV",strlen("LVDC_ROV"))==0){ sscanf(line+strlen("LVDC_ROV"),"%lf",&ROV);
+		} else if (strnicmp(line,"LVDC_ROVs",strlen("LVDC_ROVs"))==0){ sscanf(line+strlen("LVDC_ROVs"),"%lf",&ROVs);
+		} else if (strnicmp(line,"LVDC_R_T",strlen("LVDC_R_T"))==0){ sscanf(line+strlen("LVDC_R_T"),"%lf",&R_T);
+		} else if (strnicmp(line,"LVDC_S_1",strlen("LVDC_S_1"))==0){ sscanf(line+strlen("LVDC_S_1"),"%lf",&S_1);
+		} else if (strnicmp(line,"LVDC_S_2",strlen("LVDC_S_2"))==0){ sscanf(line+strlen("LVDC_S_2"),"%lf",&S_2);
+		} else if (strnicmp(line,"LVDC_S_3",strlen("LVDC_S_3"))==0){ sscanf(line+strlen("LVDC_S_3"),"%lf",&S_3);
+		} else if (strnicmp(line,"LVDC_S_12",strlen("LVDC_S_12"))==0){ sscanf(line+strlen("LVDC_S_12"),"%lf",&S_12);
+		} else if (strnicmp(line,"LVDC_S_P",strlen("LVDC_S_P"))==0){ sscanf(line+strlen("LVDC_S_P"),"%lf",&S_P);
+		} else if (strnicmp(line,"LVDC_S_Y",strlen("LVDC_S_Y"))==0){ sscanf(line+strlen("LVDC_S_Y"),"%lf",&S_Y);
+		} else if (strnicmp(line,"LVDC_S1_Sep_Time",strlen("LVDC_S1_Sep_Time"))==0){ sscanf(line+strlen("LVDC_S1_Sep_Time"),"%lf",&S1_Sep_Time);
+		} else if (strnicmp(line,"LVDC_sinceLastIGM",strlen("LVDC_sinceLastIGM"))==0){ sscanf(line+strlen("LVDC_sinceLastIGM"),"%lf",&sinceLastIGM);
+		} else if (strnicmp(line,"LVDC_sin_chi_Yit",strlen("LVDC_sin_chi_Yit"))==0){ sscanf(line+strlen("LVDC_sin_chi_Yit"),"%lf",&sin_chi_Yit);
+		} else if (strnicmp(line,"LVDC_sin_chi_Zit",strlen("LVDC_sin_chi_Zit"))==0){ sscanf(line+strlen("LVDC_sin_chi_Zit"),"%lf",&sin_chi_Zit);
+		} else if (strnicmp(line,"LVDC_sin_ups",strlen("LVDC_sin_ups"))==0){ sscanf(line+strlen("LVDC_sin_ups"),"%lf",&sin_ups);
+		} else if (strnicmp(line,"LVDC_cos_ups",strlen("LVDC_cos_ups"))==0){ sscanf(line+strlen("LVDC_cos_ups"),"%lf",&cos_ups);
+		} else if (strnicmp(line,"LVDC_SMCG",strlen("LVDC_SMCG"))==0){ sscanf(line+strlen("LVDC_SMCG"),"%lf",&SMCG);
+		}
+		if (strnicmp(line,"LVDC_S",strlen("LVDC_S"))==0){ sscanf(line+strlen("LVDC_S"),"%lf",&S);
+		} else if (strnicmp(line,"LVDC_P",strlen("LVDC_P"))==0){ sscanf(line+strlen("LVDC_P"),"%lf",&P);
+		} else if (strnicmp(line,"LVDC_t",strlen("LVDC_t"))==0){ sscanf(line+strlen("LVDC_t"),"%lf",&t);
+		} else if (strnicmp(line,"LVDC_T_0",strlen("LVDC_T_0"))==0){ sscanf(line+strlen("LVDC_T_0"),"%lf",&T_0);
+		} else if (strnicmp(line,"LVDC_t_1",strlen("LVDC_t_1"))==0){ sscanf(line+strlen("LVDC_t_1"),"%lf",&t_1);
+		} else if (strnicmp(line,"LVDC_T_1",strlen("LVDC_T_1"))==0){ sscanf(line+strlen("LVDC_T_1"),"%lf",&T_1);
+		} else if (strnicmp(line,"LVDC_T_1c",strlen("LVDC_T_1c"))==0){ sscanf(line+strlen("LVDC_T_1c"),"%lf",&T_1c);
+		} else if (strnicmp(line,"LVDC_t_2",strlen("LVDC_t_2"))==0){ sscanf(line+strlen("LVDC_t_2"),"%lf",&t_2);
+		} else if (strnicmp(line,"LVDC_T_2",strlen("LVDC_T_2"))==0){ sscanf(line+strlen("LVDC_T_2"),"%lf",&T_2);
+		} else if (strnicmp(line,"LVDC_t_21",strlen("LVDC_t_21"))==0){ sscanf(line+strlen("LVDC_t_21"),"%lf",&t_21);
+		} else if (strnicmp(line,"LVDC_t_3",strlen("LVDC_t_3"))==0){ sscanf(line+strlen("LVDC_t_3"),"%lf",&t_3);
+		} else if (strnicmp(line,"LVDC_T_3",strlen("LVDC_T_3"))==0){ sscanf(line+strlen("LVDC_T_3"),"%lf",&T_3);
+		} else if (strnicmp(line,"LVDC_t_3i",strlen("LVDC_t_3i"))==0){ sscanf(line+strlen("LVDC_t_3i"),"%lf",&t_3i);
+		} else if (strnicmp(line,"LVDC_t_4",strlen("LVDC_t_4"))==0){ sscanf(line+strlen("LVDC_t_4"),"%lf",&t_4);
+		} else if (strnicmp(line,"LVDC_T_4N",strlen("LVDC_T_4N"))==0){ sscanf(line+strlen("LVDC_T_4N"),"%lf",&T_4N);
+		} else if (strnicmp(line,"LVDC_t_5",strlen("LVDC_t_5"))==0){ sscanf(line+strlen("LVDC_t_5"),"%lf",&t_5);
+		} else if (strnicmp(line,"LVDC_t_6",strlen("LVDC_t_6"))==0){ sscanf(line+strlen("LVDC_t_6"),"%lf",&t_6);
+		} else if (strnicmp(line,"LVDC_TA1",strlen("LVDC_TA1"))==0){ sscanf(line+strlen("LVDC_TA1"),"%lf",&TA1);
+		} else if (strnicmp(line,"LVDC_TA2",strlen("LVDC_TA2"))==0){ sscanf(line+strlen("LVDC_TA2"),"%lf",&TA2);
+		} else if (strnicmp(line,"LVDC_TABLE15_C_3",strlen("LVDC_TABLE15_C_3"))==0){ sscanf(line+strlen("LVDC_TABLE15_C_3"),"%lf",&TABLE15_C_3);
+		} else if (strnicmp(line,"LVDC_TABLE15_e",strlen("LVDC_TABLE15_e"))==0){ sscanf(line+strlen("LVDC_TABLE15_e"),"%lf",&TABLE15_e);
+		} else if (strnicmp(line,"LVDC_TABLE15_f",strlen("LVDC_TABLE15_f"))==0){ sscanf(line+strlen("LVDC_TABLE15_f"),"%lf",&TABLE15_f);
+		} else if (strnicmp(line,"LVDC_T_ar",strlen("LVDC_T_ar"))==0){ sscanf(line+strlen("LVDC_T_ar"),"%lf",&T_ar);
+		} else if (strnicmp(line,"LVDC_TAS",strlen("LVDC_TAS"))==0){ sscanf(line+strlen("LVDC_TAS"),"%lf",&TAS);
+		} else if (strnicmp(line,"LVDC_tau1",strlen("LVDC_tau1"))==0){ sscanf(line+strlen("LVDC_tau1"),"%lf",&tau1);
+		} else if (strnicmp(line,"LVDC_tau2",strlen("LVDC_tau2"))==0){ sscanf(line+strlen("LVDC_tau2"),"%lf",&tau2);
+		} else if (strnicmp(line,"LVDC_tau3",strlen("LVDC_tau3"))==0){ sscanf(line+strlen("LVDC_tau3"),"%lf",&tau3);
+		} else if (strnicmp(line,"LVDC_tau3N",strlen("LVDC_tau3N"))==0){ sscanf(line+strlen("LVDC_tau3N"),"%lf",&tau3N);
+		} else if (strnicmp(line,"LVDC_t_B1",strlen("LVDC_t_B1"))==0){ sscanf(line+strlen("LVDC_t_B1"),"%lf",&t_B1);
+		} else if (strnicmp(line,"LVDC_TB1",strlen("LVDC_TB1"))==0){ sscanf(line+strlen("LVDC_TB1"),"%lf",&TB1);
+		} else if (strnicmp(line,"LVDC_TB2",strlen("LVDC_TB2"))==0){ sscanf(line+strlen("LVDC_TB2"),"%lf",&TB2);
+		} else if (strnicmp(line,"LVDC_t_B3",strlen("LVDC_t_B3"))==0){ sscanf(line+strlen("LVDC_t_B3"),"%lf",&t_B3);
+		} else if (strnicmp(line,"LVDC_TB3",strlen("LVDC_TB3"))==0){ sscanf(line+strlen("LVDC_TB3"),"%lf",&TB3);
+		} else if (strnicmp(line,"LVDC_TB4",strlen("LVDC_TB4"))==0){ sscanf(line+strlen("LVDC_TB4"),"%lf",&TB4);
+		} else if (strnicmp(line,"LVDC_TB4A",strlen("LVDC_TB4A"))==0){ sscanf(line+strlen("LVDC_TB4A"),"%lf",&TB4A);
+		} else if (strnicmp(line,"LVDC_TB5",strlen("LVDC_TB5"))==0){ sscanf(line+strlen("LVDC_TB5"),"%lf",&TB5);
+		} else if (strnicmp(line,"LVDC_TB6",strlen("LVDC_TB6"))==0){ sscanf(line+strlen("LVDC_TB6"),"%lf",&TB6);
+		} else if (strnicmp(line,"LVDC_TB7",strlen("LVDC_TB7"))==0){ sscanf(line+strlen("LVDC_TB7"),"%lf",&TB7);
+		} else if (strnicmp(line,"LVDC_T_c",strlen("LVDC_T_c"))==0){ sscanf(line+strlen("LVDC_T_c"),"%lf",&T_c);
+		} else if (strnicmp(line,"LVDC_tchi_y_last",strlen("LVDC_tchi_y_last"))==0){ sscanf(line+strlen("LVDC_tchi_y_last"),"%lf",&tchi_y_last);
+		} else if (strnicmp(line,"LVDC_tchi_p_last",strlen("LVDC_tchi_p_last"))==0){ sscanf(line+strlen("LVDC_tchi_p_last"),"%lf",&tchi_p_last);
+		} else if (strnicmp(line,"LVDC_tchi_y",strlen("LVDC_tchi_y"))==0){ sscanf(line+strlen("LVDC_tchi_y"),"%lf",&tchi_y);
+		} else if (strnicmp(line,"LVDC_tchi_p",strlen("LVDC_tchi_p"))==0){ sscanf(line+strlen("LVDC_tchi_p"),"%lf",&tchi_p);
+		} else if (strnicmp(line,"LVDC_t_clock",strlen("LVDC_t_clock"))==0){ sscanf(line+strlen("LVDC_t_clock"),"%lf",&t_clock);
+		} else if (strnicmp(line,"LVDC_T_CO",strlen("LVDC_T_CO"))==0){ sscanf(line+strlen("LVDC_T_CO"),"%lf",&T_CO);
+		} else if (strnicmp(line,"LVDC_t_fail",strlen("LVDC_t_fail"))==0){ sscanf(line+strlen("LVDC_t_fail"),"%lf",&t_fail);
+		} else if (strnicmp(line,"LVDC_T_GO",strlen("LVDC_T_GO"))==0){ sscanf(line+strlen("LVDC_T_GO"),"%lf",&T_GO);
+		} else if (strnicmp(line,"LVDC_T_IGM",strlen("LVDC_T_IGM"))==0){ sscanf(line+strlen("LVDC_T_IGM"),"%lf",&T_IGM);
+		} else if (strnicmp(line,"LVDC_T_LET",strlen("LVDC_T_LET"))==0){ sscanf(line+strlen("LVDC_T_LET"),"%lf",&T_LET);
+		} else if (strnicmp(line,"LVDC_T_S1",strlen("LVDC_T_S1"))==0){ sscanf(line+strlen("LVDC_T_S1"),"%lf",&T_S1);
+		} else if (strnicmp(line,"LVDC_T_S2",strlen("LVDC_T_S2"))==0){ sscanf(line+strlen("LVDC_T_S2"),"%lf",&T_S2);
+		} else if (strnicmp(line,"LVDC_T_S3",strlen("LVDC_T_S3"))==0){ sscanf(line+strlen("LVDC_T_S3"),"%lf",&T_S3);
+		} else if (strnicmp(line,"LVDC_TS4BS",strlen("LVDC_TS4BS"))==0){ sscanf(line+strlen("LVDC_TS4BS"),"%lf",&TS4BS);
+		} else if (strnicmp(line,"LVDC_TSMC1",strlen("LVDC_TSMC1"))==0){ sscanf(line+strlen("LVDC_TSMC1"),"%lf",&TSMC1);
+		} else if (strnicmp(line,"LVDC_TSMC2",strlen("LVDC_TSMC2"))==0){ sscanf(line+strlen("LVDC_TSMC2"),"%lf",&TSMC2);
+		}
+		if (strnicmp(line,"LVDC_T_T",strlen("LVDC_T_T"))==0){ sscanf(line+strlen("LVDC_T_T"),"%lf",&T_T);
+		} else if (strnicmp(line,"LVDC_Tt_3",strlen("LVDC_Tt_3"))==0){ sscanf(line+strlen("LVDC_Tt_3"),"%lf",&Tt_3);
+		} else if (strnicmp(line,"LVDC_Tt_T",strlen("LVDC_Tt_T"))==0){ sscanf(line+strlen("LVDC_Tt_T"),"%lf",&Tt_T);
+		} else if (strnicmp(line,"LVDC_U_1",strlen("LVDC_U_1"))==0){ sscanf(line+strlen("LVDC_U_1"),"%lf",&U_1);
+		} else if (strnicmp(line,"LVDC_U_2",strlen("LVDC_U_2"))==0){ sscanf(line+strlen("LVDC_U_2"),"%lf",&U_2);
+		} else if (strnicmp(line,"LVDC_U_3",strlen("LVDC_U_3"))==0){ sscanf(line+strlen("LVDC_U_3"),"%lf",&U_3);
+		} else if (strnicmp(line,"LVDC_U_12",strlen("LVDC_U_12"))==0){ sscanf(line+strlen("LVDC_U_12"),"%lf",&U_12);
+		} else if (strnicmp(line,"LVDC_ups_T",strlen("LVDC_ups_T"))==0){ sscanf(line+strlen("LVDC_ups_T"),"%lf",&ups_T);
+		} else if (strnicmp(line,"LVDC_V",strlen("LVDC_V"))==0){ sscanf(line+strlen("LVDC_V"),"%lf",&V);
+		} else if (strnicmp(line,"LVDC_Velocity[0]",strlen("LVDC_Velocity[3]"))==0){ sscanf(line+strlen("LVDC_Velocity[3]"),"%lf",&Velocity[0]);
+		} else if (strnicmp(line,"LVDC_Velocity[1]",strlen("LVDC_Velocity[3]"))==0){ sscanf(line+strlen("LVDC_Velocity[3]"),"%lf",&Velocity[1]);
+		} else if (strnicmp(line,"LVDC_Velocity[2]",strlen("LVDC_Velocity[3]"))==0){ sscanf(line+strlen("LVDC_Velocity[3]"),"%lf",&Velocity[2]);
+		} else if (strnicmp(line,"LVDC_V_ex1",strlen("LVDC_V_ex1"))==0){ sscanf(line+strlen("LVDC_V_ex1"),"%lf",&V_ex1);
+		} else if (strnicmp(line,"LVDC_V_ex2",strlen("LVDC_V_ex2"))==0){ sscanf(line+strlen("LVDC_V_ex2"),"%lf",&V_ex2);
+		} else if (strnicmp(line,"LVDC_V_ex3",strlen("LVDC_V_ex3"))==0){ sscanf(line+strlen("LVDC_V_ex3"),"%lf",&V_ex3);
+		} else if (strnicmp(line,"LVDC_V_i",strlen("LVDC_V_i"))==0){ sscanf(line+strlen("LVDC_V_i"),"%lf",&V_i);
+		} else if (strnicmp(line,"LVDC_V_0",strlen("LVDC_V_0"))==0){ sscanf(line+strlen("LVDC_V_0"),"%lf",&V_0);
+		} else if (strnicmp(line,"LVDC_V_1",strlen("LVDC_V_1"))==0){ sscanf(line+strlen("LVDC_V_1"),"%lf",&V_1);
+		} else if (strnicmp(line,"LVDC_V_2",strlen("LVDC_V_2"))==0){ sscanf(line+strlen("LVDC_V_2"),"%lf",&V_2);
+		} else if (strnicmp(line,"LVDC_V_S2T",strlen("LVDC_V_S2T"))==0){ sscanf(line+strlen("LVDC_V_S2T"),"%lf",&V_S2T);
+		} else if (strnicmp(line,"LVDC_V_T",strlen("LVDC_V_T"))==0){ sscanf(line+strlen("LVDC_V_T"),"%lf",&V_T);
+		} else if (strnicmp(line,"LVDC_V_TC",strlen("LVDC_V_TC"))==0){ sscanf(line+strlen("LVDC_V_TC"),"%lf",&V_TC);
+		} else if (strnicmp(line,"LVDC_xi_T",strlen("LVDC_xi_T"))==0){ sscanf(line+strlen("LVDC_xi_T"),"%lf",&xi_T);
+		} else if (strnicmp(line,"LVDC_eta_T",strlen("LVDC_eta_T"))==0){ sscanf(line+strlen("LVDC_eta_T"),"%lf",&eta_T);
+		} else if (strnicmp(line,"LVDC_zeta_T",strlen("LVDC_zeta_T"))==0){ sscanf(line+strlen("LVDC_zeta_T"),"%lf",&zeta_T);
+		} else if (strnicmp(line,"LVDC_X_S1",strlen("LVDC_X_S1"))==0){ sscanf(line+strlen("LVDC_X_S1"),"%lf",&X_S1);
+		} else if (strnicmp(line,"LVDC_X_S2",strlen("LVDC_X_S2"))==0){ sscanf(line+strlen("LVDC_X_S2"),"%lf",&X_S2);
+		} else if (strnicmp(line,"LVDC_X_S3",strlen("LVDC_X_S3"))==0){ sscanf(line+strlen("LVDC_X_S3"),"%lf",&X_S3);
+		} else if (strnicmp(line,"LVDC_Xtt_y",strlen("LVDC_Xtt_y"))==0){ sscanf(line+strlen("LVDC_Xtt_y"),"%lf",&Xtt_y);
+		} else if (strnicmp(line,"LVDC_Xtt_p",strlen("LVDC_Xtt_p"))==0){ sscanf(line+strlen("LVDC_Xtt_p"),"%lf",&Xtt_p);
+		} else if (strnicmp(line,"LVDC_X_Zi",strlen("LVDC_X_Zi"))==0){ sscanf(line+strlen("LVDC_X_Zi"),"%lf",&X_Zi);
+		} else if (strnicmp(line,"LVDC_X_Yi",strlen("LVDC_X_Yi"))==0){ sscanf(line+strlen("LVDC_X_Yi"),"%lf",&X_Yi);
+		} else if (strnicmp(line,"LVDC_Y_u",strlen("LVDC_Y_u"))==0){ sscanf(line+strlen("LVDC_Y_u"),"%lf",&Y_u);
+		}
+		// VECTOR3
+		if (strnicmp(line,"LVDC_ACommandedAttitude",strlen("LVDC_ACommandedAttitude"))==0){ sscanf(line+strlen("LVDC_ACommandedAttitude"),"%lf %lf %lf",&ACommandedAttitude.x,&ACommandedAttitude.y,&ACommandedAttitude.z);
+		} else if (strnicmp(line,"LVDC_AttitudeError",strlen("LVDC_AttitudeError"))==0){ sscanf(line+strlen("LVDC_AttitudeError"),"%lf %lf %lf",&AttitudeError.x,&AttitudeError.y,&AttitudeError.z);
+		} else if (strnicmp(line,"LVDC_AttRate",strlen("LVDC_AttRate"))==0){ sscanf(line+strlen("LVDC_AttRate"),"%lf %lf %lf",&AttRate.x,&AttRate.y,&AttRate.z);
+		} else if (strnicmp(line,"LVDC_CommandedAttitude",strlen("LVDC_CommandedAttitude"))==0){ sscanf(line+strlen("LVDC_CommandedAttitude"),"%lf %lf %lf",&CommandedAttitude.x,&CommandedAttitude.y,&CommandedAttitude.z);
+		} else if (strnicmp(line,"LVDC_CommandRateLimits",strlen("LVDC_CommandRateLimits"))==0){ sscanf(line+strlen("LVDC_CommandRateLimits"),"%lf %lf %lf",&CommandRateLimits.x,&CommandRateLimits.y,&CommandRateLimits.z);
+		} else if (strnicmp(line,"LVDC_CurrentAttitude",strlen("LVDC_CurrentAttitude"))==0){ sscanf(line+strlen("LVDC_CurrentAttitude"),"%lf %lf %lf",&CurrentAttitude.x,&CurrentAttitude.y,&CurrentAttitude.z);
+		} else if (strnicmp(line,"LVDC_ddotG_act",strlen("LVDC_ddotG_act"))==0){ sscanf(line+strlen("LVDC_ddotG_act"),"%lf %lf %lf",&ddotG_act.x,&ddotG_act.y,&ddotG_act.z);
+		} else if (strnicmp(line,"LVDC_ddotG_last",strlen("LVDC_ddotG_last"))==0){ sscanf(line+strlen("LVDC_ddotG_last"),"%lf %lf %lf",&ddotG_last.x,&ddotG_last.y,&ddotG_last.z);
+		} else if (strnicmp(line,"LVDC_ddotM_act",strlen("LVDC_ddotM_act"))==0){ sscanf(line+strlen("LVDC_ddotM_act"),"%lf %lf %lf",&ddotM_act.x,&ddotM_act.y,&ddotM_act.z);
+		} else if (strnicmp(line,"LVDC_ddotM_last",strlen("LVDC_ddotM_last"))==0){ sscanf(line+strlen("LVDC_ddotM_last"),"%lf %lf %lf",&ddotM_last.x,&ddotM_last.y,&ddotM_last.z);
+		} else if (strnicmp(line,"LVDC_DDotXEZ_G",strlen("LVDC_DDotXEZ_G"))==0){ sscanf(line+strlen("LVDC_DDotXEZ_G"),"%lf %lf %lf",&DDotXEZ_G.x,&DDotXEZ_G.y,&DDotXEZ_G.z);
+		} else if (strnicmp(line,"LVDC_DotG_act",strlen("LVDC_DotG_act"))==0){ sscanf(line+strlen("LVDC_DotG_act"),"%lf %lf %lf",&DotG_act.x,&DotG_act.y,&DotG_act.z);
+		} else if (strnicmp(line,"LVDC_DotG_last",strlen("LVDC_DotG_last"))==0){ sscanf(line+strlen("LVDC_DotG_last"),"%lf %lf %lf",&DotG_last.x,&DotG_last.y,&DotG_last.z);
+		} else if (strnicmp(line,"LVDC_DotM_act",strlen("LVDC_DotM_act"))==0){ sscanf(line+strlen("LVDC_DotM_act"),"%lf %lf %lf",&DotM_act.x,&DotM_act.y,&DotM_act.z);
+		} else if (strnicmp(line,"LVDC_DotM_last",strlen("LVDC_DotM_last"))==0){ sscanf(line+strlen("LVDC_DotM_last"),"%lf %lf %lf",&DotM_last.x,&DotM_last.y,&DotM_last.z);
+		} else if (strnicmp(line,"LVDC_DotS",strlen("LVDC_DotS"))==0){ sscanf(line+strlen("LVDC_DotS"),"%lf %lf %lf",&DotS.x,&DotS.y,&DotS.z);
+		} else if (strnicmp(line,"LVDC_DotXEZ",strlen("LVDC_DotXEZ"))==0){ sscanf(line+strlen("LVDC_DotXEZ"),"%lf %lf %lf",&DotXEZ.x,&DotXEZ.y,&DotXEZ.z);
+		} else if (strnicmp(line,"LVDC_PCommandedAttitude",strlen("LVDC_PCommandedAttitude"))==0){ sscanf(line+strlen("LVDC_PCommandedAttitude"),"%lf %lf %lf",&PCommandedAttitude.x,&PCommandedAttitude.y,&PCommandedAttitude.z);
+		} else if (strnicmp(line,"LVDC_Pos4",strlen("LVDC_Pos4"))==0){ sscanf(line+strlen("LVDC_Pos4"),"%lf %lf %lf",&Pos4.x,&Pos4.y,&Pos4.z);
+		} else if (strnicmp(line,"LVDC_PosS",strlen("LVDC_PosS"))==0){ sscanf(line+strlen("LVDC_PosS"),"%lf %lf %lf",&PosS.x,&PosS.y,&PosS.z);
+		} else if (strnicmp(line,"LVDC_PosXEZ",strlen("LVDC_PosXEZ"))==0){ sscanf(line+strlen("LVDC_PosXEZ"),"%lf %lf %lf",&PosXEZ.x,&PosXEZ.y,&PosXEZ.z);
+		} else if (strnicmp(line,"LVDC_WV",strlen("LVDC_WV"))==0){ sscanf(line+strlen("LVDC_WV"),"%lf %lf %lf",&WV.x,&WV.y,&WV.z);
+		} else if (strnicmp(line,"LVDC_XLunarAttitude",strlen("LVDC_XLunarAttitude"))==0){ sscanf(line+strlen("LVDC_XLunarAttitude"),"%lf %lf %lf",&XLunarAttitude.x,&XLunarAttitude.y,&XLunarAttitude.z);
+		}
+		// MATRIX3
+		if (strnicmp(line,"LVDC_MX_A",strlen("LVDC_MX_A"))==0){ sscanf(line+strlen("LVDC_MX_A"),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&MX_A.m11,&MX_A.m12,&MX_A.m13,&MX_A.m21,&MX_A.m22,&MX_A.m23,&MX_A.m31,&MX_A.m32,&MX_A.m33);
+		} else if (strnicmp(line,"LVDC_MX_B",strlen("LVDC_MX_B"))==0){ sscanf(line+strlen("LVDC_MX_B"),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&MX_B.m11,&MX_B.m12,&MX_B.m13,&MX_B.m21,&MX_B.m22,&MX_B.m23,&MX_B.m31,&MX_B.m32,&MX_B.m33);
+		} else if (strnicmp(line,"LVDC_MX_G",strlen("LVDC_MX_G"))==0){ sscanf(line+strlen("LVDC_MX_G"),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&MX_G.m11,&MX_G.m12,&MX_G.m13,&MX_G.m21,&MX_G.m22,&MX_G.m23,&MX_G.m31,&MX_G.m32,&MX_G.m33);
+		} else if (strnicmp(line,"LVDC_MX_K",strlen("LVDC_MX_K"))==0){ sscanf(line+strlen("LVDC_MX_K"),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&MX_K.m11,&MX_K.m12,&MX_K.m13,&MX_K.m21,&MX_K.m22,&MX_K.m23,&MX_K.m31,&MX_K.m32,&MX_K.m33);
+		} else if (strnicmp(line,"LVDC_MX_phi_T",strlen("LVDC_MX_phi_T"))==0){ sscanf(line+strlen("LVDC_MX_phi_T"),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&MX_phi_T.m11,&MX_phi_T.m12,&MX_phi_T.m13,&MX_phi_T.m21,&MX_phi_T.m22,&MX_phi_T.m23,&MX_phi_T.m31,&MX_phi_T.m32,&MX_phi_T.m33);
+		}
+		// Done
 	}
 	if(oapiReadScenario_nextline (scn, line)){
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
@@ -4361,7 +5162,8 @@ minorloop:
 	}
 
 	/* **** SATURN 5 ABORT HANDLING **** */
-	if(owner->bAbort){
+	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
+	if(owner->bAbort && owner->MissionTime > -300){				
 		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
 		owner->agc.SetInputChannelBit(030, 4, true);	// Notify the AGC of the abort
 		owner->agc.SetInputChannelBit(030, 5, true);	// and the liftoff, if it's not set already
