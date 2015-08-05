@@ -75,6 +75,11 @@ public:
 	/// \todo Not implemented yet, see Saturn1b
 	virtual void SetVentingJ2Thruster() {};
 
+	///
+	/// \brief LVDC "Switch Selector" staging support utility function
+	/// 
+	void SwitchSelector(int item);
+
 	//
 	// Functions that external code shouldn't need to access.
 	//

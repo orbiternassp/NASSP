@@ -66,6 +66,11 @@ public:
 	///
 	virtual void SetVentingJ2Thruster();
 
+	/// 
+	/// \brief LVDC "Switch Selector" staging support utility function
+	/// 
+	void SwitchSelector(int item);
+
 protected:
 
 	VECTOR3 RelPos;

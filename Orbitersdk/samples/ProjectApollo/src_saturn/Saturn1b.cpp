@@ -683,6 +683,95 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 	}
 }
 
+/// 
+/// \brief LVDC "Switch Selector" staging support utility function
+/// 
+void Saturn1b::SwitchSelector(int item){
+	int i=0;
+
+	switch(item){
+	case 10:
+		DeactivatePrelaunchVenting();
+		break;
+	case 11:
+		ActivatePrelaunchVenting();
+		break;
+	case 12:
+		SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
+			SetThrusterResource(th_main[i], ph_1st);
+		}
+		CreateStageOne();								// Create hidden stage one, for later use in staging
+		break;
+	case 13:
+		if (!UseATC && Scount.isValid()) {
+			Scount.play();
+			Scount.done();
+		}
+		break;
+	case 14:
+		DeactivatePrelaunchVenting();
+		break;
+	case 15:
+		SetLiftoffLight();								// Light liftoff lamp
+		SetStage(LAUNCH_STAGE_ONE);						// Switch to stage one
+		// Start mission and event timers
+		MissionTimerDisplay.Reset();
+		MissionTimerDisplay.SetEnabled(true);
+		EventTimerDisplay.Reset();
+		EventTimerDisplay.SetEnabled(true);
+		EventTimerDisplay.SetRunning(true);
+		agc.SetInputChannelBit(030, 5, true);			// Inform AGC of liftoff
+		SetThrusterGroupLevel(thg_main, 1.0);			// Set full thrust, just in case
+		contrailLevel = 1.0;
+		if (LaunchS.isValid() && !LaunchS.isPlaying()){			
+			// And play launch sound
+			LaunchS.play(NOLOOP,255);
+			LaunchS.done();
+		}
+		break;
+	case 16:
+		SetThrusterResource(th_main[4], NULL);
+		SetThrusterResource(th_main[5], NULL);
+		SetThrusterResource(th_main[6], NULL);
+		SetThrusterResource(th_main[7], NULL);
+		SShutS.play(NOLOOP,235);
+		SShutS.done();
+		// Clear liftoff light now - Apollo 15 checklist item
+		ClearLiftoffLight();
+		break;
+	case 17:
+		// Move hidden S1B
+		if(hstg1){
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs);
+		}				
+		// Engine Shutdown
+		for (i = 0; i < 5; i++){
+			SetThrusterResource(th_main[i], NULL);
+		}
+		break;
+	case 18:
+		ClearEngineIndicators();
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
+		SetSIVBThrusters(true);
+		SetThrusterGroupLevel(thg_ver,1.0);
+		SetThrusterResource(th_main[0], ph_3rd);
+		SetSIVBMixtureRatio(5.5);				
+		break;
+
+	case 23:
+		SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
+		SPUShiftS.play(NOLOOP,255); 
+		SPUShiftS.done();
+		break;
+	}
+}
+
 //
 // Save any state specific to the Saturn 1b.
 //

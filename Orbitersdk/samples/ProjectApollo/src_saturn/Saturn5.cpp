@@ -1635,6 +1635,114 @@ void SaturnV::LaunchVehicleUnbuild() {
 
 // ********** LVDC++ **********
 
+// DS20150720 "SWITCH SELECTOR" STAGING SUPPORT FUNCTION
+void SaturnV::SwitchSelector(int item){
+	int i=0;
+
+	switch(item){
+	case 10:
+		DeactivatePrelaunchVenting();
+		break;
+	case 11:
+		ActivatePrelaunchVenting();
+		break;
+	case 12:
+		SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
+			SetThrusterResource(th_main[i], ph_1st);
+		}
+		CreateStageOne();								// Create hidden stage one, for later use in staging
+		break;
+	case 13:
+		if (!UseATC && Scount.isValid()) {
+			Scount.play();
+			Scount.done();
+		}
+		break;
+	case 14:
+		DeactivatePrelaunchVenting();
+		break;
+	case 15:
+		SetLiftoffLight();										// And light liftoff lamp
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+		// Start mission and event timers
+		MissionTimerDisplay.Reset();
+		MissionTimerDisplay.SetEnabled(true);
+		EventTimerDisplay.Reset();
+		EventTimerDisplay.SetEnabled(true);
+		EventTimerDisplay.SetRunning(true);
+		agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
+		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
+		contrailLevel = 1.0;
+		if (LaunchS.isValid() && !LaunchS.isPlaying()){			// And play launch sound			
+			LaunchS.play(NOLOOP,255);
+			LaunchS.done();
+		}
+		break;
+	case 16:
+		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SShutS.play(NOLOOP,235);
+		SShutS.done();
+		// Clear liftoff light now - Apollo 15 checklist item
+		ClearLiftoffLight();
+		break;
+	case 17:
+		// Move hidden S1C
+		if (hstg1) {
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs);
+		}				
+		// Engine Shutdown
+		for (i = 0; i < 5; i++){
+			SetThrusterResource(th_main[i], NULL);
+		}
+		break;
+	case 18:
+		// Drop old stage
+		SeparateStage(LAUNCH_STAGE_TWO);
+		SetStage(LAUNCH_STAGE_TWO);
+		// Fire S2 ullage
+		if(SII_UllageNum){
+			SetThrusterGroupLevel(thg_ull, 1.0);
+			SepS.play(LOOP, 130);
+		}
+		ActivateStagingVent();
+		break;
+	case 19:
+		// S2 Engine Startup
+		SIISepState = true;
+		SetSIICMixtureRatio(5.5);
+		DeactivateStagingVent();
+		SetThrusterGroupLevel(thg_main, ((LVDC_TB_ETime-2.4)*0.45));
+		break;
+	case 20:
+		// S2 Engine Startup P2
+		SetThrusterGroupLevel(thg_main, 1); // Full power
+		if(SII_UllageNum){ SetThrusterGroupLevel(thg_ull,0.0); }
+		SepS.stop();
+		break;
+	case 21:
+		SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
+		SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+		break;
+	case 22:
+		JettisonLET();
+		break;
+	case 23:
+		// MR Shift
+		SetSIICMixtureRatio(4.5); // Is this 4.7 or 4.2? AP8 says 4.5
+		SPUShiftS.play(NOLOOP,255); 
+		SPUShiftS.done();
+		break;
+	case 5:
+		// S4B Startup
+		SetSIVbCMixtureRatio(5.0);
+		break;
+	}
+}
+
 // DS20070205 LVDC++ SETUP
 void SaturnV::lvdc_init(){
 	lvimu.Init();							// Initialize IMU

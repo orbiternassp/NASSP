@@ -962,6 +962,10 @@ public:
 	///
 	ChecklistController *GetChecklistControl();
 
+	/// 
+	/// \brief LVDC "Switch Selector" staging support utility function
+	/// 
+	virtual void SwitchSelector(int item) = 0;
 
 	//
 	// CWS functions.
@@ -4450,6 +4454,8 @@ protected:
 	// Friend Class List for systems objects 
 	//
 
+	friend class LVDC1B;	// If we are a Saturn 1B
+	friend class LVDC;		// If we are a Saturn V
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;
