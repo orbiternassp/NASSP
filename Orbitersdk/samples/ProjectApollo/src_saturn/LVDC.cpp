@@ -2225,6 +2225,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_END_STRING);
 	lvimu.SaveState(scn);
 }
+
 void LVDC1B::LoadState(FILEHANDLE scn){
 	char *line;	
 	int tmp = 0; // Used in boolean type loader
