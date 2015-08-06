@@ -1632,13 +1632,10 @@ protected:
 	//
 	bool use_lvdc; // LVDC use flag
 	
-
 	//
 	// Ground Systems
 	//
-	MCC	 mcc;
-	MC_GroundTrack  groundtrack;
-	MC_CapCom  capcom;
+	MCC	mcc;
 
 	//
 	// ChecklistController
@@ -4447,7 +4444,6 @@ protected:
 	//
 	// IMFD5 communication support
 	//
-
 	IMFD_Client IMFD_Client; 
 
 	//
@@ -4456,6 +4452,7 @@ protected:
 
 	friend class LVDC1B;	// If we are a Saturn 1B
 	friend class LVDC;		// If we are a Saturn V
+	friend class MCC;
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;

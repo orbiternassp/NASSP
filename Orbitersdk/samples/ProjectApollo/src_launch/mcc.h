@@ -81,7 +81,49 @@
 #define GSPT_ENTRY		0x0080
 
 // Max number of ground stations
-#define MAX_GROUND_STATION 42
+#define MAX_GROUND_STATION	42
+
+// Message buffer limits
+#define MAX_MESSAGES		10
+#define MAX_MSGSIZE			128
+#define MSG_DISPLAY_TIME	10
+
+// Mission major state numbers
+#define MST_PRELAUNCH		0
+#define MST_BOOST			1
+#define MST_EARTH_ORBIT		2
+#define MST_TL_COAST		3
+#define MST_LUNAR_ORBIT		4
+#define MST_TE_COAST		5
+#define MST_ENTRY			6
+
+// Mission Types
+// Unmanned and unflown missions are included for completeness. I don't intend to support them, or at least it's not a priority.
+
+// MISSION A is an unmanned CSM launched with a Saturn V. Apollo 4 and Apollo 6.
+#define MTP_A				0
+// MISSION B is an unmanned LM launched with a Saturn 1B. Apollo 5.
+#define MTP_B				1
+// MISSION C is a manned CSM launched with a Saturn 1B to earth orbit for evaluation. Apollo 7.
+#define MTP_C				2
+// MISSION C PRIME is a manned CSM launched into lunar orbit for evaluation. Apollo 8.
+#define MTP_C_PRIME			3
+// MISSION D is a manned CSM and LM launched with a Saturn V to earth orbit for evaluation. This was supposed to be Apollo 8, but became Apollo 9.
+#define MTP_D				4
+// MISSION E was to be a manned CSM and LM, launched with a Saturn V into a 3500nm orbit to simulate lunar operations. It was never flown.
+#define MTP_E				5
+// MISSION F is a manned CSM and LM launched to lunar orbit for evaluation. Apollo 10.
+#define MTP_F				6
+// MISSION G is a manned CSM and LM launched to lunar orbit for landing. Apollo 11.
+#define MTP_G				7
+// MISSION H is a manned CSM and LM launched to lunar orbit for landing and up to 2-day stay. Apollo 12-14.
+#define MTP_H				8
+// MISSION J is a manned CSM and modified LM launched to lunar orbit for landing, LRV operations, and extended stay. Apollo 15-17.
+#define MTP_J				9
+// SKYLAB is a manned CSM launched with a Saturn 1B to earth orbit to dock with the SKYLAB space station.
+#define MTP_SKYLAB			10
+// ASTP is a manned CSM launched with a Saturn 1B to earth orbit to dock with Soyuz 19.
+#define MTP_ASTP			11
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -100,51 +142,38 @@ struct GroundStation {
 	char UpTlmCaps;      // Command Capabilities
 	char StationType;    // Station Type
 	int  StationPurpose; // Station Purpose
+	int	 AOS;            // AOS flag
 };
 
-class MCC {
-	// Mission Control Center main class
+// Mission Control Center class
+class MCC {	
 public:
-	MCC();															// Cons
-	virtual void Init();									// Initialization
-	virtual void TimeStep(double simdt);                                    // Timestep
+	MCC();													// Cons
+	void Init(Saturn *vs);									// Initialization
+	void TimeStep(double simdt);					        // Timestep
+	void keyDown(DWORD key);								// Notification of keypress	
+	void addMessage(char *msg);								// Add message into buffer
 
-	Saturn *cm;														// Pointer to CM
+	Saturn *cm;												// Pointer to CM
+	// GROUND TRACKING NETWORK
+	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
+	double LastAOSUpdate;									// Last update to AOS data
+	double CM_Position[3];                                  // CM's position and altitude
+	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
+	bool   GT_Enabled;										// Ground tracking enable/disable
+
+	// MISSION STATE
+	int MissionType;										// Mission Type
+	int MissionState;										// Major state
+	// CAPCOM INTERFACE
+	NOTEHANDLE NHmenu;										// Menu notification handle
+	NOTEHANDLE NHmessages;									// Message notification handle	
+	int menuState;											// Menu state
+	char messages[MAX_MESSAGES][MAX_MSGSIZE];				// Message buffer
+	double msgtime[MAX_MESSAGES];							// Message timeout list
+	int currentMessage;										// Index to tail of ring buffer
+	char msgOutputBuf[MAX_MSGSIZE*MAX_MESSAGES];			// Final output string
+
 };
 
-class MC_GroundTrack : public MCC {
-	// Derived GroundTrack class from Mission Control Center main class
-public:
-
-	MC_GroundTrack();												// Cons
-	void InitGroundStations();
-	virtual void Init(Saturn *vessel);								// Initialization
-	virtual void TimeStep(double simdt);							// Timestep
-
-	struct GroundStation GroundStations[MAX_GROUND_STATION];        // Ground Station Array
-	double LastAOSUpdate;											// Last update to AOS data
-	double CM_Position[3];                                          // CM's position and altitude
-	bool   CM_DeepSpace;                                            // CM Deep Space Mode flag	
-	double ClosestRange;											// CM range to closest ground station
-	int    ClosestStation;											// CM closest station number
-
-};
-class MC_CapCom : public MCC {
-	// Derived CapCom class from Mission Control Center main class
-public:
-
-	MC_CapCom();
-	~MC_CapCom();
-	virtual void Init();
-	virtual void TimeStep(double simdt);
-	
-    int Talk(char *ID, ...);
-
-
-	FILE *trnscrpt_h; // Transcript file pointer
-	FILE *capcomdb_h; // CapCom Phrase Database file pointer
-	char language[100];
-	char trnscrpt_fname[100];
-	char capcomdb_fname[100];
-};
 #endif // _PA_MCC_H

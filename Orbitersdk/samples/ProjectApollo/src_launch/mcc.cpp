@@ -42,29 +42,15 @@
 #include "tracer.h"
 #include "mcc.h"
 
-// MCC MAIN CLASS
+// MCC CLASS
 
 // CONS
 MCC::MCC(){
-
+	// Reset data
 	cm = NULL;
-	
-}
-
-void MCC::Init(){
-
-}
-
-void MCC::TimeStep(double simdt){
-
-}
-
-MC_GroundTrack::MC_GroundTrack(){
 	CM_DeepSpace = false;
+	GT_Enabled = false;
 	LastAOSUpdate=0;
-	ClosestRange=0;
-	ClosestStation=0;
-
 	// Reset ground stations
 	int x=0;
 	while(x<MAX_GROUND_STATION){
@@ -82,83 +68,110 @@ MC_GroundTrack::MC_GroundTrack(){
 		GroundStations[x].UpTlmCaps = 0;
 		GroundStations[x].USBCaps = 0;
 		GroundStations[x].StationPurpose = 0;
+		GroundStations[x].AOS = 0;
 		sprintf(GroundStations[x].Name,"INVALID");
 		sprintf(GroundStations[x].Code,"XXX");
 		x++;
-	}
+	}	
+	// Reset capcom interface
+	menuState = 0;
+	NHmenu = 0;
+	NHmessages = 0;
 }
 
+void MCC::Init(Saturn *vs){
+	// Set CM pointer
+	cm = vs;
 
-void MC_GroundTrack::Init(Saturn *vessel) {
+	// Determine mission type. 	
+	switch(cm->ApolloNo){
+		case 7:
+			MissionType = MTP_C; 
+			break;
+		case 8:
+			MissionType = MTP_C_PRIME;
+			break;
+		case 9:
+			MissionType = MTP_D;
+			break;
+		case 10:
+			MissionType = MTP_F;
+			break;
+		case 11:
+			MissionType = MTP_G;
+			break;
+		case 12:
+		case 13:
+		case 14:
+			MissionType = MTP_H;
+			break;
+		case 15:
+		case 16:
+		case 17:
+			MissionType = MTP_J;
+			break;
+		default:
+			// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
+			if(cm->SaturnType == SAT_SATURNV){
+				MissionType = MTP_H;
+			}
+			if(cm->SaturnType == SAT_SATURN1B){
+				MissionType = MTP_C;
+			}
+			break;
 
-	cm = vessel;
-
-	ClosestRange=0;
-	ClosestStation=0;
+	}
+	
+	// GROUND TRACKING INITIALIZATION
 	LastAOSUpdate=0;
 
 	// Load ground station information.
 	// Later this can be made dynamic, but this will work for now.
 
 	// This particular ground station list is the stations that were on-net for Apollo 8.
-	// The index numbers represent status as of 1968.
-	
+	// The index numbers represent status as of 1968.	
 	sprintf(GroundStations[1].Name,"ANTIGUA"); sprintf(GroundStations[1].Code,"ANG");
 	GroundStations[1].Position[0] = 28.40433; GroundStations[1].Position[1] = -80.60192;
 	GroundStations[1].Active = true;
-
 	sprintf(GroundStations[2].Name,"ASCENSION"); sprintf(GroundStations[2].Code,"ASC");
 	GroundStations[2].Position[0] = -7.94354; GroundStations[2].Position[1] = -14.37105;
 	GroundStations[2].Active = true;
-
 	sprintf(GroundStations[3].Name,"BERMUDA"); sprintf(GroundStations[3].Code,"BDA");
 	GroundStations[3].Position[0] = 32.36864; GroundStations[3].Position[1] = -64.68563;
 	GroundStations[3].Active = true;
-
 	sprintf(GroundStations[4].Name,"GRAND CANARY"); sprintf(GroundStations[4].Code,"CYI");
 	GroundStations[4].Position[0] = 27.74055; GroundStations[4].Position[1] = -15.60077;
 	GroundStations[4].Active = true;
-
 	sprintf(GroundStations[5].Name,"HONEYSUCKLE"); sprintf(GroundStations[5].Code,"HSK");
 	GroundStations[5].Position[0] = -35.40282; GroundStations[5].Position[1] = 148.98144;
 	GroundStations[5].Active = true;
-
 	sprintf(GroundStations[6].Name,"CARNARVON"); sprintf(GroundStations[6].Code,"CRO");
 	GroundStations[6].Position[0] = -24.90619; GroundStations[6].Position[1] = 113.72595;
 	GroundStations[6].Active = true;
-
 	sprintf(GroundStations[7].Name,"CORPUS CHRISTI"); sprintf(GroundStations[7].Code,"TEX");
 	GroundStations[7].Position[0] = 27.65273; GroundStations[7].Position[1] = -97.37588;
 	GroundStations[7].Active = true;
-
 	sprintf(GroundStations[8].Name,"GOLDSTONE"); sprintf(GroundStations[8].Code,"GDS");
 	GroundStations[8].Position[0] = 35.33820; GroundStations[8].Position[1] = -116.87421;
 	GroundStations[8].Active = true;
-
 	sprintf(GroundStations[9].Name,"GRAND BAHAMA"); sprintf(GroundStations[9].Code,"GBM");
 	GroundStations[9].Position[0] = 26.62022; GroundStations[9].Position[1] = -78.35825;
 	GroundStations[9].Active = true;
-
 	sprintf(GroundStations[10].Name,"GUAM"); sprintf(GroundStations[10].Code,"GWM");
 	GroundStations[10].Position[0] = 13.30929; GroundStations[10].Position[1] = 144.73694;
 	GroundStations[10].Active = true;
-
 	sprintf(GroundStations[11].Name,"GUAYMAS"); sprintf(GroundStations[11].Code,"GYM");
 	GroundStations[11].Position[0] = 27.95029; GroundStations[11].Position[1] = -110.90846;
 	GroundStations[11].Active = true;
-
 	sprintf(GroundStations[12].Name,"HAWAII"); sprintf(GroundStations[12].Code,"HAW");
 	GroundStations[12].Position[0] = 21.44719; GroundStations[12].Position[1] = -157.76307;
 	GroundStations[12].Active = true;
-
 	sprintf(GroundStations[13].Name,"MADRID"); sprintf(GroundStations[13].Code,"MAD");
 	GroundStations[13].Position[0] = 40.45443; GroundStations[13].Position[1] = -4.16990;
 	GroundStations[13].Active = true;
-
 	sprintf(GroundStations[14].Name,"MERRIT"); sprintf(GroundStations[14].Code,"MIL");
 	GroundStations[14].Position[0] = 28.40433; GroundStations[14].Position[1] = -80.60192;
 	GroundStations[14].Active = true;
-
 	// 15 = USNS HUNTSVILLE
 	// 16 = USNS MERCURY
 	// 17 = USNS REDSTONE
@@ -177,122 +190,191 @@ void MC_GroundTrack::Init(Saturn *vessel) {
 	// 30 = GDS WING
 	// 31 = MAD WING
 	// 32 = NTTF (PRELAUNCH?)
-
 	sprintf(GroundStations[33].Name,"TANANARIVE"); sprintf(GroundStations[33].Code,"TAN");
 	GroundStations[33].Position[0] = -19.00000; GroundStations[33].Position[1] = 47.27556;
 	GroundStations[33].Active = true;
 
 	// ALL SUBSEQUENT ARE DOD STATIONS
-
 	// 34 = ANTIGUA
 	// 35 = ASCENSION
 	// 36 = CAPE KENNEDY
+	// These numbers and code are guesses. Since it's a DOD site, it's probably at the AFB.
+	sprintf(GroundStations[36].Name,"CAPE KENNEDY"); sprintf(GroundStations[36].Code,"CAP");
+	GroundStations[36].Position[0] = 28.488889; GroundStations[36].Position[1] = -80.577778;
+	GroundStations[36].Active = true;
 	// 37 = GRAND BAHAMA
 	// 38 = MERRIT I.
-
 	sprintf(GroundStations[39].Name,"PRETORIA"); sprintf(GroundStations[39].Code,"PRE");
 	GroundStations[39].Position[0] = -30.78330; GroundStations[39].Position[1] = 28.58330;
 	GroundStations[39].Active = true;
-
 	sprintf(GroundStations[40].Name,"VANDENBERG"); sprintf(GroundStations[40].Code,"CAL");
 	GroundStations[40].Position[0] = 34.74007; GroundStations[40].Position[1] = -120.61909;
 	GroundStations[40].Active = true;
-
 	sprintf(GroundStations[41].Name,"WHITE SANDS"); sprintf(GroundStations[41].Code,"WHS");
 	GroundStations[41].Position[0] = 32.35637; GroundStations[41].Position[1] = -106.37826;
 	GroundStations[41].Active = true;
 
+	// MISSION STATE
+	MissionState = MST_PRELAUNCH;
+
+	// CAPCOM INTERFACE INITIALIZATION
+	// Get handles to annotations.
+	// The menu lives in the top left, the message box to the right of that
+	NHmenu = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	oapiAnnotationSetPos(NHmenu,0,0,0.15,0.2);
+	NHmessages = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	oapiAnnotationSetPos(NHmessages,0.18,0,0.87,0.2);
+	// Clobber message output buffer
+	msgOutputBuf[0] = 0;
+	// Clobber the message ring buffer, then set the index back to zero
+	currentMessage = 0;
+	while(currentMessage < MAX_MESSAGES){
+		messages[currentMessage][0] = 0;
+		msgtime[currentMessage] = -1;
+		currentMessage++;
+	}
+	currentMessage = 0;
+
 }
 
-// Timestep
-void MC_GroundTrack::TimeStep(double simdt){
+void MCC::TimeStep(double simdt){
+	int x=0,y=0,z=0;				// Scratch
+	char buf[MAX_MSGSIZE];			// More Scratch
 
 	/* AOS DETERMINATION */
-	if((LastAOSUpdate+1) < simdt){
-		int x=0;
-		double PosDiff[2];
-		double LateralRange;	
-		double SlantRange;
-		ClosestRange = 0;
-		ClosestStation = 0;
-		LastAOSUpdate = simdt;
+	
+	if(GT_Enabled == true){
+		LastAOSUpdate += simdt;
+		if(LastAOSUpdate > 1){
+			if(CM_DeepSpace == false){
+				// In earth SOI
+				double PosDiff[2];
+				double LateralRange;	
+				double SlantRange;
+				double LOSRange;
+				LastAOSUpdate = 0;
 
-		// Get CM position
-		cm->GetEquPos(CM_Position[1],CM_Position[0],CM_Position[2]);
-		// Convert from radians (sigh...)
-		CM_Position[0] *= 57.2957795;
-		CM_Position[1] *= 57.2957795;
-		// Get altitude
-		CM_Position[2] = cm->GetAltitude();
+				// Get CM position
+				cm->GetEquPos(CM_Position[1],CM_Position[0],CM_Position[2]);
+				// Convert from radians (sigh...)
+				CM_Position[0] *= 57.2957795;
+				CM_Position[1] *= 57.2957795;
+				// Get altitude
+				CM_Position[2] = cm->GetAltitude();
+				if(CM_Position[2] < 23546000){
+					// Our comm range is lunar even with an omni, so the determining factor for AOS-ness is angle above horizon.
+					// But we are lazy, so we'll figure our line-of-sight radio range from our altitude instead.
+					LOSRange = 4120*sqrt(CM_Position[2]); // In meters
+					if(LOSRange > 20000000){ LOSRange = 20000000; } // Cap it just in case
+				}else{
+					// We are high enough to cover the entire hemisphere. No point in doing the math.
+					LOSRange = 20000000;
+				}
+				sprintf(buf,"POS %f %f",CM_Position[0],CM_Position[1]);
+				// addMessage(buf);
 
-		while(x<MAX_GROUND_STATION){
-			if(GroundStations[x].Active == true){
-				// Get lateral range
-				PosDiff[0] = fabs(GroundStations[x].Position[0]-CM_Position[0]);
-				PosDiff[1] = fabs(GroundStations[x].Position[1]-CM_Position[1]);
-				LateralRange = sqrt((PosDiff[0]*PosDiff[0])+(PosDiff[1]*PosDiff[1]));
-				LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
-				// Figure slant range
-				SlantRange = sqrt((LateralRange*LateralRange)+(CM_Position[2]*CM_Position[2]));
-				// Check
-				if(ClosestRange == 0){ ClosestRange = SlantRange; }
-				if(SlantRange > ClosestRange){ x++; continue; }
-				ClosestRange = SlantRange; ClosestStation = x;
+				y = 0;
+				while(x<MAX_GROUND_STATION){
+					if(GroundStations[x].Active == true){
+						// Get lateral range
+						LateralRange = sqrt(pow(GroundStations[x].Position[0]-CM_Position[0],2)+pow(GroundStations[x].Position[1]-CM_Position[1],2));
+						LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
+						// Figure slant range
+						SlantRange = sqrt((LateralRange*LateralRange)+(CM_Position[2]*CM_Position[2]));
+						// Check
+						if(SlantRange < LOSRange && GroundStations[x].AOS == 0){
+							GroundStations[x].AOS = 1;
+							sprintf(buf,"AOS %s",GroundStations[x].Name);
+							addMessage(buf);
+						}
+						if(SlantRange > LOSRange && GroundStations[x].AOS == 1){
+							GroundStations[x].AOS = 0;
+							sprintf(buf,"LOS %s",GroundStations[x].Name);
+							addMessage(buf);
+						}			
+						if(GroundStations[x].AOS){ y++; }
+					}
+					x++;
+				}
+			}else{
+				// Not in earth's SOI.
+				// Add this later.
 			}
-			x++;
 		}
-		/*
-		sprintf(oapiDebugString(),"CM-POS: %f %f ALT %f CLOSEST STN %d '%s' DST %f",
-			CM_Position[0],CM_Position[1],CM_Position[2],
-			ClosestStation,GroundStations[ClosestStation].Name,ClosestRange);
-		*/
 	}
 
+	// MISSION STATE EVALUATOR
+
+
+	// MESSAGE LIST MAINTENANCE should come last that way if any of the above prints anything,
+	// it gets printed in this timestep rather than the next.
+	x = currentMessage+1;					// Index, Point beyond tail
+	y = 0;									// Tail of output buffer
+	z = 0;									// Updation flag
+	msgOutputBuf[0] = 0;					// Clobber buffer
+	if(x == MAX_MESSAGES){ x = 0; }			// Wrap index if necessary
+	while(x != currentMessage){				// we'll wait till it comes around on the guitar here, and sing it when it does
+		if(msgtime[x] != -1){				// with feeling!
+			if(msgtime[x] == 0){ z = 1; }	// If message is brand new, set updation flag			
+			msgtime[x] += simdt;			// Increment lifetime
+			if(msgtime[x] > MSG_DISPLAY_TIME){
+				messages[x][0] = 0;			// Message too old, kill it
+				msgtime[x] = -1;			// Mark not-in-use
+				z = 1;						// Set updation flag
+			}else{				
+				sprintf(msgOutputBuf+y,"%s\n",messages[x]);	// Otherwise push to output buffer
+				y += strlen(messages[x])+1; // Add message length plus NL
+			}
+		}
+		x++;								// Next message
+		if(x == MAX_MESSAGES){ x = 0; }		// Wrap index if necessary
+	}
+	if(z == 1){								// If we set the updation flag
+		oapiAnnotationSetText(NHmessages,msgOutputBuf);	// update the annotation
+	}
 }
 
-MC_CapCom::MC_CapCom(){
-
-	strcpy (language,"_en");
-	
-	strcpy (capcomdb_fname, "capcomdb");
-	strcat (capcomdb_fname, language);
-	strcat (capcomdb_fname, ".npd");
-
-	strcpy (trnscrpt_fname, "transcript");
-	strcat (trnscrpt_fname, ".log");
-
+// Add message to ring buffer
+void MCC::addMessage(char *msg){
+	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
+	msgtime[currentMessage] = 0;								// Mark new
+	currentMessage++;											// Advance tail index
+	if(currentMessage == MAX_MESSAGES){ currentMessage = 0; }	// Wrap index if necessary
 }
 
-MC_CapCom::~MC_CapCom(){
-
-//	trnscrpt_h = fopen(trnscrpt_fname,"w");
-//	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
-//	fclose(trnscrpt_h);
-
-
-}
-
-void MC_CapCom::Init(){
-
-//	trnscrpt_h = fopen(trnscrpt_fname,"a");
-//	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
-//	fclose(trnscrpt_h);
-}
-
-void MC_CapCom::TimeStep(double simdt){
-	//trnscrpt_h = fopen(&trnscrpt_fname,"a");
-	//fprintf(trnscrpt_h,"Current SimTime %f\n",simdt);
-	//fclose(trnscrpt_h);
-
-}
-
-int MC_CapCom::Talk(char *ID, ...){
-
-	va_list argptr;
-
-	va_start(argptr, ID);
-
-	va_end(argptr);
-
-	return 0;
+void MCC::keyDown(DWORD key){
+	char buf[MAX_MSGSIZE];
+	switch(key){
+		case OAPI_KEY_TAB:
+			if(menuState == 0){
+				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1. Voice Check\n2. Toggle AOS/LOS Trk"); // Present menu
+				menuState = 1;
+			}else{
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_1:
+			if(menuState == 1){
+				sprintf(buf,"Voice Check");
+				addMessage(buf);
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_2:
+			if(menuState == 1){
+				if(GT_Enabled == false){
+					GT_Enabled = true;
+					sprintf(buf,"AOS Tracking Enabled");
+				}else{
+					GT_Enabled = false;
+					sprintf(buf,"AOS Tracking Disabled");
+				}
+				addMessage(buf);
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+	}
 }

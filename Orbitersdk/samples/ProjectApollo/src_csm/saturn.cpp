@@ -3425,6 +3425,25 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 	}
 
+	// MCC CAPCOM interface key handling                                                                                                
+	if(down && !InVC && !KEYMOD_SHIFT(kstate)){
+		switch(key){
+		case OAPI_KEY_TAB:
+		case OAPI_KEY_1:
+		case OAPI_KEY_2:
+		case OAPI_KEY_3:
+		case OAPI_KEY_4:
+		case OAPI_KEY_5:
+		case OAPI_KEY_6:
+		case OAPI_KEY_7:
+		case OAPI_KEY_8:
+		case OAPI_KEY_9:
+		case OAPI_KEY_0:
+			mcc.keyDown(key);
+			break;
+		}
+	}
+
 	// Separate stages and undock with keypress if REALISM 0
 	if (Crewed && !Realism && key == OAPI_KEY_J && down == true) {
 

@@ -464,9 +464,7 @@ void Saturn::SystemsInit() {
 	GlycolCoolingController.Init(this);
 
 	// Ground Systems Init
-	//mcc.InitCM(this);
-	groundtrack.Init(this);
-	capcom.Init();
+	mcc.Init(this);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -570,9 +568,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
-		//mcc.TimeStep(MissionTime);
-		groundtrack.TimeStep(MissionTime);
-		capcom.TimeStep(MissionTime);
+		mcc.TimeStep(simdt);
 
 		//
 		// Systems state handling
