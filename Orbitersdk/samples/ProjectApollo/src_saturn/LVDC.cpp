@@ -837,6 +837,23 @@ void LVDC1B::timestep(double simt, double simdt) {
 				break;
 
 			case 4:
+				// TB4 timed events
+				// Cutoff transient thrust
+				if(LVDC_TB_ETime < 2){
+					if(LVDC_TB_ETime < 0.25){
+						// 95% of thrust dies in the first .25 second
+						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.8));
+					}else{
+						if(LVDC_TB_ETime < 1.5){
+							// The remainder dies over the next 1.25 second
+							owner->SetThrusterLevel(owner->th_main[0], .05-((LVDC_TB_ETime-0.25)*0.04));
+						}else{
+							// Engine is completely shut down at 1.5 second
+							owner->SetThrusterLevel(owner->th_main[0], 0);
+						}
+					}
+					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,owner->GetThrusterLevel(owner->th_main[0]));
+				}
 				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
 					owner->SetStage(STAGE_ORBIT_SIVB);
 					fprintf(lvlog,"[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n",LVDC_Timebase,LVDC_TB_ETime);
@@ -1635,8 +1652,7 @@ limittest:
 
 minorloop: //minor loop;
 		if(T_GO - sinceLastIGM <= 0 && HSL == true && S4B_IGN == true){
-			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second
-			owner->SetThrusterLevel(owner->th_main[0], 0);
+			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
 			S4B_IGN = false;
 			HSL = false;
 			BOOST = false;
@@ -3981,6 +3997,24 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				break;
 			case 5:
+				// TB5 timed events
+				// Cutoff transient thrust
+				if(LVDC_TB_ETime < 2){
+					if(LVDC_TB_ETime < 0.25){
+						// 95% of thrust dies in the first .25 second
+						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.8));
+					}else{
+						if(LVDC_TB_ETime < 1.5){
+							// The remainder dies over the next 1.25 second
+							owner->SetThrusterLevel(owner->th_main[0], .05-((LVDC_TB_ETime-0.25)*0.04));
+						}else{
+							// Engine is completely shut down at 1.5 second
+							owner->SetThrusterLevel(owner->th_main[0], 0);
+						}
+					}
+					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,owner->GetThrusterLevel(owner->th_main[0]));
+				}
+
 				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
 					owner->SetStage(STAGE_ORBIT_SIVB);
 					LVDC_EI_On = false;
@@ -4892,8 +4926,7 @@ restartprep:
 minorloop:
 		//minor loop; TBD: move IGM steering angles & HSL logic here
 		if(T_GO - sinceLastIGM <= 0 && HSL == true && S4B_IGN == true){
-			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second
-			owner->SetThrusterLevel(owner->th_main[0], 0);
+			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
 			S4B_IGN = false;
 			TB5 = - simdt;
 			LVDC_Timebase = 5;
