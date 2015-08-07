@@ -38,6 +38,7 @@ class Saturn1b;
 
 class LVDC {
 public:
+	LVDC();											// Constructor
 	void Init(Saturn* vs);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -47,6 +48,7 @@ private:
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 	FILE* lvlog;									// LV Log file
+	bool Initialized;								// Clobberness flag
 
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
