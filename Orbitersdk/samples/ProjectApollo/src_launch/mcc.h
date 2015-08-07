@@ -29,6 +29,7 @@
 #define GSTK_CBAND_LOWSPEED  0x02
 #define GSTK_ODOP            0x04
 #define GSTK_OPTICAL		 0x08
+#define GSTK_USB			 0x10
 
 // Ground Station Unified S-Band Capabilities bits
 #define GSSC_VOICE     0x01
@@ -42,7 +43,7 @@
 #define GSTM_DECOMMUTATOR 0x08
 #define GSTM_DISPLAYS     0x10
 
-// Ground Station Ground Communications Capabilities Bits
+// Ground Station Communications Capabilities Bits
 #define GSGC_DATAHISPEED  0x01
 #define GSGC_DATAWIDEBAND 0x02
 #define GSGC_TELETYPE     0x04
@@ -60,7 +61,7 @@
 #define GSDT_USB	0x02
 
 // Ground Station Command Capabilities
-#define GSCC_VHF	0x01
+#define GSCC_UHF	0x01
 #define GSCC_USB	0x02
 
 // Ground Station Types (Not flags)
@@ -81,7 +82,7 @@
 #define GSPT_ENTRY		0x0080
 
 // Max number of ground stations
-#define MAX_GROUND_STATION	42
+#define MAX_GROUND_STATION	43
 
 // Message buffer limits
 #define MAX_MESSAGES		10
@@ -135,7 +136,7 @@ struct GroundStation {
 	char USBCaps;        // Unified S-Band Capabilities
 	char SBandAntenna;   // S-Band Antenna Type
 	char TelemetryCaps;  // Telemetry Handling Capabilities
-	char GroundCommCaps; // Ground Communications Capabilities
+	char CommCaps;		 // Radio/Ground Communications Capabilities
 	bool HasRadar;       // Has radar capability
 	bool HasAcqAid;      // Has target acquisition aid
 	char DownTlmCaps;    // Downtelemetry Capabilities
@@ -159,12 +160,15 @@ public:
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
+	double CM_Prev_Position[3];                             // CM's previous position and altitude
 	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
 	bool   GT_Enabled;										// Ground tracking enable/disable
 
 	// MISSION STATE
 	int MissionType;										// Mission Type
 	int MissionState;										// Major state
+	int EarthRev;											// Revolutions around Earth
+	int MoonRev;											// Revolutions around moon
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle
 	NOTEHANDLE NHmessages;									// Message notification handle	
