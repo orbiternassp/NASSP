@@ -850,11 +850,11 @@ void LVDC1B::timestep(double simt, double simdt) {
 				if(LVDC_TB_ETime < 2){
 					if(LVDC_TB_ETime < 0.25){
 						// 95% of thrust dies in the first .25 second
-						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.8));
+						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.3048));
 					}else{
 						if(LVDC_TB_ETime < 1.5){
 							// The remainder dies over the next 1.25 second
-							owner->SetThrusterLevel(owner->th_main[0], .05-((LVDC_TB_ETime-0.25)*0.04));
+							owner->SetThrusterLevel(owner->th_main[0], 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
 						}else{
 							// Engine is completely shut down at 1.5 second
 							owner->SetThrusterLevel(owner->th_main[0], 0);
@@ -4378,11 +4378,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime < 2){
 					if(LVDC_TB_ETime < 0.25){
 						// 95% of thrust dies in the first .25 second
-						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.8));
+						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.3048));
 					}else{
 						if(LVDC_TB_ETime < 1.5){
 							// The remainder dies over the next 1.25 second
-							owner->SetThrusterLevel(owner->th_main[0], .05-((LVDC_TB_ETime-0.25)*0.04));
+							owner->SetThrusterLevel(owner->th_main[0], 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
 						}else{
 							// Engine is completely shut down at 1.5 second
 							owner->SetThrusterLevel(owner->th_main[0], 0);
