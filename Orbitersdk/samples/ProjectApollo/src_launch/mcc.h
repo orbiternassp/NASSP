@@ -156,6 +156,10 @@ public:
 	void addMessage(char *msg);								// Add message into buffer
 
 	Saturn *cm;												// Pointer to CM
+	Saturn *lm;												// Pointer to LM
+	OBJHANDLE Earth;										// Handle for Earth
+	OBJHANDLE Moon;											// Handle for the moon
+
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
 	double LastAOSUpdate;									// Last update to AOS data

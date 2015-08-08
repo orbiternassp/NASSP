@@ -48,6 +48,8 @@
 MCC::MCC(){
 	// Reset data
 	cm = NULL;
+	Earth = NULL;
+	Moon = NULL;
 	CM_DeepSpace = false;
 	GT_Enabled = false;
 	LastAOSUpdate=0;
@@ -82,6 +84,10 @@ MCC::MCC(){
 void MCC::Init(Saturn *vs){
 	// Set CM pointer
 	cm = vs;
+
+	// Obtain Earth and Moon pointers
+	Earth = oapiGetGbodyByName("Earth");
+	Moon = oapiGetGbodyByName("Moon");
 
 	// Determine mission type. 	
 	switch(cm->ApolloNo){
@@ -534,70 +540,71 @@ void MCC::TimeStep(double simdt){
 	if(GT_Enabled == true){
 		LastAOSUpdate += simdt;
 		if(LastAOSUpdate > 1){
-			if(CM_DeepSpace == false){
-				// In earth SOI
-				double LateralRange;	
-				double SlantRange;
-				double LOSRange;
-				LastAOSUpdate = 0;
+			double LateralRange;	
+			double SlantRange;
+			double LOSRange;
+			VECTOR3 CMGlobalPos = _V(0,0,0);
+			LastAOSUpdate = 0;
+			// Bail out if we failed to find either major body
+			if(Earth == NULL){ addMessage("Can't find Earth"); GT_Enabled = false; return; }
+			if(Moon == NULL){ addMessage("Can't find Moon"); GT_Enabled = false; return; }
+				
+			// Update previous position data
+			CM_Prev_Position[0] = CM_Position[0];
+			CM_Prev_Position[1] = CM_Position[1];
+			CM_Prev_Position[2] = CM_Position[2];
+			// Obtain CM's global position
+			cm->GetGlobalPos(CMGlobalPos);
+			// Convert to Earth equatorial
+			oapiGlobalToEqu(Earth,CMGlobalPos,&CM_Position[1],&CM_Position[0],&CM_Position[2]);
+			// Convert from radians
+			CM_Position[0] *= DEG; 
+			CM_Position[1] *= DEG; 
+			// Convert from radial distance
+			CM_Position[2] -= 6373338; // Launch pad radius should be good enough
+			// If we just crossed the rev line, count it
+			if(CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB){
+				EarthRev++;
+				sprintf(buf,"Rev %d",EarthRev);
+				addMessage(buf);
+			}
 
-				// Update previous position data
-				CM_Prev_Position[0] = CM_Position[0];
-				CM_Prev_Position[1] = CM_Position[1];
-				CM_Prev_Position[2] = CM_Position[2];
-				// Get CM position
-				cm->GetEquPos(CM_Position[1],CM_Position[0],CM_Position[2]);
-				// Convert from radians (sigh...)
-				CM_Position[0] *= 57.2957795;
-				CM_Position[1] *= 57.2957795;
-				// Get altitude
-				CM_Position[2] = cm->GetAltitude();
-				// If we just crossed the rev line, count it
-				if(CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB){
-					EarthRev++;
-					sprintf(buf,"Rev %d",EarthRev);
-					addMessage(buf);
-				}
-
-				if(CM_Position[2] < 23546000){
-					// Our comm range is lunar even with an omni, so the determining factor for AOS-ness is angle above horizon.
-					// But we are lazy, so we'll figure our line-of-sight radio range from our altitude instead.
-					LOSRange = 4120*sqrt(CM_Position[2]); // In meters
-					if(LOSRange > 20000000){ LOSRange = 20000000; } // Cap it just in case
-				}else{
-					// We are high enough to cover the entire hemisphere. No point in doing the math.
-					LOSRange = 20000000;
-				}
-
-				y = 0;
-				while(x<MAX_GROUND_STATION){
-					if(GroundStations[x].Active == true){
-						// Get lateral range
-						LateralRange = sqrt(pow(GroundStations[x].Position[0]-CM_Position[0],2)+pow(GroundStations[x].Position[1]-CM_Position[1],2));
-						LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
-						// Figure slant range
-						SlantRange = sqrt((LateralRange*LateralRange)+(CM_Position[2]*CM_Position[2]));
-						// Check
-						if(SlantRange < LOSRange && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps&GSSC_VOICE)||(GroundStations[x].CommCaps&GSGC_VHFAG_VOICE))){
-							GroundStations[x].AOS = 1;
-							sprintf(buf,"AOS %s",GroundStations[x].Name);
-							addMessage(buf);
-						}
-						if(SlantRange > LOSRange && GroundStations[x].AOS == 1){
-							GroundStations[x].AOS = 0;
-							sprintf(buf,"LOS %s",GroundStations[x].Name);
-							addMessage(buf);
-						}			
-						if(GroundStations[x].AOS){ y++; }
-					}
-					x++;
-				}
+			if(CM_Position[2] < 23546000){
+				// Our comm range is lunar even with an omni, so the determining factor for AOS-ness is angle above horizon.
+				// But we are lazy, so we'll figure our line-of-sight radio range from our altitude instead.
+				LOSRange = 4120*sqrt(CM_Position[2]); // In meters
+				if(LOSRange > 20000000){ LOSRange = 20000000; } // Cap it just in case
 			}else{
-				// Not in earth's SOI.
-				// Add this later.
+				// We are high enough to cover the entire hemisphere. No point in doing the math.
+				LOSRange = 20000000;
+			}
+
+			y = 0;
+			while(x<MAX_GROUND_STATION){
+				if(GroundStations[x].Active == true){
+					// Get lateral range
+					LateralRange = sqrt(pow(GroundStations[x].Position[0]-CM_Position[0],2)+pow(GroundStations[x].Position[1]-CM_Position[1],2));
+					LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
+					// Figure slant range
+					SlantRange = sqrt((LateralRange*LateralRange)+(CM_Position[2]*CM_Position[2]));
+					// Check
+					if(SlantRange < LOSRange && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps&GSSC_VOICE)||(GroundStations[x].CommCaps&GSGC_VHFAG_VOICE))){
+						GroundStations[x].AOS = 1;
+						sprintf(buf,"AOS %s",GroundStations[x].Name);
+						addMessage(buf);
+					}
+					if(SlantRange > LOSRange && GroundStations[x].AOS == 1){
+						GroundStations[x].AOS = 0;
+						sprintf(buf,"LOS %s",GroundStations[x].Name);
+						addMessage(buf);
+					}			
+					if(GroundStations[x].AOS){ y++; }
+				}
+				x++;
 			}
 		}
 	}
+	
 
 	// MISSION STATE EVALUATOR
 
