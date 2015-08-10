@@ -1,0 +1,31 @@
+             BE AWARE: YOU CANNOT LEGALLY CREATE A COMBINED
+               BINARY DISTRIBUTION OF NASSP AND ORBITER!
+
+NASSP is a DLL plugin for a non-Free software program, Orbiter.
+
+The GPL v2 does not permit the DISTRIBUTION of a combined Free DLL and 
+non-Free program.
+
+The USAGE of such a combination is perfectly legal, as the GPL v2 is a 
+DISTRIBUTION license and not a USAGE license. The GPL specifically 
+states it only covers COPYING, MODIFICATION, and DISTRIBUTION of 
+software and not RUNNING of software.
+
+A violation occurs only when someone combines the GPL library with the 
+closed source component and then distributes the result.
+
+Only the copyright holders of the project have a course of action if 
+someone does combine the works and distribute them. 
+
+We do include GPLed code from other projects. The copyright holders of 
+those projects can take action against anyone who distributes a combined 
+NASSP/Orbiter binary, but they cannot take action against us, or anyone 
+who merely uses NASSP with Orbiter. Only the act of distribution of a 
+combined NASSP/Orbiter binary package can create a violation.
+
+Remember, the GPL is a license that we, the copyright holders, grant. We 
+own the rights. We are the only people who can bother anyone else for 
+violating the terms of the license.
+
+Please refer to the GPL v2, available in the repository root directory 
+as NASSP-LICENSE.txt, for more information.
