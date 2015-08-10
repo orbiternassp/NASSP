@@ -185,14 +185,14 @@ void LM_VHF::TimeStep(double simt){
 		// return;
 	}
 	// Allow IO to check for connections, etc
-	
+	/*
 	if(conn_state != 2){
 		last_update = simt; // Don't care about rate
 		last_rx = simt;
 		perform_io(simt);
 		return;
 	}
-	
+	*/
 
 	// PCMTEA makes the datastream, but for now, don't care about voltage.
 	// Otherwise we would abort here (I think)
