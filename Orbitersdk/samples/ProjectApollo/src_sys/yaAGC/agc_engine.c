@@ -1986,7 +1986,7 @@ agc_engine (agc_t * State)
       if (i)
 	{
 	  State->PendFlag = 1;
-	  State->PendDelay = i;
+	  State->PendDelay = i-1;  // spacex15 bug fix - Multi cycles instructions were one cycle too long
 	  return (0);
 	}
     }
