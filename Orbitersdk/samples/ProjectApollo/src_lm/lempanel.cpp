@@ -1362,7 +1362,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
 		
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 233, 625); // Was 135,625
-		//fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1103, 625);
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1201, 625); // was 1103,625
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -1473,7 +1473,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,		_R(1616,  738, 1652,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		// 3 pos Engine Arm Lever
 	    oapiRegisterPanelArea (AID_ENG_ARM,						_R(1427,  898, 1461,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1400, 445); 
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		break;
@@ -1593,11 +1594,12 @@ void LEM::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
+	/*
 	switch(panel){
 		case LMPANEL_MAIN:
 		case LMPANEL_LEFTWINDOW:
 		case LMPANEL_RIGHTWINDOW:
-
+*/
 			MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
 			EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 			CommandedThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
@@ -1822,10 +1824,11 @@ void LEM::SetSwitches(int panel) {
 			EventTimerStartSwitch.Init(55, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow);
 			EventTimerMinuteSwitch.Init(111, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow);
 			EventTimerSecondSwitch.Init(167, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow);
-
+/*
 			break;
 
 		case LMPANEL_RIGHTPANEL: // LEM Right Panel
+			*/
 			Panel16CB1SwitchRow.Init(AID_LEM_P16_CB_ROW1, MainPanel);
 			LMP_EVT_TMR_FDAI_DC_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
 			SE_XPTR_DC_CB.Init(64, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
@@ -2016,10 +2019,11 @@ void LEM::SetSwitches(int panel) {
 
 			AGSOperateSwitchRow.Init(AID_LM_AGS_OPERATE_SWITCH,MainPanel);
 			AGSOperateSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], AGSOperateSwitchRow);
-
+/*
 			break;
 
 		case LMPANEL_LEFTPANEL:
+			*/
 			Panel11CB1SwitchRow.Init(AID_LEM_P11_CB_ROW1, MainPanel);
 			SE_WND_HTR_AC_CB.Init(3, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			HE_PQGS_PROP_DISP_AC_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
@@ -2166,17 +2170,17 @@ void LEM::SetSwitches(int panel) {
 			CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
-			break;
+//			break;
 
-		case LMPANEL_AOTVIEW:			
+//		case LMPANEL_AOTVIEW:			
 			RRGyroSelSwitchRow.Init(AID_RR_GYRO_SEL_SWITCH, MainPanel);
 			RRGyroSelSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], RRGyroSelSwitchRow);
-			break;
+//			break;
 
-		case LMPANEL_LPDWINDOW:
-			break;
+//		case LMPANEL_LPDWINDOW:
+//			break;
 
-	}
+//	}
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {

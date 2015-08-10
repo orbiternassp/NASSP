@@ -848,6 +848,15 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 //TODOX15
 			agc.SetInputChannelBit(030, 3, false);
 		}
+		if (THRContSwitch.IsUp()) {
+			//TODOX15 is it useful to do it on every step ? surely no
+			agc.SetInputChannelBit(030, 5, true);
+		}
+		else {
+			//TODOX15
+			agc.SetInputChannelBit(030, 5, false);
+		}
+
 		
 
 	}else if (stage == 1 || stage == 5)	{
@@ -863,6 +872,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 //TODOX15	
 			agc.SetInputChannelBit(030, 3, false);
 		}
+
+		if (THRContSwitch.IsUp()) {
+			//TODOX15 is it useful to do it on every step ? surely no
+			agc.SetInputChannelBit(030, 5, true);
+		}
+		else {
+			//TODOX15
+			agc.SetInputChannelBit(030, 5, false);
+		}
+
 
 		if (CDREVA_IP) {
 			if(!hLEVA) {
