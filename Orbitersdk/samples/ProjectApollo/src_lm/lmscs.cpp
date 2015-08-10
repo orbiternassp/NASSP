@@ -139,8 +139,6 @@ void ATCA::Timestep(double simt){
 		}
 		// FIXME: This is just for testing.
 		// if(power > 0.25){ power = 0.25; }
-		if (power >0) 
-			sprintf(oapiDebugString(), "FIRE JET");
 		lem->SetRCSJetLevelPrimary(x,power);
 		x++;
 	}
@@ -154,9 +152,7 @@ void ATCA::ProcessLGC(int ch, int val){
 	switch(ch){
 		case 05:
 			LMChannelValue5 ch5;
-			ch5.Value = val;	
-			if(val>0)
-			     sprintf(oapiDebugString(),"CHAN 5 Jet"); 
+			ch5.Value = val;			
 			if(ch5.Bits.B4U != 0){ jet_request[12] = 1; }else{ jet_request[12] = 0; }
 			if(ch5.Bits.A4D != 0){ jet_request[15] = 1; }else{ jet_request[15] = 0; }
 			if(ch5.Bits.A3U != 0){ jet_request[8]  = 1; }else{ jet_request[8]  = 0; }
@@ -169,8 +165,6 @@ void ATCA::ProcessLGC(int ch, int val){
 		case 06:
 			LMChannelValue6 ch6;
 			ch6.Value = val;
-			if(val>0)
-			    sprintf(oapiDebugString(), "CHAN 6 Jet");
 			if(ch6.Bits.B3A != 0){ jet_request[10] = 1; }else{ jet_request[10] = 0; }
 			if(ch6.Bits.B4F != 0){ jet_request[13] = 1; }else{ jet_request[13] = 0; }
 			if(ch6.Bits.A1F != 0){ jet_request[1]  = 1; }else{ jet_request[1]  = 0; }
