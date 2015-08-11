@@ -14,7 +14,6 @@
     <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
-    <ClInclude Include="..\..\src_rtccmfd\CoastIntegration.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
   </ItemGroup>
@@ -22,7 +21,6 @@
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
-    <ClCompile Include="..\..\src_rtccmfd\CoastIntegration.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
   </ItemGroup>
