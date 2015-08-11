@@ -191,14 +191,6 @@ static inline double papiGetAltitude(VESSEL *vessel) {
 	return vessel->GetAltitude() - VSGetAbsMaxElvLoc(buffer, lat, lon);
 }
 
-static inline void papiWriteScenario_mat(FILEHANDLE scn, char *item, MATRIX3 v) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, v.m11, v.m12, v.m13, v.m21, v.m22, v.m23, v.m31, v.m32, v.m33);
-	oapiWriteLine(scn, buffer);
-}
-
 static inline void papiWriteScenario_intarr(FILEHANDLE scn, char *item, int *v, int len) {
 
 	char buffer[256], buffer2[256];
