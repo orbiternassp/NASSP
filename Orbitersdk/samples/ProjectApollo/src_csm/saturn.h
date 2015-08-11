@@ -4493,6 +4493,7 @@ protected:
 	friend class SaturnPanelOrdeal;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
+	friend class ApolloRTCCMFD;
 };
 
 extern void BaseInit();

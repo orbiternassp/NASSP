@@ -190,3 +190,74 @@ static inline double papiGetAltitude(VESSEL *vessel) {
 	vessel->GetEquPos(lon, lat, rad);
 	return vessel->GetAltitude() - VSGetAbsMaxElvLoc(buffer, lat, lon);
 }
+
+static inline void papiWriteScenario_mat(FILEHANDLE scn, char *item, MATRIX3 v) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, v.m11, v.m12, v.m13, v.m21, v.m22, v.m23, v.m31, v.m32, v.m33);
+	oapiWriteLine(scn, buffer);
+}
+
+static inline void papiWriteScenario_intarr(FILEHANDLE scn, char *item, int *v, int len) {
+
+	char buffer[256], buffer2[256];
+	int s;
+	sprintf(buffer, "  %s ", item);
+	s = strlen(item) + 3;
+	for (int i = 0; i < len; i++)
+	{
+		sprintf(buffer + s, "%d ", v[i]);
+		sprintf(buffer2, "%d", v[i]);
+		s += strlen(buffer2) + 1;
+	}
+	oapiWriteLine(scn, buffer);
+}
+
+static inline bool papiReadScenario_intarr(char *line, char *item, int *v, int len) {
+
+	char buffer[256];
+	int pos, cur;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!_stricmp(buffer, item)) {
+			sscanf(line, "%s %n", buffer, &pos);
+			for (int i = 0; i < len; i++)
+			{
+				sscanf(line + pos, "%d %n", &v[i], &cur);
+				pos += cur;
+			}
+		}
+	}
+	return false;
+}
+
+static inline bool papiReadScenario_string(char *line, char *item, char *i) {
+
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!_stricmp(buffer, item)) {
+			if (sscanf(line, "%s %s", buffer, i) == 2) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static inline bool papiReadScenario_mat(char *line, char *item, MATRIX3 &v) {
+
+	char buffer[256];
+	MATRIX3 w;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!_stricmp(buffer, item)) {
+			if (sscanf(line, "%s %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &w.m11, &w.m12, &w.m13, &w.m21, &w.m22, &w.m23, &w.m31, &w.m32, &w.m33) == 10) {
+				v = w;
+				return true;
+			}
+		}
+	}
+	return false;
+}
