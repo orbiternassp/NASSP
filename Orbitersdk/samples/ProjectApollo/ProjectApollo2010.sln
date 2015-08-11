@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2010\ASTP.vcxproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "Build\VC2010\Crawler.vcxproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
@@ -59,6 +59,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FloatBag", "Build\VC2010\FloatBag.vcxproj", "{FE06FF4C-6772-48C7-9FFB-BCA00CBA8DA1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CMChute", "Build\VC2010\CMChute.vcxproj", "{68F2AA4E-3774-4A03-947D-9890DF0E73C5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ApolloRTCCMFD", "Build\VC2010\ApolloRTCCMFD.vcxproj", "{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -178,6 +180,10 @@ Global
 		{68F2AA4E-3774-4A03-947D-9890DF0E73C5}.Debug|Win32.Build.0 = Debug|Win32
 		{68F2AA4E-3774-4A03-947D-9890DF0E73C5}.Release|Win32.ActiveCfg = Release|Win32
 		{68F2AA4E-3774-4A03-947D-9890DF0E73C5}.Release|Win32.Build.0 = Release|Win32
+		{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}.Debug|Win32.Build.0 = Debug|Win32
+		{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}.Release|Win32.ActiveCfg = Release|Win32
+		{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

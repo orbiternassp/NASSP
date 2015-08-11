@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -11,34 +11,31 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
-    <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
-    <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
-    <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
-    <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
+    <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
+    <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
+    <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
+    <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3F97A697-44DB-4A22-A5F3-7168A990B3C0}</ProjectGuid>
+    <ProjectGuid>{9A6F897E-7D11-4C97-A568-CD96B1ED99E0}</ProjectGuid>
     <RootNamespace>ApolloRTCCMFD</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -83,7 +80,7 @@
       <ProgramDataBaseFileName>.\Debug\ApolloRTCCMFD/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -127,10 +124,10 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release\ProjectApolloMFD/ProjectApolloMFD.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release\ProjectApolloMFD/</AssemblerListingLocation>
-      <ObjectFileName>.\Release\ProjectApolloMFD/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release\ProjectApolloMFD/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\Release\ApolloRTCCMFD\ApolloRTCCMFD.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Release\ApolloRTCCMFD/</AssemblerListingLocation>
+      <ObjectFileName>.\Release\ApolloRTCCMFD/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\ApolloRTCCMFD/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>

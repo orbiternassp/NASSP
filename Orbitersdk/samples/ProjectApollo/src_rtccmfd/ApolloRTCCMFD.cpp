@@ -950,11 +950,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				}
 			}
 
-				sprintf(Buffer, "R %03.0f", round(G->GDCangles.x*DEG));
+				sprintf(Buffer, "R %03.0f", OrbMech::round(G->GDCangles.x*DEG));
 				skp->Text(0.5 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "P %03.0f", round(G->GDCangles.y*DEG));
+				sprintf(Buffer, "P %03.0f", OrbMech::round(G->GDCangles.y*DEG));
 				skp->Text(0.5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "Y %03.0f", round(G->GDCangles.z*DEG));
+				sprintf(Buffer, "Y %03.0f", OrbMech::round(G->GDCangles.z*DEG));
 				skp->Text(0.5 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
 
 			int hh, mm, ss;
@@ -962,9 +962,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			time = G->P30TIG;
 
-			hh = trunc(time / 3600.0);
+			hh = OrbMech::trunc(time / 3600.0);
 			mins = (time / 3600.0 - hh) * 60.0;
-			mm = trunc(mins);
+			mm = OrbMech::trunc(mins);
 			secs = (mins - mm) * 60.0;
 
 			skp->Text(7 * W / 8, 3 * H / 21, "N47", 3);
@@ -1005,9 +1005,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(3.5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 
 			mins = G->ManPADBurnTime / 60.0;
-			mm = trunc(mins);
+			mm = OrbMech::trunc(mins);
 			secs = (mins - mm) * 60.0;
-			ss = trunc(secs);
+			ss = OrbMech::trunc(secs);
 
 			sprintf(Buffer, "XXX%d:%02.0f BT (MIN:SEC)", mm, secs);
 			skp->Text(3.5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
@@ -1044,9 +1044,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			time = G->P30TIG;
 
-			hh = trunc(time / 3600.0);
+			hh = OrbMech::trunc(time / 3600.0);
 			mins = (time / 3600.0 - hh) * 60.0;
-			mm = trunc(mins);
+			mm = OrbMech::trunc(mins);
 			secs = (mins - mm) * 60.0;
 
 			skp->Text(7 * W / 8, 3 * H / 20, "N37", 3);
@@ -1128,7 +1128,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			int mm;
 
 			mins = G->EntryPADRET05Earth / 60.0;
-			mm = trunc(mins);
+			mm = OrbMech::trunc(mins);
 			secs = (mins - mm) * 60.0;
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
@@ -1190,7 +1190,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			int mm;
 
 			mins = G->EntryPADRET05Lunar / 60.0;
-			mm = trunc(mins);
+			mm = OrbMech::trunc(mins);
 			secs = (mins - mm) * 60.0;
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
@@ -1305,11 +1305,11 @@ char* ApolloRTCCMFD::GET_Display(char* Buff, double time) //Display a time in th
 	int hh, mm, ss;
 	double mins, secs;
 
-	hh = trunc(time / 3600.0);
+	hh = OrbMech::trunc(time / 3600.0);
 	mins = (time / 3600.0 - hh) * 60.0;
-	mm = trunc(mins);
+	mm = OrbMech::trunc(mins);
 	secs = (mins - mm) * 60.0;
-	ss = trunc(secs);
+	ss = OrbMech::trunc(secs);
 
 	sprintf(Buff, "%03.0f:%02.0f:%02.0f GET", floor(time / 3600.0), floor(fmod(time, 3600.0) / 60.0), fmod(time, 60.0));
 	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);

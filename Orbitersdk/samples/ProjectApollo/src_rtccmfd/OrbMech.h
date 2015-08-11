@@ -225,7 +225,7 @@ namespace OrbMech {
 	unsigned long long BinToDec(unsigned long long num);
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
-	//double trunc(double d) { return (d > 0) ? floor(d) : ceil(d); }
+	double trunc(double d);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
