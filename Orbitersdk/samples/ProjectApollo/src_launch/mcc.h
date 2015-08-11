@@ -126,6 +126,87 @@
 // ASTP is a manned CSM launched with a Saturn 1B to earth orbit to dock with Soyuz 19.
 #define MTP_ASTP			11
 
+// MISSION STATES: GLOBAL
+// The init state is supposed to set up the MCC state engine for the mission and dispatch accordingly. Not called when reloading.
+#define MST_INIT			0
+// Prelaunch is the default state. There are separate states for 1B and V just in case one needs something the other doesn't.
+#define MST_1B_PRELAUNCH	1
+#define MST_SV_PRELAUNCH	2
+// Ends at launch time, goes to
+#define MST_1B_LAUNCH		3
+#define MST_SV_LAUNCH		4
+// Ends at S4B cutoff, goes to the relevant mission INSERTION state.
+
+// This is entry from Earth orbit, ala Saturn 1B missions, or an abort from EPO.
+#define MST_ORBIT_ENTRY		5
+// This is entry at translunar speed, in case that's different.
+#define MST_ENTRY			6
+// Landing phase
+#define MST_LANDING			7
+
+// MISSION STATES: ABORTS
+// The abort state is entered when the astronauts or the MCC initiates a mission abort.
+// Mission-specific aborts may have their own state.
+// Prelaunch abort
+#define MST_ABORT_PL		90
+// Launch abort, return to Earth
+#define MST_LAUNCH_ABORT	91
+// Abort from orbit is handled by mission-specific abort state and goes to entry.
+
+// MISSION STATES: MISSION C
+#define MST_C_INSERTION		10
+// Ends at specified time, goes to
+#define MST_C_SEPARATION	11
+// Ends at 1ST RDZ PHASING BURN, goes to
+#define MST_C_COAST1		12
+// Ends at 2ND RDZ PHASING BURN, goes to
+#define MST_C_COAST2		13
+// Ends at 1ST SPS BURN (NCC BURN), goes to
+#define MST_C_COAST3		14
+// Ends at 2ND SPS BURN (NSR BURN), goes to
+#define MST_C_COAST4		15
+// Ends at TERMINAL PHASE INITIATION BURN, goes to
+#define MST_C_COAST5		16
+// Ends at MCC, goes to
+#define MST_C_COAST6		17
+// Ends at TERMINAL PHASE FINALIZE BURN, goes to
+#define MST_C_COAST7		18
+// Ends at SEPARATION MANEUVER, goes to
+#define MST_C_COAST8		19
+// Ends at 3RD SPS BURN, goes to
+#define MST_C_COAST9		20
+// Ends at 4TH SPS BURN (MIN IMP TEST), goes to
+#define MST_C_COAST10		21
+// Ends at 5TH SPS BURN, goes to
+#define MST_C_COAST11		22
+// Ends at 6TH SPS BURN (MIN IMP TEST 2), goes to
+#define MST_C_COAST12		23
+// Ends at 7TH SPS BURN (TIME ANOMALY ADJ FOR DEORBIT), goes to
+#define MST_C_COAST13		24
+// Ends at DEORBIT BURN, goes to
+#define MST_C_COAST14		25
+// Ends at entry interface, goes to entry.
+#define MST_C_ABORT			26
+// Entered on abort from orbit, works like COAST14, goes to MST_ORBIT_ENTRY
+
+// MISSION STATES: MISSION C PRIME
+#define MST_CP_INSERTION	10
+// Ends at TLI BURN
+#define MST_CP_TRANSLUNAR1	11
+// Ends at separation
+#define MST_CP_TRANSLUNAR2	12
+// Includes MCC burns as necessary.
+// Ends at LOI BURN
+#define MST_CP_LUNAR_ORBIT	13
+// Ends at TEI BURN
+#define MST_CP_TRANSEARTH	14
+// Ends at entry interface, goes to entry.
+#define MST_CP_ABORT_ORBIT	20
+// Abort from earth orbit, goes to MST_ORBIT_ENTRY
+#define MST_CP_ABORT		21
+// post-TLI abort, ends at abort burn (if any)
+// goes to MST_CP_TRANSEARTH with an abort flag.
+
 // Ground Station Information Structure
 struct GroundStation {
 	char Name[64];		 // Station name
