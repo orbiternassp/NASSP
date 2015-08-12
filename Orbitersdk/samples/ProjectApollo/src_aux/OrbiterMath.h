@@ -176,6 +176,7 @@ static inline double KM(double m)
 }
 
 // Scale a value before it's displayed.  The buffer must be at least 10 bytes.
+/* This isn't actually used anywhere, and it generates compiler warnings, so I commented it out.
 inline void ScaleOutput(char *Buffer, double Value)
 {
 	if (fabs(Value) < 1000) {
@@ -189,4 +190,5 @@ inline void ScaleOutput(char *Buffer, double Value)
 	}
 
 }
+*/
 #endif

@@ -146,7 +146,7 @@ void Floodlight::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	if (configMode)
-		sprintf(oapiDebugString(), "Light %d [Usage: J Change, NUM 8/2/4/6/3/1 Move, NUM 7/9/+/- Direction, NUM 0/,/÷/* Size]", currentExhaust);
+		sprintf(oapiDebugString(), "Light %d [Usage: J Change, NUM 8/2/4/6/3/1 Move, NUM 7/9/+/- Direction, NUM 0/,/? * Size]", currentExhaust);
 }
 
 void Floodlight::clbkPostStep (double simt, double simdt, double mjd) {

@@ -1276,6 +1276,18 @@ void ApolloGuidance::SetR3Octal(int val)
 	DoSetR3(val, false);
 }
 
+void ApolloGuidance::SetR1Format(char *fmt){
+	strncpy(R1Format, fmt, 7); UpdateR1();
+}
+
+void ApolloGuidance::SetR2Format(char *fmt){
+	strncpy(R2Format, fmt, 7); UpdateR2();
+}
+
+void ApolloGuidance::SetR3Format(char *fmt){
+	strncpy(R3Format, fmt, 7); UpdateR3();
+}
+
 void ApolloGuidance::SetProg(int val)
 
 {

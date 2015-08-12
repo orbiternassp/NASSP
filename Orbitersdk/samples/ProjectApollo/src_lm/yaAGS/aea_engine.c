@@ -861,14 +861,14 @@ aea_engine (ags_t * State)
 	      }
 	    else
 	      { 
-		f = lli;
-		State->Quotient = floor (f / i);  
+		f = (double)lli;
+		State->Quotient = (int)(floor (f / i));  
 		State->Quotient &= 0777777;
 		if (State->Quotient == 0377777)
 		  State->Accumulator = 0377777;
 		else
 		  {
-		    State->Accumulator = floor ((f + i / 2) / i);
+		    State->Accumulator = (int)(floor ((f + i / 2) / i));
 		    State->Accumulator &= 0777777;
 		  }
 	      }

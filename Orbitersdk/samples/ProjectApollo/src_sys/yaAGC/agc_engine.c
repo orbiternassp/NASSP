@@ -2552,8 +2552,8 @@ agc_engine (agc_t * State)
 	    //  AccPair[0],*WhereWord,AccPair[1],AbsA,AbsK,AbsL);
 	    // The divisor is smaller than the dividend.  In this case, 
 	    // we return "total nonsense".
-	    c (RegL) = (0777777 & random ());
-	    c (RegA) = (0177777 & random ());
+	    c (RegL) = (0777777 & (int16_t)random ());
+	    c (RegA) = (0177777 & (int16_t)random ());
 	  }
 	else if (AbsA == AbsK && AbsL == AGC_P0)
 	  {

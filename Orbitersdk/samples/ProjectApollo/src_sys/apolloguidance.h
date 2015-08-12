@@ -1024,9 +1024,9 @@ protected:
 	void DisplayR1Octal() { R1Decimal = false; UpdateR1(); };
 	void DisplayR2Octal() { R2Decimal = false; UpdateR2(); };
 	void DisplayR3Octal() { R3Decimal = false; UpdateR3(); };
-	void SetR1Format(char *fmt) { strncpy(R1Format, fmt, 7); UpdateR1(); };
-	void SetR2Format(char *fmt) { strncpy(R2Format, fmt, 7); UpdateR2(); };
-	void SetR3Format(char *fmt) { strncpy(R3Format, fmt, 7); UpdateR3(); };
+	void SetR1Format(char *fmt);
+	void SetR2Format(char *fmt);
+	void SetR3Format(char *fmt);
 	void SetProg(int val);
 	void SetVerb(int val);
 	void SetNoun(int val);
