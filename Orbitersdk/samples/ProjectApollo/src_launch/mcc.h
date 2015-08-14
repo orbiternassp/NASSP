@@ -159,35 +159,33 @@
 #define MST_C_SEPARATION	11
 // Ends at 1ST RDZ PHASING BURN, goes to
 #define MST_C_COAST1		12
-// Ends at 2ND RDZ PHASING BURN, goes to
-#define MST_C_COAST2		13
 // Ends at 1ST SPS BURN (NCC BURN), goes to
-#define MST_C_COAST3		14
+#define MST_C_COAST2		13
 // Ends at 2ND SPS BURN (NSR BURN), goes to
-#define MST_C_COAST4		15
+#define MST_C_COAST3		14
 // Ends at TERMINAL PHASE INITIATION BURN, goes to
-#define MST_C_COAST5		16
+#define MST_C_COAST4		15
 // Ends at MCC, goes to
-#define MST_C_COAST6		17
+#define MST_C_COAST5		16
 // Ends at TERMINAL PHASE FINALIZE BURN, goes to
-#define MST_C_COAST7		18
+#define MST_C_COAST6		17
 // Ends at SEPARATION MANEUVER, goes to
-#define MST_C_COAST8		19
+#define MST_C_COAST7		18
 // Ends at 3RD SPS BURN, goes to
-#define MST_C_COAST9		20
+#define MST_C_COAST8		19
 // Ends at 4TH SPS BURN (MIN IMP TEST), goes to
-#define MST_C_COAST10		21
+#define MST_C_COAST9		20
 // Ends at 5TH SPS BURN, goes to
-#define MST_C_COAST11		22
+#define MST_C_COAST10		21
 // Ends at 6TH SPS BURN (MIN IMP TEST 2), goes to
-#define MST_C_COAST12		23
+#define MST_C_COAST11		22
 // Ends at 7TH SPS BURN (TIME ANOMALY ADJ FOR DEORBIT), goes to
-#define MST_C_COAST13		24
+#define MST_C_COAST12		23
 // Ends at DEORBIT BURN, goes to
-#define MST_C_COAST14		25
+#define MST_C_COAST13		24
 // Ends at entry interface, goes to entry.
-#define MST_C_ABORT			26
-// Entered on abort from orbit, works like COAST14, goes to MST_ORBIT_ENTRY
+#define MST_C_ABORT			25
+// Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -248,12 +246,15 @@ public:
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
 	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
 	bool   GT_Enabled;										// Ground tracking enable/disable
+	bool   MT_Enabled;										// Mission status tracking enable/disable
 
 	// MISSION STATE
 	int MissionType;										// Mission Type
 	int MissionState;										// Major state
 	int EarthRev;											// Revolutions around Earth
 	int MoonRev;											// Revolutions around moon
+	int AbortMode;											// Abort mode
+
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle
 	NOTEHANDLE NHmessages;									// Message notification handle	

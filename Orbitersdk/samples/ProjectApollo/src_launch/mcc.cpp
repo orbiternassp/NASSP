@@ -52,6 +52,8 @@ MCC::MCC(){
 	Moon = NULL;
 	CM_DeepSpace = false;
 	GT_Enabled = false;
+	MT_Enabled = false;
+	AbortMode = 0;
 	LastAOSUpdate=0;
 	// Reset ground stations
 	int x=0;
@@ -88,45 +90,6 @@ void MCC::Init(Saturn *vs){
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
 	Moon = oapiGetGbodyByName("Moon");
-
-	// Determine mission type. 	
-	switch(cm->ApolloNo){
-		case 7:
-			MissionType = MTP_C; 
-			break;
-		case 8:
-			MissionType = MTP_C_PRIME;
-			break;
-		case 9:
-			MissionType = MTP_D;
-			break;
-		case 10:
-			MissionType = MTP_F;
-			break;
-		case 11:
-			MissionType = MTP_G;
-			break;
-		case 12:
-		case 13:
-		case 14:
-			MissionType = MTP_H;
-			break;
-		case 15:
-		case 16:
-		case 17:
-			MissionType = MTP_J;
-			break;
-		default:
-			// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
-			if(cm->SaturnType == SAT_SATURNV){
-				MissionType = MTP_H;
-			}
-			if(cm->SaturnType == SAT_SATURN1B){
-				MissionType = MTP_C;
-			}
-			break;
-
-	}
 	
 	// GROUND TRACKING INITIALIZATION
 	LastAOSUpdate=0;
@@ -544,6 +507,7 @@ void MCC::TimeStep(double simdt){
 			double SlantRange;
 			double LOSRange;
 			VECTOR3 CMGlobalPos = _V(0,0,0);
+
 			LastAOSUpdate = 0;
 			// Bail out if we failed to find either major body
 			if(Earth == NULL){ addMessage("Can't find Earth"); GT_Enabled = false; return; }
@@ -562,6 +526,7 @@ void MCC::TimeStep(double simdt){
 			CM_Position[1] *= DEG; 
 			// Convert from radial distance
 			CM_Position[2] -= 6373338; // Launch pad radius should be good enough
+
 			// If we just crossed the rev line, count it
 			if(CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB){
 				EarthRev++;
@@ -604,10 +569,176 @@ void MCC::TimeStep(double simdt){
 			}
 		}
 	}
-	
 
 	// MISSION STATE EVALUATOR
+	if(MT_Enabled == true){
+		// Make sure ground tracking is also on
+		if(GT_Enabled == false){ addMessage("Mission tracking requires ground tracking"); MT_Enabled = false; return; }
+		// Handle global mission states
+		switch(MissionState){			
+		case MST_INIT:
+			// INITIALIZATION STATE
+			AbortMode = 0;
+			// Determine mission type.
+			switch(cm->ApolloNo){
+				case 7:
+					MissionType = MTP_C;
+					MissionState = MST_1B_PRELAUNCH;
+					break;
+				case 8:
+					MissionType = MTP_C_PRIME;
+					MissionState = MST_SV_PRELAUNCH;
+					break;
+				case 9:
+					MissionType = MTP_D;
+					break;
+				case 10:
+					MissionType = MTP_F;
+					break;
+				case 11:
+					MissionType = MTP_G;
+					break;
+				case 12:
+				case 13:
+				case 14:
+					MissionType = MTP_H;
+					break;
+				case 15:
+				case 16:
+				case 17:
+					MissionType = MTP_J;
+					break;
+				default:
+					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
+					if(cm->SaturnType == SAT_SATURNV){
+						MissionType = MTP_H;
+					}
+					if(cm->SaturnType == SAT_SATURN1B){
+						MissionType = MTP_C;
+					}
+					break;
 
+			}
+			if(MissionType == 0){
+				sprintf(buf,"Unsupported Mission %d",cm->ApolloNo);
+				addMessage(buf);
+				MT_Enabled = false;
+			}
+			break;
+		case MST_1B_PRELAUNCH:
+			// Await launch
+			if(cm->stage >= CM_STAGE){
+				// Pad Abort
+				addMessage("PAD ABORT");
+				MissionState = MST_ABORT_PL;					
+			}else{
+				if(cm->stage == LAUNCH_STAGE_ONE){
+					// Normal Liftoff
+					addMessage("LIFTOFF!");
+					MissionState = MST_1B_LAUNCH;
+				}
+			}
+			break;
+		case MST_SV_PRELAUNCH:
+			// Await launch
+			if(cm->stage >= CM_STAGE){
+				// Pad Abort
+				addMessage("PAD ABORT");
+				MissionState = MST_ABORT_PL;
+			}else{
+				if(cm->stage == LAUNCH_STAGE_ONE){
+					// Normal Liftoff
+					addMessage("LIFTOFF!");
+					MissionState = MST_SV_LAUNCH;
+				}
+			}
+			break;
+		case MST_1B_LAUNCH:
+			// Abort?
+			if(cm->bAbort){
+				// What type?
+				if(cm->LETAttached()){
+					// ABORT MODE 1
+					addMessage("ABORT MODE 1");
+					MissionState = MST_LAUNCH_ABORT;
+					AbortMode = 1;
+				}else{
+					// AP7 Abort Summary says:
+					// Mode 2: 2:46 - 9:30
+					// Mode 2 is selected if we are within the time range and must land immediately/no other options available.
+					// Mode 3: 9:30 - Insertion
+					// Mode 3 is selected if we are within the time range and must land immediately.
+					// Mode 4: 9:21 - Insertion
+					// Mode 4 is selected if we are within the time range and can land in the Pacific.
+					addMessage("ABORT MODE 2/3/4");
+					MissionState = MST_LAUNCH_ABORT;
+					AbortMode = 2;
+				}
+			}else{
+				// Await insertion
+				if(cm->stage >= STAGE_ORBIT_SIVB){
+					switch(MissionType){
+					case MTP_C:
+						addMessage("INSERTION");
+						MissionState = MST_C_INSERTION;
+						break;
+					}				
+				}
+			}
+			break;
+		case MST_SV_LAUNCH:
+			// Abort?
+			if(cm->bAbort){
+				// What type?
+				if(cm->LETAttached()){
+					// ABORT MODE 1
+					addMessage("ABORT MODE 1");
+					MissionState = MST_LAUNCH_ABORT;
+					AbortMode = 1;
+				}else{
+					// ABORT MODE 2/3/4
+					addMessage("ABORT MODE 2/3/4");
+					MissionState = MST_LAUNCH_ABORT;
+					AbortMode = 2;
+				}
+			}else{
+				// Await insertion
+				if(cm->stage >= STAGE_ORBIT_SIVB){
+					switch(MissionType){
+					case MTP_C_PRIME:
+						addMessage("INSERTION");
+						MissionState = MST_CP_INSERTION;
+						break;
+					}				
+				}
+			}
+			break;
+		}
+		// Now handle mission-specific states
+		switch(MissionType){
+		case MTP_C:
+			/* *********************
+			 * MISSION C: APOLLO 7 *
+			 ********************* */
+			switch(MissionState){
+			case MST_C_INSERTION:
+				// Await separation.
+				if(cm->stage == CSM_LEM_STAGE){
+					MissionState = MST_C_SEPARATION;
+				}else{
+					break;
+				}
+				// FALL INTO
+			case MST_C_SEPARATION:
+				// Ends with 1ST RDZ PHASING BURN
+				// The phasing burn was intended to place the spacecraft 76.5 n mi ahead of the S-IVB in 23 hours.
+				break;
+			case MST_C_COAST1:
+				// Ends with 1ST SPS BURN (NCC BURN)
+				break;
+			}
+		}
+	}
 
 	// MESSAGE LIST MAINTENANCE should come last that way if any of the above prints anything,
 	// it gets printed in this timestep rather than the next.
@@ -650,7 +781,7 @@ void MCC::keyDown(DWORD key){
 	switch(key){
 		case OAPI_KEY_TAB:
 			if(menuState == 0){
-				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1. Voice Check\n2. Toggle AOS/LOS Trk"); // Present menu
+				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk"); // Present menu
 				menuState = 1;
 			}else{
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
@@ -669,10 +800,24 @@ void MCC::keyDown(DWORD key){
 			if(menuState == 1){
 				if(GT_Enabled == false){
 					GT_Enabled = true;
-					sprintf(buf,"AOS Tracking Enabled");
+					sprintf(buf,"Ground Tracking Enabled");
 				}else{
 					GT_Enabled = false;
-					sprintf(buf,"AOS Tracking Disabled");
+					sprintf(buf,"Ground Tracking Disabled");
+				}
+				addMessage(buf);
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_3:
+			if(menuState == 1){
+				if(MT_Enabled == false){
+					MT_Enabled = true; GT_Enabled = true;
+					sprintf(buf,"Mission and Ground Tracking Enabled");
+				}else{
+					MT_Enabled = false;
+					sprintf(buf,"Mission Tracking Disabled");
 				}
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
