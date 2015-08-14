@@ -233,11 +233,16 @@ public:
 	void TimeStep(double simdt);					        // Timestep
 	void keyDown(DWORD key);								// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
+	int  subThread();										// Subthread entry point
 
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
+
+	// SUBTHREAD MANAGEMENT
+	int subThreadMode;										// What should the subthread do?
+	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array

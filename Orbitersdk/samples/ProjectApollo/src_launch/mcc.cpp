@@ -42,6 +42,12 @@
 #include "tracer.h"
 #include "mcc.h"
 
+// This is a threadenwerfer. It werfs threaden.
+static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	
+	MCC *mcc = (MCC *)ptr;
+	return(mcc->subThread());
+}
+
 // MCC CLASS
 
 // CONS
@@ -768,6 +774,22 @@ void MCC::TimeStep(double simdt){
 	}
 }
 
+// Subthread Entry Point
+int MCC::subThread(){
+	int Result = 0;
+	subThreadStatus = 2; // Running
+	switch(subThreadMode){
+	case 0: // Test
+		Sleep(5000); // Waste 5 seconds
+		Result = 0;  // Success (negative = error)
+		break;
+	}
+	subThreadStatus = Result;
+	// Printing messages from the subthread is not safe, but this is just for testing.
+	addMessage("Thread Completed");
+	return(0);
+}
+
 // Add message to ring buffer
 void MCC::addMessage(char *msg){
 	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
@@ -781,7 +803,7 @@ void MCC::keyDown(DWORD key){
 	switch(key){
 		case OAPI_KEY_TAB:
 			if(menuState == 0){
-				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk"); // Present menu
+				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk\n4: Thread Test"); // Present menu
 				menuState = 1;
 			}else{
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
@@ -820,6 +842,22 @@ void MCC::keyDown(DWORD key){
 					sprintf(buf,"Mission Tracking Disabled");
 				}
 				addMessage(buf);
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_4:
+			if(menuState == 1){
+				if(subThreadStatus < 1){
+					// Punt thread
+					subThreadStatus = 1; // Busy
+					DWORD id = 0;
+					HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
+					if(h != NULL){ CloseHandle(h); }
+					addMessage("Thread Started");
+				}else{
+					addMessage("Thread Busy");
+				}
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
 				menuState = 0;
 			}
