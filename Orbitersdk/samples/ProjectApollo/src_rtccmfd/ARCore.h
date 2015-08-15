@@ -128,8 +128,9 @@ public:
 	double EntryLatPred;
 	double EntryLngPred;
 	VECTOR3 Entry_DV;
-	int entrycalcmode;
+	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction
 	int entrycalcstate;
+	double entryrange;
 	bool SVSlot;
 	VECTOR3 BRCSPos, BRCSVel;
 	double BRCSGET;

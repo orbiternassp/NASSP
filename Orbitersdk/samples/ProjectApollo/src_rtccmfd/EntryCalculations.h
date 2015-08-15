@@ -6,7 +6,7 @@
 
 class Entry {
 public:
-	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical);
+	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange);
 	Entry(OBJHANDLE gravref);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
@@ -56,6 +56,8 @@ private:
 	VECTOR3 VEI;
 	double x2_apo;
 	int revcor;
+	double entryrange;
+	int rangeiter;
 };
 
 #endif

@@ -165,9 +165,11 @@ ARCore::ARCore(VESSEL* v)
 	EntryAng = 0.0;
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
-	entrycalcmode = 0; //0=LEO mode with angle and longitude, 1=Entry Prediction
+	entrycalcmode = 0;
 	entrycritical = 1; //0 = Fuel critical, 1 = time critical, 2 = Abort
 	entrycalcstate = 0;
+	entryrange = 0.0;
+	EntryRTGO = 0.0;
 	SVSlot = true; //true = CSM; false = Other
 	BRCSPos = _V(0.0, 0.0, 0.0);
 	BRCSVel = _V(0.0, 0.0, 0.0);
@@ -259,9 +261,9 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 			maneuverplanet = oapiGetObjectByName("Earth");
 			P37GET400K = entry->t2;
 
-			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, V_G, DV_P, DV_C;
-			MATRIX3 Rot, mat;
-			double SVMJD,theta_T,t_slip;
+			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, V_G, DV_P, DV_C,R_cor,V_cor,i,j,k;
+			MATRIX3 Rot, mat,Q_Xx;
+			double SVMJD,theta_T,t_slip, mu;
 
 
 			vessel->GetRelativePos(gravref, R0);
@@ -286,9 +288,18 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 
 			impulsive(R, V, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
 
+			mu = GGRAV*oapiGetMass(gravref);
+			OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);
+
+			j = unit(crossp(V_cor, R_cor));
+			k = unit(-R_cor);
+			i = crossp(j, k);
+			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
 			EntryTIGcor = entry->EntryTIGcor+t_slip;
-			P30TIG = EntryTIGcor;
-			dV_LVLH = tmul(mat, Llambda);
+			P30TIG = EntryTIGcor + t_slip;
+			dV_LVLH = mul(Q_Xx, Llambda);
+			//dV_LVLH = tmul(mat, Llambda);
 			entrycalcstate = 0;
 			delete entry;
 
@@ -315,6 +326,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		entry->EntryUpdateCalc();
 		EntryLatPred = entry->EntryLatPred;
 		EntryLngPred = entry->EntryLngPred;
+		EntryRTGO = entry->EntryRTGO;
 		entrycalcstate = 0;
 		delete entry;
 	}
@@ -483,15 +495,23 @@ void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic bur
 		}
 		else
 		{
-			k = -RA2 / length(RA2);
-			j = crossp(VA2, RA2) / length(RA2) / length(VA2);
+			j = unit(crossp(VA2, RA2));
+			k = unit(-RA2);
 			i = crossp(j, k);
 			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 		}
 		CDHdeltaV = mul(Q_Xx, V_A2_apo - VA2_alt); //Calculates the desired P30 LVLH DV Vector
 
-		VECTOR3 Llambda;double t_slip;
+		VECTOR3 Llambda,RA2_cor,VA2_cor;double t_slip;
 		impulsive(RA2, VA2_alt, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
+
+		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
+
+		j = unit(crossp(VA2_cor, RA2_cor));
+		k = unit(-RA2_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
 		CDHdeltaV = mul(Q_Xx, Llambda); //Calculates the desired P30 LVLH DV Vector
 		P30TIG = CDHtime_cor + t_slip;
 		dV_LVLH = CDHdeltaV;
@@ -655,14 +675,21 @@ void ARCore::lambertcalc()
 	}
 	else
 	{
-		k = -RA1 / length(RA1);
-		j = crossp(VA1, RA1) / length(RA1) / length(VA1);
+		j = unit(crossp(VA1, RA1));
+		k = unit(-RA1);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 	}
-	VECTOR3 Llambda;
+	VECTOR3 Llambda,RA1_cor,VA1_cor;
 	double t_slip;
+
 	impulsive(RA1, VA1, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda,t_slip);
+	OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
+
+	j = unit(crossp(VA1_cor, RA1_cor));
+	k = unit(-RA1_cor);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
 	LambertdeltaV = mul(Q_Xx,Llambda);
 	dV_LVLH = LambertdeltaV;
@@ -800,8 +827,8 @@ void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach
 
 		//OrbMech::rv_from_r0v0(R2, V2, -30.0, R2, V2, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
 
-		k = -R2 / length(R2);											
-		j = crossp(V2, R2) / length(R2) / length(V2);
+		j = unit(crossp(V2, R2));
+		k = unit(-R2);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);			//Creates the rotation matrix from the geocentric equatorial frame to the vessel-centered P30 LVLH frame
 
@@ -827,8 +854,15 @@ void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach
 			DVX = DVX4;
 		}
 
-		VECTOR3 Llambda; double t_slip;
-		impulsive(R2, V2, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip);
+		VECTOR3 Llambda,R2_cor,V2_cor; double t_slip;
+		impulsive(R2, V2, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+
+		OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+
+		j = unit(crossp(V2_cor, R2_cor));
+		k = unit(-R2_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
 
 		OrbAdjDVX = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
 		iterator = 0;		//tells the program that the iteration is over
@@ -1104,7 +1138,7 @@ void ARCore::EntryPAD()
 	{
 		dt = OrbMech::time_radius_integ(R0B, V0B, SVMJD, oapiGetSize(hEarth) + EMSAlt, -1, gravref, hEarth, R05G, V05G);
 		//OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R05G, V05G, mu);
-		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical);
+		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical,entryrange);
 		entry->EntryUpdateCalc();
 		EntryPADLat = entry->EntryLatPred;
 		EntryPADLng = entry->EntryLngPred;
@@ -2006,15 +2040,85 @@ void ARCore::checkstar(MATRIX3 REFSM, VECTOR3 IMU, VECTOR3 R_C, double R_E, int 
 
 void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
-	double mu, v_ex, f_T, m, a_T, tau, L,t_go,t_go_old,J,S,dr_z,v_goz,dt_go,r_goz, phi;
+	VECTOR3 R_ig, V_ig,V_go,R_ref,V_ref,dV_go,V_go_apo,R_d,V_d,R_p,V_p,i_z,i_y;
+	double t_slip_old,mu,t_go,v_goz,dr_z,dt_go,m,f_T;
+	int n,nmax;
+
+	nmax = 100;
+	t_slip = 0;
+	t_slip_old = 1;
+	dt_go = 1;
+	mu = GGRAV*oapiGetMass(gravref);
+	V_go = DV;
+	R_ref = R;
+	V_ref = V + DV;
+	i_y = -unit(crossp(R_ref, V_ref));
+
+	m = vessel->GetMass();
+	f_T = vessel->GetThrusterMax0(thruster);
+
+	while (abs(t_slip - t_slip_old) > 0.01)
+	{
+		n = 0;
+		OrbMech::rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
+		{
+			poweredflight(R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_go, R_p, V_p, t_go);
+			OrbMech::rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			i_z = unit(crossp(R_d, i_y));
+			dr_z = dotp(i_z, R_d - R_p);
+			v_goz = dotp(i_z, V_go);
+			dt_go = -2.0 * dr_z / v_goz;
+			dV_go = V_d - V_p;
+			//dV_go = (V_go_apo - V_go)*0.5;
+			V_go = V_go + dV_go;
+			n++;
+		}
+		t_slip_old = t_slip;
+		t_slip += dt_go*0.1;
+	}
+	//Llambda = V_go;
+
+	double apo, peri;
+	OrbMech::periapo(R_p, V_p, mu, apo, peri);
+
+	VECTOR3 X,Y,Z,dV_LV,DV_P,DV_C,V_G;
+
+	MATRIX3 Q_Xx;
+	double theta_T;
+
+	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
+	Y = unit(crossp(V_ig, R_ig));
+	Z = -unit(R_ig);
+
+	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+	dV_LV = mul(Q_Xx, V_go);
+	DV_P = X*dV_LV.x + Z*dV_LV.z;
+	if (length(DV_P) != 0.0)
+	{
+		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + Y*dV_LV.y;
+	}
+	else
+	{
+		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
+	}
+	Llambda = V_G;
+}
+
+/*void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+{
+	double mu, v_ex, f_T, m, a_T, tau, L,t_go,t_go_old,J,S,dr_z,v_goz,dt_go,r_goz, phi,m_dot,t_slip_old;
 	VECTOR3 lambda, Slambda,R3,V3,V_apo,R_ref,V_ref,R_thrust, V_thrust, R_bias, V_bias, V_go,R_grav,R_go,R_d,i_z,i_y;
-	VECTOR3 dR_c, dV_c,R_c1,V_c1,R_c2,V_c2,V_grav,R_p,V_d,V_go_apo,dV_go,R_ig,V_ig;
+	VECTOR3 dR_c, dV_c,R_c1,V_c1,R_c2,V_c2,V_grav,R_p,V_d,V_go_apo,dV_go,R_ig,V_ig,V_p;
 	int n, nmax;
 
 	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G,R_goxy;
 	MATRIX3 Q_Xx;
 
 	t_slip = 0;
+	t_slip_old = 1;
 	dt_go = 1;
 	mu = GGRAV*oapiGetMass(gravref);
 
@@ -2023,14 +2127,14 @@ void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE 
 	m = vessel->GetMass();
 	a_T = f_T / m;
 	tau = v_ex / a_T;
+	m_dot = f_T / v_ex;
 	V_apo = V + DV;
 	R_ref = R;
 	V_ref = V_apo;
 
-	while (abs(dt_go) > 0.01)
+	while (abs(t_slip-t_slip_old) > 0.01)
 	{
 		OrbMech::rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
-
 		n = 0;
 		nmax = 100;
 
@@ -2053,8 +2157,8 @@ void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE 
 			J = tau*L - v_ex*t_go;
 			S = -J + t_go*L;
 
-			R_grav = R_grav*OrbMech::power(t_go / t_go_old, 2.0);
-			R_go = R_d - (R_ig + V_ig*t_go + R_grav);
+			//R_grav = R_grav*OrbMech::power(t_go / t_go_old, 2.0);
+			/*R_go = R_d - (R_ig + V_ig*t_go + R_grav);
 			i_z = unit(crossp(R_d, i_y));
 			R_goxy = R_go - i_z*dotp(i_z, R_go);
 			r_goz = (S - dotp(lambda, R_goxy)) / dotp(lambda, i_z);
@@ -2063,18 +2167,8 @@ void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE 
 			V_thrust = lambda*L;
 			R_thrust = lambda*S;
 
-			/*X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-			Y = unit(crossp(V_ig, R_ig));
-			Z = -unit(R_ig);
-			Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-			dV_LV = mul(Q_Xx, V_go);
-			DV_P = X*dV_LV.x + Z*dV_LV.z;
-			phi = length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-			DV_C = (unit(DV_P)*cos(phi / 2.0) + unit(crossp(DV_P, Y))*sin(phi / 2.0))*length(DV_P);
-			V_go = DV_C + Y*dV_LV.y;*/
-
-			V_bias = V_go - V_thrust;
-			R_bias = R_go - R_thrust;
+			//V_bias = V_go - V_thrust;
+			//R_bias = R_go - R_thrust;
 			dR_c = -R_thrust*1.0 / 10.0 - V_thrust*t_go * 1.0 / 30.0;
 			dV_c = R_thrust*6.0 / 5.0 / t_go - V_thrust*1.0 / 10.0;
 			R_c1 = R_ig + dR_c;
@@ -2083,16 +2177,21 @@ void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE 
 			V_grav = V_c2 - V_c1;
 			R_grav = R_c2 - R_c1 - V_c1*t_go;
 			R_p = R_ig + V_ig*t_go + R_grav + R_thrust;
+			V_p = V_ig + V_grav + V_thrust;
+			//R_p = R_ig + V_ig*t_go + lambda*f_T / (m*2.0)*t_go*t_go + lambda*f_T*m_dot / (6.0*m*m)*t_go*t_go*t_go;
+			//V_p = V_ig + lambda*f_T / m*t_go + lambda*f_T*m_dot / (2.0*m*m)*t_go*t_go;
 			//V_d = V_ig + V_grav + V_thrust;
 			OrbMech::rv_from_r0v0(R_ref, V_ref, t_go+t_slip, R_d, V_d, mu);
 			dr_z = dotp(i_z, R_d - R_p);
 			v_goz = dotp(i_z, V_go);
 			dt_go = -2.0 * dr_z / v_goz;
-			V_go_apo = V_d - V_ig - V_grav + V_bias;
+			V_go_apo = V_d - V_ig - V_grav;// +V_bias;
+			//V_go_apo = V_d - V_p;
 			dV_go = V_go_apo - V_go;
 			V_go = V_go + dV_go;
 			n++;
 		}
+		t_slip_old = t_slip;
 		t_slip+= dt_go*0.1;
 	}
 
@@ -2119,8 +2218,8 @@ void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE 
 	{
 		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
 	}
-	Llambda = V_go;
-}
+	Llambda = V_G;
+}*/
 
 void ARCore::poweredflight(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
 {

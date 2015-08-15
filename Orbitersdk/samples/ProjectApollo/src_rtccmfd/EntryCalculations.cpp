@@ -1,6 +1,6 @@
 #include "EntryCalculations.h"
 
-Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical)
+Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange)
 {
 	MA1 = 8e8;
 	C0 = 1.81000432e8;
@@ -79,6 +79,17 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 		EMSAlt = 297431.0*0.3048;
 	}
 	revcor = -5;
+
+	this->entryrange = entryrange;
+
+	if (entryrange == 0)
+	{
+		rangeiter = 1;
+	}
+	else
+	{
+		rangeiter = 2;
+	}
 }
 
 Entry::Entry(OBJHANDLE gravref)
@@ -762,6 +773,8 @@ void Entry::EntryUpdateCalc()
 	double mjd, RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t2, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
 	MATRIX3 Rot, R;
 	OBJHANDLE hEarth;
+	VECTOR3 R05G, V05G;
+	double dt22;
 
 	hEarth = oapiGetObjectByName("Earth");
 
@@ -790,40 +803,48 @@ void Entry::EntryUpdateCalc()
 	gammaE = asin(S_FPA);
 	augekugel(v3, gammaE, phie, te);
 
-	t2 = dt2;
-	t_LS = t2 + t32 + te;
-	Sphie = sin(0.00029088821*phie);
-	Cphie = cos(0.00029088821*phie);
-	U_H3 = unit(crossp(crossp(R3, V3), R3));
-	U_LS = UR3*Cphie + U_H3*Sphie;
-
-	tLSMJD = mjd + t_LS / 24.0 / 3600.0;
-	U_LS = tmul(Rot, U_LS);
-	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-	R = OrbMech::GetRotationMatrix2(gravref, tLSMJD);
-	LSEF = tmul(R, U_LS);
-	l = LSEF.x;
-	m = LSEF.z;
-	n = LSEF.y;
-	phi = asin(n);
-	if (m > 0)
+	for (int iii = 0;iii < rangeiter;iii++)
 	{
-		lambda2 = acos(l / cos(phi));
+		t2 = dt2;
+		t_LS = t2 + t32 + te;
+		Sphie = sin(0.00029088821*phie);
+		Cphie = cos(0.00029088821*phie);
+		U_H3 = unit(crossp(crossp(R3, V3), R3));
+		U_LS = UR3*Cphie + U_H3*Sphie;
+
+		tLSMJD = mjd + t_LS / 24.0 / 3600.0;
+		U_LS = tmul(Rot, U_LS);
+		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
+		R = OrbMech::GetRotationMatrix2(gravref, tLSMJD);
+		LSEF = tmul(R, U_LS);
+		l = LSEF.x;
+		m = LSEF.z;
+		n = LSEF.y;
+		phi = asin(n);
+		if (m > 0)
+		{
+			lambda2 = acos(l / cos(phi));
+		}
+		else
+		{
+			lambda2 = PI2 - acos(l / cos(phi));
+		}
+		if (lambda2 > PI) { lambda2 -= PI2; }
+
+		EntryLatPred = phi;
+		EntryLngPred = lambda2;
+
+		
+		dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
+		OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu);
+
+		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
+		if (entryrange != 0)
+		{
+			te *= entryrange / EntryRTGO;
+			phie = entryrange + 3437.7468*acos(dotp(unit(R3), unit(R05G)));
+		}
 	}
-	else
-	{
-		lambda2 = PI2 - acos(l / cos(phi));
-	}
-	if (lambda2 > PI){ lambda2 -= PI2; }
-
-	EntryLatPred = phi;
-	EntryLngPred = lambda2;
-
-	VECTOR3 R05G, V05G;
-	double dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
-	OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu);
-
-	EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 	EntryVIO = length(V05G);
 	EntryRET = dt2 + t32 + dt22;
 }

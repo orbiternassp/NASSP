@@ -171,6 +171,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
 	oapiWriteScenario_int(scn, "ENTRYCALCMODE", G->entrycalcmode);
 	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
+	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
@@ -233,6 +234,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
 		papiReadScenario_int(line, "ENTRYCALCMODE", G->entrycalcmode);
 		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
+		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -541,15 +543,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 			else if (G->dvdisplay == 1)
 			{
-				skp->Text(5 * W / 8, 6 * H / 14, "DX", 2);
-				skp->Text(5 * W / 8, 8 * H / 14, "DY", 2);
-				skp->Text(5 * W / 8, 10 * H / 14, "DZ", 2);
+				skp->Text(5 * W / 8, 6 * H / 14, "DVX", 3);
+				skp->Text(5 * W / 8, 8 * H / 14, "DVY", 3);
+				skp->Text(5 * W / 8, 10 * H / 14, "DVZ", 3);
+				//skp->Text(5 * W / 8, 12 * H / 14, "DVT", 3);
 				AGC_Display(Buffer, G->OrbAdjDVX.x / 0.3048);
 				skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 				AGC_Display(Buffer, G->OrbAdjDVX.y / 0.3048);
 				skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 				AGC_Display(Buffer, G->OrbAdjDVX.z / 0.3048);
 				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+				//AGC_Display(Buffer, length(G->OrbAdjDVX) / 0.3048);
+				//skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 			}
 		}
 		else if (G->iterator == 1)
@@ -741,10 +746,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(6 * W / 8,(int)(0.5 * H / 14), "Entry Update", 12);
 
-			sprintf(Buffer, "%f °", G->EntryLatPred*DEG);
+
+			sprintf(Buffer, "Lat:  %f °", G->EntryLatPred*DEG);
 			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryLngPred*DEG);
+			sprintf(Buffer, "Long: %f °", G->EntryLngPred*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "Desired Range: %.1f NM", G->entryrange);
+			skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "Actual Range:  %.1f NM", G->EntryRTGO);
+			skp->Text(4 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
@@ -766,7 +777,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "X%+04.0f LONG", G->EntryLngcor*DEG);
 			skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 			GET_Display(Buffer, G->P37GET400K);
-			sprintf(Buffer, "%s 400K", Buffer, G->P37GET400K);
+			sprintf(Buffer, "%f 400K", G->P37GET400K);
 			skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
@@ -1150,6 +1161,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			else
 			{
 				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "MCC", 3);
+			}
+
+			if (G->entryrange != 0)
+			{
+				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Desired Range:", 14);
+				sprintf(Buffer, "%.1f NM", G->entryrange);
+				skp->Text((int)(0.5 * W / 8), 7 * H / 14, Buffer, strlen(Buffer));
 			}
 
 			sprintf(Buffer, "XXX%03.0f R 0.05G", OrbMech::imulimit(G->EIangles.x*DEG));
@@ -1634,6 +1652,13 @@ void ApolloRTCCMFD::OrbAdjGETDialogue()
 bool OrbAdjGETInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss, SPSGET;
+	if (strcmp(str, "PeT") == 0)
+	{
+		double pet;
+		pet = ((ApolloRTCCMFD*)data)->timetoperi();
+		((ApolloRTCCMFD*)data)->set_OrbAdjGET(pet);
+		return true;
+	}
 	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		SPSGET = ss + 60 * (mm + 60 * hh);
@@ -2440,19 +2465,43 @@ void ApolloRTCCMFD::menuEntryCalc()
 {
 	if (G->entrycalcmode == 0)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else if(G->entrycalcmode == 1)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
 	else
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
+}
+
+void ApolloRTCCMFD::EntryRangeDialogue()
+{
+	if (G->entrycalcmode == 1)
+	{
+		bool EntryRangeInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the Entry Range in NM:", EntryRangeInput, 0, 20, (void*)this);
+	}
+}
+
+bool EntryRangeInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_entryrange(atoi(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_entryrange(double range)
+{
+	G->entryrange = range;
 }
 
 void ApolloRTCCMFD::menuSVCalc()

@@ -121,6 +121,8 @@ public:
 	void set_entrylng(double lng);
 	void EntryLngDialogue();
 	void menuEntryCalc();
+	void set_entryrange(double range);
+	void EntryRangeDialogue();
 	void menuSVCalc();
 	void menuSwitchSVSlot();
 	void menuSVUpload();
