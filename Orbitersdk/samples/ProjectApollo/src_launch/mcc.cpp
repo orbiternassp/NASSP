@@ -85,8 +85,11 @@ MCC::MCC(){
 	}	
 	// Reset capcom interface
 	menuState = 0;
+	padState = 0;
+	padNumber = 0;
 	NHmenu = 0;
 	NHmessages = 0;
+	NHpad = 0;
 }
 
 void MCC::Init(Saturn *vs){
@@ -487,6 +490,8 @@ void MCC::Init(Saturn *vs){
 	oapiAnnotationSetPos(NHmenu,0,0,0.15,0.2);
 	NHmessages = oapiCreateAnnotation(false,0.75,_V(1,1,0));
 	oapiAnnotationSetPos(NHmessages,0.18,0,0.87,0.2);
+	NHpad = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	oapiAnnotationSetPos(NHpad,0,0.2,0.33,1);
 	// Clobber message output buffer
 	msgOutputBuf[0] = 0;
 	// Clobber the message ring buffer, then set the index back to zero
@@ -758,7 +763,7 @@ void MCC::TimeStep(double simdt){
 			if(msgtime[x] == 0){ z = 1; }	// If message is brand new, set updation flag			
 			msgtime[x] += simdt;			// Increment lifetime
 			if(msgtime[x] > MSG_DISPLAY_TIME){
-				messages[x][0] = 0;			// Message too old, kill it
+				// messages[x][0] = 0;			// Message too old, kill it
 				msgtime[x] = -1;			// Mark not-in-use
 				z = 1;						// Set updation flag
 			}else{				
@@ -772,6 +777,27 @@ void MCC::TimeStep(double simdt){
 	if(z == 1){								// If we set the updation flag
 		oapiAnnotationSetText(NHmessages,msgOutputBuf);	// update the annotation
 	}
+}
+
+// Add message to ring buffer
+void MCC::addMessage(char *msg){
+	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
+	msgtime[currentMessage] = 0;								// Mark new
+	currentMessage++;											// Advance tail index
+	if(currentMessage == MAX_MESSAGES){ currentMessage = 0; }	// Wrap index if necessary
+}
+
+// Redisplay ring buffer
+void MCC::redisplayMessages(){
+	int x=0;
+	while(x < MAX_MESSAGES){
+		if(messages[x][0] != 0){
+			msgtime[x] = 0;
+		}
+		x++;
+	}
+	// The ring buffer pointer will walk from the current message forward, so anything that was displayed
+	// should be redisplayed in the right order.
 }
 
 // Subthread Entry Point
@@ -807,20 +833,28 @@ int MCC::startSubthread(int fcn){
 	return(0);
 }
 
-// Add message to ring buffer
-void MCC::addMessage(char *msg){
-	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
-	msgtime[currentMessage] = 0;								// Mark new
-	currentMessage++;											// Advance tail index
-	if(currentMessage == MAX_MESSAGES){ currentMessage = 0; }	// Wrap index if necessary
+// Draw PAD display
+void MCC::drawPad(){
+	char buffer[512];
+	switch(padNumber){
+	case 0:
+		// NO PAD (*knifed*)
+		oapiAnnotationSetText(NHpad,"No PAD");
+		break;
+	default:
+		sprintf(buffer,"Unknown padNumber %d",padNumber);
+		oapiAnnotationSetText(NHpad,buffer);
+		break;
+	}
 }
 
+// Keypress handler
 void MCC::keyDown(DWORD key){
 	char buf[MAX_MSGSIZE];
 	switch(key){
 		case OAPI_KEY_TAB:
 			if(menuState == 0){
-				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk\n4: Thread Test"); // Present menu
+				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk\n4: Thread Test\n5: Hide/Show PAD\n6: Redisplay Messages"); // Present menu
 				menuState = 1;
 			}else{
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
@@ -866,6 +900,31 @@ void MCC::keyDown(DWORD key){
 		case OAPI_KEY_4:
 			if(menuState == 1){
 				startSubthread(0);
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_5:
+			padNumber = 5; // Cheat
+			if(menuState == 1){
+				if(padState == 1){
+					oapiAnnotationSetText(NHpad,""); // Clear PAD
+					padState = 0;
+				}else{
+					if(padNumber == 0){
+						addMessage("No PAD available");
+					}else{
+						drawPad();
+						padState = 1;
+					}
+				}
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_6:
+			if(menuState == 1){
+				redisplayMessages();
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
 				menuState = 0;
 			}

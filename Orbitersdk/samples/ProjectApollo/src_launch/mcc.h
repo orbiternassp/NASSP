@@ -225,6 +225,42 @@ struct GroundStation {
 	int	 AOS;            // AOS flag
 };
 
+// PAD FORMS AND SUCH
+// TRANSLUNAR INJECTION
+struct TLIPAD{
+	double TB6P;		// Predicted start of TB6	
+	VECTOR3	IgnATT;		// SC attitude at ignition
+	double BurnTime;	// Burn duration
+	double dVC;			// dV for EMS
+	double VI;			// Inertial velocity at cutoff
+	VECTOR3 SepATT;		// SC attitude after S4B sep att maneuver
+	VECTOR3 ExtATT;		// SC attitude at LM extraction
+};
+
+// P37 RETURN-TO-EARTH
+struct P37PAD{
+	// This PAD has 7 blocks on it
+	double GETI[7];		// TIG
+	double dVT[7];		// Total dV
+	double lng[7];		// Longitude of landing point
+	double GET400K[7];	// Time of entry interface
+};
+
+// P27 CMC/LGC UPDATE
+struct P27PAD{
+	// This PAD has 3 blocks on the top part
+	char Purpose[3][64]; // Purpose of update
+	int	Verb[3];		// Verb to use for update
+	double GET[3];		// Time data recorded
+	int Index[3];		// 304 01 Index #
+	int Data[3][19];	// Data
+	// From here out there is only one block
+	double NavChk;		// Time for nav check
+	double lat;			// Latitude for N43
+	double lng;			// Longitude for N43
+	double alt;			// Altitude for N43
+};
+
 // Mission Control Center class
 class MCC {	
 public:
@@ -233,6 +269,8 @@ public:
 	void TimeStep(double simdt);					        // Timestep
 	void keyDown(DWORD key);								// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
+	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
+	void drawPad();											// Draw PAD display
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
 
@@ -263,8 +301,11 @@ public:
 
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle
-	NOTEHANDLE NHmessages;									// Message notification handle	
+	NOTEHANDLE NHmessages;									// Message notification handle
+	NOTEHANDLE NHpad;										// PAD display handle
 	int menuState;											// Menu state
+	int padState;											// PAD display state
+	int padNumber;											// PAD display number
 	char messages[MAX_MESSAGES][MAX_MSGSIZE];				// Message buffer
 	double msgtime[MAX_MESSAGES];							// Message timeout list
 	int currentMessage;										// Index to tail of ring buffer
