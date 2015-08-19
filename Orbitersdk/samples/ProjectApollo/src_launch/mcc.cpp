@@ -790,6 +790,23 @@ int MCC::subThread(){
 	return(0);
 }
 
+// Subthread initiation
+int MCC::startSubthread(int fcn){
+	if(subThreadStatus < 1){
+		// Punt thread
+		subThreadMode = fcn;
+		subThreadStatus = 1; // Busy
+		DWORD id = 0;
+		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
+		if(h != NULL){ CloseHandle(h); }
+		addMessage("Thread Started");
+	}else{
+		addMessage("Thread Busy");
+		return(-1);
+	}
+	return(0);
+}
+
 // Add message to ring buffer
 void MCC::addMessage(char *msg){
 	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
@@ -848,16 +865,7 @@ void MCC::keyDown(DWORD key){
 			break;
 		case OAPI_KEY_4:
 			if(menuState == 1){
-				if(subThreadStatus < 1){
-					// Punt thread
-					subThreadStatus = 1; // Busy
-					DWORD id = 0;
-					HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
-					if(h != NULL){ CloseHandle(h); }
-					addMessage("Thread Started");
-				}else{
-					addMessage("Thread Busy");
-				}
+				startSubthread(0);
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
 				menuState = 0;
 			}

@@ -234,6 +234,7 @@ public:
 	void keyDown(DWORD key);								// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	int  subThread();										// Subthread entry point
+	int startSubthread(int fcn);							// Subthread start request
 
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
