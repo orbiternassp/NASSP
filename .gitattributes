@@ -1,0 +1,9 @@
+# Override line endings for source files so VS will stop being a butt if people do things wrong.
+*.h	eol=crlf
+*.c	eol=crlf
+*.cpp	eol=crlf
+*.rc	eol=crlf
+*.vcproj eol=crlf
+*.bat	eol=crlf
+*.sln	eol=crlf
+
