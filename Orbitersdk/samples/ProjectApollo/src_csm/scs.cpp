@@ -1228,15 +1228,12 @@ void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
 }
 
 bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
-
-	char cheat[10];                      // Have plenty of room for this
 	int srx, sry, beta, digit, digit0, digit1;
-
-	sprintf(cheat, "%+06.1f", value);    // Arithmetic is for suckers!	
-	digit0 = cheat[1] - 0x30;			 // Hint: 0x30 = ASCII "0"
-	digit1 = cheat[2] - 0x30;
-	digit = cheat[3] - 0x30; 
-	beta = cheat[5] - 0x30; 
+	int x=(int)fabs(value*10);
+	beta = x%10;
+	digit = (x%100)/10;
+	digit1 = (x%1000)/100;
+	digit0 = x/1000;
 	sry = (int)(beta * 1.2);
 
 	srx = 8 + (digit0 * 25);	 
@@ -1256,7 +1253,7 @@ bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
 		oapiBlt(surf, digits, 10, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
 
 		if (digit1 == 9) digit1 = 0; else digit1++;
-		if (digit1 == 6 && (cheat[1] - 0x30) == 3) digit1 = 0;
+		if (digit1 == 6 && digit0 == 3) digit1 = 0;
 		srx = 8 + (digit1 * 25);			
 		oapiBlt(surf, digits, 10, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
 	}
