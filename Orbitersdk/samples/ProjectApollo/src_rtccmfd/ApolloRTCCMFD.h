@@ -166,6 +166,7 @@ public:
 	void set_offvec(VECTOR3 off);
 	void GetREFSMMATfromAGC();
 	void menuCycleSVTimeMode();
+	void set_lambertaxis();
 
 protected:
 	oapi::Font *font;

@@ -207,7 +207,7 @@ ARCore::ARCore(VESSEL* v)
 	EntryPADLng = 0.0;
 	EntryPADLat = 0.0;
 	EntryPADGMax = 0.0;
-	ManPADSPS = true;
+	ManPADSPS = 0;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
 	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
@@ -232,6 +232,7 @@ ARCore::ARCore(VESSEL* v)
 	svtarget = NULL;
 	svtargetnumber = -1;
 	svtimemode = 0;
+	lambertmultiaxis = 1;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -663,7 +664,14 @@ void ARCore::lambertcalc()
 	}
 	else
 	{
-		VA1_apo = OrbMech::elegant_lambert(RA1, VA1, RP2off, dt2, N, tgtprograde, mu);	//Lambert Targeting
+		if (lambertmultiaxis)
+		{
+			VA1_apo = OrbMech::elegant_lambert(RA1, VA1, RP2off, dt2, N, tgtprograde, mu);	//Lambert Targeting
+		}
+		else
+		{
+			VA1_apo = xaxislambert(RA1, VA1, RP2off, dt2, N, tgtprograde, mu);	//Lambert Targeting
+		}
 	}
 	//OrbMech::rv_from_r0v0(RA1, VA1, -30.0, RA1, VA1, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
 	if (orient == 0)
@@ -1317,7 +1325,7 @@ void ARCore::ManeuverPAD()
 	ManPADWeight = vessel->GetMass() / 0.45359237;
 
 	double v_e, F;
-	if (ManPADSPS)
+	if (ManPADSPS == 0)
 	{
 		v_e = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
@@ -1339,7 +1347,7 @@ void ARCore::ManeuverPAD()
 		headsswitch = -1.0;
 	}
 
-	if (ManPADSPS)
+	if (ManPADSPS == 0)
 	{
 		DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
 		if (length(DV_P) != 0.0)
@@ -1385,9 +1393,16 @@ void ARCore::ManeuverPAD()
 
 		V_G = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 		X_B = unit(V_G);
-		UX = X_B;
-		UY = unit(crossp(X_B, R1B*headsswitch));
-		UZ = unit(crossp(X_B, crossp(X_B, R1B*headsswitch)));
+		if (ManPADSPS == 1)
+		{
+			UX = X_B;
+		}
+		else
+		{
+			UX = -X_B;
+		}
+		UY = unit(crossp(UX, R1B*headsswitch));
+		UZ = unit(crossp(UX, crossp(UX, R1B*headsswitch)));
 
 
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
@@ -2266,4 +2281,51 @@ VECTOR3 ARCore::finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and
 	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
 	expmat = mul(summat, csmmat);
 	return OrbMech::CALCSGTA(mul(lmmat, OrbMech::transpose_matrix(expmat)));
+}
+
+VECTOR3 ARCore::xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu)
+{
+	VECTOR3 RPP1, RPP2,VAP1,VAP2,i,j,k,dVLV1,dVLV2;
+	double f1, f2, r1, r2, y;
+	MATRIX3 Q_Xx;
+	int nmax, n;
+
+	j = unit(crossp(VA1, RA1));
+	k = unit(-RA1);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+	f2 = 1;
+	n = 0;
+	nmax = 10;
+
+	RPP1 = RP2off;
+	RPP2 = RP2off*(length(RP2off) + 10.0) / length(RP2off);
+
+	VAP1 = OrbMech::elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
+	VAP2 = OrbMech::elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
+
+	r1 = length(RPP1);
+	r2 = length(RPP2);
+
+	while (abs(f2)>0.01 && nmax>=n)
+	{
+		dVLV1 = mul(Q_Xx, VAP1 - VA1);
+		dVLV2 = mul(Q_Xx, VAP2 - VA1);
+
+		f1 = dVLV1.z;
+		f2 = dVLV2.z;
+		
+		y = r2 - f2*(r2 - r1) / (f2 - f1);
+		VAP1 = VAP2;
+		r1 = r2;
+		r2 = y;
+
+		VAP2 = OrbMech::elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
+
+		n++;
+	}
+
+	offvec.z += length(RP2off) - r2;
+	return VAP2;
 }

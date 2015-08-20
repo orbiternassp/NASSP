@@ -69,6 +69,7 @@ public:
 
 	void poweredflight(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	void impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
+	VECTOR3 xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu);
 
 	//OrbMech* mech;
 	CoastIntegrator* coast;
@@ -89,7 +90,7 @@ public:
 	VESSEL* vessel;
 	VESSEL* target;
 	VECTOR3 LambertdeltaV;
-	int lambertopt;		//0 = non-spherical, 1 = spherical
+	int lambertopt;		//0 = spherical, 1 = non-spherical
 	VECTOR3 CDHdeltaV;
 	VECTOR3 offvec;
 	//ApolloRTCCMFDButtons coreButtons;
@@ -157,7 +158,7 @@ public:
 	VECTOR3 EIangles;
 	double TimeTag;
 	bool EntryPADdirect;
-	bool ManPADSPS;
+	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
 	OBJHANDLE maneuverplanet;
 	double sxtstardtime;
 	double P37GET400K;
@@ -168,6 +169,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
