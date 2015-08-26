@@ -6,7 +6,7 @@
 
 class Entry {
 public:
-	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange);
+	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal);
 	Entry(OBJHANDLE gravref);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
@@ -24,6 +24,7 @@ public:
 	double t2;
 private:
 	void xdviterator();
+	void xdviterator2();
 	void limitxchange();
 	void dvcalc();
 	void reentryconstraints();
@@ -58,6 +59,10 @@ private:
 	int revcor;
 	double entryrange;
 	int rangeiter;
+	double phi2;
+	double earthorbitangle; //31.7° nominal angled reentry DV vector
+	double R_E;
+	bool entrynominal; //0 = minimum DV entry, 1 = 31.7° line
 };
 
 #endif

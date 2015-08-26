@@ -1,13 +1,12 @@
 #include "EntryCalculations.h"
 
-Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange)
+Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal)
 {
 	MA1 = 8e8;
 	C0 = 1.81000432e8;
 	C1 = 1.5078514;
 	C2 = -6.49993054e-9;
 	C3 = 9.769389245e-18;
-	D1 = 1.6595;
 	D2 = -4.8760771e-4;
 	D3 = 4.5419476e-8;
 	D4 = -1.4317675e-12;
@@ -69,6 +68,14 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	delete coast;
 
 	x2 = OrbMech::cot(PI05 - EntryAng);
+	if (length(R11B) > k1)
+	{
+		D1 = 1.6595;
+	}
+	else
+	{
+		D1 = 1.69107;
+	}
 
 	if (critical == 0)
 	{
@@ -90,6 +97,11 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	{
 		rangeiter = 2;
 	}
+
+	R_E = oapiGetSize(gravref);
+	earthorbitangle = tan((-31.7 - 2.15)*RAD);
+
+	this->entrynominal = entrynominal;
 }
 
 Entry::Entry(OBJHANDLE gravref)
@@ -102,6 +114,46 @@ Entry::Entry(OBJHANDLE gravref)
 
 	RCON = oapiGetSize(gravref) + EntryInterface;
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
+}
+
+void Entry::xdviterator2()
+{
+	double xdes, xact, x_err,x_apo, x_err_apo, epsilon;
+	int i;
+	i = 0;
+	dx = 1;
+	epsilon = pow(2.0, -20.0);
+
+	xdes = earthorbitangle - tan(acos(R_E / length(R1B)));
+
+	while (abs(dx) > epsilon && i < 135)
+	{
+		p_CON = theta2 / (theta1 - x*x);
+		V2 = (U_R1*x + U_H)*theta3*sqrt(p_CON);
+		DV = V2 - V1B;
+		dv = length(DV);
+
+		Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
+
+		xact = Entry_DV.z / Entry_DV.x;
+		x_err = xdes - xact;
+
+
+		if (i == 0)
+		{
+			dx = -0.01*(xdes - xact);
+		}
+		else
+		{
+			dx = x_err*(x_apo - x) / (x_err - x_err_apo);
+		}
+		x_err_apo = x_err;
+		x_apo = x;
+		x += dx;
+		i++;
+	}
+
+
 }
 
 void Entry::xdviterator()
@@ -214,7 +266,7 @@ void Entry::reentryconstraints()
 bool Entry::EntryIter()
 {
 	double dt1, r1b, MA2, lambda, beta1, beta5, beta10;
-	double dt2, phi2, R_ERR, dt21apo, beta12, x2PRE, alpha_N, c3, sing, cosg, p_N, beta2, beta3, beta4, RF, phi4;
+	double dt2, R_ERR, dt21apo, beta12, x2PRE, alpha_N, c3, sing, cosg, p_N, beta2, beta3, beta4, RF, phi4;
 	double dt21, beta13, beta14, dRCON, S, RPRE_apo, t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2;
 	double dlng, beta6, xlim, C_FPA;
 	bool stop;
@@ -325,7 +377,15 @@ bool Entry::EntryIter()
 		{
 			if (critical == 0 || critical == 1)
 			{
-				xdviterator();
+				if (entrynominal)
+				{
+					xdviterator();
+					xdviterator2();
+				}
+				else
+				{
+					xdviterator();
+				}
 			}
 			else
 			{
@@ -336,7 +396,15 @@ bool Entry::EntryIter()
 		{
 			if (critical == 0)
 			{
-				xdviterator();
+				if (entrynominal)
+				{
+					xdviterator();
+					xdviterator2();
+				}
+				else
+				{
+					xdviterator();
+				}
 			}
 			else
 			{
@@ -348,10 +416,12 @@ bool Entry::EntryIter()
 
 		dt2 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
 		OrbMech::rv_from_r0v0(R1B, V2, dt2, REI, VEI, mu);
+		double rtest;
+		rtest = length(REI);
 		reentryconstraints();
 		x2_err = x2_apo - x2;
 
-		if (n1 == 1)
+		if (n1 == 1 || critical == 0)
 		{
 			Dx2 = x2_err;
 		}
@@ -446,14 +516,7 @@ bool Entry::EntryIter()
 	}
 	else
 	{
-		if (RCON - p_CON*beta1 >= 0)
-		{
-			phi2 = 1.0;
-		}
-		else
-		{
-			phi2 = -1.0;
-		}
+		
 
 		//phi2 = 1.0;
 		R_ERR = 1000000.0;
@@ -655,7 +718,15 @@ bool Entry::EntryIter()
 					}
 				}
 
-				xdviterator();
+				if (entrynominal)
+				{
+					xdviterator();
+					xdviterator2();
+				}
+				else
+				{
+					xdviterator();
+				}
 			}
 			else
 			{
@@ -750,6 +821,15 @@ bool Entry::EntryIter()
 		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD))
 		{
 			entryphase = 1;
+
+			if (RCON - p_CON*beta1 >= 0)
+			{
+				phi2 = 1.0;
+			}
+			else
+			{
+				phi2 = -1.0;
+			}
 		}
 		return false;
 	}
