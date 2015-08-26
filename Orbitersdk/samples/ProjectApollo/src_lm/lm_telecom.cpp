@@ -895,17 +895,19 @@ void LM_VHF::generate_stream_hbr(){
         case 118: tx_data[tx_offset] = measure(100,LTLM_A,21); break;
         case 119: tx_data[tx_offset] = measure(100,LTLM_A,22); break;
         case 120: // 50DS1A
+		{
 			// DOWNRUPT needs time to get data on the bus, so it has to have happened BEFORE we get here!
-			LMChannelValue13 ch13;
-			ch13.Value = lem->agc.GetOutputChannel(013);			
-			data = (lem->agc.GetOutputChannel(034)&077400)>>8;
-			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
+			ChannelValue ch13;
+			ch13 = lem->agc.GetOutputChannel(013);
+			data = (lem->agc.GetOutputChannel(034) & 077400) >> 8;
+			if (ch13[DownlinkWordOrderCodeBit]) { data |= 0200; } // WORD ORDER BIT
 			/*
 			sprintf(oapiDebugString(),"LGC DATA: %o (%lo %lo)",data,lem->agc.GetOutputChannel(034),
 				lem->agc.GetOutputChannel(035));
-			*/			
+			*/
 			tx_data[tx_offset] = data;
 			break;
+		}
         case 121: // 50DS1B
 			data = (lem->agc.GetOutputChannel(034)&0377);
 			tx_data[tx_offset] = data; 

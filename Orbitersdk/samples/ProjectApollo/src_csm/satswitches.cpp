@@ -38,6 +38,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "IMU.h"
 #include "lvimu.h"
 
@@ -1751,9 +1752,9 @@ bool THCRotarySwitch::SwitchTo(int newState)
 void SaturnSCControlSetter::SetSCControl(Saturn *sat) {
 
 	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
-		sat->agc.SetInputChannelBit(031, 15, true);
+		sat->agc.SetInputChannelBit(031, GNAutopilotControl, true);
 	} else {
-		sat->agc.SetInputChannelBit(031, 15, false);
+		sat->agc.SetInputChannelBit(031, GNAutopilotControl, false);
 	}
 }
 

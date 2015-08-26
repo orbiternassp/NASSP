@@ -207,11 +207,12 @@ void ApolloGuidance::ClearProg()
 	SetChannel10Lights(8, false);
 }
 
-void ApolloGuidance::ProcessChannel13(int val)
+void ApolloGuidance::ProcessChannel13(ChannelValue val)
 
 {
-	dsky.ProcessChannel13(OutputChannel[013]);
-	if (dsky2) dsky2->ProcessChannel13(OutputChannel[013]);
+	OutputChannel[013] = val.to_ulong();
+	dsky.ProcessChannel13(val);
+	if (dsky2) dsky2->ProcessChannel13(val);
 }
 
 void ApolloGuidance::LightsOff()
@@ -490,7 +491,7 @@ void ApolloGuidance::UpdateTwoDigitEntry(int n)
 // Keyboard interface.
 //
 
-void ApolloGuidance::ProcessInputChannel15(int val)
+void ApolloGuidance::ProcessInputChannel15(ChannelValue val)
 
 {
 	//
@@ -503,7 +504,7 @@ void ApolloGuidance::ProcessInputChannel15(int val)
 	// The DSKY keys (other than Prog) come through on this
 	// channel.
 	//
-	switch (val) {
+	switch (val.to_ulong()) {
 	case 1:
 	case 2:
 	case 3:
@@ -513,7 +514,7 @@ void ApolloGuidance::ProcessInputChannel15(int val)
 	case 7:
 	case 8:
 	case 9:
-		NumberPressed(val);
+		NumberPressed(val.to_ulong());
 		break;
 
 	case 16:
@@ -1410,11 +1411,11 @@ bool ApolloGuidance::KBCheck()
 // By default, just pass these calls through to the dsky.
 //
 
-void ApolloGuidance::ProcessChannel10(int val)
+void ApolloGuidance::ProcessChannel10(ChannelValue val)
 
 {
-	dsky.ProcessChannel10(val);
-	if (dsky2) dsky2->ProcessChannel10(val);
+	dsky.ProcessChannel10(val.to_ulong());
+	if (dsky2) dsky2->ProcessChannel10(val.to_ulong());
 }
 
 void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
@@ -1424,7 +1425,7 @@ void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
 	if (dsky2) dsky2->ProcessChannel11Bit(bit, val);
 }
 
-void ApolloGuidance::ProcessChannel11(int val)
+void ApolloGuidance::ProcessChannel11(ChannelValue val)
 
 {
 	dsky.ProcessChannel11(val);

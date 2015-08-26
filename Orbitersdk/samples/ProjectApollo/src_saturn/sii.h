@@ -81,7 +81,7 @@ typedef struct {
 /// \brief SII state.
 /// \ingroup SepStageSettings
 ///
-typedef enum SIIState
+enum SIIState
 {
 	SII_STATE_SETUP = -1,				///< SII is waiting for setup call.
 	SII_STATE_SHUTTING_DOWN,			///< SII is firing motors to jettison.

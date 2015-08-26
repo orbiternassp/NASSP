@@ -41,6 +41,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "IMU.h"
 #include "lvimu.h"
 
@@ -3794,16 +3795,16 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	} else if (s == &OpticsMarkButton) {
 		if (s->GetState() == 1) {
-			agc.SetInputChannelBit(016, 6, 1);
+			agc.SetInputChannelBit(016, Mark, 1);
 		} else {
-			agc.SetInputChannelBit(016, 6, 0);
+			agc.SetInputChannelBit(016, Mark, 0);
 		}
 
 	} else if (s == &OpticsMarkRejectButton) {
 		if (s->GetState() == 1) {
-			agc.SetInputChannelBit(016, 7, 1);
+			agc.SetInputChannelBit(016, MarkReject, 1);
 		} else {
-			agc.SetInputChannelBit(016, 7, 0);
+			agc.SetInputChannelBit(016, MarkReject, 0);
 		}
 	}
 }

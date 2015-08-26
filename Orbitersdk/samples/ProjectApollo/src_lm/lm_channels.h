@@ -21,7 +21,7 @@
   See http://nassp.sourceforge.net/license/ for more details.
   
   **************************************************************************/
-
+#include <bitset>
 // Channel 5, RCS PITCH & YAW
 typedef union {
 	struct {
@@ -52,6 +52,8 @@ typedef union {
 	int Value;
 } LMChannelValue6;
 
+typedef std::bitset<16> ChannelValue;
+
 // Channel 10, DSKY
 typedef union {
 	struct {
@@ -75,150 +77,129 @@ typedef union {
 } LMChannelValue10;
 
 // Channel 11, DSKY II
-typedef union {
-	struct {
-		unsigned ISSWarning:1;
-		unsigned LightComputerActivity:1;
-		unsigned LightUplink:1;
-		unsigned LightTempCaution:1;
-		unsigned LightKbRel:1;
-		unsigned FlashVerbNoun:1;
-		unsigned LightOprErr:1;
-		unsigned TestConnectorOutA:1;
-		unsigned TestConnectorOutB:1;
-		unsigned CautionReset:1;
-		unsigned Spare1:2;
-		unsigned EngineOn:1;
-		unsigned EngineOff:1;
-	} Bits;
-	int Value;
-} LMChannelValue11;
+enum ChannelValue11_Bits {
+	ISSWarning,
+	LightComputerActivity,
+	LightUplink,
+	LightTempCaution,
+	LightKbRel,
+	FlashVerbNoun,
+	LightOprErr,
+	TestConnectorOutA,
+	TestConnectorOutB,
+	CautionReset,
+	Spare1,
+	EngineOn,
+	EngineOff
+};
 
 // Channel 12, GN&CS DISCRETES
-typedef union {
-	struct {
-		unsigned ZeroRRCDU:1;
-		unsigned EnableRRCDUErrorCounter:1;
-		unsigned HorizVelLowScale:1;
-		unsigned CoarseAlignEnable:1;
-		unsigned ZeroIMUCDUs:1;
-		unsigned EnableIMUCDUErrorCounters:1;
-		unsigned Spare:1;
-		unsigned DIDEnable:1;
-		unsigned PlusPitchTrim:1;
-		unsigned MinusPitchTrim:1;
-		unsigned PlusRollTrim:1;
-		unsigned MinusRollTrim:1;
-		unsigned LRPositionCommand:1;
-		unsigned RRAutoTrackOrEnable:1;
-		unsigned ISSTurnOnDelayComplete:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue12;
+enum ChannelValue12_Bits {
+	ZeroRRCDUs = 1,
+	EnableRRCDUErrorCounter,
+	// Unused.
+	CoarseAlignEnable = 4,
+	ZeroIMUCDUs,
+	EnableIMUCDUErrorCounters,
+	// Unused.
+	DispayInertialData = 8,						///< Enable thrust vector control.
+	PlusPitchVehicleMotion,
+	MinusPitchVehicleMotion,
+	PlusRollVehicleMotion,
+	MinusRollVehicleMotion,
+	LRPositionCommand,							
+	RRAutoTrackOrEnable = 14,		///< Start the SIVb ignition sequence for TLI.
+	ISSTurnOnDelayComplete			///< Delay for ISS turnon has completed.
+};
 
 // Channel 13, LGC DISCRETES
-typedef union {
-	struct {
-		unsigned RadarC:1;
-		unsigned RadarB:1;
-		unsigned RadarA:1;
-		unsigned RadarActivity:1;
-		unsigned InhibitUplink:1;
-		unsigned BlockInlink:1;
-		unsigned DownlinkWordOrderCodeBit:1;
-		unsigned EnableRHCCounter:1;
-		unsigned RHCRead:1;
-		unsigned TestAlarms:1;
-		unsigned EnableStandby:1;
-		unsigned ResetTrap31A:1;
-		unsigned ResetTrap31B:1;
-		unsigned ResetTrap32:1;
-		unsigned EnableT6RUPT:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue13;
+enum ChannelValue13_Bits {
+	RadarC=1,
+    RadarB,
+    RadarA,
+	RadarActivity,
+	InhibitUplink,
+	BlockInlink,
+	DownlinkWordOrderCodeBit,
+	EnableRHCCounter,
+	RHCRead,
+	TestAlarms,
+	EnableStandby,
+	ResetTrap31A,
+	ResetTrap31B,
+	ResetTrap32,
+	EnableT6RUPT
+};
 
 // Channel 14, IMU DISCRETES
-typedef union {
-	struct {
-		unsigned OutlinkActivity:1;
-		unsigned AltitudeRate:1;
-		unsigned AltitudeIndicator:1;
-		unsigned ThrustIndicatorDrive:1;
-		unsigned Spare:1;
-		unsigned GyroEnable:1;
-		unsigned GyroB:1;
-		unsigned GyroA:1;
-		unsigned GyroMinus:1;
-		unsigned GyroActivity:1;
-		unsigned ShaftAngleCDUDrive:1;
-		unsigned TrunnionAngleCDUDrive:1;
-		unsigned ZCDUDrive:1;
-		unsigned YCDUDrive:1;
-		unsigned XCDUDrive:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue14;
+enum ChannelValue14_Bits {
+	OutlinkActivity = 1,
+    AltitudeRate,
+	AltitudeIndicator,
+	ThrustIndicatorDrive,
+	Spare,
+	GyroEnable,
+	GyroB,
+	GyroA,
+	GyroMinus,
+	GyroActivity,
+	ShaftAngleCDUDrive,
+	TrunnionAngleCDUDrive,
+	ZCDUDrive,
+	YCDUDrive,
+	XCDUDrive
+};
 
 // Channel 15, MAIN DSKY
 
 // Channel 16, NAVIGATION
-typedef union {
-	struct {
-		unsigned Spare1:1;
-		unsigned Spare2:1;
-		unsigned MarkX:1;
-		unsigned MarkY:1;
-		unsigned MarkReject:1;
-		unsigned PositiveDescent:1;
-		unsigned NegativeDescent:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue16;
+enum ChannelValue16_Bits {
+	// Spare 2				///< NAV DSKY
+	MarkX = 3,				///< NAV DSKY
+	MarkY,				///< NAV DSKY
+	MarkReject_LM,				///< NAV DSKY
+	DescendPlus,					///< MARK key
+	DescendMinus				///< MARK REJECT key
+};
+
 
 // Channel 30, GN&CS DISCRETES
-typedef union {
-	struct {
-		unsigned ABORT:1;
-		unsigned StageVerify:1;
-		unsigned EngineArmed:1;
-		unsigned ABORT_STAGE:1;
-		unsigned AutomaticThrottle:1;
-		unsigned DID:1;
-		unsigned RRCDUFailure:1;
-		unsigned spare:1;
-		unsigned IMUOperate:1;
-		unsigned GNControl:1;
-		unsigned IMUCage:1;
-		unsigned IMUCDUFailure:1;
-		unsigned IMUFailure:1;
-		unsigned ISSTurnOnRequest:1;
-		unsigned TemperatureInLimits:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue30;
+enum ChannelValue30_Bits {
+	AbortWithDescentStage = 1,
+	DescendStageAttached,
+	EngineArmed,
+	AbortWithAscentStage,
+	AutoThrottle,						///< Liftoff has occured.
+	DisplayInertialData,
+	RendezVousCDUFail,
+	// Spare
+	IMUOperate = 9,					///< IMU is operating.
+	GNControlOfSC,
+	IMUCage,						///< IMU is caged.
+	IMUCDUFailure,
+	IMUFailure,
+	ISSTurnOnRequest,
+	TempInLimits
+};
 
 // Channel 31, Translation & Rotation
-typedef union {
-	struct {
-		unsigned PlusElevation:1;
-		unsigned MinusElevation:1;
-		unsigned PlusYaw:1;
-		unsigned MinusYaw:1;
-		unsigned PlusAzimuth:1;
-		unsigned MinusAzimuth:1;
-		unsigned PlusX:1;
-		unsigned MinusX:1;
-		unsigned PlusY:1;
-		unsigned MinusY:1;
-		unsigned PlusZ:1;
-		unsigned MinusZ:1;
-		unsigned AttitudeHold:1;
-		unsigned AutomaticStab:1;
-		unsigned ACAOutOfDetent:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue31;
+enum ChannelValue31_Bits {
+	     PlusElevation = 1,
+		 MinusElevation,
+		 PlusYaw,
+		 MinusYaw,
+		 PlusAzimuth,
+		 MinusAzimuth,
+		 PlusX,
+		 MinusX,
+		 PlusY,
+		 MinusY,
+		 PlusZ,
+		 MinusZ,
+		 AttitudeHold,
+		 AutomaticStab,
+		 ACAOutOfDetent
+};
 
 // Channel 32, Impulse
 typedef union {
@@ -237,27 +218,40 @@ typedef union {
 	unsigned int Value;
 } LMChannelValue32;
 
+
+enum ChannelValue32_Bits {
+	Thruster2_4_Disabled = 1,
+	Thruster5_8_Disabled,
+	Thruster1_3_Disabled,
+	Thruster6_7_Disabled,
+	Thruster14_16_Disabled,
+	Thruster13_15_Disabled,
+	Thruster9_12_Disabled,
+	Thruster10_11_Disabled,
+	DescentEngineGimbalsDisabled,
+	ApparentDecscentEngineGimbalsFailed,
+	// Spare 3 
+	Proceed = 14
+	// Spare
+};
+
 // Channel 33, Optics
-typedef union {
-	struct {
-		unsigned Spare:1;
-		unsigned RRPowerOnAuto:1;      // RR power on and RR mode = LGC
-		unsigned RRRangeLowScale:1;
-		unsigned RRDataGood:1;
-		unsigned LRDataGood:1;
-		unsigned LRPos1:1;
-		unsigned LRPos2:1;
-		unsigned LRVelocityDataGood:1;
-		unsigned LRRangeLowScale:1;
-		unsigned BlockUplink:1;
-		unsigned UplinkTooFast:1;
-		unsigned DownlinkTooFast:1;
-		unsigned PIPAFailed:1;
-		unsigned LGC:1;                // LGC Internal Malfunction
-		unsigned OscillatorAlarm:1;
-	} Bits;
-	unsigned int Value;
-} LMChannelValue33;
+enum ChannelValue33_Bits {
+	RRPowerOnAuto = 2,      // RR power on and RR mode = LGC
+	RRRangeLowScale,
+	RRDataGood,
+	LRDataGood,
+	LRPos1,
+	LRPos2,
+	LRVelocityDataGood,
+	LRRangeLowScale,
+	BlockUplink,
+	UplinkTooFast,
+	DownlinkTooFast,
+	PIPAFailed,
+	LGC,                // LGC Internal Malfunction
+	OscillatorAlarm
+};
 
 // Channel 34, Downlink 1
 // Channel 35, Downlink 2

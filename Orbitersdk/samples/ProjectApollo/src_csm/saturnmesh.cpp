@@ -39,6 +39,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "IMU.h"
 #include "lvimu.h"
 
@@ -762,7 +763,7 @@ void Saturn::SetReentryStage ()
 	// Tell AGC the CM has seperated from the SM.
 	//
 
-	agc.SetInputChannelBit(030, 2, true);
+	agc.SetInputChannelBit(030, CMSMSeperate, true);
 
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 

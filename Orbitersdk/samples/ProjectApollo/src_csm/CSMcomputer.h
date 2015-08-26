@@ -334,7 +334,7 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannelBit(int channel, int bit, bool val);
-	void SetOutputChannel(int channel, unsigned int val);
+	void SetOutputChannel(int channel, ChannelValue val);
 
 	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
 

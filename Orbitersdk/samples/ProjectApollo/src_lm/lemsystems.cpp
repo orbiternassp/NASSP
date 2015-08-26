@@ -42,7 +42,6 @@
 #include "dsky.h"
 #include "IMU.h"
 #include "PanelSDK/Internals/Esystems.h"
-#include "ioChannels.h"
 
 #include "LEM.h"
 
@@ -807,9 +806,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 
 	// Zero ACA and TTCA bits in channel 31
-	LMChannelValue31 val31;
-	val31.Value = agc.GetInputChannel(031);
-	val31.Value &= 030000; // Leaves AttitudeHold and AutomaticStab alone
+	ChannelValue val31;
+	val31 = agc.GetInputChannel(031);
+	val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
 
 	// Joystick read
 	if(js_enabled > 0 && oapiGetFocusInterface() == this){		
@@ -872,34 +871,34 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}	
 			if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.PlusAzimuth = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[PlusAzimuth] = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
 			}
 			if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.MinusAzimuth = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[MinusAzimuth] = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
 			}
 			if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.PlusElevation = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[PlusElevation] = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
 			}
 			if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.MinusElevation = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[MinusElevation] = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
 			}
 			// YAW IS REVERSED
 			if(rhc_rot_pos > 34028){ // Out of detent RIGHT
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.PlusYaw = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[PlusYaw] = 1;
 				rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
 			}
 			if(rhc_rot_pos < 31508){ // Out of detent LEFT
-				val31.Bits.ACAOutOfDetent = 1;
-				val31.Bits.MinusYaw = 1;
+				val31[ACAOutOfDetent] = 1;
+				val31[MinusYaw] = 1;
 				rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
 			}
 		}else{
@@ -935,17 +934,17 @@ void LEM::SystemsTimestep(double simt, double simdt)
 					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
 					ttca_throttle_pos = 32768;           // Center of axis (just in case)
 					if(dx8_jstate[thc_id].lY < 16384){
-						val31.Bits.PlusX = 1;
+						val31[PlusX] = 1;
 					}
 					if(dx8_jstate[thc_id].lY > 49152){						
-						val31.Bits.MinusX = 1;
+						val31[MinusX] = 1;
 					}
 				}
 				if(dx8_jstate[thc_id].lX > 49152){
-					val31.Bits.PlusY = 1;
+					val31[PlusY] = 1;
 				}
 				if(dx8_jstate[thc_id].lX < 16384){												
-					val31.Bits.MinusY = 1;
+					val31[MinusY] = 1;
 				}				
 				// Z-axis read.
 				if(thc_rot_id != -1){ // If this is a rotator-type axis
@@ -965,10 +964,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
 				if(thc_rot_pos < 16384){
-					val31.Bits.MinusZ = 1;
+					val31[MinusZ] = 1;
 				}
 				if(thc_rot_pos > 49152){
-					val31.Bits.PlusZ = 1;
+					val31[PlusZ] = 1;
 				}
 				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d TJT = %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
 					thc_rot_pos,thc_tjt_pos); }
@@ -978,7 +977,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		}
 	}
 	// Write back channel data
-	agc.SetInputChannel(031,val31.Value);
+	agc.SetInputChannel(031,val31);
 
 	// Each timestep is passed to the SPSDK
 	// to perform internal computations on the 
@@ -1756,24 +1755,24 @@ void LEM_LR::TimeStep(double simdt){
 	// sprintf(oapiDebugString(),"LR Antenna Temp: %f DT %f Change: %f, AH %f",antenna.Temp,simdt,(lastTemp-antenna.Temp)/simdt,antheater.pumping);
 	lastTemp = antenna.Temp;
 	// char debugmsg[256];
-	LMChannelValue12 val12;
-	LMChannelValue13 val13;
-	LMChannelValue14 val14;
-	LMChannelValue33 val33;
-	val12.Value = lem->agc.GetInputChannel(012);
-	val13.Value = lem->agc.GetInputChannel(013);
-	val14.Value = lem->agc.GetInputChannel(014);
-	val33.Value = lem->agc.GetCh33Switches();
+	ChannelValue val12;
+	ChannelValue val13;
+	ChannelValue val14;
+	ChannelValue val33;
+	val12 = lem->agc.GetInputChannel(012);
+	val13 = lem->agc.GetInputChannel(013);
+	val14 = lem->agc.GetInputChannel(014);
+	val33 = lem->agc.GetCh33Switches();
 
 	if (!IsPowered() ) { 
 		// Clobber data. Values inverted.
 		bool clobber = FALSE;
-		if(!val33.Bits.LRDataGood){ clobber = TRUE; val33.Bits.LRDataGood = 1; } 
-		if(!val33.Bits.LRVelocityDataGood){ clobber = TRUE; val33.Bits.LRVelocityDataGood = 1; }
-		if(!val33.Bits.LRPos1){ clobber = TRUE; val33.Bits.LRPos1 = 1; }
-		if(!val33.Bits.LRPos2){ clobber = TRUE; val33.Bits.LRPos2 = 1; }
-		if(!val33.Bits.LRRangeLowScale){ clobber = TRUE; val33.Bits.LRRangeLowScale = 1; }
-		if(clobber == TRUE){ lem->agc.SetCh33Switches(val33.Value); }
+		if(!val33[LRDataGood]){ clobber = TRUE; val33[LRDataGood] = 1; } 
+		if(!val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 1; }
+		if(!val33[LRPos1]){ clobber = TRUE; val33[LRPos1] = 1; }
+		if(!val33[LRPos2]){ clobber = TRUE; val33[LRPos2] = 1; }
+		if(!val33[LRRangeLowScale]){ clobber = TRUE; val33[LRRangeLowScale] = 1; }
+		if(clobber == TRUE){ lem->agc.SetCh33Switches(val33.to_ulong()); }
 		return;
 	}	
 
@@ -1786,7 +1785,7 @@ void LEM_LR::TimeStep(double simdt){
 	// Follow drive commands and use power
 	// The antenna takes 10 seconds to move, and draws 15 watts while doing so.
 	// The computer can command position 2, but it can't command position 1 from position 2.
-	if(val12.Bits.LRPositionCommand == 1 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_DOWN){
+	if(val12[LRPositionCommand] == 1 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_DOWN){
 		if(antennaAngle != 0){
 			// Drive to Position 2
 			antennaAngle -= (2.4*simdt);
@@ -1813,29 +1812,29 @@ void LEM_LR::TimeStep(double simdt){
 	// If at Pos 1
 	if(antennaAngle == 24){
 		// Light Pos 1
-		if(val33.Bits.LRPos1 == 1){
-			val33.Bits.LRPos1 = 0;
-			lem->agc.SetCh33Switches(val33.Value);
+		if(val33[LRPos1] == 1){
+			val33[LRPos1] = 0;
+			lem->agc.SetCh33Switches(val33.to_ulong());
 		}
 	}else{
 		// Otherwise
 		// Clobber Pos 1 flag
-		if(val33.Bits.LRPos1 == 0){
-			val33.Bits.LRPos1 = 1;
-			lem->agc.SetCh33Switches(val33.Value);
+		if(val33[LRPos1] == 0){
+			val33[LRPos1] = 1;
+			lem->agc.SetCh33Switches(val33.to_ulong());
 		}
 		// If at Pos 2
 		if(antennaAngle == 0){
 			// Light Pos 2
-			if(val33.Bits.LRPos2 == 1){
-				val33.Bits.LRPos2 = 0;
-				lem->agc.SetCh33Switches(val33.Value);
+			if(val33[LRPos2] == 1){
+				val33[LRPos2] = 0;
+				lem->agc.SetCh33Switches(val33.to_ulong());
 			}
 		}else{
 			// Otherwise clobber Pos 2 flag
-			if(val33.Bits.LRPos2 == 0){
-				val33.Bits.LRPos2 = 1;
-				lem->agc.SetCh33Switches(val33.Value);
+			if(val33[LRPos2] == 0){
+				val33[LRPos2] = 1;
+				lem->agc.SetCh33Switches(val33.to_ulong());
 			}
 		}
 	}
@@ -1873,25 +1872,25 @@ void LEM_LR::TimeStep(double simdt){
 
 	// Maintain discretes
 	// Range data good
-	if(rangeGood == 1 && val33.Bits.LRDataGood == 1){ val33.Bits.LRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
-	if(rangeGood == 0 && val33.Bits.LRDataGood == 0){ val33.Bits.LRDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
+	if(rangeGood == 1 && val33[LRDataGood] == 1){ val33[LRDataGood] = 0; lem->agc.SetCh33Switches(val33.to_ulong()); }
+	if(rangeGood == 0 && val33[LRDataGood] == 0){ val33[LRDataGood] = 1; lem->agc.SetCh33Switches(val33.to_ulong()); }
 	// RANGE SCALE:
 	// C++ VALUE OF 1 = HIGH RANGE
 	// C++ VALUE OF 0 = LOW RANGE
 	// We switch from high range to low range at 2500 feet
 	// Range scale affects only the altimeter, velocity is not affected.
-	if((rangeGood == 1 && range < 2500) && val33.Bits.LRRangeLowScale == 1){ val33.Bits.LRRangeLowScale = 0; lem->agc.SetCh33Switches(val33.Value); }
-	if((rangeGood == 0 || range > 2500) && val33.Bits.LRRangeLowScale == 0){ val33.Bits.LRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value); }
+	if((rangeGood == 1 && range < 2500) && val33[LRRangeLowScale] == 1){ val33[LRRangeLowScale] = 0; lem->agc.SetCh33Switches(val33.to_ulong()); }
+	if((rangeGood == 0 || range > 2500) && val33[LRRangeLowScale] == 0){ val33[LRRangeLowScale] = 1; lem->agc.SetCh33Switches(val33.to_ulong()); }
 	// Velocity data good
-	if(velocityGood == 1 && val33.Bits.LRVelocityDataGood == 1){ val33.Bits.LRVelocityDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
-	if(velocityGood == 0 && val33.Bits.LRVelocityDataGood == 0){ val33.Bits.LRVelocityDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
+	if(velocityGood == 1 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetCh33Switches(val33.to_ulong()); }
+	if(velocityGood == 0 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetCh33Switches(val33.to_ulong()); }
 
 	// The computer wants something from the radar.
-	if(val13.Bits.RadarActivity == 1){
+	if(val13[RadarActivity] == 1){
 		int radarBits = 0;
-		if(val13.Bits.RadarA == 1){ radarBits |= 1; }
-		if(val13.Bits.RadarB == 1){ radarBits |= 2; }
-		if(val13.Bits.RadarC == 1){ radarBits |= 4; }
+		if(val13[RadarA] == 1){ radarBits |= 1; }
+		if(val13[RadarB] == 1){ radarBits |= 2; }
+		if(val13[RadarC] == 1){ radarBits |= 4; }
 		switch(radarBits){
 		case 1: 
 			// LR (LR VEL X)
@@ -1937,7 +1936,7 @@ void LEM_LR::TimeStep(double simdt){
 			if(ruptSent != 7){
 				// High range is 5.395 feet per count
 				// Low range is 1.079 feet per count
-				if(val33.Bits.LRRangeLowScale == 1){
+				if(val33[LRRangeLowScale] == 1){
 					// Hi Range
 					lem->agc.vagc.Erasable[0][RegRNRAD] = range/5.395;
 				}else{
@@ -2010,11 +2009,9 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
 }
 
 
-void LEM_RR::RRTrunionDrive(int val,int ch12) {
+void LEM_RR::RRTrunionDrive(int val, ChannelValue val12) {
 
 	int pulses;
-	LMChannelValue12 val12;
-	val12.Value = ch12;
 
 	if (IsPowered() == 0) { return; }
 
@@ -2023,7 +2020,7 @@ void LEM_RR::RRTrunionDrive(int val,int ch12) {
 	} else {
 		pulses = val&07777; 
 	}
-	if (val12.Bits.EnableRRCDUErrorCounter){
+	if (val12[EnableRRCDUErrorCounter]){
 		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 	}
@@ -2052,11 +2049,11 @@ bool LEM_RR::IsDCPowered()
 	return true;
 }
 
-void LEM_RR::RRShaftDrive(int val,int ch12) {
+void LEM_RR::RRShaftDrive(int val,ChannelValue ch12) {
 
 	int pulses;
-	LMChannelValue12 val12;
-	val12.Value = ch12;
+	ChannelValue val12;
+	val12 = ch12;
 	
 	if (!IsPowered()) { return; }
 
@@ -2068,7 +2065,7 @@ void LEM_RR::RRShaftDrive(int val,int ch12) {
 	shaftVel = (RR_SHAFT_STEP*pulses);
 	shaftAngle += (RR_SHAFT_STEP*pulses);
 	lastShaftAngle = shaftAngle;
-	if (val12.Bits.EnableRRCDUErrorCounter){
+	if (val12[EnableRRCDUErrorCounter]){
 		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 	}
@@ -2166,16 +2163,16 @@ void LEM_RR::CalculateRadarData(double &pitch, double &yaw)
 
 void LEM_RR::TimeStep(double simdt){
 
-	LMChannelValue12 val12;
-	LMChannelValue13 val13;
-	LMChannelValue14 val14;
-	LMChannelValue30 val30;
-	LMChannelValue33 val33;
-	val12.Value = lem->agc.GetInputChannel(012);
-	val13.Value = lem->agc.GetInputChannel(013);
-	val14.Value = lem->agc.GetInputChannel(014);
-	val30.Value = lem->agc.GetInputChannel(030);
-	val33.Value = lem->agc.GetCh33Switches();
+	ChannelValue val12;
+	ChannelValue val13;
+	ChannelValue val14;
+	ChannelValue val30;
+	ChannelValue val33;
+	val12 = lem->agc.GetInputChannel(012);
+	val13 = lem->agc.GetInputChannel(013);
+	val14 = lem->agc.GetInputChannel(014);
+	val30 = lem->agc.GetInputChannel(030);
+	val33 = lem->agc.GetCh33Switches();
 
 	double ShaftRate = 0;
 	double TrunRate = 0;
@@ -2190,11 +2187,11 @@ void LEM_RR::TimeStep(double simdt){
 	*/
 
 	if (!IsPowered() ) { 
-		val33.Bits.RRPowerOnAuto = 1; // Inverted
-		val33.Bits.RRDataGood = 1;    // Also inverted
+		val33[RRPowerOnAuto] = 1; // Inverted
+		val33[RRDataGood] = 1;    // Also inverted
 		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
 		lastShaftAngle = shaftAngle;
-		lem->agc.SetCh33Switches(val33.Value);
+		lem->agc.SetCh33Switches(val33.to_ulong());
 		return;
 	}
 	// Max power used based on LM GNCStudyGuide. Is this good?
@@ -2293,15 +2290,15 @@ void LEM_RR::TimeStep(double simdt){
 	// Let's test.
 	// First, manage the status bit.
 	if(lem->RendezvousRadarRotary.GetState() == 2){
-		if(val33.Bits.RRPowerOnAuto != 0){
-			val33.Bits.RRPowerOnAuto = 0;
-			lem->agc.SetCh33Switches(val33.Value);
+		if(val33[RRPowerOnAuto] != 0){
+			val33[RRPowerOnAuto] = 0;
+			lem->agc.SetCh33Switches(val33.to_ulong());
 			sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
 		}
 	}else{
-		if(val33.Bits.RRPowerOnAuto != 1){
-			val33.Bits.RRPowerOnAuto = 1;
-			lem->agc.SetCh33Switches(val33.Value);
+		if(val33[RRPowerOnAuto] != 1){
+			val33[RRPowerOnAuto] = 1;
+			lem->agc.SetCh33Switches(val33.to_ulong());
 			sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
 		}
 	}
@@ -2366,17 +2363,17 @@ void LEM_RR::TimeStep(double simdt){
 			sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 			// Maintain RADAR GOOD state
-			if(radarDataGood == 1 && val33.Bits.RRDataGood == 1){ val33.Bits.RRDataGood = 0; lem->agc.SetCh33Switches(val33.Value); }
-			if(radarDataGood == 0 && val33.Bits.RRDataGood == 0){ val33.Bits.RRDataGood = 1; lem->agc.SetCh33Switches(val33.Value); }
+			if(radarDataGood == 1 && val33[RRDataGood] == 1){ val33[RRDataGood] = 0; lem->agc.SetCh33Switches(val33.to_ulong()); }
+			if(radarDataGood == 0 && val33[RRDataGood] == 0){ val33[RRDataGood] = 1; lem->agc.SetCh33Switches(val33.to_ulong()); }
 			// Maintain radar scale indicator
 			// We use high scale above 50.6nm, and low scale below that.
-			if(range > 93700 && val33.Bits.RRRangeLowScale == 0){ 
+			if(range > 93700 && val33[RRRangeLowScale] == 0){ 
 				// HI SCALE
-				val33.Bits.RRRangeLowScale = 1; lem->agc.SetCh33Switches(val33.Value);
+				val33[RRRangeLowScale] = 1; lem->agc.SetCh33Switches(val33.to_ulong());
 			}
-			if(range < 93701 && val33.Bits.RRRangeLowScale == 1){
+			if(range < 93701 && val33[RRRangeLowScale] == 1){
 				// LO SCALE
-				val33.Bits.RRRangeLowScale = 0; lem->agc.SetCh33Switches(val33.Value);
+				val33[RRRangeLowScale] = 0; lem->agc.SetCh33Switches(val33.to_ulong());
 			}
 
 			// Print status
@@ -2398,11 +2395,11 @@ void LEM_RR::TimeStep(double simdt){
 			*/
 
 			// The computer wants something from the radar.
-			if(val13.Bits.RadarActivity == 1){
+			if(val13[RadarActivity] == 1){
 				int radarBits = 0;
-				if(val13.Bits.RadarA == 1){ radarBits |= 1; }
-				if(val13.Bits.RadarB == 1){ radarBits |= 2; }
-				if(val13.Bits.RadarC == 1){ radarBits |= 4; }
+				if(val13[RadarA] == 1){ radarBits |= 1; }
+				if(val13[RadarB] == 1){ radarBits |= 2; }
+				if(val13[RadarC] == 1){ radarBits |= 4; }
 				switch(radarBits){
 				case 1: 
 					// LR (LR VEL X)
@@ -2456,12 +2453,12 @@ void LEM_RR::TimeStep(double simdt){
 				ruptSent = 0; 
 			}
 			// Watch for CDU Zero
-			if(val12.Bits.ZeroRRCDU != 0){
+			if(val12[ZeroRRCDUs] != 0){
 				// Clear shaft and trunnion read counters 
 				// Incrementing pulses are inhibited
 			}else{
 				// Look for RR Error Counter Enable
-				if(val12.Bits.EnableRRCDUErrorCounter != 0){
+				if(val12[EnableRRCDUErrorCounter] != 0){
 					// sprintf(oapiDebugString(),"RR CDU Error Counters Enabled");
 					// If this is enabled, the LGC wants to drive the positioner.
 				}
@@ -2478,18 +2475,18 @@ void LEM_RR::TimeStep(double simdt){
 
 	if((fabs(shaftAngle-pitch) < 2*RAD ) &&  (fabs(trunnionAngle-yaw) < 2*RAD) && ( range < 740800.0) ) {
 		radarDataGood = 1;
-		val33.Bits.RRDataGood = radarDataGood;
-		if (val13.Bits.RadarActivity && val13.Bits.RadarA) { // Request Range R-567-sec4-rev7-R10-R56.pdf R22.
+		val33[RRDataGood] = radarDataGood;
+		if (val13[RadarActivity] && val13[RadarA]) { // Request Range R-567-sec4-rev7-R10-R56.pdf R22.
 			if ( range > 93681.639 ) { // Ref R-568-sec6.prf p 6-59
-				val33.Bits.RRRangeLowScale = 1; // Inverted bits
+				val33[RRRangeLowScale] = 1; // Inverted bits
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) range * 0.043721214 ;
 			}
 			else {
-				val33.Bits.RRRangeLowScale = 0; // Inverted bits
+				val33[RRRangeLowScale] = 0; // Inverted bits
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) range * 0.34976971 ;
 			}	
 			lem->agc.GenerateRadarupt();
-		} else if (val13.Bits.RadarActivity && val13.Bits.RadarB) {
+		} else if (val13[RadarActivity] && val13[RadarB]) {
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) rate;
 				lem->agc.GenerateRadarupt();
 	}
@@ -2538,13 +2535,13 @@ void LEM_RR::TimeStep(double simdt){
 				}
 			}
 	} else if (lem->RendezvousRadarRotary.GetState() == 2 ) { // LGC
-		val33.Bits.RRPowerOnAuto = 0; // Inverted ON
+		val33[RRPowerOnAuto] = 0; // Inverted ON
 	} else
-		val33.Bits.RRPowerOnAuto = 1; // Inverted OFF
-	lem->agc.SetCh33Switches(val33.Value);
+		val33[RRPowerOnAuto] = 1; // Inverted OFF
+	lem->agc.SetCh33Switches(val33.to_ulong());
 
 	// AutoTrack  the CSM using the RR
-    if( ((val12.Bits.RRAutoTrackOrEnable == 1) || (lem->RendezvousRadarRotary.GetState()== 0  ) ) && radarDataGood == 1 ) {
+    if( ((val12[RRAutoTrackOrEnable] == 1) || (lem->RendezvousRadarRotary.GetState()== 0  ) ) && radarDataGood == 1 ) {
 		// Auto track within reach of trunnion/shaft
 		if( ( pitch > -(RAD*180) ) && (pitch < (RAD * 90 ) && ( yaw > (RAD * -90) ) && (yaw < (RAD * 90))) ) {
 			trunnionVel = (yaw-trunnionAngle) / simdt;					
@@ -2702,16 +2699,16 @@ void LEM_CWEA::Init(LEM *s){
 }
 
 void LEM_CWEA::TimeStep(double simdt){
-	LMChannelValue11 val11;
-	LMChannelValue13 val13;
-	LMChannelValue30 val30;
-	LMChannelValue33 val33;		
+	ChannelValue val11;
+	ChannelValue val13;
+	ChannelValue val30;
+	ChannelValue val33;		
 
 	if(lem == NULL){ return; }
-	val11.Value = lem->agc.GetOutputChannel(011);
-	val13.Value = lem->agc.GetOutputChannel(013);
-	val30.Value = lem->agc.GetInputChannel(030);
-	val33.Value = lem->agc.GetInputChannel(033);
+	val11 = lem->agc.GetOutputChannel(011);
+	val13 = lem->agc.GetOutputChannel(013);
+	val30 = lem->agc.GetInputChannel(030);
+	val33 = lem->agc.GetInputChannel(033);
 
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
@@ -2771,7 +2768,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 	// Disabled by Guidance Control switch in AGS position.
-	if((val13.Bits.TestAlarms || val33.Bits.LGC || val33.Bits.OscillatorAlarm) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+	if((val13[TestAlarms] || val33[LGC] || val33[OscillatorAlarm]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
 		LightStatus[3][1] = 1;
 	}else{
 		LightStatus[3][1] = 0;
@@ -2780,7 +2777,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS10 ISS FAILURE
 	// On when ISS power supply fails, PIPA fails while main engine thrusting, gimbal servo fails, CDU fails.
 	// Disabled by Guidance Control switch in AGS position.
-	if ((val11.Bits.ISSWarning || val33.Bits.PIPAFailed || val30.Bits.IMUCDUFailure || val30.Bits.IMUFailure) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+	if ((val11[ISSWarning] || val33[PIPAFailed] || val30[IMUCDUFailure] || val30[IMUFailure]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
 		LightStatus[4][1] = 1;
 	}else{
 		LightStatus[4][1] = 0;

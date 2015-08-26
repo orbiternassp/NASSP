@@ -2,7 +2,7 @@
   This file is part of Project Apollo - NASSP
 
   CSM Telecommunications
-
+  
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -1925,17 +1925,19 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 8: // 51DS1A COMPUTER DIGITAL DATA (40 BITS) 
 		case 28:
+		{
 			unsigned char data;
-			ChannelValue13 ch13;
-			ch13.Value = sat->agc.GetOutputChannel(013);			
-			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
-			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
+			ChannelValue ch13;
+			ch13 = sat->agc.GetOutputChannel(013);
+			data = (sat->agc.GetOutputChannel(034) & 077400) >> 8;
+			if (ch13[DownlinkWordOrderCodeBit]) { data |= 0200; } // WORD ORDER BIT
 			/*
 			sprintf(oapiDebugString(),"CMC DATA: %o (%lo %lo)",data,sat->agc.GetOutputChannel(034),
-				sat->agc.GetOutputChannel(035));		
+				sat->agc.GetOutputChannel(035));
 				*/
-			tx_data[tx_offset] = data; 
+			tx_data[tx_offset] = data;
 			break;
+		}
 		case 9: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
 		case 29:
 			data = (sat->agc.GetOutputChannel(034)&0377);
@@ -2644,16 +2646,18 @@ void PCM::generate_stream_hbr(){
 		case 31: // 51DS1A COMPUTER DIGITAL DATA (40 BITS)
 			// The very first pass through this loop will get garbage data because there was no downrupt.
 			// Generating a downrupt at 0 doesn't give the CMC enough time to get data on the busses.
-			ChannelValue13 ch13;
-			ch13.Value = sat->agc.GetOutputChannel(013);			
-			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
-			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
+		{
+			ChannelValue ch13;
+			ch13 = sat->agc.GetOutputChannel(013);
+			data = (sat->agc.GetOutputChannel(034) & 077400) >> 8;
+			if (ch13[DownlinkWordOrderCodeBit]) { data |= 0200; } // WORD ORDER BIT
 			/*
 			sprintf(oapiDebugString(),"CMC DATA: %o (%lo %lo)",data,sat->agc.GetOutputChannel(034),
 				sat->agc.GetOutputChannel(035));
-			*/			
-			tx_data[tx_offset] = data; 
+			*/
+			tx_data[tx_offset] = data;
 			break;
+		}
 		case 32: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
 			data = (sat->agc.GetOutputChannel(034)&0377);
 			tx_data[tx_offset] = data; 

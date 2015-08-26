@@ -27,7 +27,7 @@
 #if !defined(_PA_IMU_H)
 #define _PA_IMU_H
 
-class ApolloGuidance;
+#include "apolloguidance.h"
 
 #include "powersource.h"
 
@@ -38,7 +38,7 @@ public:
 	~IMU();
 
 	void Init();
-	void ChannelOutput(int address, int value);
+	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simt);
 	void SystemTimestep(double simdt); 
 	void TurnOn();
@@ -70,7 +70,7 @@ protected:
 	void DriveGimbal(int index, int RegCDU, double angle);
 	void PulsePIPA(int RegPIPA, int pulses);
 	void SetOrbiterAttitudeReference();
-	void ZeroIMUCDUs();
+	void DoZeroIMUCDUs();
 
 	//
 	// Logging.

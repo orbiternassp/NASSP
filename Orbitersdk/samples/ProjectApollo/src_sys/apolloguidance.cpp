@@ -240,43 +240,43 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 
 	// Set channels only once, otherwise this code overwrites the channel values in the scenario
 	if (!PadLoaded) { 
-		ChannelValue30 val30;
-		ChannelValue31 val31;
-		ChannelValue32 val32;
-		ChannelValue33 val33;
+		ChannelValue val30;
+		ChannelValue val31;
+		ChannelValue val32;
+		ChannelValue val33;
 
 		//
 		// Set default state. Note that these are oddities, as zero means
 		// true and one means false for the 'Virtual AGC'!
 		//
 
-		val30.Value = 077777;
+		val30 = 077777;
 		// Enable to turn on
 		// val30.Bits.IMUOperate = 0;
-		val30.Bits.TempInLimits = 0;
+		val30.reset(TempInLimits);
 
 		//
 		// We default to the IMU turned off. If you change this, change the IMU code to
 		// match.
 		//
-		val30.Bits.IMUOperate = 1;
+		val30.set(IMUOperate);
 
-		vagc.InputChannel[030] = val30.Value;
-		InputChannel[030] = (val30.Value ^ 077777);
+		vagc.InputChannel[030] = val30.to_ulong();
+		InputChannel[030] = (val30.to_ulong() ^ 077777);
 
-		val31.Value = 077777;
+		val31 = 077777;
 		// Default position of the CMC MODE switch is FREE
-		val31.Bits.FreeFunction = 0;
+		val31[FreeFunction] = 0;
 
-		vagc.InputChannel[031] = val31.Value;
-		InputChannel[031] = (val31.Value ^ 077777);
+		vagc.InputChannel[031] = val31.to_ulong();
+		InputChannel[031] = (val31.to_ulong() ^ 077777);
 
 
-		val32.Value = 077777;
-		vagc.InputChannel[032] = val32.Value;
-		InputChannel[032] = (val32.Value ^ 077777);
+		val32 = 077777;
+		vagc.InputChannel[032] = val32.to_ulong();
+		InputChannel[032] = (val32.to_ulong() ^ 077777);
 
-		val33.Value = 077777;
+		val33 = 077777;
 	//	val33.Bits.RangeUnitDataGood = 0;
 	//	val33.Bits.BlockUplinkInput = 0;
 
@@ -289,10 +289,10 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		//	RAND	CHAN33		# RESTART LOOP.
 		//
 
-		val33.Bits.AGCWarning = 0;
+		val33[AGCWarning] = 0;
 		
-		vagc.InputChannel[033] = val33.Value;
-		InputChannel[033] = (val33.Value ^ 077777);
+		vagc.InputChannel[033] = val33.to_ulong();
+		InputChannel[033] = (val33.to_ulong() ^ 077777);
 	}
 }
 
@@ -314,10 +314,10 @@ void ApolloGuidance::Startup()
 	// Light NO ATT if the IMU isn't running.
 	//
 
-	ChannelValue30 val30;
+	ChannelValue val30;
 
-	val30.Value = GetInputChannel(030);
-	if (val30.Bits.IMUCage || !val30.Bits.IMUOperate) {
+	val30 = GetInputChannel(030);
+	if (val30[IMUCage] || !val30[IMUOperate]) {
 		LightNoAtt();
 	}
 
@@ -4309,11 +4309,10 @@ unsigned int ApolloGuidance::GetOutputChannel(int channel)
 	return OutputChannel[channel];
 }
 
-void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
-
+void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val) 
 {
 	if (channel >= 0 && channel <= MAX_INPUT_CHANNELS)
-		InputChannel[channel] = val;
+		InputChannel[channel] = val.to_ulong();
 
 	//
 	// Do nothing if we have no power.
@@ -4334,7 +4333,7 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		if (channel & 0x80) {
 			// In this case we're dealing with a counter increment.
 			// So increment the counter.
-			UnprogrammedIncrement (&vagc, channel, val);
+			UnprogrammedIncrement (&vagc, channel, val.to_ulong());
 		}
 		else {
 			// If this is a keystroke from the DSKY, generate an interrupt req.
@@ -4351,7 +4350,7 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 			if (channel >= 030 && channel <= 034){
 				val ^= 077777;
 			}
-			WriteIO(&vagc, channel, val);
+			WriteIO(&vagc, channel, val.to_ulong());
 		}
 	}
 	else {
@@ -4457,21 +4456,21 @@ void ApolloGuidance::ProcessInputChannel30(int bit, bool val)
 {	
 	if (bit == 14) {	// Answer to ISSTurnOnRequest
 		if (val) {
-			ChannelValue12 val12;
-	    	val12.Value = 0;
-			val12.Bits.ISSTurnOnDelayComplete = 1;
-			imu.ChannelOutput(012, val12.Value);
+			ChannelValue val12;
+	    	val12 = 0;
+			val12[ISSTurnOnDelayComplete] = 1;
+			imu.ChannelOutput(012, val12);
 		}
 	}
 }
 
-void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
+void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 
 {
 	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
 		return;
 
-	OutputChannel[channel] = val;
+	OutputChannel[channel] = val.to_ulong();
 
 #ifdef _DEBUG
 	if (Yaagc) {
@@ -4562,31 +4561,31 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 // By default, do nothing for the RCS channels.
 //
 
-void ApolloGuidance::ProcessChannel5(int val)
+void ApolloGuidance::ProcessChannel5(ChannelValue val)
 
 {
 }
 
-void ApolloGuidance::ProcessChannel6(int val)
+void ApolloGuidance::ProcessChannel6(ChannelValue val)
 
 {
 }
 
 // DS20060226 Stubs for optics controls and TVC
-void ApolloGuidance::ProcessChannel14(int val)
+void ApolloGuidance::ProcessChannel14(ChannelValue val)
 {
 }
 
-void ApolloGuidance::ProcessChannel160(int val)
+void ApolloGuidance::ProcessChannel160(ChannelValue val)
 {
 }
 
-void ApolloGuidance::ProcessChannel161(int val)
+void ApolloGuidance::ProcessChannel161(ChannelValue val)
 {
 }
 
 // DS20060308 Stub for FDAI
-void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 }
 
 // DS20060402 DOWNRUPT

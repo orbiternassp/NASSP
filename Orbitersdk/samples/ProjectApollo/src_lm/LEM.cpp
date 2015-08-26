@@ -36,6 +36,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
 
@@ -378,8 +379,8 @@ void LEM::Init()
 		//
 		// Default channel setup.
 		//
-		agc.SetInputChannelBit(030, 2, true);	// Descent stage attached.
-		agc.SetInputChannelBit(030, 15, true);	// Temperature in limits.
+		agc.SetInputChannelBit(030, DescendStageAttached, true);	// Descent stage attached.
+		agc.SetInputChannelBit(030, TempInLimits, true);	// Temperature in limits.
 
 
 		InitLEMCalled = true;
@@ -585,6 +586,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_NUMPAD0:
 					dsky.NumberPressed(0);
 					break;
+				
 			}
 		}else{
 			// KEY UP
@@ -592,15 +594,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_DECIMAL:
 					dsky.ProgReleased();
 					break;
-				case OAPI_KEY_Q: 
-					agc.SetInputChannelBit(016,3,0);  // Mark X
-					return 1;
-				case OAPI_KEY_Y: 
-					agc.SetInputChannelBit(016,4,0);  // Mark Y
-					return 1;
-				case OAPI_KEY_E: 
-					agc.SetInputChannelBit(016,5,0);  // Mark Reject
-					return 1;
+
 			}
 		}
 		return 0;
@@ -645,12 +639,31 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 					optics.ReticleMoved = -0.01;  //Slow Rate (about 0.5 deg/sec)
 				}
 				break;
+			case OAPI_KEY_Q:
+				agc.SetInputChannelBit(016, MarkX, 1);  // Mark X
+				break;
+			case OAPI_KEY_Y:
+				agc.SetInputChannelBit(016, MarkY, 1);  // Mark Y
+				break;
+			case OAPI_KEY_E:
+				agc.SetInputChannelBit(016, MarkReject_LM, 1);  // Mark Reject
+				break;
+
 		}
 	}else{
 		switch(key){
 			case OAPI_KEY_W:
 			case OAPI_KEY_S:
 				optics.ReticleMoved = 0;
+				break;
+			case OAPI_KEY_Q:
+				agc.SetInputChannelBit(016, MarkX, 0);  // Mark X
+				break;
+			case OAPI_KEY_Y:
+				agc.SetInputChannelBit(016, MarkY, 0);  // Mark Y
+				break;
+			case OAPI_KEY_E:
+				agc.SetInputChannelBit(016, MarkReject_LM, 0);  // Mark Reject
 				break;
 		}
 
@@ -841,12 +854,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 //TODOX15 is it useful to do it on every step ? surely no
-			agc.SetInputChannelBit(030, 3, true);
+			agc.SetInputChannelBit(030, EngineArmed, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
 //TODOX15
-			agc.SetInputChannelBit(030, 3, false);
+			agc.SetInputChannelBit(030, EngineArmed, false);
 		}
 		
 
@@ -856,12 +869,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 // TODOX15
-			agc.SetInputChannelBit(030, 3, true);
+			agc.SetInputChannelBit(030, EngineArmed, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
 //TODOX15	
-			agc.SetInputChannelBit(030, 3, false);
+			agc.SetInputChannelBit(030, EngineArmed, false);
 		}
 
 		if (CDREVA_IP) {
@@ -912,7 +925,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetEngineLevel(ENGINE_HOVER,1);
 			stage = 2;
 			AbortFire();
-			agc.SetInputChannelBit(030, 4, true); // Abort with ascent stage.
+			agc.SetInputChannelBit(030, AbortWithAscentStage, true); // Abort with ascent stage.
 		}
 		if (bManualSeparate && !startimer){
 			VESSELSTATUS vs;
@@ -938,22 +951,22 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		if (AscentEngineArmed()) {
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
-			agc.SetInputChannelBit(030, 3, true);
+			agc.SetInputChannelBit(030, EngineArmed, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
-			agc.SetInputChannelBit(030, 3, false);
+			agc.SetInputChannelBit(030, EngineArmed, false);
 		}
 	}
 	else if (stage == 3){
 		if (AscentEngineArmed()) {
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
-			agc.SetInputChannelBit(030, 3, true);
+			agc.SetInputChannelBit(030, EngineArmed, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
-			agc.SetInputChannelBit(030, 3, false);
+			agc.SetInputChannelBit(030, EngineArmed, false);
 		}
 	}
 	else if (stage == 4)
@@ -1007,7 +1020,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 void LEM::SetGimbal(bool setting)
 {
-	agc.SetInputChannelBit(032, 9, setting);
+	agc.SetInputChannelBit(032, DescentEngineGimbalsDisabled, setting);
 	GMBLswitch = setting;
 }
 

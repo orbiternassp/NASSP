@@ -36,6 +36,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
 
@@ -191,7 +192,7 @@ void LEM::SetLmVesselDockStage()
 	AFEED4switch=false;
 
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, 2, true);
+	agc.SetInputChannelBit(030, DescendStageAttached, true);
 
 	CheckRCS();
 }
@@ -277,7 +278,7 @@ void LEM::SetLmVesselHoverStage()
 	AFEED4switch=false;
 
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, 2, true);
+	agc.SetInputChannelBit(030, DescendStageAttached, true);
 
 	CheckRCS();
 }
@@ -348,7 +349,7 @@ void LEM::SetLmAscentHoverStage()
 	AFEED4switch=true;
 
 	// Descent stage detached.
-	agc.SetInputChannelBit(030, 2, false);
+	agc.SetInputChannelBit(030, DescendStageAttached, false);
 
 	CheckRCS();
 }

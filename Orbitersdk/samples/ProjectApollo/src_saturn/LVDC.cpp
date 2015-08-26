@@ -37,6 +37,7 @@
 
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "dsky.h"
 #include "IMU.h"
 #include "papi.h"
@@ -744,7 +745,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					owner->EventTimerDisplay.Reset();
 					owner->EventTimerDisplay.SetEnabled(true);
 					owner->EventTimerDisplay.SetRunning(true);
-					owner->agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
+					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;
 					if (owner->LaunchS.isValid() && !owner->LaunchS.isPlaying()){	// And play launch sound
@@ -1691,7 +1692,7 @@ minorloop: //minor loop;
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 	
 		// S/C takeover function
-		if(LVDC_Timebase == 4 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012,9))){
+		if(LVDC_Timebase == 4 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
@@ -1889,11 +1890,11 @@ minorloop: //minor loop;
 	/* **** ABORT HANDLING **** */
 	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
 	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);					// Kill the engines
-		owner->agc.SetInputChannelBit(030, 4, true);			// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, 5, true);			// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");							// Clear the LVDC debug line
-		LVDC_Stop = true;										// Stop LVDC program
+		owner->SetEngineLevel(ENGINE_MAIN, 0);						// Kill the engines
+		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);// Notify the AGC of the abort
+		owner->agc.SetInputChannelBit(030, LiftOff, true);			// and the liftoff, if it's not set already
+		sprintf(oapiDebugString(),"");								// Clear the LVDC debug line
+		LVDC_Stop = true;											// Stop LVDC program
 		// ABORT MODE 1 - Use of LES to extract CM
 		// Allowed from T - 5 minutes until LES jettison.
 		if(owner->MissionTime > -300 && owner->LESAttached){			
@@ -5376,7 +5377,7 @@ minorloop:
 		// LV takeover
 		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
 		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if(LVDC_Timebase > 1 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012,9))){
+		if(LVDC_Timebase > 1 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
@@ -5607,8 +5608,8 @@ minorloop:
 	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
 	if(owner->bAbort && owner->MissionTime > -300){				
 		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
-		owner->agc.SetInputChannelBit(030, 4, true);	// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, 5, true);	// and the liftoff, if it's not set already
+		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+		owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 		sprintf(oapiDebugString(),"");					// Clear the LVDC debug line
 		LVDC_Stop = 1;									// Stop LVDC program
 		// ABORT MODE 1 - Use of LES to extract CM
