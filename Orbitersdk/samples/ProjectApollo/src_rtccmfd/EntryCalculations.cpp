@@ -99,7 +99,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	}
 
 	R_E = oapiGetSize(gravref);
-	earthorbitangle = tan((-31.7 - 2.15)*RAD);
+	earthorbitangle = (-31.7 - 2.15)*RAD;
 
 	this->entrynominal = entrynominal;
 }
@@ -124,7 +124,7 @@ void Entry::xdviterator2()
 	dx = 1;
 	epsilon = pow(2.0, -20.0);
 
-	xdes = earthorbitangle - tan(acos(R_E / length(R1B)));
+	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
 
 	while (abs(dx) > epsilon && i < 135)
 	{
