@@ -173,6 +173,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "ENTRYCALCMODE", G->entrycalcmode);
 	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
+	papiWriteScenario_bool(scn, "ENTRYNOMINAL", G->entrynominal);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
@@ -237,6 +238,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "ENTRYCALCMODE", G->entrycalcmode);
 		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
+		papiReadScenario_bool(line, "ENTRYNOMINAL", G->entrynominal);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -714,6 +716,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			if (G->entrycritical == 0)
 			{
 				skp->Text(1 * W / 8, 12 * H / 14, "Deorbit", 7);
+
+				if (G->entrynominal)
+				{
+					skp->Text(1 * W / 8, 10 * H / 14, "Nominal", 7);
+				}
+				else
+				{
+					skp->Text(1 * W / 8, 10 * H / 14, "Min DV", 6);
+				}
 			}
 			else if (G->entrycritical == 1)
 			{
@@ -2480,17 +2491,17 @@ void ApolloRTCCMFD::menuEntryCalc()
 {
 	if (G->entrycalcmode == 0)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else if(G->entrycalcmode == 1)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
 	else
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 }
@@ -2850,5 +2861,13 @@ void ApolloRTCCMFD::set_lambertaxis()
 	if (G->lambertopt == false)
 	{
 		G->lambertmultiaxis = !G->lambertmultiaxis;
+	}
+}
+
+void ApolloRTCCMFD::menuSwitchEntryNominal()
+{
+	if (G->entrycritical == 0 && G->entrycalcmode == 0)
+	{
+		G->entrynominal = !G->entrynominal;
 	}
 }
