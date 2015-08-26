@@ -683,6 +683,33 @@ void MCC::TimeStep(double simdt){
 			}
 			break;
 		case MST_1B_LAUNCH:
+			// CALLOUTS TO MAKE:
+			// TOWER CLEAR
+			if(SubState == 0 && CM_Position[2] > 100){
+				addMessage("CLEAR OF THE TOWER");
+				setSubState(1);
+			}
+			// ABORT MODES (1B, 1C)
+			// These callouts can safely be made based purely on time; They are early enough in the mission that
+			// large deviations from the mission plan will likely cause an abort anyway. Later abort callouts
+			// must be made on criteria.
+			if(SubState == 1 && StateTime > 61){
+				addMessage("MODE 1B");
+				setSubState(2);
+			}
+			if(SubState == 2 && StateTime > 110){
+				addMessage("MODE 1C");
+				setSubState(3);
+			}
+			// GO FOR STAGING
+			// (What criteria?)
+
+			// TRAJECTORY/GUIDANCE GO
+			// (What criteria?)
+
+			// ABORT MODE 4
+			// (What criteria?)
+
 			// Abort?
 			if(cm->bAbort){
 				// What type?
