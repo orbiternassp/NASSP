@@ -1600,6 +1600,9 @@ void Saturn::AddCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYCWLIGHTS,					_R(2100 + offset,  923, 2154 + offset,  999), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYOPTICSLIGHTS,				_R(1363 + offset, 1054, 1437 + offset, 1153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
+	oapiRegisterPanelArea (AID_OPT_SHAFTDISPLAY,							_R(1893 + offset,  570, 1944 + offset,  582), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_OPT_TRUNDISPLAY,								_R(2021 + offset,  520, 2072 + offset,  532), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+
 	// "Accelerator" areas
 	oapiRegisterPanelArea (AID_SWITCHTO_TELESCOPE1,      				    _R(2030 + offset,  580, 2165 + offset,  700), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SWITCHTO_TELESCOPE2,      				    _R(2100 + offset, 1190, 2360 + offset, 1445), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -4592,6 +4595,14 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_OPTICSCLKAREATELE:
 		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
+		return true;
+
+	case AID_OPT_SHAFTDISPLAY:
+		optics.PaintShaftDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTSINV]);
+		return true;
+
+	case AID_OPT_TRUNDISPLAY:
+		optics.PaintTrunnionDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTSINV]);
 		return true;
 
 	case AID_MISSION_CLOCK:

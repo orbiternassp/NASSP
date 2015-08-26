@@ -4295,6 +4295,44 @@ void CMOptics::CMCShaftDrive(int val,int ch12) {
 	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
+// Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
+// For now it's assumed to be CDU counts.
+
+bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	int value = (int)(OpticsShaft/OCDU_SHAFT_STEP);
+	if(value < 0){ value += 32767; }
+	return PaintDisplay(surf, digits, value);
+}
+
+bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	int value = (int)(SextTrunion/OCDU_TRUNNION_STEP);
+	value -= 7199;
+	if(value < 0){ value += 32767; }	
+	return PaintDisplay(surf, digits, value);
+}
+
+bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
+	int srx, sry, digit[5];
+	int x=value;	
+	digit[0] = (x%10);
+	digit[1] = (x%100)/10;
+	digit[2] = (x%1000)/100;
+	digit[3] = (x%10000)/1000;
+	digit[4] = x/10000;
+	sry = (int)(digit[0] * 1.2);
+	srx = 8 + (digit[4] * 25);
+	oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[3] * 25);
+	oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[2] * 25);
+	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[1] * 25);
+	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[0] * 25);
+	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	return true;
+}
+
 void CMOptics::TimeStep(double simdt) {
 
 	double ShaftRate = 0;

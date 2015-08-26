@@ -681,6 +681,9 @@ public:
 	void SystemTimestep(double simdt);
 	void CMCShaftDrive(int val, int ch12);                          // CMC pulses
 	void CMCTrunionDrive(int val, int ch12); 
+	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits);		// Update panel image
+	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
+
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -703,6 +706,8 @@ public:
 	bool SextDVLOSTog;												// Alternating flag that controls LineOfSight cycling in Dual-View mode
 	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second
 	bool OpticsCovered;												// Are optics covers in place?
+protected:
+	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value);
 };
 
 
