@@ -570,7 +570,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
-		mcc.TimeStep(MissionTime);
+		mcc.TimeStep(simdt);
 
 		//
 		// Systems state handling
