@@ -370,6 +370,7 @@ void Saturn::SystemsInit() {
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);
+	hga.Init(this);
 	dataRecorder.Init(this);
 	pcm.Init(this);
 
@@ -565,6 +566,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
+		hga.TimeStep(MissionTime);
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
@@ -1174,6 +1176,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		pcm.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
+		hga.SystemTimestep(tFactor);
 		ems.SystemTimestep(tFactor);
 		els.SystemTimestep(tFactor);
 		ordeal.SystemTimestep(tFactor);

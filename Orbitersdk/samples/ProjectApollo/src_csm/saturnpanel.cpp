@@ -1236,6 +1236,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL10_RIGHT_THUMBWHEELS,		_R(1067, 472, 1084, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL10_RIGHT_SWITCHES,			_R(1112, 476, 1146, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_TUNNEL_VENT_VALVE,			_R(1709, 297, 1747, 335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DP_GAUGE,						_R(1681, 448, 1767, 530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -1490,6 +1491,7 @@ void Saturn::AddRightMiddleMainPanelAreas(int offset) {
 	oapiRegisterPanelArea (AID_HIGHGAINANTENNAUPPERSWITCHES,      			_R(2185 + offset,  943, 2262 + offset,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_HIGHGAINANTENNALOWERSWITCHES,      			_R(2381 + offset, 1157, 2458 + offset, 1186), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_HIGHGAINANTENNAYAWPOSITIONSWITCH,      		_R(2398 + offset, 1016, 2488 + offset, 1116), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_HIGHGAINANTENNAMETERS,						_R(2283 + offset,  933, 2496 + offset,  985), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 	// MFDs
 	MFDSPEC mfds_mainright = {{1834 + offset, 1075, 2093 + offset, 1330}, 6, 6, 37, 37};
@@ -2264,6 +2266,11 @@ void Saturn::SetSwitches(int panel) {
 	HighGainAntennaYawPositionSwitchRow.Init(AID_HIGHGAINANTENNAYAWPOSITIONSWITCH, MainPanel);
 	HighGainAntennaYawPositionSwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], HighGainAntennaYawPositionSwitchRow);
 	
+	HighGainAntennaMetersRow.Init(AID_HIGHGAINANTENNAMETERS, MainPanel, &GaugePower);
+	HighGainAntennaPitchMeter.Init(g_Param.pen[4], g_Param.pen[4], HighGainAntennaMetersRow, this);
+	HighGainAntennaStrengthMeter.Init(g_Param.pen[4], g_Param.pen[4], HighGainAntennaMetersRow, this);
+	HighGainAntennaYawMeter.Init(g_Param.pen[4], g_Param.pen[4], HighGainAntennaMetersRow, this);
+
 	VHFAntennaRotaryRow.Init(AID_VHFANTENNAROTARY, MainPanel);
 	VHFAntennaRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], VHFAntennaRotaryRow);
 	
@@ -3135,6 +3142,9 @@ void Saturn::SetSwitches(int panel) {
 	LMTunnelVentValveRow.Init(AID_LM_TUNNEL_VENT_VALVE, MainPanel);
 	LMTunnelVentValve.Init(0, 0, 38, 38, srf[SRF_CSM_LM_TUNNEL_VENT_VALVE], srf[SRF_BORDER_38x38], LMTunnelVentValveRow);
 	
+	LMDPGaugeRow.Init(AID_LM_DP_GAUGE, MainPanel, &GaugePower);
+	LMDPGauge.Init(g_Param.pen[6], g_Param.pen[6], LMDPGaugeRow, this);
+
 	////////////////////////
 	// Panel 325/326 etc. //
 	////////////////////////
@@ -3359,6 +3369,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
 	g_Param.pen[5] = CreatePen (PS_SOLID, 1, RGB(255,   0,   0));
+	g_Param.pen[6] = CreatePen (PS_SOLID, 3, RGB(255, 255, 255));
 }
 
 void DeletegParam() {
@@ -5530,6 +5541,10 @@ void Saturn::InitSwitches() {
 	HighGainAntennaYawPositionSwitch.AddPosition(11, 330);
 	HighGainAntennaYawPositionSwitch.Register(PSH, "HighGainAntennaYawPositionSwitch", 0);
 
+	HighGainAntennaPitchMeter.Register(PSH, "HighGainAntennaPitchMeter", -90, 90, 5);
+	HighGainAntennaStrengthMeter.Register(PSH, "HighGainAntennaStrengthMeter", 0, 100, 5);
+	HighGainAntennaYawMeter.Register(PSH, "HighGainAntennaYawMeter", 0, 360, 5);
+
 	EMSFunctionSwitch.AddPosition(0,  180);
 	EMSFunctionSwitch.AddPosition(1,  210);
 	EMSFunctionSwitch.AddPosition(2,  240);
@@ -5913,6 +5928,8 @@ void Saturn::InitSwitches() {
 	LMTunnelVentValve.AddPosition(2,  30);
 	LMTunnelVentValve.AddPosition(3,  60);
 	LMTunnelVentValve.Register(PSH, "LMTunnelVentValve", 0);
+
+	LMDPGauge.Register(PSH, "LMDPGauge", -1, 4, 5);
 
 	WasteMGMTOvbdDrainDumpRotary.AddPosition(0,   0);
 	WasteMGMTOvbdDrainDumpRotary.AddPosition(1,  90);

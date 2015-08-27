@@ -234,7 +234,7 @@ typedef struct {
 	HFONT font[3];		///< GDI fonts.
 	DWORD col[6];		///< GDI colors.
 	HBRUSH brush[4];	///< GDI brushes.
-	HPEN pen[6];		///< GDI pens.
+	HPEN pen[7];		///< GDI pens.
 } GDIParams;
 
 //
