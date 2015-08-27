@@ -1594,6 +1594,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	CrewStatus.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
+	hga.SaveState(scn);
 	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
@@ -2388,6 +2389,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    }
 	    else if (!strnicmp (line, "UNIFIEDSBAND", 12)) {
 		    usb.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "HIGHGAINANTENNA", 12)) {
+		    hga.LoadState(line);
 	    }
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);

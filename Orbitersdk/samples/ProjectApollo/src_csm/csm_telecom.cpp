@@ -458,7 +458,41 @@ void USB::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
 
+// High Gain Antenna
+// Unifed S-Band System
+HGA::HGA(){
+	sat = NULL;
+	Pitch = 0;
+	Yaw = 0;
+	SignalStrength = 0;
+}
 
+void HGA::Init(Saturn *vessel){
+	sat = vessel;
+	Pitch = 0;
+	Yaw = 0;
+	SignalStrength = 0;
+}
+
+// Draw power
+void HGA::SystemTimestep(double simdt) {	
+
+}
+
+// Do work
+void HGA::TimeStep(double simt) {
+
+}
+
+// Load
+void HGA::LoadState(char *line) {
+
+}
+
+// Save
+void HGA::SaveState(FILEHANDLE scn) {
+
+}
 
 // Socket registration method (registers sockets to be deinitialized
 bool PCM::registerSocket(SOCKET sock)

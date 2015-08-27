@@ -2302,6 +2302,11 @@ protected:
 	SwitchRow HighGainAntennaYawPositionSwitchRow;
 	RotationalSwitch HighGainAntennaYawPositionSwitch;
 
+	SwitchRow HighGainAntennaMetersRow;
+	SaturnHighGainAntennaPitchMeter HighGainAntennaPitchMeter;
+	SaturnHighGainAntennaStrengthMeter HighGainAntennaStrengthMeter;
+	SaturnHighGainAntennaYawMeter HighGainAntennaYawMeter;	
+
 	///
 	/// \brief Docking probe switches
 	///
@@ -2972,6 +2977,9 @@ protected:
 	SwitchRow LMTunnelVentValveRow;
 	RotationalSwitch LMTunnelVentValve;
 
+	SwitchRow LMDPGaugeRow;
+	SaturnLMDPGauge LMDPGauge;
+
 	///////////////////
 	// Panel 225/226 //
 	///////////////////
@@ -3587,6 +3595,7 @@ protected:
 	PCM  pcm;
 	PMP	 pmp;
 	USB  usb;
+	HGA  hga;
 	EMS  ems;
 
 	// CM Optics
@@ -4491,6 +4500,9 @@ protected:
 	friend class SaturnASCPSwitch;
 	friend class SaturnAbortSwitch;
 	friend class SaturnPanelOrdeal;
+	friend class SaturnHighGainAntennaPitchMeter;
+	friend class SaturnHighGainAntennaYawMeter;
+	friend class SaturnHighGainAntennaStrengthMeter;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

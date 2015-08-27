@@ -356,3 +356,19 @@ public:
 	int pa_ovr_1, pa_ovr_2;			   // PA mode override for uptelemetry channel
 };
 
+// High Gain Antenna system
+
+class HGA {
+public:
+	HGA();
+	void Init(Saturn *vessel);	       // Initialization
+	void TimeStep(double simt);        // TimeStep
+	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+	Saturn *sat;					   // Ship we're installed in
+	double Pitch;					   // Antenna Pitch
+	double Yaw;						   // Antenna Yaw
+	double SignalStrength;			   // Signal Strength (0-100)
+};
