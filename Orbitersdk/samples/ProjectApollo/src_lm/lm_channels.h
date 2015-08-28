@@ -78,7 +78,7 @@ typedef union {
 
 // Channel 11, DSKY II
 enum ChannelValue11_Bits {
-	ISSWarning,
+	ISSWarning=0,
 	LightComputerActivity,
 	LightUplink,
 	LightTempCaution,
@@ -95,26 +95,26 @@ enum ChannelValue11_Bits {
 
 // Channel 12, GN&CS DISCRETES
 enum ChannelValue12_Bits {
-	ZeroRRCDUs = 1,
+	ZeroRRCDUs = 0,
 	EnableRRCDUErrorCounter,
 	// Unused.
-	CoarseAlignEnable = 4,
+	CoarseAlignEnable = 3,
 	ZeroIMUCDUs,
 	EnableIMUCDUErrorCounters,
 	// Unused.
-	DispayInertialData = 8,						///< Enable thrust vector control.
+	DispayInertialData = 7,						///< Enable thrust vector control.
 	PlusPitchVehicleMotion,
 	MinusPitchVehicleMotion,
 	PlusRollVehicleMotion,
 	MinusRollVehicleMotion,
 	LRPositionCommand,							
-	RRAutoTrackOrEnable = 14,		///< Start the SIVb ignition sequence for TLI.
+	RRAutoTrackOrEnable = 13,		///< Start the SIVb ignition sequence for TLI.
 	ISSTurnOnDelayComplete			///< Delay for ISS turnon has completed.
 };
 
 // Channel 13, LGC DISCRETES
 enum ChannelValue13_Bits {
-	RadarC=1,
+	RadarC=0,
     RadarB,
     RadarA,
 	RadarActivity,
@@ -133,7 +133,7 @@ enum ChannelValue13_Bits {
 
 // Channel 14, IMU DISCRETES
 enum ChannelValue14_Bits {
-	OutlinkActivity = 1,
+	OutlinkActivity = 0,
     AltitudeRate,
 	AltitudeIndicator,
 	ThrustIndicatorDrive,
@@ -155,7 +155,7 @@ enum ChannelValue14_Bits {
 // Channel 16, NAVIGATION
 enum ChannelValue16_Bits {
 	// Spare 2				///< NAV DSKY
-	MarkX = 3,				///< NAV DSKY
+	MarkX = 2,				///< NAV DSKY
 	MarkY,				///< NAV DSKY
 	MarkReject_LM,				///< NAV DSKY
 	DescendPlus,					///< MARK key
@@ -165,7 +165,7 @@ enum ChannelValue16_Bits {
 
 // Channel 30, GN&CS DISCRETES
 enum ChannelValue30_Bits {
-	AbortWithDescentStage = 1,
+	AbortWithDescentStage = 0,
 	DescendStageAttached,
 	EngineArmed,
 	AbortWithAscentStage,
@@ -173,7 +173,7 @@ enum ChannelValue30_Bits {
 	DisplayInertialData,
 	RendezVousCDUFail,
 	// Spare
-	IMUOperate = 9,					///< IMU is operating.
+	IMUOperate = 8,					///< IMU is operating.
 	GNControlOfSC,
 	IMUCage,						///< IMU is caged.
 	IMUCDUFailure,
@@ -184,7 +184,7 @@ enum ChannelValue30_Bits {
 
 // Channel 31, Translation & Rotation
 enum ChannelValue31_Bits {
-	     PlusElevation = 1,
+	     PlusElevation = 0,
 		 MinusElevation,
 		 PlusYaw,
 		 MinusYaw,
@@ -220,7 +220,7 @@ typedef union {
 
 
 enum ChannelValue32_Bits {
-	Thruster2_4_Disabled = 1,
+	Thruster2_4_Disabled = 0,
 	Thruster5_8_Disabled,
 	Thruster1_3_Disabled,
 	Thruster6_7_Disabled,
@@ -231,13 +231,14 @@ enum ChannelValue32_Bits {
 	DescentEngineGimbalsDisabled,
 	ApparentDecscentEngineGimbalsFailed,
 	// Spare 3 
-	Proceed = 14
+	Proceed = 13
 	// Spare
 };
 
 // Channel 33, Optics
 enum ChannelValue33_Bits {
-	RRPowerOnAuto = 2,      // RR power on and RR mode = LGC
+	//Spare
+	RRPowerOnAuto = 1,      // RR power on and RR mode = LGC
 	RRRangeLowScale,
 	RRDataGood,
 	LRDataGood,

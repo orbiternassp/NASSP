@@ -53,7 +53,7 @@ typedef std::bitset<16> ChannelValue;
 
 
 enum ChannelValue11_Bits {
- ISSWarning=1,
+ ISSWarning=0,
  LightComputerActivity,		///< Turn on the Computer Activity light.
  LightUplink,					///< Turn on the Uplink Activity light.
  LightTempCaution,			///< Turn on the Temperature warning light.
@@ -61,10 +61,10 @@ enum ChannelValue11_Bits {
  FlashVerbNoun,			///< Flash the Verb and Noun displays.
  LightOprErr,					///< Light the Operator Error light.
 					///< Unused.
- TestConnectorOut=9,
+ TestConnectorOut=8,
  CautionReset,
 //						///< Unused.
- EngineOn=13,					///< Turn the main engine on.
+ EngineOn=12,					///< Turn the main engine on.
  EngineOff
 };
 
@@ -74,19 +74,19 @@ enum ChannelValue11_Bits {
 ///
 
 enum ChannelValue12_Bits {
-	ZeroOpticsCDUs = 1,
+	ZeroOpticsCDUs = 0,
 	EnableOpticsCDUErrorCounters,
 	// Unused.
-	CoarseAlignEnable = 4,
+	CoarseAlignEnable = 3,
 	ZeroIMUCDUs,
 	EnableIMUCDUErrorCounters,
 	// Unused.
-	TVCEnable = 8,						///< Enable thrust vector control.
+	TVCEnable = 7,						///< Enable thrust vector control.
 	EnableSIVBTakeover,
 	ZeroOptics,
 	DisengageOpticsDAC,
 	// Spare2							///< Unused.
-	SIVBIgnitionSequenceStart = 13,		///< Start the SIVb ignition sequence for TLI.
+	SIVBIgnitionSequenceStart = 12,		///< Start the SIVb ignition sequence for TLI.
 	SIVBCutoff,						///< Shut down the SIVb.
 	ISSTurnOnDelayComplete			///< Delay for ISS turnon has completed.
 };
@@ -99,7 +99,7 @@ enum ChannelValue12_Bits {
 ///
 
 enum ChannelValue13_Bits {
- RangeUnitSelectC = 1,
+ RangeUnitSelectC = 0,
  RangeUnitSelectB,
  RangeUnitSelectA,
  RangeUnitActivity,
@@ -108,7 +108,7 @@ enum ChannelValue13_Bits {
  DownlinkWordOrderCodeBit,
  ///< Unused.
  ///< Unused.
- TestAlarms=10,
+ TestAlarms=9,
  EnableStandby,				///< Enable AGC standby mode.
  ResetTrap31A,
  ResetTrap31B,
@@ -121,12 +121,12 @@ enum ChannelValue13_Bits {
 /// \brief CSM AGC output channel 14.
 ///
 enum ChannelValue14_Bits {
-	OutLinkActivity = 1,				
+	OutLinkActivity = 0,				
 	AltitudeRateSelect,					
 	AltitudeMeterActivity,
 	ThrustDrive,
 	//Spare
-	GyroEnable = 6,
+	GyroEnable = 5,
 	GyroSelectB,
 	GyroSelectA,
 	GyroSign,
@@ -144,7 +144,7 @@ enum ChannelValue14_Bits {
 ///
 
 enum ChannelValue16_Bits {
-		NavDSKY1=1,				///< NAV DSKY
+		NavDSKY1=0,				///< NAV DSKY
 		NavDSKY2,				///< NAV DSKY
 		NavDSKY3,				///< NAV DSKY
 		NavDSKY4,				///< NAV DSKY
@@ -160,7 +160,7 @@ enum ChannelValue16_Bits {
 ///
 
 enum ChannelValue30_Bits {
-	UllageThrust = 1,
+	UllageThrust = 0,
 	CMSMSeperate,				///< CM has seperated from the SM.
 	SPSReady,					///< SPS is activated.
 	SIVBSeperateAbort,
@@ -168,7 +168,7 @@ enum ChannelValue30_Bits {
 	GuidanceReferenceRelease,
 	OpticsCDUFail,
 //  Spare
-	IMUOperate=9,					///< IMU is operating.
+	IMUOperate=8,					///< IMU is operating.
 	SCControlOfSaturn,
 	IMUCage,						///< IMU is caged.
 	IMUCDUFail,
@@ -184,7 +184,7 @@ enum ChannelValue30_Bits {
 ///
 
 enum ChannelValue31_Bits {
-	    PlusPitchManualRotation=1,
+	    PlusPitchManualRotation=0,
 		MinusPitchManualRotation,
 		PlusYawManualRotation,
 		MinusYawManualRotation,
@@ -208,16 +208,16 @@ enum ChannelValue31_Bits {
 ///
 
 enum ChannelValue32_Bits {
-		PlusPitchMinImpulse=1,
+		PlusPitchMinImpulse=0,
 		MinusPitchMinImpulse,
 		PlusYawMinimumImpulse,
 		MinusYawMinimumImpulse,
 		PlusRollMinimumImpulse,
 		MinusRollMinimumImpulse,
 		// Spare 4					///< Unused.
-		LMAttached=11,
+		LMAttached=10,
 		// Spare 2					///< Unused.
-		Proceed=14
+		Proceed=13
 		//Spare 1					///< Unused.
 } ;
 
@@ -229,13 +229,13 @@ enum ChannelValue32_Bits {
 
 enum ChannelValue33_Bits {
         // Spare 1					///< Unused.
-		RangeUnitDataGood = 2,
+		RangeUnitDataGood = 1,
 		// Spare 1					///< Unused.
-		ZeroOptics_33 = 4,				    ///< Optics ZERO switch
+		ZeroOptics_33 = 3,				    ///< Optics ZERO switch
 		CMCControl,				    ///< Optics under CMC control
 		// NotUsed 2				///< Unused.
 		// Spare 2					///< Unused.
-		BlockUplinkInput=10,
+		BlockUplinkInput=9,
 		UplinkTooFast,
 		DownlinkTooFast,
 		PIPAFail,
