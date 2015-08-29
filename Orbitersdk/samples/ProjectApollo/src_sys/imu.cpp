@@ -96,7 +96,7 @@ void IMU::Init()
 	IMUHeater = 0;
 	PowerSwitch = 0;
 
-	ZeroIMUCDUs();
+	DoZeroIMUCDUs();
 	LastTime = -1;
 	
 	LogInit();
@@ -127,10 +127,10 @@ void IMU::SetCaged(bool val)
 {
 	if (Caged != val) {
 		Caged = val;
-		agc.SetInputChannelBit(030, 11, val);
+		agc.SetInputChannelBit(030, IMUCage, val);
 
 		if (val) {
-			ZeroIMUCDUs();
+			DoZeroIMUCDUs();
 		}
 	}
 }
@@ -144,10 +144,10 @@ void IMU::TurnOn()
 {
 	if (!Operate) {
 		SetCaged(false);
-		agc.SetInputChannelBit(030, 9, true);
-		agc.SetInputChannelBit(030, 14, true);
+		agc.SetInputChannelBit(030, IMUOperate, true);
+		agc.SetInputChannelBit(030, ISSTurnOnRequest, true);
 		// Clear IMUFail
-		agc.SetInputChannelBit(030, 13, false);
+		agc.SetInputChannelBit(030, IMUFail, false);
 		Operate = true;
 	}
 }
@@ -156,14 +156,14 @@ void IMU::TurnOff()
 
 {
 	if (Operate) {
-		agc.SetInputChannelBit(030, 9, false);
-		agc.SetInputChannelBit(030, 14, false);
+		agc.SetInputChannelBit(030, IMUOperate, false);
+		agc.SetInputChannelBit(030, ISSTurnOnRequest, false);
 
 		// The IMU is monitored by a separate "IMU Fail Detect Logic",
 		// which sets the IMUFail and IMUCDUFail bits of channel 030
 		// under certain conditions, see CSM systems handbook 8.1 H9.
 		// For now we just raise an IMUFail in case of an turn off.
-		agc.SetInputChannelBit(030, 13, true);
+		agc.SetInputChannelBit(030, IMUFail, true);
 
 		Operate = false;
 		TurnedOn = false;
@@ -171,7 +171,7 @@ void IMU::TurnOff()
 	}
 }
 
-void IMU::ChannelOutput(int address, int value) 
+void IMU::ChannelOutput(int address, ChannelValue value) 
 
 {
 	TRACESETUP("CHANNEL OUTPUT PROCESS");
@@ -184,26 +184,26 @@ void IMU::ChannelOutput(int address, int value)
 	double delta;
   	MATRIX3 t;
   	VECTOR3 newAngles;
-    ChannelValue12 val12;
+    ChannelValue val12;
 	
 	if (address != 07 && address != 033 /*&& address != 010*/) {  	  
-    	LogState(address, "out", value);
+    	LogState(address, "out", value.to_ulong());
 	}
 
   	if (address == 012) {
-    	val12.Value = value;
+    	val12 = value;
 
-		if (val12.Bits.ISSTurnOnDelayComplete) 
+		if (val12[ISSTurnOnDelayComplete]) 
 		{
 			if(!TurnedOn)
 			{
-			    agc.SetInputChannelBit(030, 14, false);
+			    agc.SetInputChannelBit(030, ISSTurnOnRequest, false);
 			    TurnedOn = true;
 			}
 		}
     
-    	if (val12.Bits.ZeroIMUCDUs) {
-			ZeroIMUCDUs();
+    	if (val12[ZeroIMUCDUs]) {
+			DoZeroIMUCDUs();
 			agc.SetErasable(0, RegCDUX, 0);
 			agc.SetErasable(0, RegCDUY, 0);
 			agc.SetErasable(0, RegCDUZ, 0);
@@ -215,24 +215,24 @@ void IMU::ChannelOutput(int address, int value)
 	}
 
 	// coarse align 
-	val12.Value = agc.GetOutputChannel(012);
+	val12 = agc.GetOutputChannel(012);
 
-	if(val12.Bits.CoarseAlignEnable) {
+	if(val12[CoarseAlignEnable]) {
 		if (address == 0174) {
-			DriveCDUX(value);
+			DriveCDUX(value.to_ulong());
 		}
 		if (address == 0175) {
-			DriveCDUY(value);
+			DriveCDUY(value.to_ulong());
 		}
 		if (address == 0176) {
-			DriveCDUZ(value);
+			DriveCDUZ(value.to_ulong());
 		}
 	}
 	
 	// gyro torquing
 	if (address == 0177) {
 		ChannelValue177 val177;
-		val177.Value = value;
+		val177.Value = value.to_ulong();
 
 		if (val177.Bits.GyroSign) {
 			pulses = -1 * val177.Bits.GyroPulses; 
@@ -305,7 +305,7 @@ void IMU::Timestep(double simt)
 	TRACESETUP("IMU::Timestep");
 
 	double deltaTime, pulses;
-	ChannelValue12 val12;
+	ChannelValue val12;
 
 	if (!Operate) {
 		if (IsPowered())
@@ -379,11 +379,11 @@ void IMU::Timestep(double simt)
 		//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
 
 		// Process channel bits				
-		val12.Value = agc.GetOutputChannel(012);
-		if (val12.Bits.ZeroIMUCDUs) {
-			ZeroIMUCDUs();
+		val12 = agc.GetOutputChannel(012);
+		if (val12[ZeroIMUCDUs]) {
+			DoZeroIMUCDUs();
 		}
-		else if (val12.Bits.CoarseAlignEnable) {
+		else if (val12[CoarseAlignEnable]) {
 			TRACE("CHANNEL 12 COARSE");
 			SetOrbiterAttitudeReference();
 		}
@@ -567,7 +567,7 @@ void IMU::SetOrbiterAttitudeReference()
 	Orbiter.AttitudeReference = t;
 }
 
-void IMU::ZeroIMUCDUs() 
+void IMU::DoZeroIMUCDUs() 
 
 {
 	Gimbal.X = 0;

@@ -38,6 +38,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "IMU.h"
 #include "lvimu.h"
 
@@ -1751,9 +1752,9 @@ bool THCRotarySwitch::SwitchTo(int newState)
 void SaturnSCControlSetter::SetSCControl(Saturn *sat) {
 
 	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
-		sat->agc.SetInputChannelBit(031, 15, true);
+		sat->agc.SetInputChannelBit(031, GNAutopilotControl, true);
 	} else {
-		sat->agc.SetInputChannelBit(031, 15, false);
+		sat->agc.SetInputChannelBit(031, GNAutopilotControl, false);
 	}
 }
 
@@ -2300,3 +2301,59 @@ void OrdealRotationalSwitch::LoadState(char *line) {
 		SetValue((int) ((value / 50.) + 0.5));
 	}
 }
+
+double SaturnHighGainAntennaPitchMeter::QueryValue(){
+	return Sat->hga.Pitch; 
+}
+
+void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// Gauge runs from -110 to 110 degrees. Sign matches.
+	v = v * 1.222222;
+	DrawNeedle(drawSurface, 30, 25, 20.0, v * RAD);
+}
+
+double SaturnHighGainAntennaStrengthMeter::QueryValue(){
+	return Sat->hga.SignalStrength; 
+}
+
+void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// Gauge runs from 180 to 0. Sign reversed.
+	v = 180-(v*1.8);
+	DrawNeedle(drawSurface, 107, 25, 20.0, v * RAD);
+}
+
+double SaturnHighGainAntennaYawMeter::QueryValue(){
+	return Sat->hga.Yaw; 
+}
+
+void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// Gauge runs from 220 to -40. Sign reversed.
+	v = 220-(v*0.722222);
+	DrawNeedle(drawSurface, 185, 25, 20.0, v * RAD);
+}
+
+double SaturnLMDPGauge::QueryValue(){
+	return 4; // FIXME: Return actual data when actual data available
+}
+
+void SaturnLMDPGauge::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// Gauge runs from 122.5 to 57.5, sign reversed.
+	v = 122.5-((v+1)*13);	
+	DrawNeedle(drawSurface, 43, 77, 20.0, v * RAD);
+}
+
+void SaturnLMDPGauge::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle){
+	// Needle function by Rob Conley from Mercury code
+	// This one needs a longer and offset needle
+
+	double dx = rad * cos(angle), dy = rad * sin(angle);
+	HGDIOBJ oldObj;
+
+	HDC hDC = oapiGetDC (surf);
+	oldObj = SelectObject (hDC, Pen1);
+	MoveToEx (hDC, x + (int)(2*dx+0.5), y - (int)(2*dy+0.5), 0); 
+	LineTo (hDC, x + (int)(3*dx+0.5), y - (int)(3*dy+0.5));
+	SelectObject (hDC, oldObj);
+	oapiReleaseDC (surf, hDC);
+}
+

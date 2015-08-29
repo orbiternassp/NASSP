@@ -429,6 +429,31 @@ protected:
 	ThreeWayPowerMerge ACBus2;
 };
 
+class SaturnHighGainAntennaPitchMeter: public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+};
+
+class SaturnHighGainAntennaStrengthMeter: public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+};
+
+class SaturnHighGainAntennaYawMeter: public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+};
+
+class SaturnLMDPGauge: public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+};
+
 ///
 /// \brief DC current meter for Saturn panel.
 ///

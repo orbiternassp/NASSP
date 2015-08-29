@@ -85,8 +85,14 @@ MCC::MCC(){
 	}	
 	// Reset capcom interface
 	menuState = 0;
+	padState = -1;
+	padNumber = 0;
+	padForm = NULL;
 	NHmenu = 0;
 	NHmessages = 0;
+	NHpad = 0;
+	StateTime = 0;
+	SubStateTime = 0;
 }
 
 void MCC::Init(Saturn *vs){
@@ -475,7 +481,7 @@ void MCC::Init(Saturn *vs){
 	GroundStations[42].Active = true;
 
 	// MISSION STATE
-	MissionState = MST_PRELAUNCH;
+	setState(MST_PRELAUNCH);
 	// Revolutions count up from 1.
 	EarthRev = 1;
 	MoonRev = 1;
@@ -487,6 +493,8 @@ void MCC::Init(Saturn *vs){
 	oapiAnnotationSetPos(NHmenu,0,0,0.15,0.2);
 	NHmessages = oapiCreateAnnotation(false,0.75,_V(1,1,0));
 	oapiAnnotationSetPos(NHmessages,0.18,0,0.87,0.2);
+	NHpad = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	oapiAnnotationSetPos(NHpad,0,0.2,0.33,1);
 	// Clobber message output buffer
 	msgOutputBuf[0] = 0;
 	// Clobber the message ring buffer, then set the index back to zero
@@ -498,6 +506,18 @@ void MCC::Init(Saturn *vs){
 	}
 	currentMessage = 0;
 
+}
+
+void MCC::setState(int newState){
+	MissionState = newState;
+	SubState = 0;
+	StateTime = 0;
+	SubStateTime = 0;
+}
+
+void MCC::setSubState(int newState){
+	SubState = newState;
+	SubStateTime = 0;
 }
 
 void MCC::TimeStep(double simdt){
@@ -580,6 +600,9 @@ void MCC::TimeStep(double simdt){
 	if(MT_Enabled == true){
 		// Make sure ground tracking is also on
 		if(GT_Enabled == false){ addMessage("Mission tracking requires ground tracking"); MT_Enabled = false; return; }
+		// Clock timers
+		StateTime += simdt;
+		SubStateTime += simdt;
 		// Handle global mission states
 		switch(MissionState){			
 		case MST_INIT:
@@ -589,11 +612,11 @@ void MCC::TimeStep(double simdt){
 			switch(cm->ApolloNo){
 				case 7:
 					MissionType = MTP_C;
-					MissionState = MST_1B_PRELAUNCH;
+					setState(MST_1B_PRELAUNCH);
 					break;
 				case 8:
 					MissionType = MTP_C_PRIME;
-					MissionState = MST_SV_PRELAUNCH;
+					setState(MST_SV_PRELAUNCH);
 					break;
 				case 9:
 					MissionType = MTP_D;
@@ -636,12 +659,12 @@ void MCC::TimeStep(double simdt){
 			if(cm->stage >= CM_STAGE){
 				// Pad Abort
 				addMessage("PAD ABORT");
-				MissionState = MST_ABORT_PL;					
+				setState(MST_ABORT_PL);					
 			}else{
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
-					MissionState = MST_1B_LAUNCH;
+					setState(MST_1B_LAUNCH);
 				}
 			}
 			break;
@@ -650,23 +673,50 @@ void MCC::TimeStep(double simdt){
 			if(cm->stage >= CM_STAGE){
 				// Pad Abort
 				addMessage("PAD ABORT");
-				MissionState = MST_ABORT_PL;
+				setState(MST_ABORT_PL);
 			}else{
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
-					MissionState = MST_SV_LAUNCH;
+					setState(MST_SV_LAUNCH);
 				}
 			}
 			break;
 		case MST_1B_LAUNCH:
+			// CALLOUTS TO MAKE:
+			// TOWER CLEAR
+			if(SubState == 0 && CM_Position[2] > 100){
+				addMessage("CLEAR OF THE TOWER");
+				setSubState(1);
+			}
+			// ABORT MODES (1B, 1C)
+			// These callouts can safely be made based purely on time; They are early enough in the mission that
+			// large deviations from the mission plan will likely cause an abort anyway. Later abort callouts
+			// must be made on criteria.
+			if(SubState == 1 && StateTime > 61){
+				addMessage("MODE 1B");
+				setSubState(2);
+			}
+			if(SubState == 2 && StateTime > 110){
+				addMessage("MODE 1C");
+				setSubState(3);
+			}
+			// GO FOR STAGING
+			// (What criteria?)
+
+			// TRAJECTORY/GUIDANCE GO
+			// (What criteria?)
+
+			// ABORT MODE 4
+			// (What criteria?)
+
 			// Abort?
 			if(cm->bAbort){
 				// What type?
 				if(cm->LETAttached()){
 					// ABORT MODE 1
 					addMessage("ABORT MODE 1");
-					MissionState = MST_LAUNCH_ABORT;
+					setState(MST_LAUNCH_ABORT);
 					AbortMode = 1;
 				}else{
 					// AP7 Abort Summary says:
@@ -677,7 +727,7 @@ void MCC::TimeStep(double simdt){
 					// Mode 4: 9:21 - Insertion
 					// Mode 4 is selected if we are within the time range and can land in the Pacific.
 					addMessage("ABORT MODE 2/3/4");
-					MissionState = MST_LAUNCH_ABORT;
+					setState(MST_LAUNCH_ABORT);
 					AbortMode = 2;
 				}
 			}else{
@@ -686,7 +736,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C:
 						addMessage("INSERTION");
-						MissionState = MST_C_INSERTION;
+						setState(MST_C_INSERTION);
 						break;
 					}				
 				}
@@ -699,12 +749,12 @@ void MCC::TimeStep(double simdt){
 				if(cm->LETAttached()){
 					// ABORT MODE 1
 					addMessage("ABORT MODE 1");
-					MissionState = MST_LAUNCH_ABORT;
+					setState(MST_LAUNCH_ABORT);
 					AbortMode = 1;
 				}else{
 					// ABORT MODE 2/3/4
 					addMessage("ABORT MODE 2/3/4");
-					MissionState = MST_LAUNCH_ABORT;
+					setState(MST_LAUNCH_ABORT);
 					AbortMode = 2;
 				}
 			}else{
@@ -713,7 +763,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C_PRIME:
 						addMessage("INSERTION");
-						MissionState = MST_CP_INSERTION;
+						setState(MST_CP_INSERTION);
 						break;
 					}				
 				}
@@ -730,7 +780,8 @@ void MCC::TimeStep(double simdt){
 			case MST_C_INSERTION:
 				// Await separation.
 				if(cm->stage == CSM_LEM_STAGE){
-					MissionState = MST_C_SEPARATION;
+					addMessage("SEPARATION");
+					setState(MST_C_SEPARATION);
 				}else{
 					break;
 				}
@@ -738,6 +789,26 @@ void MCC::TimeStep(double simdt){
 			case MST_C_SEPARATION:
 				// Ends with 1ST RDZ PHASING BURN
 				// The phasing burn was intended to place the spacecraft 76.5 n mi ahead of the S-IVB in 23 hours.
+				switch(SubState){
+				case 0: // Must plot phasing burn
+					allocPad(4); // Allocate AP7 Maneuver Pad
+					if(padForm != NULL){
+						// If success
+						startSubthread(1); // Start subthread to fill PAD
+					}else{
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if(SubStateTime > 10 && padState > -1){
+						addMessage("You can has PAD");
+						if(padAutoShow == true && padState == 0){ drawPad(); }
+						setSubState(2);
+					}
+				case 2: // Await burn
+					break;
+				}
 				break;
 			case MST_C_COAST1:
 				// Ends with 1ST SPS BURN (NCC BURN)
@@ -758,7 +829,7 @@ void MCC::TimeStep(double simdt){
 			if(msgtime[x] == 0){ z = 1; }	// If message is brand new, set updation flag			
 			msgtime[x] += simdt;			// Increment lifetime
 			if(msgtime[x] > MSG_DISPLAY_TIME){
-				messages[x][0] = 0;			// Message too old, kill it
+				// messages[x][0] = 0;			// Message too old, kill it
 				msgtime[x] = -1;			// Mark not-in-use
 				z = 1;						// Set updation flag
 			}else{				
@@ -774,6 +845,27 @@ void MCC::TimeStep(double simdt){
 	}
 }
 
+// Add message to ring buffer
+void MCC::addMessage(char *msg){
+	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
+	msgtime[currentMessage] = 0;								// Mark new
+	currentMessage++;											// Advance tail index
+	if(currentMessage == MAX_MESSAGES){ currentMessage = 0; }	// Wrap index if necessary
+}
+
+// Redisplay ring buffer
+void MCC::redisplayMessages(){
+	int x=0;
+	while(x < MAX_MESSAGES){
+		if(messages[x][0] != 0){
+			msgtime[x] = 0;
+		}
+		x++;
+	}
+	// The ring buffer pointer will walk from the current message forward, so anything that was displayed
+	// should be redisplayed in the right order.
+}
+
 // Subthread Entry Point
 int MCC::subThread(){
 	int Result = 0;
@@ -783,6 +875,16 @@ int MCC::subThread(){
 		Sleep(5000); // Waste 5 seconds
 		Result = 0;  // Success (negative = error)
 		break;
+	case 1: // FILL PAD AP7MNV FOR AP7 PHASING BURN
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+			sprintf(form->purpose,"PHASING BURN");
+			// Done filling form, OK to show
+			padState = 0;
+			// Pretend we did the math
+			Result = 0; // Done
+		}
+		break;
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
@@ -790,20 +892,112 @@ int MCC::subThread(){
 	return(0);
 }
 
-// Add message to ring buffer
-void MCC::addMessage(char *msg){
-	strncpy(messages[currentMessage],msg,MAX_MSGSIZE);			// Copy string
-	msgtime[currentMessage] = 0;								// Mark new
-	currentMessage++;											// Advance tail index
-	if(currentMessage == MAX_MESSAGES){ currentMessage = 0; }	// Wrap index if necessary
+// Subthread initiation
+int MCC::startSubthread(int fcn){
+	if(subThreadStatus < 1){
+		// Punt thread
+		subThreadMode = fcn;
+		subThreadStatus = 1; // Busy
+		DWORD id = 0;
+		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
+		if(h != NULL){ CloseHandle(h); }
+		addMessage("Thread Started");
+	}else{
+		addMessage("Thread Busy");
+		return(-1);
+	}
+	return(0);
 }
 
+// Draw PAD display
+void MCC::drawPad(){
+	char buffer[512];
+	if(padNumber > 0 && padForm == NULL){
+		oapiAnnotationSetText(NHpad,"PAD data lost");
+		return;
+	}
+	switch(padNumber){
+	case 0:
+		// NO PAD (*knifed*)
+		oapiAnnotationSetText(NHpad,"No PAD");
+		break;
+	case 4: // AP7MNV
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s",form->purpose);
+			oapiAnnotationSetText(NHpad,buffer);
+		}
+		break;
+	default:
+		sprintf(buffer,"Unknown padNumber %d",padNumber);
+		oapiAnnotationSetText(NHpad,buffer);
+		break;
+	}
+	padState = 1;
+}
+
+// Allocate PAD
+void MCC::allocPad(int Number){
+	char msg[256];
+	// Ensure PAD display off and disabled
+	if(padState == 1){ 
+		oapiAnnotationSetText(NHpad,""); // Clear PAD		
+	}
+	padState = -1;
+	padNumber = Number;
+	// Ensure pointer freed
+	if(padForm != NULL){
+		free(padForm);
+	}
+	switch(padNumber){
+	case 1: // AP7BLK
+		padForm = calloc(1,sizeof(AP7BLK));
+		break;
+	case 2: // P27PAD
+		padForm = calloc(1,sizeof(P27PAD));
+		break;
+	case 3: // AP7NAV
+		padForm = calloc(1,sizeof(AP7NAV));
+		break;
+	case 4: // AP7MNV
+		padForm = calloc(1,sizeof(AP7MNV));
+		break;
+	case 5: // AP7TPI
+		padForm = calloc(1,sizeof(AP7TPI));
+		break;
+	case 6: // AP7ENT
+		padForm = calloc(1,sizeof(AP7ENT));
+		break;
+
+	default:
+		padForm = NULL;
+		return;
+	}
+	if(padForm == NULL){
+		sprintf(msg,"Could not calloc() PAD: %s",strerror(errno));
+		addMessage(msg);
+	}
+	return;
+}
+
+// Free PAD
+void MCC::freePad(){
+	if(padState == 1){ 
+		oapiAnnotationSetText(NHpad,""); // Clear PAD		
+	}
+	padState = -1;
+	if(padForm == NULL){ return; }
+	free(padForm);
+	padForm = NULL; // ensure clobber
+}
+
+// Keypress handler
 void MCC::keyDown(DWORD key){
 	char buf[MAX_MSGSIZE];
 	switch(key){
 		case OAPI_KEY_TAB:
 			if(menuState == 0){
-				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk\n4: Thread Test"); // Present menu
+				oapiAnnotationSetText(NHmenu,"CAPCOM MENU\n1: Voice Check\n2: Toggle Ground Trk\n3: Toggle Mission Trk\n4: Toggle Auto PAD\n5: Hide/Show PAD\n6: Redisplay Messages"); // Present menu
 				menuState = 1;
 			}else{
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
@@ -848,16 +1042,37 @@ void MCC::keyDown(DWORD key){
 			break;
 		case OAPI_KEY_4:
 			if(menuState == 1){
-				if(subThreadStatus < 1){
-					// Punt thread
-					subThreadStatus = 1; // Busy
-					DWORD id = 0;
-					HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
-					if(h != NULL){ CloseHandle(h); }
-					addMessage("Thread Started");
+				if(padAutoShow == false){
+					padAutoShow = true;
+					sprintf(buf,"PAD Auto Show Enabled");
 				}else{
-					addMessage("Thread Busy");
+					padAutoShow = false;
+					sprintf(buf,"PAD Auto Show Disabled");
 				}
+				addMessage(buf);			
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_5:
+			if(menuState == 1){
+				if(padState == -1 || padNumber == 0){
+					addMessage("No PAD available");
+				}else{
+					if(padState == 1){
+						oapiAnnotationSetText(NHpad,""); // Clear PAD
+						padState = 0;
+					}else{
+						drawPad();						
+					}
+				}
+				oapiAnnotationSetText(NHmenu,""); // Clear menu
+				menuState = 0;
+			}
+			break;
+		case OAPI_KEY_6:
+			if(menuState == 1){
+				redisplayMessages();
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
 				menuState = 0;
 			}

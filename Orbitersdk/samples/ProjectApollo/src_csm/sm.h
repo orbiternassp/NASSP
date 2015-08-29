@@ -81,7 +81,7 @@ typedef struct {
 /// \brief SM state.
 /// \ingroup SepStageSettings
 ///
-typedef enum SMState
+enum SMState
 {
 	SM_STATE_SETUP = -1,				///< SM is waiting for setup call.
 	SM_UMBILICALDETACH_PAUSE,			///< SM umbilical is detaching

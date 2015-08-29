@@ -37,6 +37,7 @@
 
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "dsky.h"
 #include "IMU.h"
 
@@ -630,8 +631,8 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 			SeparateStage(CM_STAGE);
 			SetStage(CM_STAGE);
 			StartAbort();
-			agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
-			agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+			agc.SetInputChannelBit(030, SIVBSeperateAbort, true); // Notify the AGC of the abort
+			agc.SetInputChannelBit(030, LiftOff, true); // and the liftoff, if it's not set already
 			bAbort = false;
 			return;
 		}
@@ -734,7 +735,7 @@ void Saturn1b::SwitchSelector(int item){
 		EventTimerDisplay.Reset();
 		EventTimerDisplay.SetEnabled(true);
 		EventTimerDisplay.SetRunning(true);
-		agc.SetInputChannelBit(030, 5, true);			// Inform AGC of liftoff
+		agc.SetInputChannelBit(030, LiftOff, true);			// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);			// Set full thrust, just in case
 		contrailLevel = 1.0;
 		if (LaunchS.isValid() && !LaunchS.isPlaying()){			

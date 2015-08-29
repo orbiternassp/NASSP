@@ -20,6 +20,117 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log: dsky.cpp,v $
+  *	Revision 1.7  2015/07/15 18:53:42  vrouleau
+  *	Adaptation For OrbiterSoundSDK40
+  *	
+  *	Revision 1.6  2011/07/11 01:42:36  vrouleau
+  *	- Removed AGC_SOCKET_ENABLED flag. Rework is needed to make this an optional feature instead of a conditional define. To many untested think exists in the socket version
+  *	
+  *	- Checkpoint commit on the LEM RR. If the RR as been slew to track the CSM , the auto mode will continue tracking it.
+  *	
+  *	Revision 1.5  2010/08/28 16:16:33  dseagrav
+  *	Fixed LM DSKY to use dimmer. (Dimmer source may be wrong)
+  *	Corrected a typo and did some bracketization in DSKY source.
+  *	Wasted a lot of time figuring out our copy of Luminary had been garbaged.
+  *	Your Luminary 99 binary should be overwritten by the commit before this one.
+  *	If your binary is 700 bytes in size you have the garbaged version.
+  *	
+  *	Revision 1.4  2010/07/16 17:14:42  tschachim
+  *	Changes for Orbiter 2010 and bugfixes
+  *	
+  *	Revision 1.3  2009/09/17 17:48:42  tschachim
+  *	DSKY support and enhancements of ChecklistMFD / ChecklistController
+  *	
+  *	Revision 1.2  2009/08/02 19:21:07  spacex15
+  *	agc socket version reenabled
+  *	
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
+  *	Revision 1.26  2008/04/15 20:46:12  lassombra
+  *	Panel callback compatible callback methods implemented
+  *	
+  *	Revision 1.25  2008/04/11 11:49:34  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
+  *	Revision 1.24  2007/10/18 00:23:19  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
+  *	Revision 1.23  2007/08/13 16:06:09  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
+  *	Revision 1.22  2007/06/06 15:02:12  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
+  *	Revision 1.21  2006/12/26 06:24:43  dseagrav
+  *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
+  *	
+  *	Revision 1.20  2006/06/21 13:11:29  tschachim
+  *	Bugfix power drawing.
+  *	
+  *	Revision 1.19  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
+  *	Revision 1.18  2006/06/08 15:25:57  tschachim
+  *	Disabkled buggy DrawPower.
+  *	
+  *	Revision 1.17  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
+  *	Revision 1.16  2006/05/17 01:50:45  movieman523
+  *	Fixed DSKY key-clicks (bug 1375310).
+  *	
+  *	Revision 1.15  2005/11/15 05:42:54  flydba
+  *	*** empty log message ***
+  *	
+  *	Revision 1.14  2005/08/29 19:16:43  tschachim
+  *	Rendering of the DSKY keys.
+  *	
+  *	Revision 1.13  2005/08/19 13:45:26  tschachim
+  *	Added missing DSKY display elements.
+  *	Added channel 013 handling.
+  *	
+  *	Revision 1.12  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
+  *	Revision 1.11  2005/08/18 20:07:19  spacex15
+  *	fixed click sound missing in lm dsky
+  *	
+  *	Revision 1.10  2005/08/18 00:22:52  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
+  *	Revision 1.9  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
+  *	Revision 1.8  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
+  *	Revision 1.7  2005/08/09 13:05:07  spacex15
+  *	fixed some initialization bugs in dsky and apolloguidance
+  *	
+  *	Revision 1.6  2005/08/09 02:28:25  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
+  *	Revision 1.5  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
+  *	Revision 1.4  2005/04/16 00:14:10  tschachim
+  *	fixed dsky keyboard and g&n panel lights
+  *	
+  *	Revision 1.3  2005/04/10 19:25:33  flydba
+  *	*** empty log message ***
+  *	
+  *	Revision 1.2  2005/04/10 16:05:43  flydba
+  *	*** empty log message ***
+  *	
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
@@ -263,13 +374,13 @@ void DSKY::ProgPressed()
 {
 	KeyClick();
 
-	agc.SetInputChannelBit(032, 14, true);
+	agc.SetInputChannelBit(032, Proceed, true);
 }
 
 void DSKY::ProgReleased()
 
 {
-	agc.SetInputChannelBit(032, 14, false);
+	agc.SetInputChannelBit(032, Proceed, false);
 }
 
 void DSKY::ResetPressed()
@@ -339,15 +450,13 @@ char DSKY::ValueChar(unsigned val)
 	return ' ';
 }
 
-void DSKY::ProcessChannel13(int val)
+void DSKY::ProcessChannel13(ChannelValue val)
 
 {
-	ChannelValue13 out_val;
 
-	out_val.Value = val;
 
 	/// \todo Standby light with PRO key?
-	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms)
+	if (val[EnableStandby] || val[TestAlarms])
 	{
 		SetStby(true);
 	}
@@ -357,7 +466,7 @@ void DSKY::ProcessChannel13(int val)
 	}
 
 	/// \todo Other conditions restart light
-	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
+	if (val[TestAlarms] || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);
 	}
@@ -850,19 +959,19 @@ void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 //
 
 
-void DSKY::ProcessChannel11(int val)
+void DSKY::ProcessChannel11(ChannelValue val)
 
 {
-	ChannelValue11 val11;
+	ChannelValue val11;
 
-	val11.Value = val;
-	SetCompActy(val11.Bits.LightComputerActivity);
-	SetUplink(val11.Bits.LightUplink);
-	SetTemp(val11.Bits.LightTempCaution);
-	SetKbRel(val11.Bits.LightKbRel);
-	SetOprErr(val11.Bits.LightOprErr);
+	val11 = val;
+	SetCompActy(val11[LightComputerActivity]);
+	SetUplink(val11[LightUplink]);
+	SetTemp(val11[LightTempCaution]);
+	SetKbRel(val11[LightKbRel]);
+	SetOprErr(val11[LightOprErr]);
 
-	if (val11.Bits.FlashVerbNoun) {
+	if (val11[FlashVerbNoun]) {
 		SetVerbDisplayFlashing();
 		SetNounDisplayFlashing();
 	}

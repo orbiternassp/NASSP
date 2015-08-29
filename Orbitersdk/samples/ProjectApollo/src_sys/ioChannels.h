@@ -21,7 +21,7 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************************************************************/
-
+#include <bitset>
 ///
 /// AGC output channel ten, used to control the DSKY displays. Output values sent to
 /// this channel can have numerous different results based on differnt combinations
@@ -30,6 +30,7 @@
 /// \ingroup AGCIO
 /// \brief AGC output channel 10.
 ///
+
 typedef union {
 	struct {
 		unsigned d:5;						///< Typically second display digit.
@@ -40,215 +41,207 @@ typedef union {
 	unsigned int Value;
 } ChannelValue10;
 
+
+typedef std::bitset<16> ChannelValue;
+
 ///
 /// AGC output channel ten, used to control the DSKY lights.
 ///
 /// \ingroup AGCIO
 /// \brief AGC output channel 11.
 ///
-typedef union {
-	struct {
-		unsigned ISSWarning:1;
-		unsigned LightComputerActivity:1;		///< Turn on the Computer Activity light.
-		unsigned LightUplink:1;					///< Turn on the Uplink Activity light.
-		unsigned LightTempCaution:1;			///< Turn on the Temperature warning light.
-		unsigned LightKbRel:1;					///< Turn on the Keyboard Release light.
-		unsigned FlashVerbNoun:1;				///< Flash the Verb and Noun displays.
-		unsigned LightOprErr:1;					///< Light the Operator Error light.
-		unsigned Spare:1;						///< Unused.
-		unsigned TestConnectorOut:1;
-		unsigned CautionReset:1;
-		unsigned Spare1:2;						///< Unused.
-		unsigned EngineOnOff:1;					///< Turn the main engine on.
-	} Bits;
-	int Value;
-} ChannelValue11;
+
+
+enum ChannelValue11_Bits {
+ ISSWarning=0,
+ LightComputerActivity,		///< Turn on the Computer Activity light.
+ LightUplink,					///< Turn on the Uplink Activity light.
+ LightTempCaution,			///< Turn on the Temperature warning light.
+ LightKbRel,					///< Turn on the Keyboard Release light.
+ FlashVerbNoun,			///< Flash the Verb and Noun displays.
+ LightOprErr,					///< Light the Operator Error light.
+					///< Unused.
+ TestConnectorOut=8,
+ CautionReset,
+//						///< Unused.
+ EngineOn=12,					///< Turn the main engine on.
+ EngineOff
+};
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC output channel 12.
 ///
-typedef union {
-	struct {
-		unsigned ZeroOpticsCDUs:1;
-		unsigned EnableOpticsCDUErrorCounters:1;
-		unsigned NotUsed:1;							///< Unused.
-		unsigned CoarseAlignEnable:1;
-		unsigned ZeroIMUCDUs:1;
-		unsigned EnableIMUCDUErrorCounters:1;
-		unsigned Spare:1;							///< Unused.
-		unsigned TVCEnable:1;						///< Enable thrust vector control.
-		unsigned EnableSIVBTakeover:1;
-		unsigned ZeroOptics:1;
-		unsigned DisengageOpticsDAC:1;
-		unsigned Spare2:1;							///< Unused.
-		unsigned SIVBIgnitionSequenceStart:1;		///< Start the SIVb ignition sequence for TLI.
-		unsigned SIVBCutoff:1;						///< Shut down the SIVb.
-		unsigned ISSTurnOnDelayComplete:1;			///< Delay for ISS turnon has completed.
-	} Bits;
-	unsigned int Value;
-} ChannelValue12;
+
+enum ChannelValue12_Bits {
+	ZeroOpticsCDUs = 0,
+	EnableOpticsCDUErrorCounters,
+	// Unused.
+	CoarseAlignEnable = 3,
+	ZeroIMUCDUs,
+	EnableIMUCDUErrorCounters,
+	// Unused.
+	TVCEnable = 7,						///< Enable thrust vector control.
+	EnableSIVBTakeover,
+	ZeroOptics,
+	DisengageOpticsDAC,
+	// Spare2							///< Unused.
+	SIVBIgnitionSequenceStart = 12,		///< Start the SIVb ignition sequence for TLI.
+	SIVBCutoff,						///< Shut down the SIVb.
+	ISSTurnOnDelayComplete			///< Delay for ISS turnon has completed.
+};
+
+
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC output channel 13.
 ///
-typedef union {
-	struct {
-		unsigned RangeUnitSelectC:1;
-		unsigned RangeUnitSelectB:1;
-		unsigned RangeUnitSelectA:1;
-		unsigned RangeUnitActivity:1;
-		unsigned NotUsed1:1;					///< Unused.
-		unsigned BlockInlink:1;
-		unsigned DownlinkWordOrderCodeBit:1;
-		unsigned NotUsed2:1;					///< Unused.
-		unsigned Spare1:1;						///< Unused.
-		unsigned TestAlarms:1;
-		unsigned EnableStandby:1;				///< Enable AGC standby mode.
-		unsigned ResetTrap31A:1;
-		unsigned ResetTrap31B:1;
-		unsigned ResetTrap32:1;
-		unsigned EnableT6RUPT:1;
-	} Bits;
-	unsigned int Value;
-} ChannelValue13;
+
+enum ChannelValue13_Bits {
+ RangeUnitSelectC = 0,
+ RangeUnitSelectB,
+ RangeUnitSelectA,
+ RangeUnitActivity,
+///< Unused.
+ BlockInlink=6,
+ DownlinkWordOrderCodeBit,
+ ///< Unused.
+ ///< Unused.
+ TestAlarms=9,
+ EnableStandby,				///< Enable AGC standby mode.
+ ResetTrap31A,
+ ResetTrap31B,
+ ResetTrap32,
+ EnableT6RUPT,
+};
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC output channel 14.
 ///
-typedef union {
-	struct {
-		unsigned NotUsed1:1;				///< Unused.
-		unsigned Spare1:1;					///< Unused.
-		unsigned Spare2:1;					///< Unused.
-		unsigned Spare3:1;					///< Unused.
-		unsigned NotUsed2:1;				///< Unused.
-		unsigned GyroEnable:1;
-		unsigned GyroSelectB:1;
-		unsigned GyroSelectA:1;
-		unsigned GyroSign:1;
-		unsigned GyroActivity:1;
-		unsigned DriveCDUS:1;
-		unsigned DriveCDUT:1;
-		unsigned DriveCDUZ:1;
-		unsigned DriveCDUY:1;
-		unsigned DriveCDUX:1;
-	} Bits;
-	unsigned int Value;
-} ChannelValue14;
+enum ChannelValue14_Bits {
+	OutLinkActivity = 0,				
+	AltitudeRateSelect,					
+	AltitudeMeterActivity,
+	ThrustDrive,
+	//Spare
+	GyroEnable = 5,
+	GyroSelectB,
+	GyroSelectA,
+	GyroSign,
+	GyroActivity,
+	DriveCDUS,
+	DriveCDUT,
+	DriveCDUZ,
+	DriveCDUY,
+	DriveCDUX
+};
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC input channel 16.
 ///
-typedef union {
-	struct {
-		unsigned NavDSKY1:1;				///< NAV DSKY
-		unsigned NavDSKY2:1;				///< NAV DSKY
-		unsigned NavDSKY3:1;				///< NAV DSKY
-		unsigned NavDSKY4:1;				///< NAV DSKY
-		unsigned NavDSKY5:1;				///< NAV DSKY
-		unsigned Mark:1;					///< MARK key
-		unsigned MarkReject:1;				///< MARK REJECT key
-	} Bits;
-	unsigned int Value;
-} ChannelValue16;
+
+enum ChannelValue16_Bits {
+		NavDSKY1=0,				///< NAV DSKY
+		NavDSKY2,				///< NAV DSKY
+		NavDSKY3,				///< NAV DSKY
+		NavDSKY4,				///< NAV DSKY
+		NavDSKY5,				///< NAV DSKY
+		Mark,					///< MARK key
+		MarkReject				///< MARK REJECT key
+}; 
+
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC input channel 30.
 ///
-typedef union {
-	struct {
-		unsigned UllageThrust:1;
-		unsigned CMSMSeperate:1;				///< CM has seperated from the SM.
-		unsigned SPSReady:1;					///< SPS is activated.
-		unsigned SIVBSeperateAbort:1;
-		unsigned LiftOff:1;						///< Liftoff has occured.
-		unsigned GuidanceReferenceRelease:1;
-		unsigned OpticsCDUFail:1;
-		unsigned Spare:1;						///< Unused.
-		unsigned IMUOperate:1;					///< IMU is operating.
-		unsigned SCControlOfSaturn:1;
-		unsigned IMUCage:1;						///< IMU is caged.
-		unsigned IMUCDUFail:1;
-		unsigned IMUFail:1;
-		unsigned ISSTurnOnRequest:1;
-		unsigned TempInLimits:1;
-	} Bits;
-	unsigned int Value;
-} ChannelValue30;
+
+enum ChannelValue30_Bits {
+	UllageThrust = 0,
+	CMSMSeperate,				///< CM has seperated from the SM.
+	SPSReady,					///< SPS is activated.
+	SIVBSeperateAbort,
+	LiftOff,						///< Liftoff has occured.
+	GuidanceReferenceRelease,
+	OpticsCDUFail,
+//  Spare
+	IMUOperate=8,					///< IMU is operating.
+	SCControlOfSaturn,
+	IMUCage,						///< IMU is caged.
+	IMUCDUFail,
+	IMUFail,
+	ISSTurnOnRequest,
+	TempInLimits
+};
+
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC input channel 31.
 ///
-typedef union {
-	struct {
-		unsigned PlusPitchManualRotation:1;
-		unsigned MinusPitchManualRotation:1;
-		unsigned PlusYawManualRotation:1;
-		unsigned MinusYawManualRotation:1;
-		unsigned PlusRollManualRotation:1;
-		unsigned MinusRollManualRotation:1;
-		unsigned PlusXTranslation:1;
-		unsigned MinusXTranslation:1;
-		unsigned PlusYTranslation:1;
-		unsigned MinusYTranslation:1;
-		unsigned PlusZTranslation:1;
-		unsigned MinusZTranslation:1;		
-		unsigned HoldFunction:1;
-		unsigned FreeFunction:1;
-		unsigned GNAutopilotControl:1;
-	} Bits;
-	unsigned int Value;
-} ChannelValue31;
+
+enum ChannelValue31_Bits {
+	    PlusPitchManualRotation=0,
+		MinusPitchManualRotation,
+		PlusYawManualRotation,
+		MinusYawManualRotation,
+		PlusRollManualRotation,
+		MinusRollManualRotation,
+		PlusXTranslation,
+		MinusXTranslation,
+		PlusYTranslation,
+		MinusYTranslation,
+		PlusZTranslation,
+		MinusZTranslation,		
+		HoldFunction,
+		FreeFunction,
+		GNAutopilotControl,
+} ;
+
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC input channel 32.
 ///
-typedef union {
-	struct {
-		unsigned PlusPitchMinImpulse:1;
-		unsigned MinusPitchMinImpulse:1;
-		unsigned PlusYawMinimumImpulse:1;
-		unsigned MinusYawMinimumImpulse:1;
-		unsigned PlusRollMinimumImpulse:1;
-		unsigned MinusRollMinimumImpulse:1;
-		unsigned Spare:4;					///< Unused.
-		unsigned LMAttached:1;
-		unsigned Spare1:2;					///< Unused.
-		unsigned Proceed:1;
-		unsigned Spare2:1;					///< Unused.
-	} Bits;
-	unsigned int Value;
-} ChannelValue32;
+
+enum ChannelValue32_Bits {
+		PlusPitchMinImpulse=0,
+		MinusPitchMinImpulse,
+		PlusYawMinimumImpulse,
+		MinusYawMinimumImpulse,
+		PlusRollMinimumImpulse,
+		MinusRollMinimumImpulse,
+		// Spare 4					///< Unused.
+		LMAttached=10,
+		// Spare 2					///< Unused.
+		Proceed=13
+		//Spare 1					///< Unused.
+} ;
+
 
 ///
 /// \ingroup AGCIO
 /// \brief CSM AGC input channel 33.
 ///
-typedef union {
-	struct {
-		unsigned Spare:1;					///< Unused.
-		unsigned RangeUnitDataGood:1;
-		unsigned Spare1:1;					///< Unused.
-		unsigned ZeroOptics:1;				///< Optics ZERO switch
-		unsigned CMCControl:1;				///< Optics under CMC control
-		unsigned NotUsed:2;					///< Unused.
-		unsigned Spare2:2;					///< Unused.
-		unsigned BlockUplinkInput:1;
-		unsigned UplinkTooFast:1;
-		unsigned DownlinkTooFast:1;
-		unsigned PIPAFail:1;
-		unsigned AGCWarning:1;
-		unsigned AGCOscillatorAlarm:1;
-	} Bits;
-	unsigned int Value;
-} ChannelValue33;
+
+enum ChannelValue33_Bits {
+        // Spare 1					///< Unused.
+		RangeUnitDataGood = 1,
+		// Spare 1					///< Unused.
+		ZeroOptics_33 = 3,				    ///< Optics ZERO switch
+		CMCControl,				    ///< Optics under CMC control
+		// NotUsed 2				///< Unused.
+		// Spare 2					///< Unused.
+		BlockUplinkInput=9,
+		UplinkTooFast,
+		DownlinkTooFast,
+		PIPAFail,
+		AGCWarning,
+		AGCOscillatorAlarm,
+} ;
 
 ///
 /// \ingroup AGCIO

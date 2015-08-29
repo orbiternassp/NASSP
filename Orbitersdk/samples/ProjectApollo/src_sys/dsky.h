@@ -141,9 +141,9 @@ public:
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 	void ProcessChannel10(int val);
-	void ProcessChannel13(int val);
+	void ProcessChannel13(ChannelValue val);
 	void ProcessChannel11Bit(int bit, bool val);
-	void ProcessChannel11(int val);
+	void ProcessChannel11(ChannelValue val);
 
 	//
 	// Helper functions.

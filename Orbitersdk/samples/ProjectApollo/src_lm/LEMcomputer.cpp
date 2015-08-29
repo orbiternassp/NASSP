@@ -39,7 +39,6 @@
 #include "lemcomputer.h"
 #include "papi.h"
 #include "saturn.h"
-#include "ioChannels.h"
 #include "LEM.h"
 
 #include "lm_channels.h"
@@ -1384,9 +1383,9 @@ int LEMcomputer::SetStatus(double simcomputert,
 
 void LEMcomputer::ProcessChannel13(int val){
 	LEM *lem = (LEM *) OurVessel;	
-	LMChannelValue13 ch13;
-	ch13.Value = val;
-	if(ch13.Bits.EnableRHCCounter && ch13.Bits.RHCRead){
+	ChannelValue ch13;
+	ch13 = val;
+	if(ch13[EnableRHCCounter] && ch13[RHCRead]){
 		int rhc_count[3];
 		rhc_count[0] = lem->rhc_pos[0]/550;
 		rhc_count[1] = lem->rhc_pos[1]/550;
@@ -1420,20 +1419,20 @@ void LEMcomputer::ProcessChannel6(int val){
 
 void LEMcomputer::ProcessChannel160(int val) {
 	
-	ChannelValue12 val12;
-	val12.Value = GetOutputChannel(012);
+	ChannelValue val12;
+	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 	
-	lem->RR.RRShaftDrive(val,val12.Value);
+	lem->RR.RRShaftDrive(val,val12);
 	
 }
 
 void LEMcomputer::ProcessChannel161(int val) {
 
-	ChannelValue12 val12;
-	val12.Value = GetOutputChannel(012);
+	ChannelValue val12;
+	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
-	lem->RR.RRTrunionDrive(val,val12.Value);
+	lem->RR.RRTrunionDrive(val,val12);
 }
 
 
@@ -1444,13 +1443,13 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	// 22 PULSES IS ONE DEGREE, 384 PULSES = FULL SCALE
 	// 0.10677083 PIXELS PER PULSE
 	LEM *lem = (LEM *) OurVessel;	
-	LMChannelValue12 val12;
-	if(channel != 012){ val12.Value = GetOutputChannel(012); }else{ val12.Value = val; }
+	ChannelValue val12;
+	if(channel != 012){ val12 = GetOutputChannel(012); }else{ val12 = val; }
 	// 174 = X, 175 = Y, 176 = Z
-	if(val12.Bits.CoarseAlignEnable){ return; } // Does not apply to us here.
+	if(val12[CoarseAlignEnable]){ return; } // Does not apply to us here.
 	switch(channel){
 	case 012:
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			if(lem->atca.lgc_err_ena == 0){
 				// sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
 				lem->atca.lgc_err_x = 0;
@@ -1464,7 +1463,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 
 	case 0174: // YAW ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			// NEGATIVE = RIGHT
 			if(val&040000){
@@ -1477,7 +1476,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 	
 	case 0175: // PITCH ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			// NEGATIVE = DOWN
 			if(val&040000){
@@ -1490,7 +1489,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 
 	case 0176: // ROLL ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			// NEGATIVE = RIGHT
 			if(val&040000){

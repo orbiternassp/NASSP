@@ -35,6 +35,7 @@
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
+#include "lm_channels.h"
 #include "LEMcomputer.h"
 #include "IMU.h"
 #include "dsky.h"
@@ -2191,7 +2192,7 @@ void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 			//SetThrusterResource(th_hover[1], ph_Asc);
 			//stage = 2;
 			startimer = false;
-			agc.SetInputChannelBit(030, 1, true);
+			agc.SetInputChannelBit(030, AbortWithDescentStage, true);
 		}
 	
 	} else if (s == &AbortStageSwitch) {
@@ -2207,14 +2208,14 @@ void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 			AbortStageSwitchLight = true;
 			if(agc.GetProgRunning() > 14 ) {
 				SetEngineLevel(ENGINE_HOVER, 1);
-				agc.SetInputChannelBit(030, 4, true);
+				agc.SetInputChannelBit(030, AbortWithAscentStage, true);
 			}
 		}
 
 	} 
 	else if (s == &EngineArmSwitch) {
 		if (!s->IsCenter())
- 		    agc.SetInputChannelBit(030, 3, true);
+ 		    agc.SetInputChannelBit(030, EngineArmed, true);
     }
 }
 

@@ -33,6 +33,7 @@ class DSKY;
 class IMU;
 class PanelSDK;
 
+#include <bitset>
 #include "powersource.h"
 
 #include "control.h"
@@ -53,6 +54,8 @@ enum MeasurementUnits
 	UnitMetric		///< Use Metric units for velocity, altitude, etc.
 };
 
+
+typedef std::bitset<16> ChannelValue;
 ///
 /// \ingroup AGC
 /// \brief AGC base class.
@@ -389,7 +392,7 @@ public:
 	/// \param bit Bit number to update.
 	/// \param val The bit value. True to set, false to clear.
 	///
-	virtual void SetInputChannelBit(int channel, int bit, bool val);
+	virtual void SetInputChannelBit(int channel, int bit,bool val);
 
 	///
 	/// Set or clear a bit in an AGC output channel. This is used to simulate the real hardware interface
@@ -421,7 +424,7 @@ public:
 	/// \param channel Input channel to set.
 	/// \param val Byte value to set in the channel.
 	///
-	virtual void SetOutputChannel(int channel, unsigned int val);
+	virtual void SetOutputChannel(int channel, ChannelValue val);
 
 	///
 	/// Get the specified bit from an output channel.
@@ -452,7 +455,7 @@ public:
 	/// \param channel Input channel to set.
 	/// \param val Value to set in the input channel.
 	///
-	virtual void SetInputChannel(int channel, unsigned int val);
+	virtual void SetInputChannel(int channel, ChannelValue val);
 
 	///
 	/// Get the specified bit from an input channel.
@@ -674,20 +677,20 @@ protected:
 
 	void SetChannel10Lights(int bit, bool val);
 
-	void ProcessInputChannel15(int val);
+	void ProcessInputChannel15(ChannelValue val);
 	void ProcessInputChannel30(int bit, bool val);
 	void ProcessInputChannel32(int bit, bool val);
 
-	virtual void ProcessChannel5(int val);
-	virtual void ProcessChannel6(int val);
-	virtual void ProcessChannel10(int val);
+	virtual void ProcessChannel5(ChannelValue val);
+	virtual void ProcessChannel6(ChannelValue val);
+	virtual void ProcessChannel10(ChannelValue val);
 	virtual void ProcessChannel11Bit(int bit, bool val);
-	virtual void ProcessChannel11(int val);
-	virtual void ProcessChannel13(int val);
-	virtual void ProcessChannel14(int val);
-	virtual void ProcessChannel160(int val);
-	virtual void ProcessChannel161(int val);
-	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+	virtual void ProcessChannel11(ChannelValue val);
+	virtual void ProcessChannel13(ChannelValue val);
+	virtual void ProcessChannel14(ChannelValue val);
+	virtual void ProcessChannel160(ChannelValue val);
+	virtual void ProcessChannel161(ChannelValue val);
+	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	public: virtual void GenerateDownrupt();
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();

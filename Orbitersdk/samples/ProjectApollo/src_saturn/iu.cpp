@@ -678,25 +678,25 @@ void IU::TLIInhibit()
 void IU::ChannelOutput(int address, int value)
 
 {
-	ChannelValue12 val12;
+	ChannelValue val12;
 
  	if (address == 012) {
-    	val12.Value = value;
-		if (val12.Bits.SIVBIgnitionSequenceStart) {
+    	val12 = value;
+		if (val12[SIVBIgnitionSequenceStart]) {
 			ExternalGNC = true;
 			SIVBStart();
 
-			val12.Bits.SIVBIgnitionSequenceStart = false;			
-			commandConnector.SetAGCOutputChannel(012, val12.Value);
+			val12[SIVBIgnitionSequenceStart] = false;			
+			commandConnector.SetAGCOutputChannel(012, val12.to_ulong());
 		}
 
-		if (val12.Bits.SIVBCutoff) {
+		if (val12[SIVBCutoff]) {
 			if (TLIBurnStart) { 
 				TLIBurnDone = true;
 			}
 			ExternalGNC = false;
-			val12.Bits.SIVBCutoff = false;			
-			commandConnector.SetAGCOutputChannel(012, val12.Value);
+			val12[SIVBCutoff] = false;			
+			commandConnector.SetAGCOutputChannel(012, val12.to_ulong());
 		}
 	}
 }

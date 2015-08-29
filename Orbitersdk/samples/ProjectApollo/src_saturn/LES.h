@@ -75,7 +75,7 @@ typedef struct
 /// \brief LES state.
 /// \ingroup SepStageSettings
 ///
-typedef enum LESState
+enum LESState
 {
 	LES_STATE_SETUP,			///< LES is waiting for setup call.
 	LES_STATE_JETTISON,			///< LES is firing motors to jettison.

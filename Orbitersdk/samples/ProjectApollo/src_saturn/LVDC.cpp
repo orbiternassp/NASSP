@@ -37,6 +37,7 @@
 
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "ioChannels.h"
 #include "dsky.h"
 #include "IMU.h"
 #include "papi.h"
@@ -639,7 +640,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 			case 0: // MORE TB0
 				double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
 
-				// At 10 seconds, play the countdown sound.
+									// At 10 seconds, play the countdown sound.
 				if (owner->MissionTime >= -10.3) { // Was -10.9
 					if (!owner->UseATC && owner->Scount.isValid()) {
 						owner->Scount.play();
@@ -648,10 +649,10 @@ void LVDC1B::timestep(double simt, double simdt) {
 				}
 
 				// Shut down venting at T - 9
-				if(owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->DeactivatePrelaunchVenting(); }
+				if (owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->DeactivatePrelaunchVenting(); }
 
 				// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
-			
+
 				// Engine 7+5 combustion chamber ignition was at T-2.998,  6+8 at T-2.898, 2+4 at T-2.798, 1+3 at T-2.698
 				// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
 				// and then rose to 93% thrust in 0.085 seconds.
@@ -661,40 +662,43 @@ void LVDC1B::timestep(double simt, double simdt) {
 				// Source: Apollo 7 LV Flight Evaluation
 
 				// Transition from seperate throttles to single throttle
-				if(owner->MissionTime < -0.715){ 
-					int x=0; // Start Sequence Index
-					double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-					double SumThrust=0;
+				if (owner->MissionTime < -0.715) {
+					int x = 0; // Start Sequence Index
+					double tm_1, tm_2, tm_3, tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
+					double SumThrust = 0;
 
-					while(x < 4){
+					while (x < 4) {
 						thrst[x] = 0;
-						switch(x){
-							case 0: // Engine 7+5
-								tm_1 = -2.998; break;
-							case 1: // Engine 6+8
-								tm_1 = -2.898; break;
-							case 2: // Engine 2+4
-								tm_1 = -2.798; break;
-							case 3: // Engine 1+3
-								tm_1 = -2.698; break;
+						switch (x) {
+						case 0: // Engine 7+5
+							tm_1 = -2.998; break;
+						case 1: // Engine 6+8
+							tm_1 = -2.898; break;
+						case 2: // Engine 2+4
+							tm_1 = -2.798; break;
+						case 3: // Engine 1+3
+							tm_1 = -2.698; break;
 						}
 						tm_2 = tm_1 + 0.3;  // Start of 1st rise
 						tm_3 = tm_2 + 0.085; // Start of 2nd rise
 						tm_4 = tm_3 + 0.75; // End of 2nd rise
-						if(owner->MissionTime >= tm_1){
+						if (owner->MissionTime >= tm_1) {
 							// Light CC
-							if(owner->MissionTime < tm_2){
+							if (owner->MissionTime < tm_2) {
 								// Idle at 2.5% thrust
 								thrst[x] = 0.025;
-							}else{
-								if(owner->MissionTime < tm_3){
+							}
+							else {
+								if (owner->MissionTime < tm_3) {
 									// the actual rise is so fast that any 'smoothing' is pointless
 									thrst[x] = 0.93;
-								}else{
-									if(owner->MissionTime < tm_4){
+								}
+								else {
+									if (owner->MissionTime < tm_4) {
 										// Rise to 100% at a rate of 9 percent per second.
-										thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
-									}else{
+										thrst[x] = 0.93 + (0.09*(owner->MissionTime - tm_3));
+									}
+									else {
 										// Hold 100%
 										thrst[x] = 1;
 									}
@@ -703,34 +707,35 @@ void LVDC1B::timestep(double simt, double simdt) {
 						}
 						x++; // Do next
 					}
-					SumThrust = (thrst[0]*2)+(thrst[1]*2)+(thrst[2]*2)+(thrst[3]*2);
-	//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-	//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-					if(SumThrust > 0){ //let's hope that those numberings are right...
-						owner->SetThrusterLevel(owner->th_main[0],thrst[3]); // Engine 1
-						owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
-						owner->SetThrusterLevel(owner->th_main[2],thrst[3]); // Engine 3
-						owner->SetThrusterLevel(owner->th_main[3],thrst[2]); // Engine 4
-						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
-						owner->SetThrusterLevel(owner->th_main[5],thrst[1]); // Engine 6
-						owner->SetThrusterLevel(owner->th_main[6],thrst[0]); // Engine 7
-						owner->SetThrusterLevel(owner->th_main[7],thrst[1]); // Engine 8
+					SumThrust = (thrst[0] * 2) + (thrst[1] * 2) + (thrst[2] * 2) + (thrst[3] * 2);
+					//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
+					//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
+					if (SumThrust > 0) { //let's hope that those numberings are right...
+						owner->SetThrusterLevel(owner->th_main[0], thrst[3]); // Engine 1
+						owner->SetThrusterLevel(owner->th_main[1], thrst[2]); // Engine 2
+						owner->SetThrusterLevel(owner->th_main[2], thrst[3]); // Engine 3
+						owner->SetThrusterLevel(owner->th_main[3], thrst[2]); // Engine 4
+						owner->SetThrusterLevel(owner->th_main[4], thrst[0]); // Engine 5
+						owner->SetThrusterLevel(owner->th_main[5], thrst[1]); // Engine 6
+						owner->SetThrusterLevel(owner->th_main[6], thrst[0]); // Engine 7
+						owner->SetThrusterLevel(owner->th_main[7], thrst[1]); // Engine 8
 
-						owner->contrailLevel = SumThrust/8;
+						owner->contrailLevel = SumThrust / 8;
 						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust+.05))), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .05))), _V(0, 0, 0)); // Maintain hold-down lock
 					}
-				}else{
+				}
+				else {
 					// Get 100% thrust on all engines.
-					sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",owner->MissionTime,LVDC_TB_ETime);
-					owner->SetThrusterGroupLevel(owner->thg_main,1);
-					owner->contrailLevel = 1;				
+					sprintf(oapiDebugString(), "LVDC: T %f | TB0 + %f | TH = 100%", owner->MissionTime, LVDC_TB_ETime);
+					owner->SetThrusterGroupLevel(owner->thg_main, 1);
+					owner->contrailLevel = 1;
 					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.05)), _V(0, 0, 0));
 				}
 
-				if(owner->MissionTime >= 0){
+				if (owner->MissionTime >= 0) {
 					LVDC_Timebase = 1;
-					LVDC_TB_ETime = 0;	
+					LVDC_TB_ETime = 0;
 				}
 				break;
 
@@ -745,7 +750,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					owner->EventTimerDisplay.Reset();
 					owner->EventTimerDisplay.SetEnabled(true);
 					owner->EventTimerDisplay.SetRunning(true);
-					owner->agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
+					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;
 					if (owner->LaunchS.isValid() && !owner->LaunchS.isPlaying()){	// And play launch sound
@@ -1692,7 +1697,7 @@ minorloop: //minor loop;
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 	
 		// S/C takeover function
-		if(LVDC_Timebase == 4 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012,9))){
+		if(LVDC_Timebase == 4 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
@@ -1890,11 +1895,11 @@ minorloop: //minor loop;
 	/* **** ABORT HANDLING **** */
 	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
 	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);					// Kill the engines
-		owner->agc.SetInputChannelBit(030, 4, true);			// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, 5, true);			// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");							// Clear the LVDC debug line
-		LVDC_Stop = true;										// Stop LVDC program
+		owner->SetEngineLevel(ENGINE_MAIN, 0);						// Kill the engines
+		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);// Notify the AGC of the abort
+		owner->agc.SetInputChannelBit(030, LiftOff, true);			// and the liftoff, if it's not set already
+		sprintf(oapiDebugString(),"");								// Clear the LVDC debug line
+		LVDC_Stop = true;											// Stop LVDC program
 		// ABORT MODE 1 - Use of LES to extract CM
 		// Allowed from T - 5 minutes until LES jettison.
 		if(owner->MissionTime > -300 && owner->LESAttached){			
@@ -5377,7 +5382,7 @@ minorloop:
 		// LV takeover
 		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
 		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if(LVDC_Timebase > 1 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012,9))){
+		if(LVDC_Timebase > 1 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
@@ -5608,8 +5613,8 @@ minorloop:
 	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
 	if(owner->bAbort && owner->MissionTime > -300){				
 		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
-		owner->agc.SetInputChannelBit(030, 4, true);	// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, 5, true);	// and the liftoff, if it's not set already
+		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+		owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 		sprintf(oapiDebugString(),"");					// Clear the LVDC debug line
 		LVDC_Stop = 1;									// Stop LVDC program
 		// ABORT MODE 1 - Use of LES to extract CM

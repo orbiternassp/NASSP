@@ -40,6 +40,7 @@
 #include "IMU.h"
 #include "missiontimer.h"
 #include "apolloguidance.h"
+#include "ioChannels.h"
 #include "powersource.h"
 #include "fdai.h"
 #include "scs.h"
@@ -3553,8 +3554,8 @@ bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
 				Free = true;
 			}
 
-			agc->SetInputChannelBit(031, 13, Hold);
-			agc->SetInputChannelBit(031, 14, Free);
+			agc->SetInputChannelBit(031, HoldFunction, Hold);
+			agc->SetInputChannelBit(031, FreeFunction, Free);
 		}
 		return true;
 	}
@@ -3615,8 +3616,8 @@ bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
 				Auto = true;
 			}
 
-			agc->SetInputChannelBit(031, 13, Hold);
-			agc->SetInputChannelBit(031, 14, Auto);
+			agc->SetInputChannelBit(031, HoldFunction, Hold);
+			agc->SetInputChannelBit(031, FreeFunction, Auto);
 		}
 		return true;
 	}

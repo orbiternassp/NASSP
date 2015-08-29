@@ -87,7 +87,7 @@ typedef struct {
 /// \brief S1c state.
 /// \ingroup SepStageSettings
 ///
-typedef enum S1cState
+enum S1cState
 {
 	SIC_STATE_HIDDEN = -1,				///< S1c is waiting for setup call.
 	S1C_STATE_SHUTTING_DOWN,			///< S1c is firing motors to jettison.

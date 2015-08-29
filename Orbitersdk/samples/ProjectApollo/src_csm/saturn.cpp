@@ -1594,6 +1594,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	CrewStatus.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
+	hga.SaveState(scn);
 	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
@@ -2389,6 +2390,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "UNIFIEDSBAND", 12)) {
 		    usb.LoadState(line);
 	    }
+	    else if (!strnicmp (line, "HIGHGAINANTENNA", 12)) {
+		    hga.LoadState(line);
+	    }
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);
 	    }
@@ -2915,7 +2919,7 @@ void Saturn::DoLaunch(double simt)
 	// Tell the AGC that we've lifted off.
 	//
 
-	agc.SetInputChannelBit(030, 5, true);
+	agc.SetInputChannelBit(030, LiftOff, true);
 
 	//
 	// Set full thrust, just in case.
@@ -3327,22 +3331,22 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					dsky.NumberPressed(0);
 					break;
 				case OAPI_KEY_W: // Minimum impulse controller, pitch down
-					agc.SetInputChannelBit(032,2,1);
+					agc.SetInputChannelBit(032, MinusPitchMinImpulse,1);
 					break;
 				case OAPI_KEY_S: // Minimum impulse controller, pitch up
-					agc.SetInputChannelBit(032,1,1);
+					agc.SetInputChannelBit(032, PlusPitchMinImpulse,1);
 					break;
 				case OAPI_KEY_A: // Minimum impulse controller, yaw left
-					agc.SetInputChannelBit(032,4,1);
+					agc.SetInputChannelBit(032, MinusYawMinimumImpulse,1);
 					break;
 				case OAPI_KEY_D: // Minimum impulse controller, yaw right
-					agc.SetInputChannelBit(032,3,1);
+					agc.SetInputChannelBit(032, PlusYawMinimumImpulse,1);
 					break;
 				case OAPI_KEY_Q: // Minimum impulse controller, roll left
-					agc.SetInputChannelBit(032,6,1);
+					agc.SetInputChannelBit(032, MinusRollMinimumImpulse,1);
 					break;
 				case OAPI_KEY_E: // Minimum impulse controller, roll right
-					agc.SetInputChannelBit(032,5,1);
+					agc.SetInputChannelBit(032, PlusRollMinimumImpulse,1);
 					break;
 			}
 		}else{
@@ -3352,22 +3356,22 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					dsky.ProgReleased();
 					break;
 				case OAPI_KEY_W: // Minimum impulse controller, pitch down
-					agc.SetInputChannelBit(032,2,0);
+					agc.SetInputChannelBit(032, MinusPitchMinImpulse, 0);
 					break;
 				case OAPI_KEY_S: // Minimum impulse controller, pitch up
-					agc.SetInputChannelBit(032,1,0);
+					agc.SetInputChannelBit(032, PlusPitchMinImpulse, 0);
 					break;
 				case OAPI_KEY_A: // Minimum impulse controller, yaw left
-					agc.SetInputChannelBit(032,4,0);
+					agc.SetInputChannelBit(032, MinusYawMinimumImpulse, 0);
 					break;
 				case OAPI_KEY_D: // Minimum impulse controller, yaw right
-					agc.SetInputChannelBit(032,3,0);
+					agc.SetInputChannelBit(032, PlusYawMinimumImpulse, 0);
 					break;
 				case OAPI_KEY_Q: // Minimum impulse controller, roll left
-					agc.SetInputChannelBit(032,6,0);
+					agc.SetInputChannelBit(032, MinusRollMinimumImpulse, 0);
 					break;
 				case OAPI_KEY_E: // Minimum impulse controller, roll right
-					agc.SetInputChannelBit(032,5,0);
+					agc.SetInputChannelBit(032, PlusRollMinimumImpulse, 0);
 					break;
 			}
 		}
@@ -3393,10 +3397,10 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				optics.OpticsManualMovement |= 0x08; 
 				return 1;
 			case OAPI_KEY_Q: // Optics Mark
-				agc.SetInputChannelBit(016,6,1);
+				agc.SetInputChannelBit(016, Mark,1);
 				return 1;
 			case OAPI_KEY_E: // Optics Mark Reject
-				agc.SetInputChannelBit(016,7,1);
+				agc.SetInputChannelBit(016, MarkReject,1);
 				return 1;
 			case OAPI_KEY_V: // Change Sextant View Mode to DualView
 				optics.SextDualView = !optics.SextDualView;
@@ -3417,10 +3421,10 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				optics.OpticsManualMovement &= 0xF7; 
 				return 1;
 			case OAPI_KEY_Q: 
-				agc.SetInputChannelBit(016,6,0);
+				agc.SetInputChannelBit(016,Mark,0);
 				return 1;
 			case OAPI_KEY_E: 
-				agc.SetInputChannelBit(016,7,0);
+				agc.SetInputChannelBit(016,MarkReject,0);
 				return 1;
 		}
 	}
@@ -5025,9 +5029,9 @@ void Saturn::SaturnTakeoverMode() {
 	VECTOR3 target = _V(0, 0, 0);
 
 	// Is S-IVB Takeover enabled (DAP setting)?
-	ChannelValue12 val12;
-	val12.Value = agc.GetInputChannel(012); 
-	if (val12.Bits.EnableSIVBTakeover) { 
+	ChannelValue val12;
+	val12 = agc.GetInputChannel(012); 
+	if (val12[EnableSIVBTakeover]) { 
 		// roll
 		if (gdc.fdai_err_x > 40)
 			target.z = 0.5 * RAD;

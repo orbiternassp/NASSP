@@ -370,6 +370,7 @@ void Saturn::SystemsInit() {
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);
+	hga.Init(this);
 	dataRecorder.Init(this);
 	pcm.Init(this);
 
@@ -565,6 +566,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
+		hga.TimeStep(MissionTime);
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
@@ -1174,6 +1176,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		pcm.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
+		hga.SystemTimestep(tFactor);
 		ems.SystemTimestep(tFactor);
 		els.SystemTimestep(tFactor);
 		ordeal.SystemTimestep(tFactor);
@@ -1238,11 +1241,11 @@ void Saturn::JoystickTimestep()
 		}
 
 		HRESULT hr;
-		ChannelValue31 val31;
+		ChannelValue val31;
 		e_object *direct_power1, *direct_power2;
-		val31.Value = agc.GetInputChannel(031); // Get current data
+		val31 = agc.GetInputChannel(031); // Get current data
 		// Mask off joystick bits
-		val31.Value &= 070000;
+		val31  = val31.to_ulong() & 070000;
 
 		// We'll do this with a RHC first. 						
 		double rhc_voltage1 = 0, rhc_voltage2 = 0;
@@ -1380,22 +1383,22 @@ void Saturn::JoystickTimestep()
 		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 			// CMC
 			if (rhc_x_pos < 28673) {
-				val31.Bits.MinusRollManualRotation = 1;
+				val31[MinusRollManualRotation] = 1;
 			}					
 			if (rhc_y_pos < 28673) {
-				val31.Bits.MinusPitchManualRotation = 1;
+				val31[MinusPitchManualRotation] = 1;
 			}
 			if (rhc_x_pos > 36863) {
-				val31.Bits.PlusRollManualRotation = 1;
+				val31[PlusRollManualRotation] = 1;
 			}
 			if (rhc_y_pos > 36863) {
-				val31.Bits.PlusPitchManualRotation = 1;
+				val31[PlusPitchManualRotation] = 1;
 			}
 			if (rhc_rot_pos < 28673) {
-				val31.Bits.MinusYawManualRotation = 1;
+				val31[MinusYawManualRotation] = 1;
 			}
 			if (rhc_rot_pos > 36863) {
-				val31.Bits.PlusYawManualRotation = 1;
+				val31[PlusYawManualRotation] = 1;
 			}
 		}
 
@@ -1841,22 +1844,22 @@ void Saturn::JoystickTimestep()
 		if (thc_voltage > SP_MIN_DCVOLTAGE) {
 			if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
 				if (thc_x_pos < 16384) {							
-					val31.Bits.MinusYTranslation = 1;
+					val31[MinusYTranslation] = 1;
 				}
 				if (thc_y_pos < 16384) {
-					val31.Bits.PlusZTranslation = 1;
+					val31[PlusZTranslation] = 1;
 				}
 				if (thc_x_pos > 49152) {
-					val31.Bits.PlusYTranslation = 1;
+					val31[PlusYTranslation] = 1;
 				}
 				if (thc_y_pos > 49152) {
-					val31.Bits.MinusZTranslation = 1;
+					val31[MinusZTranslation] = 1;
 				}
-				if (thc_rot_pos < 16384) {
-					val31.Bits.MinusXTranslation = 1;
+				if (thc_rot_pos < 16384) { 
+					val31[MinusXTranslation] = 1;
 				}
 				if (thc_rot_pos > 49152) {
-					val31.Bits.PlusXTranslation = 1;
+					val31[PlusXTranslation] = 1;
 				}
 			}
 			if (thc_debug != -1) { 
@@ -1874,7 +1877,7 @@ void Saturn::JoystickTimestep()
 			eca.thc_z = 32768;
 		}
 		// Submit data to the AGC
-		agc.SetInputChannel(031, val31.Value);
+		agc.SetInputChannel(031, val31);
 	}
 
 	//
@@ -2066,10 +2069,10 @@ void Saturn::CheckSMSystemsState()
 bool Saturn::AutopilotActive()
 
 {
-	ChannelValue12 val12;
-	val12.Value = agc.GetOutputChannel(012);
+	ChannelValue val12;
+	val12 = agc.GetOutputChannel(012);
 
-	return autopilot && !val12.Bits.EnableSIVBTakeover;
+	return autopilot && !val12[EnableSIVBTakeover];
 }
 
 bool Saturn::CabinFansActive()
@@ -3273,24 +3276,24 @@ void Saturn::DisconnectInverter(bool disc, int busno)
 void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 
 {
-	ChannelValue11 val11;
-	ChannelValue13 val13;
-	ChannelValue33 val33;
+	ChannelValue val11;
+	ChannelValue val13;
+	ChannelValue val33;
 
-	val11.Value = agc.GetOutputChannel(011);
-	if (val11.Bits.ISSWarning) 
+	val11 = agc.GetOutputChannel(011);
+	if (val11[ISSWarning]) 
 		aws.ISSWarning = true;
 	else
 		aws.ISSWarning = false;
 
-	val13.Value = agc.GetOutputChannel(013);
-	if (val13.Bits.TestAlarms)  
+	val13 = agc.GetOutputChannel(013);
+	if (val13[TestAlarms])  
 		aws.TestAlarms = true;
 	else
 		aws.TestAlarms = false;
 
-	val33.Value = agc.GetInputChannel(033);
-	if (val33.Bits.AGCWarning)
+	val33 = agc.GetInputChannel(033);
+	if (val33[AGCWarning])
 		aws.CMCWarning = true;
 	else
 		aws.CMCWarning = false;
@@ -3306,7 +3309,7 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	if (agc.GetProgAlarm()) 
 		aws.PGNSWarning = true;
 	// Temp alarm
-	if (val11.Bits.LightTempCaution)
+	if (val11[LightTempCaution])
 		aws.PGNSWarning = true;
 }
 

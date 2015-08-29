@@ -1,9 +1,0 @@
-bin\Debug\UnitTestsForSimmetrics.dll.config
-bin\Debug\UnitTestsForSimmetrics.dll
-bin\Debug\UnitTestsForSimmetrics.pdb
-bin\Debug\nunit.core.dll
-bin\Debug\SimMetrics.dll
-bin\Debug\SimMetrics.xml
-obj\Debug\ResolveAssemblyReference.cache
-obj\Debug\UnitTestsForSimmetrics.dll
-obj\Debug\UnitTestsForSimmetrics.pdb

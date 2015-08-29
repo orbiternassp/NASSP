@@ -45,7 +45,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Maneuver Time", 0, 'M' },
 		{ "Arrival Time", 0, 'A' },
 		{ "Number of revolutions", 0, 'N' },
-		{ "Displayed unit", 0, 'U' },
+		{ "LVLH maneuver axis", 0, 'U' },
 		{ "Gravity sources", 0, 'G' },
 
 		{ "Target Vessel", 0, 'V' },
@@ -63,7 +63,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("T1", OAPI_KEY_M, &ApolloRTCCMFD::t1dialogue);
 	RegisterFunction("T2", OAPI_KEY_A, &ApolloRTCCMFD::t2dialogue);
 	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::revdialogue);
-	RegisterFunction("UNI", OAPI_KEY_U, &ApolloRTCCMFD::set_unit);
+	RegisterFunction("AXI", OAPI_KEY_U, &ApolloRTCCMFD::set_lambertaxis);
 	RegisterFunction("SPH", OAPI_KEY_G, &ApolloRTCCMFD::set_spherical);
 	//RegisterFunction("ORI", OAPI_KEY_O, &ApolloRTCCMFD::set_orient);
 
@@ -232,7 +232,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LAT", OAPI_KEY_L, &ApolloRTCCMFD::EntryLatDialogue);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
 	RegisterFunction("ANG", OAPI_KEY_A, &ApolloRTCCMFD::EntryAngDialogue);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("OPT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchEntryNominal);
 	RegisterFunction("TYP", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchCritical);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuEntryCalc);

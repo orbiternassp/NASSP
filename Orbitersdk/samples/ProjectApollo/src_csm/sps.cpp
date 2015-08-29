@@ -490,11 +490,11 @@ void SPSEngine::Timestep(double simt, double simdt) {
 
 	// SPS ready signal to CMC
 	if (saturn->GetStage() <= CSM_LEM_STAGE  && (saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE || saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE)) {
-		if (!saturn->agc.GetInputChannelBit(030, 3))
-			saturn->agc.SetInputChannelBit(030, 3, true);
+		if (!saturn->agc.GetInputChannelBit(030, SPSReady))
+			saturn->agc.SetInputChannelBit(030, SPSReady, true);
 	} else {
-		if (saturn->agc.GetInputChannelBit(030, 3))
-			saturn->agc.SetInputChannelBit(030, 3, false);
+		if (saturn->agc.GetInputChannelBit(030, SPSReady))
+			saturn->agc.SetInputChannelBit(030, SPSReady, false);
 	}
 
 	//
@@ -521,9 +521,9 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		/// \todo SC CONT switch is supplied by G/N IMU PWR
 		if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
 			// Check i/o channel
-			ChannelValue11 val11;
-			val11.Value = saturn->agc.GetOutputChannel(011);
-			if (val11.Bits.EngineOnOff) {
+			ChannelValue val11;
+			val11 = saturn->agc.GetOutputChannel(011);
+			if (val11[EngineOn]) {
 				thrustOn = true;
 			} else {
 				thrustOn = false;

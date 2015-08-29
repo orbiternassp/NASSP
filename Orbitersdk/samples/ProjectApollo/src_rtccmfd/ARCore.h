@@ -47,7 +47,6 @@ public:
 	//void EntryCalc();
 	//void EntryUpdateCalc();
 	void StateVectorCalc();
-	void checkstar(MATRIX3 REFSM, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
@@ -66,9 +65,6 @@ public:
 	void EntryPAD();
 	void TPIPAD();
 	void MapUpdate();
-
-	void poweredflight(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
-	void impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
 
 	//OrbMech* mech;
 	CoastIntegrator* coast;
@@ -89,7 +85,7 @@ public:
 	VESSEL* vessel;
 	VESSEL* target;
 	VECTOR3 LambertdeltaV;
-	int lambertopt;		//0 = non-spherical, 1 = spherical
+	int lambertopt;		//0 = spherical, 1 = non-spherical
 	VECTOR3 CDHdeltaV;
 	VECTOR3 offvec;
 	//ApolloRTCCMFDButtons coreButtons;
@@ -117,7 +113,8 @@ public:
 	double P30TIG;
 	VECTOR3 dV_LVLH;
 	//VECTOR3 dV_BRC;
-	int entrycritical;
+	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
+	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
 	double EntryLat;
 	double EntryLng;
@@ -128,7 +125,7 @@ public:
 	double EntryLatPred;
 	double EntryLngPred;
 	VECTOR3 Entry_DV;
-	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction
+	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data
 	int entrycalcstate;
 	double entryrange;
 	bool SVSlot;
@@ -157,7 +154,7 @@ public:
 	VECTOR3 EIangles;
 	double TimeTag;
 	bool EntryPADdirect;
-	bool ManPADSPS;
+	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
 	OBJHANDLE maneuverplanet;
 	double sxtstardtime;
 	double P37GET400K;
@@ -168,6 +165,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

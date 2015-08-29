@@ -755,12 +755,16 @@
 #define IDB_CSM_LEFT_RNDZ_WINDOW_16_9                      1040
 #define IDB_CSM_RIGHT_RNDZ_WINDOW_16_9                     1041
 #define IDB_CSM_HATCH_WINDOW_OPEN_16_9                     1042
+#define AID_OPT_SHAFTDISPLAY							   1043
+#define AID_OPT_TRUNDISPLAY								   1044
+#define AID_LM_DP_GAUGE									   1045
+#define AID_HIGHGAINANTENNAMETERS						   1046
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1043
+#define _APS_NEXT_RESOURCE_VALUE                            1047
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

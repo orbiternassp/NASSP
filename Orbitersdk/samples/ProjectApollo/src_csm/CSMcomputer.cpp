@@ -526,11 +526,11 @@ void CSMcomputer::ProcessVerbNoun(int verb, int noun)
 
 	case 46:
 		if (ProgRunning == 11) {
-			ChannelValue12 val12;
-			val12.Value = GetOutputChannel(012);
+			ChannelValue val12;
+			val12 = GetOutputChannel(012);
 
-			val12.Bits.EnableSIVBTakeover = !val12.Bits.EnableSIVBTakeover;
-			SetOutputChannel(012, val12.Value);
+			val12[EnableSIVBTakeover] = !val12[EnableSIVBTakeover];
+			SetOutputChannel(012, val12);
 		}
 		break;
 	case 37:
@@ -596,6 +596,7 @@ bool CSMcomputer::ValidateProgram(int prog)
 void CSMcomputer::Prog01(double simt)
 
 {
+	ChannelValue val30;
 	switch (ProgState) {
 
 	case 0:
@@ -609,9 +610,8 @@ void CSMcomputer::Prog01(double simt)
 		LightNoAtt();
 
 		// Check if the IMU is running and uncaged.
-		ChannelValue30 val30;
-		val30.Value = GetInputChannel(030);
-		if (val30.Bits.IMUCage || !val30.Bits.IMUOperate) {
+		val30 = GetInputChannel(030);
+		if (val30[IMUCage] || !val30[IMUOperate]) {
 			AbortWithError(0210);
 			break;
 		}
@@ -629,8 +629,8 @@ void CSMcomputer::Prog01(double simt)
 			LightCompActy();
 
 			// Check if the IMU is running and uncaged.
-			val30.Value = GetInputChannel(030);
-			if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+			val30 = GetInputChannel(030);
+			if (!Yaagc && val30[IMUOperate] && !val30[IMUCage]) {
 
 				//
 				// As a quick hack we drive the IMU to prelaunch orientation, 
@@ -647,12 +647,12 @@ void CSMcomputer::Prog01(double simt)
 
 	case 2:
 		if (simt >= NextProgTime) {
-			ChannelValue30 val30;
+			ChannelValue val30;
 
 			LightCompActy();
 			// Check if the IMU is running and uncaged.
-			val30.Value = GetInputChannel(030);
-			if (val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+			val30 = GetInputChannel(030);
+			if (val30[IMUOperate] && !val30[IMUCage]) {
 				ClearNoAtt();
 				RunProgram(2);
 			}
@@ -692,9 +692,9 @@ void CSMcomputer::Prog02(double simt)
 	}
 
 	// Check if the IMU is running and uncaged.
-	ChannelValue30 val30;
-	val30.Value = GetInputChannel(030);
-	if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+	ChannelValue val30;
+	val30 = GetInputChannel(030);
+	if (!Yaagc && val30[IMUOperate] && !val30[IMUCage]) {
 
 		//
 		// As a quick hack we do "gyro-compassing" to maintain prelaunch orientation, 
@@ -2811,8 +2811,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0317] = 037777;
 				vagc.Erasable[3][0320] = 037777;
 
-				// set DAP data to LV mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
+				// set DAP data to CSM mode 
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8 and 11 have proper scenarios
@@ -2843,8 +2843,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0315] = 037777;	
 				vagc.Erasable[3][0316] = 037777;	
 
-				// set DAP data to LV mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;
+				// set DAP data to CSM mode 
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 			}
 			PadLoaded = true;
@@ -3753,10 +3753,10 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 			break;
 		}
 		else if (!Yaagc && (bit == 11 || bit == 9)) {
-			ChannelValue30 val30;
+			ChannelValue val30;
 
-			val30.Value = GetInputChannel(030);
-			dsky.SetNoAtt(!val30.Bits.IMUOperate || val30.Bits.IMUCage);
+			val30 = GetInputChannel(030);
+			dsky.SetNoAtt(!val30[IMUOperate] || val30[IMUCage]);
 		}
 		break;
 	}
@@ -3779,7 +3779,7 @@ void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val)
 	}
 }
 
-void CSMcomputer::SetOutputChannel(int channel, unsigned int val)
+void CSMcomputer::SetOutputChannel(int channel, ChannelValue val)
 
 {
 	ApolloGuidance::SetOutputChannel(channel, val);
@@ -3791,7 +3791,7 @@ void CSMcomputer::SetOutputChannel(int channel, unsigned int val)
 	switch (channel)
 	{
 	case 012:
-		iu.ChannelOutput(channel, val);
+		iu.ChannelOutput(channel, val.to_ulong());
 		break;
 	}
 }
@@ -3854,8 +3854,8 @@ void CSMcomputer::BurnMainEngine(double thrust)
 void CSMcomputer::ProcessChannel5(int val)
 
 {
-	ChannelValue30 val30;
-	val30.Value = GetInputChannel(030);
+	ChannelValue val30;
+	val30 = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
 	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
@@ -3910,8 +3910,8 @@ void CSMcomputer::ProcessChannel5(int val)
 void CSMcomputer::ProcessChannel6(int val)
 
 {
-	ChannelValue30 val30;
-	val30.Value = GetInputChannel(030);
+	ChannelValue val30;
+	val30 = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
 	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
@@ -3972,14 +3972,14 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	// 0.10677083 PIXELS PER PULSE
 
 	Saturn *sat = (Saturn *) OurVessel;
-	ChannelValue12 val12;
-	if(channel != 012){ val12.Value = GetOutputChannel(012); }else{ val12.Value = val; }
+	ChannelValue val12;
+	if(channel != 012){ val12 = GetOutputChannel(012); }else{ val12 = val; }
 	// 174 = X, 175 = Y, 176 = Z
-	if(val12.Bits.CoarseAlignEnable){ return; } // Does not apply to us here.
+	if(val12[CoarseAlignEnable]){ return; } // Does not apply to us here.
 	switch(channel){
 	case 012:
 		// Reset FDAI
-		if (val12.Bits.EnableIMUCDUErrorCounters) {
+		if (val12[EnableIMUCDUErrorCounters]) {
 			if (sat->gdc.fdai_err_ena == 0) {
 				// sprintf(oapiDebugString(),"FDAI: RESET");						
 				sat->gdc.fdai_err_x = 0;
@@ -3998,8 +3998,8 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		}
 
 		// Reset TVC
-		if (val12.Bits.TVCEnable) {
-			if (val12.Bits.EnableOpticsCDUErrorCounters) {
+		if (val12[TVCEnable]) {
+			if (val12[EnableOpticsCDUErrorCounters]) {
 				if (!sat->SPSEngine.cmcErrorCountersEnabled) {
 					sat->SPSEngine.pitchGimbalActuator.ZeroCMCPosition();
 					sat->SPSEngine.yawGimbalActuator.ZeroCMCPosition();
@@ -4020,22 +4020,22 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 			char DebugMsg[256];
 
 			sprintf(DebugMsg,"OPTICS: ");
-			if(val12.Bits.DisengageOpticsDAC){
+			if(val12[DisengageOpticsDAC]){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s DISENGAGE-DAC",DebugMsg);
 			}
-			if(val12.Bits.EnableOpticsCDUErrorCounters){
+			if(val12[EnableOpticsCDUErrorCounters]){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s ENABLE-ERR-CTR",DebugMsg);
 			}else{
 				// This caused problems.
 				// sat->agc.vagc.block_ocdu_err_ctr = 0;
 			}
-			if(val12.Bits.ZeroOptics){
+			if(val12[ZeroOptics]){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s ZERO-OPTICS",DebugMsg);
 			}
-			if(val12.Bits.ZeroOpticsCDUs){
+			if(val12[ZeroOpticsCDUs]){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s ZERO-CDU",DebugMsg);
 			}
@@ -4048,7 +4048,7 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 		
 	case 0174: // FDAI ROLL ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			// Direction for these is inverted.
 			if(val&040000){
@@ -4061,7 +4061,7 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 	
 	case 0175: // FDAI PITCH ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			if(val&040000){
 				sat->gdc.fdai_err_y -= delta;
@@ -4073,7 +4073,7 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		break;
 
 	case 0176: // FDAI YAW ERROR
-		if(val12.Bits.EnableIMUCDUErrorCounters){
+		if(val12[EnableIMUCDUErrorCounters]){
 			int delta = val&0777;
 			if(val&040000){
 				sat->gdc.fdai_err_z += delta;
@@ -4090,13 +4090,13 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 void CSMcomputer::ProcessChannel160(int val) {
 	
-	ChannelValue12 val12;
-	val12.Value = GetOutputChannel(012);
+	ChannelValue val12;
+	val12 = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
 	double error = 0;
 	
 	// TVC enable controls SPS gimballing.			
-	if (val12.Bits.TVCEnable) {
+	if (val12[TVCEnable]) {
 		// TVC PITCH
 		int tvc_pitch_pulses = 0;
 		double tvc_pitch_cmd = 0;
@@ -4113,18 +4113,18 @@ void CSMcomputer::ProcessChannel160(int val) {
 		sat->SPSEngine.pitchGimbalActuator.ChangeCMCPosition(tvc_pitch_cmd);
 
 	} else {
-		sat->optics.CMCShaftDrive(val,val12.Value);
+		sat->optics.CMCShaftDrive(val,val12.to_ulong());
 	}	
 }
 
 void CSMcomputer::ProcessChannel161(int val) {
 
-	ChannelValue12 val12;
-	val12.Value = GetOutputChannel(012);
+	ChannelValue val12;
+	val12 = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
 	double error = 0;
 	
-	if (val12.Bits.TVCEnable) {
+	if (val12[TVCEnable]) {
 		// TVC YAW
 		int tvc_yaw_pulses = 0;
 		double tvc_yaw_cmd = 0;		
@@ -4140,7 +4140,7 @@ void CSMcomputer::ProcessChannel161(int val) {
 		sat->SPSEngine.yawGimbalActuator.ChangeCMCPosition(tvc_yaw_cmd);
 
 	} else {
-		sat->optics.CMCTrunionDrive(val,val12.Value);
+		sat->optics.CMCTrunionDrive(val,val12.to_ulong());
 	}	
 }
 
@@ -4178,16 +4178,16 @@ void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 }
 
 void CSMcomputer::LVGuidanceSwitchToggled(PanelSwitchItem *s) {
-	ChannelValue30 val30;
+	ChannelValue val30;
 
-	val30.Value = GetInputChannel(030); // Get current data
+	val30 = GetInputChannel(030); // Get current data
 
 	if (s->GetState() == TOGGLESWITCH_UP) {
-		val30.Bits.SCControlOfSaturn = 0;
+		val30[SCControlOfSaturn] = 0;
 	} else {
-		val30.Bits.SCControlOfSaturn = 1;
+	    val30[SCControlOfSaturn] = 1;
 	}
-	SetInputChannel(030, val30.Value);
+	SetInputChannel(030, val30);
 }
 
 
@@ -4254,8 +4254,8 @@ void CMOptics::SystemTimestep(double simdt) {
 void CMOptics::CMCTrunionDrive(int val,int ch12) {
 
 	int pulses;
-	ChannelValue12 val12;
-	val12.Value = ch12;
+	ChannelValue val12;
+	val12 = ch12;
 
 	if (Powered == 0) { return; }
 
@@ -4264,7 +4264,7 @@ void CMOptics::CMCTrunionDrive(int val,int ch12) {
 	} else {
 		pulses = val&07777; 
 	}
-	if (val12.Bits.EnableOpticsCDUErrorCounters){
+	if (val12[EnableOpticsCDUErrorCounters]){
 		sat->agc.vagc.Erasable[0][RegOPTY] += pulses;
 		sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 	}
@@ -4276,8 +4276,8 @@ void CMOptics::CMCTrunionDrive(int val,int ch12) {
 void CMOptics::CMCShaftDrive(int val,int ch12) {
 
 	int pulses;
-	ChannelValue12 val12;
-	val12.Value = ch12;
+	ChannelValue val12;
+	val12 = ch12;
 
 	if (Powered == 0) { return; }
 
@@ -4288,11 +4288,49 @@ void CMOptics::CMCShaftDrive(int val,int ch12) {
 	}
 	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
 	ShaftMoved = OpticsShaft;
-	if (val12.Bits.EnableOpticsCDUErrorCounters){
+	if (val12[EnableOpticsCDUErrorCounters]){
 		sat->agc.vagc.Erasable[0][RegOPTX] += pulses;
 		sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 	}
 	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+}
+
+// Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
+// For now it's assumed to be CDU counts.
+
+bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	int value = (int)(OpticsShaft/OCDU_SHAFT_STEP);
+	if(value < 0){ value += 32767; }
+	return PaintDisplay(surf, digits, value);
+}
+
+bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	int value = (int)(SextTrunion/OCDU_TRUNNION_STEP);
+	value -= 7199;
+	if(value < 0){ value += 32767; }	
+	return PaintDisplay(surf, digits, value);
+}
+
+bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
+	int srx, sry, digit[5];
+	int x=value;	
+	digit[0] = (x%10);
+	digit[1] = (x%100)/10;
+	digit[2] = (x%1000)/100;
+	digit[3] = (x%10000)/1000;
+	digit[4] = x/10000;
+	sry = (int)(digit[0] * 1.2);
+	srx = 8 + (digit[4] * 25);
+	oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[3] * 25);
+	oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[2] * 25);
+	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[1] * 25);
+	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8 + (digit[0] * 25);
+	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	return true;
 }
 
 void CMOptics::TimeStep(double simdt) {
@@ -4307,7 +4345,7 @@ void CMOptics::TimeStep(double simdt) {
 	}
 
 	// Optics cover handling
-	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {		
+	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {
 		if (OpticsShaft > 150. * RAD) {
 			OpticsCovered = false;			
 			sat->SetOpticsCoverMesh();

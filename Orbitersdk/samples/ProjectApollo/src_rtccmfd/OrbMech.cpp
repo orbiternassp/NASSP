@@ -2685,6 +2685,227 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
+void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
+{
+	VECTOR3 RPP1, RPP2, VAP1, i, j, k, dVLV1, dVLV2;
+	double f1, f2, r1, r2, y;
+	MATRIX3 Q_Xx;
+	int nmax, n;
+
+	j = unit(crossp(VA1, RA1));
+	k = unit(-RA1);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+	f2 = 1;
+	n = 0;
+	nmax = 10;
+
+	RPP1 = RP2off;
+	RPP2 = RP2off*(length(RP2off) + 10.0) / length(RP2off);
+
+	VAP1 = OrbMech::elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
+	VAP2 = OrbMech::elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
+
+	r1 = length(RPP1);
+	r2 = length(RPP2);
+
+	while (abs(f2)>0.01 && nmax >= n)
+	{
+		dVLV1 = mul(Q_Xx, VAP1 - VA1);
+		dVLV2 = mul(Q_Xx, VAP2 - VA1);
+
+		f1 = dVLV1.z;
+		f2 = dVLV2.z;
+
+		y = r2 - f2*(r2 - r1) / (f2 - f1);
+		VAP1 = VAP2;
+		r1 = r2;
+		r2 = y;
+
+		VAP2 = OrbMech::elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
+
+		n++;
+	}
+
+	zoff += length(RP2off) - r2;
+}
+
+void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+{
+	double v_ex, f_T, a_T, tau, m, L, S, J, mu, dV;
+	VECTOR3 R_thrust, V_thrust, R_c1, V_c1, R_c2, V_c2, R_grav, V_grav, U_TD;
+
+	dV = length(V_G);
+	U_TD = unit(V_G);
+
+	mu = GGRAV*oapiGetMass(gravref);
+
+	v_ex = vessel->GetThrusterIsp0(thruster);
+	f_T = vessel->GetThrusterMax0(thruster);
+	m = vessel->GetMass();
+	a_T = f_T / m;
+	tau = v_ex / a_T;
+
+	L = dV;
+	t_go = tau*(1.0 - exp(-L / v_ex));
+	J = L*tau - v_ex*t_go;
+	S = -J + t_go*L;
+
+	R_thrust = U_TD*S;
+	V_thrust = U_TD*L;
+
+	R_c1 = R - R_thrust*1.0 / 10.0 - V_thrust*1.0 / 30.0*t_go;
+	V_c1 = V + R_thrust*6.0 / 5.0 / t_go - V_thrust*1.0 / 10.0;
+
+	rv_from_r0v0(R_c1, V_c1, t_go, R_c2, V_c2, mu);
+
+	V_grav = V_c2 - V_c1;
+	R_grav = R_c2 - R_c1 - V_c1*t_go;
+
+	R_cutoff = R + V*t_go + R_grav + R_thrust;
+	V_cutoff = V + V_grav + V_thrust;
+}
+
+void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+{
+	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, V_go_apo, R_d, V_d, R_p, V_p, i_z, i_y;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m, f_T;
+	int n, nmax;
+
+	nmax = 100;
+	t_slip = 0;
+	t_slip_old = 1;
+	dt_go = 1;
+	mu = GGRAV*oapiGetMass(gravref);
+	V_go = DV;
+	R_ref = R;
+	V_ref = V + DV;
+	i_y = -unit(crossp(R_ref, V_ref));
+
+	m = vessel->GetMass();
+	f_T = vessel->GetThrusterMax0(thruster);
+
+	while (abs(t_slip - t_slip_old) > 0.01)
+	{
+		n = 0;
+		rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
+		{
+			poweredflight(vessel, R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_go, R_p, V_p, t_go);
+			rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			i_z = unit(crossp(R_d, i_y));
+			dr_z = dotp(i_z, R_d - R_p);
+			v_goz = dotp(i_z, V_go);
+			dt_go = -2.0 * dr_z / v_goz;
+			dV_go = V_d - V_p;
+			//dV_go = (V_go_apo - V_go)*0.5;
+			V_go = V_go + dV_go;
+			n++;
+		}
+		t_slip_old = t_slip;
+		t_slip += dt_go*0.1;
+	}
+	//Llambda = V_go;
+
+	double apo, peri;
+	periapo(R_p, V_p, mu, apo, peri);
+
+	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
+
+	MATRIX3 Q_Xx;
+	double theta_T;
+
+	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
+	Y = unit(crossp(V_ig, R_ig));
+	Z = -unit(R_ig);
+
+	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+	dV_LV = mul(Q_Xx, V_go);
+	DV_P = X*dV_LV.x + Z*dV_LV.z;
+	if (length(DV_P) != 0.0)
+	{
+		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + Y*dV_LV.y;
+	}
+	else
+	{
+		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
+	}
+	Llambda = V_G;
+}
+
+void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
+{
+	MATRIX3 SMNB, Q1, Q2, Q3, NBSB, SBNB;
+	double OGA, IGA, MGA, a, cosSA, TA, SA, sinSA;
+	VECTOR3 U_LOS, USTAR, Y_SB, Z_SB, S_SM, S_SB, U_TPA, X_SB;
+	int star;
+
+	/*if (REFSMMATopt == 0)
+	{
+	OGA = 0;
+	IGA = 0;
+	MGA = 0;
+	}
+	else
+	{
+	OGA = PI; //ROLL
+	IGA = PI; //PITCH
+	MGA = 0;  //YAW
+	}*/
+
+	OGA = IMU.x;
+	IGA = IMU.y;
+	MGA = IMU.z;
+
+	Q1 = _MRy(IGA);
+	Q2 = _MRz(MGA);
+	Q3 = _MRx(OGA);
+
+	SMNB = mul(Q3, mul(Q2, Q1));
+
+	U_LOS = ULOS(REFSMMAT, SMNB);
+	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E);
+
+	if (star == -1)
+	{
+		staroct = 0;
+
+		trunnion = 0;
+		shaft = 0;
+	}
+	else
+	{
+
+		USTAR = navstars[star];
+
+		X_SB = _V(1.0, 0.0, 0.0);
+		Z_SB = _V(0.0, 0.0, 1.0);
+		Y_SB = _V(0.0, 1.0, 0.0);
+
+		a = -0.5676353234;
+		SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+		NBSB = transpose_matrix(SBNB);
+
+		S_SM = mul(REFSMMAT, USTAR);
+		S_SB = mul(NBSB, mul(SMNB, S_SM));
+		U_TPA = unit(crossp(Z_SB, S_SB));
+		sinSA = dotp(U_TPA, -X_SB);
+		cosSA = dotp(U_TPA, Y_SB);
+		SA = atan3(sinSA, cosSA);
+		TA = acos(dotp(Z_SB, S_SB));
+
+		staroct = decimal_octal(star + 1);
+
+		trunnion = TA;
+		shaft = SA;
+	}
+
+	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
+}
+
 double imulimit(double a)
 {
 	if (a > 359.5)
