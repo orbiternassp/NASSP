@@ -1,0 +1,25 @@
+version: 7.0-Beta-{branch}-{build}
+branches:
+  only:
+  - master
+os: Visual Studio 2015
+configuration: Release
+platform: Win32
+before_build:
+- appveyor DownloadFile http://cirno.lunar-tokyo.net/PA-Items-%APPVEYOR_REPO_BRANCH%.zip
+- 7z x PA-Items-%APPVEYOR_REPO_BRANCH%.zip
+- del PA-Items-%APPVEYOR_REPO_BRANCH%.zip
+build:
+  verbosity: normal
+artifacts:
+- path: Config\**\*.*
+- path: Doc\**\*.*
+- path: Html\**\*.*
+- path: Meshes\**\*.*
+- path: Modules\**\*.*
+- path: Scenarios\**\*.*
+- path: Script\**\*.*
+- path: Sound\ProjectApollo\**\*.*
+- path: Textures\**\*.*
+- path: NASSP-LICENSE.txt
+- path: README.md
