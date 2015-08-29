@@ -11,15 +11,17 @@ before_build:
 - del PA-Items-%APPVEYOR_REPO_BRANCH%.zip
 build:
   verbosity: normal
+after_build:
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Config
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Doc
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Html
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Meshes
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Modules
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Scenarios
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Script
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Sound\ProjectApollo
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\Textures
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\NASSP-LICENSE.txt
+- 7z a -r NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\README.md
 artifacts:
-- path: Config\**\*.*
-- path: Doc\**\*.*
-- path: Html\**\*.*
-- path: Meshes\**\*.*
-- path: Modules\**\*.*
-- path: Scenarios\**\*.*
-- path: Script\**\*.*
-- path: Sound\ProjectApollo\**\*.*
-- path: Textures\**\*.*
-- path: NASSP-LICENSE.txt
-- path: README.md
+- path: NASSP-*.zip
