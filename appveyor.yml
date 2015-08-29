@@ -25,3 +25,11 @@ after_build:
 - 7z a NASSP-V7.0-Beta-%APPVEYOR_REPO_BRANCH%.zip %APPVEYOR_BUILD_FOLDER%\README.md
 artifacts:
 - path: NASSP-*.zip
+deploy:
+- provider: GitHub
+  tag: NASSP-V7.0-Beta-$(appveyor_repo_branch)-$(appveyor_build_version)
+  description: V7.0 Beta Release
+  auth_token:
+    secure: IQ7NMbd0zOFrOgF1Kmp2i5/6C/bTng4X83G4tu9YAoYViKEvjWTPcn7r/0kKJ7M2
+  artifact: NASSP-*.zip
+  prerelease: true
