@@ -31,3 +31,11 @@ deploy:
     secure: IQ7NMbd0zOFrOgF1Kmp2i5/6C/bTng4X83G4tu9YAoYViKEvjWTPcn7r/0kKJ7M2
   artifact: NASSP
   prerelease: true
+notifications:
+  - provider: Webhook
+    url: http://cirno.lunar-tokyo.net/NASSP/web-hook.php
+    headers:
+      Authorization:
+        secure: dbYgsSP4RjFtMPSa95EaBA==
+    on_build_success: true
+    on_build_failure: true
