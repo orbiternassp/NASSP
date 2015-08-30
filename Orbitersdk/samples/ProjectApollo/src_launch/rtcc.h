@@ -54,10 +54,10 @@ struct LambertMan //Data for Lambert targeting
 class RTCC {
 public:
 	RTCC();
-	void Init(Saturn *vs);
-	void Calculation(int missiontype, int missionstate, LPVOID &pad);
+	void Init(MCC *ptr);
+	void Calculation(LPVOID &pad);
 
-	Saturn *cm;
+	MCC *mcc;
 private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 };

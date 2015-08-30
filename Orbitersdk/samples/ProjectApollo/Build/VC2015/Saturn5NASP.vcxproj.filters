@@ -180,6 +180,15 @@
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp">
       <Filter>IMFD</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_saturn\LVDC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\rtcc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -328,6 +337,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h">
       <Filter>IMFD</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\rtcc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

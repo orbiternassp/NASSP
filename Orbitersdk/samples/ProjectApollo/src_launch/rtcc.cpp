@@ -40,24 +40,24 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
-#include "OrbMech.h"
+#include "../src_rtccmfd/OrbMech.h"
 #include "rtcc.h"
 
 RTCC::RTCC()
 {
-	cm = NULL;
+	mcc = NULL;
 }
 
-void RTCC::Init(Saturn *vs)
+void RTCC::Init(MCC *ptr)
 {
-	cm = vs;
+	mcc = ptr;
 }
 
-void RTCC::Calculation(int missiontype, int missionstate, LPVOID &pad)
+void RTCC::Calculation(LPVOID &pad)
 {
-	if (missiontype == MTP_C)
+	if (mcc->MissionType == MTP_C)
 	{
-		if (missionstate == MST_C_SEPARATION)
+		if (mcc->MissionState == MST_C_SEPARATION)
 		{
 			LambertMan lambert;
 
@@ -67,8 +67,8 @@ void RTCC::Calculation(int missiontype, int missionstate, LPVOID &pad)
 			lambert.axis = RTCC_LAMBERT_XAXIS;
 			lambert.Offset = _V(76.5 * 1852, 0, 0);
 			lambert.PhaseAngle = 0;
-			lambert.target = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG"));
-			lambert.gravref = cm->GetGravityRef();
+			lambert.target = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Target should come from MCC later so we can parameterize it
+			lambert.gravref = mcc->cm->GetGravityRef();
 			lambert.prograde = RTCC_LAMBERT_PROGRADE;
 			lambert.impulsive = RTCC_LAMBERT_IMPULSIVE;
 			lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
@@ -93,12 +93,12 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	MATRIX3 Rot;
 	double SVMJD,GET,GETbase,dt1,dt2,mu;
 
-	cm->GetRelativePos(lambert->gravref, RA0_orb);
-	cm->GetRelativeVel(lambert->gravref, VA0_orb);
+	mcc->cm->GetRelativePos(lambert->gravref, RA0_orb);
+	mcc->cm->GetRelativeVel(lambert->gravref, VA0_orb);
 	lambert->target->GetRelativePos(lambert->gravref, RP0_orb);
 	lambert->target->GetRelativeVel(lambert->gravref, VP0_orb);
 	SVMJD = oapiGetSimMJD();
-	GET = cm->GetMissionTime();
+	GET = mcc->cm->GetMissionTime();
 
 	GETbase = SVMJD - GET / 24.0 / 3600.0;
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
@@ -168,7 +168,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		double t_slip;
 		
 
-		OrbMech::impulsive(cm, RA1, VA1, lambert->gravref, cm->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda, t_slip);
+		OrbMech::impulsive(mcc->cm, RA1, VA1, lambert->gravref, mcc->cm->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda, t_slip);
 		OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
