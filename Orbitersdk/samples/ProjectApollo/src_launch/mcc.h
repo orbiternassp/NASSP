@@ -370,6 +370,7 @@ public:
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
 
+	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
 	OBJHANDLE Earth;										// Handle for Earth
@@ -414,6 +415,8 @@ public:
 	int currentMessage;										// Index to tail of ring buffer
 	char msgOutputBuf[MAX_MSGSIZE*MAX_MESSAGES];			// Final output string
 
+	// FRIEND CLASSES
+	friend class RTCC;										// RTCC can handle our data
 };
 
 #endif // _PA_MCC_H

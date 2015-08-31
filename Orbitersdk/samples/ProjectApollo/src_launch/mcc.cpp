@@ -41,6 +41,7 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "mcc.h"
+#include "rtcc.h"
 
 // This is a threadenwerfer. It werfs threaden.
 static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	
@@ -53,6 +54,7 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 // CONS
 MCC::MCC(){
 	// Reset data
+	rtcc = NULL;
 	cm = NULL;
 	Earth = NULL;
 	Moon = NULL;
@@ -96,6 +98,8 @@ MCC::MCC(){
 }
 
 void MCC::Init(Saturn *vs){
+	// Make a new RTCC if we don't have one already
+	if (rtcc == NULL) { rtcc = new RTCC; }
 	// Set CM pointer
 	cm = vs;
 
@@ -778,6 +782,18 @@ void MCC::TimeStep(double simdt){
 			 ********************* */
 			switch(MissionState){
 			case MST_C_INSERTION:
+				// CALLOUTS TO MAKE:
+				// Acknowledge CDR's SECO call
+				// Acknowledge CDR's DSKY reports
+				// GO FOR ORBIT
+				// S4B SAFED
+				// ORBIT APOGEE/PERIGEE IN (ROUND) NAUTICAL MILES
+				// LOX dump time and expected dV
+				// NAV uplink of some kind (state vector?) and GO for CDR to leave seat and/or unsuiting (?)
+				// S4B Passivation complete (OK to terminate P47)
+				// S4B takeover experiment
+				// GO for pyro arm
+
 				// Await separation.
 				if(cm->stage == CSM_LEM_STAGE){
 					addMessage("SEPARATION");
@@ -879,6 +895,8 @@ int MCC::subThread(){
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 			sprintf(form->purpose,"PHASING BURN");
+			// Ask RTCC for numbers
+			rtcc->Calculation(padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
@@ -909,9 +927,21 @@ int MCC::startSubthread(int fcn){
 	return(0);
 }
 
+// PAD Utility: Format time.
+void format_time(char *buf, double time) {
+	buf[0] = 0; // Clobber
+	int hours, minutes, seconds;
+	if (time < 0) { return;  } // don't do that
+	hours = (int)(time / 3600);
+	minutes = (int)((time / 60) - (hours * 60));
+	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
+	sprintf(buf, "%d:%d:%d", hours, minutes, seconds);
+}
+
 // Draw PAD display
 void MCC::drawPad(){
 	char buffer[512];
+	char tmpbuf[32];
 	if(padNumber > 0 && padForm == NULL){
 		oapiAnnotationSetText(NHpad,"PAD data lost");
 		return;
@@ -924,7 +954,8 @@ void MCC::drawPad(){
 	case 4: // AP7MNV
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s",form->purpose);
+			format_time(tmpbuf, form->GETI);
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %f\ndV Y: %f\ndV Z: %f",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z);			
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
