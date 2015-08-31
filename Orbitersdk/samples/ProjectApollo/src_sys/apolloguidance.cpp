@@ -4297,7 +4297,7 @@ bool ApolloGuidance::GetOutputChannelBit(int channel, int bit)
 		return false;
 
 	int val = OutputChannel[channel];
-	return (OutputChannel[channel] & (1 << (bit - 1))) != 0;
+	return (OutputChannel[channel] & (1 << (bit))) != 0;
 }
 
 unsigned int ApolloGuidance::GetOutputChannel(int channel)
@@ -4372,7 +4372,7 @@ void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val)
 void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 {
-	unsigned int mask = (1 << (bit - 1));
+	unsigned int mask = (1 << (bit));
 	int	data = InputChannel[channel];
 
 	if (Yaagc) {
@@ -4641,7 +4641,7 @@ int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
 {
-	unsigned int mask = (1 << (bit - 1));
+	unsigned int mask = (1 << (bit));
 
 	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
 		return;
@@ -4688,7 +4688,7 @@ bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return false;
 
-	return (GetInputChannel(channel) & (1 << (bit - 1))) != 0;
+	return (GetInputChannel(channel) & (1 << (bit))) != 0;
 }
 
 unsigned int ApolloGuidance::GetInputChannel(int channel)
