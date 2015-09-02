@@ -722,7 +722,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					}
 				}else{
 					// Get 100% thrust on all engines.
-					sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%",owner->MissionTime,LVDC_TB_ETime);
+					sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
 					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
@@ -1045,7 +1045,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 			lvimu.ZeroPIPACounters();
 			sinceLastIGM = 0;
 			GRR_init = true;
-			fprintf(lvlog,"Initialization completed.\r\n\r\n",owner->MissionTime);
+			fprintf(lvlog,"Initialization completed.\r\n\r\n");
 			goto minorloop;
 		}
 		// various clocks the LVDC needs...
@@ -1140,7 +1140,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 				if(t_clock >= t_6){
 					if (t_clock > T_ar){
 						//time for pitch freeze?
-						fprintf(lvlog,"[%d+%f] Pitch freeze! \r\n",LVDC_Timebase,LVDC_TB_ETime,T_ar);
+						fprintf(lvlog,"[%d+%f] Pitch freeze! \r\n",LVDC_Timebase,LVDC_TB_ETime);
 						CommandedAttitude.y = PCommandedAttitude.y;
 						CommandedAttitude.x = 360 * RAD;
 						CommandedAttitude.z = 0;
@@ -4126,7 +4126,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime < -17){
-					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %d %d %d PIPA %d %d %d | TV %f | AWAITING GRR",owner->MissionTime,
+					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
 						lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 					break;
@@ -4678,7 +4678,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 							fprintf(lvlog,"[%d+%f] Pre-IGM SII engine out interrupt received!\r\n",LVDC_Timebase,LVDC_TB_ETime);
 							goto minorloop;
 						}else{
-							fprintf(lvlog,"[%d+%f] Pitch freeze! \r\n",LVDC_Timebase,LVDC_TB_ETime,T_ar);
+							fprintf(lvlog,"[%d+%f] Pitch freeze! \r\n",LVDC_Timebase,LVDC_TB_ETime);
 							CommandedAttitude.y = PCommandedAttitude.y;
 							CommandedAttitude.x = 360 * RAD;
 							CommandedAttitude.z = 0;
@@ -5121,7 +5121,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// Done, go to navigation
-				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,PITCH,YAW,T_GO);
+				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 				goto minorloop;
 			}
 			// End of high-speed loop
