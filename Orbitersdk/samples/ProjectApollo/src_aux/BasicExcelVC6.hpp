@@ -407,7 +407,7 @@ protected:
 		friend bool operator>=(const Property& lhs, const Property& rhs) {return !(lhs < rhs);}
 
 		wchar_t name_[32];				// A unicode null-terminated uncompressed 16bit string (lblocke the high bytes) containing the name of the property. (0x00, 0x02, 0x04, ... 0x3E)
-		short nameSize_;				// Number of characters in the NAME field (0x40)
+		size_t nameSize_;				// Number of characters in the NAME field (0x40)
 		unsigned char propertyType_;	// Property type (directory, file, or root) Byte 1 (directory), 2 (file), or 5 (root entry) (0x42)
 		unsigned char nodeColor_;		// Node color (0x43)
 		int previousProp_;				// Previous property index (0x44)
@@ -743,10 +743,10 @@ public:
 		virtual size_t Write(char* data);
 		virtual size_t DataSize();
 		virtual size_t RecordSize();
-		short stringsTotal_;
+		size_t stringsTotal_;
 		vector<int> streamPos_;
-		vector<short> firstStringPos_;
-		vector<short> unused_;
+		vector<size_t> firstStringPos_;
+		vector<size_t> unused_;
 	};
 	size_t Read(const char* data);
 	size_t Write(char* data);
@@ -824,8 +824,8 @@ public:
 		virtual size_t Write(char* data);	
 		size_t firstUsedRowIndex_;
 		size_t lastUsedRowIndexPlusOne_;
-		short firstUsedColIndex_;
-		short lastUsedColIndexPlusOne_;
+		size_t firstUsedColIndex_;
+		size_t lastUsedColIndexPlusOne_;
 		short unused_;		
 	};
 	struct CellTable
@@ -837,10 +837,10 @@ public:
 				Row();
 				virtual size_t Read(const char* data);
 				virtual size_t Write(char* data);	
-				short rowIndex_;
-				short firstCellColIndex_;
-				short lastCellColIndexPlusOne_;
-				short height_;
+				size_t rowIndex_;
+				size_t firstCellColIndex_;
+				size_t lastCellColIndexPlusOne_;
+				size_t height_;
 				short unused1_;
 				short unused2_;
 				int options_;
@@ -872,9 +872,9 @@ public:
 					LabelSST();
 					virtual size_t Read(const char* data);
 					virtual size_t Write(char* data);	
-					short rowIndex_;
-					short colIndex_;
-					short XFRecordIndex_;
+					size_t rowIndex_;
+					size_t colIndex_;
+					size_t XFRecordIndex_;
 					size_t SSTRecordIndex_;	
 				};
 				struct MulBlank : public Record
@@ -904,19 +904,19 @@ public:
 						short XFRecordIndex_;
 						int RKValue_;
 					};
-					short rowIndex_;
-					short firstColIndex_;
+					size_t rowIndex_;
+					size_t firstColIndex_;
 					vector<XFRK> XFRK_;
-					short lastColIndex_;
+					size_t lastColIndex_;
 				};
 				struct Number : public Record
 				{
 					Number();
 					virtual size_t Read(const char* data);
 					virtual size_t Write(char* data);	
-					short rowIndex_;
-					short colIndex_;
-					short XFRecordIndex_;
+					size_t rowIndex_;
+					size_t colIndex_;
+					size_t XFRecordIndex_;
 					double value_;
 
 				private:
@@ -931,9 +931,9 @@ public:
 					RK();
 					virtual size_t Read(const char* data);
 					virtual size_t Write(char* data);	
-					short rowIndex_;
-					short colIndex_;
-					short XFRecordIndex_;
+					size_t rowIndex_;
+					size_t colIndex_;
+					size_t XFRecordIndex_;
 					int value_;	
 				};
 
@@ -1035,9 +1035,9 @@ public:
 				size_t Write(char* data);
 				size_t DataSize();
 				size_t RecordSize();
-				short RowIndex();
-				short ColIndex();
-				short LastColIndex();
+				size_t RowIndex();
+				size_t ColIndex();
+				size_t LastColIndex();
 				short type_;
 				bool normalType_;
 				
@@ -1058,7 +1058,7 @@ public:
 				virtual size_t DataSize();
 				virtual size_t RecordSize();
 				int firstRowOffset_;
-				vector<short> offsets_;
+				vector<size_t> offsets_;
 			};			
 			
 			size_t Read(const char* data);

@@ -177,7 +177,7 @@ void AttitudeReference::SaveState(FILEHANDLE scn) {
 void AttitudeReference::LoadState(char *line) {
 
 	if (!strnicmp (line, "ATTITUDEINITIALIZED", 19)) {
-		sscanf(line + 19, "%i", &AttitudeInitialized);
+		sscanf(line + 19, "%i", (int *)&AttitudeInitialized);
 	}
 	else if (!strnicmp (line, "ATTITUDEX", 9)) {
 		sscanf(line + 9, "%lf", &Attitude.x);
@@ -3275,7 +3275,7 @@ void EMS::LoadState(FILEHANDLE scn) {
 		} else if (!strnicmp (line, "TENSECTIMER", 11)) {
 			sscanf(line + 11, "%lf", &TenSecTimer);
 		} else if (!strnicmp (line, "LIFTVECTLTON", 12)) {
-			sscanf(line + 12, "%lf", &LiftVectLightOn);
+			sscanf(line + 12, "%hd", &LiftVectLightOn);
 		} 
 		else if (papiReadScenario_int(line, "SCRIBEPNTCNT", ScribePntCnt));
 		else if (!strnicmp (line, "SCRIBEPNTARRAY", 14)) {
