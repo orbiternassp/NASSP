@@ -1568,6 +1568,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
 	SaveLVDC(scn);
+	mcc.SaveState(scn);
+
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
 	// Both should be saving the same information, but this is human-readable
@@ -2248,6 +2250,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, BMAG2_START_STRING, sizeof(BMAG2_START_STRING))) {
 		bmag2.LoadState(scn);
+	}
+	else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
+		mcc.LoadState(scn);
 	}
 	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
 		LoadLVDC(scn);

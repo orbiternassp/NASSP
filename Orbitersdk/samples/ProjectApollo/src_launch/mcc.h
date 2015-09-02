@@ -23,6 +23,9 @@
 
 #if !defined(_PA_MCC_H)
 #define _PA_MCC_H
+// Save file strings
+#define MCC_START_STRING	"MCC_BEGIN"
+#define MCC_END_STRING	    "MCC_END"
 
 // Ground Station Tracking Capabilities bits
 #define GSTK_CBAND_HIGHSPEED 0x01
@@ -369,6 +372,8 @@ public:
 	void freePad();											// Free memory occupied by PAD form
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
+	void SaveState(FILEHANDLE scn);							// Save state
+	void LoadState(FILEHANDLE scn);							// Load state
 
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM

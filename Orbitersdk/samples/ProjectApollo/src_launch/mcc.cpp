@@ -36,7 +36,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
+#include "papi.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -48,6 +48,18 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 	MCC *mcc = (MCC *)ptr;
 	return(mcc->subThread());
 }
+
+// SCENARIO FILE MACROLOGY
+#define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
+#define SAVE_INT(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
+#define SAVE_DOUBLE(KEY,VALUE) papiWriteScenario_double(scn, KEY, VALUE)
+#define SAVE_V3(KEY,VALUE) papiWriteScenario_vec(scn, KEY, VALUE)
+#define SAVE_M3(KEY,VALUE) papiWriteScenario_mx(scn, KEY, VALUE)
+#define LOAD_BOOL(KEY,VALUE) if(strnicmp(line, KEY, strlen(KEY)) == 0){ sscanf(line + strlen(KEY), "%i", &tmp); if (tmp == 1) { VALUE = true; } else { VALUE = false; } }
+#define LOAD_INT(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%i",&VALUE); }
+#define LOAD_DOUBLE(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf",&VALUE); }
+#define LOAD_V3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf",&VALUE.x,&VALUE.y,&VALUE.z); }
+#define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 
 // MCC CLASS
 
@@ -925,6 +937,53 @@ int MCC::startSubthread(int fcn){
 		return(-1);
 	}
 	return(0);
+}
+
+// Save State
+void MCC::SaveState(FILEHANDLE scn) {
+	oapiWriteLine(scn, MCC_START_STRING);
+	// Booleans
+	SAVE_BOOL("MCC_GT_Enabled", GT_Enabled);	
+	SAVE_BOOL("MCC_MT_Enabled", MT_Enabled);
+	SAVE_BOOL("MCC_padAutoShow", padAutoShow);
+	// Integers
+	SAVE_INT("MCC_MissionType", MissionType);
+	SAVE_INT("MCC_MissionState", MissionState);
+	SAVE_INT("MCC_SubState", SubState);
+	SAVE_INT("MCC_EarthRev", EarthRev);
+	SAVE_INT("MCC_MoonRev", MoonRev);
+	SAVE_INT("MCC_AbortMode", AbortMode);
+	// Floats
+	SAVE_DOUBLE("MCC_StateTime", StateTime);
+	SAVE_DOUBLE("MCC_SubStateTime", SubStateTime);
+	// Write PAD here!
+	// Done
+	oapiWriteLine(scn, MCC_END_STRING);
+}
+
+// Load State
+void MCC::LoadState(FILEHANDLE scn) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
+			break;
+		}
+		LOAD_BOOL("MCC_GT_Enabled", GT_Enabled);
+		LOAD_BOOL("MCC_MT_Enabled", MT_Enabled);
+		LOAD_BOOL("MCC_padAutoShow", padAutoShow);
+		LOAD_INT("MCC_MissionType", MissionType);
+		LOAD_INT("MCC_MissionState", MissionState);
+		LOAD_INT("MCC_SubState", SubState);
+		LOAD_INT("MCC_EarthRev", EarthRev);
+		LOAD_INT("MCC_MoonRev", MoonRev);
+		LOAD_INT("MCC_AbortMode", AbortMode);
+		LOAD_DOUBLE("MCC_StateTime", StateTime);
+		LOAD_DOUBLE("MCC_SubStateTime", SubStateTime);
+
+	}
+	return;
 }
 
 // PAD Utility: Format time.
