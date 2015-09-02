@@ -177,7 +177,7 @@ void IMU::ChannelOutput(int address, ChannelValue value)
 	TRACESETUP("CHANNEL OUTPUT PROCESS");
 
 	char buffers[80];
-	sprintf(buffers,"CHANNEL OUTPUT %o %o", address,value);
+	sprintf(buffers,"CHANNEL OUTPUT %o %o", address,value.to_ulong());
 	TRACE(buffers);
 
 	int pulses;

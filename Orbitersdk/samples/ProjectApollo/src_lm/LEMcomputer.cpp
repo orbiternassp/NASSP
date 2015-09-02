@@ -1722,13 +1722,13 @@ void LMOptics::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, LMOPTICS_END_STRING, sizeof(LMOPTICS_END_STRING)))
 			return;
 		else if (!strnicmp (line, "OPTICSSHAFT", 11)) {
-			sscanf (line+11, "%lf", &OpticsShaft);
+			sscanf (line+11, "%d", &OpticsShaft);
 		}
 		else if (!strnicmp (line, "OPTICSRETICLE", 11)) {
 			sscanf (line+11, "%lf", &OpticsReticle);
 		}
 		else if (!strnicmp (line, "RETDIMMER", 11)) {
-			sscanf (line+11, "%lf", &RetDimmer);
+			sscanf (line+11, "%d", &RetDimmer);
 		}
 	}
 }

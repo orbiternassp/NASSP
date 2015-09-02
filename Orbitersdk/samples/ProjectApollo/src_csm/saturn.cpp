@@ -1160,7 +1160,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 {
 	char buffer[100];
 	TRACESETUP("Saturn::clbkPreStep");
-	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %d", MissionTime, simt, simdt, time(0)); 
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0)); 
 	TRACE(buffer);
 
 	//
@@ -1244,7 +1244,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 	Timestep(simt, simdt, mjd);
 
-	sprintf(buffer, "End time(0) %d", time(0)); 
+	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
 }
 
@@ -1253,7 +1253,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 {
 	char buffer[100];
 	TRACESETUP("Saturn::clbkPostStep");
-	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %d", MissionTime, simt, simdt, time(0)); 
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0)); 
 	TRACE(buffer);
 
 	if (debugConnected == false)
@@ -1281,7 +1281,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime,eventControl);
 
-	sprintf(buffer, "End time(0) %d", time(0)); 
+	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
 }
 

@@ -261,19 +261,19 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		//
 		val30.set(IMUOperate);
 
-		vagc.InputChannel[030] = val30.to_ulong();
+		vagc.InputChannel[030] = (int16_t)val30.to_ulong();
 		InputChannel[030] = (val30.to_ulong() ^ 077777);
 
 		val31 = 077777;
 		// Default position of the CMC MODE switch is FREE
 		val31[FreeFunction] = 0;
 
-		vagc.InputChannel[031] = val31.to_ulong();
+		vagc.InputChannel[031] = (int16_t)val31.to_ulong();
 		InputChannel[031] = (val31.to_ulong() ^ 077777);
 
 
 		val32 = 077777;
-		vagc.InputChannel[032] = val32.to_ulong();
+		vagc.InputChannel[032] = (int16_t)val32.to_ulong();
 		InputChannel[032] = (val32.to_ulong() ^ 077777);
 
 		val33 = 077777;
@@ -291,7 +291,7 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 
 		val33[AGCWarning] = 0;
 		
-		vagc.InputChannel[033] = val33.to_ulong();
+		vagc.InputChannel[033] = (int16_t)val33.to_ulong();
 		InputChannel[033] = (val33.to_ulong() ^ 077777);
 	}
 }
