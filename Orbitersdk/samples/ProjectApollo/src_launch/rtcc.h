@@ -51,6 +51,16 @@ struct LambertMan //Data for Lambert targeting
 	int impulsive;
 };
 
+struct AP7ManPADOpt
+{
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	int engopt; //0 = SPS, 1 = RCS+X, 2 = RCS-X
+	bool HeadsUp; //Orientation during the maneuver
+	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
+	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
+};
+
 class RTCC {
 public:
 	RTCC();
@@ -60,6 +70,8 @@ public:
 	MCC *mcc;
 private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
+	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
+	MATRIX3 GetREFSMMATfromAGC();
 };
 
 
