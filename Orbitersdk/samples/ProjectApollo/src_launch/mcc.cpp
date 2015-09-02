@@ -955,7 +955,7 @@ void MCC::drawPad(){
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 			format_time(tmpbuf, form->GETI);
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %f\ndV Y: %f\ndV Z: %f",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z);			
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, form->Att.x, form->Att.y, form->Att.z);			
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
