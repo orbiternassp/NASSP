@@ -99,7 +99,7 @@ MCC::MCC(){
 
 void MCC::Init(Saturn *vs){
 	// Make a new RTCC if we don't have one already
-	if (rtcc == NULL) { rtcc = new RTCC; }
+	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
 	// Set CM pointer
 	cm = vs;
 
