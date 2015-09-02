@@ -1131,7 +1131,7 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 
 void orbitmidnight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool night, double &v1)
 {
-	double tol, swit, mu, R_E,g1,g2,p1,p2,beta1,beta2,aa,sin1,sin2,cos1,cos2,x1,x2,SS,p;
+	double tol, swit, mu, R_E,g1,g2,beta1,beta2,aa,SS,p;
 	OELEMENTS coe;
 	VECTOR3 P, Q, h, h_proj, r_proj;
 
@@ -1196,8 +1196,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	OELEMENTS coe;
 	VECTOR3 P, Q;
 	//double beta1, beta2, p, A,B, C, D, tol, f, f_dot, f_ddot,x, R_E, sinv, cosv, v, x_alt,mu,f0,f1;
-	double tol, R_E, f, beta1, beta2, a, b, c, d, e, p, q, QQ, D0, D1, S, DD, phi, swit,SS,sinx,pp, alpha, cond, aa, mu;
-	double A, B, C, D;
+	double tol, R_E, f, beta1, beta2, a, b, c, d, e, p, q, QQ, D0, D1, S, DD, phi, SS,sinx,pp, alpha, cond, aa, mu;
 	double x[4];
 	double cosv[2], sinv[2];
 	int j;
@@ -1433,7 +1432,7 @@ double findlongitude(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double 
 {
 	double dt, dt_old, TA,h,e,theta0, a, T, n, E_0, t_0, E_1, t_f;
 	OELEMENTS coe;
-	double mu, v1;
+	double mu;
 	MATRIX3 Rot;
 	VECTOR3 H, E, lngvec, lngecl, lngecl2, dir, U_L;
 	
@@ -1490,7 +1489,7 @@ double findlongitude(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double 
 
 bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt)
 {
-	double v1, dt_old,h, e, theta0,a,T,n, E_0, t_0, E_1, t_f, R_E, dt_max, dt_des, rev, T_p, mu;
+	double v1, dt_old,h, e, theta0,a,T,n, E_0, t_0, E_1, t_f, R_E, dt_max, rev, T_p, mu;
 	VECTOR3 R_GS, gndst;
 	MATRIX3 Rot;
 	OELEMENTS coe;
@@ -1562,7 +1561,7 @@ bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double la
 
 bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v)
 {
-	double R_E, beta1, beta2, root, deno, a, b, c, e, f, d, g, aa, p, alpha, fact, root2,test1,test2, v1, v2, mu;
+	double R_E, beta1, beta2, root, deno, a, b, c, e, f, d, g, aa, p, alpha, fact, root2, v1, v2, mu;
 	OELEMENTS coe;
 	VECTOR3 P, Q;
 
@@ -1695,7 +1694,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	//CELBODY *cSun = oapiGetCelbodyInterface(hSun);
 
 	OELEMENTS coe;
-	double h, e, theta0, a, T, n, E_0, t_0, E_1, dt, t_f,i, dt_alt;
+	double h, e, theta0, a, T, n, E_0, t_0, E_1, dt, t_f, dt_alt;
 
 	dt = 0;
 	dt_alt = 1;
