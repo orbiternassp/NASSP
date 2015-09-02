@@ -4183,7 +4183,7 @@ size_t Worksheet::CellTable::RowBlock::CellBlock::RecordSize()
 	}
 	abort();
 }
-short Worksheet::CellTable::RowBlock::CellBlock::RowIndex()
+size_t Worksheet::CellTable::RowBlock::CellBlock::RowIndex()
 {
 	switch (type_)
 	{
@@ -4213,7 +4213,7 @@ short Worksheet::CellTable::RowBlock::CellBlock::RowIndex()
 	}
 	abort();
 }
-short Worksheet::CellTable::RowBlock::CellBlock::ColIndex()
+size_t Worksheet::CellTable::RowBlock::CellBlock::ColIndex()
 {
 	switch (type_)
 	{
