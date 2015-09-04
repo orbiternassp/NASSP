@@ -415,6 +415,10 @@ public:
 	NOTEHANDLE NHmessages;									// Message notification handle
 	NOTEHANDLE NHpad;										// PAD display handle
 	int menuState;											// Menu state
+	bool PCOption_Enabled;									// Positive Completion Option Enabled
+	char PCOption_Text[32];									// Positive Completion Option Text
+	bool NCOption_Enabled;									// Negative Completion Option Enabled	
+	char NCOption_Text[32];									// Positive Completion Option Text
 	char messages[MAX_MESSAGES][MAX_MSGSIZE];				// Message buffer
 	double msgtime[MAX_MESSAGES];							// Message timeout list
 	int currentMessage;										// Index to tail of ring buffer
