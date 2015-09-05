@@ -63,9 +63,6 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
-
-// MCC CLASS
-
 // CONS
 MCC::MCC(){
 	// Reset data
@@ -903,6 +900,15 @@ void MCC::redisplayMessages(){
 	}
 	// The ring buffer pointer will walk from the current message forward, so anything that was displayed
 	// should be redisplayed in the right order.
+}
+
+// Uplink string to CM
+int MCC::CM_uplink(const unsigned char *data, int len) {
+	if (cm->pcm.mcc_size > 0) { return -1; } // If busy, bail
+	if (len > 1024) { return -2; } // Too long!
+	memcpy(cm->pcm.mcc_data, data, len);
+	cm->pcm.mcc_size = len;
+	return len;
 }
 
 // Subthread Entry Point
