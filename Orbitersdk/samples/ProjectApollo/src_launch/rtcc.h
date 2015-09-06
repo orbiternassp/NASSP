@@ -47,7 +47,7 @@ struct LambertMan //Data for Lambert targeting
 	VECTOR3 Offset; //Offset vector
 	double PhaseAngle; //Phase angle to target, will overwrite offset
 	OBJHANDLE gravref; //Gravity reference of the maneuver
-	int prograde; //Prograde or retrograde solution
+	bool prograde; //Prograde or retrograde solution
 	int impulsive;
 };
 
@@ -59,6 +59,7 @@ struct AP7ManPADOpt
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
+	double navcheckGET; //Time for the navcheck. 0 = no nav check
 };
 
 class RTCC {
@@ -72,6 +73,8 @@ private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();
+	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
+	void StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
 };
 
 

@@ -86,6 +86,7 @@ void RTCC::Calculation(LPVOID &pad)
 			opt.HeadsUp = false;
 			opt.sxtstardtime = 0;
 			opt.REFSMMAT = GetREFSMMATfromAGC();
+			opt.navcheckGET = 0;
 
 			AP7ManeuverPAD(&opt, *form);
 
@@ -196,7 +197,6 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, X_B, DV, U_TD, R2B, V2B, Att;
 	MATRIX3 Rot, M, M_R, M_RTM;
 	double p_T, y_T, peri, apo, m1;
-	bool stop;
 	double headsswitch, GET, GETbase;
 	OBJHANDLE gravref;
 
@@ -324,6 +324,19 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(pad.Att.x*DEG)*RAD, OrbMech::round(pad.Att.y*DEG)*RAD, OrbMech::round(pad.Att.z*DEG)*RAD), Rsxt, oapiGetSize(gravref), pad.Star, pad.Trun, pad.Shaft);
 
+	if (opt->navcheckGET != 0.0)
+	{
+		VECTOR3 Rnav, Vnav;
+		double alt, lat, lng;
+		OrbMech::oneclickcoast(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, opt->navcheckGET - opt->TIG, Rnav, Vnav, gravref, gravref);
+		navcheck(Rnav, Vnav, GETbase + opt->navcheckGET / 24.0 / 3600.0, gravref, lat, lng, alt);
+
+		pad.NavChk = opt->navcheckGET;
+		pad.lat = lat*DEG;
+		pad.lng = lng*DEG;
+		pad.alt = alt / 1852;
+	}
+
 	pad.Att = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
 
 	pad.GETI = opt->TIG;
@@ -385,4 +398,81 @@ MATRIX3 RTCC::GetREFSMMATfromAGC()
 		REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
 	}
 	return REFSMMAT;
+}
+
+void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt)
+{
+	//R and V in the BRCS
+
+	MATRIX3 Rot, Rot2;
+	VECTOR3 Requ, Vequ, Recl, Vecl, u;
+	double sinl, a, b, gamma,r_0;
+
+	a = 6378166;
+	b = 6356784;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
+
+	Recl = tmul(Rot, R);
+	Recl = _V(Recl.x, Recl.z, Recl.y);
+
+	Requ = tmul(Rot2, Recl);
+	Requ = _V(Requ.x, Requ.z, Requ.y);
+
+	u = unit(Requ);
+	sinl = u.z;
+
+	if (gravref == oapiGetObjectByName("Earth"))
+	{
+		gamma = b*b / a / a;
+	}
+	else
+	{
+		gamma = 1;
+	}
+	r_0 = oapiGetSize(gravref);
+
+	lat = atan(u.z/(gamma*sqrt(u.x*u.x + u.y*u.y)));
+	lng = atan2(u.y, u.x);
+	alt = length(Requ) - r_0;
+}
+
+void RTCC::StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
+{
+	VECTOR3 R, V, R0B, V0B, R1B, V1B;
+	MATRIX3 Rot;
+	double SVMJD, dt, GET, GETbase;
+	OBJHANDLE gravref;
+
+	gravref = mcc->cm->GetGravityRef();
+
+	mcc->cm->GetRelativePos(gravref, R);
+	mcc->cm->GetRelativeVel(gravref, V);
+	SVMJD = oapiGetSimMJD();
+	GET = mcc->cm->GetMissionTime();
+	GETbase = SVMJD - GET / 24.0 / 3600.0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R.x, R.z, R.y));
+	V0B = mul(Rot, _V(V.x, V.z, V.y));
+
+	if (SVGET != 0.0)
+	{
+		dt = SVGET - (SVMJD - GETbase)*24.0*3600.0;
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
+	}
+	else
+	{
+		SVGET = (SVMJD - GETbase)*24.0*3600.0;
+		R1B = R0B;
+		V1B = V0B;
+	}
+
+	//oapiGetPlanetObliquityMatrix(gravref, &obl);
+	//convmat = mul(_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0),mul(transpose_matrix(obl),_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0)));
+
+	BRCSPos = R1B;
+	BRCSVel = V1B;
 }
