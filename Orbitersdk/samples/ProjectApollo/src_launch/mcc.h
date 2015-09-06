@@ -23,6 +23,9 @@
 
 #if !defined(_PA_MCC_H)
 #define _PA_MCC_H
+// Save file strings
+#define MCC_START_STRING	"MCC_BEGIN"
+#define MCC_END_STRING	    "MCC_END"
 
 // Ground Station Tracking Capabilities bits
 #define GSTK_CBAND_HIGHSPEED 0x01
@@ -362,6 +365,7 @@ public:
 	void keyDown(DWORD key);								// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
+	int  CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
 	void drawPad();											// Draw PAD display
@@ -369,7 +373,8 @@ public:
 	void freePad();											// Free memory occupied by PAD form
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
-
+	void SaveState(FILEHANDLE scn);							// Save state
+	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
@@ -410,6 +415,10 @@ public:
 	NOTEHANDLE NHmessages;									// Message notification handle
 	NOTEHANDLE NHpad;										// PAD display handle
 	int menuState;											// Menu state
+	bool PCOption_Enabled;									// Positive Completion Option Enabled
+	char PCOption_Text[32];									// Positive Completion Option Text
+	bool NCOption_Enabled;									// Negative Completion Option Enabled	
+	char NCOption_Text[32];									// Positive Completion Option Text
 	char messages[MAX_MESSAGES][MAX_MSGSIZE];				// Message buffer
 	double msgtime[MAX_MESSAGES];							// Message timeout list
 	int currentMessage;										// Index to tail of ring buffer

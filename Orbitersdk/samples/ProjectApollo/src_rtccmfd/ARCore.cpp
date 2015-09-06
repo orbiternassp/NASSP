@@ -263,9 +263,9 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 			maneuverplanet = oapiGetObjectByName("Earth");
 			P37GET400K = entry->t2;
 
-			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, V_G, DV_P, DV_C,R_cor,V_cor,i,j,k;
+			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor,V_cor,i,j,k;
 			MATRIX3 Rot, mat,Q_Xx;
-			double SVMJD,theta_T,t_slip, mu;
+			double SVMJD,t_slip, mu;
 
 
 			vessel->GetRelativePos(gravref, R0);
@@ -886,7 +886,7 @@ void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach
 void ARCore::REFSMMATCalc()
 {
 	double SVMJD, dt, mu;
-	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, X_B, DV, V2;
+	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, X_B;
 	MATRIX3 Rot, a;
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T,t_go;
@@ -1115,7 +1115,7 @@ void ARCore::REFSMMATCalc()
 
 void ARCore::EntryPAD()
 {
-	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, V2, R05G, V05G,R3,V3;
+	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, R05G, V05G,R3,V3;
 	MATRIX3 Rot, M_R;
 	double SVMJD, dt, mu, EMSAlt,dt2,dt3,S_FPA,g_T,V_T,v_BAR;
 	OBJHANDLE hEarth;

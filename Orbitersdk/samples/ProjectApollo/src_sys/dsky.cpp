@@ -1029,13 +1029,11 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	}
 }
 
-void DSKY::ProcessChannel10(int val)
-
-{
+void DSKY::ProcessChannel10(ChannelValue val){
 	ChannelValue10 out_val;
 	char	C1, C2;
 
-	out_val.Value = val;
+	out_val.Value = val.to_ulong();
 
 	C1 = ValueChar(out_val.Bits.c);
 	C2 = ValueChar(out_val.Bits.d);

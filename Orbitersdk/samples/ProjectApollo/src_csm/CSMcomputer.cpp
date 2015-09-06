@@ -3734,9 +3734,7 @@ void CSMcomputer::Liftoff(double simt)
 	} 
 }
 
-void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
-
-{
+void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val){
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
 
 	//
@@ -3762,9 +3760,7 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 	}
 }
 
-void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val)
-
-{
+void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val){
 	ApolloGuidance::SetOutputChannelBit(channel, bit, val);
 
 	//
@@ -3779,9 +3775,7 @@ void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val)
 	}
 }
 
-void CSMcomputer::SetOutputChannel(int channel, ChannelValue val)
-
-{
+void CSMcomputer::SetOutputChannel(int channel, ChannelValue val){
 	ApolloGuidance::SetOutputChannel(channel, val);
 
 	//
@@ -3800,15 +3794,13 @@ void CSMcomputer::SetOutputChannel(int channel, ChannelValue val)
 // We need to pass these I/O channels to both DSKYs.
 //
 
-void CSMcomputer::ProcessChannel10(int val)
-
-{
+void CSMcomputer::ProcessChannel10(ChannelValue val){
 	dsky.ProcessChannel10(val);
 	dsky2.ProcessChannel10(val);
 
 	// Gimbal Lock & Prog alarm
 	ChannelValue10 val10;
-	val10.Value = val;
+	val10.Value = val.to_ulong();
 	if (val10.Bits.a == 12) {
 		// Gimbal Lock
 		GimbalLockAlarm = ((val10.Value & (1 << 5)) != 0);
@@ -3817,22 +3809,18 @@ void CSMcomputer::ProcessChannel10(int val)
 	}
 }
 
-void CSMcomputer::ProcessChannel11Bit(int bit, bool val)
-
-{
+void CSMcomputer::ProcessChannel11Bit(int bit, bool val){
 	dsky.ProcessChannel11Bit(bit, val);
 	dsky2.ProcessChannel11Bit(bit, val);
 
 	LastOut11 = GetOutputChannel(011);
 }
 
-void CSMcomputer::ProcessChannel11(int val)
-
-{
+void CSMcomputer::ProcessChannel11(ChannelValue val){
 	dsky.ProcessChannel11(val);
 	dsky2.ProcessChannel11(val);
 
-	LastOut11 = val;
+	LastOut11 = val.to_ulong();
 }
 
 void CSMcomputer::BurnMainEngine(double thrust)
@@ -3851,9 +3839,7 @@ void CSMcomputer::BurnMainEngine(double thrust)
 // Process RCS channels
 //
 
-void CSMcomputer::ProcessChannel5(int val)
-
-{
+void CSMcomputer::ProcessChannel5(ChannelValue val){
 	ChannelValue val30;
 	val30 = GetInputChannel(030);
 
@@ -3868,9 +3854,10 @@ void CSMcomputer::ProcessChannel5(int val)
 	//
 	// Get the current state and a mask of any changed state.
 	//
-
-	Current.word = val;
-	Changed.word = (val ^ LastOut5);
+	
+	Current.word = val.to_ulong();
+	Changed.word = (val.to_ulong() ^ LastOut5);
+	sprintf(oapiDebugString(), "CSMOUT5 VAL %o LAST %o CHANGED %o",Current.word,LastOut5,Changed.word);
 
 	//
 	// Update any thrusters that have changed.
@@ -3904,16 +3891,15 @@ void CSMcomputer::ProcessChannel5(int val)
 		sat->rjec.SetThruster(8,Current.u.SMD4 != 0);
 	}
 
-	LastOut5 = val;
+	LastOut5 = val.to_ulong();
 }
 
-void CSMcomputer::ProcessChannel6(int val)
-
-{
+void CSMcomputer::ProcessChannel6(ChannelValue val){
 	ChannelValue val30;
 	val30 = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
+	sprintf(oapiDebugString(), "CSMOUT6 VAL %o SCC %d THC %d", val, sat->SCContSwitch.IsDown(), sat->THCRotary.IsClockwise());
 	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
 		return;
 	}
@@ -3925,8 +3911,9 @@ void CSMcomputer::ProcessChannel6(int val)
 	// Get the current state and a mask of any changed state.
 	//
 
-	Current.word = val;
-	Changed.word = (val ^ LastOut6);
+	Current.word = val.to_ulong();
+	Changed.word = (val.to_ulong() ^ LastOut6);
+	sprintf(oapiDebugString(), "CSMOUT6 VAL %o LAST %o CHANGED %o", Current.word, LastOut6, Changed.word);
 
 	//
 	// Update any thrusters that have changed.
@@ -3960,7 +3947,7 @@ void CSMcomputer::ProcessChannel6(int val)
 		sat->rjec.SetThruster(10,Current.u.SMD2 != 0);
 	}
 
-	LastOut6 = val;
+	LastOut6 = val.to_ulong();
 }
 
 // DS20060308 FDAI
@@ -4088,63 +4075,65 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 // TVC / Optics control
 
-void CSMcomputer::ProcessChannel160(int val) {
+void CSMcomputer::ProcessChannel160(ChannelValue val) {
 	
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
 	double error = 0;
-	
+	int valx = val.to_ulong();
+
 	// TVC enable controls SPS gimballing.			
 	if (val12[TVCEnable]) {
 		// TVC PITCH
 		int tvc_pitch_pulses = 0;
 		double tvc_pitch_cmd = 0;
 		// One pulse means .023725 degree of rotation.
-		if(val&077000){ // Negative
-			tvc_pitch_pulses = (~val)&0777;
+		if(valx&077000){ // Negative
+			tvc_pitch_pulses = (~valx)&0777;
 			if(tvc_pitch_pulses == 0){ return; } // HACK
 			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
 		}else{
-			tvc_pitch_pulses = val&0777;
+			tvc_pitch_pulses = valx&0777;
 			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 		}		
 		sat->SPSEngine.pitchGimbalActuator.ChangeCMCPosition(tvc_pitch_cmd);
 
 	} else {
-		sat->optics.CMCShaftDrive(val,val12.to_ulong());
+		sat->optics.CMCShaftDrive(valx,val12.to_ulong());
 	}	
 }
 
-void CSMcomputer::ProcessChannel161(int val) {
+void CSMcomputer::ProcessChannel161(ChannelValue val) {
 
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
 	double error = 0;
-	
+	int valx = val.to_ulong();
+
 	if (val12[TVCEnable]) {
 		// TVC YAW
 		int tvc_yaw_pulses = 0;
 		double tvc_yaw_cmd = 0;		
-		if(val&077000){ 
-			tvc_yaw_pulses = (~val)&0777;
+		if(valx&077000){ 
+			tvc_yaw_pulses = (~valx)&0777;
 			if(tvc_yaw_pulses == 0){ return; } 
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 			tvc_yaw_cmd = 0 - tvc_yaw_cmd; 
 		}else{
-			tvc_yaw_pulses = val&0777;
+			tvc_yaw_pulses = valx&0777;
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
 		sat->SPSEngine.yawGimbalActuator.ChangeCMCPosition(tvc_yaw_cmd);
 
 	} else {
-		sat->optics.CMCTrunionDrive(val,val12.to_ulong());
+		sat->optics.CMCTrunionDrive(valx,val12.to_ulong());
 	}	
 }
 
-void CSMcomputer::ProcessChannel14(int val){
+void CSMcomputer::ProcessChannel14(ChannelValue val){
 	// This entire deal is no longer necessary, but we'll leave the stub here in case it's needed later.
 	/*
 	ChannelValue12 val12;
