@@ -375,15 +375,15 @@ protected:
 	void DisplayBankSum();
 	void SetAttitudeRotLevel(VECTOR3 level);
 
-	void ProcessChannel5(int val);
-	void ProcessChannel6(int val);
-	void ProcessChannel10(int val);
+	void ProcessChannel5(ChannelValue val);
+	void ProcessChannel6(ChannelValue val);
+	void ProcessChannel10(ChannelValue val);
 	void ProcessChannel11Bit(int bit, bool val);
-	void ProcessChannel11(int val);
+	void ProcessChannel11(ChannelValue val);
 	// DS20060226 TVC / Optics
-	void ProcessChannel14(int val);
-	void ProcessChannel160(int val);
-	void ProcessChannel161(int val);
+	void ProcessChannel14(ChannelValue val);
+	void ProcessChannel160(ChannelValue val);
+	void ProcessChannel161(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 

@@ -157,13 +157,13 @@ public:
 	VESSEL *GetCSM();
 protected:
 	// DS20060413
-	void ProcessChannel13(int val);
-	void ProcessChannel5(int val);
-	void ProcessChannel6(int val);
+	void ProcessChannel13(ChannelValue val);
+	void ProcessChannel5(ChannelValue val);
+	void ProcessChannel6(ChannelValue val);
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
-	void ProcessChannel160(int val);
-	void ProcessChannel161(int val);
+	void ProcessChannel160(ChannelValue val);
+	void ProcessChannel161(ChannelValue val);
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);

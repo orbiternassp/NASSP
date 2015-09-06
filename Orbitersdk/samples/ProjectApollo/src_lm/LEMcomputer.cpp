@@ -1381,7 +1381,7 @@ int LEMcomputer::SetStatus(double simcomputert,
 
 // DS20060413
 
-void LEMcomputer::ProcessChannel13(int val){
+void LEMcomputer::ProcessChannel13(ChannelValue val){
 	LEM *lem = (LEM *) OurVessel;	
 	ChannelValue ch13;
 	ch13 = val;
@@ -1404,35 +1404,35 @@ void LEMcomputer::ProcessChannel13(int val){
 
 }
 
-void LEMcomputer::ProcessChannel5(int val){
+void LEMcomputer::ProcessChannel5(ChannelValue val){
 	// This is now handled inside the ATCA
 	LEM *lem = (LEM *) OurVessel;	
-	lem->atca.ProcessLGC(5,val);
+	lem->atca.ProcessLGC(5,val.to_ulong());
 }
 
-void LEMcomputer::ProcessChannel6(int val){	
+void LEMcomputer::ProcessChannel6(ChannelValue val){
 	// This is now handled inside the ATCA
 	LEM *lem = (LEM *) OurVessel;	
-	lem->atca.ProcessLGC(6,val);
+	lem->atca.ProcessLGC(6,val.to_ulong());
 }
 
 
-void LEMcomputer::ProcessChannel160(int val) {
+void LEMcomputer::ProcessChannel160(ChannelValue val) {
 	
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 	
-	lem->RR.RRShaftDrive(val,val12);
+	lem->RR.RRShaftDrive(val.to_ulong(),val12);
 	
 }
 
-void LEMcomputer::ProcessChannel161(int val) {
+void LEMcomputer::ProcessChannel161(ChannelValue val) {
 
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
-	lem->RR.RRTrunionDrive(val,val12);
+	lem->RR.RRTrunionDrive(val.to_ulong(),val12);
 }
 
 

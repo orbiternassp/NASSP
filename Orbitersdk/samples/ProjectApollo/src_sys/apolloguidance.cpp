@@ -4561,27 +4561,20 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 // By default, do nothing for the RCS channels.
 //
 
-void ApolloGuidance::ProcessChannel5(ChannelValue val)
-
-{
+void ApolloGuidance::ProcessChannel5(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel6(ChannelValue val)
-
-{
+void ApolloGuidance::ProcessChannel6(ChannelValue val){
 }
 
 // DS20060226 Stubs for optics controls and TVC
-void ApolloGuidance::ProcessChannel14(ChannelValue val)
-{
+void ApolloGuidance::ProcessChannel14(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel160(ChannelValue val)
-{
+void ApolloGuidance::ProcessChannel160(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel161(ChannelValue val)
-{
+void ApolloGuidance::ProcessChannel161(ChannelValue val){
 }
 
 // DS20060308 Stub for FDAI
@@ -4600,7 +4593,6 @@ void ApolloGuidance::GenerateUprupt(){
 void ApolloGuidance::GenerateRadarupt(){
 	GenerateRADARUPT(&vagc);
 }
-
 
 bool ApolloGuidance::IsUpruptActive() {
 	if (!Yaagc) return false;
