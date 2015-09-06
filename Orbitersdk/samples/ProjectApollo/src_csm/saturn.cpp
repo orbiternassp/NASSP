@@ -4090,7 +4090,8 @@ void Saturn::LaunchCountdown(double simt)
 		double amt = (thrst) * 0.1;
 		JostleViewpoint(amt);
 
-		AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0));
+		// AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0));
+		AddForce(_V(0, 0, -(THRUST_FIRST_VAC*(thrst + .01))), _V(0, 0, 0));
 		break;
 	}
 }

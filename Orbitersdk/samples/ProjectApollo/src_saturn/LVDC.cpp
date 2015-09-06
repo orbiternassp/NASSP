@@ -722,7 +722,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 
 						owner->contrailLevel = SumThrust / 8;
 						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .05))), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}
 				else {
@@ -730,7 +730,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					sprintf(oapiDebugString(), "LVDC: T %f | TB0 + %f | TH = 100%%", owner->MissionTime, LVDC_TB_ETime);
 					owner->SetThrusterGroupLevel(owner->thg_main, 1);
 					owner->contrailLevel = 1;
-					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.05)), _V(0, 0, 0));
+					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
 				}
 
 				if (owner->MissionTime >= 0) {
