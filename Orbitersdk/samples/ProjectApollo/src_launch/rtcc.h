@@ -74,7 +74,8 @@ private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	void StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
+	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
+	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 };
 
 

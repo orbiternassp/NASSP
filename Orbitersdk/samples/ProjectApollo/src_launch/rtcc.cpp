@@ -405,7 +405,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	//R and V in the BRCS
 
 	MATRIX3 Rot, Rot2;
-	VECTOR3 Requ, Vequ, Recl, Vecl, u;
+	VECTOR3 Requ, Recl, u;
 	double sinl, a, b, gamma,r_0;
 
 	a = 6378166;
@@ -438,17 +438,17 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	alt = length(Requ) - r_0;
 }
 
-void RTCC::StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
+void RTCC::StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
 {
 	VECTOR3 R, V, R0B, V0B, R1B, V1B;
 	MATRIX3 Rot;
 	double SVMJD, dt, GET, GETbase;
 	OBJHANDLE gravref;
 
-	gravref = mcc->cm->GetGravityRef();
+	gravref = AGCGravityRef(vessel);
 
-	mcc->cm->GetRelativePos(gravref, R);
-	mcc->cm->GetRelativeVel(gravref, V);
+	vessel->GetRelativePos(gravref, R);
+	vessel->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
 	GET = mcc->cm->GetMissionTime();
 	GETbase = SVMJD - GET / 24.0 / 3600.0;
@@ -475,4 +475,18 @@ void RTCC::StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
 
 	BRCSPos = R1B;
 	BRCSVel = V1B;
+}
+
+OBJHANDLE RTCC::AGCGravityRef(VESSEL *vessel)
+{
+	OBJHANDLE gravref;
+	VECTOR3 rsph;
+
+	gravref = oapiGetObjectByName("Moon");
+	vessel->GetRelativePos(gravref, rsph);
+	if (length(rsph) > 64373760.0)
+	{
+		gravref = oapiGetObjectByName("Earth");
+	}
+	return gravref;
 }
