@@ -735,6 +735,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text(1 * W / 8, 12 * H / 14, "Abort", 5);
 			}
 
+			if (G->entrycalcstate == 1)
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
+			}
+
 			GET_Display(Buffer, G->EntryTIGcor);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f °", G->EntryLatcor*DEG);
