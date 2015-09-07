@@ -3856,8 +3856,7 @@ void CSMcomputer::ProcessChannel5(ChannelValue val){
 	//
 	
 	Current.word = val.to_ulong();
-	Changed.word = (val.to_ulong() ^ LastOut5);
-	sprintf(oapiDebugString(), "CSMOUT5 VAL %o LAST %o CHANGED %o",Current.word,LastOut5,Changed.word);
+	Changed.word = (val.to_ulong() ^ LastOut5);	
 
 	//
 	// Update any thrusters that have changed.
@@ -3898,8 +3897,7 @@ void CSMcomputer::ProcessChannel6(ChannelValue val){
 	ChannelValue val30;
 	val30 = GetInputChannel(030);
 
-	Saturn *sat = (Saturn *) OurVessel;
-	sprintf(oapiDebugString(), "CSMOUT6 VAL %o SCC %d THC %d", val, sat->SCContSwitch.IsDown(), sat->THCRotary.IsClockwise());
+	Saturn *sat = (Saturn *) OurVessel;	
 	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
 		return;
 	}
@@ -3912,8 +3910,7 @@ void CSMcomputer::ProcessChannel6(ChannelValue val){
 	//
 
 	Current.word = val.to_ulong();
-	Changed.word = (val.to_ulong() ^ LastOut6);
-	sprintf(oapiDebugString(), "CSMOUT6 VAL %o LAST %o CHANGED %o", Current.word, LastOut6, Changed.word);
+	Changed.word = (val.to_ulong() ^ LastOut6);	
 
 	//
 	// Update any thrusters that have changed.
