@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "ioChannels.h"
 #include "tracer.h"
 #include "../src_rtccmfd/OrbMech.h"
+#include "../src_rtccmfd/EntryCalculations.h"
 #include "rtcc.h"
 
 RTCC::RTCC()
@@ -75,7 +76,7 @@ void RTCC::Calculation(LPVOID &pad)
 			lambert.target = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Target should come from MCC later so we can parameterize it
 			lambert.gravref = mcc->cm->GetGravityRef();
 			lambert.prograde = RTCC_LAMBERT_PROGRADE;
-			lambert.impulsive = RTCC_LAMBERT_IMPULSIVE;
+			lambert.impulsive = RTCC_IMPULSIVE;
 			lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
 
 			LambertTargeting(&lambert, dV_LVLH, P30TIG);
@@ -91,6 +92,95 @@ void RTCC::Calculation(LPVOID &pad)
 			AP7ManeuverPAD(&opt, *form);
 
 		}
+		else if (mcc->MissionState == MST_C_COAST1)
+		{
+			AP7MNV * form = (AP7MNV *)pad;
+
+			double P30TIG;
+			VECTOR3 dV_LVLH;
+			EntryOpt entopt;
+			AP7ManPADOpt opt;
+
+			entopt.impulsive = RTCC_NONIMPULSIVE;
+			entopt.lng = -165.0*RAD;
+			entopt.nominal = RTCC_ENTRY_NOMINAL;
+			entopt.Range = 0;
+			entopt.ReA = 0;
+			entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
+			entopt.type = RTCC_ENTRY_DEORBIT;
+			entopt.vessel = mcc->cm;
+
+			EntryTargeting(&entopt, dV_LVLH, P30TIG);
+
+			opt.TIG = P30TIG;
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = 0;
+			opt.HeadsUp = true;
+			opt.sxtstardtime = -25 * 60;
+			opt.REFSMMAT = GetREFSMMATfromAGC();
+			opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
+
+			AP7ManeuverPAD(&opt, *form);
+		}
+	}
+}
+
+void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	Entry* entry;
+	double SVMJD, GET, GETbase;
+	VECTOR3 RA0_orb, VA0_orb;
+	bool stop;
+
+	stop = false;
+	
+	mcc->cm->GetRelativePos(AGCGravityRef(opt->vessel), RA0_orb);
+	mcc->cm->GetRelativeVel(AGCGravityRef(opt->vessel), VA0_orb);
+	SVMJD = oapiGetSimMJD();
+	GET = mcc->cm->GetMissionTime();
+	GETbase = SVMJD - GET / 24.0 / 3600.0;
+
+	entry = new Entry(opt->vessel, AGCGravityRef(opt->vessel), GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->Range, opt->nominal);
+
+	while (!stop)
+	{
+		stop = entry->EntryIter();
+	}
+
+	dV_LVLH = entry->Entry_DV;
+	P30TIG = entry->EntryTIGcor;
+
+	delete entry;
+
+	if (opt->impulsive == RTCC_NONIMPULSIVE)
+	{
+		VECTOR3 Llambda, RA1_cor, VA1_cor, R0,V0,RA1,VA1,UX,UY,UZ,DV,i,j,k;
+		double t_slip;
+		MATRIX3 Rot, Q_Xx;
+		
+		Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+		R0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
+		V0 = mul(Rot, _V(VA0_orb.x, VA0_orb.z, VA0_orb.y));
+
+		OrbMech::oneclickcoast(R0, V0, SVMJD, P30TIG - GET, RA1, VA1, AGCGravityRef(opt->vessel), oapiGetObjectByName("Earth"));
+
+		UY = unit(crossp(VA1, RA1));
+		UZ = unit(-RA1);
+		UX = crossp(UY, UZ);
+
+		DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
+
+		OrbMech::impulsive(mcc->cm, RA1, VA1, AGCGravityRef(opt->vessel), mcc->cm->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, AGCGravityRef(opt->vessel), AGCGravityRef(opt->vessel));
+
+		j = unit(crossp(VA1_cor, RA1_cor));
+		k = unit(-RA1_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		dV_LVLH = mul(Q_Xx, Llambda);
+		P30TIG += t_slip;
 	}
 }
 
@@ -161,7 +251,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		}
 	}
 
-	if (lambert->impulsive == RTCC_LAMBERT_IMPULSIVE)
+	if (lambert->impulsive == RTCC_IMPULSIVE)
 	{
 		j = unit(crossp(VA1, RA1));
 		k = unit(-RA1);
@@ -405,7 +495,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	//R and V in the BRCS
 
 	MATRIX3 Rot, Rot2;
-	VECTOR3 Requ, Vequ, Recl, Vecl, u;
+	VECTOR3 Requ, Recl, u;
 	double sinl, a, b, gamma,r_0;
 
 	a = 6378166;
@@ -438,17 +528,17 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	alt = length(Requ) - r_0;
 }
 
-void RTCC::StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
+void RTCC::StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
 {
 	VECTOR3 R, V, R0B, V0B, R1B, V1B;
 	MATRIX3 Rot;
 	double SVMJD, dt, GET, GETbase;
 	OBJHANDLE gravref;
 
-	gravref = mcc->cm->GetGravityRef();
+	gravref = AGCGravityRef(vessel);
 
-	mcc->cm->GetRelativePos(gravref, R);
-	mcc->cm->GetRelativeVel(gravref, V);
+	vessel->GetRelativePos(gravref, R);
+	vessel->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
 	GET = mcc->cm->GetMissionTime();
 	GETbase = SVMJD - GET / 24.0 / 3600.0;
@@ -475,4 +565,18 @@ void RTCC::StateVectorCalc(double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel)
 
 	BRCSPos = R1B;
 	BRCSVel = V1B;
+}
+
+OBJHANDLE RTCC::AGCGravityRef(VESSEL *vessel)
+{
+	OBJHANDLE gravref;
+	VECTOR3 rsph;
+
+	gravref = oapiGetObjectByName("Moon");
+	vessel->GetRelativePos(gravref, rsph);
+	if (length(rsph) > 64373760.0)
+	{
+		gravref = oapiGetObjectByName("Earth");
+	}
+	return gravref;
 }
