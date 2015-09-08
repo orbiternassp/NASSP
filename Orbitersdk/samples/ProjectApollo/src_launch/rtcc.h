@@ -45,7 +45,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct LambertMan //Data for Lambert targeting
 {
+	VESSEL* vessel; //Vessel executing the burn
 	VESSEL* target; //Target vessel
+	double GETbase; //usually MJD at launch
 	double T1;	//GET of the maneuver
 	double T2;	// GET of the arrival
 	int N;		//number of revolutions
@@ -53,13 +55,14 @@ struct LambertMan //Data for Lambert targeting
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
 	double PhaseAngle; //Phase angle to target, will overwrite offset
-	OBJHANDLE gravref; //Gravity reference of the maneuver
 	bool prograde; //Prograde or retrograde solution
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 };
 
 struct AP7ManPADOpt
 {
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int engopt; //0 = SPS, 1 = RCS+X, 2 = RCS-X
@@ -72,6 +75,7 @@ struct AP7ManPADOpt
 struct EntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
+	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG or baseline TIG for abort and MCC maneuvers
 	int type; //Type of reentry maneuver
 	double ReA; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
@@ -79,6 +83,20 @@ struct EntryOpt
 	double Range;  //Desired range from 0.05g to splashdown, 0 uses AUGEKUGEL function to determine range
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+};
+
+struct REFSMMATOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	bool REFSMMATdirect; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
+	double P30TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	OBJHANDLE maneuverplanet; //The gravity reference of the maneuver might be different than the gravity reference now!
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC
+	double REFSMMATTime; //Time for the REFSMMAT calculation
+	double LSLng; //longitude for the landing site REFSMMAT
+	double LSLat; //latitude for the landign site REFSMMAT
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -103,6 +121,8 @@ private:
 	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	double getGETBase();
+	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 };
 
 
