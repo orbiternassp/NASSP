@@ -81,13 +81,20 @@ struct EntryOpt
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 };
 
+// Parameter block for Calculation(). Expand as needed.
+struct calculationParameters {
+	VESSEL *src;	// Our ship
+	VESSEL *tgt;	// Target ship
+};
+
 class RTCC {
 public:
 	RTCC();
 	void Init(MCC *ptr);
-	void Calculation(LPVOID &pad);
+	void Calculation(int fcn,LPVOID &pad);
 
 	MCC *mcc;
+	struct calculationParameters calcParams;
 private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);

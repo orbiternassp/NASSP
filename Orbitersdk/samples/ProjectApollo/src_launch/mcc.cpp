@@ -925,7 +925,9 @@ int MCC::subThread(){
 			AP7MNV * form = (AP7MNV *)padForm;
 			sprintf(form->purpose,"PHASING BURN");
 			// Ask RTCC for numbers
-			rtcc->Calculation(padForm);
+			rtcc->calcParams.src = cm;
+			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+			rtcc->Calculation(1,padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
