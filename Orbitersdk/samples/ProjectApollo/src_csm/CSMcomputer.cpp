@@ -3948,7 +3948,7 @@ void CSMcomputer::ProcessChannel6(ChannelValue val){
 }
 
 // DS20060308 FDAI
-void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 	// These pulses work like the TVC pulses.
 	// FULL NEEDLE DEFLECTION is 16.88 DEGREES
 	// 030 PULSES = MAX IN ONE RELAY EVENT
@@ -4033,9 +4033,9 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 		
 	case 0174: // FDAI ROLL ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
+			int delta = (val.to_ulong()&0777);
 			// Direction for these is inverted.
-			if(val&040000){
+			if(val.to_ulong()&040000){
 				sat->gdc.fdai_err_x += delta;
 			}else{
 				sat->gdc.fdai_err_x -= delta;
@@ -4046,8 +4046,8 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	
 	case 0175: // FDAI PITCH ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
-			if(val&040000){
+			int delta = val.to_ulong()&0777;
+			if(val.to_ulong()&040000){
 				sat->gdc.fdai_err_y -= delta;
 			}else{
 				sat->gdc.fdai_err_y += delta;
@@ -4058,8 +4058,8 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 	case 0176: // FDAI YAW ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
-			if(val&040000){
+			int delta = val.to_ulong()&0777;
+			if(val.to_ulong()&040000){
 				sat->gdc.fdai_err_z += delta;
 			}else{
 				sat->gdc.fdai_err_z -= delta;

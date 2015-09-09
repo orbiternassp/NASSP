@@ -385,7 +385,7 @@ protected:
 	void ProcessChannel160(ChannelValue val);
 	void ProcessChannel161(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
-	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 
 	///
 	/// \brief Set the thrust level of the main engine.
