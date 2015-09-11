@@ -102,6 +102,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	earthorbitangle = (-31.7 - 2.15)*RAD;
 
 	this->entrynominal = entrynominal;
+	xislimited = false;
 }
 
 Entry::Entry(OBJHANDLE gravref)
@@ -133,19 +134,25 @@ void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &
 	xt2 = xt2 + Dxt2;
 }
 
-void Entry::xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x)
+void Entry::xdviterator2(int f1, VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
 {
 	double xdes, xact, x_err,x_apo, x_err_apo, epsilon, p_CON, beta9;
 	VECTOR3 Entry_DV, DV, V2;
 	int i;
 	i = 0;
 	epsilon = pow(2.0, -20.0);
-	double dx = 1;
 
 	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
 
+	x_err_apo = 1000;
+
 	while (abs(dx) > epsilon && i < 135)
 	{
+		if (f1 == 1)
+		{
+			xislimited = false;
+		}
+
 		dvcalc(V1B, theta1, theta2, theta3, x, U_R1, U_H, V2, DV, p_CON);
 
 		Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
@@ -153,30 +160,40 @@ void Entry::xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2,
 		xact = Entry_DV.z / Entry_DV.x;
 		x_err = xdes - xact;
 
-		if (i == 0)
+		//if (i == 0)
+		//{
+		//	dx = -0.01*(xdes - xact);
+		//}
+		//else
+		//{
+			//dx = x_err*((x_apo - x) / (x_err - x_err_apo));
+		//}
+		if (abs(x_err) > abs(x_err_apo))
 		{
-			dx = -0.01*(xdes - xact);
-		}
-		else
-		{
-			dx = x_err*((x_apo - x) / (x_err - x_err_apo));
+			dx = -dx*0.5;
 		}
 		beta9 = x + 1.1*dx;
 		if (beta9 > xmax)
 		{
 			dx = (xmax - x) / 2.0;
+			if (f1 == 1)
+			{
+				xislimited = true;
+			}
 		}
 		else if (beta9 < xmin)
 		{
 			dx = (xmin - x) / 2.0;
+			if (f1 == 1)
+			{
+				xislimited = true;
+			}
 		}
 		x_err_apo = x_err;
 		x_apo = x;
 		x += dx;
 		i++;
 	}
-
-
 }
 
 void Entry::xdviterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
@@ -288,22 +305,22 @@ void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, d
 	double MA2, x2_err, x2_err_apo,C_FPA;
 	int n1;
 
-	x2_err = 1.0;
-	precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
-	n1 = 1;
-	while (abs(x2_err) > 0.0001 && n1<=10)
-	{
-		conicreturn(0, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
-		t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
-		OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-		reentryconstraints(n1, R1B, VEI);
-		x2_err = x2_apo - x2;
-		newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
-		n1++;
-	}
-	t2 = t1 + t21;
+x2_err = 1.0;
+precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
+n1 = 1;
+while (abs(x2_err) > 0.0001 && n1 <= 10)
+{
+	conicreturn(0, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
+	t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
 	OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-	landingsite(REI, VEI, t2, theta_long, theta_lat);
+	reentryconstraints(n1, R1B, VEI);
+	x2_err = x2_apo - x2;
+	newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
+	n1++;
+}
+t2 = t1 + t21;
+OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
+landingsite(REI, VEI, t2, theta_long, theta_lat);
 }
 
 void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
@@ -355,7 +372,7 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, doubl
 	finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
 	R_ERR = length(RPRE) - RD;
 
-	while (abs(R_ERR) > 10.0 && n1<=10)
+	while (abs(R_ERR) > 100.0 && n1 <= 10)
 	{
 		newrcon(n1, RD, length(RPRE), R_ERR, dRCON, rPRE_apo);
 		conicreturn(1, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
@@ -530,7 +547,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 				if (entrynominal)
 				{
 					xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+					xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 				}
 				else
 				{
@@ -553,7 +570,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 				if (entrynominal)
 				{
 					xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+					xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 				}
 				else
 				{
@@ -604,6 +621,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 					}
 					else
 					{
+
 						xmax = -xlim;
 						x = xmin;
 						dx = dxmax;
@@ -632,7 +650,8 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			if (entrynominal)
 			{
 				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-				xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+				//conicinit(R1B, MA2, xmin, xmax, theta1, theta2, theta3);
+				xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 			}
 			else
 			{
@@ -716,7 +735,7 @@ bool Entry::EntryIter()
 	dt1 = EntryTIGcor - get - dt0;
 	OrbMech::oneclickcoast(R11B, V11B, mjd + dt0 / 24.0 / 3600.0, dt1, R1B, V1B, hEarth, hEarth);
 	coniciter(R1B, V1B, EntryTIGcor, theta_long, theta_lat, V2, x, dx, t21);
-	if (entryphase == 1)
+	if (entryphase == 1 && !entrynominal)
 	{
 		precisioniter(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
 	}

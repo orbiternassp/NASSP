@@ -36,7 +36,7 @@ private:
 	void conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1);
 	void conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3);
 	void xdviterator(VECTOR3 R1B,VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
-	void xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
+	void xdviterator2(int f1, VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
 	void limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
 	void dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON);
 	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI);
@@ -61,7 +61,7 @@ private:
 	int ii;
 	double EntryLng;
 	int entryphase;
-	int critical;
+	int critical; //0 = Earth orbit reentry, 1 = MCC calculation, 2 = TLC or TEC abort
 	double xapo, dv_err;
 	VECTOR3 R11B, V11B;
 	int f2;
@@ -78,6 +78,7 @@ private:
 	bool entrynominal; //0 = minimum DV entry, 1 = 31.7° line
 	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
 	double x, dx, dxmax;
+	bool xislimited;
 };
 
 #endif
