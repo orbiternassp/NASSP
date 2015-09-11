@@ -1437,7 +1437,7 @@ void LEMcomputer::ProcessChannel161(ChannelValue val) {
 
 
 // Process IMU CDU error counters.
-void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 	// FULL NEEDLE DEFLECTION is 16.88 DEGREES
 	// 030 PULSES = MAX IN ONE RELAY EVENT
 	// 22 PULSES IS ONE DEGREE, 384 PULSES = FULL SCALE
@@ -1464,9 +1464,9 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 	case 0174: // YAW ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
+			int delta = val.to_ulong()&0777;
 			// NEGATIVE = RIGHT
-			if(val&040000){
+			if(val.to_ulong()&040000){
 				lem->atca.lgc_err_z -= delta;
 			}else{
 				lem->atca.lgc_err_z += delta;
@@ -1477,9 +1477,9 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	
 	case 0175: // PITCH ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
+			int delta = val.to_ulong()&0777;
 			// NEGATIVE = DOWN
-			if(val&040000){
+			if(val.to_ulong()&040000){
 				lem->atca.lgc_err_y -= delta;
 			}else{
 				lem->atca.lgc_err_y += delta;
@@ -1490,9 +1490,9 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 	case 0176: // ROLL ERROR
 		if(val12[EnableIMUCDUErrorCounters]){
-			int delta = val&0777;
+			int delta = val.to_ulong()&0777;
 			// NEGATIVE = RIGHT
-			if(val&040000){
+			if(val.to_ulong()&040000){
 				lem->atca.lgc_err_x += delta;
 			}else{
 				lem->atca.lgc_err_x -= delta;

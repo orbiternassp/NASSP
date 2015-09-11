@@ -161,7 +161,7 @@ protected:
 	void ProcessChannel5(ChannelValue val);
 	void ProcessChannel6(ChannelValue val);
 	// DS20090919
-	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessChannel160(ChannelValue val);
 	void ProcessChannel161(ChannelValue val);
 
