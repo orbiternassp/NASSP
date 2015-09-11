@@ -120,7 +120,7 @@ private:
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
-	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude);
 	double getGETBase();
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 };

@@ -54,98 +54,209 @@ void RTCC::Init(MCC *ptr)
 	mcc = ptr;
 }
 
-void RTCC::Calculation(int fcn,LPVOID &pad)
+void RTCC::Calculation(int fcn, LPVOID &pad)
 {
 	switch (fcn) {
 	case 1: // MISSION C PHASING BURN
-		{
-			LambertMan lambert;
-			AP7ManPADOpt opt;
-			double P30TIG;
-			VECTOR3 dV_LVLH;
+	{
+		LambertMan lambert;
+		AP7ManPADOpt opt;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
 
-			AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV * form = (AP7MNV *)pad;
 
-			lambert.vessel = calcParams.src;
-			lambert.GETbase = getGETBase();
-			lambert.T1 = 3 * 3600 + 20 * 60;
-			lambert.T2 = 26 * 3600 + 25 * 60;
-			lambert.N = 15;
-			lambert.axis = RTCC_LAMBERT_XAXIS;
-			lambert.Offset = _V(76.5 * 1852, 0, 0);
-			lambert.PhaseAngle = 0;
-			lambert.target = calcParams.tgt;
-			lambert.prograde = RTCC_LAMBERT_PROGRADE;
-			lambert.impulsive = RTCC_IMPULSIVE;
-			lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
+		lambert.vessel = calcParams.src;
+		lambert.GETbase = getGETBase();
+		lambert.T1 = 3 * 3600 + 20 * 60;
+		lambert.T2 = 26 * 3600 + 25 * 60;
+		lambert.N = 15;
+		lambert.axis = RTCC_LAMBERT_XAXIS;
+		lambert.Offset = _V(76.5 * 1852, 0, 0);
+		lambert.PhaseAngle = 0;
+		lambert.target = calcParams.tgt;
+		lambert.prograde = RTCC_LAMBERT_PROGRADE;
+		lambert.impulsive = RTCC_IMPULSIVE;
+		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
 
-			LambertTargeting(&lambert, dV_LVLH, P30TIG);
+		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
-			opt.GETbase = getGETBase();
-			opt.vessel = calcParams.src;
-			opt.TIG = P30TIG;
-			opt.dV_LVLH = dV_LVLH;
-			opt.engopt = 2; //X- RCS Thrusters
-			opt.HeadsUp = false;
-			opt.sxtstardtime = 0;
-			opt.REFSMMAT = GetREFSMMATfromAGC();
-			opt.navcheckGET = 0;
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 2; //X- RCS Thrusters
+		opt.HeadsUp = false;
+		opt.sxtstardtime = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.navcheckGET = 0;
 
-			AP7ManeuverPAD(&opt, *form);
-		}
-		break;
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
-		{
-			AP7MNV * form = (AP7MNV *)pad;
+	{
+		AP7MNV * form = (AP7MNV *)pad;
 
-			double P30TIG, SVGET;
-			VECTOR3 dV_LVLH, R0, V0;
-			MATRIX3 REFSMMAT;
-			EntryOpt entopt;
-			AP7ManPADOpt opt;
-			REFSMMATOpt refsopt;
+		double P30TIG, SVGET, latitude, longitude;
+		VECTOR3 dV_LVLH, R0, V0;
+		MATRIX3 REFSMMAT;
+		EntryOpt entopt;
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
 
-			SVGET = 0;
-			StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
 
-			entopt.vessel = calcParams.src;
-			entopt.GETbase = getGETBase();
-			entopt.impulsive = RTCC_NONIMPULSIVE;
-			entopt.lng = -165.0*RAD;
-			entopt.nominal = RTCC_ENTRY_NOMINAL;
-			entopt.Range = 0;
-			entopt.ReA = 0;
-			entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
-			entopt.type = RTCC_ENTRY_DEORBIT;
+		entopt.vessel = calcParams.src;
+		entopt.GETbase = getGETBase();
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -163.0*RAD;
+		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.Range = 0;
+		entopt.ReA = 0;
+		entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
+		entopt.type = RTCC_ENTRY_DEORBIT;
 
-			EntryTargeting(&entopt, dV_LVLH, P30TIG); //Target Load for uplink
+		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude); //Target Load for uplink
 
-			refsopt.vessel = calcParams.src;
-			refsopt.GETbase = getGETBase();
-			refsopt.dV_LVLH = dV_LVLH;
-			refsopt.P30TIG = P30TIG;
-			refsopt.REFSMMATdirect = true;
-			refsopt.REFSMMATopt = 1;
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = getGETBase();
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATdirect = true;
+		refsopt.REFSMMATopt = 1;
 
-			REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
+		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
 
-			opt.vessel = calcParams.src;
-			opt.GETbase = getGETBase();
-			opt.TIG = P30TIG;
-			opt.dV_LVLH = dV_LVLH;
-			opt.engopt = 0;
-			opt.HeadsUp = true;
-			opt.sxtstardtime = -25 * 60;
-			opt.REFSMMAT = REFSMMAT;
-			opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
+		opt.vessel = calcParams.src;
+		opt.GETbase = getGETBase();
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.HeadsUp = true;
+		opt.sxtstardtime = -25 * 60;
+		opt.REFSMMAT = REFSMMAT;
+		opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
 
-			AP7ManeuverPAD(&opt, *form);
-		}
-		break;
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
+	case 3: //MISSION C 2ND PHASING MANEUVER
+	{
+		AP7ManPADOpt opt;
+		LambertMan lambert;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
+
+		AP7MNV * form = (AP7MNV *)pad;
+
+		lambert.axis = RTCC_LAMBERT_XAXIS;
+		lambert.GETbase = getGETBase();
+		lambert.impulsive = RTCC_IMPULSIVE;
+		lambert.N = 7;
+		lambert.Offset = _V(76.5 * 1852, 0, 0);
+		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
+		lambert.PhaseAngle = 0;
+		lambert.prograde = RTCC_LAMBERT_PROGRADE;
+		lambert.T1 = 15 * 60 * 60 + 52 * 60;
+		lambert.T2 = 26 * 60 * 60 + 25 * 60;
+		lambert.target = calcParams.tgt;
+		lambert.vessel = calcParams.src;
+
+		LambertTargeting(&lambert, dV_LVLH, P30TIG);
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 1; //+X RCS Thrusters
+		opt.HeadsUp = true;
+		opt.sxtstardtime = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.navcheckGET = 0;
+
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
+	case 4: //MISSION C NCC1 MANEUVER
+	{
+		LambertMan lambert;
+		AP7ManPADOpt opt;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
+
+		AP7MNV * form = (AP7MNV *)pad;
+
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.GETbase = getGETBase();
+		lambert.impulsive = RTCC_NONIMPULSIVE;
+		lambert.N = 1;
+		lambert.Offset = _V(0, 0, 8 * 1852);
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.prograde = RTCC_LAMBERT_PROGRADE;
+		lambert.T1 = 26 * 60 * 60 + 25 * 60;
+		lambert.T2 = 28 * 60 * 60;
+		lambert.target = calcParams.tgt;
+		lambert.vessel = calcParams.src;
+
+		LambertTargeting(&lambert, dV_LVLH, P30TIG);
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.HeadsUp = true;
+		opt.sxtstardtime = -30 * 60;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
+
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
+	case 5: //MISSION C NCC2 MANEUVER
+	{
+		LambertMan lambert;
+		AP7ManPADOpt opt;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
+
+		AP7MNV * form = (AP7MNV *)pad;
+
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.GETbase = getGETBase();
+		lambert.impulsive = RTCC_IMPULSIVE;
+		lambert.N = 0;
+		lambert.Offset = _V(0, 0, 8 * 1852);
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.prograde = RTCC_LAMBERT_PROGRADE;
+		lambert.T1 = 27 * 60 * 60 + 30 * 60;
+		lambert.T2 = 28 * 60 * 60;
+		lambert.target = calcParams.tgt;
+		lambert.vessel = calcParams.src;
+
+		LambertTargeting(&lambert, dV_LVLH, P30TIG);
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 1;
+		opt.HeadsUp = false;
+		opt.sxtstardtime = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.navcheckGET = 0;
+
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
 	}
 }
 
-void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude)
 {
 	Entry* entry;
 	double SVMJD, GET;
@@ -168,6 +279,8 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 	dV_LVLH = entry->Entry_DV;
 	P30TIG = entry->EntryTIGcor;
+	latitude = entry->EntryLatcor;
+	longitude = entry->EntryLngcor;
 
 	delete entry;
 
@@ -251,7 +364,16 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 	
 	RP2off = RP2 + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
-	angle = lambert->Offset.x / length(RP2);
+
+	if (lambert->PhaseAngle != 0)
+	{
+		angle = lambert->PhaseAngle;
+	}
+	else
+	{
+		angle = lambert->Offset.x / length(RP2);
+	}
+
 	yvec = _V(Q_Xx2.m21, Q_Xx2.m22, Q_Xx2.m23);
 	RP2off = OrbMech::RotateVector(yvec, -angle, RP2off);
 
@@ -298,6 +420,10 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		P30TIG = lambert->T1 + t_slip;
 	}
 
+	if (lambert->axis == RTCC_LAMBERT_XAXIS)
+	{
+		dV_LVLH.y = 0.0;
+	}
 }
 
 void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
