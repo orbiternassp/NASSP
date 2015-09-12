@@ -117,6 +117,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		entopt.ReA = 0;
 		entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
 		entopt.type = RTCC_ENTRY_DEORBIT;
+		entopt.entrylongmanual = true;
 
 		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude); //Target Load for uplink
 
@@ -253,6 +254,15 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
+	case 30: //GENERIC STATE VECTOR UPDATE
+	{
+		double SVGET;
+		VECTOR3 R0, V0;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+	}
+	break;
 	}
 }
 
@@ -270,7 +280,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 	SVMJD = oapiGetSimMJD();
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new Entry(opt->vessel, AGCGravityRef(opt->vessel), opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->Range, opt->nominal);
+	entry = new Entry(opt->vessel, AGCGravityRef(opt->vessel), opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->Range, opt->nominal, opt->entrylongmanual);
 
 	while (!stop)
 	{

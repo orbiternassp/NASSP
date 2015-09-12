@@ -212,7 +212,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu6[] =
 	{
 		{ "Est. Time of Ignition", 0, 'T' },
-		{ "Est. Landing Lat", 0, 'L' },
+		{ "Manual longitude or zone", 0, 'L' },
 		{ "Des. Landing Long", 0, 'O' },
 		{ "Entry Angle", 0, 'A' },
 		{ "", 0, ' ' },
@@ -229,7 +229,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu6, sizeof(mnu6) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
-	RegisterFunction("LAT", OAPI_KEY_L, &ApolloRTCCMFD::EntryLatDialogue);
+	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
 	RegisterFunction("ANG", OAPI_KEY_A, &ApolloRTCCMFD::EntryAngDialogue);
 	RegisterFunction("OPT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchEntryNominal);

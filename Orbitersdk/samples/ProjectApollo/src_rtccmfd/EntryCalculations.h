@@ -6,7 +6,7 @@
 
 class Entry {
 public:
-	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal);
+	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual);
 	Entry(OBJHANDLE gravref);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
@@ -44,6 +44,7 @@ private:
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, double &phi);
 	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
+	double landingzonelong(int zone, double lat);
 
 	OBJHANDLE gravref, hEarth;
 	CoastIntegrator* coast;
@@ -79,6 +80,8 @@ private:
 	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
 	double x, dx, dxmax;
 	bool xislimited;
+	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	bool entrylongmanual;
 };
 
 #endif

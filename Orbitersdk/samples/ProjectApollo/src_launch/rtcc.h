@@ -83,6 +83,7 @@ struct EntryOpt
 	double Range;  //Desired range from 0.05g to splashdown, 0 uses AUGEKUGEL function to determine range
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 };
 
 struct REFSMMATOpt

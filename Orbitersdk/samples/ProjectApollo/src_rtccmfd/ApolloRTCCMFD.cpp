@@ -174,6 +174,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 	papiWriteScenario_bool(scn, "ENTRYNOMINAL", G->entrynominal);
+	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
@@ -239,6 +240,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 		papiReadScenario_bool(line, "ENTRYNOMINAL", G->entrynominal);
+		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -706,10 +708,41 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			GET_Display(Buffer, G->EntryTIG);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryLat*DEG);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryLng*DEG);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			if (G->entrylongmanual)
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
+				sprintf(Buffer, "%f °", G->EntryLng*DEG);
+				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
+				if (G->landingzone == 0)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
+				}
+				else if (G->landingzone == 1)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
+				}
+				else if (G->landingzone == 2)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
+				}
+				else if (G->landingzone == 3)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
+				}
+				else if (G->landingzone == 4)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
+				}
+			}
+
+			//sprintf(Buffer, "%f °", G->EntryLat*DEG);
+			//skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			
 			sprintf(Buffer, "%f °", G->EntryAng*DEG);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
@@ -1828,8 +1861,22 @@ void ApolloRTCCMFD::set_entrylat(double lat)
 
 void ApolloRTCCMFD::EntryLngDialogue()
 {
-	bool EntryLngInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Longitude in degree (°):", EntryLngInput, 0, 20, (void*)this);
+	if (G->entrylongmanual)
+	{
+		bool EntryLngInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Longitude in degree (°):", EntryLngInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		if (G->landingzone < 4)
+		{
+			G->landingzone++;
+		}
+		else
+		{
+			G->landingzone = 0;
+		}
+	}
 }
 
 bool EntryLngInput(void *id, char *str, void *data)
@@ -2496,17 +2543,24 @@ void ApolloRTCCMFD::menuEntryCalc()
 {
 	if (G->entrycalcmode == 0)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal);
+		if (G->entrylongmanual)
+		{
+			G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+		}
+		else
+		{
+			G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+		}
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else if(G->entrycalcmode == 1)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
 	else
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0);
+		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 }
@@ -2874,5 +2928,13 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 	if (G->entrycritical == 0 && G->entrycalcmode == 0)
 	{
 		G->entrynominal = !G->entrynominal;
+	}
+}
+
+void ApolloRTCCMFD::EntryLongitudeModeDialogue()
+{
+	if (G->entrycalcmode == 0)
+	{
+		G->entrylongmanual = !G->entrylongmanual;
 	}
 }

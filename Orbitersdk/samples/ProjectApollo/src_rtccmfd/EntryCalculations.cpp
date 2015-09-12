@@ -1,6 +1,6 @@
 #include "EntryCalculations.h"
 
-Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal)
+Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual)
 {
 	MA1 = 8e8;
 	C0 = 1.81000432e8;
@@ -15,11 +15,22 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	k3 = -0.06105;
 	k4 = -0.10453;
 
+	this->entrylongmanual = entrylongmanual;
+
 	this->vessel = v;
 	this->GETbase = GETbase;
 	this->gravref = gravref;
 	this->EntryAng = EntryAng;
-	this->EntryLng = EntryLng;
+
+	if (entrylongmanual)
+	{
+		this->EntryLng = EntryLng;
+	}
+	else
+	{
+		landingzone = (int)EntryLng;
+		this->EntryLng = landingzonelong(landingzone, 0);
+	}
 
 	this->critical = critical;
 
@@ -739,6 +750,12 @@ bool Entry::EntryIter()
 	{
 		precisioniter(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
 	}
+
+	if (!entrylongmanual)
+	{
+		EntryLng = landingzonelong(landingzone, theta_lat);
+	}
+
 	dlng = EntryLng - theta_long;
 	if (abs(dlng) > PI)
 	{
@@ -1640,5 +1657,29 @@ double Entry::WPL(double lat)
 	else
 	{
 		return 170.0*RAD;
+	}
+}
+
+double Entry::landingzonelong(int zone, double lat)
+{
+	if (zone == 0)
+	{
+		return MPL(lat);
+	}
+	else if (zone == 1)
+	{
+		return EPL(lat);
+	}
+	else if (zone == 2)
+	{
+		return AOL(lat);
+	}
+	else if (zone == 3)
+	{
+		return IOL(lat);
+	}
+	else
+	{
+		return WPL(lat);
 	}
 }

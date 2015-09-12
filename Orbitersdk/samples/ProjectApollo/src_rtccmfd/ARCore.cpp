@@ -234,6 +234,8 @@ ARCore::ARCore(VESSEL* v)
 	svtargetnumber = -1;
 	svtimemode = 0;
 	lambertmultiaxis = 1;
+	entrylongmanual = true;
+	landingzone = 0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -1147,7 +1149,7 @@ void ARCore::EntryPAD()
 	{
 		dt = OrbMech::time_radius_integ(R0B, V0B, SVMJD, oapiGetSize(hEarth) + EMSAlt, -1, gravref, hEarth, R05G, V05G);
 		//OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R05G, V05G, mu);
-		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical,entryrange, 0);
+		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical,entryrange, 0, true);
 		entry->EntryUpdateCalc();
 		EntryPADLat = entry->EntryLatPred;
 		EntryPADLng = entry->EntryLngPred;

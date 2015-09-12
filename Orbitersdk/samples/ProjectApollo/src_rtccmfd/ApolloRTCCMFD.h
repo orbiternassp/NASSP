@@ -168,6 +168,7 @@ public:
 	void menuCycleSVTimeMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
+	void EntryLongitudeModeDialogue();
 
 protected:
 	oapi::Font *font;
