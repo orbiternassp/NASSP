@@ -388,13 +388,19 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 	}
 
 	finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+	reentryconstraints(n1 + 1, R1B, VPRE);
+	x2 = x2_apo;
+	beta1 = 1.0 + x2*x2;
 	R_ERR = length(RPRE) - RD;
 
-	while (abs(R_ERR) > 100.0 && n1 <= 10)
+	while ((abs(R_ERR) > 50.0 && n1 <= 10) || n1 == 0)
 	{
 		newrcon(n1, RD, length(RPRE), R_ERR, dRCON, rPRE_apo);
 		conicreturn(1, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
 		finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+		reentryconstraints(n1+1, R1B, VPRE);
+		x2 = x2_apo;
+		beta1 = 1.0 + x2*x2;
 		R_ERR = length(RPRE) - RD;
 		n1++;
 	}
@@ -825,8 +831,9 @@ bool Entry::EntryIter()
 		precomputations(0, R1B, V1B, U_R1, U_H, MA2, C_FPA);
 
 		t2 = EntryTIGcor + t21;
-		OrbMech::rv_from_r0v0(R1B, V2, t2-EntryTIGcor, REI, VEI, mu); 
+		//OrbMech::rv_from_r0v0(R1B, V2, t2-EntryTIGcor, REI, VEI, mu); 
 		OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, REI, VEI, hEarth, hEarth);//Maneuver to Entry Interface (400k ft)
+		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);
 
 		t32 = OrbMech::time_radius(REI, VEI, length(REI) - 30480.0, -1, mu);
 		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu); //Entry Interface to 300k ft
@@ -845,7 +852,7 @@ bool Entry::EntryIter()
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
 		EntryRET = t2 - EntryTIGcor + t32 + dt22;
-		EntryAng = atan(x2);
+		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
 
 		EntryLngcor = theta_long;
 		EntryLatcor = theta_lat;
