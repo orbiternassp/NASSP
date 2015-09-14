@@ -301,7 +301,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
 			EntryTIGcor = entry->EntryTIGcor+t_slip;
-			P30TIG = EntryTIGcor + t_slip;
+			P30TIG = EntryTIGcor;
 			dV_LVLH = mul(Q_Xx, Llambda);
 			//dV_LVLH = tmul(mat, Llambda);
 			entrycalcstate = 0;

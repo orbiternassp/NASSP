@@ -112,7 +112,14 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	R_E = oapiGetSize(gravref);
 	earthorbitangle = (-31.7 - 2.15)*RAD;
 
-	this->entrynominal = entrynominal;
+	if (critical == 0)
+	{
+		this->entrynominal = entrynominal;
+	}
+	else
+	{
+		this->entrynominal = false;
+	}
 	xislimited = false;
 }
 
@@ -313,28 +320,28 @@ void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI)
 void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21)
 {
 	VECTOR3 U_R1, U_H, REI, VEI;
-	double MA2, x2_err, x2_err_apo,C_FPA;
+	double MA2, x2_err, x2_err_apo, C_FPA;
 	int n1;
 
-x2_err = 1.0;
-precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
-n1 = 1;
-while (abs(x2_err) > 0.0001 && n1 <= 10)
-{
-	conicreturn(0, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
-	t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
+	x2_err = 1.0;
+	precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
+	n1 = 1;
+	while (abs(x2_err) > 0.0001 && n1 <= 10)
+	{
+		conicreturn(0, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
+		t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
+		OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
+		reentryconstraints(n1, R1B, VEI);
+		x2_err = x2_apo - x2;
+		newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
+		n1++;
+	}
+	t2 = t1 + t21;
 	OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-	reentryconstraints(n1, R1B, VEI);
-	x2_err = x2_apo - x2;
-	newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
-	n1++;
-}
-t2 = t1 + t21;
-OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-landingsite(REI, VEI, t2, theta_long, theta_lat);
+	landingsite(REI, VEI, t2, theta_long, theta_lat);
 }
 
-void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
+void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
 {
 	double RD, R_ERR, dRCON, rPRE_apo, r1b, lambda, beta1, beta5, theta1, theta2, p_CON, C_FPA, MA2;
 	VECTOR3 U_R1, U_V1, RPRE, VPRE, U_H, eta;
@@ -798,7 +805,7 @@ bool Entry::EntryIter()
 
 	ii++;
 
-	if ((abs(dlng) > 0.005*RAD && ii < 50) || entryphase == 0)
+	if ((abs(dlng) > 0.005*RAD && ii < 40) || entryphase == 0)
 	{
 		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD))
 		{
