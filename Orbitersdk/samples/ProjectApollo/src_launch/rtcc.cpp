@@ -254,6 +254,38 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
+	case 6: //MISSION C NSR MANEUVER
+	{
+		CDHOpt cdhopt;
+		AP7ManPADOpt opt;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
+
+		AP7MNV * form = (AP7MNV *)pad;
+
+		cdhopt.GETbase = getGETBase();
+		cdhopt.impulsive = RTCC_NONIMPULSIVE;
+		cdhopt.CDHtimemode = 1;
+		cdhopt.DH = 8 * 1852;
+		cdhopt.TIG = 28 * 60 * 60;
+		cdhopt.target = calcParams.tgt;
+		cdhopt.vessel = calcParams.src;
+
+		CDHcalc(&cdhopt, dV_LVLH, P30TIG);
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.HeadsUp = false;
+		opt.sxtstardtime = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
+
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
 	case 30: //GENERIC STATE VECTOR UPDATE
 	{
 		double SVGET;
@@ -974,4 +1006,136 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 	REFSMMATcur = REFSMMATopt;*/
+}
+
+void RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates the required DV vector of a coelliptic burn
+{
+	double mu;
+	double SVMJD, SVtime, dt, dt2, c1, c2, theta, SW, dh_CDH, VPV, dt2_apo, CDHtime_cor;
+	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb;
+	VECTOR3 RA0, VA0, RP0, VP0, RA2_alt, VA2_alt, V_A2_apo, CDHdeltaV;
+	VECTOR3 u, RPC, VPC, i, j, k;
+	double epsilon, a_P, a_A, V_AH, V_AV;
+	MATRIX3 Q_Xx;
+	MATRIX3 obli;
+	VECTOR3 RA2, VA2, RP2, VP2;
+	OBJHANDLE gravref;
+
+	//maneuverplanet = gravref;
+	gravref = AGCGravityRef(opt->vessel);
+
+	mu = GGRAV*oapiGetMass(gravref);
+
+	//DH_met = DH*1852.0;							//Calculates the desired delta height of the coellitpic orbit in metric units
+
+	opt->vessel->GetRelativePos(gravref, RA0_orb);	//vessel position vector
+	opt->vessel->GetRelativeVel(gravref, VA0_orb);	//vessel velocity vector
+	opt->target->GetRelativePos(gravref, RP0_orb);	//target position vector
+	opt->target->GetRelativeVel(gravref, VP0_orb);	//target velocity vector
+	SVtime = oapiGetSimTime();					//The time mark of the state vectors
+
+	oapiGetPlanetObliquityMatrix(gravref, &obli);
+
+	RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);
+	VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
+	RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
+	VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
+
+	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//Coordinate system nightmare. My calculation methods use another system
+	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
+	RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
+	VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
+
+	SVMJD = oapiTime2MJD(SVtime);				//Calculates the MJD of the state vector
+
+	if (opt->CDHtimemode == 0)
+	{
+		CDHtime_cor = opt->TIG;
+		dt2 = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
+	}
+	else
+	{
+		dt = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
+
+		dt2 = dt + 10.0;							//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
+
+		while (abs(dt2 - dt) > 0.1)					//0.1 seconds accuracy should be enough
+		{
+			c1 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt, opt->DH, gravref);		//c is the difference between desired and actual DH
+			c2 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt2, opt->DH, gravref);
+
+			dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
+			dt = dt2;
+			dt2 = dt2_apo;
+		}
+
+		CDHtime_cor = dt2 + (SVMJD - opt->GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
+
+	}
+
+	//OrbMech::rv_from_r0v0(RA0, VA0, dt2, RA2, VA2, mu);
+	//OrbMech::rv_from_r0v0(RP0, VP0, dt2, RP2, VP2, mu);
+	OrbMech::oneclickcoast(RA0, VA0, SVMJD, dt2, RA2, VA2, gravref, gravref);//Coasting Integration, active vessel state to CDH time
+	OrbMech::oneclickcoast(RP0, VP0, SVMJD, dt2, RP2, VP2, gravref, gravref);//Coasting Integration, passive vessel state to CDH time
+
+	//This block of equations is taken from the GSOP for Luminary document: 
+	//http://www.ibiblio.org/apollo/NARA-SW/R-567-sec5-rev8-5.4-5.5.pdf
+	//Pre-CDH Program, page 5.4-18
+	u = unit(crossp(RP2, VP2));
+	RA2_alt = RA2;
+	VA2_alt = VA2;
+	RA2 = unit(RA2 - u*dotp(RA2, u))*length(RA2);
+	VA2 = unit(VA2 - u*dotp(VA2, u))*length(VA2);
+
+	theta = acos(dotp(RA2, RP2) / length(RA2) / length(RP2));
+	SW = OrbMech::sign(dotp(u, crossp(RP2, RA2)));
+	theta = SW*theta;
+	OrbMech::rv_from_r0v0_ta(RP2, VP2, theta, RPC, VPC, mu);
+	dh_CDH = length(RPC) - length(RA2);
+
+	if (opt->CDHtimemode == 0)
+	{
+		//DH = dh_CDH / 1852.0;
+	}
+
+	VPV = dotp(VPC, RA2 / length(RA2));
+
+	epsilon = (length(VPC)*length(VPC)) / 2 - mu / length(RPC);
+	a_P = -mu / (2.0 * epsilon);
+	a_A = a_P - dh_CDH;
+	V_AV = VPV*OrbMech::power((a_P / a_A), 1.5);
+	V_AH = sqrt(mu*(2.0 / length(RA2) - 1.0 / a_A) - (V_AV*V_AV));
+	V_A2_apo = unit(crossp(u, RA2))*V_AH + unit(RA2)*V_AV;	//The desired velocity vector at CDH time													
+	
+	if (opt->impulsive == RTCC_IMPULSIVE)
+	{
+		j = unit(crossp(VA2, RA2));
+		k = unit(-RA2);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		CDHdeltaV = mul(Q_Xx, V_A2_apo - VA2_alt); //Calculates the desired P30 LVLH DV Vector
+
+		P30TIG = CDHtime_cor;
+		dV_LVLH = CDHdeltaV;
+	}
+	else
+	{
+		VECTOR3 Llambda, RA2_cor, VA2_cor;double t_slip;
+		OrbMech::impulsive(opt->vessel, RA2, VA2_alt, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
+
+		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
+
+		j = unit(crossp(VA2_cor, RA2_cor));
+		k = unit(-RA2_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		CDHdeltaV = mul(Q_Xx, Llambda); //Calculates the desired P30 LVLH DV Vector
+		P30TIG = CDHtime_cor + t_slip;
+		dV_LVLH = CDHdeltaV;
+
+		/*dV_LVLH = CDHdeltaV;
+		P30TIG = CDHtime_cor;*/
+	}
 }

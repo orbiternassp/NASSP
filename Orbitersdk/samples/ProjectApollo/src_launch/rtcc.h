@@ -100,6 +100,17 @@ struct REFSMMATOpt
 	double LSLat; //latitude for the landign site REFSMMAT
 };
 
+struct CDHOpt
+{
+	VESSEL* vessel; //Vessel executing the burn
+	VESSEL* target; //Target vessel
+	double GETbase; //usually MJD at launch
+	double DH; //Delta Height
+	int CDHtimemode; //0 = Fixed Time, 1 = Find GETI
+	double TIG; // (Estimated) Time of Ignition
+	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	VESSEL *src;	// Our ship
@@ -116,6 +127,7 @@ public:
 	struct calculationParameters calcParams;
 private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
+	void CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
