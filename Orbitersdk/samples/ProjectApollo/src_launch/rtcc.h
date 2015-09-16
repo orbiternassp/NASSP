@@ -111,6 +111,14 @@ struct CDHOpt
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 };
 
+struct AP7BLKOpt
+{
+	int n; //number of PAD entries
+	double *lng; //pointer to splashdown longitudes
+	double *GETI; //pointer to ignition times
+	char **area; //pointer to splashdown areas
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	VESSEL *src;	// Our ship
@@ -136,6 +144,8 @@ private:
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude);
 	double getGETBase();
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
+	double HHMMSSToSS(int H, int M, int S);
+	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 };
 
 

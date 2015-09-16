@@ -143,7 +143,31 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 3: //MISSION C 2ND PHASING MANEUVER
+	case 3: //MISSION C BLOCK DATA UPDATE 2
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { 136.7*RAD, -16.2*RAD, -22.0*RAD, -33.0*RAD, -28.2*RAD, -62.0*RAD };
+		double GETI[6] = { HHMMSSToSS(13,29,36),HHMMSSToSS(14,19,12),HHMMSSToSS(15,54,48),HHMMSSToSS(17,28,48),HHMMSSToSS(19,8,6),HHMMSSToSS(20,34,3) };
+		char area[6][10] = { "009-3B", "010-AC", "011-AC", "012-AC", "013-2A", "014-1B" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+		
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 4: //MISSION C 2ND PHASING MANEUVER
 	{
 		AP7ManPADOpt opt;
 		LambertMan lambert;
@@ -180,7 +204,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 4: //MISSION C NCC1 MANEUVER
+	case 5: //MISSION C NCC1 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -217,7 +241,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 5: //MISSION C NCC2 MANEUVER
+	case 6: //MISSION C NCC2 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -254,7 +278,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 6: //MISSION C NSR MANEUVER
+	case 7: //MISSION C NSR MANEUVER
 	{
 		CDHOpt cdhopt;
 		AP7ManPADOpt opt;
@@ -295,6 +319,47 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
 	}
 	break;
+	}
+}
+
+void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
+{
+	EntryOpt entopt;
+	VECTOR3 dV_LVLH;
+	double P30TIG, latitude, longitude, v_e, m1, Vc;
+
+	char weather[10] = "GOOD";
+
+	v_e = calcParams.src->GetThrusterIsp0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
+
+	entopt.vessel = calcParams.src;
+	entopt.GETbase = getGETBase();
+	entopt.impulsive = RTCC_NONIMPULSIVE;
+	entopt.nominal = RTCC_ENTRY_NOMINAL;
+	entopt.Range = 0;
+	entopt.ReA = 0;
+	entopt.type = RTCC_ENTRY_DEORBIT;
+	entopt.entrylongmanual = true;
+
+	for (int i = 0;i < opt->n;i++)
+	{
+		entopt.lng = opt->lng[i];
+		entopt.TIGguess = opt->GETI[i];
+
+		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude);
+
+		m1 = calcParams.src->GetMass()*exp(-length(dV_LVLH) / v_e);
+		Vc = length(dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD) - 60832.18 / m1;
+
+		for (int j = 0;j < 10;j++)
+		{
+			pad.Area[i][j] = opt->area[i][j];
+			pad.Wx[i][j] = weather[j];
+		}
+		pad.dVC[i] = Vc/0.3048;
+		pad.GETI[i] = P30TIG;
+		pad.Lat[i] = latitude*DEG;
+		pad.Lng[i] = longitude*DEG;	
 	}
 }
 
@@ -1138,4 +1203,9 @@ void RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates
 		/*dV_LVLH = CDHdeltaV;
 		P30TIG = CDHtime_cor;*/
 	}
+}
+
+double RTCC::HHMMSSToSS(int H, int M, int S) 
+{
+	return (double)H*3600.0 + (double)M*60.0 + (double)S;
 }

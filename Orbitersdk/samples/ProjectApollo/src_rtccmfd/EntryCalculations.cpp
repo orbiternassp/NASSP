@@ -832,7 +832,7 @@ bool Entry::EntryIter()
 
 		t2 = EntryTIGcor + t21;
 		//OrbMech::rv_from_r0v0(R1B, V2, t2-EntryTIGcor, REI, VEI, mu); 
-		OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, REI, VEI, hEarth, hEarth);//Maneuver to Entry Interface (400k ft)
+		//OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, REI, VEI, hEarth, hEarth);//Maneuver to Entry Interface (400k ft)
 		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);
 
 		t32 = OrbMech::time_radius(REI, VEI, length(REI) - 30480.0, -1, mu);
