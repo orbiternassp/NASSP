@@ -66,18 +66,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert.vessel = calcParams.src;
-		lambert.GETbase = getGETBase();
-		lambert.T1 = 3 * 3600 + 20 * 60;
-		lambert.T2 = 26 * 3600 + 25 * 60;
-		lambert.N = 15;
-		lambert.axis = RTCC_LAMBERT_XAXIS;
-		lambert.Offset = _V(76.5 * 1852, 0, 0);
-		lambert.PhaseAngle = 0;
-		lambert.target = calcParams.tgt;
-		lambert.prograde = RTCC_LAMBERT_PROGRADE;
-		lambert.impulsive = RTCC_IMPULSIVE;
-		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(3, 20, 0), OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -149,7 +138,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7BLKOpt opt;
 
 		double lng[6] = { 136.7*RAD, -16.2*RAD, -22.0*RAD, -33.0*RAD, -28.2*RAD, -62.0*RAD };
-		double GETI[6] = { HHMMSSToSS(13,29,36),HHMMSSToSS(14,19,12),HHMMSSToSS(15,54,48),HHMMSSToSS(17,28,48),HHMMSSToSS(19,8,6),HHMMSSToSS(20,34,3) };
+		double GETI[6] = { OrbMech::HHMMSSToSS(13,29,36),OrbMech::HHMMSSToSS(14,19,12),OrbMech::HHMMSSToSS(15,54,48),OrbMech::HHMMSSToSS(17,28,48),OrbMech::HHMMSSToSS(19,8,6),OrbMech::HHMMSSToSS(20,34,3) };
 		char area[6][10] = { "009-3B", "010-AC", "011-AC", "012-AC", "013-2A", "014-1B" };
 		char **test;
 		test = new char*[6];
@@ -176,18 +165,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert.axis = RTCC_LAMBERT_XAXIS;
-		lambert.GETbase = getGETBase();
-		lambert.impulsive = RTCC_IMPULSIVE;
-		lambert.N = 7;
-		lambert.Offset = _V(76.5 * 1852, 0, 0);
-		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
-		lambert.PhaseAngle = 0;
-		lambert.prograde = RTCC_LAMBERT_PROGRADE;
-		lambert.T1 = 15 * 60 * 60 + 52 * 60;
-		lambert.T2 = 26 * 60 * 60 + 25 * 60;
-		lambert.target = calcParams.tgt;
-		lambert.vessel = calcParams.src;
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(15, 52, 0), OrbMech::HHMMSSToSS(26, 25, 0), 7, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -204,7 +182,31 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 5: //MISSION C NCC1 MANEUVER
+	case 5: //MISSION C BLOCK DATA UPDATE 3
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[7] = { -62.9*RAD, -63.0*RAD, -62.9*RAD, -68.5*RAD, -162.4*RAD, -162.3*RAD, -163.3*RAD };
+		double GETI[7] = { OrbMech::HHMMSSToSS(22,10,42),OrbMech::HHMMSSToSS(23,46,41),OrbMech::HHMMSSToSS(25,22,18),OrbMech::HHMMSSToSS(26,56,28),OrbMech::HHMMSSToSS(29,43,42),OrbMech::HHMMSSToSS(31,18,29), OrbMech::HHMMSSToSS(32,53,56) };
+		char area[7][10] = { "015-1A", "016-1B", "017-1A", "018-1A", "019-4A", "020-4A", "021-4A" };
+		char **test;
+		test = new char*[7];
+		for (int i = 0;i < 7;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 7;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 6: //MISSION C NCC1 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -213,18 +215,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
-		lambert.GETbase = getGETBase();
-		lambert.impulsive = RTCC_NONIMPULSIVE;
-		lambert.N = 1;
-		lambert.Offset = _V(0, 0, 8 * 1852);
-		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lambert.PhaseAngle = -1.32*RAD;
-		lambert.prograde = RTCC_LAMBERT_PROGRADE;
-		lambert.T1 = 26 * 60 * 60 + 25 * 60;
-		lambert.T2 = 28 * 60 * 60;
-		lambert.target = calcParams.tgt;
-		lambert.vessel = calcParams.src;
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(26, 25, 0), OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_LAMBERT_PROGRADE, RTCC_NONIMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -241,7 +232,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 6: //MISSION C NCC2 MANEUVER
+	case 7: //MISSION C NCC2 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -250,18 +241,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
-		lambert.GETbase = getGETBase();
-		lambert.impulsive = RTCC_IMPULSIVE;
-		lambert.N = 0;
-		lambert.Offset = _V(0, 0, 8 * 1852);
-		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lambert.PhaseAngle = -1.32*RAD;
-		lambert.prograde = RTCC_LAMBERT_PROGRADE;
-		lambert.T1 = 27 * 60 * 60 + 30 * 60;
-		lambert.T2 = 28 * 60 * 60;
-		lambert.target = calcParams.tgt;
-		lambert.vessel = calcParams.src;
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(27, 30, 0), OrbMech::HHMMSSToSS(28, 0, 0), 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -278,7 +258,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
-	case 7: //MISSION C NSR MANEUVER
+	case 8: //MISSION C NSR MANEUVER
 	{
 		CDHOpt cdhopt;
 		AP7ManPADOpt opt;
@@ -308,6 +288,40 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
+	case 29: //MISSION C NOMINAL DEORBIT MANEUVER 
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EntryOpt entopt;
+		EarthEntryPADOpt opt;
+		double P30TIG, latitude, longitude;
+		VECTOR3 dV_LVLH;
+		
+		entopt.vessel = calcParams.src;
+		entopt.GETbase = getGETBase();
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -64.17*RAD;
+		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.Range = 0;
+		entopt.ReA = -2.062*RAD;
+		entopt.TIGguess = OrbMech::HHMMSSToSS(259,39,16);
+		entopt.type = RTCC_ENTRY_DEORBIT;
+		entopt.entrylongmanual = true;
+
+		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude); //Target Load for uplink
+	
+		opt.dV_LVLH = dV_LVLH;
+		opt.GETbase = getGETBase();
+		opt.P30TIG = P30TIG;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.vessel = calcParams.src;
+
+		EarthOrbitEntry(&opt, *form);
+		sprintf(form->Area[0], "164-1A");
+		form->Lat[0] = latitude*DEG;
+		form->Lng[0] = longitude*DEG;
 	}
 	break;
 	case 30: //GENERIC STATE VECTOR UPDATE
@@ -351,11 +365,9 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 		m1 = calcParams.src->GetMass()*exp(-length(dV_LVLH) / v_e);
 		Vc = length(dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD) - 60832.18 / m1;
 
-		for (int j = 0;j < 10;j++)
-		{
-			pad.Area[i][j] = opt->area[i][j];
-			pad.Wx[i][j] = weather[j];
-		}
+		sprintf(pad.Area[i], opt->area[i]);
+		sprintf(pad.Wx[i], weather);
+
 		pad.dVC[i] = Vc/0.3048;
 		pad.GETI[i] = P30TIG;
 		pad.Lat[i] = latitude*DEG;
@@ -689,6 +701,82 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	pad.Trun *= DEG;
 	pad.HA /= 1852.0;
 	pad.HP /= 1852.0;
+}
+
+void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
+{
+	double mu, SVMJD, GET, EMSAlt, theta_T, m1,v_e, EIAlt, lat, lng;
+	double dt;//from SV time to deorbit maneuver
+	double t_go; //from deorbit TIG to shutdown
+	double dt2; //from shutdown to EI
+	double dt3; //from EI to 0.05g
+	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, R2B, V2B, R05G, V05G, EIangles, REI, VEI;
+	MATRIX3 Rot, M_R;
+	OBJHANDLE gravref;
+	Entry* entry;
+
+	gravref = AGCGravityRef(opt->vessel);
+	mu = GGRAV*oapiGetMass(gravref);
+
+	opt->vessel->GetRelativePos(gravref, R_A);
+	opt->vessel->GetRelativeVel(gravref, V_A);
+	SVMJD = oapiGetSimMJD();
+	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+	EMSAlt = 284643.0*0.3048;
+	EIAlt = 400000.0*0.3048;
+
+	dt = opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
+
+	UY = unit(crossp(V1B, R1B));
+	UZ = unit(-R1B);
+	UX = crossp(UY, UZ);
+
+	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+	theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
+	DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+	V_G = DV_C + UY*opt->dV_LVLH.y;
+
+	OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+
+	dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + (dt + t_go) / 3600.0 / 24.0, oapiGetSize(gravref) + EIAlt, -1, gravref, gravref, REI, VEI);
+	dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0, oapiGetSize(gravref) + EMSAlt, -1, gravref, gravref, R05G, V05G);
+
+	entry = new Entry(gravref);
+	entry->Reentry(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0);
+
+	lat = entry->EntryLatPred;
+	lng = entry->EntryLngPred;
+
+	UX = unit(V05G);
+	UY = unit(crossp(UX, R05G));
+	UZ = unit(crossp(UX, crossp(UX, R05G)));
+
+	double aoa = -157.0*RAD;
+	VECTOR3 vunit = _V(0.0, 1.0, 0.0);
+	MATRIX3 Rotaoa;
+
+	Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+
+	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
+
+	pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
+	pad.dVTO[0] = -60832.18 / m1/0.3048;
+	pad.Lat[0] = lat*DEG;
+	pad.Lng[0] = lng*DEG;
+	pad.Ret05[0] = t_go + dt2 + dt3;
+	pad.RTGO[0] = entry->EntryRTGO;
+	pad.VIO[0] = entry->EntryVIO/0.3048;
 }
 
 MATRIX3 RTCC::GetREFSMMATfromAGC()
@@ -1205,7 +1293,22 @@ void RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates
 	}
 }
 
-double RTCC::HHMMSSToSS(int H, int M, int S) 
+LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, bool prograde, int impulsive)
 {
-	return (double)H*3600.0 + (double)M*60.0 + (double)S;
+	LambertMan opt;
+
+	opt.axis = axis;
+	opt.GETbase = GETbase;
+	opt.impulsive = impulsive;
+	opt.N = N;
+	opt.Offset = Offset;
+	opt.Perturbation = Perturbation;
+	opt.PhaseAngle = PhaseAngle;
+	opt.prograde = prograde;
+	opt.T1 = T1;
+	opt.T2 = T2;
+	opt.target = target;
+	opt.vessel = vessel;
+	
+	return opt;
 }

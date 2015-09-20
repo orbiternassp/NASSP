@@ -6,6 +6,16 @@ inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
 namespace OrbMech{
 
+	double HHMMSSToSS(int H, int M, int S)
+	{
+		return (double)H*3600.0 + (double)M*60.0 + (double)S;
+	}
+
+	double HHMMSSToSS(double H, double M, double S)
+	{
+		return H*3600.0 + M*60.0 + S;
+	}
+
 void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX)	//Creates a velocity vector from orbital elements
 {
 	//INPUTS:
@@ -2768,7 +2778,7 @@ void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRU
 
 void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
-	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, V_go_apo, R_d, V_d, R_p, V_p, i_z, i_y;
+	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m, f_T;
 	int n, nmax;
 

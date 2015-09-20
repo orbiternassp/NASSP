@@ -229,6 +229,8 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	double HHMMSSToSS(int H, int M, int S);
+	double HHMMSSToSS(double H, double M, double S);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
