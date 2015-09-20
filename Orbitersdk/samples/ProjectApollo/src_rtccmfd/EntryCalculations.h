@@ -79,9 +79,10 @@ private:
 	bool entrynominal; //0 = minimum DV entry, 1 = 31.7° line
 	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
 	double x, dx, dxmax;
-	bool xislimited;
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	bool entrylongmanual;
+	double xlim;
+	bool precision; //0 = only conic, 1 = precision
 };
 
 #endif
