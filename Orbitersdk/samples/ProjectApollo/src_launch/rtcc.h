@@ -72,6 +72,15 @@ struct AP7ManPADOpt
 	double navcheckGET; //Time for the navcheck. 0 = no nav check
 };
 
+struct AP7TPIPADOpt
+{
+	VESSEL* vessel; //vessel
+	VESSEL* target; //Target vessel
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+};
+
 struct EntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
@@ -146,6 +155,7 @@ private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
+	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -156,6 +166,7 @@ private:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
+	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 };
 
 

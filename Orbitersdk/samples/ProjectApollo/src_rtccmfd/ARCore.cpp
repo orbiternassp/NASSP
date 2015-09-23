@@ -1513,8 +1513,17 @@ void ARCore::TPIPAD()
 
 	TPIPAD_ELmin5 = acos(dotp(U_L, U_P*OrbMech::sign(dotp(U_P, crossp(u, RA2)))));
 
-	TPIPAD_AZ = atan2(-TPIPAD_dV_LOS.z, TPIPAD_dV_LOS.x);
-
+	VECTOR3 U_F, LOS, U_LOS, NN;
+	U_F = unit(crossp(crossp(RA3, VA3), RA3));
+	U_R = unit(RA3);
+	LOS = RP3 - RA3;
+	U_LOS = unit(LOS - U_R*dotp(LOS, U_R));
+	TPIPAD_AZ = acos(dotp(U_LOS, U_F));//atan2(-TPIPAD_dV_LOS.z, TPIPAD_dV_LOS.x);
+	NN = crossp(U_LOS, U_F);
+	if (dotp(NN, RA3) < 0)
+	{
+		TPIPAD_AZ = PI2 - TPIPAD_AZ;
+	}
 }
 
 void ARCore::MapUpdate()
