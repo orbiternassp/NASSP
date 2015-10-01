@@ -335,6 +335,7 @@ protected:
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
+	double vinert;
 
 	int status;
 	int SlewScribe; //pixels

@@ -2681,6 +2681,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	constG = 9.7939; //Set initial value
 	RSIRotation = PI/2;
 	RSITarget = 0;
+	vinert = 37000.0;
 
 	switchchangereset = false;
 
@@ -2727,7 +2728,7 @@ void EMS::Init(Saturn *vessel) {
 void EMS::TimeStep(double MissionTime, double simdt) {
 
 	double position;
-	double dV;
+	double dV, dV_res;
 
 	AccelerometerTimeStep(simdt);
 
@@ -2792,8 +2793,16 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 				if (pt02GComparator(simdt)) ThresholdBreeched = false;
 
-				ScrollPosition = ScrollPosition + (dV * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
-				dVRangeCounter -= dV * simdt;
+				dV_res = 0.948*dV; //Resolution factor from RTCC requirements for reentry phase: https://archive.org/download/nasa_techdoc_19740074547/19740074547.pdf
+
+				ScrollPosition = ScrollPosition + (dV_res * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
+				vinert -= dV_res;
+
+				if (vinert < 0.0) //Did the EMS integrator have the ability to count below 0? If yes, range goes up again.
+				{
+					vinert = 0.0;
+				}
+				dVRangeCounter -= 0.000162*vinert * simdt; //Also from the RTCC document
 
 				pt05GLightOn = true;
 				if (!CorridorEvaluated){
@@ -2815,13 +2824,25 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		case EMS_STATUS_Vo_SET:
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
-				ScrollPosition += 480*ScrollScaling * simdt;
+			{
+				ScrollPosition += 480 * ScrollScaling * simdt; 
+				vinert -= 480 * simdt;
+			}
 			else if (position == 2)
-				ScrollPosition += 30*ScrollScaling * simdt;
-			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=40.0)
-				ScrollPosition -= 480*ScrollScaling * simdt;
-			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
-				ScrollPosition -= 30*ScrollScaling * simdt;
+			{
+				ScrollPosition += 30 * ScrollScaling * simdt;
+				vinert -= 30 * simdt;
+			}
+			else if (position == 3 && (MaxScrollPosition - ScrollPosition) <= 40.0)
+			{
+				ScrollPosition -= 480 * ScrollScaling * simdt;
+				vinert += 480 * simdt;
+			}
+			else if (position == 4 && (MaxScrollPosition - ScrollPosition) <= 40.0)
+			{
+				ScrollPosition -= 30 * ScrollScaling * simdt;
+				vinert += 30 * simdt;
+			}
 			break;
 
 		case EMS_STATUS_RNG_SET:
@@ -2855,6 +2876,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 
 		case EMS_STATUS_EMS_TEST3:
+			vinert = 37000.0;
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
 				dVRangeCounter += 127.5 * simdt;
@@ -2882,6 +2904,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 
 		case EMS_STATUS_EMS_TEST5:
+			vinert = 37000.0;
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
 				ScrollPosition += 480*ScrollScaling * simdt;
@@ -3223,6 +3246,7 @@ void EMS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
 	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
+	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
 	papiWriteScenario_double(scn, "RSITARGET", RSITarget);
 	papiWriteScenario_double(scn, "SCROLLPOSITION", ScrollPosition);
@@ -3260,6 +3284,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
+		} else if (!strnicmp (line, "VINERTIAL", 9)) {
+			sscanf(line + 9, "%lf", &vinert);
 		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
 			sscanf(line + 10, "%lf", &dVTestTime);
 		} else if (!strnicmp (line, "RSITARGET", 9)) {
