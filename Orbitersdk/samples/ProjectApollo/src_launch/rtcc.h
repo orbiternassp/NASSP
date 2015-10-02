@@ -149,14 +149,15 @@ public:
 	void Init(MCC *ptr);
 	void Calculation(int fcn,LPVOID &pad);
 
+	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
+
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
-	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);

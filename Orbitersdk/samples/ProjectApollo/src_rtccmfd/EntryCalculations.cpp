@@ -131,7 +131,10 @@ Entry::Entry(OBJHANDLE gravref)
 	double EntryInterface;
 	EntryInterface = 400000.0 * 0.3048;
 
-	RCON = oapiGetSize(gravref) + EntryInterface;
+	hEarth = oapiGetObjectByName("Earth");
+	mu = GGRAV*oapiGetMass(hEarth);
+
+	RCON = oapiGetSize(hEarth) + EntryInterface;
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
 }
 
@@ -814,7 +817,7 @@ bool Entry::EntryIter()
 	{
 		if (precision && entrynominal)
 		{
-			if (abs(x - xlim) < OrbMech::power(2.0, -20.0)*2.0 || abs(x + xlim) < OrbMech::power(2.0, -20.0)*2.0)
+			if (abs(x - xlim) < OrbMech::power(2.0, -20.0)*2.0 || abs(x + xlim) < OrbMech::power(2.0, -20.0)*2.0 || ii == 40)
 			{
 				ii = 2;
 				precision = false;

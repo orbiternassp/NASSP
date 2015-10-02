@@ -6,7 +6,15 @@
 #include "ApollomfdButtons.h"
 #include "OrbMech.h"
 #include "EntryCalculations.h"
-
+#include "soundlib.h"
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+#include "IMU.h"
+#include "saturn.h"
+#include "mcc.h"
+#include "rtcc.h"
 #include <queue>
 
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
@@ -69,6 +77,7 @@ public:
 	//OrbMech* mech;
 	CoastIntegrator* coast;
 	Entry* entry;
+	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 	int time_mode; //0 = GET, 1 = Simulation Time
 	double T1; //Time of the Lambert targeted maneuver
@@ -141,8 +150,8 @@ public:
 	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime,ManPADDVC;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
-	double EntryPADRTGO, EntryPADVIO, EntryPADRET05Earth, EntryPADRET05Lunar;
-	int entrypadopt;
+	double EntryPADRTGO, EntryPADVIO, EntryPADRET05Earth, EntryPADRET05Lunar, EntryPADdVTO;
+	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
 	double EntryPADGMax, EntryPADDO;
 	bool EntryPADLift;
 	double EntryPADHorChkGET, EntryPADHorChkPit;
@@ -168,6 +177,7 @@ public:
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	int entryprecision; //0 = conic, 1 = precision
 	
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

@@ -14,8 +14,7 @@
 
 #define STRICT
 #define ORBITER_MODULE
-#include "windows.h"
-#include "orbitersdk.h"
+
 #include "ApolloRTCCMFD.h"
 #include "papi.h"
 
@@ -772,6 +771,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
+			else if (G->entrycalcstate == 0)
+			{
+				if (G->entryprecision == 0)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Conic Solution", 14);
+				}
+				else if (G->entryprecision == 1)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Precision Solution", 18);
+				}
+			}
 
 			GET_Display(Buffer, G->EntryTIGcor);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -1142,41 +1152,41 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			if (G->TPIPAD_dV_LOS.x > 0)
 			{
-				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x / 0.3048),G->TPIPAD_BT.x);
+				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x),G->TPIPAD_BT.x);
 			}
 			else
 			{
-				sprintf(Buffer, "A%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x / 0.3048), G->TPIPAD_BT.x);
+				sprintf(Buffer, "A%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x), G->TPIPAD_BT.x);
 			}
 			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
 			if (G->TPIPAD_dV_LOS.y > 0)
 			{
-				sprintf(Buffer, "R%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y / 0.3048), G->TPIPAD_BT.y);
+				sprintf(Buffer, "R%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y), G->TPIPAD_BT.y);
 			}
 			else
 			{
-				sprintf(Buffer, "L%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y / 0.3048), G->TPIPAD_BT.y);
+				sprintf(Buffer, "L%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y), G->TPIPAD_BT.y);
 			}
 			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
 			if (G->TPIPAD_dV_LOS.z > 0)
 			{
-				sprintf(Buffer, "D%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z / 0.3048), G->TPIPAD_BT.z);
+				sprintf(Buffer, "D%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z), G->TPIPAD_BT.z);
 			}
 			else
 			{
-				sprintf(Buffer, "U%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z / 0.3048), G->TPIPAD_BT.z);
+				sprintf(Buffer, "U%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z), G->TPIPAD_BT.z);
 			}
 			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "X%04.1f/%02.1f dH TPI/ddH", G->TPIPAD_dH / 1852.0, G->TPIPAD_ddH / 1852.0);
+			sprintf(Buffer, "X%04.1f/%02.1f dH TPI/ddH", G->TPIPAD_dH, G->TPIPAD_ddH);
 			skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f R", G->TPIPAD_R / 1852.0);
+			sprintf(Buffer, "X%06.2f R", G->TPIPAD_R);
 			skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f RDOT at TPI", G->TPIPAD_Rdot/0.3048);
+			sprintf(Buffer, "%+07.1f RDOT at TPI", G->TPIPAD_Rdot);
 			skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f EL minus 5 min", G->TPIPAD_ELmin5*DEG);
+			sprintf(Buffer, "X%06.2f EL minus 5 min", G->TPIPAD_ELmin5);
 			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f AZ", G->TPIPAD_AZ*DEG);
+			sprintf(Buffer, "X%06.2f AZ", G->TPIPAD_AZ);
 			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
 		}
 	}
@@ -1187,17 +1197,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Earth Entry PAD", 15);
 
-			sprintf(Buffer, "XXX%03.0f R 0.05G", OrbMech::imulimit(G->EIangles.x*DEG));
+			sprintf(Buffer, "XX%+05.1f dV TO", G->EntryPADdVTO);
 			skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f P 0.05G", OrbMech::imulimit(G->EIangles.y*DEG));
+
+			sprintf(Buffer, "XXX%03.0f R 0.05G", OrbMech::imulimit(G->EIangles.x));
 			skp->Text(3 * W / 8, 4 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f Y 0.05G", OrbMech::imulimit(G->EIangles.z*DEG));
+			sprintf(Buffer, "XXX%03.0f P 0.05G", OrbMech::imulimit(G->EIangles.y));
 			skp->Text(3 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "XXX%03.0f Y 0.05G", OrbMech::imulimit(G->EIangles.z));
+			skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f RTGO .05G", G->EntryPADRTGO);
-			skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+06.0f VIO  .05G", G->EntryPADVIO / 0.3048);
 			skp->Text(3 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+06.0f VIO  .05G", G->EntryPADVIO);
+			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
 
 			double mins, secs;
 			int mm;
@@ -1207,12 +1220,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			secs = (mins - mm) * 60.0;
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
-			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%+07.2f LAT", G->EntryLatcor*DEG);
 			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.2f LONG", G->EntryLngcor*DEG);
+
+			sprintf(Buffer, "%+07.2f LAT", G->EntryPADLat);
 			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.2f LONG", G->EntryPADLng);
+			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
 		}
 		else
 		{
@@ -2339,16 +2352,16 @@ bool SVGETInput(void *id, char *str, void *data)
 	int hh, mm, ss;
 	double SVtime;
 
-	if (sscanf(str, "%d", &ss) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_SVtime(0);
-
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		SVtime = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_SVtime(SVtime);
+
+		return true;
+	}
+	else if (sscanf(str, "%d", &ss) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_SVtime(0);
 
 		return true;
 	}

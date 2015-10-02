@@ -732,7 +732,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 {
 	double mu, dt, SVMJD;
-	VECTOR3 R_A, V_A, R0B, V0B, RA3, VA3, R_P, V_P, RP0B, VP0B, RP3, VP3, u, U_L, UX, UY, UZ, U_R, RA2, VA2, RP2, VP2, U_P, TPIPAD_BT, TPIPAD_dV_LOS;
+	VECTOR3 R_A, V_A, R0B, V0B, RA3, VA3, R_P, V_P, RP0B, VP0B, RP3, VP3, u, U_L, UX, UY, UZ, U_R, U_R2, RA2, VA2, RP2, VP2, U_P, TPIPAD_BT, TPIPAD_dV_LOS;
 	MATRIX3 Rot, Rot1, Rot2;
 	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5,TPIPAD_dH, TPIPAD_ddH;
 	VECTOR3 U_F, LOS, U_LOS, NN;
@@ -747,13 +747,7 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	opt->vessel->GetRelativeVel(gravref, V_A);
 	opt->target->GetRelativePos(gravref, R_P);
 	opt->target->GetRelativeVel(gravref, V_P);
-
-
 	SVMJD = oapiGetSimMJD();
-
-	//double ddtt = OrbMech::sunrise(R_A, V_A, SVMJD, gravref,true);
-	//TimeTag = (SVMJD - GETbase)*24.0*3600.0 + ddtt;
-	//TimeTagUplink();
 
 	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
@@ -780,8 +774,6 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	UZ = crossp(UX, UY);
 
 	Rot2 = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-
-	U_R = unit(RP3 - RA3);
 
 	TPIPAD_dV_LOS = mul(Rot2, mul(Rot1, opt->dV_LVLH));
 	//TPIPAD_dH = abs(length(RP3) - length(RA3));
@@ -810,26 +802,28 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	dxmax = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t1) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t1);
 	dxmin = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t2) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t2);
 
+	OrbMech::oneclickcoast(RA3, VA3, SVMJD + dt / 24.0 / 3600.0, -5.0*60.0, RA2, VA2, gravref, gravref);
+	OrbMech::oneclickcoast(RP3, VP3, SVMJD + dt / 24.0 / 3600.0, -5.0*60.0, RP2, VP2, gravref, gravref);
+
+	U_R2 = unit(RP2 - RA2);
+
 	TPIPAD_dH = -dr0.x;
 	TPIPAD_ddH = abs(dxmax - dxmin);
-	TPIPAD_R = abs(length(RP3 - RA3));
-	TPIPAD_Rdot = dotp(VP3 - VA3, U_R);
-
-	OrbMech::oneclickcoast(RA3, VA3, SVMJD, -5.0*60.0, RA2, VA2, gravref, gravref);
-	OrbMech::oneclickcoast(RP3, VP3, SVMJD, -5.0*60.0, RP2, VP2, gravref, gravref);
+	TPIPAD_R = abs(length(RP2 - RA2));
+	TPIPAD_Rdot = dotp(VP2 - VA2, U_R2);
 
 	U_L = unit(RP2 - RA2);
 	U_P = unit(U_L - RA2*dotp(U_L, RA2) / length(RA2) / length(RA2));
 
 	TPIPAD_ELmin5 = acos(dotp(U_L, U_P*OrbMech::sign(dotp(U_P, crossp(u, RA2)))));
 
-	U_F = unit(crossp(crossp(RA3, VA3), RA3));
-	U_R = unit(RA3);
-	LOS = RP3 - RA3;
+	U_F = unit(crossp(crossp(RA2, VA2), RA2));
+	U_R = unit(RA2);
+	LOS = RP2 - RA2;
 	U_LOS = unit(LOS - U_R*dotp(LOS, U_R));
 	TPIPAD_AZ = acos(dotp(U_LOS, U_F));//atan2(-TPIPAD_dV_LOS.z, TPIPAD_dV_LOS.x);
 	NN = crossp(U_LOS, U_F);
-	if (dotp(NN, RA3) < 0)
+	if (dotp(NN, RA2) < 0)
 	{
 		TPIPAD_AZ = PI2 - TPIPAD_AZ;
 	}
@@ -843,6 +837,7 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	pad.GETI = opt->TIG;
 	pad.Vg = opt->dV_LVLH / 0.3048;
 	pad.dH_TPI = TPIPAD_dH / 1852.0;
+	pad.dH_Max = TPIPAD_ddH / 1852.0;
 }
 
 void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)

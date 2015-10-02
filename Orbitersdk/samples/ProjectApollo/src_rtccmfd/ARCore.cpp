@@ -1,5 +1,14 @@
 #include "ARCore.h"
 
+#include "soundlib.h"
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "csmcomputer.h"
+#include "IMU.h"
+#include "saturn.h"
+#include "mcc.h"
+#include "rtcc.h"
+
 static WSADATA wsaData;
 static SOCKET m_socket;
 static sockaddr_in clientService;
@@ -202,7 +211,7 @@ ARCore::ARCore(VESSEL* v)
 	EntryPADHorChkPit = 0.0;
 	EIangles = _V(0.0, 0.0, 0.0);
 	TimeTag = 0.0;
-	entrypadopt = 0; //0 = Earth Entry Update, 1 = Lunar Entry
+	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
 	EntryPADRRT = 0.0;
 	EntryPADLng = 0.0;
@@ -236,6 +245,10 @@ ARCore::ARCore(VESSEL* v)
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
 	landingzone = 0;
+	entryprecision = -1;
+	EntryPADdVTO = 0.0;
+
+	rtcc = new RTCC();
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -254,6 +267,8 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		endi = entry->EntryIter();
 		if (endi)
 		{
+			entryprecision = entry->precision;
+
 			EntryLatcor = entry->EntryLatcor;
 			EntryLngcor = entry->EntryLngcor;
 			
@@ -1117,9 +1132,33 @@ void ARCore::REFSMMATCalc()
 
 void ARCore::EntryPAD()
 {
-	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, R05G, V05G,R3,V3;
+	if (entrypadopt == 0)
+	{
+		AP7ENT pad;
+		EarthEntryPADOpt opt;
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.GETbase = GETbase;
+		opt.P30TIG = P30TIG;
+		opt.REFSMMAT = REFSMMAT;
+		opt.vessel = vessel;
+
+		rtcc->EarthOrbitEntry(&opt, pad);
+
+		EIangles = pad.Att400K[0];
+		EntryPADdVTO = pad.dVTO[0];
+		EntryPADRTGO = pad.RTGO[0];
+		EntryPADVIO = pad.VIO[0];
+		EntryPADRET05Earth = pad.Ret05[0];
+		EntryPADLat = pad.Lat[0];
+		EntryPADLng = pad.Lng[0];
+
+		return;
+	}
+
+	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, R05G, V05G, R3, V3;
 	MATRIX3 Rot, M_R;
-	double SVMJD, dt, mu, EMSAlt,dt2,dt3,S_FPA,g_T,V_T,v_BAR;
+	double SVMJD, dt, mu, EMSAlt, dt2, dt3, S_FPA, g_T, V_T, v_BAR;
 	OBJHANDLE hEarth;
 	dt2 = 0;
 
@@ -1149,7 +1188,7 @@ void ARCore::EntryPAD()
 	{
 		dt = OrbMech::time_radius_integ(R0B, V0B, SVMJD, oapiGetSize(hEarth) + EMSAlt, -1, gravref, hEarth, R05G, V05G);
 		//OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R05G, V05G, mu);
-		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical,entryrange, 0, true);
+		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical, entryrange, 0, true);
 		entry->EntryUpdateCalc();
 		EntryPADLat = entry->EntryLatPred;
 		EntryPADLng = entry->EntryLngPred;
@@ -1159,8 +1198,8 @@ void ARCore::EntryPAD()
 	}
 	else
 	{
-		VECTOR3 DV_P, DV_C, V_G,R2B,V2B;
-		double theta_T,t_go;
+		VECTOR3 DV_P, DV_C, V_G, R2B, V2B;
+		double theta_T, t_go;
 
 		EntryPADLng = EntryLngcor;
 		EntryPADLat = EntryLatcor;
@@ -1203,81 +1242,74 @@ void ARCore::EntryPAD()
 	VECTOR3 vunit = _V(0.0, 1.0, 0.0);
 	MATRIX3 Rotaoa;
 
-	Rotaoa = _M(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit,vunit)*(1.0 - cos(aoa));
-	
+	Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	EIangles = OrbMech::CALCGAR(REFSMMAT, mul(Rotaoa,M_R));
+	EIangles = OrbMech::CALCGAR(REFSMMAT, mul(Rotaoa, M_R));
 
 
-	if (entrypadopt == 1)
+	dt3 = OrbMech::time_radius(R05G, -V05G, oapiGetSize(hEarth) + 300000.0*0.3048, 1, mu);
+	OrbMech::rv_from_r0v0(R05G, -V05G, dt3, R3, V3, mu);
+	V3 = -V3;
+	S_FPA = dotp(unit(R3), V3) / length(V3);
+	g_T = asin(S_FPA);
+	V_T = length(V3);
+	v_BAR = (V_T / 0.3048 - 36000.0) / 20000.0;
+	EntryPADGMax = 4.0 / (1.0 + 4.8*v_BAR*v_BAR)*(abs(g_T)*DEG - 6.05 - 2.4*v_BAR*v_BAR) + 10.0;
+
+	double dt22, vei, liftline, horang, coastang, cosIGA, sinIGA, IGA;
+	VECTOR3 REI, VEI, UREI, REI17, VEI17, X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, A_MG, Rcheck, Vcheck;
+
+	dt22 = OrbMech::time_radius(R05G, -V05G, oapiGetSize(hEarth) + 400000.0*0.3048, 1, mu);
+	OrbMech::rv_from_r0v0(R05G, -V05G, dt22, REI, VEI, mu);
+	VEI = -VEI;
+	UREI = unit(REI);
+	EntryPADV400k = length(VEI);
+	S_FPA = dotp(UREI, VEI) / EntryPADV400k;
+	EntryPADgamma400k = asin(S_FPA);
+	EntryPADRET05Lunar = dt22;
+	EntryPADRRT = dt + dt2 + (SVMJD - GETbase)*24.0*3600.0 - dt22;
+
+	vei = length(VEI) / 0.3048;
+
+	EntryPADDO = 4.2317708e-9*vei*vei + 1.4322917e-6*vei - 1.600664062;
+
+	liftline = 4.055351e-10*vei*vei - 3.149125e-5*vei + 0.503280635;
+	if (S_FPA > atan(liftline))
 	{
-		dt3 = OrbMech::time_radius(R05G, -V05G, oapiGetSize(hEarth) + 300000.0*0.3048, 1, mu);
-		OrbMech::rv_from_r0v0(R05G, -V05G, dt3, R3, V3, mu);
-		V3 = -V3;
-		S_FPA = dotp(unit(R3), V3) / length(V3);
-		g_T = asin(S_FPA);
-		V_T = length(V3);
-		v_BAR = (V_T / 0.3048 - 36000.0) / 20000.0;
-		EntryPADGMax = 4.0 / (1.0 + 4.8*v_BAR*v_BAR)*(abs(g_T)*DEG - 6.05 - 2.4*v_BAR*v_BAR) + 10.0;
-
-		double dt22, S_FPA,vei,liftline,horang,coastang,cosIGA,sinIGA,IGA;
-		VECTOR3 REI, VEI, UREI,REI17,VEI17,X_NB,Y_NB,Z_NB,X_SM,Y_SM,Z_SM,A_MG,Rcheck,Vcheck;
-
-		dt22 = OrbMech::time_radius(R05G, -V05G, oapiGetSize(hEarth) + 400000.0*0.3048, 1, mu);
-		OrbMech::rv_from_r0v0(R05G, -V05G, dt22, REI, VEI, mu);
-		VEI = -VEI;
-		UREI = unit(REI);
-		EntryPADV400k = length(VEI);
-		S_FPA = dotp(UREI, VEI) / EntryPADV400k;
-		EntryPADgamma400k = asin(S_FPA);
-		EntryPADRET05Lunar = dt22;
-		EntryPADRRT = dt+dt2+(SVMJD-GETbase)*24.0*3600.0 - dt22;
-
-		vei = length(VEI) / 0.3048;
-
-		EntryPADDO = 4.2317708e-9*vei*vei + 1.4322917e-6*vei - 1.600664062;
-
-		liftline = 4.055351e-10*vei*vei - 3.149125e-5*vei + 0.503280635;
-		if (S_FPA > atan(liftline))
-		{
-			EntryPADLift = false;
-		}
-		else
-		{
-			EntryPADLift = true;
-		}
-
-		OrbMech::oneclickcoast(REI, -VEI, EntryPADRRT / 24.0 / 3600.0 + GETbase, 17.0*60.0, REI17, VEI17, hEarth, hEarth);
-
-		OrbMech::oneclickcoast(REI17, VEI17, EntryPADRRT / 24.0 / 3600.0 + GETbase - 1.0 / 24.0, 60.0*60.0, Rcheck, Vcheck, hEarth, hEarth);
-
-		VEI17 = -VEI17;
-
-		EntryPADHorChkGET = EntryPADRRT - 17.0*60.0;
-
-		OrbMech::checkstar(REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), Rcheck, oapiGetSize(hEarth), Entrystaroct, Entrytrunnion, Entryshaft);
-
-		horang = asin(oapiGetSize(gravref) / length(REI17));
-		coastang = dotp(unit(REI), unit(REI17));
-
-		Z_NB = unit(-REI);
-		Y_NB = unit(crossp(VEI, REI));
-		X_NB = crossp(Y_NB, Z_NB);
-
-		X_SM = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
-		Y_SM = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
-		Z_SM = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-		A_MG = unit(crossp(X_NB, Y_SM));
-		cosIGA = dotp(A_MG, Z_SM);
-		sinIGA = dotp(A_MG, X_SM);
-		IGA = atan2(sinIGA, cosIGA);
-
-		EntryPADHorChkPit = PI2-(horang + coastang+0.0*31.7*RAD)+IGA;
+		EntryPADLift = false;
 	}
 	else
 	{
-		EntryPADRET05Earth = EntryRET05;
+		EntryPADLift = true;
 	}
+
+	OrbMech::oneclickcoast(REI, -VEI, EntryPADRRT / 24.0 / 3600.0 + GETbase, 17.0*60.0, REI17, VEI17, hEarth, hEarth);
+
+	OrbMech::oneclickcoast(REI17, VEI17, EntryPADRRT / 24.0 / 3600.0 + GETbase - 1.0 / 24.0, 60.0*60.0, Rcheck, Vcheck, hEarth, hEarth);
+
+	VEI17 = -VEI17;
+
+	EntryPADHorChkGET = EntryPADRRT - 17.0*60.0;
+
+	OrbMech::checkstar(REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), Rcheck, oapiGetSize(hEarth), Entrystaroct, Entrytrunnion, Entryshaft);
+
+	horang = asin(oapiGetSize(gravref) / length(REI17));
+	coastang = dotp(unit(REI), unit(REI17));
+
+	Z_NB = unit(-REI);
+	Y_NB = unit(crossp(VEI, REI));
+	X_NB = crossp(Y_NB, Z_NB);
+
+	X_SM = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+	Y_SM = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+	Z_SM = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+	A_MG = unit(crossp(X_NB, Y_SM));
+	cosIGA = dotp(A_MG, Z_SM);
+	sinIGA = dotp(A_MG, X_SM);
+	IGA = atan2(sinIGA, cosIGA);
+
+	EntryPADHorChkPit = PI2 - (horang + coastang + 0.0*31.7*RAD) + IGA;
 }
 
 void ARCore::ManeuverPAD()
@@ -1427,103 +1459,25 @@ void ARCore::ManeuverPAD()
 
 void ARCore::TPIPAD()
 {
-	double mu, dt, SVMJD;
-	VECTOR3 R_A, V_A, R0B, V0B, RA3, VA3, R_P, V_P, RP0B, VP0B, RP3, VP3,u,U_L, UX,UY, UZ, U_R,RA2,VA2,RP2,VP2,U_P;
-	MATRIX3 Rot, Rot1, Rot2;
+	AP7TPIPADOpt opt;
+	AP7TPI pad;
 
-	mu = GGRAV*oapiGetMass(gravref);
+	opt.dV_LVLH = dV_LVLH;
+	opt.GETbase = GETbase;
+	opt.target = target;
+	opt.vessel = vessel;
+	opt.TIG = P30TIG;
 
-	vessel->GetRelativePos(gravref, R_A);
-	vessel->GetRelativeVel(gravref, V_A);
-	target->GetRelativePos(gravref, R_P);
-	target->GetRelativeVel(gravref, V_P);
+	rtcc->AP7TPIPAD(&opt, pad);
 
-
-	SVMJD = oapiGetSimMJD();
-
-	//double ddtt = OrbMech::sunrise(R_A, V_A, SVMJD, gravref,true);
-	//TimeTag = (SVMJD - GETbase)*24.0*3600.0 + ddtt;
-	//TimeTagUplink();
-
-	dt = P30TIG - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
-
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
-	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
-	RP0B = mul(Rot, _V(R_P.x, R_P.z, R_P.y));
-	VP0B = mul(Rot, _V(V_P.x, V_P.z, V_P.y));
-
-	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, RA3, VA3, gravref, gravref);
-	OrbMech::oneclickcoast(RP0B, VP0B, SVMJD, dt, RP3, VP3, gravref, gravref);
-
-	UY = unit(crossp(VA3, RA3));
-	UZ = unit(-RA3);
-	UX = crossp(UY, UZ);
-
-	Rot1 = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
-
-	u = unit(crossp(RA3, VA3));
-	U_L = unit(RP3 - RA3);
-	UX = U_L;
-	UY = unit(crossp(crossp(u, UX), UX));
-	UZ = crossp(UX, UY);
-
-	Rot2 = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-
-	U_R = unit(RP3-RA3);
-
-	TPIPAD_dV_LOS = mul(Rot2, mul(Rot1, dV_LVLH));
-	//TPIPAD_dH = abs(length(RP3) - length(RA3));
-	double mass,F;
-
-	mass = vessel->GetMass();
-	F = 200.0 * 4.448222;
-	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*mass / F;
-
-	VECTOR3 i, j, k, dr, dv, dr0, dv0,Omega;
-	MATRIX3 Q_Xx;
-	double t1, t2, dxmin, n, dxmax;
-
-	j = unit(VP3);
-	k = unit(crossp(RP3, j));
-	i = crossp(j, k);
-	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-	dr = RA3 - RP3;
-	n = length(VP3) / length(RP3);
-	Omega = k*n;
-	dv = VA3 - VP3 - crossp(Omega, dr);
-	dr0 = mul(Q_Xx, dr);
-	dv0 = mul(Q_Xx, dv);
-	t1 = 1.0 / n*atan(-dv0.x / (3.0*n*dr0.x + 2.0 * dv0.y));
-	t2 = 1.0 / n*(atan(-dv0.x / (3.0*n*dr0.x + 2.0 * dv0.y))+PI);
-	dxmax = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t1) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t1);
-	dxmin = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t2) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t2);
-
-	TPIPAD_dH = -dr0.x;
-	TPIPAD_ddH = abs(dxmax - dxmin);
-	TPIPAD_R = abs(length(RP3 - RA3));
-	TPIPAD_Rdot = dotp(VP3 - VA3, U_R);
-
-	OrbMech::oneclickcoast(RA3, VA3, SVMJD, -5.0*60.0, RA2, VA2, gravref, gravref);
-	OrbMech::oneclickcoast(RP3, VP3, SVMJD, -5.0*60.0, RP2, VP2, gravref, gravref);
-
-	U_L = unit(RP2 - RA2);
-	U_P = unit(U_L - RA2*dotp(U_L, RA2) / length(RA2) / length(RA2));
-
-	TPIPAD_ELmin5 = acos(dotp(U_L, U_P*OrbMech::sign(dotp(U_P, crossp(u, RA2)))));
-
-	VECTOR3 U_F, LOS, U_LOS, NN;
-	U_F = unit(crossp(crossp(RA3, VA3), RA3));
-	U_R = unit(RA3);
-	LOS = RP3 - RA3;
-	U_LOS = unit(LOS - U_R*dotp(LOS, U_R));
-	TPIPAD_AZ = acos(dotp(U_LOS, U_F));//atan2(-TPIPAD_dV_LOS.z, TPIPAD_dV_LOS.x);
-	NN = crossp(U_LOS, U_F);
-	if (dotp(NN, RA3) < 0)
-	{
-		TPIPAD_AZ = PI2 - TPIPAD_AZ;
-	}
+	TPIPAD_AZ = pad.AZ;
+	TPIPAD_BT = pad.Backup_bT;
+	TPIPAD_ddH = pad.dH_Max;
+	TPIPAD_dH = pad.dH_TPI;
+	TPIPAD_dV_LOS = pad.Backup_dV;
+	TPIPAD_ELmin5 = pad.EL;
+	TPIPAD_R = pad.R;
+	TPIPAD_Rdot = pad.Rdot;
 }
 
 void ARCore::MapUpdate()
@@ -1994,126 +1948,6 @@ bool ARCore::vesselinLOS()
 
 	return OrbMech::vesselinLOS(R, V, MJD, gravref);
 }
-
-
-
-
-
-/*void ARCore::impulsive(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
-{
-	double mu, v_ex, f_T, m, a_T, tau, L,t_go,t_go_old,J,S,dr_z,v_goz,dt_go,r_goz, phi,m_dot,t_slip_old;
-	VECTOR3 lambda, Slambda,R3,V3,V_apo,R_ref,V_ref,R_thrust, V_thrust, R_bias, V_bias, V_go,R_grav,R_go,R_d,i_z,i_y;
-	VECTOR3 dR_c, dV_c,R_c1,V_c1,R_c2,V_c2,V_grav,R_p,V_d,V_go_apo,dV_go,R_ig,V_ig,V_p;
-	int n, nmax;
-
-	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G,R_goxy;
-	MATRIX3 Q_Xx;
-
-	t_slip = 0;
-	t_slip_old = 1;
-	dt_go = 1;
-	mu = GGRAV*oapiGetMass(gravref);
-
-	v_ex = vessel->GetThrusterIsp0(thruster);
-	f_T = vessel->GetThrusterMax0(thruster);
-	m = vessel->GetMass();
-	a_T = f_T / m;
-	tau = v_ex / a_T;
-	m_dot = f_T / v_ex;
-	V_apo = V + DV;
-	R_ref = R;
-	V_ref = V_apo;
-
-	while (abs(t_slip-t_slip_old) > 0.01)
-	{
-		OrbMech::rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
-		n = 0;
-		nmax = 100;
-
-		V_go = DV;
-		R_d = R_ig;
-
-		R_bias = _V(0, 0, 0);
-		R_grav = -R_ig*0.5 * mu / OrbMech::power(length(R_ig), 3.0);
-		i_y = -unit(crossp(R_ref, V_ref));
-		t_go = v_ex / f_T*m*(1.0 - exp(-length(V_go) / v_ex));
-		dV_go = _V(1.0, 1.0, 1.0);
-
-		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
-		{
-			lambda = unit(V_go);
-			L = length(V_go);
-			t_go_old = t_go;
-			t_go = tau*(1.0 - exp(-L / v_ex));
-
-			J = tau*L - v_ex*t_go;
-			S = -J + t_go*L;
-
-			//R_grav = R_grav*OrbMech::power(t_go / t_go_old, 2.0);
-			/*R_go = R_d - (R_ig + V_ig*t_go + R_grav);
-			i_z = unit(crossp(R_d, i_y));
-			R_goxy = R_go - i_z*dotp(i_z, R_go);
-			r_goz = (S - dotp(lambda, R_goxy)) / dotp(lambda, i_z);
-			R_go = R_goxy + i_z*r_goz + R_bias;
-
-			V_thrust = lambda*L;
-			R_thrust = lambda*S;
-
-			//V_bias = V_go - V_thrust;
-			//R_bias = R_go - R_thrust;
-			dR_c = -R_thrust*1.0 / 10.0 - V_thrust*t_go * 1.0 / 30.0;
-			dV_c = R_thrust*6.0 / 5.0 / t_go - V_thrust*1.0 / 10.0;
-			R_c1 = R_ig + dR_c;
-			V_c1 = V_ig + dV_c;
-			OrbMech::rv_from_r0v0(R_c1, V_c1, t_go, R_c2, V_c2, mu);
-			V_grav = V_c2 - V_c1;
-			R_grav = R_c2 - R_c1 - V_c1*t_go;
-			R_p = R_ig + V_ig*t_go + R_grav + R_thrust;
-			V_p = V_ig + V_grav + V_thrust;
-			//R_p = R_ig + V_ig*t_go + lambda*f_T / (m*2.0)*t_go*t_go + lambda*f_T*m_dot / (6.0*m*m)*t_go*t_go*t_go;
-			//V_p = V_ig + lambda*f_T / m*t_go + lambda*f_T*m_dot / (2.0*m*m)*t_go*t_go;
-			//V_d = V_ig + V_grav + V_thrust;
-			OrbMech::rv_from_r0v0(R_ref, V_ref, t_go+t_slip, R_d, V_d, mu);
-			dr_z = dotp(i_z, R_d - R_p);
-			v_goz = dotp(i_z, V_go);
-			dt_go = -2.0 * dr_z / v_goz;
-			V_go_apo = V_d - V_ig - V_grav;// +V_bias;
-			//V_go_apo = V_d - V_p;
-			dV_go = V_go_apo - V_go;
-			V_go = V_go + dV_go;
-			n++;
-		}
-		t_slip_old = t_slip;
-		t_slip+= dt_go*0.1;
-	}
-
-
-	//VECTOR3 X,Y,Z,dV_LV,DV_P,DV_C,V_G;
-	
-	//MATRIX3 Q_Xx;
-	double theta_T;
-
-	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-	Y = unit(crossp(V_ig, R_ig));
-	Z = -unit(R_ig);
-
-	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-	dV_LV = mul(Q_Xx, V_go);
-	DV_P = X*dV_LV.x + Z*dV_LV.z;
-	if (length(DV_P) != 0.0)
-	{
-		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + Y*dV_LV.y;
-	}
-	else
-	{
-		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
-	}
-	Llambda = V_G;
-}*/
-
-
 
 VECTOR3 ARCore::finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM noun 20
 {

@@ -25,7 +25,6 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"

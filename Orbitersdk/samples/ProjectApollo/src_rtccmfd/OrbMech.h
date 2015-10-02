@@ -2,7 +2,6 @@
 #define _ORBMECH_H
 
 #include "Orbitersdk.h"
-//#include "CoastIntegration.h"
 
 const VECTOR3 navstars[37] = { _V(0.874918332, 0.025891699, 0.483577844),
 _V(0.934272669, 0.173297383, -0.311612896),

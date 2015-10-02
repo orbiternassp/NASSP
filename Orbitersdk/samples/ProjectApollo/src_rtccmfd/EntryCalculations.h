@@ -29,6 +29,7 @@ public:
 	double EntryAng;
 	double t2;
 	VECTOR3 Entry_DV; //Entry DV vector in LVLH coordinates
+	bool precision; //0 = only conic, 1 = precision
 private:
 	void coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21);
 	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
@@ -82,7 +83,6 @@ private:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	bool entrylongmanual;
 	double xlim;
-	bool precision; //0 = only conic, 1 = precision
 };
 
 #endif
