@@ -123,7 +123,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	precision = true;
 }
 
-Entry::Entry(OBJHANDLE gravref)
+Entry::Entry(OBJHANDLE gravref, int critical)
 {
 	this->critical = critical;
 	this->gravref = gravref;
@@ -136,6 +136,15 @@ Entry::Entry(OBJHANDLE gravref)
 
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	if (critical == 0)
+	{
+		EMSAlt = 284643.0*0.3048;
+	}
+	else
+	{
+		EMSAlt = 297431.0*0.3048;
+	}
 }
 
 void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)

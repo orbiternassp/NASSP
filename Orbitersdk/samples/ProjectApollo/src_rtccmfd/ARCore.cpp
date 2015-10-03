@@ -249,6 +249,11 @@ ARCore::ARCore(VESSEL* v)
 	EntryPADdVTO = 0.0;
 
 	rtcc = new RTCC();
+
+	EntryPADPB_RTGO = 0.0;
+	EntryPADPB_R400K = 0.0;
+	EntryPADPB_Ret05 = 0.0;
+	EntryPADPB_VIO = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -1132,6 +1137,12 @@ void ARCore::REFSMMATCalc()
 
 void ARCore::EntryPAD()
 {
+	OBJHANDLE hEarth;
+	double mu;
+
+	hEarth = oapiGetObjectByName("Earth");
+	mu = GGRAV*oapiGetMass(hEarth);
+
 	if (entrypadopt == 0)
 	{
 		AP7ENT pad;
@@ -1143,28 +1154,44 @@ void ARCore::EntryPAD()
 		opt.REFSMMAT = REFSMMAT;
 		opt.vessel = vessel;
 
-		rtcc->EarthOrbitEntry(&opt, pad);
+		VECTOR3 R, V;
+		double apo, peri;
+		vessel->GetRelativePos(gravref, R);
+		vessel->GetRelativeVel(gravref, V);
+		OrbMech::periapo(R, V, mu, apo, peri);
+		if (peri < oapiGetSize(gravref) + 50 * 1852.0)
+		{
+			opt.preburn = false;
+			opt.lat = EntryLatcor;
+			opt.lng = EntryLngcor;
+			rtcc->EarthOrbitEntry(&opt, pad);
 
-		EIangles = pad.Att400K[0];
-		EntryPADdVTO = pad.dVTO[0];
-		EntryPADRTGO = pad.RTGO[0];
-		EntryPADVIO = pad.VIO[0];
-		EntryPADRET05Earth = pad.Ret05[0];
-		EntryPADLat = pad.Lat[0];
-		EntryPADLng = pad.Lng[0];
+			EntryPADPB_RTGO = pad.PB_RTGO[0];
+			EntryPADPB_R400K = pad.PB_R400K[0];
+			EntryPADPB_Ret05 = pad.PB_Ret05[0];
+			EntryPADPB_VIO = pad.PB_VIO[0];
+		}
+		else
+		{
+			opt.preburn = true;
+			rtcc->EarthOrbitEntry(&opt, pad);
+			EIangles = pad.Att400K[0];
+			EntryPADdVTO = pad.dVTO[0];
+			EntryPADRTGO = pad.RTGO[0];
+			EntryPADVIO = pad.VIO[0];
+			EntryPADRET05Earth = pad.Ret05[0];
+			EntryPADLat = pad.Lat[0];
+			EntryPADLng = pad.Lng[0];
+		}
+
 
 		return;
 	}
 
 	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, R05G, V05G, R3, V3;
 	MATRIX3 Rot, M_R;
-	double SVMJD, dt, mu, EMSAlt, dt2, dt3, S_FPA, g_T, V_T, v_BAR;
-	OBJHANDLE hEarth;
+	double SVMJD, dt, EMSAlt, dt2, dt3, S_FPA, g_T, V_T, v_BAR;
 	dt2 = 0;
-
-	hEarth = oapiGetObjectByName("Earth");
-
-	mu = GGRAV*oapiGetMass(hEarth);
 
 	vessel->GetRelativePos(gravref, R_A);
 	vessel->GetRelativeVel(gravref, V_A);

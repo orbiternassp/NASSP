@@ -7,7 +7,7 @@
 class Entry {
 public:
 	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual);
-	Entry(OBJHANDLE gravref);
+	Entry(OBJHANDLE gravref, int critical);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
 	bool EntryIter();

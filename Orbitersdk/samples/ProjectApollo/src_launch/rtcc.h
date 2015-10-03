@@ -135,6 +135,9 @@ struct EarthEntryPADOpt
 	double P30TIG; //Time of Ignition (deorbit maneuver)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
 	MATRIX3 REFSMMAT;
+	bool preburn; //
+	double lat; //latitude for the postburn targeting
+	double lng; //longitude for the postburn targeting
 };
 
 // Parameter block for Calculation(). Expand as needed.

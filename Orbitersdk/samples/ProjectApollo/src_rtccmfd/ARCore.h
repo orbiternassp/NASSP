@@ -178,7 +178,7 @@ public:
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision
-	
+	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

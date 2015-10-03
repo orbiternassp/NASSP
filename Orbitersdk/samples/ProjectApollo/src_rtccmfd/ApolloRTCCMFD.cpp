@@ -1196,6 +1196,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		if (G->entrypadopt == 0)
 		{
 			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Earth Entry PAD", 15);
+			skp->Text(4 * W / 8, 2 * H / 20, "PREBURN", 7);
 
 			sprintf(Buffer, "XX%+05.1f dV TO", G->EntryPADdVTO);
 			skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
@@ -1226,6 +1227,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.2f LONG", G->EntryPADLng);
 			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 12 * H / 20, "POSTBURN", 8);
+
+			sprintf(Buffer, "XXX%03.0f R 0.05G", OrbMech::imulimit(G->EntryPADPB_R400K));
+			skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f RTGO .05G", G->EntryPADPB_RTGO);
+			skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+06.0f VIO  .05G", G->EntryPADPB_VIO);
+			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
+
+			mins = G->EntryPADPB_Ret05 / 60.0;
+			mm = (int)OrbMech::trunc(mins);
+			secs = (mins - mm) * 60.0;
+
+			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
+			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
 		}
 		else
 		{

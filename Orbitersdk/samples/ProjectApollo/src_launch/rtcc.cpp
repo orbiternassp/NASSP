@@ -343,6 +343,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		opt.P30TIG = P30TIG;
 		opt.REFSMMAT = GetREFSMMATfromAGC();
 		opt.vessel = calcParams.src;
+		opt.preburn = true;
 
 		EarthOrbitEntry(&opt, *form);
 		sprintf(form->Area[0], "164-1A");
@@ -846,8 +847,9 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 	double dt;//from SV time to deorbit maneuver
 	double t_go; //from deorbit TIG to shutdown
 	double dt2; //from shutdown to EI
-	double dt3; //from EI to 0.05g
-	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, R2B, V2B, R05G, V05G, EIangles, REI, VEI;
+	double dt3; //from EI to 300k
+	double dt4; //from 300k to 0.05g
+	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, R2B, V2B, R05G, V05G, EIangles, REI, VEI, R300K, V300K;
 	MATRIX3 Rot, M_R;
 	OBJHANDLE gravref;
 	Entry* entry;
@@ -868,52 +870,108 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 	EMSAlt = 284643.0*0.3048;
 	EIAlt = 400000.0*0.3048;
 
-	dt = opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
+	if (opt->preburn)
+		{
 
-	UY = unit(crossp(V1B, R1B));
-	UZ = unit(-R1B);
-	UX = crossp(UY, UZ);
+		dt = opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
 
-	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
-	theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
-	DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-	V_G = DV_C + UY*opt->dV_LVLH.y;
+		UY = unit(crossp(V1B, R1B));
+		UZ = unit(-R1B);
+		UX = crossp(UY, UZ);
 
-	OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + UY*opt->dV_LVLH.y;
 
-	dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + (dt + t_go) / 3600.0 / 24.0, oapiGetSize(gravref) + EIAlt, -1, gravref, gravref, REI, VEI);
-	dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0, oapiGetSize(gravref) + EMSAlt, -1, gravref, gravref, R05G, V05G);
+		OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
 
-	entry = new Entry(gravref);
-	entry->Reentry(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0);
+		dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + (dt + t_go) / 3600.0 / 24.0, oapiGetSize(gravref) + EIAlt, -1, gravref, gravref, REI, VEI);
+		dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0, oapiGetSize(gravref) + 300000.0*0.3048, -1, gravref, gravref, R300K, V300K);
+		dt4 = OrbMech::time_radius_integ(R300K, V300K, SVMJD + (dt + t_go + dt2 + dt3) / 3600.0 / 24.0, oapiGetSize(gravref) + EMSAlt, -1, gravref, gravref, R05G, V05G);
 
-	lat = entry->EntryLatPred;
-	lng = entry->EntryLngPred;
+		entry = new Entry(gravref, 0);
+		entry->Reentry(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0);
 
-	UX = unit(V05G);
-	UY = unit(crossp(UX, R05G));
-	UZ = unit(crossp(UX, crossp(UX, R05G)));
+		lat = entry->EntryLatPred;
+		lng = entry->EntryLngPred;
 
-	double aoa = -157.0*RAD;
-	VECTOR3 vunit = _V(0.0, 1.0, 0.0);
-	MATRIX3 Rotaoa;
+		UX = unit(V05G);
+		UY = unit(crossp(UX, R05G));
+		UZ = unit(crossp(UX, crossp(UX, R05G)));
 
-	Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+		double aoa = -157.0*RAD;
+		VECTOR3 vunit = _V(0.0, 1.0, 0.0);
+		MATRIX3 Rotaoa;
 
-	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+		Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
 
-	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
 
-	pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
-	pad.dVTO[0] = -60832.18 / m1/0.3048;
-	pad.Lat[0] = lat*DEG;
-	pad.Lng[0] = lng*DEG;
-	pad.Ret05[0] = t_go + dt2 + dt3;
-	pad.RTGO[0] = entry->EntryRTGO;
-	pad.VIO[0] = entry->EntryVIO/0.3048;
+		v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
+
+		pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
+		pad.dVTO[0] = -60832.18 / m1 / 0.3048;
+		pad.Lat[0] = lat*DEG;
+		pad.Lng[0] = lng*DEG;
+		pad.Ret05[0] = t_go + dt2 + dt3 + dt4;
+		pad.RTGO[0] = entry->EntryRTGO;
+		pad.VIO[0] = entry->EntryVIO / 0.3048;
+	}
+	else
+	{
+		double EMSTime, LSMJD, dt5, theta_rad, theta_nm;
+		VECTOR3 R_P, R_LS;
+		MATRIX3 Rot2;
+
+		dt = opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		dt2 = OrbMech::time_radius_integ(R0B, V0B, SVMJD, oapiGetSize(gravref) + EIAlt, -1, gravref, gravref, REI, VEI);
+		dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + dt2 / 24.0 / 3600.0, oapiGetSize(gravref) + 300000.0*0.3048, -1, gravref, gravref, R300K, V300K);
+		dt4 = OrbMech::time_radius_integ(R300K, V300K, SVMJD + (dt2 + dt3) / 24.0 / 3600.0, oapiGetSize(gravref) + EMSAlt, -1, gravref, gravref, R05G, V05G);
+
+		UX = unit(V05G);
+		UY = unit(crossp(UX, R05G));
+		UZ = unit(crossp(UX, crossp(UX, R05G)));
+
+		double aoa = -157.0*RAD;
+		VECTOR3 vunit = _V(0.0, 1.0, 0.0);
+		MATRIX3 Rotaoa;
+
+		Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+
+		dt5 = 500.0;
+		EMSTime = dt2 + dt3 + dt4 + (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+		for (int i = 0;i < 10;i++)
+		{
+			LSMJD = (EMSTime + dt5) / 24.0 / 3600.0 + opt->GETbase;
+			R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
+			Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+			R_LS = mul(Rot2, R_P);
+			R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
+			theta_rad = acos(dotp(R_LS, unit(R300K)));
+			theta_nm = 3437.7468*theta_rad;
+			if (length(V300K) >= 26000.0*0.3048)
+			{
+				dt5 = theta_nm / 3.0;
+			}
+			else
+			{
+				dt5 = 8660.0*theta_nm / (length(V300K) / 0.3048);
+			}
+		}
+
+		pad.PB_RTGO[0] = theta_nm - 3437.7468*acos(dotp(unit(R300K), unit(R05G)));
+		pad.PB_R400K[0] = EIangles.x*DEG;
+		pad.PB_Ret05[0] = dt2 + dt3 + dt4 - dt;
+		pad.PB_VIO[0] = length(V05G) / 0.3048;
+	}
 }
 
 MATRIX3 RTCC::GetREFSMMATfromAGC()
