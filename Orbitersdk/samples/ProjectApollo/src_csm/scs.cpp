@@ -2791,10 +2791,9 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 			if (ThresholdBreeched) { // if .05G comparator has been tripped
 
-				if (pt02GComparator(simdt)) ThresholdBreeched = false;
+				if (pt02GComparator(simdt) && !Manual05GInit()) ThresholdBreeched = false;
 
 				dV_res = 0.948*dV; //Resolution factor from RTCC requirements for reentry phase: https://archive.org/download/nasa_techdoc_19740074547/19740074547.pdf
-
 				ScrollPosition = ScrollPosition + (dV_res * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
 				vinert -= dV_res;
 
@@ -2802,20 +2801,26 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 				{
 					vinert = 0.0;
 				}
-				dVRangeCounter -= 0.000162*vinert * simdt; //Also from the RTCC document
+				dVRangeCounter -= 0.000162*(vinert + 0.5*dV_res) * simdt; //Also from the RTCC document
 
 				pt05GLightOn = true;
-				if (!CorridorEvaluated){
-					TenSecTimer -= simdt;
-					if (TenSecTimer < 0.0) {
-						LiftVectLightOn = VerifyCorridor();
-						CorridorEvaluated = true;
+				if (!Manual05GInit())
+				{
+					if (!CorridorEvaluated) {
+						TenSecTimer -= simdt;
+						if (TenSecTimer < 0.0) {
+							LiftVectLightOn = VerifyCorridor();
+							CorridorEvaluated = true;
+						}
 					}
-				} else {
-					if (xaccG > 2) LiftVectLightOn = 0;
+					else {
+						if (xaccG > 2) LiftVectLightOn = 0;
+					}
 				}
-			} else {
-				if (pt05GComparator(simdt)) ThresholdBreeched = true;
+			}
+			else
+			{
+				if (pt05GComparator(simdt) || Manual05GInit()) ThresholdBreeched = true;
 				TenSecTimer = 10.0;
 			}
 
@@ -3185,6 +3190,14 @@ bool EMS::pt05GComparator(double simdt) {
 bool EMS::pt02GComparator(double simdt) {
 
 	if (xaccG < 0.02 && ThresholdBreeched) {
+		return true;
+	}
+	return false;
+}
+
+bool EMS::Manual05GInit() {
+	if (sat->EMSModeSwitch.IsDown() && status == EMS_STATUS_ENTRY)
+	{
 		return true;
 	}
 	return false;

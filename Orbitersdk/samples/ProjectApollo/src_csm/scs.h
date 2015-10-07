@@ -360,6 +360,7 @@ protected:
 	//Comparator Circuits
 	bool pt05GComparator(double simdt);
 	bool pt02GComparator(double simdt);
+	bool Manual05GInit();
 	bool InitialTrip;
 	double OneSecTimer;
 	short int VerifyCorridor();
