@@ -256,9 +256,9 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	static const double CM[nlift]  = {0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0.};
 	static const double CD[nlift]  = {1.143,1.0,1.0,0.8,0.8,0.8,0.8,0.8,1.0,1.0,1.143};
 	int j;
-	factor = -6.0;
-	dfact = 1.0;
-	lfact = 1.0;
+	factor = -5.0;
+	dfact = 1.05;
+	lfact = 0.94;
 	for(j = 0; (j < 16) && (Mach[j+1] < M); j++);
 	frac = (M-Mach[j])/(Mach[j+1]-Mach[j]);
 	drag = dfact*(frac*DFactor[j+1]+(1.0-frac)*DFactor[j]);
