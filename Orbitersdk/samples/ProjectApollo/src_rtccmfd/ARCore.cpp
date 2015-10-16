@@ -1559,16 +1559,8 @@ void ARCore::StateVectorCalc()
 	MATRIX3 Rot;
 	double SVMJD,dt;
 
-	if (SVSlot || target == NULL)
-	{
-		vessel->GetRelativePos(gravref, R);
-		vessel->GetRelativeVel(gravref, V);
-	}
-	else
-	{
-		target->GetRelativePos(gravref, R);
-		target->GetRelativeVel(gravref, V);
-	}
+	svtarget->GetRelativePos(gravref, R);
+	svtarget->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
 
 	Rot = OrbMech::J2000EclToBRCS(40222.525);

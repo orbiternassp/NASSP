@@ -2621,8 +2621,10 @@ void ApolloRTCCMFD::set_entryrange(double range)
 
 void ApolloRTCCMFD::menuSVCalc()
 {
-
-	G->StateVectorCalc();
+	if (G->svtarget != NULL)
+	{
+		G->StateVectorCalc();
+	}
 }
 
 void ApolloRTCCMFD::menuSwitchSVSlot()
