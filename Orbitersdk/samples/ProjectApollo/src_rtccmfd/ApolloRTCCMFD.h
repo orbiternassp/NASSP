@@ -164,6 +164,7 @@ public:
 	void offvecdialogue();
 	void set_offvec(VECTOR3 off);
 	void GetREFSMMATfromAGC();
+	void GetEntryTargetfromAGC();
 	void menuCycleSVTimeMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();

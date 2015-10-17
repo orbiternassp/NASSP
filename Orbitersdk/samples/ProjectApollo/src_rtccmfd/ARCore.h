@@ -131,8 +131,6 @@ public:
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
-	double EntryLatPred;
-	double EntryLngPred;
 	VECTOR3 Entry_DV;
 	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data
 	int entrycalcstate;

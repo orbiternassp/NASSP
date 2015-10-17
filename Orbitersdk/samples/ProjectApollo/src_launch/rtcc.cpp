@@ -344,6 +344,8 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		opt.REFSMMAT = GetREFSMMATfromAGC();
 		opt.vessel = calcParams.src;
 		opt.preburn = true;
+		opt.lat = latitude;
+		opt.lng = longitude;
 
 		EarthOrbitEntry(&opt, *form);
 		sprintf(form->Area[0], "164-1A");
@@ -913,12 +915,42 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
 
+		double WIE, WT, theta_rad, LSMJD;
+		VECTOR3 RTE, UTR, urh, URT0, URT, R_LS, R_P;
+		MATRIX3 Rot2;
+		LSMJD = (dt + t_go + dt2 + dt3 + dt4) / 24.0 / 3600.0 + SVMJD;
+		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
+		Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+		R_LS = mul(Rot2, R_P);
+		R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
+		URT0 = R_LS;
+		WIE = 72.9211505e-6;
+		UZ = _V(0, 0, 1);
+		RTE = crossp(UZ, URT0);
+		UTR = crossp(RTE, UZ);
+		urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
+		theta_rad = acos(dotp(URT0, urh));
+		for (int i = 0;i < 10;i++)
+		{
+			WT = WIE*(KTETA*theta_rad);
+			URT = URT0 + UTR*(cos(WT) - 1.0) + RTE*sin(WT);
+			theta_rad = acos(dotp(URT, urh));
+		}
+
 		pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
 		pad.dVTO[0] = -60832.18 / m1 / 0.3048;
-		pad.Lat[0] = lat*DEG;
-		pad.Lng[0] = lng*DEG;
+		if (opt->lat == 0)
+		{
+			pad.Lat[0] = lat*DEG;
+			pad.Lng[0] = lng*DEG;
+		}
+		else
+		{
+			pad.Lat[0] = opt->lat*DEG;
+			pad.Lng[0] = opt->lng*DEG;
+		}
 		pad.Ret05[0] = t_go + dt2 + dt3 + dt4;
-		pad.RTGO[0] = entry->EntryRTGO;
+		pad.RTGO[0] = theta_rad*3437.7468;//entry->EntryRTGO;
 		pad.VIO[0] = entry->EntryVIO / 0.3048;
 	}
 	else
@@ -948,7 +980,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		dt5 = 500.0;
 		EMSTime = dt2 + dt3 + dt4 + (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
-		for (int i = 0;i < 10;i++)
+		/*for (int i = 0;i < 10;i++)
 		{
 			LSMJD = (EMSTime + dt5) / 24.0 / 3600.0 + opt->GETbase;
 			R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
@@ -965,9 +997,30 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 			{
 				dt5 = 8660.0*theta_nm / (length(V300K) / 0.3048);
 			}
+		}*/
+		double WIE, WT;
+		VECTOR3 RTE, UTR, urh, URT0, URT;
+		LSMJD = EMSTime / 24.0 / 3600.0 + opt->GETbase;
+		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
+		Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+		R_LS = mul(Rot2, R_P);
+		R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
+		URT0 = R_LS;
+		WIE = 72.9211505e-6;
+		UZ = _V(0, 0, 1);
+		RTE = crossp(UZ, URT0);
+		UTR = crossp(RTE, UZ);
+		urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
+		theta_rad = acos(dotp(URT0, urh));
+		for (int i = 0;i < 10;i++)
+		{
+			WT = WIE*(KTETA*theta_rad);
+			URT = URT0 + UTR*(cos(WT) - 1.0) + RTE*sin(WT);
+			theta_rad = acos(dotp(URT, urh));
 		}
+		theta_nm = theta_rad*3437.7468;
 
-		pad.PB_RTGO[0] = theta_nm - 3437.7468*acos(dotp(unit(R300K), unit(R05G)));
+		pad.PB_RTGO[0] = theta_nm;//-3437.7468*acos(dotp(unit(R300K), unit(R05G)));
 		pad.PB_R400K[0] = EIangles.x*DEG;
 		pad.PB_Ret05[0] = dt2 + dt3 + dt4 - dt;
 		pad.PB_VIO[0] = length(V05G) / 0.3048;

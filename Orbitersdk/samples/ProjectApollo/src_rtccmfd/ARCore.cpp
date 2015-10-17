@@ -169,8 +169,6 @@ ARCore::ARCore(VESSEL* v)
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
 	EntryLngcor = 0.0;
-	EntryLatPred = 0.0;
-	EntryLngPred = 0.0;
 	EntryAng = 0.0;
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
@@ -348,8 +346,8 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	else if (entrycalcstate == 2)
 	{
 		entry->EntryUpdateCalc();
-		EntryLatPred = entry->EntryLatPred;
-		EntryLngPred = entry->EntryLngPred;
+		EntryLatcor = entry->EntryLatPred;
+		EntryLngcor = entry->EntryLngPred;
 		EntryRTGO = entry->EntryRTGO;
 		entrycalcstate = 0;
 		delete entry;
@@ -546,189 +544,22 @@ void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic bur
 
 void ARCore::lambertcalc()
 {
+	LambertMan opt;
+	opt.axis = !lambertmultiaxis;
+	opt.GETbase = GETbase;
+	opt.impulsive = RTCC_NONIMPULSIVE;
+	opt.N = N;
+	opt.Offset = offvec;
+	opt.Perturbation = lambertopt;
+	opt.PhaseAngle = 0.0;
+	opt.prograde = true;
+	opt.T1 = T1;
+	opt.T2 = T2;
+	opt.target = target;
+	opt.vessel = vessel;
 
-	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb;
-	VECTOR3 RA0, VA0, RP0, VP0, RA1, VA1, RP2, VP2, RP2off, H_P;
-	double SVMJD, dt1, dt2;
-	double mu,i_P;
-	VECTOR3 VA1_apo;
-	VECTOR3 i, j, k;
-	MATRIX3 Q_Xx, Q_Xx2, obli;
-	bool tgtprograde;
-
-	maneuverplanet = gravref;
-
-	mu = GGRAV*oapiGetMass(gravref);
-
-	//if (IterStage == 0)
-	//{
-
-	oapiGetPlanetObliquityMatrix(gravref, &obli);//oapiGetRotationMatrix(gravref, &obli);
-
-		vessel->GetRelativePos(gravref, RA0_orb);
-		vessel->GetRelativeVel(gravref, VA0_orb);
-		target->GetRelativePos(gravref, RP0_orb);
-		target->GetRelativeVel(gravref, VP0_orb);
-
-		//SVtime = oapiGetSimTime();
-		SVMJD = oapiGetSimMJD();
-
-		if (lambertopt == 1)//vessel->NonsphericalGravityEnabled() == true && N < 16)	//Revolution values higher than 15 have not successfully lead to convergence
-		{
-			RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);	//Calculates the equatorial state vector from the ecliptic state vector
-			VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
-			RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
-			VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
-		}
-
-		RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
-		VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-		RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-		if (time_mode == 0)	//GET time mode
-		{
-			dt1 = T1 - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
-			dt2 = T2 - T1;
-		}
-		else if (time_mode == 1)
-		{
-			dt1 = (T1 - SVMJD) * 24 * 60 * 60;
-			dt2 = (T2 - T1) * 24 * 60 * 60;
-		}
-		else
-		{
-			//dt1 = T1 - SVtime; BROKEN BROKEN
-			dt2 = T2 - T1;
-		}
-
-		if (lambertopt == 1)//vessel->NonsphericalGravityEnabled() == true && N < 16)
-		{
-			//OrbMech::rungeinteg(RA0, VA0, dt1, RA1, VA1, mu);
-			OrbMech::oneclickcoast(RA0, VA0, SVMJD, dt1, RA1, VA1, gravref, gravref);
-			//coast = new CoastIntegrator(RA0, VA0, SVMJD, dt1, gravref);
-			//IterStage++;
-			//}
-			//else if (IterStage == 1)
-			//{
-			//bool stop;
-			//stop = false;
-			//while (stop == false)
-			//{
-			//	stop = coast->iteration();
-			//}
-			//RA1 = coast->R2;
-			//VA1 = coast->V2;
-			//sprintf(oapiDebugString(), "x %0.1f, y %0.1f, z %0.1f, x %0.1f, y %0.1f, z %0.1f", RA1.x, RA1.y, RA1.z, VA1.x, VA1.y, VA1.z);
-
-			//delete coast;
-			//OrbMech::rungeinteg(RP0, VP0, dt1+dt2, RP2, VP2, mu);
-			OrbMech::oneclickcoast(RP0, VP0, SVMJD, dt1 + dt2, RP2, VP2, gravref, gravref);
-			//coast = new CoastIntegrator(RP0, VP0, SVMJD, dt1 + dt2, gravref);
-			//stop = false;
-			//while (stop == false)
-			//{
-			//	stop = coast->iteration();
-			//}
-			//RP2 = coast->R2;
-			//VP2 = coast->V2;
-			//delete coast;
-			//}
-		}
-
-	//if (vessel->NonsphericalGravityEnabled() == true && N < 15)
-	//{
-	//	OrbMech::rv_from_r0v0_obla(RA0, VA0, dt1, RA1, VA1, mu);
-	//	OrbMech::rv_from_r0v0_obla(RP0, VP0, dt1 + dt2, RP2, VP2, mu);
-	//}
-		else
-		{
-			OrbMech::rv_from_r0v0(RA0, VA0, dt1, RA1, VA1, mu);
-			OrbMech::rv_from_r0v0(RP0, VP0, dt1 + dt2, RP2, VP2, mu);
-		}
-
-	if (orient == 0)
-	{
-		i = RP2 / length(RP2);
-		j = VP2 / length(VP2);
-		k = crossp(i, j);
-		Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		RP2off = RP2 + tmul(Q_Xx2, offvec);
-	}
-	else
-	{
-		k = -RP2 / length(RP2);
-		j = crossp(VP2, RP2) / length(RP2) / length(VP2);
-		i = crossp(j, k);
-		Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		double angle;
-		VECTOR3 yvec;
-		//dhdiff = length(RP2) - sqrt(length(RP2)*length(RP2) - offvec.x*offvec.x);
-		RP2off = RP2 + tmul(Q_Xx2, _V(0.0,offvec.y, offvec.z));
-		angle = offvec.x / length(RP2);
-		yvec = _V(Q_Xx2.m21, Q_Xx2.m22, Q_Xx2.m23);
-		RP2off = OrbMech::RotateVector(yvec, -angle, RP2off);
-	}
-
-	H_P = crossp(RP0, VP0);
-	i_P = acos(H_P.z / length(H_P));
-	if (i_P < PI05)
-	{
-		tgtprograde = true;
-	}
-	else
-	{
-		tgtprograde = false;
-	}
-
-	if (lambertopt == 1)//vessel->NonsphericalGravityEnabled() == true && N < 16)
-	{
-		VA1_apo = OrbMech::Vinti(RA1, VA1, RP2off, SVMJD + dt1 / 24.0 / 3600.0, dt2, N, tgtprograde, gravref); //Vinti Targeting: For non-spherical gravity
-	}
-	else
-	{
-		if (lambertmultiaxis)
-		{
-			VA1_apo = OrbMech::elegant_lambert(RA1, VA1, RP2off, dt2, N, tgtprograde, mu);	//Lambert Targeting
-		}
-		else
-		{
-			OrbMech::xaxislambert(RA1, VA1, RP2off, dt2, N, tgtprograde, mu, VA1_apo, offvec.z);	//Lambert Targeting
-		}
-	}
-	//OrbMech::rv_from_r0v0(RA1, VA1, -30.0, RA1, VA1, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
-	if (orient == 0)
-	{
-		i = RA1 / length(RA1);
-		j = VA1 / length(VA1);
-		k = crossp(i, j);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-	}
-	else
-	{
-		j = unit(crossp(VA1, RA1));
-		k = unit(-RA1);
-		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-	}
-	VECTOR3 Llambda,RA1_cor,VA1_cor;
-	double t_slip;
-
-	OrbMech::impulsive(vessel, RA1, VA1, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda,t_slip);
-	OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
-
-	j = unit(crossp(VA1_cor, RA1_cor));
-	k = unit(-RA1_cor);
-	i = crossp(j, k);
-	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-
-	LambertdeltaV = mul(Q_Xx,Llambda);
-	dV_LVLH = LambertdeltaV;
-	P30TIG = T1+t_slip;
-	/*LambertdeltaV = mul(Q_Xx, VA1_apo - VA1);
-	dV_LVLH = LambertdeltaV;
-	P30TIG = T1;*/
-
+	rtcc->LambertTargeting(&opt, dV_LVLH, P30TIG);
+	LambertdeltaV = dV_LVLH;
 }
 
 void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach an orbit specified by apoapsis, periapsis and inclination
@@ -1154,6 +985,17 @@ void ARCore::EntryPAD()
 		opt.REFSMMAT = REFSMMAT;
 		opt.vessel = vessel;
 
+		if (EntryLatcor == 0)
+		{
+			opt.lat = 0;
+			opt.lng = 0;
+		}
+		else
+		{
+			opt.lat = EntryLatcor;
+			opt.lng = EntryLngcor;
+		}
+
 		VECTOR3 R, V;
 		double apo, peri;
 		vessel->GetRelativePos(gravref, R);
@@ -1162,8 +1004,6 @@ void ARCore::EntryPAD()
 		if (peri < oapiGetSize(gravref) + 50 * 1852.0)
 		{
 			opt.preburn = false;
-			opt.lat = EntryLatcor;
-			opt.lng = EntryLngcor;
 			rtcc->EarthOrbitEntry(&opt, pad);
 
 			EntryPADPB_RTGO = pad.PB_RTGO[0];
@@ -1191,6 +1031,10 @@ void ARCore::EntryPAD()
 	VECTOR3 DV, R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, R05G, V05G, R3, V3;
 	MATRIX3 Rot, M_R;
 	double SVMJD, dt, EMSAlt, dt2, dt3, S_FPA, g_T, V_T, v_BAR;
+	double WIE, WT, LSMJD, theta_rad, theta_nm;
+	VECTOR3 RTE, UTR, urh, URT0, URT, R_P, R_LS;
+	MATRIX3 Rot2;
+
 	dt2 = 0;
 
 	vessel->GetRelativePos(gravref, R_A);
@@ -1217,11 +1061,23 @@ void ARCore::EntryPAD()
 		//OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R05G, V05G, mu);
 		entry = new Entry(vessel, gravref, GETbase, EntryTIG, EntryAng, EntryLng, entrycritical, entryrange, 0, true);
 		entry->EntryUpdateCalc();
-		EntryPADLat = entry->EntryLatPred;
-		EntryPADLng = entry->EntryLngPred;
 		EntryPADRTGO = entry->EntryRTGO;
 		EntryPADVIO = entry->EntryVIO;
+		
+
+		if (EntryLatcor == 0)
+		{
+			EntryPADLat = entry->EntryLatPred;
+			EntryPADLng = entry->EntryLngPred;
+		}
+		else
+		{
+			EntryPADLat = EntryLatcor;
+			EntryPADLng = EntryLngcor;
+		}
+
 		delete entry;
+		LSMJD = SVMJD + dt / 24.0 / 3600.0;
 	}
 	else
 	{
@@ -1257,9 +1113,31 @@ void ARCore::EntryPAD()
 		//dt22 = OrbMech::time_radius(R05G, -V05G, oapiGetSize(gravref) + 400000.0*0.3048, 1,mu);
 		//rv_from_r0v0(R05G, -V05G, dt22, REI, VEI, mu);
 		//VEI = -VEI;
-		EntryPADRTGO = EntryRTGO;
+		//EntryPADRTGO = EntryRTGO;
 		EntryPADVIO = EntryVIO;
+
+		LSMJD = SVMJD + (dt + t_go + dt2) / 24.0 / 3600.0;
 	}
+
+	R_P = unit(_V(cos(EntryPADLng)*cos(EntryPADLat), sin(EntryPADLat), sin(EntryPADLng)*cos(EntryPADLat)));
+	Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+	R_LS = mul(Rot2, R_P);
+	R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
+	URT0 = R_LS;
+	WIE = 72.9211505e-6;
+	UZ = _V(0, 0, 1);
+	RTE = crossp(UZ, URT0);
+	UTR = crossp(RTE, UZ);
+	urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
+	theta_rad = acos(dotp(URT0, urh));
+	for (int i = 0;i < 10;i++)
+	{
+		WT = WIE*(KTETA*theta_rad);
+		URT = URT0 + UTR*(cos(WT) - 1.0) + RTE*sin(WT);
+		theta_rad = acos(dotp(URT, urh));
+	}
+	theta_nm = theta_rad*3437.7468;
+	EntryPADRTGO = theta_nm;
 
 	UX = unit(V05G);
 	UY = unit(crossp(UX, R05G));
@@ -1805,7 +1683,7 @@ void ARCore::EntryUplink(void)
 
 	g_Data.emem[0] = 16;
 	g_Data.emem[1] = 3400;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatcor/PI2, 0, 1);
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
 	g_Data.emem[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
 	g_Data.emem[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
 	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
@@ -1826,10 +1704,10 @@ void ARCore::EntryUpdateUplink(void)
 {
 	g_Data.emem[0] = 06;
 	g_Data.emem[1] = 3400;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatPred / PI2, 0, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(EntryLatPred / PI2, 0, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(EntryLngPred / PI2, 0, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngPred / PI2, 0, 0);
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
+	g_Data.emem[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
+	g_Data.emem[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
+	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
 
 	//g_Data.uplinkDataReady = 2;
 	UplinkData(); // Go for uplink

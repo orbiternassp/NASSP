@@ -136,8 +136,8 @@ struct EarthEntryPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
 	MATRIX3 REFSMMAT;
 	bool preburn; //
-	double lat; //latitude for the postburn targeting
-	double lng; //longitude for the postburn targeting
+	double lat; //splashdown latitude
+	double lng; //splashdown longitude
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -154,11 +154,11 @@ public:
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
+	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();

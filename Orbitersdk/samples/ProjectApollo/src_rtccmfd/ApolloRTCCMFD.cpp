@@ -164,8 +164,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "ENTRYTIGCOR", G->EntryTIGcor);
 	papiWriteScenario_double(scn, "ENTRYLATCOR", G->EntryLatcor);
 	papiWriteScenario_double(scn, "ENTRYLNGCOR", G->EntryLngcor);
-	papiWriteScenario_double(scn, "ENTRYLATPRED", G->EntryLatPred);
-	papiWriteScenario_double(scn, "ENTRYLNGPRED", G->EntryLngPred);
 	papiWriteScenario_double(scn, "ENTRYANG", G->EntryAng);
 	papiWriteScenario_double(scn, "ENTRYANGCOR", G->EntryAngcor);
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
@@ -230,8 +228,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "ENTRYTIGCOR", G->EntryTIGcor);
 		papiReadScenario_double(line, "ENTRYLATCOR", G->EntryLatcor);
 		papiReadScenario_double(line, "ENTRYLNGCOR", G->EntryLngcor);
-		papiReadScenario_double(line, "ENTRYLATPRED", G->EntryLatPred);
-		papiReadScenario_double(line, "ENTRYLNGPRED", G->EntryLngPred);
 		papiReadScenario_double(line, "ENTRYANG", G->EntryAng);
 		papiReadScenario_double(line, "ENTRYANGCOR", G->EntryAngcor);
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
@@ -817,9 +813,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8,(int)(0.5 * H / 14), "Entry Update", 12);
 
 
-			sprintf(Buffer, "Lat:  %f °", G->EntryLatPred*DEG);
+			sprintf(Buffer, "Lat:  %f °", G->EntryLatcor*DEG);
 			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "Long: %f °", G->EntryLngPred*DEG);
+			sprintf(Buffer, "Long: %f °", G->EntryLngcor*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "Desired Range: %.1f NM", G->entryrange);
@@ -2944,6 +2940,31 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 
 			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 		}
+	}
+}
+
+void ApolloRTCCMFD::GetEntryTargetfromAGC()
+{
+	if (G->vesseltype == CSM)
+	{
+		saturn = (Saturn *)G->vessel;
+		//if (saturn->IsVirtualAGC() == FALSE)
+		//{
+		//
+		//}
+		//else
+		//{
+			unsigned short Entryoct[6];
+			Entryoct[2] = saturn->agc.vagc.Erasable[0][03400];
+			Entryoct[3] = saturn->agc.vagc.Erasable[0][03401];
+			Entryoct[4] = saturn->agc.vagc.Erasable[0][03402];
+			Entryoct[5] = saturn->agc.vagc.Erasable[0][03403];
+
+			G->EntryLatcor = OrbMech::DecToDouble(Entryoct[2], Entryoct[3])*PI2;
+			G->EntryLngcor = OrbMech::DecToDouble(Entryoct[4], Entryoct[5])*PI2;
+			G->EntryPADLat = G->EntryLatcor;
+			G->EntryPADLng = G->EntryLngcor;
+		//}
 	}
 }
 
