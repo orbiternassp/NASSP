@@ -777,6 +777,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				{
 					skp->Text(5 * W / 8, 2 * H / 14, "Precision Solution", 18);
 				}
+				else if (G->entryprecision == 2)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "PeA=-30NM Solution", 18);
+				}
 			}
 
 			GET_Display(Buffer, G->EntryTIGcor);
