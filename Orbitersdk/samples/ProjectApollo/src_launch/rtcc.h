@@ -43,6 +43,23 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
 
+const MATRIX3 A7REFSMMAT = _M(-0.097435921, -0.957429007, 0.271727726, -0.516196772, -0.184815392, -0.836291939, 0.850909933, -0.221749939, -0.476214282);
+const MATRIX3 A8REFSMMAT = _M(0.496776313, -0.82489121, 0.269755125, -0.303982571, -0.456513584, -0.836175814, 0.812900983, 0.333391495, -0.477537684);
+
+const double LaunchMJD[11] = {//Launch MJD of Apollo missions
+	40140.62691,
+	40211.535417,
+	40283.666667,
+	40359.700694,
+	40418.563889,
+	40539.68194,
+	40687.80069,
+	40982.87711,
+	41128.56529,
+	41423.74583,
+	41658.23125
+};
+
 struct LambertMan //Data for Lambert targeting
 {
 	VESSEL* vessel; //Vessel executing the burn
@@ -107,6 +124,7 @@ struct REFSMMATOpt
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landign site REFSMMAT
+	int mission; //Just for the launch REFSMMAT
 };
 
 struct CDHOpt
@@ -155,11 +173,12 @@ public:
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
+	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
-	void CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -167,7 +186,6 @@ private:
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude);
 	double getGETBase();
-	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);

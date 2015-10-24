@@ -66,7 +66,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(3, 20, 0), OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
+		lambert = set_lambertoptions(calcParams.tgt, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(3, 20, 0), OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -1226,14 +1226,14 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	if (opt->REFSMMATopt == 4)
 	{
 		//TODO: Nominal launchpad REFSMMATs for all missions
-		/*if (mission == 7)
+		if (opt->mission == 7)
 		{
-		REFSMMAT = A7REFSMMAT;
+		return A7REFSMMAT;
 		}
-		else if (mission == 8)
+		else if (opt->mission == 8)
 		{
-		REFSMMAT = A8REFSMMAT;
-		}*/
+		return A8REFSMMAT;
+		}
 		return _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	}
 	else if (opt->REFSMMATopt == 5)
@@ -1409,7 +1409,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	REFSMMATcur = REFSMMATopt;*/
 }
 
-void RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates the required DV vector of a coelliptic burn
+double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates the required DV vector of a coelliptic burn
 {
 	double mu;
 	double SVMJD, SVtime, dt, dt2, c1, c2, theta, SW, dh_CDH, VPV, dt2_apo, CDHtime_cor;
@@ -1539,6 +1539,8 @@ void RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates
 		/*dV_LVLH = CDHdeltaV;
 		P30TIG = CDHtime_cor;*/
 	}
+
+	return dh_CDH;
 }
 
 LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, bool prograde, int impulsive)

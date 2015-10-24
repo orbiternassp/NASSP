@@ -376,170 +376,26 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 
 void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic burn
 {
-	double mu, DH_met;
-	double SVMJD, SVtime, dt, dt2, c1, c2, theta, SW, dh_CDH, VPV, dt2_apo;
-	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb;
-	VECTOR3 RA0, VA0, RP0, VP0, RA2_alt, VA2_alt, V_A2_apo;
-	VECTOR3 u, RPC, VPC, i, j, k;
-	double epsilon, a_P, a_A, V_AH, V_AV;
-	MATRIX3 Q_Xx;
-	bool stop;
-	MATRIX3 obli;
-	VECTOR3 RA2, VA2, RP2, VP2;
+	double dH_CDH;
+	CDHOpt opt;
 
-	maneuverplanet = gravref;
+	opt.CDHtimemode = CDHtimemode;
+	opt.DH = DH*1852.0;
+	opt.GETbase = GETbase;
+	opt.impulsive = RTCC_NONIMPULSIVE;
+	opt.target = target;
+	opt.vessel = vessel;
+	opt.TIG = CDHtime;
 
-	mu = GGRAV*oapiGetMass(gravref);
+	dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
 
-		DH_met = DH*1852.0;							//Calculates the desired delta height of the coellitpic orbit in metric units
+	if (CDHtimemode == 0)
+	{
+		DH = dH_CDH / 1852.0;
+	}
 
-		vessel->GetRelativePos(gravref, RA0_orb);	//vessel position vector
-		vessel->GetRelativeVel(gravref, VA0_orb);	//vessel velocity vector
-		target->GetRelativePos(gravref, RP0_orb);	//target position vector
-		target->GetRelativeVel(gravref, VP0_orb);	//target velocity vector
-		SVtime = oapiGetSimTime();					//The time mark of the state vectors
-
-		oapiGetPlanetObliquityMatrix(gravref, &obli);
-
-		RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);
-		VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
-		RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
-		VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
-
-		RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//Coordinate system nightmare. My calculation methods use another system
-		VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-		RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-		SVMJD = oapiTime2MJD(SVtime);				//Calculates the MJD of the state vector
-
-		if (CDHtimemode == 0)
-		{
-			CDHtime_cor = CDHtime;
-			dt2 = CDHtime - (SVMJD - GETbase) * 24 * 60 * 60;
-		}
-		else
-		{
-			if (time_mode == 0)							//If the time mode is GET, calculate the dt in seconds
-			{
-				dt = CDHtime - (SVMJD - GETbase) * 24 * 60 * 60;
-			}
-			else if (time_mode == 1)					//If the time mode is MJD, calculate the dt in seconds
-			{
-				dt = (CDHtime - SVMJD) * 24 * 60 * 60;
-			}
-			else										////If the time mode is sim time, calculate the dt in seconds
-			{
-				dt = CDHtime - SVtime;
-			}
-
-			dt2 = dt + 10.0;							//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
-
-			while (abs(dt2 - dt) > 0.1)					//0.1 seconds accuracy should be enough
-			{
-				c1 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt, DH_met, gravref);		//c is the difference between desired and actual DH
-				c2 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt2, DH_met, gravref);
-
-				dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
-				dt = dt2;
-				dt2 = dt2_apo;
-			}
-
-			CDHtime_cor = dt2 + (SVMJD - GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
-
-		}
-
-		//OrbMech::rv_from_r0v0(RA0, VA0, dt2, RA2, VA2, mu);
-		//OrbMech::rv_from_r0v0(RP0, VP0, dt2, RP2, VP2, mu);
-
-		stop = false;
-		coast = new CoastIntegrator(RA0, VA0, SVMJD, dt2, gravref, gravref); //Coasting Integration, active vessel state to CDH time
-		while (stop == false)								//Not a single method, so that it could be used in framerate friendly iterations
-		{
-			stop = coast->iteration();
-		}
-		RA2 = coast->R2;
-		VA2 = coast->V2;
-		stop = false;
-		delete coast;
-
-		coast = new CoastIntegrator(RP0, VP0, SVMJD, dt2, gravref, gravref);
-		while (stop == false)
-		{
-			stop = coast->iteration();
-		}
-		RP2 = coast->R2;
-		VP2 = coast->V2;
-		delete coast;
-
-		//This block of equations is taken from the GSOP for Luminary document: 
-		//http://www.ibiblio.org/apollo/NARA-SW/R-567-sec5-rev8-5.4-5.5.pdf
-		//Pre-CDH Program, page 5.4-18
-		u = unit(crossp(RP2, VP2));
-		RA2_alt = RA2;
-		VA2_alt = VA2;
-		RA2 = unit(RA2 - u*dotp(RA2, u))*length(RA2);
-		VA2 = unit(VA2 - u*dotp(VA2, u))*length(VA2);
-
-		theta = acos(dotp(RA2, RP2) / length(RA2) / length(RP2));
-		SW = OrbMech::sign(dotp(u, crossp(RP2, RA2)));
-		theta = SW*theta;
-		OrbMech::rv_from_r0v0_ta(RP2, VP2, theta, RPC, VPC, mu);
-		dh_CDH = length(RPC) - length(RA2);
-
-		if (CDHtimemode == 0)
-		{
-			DH = dh_CDH/1852.0;
-		}
-
-		VPV = dotp(VPC, RA2 / length(RA2));
-
-		epsilon = (length(VPC)*length(VPC)) / 2 - mu / length(RPC);
-		a_P = -mu / (2.0 * epsilon);
-		a_A = a_P - dh_CDH;
-		V_AV = VPV*OrbMech::power((a_P / a_A), 1.5);
-		V_AH = sqrt(mu*(2.0 / length(RA2) - 1.0 / a_A) - (V_AV*V_AV));
-		V_A2_apo = unit(crossp(u, RA2))*V_AH + unit(RA2)*V_AV;	//The desired velocity vector at CDH time
-		//dV2 = V_A2_apo - VA2_alt;
-		//Z = unit(-RA2);
-		//Y = -u;
-		//X = unit(crossp(Y, Z));
-		//dV_CDHLV = mul(_M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z),dV2);
-
-		//OrbMech::rv_from_r0v0(RA2, VA2, -30.0, RA2, VA2, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
-
-		if (orient == 0)
-		{
-			i = RA2 / length(RA2);
-			j = VA2 / length(VA2);
-			k = crossp(i, j);
-			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		}
-		else
-		{
-			j = unit(crossp(VA2, RA2));
-			k = unit(-RA2);
-			i = crossp(j, k);
-			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		}
-		CDHdeltaV = mul(Q_Xx, V_A2_apo - VA2_alt); //Calculates the desired P30 LVLH DV Vector
-
-		VECTOR3 Llambda,RA2_cor,VA2_cor;double t_slip;
-		OrbMech::impulsive(vessel, RA2, VA2_alt, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
-
-		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
-
-		j = unit(crossp(VA2_cor, RA2_cor));
-		k = unit(-RA2_cor);
-		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-
-		CDHdeltaV = mul(Q_Xx, Llambda); //Calculates the desired P30 LVLH DV Vector
-		P30TIG = CDHtime_cor + t_slip;
-		dV_LVLH = CDHdeltaV;
-
-		/*dV_LVLH = CDHdeltaV;
-		P30TIG = CDHtime_cor;*/
+	P30TIG = CDHtime_cor;
+	dV_LVLH = CDHdeltaV;
 }
 
 void ARCore::lambertcalc()
@@ -738,185 +594,22 @@ void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach
 
 void ARCore::REFSMMATCalc()
 {
-	double SVMJD, dt, mu;
-	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, X_B;
-	MATRIX3 Rot, a;
-	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
-	double theta_T,t_go;
-	OBJHANDLE hMoon, hEarth;
+	MATRIX3 a;
+	REFSMMATOpt opt;
 
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
+	opt.dV_LVLH = dV_LVLH;
+	opt.GETbase = GETbase;
+	opt.LSLat = LSLat;
+	opt.LSLng = LSLng;
+	opt.maneuverplanet = maneuverplanet;
+	opt.mission = mission;
+	opt.P30TIG = P30TIG;
+	opt.REFSMMATdirect = REFSMMATdirect;
+	opt.REFSMMATopt = REFSMMATopt;
+	opt.REFSMMATTime = REFSMMATTime;
+	opt.vessel = vessel;
 
-	vessel->GetRelativePos(gravref, R_A);
-	vessel->GetRelativeVel(gravref, V_A);
-	SVMJD = oapiGetSimMJD();
-
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-	R_A = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
-	V_A = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
-
-	if (REFSMMATdirect == false)
-	{
-		OrbMech::oneclickcoast(R_A, V_A, SVMJD, P30TIG - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R0B, V0B, gravref, maneuverplanet);
-
-		UY = unit(crossp(V0B, R0B));
-		UZ = unit(-R0B);
-		UX = crossp(UY, UZ);
-
-		DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
-		theta_T = length(crossp(R0B, V0B))*length(dV_LVLH)*vessel->GetMass() / OrbMech::power(length(R0B), 2.0) / 92100.0;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + UY*dV_LVLH.y;
-
-		OrbMech::poweredflight(vessel, R0B, V0B, maneuverplanet, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B, V0B, t_go);
-
-		//DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
-		//V0B = V0B + DV;
-		SVMJD += (t_go+P30TIG) / 24.0 / 60.0 / 60.0 - (SVMJD - GETbase);
-	}
-	else
-	{
-		R0B = R_A;
-		V0B = V_A;
-	}
-
-	if (REFSMMATopt == 4)
-	{
-		if (mission == 7)
-		{
-			REFSMMAT = A7REFSMMAT;
-		}
-		else if (mission == 8)
-		{
-			REFSMMAT = A8REFSMMAT;
-		}
-	}
-	else if (REFSMMATopt == 5)
-	{
-		double LSMJD;
-		VECTOR3 R_P,R_LS, H_C;
-		MATRIX3 Rot2;
-		
-		LSMJD = REFSMMATTime/24.0/3600.0 + GETbase;
-
-		R_P = unit(_V(cos(LSLng)*cos(LSLat), sin(LSLat), sin(LSLng)*cos(LSLat)));
-
-		Rot2 = OrbMech::GetRotationMatrix2(oapiGetObjectByName("Moon"), LSMJD);
-
-		R_LS = mul(Rot2, R_P);
-		R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
-
-		OrbMech::oneclickcoast(R0B, V0B, SVMJD, (LSMJD - SVMJD)*24.0*3600.0, R1B, V1B, gravref, hMoon);
-
-		H_C = crossp(R1B, V1B);
-
-		UX = unit(R_LS);
-		UZ = unit(crossp(H_C, R_LS));
-		UY = crossp(UZ, UX);
-
-		REFSMMAT = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	}
-	else if (REFSMMATopt == 6)
-	{
-		double *MoonPos;
-		double PTCMJD;
-		VECTOR3 R_ME;
-
-		MoonPos = new double[12];
-
-		PTCMJD = REFSMMATTime / 24.0 / 3600.0 + GETbase;
-
-		OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
-
-		cMoon->clbkEphemeris(PTCMJD, EPHEM_TRUEPOS, MoonPos);
-
-		R_ME = -_V(MoonPos[0], MoonPos[1], MoonPos[2]);
-
-		UX = unit(crossp(_V(0.0, 1.0, 0.0), unit(R_ME)));
-		UX = mul(Rot, _V(UX.x, UX.z, UX.y));
-
-		UZ = unit(mul(Rot, _V(0.0, 0.0, -1.0)));
-		UY = crossp(UZ, UX);
-		REFSMMAT = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	}
-	else
-	{
-		mu = GGRAV*oapiGetMass(gravref);
-
-		if (REFSMMATopt == 2)
-		{
-			dt = REFSMMATTime - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
-			OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
-		}
-		else if (REFSMMATopt == 0 || REFSMMATopt == 1)
-		{
-			dt = P30TIG - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
-			OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
-		}
-		else
-		{
-			dt = OrbMech::time_radius_integ(R0B, V0B, SVMJD, oapiGetSize(hEarth) + 400000.0*0.3048, -1, hEarth, hEarth, R1B, V1B);
-		}
-
-		UY = unit(crossp(V1B, R1B));
-		UZ = unit(-R1B);
-		UX = crossp(UY, UZ);
-
-
-
-		if (REFSMMATopt == 0 || REFSMMATopt == 1)
-		{
-			MATRIX3 M, M_R, M_RTM;
-			double p_T, y_T;
-
-			DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
-			if (length(DV_P) != 0.0)
-			{
-				theta_T = length(crossp(R1B, V1B))*length(dV_LVLH)*vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
-				DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-				V_G = DV_C + UY*dV_LVLH.y;
-			}
-			else
-			{
-				V_G = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
-			}
-			if (REFSMMATopt == 0)
-			{
-				p_T = -2.15*RAD;
-				X_B = unit(V_G);// tmul(REFSMMAT, dV_LVLH));
-			}
-			else
-			{
-				p_T = 2.15*RAD;
-				X_B = -unit(V_G);// tmul(REFSMMAT, dV_LVLH));
-			}
-			UX = X_B;
-			UY = unit(crossp(X_B, R1B));
-			UZ = unit(crossp(X_B, crossp(X_B, R1B)));
-
-
-			y_T = 0.95*RAD;
-
-			M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-			M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-			M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
-			X_SM = mul(M_RTM, _V(1.0, 0.0, 0.0));
-			Y_SM = mul(M_RTM, _V(0.0, 1.0, 0.0));
-			Z_SM = mul(M_RTM, _V(0.0, 0.0, 1.0));
-			REFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
-
-			//IMUangles = OrbMech::CALCGAR(REFSMMAT, mul(transpose_matrix(M), M_R));
-			//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
-		}
-		else
-		{
-			REFSMMAT = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		}
-		//
-	}
+	REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
 	a = REFSMMAT;
 
