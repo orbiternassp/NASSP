@@ -316,6 +316,25 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		AP7TPIPAD(&opt, *form);
 	}
 	break;
+	case 10: //MISSION C FINAL SEPARATION MANEUVER
+	{
+		AP7ManPADOpt opt;
+
+		AP7MNV * form = (AP7MNV *)pad;
+
+		opt.dV_LVLH = _V(2.0*0.3048, 0.0, 0.0);
+		opt.engopt = 2;
+		opt.GETbase = getGETBase();
+		opt.HeadsUp = false;
+		opt.navcheckGET = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.sxtstardtime = 0;
+		opt.TIG = OrbMech::HHMMSSToSS(30.0, 20.0, 0.0);
+		opt.vessel = calcParams.src;	
+
+		AP7ManeuverPAD(&opt, *form);
+	}
+	break;
 	case 29: //MISSION C NOMINAL DEORBIT MANEUVER 
 	{
 		AP7ENT * form = (AP7ENT *)pad;
