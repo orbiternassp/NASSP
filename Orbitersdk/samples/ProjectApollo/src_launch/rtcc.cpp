@@ -1608,3 +1608,246 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
+
+void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	double SVMJD, GET;
+	VECTOR3 R_A, V_A, R0B, V0B;
+	MATRIX3 Rot;
+	OBJHANDLE hMoon;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	opt->vessel->GetRelativePos(hMoon, R_A);
+	opt->vessel->GetRelativeVel(hMoon, V_A);
+	SVMJD = oapiGetSimMJD();
+	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+	if (opt->man == 0)
+	{
+		double PeriMJD, dt1, dt2;
+		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k;
+		MATRIX3 Rot2, Q_Xx;
+
+		PeriMJD = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
+
+		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
+
+		Rot2 = OrbMech::GetRotationMatrix2(hMoon, PeriMJD);
+
+		R_peri = mul(Rot2, R_P);
+		R_peri = unit(mul(Rot, _V(R_peri.x, R_peri.z, R_peri.y)))*(oapiGetSize(hMoon) + opt->h_peri);
+
+		dt1 = opt->MCCGET - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		dt2 = opt->PeriGET - opt->MCCGET;
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, hMoon, hMoon);
+
+		VA1_apo = OrbMech::Vinti(RA1, VA1, R_peri, SVMJD + dt1 / 24.0 / 3600.0, dt2, 0, false, hMoon);
+
+		j = unit(crossp(VA1, RA1));
+		k = unit(-RA1);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);
+		P30TIG = opt->MCCGET;
+	}
+	else if (opt->man == 1)
+	{
+		OrbAdjOpt orbopt;
+
+		orbopt.GETbase = opt->GETbase;
+		orbopt.gravref = hMoon;
+		orbopt.h_apo = opt->h_apo;
+		orbopt.h_peri = opt->h_peri;
+		orbopt.inc = opt->inc;
+		orbopt.SPSGET = opt->MCCGET;
+		orbopt.vessel = opt->vessel;
+
+		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
+	}
+	else if (opt->man == 2)
+	{
+		double mu, a, dt2, LOIGET, v_circ;
+		VECTOR3 RA2, VA2, U_H, U_hor, VA2_apo, DVX, i, j, k;
+		MATRIX3 Q_Xx;
+
+		mu = GGRAV*oapiGetMass(hMoon);
+		a = oapiGetSize(hMoon) + opt->h_peri;
+
+		//double t_period;
+		//VECTOR3 RA1, VA1;
+		//t_period = OrbMech::period(R0B, V0B, mu);
+		//OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_period, RA1, VA1, hMoon, hMoon);
+		//dt2 = OrbMech::time_radius_integ(RA1, VA1, SVMJD + t_period / 24.0 / 3600.0, a, -1, hMoon, hMoon, RA2, VA2);
+		dt2 = OrbMech::time_radius_integ(R0B, V0B, SVMJD, a, -1, hMoon, hMoon, RA2, VA2);
+		LOIGET = dt2 + (SVMJD - opt->GETbase) * 24 * 60 * 60;
+
+		U_H = unit(crossp(RA2, VA2));
+		U_hor = unit(crossp(U_H, unit(RA2)));
+		v_circ = sqrt(mu*(2.0 / length(RA2) - 1.0 / a));
+		VA2_apo = U_hor*v_circ;
+
+		DVX = VA2_apo - VA2;
+
+		VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
+		OrbMech::impulsive(opt->vessel, RA2, VA2, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+
+		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+
+		j = unit(crossp(V2_cor, R2_cor));
+		k = unit(-R2_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+		dV_LVLH = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
+
+		P30TIG = LOIGET + t_slip;
+	}
+}
+
+void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	double R_E, SPSMJD, SVMJD, mu, r, phi, lambda, apo, peri, a, e, theta1, theta2, beta1, beta2, ll1, ll2, h, w11, w12, w21, w22, dlambda1, dlambda2, lambda11, lambda12;
+	VECTOR3 u, RPOS, RVEL, Requ, Vequ, R2, V2, VX1, VX2, VX3, VX4, k, i, j, DVX1, DVX2, DVX3, DVX4, DVX;
+	MATRIX3 obli, Q_Xx;
+
+	obli = OrbMech::J2000EclToBRCS(40222.525);
+	mu = GGRAV*oapiGetMass(opt->gravref);									//Standard gravitational parameter GM
+	SPSMJD = opt->GETbase + opt->SPSGET / 24.0 / 60.0 / 60.0;					//The MJD of the maneuver
+
+
+	opt->vessel->GetRelativePos(opt->gravref, RPOS);							//The current position vecotr of the vessel in the ecliptic frame
+	opt->vessel->GetRelativeVel(opt->gravref, RVEL);							//The current velocity vector of the vessel in the ecliptic frame
+	SVMJD = oapiGetSimMJD();										//The time mark for this state vector
+
+	Requ = mul(obli, _V(RPOS.x, RPOS.z, RPOS.y));
+	Vequ = mul(obli, _V(RVEL.x, RVEL.z, RVEL.y));
+
+	OrbMech::oneclickcoast(Requ, Vequ, SVMJD, (SPSMJD - SVMJD)*24.0*60.0*60.0, R2, V2, opt->gravref, opt->gravref);
+
+	if (opt->gravref == oapiGetObjectByName("Earth"))
+	{
+		R_E = 6373338.0;// OrbMech::fischer_ellipsoid(R2);				//The radius of the Earth according to the AGC. This is the radius at launch?
+	}
+	else
+	{
+		R_E = oapiGetSize(opt->gravref);
+
+		MATRIX3 Rot2;
+		Rot2 = OrbMech::GetRotationMatrix2(oapiGetObjectByName("Moon"), SPSMJD);
+
+		R2 = tmul(obli, R2);
+		V2 = tmul(obli, V2);
+		R2 = _V(R2.x, R2.z, R2.y);
+		V2 = _V(V2.x, V2.z, V2.y);
+		R2 = tmul(Rot2, R2);
+		V2 = tmul(Rot2, V2);
+		R2 = _V(R2.x, R2.z, R2.y);
+		V2 = _V(V2.x, V2.z, V2.y);
+	}
+
+	//OrbMech::local_to_equ(R2, r, phi, lambda);							//Calculates the radius, latitude and longitude of the maneuver position
+	u = unit(R2);
+	r = length(R2);
+	phi = atan(u.z / sqrt(u.x*u.x + u.y*u.y));
+	lambda = atan2(u.y, u.x);
+
+	apo = R_E + opt->h_apo;									//calculates the apoapsis radius in the metric system
+	peri = R_E + opt->h_peri;								//calculates the periapsis radius in the metric system
+
+	if (r > apo)													//If the maneuver radius is higher than the desired apoapsis, then we would get no solution
+	{
+		apo = r;													//sets the desired apoapsis to the current radius, so that we can calculate a maneuver
+	}
+	else if (r < peri)												//If the maneuver radius is lower than the desired periapsis, then we would also get no solution
+	{
+		peri = r;													//sets the desired periapsis to the current radius, so that we can calculate a maneuver
+	}
+
+	a = (apo + peri) / 2.0;											//The semi-major axis of the desired orbit
+	e = (apo - peri) / (apo + peri);								//The eccentricity of the desired orbit
+
+	theta1 = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
+	theta2 = PI2 - theta1;											//Calculates the second possible true anomaly of the desired orbit
+
+	beta1 = asin(cos(opt->inc) / cos(phi));									//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
+	beta2 = PI - beta1;													//The second possible azimuth heading
+
+	ll1 = atan2(tan(phi), cos(beta1));    //angular distance between the ascending node and the current position (beta1)
+	ll2 = atan2(tan(phi), cos(beta2));    //angular distance between the ascending node and the current position (beta2)	
+
+	h = sqrt(r*mu*(1.0 + e*cos(theta1)));    //Specific relative angular momentum (theta1)
+												 //h2 = sqrt(r*mu*(1.0 + e*cos(theta2)));    //Specific relative angular momentum (theta2)
+
+	w11 = ll1 - theta1;                     //argument of periapsis (beta1, theta1)
+	w12 = ll1 - theta2;                     //argument of periapsis (beta1, theta2)
+	w21 = ll2 - theta1;                     //argument of periapsis (beta2, theta1)
+	w22 = ll2 - theta2;                     //argument of periapsis (beta2, theta2)
+												//w = w1;
+
+											//dlambda1 = atan2(sin(phi),1.0/tan(beta1));   //angular distance between the ascending node and the current position measured in the equatorial plane (beta1)
+											//dlambda2 = atan2(sin(phi),1.0/tan(beta2));   //angular distance between the ascending node and the current position measured in the equatorial plane (beta2)
+	dlambda1 = atan(tan(beta1)*sin(phi));
+	dlambda2 = atan(tan(beta2)*sin(phi)) + PI;
+
+	//dlambda1 = atan2(tan(beta1), 1.0 / sin(phi));
+	//dlambda2 = atan2(tan(beta2), 1.0 / sin(phi));
+
+	lambda11 = lambda - dlambda1;               //longitude at the ascending node (beta1)
+	lambda12 = lambda - dlambda2;               //longitude at the ascending node (beta2)
+
+	VECTOR3 RX1, RX2, RX3, RX4;
+
+	OrbMech::perifocal(h, mu, e, theta1, opt->inc, lambda11, w11, RX1, VX1); //The required velocity vector for the desired orbit (beta1, theta1)
+	OrbMech::perifocal(h, mu, e, theta2, opt->inc, lambda11, w12, RX2, VX2); //The required velocity vector for the desired orbit (beta1, theta2)
+	OrbMech::perifocal(h, mu, e, theta1, opt->inc, lambda12, w21, RX3, VX3); //The required velocity vector for the desired orbit (beta2, theta1)
+	OrbMech::perifocal(h, mu, e, theta2, opt->inc, lambda12, w22, RX4, VX4); //The required velocity vector for the desired orbit (beta2, theta2)
+
+																			//OrbMech::rv_from_r0v0(R2, V2, -30.0, R2, V2, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
+
+	j = unit(crossp(V2, R2));
+	k = unit(-R2);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);			//Creates the rotation matrix from the geocentric equatorial frame to the vessel-centered P30 LVLH frame
+
+	DVX1 = VX1 - V2;									//Calculates the DV vectors to achieve the desired orbit
+	DVX2 = VX2 - V2;
+	DVX3 = VX3 - V2;
+	DVX4 = VX4 - V2;
+
+	if (length(DVX1) <= length(DVX2) && length(DVX1) <= length(DVX3) && length(DVX1) <= length(DVX4))		//The lowest DV vector is selected. TODO: Let the user choose it.
+	{
+		DVX = DVX1;
+	}
+	else if (length(DVX2) < length(DVX1) && length(DVX2) < length(DVX3) && length(DVX2) < length(DVX4))
+	{
+		DVX = DVX2;
+	}
+	else if (length(DVX3) <= length(DVX1) && length(DVX3) <= length(DVX2) && length(DVX3) <= length(DVX4))
+	{
+		DVX = DVX3;
+	}
+	else if (length(DVX4) < length(DVX1) && length(DVX4) < length(DVX2) && length(DVX4) < length(DVX3))
+	{
+		DVX = DVX4;
+	}
+
+	VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
+	OrbMech::impulsive(opt->vessel, R2, V2, opt->gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+	
+	OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+
+	j = unit(crossp(V2_cor, R2_cor));
+	k = unit(-R2_cor);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+	dV_LVLH = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
+
+	P30TIG = opt->SPSGET + t_slip;
+}

@@ -6,6 +6,105 @@ inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
 namespace OrbMech{
 
+	double period(VECTOR3 R, VECTOR3 V, double mu)
+	{
+		double a, epsilon;
+
+		epsilon = power(length(V), 2.0) / 2.0 - mu / length(R);
+		a = -mu / (2.0*epsilon);
+		return PI2*sqrt(power(a, 3.0) / mu);
+	}
+
+	double fraction_an(int n)
+	{
+		if (n == 0)
+		{
+			return 4.0;
+		}
+		else
+		{
+			return fraction_an(n - 1) + (2.0*n + 1.0);
+		}
+	}
+
+	double fraction_ad(int n)
+	{
+		if (n == 0)
+		{
+			return 15.0;
+		}
+		else
+		{
+			return fraction_ad(n - 1) + 4.0*(2.0*n + 1.0);
+		}
+	}
+
+	double fraction_a(int n, double x)
+	{
+		if (n == 0)
+		{
+			return 1.0 / 5.0;
+		}
+		else
+		{
+			return -fraction_an(n) / fraction_ad(n)*x;
+		}
+	}
+
+	double fraction_b(int n, double x)
+	{
+		return 1.0;
+	}
+
+	double fraction_delta(int n, double x)
+	{
+		if (n == 0)
+		{
+			return 1.0;
+		}
+		else
+		{
+			return 1.0 / (1.0 - fraction_a(n, x)*fraction_delta(n - 1, x));
+		}
+	}
+
+	double fraction_u(int n, double x)
+	{
+		if (n == 0)
+		{
+			return 1.0 / 5.0;
+		}
+		else
+		{
+			return fraction_u(n - 1, x)*(fraction_delta(n, x) - 1.0);
+		}
+	}
+
+	double fraction_pq(double x)
+	{
+		int n = 0;
+		double u = 100.0;
+		double pq = 0.0;
+
+		while (abs(u) > 1e-9)
+		{
+			u = fraction_u(n, x);
+			pq += u;
+			n++;
+		}
+		return pq;
+	}
+
+	double fraction_xi(double x)
+	{
+		double eta, xi_eta, xi_x;
+
+		eta = (sqrt(1.0 + x) - 1.0) / (sqrt(1.0 + x) + 1.0);
+		xi_eta = fraction_pq(eta);
+		xi_x = 1.0 / (8.0*(sqrt(1.0 + x) + 1.0))*(3.0 + xi_eta / (1.0 + eta*xi_eta));
+		return xi_x;
+	}
+
 	double HHMMSSToSS(int H, int M, int S)
 	{
 		return (double)H*3600.0 + (double)M*60.0 + (double)S;
@@ -474,8 +573,17 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	while (abs(ratio) > tol && nMax >= n)
 	{
 		n = n + 1;
-		h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
-		h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
+		if (N == 0)
+		{
+			double xi = fraction_xi(x);
+			h1 = OrbMech::power(l + x, 2.0)*(1.0 + xi*(1.0 + 3.0*x)) / (1.0 + 2.0*x + l)*(3.0 + x*(1.0 + 4.0*xi));
+			h2 = m*(1.0 + (x - l)*xi) / ((1.0 + 2.0*x + l)*(3.0 + x*(1.0 + 4.0*xi)));
+		}
+		else
+		{
+			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
+			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
+		}
 		B = 27 * h2 / (4 * OrbMech::power(1 + h1, 3));
 		if (B >= 0)
 		{

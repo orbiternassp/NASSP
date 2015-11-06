@@ -35,6 +35,7 @@ public:
 	void CDHcalc();
 	void OrbitAdjustCalc();
 	void REFSMMATCalc();
+	void LOICalc();
 	//void EntryCalc();
 	//void EntryUpdateCalc();
 	void StateVectorCalc();
@@ -56,6 +57,13 @@ public:
 	void EntryPAD();
 	void TPIPAD();
 	void MapUpdate();
+
+	int startSubthread(int fcn);
+	int subThread();
+
+	// SUBTHREAD MANAGEMENT
+	int subThreadMode;										// What should the subthread do?
+	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
 	//OrbMech* mech;
 	CoastIntegrator* coast;
@@ -160,6 +168,10 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1, 2 = LOI-2
+	double LOIGET, LOIPeriGET, LOILat, LOILng;
+	double LOIapo, LOIperi, LOIinc;
+	VECTOR3 LOIdeltaV;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

@@ -158,6 +158,31 @@ struct EarthEntryPADOpt
 	double lng; //splashdown longitude
 };
 
+struct LOIMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	int man; //0 = last MCC, 1 = LOI-1, 2 = LOI-2
+	double MCCGET; //GET for the last MCC
+	double lat; //target for MCC
+	double lng; //target for MCC
+	double PeriGET; //time of periapsis (for MCC)
+	double h_apo;	//for LOI-1
+	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
+	double inc;		//Inclination (equatorial) for LOI-1
+};
+
+struct OrbAdjOpt
+{
+	VESSEL* vessel;
+	OBJHANDLE gravref;
+	double SPSGET;
+	double GETbase; //usually MJD at launch
+	double h_apo;	//
+	double h_peri;	//
+	double inc;		//
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	VESSEL *src;	// Our ship
@@ -175,6 +200,8 @@ public:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 
 	MCC *mcc;
 	struct calculationParameters calcParams;

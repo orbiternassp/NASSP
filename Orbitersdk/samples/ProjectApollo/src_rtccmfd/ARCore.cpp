@@ -17,6 +17,10 @@ static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
 
+static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
+	ARCore *core = (ARCore *)ptr;
+	return(core->subThread());
+}
 
 ARCore::ARCore(VESSEL* v)
 {
@@ -252,13 +256,26 @@ ARCore::ARCore(VESSEL* v)
 	EntryPADPB_R400K = 0.0;
 	EntryPADPB_Ret05 = 0.0;
 	EntryPADPB_VIO = 0.0;
+
+	LOImaneuver = 0;
+	LOIGET = 0.0;
+	LOIPeriGET = 0.0;
+	LOILat = 0.0;
+	LOILng = 0.0;
+	LOIapo = 0.0;
+	LOIperi = 0.0;
+	LOIinc = 0.0;
+	LOIdeltaV = _V(0.0, 0.0, 0.0);
+
+	subThreadMode = 0;
+	subThreadStatus = 0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 {
 	if (iterator == 1)
 	{
-		OrbitAdjustCalc();
+		//OrbitAdjustCalc();
 	}
 	else if (iterator == 2)
 	{
@@ -266,82 +283,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	}
 	if (entrycalcstate == 1)
 	{
-		bool endi;
-		endi = entry->EntryIter();
-		if (endi)
-		{
-			entryprecision = entry->precision;
-
-			EntryLatcor = entry->EntryLatcor;
-			EntryLngcor = entry->EntryLngcor;
-			
-			EntryRET05 = entry->EntryRET;
-			EntryRTGO = entry->EntryRTGO;
-			EntryVIO = entry->EntryVIO;
-			EntryAngcor = entry->EntryAng;
-			Entry_DV = entry->Entry_DV;
-			maneuverplanet = oapiGetObjectByName("Earth");
-			P37GET400K = entry->t2;
-
-			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor,V_cor,i,j,k;
-			MATRIX3 Rot, mat,Q_Xx;
-			double SVMJD,t_slip, mu;
-
-
-			vessel->GetRelativePos(gravref, R0);
-			vessel->GetRelativeVel(gravref, V0);
-			SVMJD = oapiGetSimMJD();
-
-			Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-			R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
-			V0 = mul(Rot, _V(V0.x, V0.z, V0.y));
-
-			OrbMech::oneclickcoast(R0, V0, SVMJD, entry->EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R, V, gravref,gravref);
-
-			UY = unit(crossp(V, R));
-			UZ = unit(-R);
-			UX = crossp(UY, UZ);
-
-			DV = UX*Entry_DV.x + UY*Entry_DV.y + UZ*Entry_DV.z;
-
-			mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
-			DV = mul(mat,Entry_DV);
-
-			OrbMech::impulsive(vessel, R, V, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
-
-			mu = GGRAV*oapiGetMass(gravref);
-			OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);
-
-			j = unit(crossp(V_cor, R_cor));
-			k = unit(-R_cor);
-			i = crossp(j, k);
-			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-
-			EntryTIGcor = entry->EntryTIGcor+t_slip;
-			P30TIG = EntryTIGcor;
-			dV_LVLH = mul(Q_Xx, Llambda);
-			//dV_LVLH = tmul(mat, Llambda);
-			entrycalcstate = 0;
-			delete entry;
-
-			/*DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
-			theta_T = length(crossp(R, V))*length(dV_LVLH)*vessel->GetMass() / power(length(R), 2.0) / 92100.0;
-			DV_C = (unit(DV_P)*cos(-theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(-theta_T / 2.0))*length(DV_P);
-			V_G = DV_C + UY*dV_LVLH.y;
-			dV_LVLH = tmul(mat, V_G);*/
-
-
-			/*double v_e,F,t_b;
-			v_e = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-			F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-			t_b = v_e / F*vessel->GetMass()*(1.0 - exp(-length(Entry_DV) / v_e));
-			EntryTIGcor = entry->EntryTIGcor-0.5*t_b;
-			P30TIG = EntryTIGcor;
-			dV_LVLH = Entry_DV;
-			entrycalcstate = 0;
-			delete entry;*/
-		}
+		startSubthread(7);
 	}
 	else if (entrycalcstate == 2)
 	{
@@ -374,289 +316,29 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	}
 }
 
+void ARCore::LOICalc()
+{
+	startSubthread(5);
+}
+
 void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic burn
 {
-	double dH_CDH;
-	CDHOpt opt;
-
-	opt.CDHtimemode = CDHtimemode;
-	opt.DH = DH*1852.0;
-	opt.GETbase = GETbase;
-	opt.impulsive = RTCC_NONIMPULSIVE;
-	opt.target = target;
-	opt.vessel = vessel;
-	opt.TIG = CDHtime;
-
-	dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
-
-	if (CDHtimemode == 0)
-	{
-		DH = dH_CDH / 1852.0;
-	}
-
-	P30TIG = CDHtime_cor;
-	dV_LVLH = CDHdeltaV;
+	startSubthread(2);
 }
 
 void ARCore::lambertcalc()
 {
-	LambertMan opt;
-	opt.axis = !lambertmultiaxis;
-	opt.GETbase = GETbase;
-	opt.impulsive = RTCC_NONIMPULSIVE;
-	opt.N = N;
-	opt.Offset = offvec;
-	opt.Perturbation = lambertopt;
-	opt.PhaseAngle = 0.0;
-	opt.prograde = true;
-	opt.T1 = T1;
-	opt.T2 = T2;
-	opt.target = target;
-	opt.vessel = vessel;
-
-	rtcc->LambertTargeting(&opt, dV_LVLH, P30TIG);
-	LambertdeltaV = dV_LVLH;
+	startSubthread(1);
 }
 
 void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach an orbit specified by apoapsis, periapsis and inclination
 {
-	double R_E, SPSMJD, SVMJD, mu, r, phi, lambda, apo, peri, inc, a, e, theta1, theta2, beta1, beta2, ll1, ll2, h, w11, w12, w21, w22, dlambda1, dlambda2, lambda11, lambda12;
-	VECTOR3 u, RPOS, RVEL, Requ, Vequ, R2, V2,VX1,VX2,VX3,VX4,k,i,j,DVX1,DVX2,DVX3,DVX4,DVX;
-	MATRIX3 obli,Q_Xx;
-
-	maneuverplanet = gravref;
-
-	obli = OrbMech::J2000EclToBRCS(40222.525);
-	mu = GGRAV*oapiGetMass(gravref);									//Standard gravitational parameter GM
-	SPSMJD = GETbase + SPSGET / 24.0 / 60.0 / 60.0;					//The MJD of the maneuver
-
-
-	if (IterStage == 0)												//The calculation has 3 stages: setup, coasting integration and DV calculation
-	{
-		vessel->GetRelativePos(gravref, RPOS);							//The current position vecotr of the vessel in the ecliptic frame
-		vessel->GetRelativeVel(gravref, RVEL);							//The current velocity vector of the vessel in the ecliptic frame
-		SVMJD = oapiGetSimMJD();										//The time mark for this state vector
-
-		Requ = mul(obli, _V(RPOS.x, RPOS.z, RPOS.y));
-		Vequ = mul(obli, _V(RVEL.x, RVEL.z, RVEL.y));
-		//oapiGetPlanetObliquityMatrix(gravref, &obli);							//Gets the Obliquity Matrix of the Earth. NOTE: Any resulting longitudes are in the fixed, non-rotating frame
-		//Requ = mul(OrbMech::inverse(obli), RPOS);								//Calculate the equatorial position vector from the ecliptic state vector
-		//Vequ = mul(OrbMech::inverse(obli), RVEL);								//Calculate the equatorial velocity vector from the ecliptic state vector
-
-		//Requ = _V(Requ.x, Requ.z, Requ.y);								//Coordinate system nightmare, don't even ask
-		//Vequ = _V(Vequ.x, Vequ.z, Vequ.y);								//More coordinate system nightmare
-		coast = new CoastIntegrator(Requ, Vequ, SVMJD, (SPSMJD- SVMJD)*24.0*60.0*60.0, gravref, gravref);		//Creates a new coast integration object
-		IterStage++;													//Stage 0 done, next iteration is stage 1
-
-	}
-	else if (IterStage == 1)
-	{
-		bool stop;														
-		stop = coast->iteration();										//iteration of the class CoastIntegrator2 is an implementation of Nystrom's method
-		if (stop)														//The iteration method will set bool to true, once the iteration is finished
-		{
-			IterStage++;												//Iteration done
-		}
-	}
-	else if (IterStage == 2)
-	{
-		R2 = coast->R2;													//The resulting position vector of the coasting routine
-		V2 = coast->V2;													//The resulting velocity vector of the coasting routine	
-		delete coast;													//We have everything from the coasting routine we wanted, so let's delete it
-
-		if (gravref == oapiGetObjectByName("Earth"))
-		{
-			R_E = 6373338.0;// OrbMech::fischer_ellipsoid(R2);				//The radius of the Earth according to the AGC. This is the radius at launch?
-		}
-		else
-		{
-			R_E = oapiGetSize(gravref);
-
-			MATRIX3 Rot2;
-			Rot2 = OrbMech::GetRotationMatrix2(oapiGetObjectByName("Moon"), SPSMJD);
-
-			R2 = tmul(obli, R2);
-			V2 = tmul(obli,V2);
-			R2 = _V(R2.x, R2.z, R2.y);
-			V2 = _V(V2.x, V2.z, V2.y);
-			R2 = tmul(Rot2, R2);
-			V2 = tmul(Rot2, V2);
-			R2 = _V(R2.x, R2.z, R2.y);
-			V2 = _V(V2.x, V2.z, V2.y);
-		}
-
-		//OrbMech::local_to_equ(R2, r, phi, lambda);							//Calculates the radius, latitude and longitude of the maneuver position
-		u = unit(R2);
-		r = length(R2);
-		phi = atan(u.z / sqrt(u.x*u.x + u.y*u.y));
-		lambda = atan2(u.y, u.x);
-
-		apo = R_E + apo_desnm * 1852.0;									//calculates the apoapsis radius in the metric system
-		peri = R_E + peri_desnm * 1852.0;								//calculates the periapsis radius in the metric system
-
-		if (r > apo)													//If the maneuver radius is higher than the desired apoapsis, then we would get no solution
-		{
-			apo = r;													//sets the desired apoapsis to the current radius, so that we can calculate a maneuver
-		}
-		else if (r < peri)												//If the maneuver radius is lower than the desired periapsis, then we would also get no solution
-		{
-			peri = r;													//sets the desired periapsis to the current radius, so that we can calculate a maneuver
-		}
-
-		inc = incdeg*PI / 180.0;										//Calculates the desired equatorial inclination in radian
-		a = (apo + peri) / 2.0;											//The semi-major axis of the desired orbit
-		e = (apo - peri) / (apo + peri);								//The eccentricity of the desired orbit
-
-		theta1 = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
-		theta2 = PI2 - theta1;											//Calculates the second possible true anomaly of the desired orbit
-
-		beta1 = asin(cos(inc) / cos(phi));									//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
-		beta2 = PI - beta1;													//The second possible azimuth heading
-
-		ll1 = atan2(tan(phi),cos(beta1));    //angular distance between the ascending node and the current position (beta1)
-		ll2 = atan2(tan(phi),cos(beta2));    //angular distance between the ascending node and the current position (beta2)	
-
-		h = sqrt(r*mu*(1.0 + e*cos(theta1)));    //Specific relative angular momentum (theta1)
-		//h2 = sqrt(r*mu*(1.0 + e*cos(theta2)));    //Specific relative angular momentum (theta2)
-
-		w11 = ll1 - theta1;                     //argument of periapsis (beta1, theta1)
-		w12 = ll1 - theta2;                     //argument of periapsis (beta1, theta2)
-		w21 = ll2 - theta1;                     //argument of periapsis (beta2, theta1)
-		w22 = ll2 - theta2;                     //argument of periapsis (beta2, theta2)
-		//w = w1;
-
-		//dlambda1 = atan2(sin(phi),1.0/tan(beta1));   //angular distance between the ascending node and the current position measured in the equatorial plane (beta1)
-		//dlambda2 = atan2(sin(phi),1.0/tan(beta2));   //angular distance between the ascending node and the current position measured in the equatorial plane (beta2)
-		dlambda1 = atan(tan(beta1)*sin(phi));
-		dlambda2 = atan(tan(beta2)*sin(phi))+PI;
-
-		//dlambda1 = atan2(tan(beta1), 1.0 / sin(phi));
-		//dlambda2 = atan2(tan(beta2), 1.0 / sin(phi));
-
-		lambda11 = lambda - dlambda1;               //longitude at the ascending node (beta1)
-		lambda12 = lambda - dlambda2;               //longitude at the ascending node (beta2)
-
-		VECTOR3 RX1, RX2, RX3, RX4;
-
-		OrbMech::perifocal(h, mu, e, theta1, inc, lambda11, w11, RX1, VX1); //The required velocity vector for the desired orbit (beta1, theta1)
-		OrbMech::perifocal(h, mu, e, theta2, inc, lambda11, w12, RX2, VX2); //The required velocity vector for the desired orbit (beta1, theta2)
-		OrbMech::perifocal(h, mu, e, theta1, inc, lambda12, w21, RX3, VX3); //The required velocity vector for the desired orbit (beta2, theta1)
-		OrbMech::perifocal(h, mu, e, theta2, inc, lambda12, w22, RX4, VX4); //The required velocity vector for the desired orbit (beta2, theta2)
-
-		//OrbMech::rv_from_r0v0(R2, V2, -30.0, R2, V2, mu);	//According to GSOP for Colossus Section 2 the uplinked DV vector is in LVLH coordinates 30 second before the TIG
-
-		j = unit(crossp(V2, R2));
-		k = unit(-R2);
-		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);			//Creates the rotation matrix from the geocentric equatorial frame to the vessel-centered P30 LVLH frame
-
-		DVX1 = VX1 - V2;									//Calculates the DV vectors to achieve the desired orbit
-		DVX2 = VX2 - V2;
-		DVX3 = VX3 - V2;
-		DVX4 = VX4 - V2;
-
-		if (length(DVX1) <= length(DVX2) && length(DVX1) <= length(DVX3) && length(DVX1) <= length(DVX4))		//The lowest DV vector is selected. TODO: Let the user choose it.
-		{
-			DVX = DVX1;
-		}
-		else if (length(DVX2) < length(DVX1) && length(DVX2) < length(DVX3) && length(DVX2) < length(DVX4))
-		{
-			DVX = DVX2;
-		}
-		else if (length(DVX3) <= length(DVX1) && length(DVX3) <= length(DVX2) && length(DVX3) <= length(DVX4))
-		{
-			DVX = DVX3;
-		}
-		else if (length(DVX4) < length(DVX1) && length(DVX4) < length(DVX2) && length(DVX4) < length(DVX3))
-		{
-			DVX = DVX4;
-		}
-
-		VECTOR3 Llambda,R2_cor,V2_cor; double t_slip;
-		OrbMech::impulsive(vessel, R2, V2, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
-
-		OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
-
-		j = unit(crossp(V2_cor, R2_cor));
-		k = unit(-R2_cor);
-		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
-
-		OrbAdjDVX = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
-		iterator = 0;		//tells the program that the iteration is over
-		IterStage = 0;		//resets the Orbit Adjustment method stage
-
-		dV_LVLH = OrbAdjDVX;
-		P30TIG = SPSGET+t_slip;
-	}
-	
+	startSubthread(3);
 }
 
 void ARCore::REFSMMATCalc()
 {
-	MATRIX3 a;
-	REFSMMATOpt opt;
-
-	opt.dV_LVLH = dV_LVLH;
-	opt.GETbase = GETbase;
-	opt.LSLat = LSLat;
-	opt.LSLng = LSLng;
-	opt.maneuverplanet = maneuverplanet;
-	opt.mission = mission;
-	opt.P30TIG = P30TIG;
-	opt.REFSMMATdirect = REFSMMATdirect;
-	opt.REFSMMATopt = REFSMMATopt;
-	opt.REFSMMATTime = REFSMMATTime;
-	opt.vessel = vessel;
-
-	REFSMMAT = rtcc->REFSMMATCalc(&opt);
-
-	a = REFSMMAT;
-
-	if (REFSMMATupl == 0)
-	{
-		if (vesseltype == CSM)
-		{
-			REFSMMAToct[1] = 306;
-		}
-		else
-		{
-			REFSMMAToct[1] = 3606;
-		}
-	}
-	else
-	{
-		if (vesseltype == CSM)
-		{
-			REFSMMAToct[1] = 1735;
-		}
-		else
-		{
-			REFSMMAToct[1] = 1733;
-		}
-	}
-
-	REFSMMAToct[0] = 24;
-	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
-
-	REFSMMATcur = REFSMMATopt;
+	startSubthread(4);
 }
 
 void ARCore::EntryPAD()
@@ -1057,25 +739,7 @@ void ARCore::ManeuverPAD()
 
 void ARCore::TPIPAD()
 {
-	AP7TPIPADOpt opt;
-	AP7TPI pad;
-
-	opt.dV_LVLH = dV_LVLH;
-	opt.GETbase = GETbase;
-	opt.target = target;
-	opt.vessel = vessel;
-	opt.TIG = P30TIG;
-
-	rtcc->AP7TPIPAD(&opt, pad);
-
-	TPIPAD_AZ = pad.AZ;
-	TPIPAD_BT = pad.Backup_bT;
-	TPIPAD_ddH = pad.dH_Max;
-	TPIPAD_dH = pad.dH_TPI;
-	TPIPAD_dV_LOS = pad.Backup_dV;
-	TPIPAD_ELmin5 = pad.EL;
-	TPIPAD_R = pad.R;
-	TPIPAD_Rdot = pad.Rdot;
+	startSubthread(6);
 }
 
 void ARCore::MapUpdate()
@@ -1548,4 +1212,285 @@ VECTOR3 ARCore::finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and
 	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
 	expmat = mul(summat, csmmat);
 	return OrbMech::CALCSGTA(mul(lmmat, OrbMech::transpose_matrix(expmat)));
+}
+
+int ARCore::startSubthread(int fcn) {
+	if (subThreadStatus < 1) {
+		// Punt thread
+		subThreadMode = fcn;
+		subThreadStatus = 1; // Busy
+		DWORD id = 0;
+		HANDLE h = CreateThread(NULL, 0, RTCCMFD_Trampoline, this, 0, &id);
+		if (h != NULL) { CloseHandle(h); }
+	}
+	else {
+		return(-1);
+	}
+	return(0);
+}
+
+int ARCore::subThread()
+{
+	int Result = 0;
+	subThreadStatus = 2; // Running
+	switch (subThreadMode) {
+	case 0: // Test
+		Sleep(5000); // Waste 5 seconds
+		Result = 0;  // Success (negative = error)
+		break;
+	case 1: //Lambert Targeting
+	{
+		LambertMan opt;
+		opt.axis = !lambertmultiaxis;
+		opt.GETbase = GETbase;
+		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.N = N;
+		opt.Offset = offvec;
+		opt.Perturbation = lambertopt;
+		opt.PhaseAngle = 0.0;
+		opt.prograde = true;
+		opt.T1 = T1;
+		opt.T2 = T2;
+		opt.target = target;
+		opt.vessel = vessel;
+		rtcc->LambertTargeting(&opt, dV_LVLH, P30TIG);
+		LambertdeltaV = dV_LVLH;
+
+		Result = 0;
+	}
+	break;
+	case 2:	//CDH Targeting
+	{
+		double dH_CDH;
+		CDHOpt opt;
+
+		opt.CDHtimemode = CDHtimemode;
+		opt.DH = DH*1852.0;
+		opt.GETbase = GETbase;
+		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.target = target;
+		opt.vessel = vessel;
+		opt.TIG = CDHtime;
+
+		dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
+
+		if (CDHtimemode == 0)
+		{
+			DH = dH_CDH / 1852.0;
+		}
+
+		P30TIG = CDHtime_cor;
+		dV_LVLH = CDHdeltaV;
+
+		Result = 0;
+	}
+	break;
+	case 3:	//Orbital Adjustment Targeting
+	{
+		maneuverplanet = gravref;
+
+		OrbAdjOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.gravref = gravref;
+		opt.h_apo = apo_desnm * 1852.0;
+		opt.h_peri = peri_desnm * 1852.0;
+		opt.inc = incdeg*RAD;
+		opt.SPSGET = SPSGET;
+		opt.vessel = vessel;
+
+		rtcc->OrbitAdjustCalc(&opt, OrbAdjDVX, P30TIG);
+
+		dV_LVLH = OrbAdjDVX;
+
+		Result = 0;
+	}
+	break;
+	case 4:	//REFSMMAT Calculation
+	{
+		MATRIX3 a;
+		REFSMMATOpt opt;
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.GETbase = GETbase;
+		opt.LSLat = LSLat;
+		opt.LSLng = LSLng;
+		opt.maneuverplanet = maneuverplanet;
+		opt.mission = mission;
+		opt.P30TIG = P30TIG;
+		opt.REFSMMATdirect = REFSMMATdirect;
+		opt.REFSMMATopt = REFSMMATopt;
+		opt.REFSMMATTime = REFSMMATTime;
+		opt.vessel = vessel;
+
+		REFSMMAT = rtcc->REFSMMATCalc(&opt);
+
+		a = REFSMMAT;
+
+		if (REFSMMATupl == 0)
+		{
+			if (vesseltype == CSM)
+			{
+				REFSMMAToct[1] = 306;
+			}
+			else
+			{
+				REFSMMAToct[1] = 3606;
+			}
+		}
+		else
+		{
+			if (vesseltype == CSM)
+			{
+				REFSMMAToct[1] = 1735;
+			}
+			else
+			{
+				REFSMMAToct[1] = 1733;
+			}
+		}
+
+		REFSMMAToct[0] = 24;
+		REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+		REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+		REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+		REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+		REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+		REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+		REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+		REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+		REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+		REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+		REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+		REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+		REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+		REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+		REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+		REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+		REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+		REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+
+		REFSMMATcur = REFSMMATopt;
+
+		Result = 0;
+	}
+	break;
+	case 5: //LOI Targeting
+	{
+		LOIMan opt;
+
+		opt.GETbase = GETbase;
+		opt.h_apo = LOIapo;
+		opt.h_peri = LOIperi;
+		opt.inc = LOIinc;
+		opt.lat = LOILat;
+		opt.lng = LOILng;
+		opt.man = LOImaneuver;
+		opt.MCCGET = LOIGET;
+		opt.PeriGET = LOIPeriGET;
+		opt.vessel = vessel;
+
+		rtcc->LOITargeting(&opt, LOIdeltaV, P30TIG);
+
+		dV_LVLH = LOIdeltaV;
+
+		Result = 0;
+	}
+	break;
+	case 6: //TPI PAD
+	{
+		AP7TPIPADOpt opt;
+		AP7TPI pad;
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.GETbase = GETbase;
+		opt.target = target;
+		opt.vessel = vessel;
+		opt.TIG = P30TIG;
+
+		rtcc->AP7TPIPAD(&opt, pad);
+
+		TPIPAD_AZ = pad.AZ;
+		TPIPAD_BT = pad.Backup_bT;
+		TPIPAD_ddH = pad.dH_Max;
+		TPIPAD_dH = pad.dH_TPI;
+		TPIPAD_dV_LOS = pad.Backup_dV;
+		TPIPAD_ELmin5 = pad.EL;
+		TPIPAD_R = pad.R;
+		TPIPAD_Rdot = pad.Rdot;
+
+		Result = 0;
+	}
+	break;
+	case 7:	//Entry Targeting
+	{
+		bool endi = false;
+
+		while (!endi)
+		{
+			endi = entry->EntryIter();
+		}
+
+		entryprecision = entry->precision;
+
+		EntryLatcor = entry->EntryLatcor;
+		EntryLngcor = entry->EntryLngcor;
+
+		EntryRET05 = entry->EntryRET;
+		EntryRTGO = entry->EntryRTGO;
+		EntryVIO = entry->EntryVIO;
+		EntryAngcor = entry->EntryAng;
+		Entry_DV = entry->Entry_DV;
+		maneuverplanet = oapiGetObjectByName("Earth");
+		P37GET400K = entry->t2;
+
+		VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k;
+		MATRIX3 Rot, mat, Q_Xx;
+		double SVMJD, t_slip, mu;
+
+
+		vessel->GetRelativePos(gravref, R0);
+		vessel->GetRelativeVel(gravref, V0);
+		SVMJD = oapiGetSimMJD();
+
+		Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+		R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
+		V0 = mul(Rot, _V(V0.x, V0.z, V0.y));
+
+		OrbMech::oneclickcoast(R0, V0, SVMJD, entry->EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R, V, gravref, gravref);
+
+		UY = unit(crossp(V, R));
+		UZ = unit(-R);
+		UX = crossp(UY, UZ);
+
+		DV = UX*Entry_DV.x + UY*Entry_DV.y + UZ*Entry_DV.z;
+
+		mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
+		DV = mul(mat, Entry_DV);
+
+		OrbMech::impulsive(vessel, R, V, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+
+		mu = GGRAV*oapiGetMass(gravref);
+		OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);
+
+		j = unit(crossp(V_cor, R_cor));
+		k = unit(-R_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		EntryTIGcor = entry->EntryTIGcor + t_slip;
+		P30TIG = EntryTIGcor;
+		dV_LVLH = mul(Q_Xx, Llambda);
+		//dV_LVLH = tmul(mat, Llambda);
+		entrycalcstate = 0;
+		delete entry;
+
+		Result = 0;
+	}
+	break;
+	}
+	subThreadStatus = Result;
+	// Printing messages from the subthread is not safe, but this is just for testing.
+	return(0);
 }

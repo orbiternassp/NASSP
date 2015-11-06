@@ -169,6 +169,23 @@ public:
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void EntryLongitudeModeDialogue();
+	void menuSetLOIPage();
+	void menuSwitchLOIManeuver();
+	void menuSetLOIGET();
+	void set_LOIGET(double time);
+	void menuSetLOIPeriGET();
+	void set_LOIPeriGET(double time);
+	void menuSetLOILat();
+	void set_LOILat(double lat);
+	void menuSetLOILng();
+	void set_LOILng(double lng);
+	void menuSetLOIAlt();
+	void set_LOIAlt(double alt);
+	void menuSetLOIApo();
+	void set_LOIApo(double alt);
+	void menuSetLOIInc();
+	void set_LOIInc(double inc);
+	void menuLOICalc();
 
 protected:
 	oapi::Font *font;

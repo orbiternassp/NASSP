@@ -420,18 +420,20 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 		phi2 = -1.0;
 	}
 
-	//finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+	finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
 	//reentryconstraints(n1 + 1, R1B, VPRE);
 	//x2 = x2_apo;
 	//beta1 = 1.0 + x2*x2;
-	//R_ERR = length(RPRE) - RD;
+	R_ERR = length(RPRE) - RD;
 
 	while ((abs(R_ERR) > 100.0 && n1 <= 10))
 	{
-		finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
-		R_ERR = length(RPRE) - RD;
+		//finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+		//R_ERR = length(RPRE) - RD;
 		newrcon(n1, RD, length(RPRE), R_ERR, dRCON, rPRE_apo);
 		conicreturn(1, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
+		finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+		R_ERR = length(RPRE) - RD;
 		n1++;
 	}
 	t2 = t1 + t21;

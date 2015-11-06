@@ -145,6 +145,7 @@ namespace OrbMech {
 	void f_and_g_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &f, double &g, double mu);
 	void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &gdot, double mu);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
+	double period(VECTOR3 R, VECTOR3 V, double mu);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
@@ -230,6 +231,15 @@ namespace OrbMech {
 	double trunc(double d);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
+
+	double fraction_an(int n);
+	double fraction_ad(int n);
+	double fraction_a(int n, double x);
+	double fraction_b(int n, double x);
+	double fraction_delta(int n, double x);
+	double fraction_u(int n, double x);
+	double fraction_pq(double x);
+	double fraction_xi(double x);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
