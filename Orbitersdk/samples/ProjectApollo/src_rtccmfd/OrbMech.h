@@ -105,6 +105,7 @@ public:
 	bool iteration();
 
 	VECTOR3 R2, V2;
+	OBJHANDLE outplanet;
 private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
 	double fq(double q);
@@ -118,7 +119,7 @@ private:
 	VECTOR3 delta, nu;
 	int M;
 	double r_MP, r_dP, r_SPH;
-	OBJHANDLE hEarth, hMoon, hSun, planet, outplanet;
+	OBJHANDLE hEarth, hMoon, hSun, planet;
 	double mu_Q, mu_S;
 	double mjd0;
 	MATRIX3 Rot;
@@ -166,7 +167,7 @@ namespace OrbMech {
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
-	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE gravout);
+	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight);

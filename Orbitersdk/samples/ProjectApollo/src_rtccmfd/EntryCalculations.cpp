@@ -52,7 +52,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 
 	hEarth = oapiGetObjectByName("Earth");
 
-	RCON = oapiGetSize(oapiGetObjectByName("Earth")) + EntryInterface;
+	RCON = oapiGetSize(hEarth) + EntryInterface;
 	RD = RCON;
 	mu = GGRAV*oapiGetMass(hEarth);
 
@@ -62,6 +62,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 
 	tigslip = 100.0;
 	ii = 0;
+
 	entryphase = 0;
 
 	bool stop;
@@ -498,6 +499,10 @@ void Entry::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON,
 		}
 		dRCON = S*R_ERR;
 		this->RCON = RCON + dRCON;
+		if (RCON < 1e6)
+		{
+			RCON = 1e6;
+		}
 	}
 	rPRE_apo = rPRE;
 }
@@ -533,8 +538,8 @@ void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21,
 			beta4 = beta2 / (1.0 - phi2*sqrt(beta3));
 		}
 		beta12 = beta4 - 1.0;
-		if (abs(beta12) > 0.000007)
-		{
+		//if (abs(beta12) > 0.000007)
+		//{
 			RF = beta4*length(RPRE);
 			if (beta12 > 0)
 			{
@@ -566,7 +571,7 @@ void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21,
 			dt21apo = dt21;
 			OrbMech::oneclickcoast(RPRE, VPRE, mjd + (dt0 + dt1 + t21) / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
 			t21 += dt21;
-		}
+		//}
 	}
 }
 
@@ -653,7 +658,13 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			}
 			else if (critical == 1 && entryphase == 0)
 			{
-				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+				//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+				VECTOR3 N;
+				double sing, cosg;
+				N = crossp(unit(R1B), unit(V1B));
+				sing = length(N);
+				cosg = dotp(unit(R1B), unit(V1B));
+				x = cosg / sing;
 			}
 			//else
 			//{
@@ -895,7 +906,7 @@ bool Entry::EntryIter()
 
 	if ((abs(dlng) > 0.005*RAD && ii < 40) || entryphase == 0)
 	{
-		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD))
+		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD) || gravref != hEarth)
 		{
 			if (entryphase == 0)
 			{
@@ -937,7 +948,17 @@ bool Entry::EntryIter()
 		gammaE = asin(S_FPA);
 		augekugel(v3, gammaE, phie, te);
 
-		DV = V2 - V1B;
+		VECTOR3 Rsph, Vsph, Vsph2, eta;
+		SOIplan = NULL;
+
+		OrbMech::oneclickcoast(R1B, V1B, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0001, Rsph, Vsph, hEarth, SOIplan);
+		OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0001, Rsph, Vsph2, hEarth, SOIplan);
+		//DV = V2 - V1B;
+		DV = Vsph2 - Vsph;
+		U_R1 = unit(Rsph);
+		eta = crossp(Rsph, Vsph);
+		U_H = unit(crossp(eta, Rsph));
+
 		Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
@@ -1692,7 +1713,7 @@ void Entry::augekugel(double ve, double gammae, double &phie, double &Te)
 		}
 		else
 		{
-			K2 = 2.4 + 0.000285*(vefps - 32000.0);
+			K2 = 2.4 + 0.000285*(vefps - 33625.0);//32000
 		}
 	}
 	phie = K1 / (abs(gammaedeg) - K2);

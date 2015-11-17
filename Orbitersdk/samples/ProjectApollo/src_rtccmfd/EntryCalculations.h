@@ -30,6 +30,7 @@ public:
 	double t2;
 	VECTOR3 Entry_DV; //Entry DV vector in LVLH coordinates
 	int precision; //0 = only conic, 1 = precision, 2 = PeA=-30 solution
+	OBJHANDLE SOIplan; //maneuver in earth or moon SOI
 private:
 	void coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21);
 	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);

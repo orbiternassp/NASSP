@@ -104,9 +104,9 @@ public:
 	int IterStage;
 	double REFSMMATTime;
 	MATRIX3 REFSMMAT;
-	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC
+	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	int REFSMMAToct[20];
-	int REFSMMATcur; //Currently saved REFSMMAT: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC
+	int REFSMMATcur; //Currently saved REFSMMAT: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
 	double LSLat, LSLng;
 	OBJHANDLE gravref;
@@ -168,10 +168,11 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1, 2 = LOI-2
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
-	VECTOR3 LOIdeltaV;
+	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
+	double TLCC_TIG, LOI_TIG;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

@@ -456,13 +456,15 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 		VECTOR3 Llambda, RA1_cor, VA1_cor, R0,V0,RA1,VA1,UX,UY,UZ,DV,i,j,k;
 		double t_slip;
 		MATRIX3 Rot, Q_Xx;
+		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+		OBJHANDLE gravref = AGCGravityRef(opt->vessel);
 		
 		Rot = OrbMech::J2000EclToBRCS(40222.525);
 
 		R0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
 		V0 = mul(Rot, _V(VA0_orb.x, VA0_orb.z, VA0_orb.y));
 
-		OrbMech::oneclickcoast(R0, V0, SVMJD, P30TIG - GET, RA1, VA1, AGCGravityRef(opt->vessel), oapiGetObjectByName("Earth"));
+		OrbMech::oneclickcoast(R0, V0, SVMJD, P30TIG - GET, RA1, VA1, AGCGravityRef(opt->vessel), hEarth);
 
 		UY = unit(crossp(VA1, RA1));
 		UZ = unit(-RA1);
@@ -471,7 +473,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 		DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 
 		OrbMech::impulsive(opt->vessel, RA1, VA1, AGCGravityRef(opt->vessel), opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
-		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, AGCGravityRef(opt->vessel), AGCGravityRef(opt->vessel));
+		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, AGCGravityRef(opt->vessel), gravref);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
 		k = unit(-RA1_cor);
@@ -1217,7 +1219,53 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	R_A = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V_A = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
 
-	if (opt->REFSMMATdirect == false)
+	if (opt->REFSMMATopt == 7)
+	{
+		VECTOR3 R0B0, R0B1, R0B2, R0B3, V0B0, V0B1, V0B2, V0B3;
+		double t_go1, t_go2, dt0, dt2, SVMJD1, SVMJD3;
+		//R_A = at state vector calculation
+		//R0B0 = at MCC ignition
+		//R0B1 = at MCC shutdown
+		//R0B2 = at LOI1 ignition
+		//R0B3 = at LOI1 shutdown
+
+		dt0 = opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;//now to MCC
+
+		OrbMech::oneclickcoast(R_A, V_A, SVMJD, dt0, R0B0, V0B0, gravref, hMoon);
+
+		UY = unit(crossp(V0B0, R0B0));
+		UZ = unit(-R0B0);
+		UX = crossp(UY, UZ);
+
+		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+		theta_T = length(crossp(R0B0, V0B0))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R0B0), 2.0) / 92100.0;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + UY*opt->dV_LVLH.y;
+
+		OrbMech::poweredflight(opt->vessel, R0B0, V0B0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B1, V0B1, t_go1);
+		SVMJD1 = SVMJD + (dt0 + t_go1) / 24.0 / 3600.0;
+		dt2 = opt->P30TIG2 - opt->P30TIG - t_go1;
+
+		OrbMech::oneclickcoast(R0B1, V0B1, SVMJD1, dt2, R0B2, V0B2, hMoon, hMoon);
+
+		UY = unit(crossp(V0B2, R0B2));
+		UZ = unit(-R0B2);
+		UX = crossp(UY, UZ);
+
+		DV_P = UX*opt->dV_LVLH2.x + UZ*opt->dV_LVLH2.z;
+		theta_T = length(crossp(R0B2, V0B2))*length(opt->dV_LVLH2)*opt->vessel->GetMass() / OrbMech::power(length(R0B2), 2.0) / 92100.0;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + UY*opt->dV_LVLH2.y;
+
+		OrbMech::poweredflight(opt->vessel, R0B2, V0B2, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B3, V0B3, t_go2);
+
+		SVMJD3 = SVMJD1 + (dt2 + t_go2) / 24.0 / 3600.0;
+
+		R0B = R0B3;
+		V0B = V0B3;
+		SVMJD = SVMJD3;
+	}
+	else if (opt->REFSMMATdirect == false)
 	{
 		OrbMech::oneclickcoast(R_A, V_A, SVMJD, opt->P30TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0, R0B, V0B, gravref, opt->maneuverplanet);
 
@@ -1290,7 +1338,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 		PTCMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
 
-		OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
 
 		cMoon->clbkEphemeris(PTCMJD, EPHEM_TRUEPOS, MoonPos);
@@ -1312,6 +1359,14 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		{
 			dt = opt->REFSMMATTime - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 			OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
+		}
+		else if (opt->REFSMMATopt == 7)
+		{
+			double t_p;
+			VECTOR3 R11B, V11B;
+			t_p = OrbMech::period(R0B, V0B, mu);
+			OrbMech::oneclickcoast(R0B, V0B, SVMJD, 1.5*t_p, R11B, V11B, hMoon, hMoon);
+			OrbMech::time_radius_integ(R11B, V11B, SVMJD + 1.5*t_p / 24.0 / 3600.0, oapiGetSize(hMoon) + 60.0*1852.0, -1, hMoon, hMoon, R1B, V1B);
 		}
 		else if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
@@ -1617,16 +1672,24 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
-
-	opt->vessel->GetRelativePos(hMoon, R_A);
-	opt->vessel->GetRelativeVel(hMoon, V_A);
-	SVMJD = oapiGetSimMJD();
-	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
-
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
 
-	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
-	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+	if (opt->useSV)
+	{
+		R0B = opt->RV_MCC.R;
+		V0B = opt->RV_MCC.V;
+		SVMJD = opt->RV_MCC.MJD;
+	}
+	else
+	{
+		opt->vessel->GetRelativePos(hMoon, R_A);
+		opt->vessel->GetRelativeVel(hMoon, V_A);
+		SVMJD = oapiGetSimMJD();
+		R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+		V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+	}
+
+	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
 
 	if (opt->man == 0)
 	{
@@ -1656,9 +1719,10 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);
 		P30TIG = opt->MCCGET;
 	}
-	else if (opt->man == 1)
+	else if (opt->man == 1 || opt->man == 2)
 	{
 		OrbAdjOpt orbopt;
+		SV SV1;
 
 		orbopt.GETbase = opt->GETbase;
 		orbopt.gravref = hMoon;
@@ -1667,10 +1731,17 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		orbopt.inc = opt->inc;
 		orbopt.SPSGET = opt->MCCGET;
 		orbopt.vessel = opt->vessel;
+		orbopt.useSV = true;
+
+		SV1.gravref = hMoon;
+		SV1.MJD = SVMJD;
+		SV1.R = R0B;
+		SV1.V = V0B;
+		orbopt.RV_MCC = SV1;
 
 		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
 	}
-	else if (opt->man == 2)
+	else if (opt->man == 3)
 	{
 		double mu, a, dt2, LOIGET, v_circ;
 		VECTOR3 RA2, VA2, U_H, U_hor, VA2_apo, DVX, i, j, k;
@@ -1718,15 +1789,24 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 	obli = OrbMech::J2000EclToBRCS(40222.525);
 	mu = GGRAV*oapiGetMass(opt->gravref);									//Standard gravitational parameter GM
+
 	SPSMJD = opt->GETbase + opt->SPSGET / 24.0 / 60.0 / 60.0;					//The MJD of the maneuver
 
+	if (opt->useSV)
+	{
+		Requ = opt->RV_MCC.R;
+		Vequ = opt->RV_MCC.V;
+		SVMJD = opt->RV_MCC.MJD;
+	}
+	else
+	{
+		opt->vessel->GetRelativePos(opt->gravref, RPOS);							//The current position vecotr of the vessel in the ecliptic frame
+		opt->vessel->GetRelativeVel(opt->gravref, RVEL);							//The current velocity vector of the vessel in the ecliptic frame
+		SVMJD = oapiGetSimMJD();										//The time mark for this state vector
 
-	opt->vessel->GetRelativePos(opt->gravref, RPOS);							//The current position vecotr of the vessel in the ecliptic frame
-	opt->vessel->GetRelativeVel(opt->gravref, RVEL);							//The current velocity vector of the vessel in the ecliptic frame
-	SVMJD = oapiGetSimMJD();										//The time mark for this state vector
-
-	Requ = mul(obli, _V(RPOS.x, RPOS.z, RPOS.y));
-	Vequ = mul(obli, _V(RVEL.x, RVEL.z, RVEL.y));
+		Requ = mul(obli, _V(RPOS.x, RPOS.z, RPOS.y));
+		Vequ = mul(obli, _V(RVEL.x, RVEL.z, RVEL.y));
+	}
 
 	OrbMech::oneclickcoast(Requ, Vequ, SVMJD, (SPSMJD - SVMJD)*24.0*60.0*60.0, R2, V2, opt->gravref, opt->gravref);
 

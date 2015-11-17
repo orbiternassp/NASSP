@@ -60,6 +60,14 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	41658.23125
 };
 
+struct SV
+{
+	VECTOR3 R;
+	VECTOR3 V;
+	double MJD;
+	OBJHANDLE gravref;
+};
+
 struct LambertMan //Data for Lambert targeting
 {
 	VESSEL* vessel; //Vessel executing the burn
@@ -119,8 +127,10 @@ struct REFSMMATOpt
 	bool REFSMMATdirect; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
 	double P30TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	double P30TIG2; //Time of Ignition 2nd maneuver
+	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
 	OBJHANDLE maneuverplanet; //The gravity reference of the maneuver might be different than the gravity reference now!
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landign site REFSMMAT
@@ -162,7 +172,7 @@ struct LOIMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	int man; //0 = last MCC, 1 = LOI-1, 2 = LOI-2
+	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-2 (w/o MCC), 3 = LOI-2
 	double MCCGET; //GET for the last MCC
 	double lat; //target for MCC
 	double lng; //target for MCC
@@ -170,6 +180,8 @@ struct LOIMan
 	double h_apo;	//for LOI-1
 	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
 	double inc;		//Inclination (equatorial) for LOI-1
+	bool useSV;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 struct OrbAdjOpt
@@ -181,6 +193,8 @@ struct OrbAdjOpt
 	double h_apo;	//
 	double h_peri;	//
 	double inc;		//
+	bool useSV;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 // Parameter block for Calculation(). Expand as needed.

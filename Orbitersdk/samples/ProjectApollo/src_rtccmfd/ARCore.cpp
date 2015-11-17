@@ -265,7 +265,10 @@ ARCore::ARCore(VESSEL* v)
 	LOIapo = 0.0;
 	LOIperi = 0.0;
 	LOIinc = 0.0;
-	LOIdeltaV = _V(0.0, 0.0, 0.0);
+	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
+	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
+	TLCC_TIG = 0.0;
+	LOI_TIG = 0.0;
 
 	subThreadMode = 0;
 	subThreadStatus = 0;
@@ -466,7 +469,7 @@ void ARCore::EntryPAD()
 		dt = EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 
 
-		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, hEarth);
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, maneuverplanet);
 
 		UY = unit(crossp(V1B, R1B));
 		UZ = unit(-R1B);
@@ -480,7 +483,8 @@ void ARCore::EntryPAD()
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*dV_LVLH.y;
 
-		OrbMech::poweredflight(vessel, R1B, V1B, hEarth, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		OrbMech::poweredflight(vessel, R1B, V1B, maneuverplanet, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		OrbMech::oneclickcoast(R2B, V2B, SVMJD + dt/3600.0/24.0, 0.000001, R2B, V2B, maneuverplanet, hEarth);
 
 		dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + dt / 3600.0 / 24.0, oapiGetSize(hEarth) + EMSAlt, -1, hEarth, hEarth, R05G, V05G);
 		dt2 += t_go;
@@ -1312,12 +1316,14 @@ int ARCore::subThread()
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
+		opt.dV_LVLH2 = LOI_dV_LVLH;
 		opt.GETbase = GETbase;
 		opt.LSLat = LSLat;
 		opt.LSLng = LSLng;
 		opt.maneuverplanet = maneuverplanet;
 		opt.mission = mission;
 		opt.P30TIG = P30TIG;
+		opt.P30TIG2 = LOI_TIG;
 		opt.REFSMMATdirect = REFSMMATdirect;
 		opt.REFSMMATopt = REFSMMATopt;
 		opt.REFSMMATTime = REFSMMATTime;
@@ -1389,10 +1395,54 @@ int ARCore::subThread()
 		opt.MCCGET = LOIGET;
 		opt.PeriGET = LOIPeriGET;
 		opt.vessel = vessel;
+		opt.useSV = false;
 
-		rtcc->LOITargeting(&opt, LOIdeltaV, P30TIG);
+		if (LOImaneuver == 0)
+		{
+			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
+		}
+		else if (LOImaneuver == 1)
+		{
+			OBJHANDLE hMoon;
+			VECTOR3 R_A, V_A, R0B, V0B, UX, UY, UZ, DV, V2;
+			double SVMJD;
+			MATRIX3 Rot;
+			SV RV1;
 
-		dV_LVLH = LOIdeltaV;
+			hMoon = oapiGetObjectByName("Moon");
+			Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+			vessel->GetRelativePos(hMoon, R_A);
+			vessel->GetRelativeVel(hMoon, V_A);
+			SVMJD = oapiGetSimMJD();
+			R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+			V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+			OrbMech::oneclickcoast(R0B, V0B, SVMJD, TLCC_TIG - (SVMJD - GETbase)*24.0*3600.0, RV1.R, RV1.V, gravref, hMoon);
+			RV1.gravref = hMoon;
+			RV1.MJD = GETbase + TLCC_TIG / 24.0 / 3600.0;
+			opt.useSV = true;
+
+			UY = unit(crossp(RV1.V, RV1.R));
+			UZ = unit(-RV1.R);
+			UX = crossp(UY, UZ);
+
+			DV = UX*TLCC_dV_LVLH.x + UY*TLCC_dV_LVLH.y + UZ*TLCC_dV_LVLH.z;
+			V2 = RV1.V + DV;
+
+			opt.RV_MCC = RV1;
+			opt.RV_MCC.V = V2;
+
+			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG);
+		}
+		else
+		{
+			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG);
+			P30TIG = LOI_TIG;
+			dV_LVLH = LOI_dV_LVLH;
+		}
 
 		Result = 0;
 	}
@@ -1441,7 +1491,7 @@ int ARCore::subThread()
 		EntryVIO = entry->EntryVIO;
 		EntryAngcor = entry->EntryAng;
 		Entry_DV = entry->Entry_DV;
-		maneuverplanet = oapiGetObjectByName("Earth");
+		maneuverplanet = entry->SOIplan;//oapiGetObjectByName("Earth");
 		P37GET400K = entry->t2;
 
 		VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k;

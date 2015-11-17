@@ -653,7 +653,7 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	}
 }
 
-void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE gravout)
+void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
 {
 	if (dt == 0.0)
 	{
@@ -671,6 +671,7 @@ void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	}
 	R1 = coast->R2;
 	V1 = coast->V2;
+	gravout = coast->outplanet;
 	delete coast;
 	stop = false;
 }
@@ -3293,7 +3294,11 @@ bool CoastIntegrator::iteration()
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
 
-		if (planet != outplanet)
+		if (outplanet == NULL)
+		{
+			outplanet = planet;
+		}
+		else if (planet != outplanet)
 		{
 			double MJD, *MoonPos;
 			VECTOR3 R_EM, V_PQ, V_EM;
