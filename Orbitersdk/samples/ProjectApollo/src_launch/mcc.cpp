@@ -842,13 +842,293 @@ void MCC::TimeStep(double simdt){
 						if(padAutoShow == true && padState == 0){ drawPad(); }
 						setSubState(2);
 					}
+					break;
 				case 2: // Await burn
+					if (cm->GetMissionTime() > 4 * 60 * 60 + 45 * 60)
+					{
+						setState(MST_C_COAST1);
+						setSubState(0);
+					}
 					break;
 				}
 				break;
 			case MST_C_COAST1:
-				// Ends with 1ST SPS BURN (NCC BURN)
+				// Ends with 6-4 Deorbit Maneuver
+				switch (SubState) {
+				case 0:
+					allocPad(4); // Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(2); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 10 * 60 * 60 + 30 * 60)
+					{
+						setState(MST_C_COAST3);
+						setSubState(0);
+					}
+					break;
+				}
 				break;
+			case MST_C_COAST3: //Ends with BLOCK DATA 2
+				switch (SubState) {
+				case 0:
+					allocPad(1);// Allocate AP7 Block Data Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(3); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 14 * 60 * 60 + 16 * 60)
+					{
+						setState(MST_C_COAST4);
+						setSubState(0);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST4: // Ends at 2ND PHASING BURN
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(4); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 21 * 60 * 60 + 50 * 60)
+					{
+						setState(MST_C_COAST5);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST5: // //Ends with BLOCK DATA 3
+				switch (SubState) {
+				case 0:
+					allocPad(1);// Allocate AP7 Block Data Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(5); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 22 * 60 * 60 + 25 * 60)
+					{
+						setState(MST_C_COAST6);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST6: // Ends at 1st SPS BURN (NCC1 BURN)
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(6); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 27 * 60 * 60)
+					{
+						setState(MST_C_COAST7);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST7: // Ends at NCC2 BURN
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(7); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 27 * 60 * 60 + 32 * 60)
+					{
+						setState(MST_C_COAST8);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST8: // Ends at 2ND SPS BURN (NSR BURN)
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(8); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 28 * 60 * 60 + 50 * 60)
+					{
+						setState(MST_C_COAST9);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST9: // Ends at TPI BURN
+				switch (SubState) {
+				case 0:
+					allocPad(5);// Allocate AP7 TPI Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(9); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 30 * 60 * 60 + 11 * 60)
+					{
+						setState(MST_C_COAST10);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST10: // Ends at SEPARATION BURN
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(10); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 30 * 60 * 60 + 54 * 60)
+					{
+						setState(MST_C_COAST11);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST12:
+				switch (SubState) {
+				case 0:
+					allocPad(6);
+					if (padForm != NULL) {
+						// If success
+						startSubthread(6); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+				case 2: // Await burn
+					break;
+				}
 			}
 		}
 	}
@@ -928,6 +1208,132 @@ int MCC::subThread(){
 			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			rtcc->Calculation(1,padForm);
+			// Done filling form, OK to show
+			padState = 0;
+			// Pretend we did the math
+			Result = 0; // Done
+		}
+		break;
+	case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
+		{
+		AP7MNV * form = (AP7MNV *)padForm;
+		sprintf(form->purpose, "6-4 DEORBIT");
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->Calculation(2, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+		}
+		break;
+	case 3: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
+		{
+			AP7BLK * form = (AP7BLK *)padForm;
+			// Ask RTCC for numbers
+			rtcc->calcParams.src = cm;
+			rtcc->Calculation(3, padForm);
+			// Done filling form, OK to show
+			padState = 0;
+			// Pretend we did the math
+			Result = 0; // Done
+		}
+		break;
+	case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		rtcc->Calculation(4, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 5: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
+	{
+		AP7BLK * form = (AP7BLK *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->Calculation(5, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 6: // FILL PAD AP7MNV FOR NCC1 MANEUVER
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		rtcc->Calculation(6, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 7: // FILL PAD AP7MNV FOR NCC2 MANEUVER
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		rtcc->Calculation(7, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 8: // FILL PAD AP7MNV FOR NSR MANEUVER
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		rtcc->Calculation(8, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 9: // FILL PAD AP7TPI FOR AP7 TPI PAD
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+			// Ask RTCC for numbers
+			rtcc->calcParams.src = cm;
+			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+			rtcc->Calculation(9, padForm);
+			// Done filling form, OK to show
+			padState = 0;
+			// Pretend we did the math
+			Result = 0; // Done
+		}
+		break;
+	case 10: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+			// Ask RTCC for numbers
+			rtcc->calcParams.src = cm;
+			rtcc->Calculation(10, padForm);
+			// Done filling form, OK to show
+			padState = 0;
+			// Pretend we did the math
+			Result = 0; // Done
+		}
+		break;
+	case 29: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+			// Ask RTCC for numbers
+			rtcc->calcParams.src = cm;
+			rtcc->Calculation(29, padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
@@ -1021,13 +1427,14 @@ void format_time(char *buf, double time) {
 	hours = (int)(time / 3600);
 	minutes = (int)((time / 60) - (hours * 60));
 	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-	sprintf(buf, "%d:%d:%d", hours, minutes, seconds);
+	sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
 }
 
 // Draw PAD display
 void MCC::drawPad(){
 	char buffer[512];
 	char tmpbuf[32];
+	char tmpbuf2[32];
 	if(padNumber > 0 && padForm == NULL){
 		oapiAnnotationSetText(NHpad,"PAD data lost");
 		return;
@@ -1035,14 +1442,70 @@ void MCC::drawPad(){
 	switch(padNumber){
 	case 0:
 		// NO PAD (*knifed*)
-		oapiAnnotationSetText(NHpad,"No PAD");
+		oapiAnnotationSetText(NHpad, "No PAD");
+		break;
+	case 1: //AP7BLK
+		{
+			AP7BLK * form = (AP7BLK *)padForm;
+			sprintf(buffer, "BLOCK DATA\n");
+
+			for (int i = 0;i < 4;i++)
+			{
+				format_time(tmpbuf, form->GETI[i]);
+				format_time(tmpbuf2, form->GETI[i + 4]);
+				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f  XXX%+05.1f LAT\nXX%+06.1f  XX%+06.1f LONG\n%s  %s GETI\nXXX%4.1f  XXX%4.1f DVC\n%s       %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
+			}
+			oapiAnnotationSetText(NHpad, buffer);
+		}
 		break;
 	case 4: // AP7MNV
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 			format_time(tmpbuf, form->GETI);
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, form->Att.x, form->Att.y, form->Att.z);			
+			format_time(tmpbuf2, form->NavChk);
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\n%s TLAT, LONG\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z);			
 			oapiAnnotationSetText(NHpad,buffer);
+		}
+		break;
+	case 5: //AP7TPI
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+			format_time(tmpbuf, form->GETI);
+			sprintf(buffer, "TERMINAL PHASE INITIATE\n%s GETI\n%+07.1f Vgx\n%+07.1f Vgy\n%+07.1f Vgz\n", tmpbuf, form->Vg.x, form->Vg.y, form->Vg.z);
+			if (form->Backup_dV.x > 0)
+			{
+				sprintf(buffer, "%sF%04.1f/%02.0f DVX LOS/BT\n", buffer, abs(form->Backup_dV.x), form->Backup_bT.x);
+			}
+			else
+			{
+				sprintf(buffer, "%sA%04.1f/%02.0f DVX LOS/BT\n", buffer, abs(form->Backup_dV.x), form->Backup_bT.x);
+			}
+			if (form->Backup_dV.y > 0)
+			{
+				sprintf(buffer, "%sR%04.1f/%02.0f DVY LOS/BT\n", buffer, abs(form->Backup_dV.y), form->Backup_bT.y);
+			}
+			else
+			{
+				sprintf(buffer, "%sL%04.1f/%02.0f DVY LOS/BT\n", buffer, abs(form->Backup_dV.y), form->Backup_bT.y);
+			}
+			if (form->Backup_dV.z > 0)
+			{
+				sprintf(buffer, "%sD%04.1f/%02.0f DVZ LOS/BT\n", buffer, abs(form->Backup_dV.z), form->Backup_bT.z);
+			}
+			else
+			{
+				sprintf(buffer, "%sU%04.1f/%02.0f DVZ LOS/BT\n", buffer, abs(form->Backup_dV.z), form->Backup_bT.z);
+			}
+			sprintf(buffer, "%sX%04.1f/%3.1f\nX%06.2f R\n%+06.1f RDOT AT TPI\n%06.2f EL MINUS 5 MIN\n%06.2f AZ", buffer, form->dH_TPI, form->dH_Max, form->R, form->Rdot, form->EL, form->AZ);
+
+			oapiAnnotationSetText(NHpad, buffer);
+		}
+		break;
+	case 6: //APTENT
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+			sprintf(buffer, "ENTRY UPDATE\nPREBURN\nX%s AREA\nXX%+5.1f DV TO\nXXX%3.0f R400K\nXXX%3.0f P400K\nXXX%3.0f Y400K\n%+7.1f RTGO .05G\n%+7.0f VIO .05G\nXX%4.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG", form->Area[0], form->dVTO[0], form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z, form->RTGO[0], form->VIO[0], form->Ret05[0], form->Lat[0], form->Lng[0]);
+			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
 	default:

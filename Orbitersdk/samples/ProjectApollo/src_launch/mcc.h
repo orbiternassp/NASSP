@@ -231,12 +231,12 @@ struct GroundStation {
 // PAD FORMS
 // APOLLO 7 - BLOCK DATA
 struct AP7BLK{
-	char Area[4][10];	// XXX.YY where XXX is rev and YY is recovery area/supt caps
-	double Lat[4];		// Target point
-	double Lng[4];		// Target point
-	double GETI[4];		// TIG
-	double dVC[4];		// dV for EMS
-	char Wx[4][10];		// Weather cndx ("GOOD-FAIR-POOR")
+	char Area[8][10];	// XXX.YY where XXX is rev and YY is recovery area/supt caps
+	double Lat[8];		// Target point
+	double Lng[8];		// Target point
+	double GETI[8];		// TIG
+	double dVC[8];		// dV for EMS
+	char Wx[8][10];		// Weather cndx ("GOOD-FAIR-POOR")
 };
 
 // APOLLO 7 - P27 CMC UPDATE
