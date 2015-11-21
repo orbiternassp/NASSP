@@ -689,7 +689,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
 
 		m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
-		pad.Vc = length(opt->dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD) - 60832.18 / m1;
+		pad.Vc = length(opt->dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD);// -60832.18 / m1;
 	}
 	else
 	{
@@ -1669,7 +1669,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	double SVMJD, GET;
 	VECTOR3 R_A, V_A, R0B, V0B;
 	MATRIX3 Rot;
-	OBJHANDLE hMoon;
+	OBJHANDLE hMoon, gravref;
 
 	hMoon = oapiGetObjectByName("Moon");
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
@@ -1679,11 +1679,13 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		R0B = opt->RV_MCC.R;
 		V0B = opt->RV_MCC.V;
 		SVMJD = opt->RV_MCC.MJD;
+		gravref = opt->RV_MCC.gravref;
 	}
 	else
 	{
-		opt->vessel->GetRelativePos(hMoon, R_A);
-		opt->vessel->GetRelativeVel(hMoon, V_A);
+		gravref = AGCGravityRef(opt->vessel);
+		opt->vessel->GetRelativePos(gravref, R_A);
+		opt->vessel->GetRelativeVel(gravref, V_A);
 		SVMJD = oapiGetSimMJD();
 		R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 		V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -1694,8 +1696,9 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	if (opt->man == 0)
 	{
 		double PeriMJD, dt1, dt2;
-		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k;
+		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k, RA2, VA2;
 		MATRIX3 Rot2, Q_Xx;
+		OBJHANDLE outplanet = NULL;
 
 		PeriMJD = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
 
@@ -1708,12 +1711,14 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 		dt1 = opt->MCCGET - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 		dt2 = opt->PeriGET - opt->MCCGET;
-		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, hMoon, hMoon);
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, gravref, hMoon);
 
 		VA1_apo = OrbMech::Vinti(RA1, VA1, R_peri, SVMJD + dt1 / 24.0 / 3600.0, dt2, 0, false, hMoon);
 
-		j = unit(crossp(VA1, RA1));
-		k = unit(-RA1);
+		OrbMech::oneclickcoast(RA1, VA1, SVMJD + dt1 / 24.0 / 3600.0, 0.000001, RA2, VA2, hMoon, outplanet);
+
+		j = unit(crossp(VA2, RA2));
+		k = unit(-RA2);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);

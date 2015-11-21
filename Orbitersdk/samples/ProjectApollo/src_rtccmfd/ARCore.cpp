@@ -702,7 +702,7 @@ void ARCore::ManeuverPAD()
 		M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
 
 		m1 = vessel->GetMass()*exp(-length(dV_LVLH) / v_e);
-		ManPADDVC = length(dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD) - 60832.18 / m1;
+		ManPADDVC = length(dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD);// -60832.18 / m1;
 	}
 	else
 	{
