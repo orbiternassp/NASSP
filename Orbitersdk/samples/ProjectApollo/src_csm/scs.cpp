@@ -554,6 +554,7 @@ GDC::GDC()
 	fdai_err_z = 0;
 	rsiRotationOn = false;
 	rsiRotationStart = 0;
+	rollstabilityrate = 0;
 }
 
 void GDC::Init(Saturn *v)
@@ -668,11 +669,13 @@ void GDC::Timestep(double simdt) {
 	// Special Logic for Entry .05 Switch
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
-		rates.y = rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
+		rates.y = -rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
+		rollstabilityrate = rollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
 		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
 		rates.y = yawBmag->GetRates().y;
+		rollstabilityrate = rollBmag->GetRates().z;
 	}
 	rates.z = rollBmag->GetRates().z;
 
@@ -2960,7 +2963,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	}
 
 	if (status != EMS_STATUS_OFF && sat->EMSRollSwitch.IsUp()) {
-		SetRSIRotation(RSITarget + sat->gdc.rates.y * simdt);
+		SetRSIRotation(RSITarget + sat->gdc.rollstabilityrate * simdt);
 		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
 	}
 

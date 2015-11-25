@@ -131,6 +131,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	void LoadState(FILEHANDLE scn); // LoadState callback
 
 	VECTOR3 rates;					// Integrated Euler rotation rates
+	double rollstabilityrate;
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
