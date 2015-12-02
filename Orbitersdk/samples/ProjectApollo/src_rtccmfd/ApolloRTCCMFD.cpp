@@ -806,26 +806,37 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				{
 					skp->Text(5 * W / 8, 2 * H / 14, "PeA=-30NM Solution", 18);
 				}
+				else if (G->entryprecision == 9)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Iteration failed", 16);
+				}
 			}
 
 			GET_Display(Buffer, G->EntryTIGcor);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryLatcor*DEG);
+			sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
 			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryLngcor*DEG);
+			sprintf(Buffer, "%.3f° Lng", G->EntryLngcor*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%f °", G->EntryAngcor*DEG);
+			sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
+			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+			GET_Display(Buffer, G->P37GET400K);
+			sprintf(Buffer, "%s RRT", Buffer);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
+			skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
+			skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
 
 			if (G->dvdisplay == 0)
 			{
 				sprintf(Buffer, "%f", G->Entry_DV.x / 0.3048);
-				skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%f", G->Entry_DV.y / 0.3048);
-				skp->Text(5 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+				skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%f", G->Entry_DV.z / 0.3048);
-				skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+				skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 			}
 			else if (G->dvdisplay == 1)
 			{
@@ -1487,12 +1498,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->TLCC_TIG);
 			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+07.1f DVX", G->TLCC_dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->TLCC_dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->TLCC_dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 17 * H / 21, "DVX", 3);
+			skp->Text(5 * W / 8, 18 * H / 21, "DVY", 3);
+			skp->Text(5 * W / 8, 19 * H / 21, "DVZ", 3);
+
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.x / 0.3048);
+			skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.y / 0.3048);
+			skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.z / 0.3048);
+			skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		}
 		else if (G->LOImaneuver == 1)
@@ -2767,22 +2782,22 @@ void ApolloRTCCMFD::menuEntryCalc()
 	{
 		if (G->entrylongmanual)
 		{
-			G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+			G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
 		}
 		else
 		{
-			G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+			G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
 		}
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else if(G->entrycalcmode == 1)
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
+		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
 	else
 	{
-		G->entry = new Entry(G->vessel, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
+		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 }

@@ -216,6 +216,7 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
@@ -224,7 +225,6 @@ private:
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
-	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude);
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);

@@ -437,7 +437,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 	SVMJD = oapiGetSimMJD();
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new Entry(opt->vessel, AGCGravityRef(opt->vessel), opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->Range, opt->nominal, opt->entrylongmanual);
+	entry = new Entry(opt->vessel, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->Range, opt->nominal, opt->entrylongmanual);
 
 	while (!stop)
 	{
@@ -548,7 +548,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{
-		VA1_apo = OrbMech::Vinti(RA1, VA1, RP2off, SVMJD + dt1 / 24.0 / 3600.0, dt2, lambert->N, lambert->prograde, gravref); //Vinti Targeting: For non-spherical gravity
+		VA1_apo = OrbMech::Vinti(RA1, VA1, RP2off, SVMJD + dt1 / 24.0 / 3600.0, dt2, lambert->N, lambert->prograde, gravref, gravref, gravref, _V(0.0, 0.0, 0.0)); //Vinti Targeting: For non-spherical gravity
 	}
 	else
 	{
@@ -959,7 +959,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		}
 
 		pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
-		pad.dVTO[0] = -60832.18 / m1 / 0.3048;
+		pad.dVTO[0] = 0.0;//-60832.18 / m1 / 0.3048;
 		if (opt->lat == 0)
 		{
 			pad.Lat[0] = lat*DEG;
@@ -1696,7 +1696,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	if (opt->man == 0)
 	{
 		double PeriMJD, dt1, dt2;
-		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k, RA2, VA2;
+		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k, V_peri, RA2;
 		MATRIX3 Rot2, Q_Xx;
 		OBJHANDLE outplanet = NULL;
 
@@ -1711,14 +1711,13 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 		dt1 = opt->MCCGET - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 		dt2 = opt->PeriGET - opt->MCCGET;
-		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, gravref, hMoon);
+		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, gravref, outplanet);
 
-		VA1_apo = OrbMech::Vinti(RA1, VA1, R_peri, SVMJD + dt1 / 24.0 / 3600.0, dt2, 0, false, hMoon);
+		V_peri = OrbMech::Vinti(R_peri, _V(0.0,0.0,0.0), RA1, SVMJD + (dt1 + dt2) / 24.0 / 3600.0, -dt2, 0, false, hMoon, hMoon, outplanet, _V(0.0, 0.0, 0.0));
+		OrbMech::oneclickcoast(R_peri, V_peri, SVMJD + (dt1 + dt2) / 24.0 / 3600.0, -dt2, RA2, VA1_apo, hMoon, outplanet);
 
-		OrbMech::oneclickcoast(RA1, VA1, SVMJD + dt1 / 24.0 / 3600.0, 0.000001, RA2, VA2, hMoon, outplanet);
-
-		j = unit(crossp(VA2, RA2));
-		k = unit(-RA2);
+		j = unit(crossp(VA1, RA1));
+		k = unit(-RA1);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);
@@ -1780,7 +1779,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
 
-		dV_LVLH = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
+		dV_LVLH = mul(Q_Xx, Llambda);
 
 		P30TIG = LOIGET + t_slip;
 	}

@@ -110,6 +110,7 @@ private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
 	double fq(double q);
 	VECTOR3 adfunc(VECTOR3 R);
+	void SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES);
 	double R_E, mu;
 	double K, dt_lim;
 	int jcount;
@@ -127,6 +128,8 @@ private:
 	CELBODY *cMoon, *cEarth, *cSun;
 	MATRIX3 obli;
 	int B, P;
+	VECTOR3 R_ES0, V_ES0;
+	double W_ES;
 };
 
 namespace OrbMech {
@@ -140,7 +143,7 @@ namespace OrbMech {
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
-	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref);
+	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	void f_and_g_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &f, double &g, double mu);
@@ -200,7 +203,7 @@ namespace OrbMech {
 	MATRIX3 inverse(MATRIX3 a);
 	double determinant(MATRIX3 a);
 	MATRIX3 transpose_matrix(MATRIX3 a);
-	double sign(double A);
+	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
 	double cot(double a);
 	void fabs_vektor(double* vektor, int n);
@@ -213,6 +216,7 @@ namespace OrbMech {
 	MATRIX3 _MRy(double a);
 	MATRIX3 _MRz(double a);
 	VECTOR3 Polar2Cartesian(double r, double lat, double lng);
+	VECTOR3 Polar2CartesianVel(double r, double lat, double lng, double r_dot, double lat_dot, double lng_dot);
 	int decimal_octal(int n);
 	void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x = 0);
 	double kepler_U(double dt, double ro, double vro, double a, double mu, double x = 0);
@@ -241,6 +245,7 @@ namespace OrbMech {
 	double fraction_u(int n, double x);
 	double fraction_pq(double x);
 	double fraction_xi(double x);
+	void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);

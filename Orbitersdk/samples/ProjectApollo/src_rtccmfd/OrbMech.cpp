@@ -655,12 +655,6 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 
 void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
 {
-	if (dt == 0.0)
-	{
-		R1 = R0;
-		V1 = V0;
-		return;
-	}
 	bool stop;
 	CoastIntegrator* coast;
 	coast = new CoastIntegrator(R0, V0, mjd0, dt, gravref, gravout);
@@ -676,11 +670,11 @@ void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	stop = false;
 }
 
-VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref)
+VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess)
 {
-	double h, rho, error2, error3, mu;
+	double h, rho, error2, error3, mu, max_dr;
 	int nMax, nMax2, n;
-	VECTOR3 Vt1, V1_star, dr2, R2_star, V2_star;
+	VECTOR3 Vt1, V1_star, dr2, R2_star, V2_star, R1_ref, V1_ref, R2_ref;
 	VECTOR3 v_l[3][4];
 	VECTOR3 R2l[3][4];
 	VECTOR3 V2l[3][4];
@@ -703,10 +697,48 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 
 	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
 
-	Vt1 = elegant_lambert(R1, V1, R2, dt, N, prog, mu);
-	V1_star = Vt1;
+	if (gravref != gravin)
+	{
+		oneclickcoast(R1, V1, mjd0, 0.0, R1_ref, V1_ref, gravin, gravref);
+		R2_ref = R2;
+	}
+	else if (gravref != gravout)
+	{
+		VECTOR3 V2_ref;
+		R1_ref = R1;
+		V1_ref = V1;
+		oneclickcoast(R2, V1, mjd0 + dt / 24.0 / 3600.0, 0.0, R2_ref, V2_ref, gravout, gravref);
+	}
+	else
+	{
+		R1_ref = R1;
+		V1_ref = V1;
+		R2_ref = R2;
+	}
 
-	if (gravref == hEarth)
+	if (dt > 0)
+	{
+		Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, dt, N, prog, mu);
+	}
+	else
+	{
+		Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, -dt, N, !prog, mu);
+	}
+	if (gravref != gravin)
+	{
+		VECTOR3 R1_unused;
+		oneclickcoast(R1_ref, Vt1, mjd0, 0.0, R1_unused, Vt1, gravref, gravin);
+	}
+	if (length(V_guess) == 0.0)
+	{
+		V1_star = Vt1*sign(dt);
+	}
+	else
+	{
+		V1_star = V_guess;
+	}
+
+	if (gravref == hEarth && gravin == gravout && dt>0)
 	{
 
 		rv_from_r0v0_obla(R1, V1_star, dt, R2_star, V2_star, gravref);
@@ -748,19 +780,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 		n = 0;
 	}
 
-	//rungeinteg(R1, V1_star, dt, R2_star, V2_star, mu);
-	oneclickcoast(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref, gravref);
-	//coast = new CoastIntegrator(R1, V1_star, mjd0, dt, gravref);
-	//stop = false;
-	//while (stop == false)
-	//{
-	//	stop = coast->iteration();
-	//}
-	//R2_star = coast->R2;
-	//V2_star = coast->V2;
-	//delete coast;
-	//stop = false;
-	//rv_from_r0v0_obla(R1, V1_star, dt, R2_star, V2_star, mu);
+	oneclickcoast(R1, V1_star, mjd0, dt, R2_star, V2_star, gravin, gravout);
 	dr2 = R2 - R2_star;
 
 	while (length(dr2) > error2 && nMax >= n)
@@ -776,18 +796,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				oneclickcoast(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j], gravref, gravref);
-				//rungeinteg(R1, v_l[i][j], dt, R2l[i][j], V2l[i][j], mu);
-				//coast = new CoastIntegrator(R1, v_l[i][j], mjd0, dt, gravref);
-				//while (stop == false)
-				//{
-				//	stop = coast->iteration();
-				//}
-				//R2l[i][j] = coast->R2;
-				//V2l[i][j] = coast->V2;
-				//delete coast;
-				//stop = false;
-				//rv_from_r0v0_obla(R1, v_l[i][j], dt, R2l[i][j], V2l[i][j], mu);
+				oneclickcoast(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j], gravin, gravout);
 			}
 		}
 		for (int i = 0; i < 3; i++)
@@ -796,21 +805,24 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 		}
 		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
 		V1_star = V1_star + mul(inverse(T2), dr2);
-		oneclickcoast(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref, gravref);
-		//rungeinteg(R1, V1_star, dt, R2_star, V2_star, mu);
-		//coast = new CoastIntegrator(R1, V1_star, mjd0, dt, gravref);
-		//while (stop == false)
-		//{
-		//	stop = coast->iteration();
-		//}
-		//R2_star = coast->R2;
-		//V2_star = coast->V2;
-		//delete coast;
-		//stop = false;
-		//rv_from_r0v0_obla(R1, V1_star, dt, R2_star, V2_star, mu);
+		oneclickcoast(R1, V1_star, mjd0, dt, R2_star, V2_star, gravin, gravout);
 		dr2 = R2 - R2_star;
+		max_dr = 0.5*length(R2_star);
+		if (length(dr2) > max_dr)
+		{
+			dr2 = unit(dr2)*max_dr;
+		}
 	}
 	return V1_star;
+}
+
+void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2)
+{
+	double c1, c2;
+	c1 = (h1 - h2*dotp(n1, n2)) / (1.0 - power(dotp(n1, n2), 2.0));
+	c2 = (h2 - h1*dotp(n1, n2)) / (1.0 - power(dotp(n1, n2), 2.0));
+	m1 = n1*c1 + n2*c2;
+	m2 = crossp(n1, n2);
 }
 
 double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref)
@@ -2032,9 +2044,8 @@ MATRIX3 transpose_matrix(MATRIX3 a)
 	return b;
 }
 
-double sign(double A)
-{
-	return A / abs(A);
+template <typename T> int sign(T val) {
+	return (T(0) < val) - (val < T(0));
 }
 
 int DoubleToBuffer(double x, double q, int m)
@@ -2360,6 +2371,11 @@ MATRIX3 _MRz(double a)
 VECTOR3 Polar2Cartesian(double r, double lat, double lng)
 {
 	return _V(r*cos(lat)*cos(lng), r*sin(lat), r*cos(lat)*sin(lng));
+}
+
+VECTOR3 Polar2CartesianVel(double r, double lat, double lng, double r_dot, double lat_dot, double lng_dot)
+{
+	return _V(r_dot*cos(lat)*cos(lng) - lat_dot*r*sin(lat)*cos(lng) - r*lng_dot*cos(lat)*sin(lng), r_dot*sin(lat) + r*lat_dot*cos(lat), r_dot*cos(lat)*sin(lng) - r*lat_dot*sin(lat)*sin(lng) + r*lng_dot*cos(lat)*cos(lng));
 }
 
 int decimal_octal(int n) /* Function to convert decimal to octal */
@@ -3126,6 +3142,18 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	r_SPH = 64373760.0;
 
 	B = 1;
+
+	double *EarthPos;
+	EarthPos = new double[12];
+	VECTOR3 EarthVec, EarthVecVel;
+
+	cEarth->clbkEphemeris(mjd0 + t_F/2.0/24.0/3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
+
+	EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
+	EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
+	R_ES0 = -mul(Rot, _V(EarthVec.x, EarthVec.z, EarthVec.y));
+	V_ES0 = -mul(Rot, _V(EarthVecVel.x, EarthVecVel.z, EarthVecVel.y));
+	W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
 }
 
 bool CoastIntegrator::iteration()
@@ -3148,6 +3176,7 @@ bool CoastIntegrator::iteration()
 	dt_max = 0.3*min(dt_lim, min(K*OrbMech::power(rr, 1.5) / sqrt(mu), K*OrbMech::power(r_qc, 1.5) / sqrt(mu_Q)));
 	Y = OrbMech::sign(t_F - t);
 	dt = Y*min(abs(t_F - t), dt_max);
+
 	if (M == 1)
 	{
 		if (P == 1)
@@ -3289,7 +3318,7 @@ bool CoastIntegrator::iteration()
 	delta = delta + (nu + (k[0] + k[1] * 2.0)*dt*1.0 / 6.0)*dt;
 	nu = nu + (k[0] + k[1] * 4.0 + k[2]) * 1.0 / 6.0 *dt;
 
-	if (abs(t - t_F)<0.0001)
+	if (abs(t - t_F) < 1e-6)
 	{
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
@@ -3329,6 +3358,12 @@ bool CoastIntegrator::iteration()
 		return true;
 	}
 	return false;
+}
+
+void CoastIntegrator::SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES)
+{
+	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(R_ES0, V_ES0)))*sin(W_ES*t);
+	V_ES = V_ES0;
 }
 
 VECTOR3 CoastIntegrator::f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d)
@@ -3382,20 +3417,14 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	if (M == 1)
 	{
 		double q_Q, q_S, MJD;
-		VECTOR3 R_SC, R_PS, R_EM, R_ES, EarthVec;
-		double *MoonPos, *EarthPos, *SunPos;
-		EarthPos = new double[12];
-		SunPos = new double[12];
+		VECTOR3 R_SC, R_PS, R_EM, R_ES, V_ES;
+		double *MoonPos;
 		MoonPos = new double[12];
 
 		MJD = mjd0 + t / 86400.0;
 
 		cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
-		cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS, EarthPos);
-		//cSun->clbkEphemeris(MJD, EPHEM_TRUEPOS, SunPos);
-
-		EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
-		R_ES = -mul(Rot, _V(EarthVec.x, EarthVec.z, EarthVec.y));
+		SolarEphemeris(t - t_F/2.0, R_ES, V_ES);
 		R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
 
 		if (planet == hEarth)
