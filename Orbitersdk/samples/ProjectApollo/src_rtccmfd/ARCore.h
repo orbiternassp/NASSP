@@ -22,8 +22,11 @@ struct ApolloRTCCMFDData {  // global data storage
 	int emem[24];
 	int uplinkState;
 	int uplinkLEM;
+	IMFD_BURN_DATA burnData;
 	std::queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
+	bool isRequesting;
+	Saturn *progVessel;
 };
 
 enum apves { CSM, LM };
@@ -56,10 +59,13 @@ public:
 	void ManeuverPAD();
 	void EntryPAD();
 	void TPIPAD();
+	void TLI_PAD();
 	void MapUpdate();
 
 	int startSubthread(int fcn);
 	int subThread();
+	void StartIMFDRequest();
+	void StopIMFDRequest();
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
@@ -145,7 +151,7 @@ public:
 	bool EntryPADLift;
 	double EntryPADHorChkGET, EntryPADHorChkPit;
 	bool REFSMMATdirect;
-	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD
+	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double EntryPADV400k, EntryPADgamma400k, EntryPADRRT;
 	double EntryPADLat, EntryPADLng;
 	double EntryRET05, EntryRTGO, EntryVIO;
@@ -173,6 +179,7 @@ public:
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
+	TLIPAD tlipad;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

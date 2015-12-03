@@ -658,7 +658,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 		if (length(DV_P) != 0.0)
 		{
-			theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
+			theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / F;
 			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 			V_G = DV_C + UY*opt->dV_LVLH.y;
 		}
@@ -1934,4 +1934,69 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	dV_LVLH = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
 
 	P30TIG = opt->SPSGET + t_slip;
+}
+
+void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
+{
+	OBJHANDLE hEarth;
+	MATRIX3 Rot, M_R;
+	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, Att, R2B, V2B;
+	double SVMJD, dt, v_e, F, theta_T, m1, t_go, dVC;
+
+	hEarth = oapiGetObjectByName("Earth");
+
+	opt->vessel->GetRelativePos(hEarth, R_A);
+	opt->vessel->GetRelativeVel(hEarth, V_A);
+	SVMJD = oapiGetSimMJD();
+
+	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, hEarth, hEarth);
+
+	UY = unit(crossp(V1B, R1B));
+	UZ = unit(-R1B);
+	UX = crossp(UY, UZ);
+
+	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+
+	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+	if (length(DV_P) != 0.0)
+	{
+		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / F;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + UY*opt->dV_LVLH.y;
+	}
+	else
+	{
+		V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
+	}
+
+	U_TD = unit(V_G);
+
+	OrbMech::poweredflight(opt->vessel, R1B, V1B, hEarth, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+
+	X_B = unit(V_G);
+	UX = X_B;
+	UY = unit(crossp(X_B, -R1B));
+	UZ = unit(crossp(X_B, crossp(X_B, -R1B)));
+
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+
+	m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
+	dVC = length(opt->dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD);
+
+	Att = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
+
+	pad.BurnTime = v_e / F *opt->vessel->GetMass()*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
+	pad.dVC = dVC / 0.3048;
+	pad.IgnATT = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
+	pad.TB6P = opt->TIG - 578.0;
+	pad.VI = length(V2B) / 0.3048;
 }

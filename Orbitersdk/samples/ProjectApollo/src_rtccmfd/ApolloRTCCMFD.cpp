@@ -1033,6 +1033,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 9)
 	{
+		if (G->g_Data.isRequesting)
+		{
+			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "Requesting...", 13);
+		}
+
 		if (G->manpadopt == 0)
 		{
 			skp->Text(5 * W / 8,(int)(0.5 * H / 14), "Maneuver PAD", 12);
@@ -1201,7 +1206,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text((int)(3.5 * W / 8), 20 * H / 21, Buffer, strlen(Buffer));
 			}
 		}
-		else
+		else if (G->manpadopt == 1)
 		{
 			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Terminal Phase Initiate", 23);
 
@@ -1269,6 +1274,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 			sprintf(Buffer, "X%06.2f AZ", G->TPIPAD_AZ);
 			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "TLI PAD", 7);
+
+			GET_Display(Buffer, G->tlipad.TB6P);
+			sprintf(Buffer, "%s TB6p", Buffer);
+			skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "XXX%03.0f R", G->tlipad.IgnATT.x);
+			skp->Text(3 * W / 8, 4 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "XXX%03.0f P", G->tlipad.IgnATT.y);
+			skp->Text(3 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "XXX%03.0f Y", G->tlipad.IgnATT.z);
+			skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
+
+			double mins, secs;
+			int ss, mm;
+			mins = G->tlipad.BurnTime / 60.0;
+			mm = (int)OrbMech::trunc(mins);
+			secs = (mins - mm) * 60.0;
+			ss = (int)OrbMech::trunc(secs);
+
+			sprintf(Buffer, "XXX%d:%02.0f BT", mm, secs);
+			skp->Text(3 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%07.1f DVC", G->tlipad.dVC);
+			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+06.0f VI", G->tlipad.VI);
+			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "XXX%03.0f R SEP", G->tlipad.SepATT.x);
+			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "XXX%03.0f P SEP", G->tlipad.SepATT.y);
+			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "XXX%03.0f Y SEP", G->tlipad.SepATT.z);
+			skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 10)
@@ -2875,12 +2917,16 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	{
 		G->ManeuverPAD();
 	}
-	else
+	else if (G->manpadopt == 1)
 	{
 		if (G->target != NULL)
 		{
 			G->TPIPAD();
 		}
+	}
+	else
+	{
+		G->TLI_PAD();
 	}
 }
 
@@ -2947,7 +2993,7 @@ void ApolloRTCCMFD::menuSwitchManPADEngine()
 
 void ApolloRTCCMFD::menuSwitchManPADopt()
 {
-	if (G->manpadopt < 1)
+	if (G->manpadopt < 2)
 	{
 		G->manpadopt++;
 	}
@@ -3387,4 +3433,19 @@ void ApolloRTCCMFD::set_LOIInc(double inc)
 void ApolloRTCCMFD::menuLOICalc()
 {
 	G->LOICalc();
+}
+
+void ApolloRTCCMFD::menuRequestLTMFD()
+{
+	if (G->manpadopt == 0 || G->manpadopt == 2)
+	{
+		if (G->g_Data.isRequesting)
+		{
+			G->StopIMFDRequest();
+		}
+		else
+		{
+			G->StartIMFDRequest();
+		}
+	}
 }

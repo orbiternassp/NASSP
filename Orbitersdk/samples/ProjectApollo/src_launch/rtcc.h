@@ -197,6 +197,15 @@ struct OrbAdjOpt
 	SV RV_MCC;		//State vector as input
 };
 
+struct TLIPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition (deorbit maneuver)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
+	MATRIX3 REFSMMAT;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	VESSEL *src;	// Our ship
@@ -210,6 +219,7 @@ public:
 	void Calculation(int fcn,LPVOID &pad);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);

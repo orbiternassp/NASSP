@@ -157,6 +157,9 @@ ARCore::ARCore(VESSEL* v)
 	{
 		g_Data.emem[i] = 0;
 	}
+	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
+	g_Data.isRequesting = false;
+	g_Data.progVessel = (Saturn *)vessel;
 	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != NO_ERROR) {
 		sprintf(debugWinsock, "ERROR AT WSAStartup()");
@@ -269,6 +272,12 @@ ARCore::ARCore(VESSEL* v)
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	TLCC_TIG = 0.0;
 	LOI_TIG = 0.0;
+	tlipad.TB6P = 0.0;
+	tlipad.BurnTime = 0.0;
+	tlipad.dVC = 0.0;
+	tlipad.VI = 0.0;
+	tlipad.SepATT = _V(0.0, 0.0, 0.0);
+	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
 
 	subThreadMode = 0;
 	subThreadStatus = 0;
@@ -317,6 +326,22 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		//	UpdateClock();
 		//}
 	}
+	if (g_Data.isRequesting && g_Data.progVessel->GetIMFDClient()->IsBurnDataValid()) {
+		g_Data.burnData = g_Data.progVessel->GetIMFDClient()->GetBurnData();
+		StopIMFDRequest();
+		if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive) {
+			//g_Data.errorMessage = "IMFD not in Off-Axis, P30 Mode";
+			//g_Data.progState = PROGSTATE_TLI_ERROR;
+			dV_LVLH = g_Data.burnData._dV_LVLH;
+			P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
+			//tlipad.BurnTime = g_Data.burnData.BT;
+			//tlipad.TB6P = P30TIG - 578.0;
+			//tlipad.IgnATT
+		}
+		else {
+			//g_Data.progState = PROGSTATE_TLI_WAITING;
+		}
+	}
 }
 
 void ARCore::LOICalc()
@@ -342,6 +367,11 @@ void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach
 void ARCore::REFSMMATCalc()
 {
 	startSubthread(4);
+}
+
+void ARCore::TLI_PAD()
+{
+	startSubthread(8);
 }
 
 void ARCore::EntryPAD()
@@ -1544,8 +1574,33 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
+	case 8: //TLI PAD
+	{
+		TLIPADOpt opt;
+		opt.dV_LVLH = dV_LVLH;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT = REFSMMAT;
+		opt.TIG = P30TIG;
+		opt.vessel = vessel;
+		rtcc->TLI_PAD(&opt, tlipad);
+		Result = 0;
+	}
+	break;
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
 	return(0);
+}
+
+void ARCore::StartIMFDRequest() {
+
+	g_Data.isRequesting = true;
+	if (!g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting())
+		g_Data.progVessel->GetIMFDClient()->StartBurnDataRequests();
+}
+
+void ARCore::StopIMFDRequest() {
+
+	g_Data.isRequesting = false;
+		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
