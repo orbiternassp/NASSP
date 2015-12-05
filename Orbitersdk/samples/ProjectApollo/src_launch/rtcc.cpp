@@ -669,7 +669,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 		U_TD = unit(V_G);
 
-		OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R2B, V2B, t_go);
 
 		OrbMech::periapo(R2B, V2B, mu, apo, peri);
 		pad.HA = apo - oapiGetSize(gravref);
@@ -908,7 +908,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH.y;
 
-		OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		OrbMech::poweredflight(opt->vessel, R1B, V1B, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R2B, V2B, t_go);
 
 		dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + (dt + t_go) / 3600.0 / 24.0, oapiGetSize(gravref) + EIAlt, -1, gravref, gravref, REI, VEI);
 		dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + (dt + t_go + dt2) / 3600.0 / 24.0, oapiGetSize(gravref) + 300000.0*0.3048, -1, gravref, gravref, R300K, V300K);
@@ -1242,7 +1242,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH.y;
 
-		OrbMech::poweredflight(opt->vessel, R0B0, V0B0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B1, V0B1, t_go1);
+		OrbMech::poweredflight(opt->vessel, R0B0, V0B0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R0B1, V0B1, t_go1);
 		SVMJD1 = SVMJD + (dt0 + t_go1) / 24.0 / 3600.0;
 		dt2 = opt->P30TIG2 - opt->P30TIG - t_go1;
 
@@ -1257,7 +1257,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH2.y;
 
-		OrbMech::poweredflight(opt->vessel, R0B2, V0B2, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B3, V0B3, t_go2);
+		OrbMech::poweredflight(opt->vessel, R0B2, V0B2, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R0B3, V0B3, t_go2);
 
 		SVMJD3 = SVMJD1 + (dt2 + t_go2) / 24.0 / 3600.0;
 
@@ -1278,7 +1278,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH.y;
 
-		OrbMech::poweredflight(opt->vessel, R0B, V0B, opt->maneuverplanet, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R0B, V0B, t_go);
+		OrbMech::poweredflight(opt->vessel, R0B, V0B, opt->maneuverplanet, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R0B, V0B, t_go);
 
 		//DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 		//V0B = V0B + DV;
@@ -1979,7 +1979,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 
 	U_TD = unit(V_G);
 
-	OrbMech::poweredflight(opt->vessel, R1B, V1B, hEarth, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+	OrbMech::poweredflight(opt->vessel, R1B, V1B, hEarth, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_G, R2B, V2B, t_go);
 
 	X_B = unit(V_G);
 	UX = X_B;
@@ -1997,6 +1997,6 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	pad.BurnTime = v_e / F *opt->vessel->GetMass()*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 	pad.dVC = dVC / 0.3048;
 	pad.IgnATT = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
-	pad.TB6P = opt->TIG - 578.0;
+	pad.TB6P = opt->TIG - 577.6;
 	pad.VI = length(V2B) / 0.3048;
 }

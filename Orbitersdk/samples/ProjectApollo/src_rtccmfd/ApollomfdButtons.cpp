@@ -312,9 +312,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu9[] =
 	{
+		{ "Maneuver Vehicle", 0, 'V' },
 		{ "Maneuver Engine", 0, 'E' },
 		{ "Heads-up/down", 0, 'H' },
-		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Manual TIG", 0, 'T' },
 		{ "Manual DV", 0, 'D' },
@@ -322,24 +322,24 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Calculate PAD", 0, 'C' },
 		{ "Switch Maneuver option", 0, 'O' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Request burn data", 0, 'R' },
 		{ "", 0, ' ' },
 		{ "Back to main menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu9, sizeof(mnu9) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuSwitchVehicle);
 	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchManPADEngine);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuSwitchHeadsUp);
-	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("REQ", OAPI_KEY_N, &ApolloRTCCMFD::menuRequestLTMFD);
+	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::menuManPADTIG);
 	RegisterFunction("DV", OAPI_KEY_D, &ApolloRTCCMFD::menuManPADDV);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcManPAD);
 	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuSwitchManPADopt);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REQ", OAPI_KEY_R, &ApolloRTCCMFD::menuRequestLTMFD);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 

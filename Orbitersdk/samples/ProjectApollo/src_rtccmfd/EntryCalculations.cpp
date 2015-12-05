@@ -438,7 +438,7 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 		x2_apo = x2;
 		if (critical > 0)
 		{
-			reentryconstraints(n1, R1B, VPRE);
+			reentryconstraints(n2, R1B, VPRE);
 		}
 		x2_err = x2_apo - x2;
 		beta1 = 1.0 + x2*x2;

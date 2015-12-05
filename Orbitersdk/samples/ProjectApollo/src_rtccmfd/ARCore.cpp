@@ -204,6 +204,10 @@ ARCore::ARCore(VESSEL* v)
 	ManPADWeight = 0.0;
 	ManPADBurnTime = 0.0;
 	ManPADDVC = 0.0;
+	ManPADPTrim = 0.0;
+	ManPADYTrim = 0.0;
+	ManPADLMWeight = 0.0;
+	ManPADVeh = 0;
 	EntryPADRTGO = 0.0;
 	EntryPADVIO = 0.0;
 	EntryPADRET05Earth = 0.0;
@@ -490,7 +494,7 @@ void ARCore::EntryPAD()
 	else
 	{
 		VECTOR3 DV_P, DV_C, V_G, R2B, V2B;
-		double theta_T, t_go;
+		double theta_T, t_go, m0;
 
 		EntryPADLng = EntryLngcor;
 		EntryPADLat = EntryLatcor;
@@ -513,7 +517,9 @@ void ARCore::EntryPAD()
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*dV_LVLH.y;
 
-		OrbMech::poweredflight(vessel, R1B, V1B, maneuverplanet, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		m0 = vessel->GetMass();
+
+		OrbMech::poweredflight(vessel, R1B, V1B, maneuverplanet, vessel->GetGroupThruster(THGROUP_MAIN, 0), m0, V_G, R2B, V2B, t_go);
 		OrbMech::oneclickcoast(R2B, V2B, SVMJD + dt/3600.0/24.0, 0.0, R2B, V2B, maneuverplanet, hEarth);
 
 		dt2 = OrbMech::time_radius_integ(R2B, V2B, SVMJD + (dt + t_go) / 3600.0 / 24.0, oapiGetSize(hEarth) + EMSAlt, -1, hEarth, hEarth, R05G, V05G);
@@ -629,7 +635,7 @@ void ARCore::EntryPAD()
 void ARCore::ManeuverPAD()
 {
 	VECTOR3 DV_P, DV_C, V_G;
-	double SVMJD, dt, mu, theta_T,t_go;
+	double SVMJD, dt, mu, theta_T,t_go, CSMmass, LMmass;
 	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, X_B, DV,U_TD,R2B,V2B;
 	MATRIX3 Rot, M, M_R, M_RTM;
 	double p_T, y_T, peri, apo, m1;
@@ -671,7 +677,29 @@ void ARCore::ManeuverPAD()
 	DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 	
 
-	ManPADWeight = vessel->GetMass() / 0.45359237;
+	CSMmass = vessel->GetMass();
+
+	if (ManPADVeh == 1)
+	{
+		DOCKHANDLE dock;
+		OBJHANDLE hLM;
+		VESSEL* lm;
+		if (vessel->DockingStatus(0) == 1)
+		{
+			dock = vessel->GetDockHandle(0);
+			hLM = vessel->GetDockStatus(dock);
+			lm = oapiGetVesselInterface(hLM);
+			LMmass = lm->GetMass();
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
 
 	double v_e, F;
 	if (ManPADSPS == 0)
@@ -685,7 +713,7 @@ void ARCore::ManeuverPAD()
 		F = 400 * 4.448222;
 	}
 
-	ManPADBurnTime = v_e/F *vessel->GetMass()*(1.0-exp(-length(dV_LVLH)/v_e));
+	ManPADBurnTime = v_e / F *(CSMmass + LMmass)*(1.0 - exp(-length(dV_LVLH) / v_e));
 
 	if (HeadsUp)
 	{
@@ -701,7 +729,7 @@ void ARCore::ManeuverPAD()
 		DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
 		if (length(DV_P) != 0.0)
 		{
-			theta_T = length(crossp(R1B, V1B))*length(dV_LVLH)*vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
+			theta_T = length(crossp(R1B, V1B))*length(dV_LVLH)*(CSMmass + LMmass) / OrbMech::power(length(R1B), 2.0) / 92100.0;
 			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 			V_G = DV_C + UY*dV_LVLH.y;
 		}
@@ -712,14 +740,18 @@ void ARCore::ManeuverPAD()
 
 		U_TD = unit(V_G);
 
-		OrbMech::poweredflight(vessel, R1B, V1B, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_G, R2B, V2B, t_go);
+		OrbMech::poweredflight(vessel, R1B, V1B, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), CSMmass + LMmass, V_G, R2B, V2B, t_go);
 
 		OrbMech::periapo(R2B, V2B, mu, apo, peri);
 		ManPADApo = apo - oapiGetSize(gravref);
 		ManPADPeri = peri - oapiGetSize(gravref);
 
-		p_T = -2.15*RAD;
-		y_T = 0.95*RAD;
+		double x1 = LMmass / (CSMmass + LMmass)*6.2;
+		ManPADPTrim = atan2(SPS_PITCH_OFFSET * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
+		ManPADYTrim = atan2(SPS_YAW_OFFSET * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
+
+		p_T = -2.15*RAD + ManPADPTrim;
+		y_T = 0.95*RAD + ManPADYTrim;
 
 		X_B = unit(V_G);
 		UX = X_B;
@@ -731,8 +763,8 @@ void ARCore::ManeuverPAD()
 		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
 		M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
 
-		m1 = vessel->GetMass()*exp(-length(dV_LVLH) / v_e);
-		ManPADDVC = length(dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD);// -60832.18 / m1;
+		m1 = (CSMmass + LMmass)*exp(-length(dV_LVLH) / v_e);
+		ManPADDVC = length(dV_LVLH)*cos(p_T)*cos(y_T);// -60832.18 / m1;
 	}
 	else
 	{
@@ -769,6 +801,9 @@ void ARCore::ManeuverPAD()
 	OrbMech::oneclickcoast(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, sxtstardtime*60.0, Rsxt, Vsxt, gravref, gravref);
 
 	OrbMech::checkstar(REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD),Rsxt, oapiGetSize(gravref), Manstaroct, Mantrunnion, Manshaft);
+
+	ManPADWeight = CSMmass / 0.45359237;
+	ManPADLMWeight = LMmass / 0.45359237;
 }
 
 void ARCore::TPIPAD()

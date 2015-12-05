@@ -104,6 +104,7 @@ public:
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	void set_dvdisplaymode();
 	void gravrefdialogue();
 	void set_gravref(OBJHANDLE body);
@@ -187,6 +188,7 @@ public:
 	void set_LOIInc(double inc);
 	void menuLOICalc();
 	void menuRequestLTMFD();
+	void menuSwitchVehicle();
 
 protected:
 	oapi::Font *font;

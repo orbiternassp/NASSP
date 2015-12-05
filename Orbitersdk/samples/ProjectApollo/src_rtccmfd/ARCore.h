@@ -142,7 +142,7 @@ public:
 	VECTOR3 IMUangles, GDCangles;
 	int GDCset;
 	bool HeadsUp;
-	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime,ManPADDVC;
+	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime,ManPADDVC, ManPADPTrim, ManPADYTrim, ManPADLMWeight;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
 	double EntryPADRTGO, EntryPADVIO, EntryPADRET05Earth, EntryPADRET05Lunar, EntryPADdVTO;
@@ -159,6 +159,7 @@ public:
 	double TimeTag;
 	bool EntryPADdirect;
 	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
+	int ManPADVeh; //0 = CSM; 1 = CSM/LM
 	OBJHANDLE maneuverplanet;
 	double sxtstardtime;
 	double P37GET400K;

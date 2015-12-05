@@ -2865,9 +2865,9 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	zoff += length(RP2off) - r2;
 }
 
-void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
 {
-	double v_ex, f_T, a_T, tau, m, L, S, J, mu, dV;
+	double v_ex, f_T, a_T, tau, L, S, J, mu, dV;
 	VECTOR3 R_thrust, V_thrust, R_c1, V_c1, R_c2, V_c2, R_grav, V_grav, U_TD;
 
 	dV = length(V_G);
@@ -2877,7 +2877,6 @@ void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRU
 
 	v_ex = vessel->GetThrusterIsp0(thruster);
 	f_T = vessel->GetThrusterMax0(thruster);
-	m = vessel->GetMass();
 	a_T = f_T / m;
 	tau = v_ex / a_T;
 
@@ -2926,7 +2925,7 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER
 		rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
 		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
 		{
-			poweredflight(vessel, R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), V_go, R_p, V_p, t_go);
+			poweredflight(vessel, R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), m, V_go, R_p, V_p, t_go);
 			rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
 			i_z = unit(crossp(R_d, i_y));
 			dr_z = dotp(i_z, R_d - R_p);
