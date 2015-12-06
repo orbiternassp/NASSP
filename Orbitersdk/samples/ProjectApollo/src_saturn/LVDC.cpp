@@ -2635,7 +2635,14 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 	}	
 	if(oapiReadScenario_nextline (scn, line)){
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
+			fprintf(lvlog, "LVIMU LoadState() called\r\n");
+			fflush(lvlog);
 			lvimu.LoadState(scn);
+			if(lvimu.Initialized) { fprintf(lvlog, "LVIMU Initialized\r\n"); }
+			if(lvimu.Operate){ fprintf(lvlog, "LVIMU Operate\r\n"); }
+			if(lvimu.Caged) { fprintf(lvlog, "LVIMU Caged\r\n"); }			
+			if(lvimu.TurnedOn) { fprintf(lvlog, "LVIMU Turned On\r\n"); }
+			fflush(lvlog);
 		}
 	}
 	return;
