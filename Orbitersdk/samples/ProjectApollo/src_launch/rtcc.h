@@ -240,6 +240,10 @@ private:
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
+	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
+	char* CMCStateVectorUpdate(SV sv, bool csm);
+	char* PleaseEnter(int* emem, int n);
+	char* V71Update(char* update);
 };
 
 

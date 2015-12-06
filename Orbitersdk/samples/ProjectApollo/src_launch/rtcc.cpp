@@ -93,9 +93,16 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		EntryOpt entopt;
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
+		SV sv;
+		char* svstring = new char[1000];
+		char* svuplink = new char[1000];
 
 		SVGET = 0;
 		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
 
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = getGETBase();
@@ -130,6 +137,10 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 		opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+
+		svstring = CMCStateVectorUpdate(sv, true);
+		svuplink = V71Update(svstring); //Ready for uplink
+		sprintf(oapiDebugString(), svuplink);
 	}
 	break;
 	case 3: //MISSION C BLOCK DATA UPDATE 2
@@ -1999,4 +2010,121 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	pad.IgnATT = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
 	pad.TB6P = opt->TIG - 577.6;
 	pad.VI = length(V2B) / 0.3048;
+}
+
+char* RTCC::CMCExternalDeltaVUpdate(double P30TIG, VECTOR3 dV_LVLH)
+{
+	char* str = new char[1000];
+	double getign = P30TIG;
+	int emem[24];
+
+	emem[0] = 12;
+	emem[1] = 3404;
+	emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
+	emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
+	emem[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
+	emem[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
+	emem[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
+	emem[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
+	emem[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
+	emem[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+
+	str = PleaseEnter(emem, 10);
+	return str;
+}
+
+char* RTCC::CMCStateVectorUpdate(SV sv, bool csm)
+{
+	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
+	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
+
+	VECTOR3 vel, pos;
+	double get;
+	int emem[24];
+	char* str = new char[1000];
+
+	pos = sv.R;
+	vel = sv.V*0.01;
+	get = (sv.MJD - getGETBase())*24.0*3600.0;
+
+	if (sv.gravref == hMoon) {
+
+		emem[0] = 21;
+		emem[1] = 1501;
+
+		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+		if (csm)
+		{
+			emem[2] = 2;
+		}
+		else
+		{
+			emem[2] = 77775;	// Octal coded decimal
+		}
+
+		emem[3] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
+		emem[4] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
+		emem[5] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
+		emem[6] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
+		emem[7] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
+		emem[8] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
+		emem[9] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
+		emem[10] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
+		emem[11] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
+		emem[12] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
+		emem[13] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
+		emem[14] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
+		emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+
+	if (sv.gravref == hEarth) {
+
+		emem[0] = 21;
+		emem[1] = 1501;
+
+		if (csm)
+		{
+			emem[2] = 1;
+		}
+		else
+		{
+			emem[2] = 77776;	// Octal coded decimal
+		}
+
+		emem[3] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
+		emem[4] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
+		emem[5] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
+		emem[6] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
+		emem[7] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
+		emem[8] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
+		emem[9] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
+		emem[10] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
+		emem[11] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
+		emem[12] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
+		emem[13] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
+		emem[14] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
+		emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+	str = PleaseEnter(emem, 17);
+	return str;
+}
+
+char* RTCC::PleaseEnter(int *emem, int n)
+{
+	char* list = new char[1000];
+	sprintf(list, "%dE", emem[0]);
+	for (int i = 1;i < n;i++)
+	{
+		sprintf(list, "%s%dE", list, emem[i]);
+	}
+	return list;
+}
+
+char* RTCC::V71Update(char* update)
+{
+	char* list = new char[1000];
+	sprintf(list, "V71E%sV33E", update);
+	return list;
 }
