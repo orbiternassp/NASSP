@@ -53,6 +53,8 @@ void LVIMU::Init()
 	TurnedOn = false;
 	Initialized = false;
 	Caged = false;
+	ZeroIMUCDUFlag = false;
+	CoarseAlignEnableFlag = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
