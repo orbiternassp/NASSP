@@ -216,7 +216,7 @@ class RTCC {
 public:
 	RTCC();
 	void Init(MCC *ptr);
-	void Calculation(int fcn,LPVOID &pad);
+	void Calculation(int fcn,LPVOID &pad, char * upString = NULL);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);

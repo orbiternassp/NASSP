@@ -365,7 +365,11 @@ public:
 	void keyDown(DWORD key);								// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
-	int  CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
+	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
+	void pushCMCUplinkKey(char key);                        // Send key to CMC
+	void pushUplinkData(unsigned char data);				// Add uplink data word to queue
+	int CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
+	int CM_uplink_buffer();									// Send uplink buffer to CM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
 	void drawPad();											// Draw PAD display
@@ -409,6 +413,11 @@ public:
 	bool padAutoShow;										// PAD Auto Show flag
 	int padNumber;											// PAD display number
 	LPVOID padForm;											// Pointer to pad form buffer
+	char upString[1024 * 3];								// Uplink string buffer
+
+	// UPLINK DATA
+	int uplink_size;										// Size of uplink buffer
+	unsigned char uplink_data[1024];						// Uplink buffer
 
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle

@@ -54,7 +54,7 @@ void RTCC::Init(MCC *ptr)
 	mcc = ptr;
 }
 
-void RTCC::Calculation(int fcn, LPVOID &pad)
+void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 {
 	switch (fcn) {
 	case 1: // MISSION C PHASING BURN
@@ -140,6 +140,10 @@ void RTCC::Calculation(int fcn, LPVOID &pad)
 
 		svstring = CMCStateVectorUpdate(sv, true);
 		svuplink = V71Update(svstring); //Ready for uplink
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, svuplink, 1024 * 3);
+		}
 		sprintf(oapiDebugString(), svuplink);
 	}
 	break;

@@ -871,6 +871,8 @@ void MCC::TimeStep(double simdt){
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(2);
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
 					}
 					break;
 				case 2: // Await burn
@@ -1182,13 +1184,139 @@ void MCC::redisplayMessages(){
 	// should be redisplayed in the right order.
 }
 
+// Push CM uplink sequence
+void MCC::pushCMCUplinkString(const char *str) {
+	if (str == NULL) { return; } // Bail
+	int len = strlen(str);
+	int x = 0;
+	while (x < len) {
+		if (str[x] == '\n' || str[x] == '\r') { x++; continue; } // Ignore CR and LF if they are present (they should not be)
+		this->pushCMCUplinkKey(str[x]);
+		x++;
+	}
+}
+
+// Push CM uplink keystroke
+void MCC::pushCMCUplinkKey(char key) {
+	this->pushUplinkData(043); // VA, SA for CMC
+	switch (key) {
+	case 'V': // VERB
+		// 11-000-101 11-010-001
+		this->pushUplinkData(0305);
+		this->pushUplinkData(0321);
+		break;
+	case 'N': // NOUN
+		// 11-111-100 00-011-111
+		this->pushUplinkData(0374);
+		this->pushUplinkData(0037);
+		break;
+	case 'E': // ENTER
+		// 11-110-000 01-111-100
+		this->pushUplinkData(0360);
+		this->pushUplinkData(0174);
+		break;
+	case 'R': // RESET
+		// 11-001-001 10-110-010
+		this->pushUplinkData(0311);
+		this->pushUplinkData(0262);
+		break;
+	case 'C': // CLEAR
+		// 11-111-000 00-111-110
+		this->pushUplinkData(0370);
+		this->pushUplinkData(0076);
+		break;
+	case 'K': // KEY RELEASE
+		// 11-100-100 11-011-001
+		this->pushUplinkData(0344);
+		this->pushUplinkData(0331);
+		break;
+	case '+': 
+		// 11-101-000 10-111-010
+		this->pushUplinkData(0350);
+		this->pushUplinkData(0372);
+		break;
+	case '-': 
+		// 11-101-100 10-011-011
+		this->pushUplinkData(0354);
+		this->pushUplinkData(0233);
+		break;
+	case '1': 
+		// 10-000-111 11-000-001
+		this->pushUplinkData(0207);
+		this->pushUplinkData(0301);
+		break;
+	case '2': 
+		// 10-001-011 10-100-010
+		this->pushUplinkData(0213);
+		this->pushUplinkData(0242);
+		break;
+	case '3': 
+		// 10-001-111 10-000-011
+		this->pushUplinkData(0217);
+		this->pushUplinkData(0203);
+		break;
+	case '4': 
+		// 10-010-011 01-100-100
+		this->pushUplinkData(0223);
+		this->pushUplinkData(0144);
+		break;
+	case '5': 
+		// 10-010-111 01-000-101
+		this->pushUplinkData(0227);
+		this->pushUplinkData(0105);
+		break;
+	case '6': 
+		// 10-011-011 00-100-110
+		this->pushUplinkData(0233);
+		this->pushUplinkData(0046);
+		break;
+	case '7': 
+		// 10-011-111 00-000-111
+		this->pushUplinkData(0237);
+		this->pushUplinkData(0007);
+		break;
+	case '8': 
+		// 10-100-010 11-101-000
+		this->pushUplinkData(0242);
+		this->pushUplinkData(0350);
+		break;
+	case '9': 
+		// 10-100-110 11-001-001
+		this->pushUplinkData(0246);
+		this->pushUplinkData(0311);
+		break;
+	case '0': 
+		// 11-000-001 11-110-000
+		this->pushUplinkData(0301);
+		this->pushUplinkData(0360);
+		break;
+	default:
+		// Unknown keystroke!
+		return;
+	}
+}
+
+// Push uplink data word on stack
+void MCC::pushUplinkData(unsigned char data) {
+	uplink_data[uplink_size] = data;
+	uplink_size++;
+}
+
 // Uplink string to CM
 int MCC::CM_uplink(const unsigned char *data, int len) {
-	if (cm->pcm.mcc_size > 0) { return -1; } // If busy, bail
-	if (len > 1024) { return -2; } // Too long!
-	memcpy(cm->pcm.mcc_data, data, len);
-	cm->pcm.mcc_size = len;
+	int remsize = 1024;
+	remsize -= cm->pcm.mcc_size;
+	// if (cm->pcm.mcc_size > 0) { return -1; } // If busy, bail
+	if (len > remsize) { return -2; } // Too long!
+	memcpy((cm->pcm.mcc_data+cm->pcm.mcc_size), data, len);
+	cm->pcm.mcc_size += len;
 	return len;
+}
+
+// Send uplink buffer to CMC
+int MCC::CM_uplink_buffer() {
+	return(this->CM_uplink(uplink_data, uplink_size));
+	uplink_size = 0; // Reset
 }
 
 // Subthread Entry Point
@@ -1220,7 +1348,14 @@ int MCC::subThread(){
 		sprintf(form->purpose, "6-4 DEORBIT");
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
-		rtcc->Calculation(2, padForm);
+		// Clobber string
+		upString[0] = 0;
+		// Do math
+		rtcc->Calculation(2, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -1387,6 +1522,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	if (PCOption_Enabled == true) { SAVE_STRING("MCC_PCOption_Text", PCOption_Text); }
 	if (NCOption_Enabled == true) { SAVE_STRING("MCC_NCOption_Text", NCOption_Text); }
 	// Write PAD here!
+	// Write uplink buffer here!
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
 }
