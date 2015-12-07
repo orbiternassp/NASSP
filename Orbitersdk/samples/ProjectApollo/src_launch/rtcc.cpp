@@ -227,15 +227,23 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		VECTOR3 dV_LVLH;
 		double SVGET;
 		VECTOR3 R0, V0;
-		SV sv;
+		SV sv_A, sv_P;
 
 		SVGET = 0;
 		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
 
-		sv.gravref = AGCGravityRef(calcParams.src);
-		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
-		sv.R = R0;
-		sv.V = V0;
+		sv_A.gravref = AGCGravityRef(calcParams.src);
+		sv_A.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_A.R = R0;
+		sv_A.V = V0;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.tgt, SVGET, R0, V0); //State vector for uplink
+
+		sv_P.gravref = AGCGravityRef(calcParams.tgt);
+		sv_P.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_P.R = R0;
+		sv_P.V = V0;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -255,7 +263,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 
-		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv_A, true), CMCStateVectorUpdate(sv_P, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
