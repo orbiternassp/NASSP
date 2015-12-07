@@ -56,6 +56,8 @@ void RTCC::Init(MCC *ptr)
 
 void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 {
+	char* uplinkdata = new char[1000];
+
 	switch (fcn) {
 	case 1: // MISSION C PHASING BURN
 	{
@@ -94,8 +96,6 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		SV sv;
-		char* svstring = new char[1000];
-		char* svuplink = new char[1000];
 
 		SVGET = 0;
 		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
@@ -138,13 +138,11 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 
-		svstring = CMCStateVectorUpdate(sv, true);
-		svuplink = V71Update(svstring); //Ready for uplink
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
 		if (upString != NULL) {
 			// give to mcc
-			strncpy(upString, svuplink, 1024 * 3);
+			strncpy(upString, uplinkdata, 1024 * 3);
 		}
-		sprintf(oapiDebugString(), svuplink);
 	}
 	break;
 	case 3: //MISSION C BLOCK DATA UPDATE 2
@@ -227,6 +225,17 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7ManPADOpt opt;
 		double P30TIG;
 		VECTOR3 dV_LVLH;
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -245,6 +254,12 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	case 7: //MISSION C NCC2 MANEUVER
@@ -271,6 +286,12 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 0;
 
 		AP7ManeuverPAD(&opt, *form);
+
+		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	case 8: //MISSION C NSR MANEUVER
@@ -303,6 +324,12 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+
+		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	case 9: //MISSION C TPI MANEUVER
@@ -356,8 +383,21 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		EntryOpt entopt;
 		EarthEntryPADOpt opt;
+		REFSMMATOpt refsopt;
 		double P30TIG, latitude, longitude;
+		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH;
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
 		
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = getGETBase();
@@ -371,11 +411,20 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		entopt.entrylongmanual = true;
 
 		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude); //Target Load for uplink
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = getGETBase();
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATdirect = true;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
 	
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = getGETBase();
 		opt.P30TIG = P30TIG;
-		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.REFSMMAT = REFSMMAT;
 		opt.vessel = calcParams.src;
 		opt.preburn = true;
 		opt.lat = latitude;
@@ -385,15 +434,33 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		sprintf(form->Area[0], "164-1A");
 		form->Lat[0] = latitude*DEG;
 		form->Lng[0] = longitude*DEG;
+
+		sprintf(uplinkdata, "%s%s%s", CMCDesiredREFSMMATUpdate(REFSMMAT), CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	case 30: //GENERIC STATE VECTOR UPDATE
 	{
 		double SVGET;
 		VECTOR3 R0, V0;
+		SV sv;
 
 		SVGET = 0;
 		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	}
@@ -2033,7 +2100,7 @@ char* RTCC::CMCExternalDeltaVUpdate(double P30TIG, VECTOR3 dV_LVLH)
 	emem[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
 	emem[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
 
-	str = PleaseEnter(emem, 10);
+	str = V71Update(emem, 10);
 	return str;
 }
 
@@ -2111,24 +2178,125 @@ char* RTCC::CMCStateVectorUpdate(SV sv, bool csm)
 		emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
 		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
-	str = PleaseEnter(emem, 17);
+	str = V71Update(emem, 17);
 	return str;
 }
 
-char* RTCC::PleaseEnter(int *emem, int n)
+char* RTCC::V71Update(int *emem, int n)
 {
 	char* list = new char[1000];
-	sprintf(list, "%dE", emem[0]);
+	sprintf(list, "V71E%dE", emem[0]);
 	for (int i = 1;i < n;i++)
 	{
 		sprintf(list, "%s%dE", list, emem[i]);
 	}
+	sprintf(list, "%sV33E", list);
 	return list;
 }
 
-char* RTCC::V71Update(char* update)
+char* RTCC::CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT)
 {
-	char* list = new char[1000];
-	sprintf(list, "V71E%sV33E", update);
-	return list;
+	MATRIX3 a;
+	int emem[24];
+	char* str = new char[1000];
+
+	a = REFSMMAT;
+
+	emem[0] = 24;
+	emem[1] = 306;
+	emem[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+	emem[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+	emem[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+	emem[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+	emem[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+	emem[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+	emem[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+	emem[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+	emem[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+	emem[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+	emem[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+	emem[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+	emem[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+	emem[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+	emem[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+	emem[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+	emem[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+	emem[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+
+	str = V71Update(emem, 20);
+	return str;
+}
+
+char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT)
+{
+	MATRIX3 a;
+	int emem[24];
+	char* str = new char[1000];
+
+	a = REFSMMAT;
+
+	emem[0] = 24;
+	emem[1] = 1735;
+	emem[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+	emem[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+	emem[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+	emem[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+	emem[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+	emem[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+	emem[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+	emem[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+	emem[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+	emem[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+	emem[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+	emem[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+	emem[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+	emem[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+	emem[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+	emem[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+	emem[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+	emem[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+
+	str = V71Update(emem, 20);
+	return str;
+}
+
+char* RTCC::CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH)
+{
+	int emem[24];
+	char* str = new char[1000];
+	double getign = P30TIG;
+
+	emem[0] = 16;
+	emem[1] = 3400;
+	emem[2] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 1);
+	emem[3] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 0);
+	emem[4] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 1);
+	emem[5] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 0);
+	emem[6] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
+	emem[7] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
+	emem[8] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
+	emem[9] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
+	emem[10] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
+	emem[11] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
+	emem[12] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
+	emem[13] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+
+	str = V71Update(emem, 14);
+	return str;
+}
+
+char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
+{
+	int emem[24];
+	char* str = new char[1000];
+
+	emem[0] = 06;
+	emem[1] = 3400;
+	emem[2] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 1);
+	emem[3] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 0);
+	emem[4] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 1);
+	emem[5] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 0);
+
+	str = V71Update(emem, 6);
+	return str;
 }

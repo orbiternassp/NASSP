@@ -242,8 +242,11 @@ private:
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
 	char* CMCStateVectorUpdate(SV sv, bool csm);
-	char* PleaseEnter(int* emem, int n);
-	char* V71Update(char* update);
+	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
+	char* CMCEntryUpdate(double LatSPL, double LngSPL);
+	char* V71Update(int* emem, int n);
 };
 
 
