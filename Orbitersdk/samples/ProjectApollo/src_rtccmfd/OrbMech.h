@@ -160,12 +160,14 @@ namespace OrbMech {
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
 	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDLE plan, double mjd0, double E, OBJHANDLE gravref);
-	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB);
-	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E);
+	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
+	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E);
 	VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB);
 	MATRIX3 CALCSMSC(VECTOR3 GA);
 	VECTOR3 CALCSGTA(MATRIX3 des);
+	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
+	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
@@ -188,6 +190,7 @@ namespace OrbMech {
 	void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
+	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	//private:
 		//VESSEL* vessel;
 		//double mu;

@@ -538,7 +538,7 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 
 VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu)
 {
-	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_neu, A, root;
+	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_new, A, root;
 	int nMax, n;
 	VECTOR3 c12, Vt1, Vt2;
 
@@ -576,7 +576,7 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		if (N == 0)
 		{
 			double xi = fraction_xi(x);
-			h1 = OrbMech::power(l + x, 2.0)*(1.0 + xi*(1.0 + 3.0*x)) / (1.0 + 2.0*x + l)*(3.0 + x*(1.0 + 4.0*xi));
+			h1 = OrbMech::power(l + x, 2.0)*(1.0 + xi*(1.0 + 3.0*x)) / ((1.0 + 2.0*x + l)*(3.0 + x*(1.0 + 4.0*xi)));
 			h2 = m*(1.0 + (x - l)*xi) / ((1.0 + 2.0*x + l)*(3.0 + x*(1.0 + 4.0*xi)));
 		}
 		else
@@ -594,9 +594,9 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 			z = 2.0 * cos(1.0 / 3.0 * acos(sqrt(B + 1.0)));
 		}
 		y = 2.0 / 3.0 * (1.0 + h1)*(sqrt(B + 1.0) / z + 1.0);
-		x_neu = sqrt(OrbMech::power((1.0 - l) / 2.0, 2) + m / y / y) - (1.0 + l) / 2.0;
-		ratio = x - x_neu;
-		x = x_neu;
+		x_new = sqrt(OrbMech::power((1.0 - l) / 2.0, 2) + m / y / y) - (1.0 + l) / 2.0;
+		ratio = x - x_new;
+		x = x_new;
 	}
 
 	Vt1 = ((R2 - R1) + R1*s*OrbMech::power(1.0 + lambda, 2.0) * (l + x) / (r1*(1.0 + x))) * 1.0 / (lambda*(1 + lambda))*sqrt(mu*(1.0 + x) / (2.0 * OrbMech::power(s, 3.0) * (l + x)));
@@ -635,10 +635,10 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		A = OrbMech::power((sqrt(B) + sqrt(B + 1.0)), 1.0 / 3.0);
 		y = 2.0 / 3.0 * sqrt(x)*(1.0 + h1)*(sqrt(B + 1.0) / (A + 1.0 / A) + 1.0);
 		//y = 2 / 3 * (1 + h1)*(sqrt(B + 1) / z + 1);
-		x_neu = 0.5*((m / y / y - (1.0 + l)) - sqrt(OrbMech::power(m / y / y - (1.0 + l), 2) - 4.0 * l));
+		x_new = 0.5*((m / y / y - (1.0 + l)) - sqrt(OrbMech::power(m / y / y - (1.0 + l), 2) - 4.0 * l));
 
-		ratio = x - x_neu;
-		x = x_neu;
+		ratio = x - x_new;
+		x = x_new;
 	}
 
 	Vt2 = ((R2 - R1) + R1*s*OrbMech::power(1.0 + lambda, 2.0) * (l + x) / (r1*(1.0 + x))) * 1.0 / (lambda*(1.0 + lambda))*sqrt(mu*(1.0 + x) / (2.0 * OrbMech::power(s, 3.0) * (l + x)));
@@ -1905,7 +1905,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	return dt;
 }
 
-VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB)
+VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA)
 {
 	MATRIX3 SBNB;
 	VECTOR3 U_NB, S_SM, U_LOS;
@@ -1913,13 +1913,13 @@ VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB)
 
 	a = -0.5676353234;
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-	U_NB = mul(SBNB, _V(0, 0, 1));
+	U_NB = mul(SBNB, _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
 	S_SM = mul(transpose_matrix(SMNB), U_NB);
 	U_LOS = mul(transpose_matrix(REFSMMAT), S_SM);
 	return U_LOS;
 }
 
-int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E)
+int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 {
 	VECTOR3 ustar;
 	double dotpr, last;
@@ -1931,7 +1931,7 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E)
 	{
 		ustar = navstars[i];
 		dotpr = dotp(ustar, U_LOS);
-		if (dotpr>last && isnotocculted(U_LOS,R_C,R_E) && dotpr>cos(50.0*RAD))
+		if (dotpr>last && isnotocculted(U_LOS,R_C,R_E) && dotpr>cos(ang_max))
 		{
 			star = i;
 			last = dotpr;
@@ -2722,6 +2722,48 @@ VECTOR3 CALCSGTA(MATRIX3 des)
 	return _V(tx, ty, tz);
 }
 
+void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
+{
+	MATRIX3 SBNB, NBSB;
+	VECTOR3 X_SB, Y_SB, Z_SB, S_SB, U_TPA;
+	double a, sinSA, cosSA;
+
+	X_SB = _V(1.0, 0.0, 0.0);
+	Z_SB = _V(0.0, 0.0, 1.0);
+	Y_SB = _V(0.0, 1.0, 0.0);
+
+	a = -0.5676353234;
+	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+	NBSB = transpose_matrix(SBNB);
+
+	S_SB = mul(NBSB, mul(SMNB, S_SM));
+	U_TPA = unit(crossp(Z_SB, S_SB));
+	sinSA = dotp(U_TPA, -X_SB);
+	cosSA = dotp(U_TPA, Y_SB);
+	SA = atan3(sinSA, cosSA);
+	TA = acos(dotp(Z_SB, S_SB));
+}
+
+void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP) 
+{
+	MATRIX3 SBNB, NBSB;
+	VECTOR3 X_SB, Y_SB, Z_SB, S_SB;
+	double a;
+
+	X_SB = _V(1.0, 0.0, 0.0);
+	Z_SB = _V(0.0, 0.0, 1.0);
+	Y_SB = _V(0.0, 1.0, 0.0);
+
+	a = -PI05;
+	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+	NBSB = transpose_matrix(SBNB);
+
+	S_SB = mul(NBSB, mul(SMNB, S_SM));
+	
+	SXP = asin(S_SB.x);
+	SPA = atan(-S_SB.y / S_SB.z);
+}
+
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
 {
 	double a, e, epsilon;
@@ -2971,23 +3013,10 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER
 
 void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
 {
-	MATRIX3 SMNB, Q1, Q2, Q3, NBSB, SBNB;
-	double OGA, IGA, MGA, a, cosSA, TA, SA, sinSA;
-	VECTOR3 U_LOS, USTAR, Y_SB, Z_SB, S_SM, S_SB, U_TPA, X_SB;
+	MATRIX3 SMNB, Q1, Q2, Q3;
+	double OGA, IGA, MGA, TA, SA;
+	VECTOR3 U_LOS, USTAR, S_SM;
 	int star;
-
-	/*if (REFSMMATopt == 0)
-	{
-	OGA = 0;
-	IGA = 0;
-	MGA = 0;
-	}
-	else
-	{
-	OGA = PI; //ROLL
-	IGA = PI; //PITCH
-	MGA = 0;  //YAW
-	}*/
 
 	OGA = IMU.x;
 	IGA = IMU.y;
@@ -2999,8 +3028,8 @@ void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &star
 
 	SMNB = mul(Q3, mul(Q2, Q1));
 
-	U_LOS = ULOS(REFSMMAT, SMNB);
-	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E);
+	U_LOS = ULOS(REFSMMAT, SMNB, 0.0, 0.0);
+	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 50.0*RAD);
 
 	if (star == -1)
 	{
@@ -3014,26 +3043,55 @@ void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &star
 
 		USTAR = navstars[star];
 
-		X_SB = _V(1.0, 0.0, 0.0);
-		Z_SB = _V(0.0, 0.0, 1.0);
-		Y_SB = _V(0.0, 1.0, 0.0);
-
-		a = -0.5676353234;
-		SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-		NBSB = transpose_matrix(SBNB);
-
 		S_SM = mul(REFSMMAT, USTAR);
-		S_SB = mul(NBSB, mul(SMNB, S_SM));
-		U_TPA = unit(crossp(Z_SB, S_SB));
-		sinSA = dotp(U_TPA, -X_SB);
-		cosSA = dotp(U_TPA, Y_SB);
-		SA = atan3(sinSA, cosSA);
-		TA = acos(dotp(Z_SB, S_SB));
+		CALCSXA(SMNB, S_SM, TA, SA);
 
 		staroct = decimal_octal(star + 1);
 
 		trunnion = TA;
 		shaft = SA;
+	}
+
+	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
+}
+
+void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
+{
+	MATRIX3 SMNB, Q1, Q2, Q3;
+	double OGA, IGA, MGA;
+	VECTOR3 U_LOS, USTAR, S_SM;
+	int star;
+
+	OGA = IMU.x;
+	IGA = IMU.y;
+	MGA = IMU.z;
+
+	Q1 = _MRy(IGA);
+	Q2 = _MRz(MGA);
+	Q3 = _MRx(OGA);
+
+	SMNB = mul(Q3, mul(Q2, Q1));
+
+	U_LOS = ULOS(REFSMMAT, SMNB, 57.47*RAD, 0.0);
+	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 31.5*RAD);
+
+	if (star == -1)
+	{
+		staroct = 0;
+
+		spa = 0;
+		sxp = 0;
+	}
+	else
+	{
+
+		USTAR = navstars[star];
+
+		S_SM = mul(REFSMMAT, USTAR);
+		CALCCOASA(SMNB, S_SM, spa, sxp);
+
+		staroct = decimal_octal(star + 1);
+
 	}
 
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
@@ -3060,7 +3118,8 @@ MATRIX3 skew(VECTOR3 u)
 
 VECTOR3 RotateVector(VECTOR3 rotaxis, double angle, VECTOR3 vec)
 {
-	return vec*cos(angle) + crossp(rotaxis, vec)*sin(angle) + rotaxis*dotp(rotaxis,vec)*(1.0 - cos(angle));
+	VECTOR3 k = unit(rotaxis);
+	return vec*cos(angle) + crossp(k, vec)*sin(angle) + k*dotp(k,vec)*(1.0 - cos(angle));
 }
 
 double round(double number)
