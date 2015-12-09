@@ -530,6 +530,8 @@ void MCC::Init(Saturn *vs){
 	sprintf(PCOption_Text, "Roger");
 	NCOption_Enabled = false;
 	sprintf(NCOption_Text, "Negative");
+
+	uplink_size = 0;
 }
 
 void MCC::setState(int newState){
@@ -853,10 +855,11 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_C_COAST1:
-				// Ends with 6-4 Deorbit Maneuver
+				// 6-4 Deorbit Maneuver update to Block Data 2
 				switch (SubState) {
 				case 0:
 					allocPad(4); // Allocate AP7 Maneuver Pad
+					addMessage("P00 and accept");
 					if (padForm != NULL) {
 						// If success
 						startSubthread(2); // Start subthread to fill PAD
@@ -873,18 +876,19 @@ void MCC::TimeStep(double simdt){
 						setSubState(2);
 						// The uplink should also be ready, so flush the uplink buffer to the CMC
 						this->CM_uplink_buffer();
+						uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
 					if (cm->GetMissionTime() > 10 * 60 * 60 + 30 * 60)
 					{
-						setState(MST_C_COAST3);
+						setState(MST_C_COAST2);
 						setSubState(0);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST3: //Ends with BLOCK DATA 2
+			case MST_C_COAST2: //Block Data 2 to 2nd Phasing Maneuver Update
 				switch (SubState) {
 				case 0:
 					allocPad(1);// Allocate AP7 Block Data Pad
@@ -907,13 +911,13 @@ void MCC::TimeStep(double simdt){
 				case 2: // Await burn
 					if (cm->GetMissionTime() > 14 * 60 * 60 + 16 * 60)
 					{
-						setState(MST_C_COAST4);
+						setState(MST_C_COAST3);
 						setSubState(0);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST4: // Ends at 2ND PHASING BURN
+			case MST_C_COAST3: // 2nd Phasing Maneuver Update to Block Data 3
 				switch (SubState) {
 				case 0:
 					allocPad(4);// Allocate AP7 Maneuver Pad
@@ -936,12 +940,12 @@ void MCC::TimeStep(double simdt){
 				case 2: // Await burn
 					if (cm->GetMissionTime() > 21 * 60 * 60 + 50 * 60)
 					{
-						setState(MST_C_COAST5);
+						setState(MST_C_COAST4);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST5: // //Ends with BLOCK DATA 3
+			case MST_C_COAST4: // Block Data 3 to Preliminary NCC1 Update
 				switch (SubState) {
 				case 0:
 					allocPad(1);// Allocate AP7 Block Data Pad
@@ -964,15 +968,16 @@ void MCC::TimeStep(double simdt){
 				case 2: // Await burn
 					if (cm->GetMissionTime() > 22 * 60 * 60 + 25 * 60)
 					{
-						setState(MST_C_COAST6);
+						setState(MST_C_COAST5);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST6: // Ends at 1st SPS BURN (NCC1 BURN)
+			case MST_C_COAST5: // Preliminary NCC1 Update to Final NCC1 Update
 				switch (SubState) {
 				case 0:
 					allocPad(4);// Allocate AP7 Maneuver Pad
+					addMessage("P00 and accept");
 					if (padForm != NULL) {
 						// If success
 						startSubthread(6); // Start subthread to fill PAD
@@ -987,20 +992,24 @@ void MCC::TimeStep(double simdt){
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(2);
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
+						uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
-					if (cm->GetMissionTime() > 27 * 60 * 60)
+					if (cm->GetMissionTime() > 25 * 60 * 60 + 30 * 60)
 					{
-						setState(MST_C_COAST7);
+						setState(MST_C_COAST6);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST7: // Ends at NCC2 BURN
+			case MST_C_COAST6: // Preliminary NCC1 Update to Final NCC1 Update
 				switch (SubState) {
 				case 0:
 					allocPad(4);// Allocate AP7 Maneuver Pad
+					addMessage("P00 and accept");
 					if (padForm != NULL) {
 						// If success
 						startSubthread(7); // Start subthread to fill PAD
@@ -1015,20 +1024,24 @@ void MCC::TimeStep(double simdt){
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(2);
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
+						uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
-					if (cm->GetMissionTime() > 27 * 60 * 60 + 32 * 60)
+					if (cm->GetMissionTime() > 27 * 60 * 60)
 					{
-						setState(MST_C_COAST8);
+						setState(MST_C_COAST7);
 					}
 					break;
 				}
 				break;
-			case MST_C_COAST8: // Ends at 2ND SPS BURN (NSR BURN)
+			case MST_C_COAST7: // Final NCC1 Update to NCC2 Update
 				switch (SubState) {
 				case 0:
 					allocPad(4);// Allocate AP7 Maneuver Pad
+					addMessage("P00 and accept");
 					if (padForm != NULL) {
 						// If success
 						startSubthread(8); // Start subthread to fill PAD
@@ -1043,6 +1056,40 @@ void MCC::TimeStep(double simdt){
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(2);
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
+						uplink_size = 0; // Reset
+					}
+					break;
+				case 2: // Await burn
+					if (cm->GetMissionTime() > 27 * 60 * 60 + 32 * 60)
+					{
+						setState(MST_C_COAST8);
+					}
+					break;
+				}
+				break;
+			case MST_C_COAST8: // NCC2 Update to NSR Update
+				switch (SubState) {
+				case 0:
+					allocPad(4);// Allocate AP7 Maneuver Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(9); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
+						uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
@@ -1053,13 +1100,13 @@ void MCC::TimeStep(double simdt){
 					break;
 				}
 				break;
-			case MST_C_COAST9: // Ends at TPI BURN
+			case MST_C_COAST9: // NSR Update to TPI Update
 				switch (SubState) {
 				case 0:
 					allocPad(5);// Allocate AP7 TPI Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(9); // Start subthread to fill PAD
+						startSubthread(10); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1081,13 +1128,13 @@ void MCC::TimeStep(double simdt){
 					break;
 				}
 				break;
-			case MST_C_COAST10: // Ends at SEPARATION BURN
+			case MST_C_COAST10: // TPI Update to Final Separation Maneuver update
 				switch (SubState) {
 				case 0:
 					allocPad(4);// Allocate AP7 Maneuver Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(10); // Start subthread to fill PAD
+						startSubthread(11); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1109,13 +1156,13 @@ void MCC::TimeStep(double simdt){
 					break;
 				}
 				break;
-			case MST_C_COAST12:
+			case MST_C_COAST11:
 				switch (SubState) {
 				case 0:
 					allocPad(6);
 					if (padForm != NULL) {
 						// If success
-						startSubthread(6); // Start subthread to fill PAD
+						startSubthread(12); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1316,7 +1363,6 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 // Send uplink buffer to CMC
 int MCC::CM_uplink_buffer() {
 	return(this->CM_uplink(uplink_data, uplink_size));
-	uplink_size = 0; // Reset
 }
 
 // Subthread Entry Point
@@ -1399,64 +1445,105 @@ int MCC::subThread(){
 		Result = 0; // Done
 	}
 	break;
-	case 6: // FILL PAD AP7MNV FOR NCC1 MANEUVER
+	case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
 	{
 		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		rtcc->Calculation(6, padForm);
+		// Clobber string
+		upString[0] = 0;
+		//Do math
+		rtcc->Calculation(6, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
 		Result = 0; // Done
 	}
 	break;
-	case 7: // FILL PAD AP7MNV FOR NCC2 MANEUVER
+	case 7: // FILL FINAL PAD AP7MNV FOR NCC1 MANEUVER
 	{
 		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		rtcc->Calculation(7, padForm);
+																							 // Clobber string
+		upString[0] = 0;
+		//Do math
+		rtcc->Calculation(7, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
 		Result = 0; // Done
 	}
 	break;
-	case 8: // FILL PAD AP7MNV FOR NSR MANEUVER
+	case 8: // FILL PAD AP7MNV FOR NCC2 MANEUVER
 	{
 		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		rtcc->Calculation(8, padForm);
+		// Clobber string
+		upString[0] = 0;
+		//Do math
+		rtcc->Calculation(8, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
 		Result = 0; // Done
 	}
 	break;
-	case 9: // FILL PAD AP7TPI FOR AP7 TPI PAD
+	case 9: // FILL PAD AP7MNV FOR NSR MANEUVER
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		 // Clobber string
+		upString[0] = 0;
+		//Do math
+		rtcc->Calculation(9, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+		Result = 0; // Done
+	}
+	break;
+	case 10: // FILL PAD AP7TPI FOR AP7 TPI PAD
 		{
 			AP7TPI * form = (AP7TPI *)padForm;
 			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			rtcc->Calculation(9, padForm);
+			rtcc->Calculation(10, padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
 			Result = 0; // Done
 		}
 		break;
-	case 10: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
+	case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
-			rtcc->Calculation(10, padForm);
+			rtcc->Calculation(11, padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
@@ -1475,6 +1562,23 @@ int MCC::subThread(){
 			Result = 0; // Done
 		}
 		break;
+	case 30: //GENERIC CSM STATE VECTOR UPDATE
+	{
+		//padForm = NULL;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		// Clobber string
+		upString[0] = 0;
+		//Do math
+		rtcc->Calculation(30, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
+		//padState = 0;
+		Result = 0; // Done
+	}
+	break;
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.

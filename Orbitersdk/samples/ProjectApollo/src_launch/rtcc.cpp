@@ -57,6 +57,7 @@ void RTCC::Init(MCC *ptr)
 void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 {
 	char* uplinkdata = new char[1000];
+	bool preliminary = true;
 
 	switch (fcn) {
 	case 1: // MISSION C PHASING BURN
@@ -219,7 +220,11 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7BlockData(&opt, *form);
 	}
 	break;
-	case 6: //MISSION C NCC1 MANEUVER
+	case 7://MISSION C FINAL NCC1 MANEUVER
+	{
+		preliminary = false;
+	}
+	case 6: //MISSION C PRELIMINARY NCC1 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -258,8 +263,24 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.engopt = 0;
 		opt.HeadsUp = true;
 		opt.sxtstardtime = -30 * 60;
-		opt.REFSMMAT = GetREFSMMATfromAGC();
-		opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
+		if (preliminary)
+		{
+			REFSMMATOpt refsopt;
+
+			refsopt.GETbase = getGETBase();
+			refsopt.REFSMMATdirect = true;
+			refsopt.REFSMMATopt = 2;
+			refsopt.REFSMMATTime = 23 * 60 * 60 + 24 * 60 + 8;
+			refsopt.vessel = calcParams.src;
+
+			opt.REFSMMAT = REFSMMATCalc(&refsopt);
+			opt.navcheckGET = 25 * 60 * 60 + 41 * 60 + 55;
+		}
+		else
+		{
+			opt.REFSMMAT = GetREFSMMATfromAGC();
+			opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
+		}
 
 		AP7ManeuverPAD(&opt, *form);
 
@@ -270,7 +291,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 7: //MISSION C NCC2 MANEUVER
+	case 8: //MISSION C NCC2 MANEUVER
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
@@ -302,7 +323,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 8: //MISSION C NSR MANEUVER
+	case 9: //MISSION C NSR MANEUVER
 	{
 		CDHOpt cdhopt;
 		AP7ManPADOpt opt;
@@ -340,7 +361,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 9: //MISSION C TPI MANEUVER
+	case 10: //MISSION C TPI MANEUVER
 	{
 		LambertMan lambert;
 		AP7TPIPADOpt opt;
@@ -366,7 +387,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7TPIPAD(&opt, *form);
 	}
 	break;
-	case 10: //MISSION C FINAL SEPARATION MANEUVER
+	case 11: //MISSION C FINAL SEPARATION MANEUVER
 	{
 		AP7ManPADOpt opt;
 
@@ -617,14 +638,14 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	double angle;
 	MATRIX3 Q_Xx2, Q_Xx;
 
-	k = -RP2 / length(RP2);
-	j = crossp(VP2, RP2) / length(RP2) / length(VP2);
+	k = -unit(RP2);
+	j = unit(crossp(VP2, RP2));
 	i = crossp(j, k);
 	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-	
+
 	RP2off = RP2 + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
 
-	if (lambert->PhaseAngle != 0)
+	if (lambert->PhaseAngle != 0.0)
 	{
 		angle = lambert->PhaseAngle;
 	}
