@@ -530,7 +530,7 @@ void MCC::Init(Saturn *vs){
 	sprintf(PCOption_Text, "Roger");
 	NCOption_Enabled = false;
 	sprintf(NCOption_Text, "Negative");
-
+	// Uplink items
 	uplink_size = 0;
 }
 
@@ -858,8 +858,7 @@ void MCC::TimeStep(double simdt){
 				// 6-4 Deorbit Maneuver update to Block Data 2
 				switch (SubState) {
 				case 0:
-					allocPad(4); // Allocate AP7 Maneuver Pad
-					addMessage("P00 and accept");
+					allocPad(4); // Allocate AP7 Maneuver Pad					
 					if (padForm != NULL) {
 						// If success
 						startSubthread(2); // Start subthread to fill PAD
@@ -870,16 +869,35 @@ void MCC::TimeStep(double simdt){
 					setSubState(1);
 					// FALL INTO
 				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
+					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
+						// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+						addMessage("Ready for uplink?");
+						sprintf(PCOption_Text, "Ready for uplink");
+						PCOption_Enabled = true;
 						setSubState(2);
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						uplink_size = 0; // Reset
 					}
 					break;
-				case 2: // Await burn
+				case 2: // Awaiting user response
+				case 3: // Negative response / not ready for uplink
+					break;				
+				case 4: // Ready for uplink
+					if (SubStateTime > 1 && padState > -1) {
+						// The uplink should also be ready, so flush the uplink buffer to the CMC
+						this->CM_uplink_buffer();
+						// uplink_size = 0; // Reset
+						PCOption_Enabled = false; // No longer needed
+						setSubState(5);
+					}
+					break;
+				case 5: // Await uplink completion
+					if (cm->pcm.mcc_size == 0) {
+						addMessage("Uplink completed!");
+						setSubState(6);
+					}
+					break;
+				case 6: // Await burn
 					if (cm->GetMissionTime() > 10 * 60 * 60 + 30 * 60)
 					{
 						setState(MST_C_COAST2);
@@ -994,7 +1012,7 @@ void MCC::TimeStep(double simdt){
 						setSubState(2);
 						// The uplink should also be ready, so flush the uplink buffer to the CMC
 						this->CM_uplink_buffer();
-						uplink_size = 0; // Reset
+						// uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
@@ -1026,7 +1044,7 @@ void MCC::TimeStep(double simdt){
 						setSubState(2);
 						// The uplink should also be ready, so flush the uplink buffer to the CMC
 						this->CM_uplink_buffer();
-						uplink_size = 0; // Reset
+						// uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
@@ -1058,7 +1076,7 @@ void MCC::TimeStep(double simdt){
 						setSubState(2);
 						// The uplink should also be ready, so flush the uplink buffer to the CMC
 						this->CM_uplink_buffer();
-						uplink_size = 0; // Reset
+						// uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
@@ -1089,7 +1107,7 @@ void MCC::TimeStep(double simdt){
 						setSubState(2);
 						// The uplink should also be ready, so flush the uplink buffer to the CMC
 						this->CM_uplink_buffer();
-						uplink_size = 0; // Reset
+						// uplink_size = 0; // Reset
 					}
 					break;
 				case 2: // Await burn
@@ -1362,7 +1380,11 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 
 // Send uplink buffer to CMC
 int MCC::CM_uplink_buffer() {
-	return(this->CM_uplink(uplink_data, uplink_size));
+	int rv = this->CM_uplink(uplink_data, uplink_size);
+	if (rv > 0) {
+		uplink_size = 0; // Reset
+	}
+	return(rv);
 }
 
 // Subthread Entry Point
