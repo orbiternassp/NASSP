@@ -1148,75 +1148,101 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			SStoHHMMSS(G->P30TIG, hh, mm, secs);
 
-			skp->Text(7 * W / 8, 3 * H / 23, "N47", 3);
-			skp->Text(7 * W / 8, 4 * H / 23, "N48", 3);
-			skp->Text(7 * W / 8, 6 * H / 23, "N33", 3);
-			skp->Text(7 * W / 8, 9 * H / 23, "N81", 3);
-			skp->Text(7 * W / 8, 15 * H / 23, "N44", 3);
+			skp->Text(7 * W / 8, 3 * H / 26, "N47", 3);
+			skp->Text(7 * W / 8, 4 * H / 26, "N48", 3);
+			skp->Text(7 * W / 8, 6 * H / 26, "N33", 3);
+			skp->Text(7 * W / 8, 9 * H / 26, "N81", 3);
+			skp->Text(7 * W / 8, 15 * H / 26, "N44", 3);
 
 			sprintf(Buffer, "%+06.0f WGT", G->ManPADWeight);
-			skp->Text((int)(3.5 * W / 8), 3 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+07.2f PTRIM", G->ManPADPTrim*DEG);
-			skp->Text((int)(3.5 * W / 8), 4 * H / 23, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.2f YTRIM", G->ManPADYTrim*DEG);
-			skp->Text((int)(3.5 * W / 8), 5 * H / 23, Buffer, strlen(Buffer));
+			if (G->ManPADSPS == 0)
+			{
+				sprintf(Buffer, "%+07.2f PTRIM", G->ManPADPTrim*DEG);
+				skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.2f YTRIM", G->ManPADYTrim*DEG);
+				skp->Text((int)(3.5 * W / 8), 5 * H / 26, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text((int)(3.5 * W / 8), 4 * H / 26, "N/A      PTRIM", 14);
+				skp->Text((int)(3.5 * W / 8), 5 * H / 26, "N/A      YTRIM", 14);
+			}
 
 			sprintf(Buffer, "%+06d HRS GETI", hh);
-			skp->Text((int)(3.5 * W / 8), 6 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 6 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+06d MIN", mm);
-			skp->Text((int)(3.5 * W / 8), 7 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 7 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
-			skp->Text((int)(3.5 * W / 8), 8 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 8 * H / 26, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 9 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 9 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 10 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 10 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 11 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 11 * H / 26, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "XXX%03.0f R", OrbMech::imulimit(G->IMUangles.x*DEG));
-			skp->Text((int)(3.5 * W / 8), 12 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 12 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f P", OrbMech::imulimit(G->IMUangles.y*DEG));
-			skp->Text((int)(3.5 * W / 8), 13 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 13 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f Y", OrbMech::imulimit(G->IMUangles.z*DEG));
-			skp->Text((int)(3.5 * W / 8), 14 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 14 * H / 26, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f HA", min(9999.9, G->ManPADApo / 1852.0));
-			skp->Text((int)(3.5 * W / 8), 15 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 15 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f HP", G->ManPADPeri / 1852.0);
-			skp->Text((int)(3.5 * W / 8), 16 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f VT", length(G->dV_LVLH) / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 17 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
 
 			SStoHHMMSS(G->ManPADBurnTime, hh, mm, secs);
 
 			sprintf(Buffer, "XXX%d:%02.0f BT (MIN:SEC)", mm, secs);
-			skp->Text((int)(3.5 * W / 8), 18 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 18 * H / 26, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f VC", G->ManPADDVC / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 19 * H / 23, Buffer, strlen(Buffer));
+			skp->Text((int)(3.5 * W / 8), 19 * H / 26, Buffer, strlen(Buffer));
 
 			//skp->Text(4 * W / 8, 13 * H / 20, "SXT star check", 14);
 
 			if (G->Manstaroct == 0)
 			{
 				sprintf(Buffer, "N/A     SXTS");
-				skp->Text((int)(3.5 * W / 8), 20 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
 				sprintf(Buffer, "N/A     SFT");
-				skp->Text((int)(3.5 * W / 8), 21 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
 				sprintf(Buffer, "N/A     TRN");
-				skp->Text((int)(3.5 * W / 8), 22 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
 			}
 			else
 			{
 				sprintf(Buffer, "XXXX%02d SXTS", G->Manstaroct);
-				skp->Text((int)(3.5 * W / 8), 20 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%+07.2f SFT", G->Manshaft*DEG);
-				skp->Text((int)(3.5 * W / 8), 21 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%+07.3f TRN", G->Mantrunnion*DEG);
-				skp->Text((int)(3.5 * W / 8), 22 * H / 23, Buffer, strlen(Buffer));
+				skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
+			}
+			if (G->ManCOASstaroct == 0)
+			{
+				sprintf(Buffer, "N/A     BSS");
+				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "N/A     SPA");
+				skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "N/A     SXP");
+				skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				sprintf(Buffer, "XXXX%02d BSS", G->ManCOASstaroct);
+				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.2f SPA", G->ManBSSpitch*DEG);
+				skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.3f SXP", G->ManBSSXPos*DEG);
+				skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
 			}
 		}
 		else if (G->manpadopt == 1)
