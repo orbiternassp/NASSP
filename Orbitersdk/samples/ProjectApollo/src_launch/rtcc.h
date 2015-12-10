@@ -227,6 +227,7 @@ public:
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
+	void NavCheckPAD(SV sv, AP7NAV &pad);
 
 	MCC *mcc;
 	struct calculationParameters calcParams;

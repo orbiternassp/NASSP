@@ -192,6 +192,9 @@ ARCore::ARCore(VESSEL* v)
 	Mantrunnion = 0.0;
 	Manshaft = 0.0;
 	Manstaroct = 0;
+	ManCOASstaroct = 0;
+	ManBSSpitch = 0.0;
+	ManBSSXPos = 0.0;
 	Entrytrunnion = 0.0;
 	Entryshaft = 0.0;
 	Entrystaroct = 0;
@@ -800,7 +803,9 @@ void ARCore::ManeuverPAD()
 
 	OrbMech::oneclickcoast(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, sxtstardtime*60.0, Rsxt, Vsxt, gravref, gravref);
 
-	OrbMech::checkstar(REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD),Rsxt, oapiGetSize(gravref), Manstaroct, Mantrunnion, Manshaft);
+	OrbMech::checkstar(REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD),Rsxt, oapiGetSize(maneuverplanet), Manstaroct, Mantrunnion, Manshaft);
+
+	OrbMech::coascheckstar(REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, oapiGetSize(maneuverplanet), ManCOASstaroct, ManBSSpitch, ManBSSXPos);
 
 	ManPADWeight = CSMmass / 0.45359237;
 	ManPADLMWeight = LMmass / 0.45359237;
@@ -1588,7 +1593,7 @@ int ARCore::subThread()
 			mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
 			DV = mul(mat, Entry_DV);
 
-			OrbMech::impulsive(vessel, R, V, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+			OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor/24.0/3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
 
 			mu = GGRAV*oapiGetMass(gravref);
 			OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);

@@ -406,6 +406,188 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7ManeuverPAD(&opt, *form);
 	}
 	break;
+	case 12: //MISSION C BLOCK DATA 4
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[7] = { -163.3*RAD, 138.8*RAD, 138.5*RAD, 135.6*RAD, -18.0*RAD, -24.0*RAD, -25.4*RAD };
+		double GETI[7] = { OrbMech::HHMMSSToSS(32,53,42),OrbMech::HHMMSSToSS(34,13,54),OrbMech::HHMMSSToSS(35,49,27),OrbMech::HHMMSSToSS(37,24,28),OrbMech::HHMMSSToSS(38,14,11),OrbMech::HHMMSSToSS(39,49,27), OrbMech::HHMMSSToSS(41,26,13) };
+		char area[7][10] = { "021-4A", "022-3B", "023-3A", "024-3B", "025-AC", "026-AC", "027-2B" };
+		char **test;
+		test = new char*[7];
+		for (int i = 0;i < 7;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 7;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 13: //MISSION C BLOCK DATA 5
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -25.4*RAD, -28.8*RAD, -63.3*RAD, -66.2*RAD, -66.2*RAD, -66.2*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(41,26,13),OrbMech::HHMMSSToSS(43,2,5),OrbMech::HHMMSSToSS(44,27,52),OrbMech::HHMMSSToSS(46,3,34),OrbMech::HHMMSSToSS(47,39,29),OrbMech::HHMMSSToSS(49,15,9) };
+		char area[6][10] = { "027-2B", "028-2B", "029-1B", "030-1A", "031-1B", "032-1A"};
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 14: //MISSION C BLOCK DATA 6
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -145.0*RAD, 150.0*RAD, 139.0*RAD, -165.9*RAD, 139.0*RAD, 137.4*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(52,5,9),OrbMech::HHMMSSToSS(53,21,42),OrbMech::HHMMSSToSS(54,55,7),OrbMech::HHMMSSToSS(56,46,40),OrbMech::HHMMSSToSS(58,7,17),OrbMech::HHMMSSToSS(59,42,35) };
+		char area[6][10] = { "033-4C", "034-3C", "035-3B", "036-4A", "037-3A", "038-3A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 15: //MISSION C BLOCK DATA 7
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { 134.5*RAD, -19.9*RAD, -22.9*RAD, -26.4*RAD, -54.9*RAD, -64.9*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(61,17,53),OrbMech::HHMMSSToSS(62,7,40),OrbMech::HHMMSSToSS(63,43,46),OrbMech::HHMMSSToSS(65,19,43),OrbMech::HHMMSSToSS(66,47,22),OrbMech::HHMMSSToSS(68,20,59) };
+		char area[6][10] = { "039-3B", "040-AC", "041-AC", "042-2A", "043-1C", "044-1A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 16: //MISSION C BLOCK DATA 8
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -63.8*RAD, -63.8*RAD, -64.9*RAD, -165.0*RAD, -165.0*RAD, -137.1*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(69,57,34),OrbMech::HHMMSSToSS(71,33,18),OrbMech::HHMMSSToSS(73,8,47),OrbMech::HHMMSSToSS(75,52,32),OrbMech::HHMMSSToSS(77,28,29),OrbMech::HHMMSSToSS(78,47,51) };
+		char area[6][10] = { "045-1A", "046-1A", "047-1A", "048-4A", "049-4B", "050-3A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 17: //MISSION C SCS MANEUVER AND SLOSH DAMPING TEST
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		OrbAdjOpt orbopt;
+		REFSMMATOpt refsopt;
+		AP7ManPADOpt manopt;
+		VECTOR3 dV_LVLH, R0, V0;
+		double P30TIG, GETbase, SVGET;
+		OBJHANDLE gravref;
+		MATRIX3 REFSMMAT;
+		SV sv;
+
+		GETbase = getGETBase();
+		gravref = AGCGravityRef(calcParams.src);
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0);
+
+		sv.gravref = gravref;
+		sv.MJD = GETbase + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
+
+		orbopt.GETbase = GETbase;
+		orbopt.gravref = gravref;
+		orbopt.h_apo = 160.1*1852.0;
+		orbopt.h_peri = 90.3*1852.0;
+		orbopt.inc = 31.26*RAD;
+		orbopt.SPSGET = OrbMech::HHMMSSToSS(75, 48, 0);
+		orbopt.useSV = false;
+		orbopt.vessel = calcParams.src;
+
+		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
+
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATdirect = true;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.engopt = 0;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.navcheckGET = OrbMech::HHMMSSToSS(75, 5, 0);
+		manopt.REFSMMAT = REFSMMAT;
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+
+		AP7ManeuverPAD(&manopt, *form);
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
+	}
+	break;
 	case 29: //MISSION C NOMINAL DEORBIT MANEUVER 
 	{
 		AP7ENT * form = (AP7ENT *)pad;
@@ -471,7 +653,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 30: //GENERIC STATE VECTOR UPDATE
+	case 30: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		double SVGET;
 		VECTOR3 R0, V0;
@@ -486,6 +668,35 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		sv.V = V0;
 
 		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
+	}
+	break;
+	case 31: //GENERIC CSM AND TARGET STATE VECTOR UPDATE
+	{
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv_A, sv_P;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv_A.gravref = AGCGravityRef(calcParams.src);
+		sv_A.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_A.R = R0;
+		sv_A.V = V0;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.tgt, SVGET, R0, V0); //State vector for uplink
+
+		sv_P.gravref = AGCGravityRef(calcParams.tgt);
+		sv_P.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_P.R = R0;
+		sv_P.V = V0;
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv_A, true), CMCStateVectorUpdate(sv_P, false));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -583,7 +794,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 
 		DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 
-		OrbMech::impulsive(opt->vessel, RA1, VA1, AGCGravityRef(opt->vessel), opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+		OrbMech::impulsive(opt->vessel, RA1, VA1, SVMJD + (P30TIG-GET)/24.0/3600.0, AGCGravityRef(opt->vessel), opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
 		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, AGCGravityRef(opt->vessel), gravref);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -634,16 +845,8 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		OrbMech::rv_from_r0v0(RP0, VP0, dt1 + dt2, RP2, VP2, mu);
 	}
 
-	VECTOR3 i, j, k, yvec,RP2off,VA1_apo;
+	VECTOR3 RP2off, VP2off;
 	double angle;
-	MATRIX3 Q_Xx2, Q_Xx;
-
-	k = -unit(RP2);
-	j = unit(crossp(VP2, RP2));
-	i = crossp(j, k);
-	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-
-	RP2off = RP2 + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
 
 	if (lambert->PhaseAngle != 0.0)
 	{
@@ -654,8 +857,17 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		angle = lambert->Offset.x / length(RP2);
 	}
 
-	yvec = _V(Q_Xx2.m21, Q_Xx2.m22, Q_Xx2.m23);
-	RP2off = OrbMech::RotateVector(yvec, -angle, RP2off);
+	OrbMech::rv_from_r0v0_ta(RP2, VP2, angle, RP2off, VP2off, mu);
+
+	VECTOR3 i, j, k, VA1_apo;
+	MATRIX3 Q_Xx2, Q_Xx;
+
+	k = -unit(RP2off);
+	j = unit(crossp(VP2off, RP2off));
+	i = crossp(j, k);
+	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+	RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{
@@ -688,7 +900,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		double t_slip;
 		
 
-		OrbMech::impulsive(lambert->vessel, RA1, VA1, gravref, lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda, t_slip);
+		OrbMech::impulsive(lambert->vessel, RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda, t_slip);
 		OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -1708,7 +1920,7 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	else
 	{
 		VECTOR3 Llambda, RA2_cor, VA2_cor;double t_slip;
-		OrbMech::impulsive(opt->vessel, RA2, VA2_alt, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
+		OrbMech::impulsive(opt->vessel, RA2, VA2_alt, opt->GETbase + CDHtime_cor/24.0/3600.0, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
 
 		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
 
@@ -1881,7 +2093,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		DVX = VA2_apo - VA2;
 
 		VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
-		OrbMech::impulsive(opt->vessel, RA2, VA2, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+		OrbMech::impulsive(opt->vessel, RA2, VA2, opt->GETbase + LOIGET/24.0/3600.0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 
 		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 
@@ -2033,7 +2245,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	}
 
 	VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
-	OrbMech::impulsive(opt->vessel, R2, V2, opt->gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+	OrbMech::impulsive(opt->vessel, R2, V2, SPSMJD, opt->gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 	
 	OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 
@@ -2328,4 +2540,15 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 
 	str = V71Update(emem, 6);
 	return str;
+}
+
+void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
+{
+	double lat, lng, alt;
+	navcheck(sv.R, sv.V, sv.MJD, sv.gravref, lat, lng, alt);
+
+	pad.alt[0] = alt / 1852.0;
+	pad.lat[0] = lat*DEG;
+	pad.lng[0] = lng*DEG;
+	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0;
 }

@@ -135,8 +135,8 @@ public:
 	bool SVSlot;
 	VECTOR3 BRCSPos, BRCSVel;
 	double BRCSGET;
-	double Mantrunnion, Manshaft;
-	int Manstaroct;
+	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos;
+	int Manstaroct, ManCOASstaroct;
 	double Entrytrunnion, Entryshaft;
 	int Entrystaroct;
 	VECTOR3 IMUangles, GDCangles;

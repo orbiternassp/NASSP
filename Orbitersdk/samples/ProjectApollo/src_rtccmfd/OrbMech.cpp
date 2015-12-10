@@ -2760,8 +2760,8 @@ void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP)
 
 	S_SB = mul(NBSB, mul(SMNB, S_SM));
 	
-	SXP = asin(S_SB.x);
-	SPA = atan(-S_SB.y / S_SB.z);
+	SXP = atan(S_SB.y / S_SB.z);//asin(S_SB.x);
+	SPA = asin(S_SB.x);//atan(-S_SB.y / S_SB.z);
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
@@ -2907,7 +2907,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	zoff += length(RP2off) - r2;
 }
 
-void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+/*void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
 {
 	double v_ex, f_T, a_T, tau, L, S, J, mu, dV;
 	VECTOR3 R_thrust, V_thrust, R_c1, V_c1, R_c2, V_c2, R_grav, V_grav, U_TD;
@@ -2940,9 +2940,84 @@ void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRU
 
 	R_cutoff = R + V*t_go + R_grav + R_thrust;
 	V_cutoff = V + V_grav + V_thrust;
+}*/
+
+void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+{
+	double dt, dt_max, v_ex, f_T, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
+	VECTOR3 U_TD, gp, g, R0, V0, Rnow, Vnow, dvdt;
+
+	dV = length(V_G);
+	U_TD = unit(V_G);
+	v_ex = vessel->GetThrusterIsp0(thruster);
+	f_T = vessel->GetThrusterMax0(thruster);
+	R0 = R;
+	V0 = V;
+	m0 = m;
+	t = 0.0;
+	Rnow = R0;
+	Vnow = V0;
+	mnow = m;
+	dVnow = dV;
+
+	dt_max = 0.1;
+	dt = 1.0;
+
+	gp = gravityroutine(R0, gravref);
+
+	while (dt != 0.0)
+	{
+		a_T = f_T / mnow;
+		tau = v_ex / a_T;
+		t_remain = tau*(1.0 - exp(-dVnow / v_ex));
+		dt = min(dt_max, t_remain);
+		dvdt = U_TD*f_T / mnow*dt;
+
+		Rnow = Rnow + (Vnow + gp*dt*0.5 + dvdt*0.5)*dt;
+		g = gravityroutine(Rnow, gravref);
+		Vnow = Vnow + (g + gp)*dt*0.5 + dvdt;
+		gp = g;
+		dVnow -= length(dvdt);
+		mnow -= f_T / v_ex*dt;
+		t += dt;
+	}
+	R_cutoff = Rnow;
+	V_cutoff = Vnow;
+	t_go = t;
+	
 }
 
-void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref)
+{
+	OBJHANDLE hEarth;
+	VECTOR3 U_R, U_Z, g;
+	double rr, mu;
+
+	hEarth = oapiGetObjectByName("Earth");
+	U_R = unit(R);
+	U_Z = _V(0.0, 0.0, 1.0);
+	rr = dotp(R, R);
+	mu = GGRAV*oapiGetMass(gravref);
+
+	if (gravref == hEarth)
+	{
+		double costheta, R_E, J2E;
+		VECTOR3 g_b;
+
+		costheta = dotp(U_R, U_Z);
+		R_E = oapiGetSize(hEarth);
+		J2E = oapiGetPlanetJCoeff(hEarth, 0);
+		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z*2.0*costheta)*mu / rr*3.0 / 2.0*J2E*power(R_E, 2.0) / rr;
+		g = -U_R*mu / rr + g_b;
+	}
+	else
+	{
+		g = -U_R*mu / rr;
+	}
+	return g;
+}
+
+void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m, f_T;
@@ -2964,11 +3039,13 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER
 	while (abs(t_slip - t_slip_old) > 0.01)
 	{
 		n = 0;
-		rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		//rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
 		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
 		{
 			poweredflight(vessel, R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), m, V_go, R_p, V_p, t_go);
-			rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
 			i_z = unit(crossp(R_d, i_y));
 			dr_z = dotp(i_z, R_d - R_p);
 			v_goz = dotp(i_z, V_go);
@@ -2981,10 +3058,14 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER
 		t_slip_old = t_slip;
 		t_slip += dt_go*0.1;
 	}
+	if (n >= nmax)
+	{
+		sprintf(oapiDebugString(), "Iteration failed!");
+	}
 	//Llambda = V_go;
 
-	double apo, peri;
-	periapo(R_p, V_p, mu, apo, peri);
+	//double apo, peri;
+	//periapo(R_p, V_p, mu, apo, peri);
 
 	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
 
@@ -3073,7 +3154,7 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 	SMNB = mul(Q3, mul(Q2, Q1));
 
 	U_LOS = ULOS(REFSMMAT, SMNB, 57.47*RAD, 0.0);
-	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 31.5*RAD);
+	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 10.0*RAD);//31.5*RAD);
 
 	if (star == -1)
 	{
