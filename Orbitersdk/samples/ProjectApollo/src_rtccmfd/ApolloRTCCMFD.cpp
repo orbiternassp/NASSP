@@ -132,7 +132,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
-	oapiWriteScenario_int(scn, "TIMEMODE", G->time_mode);
 	papiWriteScenario_double(scn, "T1", G->T1);
 	papiWriteScenario_double(scn, "T2", G->T2);
 	papiWriteScenario_double(scn, "CDHTIME", G->CDHtime);
@@ -194,7 +193,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
-		papiReadScenario_int(line, "TIMEMODE", G->time_mode);
 		papiReadScenario_double(line, "T1", G->T1);
 		papiReadScenario_double(line, "T2", G->T2);
 		papiReadScenario_double(line, "CDHTIME", G->CDHtime);
@@ -298,33 +296,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Lambert", 7);
 
-		if (G->time_mode == 0)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-		}
-		else if (G->time_mode == 1)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "MJD", 3);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "SimTime", 7);
-		}
+		skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
 
-		if (G->time_mode==0)
-		{
-			GET_Display(Buffer, G->T1);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			GET_Display(Buffer, G->T2);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			sprintf(Buffer, "%f", G->T1);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f", G->T2);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		}
+		GET_Display(Buffer, G->T1);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->T2);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%d", G->N);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
@@ -338,42 +315,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "X-Axis", 6);
 		}
 
-		if (G->uni == true)
-		{
-			//skp->Text(1 * W / 8, 10 * H / 14, "m/s", 3);
-			sprintf(Buffer, "DVX %f", G->LambertdeltaV.x);
-			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "DVY %f", G->LambertdeltaV.y);
-			skp->Text(5 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "DVZ %f", G->LambertdeltaV.z);
-			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			//skp->Text(1 * W / 8, 10 * H / 14, "ft/s", 4);
-			if (G->dvdisplay == 0)
-			{
-				sprintf(Buffer, "DVX %f", G->LambertdeltaV.x / 0.3048);
-				skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "DVY %f", G->LambertdeltaV.y / 0.3048);
-				skp->Text(5 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "DVZ %f", G->LambertdeltaV.z / 0.3048);
-				skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			}
-			else if (G->dvdisplay == 1)
-			{
-				skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
-				skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
-				skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
+		skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
+		skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
+		skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
 
-				AGC_Display(Buffer, G->LambertdeltaV.x / 0.3048);
-				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->LambertdeltaV.y / 0.3048);
-				skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->LambertdeltaV.z / 0.3048);
-				skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			}
-		}
+		AGC_Display(Buffer, G->LambertdeltaV.x / 0.3048);
+		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->LambertdeltaV.y / 0.3048);
+		skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->LambertdeltaV.z / 0.3048);
+		skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		/*if (G->orient == 0)
 		{
@@ -411,24 +362,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%f °", G->angdeg);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		if (G->offsetuni == 0)
-		{
-			sprintf(Buffer, "%f m", G->offvec.x);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f m", G->offvec.y);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f m", G->offvec.z);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			sprintf(Buffer, "%f NM", G->offvec.x/1852);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f NM", G->offvec.y / 1852);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f NM", G->offvec.z / 1852);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		}
+		sprintf(Buffer, "%f NM", G->offvec.x/1852);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f NM", G->offvec.y / 1852);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f NM", G->offvec.z / 1852);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
 
 	else if (screen == 3)
@@ -444,14 +383,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "Find GETI", 9);
 		}
 
-		if (G->time_mode == 0)
-		{
-			GET_Display(Buffer, G->CDHtime);
-		}
-		else
-		{
-			sprintf(Buffer, "%f", G->CDHtime);
-		}
+		GET_Display(Buffer, G->CDHtime);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f NM", G->DH);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
@@ -477,47 +409,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 8 * H / 14, "DY", 2);
 		skp->Text(4 * W / 8, 10 * H / 14, "DZ", 2);
 
-		if (G->uni == true)
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "m/s", 3);
-			sprintf(Buffer, "%f", G->CDHdeltaV.x);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f", G->CDHdeltaV.y);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f", G->CDHdeltaV.z);
-			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			if (G->dvdisplay == 0)
-			{
-				skp->Text(1 * W / 8, 10 * H / 14, "ft/s", 4);
-				sprintf(Buffer, "%f", G->CDHdeltaV.x / 0.3048);
-				skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->CDHdeltaV.y / 0.3048);
-				skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->CDHdeltaV.z / 0.3048);
-				skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-			}
-			else if (G->dvdisplay == 1)
-			{
-				AGC_Display(Buffer, G->CDHdeltaV.x / 0.3048);
-				skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->CDHdeltaV.y / 0.3048);
-				skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->CDHdeltaV.z / 0.3048);
-				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-			}
-		}
+		AGC_Display(Buffer, G->CDHdeltaV.x / 0.3048);
+		skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->CDHdeltaV.y / 0.3048);
+		skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->CDHdeltaV.z / 0.3048);
+		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->orient == 0)
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "LVLH", 4);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "P30", 3);
-		}
+		//skp->Text(1 * W / 8, 12 * H / 14, "P30", 3);
 
 		if (G->target != NULL)
 		{
@@ -541,37 +440,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f °", G->incdeg);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->iterator == 0)
-		{
-			if (G->dvdisplay == 0)
-			{
-				sprintf(Buffer, "%f", G->OrbAdjDVX.x / 0.3048);
-				skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->OrbAdjDVX.y / 0.3048);
-				skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->OrbAdjDVX.z / 0.3048);
-				skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-			}
-			else if (G->dvdisplay == 1)
-			{
-				skp->Text(5 * W / 8, 6 * H / 14, "DVX", 3);
-				skp->Text(5 * W / 8, 8 * H / 14, "DVY", 3);
-				skp->Text(5 * W / 8, 10 * H / 14, "DVZ", 3);
-				//skp->Text(5 * W / 8, 12 * H / 14, "DVT", 3);
-				AGC_Display(Buffer, G->OrbAdjDVX.x / 0.3048);
-				skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->OrbAdjDVX.y / 0.3048);
-				skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->OrbAdjDVX.z / 0.3048);
-				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-				//AGC_Display(Buffer, length(G->OrbAdjDVX) / 0.3048);
-				//skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			}
-		}
-		else if (G->iterator == 1)
-		{
-			skp->Text(5 * W / 8, 8 * H / 14, "Calculating...", 14);
-		}
+		skp->Text(5 * W / 8, 6 * H / 14, "DVX", 3);
+		skp->Text(5 * W / 8, 8 * H / 14, "DVY", 3);
+		skp->Text(5 * W / 8, 10 * H / 14, "DVZ", 3);
+		//skp->Text(5 * W / 8, 12 * H / 14, "DVT", 3);
+		AGC_Display(Buffer, G->OrbAdjDVX.x / 0.3048);
+		skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->OrbAdjDVX.y / 0.3048);
+		skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->OrbAdjDVX.z / 0.3048);
+		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		//AGC_Display(Buffer, length(G->OrbAdjDVX) / 0.3048);
+		//skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 5)
 	{
@@ -829,24 +709,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
 			skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
 
-			if (G->dvdisplay == 0)
-			{
-				sprintf(Buffer, "%f", G->Entry_DV.x / 0.3048);
-				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->Entry_DV.y / 0.3048);
-				skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f", G->Entry_DV.z / 0.3048);
-				skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			}
-			else if (G->dvdisplay == 1)
-			{
-				AGC_Display(Buffer, G->Entry_DV.x / 0.3048);
-				skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->Entry_DV.y / 0.3048);
-				skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-				AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
-				skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			}
+			AGC_Display(Buffer, G->Entry_DV.x / 0.3048);
+			skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->Entry_DV.y / 0.3048);
+			skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
+			skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
 			if (G->maneuverplanet == oapiGetObjectByName("Moon"))
 			{
 				skp->Text(6 * W / 8, 13 * H / 14, "Moon SOI", 8);
@@ -1021,15 +890,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 10 * H / 14, "Enabled", 7);
 		}
 
-		skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
-		if (G->dvdisplay == 0)
-		{
-			skp->Text(5 * W / 8, 12 * H / 14, "decimal number", 14);
-		}
-		else if (G->dvdisplay == 1)
-		{
-			skp->Text(5 * W / 8, 12 * H / 14, "AGC DSKY", 8);
-		}
+		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
+		//skp->Text(5 * W / 8, 12 * H / 14, "AGC DSKY", 8);
 	}
 	else if (screen == 9)
 	{
@@ -1848,18 +1710,6 @@ int ApolloRTCCMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-void ApolloRTCCMFD::set_timemode()
-{
-	if (G->time_mode < 2)
-	{
-		G->time_mode++;
-	}
-	else
-	{
-		G->time_mode = 0;
-	}
-}
-
 void ApolloRTCCMFD::set_getbase()
 {
 	if (G->mission < 7)
@@ -1957,16 +1807,8 @@ void ApolloRTCCMFD::set_P30DV(VECTOR3 dv)
 
 void ApolloRTCCMFD::t1dialogue()
 {
-	if (G->time_mode == 0)
-	{
-		bool T1GETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", T1GETInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool T1Input(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the maneuver time:", T1Input, 0, 20, (void*)this);
-	}
+	bool T1GETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", T1GETInput, 0, 20, (void*)this);
 }
 
 bool T1GETInput(void *id, char *str, void *data)
@@ -1982,16 +1824,6 @@ bool T1GETInput(void *id, char *str, void *data)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_t1(t1time);
-		return true;
-	}
-	return false;
-}
-
-bool T1Input(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_t1(atof(str));
 		return true;
 	}
 	return false;
@@ -2035,17 +1867,8 @@ void ApolloRTCCMFD::set_OrbAdjGET(double SPSGET)
 
 void ApolloRTCCMFD::CDHtimedialogue()
 {
-	if (G->time_mode == 0)
-	{
-		bool CDHGETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the CDH maneuver (Format: hhh:mm:ss)", CDHGETInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool CDHtimeInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the maneuver time:", CDHtimeInput, 0, 20, (void*)this);
-	}
-
+	bool CDHGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the CDH maneuver (Format: hhh:mm:ss)", CDHGETInput, 0, 20, (void*)this);
 }
 
 bool CDHGETInput(void *id, char *str, void *data)
@@ -2074,18 +1897,6 @@ bool CDHtimeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_CDHtime(double CDHtime)
 {
 	this->G->CDHtime = CDHtime;
-}
-
-void ApolloRTCCMFD::menuOffsetUnit()
-{
-	if (G->offsetuni<1)
-	{
-		G->offsetuni++;
-	}
-	else
-	{
-		G->offsetuni = 0;
-	}
 }
 
 void ApolloRTCCMFD::EntryTimeDialogue()
@@ -2214,16 +2025,8 @@ void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
 	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 5 || G->REFSMMATopt == 6)
 	{
-		if (G->time_mode == 0)
-		{
-			bool REFSMMATGETInput(void *id, char *str, void *data);
-			oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
-		}
-		else
-		{
-			bool REFSMMATTimeInput(void *id, char *str, void *data);
-			oapiOpenInputBox("Choose the time:", REFSMMATTimeInput, 0, 20, (void*)this);
-		}
+		bool REFSMMATGETInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
 	}
 }
 
@@ -2233,16 +2036,6 @@ void ApolloRTCCMFD::UploadREFSMMAT()
 	{
 		G->REFSMMATUplink();
 	}
-}
-
-bool REFSMMATTimeInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_REFSMMATTime(atof(str));
-		return true;
-	}
-	return false;
 }
 
 void ApolloRTCCMFD::set_REFSMMATTime(double time)
@@ -2522,14 +2315,8 @@ void ApolloRTCCMFD::calcphaseoff(double angdeg)
 		a = -mu / (2.0 * epsilon);
 		angrad = angdeg*RAD;
 		off = a*angrad;
-		if (G->orient == 0)
-		{
-			G->offvec.y = off;
-		}
-		else if (G->orient == 1)
-		{
-			G->offvec.x = off;
-		}
+
+		G->offvec.x = off;
 	}
 }
 
@@ -2586,38 +2373,17 @@ bool ZoffInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_Xoff(double x)
 {
-	if (G->offsetuni == 0)
-	{
-		G->offvec.x = x;
-	}
-	else
-	{
-		G->offvec.x = x*1852.0;
-	}
+	G->offvec.x = x;
 }
 
 void ApolloRTCCMFD::set_Yoff(double y)
 {
-	if (G->offsetuni == 0)
-	{
-		G->offvec.y = y;
-	}
-	else
-	{
-		G->offvec.y = y*1852.0;
-	}
+	G->offvec.y = y;
 }
 
 void ApolloRTCCMFD::set_Zoff(double z)
 {
-	if (G->offsetuni == 0)
-	{
-		G->offvec.z = z;
-	}
-	else
-	{
-		G->offvec.z = z*1852.0;
-	}
+	G->offvec.z = z;
 }
 
 void ApolloRTCCMFD::menuSetSVTime()
@@ -2657,16 +2423,8 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 
 void ApolloRTCCMFD::t2dialogue()
 {
-	if (G->time_mode == 0)
-	{
-		bool T2GETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss)", T2GETInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool T2Input(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the arrival time:", T2Input, 0, 20, (void*)this);
-	}
+	bool T2GETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss)", T2GETInput, 0, 20, (void*)this);
 }
 
 
@@ -2707,16 +2465,6 @@ bool T2GETInput(void *id, char *str, void *data)
 	return false;
 }
 
-bool T2Input(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_t2(atof(str),true);
-		return true;
-	}
-	return false;
-}
-
 void ApolloRTCCMFD::set_t2(double t2, bool t1dep)
 {
 	if (t1dep)
@@ -2748,23 +2496,6 @@ bool RevInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_rev(int rev)
 {
 	this->G->N = rev;
-}
-
-void ApolloRTCCMFD::set_unit()
-{
-	this->G->uni = !G->uni;
-}
-
-void ApolloRTCCMFD::set_orient()
-{
-	if (G->orient < 1)
-	{
-		G->orient++;
-	}
-	else
-	{
-		G->orient = 0;
-	}
 }
 
 void ApolloRTCCMFD::set_target()
@@ -2804,18 +2535,6 @@ void ApolloRTCCMFD::set_svtarget()
 	}
 
 		G->svtarget = oapiGetVesselInterface(oapiGetVesselByIndex(G->svtargetnumber));
-}
-
-void ApolloRTCCMFD::set_dvdisplaymode()
-{
-	if (G->dvdisplay < 1)
-	{
-		G->dvdisplay++;
-	}
-	else
-	{
-		G->dvdisplay = 0;
-	}
 }
 
 void ApolloRTCCMFD::CDHcalc()

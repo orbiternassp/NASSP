@@ -76,38 +76,49 @@ public:
 	Entry* entry;
 	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
-	int time_mode; //0 = GET, 1 = Simulation Time
-	double T1; //Time of the Lambert targeted maneuver
-	double T2;	//Arrival time for Lambert Targeting
-	double lambertelev;
+
+	//TARGETING VESSELS
+	VESSEL* vessel;
+	VESSEL* target;
+	int targetnumber;		//Vessel index for target
+
+	//GENERAL PARAMETERS
+	double GETbase;			//Launch MJD
+	int mission;			//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
+	OBJHANDLE gravref;		//Earth or Moon
+	double P30TIG;			//Maneuver GET
+	VECTOR3 dV_LVLH;		//LVLH maneuver vector
+	OBJHANDLE maneuverplanet;
+	apves vesseltype;
+	bool inhibUplLOS;
+	double TimeTag;
+
+	//LAMBERT PAGE
+	double T1;				//Time of the Lambert targeted maneuver
+	double T2;				//Arrival time for Lambert Targeting
+	double lambertelev;		//Elevation of target for T1 calculation
+	int N;					//Number of revolutions for Lambert Targeting
+	VECTOR3 LambertdeltaV;	//LVLH maneuver vector
+	int lambertopt;			//0 = spherical, 1 = non-spherical
+	VECTOR3 offvec;			//Lambert offset vector
+	double angdeg;			//Phase angle for target offset
+	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
+
+	//CDH PAGE
 	double CDHtime;	//Time of the CDH maneuver
 	double CDHtime_cor;	//Corrected time of the CDH maneuver
 	int CDHtimemode; //0=Fixed, 1 = Find GETI
 	double DH;			//Delta Height for the CDH maneuver
-	int N;				//Number of revolutions for Lambert Targeting
-	bool uni;			//displayed unit for the DV vecotr (true = m/s, false = ft/s)
-	int offsetuni;		//displayed unit for the offset vector (0 = m, 1 = NM)
-	int orient;			//Coordinate system used for calculations (1 = LVLH)
-	VESSEL* vessel;
-	VESSEL* target;
-	VECTOR3 LambertdeltaV;
-	int lambertopt;		//0 = spherical, 1 = non-spherical
 	VECTOR3 CDHdeltaV;
-	VECTOR3 offvec;
-	//ApolloRTCCMFDButtons coreButtons;
-	//int screen;
-	double angdeg;
-	int targetnumber;
-	double GETbase;
-	int mission; //0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
-	int dvdisplay;
-	double apo_desnm;
-	double peri_desnm;
-	double incdeg;
-	double SPSGET;
-	VECTOR3 OrbAdjDVX;
-	int iterator;
-	int IterStage;
+
+	//ORBIT ADJUSTMENT PAGE
+	double apo_desnm;		//Desired apoapsis altitude in NM
+	double peri_desnm;		//Desired periapsis altitude in NM
+	double incdeg;			//Desired inclination in degrees
+	double SPSGET;			//Maneuver GET
+	VECTOR3 OrbAdjDVX;		//LVLH maneuver vector
+
+	//REFSMMAT PAGE
 	double REFSMMATTime;
 	MATRIX3 REFSMMAT;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
@@ -115,10 +126,9 @@ public:
 	int REFSMMATcur; //Currently saved REFSMMAT: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
 	double LSLat, LSLng;
-	OBJHANDLE gravref;
-	double P30TIG;
-	VECTOR3 dV_LVLH;
-	//VECTOR3 dV_BRC;
+	bool REFSMMATdirect;
+
+	//ENTY PAGE	
 	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
 	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
@@ -132,55 +142,59 @@ public:
 	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data
 	int entrycalcstate;
 	double entryrange;
+	double P37GET400K;
+	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
+	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
+
+	//STATE VECTOR PAGE
 	bool SVSlot;
 	VECTOR3 BRCSPos, BRCSVel;
 	double BRCSGET;
-	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos;
-	int Manstaroct, ManCOASstaroct;
-	double Entrytrunnion, Entryshaft;
-	int Entrystaroct;
+	VESSEL* svtarget;
+	int svtargetnumber;
+	bool svtimemode; //0 = Now, 1 = GET
+
+	//MANEUVER PAD PAGE
 	VECTOR3 IMUangles, GDCangles;
 	int GDCset;
 	bool HeadsUp;
-	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime,ManPADDVC, ManPADPTrim, ManPADYTrim, ManPADLMWeight;
+	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime, ManPADDVC, ManPADPTrim, ManPADYTrim, ManPADLMWeight;
+	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos;
+	int Manstaroct, ManCOASstaroct;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
+	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
+	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
+	int ManPADVeh; //0 = CSM; 1 = CSM/LM
+	double sxtstardtime;
+	TLIPAD tlipad;
+
+	///ENTRY PAD PAGE
+	double Entrytrunnion, Entryshaft;
+	int Entrystaroct;
 	double EntryPADRTGO, EntryPADVIO, EntryPADRET05Earth, EntryPADRET05Lunar, EntryPADdVTO;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
 	double EntryPADGMax, EntryPADDO;
 	bool EntryPADLift;
 	double EntryPADHorChkGET, EntryPADHorChkPit;
-	bool REFSMMATdirect;
-	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double EntryPADV400k, EntryPADgamma400k, EntryPADRRT;
 	double EntryPADLat, EntryPADLng;
 	double EntryRET05, EntryRTGO, EntryVIO;
 	VECTOR3 EIangles;
-	double TimeTag;
 	bool EntryPADdirect;
-	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
-	int ManPADVeh; //0 = CSM; 1 = CSM/LM
-	OBJHANDLE maneuverplanet;
-	double sxtstardtime;
-	double P37GET400K;
+	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
+
+	//MAP UPDATE PAGE
 	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
-	bool inhibUplLOS;
-	apves vesseltype;
-	VESSEL* svtarget;
-	int svtargetnumber;
-	bool svtimemode; //0 = Now, 1 = GET
-	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
-	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
-	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
-	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
-	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
+
+	//LOI PAGE
 	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
-	TLIPAD tlipad;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

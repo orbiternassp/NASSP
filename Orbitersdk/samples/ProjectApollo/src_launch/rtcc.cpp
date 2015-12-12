@@ -2182,7 +2182,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	theta1 = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
 	theta2 = PI2 - theta1;											//Calculates the second possible true anomaly of the desired orbit
 
-	beta1 = asin(cos(opt->inc) / cos(phi));									//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
+	beta1 = asin(min(1.0, max(-1.0,cos(opt->inc) / cos(phi))));		//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
 	beta2 = PI - beta1;													//The second possible azimuth heading
 
 	ll1 = atan2(tan(phi), cos(beta1));    //angular distance between the ascending node and the current position (beta1)

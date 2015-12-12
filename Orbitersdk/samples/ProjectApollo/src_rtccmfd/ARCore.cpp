@@ -24,7 +24,6 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 
 ARCore::ARCore(VESSEL* v)
 {
-	time_mode = 0;
 	T1 = 0;	
 	T2 = 0;
 	CDHtime = 0;
@@ -32,9 +31,6 @@ ARCore::ARCore(VESSEL* v)
 	CDHtimemode = 1;
 	DH = 0;
 	N = 0;
-	uni = 0;
-	offsetuni = 0;
-	orient = 1;
 	this->vessel = v;
 	lambertelev = 0.0;
 	LambertdeltaV = _V(0, 0, 0);
@@ -138,9 +134,6 @@ ARCore::ARCore(VESSEL* v)
 	apo_desnm = 0;
 	peri_desnm = 0;
 	incdeg = 0;
-	iterator = 0;
-	IterStage = 0;
-	dvdisplay = 1;
 
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
@@ -292,14 +285,6 @@ ARCore::ARCore(VESSEL* v)
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 {
-	if (iterator == 1)
-	{
-		//OrbitAdjustCalc();
-	}
-	else if (iterator == 2)
-	{
-		//lambertcalc();
-	}
 	if (entrycalcstate == 1)
 	{
 		startSubthread(7);
@@ -1372,6 +1357,7 @@ int ARCore::subThread()
 		opt.inc = incdeg*RAD;
 		opt.SPSGET = SPSGET;
 		opt.vessel = vessel;
+		opt.useSV = false;
 
 		rtcc->OrbitAdjustCalc(&opt, OrbAdjDVX, P30TIG);
 
