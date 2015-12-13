@@ -100,6 +100,9 @@ public:
 	void ChangeCMCPosition(double delta);
 	void ZeroCMCPosition() { cmcPosition = 0; }
 
+	double* GimbalDynamics(double pos, double vel, double acc, double deltac);
+	void GimbalTimestep(double simdt);
+
 protected:
 	bool IsSystem1Powered();
 	bool IsSystem2Powered();
@@ -107,6 +110,8 @@ protected:
 	void DrawSystem2Power();
 
 	double position;
+	double velocity;
+	double accel;
 	double commandedPosition;
 	double cmcPosition;
 	double scsPosition;
