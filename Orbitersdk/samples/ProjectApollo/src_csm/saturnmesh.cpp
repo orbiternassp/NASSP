@@ -509,7 +509,8 @@ void Saturn::SetCSMStage ()
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
 
 	AddExhaust(th_main[0], 20.0, 2.25, SMExhaustTex);
-	SetPMI(_V(12, 12, 7));
+	//SetPMI(_V(12, 12, 7));
+	SetPMI(_V(4.3972, 4.6879, 1.6220));
 	SetCrossSections(_V(40,40,14));
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	SetRotDrag(_V(0.7,0.7,0.3));
