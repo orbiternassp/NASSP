@@ -6,8 +6,8 @@
 
 class Entry {
 public:
-	Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal);
-	Entry(OBJHANDLE gravref);
+	Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual);
+	Entry(OBJHANDLE gravref, int critical);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
 	bool EntryIter();
@@ -29,14 +29,19 @@ public:
 	double EntryAng;
 	double t2;
 	VECTOR3 Entry_DV; //Entry DV vector in LVLH coordinates
+	int precision; //0 = only conic, 1 = precision, 2 = PeA=-30 solution
+	OBJHANDLE SOIplan; //maneuver in earth or moon SOI
+	int errorstate;
 private:
 	void coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21);
-	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
+	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
 	void precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA);
 	void conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1);
 	void conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3);
 	void xdviterator(VECTOR3 R1B,VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
-	void xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
+	void xdviterator2(int f1, VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
+	void xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double &x);
+	void precisionperi(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
 	void limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
 	void dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON);
 	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI);
@@ -44,6 +49,8 @@ private:
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, double &phi);
 	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
+	double landingzonelong(int zone, double lat);
+	OBJHANDLE AGCGravityRef(VESSEL *vessel);
 
 	OBJHANDLE gravref, hEarth;
 	CoastIntegrator* coast;
@@ -61,7 +68,7 @@ private:
 	int ii;
 	double EntryLng;
 	int entryphase;
-	int critical;
+	int critical; //0 = Earth orbit reentry, 1 = MCC calculation, 2 = TLC or TEC abort
 	double xapo, dv_err;
 	VECTOR3 R11B, V11B;
 	int f2;
@@ -78,6 +85,10 @@ private:
 	bool entrynominal; //0 = minimum DV entry, 1 = 31.7° line
 	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
 	double x, dx, dxmax;
+	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	bool entrylongmanual;
+	double xlim;
+	double t21;
 };
 
 #endif

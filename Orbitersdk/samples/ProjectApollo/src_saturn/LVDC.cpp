@@ -910,7 +910,14 @@ void LVDC1B::timestep(double simt, double simdt) {
 		}
 		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
-		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
+		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
+		/*
+		if (lvimu.Operate) { fprintf(lvlog, "IMU: Operate\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: NO-Operate\r\n"); }
+		if (lvimu.TurnedOn) { fprintf(lvlog, "IMU: Turned On\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: Turned OFF\r\n"); }
+		if (lvimu.ZeroIMUCDUFlag) { fprintf(lvlog, "IMU: ERROR: Zero-IMU-CDU-Flag\r\n"); }
+		if (lvimu.CoarseAlignEnableFlag) { fprintf(lvlog, "IMU: ERROR: Coarse-Align-Enable-Flag\r\n"); }
+		if (lvimu.Caged) { fprintf(lvlog, "IMU: ERROR: Caged\r\n"); }
+		*/
 		AttRate = lvrg.GetRates();							// Get rates	
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
@@ -2640,7 +2647,16 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 	}	
 	if(oapiReadScenario_nextline (scn, line)){
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
+			// fprintf(lvlog, "LVIMU LoadState() called\r\n");
+			// fflush(lvlog);
 			lvimu.LoadState(scn);
+			/*
+			if(lvimu.Initialized) { fprintf(lvlog, "LVIMU Initialized\r\n"); }
+			if(lvimu.Operate){ fprintf(lvlog, "LVIMU Operate\r\n"); }
+			if(lvimu.Caged) { fprintf(lvlog, "LVIMU Caged\r\n"); }			
+			if(lvimu.TurnedOn) { fprintf(lvlog, "LVIMU Turned On\r\n"); }
+			fflush(lvlog);
+			*/
 		}
 	}
 	return;

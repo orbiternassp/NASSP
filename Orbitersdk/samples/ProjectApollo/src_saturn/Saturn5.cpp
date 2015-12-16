@@ -251,14 +251,14 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 		{-180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,0*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD};
 	static const double Mach[17] = {0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0};
 	static const double LFactor[17] = {0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33};
-	static const double DFactor[17] = {0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.8,1.8,1.193,1.224,1.25};
+	static const double DFactor[17] = {0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.18,1.18,1.193,1.224,1.25};
 	static const double CL[nlift]  = {0.0,-0.9,-1.1,-0.5,0.0,0.0,0.0,0.5,1.1,0.9,0.0};
 	static const double CM[nlift]  = {0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0.};
 	static const double CD[nlift]  = {1.143,1.0,1.0,0.8,0.8,0.8,0.8,0.8,1.0,1.0,1.143};
 	int j;
-	factor = 0.0;
-	dfact = 0.9;
-	lfact = 1.0;
+	factor = -5.0;
+	dfact = 1.05;
+	lfact = 0.94;
 	for(j = 0; (j < 16) && (Mach[j+1] < M); j++);
 	frac = (M-Mach[j])/(Mach[j+1]-Mach[j]);
 	drag = dfact*(frac*DFactor[j+1]+(1.0-frac)*DFactor[j]);

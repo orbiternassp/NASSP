@@ -383,10 +383,10 @@ void Saturn::SystemsInit() {
 	SPSEngine.Init(this);
 	SPSEngine.pitchGimbalActuator.Init(this, &TVCGimbalDrivePitchSwitch, &Pitch1Switch, &Pitch2Switch,
 		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker,
-									   &SPSGimbalPitchThumbwheel, &SCSTvcPitchSwitch);
+									   &SPSGimbalPitchThumbwheel, &SCSTvcPitchSwitch, &CGSwitch);
 	SPSEngine.yawGimbalActuator.Init(this, &TVCGimbalDriveYawSwitch, &Yaw1Switch, &Yaw2Switch,
 		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker,
-									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch);
+									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch, &CGSwitch);
 
 	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
 	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");

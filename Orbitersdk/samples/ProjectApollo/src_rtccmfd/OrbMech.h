@@ -2,7 +2,6 @@
 #define _ORBMECH_H
 
 #include "Orbitersdk.h"
-//#include "CoastIntegration.h"
 
 const VECTOR3 navstars[37] = { _V(0.874918332, 0.025891699, 0.483577844),
 _V(0.934272669, 0.173297383, -0.311612896),
@@ -106,10 +105,12 @@ public:
 	bool iteration();
 
 	VECTOR3 R2, V2;
+	OBJHANDLE outplanet;
 private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
 	double fq(double q);
 	VECTOR3 adfunc(VECTOR3 R);
+	void SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES);
 	double R_E, mu;
 	double K, dt_lim;
 	int jcount;
@@ -119,7 +120,7 @@ private:
 	VECTOR3 delta, nu;
 	int M;
 	double r_MP, r_dP, r_SPH;
-	OBJHANDLE hEarth, hMoon, hSun, planet, outplanet;
+	OBJHANDLE hEarth, hMoon, hSun, planet;
 	double mu_Q, mu_S;
 	double mjd0;
 	MATRIX3 Rot;
@@ -127,6 +128,8 @@ private:
 	CELBODY *cMoon, *cEarth, *cSun;
 	MATRIX3 obli;
 	int B, P;
+	VECTOR3 R_ES0, V_ES0;
+	double W_ES;
 };
 
 namespace OrbMech {
@@ -140,12 +143,13 @@ namespace OrbMech {
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
-	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref);
+	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	void f_and_g_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &f, double &g, double mu);
 	void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &gdot, double mu);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
+	double period(VECTOR3 R, VECTOR3 V, double mu);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
@@ -156,17 +160,19 @@ namespace OrbMech {
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
 	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDLE plan, double mjd0, double E, OBJHANDLE gravref);
-	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB);
-	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E);
+	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
+	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E);
 	VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB);
 	MATRIX3 CALCSMSC(VECTOR3 GA);
 	VECTOR3 CALCSGTA(MATRIX3 des);
+	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
+	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
-	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE gravout);
+	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight);
@@ -181,9 +187,12 @@ namespace OrbMech {
 	VECTOR3 DOI_calc(VECTOR3 R, VECTOR3 V, double r_LS, double h_p, double mu);
 	void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, double &t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
 	void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff);
-	void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
-	void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
+	void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
+	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
+	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref);
+	void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
+	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	//private:
 		//VESSEL* vessel;
 		//double mu;
@@ -199,7 +208,7 @@ namespace OrbMech {
 	MATRIX3 inverse(MATRIX3 a);
 	double determinant(MATRIX3 a);
 	MATRIX3 transpose_matrix(MATRIX3 a);
-	double sign(double A);
+	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
 	double cot(double a);
 	void fabs_vektor(double* vektor, int n);
@@ -212,6 +221,7 @@ namespace OrbMech {
 	MATRIX3 _MRy(double a);
 	MATRIX3 _MRz(double a);
 	VECTOR3 Polar2Cartesian(double r, double lat, double lng);
+	VECTOR3 Polar2CartesianVel(double r, double lat, double lng, double r_dot, double lat_dot, double lng_dot);
 	int decimal_octal(int n);
 	void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x = 0);
 	double kepler_U(double dt, double ro, double vro, double a, double mu, double x = 0);
@@ -229,6 +239,18 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	double HHMMSSToSS(int H, int M, int S);
+	double HHMMSSToSS(double H, double M, double S);
+
+	double fraction_an(int n);
+	double fraction_ad(int n);
+	double fraction_a(int n, double x);
+	double fraction_b(int n, double x);
+	double fraction_delta(int n, double x);
+	double fraction_u(int n, double x);
+	double fraction_pq(double x);
+	double fraction_xi(double x);
+	void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);

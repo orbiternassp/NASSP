@@ -43,6 +43,31 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
 
+const MATRIX3 A7REFSMMAT = _M(-0.097435921, -0.957429007, 0.271727726, -0.516196772, -0.184815392, -0.836291939, 0.850909933, -0.221749939, -0.476214282);
+const MATRIX3 A8REFSMMAT = _M(0.496776313, -0.82489121, 0.269755125, -0.303982571, -0.456513584, -0.836175814, 0.812900983, 0.333391495, -0.477537684);
+
+const double LaunchMJD[11] = {//Launch MJD of Apollo missions
+	40140.62691,
+	40211.535417,
+	40283.666667,
+	40359.700694,
+	40418.563889,
+	40539.68194,
+	40687.80069,
+	40982.87711,
+	41128.56529,
+	41423.74583,
+	41658.23125
+};
+
+struct SV
+{
+	VECTOR3 R;
+	VECTOR3 V;
+	double MJD;
+	OBJHANDLE gravref;
+};
+
 struct LambertMan //Data for Lambert targeting
 {
 	VESSEL* vessel; //Vessel executing the burn
@@ -72,6 +97,15 @@ struct AP7ManPADOpt
 	double navcheckGET; //Time for the navcheck. 0 = no nav check
 };
 
+struct AP7TPIPADOpt
+{
+	VESSEL* vessel; //vessel
+	VESSEL* target; //Target vessel
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+};
+
 struct EntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
@@ -83,6 +117,7 @@ struct EntryOpt
 	double Range;  //Desired range from 0.05g to splashdown, 0 uses AUGEKUGEL function to determine range
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 };
 
 struct REFSMMATOpt
@@ -92,11 +127,83 @@ struct REFSMMATOpt
 	bool REFSMMATdirect; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
 	double P30TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	double P30TIG2; //Time of Ignition 2nd maneuver
+	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
 	OBJHANDLE maneuverplanet; //The gravity reference of the maneuver might be different than the gravity reference now!
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landign site REFSMMAT
+	int mission; //Just for the launch REFSMMAT
+};
+
+struct CDHOpt
+{
+	VESSEL* vessel; //Vessel executing the burn
+	VESSEL* target; //Target vessel
+	double GETbase; //usually MJD at launch
+	double DH; //Delta Height
+	int CDHtimemode; //0 = Fixed Time, 1 = Find GETI
+	double TIG; // (Estimated) Time of Ignition
+	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+};
+
+struct AP7BLKOpt
+{
+	int n; //number of PAD entries
+	double *lng; //pointer to splashdown longitudes
+	double *GETI; //pointer to ignition times
+	char **area; //pointer to splashdown areas
+};
+
+struct EarthEntryPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double P30TIG; //Time of Ignition (deorbit maneuver)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
+	MATRIX3 REFSMMAT;
+	bool preburn; //
+	double lat; //splashdown latitude
+	double lng; //splashdown longitude
+};
+
+struct LOIMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-2 (w/o MCC), 3 = LOI-2
+	double MCCGET; //GET for the last MCC
+	double lat; //target for MCC
+	double lng; //target for MCC
+	double PeriGET; //time of periapsis (for MCC)
+	double h_apo;	//for LOI-1
+	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
+	double inc;		//Inclination (equatorial) for LOI-1
+	bool useSV;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+};
+
+struct OrbAdjOpt
+{
+	VESSEL* vessel;
+	OBJHANDLE gravref;
+	double SPSGET;
+	double GETbase; //usually MJD at launch
+	double h_apo;	//
+	double h_peri;	//
+	double inc;		//
+	bool useSV;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+};
+
+struct TLIPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition (deorbit maneuver)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
+	MATRIX3 REFSMMAT;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -109,20 +216,38 @@ class RTCC {
 public:
 	RTCC();
 	void Init(MCC *ptr);
-	void Calculation(int fcn,LPVOID &pad);
+	void Calculation(int fcn,LPVOID &pad, char * upString = NULL);
+
+	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
+	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
+	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
+	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
+	void NavCheckPAD(SV sv, AP7NAV &pad);
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC();
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
-	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
-	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude);
 	double getGETBase();
-	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
+	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
+	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
+	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
+	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
+	char* CMCStateVectorUpdate(SV sv, bool csm);
+	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
+	char* CMCEntryUpdate(double LatSPL, double LngSPL);
+	char* V71Update(int* emem, int n);
 };
 
 

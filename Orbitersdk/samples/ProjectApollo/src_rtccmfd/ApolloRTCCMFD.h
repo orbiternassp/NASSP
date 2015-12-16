@@ -25,7 +25,6 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"
@@ -51,7 +50,6 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
-	void set_timemode();
 	void t1dialogue();
 	void set_t1(double t1);
 	void t2dialogue();
@@ -62,8 +60,6 @@ public:
 	void set_DH(double DH);
 	void revdialogue();
 	void set_rev(int rev);
-	void set_unit();
-	void set_orient();
 	void set_target();
 	//void set_offset();
 	void xdialogue();
@@ -82,7 +78,6 @@ public:
 	void menuSetEntryPage();
 	void menuSetSVPage();
 	void menuSetMenu();
-	void menuOffsetUnit();
 	void menuSetConfigPage();
 	void menuSetOrbAdjPage();
 	void menuSetMapUpdatePage();
@@ -105,7 +100,7 @@ public:
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
-	void set_dvdisplaymode();
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	void gravrefdialogue();
 	void set_gravref(OBJHANDLE body);
 	double timetoperi();
@@ -165,9 +160,30 @@ public:
 	void offvecdialogue();
 	void set_offvec(VECTOR3 off);
 	void GetREFSMMATfromAGC();
+	void GetEntryTargetfromAGC();
 	void menuCycleSVTimeMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
+	void EntryLongitudeModeDialogue();
+	void menuSetLOIPage();
+	void menuSwitchLOIManeuver();
+	void menuSetLOIGET();
+	void set_LOIGET(double time);
+	void menuSetLOIPeriGET();
+	void set_LOIPeriGET(double time);
+	void menuSetLOILat();
+	void set_LOILat(double lat);
+	void menuSetLOILng();
+	void set_LOILng(double lng);
+	void menuSetLOIAlt();
+	void set_LOIAlt(double alt);
+	void menuSetLOIApo();
+	void set_LOIApo(double alt);
+	void menuSetLOIInc();
+	void set_LOIInc(double inc);
+	void menuLOICalc();
+	void menuRequestLTMFD();
+	void menuSwitchVehicle();
 
 protected:
 	oapi::Font *font;

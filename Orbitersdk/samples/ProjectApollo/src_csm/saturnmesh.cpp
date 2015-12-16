@@ -509,7 +509,8 @@ void Saturn::SetCSMStage ()
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
 
 	AddExhaust(th_main[0], 20.0, 2.25, SMExhaustTex);
-	SetPMI(_V(12, 12, 7));
+	//SetPMI(_V(12, 12, 7));
+	SetPMI(_V(4.3972, 4.6879, 1.6220));
 	SetCrossSections(_V(40,40,14));
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	SetRotDrag(_V(0.7,0.7,0.3));
@@ -776,7 +777,8 @@ void Saturn::SetReentryStage ()
 		SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	}
 	SetEmptyMass (EmptyMass);
-	SetPMI (_V(12, 12, 7));
+	SetPMI(_V(1.25411, 1.11318, 1.41524)); //Calculated from CSM-109 Mass Properties at CM/SM Separation
+	//SetPMI (_V(12, 12, 7));
 	//SetPMI (_V(1.5,1.35,1.35));
 	SetCrossSections (_V(9.17,7.13,7.0));
 	SetCW (5.5, 0.1, 3.4, 3.4);

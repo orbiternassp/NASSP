@@ -131,6 +131,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	void LoadState(FILEHANDLE scn); // LoadState callback
 
 	VECTOR3 rates;					// Integrated Euler rotation rates
+	double rollstabilityrate;
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
@@ -335,6 +336,7 @@ protected:
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
+	double vinert;
 
 	int status;
 	int SlewScribe; //pixels
@@ -359,6 +361,7 @@ protected:
 	//Comparator Circuits
 	bool pt05GComparator(double simdt);
 	bool pt02GComparator(double simdt);
+	bool Manual05GInit();
 	bool InitialTrip;
 	double OneSecTimer;
 	short int VerifyCorridor();

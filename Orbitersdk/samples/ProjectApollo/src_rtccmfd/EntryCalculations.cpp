@@ -1,8 +1,8 @@
 #include "EntryCalculations.h"
 
-Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal)
+Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual)
 {
-	MA1 = 8e8;
+	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
 	C1 = 1.5078514;
 	C2 = -6.49993054e-9;
@@ -12,19 +12,31 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	D4 = -1.4317675e-12;
 	k1 = 7.0e6;
 	k2 = 6.495e6;
-	k3 = -0.06105;
+	k3 = -0.06105;//-0.043661;
 	k4 = -0.10453;
+
+	this->entrylongmanual = entrylongmanual;
 
 	this->vessel = v;
 	this->GETbase = GETbase;
-	this->gravref = gravref;
 	this->EntryAng = EntryAng;
-	this->EntryLng = EntryLng;
+
+	if (entrylongmanual)
+	{
+		this->EntryLng = EntryLng;
+	}
+	else
+	{
+		landingzone = (int)EntryLng;
+		this->EntryLng = landingzonelong(landingzone, 0);
+	}
 
 	this->critical = critical;
 
 	VECTOR3 R0, V0;
 	double EntryInterface;
+
+	gravref = AGCGravityRef(vessel);
 
 	vessel->GetRelativePos(gravref, R0);
 	vessel->GetRelativeVel(gravref, V0);
@@ -41,7 +53,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 
 	hEarth = oapiGetObjectByName("Earth");
 
-	RCON = oapiGetSize(oapiGetObjectByName("Earth")) + EntryInterface;
+	RCON = oapiGetSize(hEarth) + EntryInterface;
 	RD = RCON;
 	mu = GGRAV*oapiGetMass(hEarth);
 
@@ -51,21 +63,14 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 
 	tigslip = 100.0;
 	ii = 0;
-	entryphase = 0;
 
-	bool stop;
+	entryphase = 0;
 
 	dt0 = EntryTIGcor - get;
 
-	coast = new CoastIntegrator(R0B, V0B, mjd, dt0, gravref, hEarth);
-	stop = false;
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	R11B = coast->R2;
-	V11B = coast->V2;
-	delete coast;
+	SOIplan = NULL;
+
+	OrbMech::oneclickcoast(R0B, V0B, mjd, dt0, R11B, V11B, gravref, hEarth);
 
 	x2 = OrbMech::cot(PI05 - EntryAng);
 	if (length(R11B) > k1)
@@ -74,7 +79,7 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 	}
 	else
 	{
-		D1 = 1.69107;
+		D1 = 1.6865;//1.69107;//1.6865;
 	}
 
 	if (critical == 0)
@@ -98,13 +103,22 @@ Entry::Entry(VESSEL *v, OBJHANDLE gravref, double GETbase, double EntryTIG, doub
 		rangeiter = 2;
 	}
 
-	R_E = oapiGetSize(gravref);
+	R_E = oapiGetSize(hEarth);
 	earthorbitangle = (-31.7 - 2.15)*RAD;
 
-	this->entrynominal = entrynominal;
+	if (critical == 0)
+	{
+		this->entrynominal = entrynominal;
+	}
+	else
+	{
+		this->entrynominal = false;
+	}
+	precision = 1;
+	errorstate = 0;
 }
 
-Entry::Entry(OBJHANDLE gravref)
+Entry::Entry(OBJHANDLE gravref, int critical)
 {
 	this->critical = critical;
 	this->gravref = gravref;
@@ -112,8 +126,20 @@ Entry::Entry(OBJHANDLE gravref)
 	double EntryInterface;
 	EntryInterface = 400000.0 * 0.3048;
 
-	RCON = oapiGetSize(gravref) + EntryInterface;
+	hEarth = oapiGetObjectByName("Earth");
+	mu = GGRAV*oapiGetMass(hEarth);
+
+	RCON = oapiGetSize(hEarth) + EntryInterface;
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	if (critical == 0)
+	{
+		EMSAlt = 284643.0*0.3048;
+	}
+	else
+	{
+		EMSAlt = 297431.0*0.3048;
+	}
 }
 
 void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
@@ -133,16 +159,50 @@ void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &
 	xt2 = xt2 + Dxt2;
 }
 
-void Entry::xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x)
+void Entry::xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double &x)
+{
+	double xdes, fac1, fac2, sing, cosg, R0, R, VT0, VR0, h0, x_apo, p, dv;
+	int i;
+	VECTOR3 N, V;
+
+	x_apo = 100000;
+	i = 0;
+
+	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
+	fac1 = 1.0 / sqrt(xdes*xdes + 1.0);
+	fac2 = -xdes / sqrt(xdes*xdes + 1.0);
+	h0 = length(crossp(R1B, V1B));
+
+	N = crossp(unit(R1B), unit(V1B));
+	sing = length(N);
+	cosg = dotp(unit(R1B), unit(V1B));
+	x = cosg / sing;
+	R0 = length(R1B);
+	R = R0 / RCON;
+	VT0 = h0 / R0;
+	VR0 = dotp(R1B, V1B) / R0;
+	while (abs(x_apo - x) > OrbMech::power(2.0, -20.0))
+	{
+		p = 2.0*R0*(R - 1.0) / (R*R*(1.0 + x2*x2) - (1.0 + x*x));
+		V = (unit(R1B)*x + unit(crossp(crossp(R1B, V1B), R1B)))*sqrt(mu*p) / R0;
+		dv = length(V - V1B);
+		x_apo = x;
+		x = (VR0 - dv*fac2) / (VT0 - dv*fac1);
+		i++;
+	}
+}
+
+void Entry::xdviterator2(int f1, VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
 {
 	double xdes, xact, x_err,x_apo, x_err_apo, epsilon, p_CON, beta9;
 	VECTOR3 Entry_DV, DV, V2;
 	int i;
 	i = 0;
 	epsilon = pow(2.0, -20.0);
-	double dx = 1;
 
 	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
+
+	x_err_apo = 1000;
 
 	while (abs(dx) > epsilon && i < 135)
 	{
@@ -153,13 +213,17 @@ void Entry::xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2,
 		xact = Entry_DV.z / Entry_DV.x;
 		x_err = xdes - xact;
 
-		if (i == 0)
+		//if (i == 0)
+		//{
+		//	dx = -0.01*(xdes - xact);
+		//}
+		//else
+		//{
+			//dx = x_err*((x_apo - x) / (x_err - x_err_apo));
+		//}
+		if (abs(x_err) > abs(x_err_apo))
 		{
-			dx = -0.01*(xdes - xact);
-		}
-		else
-		{
-			dx = x_err*((x_apo - x) / (x_err - x_err_apo));
+			dx = -dx*0.5;
 		}
 		beta9 = x + 1.1*dx;
 		if (beta9 > xmax)
@@ -175,8 +239,6 @@ void Entry::xdviterator2(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2,
 		x += dx;
 		i++;
 	}
-
-
 }
 
 void Entry::xdviterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
@@ -273,11 +335,11 @@ void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI)
 		{
 			double v2;
 			v2 = length(VEI);
-			x2_apo = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+			x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
 		}
 		else
 		{
-			x2_apo = x2;
+			x2 = x2;
 		}
 	}
 }
@@ -285,20 +347,21 @@ void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI)
 void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21)
 {
 	VECTOR3 U_R1, U_H, REI, VEI;
-	double MA2, x2_err, x2_err_apo,C_FPA;
+	double MA2, x2_err, C_FPA;
 	int n1;
 
 	x2_err = 1.0;
 	precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
 	n1 = 1;
-	while (abs(x2_err) > 0.0001 && n1<=10)
+	while (abs(x2_err) > 0.00001 && n1 <= 10)
 	{
 		conicreturn(0, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
 		t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
 		OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
+		x2_apo = x2;
 		reentryconstraints(n1, R1B, VEI);
 		x2_err = x2_apo - x2;
-		newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
+		//newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
 		n1++;
 	}
 	t2 = t1 + t21;
@@ -306,16 +369,18 @@ void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, d
 	landingsite(REI, VEI, t2, theta_long, theta_lat);
 }
 
-void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
+void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
 {
-	double RD, R_ERR, dRCON, rPRE_apo, r1b, lambda, beta1, beta5, theta1, theta2, p_CON, C_FPA, MA2;
+	double RD, R_ERR, dRCON, rPRE_apo, r1b, lambda, beta1, beta5, theta1, theta2, p_CON, C_FPA, MA2, x2_err;
 	VECTOR3 U_R1, U_V1, RPRE, VPRE, U_H, eta;
-	int n1;
+	int n1, n2;
 
 	n1 = 0;
+	n2 = 0;
 	RCON = oapiGetSize(oapiGetObjectByName("Earth")) + 400000.0 * 0.3048;
 	RD = RCON;
 	R_ERR = 1000.0;
+	x2_err = 1.0;
 
 	U_R1 = unit(R1B);
 	U_V1 = unit(V1B);
@@ -353,16 +418,80 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double t21, doubl
 	}
 
 	finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+	//reentryconstraints(n1 + 1, R1B, VPRE);
+	//x2 = x2_apo;
+	//beta1 = 1.0 + x2*x2;
 	R_ERR = length(RPRE) - RD;
-
-	while (abs(R_ERR) > 10.0 && n1<=10)
+	while (abs(x2_err) > 0.00001 && n2 <= 10)
 	{
-		newrcon(n1, RD, length(RPRE), R_ERR, dRCON, rPRE_apo);
-		conicreturn(1, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
-		finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
-		R_ERR = length(RPRE) - RD;
-		n1++;
+		n1 = 0;
+		while (n1 == 0 || (abs(R_ERR) > 100.0 && n1 <= 20))
+		{
+			//finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+			//R_ERR = length(RPRE) - RD;
+			newrcon(n1, RD, length(RPRE), R_ERR, dRCON, rPRE_apo);
+			conicreturn(1, R1B, V1B, MA2, C_FPA, U_R1, U_H, V2, x, n1);
+			finalstatevector(R1B, V2, beta1, t21, RPRE, VPRE);
+			R_ERR = length(RPRE) - RD;
+			n1++;
+		}
+		x2_apo = x2;
+		if (critical > 0)
+		{
+			reentryconstraints(n2, R1B, VPRE);
+		}
+		x2_err = x2_apo - x2;
+		beta1 = 1.0 + x2*x2;
+		n2++;
 	}
+	t2 = t1 + t21;
+	landingsite(RPRE, VPRE, t2, theta_long, theta_lat);
+	if (n1 == 21)
+	{
+		errorstate = 1;
+	}
+	if (n2 == 11)
+	{
+		errorstate = 2;
+	}
+}
+
+void Entry::precisionperi(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
+{
+	double R0, R1, R, x_apo, p, dv, h0, sing, cosg, VT0, VR0, xdes, fac1, fac2;
+	VECTOR3 N, RPRE, VPRE;
+	int i;
+
+	x_apo = 100000;
+	i = 0;
+
+	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
+	fac1 = 1.0 / sqrt(xdes*xdes + 1.0);
+	fac2 = -xdes / sqrt(xdes*xdes + 1.0);
+	h0 = length(crossp(R1B, V1B));
+	N = crossp(unit(R1B), unit(V1B));
+	sing = length(N);
+	cosg = dotp(unit(R1B), unit(V1B));
+	x = cosg / sing;
+	R0 = length(R1B);
+	R1 = R_E - 30.0*1852.0;
+	R = R0 / R1;
+	VT0 = h0 / R0;
+	VR0 = dotp(R1B, V1B) / R0;
+	while (abs(x_apo - x) > OrbMech::power(2.0, -20.0))
+	{
+		p = 2.0*R0*(R - 1.0) / (R*R - (1.0 + x*x));
+		V2 = (unit(R1B)*x + unit(crossp(crossp(R1B, V1B), R1B)))*sqrt(mu*p) / R0;
+		dv = length(V2 - V1B);
+		x_apo = x;
+		x = (VR0 - dv*fac2) / (VT0 - dv*fac1);
+		i++;
+	}
+	t21 = OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, RPRE, VPRE);
+	N = crossp(unit(RPRE), unit(VPRE));
+	sing = length(N);
+	cosg = dotp(unit(RPRE), unit(VPRE));
+	x2 = cosg / sing;
 	t2 = t1 + t21;
 	landingsite(RPRE, VPRE, t2, theta_long, theta_lat);
 }
@@ -385,6 +514,10 @@ void Entry::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON,
 		}
 		dRCON = S*R_ERR;
 		this->RCON = RCON + dRCON;
+		if (RCON < 1e6)
+		{
+			RCON = 1e6;
+		}
 	}
 	rPRE_apo = rPRE;
 }
@@ -420,8 +553,8 @@ void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21,
 			beta4 = beta2 / (1.0 - phi2*sqrt(beta3));
 		}
 		beta12 = beta4 - 1.0;
-		if (abs(beta12) > 0.000007)
-		{
+		//if (abs(beta12) > 0.000007)
+		//{
 			RF = beta4*length(RPRE);
 			if (beta12 > 0)
 			{
@@ -453,7 +586,7 @@ void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21,
 			dt21apo = dt21;
 			OrbMech::oneclickcoast(RPRE, VPRE, mjd + (dt0 + dt1 + t21) / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
 			t21 += dt21;
-		}
+		//}
 	}
 }
 
@@ -500,7 +633,7 @@ void Entry::landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, dou
 
 void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1)
 {
-	double theta1, theta2, theta3, xmin, xmax, p_CON, beta6, xlim, dx;
+	double theta1, theta2, theta3, xmin, xmax, p_CON, beta6, dx;
 	VECTOR3 DV;
 	conicinit(R1B, MA2, xmin, xmax, theta1, theta2, theta3);
 	if (f1 == 0)
@@ -529,8 +662,9 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			{
 				if (entrynominal)
 				{
-					xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+					//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+					//xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+					xdviterator3(R1B, V1B, x);
 				}
 				else
 				{
@@ -539,7 +673,17 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			}
 			else if (critical == 1 && entryphase == 0)
 			{
-				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+				//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+				VECTOR3 N;
+				double sing, cosg;
+				N = crossp(unit(R1B), unit(V1B));
+				sing = length(N);
+				cosg = dotp(unit(R1B), unit(V1B));
+				x = cosg / sing;
+				if (x*x > theta1)
+				{
+					x = 0.0;
+				}
 			}
 			//else
 			//{
@@ -552,8 +696,9 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			{
 				if (entrynominal)
 				{
-					xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+					//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+					//xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+					xdviterator3(R1B, V1B, x);
 				}
 				else
 				{
@@ -604,6 +749,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 					}
 					else
 					{
+
 						xmax = -xlim;
 						x = xmin;
 						dx = dxmax;
@@ -632,7 +778,9 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 			if (entrynominal)
 			{
 				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-				xdviterator2(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, x);
+				//conicinit(R1B, MA2, xmin, xmax, theta1, theta2, theta3);
+				xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+				//xdviterator3(R1B, V1B, x);
 			}
 			else
 			{
@@ -710,16 +858,34 @@ void Entry::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1,
 
 bool Entry::EntryIter()
 {
-	double theta_long, theta_lat, dlng,t21;
+	double theta_long, theta_lat, dlng;
 	VECTOR3 R1B, V1B, V2;
+
+	errorstate = 0;
 
 	dt1 = EntryTIGcor - get - dt0;
 	OrbMech::oneclickcoast(R11B, V11B, mjd + dt0 / 24.0 / 3600.0, dt1, R1B, V1B, hEarth, hEarth);
-	coniciter(R1B, V1B, EntryTIGcor, theta_long, theta_lat, V2, x, dx, t21);
-	if (entryphase == 1)
+	if (precision == 2)
 	{
-		precisioniter(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
+		precisionperi(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
 	}
+	else
+	{
+		if (entryphase == 0 || precision == 0 || critical == 0)
+		{
+			coniciter(R1B, V1B, EntryTIGcor, theta_long, theta_lat, V2, x, dx, t21);
+		}
+		if (entryphase == 1 && precision == 1)
+		{
+			precisioniter(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
+		}
+	}
+
+	if (!entrylongmanual)
+	{
+		EntryLng = landingzonelong(landingzone, theta_lat);
+	}
+
 	dlng = EntryLng - theta_long;
 	if (abs(dlng) > PI)
 	{
@@ -743,14 +909,14 @@ bool Entry::EntryIter()
 			else
 			{
 				dx = (x - xapo) / (theta_long - dlngapo)*dlng;
-				if (length(V2-V1B) > 2804.0)
+				if (length(V2 - V1B) > 2804.0)
 				{
 					dx = 0.5*max(1.0, revcor);
 					revcor++;
 				}
-				else if (abs(dx) > dxmax)
+				else if (abs(dx) > 1.0)
 				{
-					dx = OrbMech::sign(dx)*dxmax;
+					dx = OrbMech::sign(dx)*1.0;
 				}
 				xapo = x;
 				dlngapo = theta_long;
@@ -762,9 +928,14 @@ bool Entry::EntryIter()
 
 	ii++;
 
-	if ((abs(dlng) > 0.005*RAD && ii < 50) || entryphase == 0)
+	if (critical > 0 && entryphase == 0)
 	{
-		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD))
+		entryphase = 1;
+		return false;
+	}
+	else if ((abs(dlng) > 0.005*RAD && ii < 60) || entryphase == 0)
+	{
+		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD) && abs(dx)<0.1)
 		{
 			if (entryphase == 0)
 			{
@@ -776,14 +947,23 @@ bool Entry::EntryIter()
 	}
 	else
 	{
+		if (precision && entrynominal)
+		{
+			if (abs(x - xlim) < OrbMech::power(2.0, -20.0) || abs(x + xlim) < OrbMech::power(2.0, -20.0) || ii == 60)
+			//if (ii == 40)
+			{
+				ii = 2;
+				precision = 2;
+				return false;
+			}
+		}
 		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3, U_R1, U_H, DV;
 		double t32, dt22, v3, S_FPA, gammaE, phie, te, MA2, C_FPA;
 
 		precomputations(0, R1B, V1B, U_R1, U_H, MA2, C_FPA);
 
 		t2 = EntryTIGcor + t21;
-		OrbMech::rv_from_r0v0(R1B, V2, t2-EntryTIGcor, REI, VEI, mu); 
-		OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, REI, VEI, hEarth, hEarth);//Maneuver to Entry Interface (400k ft)
+		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
 
 		t32 = OrbMech::time_radius(REI, VEI, length(REI) - 30480.0, -1, mu);
 		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu); //Entry Interface to 300k ft
@@ -797,15 +977,38 @@ bool Entry::EntryIter()
 		gammaE = asin(S_FPA);
 		augekugel(v3, gammaE, phie, te);
 
+		VECTOR3 Rsph, Vsph;
+
+		OrbMech::oneclickcoast(R1B, V1B, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph, hEarth, SOIplan);
+		//OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph2, hEarth, SOIplan);
 		DV = V2 - V1B;
-		Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
+		//DV = Vsph2 - Vsph;
+		VECTOR3 i, j, k;
+		MATRIX3 Q_Xx;
+		j = unit(crossp(Vsph, Rsph));
+		k = unit(-Rsph);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		Entry_DV = mul(Q_Xx, DV);
+		//U_R1 = unit(Rsph);
+		//eta = crossp(Rsph, Vsph);
+		//U_H = unit(crossp(eta, Rsph));
+
+		//Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
 		EntryRET = t2 - EntryTIGcor + t32 + dt22;
-		EntryAng = atan(x2);
+		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
 
 		EntryLngcor = theta_long;
 		EntryLatcor = theta_lat;
+
+		if (errorstate != 0)
+		{
+			precision = 9;
+		}
+
 		return true;
 	}
 }
@@ -1399,7 +1602,7 @@ void Entry::EntryUpdateCalc()
 
 	EntryInterface = 400000 * 0.3048;
 	RCON = oapiGetSize(hEarth) + EntryInterface;
-	mu = GGRAV*oapiGetMass(gravref);
+	mu = GGRAV*oapiGetMass(hEarth);
 
 	vessel->GetRelativePos(gravref, R0);
 	vessel->GetRelativeVel(gravref, V0);
@@ -1434,7 +1637,7 @@ void Entry::EntryUpdateCalc()
 		tLSMJD = mjd + t_LS / 24.0 / 3600.0;
 		U_LS = tmul(Rot, U_LS);
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-		R = OrbMech::GetRotationMatrix2(gravref, tLSMJD);
+		R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
 		LSEF = tmul(R, U_LS);
 		l = LSEF.x;
 		m = LSEF.z;
@@ -1552,7 +1755,7 @@ void Entry::augekugel(double ve, double gammae, double &phie, double &Te)
 		}
 		else
 		{
-			K2 = 2.4 + 0.000285*(vefps - 32000.0);
+			K2 = 2.4 + 0.000285*(vefps - 33625.0);//32000
 		}
 	}
 	phie = K1 / (abs(gammaedeg) - K2);
@@ -1622,4 +1825,42 @@ double Entry::WPL(double lat)
 	{
 		return 170.0*RAD;
 	}
+}
+
+double Entry::landingzonelong(int zone, double lat)
+{
+	if (zone == 0)
+	{
+		return MPL(lat);
+	}
+	else if (zone == 1)
+	{
+		return EPL(lat);
+	}
+	else if (zone == 2)
+	{
+		return AOL(lat);
+	}
+	else if (zone == 3)
+	{
+		return IOL(lat);
+	}
+	else
+	{
+		return WPL(lat);
+	}
+}
+
+OBJHANDLE Entry::AGCGravityRef(VESSEL *vessel)
+{
+	OBJHANDLE gravref;
+	VECTOR3 rsph;
+
+	gravref = oapiGetObjectByName("Moon");
+	vessel->GetRelativePos(gravref, rsph);
+	if (length(rsph) > 64373760.0)
+	{
+		gravref = oapiGetObjectByName("Earth");
+	}
+	return gravref;
 }

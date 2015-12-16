@@ -133,8 +133,9 @@ void LEM::SetLmVesselDockStage()
 	}
 	SetSize (6);
 	// SetPMI (_V(2.8,2.29,2.37));
+	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	// SetCrossSections (_V(21,23,17));
-	SetPMI (_V(3.26,2.22,3.26));
+	//SetPMI(_V(3.26, 2.22, 3.26));
 	SetCrossSections (_V(24.53,21.92,24.40));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));

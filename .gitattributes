@@ -6,5 +6,7 @@
 *.vcproj eol=crlf
 *.bat	eol=crlf
 *.sln	eol=crlf
+# Let's try this for scenario files too
+*.scn	eol=crlf
 # Do not propagate build script into branches unless requested
 appveyor.yml merge=ours

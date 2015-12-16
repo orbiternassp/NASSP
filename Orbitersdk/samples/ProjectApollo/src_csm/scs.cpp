@@ -554,6 +554,7 @@ GDC::GDC()
 	fdai_err_z = 0;
 	rsiRotationOn = false;
 	rsiRotationStart = 0;
+	rollstabilityrate = 0;
 }
 
 void GDC::Init(Saturn *v)
@@ -668,11 +669,13 @@ void GDC::Timestep(double simdt) {
 	// Special Logic for Entry .05 Switch
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
-		rates.y = rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
+		rates.y = -rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
+		rollstabilityrate = rollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
 		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
 		rates.y = yawBmag->GetRates().y;
+		rollstabilityrate = rollBmag->GetRates().z;
 	}
 	rates.z = rollBmag->GetRates().z;
 
@@ -2681,6 +2684,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	constG = 9.7939; //Set initial value
 	RSIRotation = PI/2;
 	RSITarget = 0;
+	vinert = 37000.0;
 
 	switchchangereset = false;
 
@@ -2727,7 +2731,7 @@ void EMS::Init(Saturn *vessel) {
 void EMS::TimeStep(double MissionTime, double simdt) {
 
 	double position;
-	double dV;
+	double dV, dV_res;
 
 	AccelerometerTimeStep(simdt);
 
@@ -2790,23 +2794,36 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 			if (ThresholdBreeched) { // if .05G comparator has been tripped
 
-				if (pt02GComparator(simdt)) ThresholdBreeched = false;
+				if (pt02GComparator(simdt) && !Manual05GInit()) ThresholdBreeched = false;
 
-				ScrollPosition = ScrollPosition + (dV * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
-				dVRangeCounter -= dV * simdt;
+				dV_res = 0.948*dV; //Resolution factor from RTCC requirements for reentry phase: https://archive.org/download/nasa_techdoc_19740074547/19740074547.pdf
+				ScrollPosition = ScrollPosition + (dV_res * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
+				vinert -= dV_res;
+
+				if (vinert < 0.0) //Did the EMS integrator have the ability to count below 0? If yes, range goes up again.
+				{
+					vinert = 0.0;
+				}
+				dVRangeCounter -= 0.000162*(vinert + 0.5*dV_res) * simdt; //Also from the RTCC document
 
 				pt05GLightOn = true;
-				if (!CorridorEvaluated){
-					TenSecTimer -= simdt;
-					if (TenSecTimer < 0.0) {
-						LiftVectLightOn = VerifyCorridor();
-						CorridorEvaluated = true;
+				if (!Manual05GInit())
+				{
+					if (!CorridorEvaluated) {
+						TenSecTimer -= simdt;
+						if (TenSecTimer < 0.0) {
+							LiftVectLightOn = VerifyCorridor();
+							CorridorEvaluated = true;
+						}
 					}
-				} else {
-					if (xaccG > 2) LiftVectLightOn = 0;
+					else {
+						if (xaccG > 2) LiftVectLightOn = 0;
+					}
 				}
-			} else {
-				if (pt05GComparator(simdt)) ThresholdBreeched = true;
+			}
+			else
+			{
+				if (pt05GComparator(simdt) || Manual05GInit()) ThresholdBreeched = true;
 				TenSecTimer = 10.0;
 			}
 
@@ -2815,13 +2832,25 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		case EMS_STATUS_Vo_SET:
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
-				ScrollPosition += 480*ScrollScaling * simdt;
+			{
+				ScrollPosition += 480 * ScrollScaling * simdt; 
+				vinert -= 480 * simdt;
+			}
 			else if (position == 2)
-				ScrollPosition += 30*ScrollScaling * simdt;
-			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=40.0)
-				ScrollPosition -= 480*ScrollScaling * simdt;
-			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
-				ScrollPosition -= 30*ScrollScaling * simdt;
+			{
+				ScrollPosition += 30 * ScrollScaling * simdt;
+				vinert -= 30 * simdt;
+			}
+			else if (position == 3 && (MaxScrollPosition - ScrollPosition) <= 40.0)
+			{
+				ScrollPosition -= 480 * ScrollScaling * simdt;
+				vinert += 480 * simdt;
+			}
+			else if (position == 4 && (MaxScrollPosition - ScrollPosition) <= 40.0)
+			{
+				ScrollPosition -= 30 * ScrollScaling * simdt;
+				vinert += 30 * simdt;
+			}
 			break;
 
 		case EMS_STATUS_RNG_SET:
@@ -2855,6 +2884,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 
 		case EMS_STATUS_EMS_TEST3:
+			vinert = 37000.0;
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
 				dVRangeCounter += 127.5 * simdt;
@@ -2882,6 +2912,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 
 		case EMS_STATUS_EMS_TEST5:
+			vinert = 37000.0;
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
 				ScrollPosition += 480*ScrollScaling * simdt;
@@ -2932,7 +2963,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	}
 
 	if (status != EMS_STATUS_OFF && sat->EMSRollSwitch.IsUp()) {
-		SetRSIRotation(RSITarget + sat->gdc.rates.y * simdt);
+		SetRSIRotation(RSITarget + sat->gdc.rollstabilityrate * simdt);
 		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
 	}
 
@@ -3167,6 +3198,14 @@ bool EMS::pt02GComparator(double simdt) {
 	return false;
 }
 
+bool EMS::Manual05GInit() {
+	if (sat->EMSModeSwitch.IsDown() && status == EMS_STATUS_ENTRY)
+	{
+		return true;
+	}
+	return false;
+}
+
 short int EMS::VerifyCorridor() {
 	if (xaccG > .262) return 1;
 	if (xaccG < .262) return -1;
@@ -3223,6 +3262,7 @@ void EMS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
 	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
+	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
 	papiWriteScenario_double(scn, "RSITARGET", RSITarget);
 	papiWriteScenario_double(scn, "SCROLLPOSITION", ScrollPosition);
@@ -3260,6 +3300,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
+		} else if (!strnicmp (line, "VINERTIAL", 9)) {
+			sscanf(line + 9, "%lf", &vinert);
 		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
 			sscanf(line + 10, "%lf", &dVTestTime);
 		} else if (!strnicmp (line, "RSITARGET", 9)) {

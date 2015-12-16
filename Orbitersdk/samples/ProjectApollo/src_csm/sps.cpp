@@ -584,7 +584,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		} else {
 			if (saturn->Realism) {
 				// Stop engine
-				saturn->SetThrusterResource(spsThruster, NULL);			
+				saturn->SetThrusterResource(spsThruster, NULL);
 				saturn->SetThrusterLevel(spsThruster, 0);
 				saturn->rjec.SetSPSActive(false);
 				engineOnCommanded = false;
@@ -781,6 +781,7 @@ SPSGimbalActuator::SPSGimbalActuator() {
 	motor2StartSource = 0;
 	trimThumbwheel = 0;
 	scsTvcModeSwitch = 0;
+	CGSwitch = 0;
 }
 
 SPSGimbalActuator::~SPSGimbalActuator() {
@@ -789,7 +790,7 @@ SPSGimbalActuator::~SPSGimbalActuator() {
 
 void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
-							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch) {
+							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch) {
 
 	saturn = s;
 	tvcGimbalDriveSwitch = driveSwitch;
@@ -801,6 +802,7 @@ void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwi
 	motor2StartSource = m2StartSource;
 	trimThumbwheel = tThumbwheel;
 	scsTvcModeSwitch = modeSwitch;
+	CGSwitch = csmlmcogSwitch;
 }
 
 void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis) {
@@ -902,11 +904,13 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 
 	if (activeSystem == 1) {
 		if (IsSystem1Powered() && motor1Running) {
-			position = commandedPosition;  // Instant positioning	
+			//position = commandedPosition; // Instant positioning
+			GimbalTimestep(simdt);
 		}
 	} else {
 		if (IsSystem2Powered() && motor2Running) {
-			position = commandedPosition;  // Instant positioning	
+			//position = commandedPosition; // Instant positioning
+			GimbalTimestep(simdt);
 		}
 	}
 
@@ -915,6 +919,25 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 	if (position < -5.5) { position = -5.5; }
 
 	// sprintf(oapiDebugString(), "position %.3f commandedPosition %.3f cmcPosition %.3f", position, commandedPosition, cmcPosition);
+}
+
+void SPSGimbalActuator::GimbalTimestep(double simdt)
+{
+	double LMR, dposcmd, poscmdsign, dpos;
+
+	LMR = 0.15*DEG;
+
+	dposcmd = commandedPosition - position;
+	poscmdsign = abs(commandedPosition - position) / (commandedPosition - position);
+	if (abs(dposcmd)>LMR*simdt)
+	{
+		dpos = poscmdsign*LMR*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	position += dpos;
 }
 
 void SPSGimbalActuator::SystemTimestep(double simdt) {
