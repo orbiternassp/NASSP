@@ -91,7 +91,7 @@ public:
 
 	void Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
-			  ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch);
+			  ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch);
 	void Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -100,7 +100,6 @@ public:
 	void ChangeCMCPosition(double delta);
 	void ZeroCMCPosition() { cmcPosition = 0; }
 
-	double* GimbalDynamics(double pos, double vel, double acc, double deltac);
 	void GimbalTimestep(double simdt);
 
 protected:
@@ -110,8 +109,6 @@ protected:
 	void DrawSystem2Power();
 
 	double position;
-	double velocity;
-	double accel;
 	double commandedPosition;
 	double cmcPosition;
 	double scsPosition;
@@ -124,6 +121,7 @@ protected:
 	ThreePosSwitch *tvcGimbalDriveSwitch, *gimbalMotor1Switch, *gimbalMotor2Switch, *scsTvcModeSwitch;
 	e_object *motor1Source, *motor1StartSource, *motor2Source, *motor2StartSource;
 	ThumbwheelSwitch *trimThumbwheel;
+	AGCIOSwitch *CGSwitch;
 };
 
 ///

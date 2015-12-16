@@ -763,8 +763,6 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 SPSGimbalActuator::SPSGimbalActuator() {
 
 	position = 0;
-	velocity = 0;
-	accel = 0;
 	commandedPosition = 0;
 	cmcPosition = 0;
 	scsPosition = 0;
@@ -783,6 +781,7 @@ SPSGimbalActuator::SPSGimbalActuator() {
 	motor2StartSource = 0;
 	trimThumbwheel = 0;
 	scsTvcModeSwitch = 0;
+	CGSwitch = 0;
 }
 
 SPSGimbalActuator::~SPSGimbalActuator() {
@@ -791,7 +790,7 @@ SPSGimbalActuator::~SPSGimbalActuator() {
 
 void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
-							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch) {
+							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch) {
 
 	saturn = s;
 	tvcGimbalDriveSwitch = driveSwitch;
@@ -803,6 +802,7 @@ void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwi
 	motor2StartSource = m2StartSource;
 	trimThumbwheel = tThumbwheel;
 	scsTvcModeSwitch = modeSwitch;
+	CGSwitch = csmlmcogSwitch;
 }
 
 void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis) {
@@ -923,33 +923,21 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 
 void SPSGimbalActuator::GimbalTimestep(double simdt)
 {
-	double *f1, *f2;
-	double accelint, velint, posint;
-	f1 = NULL;
-	f2 = NULL;
-	f1 = new double[3];
-	f2 = new double[3];
-	
-	f1 = GimbalDynamics(position, velocity, accel, commandedPosition);
-	posint = position + simdt*f1[0];
-	velint = velocity + simdt*f1[1];
-	accelint = accel + simdt*f1[2];
-	f2 = GimbalDynamics(posint, velint, accelint, commandedPosition);
-	position += simdt*0.5*(f1[0] + f2[0]);
-	velocity += simdt*0.5*(f1[1] + f2[1]);
-	accel += simdt*0.5*(f1[2] + f2[2]);
-	//sprintf(oapiDebugString(), "position %f velocity %f accel %f commandedPosition %f", position, velocity, accel, commandedPosition);
-}
+	double LMR, dposcmd, poscmdsign, dpos;
 
-double* SPSGimbalActuator::GimbalDynamics(double pos, double vel, double acc, double deltac)
-{
-	double* dy = NULL;
-	dy = new double[3];
+	LMR = 0.15*DEG;
 
-	dy[0] = vel;
-	dy[1] = acc;
-	dy[2] = -35.52*acc - 571.958*vel - 5101.2*pos + 5.12e3*deltac;
-	return dy;
+	dposcmd = commandedPosition - position;
+	poscmdsign = abs(commandedPosition - position) / (commandedPosition - position);
+	if (abs(dposcmd)>LMR*simdt)
+	{
+		dpos = poscmdsign*LMR*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	position += dpos;
 }
 
 void SPSGimbalActuator::SystemTimestep(double simdt) {
@@ -1036,8 +1024,6 @@ void SPSGimbalActuator::SaveState(FILEHANDLE scn) {
 
 	// START_STRING is written in Saturn
 	papiWriteScenario_double(scn, "POSITION", position);
-	papiWriteScenario_double(scn, "VELOCITY", velocity);
-	papiWriteScenario_double(scn, "ACCELERATION", accel);
 	papiWriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
 	papiWriteScenario_double(scn, "CMCPOSITION", cmcPosition);
 	papiWriteScenario_double(scn, "SCSPOSITION", scsPosition);
@@ -1061,12 +1047,6 @@ void SPSGimbalActuator::LoadState(FILEHANDLE scn) {
 
 		if (!strnicmp (line, "POSITION", 8)) {
 			sscanf(line + 8, "%lf", &position);
-		}
-		if (!strnicmp(line, "VELOCITY", 8)) {
-			sscanf(line + 8, "%lf", &velocity);
-		}
-		if (!strnicmp(line, "ACCELERATION", 12)) {
-			sscanf(line + 12, "%lf", &accel);
 		}
 		else if (!strnicmp (line, "COMMANDEDPOSITION", 17)) {
 			sscanf(line + 17, "%lf", &commandedPosition);
