@@ -1354,6 +1354,7 @@ int ARCore::subThread()
 		opt.gravref = gravref;
 		opt.h_apo = apo_desnm * 1852.0;
 		opt.h_peri = peri_desnm * 1852.0;
+		opt.impulsive = RTCC_NONIMPULSIVE;
 		opt.inc = incdeg*RAD;
 		opt.SPSGET = SPSGET;
 		opt.vessel = vessel;

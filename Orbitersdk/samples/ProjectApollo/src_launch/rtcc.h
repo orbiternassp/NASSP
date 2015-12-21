@@ -195,6 +195,7 @@ struct OrbAdjOpt
 	double inc;		//
 	bool useSV;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 };
 
 struct TLIPADOpt
