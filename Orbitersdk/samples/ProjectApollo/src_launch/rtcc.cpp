@@ -768,7 +768,103 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 24: //MISSION C SPS-5: PUGS TEST AND MTVC
+	case 24: //MISSION C BLOCK DATA 14
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { 136.0*RAD, 136.0*RAD, 134.0*RAD, 170.0*RAD, -22.0*RAD, -25.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(127,45,11),OrbMech::HHMMSSToSS(129,21,34),OrbMech::HHMMSSToSS(130,53,56),OrbMech::HHMMSSToSS(132,33,15),OrbMech::HHMMSSToSS(133,19,17),OrbMech::HHMMSSToSS(134,53,55) };
+		char area[6][10] = { "081-3A", "082-3A", "083-3B", "084-CC", "085-AC", "086-2C" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 25: //MISSION C BLOCK DATA 15
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -27.0*RAD, -60.0*RAD, -62.2*RAD, -62.0*RAD, -62.2*RAD, -63.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(136,29,19),OrbMech::HHMMSSToSS(137,54,53),OrbMech::HHMMSSToSS(139,30,6),OrbMech::HHMMSSToSS(141,6,7),OrbMech::HHMMSSToSS(142,42,26),OrbMech::HHMMSSToSS(144,16,25) };
+		char area[6][10] = { "087-2A", "088-1B", "089-1A", "090-1B", "091-1A", "092-1A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 26: //MISSION C BLOCK DATA 16
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -162.0*RAD, -161.9*RAD, -163.0*RAD, 133.9*RAD, 133.9*RAD, 141.9*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(146,58,14),OrbMech::HHMMSSToSS(148,34,16),OrbMech::HHMMSSToSS(150,9,20),OrbMech::HHMMSSToSS(151,25,41),OrbMech::HHMMSSToSS(153,1,35),OrbMech::HHMMSSToSS(154,38,44) };
+		char area[6][10] = { "093-4A", "094-4A", "095-4A", "096-3A", "097-3A", "098-3C" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 27: //MISSION C BLOCK DATA 17
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -18.0*RAD, -24.0*RAD, -23.9*RAD, -27.0*RAD, -61.6*RAD, -62.7*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(155,27,54),OrbMech::HHMMSSToSS(157,0,51),OrbMech::HHMMSSToSS(158,35,56),OrbMech::HHMMSSToSS(160,10,26),OrbMech::HHMMSSToSS(161,35,40),OrbMech::HHMMSSToSS(163,10,40) };
+		char area[6][10] = { "099-AC", "100-AC", "101-2C", "102-2A", "103-1B", "104-1A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 28: //MISSION C SPS-5: PUGS TEST AND MTVC
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -834,7 +930,127 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 25: //MISSION C SPS-6: MINIMUM IMPULSE
+	case 29: //MISSION C BLOCK DATA 18
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -62.7*RAD, -63.1*RAD, -162.5*RAD, -162.5*RAD, -162.5*RAD, 139.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(164,46,6),OrbMech::HHMMSSToSS(166,21,55),OrbMech::HHMMSSToSS(168,59,3),OrbMech::HHMMSSToSS(170,40,38),OrbMech::HHMMSSToSS(172,22,48),OrbMech::HHMMSSToSS(173,34,54) };
+		char area[6][10] = { "105-1A", "106-1A", "107-4A", "108-4A", "109-4A", "110-3A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 30: //MISSION C BLOCK DATA 19
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { 138.9*RAD, 152.0*RAD, -9.0*RAD, -23.9*RAD, -31.0*RAD, -26.9*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(175,17,19),OrbMech::HHMMSSToSS(177,0,44),OrbMech::HHMMSSToSS(177,42,42),OrbMech::HHMMSSToSS(179,14,47),OrbMech::HHMMSSToSS(180,48,41),OrbMech::HHMMSSToSS(182,26,21) };
+		char area[6][10] = { "111-3A", "112-3C", "113-AC", "114-AC", "115-AC", "116-2A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 31: //MISSION C BLOCK DATA 20
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -55.2*RAD, -60.0*RAD, -60.0*RAD, -70.2*RAD, -63.0*RAD, -162.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(183,54,59),OrbMech::HHMMSSToSS(185,31,45),OrbMech::HHMMSSToSS(187,12,18),OrbMech::HHMMSSToSS(188,54,8),OrbMech::HHMMSSToSS(190,35,19),OrbMech::HHMMSSToSS(193,9,9) };
+		char area[6][10] = { "117-1C", "118-1A", "119-1B", "120-1A", "121-1A", "122-4A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 32: //MISSION C BLOCK DATA 21
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -162.0*RAD, -163.5*RAD, -166.0*RAD, -10.0*RAD, -12.0*RAD, -18.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(194,50,14),OrbMech::HHMMSSToSS(196,31,45),OrbMech::HHMMSSToSS(198,9,57),OrbMech::HHMMSSToSS(198,43,50),OrbMech::HHMMSSToSS(200,17,18),OrbMech::HHMMSSToSS(201,50,35) };
+		char area[6][10] = { "123-4A", "124-4A", "125-CC", "126-AC", "127-AC", "128-AC" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 33: //MISSION C BLOCK DATA 22
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -25.0*RAD, -27.0*RAD, -27.1*RAD, -62.0*RAD, -60.0*RAD, -60.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(203,23,55),OrbMech::HHMMSSToSS(204,58,45),OrbMech::HHMMSSToSS(206,35,31),OrbMech::HHMMSSToSS(208,2,22),OrbMech::HHMMSSToSS(209,40,53),OrbMech::HHMMSSToSS(211,20,47) };
+		char area[6][10] = { "129-AC", "130-2A", "131-2C", "132-1C", "133-1A", "134-1A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 34: //MISSION C SPS-6: MINIMUM IMPULSE
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 		AP7ManPADOpt opt;
@@ -892,7 +1108,93 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 26: //MISSION C SPS-7: SCS MANEUVER
+	case 35: //MISSION C BLOCK DATA 23
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -63.0*RAD, -161.8*RAD, -162.0*RAD, -161.7*RAD, -164.0*RAD, -5.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(213,0,32),OrbMech::HHMMSSToSS(215,38,45),OrbMech::HHMMSSToSS(217,17,27),OrbMech::HHMMSSToSS(218,57,54),OrbMech::HHMMSSToSS(220,39,3),OrbMech::HHMMSSToSS(221,19,6) };
+		char area[6][10] = { "135-1A", "136-4A", "137-4B", "138-4A", "139-4B", "140-AC" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 36: //MISSION C SV PAD
+	{
+		P27PAD * form = (P27PAD *)pad;
+		P27Opt opt;
+
+		opt.GETbase = getGETBase();
+		opt.gravref = oapiGetObjectByName("Earth");
+		opt.navcheckGET = OrbMech::HHMMSSToSS(215, 44, 0);
+		opt.SVGET = OrbMech::HHMMSSToSS(216, 14, 0);
+		opt.vessel = calcParams.src;
+
+		P27PADCalc(&opt, *form);
+	}
+	break;
+	case 37: //MISSION C BLOCK DATA 24
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -10.0*RAD, -8.0*RAD, -20.0*RAD, -31.0*RAD, -27.0*RAD, -27.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(222,51,52),OrbMech::HHMMSSToSS(224,26,0),OrbMech::HHMMSSToSS(225,58,13),OrbMech::HHMMSSToSS(227,30,42),OrbMech::HHMMSSToSS(229,6,36),OrbMech::HHMMSSToSS(230,43,18) };
+		char area[6][10] = { "141-AC", "142-AC", "143-AC", "144-AC", "145-2A", "146-2C" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 38: //MISSION C BLOCK DATA 25
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -63.0*RAD, -64.5*RAD, -64.4*RAD, -63.0*RAD, -161.5*RAD, -161.5*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(232,9,47),OrbMech::HHMMSSToSS(233,46,42),OrbMech::HHMMSSToSS(235,25,39),OrbMech::HHMMSSToSS(237,7,5),OrbMech::HHMMSSToSS(239,48,35),OrbMech::HHMMSSToSS(241,29,11) };
+		char area[6][10] = { "147-1B", "148-1A", "149-1A", "150-1A", "151-4A", "152-4A" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 39: //MISSION C SPS-7: SCS MANEUVER
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -956,7 +1258,55 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 29: //MISSION C NOMINAL DEORBIT MANEUVER 
+	case 40: //MISSION C BLOCK DATA 26
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[6] = { -161.0*RAD, -161.0*RAD, -10.0*RAD, -11.0*RAD, -17.0*RAD, -25.0*RAD };
+		double GETI[6] = { OrbMech::HHMMSSToSS(243,11,5),OrbMech::HHMMSSToSS(244,47,45),OrbMech::HHMMSSToSS(245,22,27),OrbMech::HHMMSSToSS(246,55,49),OrbMech::HHMMSSToSS(248,28,57),OrbMech::HHMMSSToSS(250,2,0) };
+		char area[6][10] = { "153-4A", "154-4C", "155-AC", "156-AC", "157-AC", "158-AC" };
+		char **test;
+		test = new char*[6];
+		for (int i = 0;i < 6;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 6;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 41: //MISSION C BLOCK DATA 27
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		double lng[7] = { -33.0*RAD, -26.5*RAD, -62.0*RAD, -64.2*RAD, -64.5*RAD, -64.2*RAD, -67.0*RAD };
+		double GETI[7] = { OrbMech::HHMMSSToSS(251,35,18),OrbMech::HHMMSSToSS(253,13,19),OrbMech::HHMMSSToSS(254,39,51),OrbMech::HHMMSSToSS(256,16,31),OrbMech::HHMMSSToSS(257,55,28),OrbMech::HHMMSSToSS(259,39,18),OrbMech::HHMMSSToSS(261,16,45) };
+		char area[7][10] = { "159-AC", "160-2A", "161-1B", "162-1A", "163-1A", "164-1A", "165-1B" };
+		char **test;
+		test = new char*[7];
+		for (int i = 0;i < 7;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = 7;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 42: //MISSION C NOMINAL DEORBIT MANEUVER 
 	{
 		AP7ENT * form = (AP7ENT *)pad;
 
@@ -1021,7 +1371,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 30: //GENERIC CSM STATE VECTOR UPDATE
+	case 50: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		double SVGET;
 		VECTOR3 R0, V0;
@@ -1042,7 +1392,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 	}
 	break;
-	case 31: //GENERIC CSM AND TARGET STATE VECTOR UPDATE
+	case 51: //GENERIC CSM AND TARGET STATE VECTOR UPDATE
 	{
 		double SVGET;
 		VECTOR3 R0, V0;
@@ -2931,4 +3281,89 @@ void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
 	pad.lat[0] = lat*DEG;
 	pad.lng[0] = lng*DEG;
 	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0;
+}
+
+void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
+{
+	double lat, lng, alt, get;
+	VECTOR3 R0, V0, pos, vel;
+	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
+	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
+	bool csm = true;
+
+	StateVectorCalc(opt->vessel, opt->SVGET, R0, V0);
+	navcheck(R0, V0, opt->GETbase + opt->navcheckGET / 24.0 / 3600.0, opt->gravref, lat, lng, alt);
+	
+	sprintf(pad.Purpose[0], "SV");
+	pad.GET[0] = opt->SVGET;
+	pad.alt = alt / 1852.0;
+	pad.lat = lat*DEG;
+	pad.lng = lng*DEG;
+	pad.NavChk = opt->navcheckGET;
+	pad.Index[0] = 21;
+	pad.Verb[0] = 71;
+
+	pos = R0;
+	vel = V0*0.01;
+	get = opt->SVGET;
+
+	if (opt->gravref == hMoon) {
+
+		pad.Data[0][0] = 1501;
+
+		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+		if (csm)
+		{
+			pad.Data[0][1] = 2;
+		}
+		else
+		{
+			pad.Data[0][1] = 77775;	// Octal coded decimal
+		}
+
+		pad.Data[0][2] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
+		pad.Data[0][3] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
+		pad.Data[0][4] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
+		pad.Data[0][5] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
+		pad.Data[0][6] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
+		pad.Data[0][7] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
+		pad.Data[0][8] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
+		pad.Data[0][9] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
+		pad.Data[0][10] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
+		pad.Data[0][11] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
+		pad.Data[0][12] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
+		pad.Data[0][13] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
+		pad.Data[0][14] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		pad.Data[0][15] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+
+	if (opt->gravref == hEarth) {
+
+		pad.Data[0][0] = 1501;
+
+		if (csm)
+		{
+			pad.Data[0][1] = 1;
+		}
+		else
+		{
+			pad.Data[0][1] = 77776;	// Octal coded decimal
+		}
+
+		pad.Data[0][2] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
+		pad.Data[0][3] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
+		pad.Data[0][4] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
+		pad.Data[0][5] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
+		pad.Data[0][6] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
+		pad.Data[0][7] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
+		pad.Data[0][8] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
+		pad.Data[0][9] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
+		pad.Data[0][10] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
+		pad.Data[0][11] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
+		pad.Data[0][12] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
+		pad.Data[0][13] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
+		pad.Data[0][14] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		pad.Data[0][15] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+
 }

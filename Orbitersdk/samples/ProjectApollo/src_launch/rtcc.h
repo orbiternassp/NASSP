@@ -207,6 +207,15 @@ struct TLIPADOpt
 	MATRIX3 REFSMMAT;
 };
 
+struct P27Opt
+{
+	VESSEL* vessel; //vessel
+	OBJHANDLE gravref; //
+	double GETbase; //usually MJD at launch
+	double SVGET; //GET of the state vector
+	double navcheckGET; //GET of the Nav Check
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	VESSEL *src;	// Our ship
@@ -249,6 +258,7 @@ private:
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);
+	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 };
 
 
