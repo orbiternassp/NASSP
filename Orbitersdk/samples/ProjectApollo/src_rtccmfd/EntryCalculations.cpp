@@ -159,7 +159,7 @@ void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &
 	xt2 = xt2 + Dxt2;
 }
 
-void Entry::xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double &x)
+void Entry::xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double xmin, double xmax, double &x)
 {
 	double xdes, fac1, fac2, sing, cosg, R0, R, VT0, VR0, h0, x_apo, p, dv;
 	int i;
@@ -167,6 +167,7 @@ void Entry::xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double &x)
 
 	x_apo = 100000;
 	i = 0;
+	dv = 0.0;
 
 	xdes = tan(earthorbitangle - acos(R_E / length(R1B)));
 	fac1 = 1.0 / sqrt(xdes*xdes + 1.0);
@@ -181,13 +182,32 @@ void Entry::xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double &x)
 	R = R0 / RCON;
 	VT0 = h0 / R0;
 	VR0 = dotp(R1B, V1B) / R0;
-	while (abs(x_apo - x) > OrbMech::power(2.0, -20.0))
+	while (abs(x_apo - x) > OrbMech::power(2.0, -20.0) && i<=100)
 	{
 		p = 2.0*R0*(R - 1.0) / (R*R*(1.0 + x2*x2) - (1.0 + x*x));
 		V = (unit(R1B)*x + unit(crossp(crossp(R1B, V1B), R1B)))*sqrt(mu*p) / R0;
-		dv = length(V - V1B);
+		if (dv - length(V - V1B)>100.0)
+		{
+			dv -= 100.0;
+		}
+		else if (dv - length(V - V1B) < -100.0)
+		{
+			dv += 100.0;
+		}
+		else
+		{
+			dv = length(V - V1B);
+		}
 		x_apo = x;
 		x = (VR0 - dv*fac2) / (VT0 - dv*fac1);
+		if (x > xmax)
+		{
+			x = xmax;
+		}
+		else if (x < xmin)
+		{
+			x = xmin;
+		}
 		i++;
 	}
 }
@@ -664,7 +684,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 				{
 					//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 					//xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator3(R1B, V1B, x);
+					xdviterator3(R1B, V1B, xmin, xmax, x);
 				}
 				else
 				{
@@ -698,7 +718,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 				{
 					//xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 					//xdviterator2(f1, R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
-					xdviterator3(R1B, V1B, x);
+					xdviterator3(R1B, V1B, xmin, xmax, x);
 				}
 				else
 				{

@@ -827,360 +827,132 @@ void MCC::TimeStep(double simdt){
 			case MST_C_SEPARATION:
 				// Ends with 1ST RDZ PHASING BURN
 				// The phasing burn was intended to place the spacecraft 76.5 n mi ahead of the S-IVB in 23 hours.
-				switch(SubState){
-				case 0: // Must plot phasing burn
-					allocPad(4); // Allocate AP7 Maneuver Pad
-					if(padForm != NULL){
-						// If success
-						startSubthread(1); // Start subthread to fill PAD
-					}else{
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if(SubStateTime > 10 && padState > -1){
-						addMessage("You can has PAD");
-						if(padAutoShow == true && padState == 0){ drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 4 * 60 * 60 + 45 * 60)
-					{
-						setState(MST_C_COAST1);
-						setSubState(0);
-					}
-					break;
-				}
+				UpdateMacro(UTP_P47MANEUVER, 4 * 60 * 60 + 45 * 60, 1, MST_C_COAST1);
 				break;
-			case MST_C_COAST1:
-				// 6-4 Deorbit Maneuver update to Block Data 2
-				switch (SubState) {
-				case 0:
-					allocPad(4); // Allocate AP7 Maneuver Pad					
-					if (padForm != NULL) {
-						// If success
-						startSubthread(2); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 1 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						// Completed. We really should test for P00 and proceed since that would be visible to the ground.
-						addMessage("Ready for uplink?");
-						sprintf(PCOption_Text, "Ready for uplink");
-						PCOption_Enabled = true;
-						setSubState(2);
-					}
-					break;
-				case 2: // Awaiting user response
-				case 3: // Negative response / not ready for uplink
-					break;				
-				case 4: // Ready for uplink
-					if (SubStateTime > 1 && padState > -1) {
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						// uplink_size = 0; // Reset
-						PCOption_Enabled = false; // No longer needed
-						setSubState(5);
-					}
-					break;
-				case 5: // Await uplink completion
-					if (cm->pcm.mcc_size == 0) {
-						addMessage("Uplink completed!");
-						setSubState(6);
-					}
-					break;
-				case 6: // Await burn
-					if (cm->GetMissionTime() > 10 * 60 * 60 + 30 * 60)
-					{
-						setState(MST_C_COAST2);
-						setSubState(0);
-					}
-					break;
-				}
+			case MST_C_COAST1: // 6-4 Deorbit Maneuver update to Block Data 2
+				UpdateMacro(UTP_P30MANEUVER, 10 * 60 * 60 + 30 * 60, 2, MST_C_COAST2);
 				break;
 			case MST_C_COAST2: //Block Data 2 to 2nd Phasing Maneuver Update
-				switch (SubState) {
-				case 0:
-					allocPad(1);// Allocate AP7 Block Data Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(3); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 14 * 60 * 60 + 16 * 60)
-					{
-						setState(MST_C_COAST3);
-						setSubState(0);
-					}
-					break;
-				}
+				UpdateMacro(UTP_BLOCKDATA, 14 * 60 * 60 + 16 * 60, 3, MST_C_COAST3);
 				break;
 			case MST_C_COAST3: // 2nd Phasing Maneuver Update to Block Data 3
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(4); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 21 * 60 * 60 + 50 * 60)
-					{
-						setState(MST_C_COAST4);
-					}
-					break;
-				}
+				UpdateMacro(UTP_P47MANEUVER, 21 * 60 * 60 + 50 * 60, 4, MST_C_COAST4);
 				break;
 			case MST_C_COAST4: // Block Data 3 to Preliminary NCC1 Update
-				switch (SubState) {
-				case 0:
-					allocPad(1);// Allocate AP7 Block Data Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(5); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 22 * 60 * 60 + 25 * 60)
-					{
-						setState(MST_C_COAST5);
-					}
-					break;
-				}
+				UpdateMacro(UTP_BLOCKDATA, 22 * 60 * 60 + 25 * 60, 5, MST_C_COAST5);
 				break;
 			case MST_C_COAST5: // Preliminary NCC1 Update to Final NCC1 Update
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					addMessage("P00 and accept");
-					if (padForm != NULL) {
-						// If success
-						startSubthread(6); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						// uplink_size = 0; // Reset
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 25 * 60 * 60 + 30 * 60)
-					{
-						setState(MST_C_COAST6);
-					}
-					break;
-				}
+				UpdateMacro(UTP_P30MANEUVER, 25 * 60 * 60 + 30 * 60, 6, MST_C_COAST6);
 				break;
-			case MST_C_COAST6: // Preliminary NCC1 Update to Final NCC1 Update
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					addMessage("P00 and accept");
-					if (padForm != NULL) {
-						// If success
-						startSubthread(7); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						// uplink_size = 0; // Reset
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 27 * 60 * 60)
-					{
-						setState(MST_C_COAST7);
-					}
-					break;
-				}
+			case MST_C_COAST6: // Final NCC1 Update to NCC2 Update
+				UpdateMacro(UTP_P30MANEUVER, 27 * 60 * 60, 7, MST_C_COAST7);
 				break;
-			case MST_C_COAST7: // Final NCC1 Update to NCC2 Update
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					addMessage("P00 and accept");
-					if (padForm != NULL) {
-						// If success
-						startSubthread(8); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						// uplink_size = 0; // Reset
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 27 * 60 * 60 + 32 * 60)
-					{
-						setState(MST_C_COAST8);
-					}
-					break;
-				}
+			case MST_C_COAST7: //  NCC2 Update to NSR Update
+				UpdateMacro(UTP_P30MANEUVER, 27 * 60 * 60 + 32 * 60, 8, MST_C_COAST8);
 				break;
-			case MST_C_COAST8: // NCC2 Update to NSR Update
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(9); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-						// The uplink should also be ready, so flush the uplink buffer to the CMC
-						this->CM_uplink_buffer();
-						// uplink_size = 0; // Reset
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 28 * 60 * 60 + 50 * 60)
-					{
-						setState(MST_C_COAST9);
-					}
-					break;
-				}
+			case MST_C_COAST8: // NSR Update to TPI Update
+				UpdateMacro(UTP_P30MANEUVER, 28 * 60 * 60 + 50 * 60, 9, MST_C_COAST9);
 				break;
-			case MST_C_COAST9: // NSR Update to TPI Update
-				switch (SubState) {
-				case 0:
-					allocPad(5);// Allocate AP7 TPI Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(10); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 30 * 60 * 60 + 11 * 60)
-					{
-						setState(MST_C_COAST10);
-					}
-					break;
-				}
+			case MST_C_COAST9: // TPI Update to Final Separation Maneuver update
+				UpdateMacro(UTP_TPI, 30 * 60 * 60 + 11 * 60, 10, MST_C_COAST10);
 				break;
-			case MST_C_COAST10: // TPI Update to Final Separation Maneuver update
-				switch (SubState) {
-				case 0:
-					allocPad(4);// Allocate AP7 Maneuver Pad
-					if (padForm != NULL) {
-						// If success
-						startSubthread(11); // Start subthread to fill PAD
-					}
-					else {
-						// ERROR STATE
-					}
-					setSubState(1);
-					// FALL INTO
-				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
-						addMessage("You can has PAD");
-						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(2);
-					}
-					break;
-				case 2: // Await burn
-					if (cm->GetMissionTime() > 30 * 60 * 60 + 54 * 60)
-					{
-						setState(MST_C_COAST11);
-					}
-					break;
-				}
+			case MST_C_COAST10: // Final Separation Maneuver update to Block Data 4
+				UpdateMacro(UTP_P47MANEUVER, 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
 				break;
-			case MST_C_COAST11:
+			case MST_C_COAST11: // Block Data 4 to Block Data 5
+				UpdateMacro(UTP_BLOCKDATA, 39 * 60 * 60 + 21 * 60, 12, MST_C_COAST12);
+				break;
+			case MST_C_COAST12: // Block Data 5 to Block Data 6
+				UpdateMacro(UTP_BLOCKDATA, 49 * 60 * 60 + 12 * 60, 13, MST_C_COAST13);
+				break;
+			case MST_C_COAST13: // Block Data 6 to Block Data 7
+				UpdateMacro(UTP_BLOCKDATA, 57 * 60 * 60 + 4 * 60, 14, MST_C_COAST14);
+				break;
+			case MST_C_COAST14: // Block Data 7 to Block Data 8
+				UpdateMacro(UTP_BLOCKDATA, 68 * 60 * 60 + 37 * 60, 15, MST_C_COAST15);
+				break;
+			case MST_C_COAST15: // Block Data 8 to SPS-3
+				UpdateMacro(UTP_BLOCKDATA, 72 * 60 * 60, 16, MST_C_COAST16);
+				break;
+			case MST_C_COAST16: // SPS-3 to Block Data 9
+				UpdateMacro(UTP_P30MANEUVER, 77 * 60 * 60 + 5 * 60, 17, MST_C_COAST17);
+				break;
+			case MST_C_COAST17: // Block Data 9 to Block Data 10
+				UpdateMacro(UTP_BLOCKDATA, 85 * 60 * 60 + 52 * 60, 18, MST_C_COAST18);
+				break;
+			case MST_C_COAST18: // Block Data 10 to Block Data 11
+				UpdateMacro(UTP_BLOCKDATA, 96 * 60 * 60 + 21 * 60, 19, MST_C_COAST19);
+				break;
+			case MST_C_COAST19: // Block Data 11 to Block Data 12
+				UpdateMacro(UTP_BLOCKDATA, 105 * 60 * 60 + 10 * 60, 20, MST_C_COAST20);
+				break;
+			case MST_C_COAST20: // Block Data 12 to Block Data 13
+				UpdateMacro(UTP_BLOCKDATA, 116 * 60 * 60 + 3 * 60, 21, MST_C_COAST21);
+				break;
+			case MST_C_COAST21: // Block Data 13 to SPS-4
+				UpdateMacro(UTP_BLOCKDATA, 117 * 60 * 60 + 30 * 60, 22, MST_C_COAST22);
+				break;
+			case MST_C_COAST22: // SPS-4 to Block Data 14
+				UpdateMacro(UTP_P30MANEUVER, 125 * 60 * 60 + 12 * 60, 23, MST_C_COAST23);
+				break;
+			case MST_C_COAST23: // Block Data 14 to Block Data 15
+				UpdateMacro(UTP_BLOCKDATA, 134 * 60 * 60 + 48 * 60, 24, MST_C_COAST24);
+				break;
+			case MST_C_COAST24: // Block Data 15 to Block Data 16
+				UpdateMacro(UTP_BLOCKDATA, 144 * 60 * 60 + 11 * 60, 25, MST_C_COAST25);
+				break;
+			case MST_C_COAST25: // Block Data 16 to Block Data 17
+				UpdateMacro(UTP_BLOCKDATA, 153 * 60 * 60 + 47 * 60, 26, MST_C_COAST26);
+				break;
+			case MST_C_COAST26: // Block Data 17 to SPS-5
+				UpdateMacro(UTP_BLOCKDATA, 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST27);
+				break;
+			case MST_C_COAST27: // SPS-5 to Block Data 18
+				UpdateMacro(UTP_P30MANEUVER, 161 * 60 * 60 + 59 * 60, 28, MST_C_COAST28);
+				break;
+			case MST_C_COAST28: // Block Data 18 to Block Data 19
+				UpdateMacro(UTP_BLOCKDATA, 172 * 60 * 60 + 42 * 60, 29, MST_C_COAST29);
+				break;
+			case MST_C_COAST29: // Block Data 19 to Block Data 20
+				UpdateMacro(UTP_BLOCKDATA, 180 * 60 * 60 + 56 * 60, 30, MST_C_COAST30);
+				break;
+			case MST_C_COAST30: // Block Data 20 to Block Data 21
+				UpdateMacro(UTP_BLOCKDATA, 192 * 60 * 60 + 17 * 60, 31, MST_C_COAST31);
+				break;
+			case MST_C_COAST31: // Block Data 21 to Block Data 22
+				UpdateMacro(UTP_BLOCKDATA, 201 * 60 * 60 + 55 * 60, 32, MST_C_COAST32);
+				break;
+			case MST_C_COAST32: // Block Data 22 to SPS-6
+				UpdateMacro(UTP_BLOCKDATA, 205 * 60 * 60 + 25 * 60, 33, MST_C_COAST33);
+				break;
+			case MST_C_COAST33: // SPS-6 to Block Data 23
+				UpdateMacro(UTP_P30MANEUVER, 210 * 60 * 60 + 11 * 60, 34, MST_C_COAST34);
+				break;
+			case MST_C_COAST34: // Block Data 23 to Block Data 24
+				UpdateMacro(UTP_BLOCKDATA, 220 * 60 * 60 + 43 * 60, 35, MST_C_COAST35);
+				break;
+			case MST_C_COAST35: // Block Data 24 to Block Data 25
+				UpdateMacro(UTP_BLOCKDATA, 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST37);
+				break;
+			case MST_C_COAST37: // Block Data 25 to SPS-7
+				UpdateMacro(UTP_BLOCKDATA, 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST38);
+				break;
+			case MST_C_COAST38: // SPS-7 to Block Data 26
+				UpdateMacro(UTP_P30MANEUVER, 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST39);
+				break;
+			case MST_C_COAST39: // Block Data 26 to Block Data 27
+				UpdateMacro(UTP_BLOCKDATA, 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST40);
+				break;
+			case MST_C_COAST40: // Block Data 27 to Deorbit Maneuver
+				UpdateMacro(UTP_BLOCKDATA, 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST41);
+				break;
+			case MST_C_COAST41:
 				switch (SubState) {
 				case 0:
 					allocPad(6);
 					if (padForm != NULL) {
 						// If success
-						startSubthread(12); // Start subthread to fill PAD
+						startSubthread(42); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1398,193 +1170,133 @@ int MCC::subThread(){
 		break;
 	case 1: // FILL PAD AP7MNV FOR AP7 PHASING BURN
 		{
-			AP7MNV * form = (AP7MNV *)padForm;
-			sprintf(form->purpose,"PHASING BURN");
 			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			rtcc->Calculation(1,padForm);
-			// Done filling form, OK to show
-			padState = 0;
-			// Pretend we did the math
+			subThreadMacro(UTP_P47MANEUVER, 1);
 			Result = 0; // Done
 		}
 		break;
 	case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
 		{
-		AP7MNV * form = (AP7MNV *)padForm;
-		sprintf(form->purpose, "6-4 DEORBIT");
-		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
-		// Clobber string
-		upString[0] = 0;
-		// Do math
-		rtcc->Calculation(2, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
-		Result = 0; // Done
+			subThreadMacro(UTP_P30MANEUVER, 2);
+			Result = 0; // Done
 		}
 		break;
 	case 3: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
+	case 5:
+	case 12:
+	case 13:
+	case 14:
+	case 15:
+	case 16:
+	case 18:
+	case 19:
+	case 20:
+	case 21:
+	case 22:
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 29:
+	case 30:
+	case 31:
+	case 32:
+	case 33:
+	case 35:
+	case 36:
+	case 37:
+	case 38:
+	case 40:
+	case 41:
 		{
-			AP7BLK * form = (AP7BLK *)padForm;
-			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
-			rtcc->Calculation(3, padForm);
-			// Done filling form, OK to show
-			padState = 0;
-			// Pretend we did the math
+			subThreadMacro(UTP_BLOCKDATA, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 	case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
 	{
-		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		rtcc->Calculation(4, padForm);
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
-		Result = 0; // Done
-	}
-	break;
-	case 5: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
-	{
-		AP7BLK * form = (AP7BLK *)padForm;
-		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
-		rtcc->Calculation(5, padForm);
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
+		subThreadMacro(UTP_P47MANEUVER, 4);
 		Result = 0; // Done
 	}
 	break;
 	case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
 	{
-		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		// Clobber string
-		upString[0] = 0;
-		//Do math
-		rtcc->Calculation(6, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
+		subThreadMacro(UTP_P30MANEUVER, 6);
 		Result = 0; // Done
 	}
 	break;
 	case 7: // FILL FINAL PAD AP7MNV FOR NCC1 MANEUVER
 	{
-		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-																							 // Clobber string
-		upString[0] = 0;
-		//Do math
-		rtcc->Calculation(7, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
+		subThreadMacro(UTP_P30MANEUVER, 7);
 		Result = 0; // Done
 	}
 	break;
 	case 8: // FILL PAD AP7MNV FOR NCC2 MANEUVER
 	{
-		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		// Clobber string
-		upString[0] = 0;
-		//Do math
-		rtcc->Calculation(8, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
+		subThreadMacro(UTP_P30MANEUVER, 8);
 		Result = 0; // Done
 	}
 	break;
 	case 9: // FILL PAD AP7MNV FOR NSR MANEUVER
 	{
-		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
 		rtcc->calcParams.src = cm;
 		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		 // Clobber string
-		upString[0] = 0;
-		//Do math
-		rtcc->Calculation(9, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
-		// Done filling form, OK to show
-		padState = 0;
-		// Pretend we did the math
+		subThreadMacro(UTP_P30MANEUVER, 9);
 		Result = 0; // Done
 	}
 	break;
 	case 10: // FILL PAD AP7TPI FOR AP7 TPI PAD
 		{
-			AP7TPI * form = (AP7TPI *)padForm;
-			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			rtcc->Calculation(10, padForm);
-			// Done filling form, OK to show
-			padState = 0;
-			// Pretend we did the math
+			subThreadMacro(UTP_TPI, 10);
 			Result = 0; // Done
 		}
 		break;
 	case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
 		{
-			AP7MNV * form = (AP7MNV *)padForm;
-			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
-			rtcc->Calculation(11, padForm);
-			// Done filling form, OK to show
-			padState = 0;
-			// Pretend we did the math
+			subThreadMacro(UTP_P47MANEUVER, 11);
 			Result = 0; // Done
 		}
 		break;
-	case 29: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
+	case 17: //FILL PAD AP7MNV FOR AP7 SPS-X PAD
+	case 23:
+	case 28:
+	case 34:
+	case 39:
+	{
+		subThreadMacro(UTP_P30MANEUVER, subThreadMode);
+		Result = 0; // Done
+	}
+	break;
+	case 42: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
 		{
 			AP7ENT * form = (AP7ENT *)padForm;
 			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
-			rtcc->Calculation(29, padForm);
+			rtcc->Calculation(42, padForm);
 			// Done filling form, OK to show
 			padState = 0;
 			// Pretend we did the math
 			Result = 0; // Done
 		}
 		break;
-	case 30: //GENERIC CSM STATE VECTOR UPDATE
+	case 50: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		//padForm = NULL;
 		// Ask RTCC for numbers
@@ -1592,7 +1304,7 @@ int MCC::subThread(){
 		// Clobber string
 		upString[0] = 0;
 		//Do math
-		rtcc->Calculation(30, padForm, upString);
+		rtcc->Calculation(50, padForm, upString);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2029,5 +1741,201 @@ void MCC::keyDown(DWORD key){
 			}
 			break;
 
+	}
+}
+
+void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate)
+{
+	if (type == UTP_BLOCKDATA) //Earth Orbit Block Data
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(1);// Allocate AP7 Block Data Pad
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 10 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (cm->GetMissionTime() > NextGET)
+			{
+				oapiSetTimeAcceleration(1.0);
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
+	else if (type == UTP_P47MANEUVER) //P47 Maneuver PAD without uplink
+	{
+		switch (SubState) {
+		case 0: // Must plot phasing burn
+			allocPad(4); // Allocate AP7 Maneuver Pad
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 10 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (cm->GetMissionTime() > NextGET)
+			{
+				oapiSetTimeAcceleration(1.0);
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
+	else if (type == UTP_P30MANEUVER)//P30 Maneuver PAD with uplinks
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(4); // Allocate AP7 Maneuver Pad					
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+				addMessage("Ready for uplink?");
+				sprintf(PCOption_Text, "Ready for uplink");
+				PCOption_Enabled = true;
+				setSubState(2);
+			}
+			break;
+		case 2: // Awaiting user response
+		case 3: // Negative response / not ready for uplink
+			break;
+		case 4: // Ready for uplink
+			if (SubStateTime > 1 && padState > -1) {
+				// The uplink should also be ready, so flush the uplink buffer to the CMC
+				this->CM_uplink_buffer();
+				// uplink_size = 0; // Reset
+				PCOption_Enabled = false; // No longer needed
+				setSubState(5);
+			}
+			break;
+		case 5: // Await uplink completion
+			if (cm->pcm.mcc_size == 0) {
+				addMessage("Uplink completed!");
+				setSubState(6);
+			}
+			break;
+		case 6: // Await burn
+			if (cm->GetMissionTime() > NextGET)
+			{
+				oapiSetTimeAcceleration(1.0);
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
+	else if (type == UTP_TPI)//TPI PAD without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(5);// Allocate AP7 TPI Pad
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 10 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (cm->GetMissionTime() > NextGET)
+			{
+				oapiSetTimeAcceleration(1.0);
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
+}
+
+void MCC::subThreadMacro(int type, int updatenumber)
+{
+	if (type == UTP_BLOCKDATA)
+	{
+		AP7BLK * form = (AP7BLK *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->Calculation(updatenumber, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_P30MANEUVER)
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		// Clobber string
+		upString[0] = 0;
+		// Do math
+		rtcc->Calculation(updatenumber, padForm, upString);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushCMCUplinkString(upString);
+		}
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_P47MANEUVER)
+	{
+		AP7MNV * form = (AP7MNV *)padForm;
+		// Ask RTCC for numbers
+		rtcc->calcParams.src = cm;
+		rtcc->Calculation(updatenumber, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_TPI)
+	{
+		AP7TPI * form = (AP7TPI *)padForm;
+		// Ask RTCC for numbers
+		rtcc->Calculation(updatenumber, padForm);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
 	}
 }

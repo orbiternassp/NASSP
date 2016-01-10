@@ -84,6 +84,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 0;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "PHASING BURN");
 	}
 	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
@@ -138,6 +139,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "6-4 DEORBIT");
 
 		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
 		if (upString != NULL) {
@@ -194,6 +196,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 0;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "PHASING BURN");
 	}
 	break;
 	case 5: //MISSION C BLOCK DATA UPDATE 3
@@ -283,6 +286,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		}
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "NCC1");
 
 		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv_A, true), CMCStateVectorUpdate(sv_P, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -315,6 +319,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 0;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "NCC2");
 
 		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -353,6 +358,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "NSR");
 
 		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -404,6 +410,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.vessel = calcParams.src;	
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "PHASING BURN");
 	}
 	break;
 	case 12: //MISSION C BLOCK DATA 4
@@ -574,7 +581,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
 		manopt.GETbase = GETbase;
-		manopt.HeadsUp = false;
+		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(75, 5, 0);
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
@@ -582,6 +589,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		manopt.sxtstardtime = 0.0;
 
 		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "SPS-3");
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -760,6 +768,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.vessel = calcParams.src;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-4");
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -920,6 +929,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		manopt.sxtstardtime = -20.0*60.0;
 
 		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "SPS-5");
 
 		form->Vc += 100.0;
 
@@ -1100,6 +1110,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		opt.vessel = calcParams.src;
 
 		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-6");
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -1250,6 +1261,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		manopt.sxtstardtime = 0.0;
 
 		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "SPS-7");
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {

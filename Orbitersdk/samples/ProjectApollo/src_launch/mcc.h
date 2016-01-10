@@ -187,8 +187,43 @@
 // Ends at DEORBIT BURN, goes to
 #define MST_C_COAST13		24
 // Ends at entry interface, goes to entry.
-#define MST_C_ABORT			25
+#define MST_C_COAST14		25
+#define MST_C_COAST15		26
+#define MST_C_COAST16		27
+#define MST_C_COAST17		28
+#define MST_C_COAST18		29
+#define MST_C_COAST19		30
+#define MST_C_COAST20		31
+#define MST_C_COAST21		32
+#define MST_C_COAST22		33
+#define MST_C_COAST23		34
+#define MST_C_COAST24		35
+#define MST_C_COAST25		36
+#define MST_C_COAST26		37
+#define MST_C_COAST27		38
+#define MST_C_COAST28		39
+#define MST_C_COAST29		40
+#define MST_C_COAST30		41
+#define MST_C_COAST31		42
+#define MST_C_COAST32		43
+#define MST_C_COAST33		44
+#define MST_C_COAST34		45
+#define MST_C_COAST35		46
+#define MST_C_COAST36		47
+#define MST_C_COAST37		48
+#define MST_C_COAST38		49
+#define MST_C_COAST39		50
+#define MST_C_COAST40		51
+#define MST_C_COAST41		52
+#define MST_C_ABORT			55
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
+
+//UPDATE TYPES
+#define UTP_BLOCKDATA		0
+#define UTP_P47MANEUVER		1
+#define UTP_P30MANEUVER		2
+#define UTP_TPI				3
+#define UTP_ENTRY			4
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -375,8 +410,10 @@ public:
 	void drawPad();											// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
+	void UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate);
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
+	void subThreadMacro(int type, int updatenumber);
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC
