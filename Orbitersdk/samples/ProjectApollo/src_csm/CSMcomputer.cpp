@@ -2815,8 +2815,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
-				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8 and 11 have proper scenarios
-				if (ApolloNo == 7 || ApolloNo == 8 || ApolloNo == 11) {
+				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8,9 and 11 have proper scenarios
+				if (ApolloNo == 7 || ApolloNo == 8 || ApolloNo == 9 || ApolloNo == 11) {
 					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] + 
 									vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
 									vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
