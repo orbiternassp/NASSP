@@ -183,7 +183,6 @@ public:
 	void set_LOIInc(double inc);
 	void menuLOICalc();
 	void menuRequestLTMFD();
-	void menuSwitchVehicle();
 
 protected:
 	oapi::Font *font;

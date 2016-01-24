@@ -127,11 +127,14 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	char Buffer2[100];
 
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
+	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
 	papiWriteScenario_mx(scn, "REFSMMAT", G->REFSMMAT);
 	papiWriteScenario_intarr(scn, "REFSMMAToct", G->REFSMMAToct, 20);
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
+	oapiWriteScenario_int(scn, "REFSMMATupl", G->REFSMMATupl);
+	papiWriteScenario_bool(scn, "REFSMMATdirect", G->REFSMMATdirect);
 	papiWriteScenario_double(scn, "T1", G->T1);
 	papiWriteScenario_double(scn, "T2", G->T2);
 	papiWriteScenario_double(scn, "CDHTIME", G->CDHtime);
@@ -171,12 +174,32 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 	papiWriteScenario_bool(scn, "ENTRYNOMINAL", G->entrynominal);
 	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
+	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
+	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
 	papiWriteScenario_double(scn, "P37GET400K", G->P37GET400K);
 	oapiWriteScenario_int(scn, "MAPPAGE", G->mappage);
 	papiWriteScenario_bool(scn, "INHIBITUPLINK", G->inhibUplLOS);
+	papiWriteScenario_double(scn, "APODESNM", G->apo_desnm);
+	papiWriteScenario_double(scn, "PERIDESNM", G->peri_desnm);
+	papiWriteScenario_double(scn, "INCDEG", G->incdeg);
+	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
+	papiWriteScenario_vec(scn, "OrbAdjDVX", G->OrbAdjDVX);
+
+	oapiWriteScenario_int(scn, "LOIMANEUVER", G->LOImaneuver);
+	papiWriteScenario_double(scn, "LOIGET", G->LOIGET);
+	papiWriteScenario_double(scn, "LOIPeriGET", G->LOIPeriGET);
+	papiWriteScenario_double(scn, "LOILat", G->LOILat);
+	papiWriteScenario_double(scn, "LOILng", G->LOILng);
+	papiWriteScenario_double(scn, "LOIapo", G->LOIapo);
+	papiWriteScenario_double(scn, "LOIperi", G->LOIperi);
+	papiWriteScenario_double(scn, "LOIinc", G->LOIinc);
+	papiWriteScenario_vec(scn, "TLCCDV", G->TLCC_dV_LVLH);
+	papiWriteScenario_vec(scn, "LOIDV", G->LOI_dV_LVLH);
+	papiWriteScenario_double(scn, "TLCCTIG", G->TLCC_TIG);
+	papiWriteScenario_double(scn, "LOITIG", G->LOI_TIG);
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -188,11 +211,14 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		bool istarget;
 
 		//papiReadScenario_int(line, "SCREEN", G->screen);
+		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
 		papiReadScenario_mat(line, "REFSMMAT", G->REFSMMAT);
 		papiReadScenario_intarr(line, "REFSMMAToct", G->REFSMMAToct, 20);
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
+		papiReadScenario_int(line, "REFSMMATupl", G->REFSMMATupl);
+		papiReadScenario_bool(line, "REFSMMATdirect", G->REFSMMATdirect);
 		papiReadScenario_double(line, "T1", G->T1);
 		papiReadScenario_double(line, "T2", G->T2);
 		papiReadScenario_double(line, "CDHTIME", G->CDHtime);
@@ -234,6 +260,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 		papiReadScenario_bool(line, "ENTRYNOMINAL", G->entrynominal);
 		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
+		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
+		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -241,6 +269,24 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "P37GET400K", G->P37GET400K);
 		papiReadScenario_int(line, "MAPPAGE", G->mappage);
 		papiReadScenario_bool(line, "INHIBITUPLINK", G->inhibUplLOS);
+		papiReadScenario_double(line, "APODESNM", G->apo_desnm);
+		papiReadScenario_double(line, "PERIDESNM", G->peri_desnm);
+		papiReadScenario_double(line, "INCDEG", G->incdeg);
+		papiReadScenario_double(line, "SPSGET", G->SPSGET);
+		papiReadScenario_vec(line, "OrbAdjDVX", G->OrbAdjDVX);
+
+		papiReadScenario_int(line, "LOIMANEUVER", G->LOImaneuver);
+		papiReadScenario_double(line, "LOIGET", G->LOIGET);
+		papiReadScenario_double(line, "LOIPeriGET", G->LOIPeriGET);
+		papiReadScenario_double(line, "LOILat", G->LOILat);
+		papiReadScenario_double(line, "LOILng", G->LOILng);
+		papiReadScenario_double(line, "LOIapo", G->LOIapo);
+		papiReadScenario_double(line, "LOIperi", G->LOIperi);
+		papiReadScenario_double(line, "LOIinc", G->LOIinc);
+		papiReadScenario_vec(line, "TLCCDV", G->TLCC_dV_LVLH);
+		papiReadScenario_vec(line, "LOIDV", G->LOI_dV_LVLH);
+		papiReadScenario_double(line, "TLCCTIG", G->TLCC_TIG);
+		papiReadScenario_double(line, "LOITIG", G->LOI_TIG);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -863,13 +909,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f", G->GETbase);
 		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->vesseltype == CSM)
+		if (G->vesseltype == 0)
 		{
 			skp->Text(1 * W / 8, 4 * H / 14, "CSM", 3);
 		}
+		else if(G->vesseltype == 1)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "CSM/LM docked", 13);
+		}
+		else if (G->vesseltype == 2)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "LM", 3);
+		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "LM", 2);
+			skp->Text(1 * W / 8, 4 * H / 14, "LM/CSM docked", 13);
 		}
 
 		oapiGetObjectName(G->gravref, Buffer, 20);
@@ -926,7 +980,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
 			}
 
-			if (G->ManPADVeh == 0)
+			if (G->vesseltype == 0)
 			{
 				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM", 3);
 			}
@@ -970,7 +1024,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "LOI-2", 5);
 			}
 
-			if (G->ManPADVeh == 1)
+			if (G->vesseltype == 1)
 			{
 				sprintf(Buffer, "LM Weight: %5.0f", G->ManPADLMWeight);
 				skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
@@ -2802,15 +2856,22 @@ void ApolloRTCCMFD::set_launchmjd(double mjd)
 
 void ApolloRTCCMFD::menuChangeVesselType()
 {
-	if (G->vesseltype == CSM)
+	if (G->vesseltype < 3)
 	{
-		G->vesseltype = LM;
-		G->g_Data.uplinkLEM = 1;
+		G->vesseltype++;
 	}
 	else
 	{
-		G->vesseltype = CSM;
+		G->vesseltype = 0;
+	}
+
+	if (G->vesseltype < 2)
+	{
 		G->g_Data.uplinkLEM = 0;
+	}
+	else
+	{
+		G->g_Data.uplinkLEM = 1;
 	}
 }
 
@@ -2884,7 +2945,7 @@ void ApolloRTCCMFD::menuCycleSVTimeMode()
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
-	if (G->vesseltype == CSM)
+	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
 		if (saturn->IsVirtualAGC() == FALSE)
@@ -2937,7 +2998,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 
 void ApolloRTCCMFD::GetEntryTargetfromAGC()
 {
-	if (G->vesseltype == CSM)
+	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
 		//if (saturn->IsVirtualAGC() == FALSE)
@@ -3182,18 +3243,6 @@ void ApolloRTCCMFD::menuRequestLTMFD()
 		{
 			G->StartIMFDRequest();
 		}
-	}
-}
-
-void ApolloRTCCMFD::menuSwitchVehicle()
-{
-	if (G->ManPADVeh < 1)
-	{
-		G->ManPADVeh++;
-	}
-	else
-	{
-		G->ManPADVeh = 0;
 	}
 }
 

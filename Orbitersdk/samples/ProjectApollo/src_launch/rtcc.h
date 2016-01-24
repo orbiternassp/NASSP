@@ -82,6 +82,7 @@ struct LambertMan //Data for Lambert targeting
 	double PhaseAngle; //Phase angle to target, will overwrite offset
 	bool prograde; //Prograde or retrograde solution
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
 
 struct AP7ManPADOpt
@@ -182,6 +183,7 @@ struct LOIMan
 	double inc;		//Inclination (equatorial) for LOI-1
 	bool useSV;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
 
 struct OrbAdjOpt
@@ -196,6 +198,7 @@ struct OrbAdjOpt
 	bool useSV;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
 
 struct TLIPADOpt

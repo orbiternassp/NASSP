@@ -3017,10 +3017,10 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref)
 	return g;
 }
 
-void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
-	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m, f_T;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, f_T;
 	int n, nmax;
 
 	nmax = 100;
@@ -3033,7 +3033,6 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravr
 	V_ref = V + DV;
 	i_y = -unit(crossp(R_ref, V_ref));
 
-	m = vessel->GetMass();
 	f_T = vessel->GetThrusterMax0(thruster);
 
 	while (abs(t_slip - t_slip_old) > 0.01)

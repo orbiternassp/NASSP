@@ -51,7 +51,7 @@ ARCore::ARCore(VESSEL* v)
 	LSLat = 0.0;
 	LSLng = 0.0;
 	manpadopt = 0;
-	vesseltype = CSM;
+	vesseltype = 0;
 	gravref = oapiGetObjectByName("Earth");
 	VECTOR3 rsph;
 	vessel->GetRelativePos(oapiGetObjectByName("Moon"), rsph);
@@ -92,7 +92,7 @@ ARCore::ARCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
 		mission = 11;
-		vesseltype = LM;
+		vesseltype = 2;
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
 	{
@@ -138,7 +138,7 @@ ARCore::ARCore(VESSEL* v)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;
-	if (vesseltype == CSM)
+	if (vesseltype == 0)
 	{
 		g_Data.uplinkLEM = 0;
 	}
@@ -203,7 +203,6 @@ ARCore::ARCore(VESSEL* v)
 	ManPADPTrim = 0.0;
 	ManPADYTrim = 0.0;
 	ManPADLMWeight = 0.0;
-	ManPADVeh = 0;
 	EntryPADRTGO = 0.0;
 	EntryPADVIO = 0.0;
 	EntryPADRET05Earth = 0.0;
@@ -667,7 +666,7 @@ void ARCore::ManeuverPAD()
 
 	CSMmass = vessel->GetMass();
 
-	if (ManPADVeh == 1)
+	if (vesseltype == 1)
 	{
 		DOCKHANDLE dock;
 		OBJHANDLE hLM;
@@ -972,7 +971,7 @@ void ARCore::send_agc_key(char key)	{
 	int bytesXmit = SOCKET_ERROR;
 	unsigned char cmdbuf[4];
 
-	if (vesseltype == LM){
+	if (vesseltype > 1){
 		cmdbuf[0] = 031; // VA,SA for LEM
 	}
 	else{
@@ -1359,6 +1358,14 @@ int ARCore::subThread()
 		opt.SPSGET = SPSGET;
 		opt.vessel = vessel;
 		opt.useSV = false;
+		if (vesseltype == 0)
+		{
+			opt.csmlmdocked = 0;
+		}
+		else if (vesseltype == 1)
+		{
+			opt.csmlmdocked = 1;
+		}
 
 		rtcc->OrbitAdjustCalc(&opt, OrbAdjDVX, P30TIG);
 
@@ -1392,7 +1399,7 @@ int ARCore::subThread()
 
 		if (REFSMMATupl == 0)
 		{
-			if (vesseltype == CSM)
+			if (vesseltype < 2)
 			{
 				REFSMMAToct[1] = 306;
 			}
@@ -1403,7 +1410,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype == CSM)
+			if (vesseltype < 2)
 			{
 				REFSMMAToct[1] = 1735;
 			}
@@ -1453,6 +1460,15 @@ int ARCore::subThread()
 		opt.PeriGET = LOIPeriGET;
 		opt.vessel = vessel;
 		opt.useSV = false;
+
+		if (vesseltype == 0)
+		{
+			opt.csmlmdocked = 0;
+		}
+		else if (vesseltype == 1)
+		{
+			opt.csmlmdocked = 1;
+		}
 
 		if (LOImaneuver == 0)
 		{
@@ -1580,7 +1596,7 @@ int ARCore::subThread()
 			mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
 			DV = mul(mat, Entry_DV);
 
-			OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor/24.0/3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+			OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor/24.0/3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), vessel->GetMass(), DV, Llambda, t_slip);
 
 			mu = GGRAV*oapiGetMass(gravref);
 			OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);

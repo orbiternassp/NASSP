@@ -566,6 +566,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		orbopt.useSV = false;
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
+		orbopt.csmlmdocked = false;
 
 		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
 
@@ -906,6 +907,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		orbopt.useSV = false;
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_IMPULSIVE;
+		orbopt.csmlmdocked = false;
 
 		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
 
@@ -1238,6 +1240,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		orbopt.useSV = false;
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
+		orbopt.csmlmdocked = false;
 
 		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
 
@@ -1376,7 +1379,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		form->Lat[0] = latitude*DEG;
 		form->Lng[0] = longitude*DEG;
 
-		sprintf(uplinkdata, "%s%s%s", CMCDesiredREFSMMATUpdate(REFSMMAT), CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH));
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -1524,7 +1527,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 
 		DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 
-		OrbMech::impulsive(opt->vessel, RA1, VA1, SVMJD + (P30TIG-GET)/24.0/3600.0, AGCGravityRef(opt->vessel), opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DV, Llambda, t_slip);
+		OrbMech::impulsive(opt->vessel, RA1, VA1, SVMJD + (P30TIG-GET)/24.0/3600.0, AGCGravityRef(opt->vessel), opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), DV, Llambda, t_slip);
 		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, AGCGravityRef(opt->vessel), gravref);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -1627,10 +1630,32 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	else
 	{
 		VECTOR3 Llambda,RA1_cor,VA1_cor;
-		double t_slip;
+		double t_slip, LMmass, mass;
 		
+		if (lambert->csmlmdocked)
+		{
+			DOCKHANDLE dock;
+			OBJHANDLE hLM;
+			VESSEL* lm;
+			if (lambert->vessel->DockingStatus(0) == 1)
+			{
+				dock = lambert->vessel->GetDockHandle(0);
+				hLM = lambert->vessel->GetDockStatus(dock);
+				lm = oapiGetVesselInterface(hLM);
+				LMmass = lm->GetMass();
+			}
+			else
+			{
+				LMmass = 0.0;
+			}
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+		mass = LMmass + lambert->vessel->GetMass();
 
-		OrbMech::impulsive(lambert->vessel, RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0), VA1_apo - VA1, Llambda, t_slip);
+		OrbMech::impulsive(lambert->vessel, RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0), mass, VA1_apo - VA1, Llambda, t_slip);
 		OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -2650,7 +2675,7 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	else
 	{
 		VECTOR3 Llambda, RA2_cor, VA2_cor;double t_slip;
-		OrbMech::impulsive(opt->vessel, RA2, VA2_alt, opt->GETbase + CDHtime_cor/24.0/3600.0, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), V_A2_apo - VA2_alt, Llambda, t_slip);
+		OrbMech::impulsive(opt->vessel, RA2, VA2_alt, opt->GETbase + CDHtime_cor/24.0/3600.0, gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), opt->vessel->GetMass(), V_A2_apo - VA2_alt, Llambda, t_slip);
 
 		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
 
@@ -2719,7 +2744,7 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
-	double SVMJD, GET;
+	double SVMJD, GET, mass, LMmass;
 	VECTOR3 R_A, V_A, R0B, V0B;
 	MATRIX3 Rot;
 	OBJHANDLE hMoon, gravref;
@@ -2745,6 +2770,29 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	}
 
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+
+	if (opt->csmlmdocked)
+	{
+		DOCKHANDLE dock;
+		OBJHANDLE hLM;
+		VESSEL* lm;
+		if (opt->vessel->DockingStatus(0) == 1)
+		{
+			dock = opt->vessel->GetDockHandle(0);
+			hLM = opt->vessel->GetDockStatus(dock);
+			lm = oapiGetVesselInterface(hLM);
+			LMmass = lm->GetMass();
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+	mass = LMmass + opt->vessel->GetMass();
 
 	if (opt->man == 0)
 	{
@@ -2790,6 +2838,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		orbopt.vessel = opt->vessel;
 		orbopt.useSV = true;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
+		orbopt.csmlmdocked = opt->csmlmdocked;
 
 		SV1.gravref = hMoon;
 		SV1.MJD = SVMJD;
@@ -2824,7 +2873,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		DVX = VA2_apo - VA2;
 
 		VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
-		OrbMech::impulsive(opt->vessel, RA2, VA2, opt->GETbase + LOIGET/24.0/3600.0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+		OrbMech::impulsive(opt->vessel, RA2, VA2, opt->GETbase + LOIGET/24.0/3600.0, hMoon, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), mass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 
 		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 
@@ -2986,8 +3035,33 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	}
 	else
 	{
-		VECTOR3 Llambda, R2_cor, V2_cor; double t_slip;
-		OrbMech::impulsive(opt->vessel, R2, V2, SPSMJD, opt->gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+		VECTOR3 Llambda, R2_cor, V2_cor; 
+		double t_slip, mass, LMmass;
+
+		if (opt->csmlmdocked)
+		{
+			DOCKHANDLE dock;
+			OBJHANDLE hLM;
+			VESSEL* lm;
+			if (opt->vessel->DockingStatus(0) == 1)
+			{
+				dock = opt->vessel->GetDockHandle(0);
+				hLM = opt->vessel->GetDockStatus(dock);
+				lm = oapiGetVesselInterface(hLM);
+				LMmass = lm->GetMass();
+			}
+			else
+			{
+				LMmass = 0.0;
+			}
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+		mass = LMmass + opt->vessel->GetMass();
+
+		OrbMech::impulsive(opt->vessel, R2, V2, SPSMJD, opt->gravref, opt->vessel->GetGroupThruster(THGROUP_MAIN, 0), mass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 
 		OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 

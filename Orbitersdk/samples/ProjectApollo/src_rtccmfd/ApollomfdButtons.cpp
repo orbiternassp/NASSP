@@ -329,7 +329,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu9, sizeof(mnu9) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuSwitchVehicle);
+	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchManPADEngine);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuSwitchHeadsUp);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);

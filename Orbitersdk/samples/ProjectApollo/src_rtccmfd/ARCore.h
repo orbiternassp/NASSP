@@ -29,8 +29,6 @@ struct ApolloRTCCMFDData {  // global data storage
 	Saturn *progVessel;
 };
 
-enum apves { CSM, LM };
-
 class ARCore {
 public:
 	ARCore(VESSEL* v);
@@ -89,7 +87,7 @@ public:
 	double P30TIG;			//Maneuver GET
 	VECTOR3 dV_LVLH;		//LVLH maneuver vector
 	OBJHANDLE maneuverplanet;
-	apves vesseltype;
+	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool inhibUplLOS;
 	double TimeTag;
 
@@ -166,7 +164,7 @@ public:
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
-	int ManPADVeh; //0 = CSM; 1 = CSM/LM
+	//int ManPADVeh; //0 = CSM; 1 = CSM/LM
 	double sxtstardtime;
 	TLIPAD tlipad;
 
