@@ -367,27 +367,27 @@ void LVDC1B::init(Saturn* own){
 	B_12 = 40.9;							// dto.
 	B_21 = -0.3611;							// dto.
 	B_22 = 29.25;							// dto.
-	// PITCH POLYNOMIAL (Apollo 9)
-	Fx[1][0] =  3.19840;
-	Fx[1][1] =  -0.544236;
-	Fx[1][2] =  0.0351605;
-	Fx[1][3] =  -0.00116379;
-	Fx[1][4] =  0.000011386;
-	Fx[2][0] =  -10.9607;
-	Fx[2][1] =  0.946620;
-	Fx[2][2] =  -0.0294206;
-	Fx[2][3] =  0.000207717;
-	Fx[2][4] =  -0.000000439036;
-	Fx[3][0] =  78.7826;
-	Fx[3][1] =  -2.83749;
-	Fx[3][2] =  0.0289710;
-	Fx[3][3] =  -0.000178363;
-	Fx[3][4] =  0.000000463029;
-	Fx[4][0] =  69.9191;
-	Fx[4][1] =  -2.007490;
-	Fx[4][2] =  0.0105367;
-	Fx[4][3] =  -0.0000233163;
-	Fx[4][4] =  0.0000000136702;
+	// PITCH POLYNOMIAL (AS-205)
+	Fx[1][0] = -0.8014017976;
+	Fx[1][1] = 0.1834943176;
+	Fx[1][2] = -0.0127672185;
+	Fx[1][3] = 0.000065735448;
+	Fx[1][4] = 0.0;
+	Fx[2][0] = 19.31641263;
+	Fx[2][1] = -0.6190923568;
+	Fx[2][2] = -0.0022020716;
+	Fx[2][3] = 0.000020108813;
+	Fx[2][4] = 0.0;
+	Fx[3][0] = 12.08184643;
+	Fx[3][1] = -0.5606283163;
+	Fx[3][2] = -0.0005797187;
+	Fx[3][3] = 0.00000592461278;
+	Fx[3][4] = 0.0;
+	Fx[4][0] = -59.31545;
+	Fx[4][1] = 0.0;
+	Fx[4][2] = 0.0;
+	Fx[4][3] = 0.0;
+	Fx[4][4] = 0.0;
 	t_1 = 10;								// Backup timer for Pre-IGM pitch maneuver
 	t_2 = 25;								// Time to initiate pitch freeze for S1C engine failure
 	t_3 = 36;								// Constant pitch freeze for S1C engine failure prior to t_2
@@ -395,10 +395,10 @@ void LVDC1B::init(Saturn* own){
 	t_4 = 45;								// Upper bound of validity for first segment of pitch freeze
 	t_5 = 81;								// Upper bound of validity for second segment of pitch freeze
 	t_6 = 0;								// Time to terminate pitch freeze after S1C engine failure
-	T_ar = 134.3;								// S1C Tilt Arrest Time	   
-	T_S1 = 33.6;							// Pitch Polynomial Segment Times
-	T_S2 = 68.6;							// dto.
-	T_S3 = 95.6;							// dto.
+	T_ar = 134.3;							// S1C Tilt Arrest Time	   
+	T_S1 = 63.8;							// Pitch Polynomial Segment Times
+	T_S2 = 109.8;							// dto.
+	T_S3 = 134.3;							// dto.
 	T_EO1 = 0;								// switching constant for SIC engine-out handling
 	T_EO2 = 0;								// allows single pass through IGM engine-out presettings when 0
 	dt = 1.7;								// Nominal powered-flight or coast-guidance computation-cycle interval
@@ -417,7 +417,7 @@ void LVDC1B::init(Saturn* own){
 	MRS = false;							// MR Shift
 	dotM_1 = 242.7976615;						// Mass flowrate of SIVB from approximately LET jettison to second MRS
 	dotM_2 = 183.3909139;						// Mass flowrate of SIVB after second MRS
-	dV_B = 0.4; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
+	dV_B = 6.22; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	ROV = 1.11706196363037;
 	ROVs = 1.5;
 	sin_phi_L = 0.477493054;					// sin of the Geodetic Launch site latitude
@@ -3109,7 +3109,7 @@ void LVDC::Init(Saturn* vs){
 	dotM_2 = 961.8088872;					// Mass flowrate of S2 after second MRS
 	dotM_3 = 222.4339038;					// Mass flowrate of S4B during first burn
 	ROT = false;
-	dV_B = 0.02; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
+	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	ROV = 1.48119724870249; //0.75-17
 	ROVs = 1.5;
 	phi_L = 28.608310*RAD;					// Geodetic Launch site latitude
@@ -4421,6 +4421,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
+				}
+				// CSM/LV separation
+				if (owner->CSMLVPyros.Blown()) {
+					owner->SeparateStage(CSM_LEM_STAGE);
+					owner->SetStage(CSM_LEM_STAGE);
+					LVDC_Stop = true;
+					return; // Stop here
 				}
 				break;
 		}
