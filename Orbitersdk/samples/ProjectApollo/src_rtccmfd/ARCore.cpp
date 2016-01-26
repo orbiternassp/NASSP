@@ -178,6 +178,10 @@ ARCore::ARCore(VESSEL* v)
 	entrycalcstate = 0;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
+	EntryTIGguess = 0.0;
+	EntryDVguess = _V(0.0, 0.0, 0.0);
+	EntryBTguess = 0.0;
+	EntryGETguess = 0.0;
 	SVSlot = true; //true = CSM; false = Other
 	BRCSPos = _V(0.0, 0.0, 0.0);
 	BRCSVel = _V(0.0, 0.0, 0.0);
@@ -280,6 +284,8 @@ ARCore::ARCore(VESSEL* v)
 
 	subThreadMode = 0;
 	subThreadStatus = 0;
+
+	requesttype = 0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -323,8 +329,17 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive) {
 			//g_Data.errorMessage = "IMFD not in Off-Axis, P30 Mode";
 			//g_Data.progState = PROGSTATE_TLI_ERROR;
-			dV_LVLH = g_Data.burnData._dV_LVLH;
-			P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
+			if (requesttype == 0)
+			{
+				dV_LVLH = g_Data.burnData._dV_LVLH;
+				P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
+			}
+			else
+			{
+				EntryDVguess = g_Data.burnData._dV_LVLH;
+				EntryTIGguess = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
+				EntryBTguess = g_Data.burnData.BT;
+			}
 			//tlipad.BurnTime = g_Data.burnData.BT;
 			//tlipad.TB6P = P30TIG - 578.0;
 			//tlipad.IgnATT
@@ -1549,70 +1564,110 @@ int ARCore::subThread()
 	{
 		bool endi = false;
 
-		while (!endi)
+		if (entrycalcmode == 3)
 		{
-			endi = entry->EntryIter();
-		}
+			VECTOR3 Llambda, R_cor, V_cor, i, j, k;
+			MATRIX3 Q_Xx;
+			double t_slip, mu;
 
-		entryprecision = entry->precision;
+			while (!endi)
+			{
+				endi = teicalc->TEIiter();
+			}
+			entryprecision = teicalc->precision;
+			EntryLatcor = teicalc->EntryLatcor;
+			EntryLngcor = teicalc->EntryLngcor;
+			Entry_DV = teicalc->Entry_DV;
+			maneuverplanet = oapiGetObjectByName("Moon");
+			P37GET400K = teicalc->TIG + teicalc->dt;
+			EntryAngcor = teicalc->EntryAng;
 
-		if (entryprecision != 9)
-		{
-
-			EntryLatcor = entry->EntryLatcor;
-			EntryLngcor = entry->EntryLngcor;
-
-			EntryRET05 = entry->EntryRET;
-			EntryRTGO = entry->EntryRTGO;
-			EntryVIO = entry->EntryVIO;
-			EntryAngcor = entry->EntryAng;
-			Entry_DV = entry->Entry_DV;
-			maneuverplanet = entry->SOIplan;//oapiGetObjectByName("Earth");
-			P37GET400K = entry->t2;
-
-
-			VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k;
-			MATRIX3 Rot, mat, Q_Xx;
-			double SVMJD, t_slip, mu;
-
-
-			vessel->GetRelativePos(gravref, R0);
-			vessel->GetRelativeVel(gravref, V0);
-			SVMJD = oapiGetSimMJD();
-
-			Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-			R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
-			V0 = mul(Rot, _V(V0.x, V0.z, V0.y));
-
-			OrbMech::oneclickcoast(R0, V0, SVMJD, entry->EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R, V, gravref, gravref);
-
-			UY = unit(crossp(V, R));
-			UZ = unit(-R);
-			UX = crossp(UY, UZ);
-
-			DV = UX*Entry_DV.x + UY*Entry_DV.y + UZ*Entry_DV.z;
-
-			mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
-			DV = mul(mat, Entry_DV);
-
-			OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor/24.0/3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), vessel->GetMass(), DV, Llambda, t_slip);
+			OrbMech::impulsive(vessel, teicalc->Rguess, teicalc->V1B, GETbase + P30TIG / 24.0 / 3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), vessel->GetMass(), teicalc->V1B_apo - teicalc->V1B, Llambda, t_slip);
 
 			mu = GGRAV*oapiGetMass(gravref);
-			OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);
+			OrbMech::rv_from_r0v0(teicalc->Rguess, teicalc->V1B, t_slip, R_cor, V_cor, mu);
 
 			j = unit(crossp(V_cor, R_cor));
 			k = unit(-R_cor);
 			i = crossp(j, k);
 			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-			EntryTIGcor = entry->EntryTIGcor + t_slip;
+			EntryTIGcor = teicalc->TIG + t_slip;
 			P30TIG = EntryTIGcor;
 			dV_LVLH = mul(Q_Xx, Llambda);
-			//dV_LVLH = tmul(mat, Llambda);
+			Entry_DV = dV_LVLH;
+
+			entrycalcstate = 0;
+			delete teicalc;
 		}
-		entrycalcstate = 0;
-		delete entry;
+		else
+		{
+			while (!endi)
+			{
+				endi = entry->EntryIter();
+			}
+
+			entryprecision = entry->precision;
+
+			if (entryprecision != 9)
+			{
+
+				EntryLatcor = entry->EntryLatcor;
+				EntryLngcor = entry->EntryLngcor;
+
+				EntryRET05 = entry->EntryRET;
+				EntryRTGO = entry->EntryRTGO;
+				EntryVIO = entry->EntryVIO;
+				EntryAngcor = entry->EntryAng;
+				Entry_DV = entry->Entry_DV;
+				maneuverplanet = entry->SOIplan;//oapiGetObjectByName("Earth");
+				P37GET400K = entry->t2;
+
+
+				VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k;
+				MATRIX3 Rot, mat, Q_Xx;
+				double SVMJD, t_slip, mu;
+
+
+				vessel->GetRelativePos(gravref, R0);
+				vessel->GetRelativeVel(gravref, V0);
+				SVMJD = oapiGetSimMJD();
+
+				Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+				R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
+				V0 = mul(Rot, _V(V0.x, V0.z, V0.y));
+
+				OrbMech::oneclickcoast(R0, V0, SVMJD, entry->EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R, V, gravref, gravref);
+
+				UY = unit(crossp(V, R));
+				UZ = unit(-R);
+				UX = crossp(UY, UZ);
+
+				DV = UX*Entry_DV.x + UY*Entry_DV.y + UZ*Entry_DV.z;
+
+				mat = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
+				DV = mul(mat, Entry_DV);
+
+				OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor / 24.0 / 3600.0, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), vessel->GetMass(), DV, Llambda, t_slip);
+
+				mu = GGRAV*oapiGetMass(gravref);
+				OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);
+
+				j = unit(crossp(V_cor, R_cor));
+				k = unit(-R_cor);
+				i = crossp(j, k);
+				Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+				EntryTIGcor = entry->EntryTIGcor + t_slip;
+				P30TIG = EntryTIGcor;
+				dV_LVLH = mul(Q_Xx, Llambda);
+				Entry_DV = dV_LVLH;
+				//dV_LVLH = tmul(mat, Llambda);
+			}
+			entrycalcstate = 0;
+			delete entry;
+		}
 
 		Result = 0;
 	}

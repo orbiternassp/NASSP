@@ -220,7 +220,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 		{ "Calculate Entry", 0, 'C' },
 		{ "Calculation Mode", 0, 'M' },
-		{ "", 0, ' ' },
+		{ "Request manuever", 0, 'Q' },
 		{ "Entry Range", 0, 'R' },
 		{ "Uplink to AGC", 0, 'U' },
 		{ "Back to main menu", 0, 'B' },
@@ -237,7 +237,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuEntryCalc);
 	RegisterFunction("MOD", OAPI_KEY_V, &ApolloRTCCMFD::CycleEntryOpt);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REQ", OAPI_KEY_Q, &ApolloRTCCMFD::menuRequestLTMFDTEI);
 	RegisterFunction("RAN", OAPI_KEY_R, &ApolloRTCCMFD::EntryRangeDialogue);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEntryUpload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);

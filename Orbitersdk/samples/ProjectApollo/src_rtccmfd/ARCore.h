@@ -72,6 +72,7 @@ public:
 	//OrbMech* mech;
 	CoastIntegrator* coast;
 	Entry* entry;
+	TEI* teicalc;
 	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 
@@ -90,6 +91,7 @@ public:
 	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool inhibUplLOS;
 	double TimeTag;
+	int requesttype; //0 = P30 for Maneuver PAD, 1 = TEI
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -137,13 +139,17 @@ public:
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
-	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data
+	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
 	int entrycalcstate;
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
+	double EntryTIGguess;
+	VECTOR3 EntryDVguess;
+	double EntryBTguess;
+	double EntryGETguess;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;

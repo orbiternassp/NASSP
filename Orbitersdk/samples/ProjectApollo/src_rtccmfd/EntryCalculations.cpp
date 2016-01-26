@@ -1789,12 +1789,12 @@ void Entry::augekugel(double ve, double gammae, double &phie, double &Te)
 	}
 }
 
-double Entry::MPL(double lat) //Calculate the splashdown longitude from the latitude for the Mid-Pacific landing area
+double MPL(double lat) //Calculate the splashdown longitude from the latitude for the Mid-Pacific landing area
 {
 	return -165.0*RAD;
 }
 
-double Entry::EPL(double lat) //Calculate the splashdown longitude from the latitude for the East-Pacific landing area
+double EPL(double lat) //Calculate the splashdown longitude from the latitude for the East-Pacific landing area
 {
 	if (lat > 21.0*RAD)
 	{
@@ -1810,7 +1810,7 @@ double Entry::EPL(double lat) //Calculate the splashdown longitude from the lati
 	}
 }
 
-double Entry::AOL(double lat)
+double AOL(double lat)
 {
 	if (lat > 10.0*RAD)
 	{
@@ -1826,12 +1826,12 @@ double Entry::AOL(double lat)
 	}
 }
 
-double Entry::IOL(double lat)
+double IOL(double lat)
 {
 	return 65.0*RAD;
 }
 
-double Entry::WPL(double lat)
+double WPL(double lat)
 {
 	if (lat > 10.0*RAD)
 	{
@@ -1847,7 +1847,7 @@ double Entry::WPL(double lat)
 	}
 }
 
-double Entry::landingzonelong(int zone, double lat)
+double landingzonelong(int zone, double lat)
 {
 	if (zone == 0)
 	{
@@ -1883,4 +1883,164 @@ OBJHANDLE Entry::AGCGravityRef(VESSEL *vessel)
 		gravref = oapiGetObjectByName("Earth");
 	}
 	return gravref;
+}
+
+TEI::TEI(VESSEL *v, double GETbase, VECTOR3 dV_LVLH, double TIG, double dt_guess, double EntryLng, bool entrylongmanual)
+{
+	MATRIX3 Rot;
+	VECTOR3 R0, V0, R0B, V0B, UX, UY, UZ, DV, REI, VEI;
+	double mjd, get, EntryInterface;
+
+	this->GETbase = GETbase;
+	this->TIG = TIG;
+	this->dt_guess = dt_guess;
+	this->EntryLng = EntryLng;
+
+	D1 = 1.6595;
+	D2 = -4.8760771e-4;
+	D3 = 4.5419476e-8;
+	D4 = -1.4317675e-12;
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+	this->entrylongmanual = entrylongmanual;
+
+	if (entrylongmanual)
+	{
+		this->EntryLng = EntryLng;
+	}
+	else
+	{
+		landingzone = (int)EntryLng;
+		this->EntryLng = landingzonelong(landingzone, 0);
+	}
+
+	EntryInterface = 400000.0 * 0.3048;
+	RCON = oapiGetSize(hEarth) + EntryInterface;
+
+	v->GetRelativePos(hMoon, R0);
+	v->GetRelativeVel(hMoon, V0);
+	mjd = oapiGetSimMJD();
+	get = (mjd - GETbase)*24.0*3600.0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R0.x, R0.z, R0.y));
+	V0B = mul(Rot, _V(V0.x, V0.z, V0.y));
+
+	OrbMech::oneclickcoast(R0B, V0B, mjd, TIG - get, Rguess, V1B, hMoon, hMoon);
+
+	UY = unit(crossp(V1B, Rguess));
+	UZ = unit(-Rguess);
+	UX = crossp(UY, UZ);
+
+	DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
+
+	//OrbMech::poweredflight(v, R1B, V1B, hMoon, v->GetGroupThruster(THGROUP_MAIN, 0), v->GetMass(), DV, R_cutoff, V_cutoff, t_go);
+	Vguess = V1B + DV;
+	V1B_apo = Vguess;
+	dt = dt_guess;
+	ii = 0;
+
+	OrbMech::oneclickcoast(Rguess, Vguess, GETbase + TIG / 24.0 / 3600.0, dt_guess, REI, VEI, hMoon, hEarth);
+	HEI = unit(crossp(REI, VEI));
+
+	precision = 1;
+}
+
+bool TEI::TEIiter()
+{
+	double REIMJD, ddt, sing, cosg, x2, v2, x2des, dx2;
+	VECTOR3 REI, REI2, VEI2, N;
+
+	REIMJD = GETbase + (TIG + dt) / 24.0 / 3600.0;
+	REI = REIcalc(EntryLng, REIMJD);
+	V1B_apo = OrbMech::Vinti(Rguess, V1B, REI, GETbase + TIG / 24.0 / 3600.0, dt, 0, false, hMoon, hMoon, hEarth, V1B_apo);
+	OrbMech::oneclickcoast(Rguess, V1B_apo, GETbase + TIG / 24.0 / 3600.0, dt, REI2, VEI2, hMoon, hEarth);
+
+	N = crossp(unit(REI2), unit(VEI2));
+	sing = length(N);
+	cosg = dotp(unit(REI2), unit(VEI2));
+	x2 = cosg / sing;
+	v2 = length(VEI2);
+	x2des = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+	dx2 = x2des - x2;
+
+	if (!entrylongmanual)
+	{
+		EntryLng = landingzonelong(landingzone, EntryLatcor);
+	}
+
+	if (ii == 0)
+	{
+		ddt = 10.0;
+		dt_apo = dt;
+		x2apo = x2;
+		dt += ddt;
+	}
+	else
+	{
+		ddt = (dt - dt_apo) / (x2 - x2apo)*dx2;
+		dt_apo = dt;
+		x2apo = x2;
+		dt += ddt;
+	}
+
+	if (abs(ddt) < 0.1 && abs(dx2) < 0.00001)
+	{
+		VECTOR3 i, j, k;
+		MATRIX3 Q_Xx;
+		j = unit(crossp(V1B, Rguess));
+		k = unit(-Rguess);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+		EntryAng = atan(x2);
+		Entry_DV = mul(Q_Xx, V1B_apo - V1B);
+		return true;
+	}
+
+	ii++;
+	return false;
+}
+
+VECTOR3 TEI::REIcalc(double lng, double REIMJD)
+{
+	double lngtest, range, rangeang;
+	VECTOR3 r_p, rlng, n1, R1, rtest, R, REI, rtest2, Rsplash, Rsplash2;
+	MATRIX3 Rot, Rot2;
+
+	r_p = unit(_V(cos(lng), 0.0, sin(lng)));
+	Rot = OrbMech::GetRotationMatrix2(hEarth, REIMJD + 300.0/24.0/3600.0);
+	Rot2 = OrbMech::J2000EclToBRCS(40222.525);
+	rlng = mul(Rot, r_p);
+	rlng = mul(Rot2,_V(rlng.x, rlng.z, rlng.y));
+	n1 = unit(crossp(rlng, _V(0.0, 0.0, 1.0)));
+
+	R1 = unit(crossp(n1, HEI))*RCON;
+	rtest = tmul(Rot2, R1);
+	rtest = unit(tmul(Rot, _V(rtest.x, rtest.z, rtest.y)));
+	rtest2 = _V(rtest.x, rtest.z, rtest.y);
+	lngtest = atan2(rtest2.y, rtest2.x);
+	if (lngtest == lng)
+	{
+		R = R1;
+	}
+	else
+	{
+		R = -R1;
+	}
+
+	Rsplash = tmul(Rot2, R);
+	Rsplash = unit(tmul(Rot, _V(Rsplash.x, Rsplash.z, Rsplash.y)));
+	Rsplash2 = _V(Rsplash.x, Rsplash.z, Rsplash.y);
+	EntryLatcor = atan2(Rsplash2.z, sqrt(Rsplash2.x*Rsplash2.x + Rsplash2.y*Rsplash2.y));
+	EntryLngcor = atan2(Rsplash2.y, Rsplash2.x);
+
+	range = 1285.0*1850.0;
+	//rangeang = range / RCON;
+	rangeang = 1285.0 / 3437.7468;
+	REI = OrbMech::RotateVector(HEI, -rangeang, R);
+
+	return REI;
 }

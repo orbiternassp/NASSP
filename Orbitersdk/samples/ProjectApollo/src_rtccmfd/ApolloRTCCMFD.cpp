@@ -176,6 +176,10 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
+	papiWriteScenario_double(scn, "ENTRYTIGGUESS", G->EntryTIGguess);
+	papiWriteScenario_vec(scn, "ENTRYDVGUESS", G->EntryDVguess);
+	papiWriteScenario_double(scn, "ENTRYBTGUESS", G->EntryBTguess);
+	papiWriteScenario_double(scn, "ENTRYGETGUESS", G->EntryGETguess);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
@@ -262,6 +266,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
+		papiReadScenario_double(line, "ENTRYTIGGUESS", G->EntryTIGguess);
+		papiReadScenario_vec(line, "ENTRYDVGUESS", G->EntryDVguess);
+		papiReadScenario_double(line, "ENTRYBTGUESS", G->EntryBTguess);
+		papiReadScenario_double(line, "ENTRYGETGUESS", G->EntryGETguess);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -782,7 +790,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "Actual Range:  %.1f NM", G->EntryRTGO);
 			skp->Text(4 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
 		}
-		else
+		else if (G->entrycalcmode == 2)
 		{
 			skp->Text(6 * W / 8,(int)(0.5 * H / 14), "P37 Block Data", 14);
 
@@ -841,6 +849,85 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->P37GET400K);
 			sprintf(Buffer, "%s 400K", Buffer);
 			skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else //TEI
+		{
+			char Buffer2[100];
+			skp->Text(6 * W / 8, (int)(0.5 * H / 14), "TEI", 3);
+
+			GET_Display(Buffer2, G->EntryGETguess);
+			sprintf(Buffer, "EI GET: %s", Buffer2);
+			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+			if (G->entrylongmanual)
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
+				sprintf(Buffer, "%f °", G->EntryLng*DEG);
+				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
+				if (G->landingzone == 0)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
+				}
+				else if (G->landingzone == 1)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
+				}
+				else if (G->landingzone == 2)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
+				}
+				else if (G->landingzone == 3)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
+				}
+				else if (G->landingzone == 4)
+				{
+					skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
+				}
+			}
+
+			skp->Text(1 * W / 8, 9 * H / 14, "Initial Guess:", 14);
+			GET_Display(Buffer, G->EntryTIGguess);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->EntryDVguess.x / 0.3048);
+			skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->EntryDVguess.y / 0.3048);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->EntryDVguess.z / 0.3048);
+			skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
+
+			if (G->entrycalcstate == 1)
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
+			}
+
+			GET_Display(Buffer, G->EntryTIGcor);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
+			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3f° Lng", G->EntryLngcor*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
+			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+			GET_Display(Buffer, G->P37GET400K);
+			sprintf(Buffer, "%s RRT", Buffer);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
+			skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
+			skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
+
+			AGC_Display(Buffer, G->Entry_DV.x / 0.3048);
+			skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->Entry_DV.y / 0.3048);
+			skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
+			skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 7)
@@ -1580,7 +1667,7 @@ void ApolloRTCCMFD::menuEntryUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		if (G->entrycalcmode == 0)
+		if (G->entrycalcmode == 0 || G->entrycalcmode == 3)
 		{
 			G->EntryUplink();
 		}
@@ -1636,7 +1723,7 @@ void ApolloRTCCMFD::CycleREFSMMATopt()
 
 void ApolloRTCCMFD::CycleEntryOpt()
 {
-	if (G->entrycalcmode < 2)
+	if (G->entrycalcmode < 3)
 	{
 		G->entrycalcmode++;
 	}
@@ -1974,13 +2061,23 @@ bool EntryGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_EntryTime(double time)
 {
-	this->G->EntryTIG = time;
+	if (G->entrycalcmode == 3)
+	{
+		this->G->EntryGETguess = time;
+	}
+	else
+	{
+		this->G->EntryTIG = time;
+	}
 }
 
 void ApolloRTCCMFD::EntryAngDialogue()
 {
-	bool EntryAngInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Entry FPA in degrees (°):", EntryAngInput, 0, 20, (void*)this);
+	if (G->entrycalcmode != 3)
+	{
+		bool EntryAngInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Entry FPA in degrees (°):", EntryAngInput, 0, 20, (void*)this);
+	}
 }
 
 bool EntryAngInput(void *id, char *str, void *data)
@@ -2626,10 +2723,15 @@ void ApolloRTCCMFD::menuEntryCalc()
 		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
-	else
+	else if (G->entrycalcmode == 2)
 	{
 		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
 		G->entrycalcstate = 1;// G->EntryCalc();
+	}
+	else
+	{
+		G->teicalc = new TEI(G->vessel, G->GETbase, G->EntryDVguess, G->EntryTIGguess + 0.5 * G->EntryBTguess, G->EntryGETguess - G->EntryTIGguess, G->EntryLng, G->entrylongmanual);
+		G->entrycalcstate = 1;
 	}
 }
 
@@ -2734,13 +2836,16 @@ void ApolloRTCCMFD::menuCalcMapUpdate()
 
 void ApolloRTCCMFD::menuSwitchCritical()
 {
-	if (G->entrycritical < 2)
+	if (G->entrycalcmode == 0)
 	{
-		G->entrycritical++;
-	}
-	else
-	{
-		G->entrycritical = 0;
+		if (G->entrycritical < 2)
+		{
+			G->entrycritical++;
+		}
+		else
+		{
+			G->entrycritical = 0;
+		}
 	}
 }
 
@@ -3039,7 +3144,7 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 
 void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 {
-	if (G->entrycalcmode == 0 || G->entrycalcmode == 2)
+	if (G->entrycalcmode == 0 || G->entrycalcmode == 2 || G->entrycalcmode == 3)
 	{
 		G->entrylongmanual = !G->entrylongmanual;
 	}
@@ -3235,6 +3340,23 @@ void ApolloRTCCMFD::menuRequestLTMFD()
 {
 	if (G->manpadopt == 0 || G->manpadopt == 2)
 	{
+		G->requesttype = 0;
+		if (G->g_Data.isRequesting)
+		{
+			G->StopIMFDRequest();
+		}
+		else
+		{
+			G->StartIMFDRequest();
+		}
+	}
+}
+
+void ApolloRTCCMFD::menuRequestLTMFDTEI()
+{
+	if (G->entrycalcmode == 3)
+	{
+		G->requesttype = 1;
 		if (G->g_Data.isRequesting)
 		{
 			G->StopIMFDRequest();

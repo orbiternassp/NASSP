@@ -13,11 +13,6 @@ public:
 	bool EntryIter();
 	//bool EntryIter2();
 	void augekugel(double ve, double gammae, double &phie, double &Te);
-	double MPL(double lat);
-	double EPL(double lat);
-	double AOL(double lat);
-	double IOL(double lat);
-	double WPL(double lat);
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
 	double EntryLngcor;	//Corrected Splashdown Longitude
@@ -49,7 +44,6 @@ private:
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, double &phi);
 	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
-	double landingzonelong(int zone, double lat);
 	OBJHANDLE AGCGravityRef(VESSEL *vessel);
 
 	OBJHANDLE gravref, hEarth;
@@ -90,5 +84,38 @@ private:
 	double xlim;
 	double t21;
 };
+
+class TEI {
+public:
+	TEI(VESSEL *v, double GETbase, VECTOR3 dV_LVLH, double TIG, double dt_guess, double EntryLng, bool entrylongmanual);
+	bool TEIiter();
+
+	int precision;
+	double EntryLatcor, EntryLngcor;
+	VECTOR3 Entry_DV;
+	VECTOR3 Rguess, V1B, V1B_apo;
+	double TIG;
+	double dt; //TEI to EI
+	double EntryAng;
+private:
+	VECTOR3 REIcalc(double lng, double REIMJD);
+
+	OBJHANDLE hMoon, hEarth;
+	VECTOR3 Vguess;
+	double GETbase, dt_guess, EntryLng, RCON;
+	VECTOR3 HEI; //Fixed specific relative angular momentum
+	double D1, D2, D3, D4;
+	double dt_apo, x2apo;
+	int ii;
+	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	bool entrylongmanual;
+};
+
+double landingzonelong(int zone, double lat);
+double MPL(double lat);
+double EPL(double lat);
+double AOL(double lat);
+double IOL(double lat);
+double WPL(double lat);
 
 #endif
