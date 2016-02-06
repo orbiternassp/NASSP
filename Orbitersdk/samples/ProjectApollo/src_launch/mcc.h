@@ -215,6 +215,7 @@
 #define MST_C_COAST39		50
 #define MST_C_COAST40		51
 #define MST_C_COAST41		52
+#define MST_C_COAST42		53
 #define MST_C_ABORT			55
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
 
@@ -224,6 +225,8 @@
 #define UTP_P30MANEUVER		2
 #define UTP_TPI				3
 #define UTP_ENTRY			4
+#define UTP_SV				5
+#define UTP_SVNAVCHECK		6
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10

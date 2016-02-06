@@ -1321,12 +1321,12 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		AP7BlockData(&opt, *form);
 	}
 	break;
-	case 42: //MISSION C NOMINAL DEORBIT MANEUVER 
+	case 42: //MISSION C NOMINAL DEORBIT MANEUVER PAD
 	{
-		AP7ENT * form = (AP7ENT *)pad;
+		AP7MNV * form = (AP7MNV *)pad;
 
 		EntryOpt entopt;
-		EarthEntryPADOpt opt;
+		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		double P30TIG, latitude, longitude;
 		MATRIX3 REFSMMAT;
@@ -1342,7 +1342,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
 		sv.R = R0;
 		sv.V = V0;
-		
+
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = getGETBase();
 		entopt.impulsive = RTCC_NONIMPULSIVE;
@@ -1350,7 +1350,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		entopt.nominal = RTCC_ENTRY_NOMINAL;
 		entopt.Range = 0;
 		entopt.ReA = -2.062*RAD;
-		entopt.TIGguess = OrbMech::HHMMSSToSS(259,39,16);
+		entopt.TIGguess = OrbMech::HHMMSSToSS(259, 39, 16);
 		entopt.type = RTCC_ENTRY_DEORBIT;
 		entopt.entrylongmanual = true;
 
@@ -1364,6 +1364,59 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		refsopt.REFSMMATopt = 1;
 
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = getGETBase();
+		opt.HeadsUp = true;
+		opt.navcheckGET = P30TIG - 40.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -20.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "164-1A RETROFIRE");
+
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
+	}
+	break;
+	case 43: //MISSION C NOMINAL DEORBIT ENTRY PAD
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EntryOpt entopt;
+		EarthEntryPADOpt opt;
+		REFSMMATOpt refsopt;
+		double P30TIG, latitude, longitude;
+		MATRIX3 REFSMMAT;
+		VECTOR3 dV_LVLH;
+		
+		entopt.vessel = calcParams.src;
+		entopt.GETbase = getGETBase();
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -64.17*RAD;
+		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.Range = 0;
+		entopt.ReA = -2.062*RAD;
+		entopt.TIGguess = OrbMech::HHMMSSToSS(259,39,16);
+		entopt.type = RTCC_ENTRY_DEORBIT;
+		entopt.entrylongmanual = true;
+
+		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude);
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = getGETBase();
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATdirect = true;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
 	
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = getGETBase();
@@ -1378,12 +1431,6 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		sprintf(form->Area[0], "164-1A");
 		form->Lat[0] = latitude*DEG;
 		form->Lng[0] = longitude*DEG;
-
-		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-		}
 	}
 	break;
 	case 50: //GENERIC CSM STATE VECTOR UPDATE

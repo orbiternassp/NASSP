@@ -1944,6 +1944,7 @@ TEI::TEI(VESSEL *v, double GETbase, VECTOR3 dV_LVLH, double TIG, double dt_guess
 
 	OrbMech::oneclickcoast(Rguess, Vguess, GETbase + TIG / 24.0 / 3600.0, dt_guess, REI, VEI, hMoon, hEarth);
 	HEI = unit(crossp(REI, VEI));
+	//head = acos(dotp(unit(crossp(_V(0.0,0.0,1.0),unit(REI))),unit(crossp(crossp(REI,VEI),REI))));
 
 	precision = 1;
 }
@@ -1952,6 +1953,7 @@ bool TEI::TEIiter()
 {
 	double REIMJD, ddt, sing, cosg, x2, v2, x2des, dx2;
 	VECTOR3 REI, REI2, VEI2, N;
+
 
 	REIMJD = GETbase + (TIG + dt) / 24.0 / 3600.0;
 	REI = REIcalc(EntryLng, REIMJD);
@@ -2006,11 +2008,12 @@ bool TEI::TEIiter()
 
 VECTOR3 TEI::REIcalc(double lng, double REIMJD)
 {
-	double lngtest, range, rangeang;
-	VECTOR3 r_p, rlng, n1, R1, rtest, R, REI, rtest2, Rsplash, Rsplash2;
+	double range, rangeang, lngtest;
+	VECTOR3 r_p, rlng, R, Rsplash, Rsplash2, REI, n1, R1, rtest, rtest2;
 	MATRIX3 Rot, Rot2;
 
 	r_p = unit(_V(cos(lng), 0.0, sin(lng)));
+
 	Rot = OrbMech::GetRotationMatrix2(hEarth, REIMJD + 300.0/24.0/3600.0);
 	Rot2 = OrbMech::J2000EclToBRCS(40222.525);
 	rlng = mul(Rot, r_p);
@@ -2022,7 +2025,7 @@ VECTOR3 TEI::REIcalc(double lng, double REIMJD)
 	rtest = unit(tmul(Rot, _V(rtest.x, rtest.z, rtest.y)));
 	rtest2 = _V(rtest.x, rtest.z, rtest.y);
 	lngtest = atan2(rtest2.y, rtest2.x);
-	if (lngtest == lng)
+	if (abs(lngtest - lng) < 0.00001*RAD)
 	{
 		R = R1;
 	}
