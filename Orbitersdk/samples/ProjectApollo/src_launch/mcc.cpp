@@ -905,98 +905,143 @@ void MCC::TimeStep(double simdt){
 			case MST_C_COAST10: // Final Separation Maneuver update to Block Data 4
 				UpdateMacro(UTP_P47MANEUVER, 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
 				break;
-			case MST_C_COAST11: // Block Data 4 to Block Data 5
-				UpdateMacro(UTP_BLOCKDATA, 39 * 60 * 60 + 21 * 60, 12, MST_C_COAST12);
+			case MST_C_COAST11: // Block Data 4 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 34 * 60 * 60 + 45 * 60, 12, MST_C_COAST12);
 				break;
-			case MST_C_COAST12: // Block Data 5 to Block Data 6
-				UpdateMacro(UTP_BLOCKDATA, 49 * 60 * 60 + 12 * 60, 13, MST_C_COAST13);
+			case MST_C_COAST12: // SV Update to Block Data 5
+				UpdateMacro(UTP_SVNAVCHECK, 39 * 60 * 60 + 21 * 60, 53, MST_C_COAST13);
 				break;
-			case MST_C_COAST13: // Block Data 6 to Block Data 7
-				UpdateMacro(UTP_BLOCKDATA, 57 * 60 * 60 + 4 * 60, 14, MST_C_COAST14);
+			case MST_C_COAST13: // Block Data 5 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 44 * 60 * 60, 13, MST_C_COAST14);
 				break;
-			case MST_C_COAST14: // Block Data 7 to Block Data 8
-				UpdateMacro(UTP_BLOCKDATA, 68 * 60 * 60 + 37 * 60, 15, MST_C_COAST15);
+			case MST_C_COAST14: // SV Update to Block Data 6
+				UpdateMacro(UTP_SVNAVCHECK, 49 * 60 * 60 + 12 * 60, 53, MST_C_COAST15);
 				break;
-			case MST_C_COAST15: // Block Data 8 to SPS-3
-				UpdateMacro(UTP_BLOCKDATA, 72 * 60 * 60, 16, MST_C_COAST16);
+			case MST_C_COAST15: // Block Data 6 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 50 * 60 * 60 + 15 * 60, 14, MST_C_COAST16);
 				break;
-			case MST_C_COAST16: // SPS-3 to Block Data 9
-				UpdateMacro(UTP_P30MANEUVER, 77 * 60 * 60 + 5 * 60, 17, MST_C_COAST17);
+			case MST_C_COAST16: // SV Update to Block Data 7
+				UpdateMacro(UTP_SVNAVCHECK, 57 * 60 * 60 + 4 * 60, 53, MST_C_COAST17);
 				break;
-			case MST_C_COAST17: // Block Data 9 to Block Data 10
-				UpdateMacro(UTP_BLOCKDATA, 85 * 60 * 60 + 52 * 60, 18, MST_C_COAST18);
+			case MST_C_COAST17: // Block Data 7 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 67 * 60 * 60 + 50 * 60, 15, MST_C_COAST18);
 				break;
-			case MST_C_COAST18: // Block Data 10 to Block Data 11
-				UpdateMacro(UTP_BLOCKDATA, 96 * 60 * 60 + 21 * 60, 19, MST_C_COAST19);
+			case MST_C_COAST18: // SV Update to Block Data 8
+				UpdateMacro(UTP_SVNAVCHECK, 68 * 60 * 60 + 37 * 60, 52, MST_C_COAST19);
 				break;
-			case MST_C_COAST19: // Block Data 11 to Block Data 12
-				UpdateMacro(UTP_BLOCKDATA, 105 * 60 * 60 + 10 * 60, 20, MST_C_COAST20);
+			case MST_C_COAST19: // Block Data 8 to SPS-3
+				UpdateMacro(UTP_BLOCKDATA, 72 * 60 * 60, 16, MST_C_COAST20);
 				break;
-			case MST_C_COAST20: // Block Data 12 to Block Data 13
-				UpdateMacro(UTP_BLOCKDATA, 116 * 60 * 60 + 3 * 60, 21, MST_C_COAST21);
+			case MST_C_COAST20: // SPS-3 to Block Data 9
+				UpdateMacro(UTP_P30MANEUVER, 77 * 60 * 60 + 5 * 60, 17, MST_C_COAST21);
 				break;
-			case MST_C_COAST21: // Block Data 13 to SPS-4
-				UpdateMacro(UTP_BLOCKDATA, 117 * 60 * 60 + 30 * 60, 22, MST_C_COAST22);
+			case MST_C_COAST21: // Block Data 9 to Block Data 10
+				UpdateMacro(UTP_BLOCKDATA, 85 * 60 * 60 + 52 * 60, 18, MST_C_COAST22);
 				break;
-			case MST_C_COAST22: // SPS-4 to Block Data 14
-				UpdateMacro(UTP_P30MANEUVER, 125 * 60 * 60 + 12 * 60, 23, MST_C_COAST23);
+			case MST_C_COAST22: // Block Data 10 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 90 * 60 * 60, 19, MST_C_COAST23);
 				break;
-			case MST_C_COAST23: // Block Data 14 to Block Data 15
-				UpdateMacro(UTP_BLOCKDATA, 134 * 60 * 60 + 48 * 60, 24, MST_C_COAST24);
+			case MST_C_COAST23: // SV Update to SV Update
+				UpdateMacro(UTP_SVNAVCHECK, 94 * 60 * 60, 52, MST_C_COAST24);
 				break;
-			case MST_C_COAST24: // Block Data 15 to Block Data 16
-				UpdateMacro(UTP_BLOCKDATA, 144 * 60 * 60 + 11 * 60, 25, MST_C_COAST25);
+			case MST_C_COAST24: // SV Update to Block Data 11
+				UpdateMacro(UTP_SVNAVCHECK, 96 * 60 * 60 + 21 * 60, 52, MST_C_COAST25);
 				break;
-			case MST_C_COAST25: // Block Data 16 to Block Data 17
-				UpdateMacro(UTP_BLOCKDATA, 153 * 60 * 60 + 47 * 60, 26, MST_C_COAST26);
+			case MST_C_COAST25: // Block Data 11 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 97 * 60 * 60 + 40 * 60, 20, MST_C_COAST26);
 				break;
-			case MST_C_COAST26: // Block Data 17 to SPS-5
-				UpdateMacro(UTP_BLOCKDATA, 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST27);
+			case MST_C_COAST26: // SV Update to Block Data 12
+				UpdateMacro(UTP_SVNAVCHECK, 105 * 60 * 60 + 10 * 60, 52, MST_C_COAST27);
 				break;
-			case MST_C_COAST27: // SPS-5 to Block Data 18
-				UpdateMacro(UTP_P30MANEUVER, 161 * 60 * 60 + 59 * 60, 28, MST_C_COAST28);
+			case MST_C_COAST27: // Block Data 12 to Block Data 13
+				UpdateMacro(UTP_BLOCKDATA, 116 * 60 * 60 + 3 * 60, 21, MST_C_COAST28);
 				break;
-			case MST_C_COAST28: // Block Data 18 to Block Data 19
-				UpdateMacro(UTP_BLOCKDATA, 172 * 60 * 60 + 42 * 60, 29, MST_C_COAST29);
+			case MST_C_COAST28: // Block Data 13 to SPS-4
+				UpdateMacro(UTP_BLOCKDATA, 117 * 60 * 60 + 30 * 60, 22, MST_C_COAST29);
 				break;
-			case MST_C_COAST29: // Block Data 19 to Block Data 20
-				UpdateMacro(UTP_BLOCKDATA, 180 * 60 * 60 + 56 * 60, 30, MST_C_COAST30);
+			case MST_C_COAST29: // SPS-4 to SV Update
+				UpdateMacro(UTP_P30MANEUVER, 121 * 60 * 60 + 36 * 60, 23, MST_C_COAST30);
 				break;
-			case MST_C_COAST30: // Block Data 20 to Block Data 21
-				UpdateMacro(UTP_BLOCKDATA, 192 * 60 * 60 + 17 * 60, 31, MST_C_COAST31);
+			case MST_C_COAST30: // SV Update to SV Update
+				UpdateMacro(UTP_P27PAD, 123 * 60 * 60 + 40 * 60, -1, MST_C_COAST31);
 				break;
-			case MST_C_COAST31: // Block Data 21 to Block Data 22
-				UpdateMacro(UTP_BLOCKDATA, 201 * 60 * 60 + 55 * 60, 32, MST_C_COAST32);
+			case MST_C_COAST31: // SV Update to Block Data 14
+				UpdateMacro(UTP_SVNAVCHECK, 125 * 60 * 60 + 12 * 60, 52, MST_C_COAST32);
 				break;
-			case MST_C_COAST32: // Block Data 22 to SPS-6
-				UpdateMacro(UTP_BLOCKDATA, 205 * 60 * 60 + 25 * 60, 33, MST_C_COAST33);
+			case MST_C_COAST32: // Block Data 14 to Block Data 15
+				UpdateMacro(UTP_BLOCKDATA, 134 * 60 * 60 + 48 * 60, 24, MST_C_COAST33);
 				break;
-			case MST_C_COAST33: // SPS-6 to Block Data 23
-				UpdateMacro(UTP_P30MANEUVER, 210 * 60 * 60 + 11 * 60, 34, MST_C_COAST34);
+			case MST_C_COAST33: // Block Data 15 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 139 * 60 * 60 + 40 * 60, 25, MST_C_COAST34);
 				break;
-			case MST_C_COAST34: // Block Data 23 to Block Data 24
-				UpdateMacro(UTP_BLOCKDATA, 220 * 60 * 60 + 43 * 60, 35, MST_C_COAST35);
+			case MST_C_COAST34: // SV Update to SV Update
+				UpdateMacro(UTP_P27PAD, 143 * 60 * 60 + 20 * 60, -1, MST_C_COAST35);
 				break;
-			case MST_C_COAST35: // Block Data 24 to Block Data 25
-				UpdateMacro(UTP_BLOCKDATA, 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST37);
+			case MST_C_COAST35: // SV Update to Block Data 16
+				UpdateMacro(UTP_SVNAVCHECK, 144 * 60 * 60 + 11 * 60, 52, MST_C_COAST36);
 				break;
-			case MST_C_COAST37: // Block Data 25 to SPS-7
-				UpdateMacro(UTP_BLOCKDATA, 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST38);
+			case MST_C_COAST36: // Block Data 16 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 147 * 60 * 60 + 10 * 60, 26, MST_C_COAST37);
 				break;
-			case MST_C_COAST38: // SPS-7 to Block Data 26
-				UpdateMacro(UTP_P30MANEUVER, 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST39);
+			case MST_C_COAST37: // SV Update to Block Data 17
+				UpdateMacro(UTP_SVNAVCHECK, 153 * 60 * 60 + 47 * 60, 26, MST_C_COAST38);
 				break;
-			case MST_C_COAST39: // Block Data 26 to Block Data 27
-				UpdateMacro(UTP_BLOCKDATA, 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST40);
+			case MST_C_COAST38: // Block Data 17 to SPS-5
+				UpdateMacro(UTP_BLOCKDATA, 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST39);
 				break;
-			case MST_C_COAST40: // Block Data 27 to Deorbit Maneuver
-				UpdateMacro(UTP_BLOCKDATA, 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST41);
+			case MST_C_COAST39: // SPS-5 to Block Data 18
+				UpdateMacro(UTP_P30MANEUVER, 161 * 60 * 60 + 59 * 60, 28, MST_C_COAST40);
 				break;
-			case MST_C_COAST41: // Deorbit Maneuver PAD to Entry PAD
-				UpdateMacro(UTP_P30MANEUVER, 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST42);
+			case MST_C_COAST40: // Block Data 18 to SV Update
+				UpdateMacro(UTP_BLOCKDATA, 169 * 60 * 60, 29, MST_C_COAST41);
 				break;
-			case MST_C_COAST42:
-				UpdateMacro(UTP_ENTRY, 300 * 60 * 60, 43, MST_C_COAST42);
+			case MST_C_COAST41: // SV Update to Block Data 19
+				UpdateMacro(UTP_SVNAVCHECK, 172 * 60 * 60 + 42 * 60, 52, MST_C_COAST42);
+				break;
+			case MST_C_COAST42: // Block Data 19 to Block Data 20
+				UpdateMacro(UTP_BLOCKDATA, 180 * 60 * 60 + 56 * 60, 30, MST_C_COAST43);
+				break;
+			case MST_C_COAST43: // Block Data 20 to Block Data 21
+				UpdateMacro(UTP_BLOCKDATA, 192 * 60 * 60 + 17 * 60, 31, MST_C_COAST44);
+				break;
+			case MST_C_COAST44: // Block Data 21 to Block Data 22
+				UpdateMacro(UTP_BLOCKDATA, 201 * 60 * 60 + 55 * 60, 32, MST_C_COAST45);
+				break;
+			case MST_C_COAST45: // Block Data 22 to SPS-6
+				UpdateMacro(UTP_BLOCKDATA, 205 * 60 * 60 + 25 * 60, 33, MST_C_COAST46);
+				break;
+			case MST_C_COAST46: // SPS-6 to Block Data 23
+				UpdateMacro(UTP_P30MANEUVER, 210 * 60 * 60 + 11 * 60, 34, MST_C_COAST47);
+				break;
+			case MST_C_COAST47: // Block Data 23 to SV PAD
+				UpdateMacro(UTP_BLOCKDATA, 213 * 60 * 60, 35, MST_C_COAST48);
+				break;
+			case MST_C_COAST48: // SV PAD to P27 PAD
+				UpdateMacro(UTP_SVNAVCHECK, 214 * 60 * 60 + 10 * 60, 52, MST_C_COAST49);
+				break;
+			case MST_C_COAST49: //P27 PAD to Block Data 24
+				UpdateMacro(UTP_P27PAD, 220 * 60 * 60 + 43 * 60, 36, MST_C_COAST50);
+				break;
+			case MST_C_COAST50: // Block Data 24 to Block Data 25
+				UpdateMacro(UTP_BLOCKDATA, 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST51);
+				break;
+			case MST_C_COAST51: // Block Data 25 to SPS-7
+				UpdateMacro(UTP_BLOCKDATA, 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST52);
+				break;
+			case MST_C_COAST52: // SPS-7 to Block Data 26
+				UpdateMacro(UTP_P30MANEUVER, 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST53);
+				break;
+			case MST_C_COAST53: // Block Data 26 to Block Data 27
+				UpdateMacro(UTP_BLOCKDATA, 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST54);
+				break;
+			case MST_C_COAST54: // Block Data 27 to Deorbit Maneuver
+				UpdateMacro(UTP_BLOCKDATA, 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST55);
+				break;
+			case MST_C_COAST55: // Deorbit Maneuver PAD to Entry PAD
+				UpdateMacro(UTP_P30MANEUVER, 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
+				break;
+			case MST_C_COAST56:
+				UpdateMacro(UTP_ENTRY, 300 * 60 * 60, 43, MST_C_COAST56);
 				break;
 			}
 		}
@@ -1199,16 +1244,18 @@ int MCC::subThread(){
 		Result = 0;  // Success (negative = error)
 		break;
 	case 1: // FILL PAD AP7MNV FOR AP7 PHASING BURN
+	case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
 		{
 			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P47MANEUVER, 1);
+			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 	case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
 		{
+			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P30MANEUVER, 2);
 			Result = 0; // Done
 		}
@@ -1241,19 +1288,11 @@ int MCC::subThread(){
 	case 40:
 	case 41:
 		{
+			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_BLOCKDATA, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
-	case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
-	{
-		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
-		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-		subThreadMacro(UTP_P47MANEUVER, 4);
-		Result = 0; // Done
-	}
-	break;
 	case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
 	{
 		// Ask RTCC for numbers
@@ -1300,6 +1339,7 @@ int MCC::subThread(){
 		break;
 	case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
 		{
+			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P47MANEUVER, 11);
 			Result = 0; // Done
 		}
@@ -1309,40 +1349,56 @@ int MCC::subThread(){
 	case 28:
 	case 34:
 	case 39:
-	{
-		subThreadMacro(UTP_P30MANEUVER, subThreadMode);
-		Result = 0; // Done
-	}
-	break;
+		{
+			rtcc->calcParams.src = cm;
+			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
+			Result = 0; // Done
+		}
+		break;
 	case 42: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
 		{
-			AP7ENT * form = (AP7ENT *)padForm;
-			// Ask RTCC for numbers
 			rtcc->calcParams.src = cm;
-			rtcc->Calculation(42, padForm);
-			// Done filling form, OK to show
-			padState = 0;
-			// Pretend we did the math
+			subThreadMacro(UTP_ENTRY, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 	case 50: //GENERIC CSM STATE VECTOR UPDATE
-	{
-		//padForm = NULL;
-		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
-		// Clobber string
-		upString[0] = 0;
-		//Do math
-		rtcc->Calculation(50, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
+		{
+			rtcc->calcParams.src = cm;
+			subThreadMacro(UTP_SV, subThreadMode);
+			Result = 0; // Done
 		}
-		//padState = 0;
-		Result = 0; // Done
-	}
-	break;
+		break;
+	case 51: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE
+		{
+			rtcc->calcParams.src = cm;
+			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+			subThreadMacro(UTP_SV, subThreadMode);
+			Result = 0; // Done
+		}
+		break;
+	case 52: //GENERIC CSM STATE VECTOR UPDATE AND NAV CHECK PAD
+		{
+			rtcc->calcParams.src = cm;
+			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
+			Result = 0; // Done
+		}
+		break;
+	case 53: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE AND NAV CHECK PAD
+		{
+			rtcc->calcParams.src = cm;
+			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
+			Result = 0; // Done
+		}
+		break;
+	case 54: //GENERIC CSM STATE VECTOR PAD
+		{
+			rtcc->calcParams.src = cm;
+			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
+			Result = 0; // Done
+		}
+		break;
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
@@ -1434,11 +1490,23 @@ void format_time(char *buf, double time) {
 	sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
 }
 
+// PAD Utility: Format precise time.
+void format_time_prec(char *buf, double time) {
+	buf[0] = 0; // Clobber
+	int hours, minutes;
+	double seconds;
+	if (time < 0) { return; } // don't do that
+	hours = (int)(time / 3600);
+	minutes = (int)((time / 60) - (hours * 60));
+	seconds = ((time - (hours * 3600)) - (minutes * 60));
+	sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
+}
+
 // Draw PAD display
 void MCC::drawPad(){
 	char buffer[512];
-	char tmpbuf[32];
-	char tmpbuf2[32];
+	char tmpbuf[36];
+	char tmpbuf2[36];
 	if(padNumber > 0 && padForm == NULL){
 		oapiAnnotationSetText(NHpad,"PAD data lost");
 		return;
@@ -1462,28 +1530,42 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
+	case 2: //P27PAD
+		{
+			P27PAD * form = (P27PAD *)padForm;
+			format_time(tmpbuf, form->GET[0]);
+			sprintf(buffer, "P27 UPDATE\nPURP V%d\nGET %s\n304 01 INDEX %d\n", form->Verb[0], tmpbuf, form->Index[0]);
+			for (int i = 0;i < 16;i++)
+			{
+				sprintf(buffer, "%s       %02o %05d\n", buffer,i+2, form->Data[0][i]);
+			}
+			format_time_prec(tmpbuf, form->NavChk);
+			sprintf(buffer, "%sNAV CHECK (N34)\n%s\nLAT %+07.2f\nLONG %+07.2f\nALT %+07.1f\n", buffer, tmpbuf, form->lat, form->lng, form->alt);
+			oapiAnnotationSetText(NHpad, buffer);
+		}
+		break;
 	case 3: // AP7NAV
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
-			format_time(tmpbuf, form->NavChk[0]);
-			sprintf(buffer, "NAV CHECK\nGET (N34): %s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n", tmpbuf, form->lat[0], form->lng[0], form->alt[0]);
+			format_time_prec(tmpbuf, form->NavChk[0]);
+			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n", tmpbuf, form->lat[0], form->lng[0], form->alt[0]);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
 	case 4: // AP7MNV
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
-			format_time(tmpbuf, form->GETI);
-			format_time(tmpbuf2, form->NavChk);
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33): %s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\n%s TLAT, LONG\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z);			
+			format_time_prec(tmpbuf, form->GETI);
+			format_time_prec(tmpbuf2, form->NavChk);
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33):\n%s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nTLAT,LONG\n%s\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z, form->remarks);			
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
 	case 5: //AP7TPI
 		{
 			AP7TPI * form = (AP7TPI *)padForm;
-			format_time(tmpbuf, form->GETI);
-			sprintf(buffer, "TERMINAL PHASE INITIATE\n%s GETI\n%+07.1f Vgx\n%+07.1f Vgy\n%+07.1f Vgz\n", tmpbuf, form->Vg.x, form->Vg.y, form->Vg.z);
+			format_time_prec(tmpbuf, form->GETI);
+			sprintf(buffer, "TERMINAL PHASE INITIATE\nGETI\n%s\n%+07.1f Vgx\n%+07.1f Vgy\n%+07.1f Vgz\n", tmpbuf, form->Vg.x, form->Vg.y, form->Vg.z);
 			if (form->Backup_dV.x > 0)
 			{
 				sprintf(buffer, "%sF%04.1f/%02.0f DVX LOS/BT\n", buffer, abs(form->Backup_dV.x), form->Backup_bT.x);
@@ -2051,6 +2133,43 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			break;
 		}
 	}
+	else if (type == UTP_P27PAD)//P27 PAD without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(2);// Allocate P27 PAD
+			if (padForm != NULL) {
+				// If success
+				if (updatenumber == -1)	//Generic Update if -1
+				{
+					startSubthread(54); // Start subthread to fill PAD
+				}
+				else
+				{
+					startSubthread(updatenumber); // Start subthread to fill PAD
+				}
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 10 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (cm->GetMissionTime() > NextGET)
+			{
+				oapiSetTimeAcceleration(1.0);
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -2059,7 +2178,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7BLK * form = (AP7BLK *)padForm;
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		rtcc->Calculation(updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
@@ -2069,7 +2187,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		// Clobber string
 		upString[0] = 0;
 		// Do math
@@ -2086,7 +2203,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7MNV * form = (AP7MNV *)padForm;
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		rtcc->Calculation(updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
@@ -2104,7 +2220,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_SV)
 	{
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		// Clobber string
 		upString[0] = 0;
 		// Do math
@@ -2118,7 +2233,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7NAV * form = (AP7NAV *)padForm;
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		// Clobber string
 		upString[0] = 0;
 		// Do math
@@ -2134,7 +2248,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7ENT * form = (AP7ENT *)padForm;
 		// Ask RTCC for numbers
-		rtcc->calcParams.src = cm;
 		// Clobber string
 		upString[0] = 0;
 		// Do math
@@ -2143,6 +2256,15 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
 		}
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_P27PAD)
+	{
+		P27PAD * form = (P27PAD *)padForm;
+		// Ask RTCC for numbers
+		rtcc->Calculation(updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math

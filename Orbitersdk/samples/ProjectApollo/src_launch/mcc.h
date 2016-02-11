@@ -216,7 +216,21 @@
 #define MST_C_COAST40		51
 #define MST_C_COAST41		52
 #define MST_C_COAST42		53
-#define MST_C_ABORT			55
+#define MST_C_COAST43		54
+#define MST_C_COAST44		55
+#define MST_C_COAST45		56
+#define MST_C_COAST46		57
+#define MST_C_COAST47		58
+#define MST_C_COAST48		59
+#define MST_C_COAST49		60
+#define MST_C_COAST50		61
+#define MST_C_COAST51		62
+#define MST_C_COAST52		63
+#define MST_C_COAST53		64
+#define MST_C_COAST54		65
+#define MST_C_COAST55		66
+#define MST_C_COAST56		67
+#define MST_C_ABORT			75
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
 
 //UPDATE TYPES
@@ -227,6 +241,7 @@
 #define UTP_ENTRY			4
 #define UTP_SV				5
 #define UTP_SVNAVCHECK		6
+#define UTP_P27PAD			7
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -305,6 +320,7 @@ struct AP7MNV{
 	double lat;			// Latitude for N43
 	double lng;			// Longitude for N43
 	double alt;			// Altitude for N43
+	char remarks[128];	// remarks
 };
 
 // APOLLO 7 - TERMINAL PHASE INITIATE

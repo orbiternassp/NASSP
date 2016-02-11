@@ -85,6 +85,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
+		sprintf(form->remarks, "heads down, retrograde, -X thrusters");
 	}
 	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
@@ -197,6 +198,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
+		sprintf(form->remarks, "heads up, +X thrusters");
 	}
 	break;
 	case 5: //MISSION C BLOCK DATA UPDATE 3
@@ -283,6 +285,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		{
 			opt.REFSMMAT = GetREFSMMATfromAGC();
 			opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
+			sprintf(form->remarks, "posigrade, heads up");
 		}
 
 		AP7ManeuverPAD(&opt, *form);
@@ -332,8 +335,25 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 	{
 		CDHOpt cdhopt;
 		AP7ManPADOpt opt;
-		double P30TIG;
-		VECTOR3 dV_LVLH;
+		double P30TIG, SVGET;
+		VECTOR3 dV_LVLH, R0, V0;
+		SV sv_A, sv_P;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv_A.gravref = AGCGravityRef(calcParams.src);
+		sv_A.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_A.R = R0;
+		sv_A.V = V0;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.tgt, SVGET, R0, V0); //State vector for uplink
+
+		sv_P.gravref = AGCGravityRef(calcParams.tgt);
+		sv_P.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_P.R = R0;
+		sv_P.V = V0;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -359,8 +379,9 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "NSR");
+		sprintf(form->remarks, "heads down, retrograde");
 
-		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv_A, true), CMCStateVectorUpdate(sv_P, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -411,6 +432,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
+		sprintf(form->remarks, "posigrade, heads down, -X Thrusters");
 	}
 	break;
 	case 12: //MISSION C BLOCK DATA 4
@@ -1481,6 +1503,78 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 		}
+	}
+	break;
+	case 52: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD
+	{
+		AP7NAV * form = (AP7NAV *)pad;
+
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
+
+		NavCheckPAD(sv, *form);
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
+	}
+	break;
+	case 53: //GENERIC CSM AND TARGET STATE VECTOR UPDATE AND CSM NAV CHECK PAD
+	{
+		AP7NAV * form = (AP7NAV *)pad;
+
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv_A, sv_P;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+
+		sv_A.gravref = AGCGravityRef(calcParams.src);
+		sv_A.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_A.R = R0;
+		sv_A.V = V0;
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.tgt, SVGET, R0, V0); //State vector for uplink
+
+		sv_P.gravref = AGCGravityRef(calcParams.tgt);
+		sv_P.MJD = getGETBase() + SVGET / 24.0 / 3600.0;
+		sv_P.R = R0;
+		sv_P.V = V0;
+
+		NavCheckPAD(sv_A, *form);
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv_A, true), CMCStateVectorUpdate(sv_P, false));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
+	}
+	break;
+	case 54: //GENERIC SV PAD
+	{
+		P27PAD * form = (P27PAD *)pad;
+		P27Opt opt;
+
+		opt.GETbase = getGETBase();
+		opt.gravref = AGCGravityRef(calcParams.src);
+		opt.SVGET = (oapiGetSimMJD() - opt.GETbase)*24.0*3600.0;
+		opt.navcheckGET = opt.SVGET + 30 * 60;
+		opt.vessel = calcParams.src;
+
+		P27PADCalc(&opt, *form);
 	}
 	break;
 	}
@@ -3407,25 +3501,31 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 
 void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
 {
-	double lat, lng, alt;
-	navcheck(sv.R, sv.V, sv.MJD, sv.gravref, lat, lng, alt);
+	double lat, lng, alt, navcheckdt;
+	VECTOR3 R1, V1;
+	
+	navcheckdt = 30 * 60;
+
+	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, sv.gravref);
+	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, sv.gravref, lat, lng, alt);
 
 	pad.alt[0] = alt / 1852.0;
 	pad.lat[0] = lat*DEG;
 	pad.lng[0] = lng*DEG;
-	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0;
+	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0 + navcheckdt;
 }
 
 void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 {
 	double lat, lng, alt, get;
-	VECTOR3 R0, V0, pos, vel;
+	VECTOR3 R0, V0, pos, vel, R1, V1;
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 	bool csm = true;
 
 	StateVectorCalc(opt->vessel, opt->SVGET, R0, V0);
-	navcheck(R0, V0, opt->GETbase + opt->navcheckGET / 24.0 / 3600.0, opt->gravref, lat, lng, alt);
+	OrbMech::oneclickcoast(R0, V0, opt->GETbase + opt->SVGET / 24.0 / 3600.0, opt->navcheckGET - opt->SVGET, R1, V1, opt->gravref, opt->gravref);
+	navcheck(R1, V1, opt->GETbase + opt->navcheckGET / 24.0 / 3600.0, opt->gravref, lat, lng, alt);
 	
 	sprintf(pad.Purpose[0], "SV");
 	pad.GET[0] = opt->SVGET;
