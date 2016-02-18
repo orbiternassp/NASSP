@@ -1001,7 +1001,7 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 	return r;
 }
 
-double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDLE plan, double mjd0, double E, OBJHANDLE gravref)
+double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref)
 {
 	double w_A, w_P, r_A, v_A, r_P, v_P, alpha, t, dt, E_err, E_A;
 	VECTOR3 u, R_A, V_A, R_P, V_P, U_L, U_P;
@@ -1027,9 +1027,9 @@ double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDL
 		alpha = E + sign(dotp(crossp(R_A, R_P), u))*acos(dotp(R_A / r_A, R_P / r_P));
 		dt = (alpha - PI + sign(r_P - r_A)*(PI - acos(r_A*cos(E) / r_P))) / (w_A - w_P);
 
-		t += dt;
 		oneclickcoast(R_A, V_A, mjd0+t/24.0/3600.0, dt, R_A, V_A, gravref, gravref);
 		oneclickcoast(R_P, V_P, mjd0+t/24.0/3600.0, dt, R_P, V_P, gravref, gravref);
+		t += dt;
 		r_A = length(R_A);
 		v_A = length(V_A);
 		r_P = length(R_P);
@@ -1039,6 +1039,129 @@ double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDL
 		E_A = acos(dotp(U_L, U_P*sign(dotp(U_P, crossp(u, R_A)))));
 		E_err = E - E_A;
 	}
+	return t;
+}
+
+double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range)
+{
+	double w_A, w_P, r_A, v_A, r_P, alpha, t, dt, E_err, E_A, dE, dE_0, dt_0, dt_max, t_S, theta_0;
+	VECTOR3 R_A, V_A, R_P, U_L, U_P, U_N, U_LL, R_proj;
+	MATRIX3 Rot, Rot2;
+	int i;
+
+	t = 0;
+	E_err = 1.0;
+	dt = 10.0;
+	R_A = R_A0;
+	V_A = V_A0;
+	dE = 0;
+	dE_0 = 0;
+	i = 0;
+	dt_max = 150.0;
+	dt_0 = 0;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	w_A = PI2 / oapiGetPlanetPeriod(gravref);
+	if (gravref == oapiGetObjectByName("Moon"))
+	{
+		w_A *= -1.0;
+	}
+	r_P = length(R_gs);
+
+	Rot2 = OrbMech::GetRotationMatrix2(gravref, mjd0);
+	R_P = mul(Rot2, R_gs);
+	R_P = mul(Rot, _V(R_P.x, R_P.z, R_P.y));
+
+	U_N = unit(crossp(R_A, V_A));
+	U_LL = unit(crossp(U_N, R_P));
+	R_proj = unit(crossp(U_LL, U_N))*r_P;
+
+	r_A = length(R_A);
+	v_A = length(V_A);
+
+	t_S = t;
+	U_L = unit(R_A - R_proj);
+	//u = unit(crossp(R_A, V_A));
+	U_P = unit(U_L - R_proj*dotp(U_L, R_proj) / r_P / r_P);
+	E_A = acos(dotp(U_L, U_P*sign(dotp(U_P, crossp(U_N, R_proj)))));
+	if (dotp(U_L, R_proj) < 0)
+	{
+		E_A = PI2 - E_A;
+	}
+
+	while ((abs(E_err) > 0.005*RAD || abs(dt)>1.0) && i < 30)
+	{
+		dE_0 = dE;
+		dE = E_A - E;
+		w_P = dotp(V_A, unit(crossp(U_N, R_A)) / r_A);
+		alpha = E + sign(dotp(crossp(R_proj, R_A), U_N))*acos(dotp(R_proj / r_P, R_A / r_A));
+		dt = (alpha - acos(min(1.0, r_P*cos(E) / r_A))) / (w_A - w_P);
+
+		if (abs(dt) > dt_max)
+		{
+			dt = dt_max*sign(dt);
+		}
+		if (i > 0)
+		{
+			if (dE*dE_0 < 0)
+			{
+				dt = -sign(dt_0)*abs(dt) / 2.0;
+				dt_max = dt_max / 3.0;
+				t += dt;
+				dt_0 = dt;
+			}
+			else if (abs(dE_0)>abs(dE))
+			{
+				dt = sign(dt_0)*abs(dt);
+				t += dt;
+				dt_0 = dt;
+			}
+			else
+			{
+				t = t - 1.5*dt_0;
+				dt_0 = -dt_0 / 2.0;
+			}
+		}
+		else
+		{
+			t += dt;
+			dt_0 = dt;
+		}
+		oneclickcoast(R_A, V_A, mjd0 + t_S / 24.0 / 3600.0, t - t_S, R_A, V_A, gravref, gravref);
+		Rot2 = OrbMech::GetRotationMatrix2(gravref, mjd0 + t / 24.0 / 3600.0);
+		R_P = mul(Rot2, R_gs);
+		R_P = mul(Rot, _V(R_P.x, R_P.z, R_P.y));
+
+		U_N = unit(crossp(R_A, V_A));
+		U_LL = unit(crossp(U_N, R_P));
+		R_proj = unit(crossp(U_LL, U_N))*r_P;
+		
+		t_S = t;
+		r_A = length(R_A);
+		v_A = length(V_A);
+		U_L = unit(R_A - R_proj);
+		//u = unit(crossp(R_A, V_A));
+		U_P = unit(U_L - R_proj*dotp(U_L, R_proj) / r_P / r_P);
+		E_A = acos(dotp(U_L, U_P*sign(dotp(U_P, crossp(U_N, R_proj)))));
+		if (dotp(U_L, R_proj) < 0)
+		{
+			E_A = PI2 - E_A;
+		}
+		E_err = E - E_A;
+		i++;
+	}
+
+	theta_0 = acos(dotp(unit(R_proj), unit(R_P)));
+	if (dotp(U_N, R_P) < 0)
+	{
+		theta_0 = -theta_0;
+	}
+	if (gravref == oapiGetObjectByName("Moon"))
+	{
+		theta_0 *= -1.0;
+	}
+	range = theta_0*r_P;
+
 	return t;
 }
 

@@ -771,11 +771,10 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		GETbase = getGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(120, 43, 0);
 
-		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATdirect = true;
-		refsopt.REFSMMATopt = 0;
+		refsopt.REFSMMATopt = 2;
+		refsopt.REFSMMATTime = OrbMech::HHMMSSToSS(120, 43, 0);
 		refsopt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
@@ -1110,7 +1109,7 @@ void RTCC::Calculation(int fcn, LPVOID &pad, char * upString)
 		sv.R = R0;
 		sv.V = V0;
 
-		dV_LVLH = _V(dv, 0.0, 0.0);
+		dV_LVLH = _V(0.0, dv, 0.0);
 		GETbase = getGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(210, 8, 0);
 
@@ -2878,7 +2877,7 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	RP0 = mul(Rot, _V(RP0_orb.x, RP0_orb.z, RP0_orb.y));
 	VP0 = mul(Rot, _V(VP0_orb.x, VP0_orb.z, VP0_orb.y));
 
-	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, gravref, SVMJD, elev, gravref);
+	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, elev, gravref);
 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }

@@ -341,6 +341,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 12 * H / 14, "Lunar Insertion", 15);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "State Vector", 12);
+		skp->Text(5 * W / 8, 4 * H / 14, "Landmark Tracking", 17);
 		skp->Text(5 * W / 8, 6 * H / 14, "Map Update", 10);
 		skp->Text(5 * W / 8, 8 * H / 14, "Maneuver PAD", 12);
 		skp->Text(5 * W / 8, 10 * H / 14, "Entry PAD", 9);
@@ -1660,6 +1661,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 13)
+	{
+		char Buffer2[100];
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Landmark Tracking", 17);
+
+		GET_Display(Buffer, G->LmkTime);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", G->LmkLat*DEG);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", G->LmkLng*DEG);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer2, G->LmkT1);
+		sprintf(Buffer, "T1: %s (HOR)", Buffer2);
+		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer2, G->LmkT2);
+		sprintf(Buffer, "T2: %s (35°)", Buffer2);
+		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->LmkRange > 0)
+		{
+			sprintf(Buffer, "%.1f NM North", G->LmkRange / 1852.0);
+		}
+		else
+		{
+			sprintf(Buffer, "%.1f NM South", abs(G->LmkRange) / 1852.0);
+		}
+		
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 9 * H / 14, "N89", 3);
+		sprintf(Buffer, "Lat %+07.3f°", G->LmkN89Lat*DEG);
+		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "Long/2 %+07.3f°", G->LmkLng*DEG*0.5);
+		skp->Text(4 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "Alt %+07.2f NM", G->LmkN89Alt/1852.0);
+		skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -1808,6 +1846,12 @@ void ApolloRTCCMFD::menuSetMapUpdatePage()
 void ApolloRTCCMFD::menuSetLOIPage()
 {
 	screen = 12;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLandmarkTrkPage()
+{
+	screen = 13;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2265,7 +2309,7 @@ void ApolloRTCCMFD::set_lambertelev(double elev)
 	RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
 	VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
 
-	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, G->gravref, SVMJD, G->lambertelev, G->gravref);
+	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->lambertelev, G->gravref);
 	G->T1 = dt1 + (SVMJD - G->GETbase) * 24.0 * 60.0 * 60.0;
 }
 
@@ -3334,6 +3378,77 @@ void ApolloRTCCMFD::set_LOIInc(double inc)
 void ApolloRTCCMFD::menuLOICalc()
 {
 	G->LOICalc();
+}
+
+void ApolloRTCCMFD::menuLmkPADCalc()
+{
+	G->LmkCalc();
+}
+
+void ApolloRTCCMFD::menuSetLmkTime()
+{
+	bool LmkTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the guess for T1:", LmkTimeInput, 0, 20, (void*)this);
+}
+
+bool LmkTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, Lmktime;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		Lmktime = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LmkTime(Lmktime);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LmkTime(double time)
+{
+	this->G->LmkTime = time;
+}
+
+void ApolloRTCCMFD::menuSetLmkLat()
+{
+	bool LmkLatInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the landmark latitude:", LmkLatInput, 0, 20, (void*)this);
+}
+
+bool LmkLatInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LmkLat(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LmkLat(double lat)
+{
+	this->G->LmkLat = lat*RAD;
+}
+
+void ApolloRTCCMFD::menuSetLmkLng()
+{
+	bool LmkLngInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the landmark longitude:", LmkLngInput, 0, 20, (void*)this);
+}
+
+bool LmkLngInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LmkLng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LmkLng(double lng)
+{
+	this->G->LmkLng = lng*RAD;
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

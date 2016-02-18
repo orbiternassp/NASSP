@@ -159,7 +159,8 @@ namespace OrbMech {
 	MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
-	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDLE plan, double mjd0, double E, OBJHANDLE gravref);
+	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
+	double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
 	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E);

@@ -184,6 +184,14 @@ public:
 	void menuLOICalc();
 	void menuRequestLTMFD();
 	void menuRequestLTMFDTEI();
+	void menuSetLandmarkTrkPage();
+	void menuSetLmkTime();
+	void set_LmkTime(double time);
+	void menuSetLmkLat();
+	void set_LmkLat(double lat);
+	void menuSetLmkLng();
+	void set_LmkLng(double lng);
+	void menuLmkPADCalc();
 
 protected:
 	oapi::Font *font;

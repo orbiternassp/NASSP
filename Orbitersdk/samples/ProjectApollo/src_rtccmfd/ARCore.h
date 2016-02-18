@@ -37,6 +37,7 @@ public:
 	void OrbitAdjustCalc();
 	void REFSMMATCalc();
 	void LOICalc();
+	void LmkCalc();
 	//void EntryCalc();
 	//void EntryUpdateCalc();
 	void StateVectorCalc();
@@ -199,6 +200,13 @@ public:
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
+
+	//LANDMARK TRACKING PAGE
+	double LmkLat, LmkLng;
+	double LmkTime;
+	double LmkT1, LmkT2;
+	double LmkRange;
+	double LmkN89Lat, LmkN89Alt;
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };
