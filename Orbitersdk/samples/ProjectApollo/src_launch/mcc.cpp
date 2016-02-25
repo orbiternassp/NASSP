@@ -984,7 +984,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_BLOCKDATA, 147 * 60 * 60 + 10 * 60, 26, MST_C_COAST37);
 				break;
 			case MST_C_COAST37: // SV Update to Block Data 17
-				UpdateMacro(UTP_SVNAVCHECK, 153 * 60 * 60 + 47 * 60, 26, MST_C_COAST38);
+				UpdateMacro(UTP_SVNAVCHECK, 153 * 60 * 60 + 47 * 60, 52, MST_C_COAST38);
 				break;
 			case MST_C_COAST38: // Block Data 17 to SPS-5
 				UpdateMacro(UTP_BLOCKDATA, 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST39);
@@ -1041,7 +1041,32 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P30MANEUVER, 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
 				break;
 			case MST_C_COAST56:
-				UpdateMacro(UTP_ENTRY, 300 * 60 * 60, 43, MST_C_COAST56);
+				UpdateMacro(UTP_ENTRY, 0.0, 43, MST_ORBIT_ENTRY);
+				break;
+			case MST_ORBIT_ENTRY:
+				switch (SubState) {
+				case 0:
+					allocPad(6);// Allocate AP7 Entry Pad
+					if (padForm != NULL) {
+						// If success
+						startSubthread(44); // Start subthread to fill PAD
+					}
+					else {
+						// ERROR STATE
+					}
+					setSubState(1);
+					// FALL INTO
+				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+					if (SubStateTime > 10 && padState > -1) {
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						setSubState(2);
+					}
+					break;
+				case 2: // Await landing?
+
+					break;
+				}
 				break;
 			}
 		}
@@ -1349,13 +1374,15 @@ int MCC::subThread(){
 	case 28:
 	case 34:
 	case 39:
+	case 42:
 		{
 			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
-	case 42: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
+	case 43: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
+	case 44:
 		{
 			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_ENTRY, subThreadMode);
@@ -1502,6 +1529,15 @@ void format_time_prec(char *buf, double time) {
 	sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 }
 
+void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
+{
+	double mins;
+	hours = (int)trunc(time / 3600.0);
+	mins = fmod(time / 60.0, 60.0);
+	minutes = (int)trunc(mins);
+	seconds = (mins - minutes) * 60.0;
+}
+
 // Draw PAD display
 void MCC::drawPad(){
 	char buffer[512];
@@ -1554,10 +1590,13 @@ void MCC::drawPad(){
 		break;
 	case 4: // AP7MNV
 		{
+			int hh, mm;
+			double ss;
 			AP7MNV * form = (AP7MNV *)padForm;
 			format_time_prec(tmpbuf, form->GETI);
 			format_time_prec(tmpbuf2, form->NavChk);
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33):\n%s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: %02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nTLAT,LONG\n%s\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, form->burntime, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z, form->remarks);			
+			SStoHHMMSS(form->burntime, hh, mm, ss);
+			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33):\n%s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: XXX%d:%02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nTLAT,LONG\n%s\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, mm, ss, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z, form->remarks);			
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
@@ -1598,7 +1637,11 @@ void MCC::drawPad(){
 	case 6: //APTENT
 		{
 			AP7ENT * form = (AP7ENT *)padForm;
-			sprintf(buffer, "ENTRY UPDATE\nPREBURN\nX%s AREA\nXX%+5.1f DV TO\nXXX%3.0f R400K\nXXX%3.0f P400K\nXXX%3.0f Y400K\n%+7.1f RTGO .05G\n%+7.0f VIO .05G\nXX%4.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG", form->Area[0], form->dVTO[0], form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z, form->RTGO[0], form->VIO[0], form->Ret05[0], form->Lat[0], form->Lng[0]);
+			int hh, mm, hh2, mm2;
+			double ss, ss2;
+			SStoHHMMSS(form->Ret05[0], hh, mm, ss);
+			SStoHHMMSS(form->PB_Ret05[0], hh2, mm2, ss2);
+			sprintf(buffer, "ENTRY UPDATE\nPREBURN\nX%s AREA\nXX%+5.1f DV TO\nXXX%03.0f R400K\nXXX%03.0f P400K\nXXX%03.0f Y400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG\nPOSTBURN\nXXX%03.0f R400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G", form->Area[0], form->dVTO[0], form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z, form->RTGO[0], form->VIO[0], mm, ss, form->Lat[0], form->Lng[0], form->PB_R400K[0], form->PB_RTGO[0], form->PB_VIO[0], mm2, ss2);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -2124,8 +2167,8 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 				setSubState(2);
 			}
 			break;
-		case 2: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+		case 2: // Await separation
+			if (cm->stage == CM_STAGE)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2252,10 +2295,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		upString[0] = 0;
 		// Do math
 		rtcc->Calculation(updatenumber, padForm, upString);
-		// Give resulting uplink string to CMC
-		if (upString[0] != 0) {
-			this->pushCMCUplinkString(upString);
-		}
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math

@@ -59,6 +59,7 @@ private:
 	double mu;
 	double Tguess;
 	double tigslip;
+	double EntryTIGcor_old, dlng_old;
 	int ii;
 	double EntryLng;
 	int entryphase;

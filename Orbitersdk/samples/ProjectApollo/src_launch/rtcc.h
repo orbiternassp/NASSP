@@ -23,6 +23,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #if !defined(_PA_RTCC_H)
 #define _PA_RTCC_H
+#define RTCC_START_STRING	"RTCC_BEGIN"
+#define RTCC_END_STRING	    "RTCC_END"
 
 #define RTCC_LAMBERT_MULTIAXIS 0
 #define RTCC_LAMBERT_XAXIS 1
@@ -242,6 +244,9 @@ public:
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad);
 
+	void SaveState(FILEHANDLE scn);							// Save state
+	void LoadState(FILEHANDLE scn);							// Load state
+
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
@@ -262,6 +267,10 @@ private:
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);
 	void P27PADCalc(P27Opt *opt, P27PAD &pad);
+
+	double TimeofIgnition;
+	double SplashLatitude, SplashLongitude;
+	VECTOR3 DeltaV_LVLH;
 };
 
 

@@ -3214,6 +3214,79 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravr
 	Llambda = V_G;
 }
 
+double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
+{
+	VECTOR3 R0, V0, R1, V1, H, u;
+	double dt, ddt, mu, Tguess, mjd0, sgn, sign2, inc, cosI, sinBeta, cosBeta, sinBeta2, cosBeta2, l1, l0, lat_now, dl, lat_des;
+	int i;
+
+	R0 = R;
+	V0 = V;
+	mjd0 = mjd;
+	lat_des = lat;
+
+	i = 0;
+	dt = 0.0;
+	ddt = 1.0;
+	mu = GGRAV*oapiGetMass(gravref);
+	Tguess = PI2 / sqrt(mu)*OrbMech::power(length(R0), 1.5);
+	if (up)
+	{
+		sgn = 1.0;
+	}
+	else
+	{
+		sgn = -1.0;
+	}
+	H = crossp(R0, V0);
+	inc = acos(H.z / length(H));
+	if (inc < abs(lat_des))
+	{
+		lat_des = inc;
+	}
+
+	while (abs(ddt) > 0.1)
+	{
+		oneclickcoast(R0, V0, mjd0, dt, R1, V1, gravref, gravref);
+		H = crossp(R1, V1);
+		cosI = H.z / length(H);
+		if (acos(cosI) < abs(lat_des))
+		{
+			lat_des = inc;
+		}
+		sinBeta = cosI / cos(lat_des);
+		cosBeta = sgn*sqrt(1.0 - sinBeta*sinBeta);
+		l1 = atan2(tan(lat_des), cosBeta);
+
+		u = unit(R1);
+		lat_now = atan(u.z / sqrt(u.x*u.x + u.y*u.y));
+		if (V1.z > 0.0)
+		{
+			sign2 = 1.0;
+		}
+		else
+		{
+			sign2 = -1.0;
+		}
+		sinBeta2 = cosI / cos(lat_now);
+		cosBeta2 = sign2*sqrt(1.0 - sinBeta2*sinBeta2);
+		l0 = atan2(tan(lat_now), cosBeta2);
+
+		dl = l1 - l0;
+		ddt = Tguess*dl / PI2;
+		if (abs(ddt) > 100.0)
+		{
+			ddt = sign(ddt)*100.0;
+		}
+		dt += ddt;
+		i++;
+	}
+	Rlat = R1;
+	Vlat = V1;
+
+	return dt;
+}
+
 void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;

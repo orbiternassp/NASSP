@@ -50,6 +50,7 @@
 #include "csm_telecom.h"
 #include "sps.h"
 #include "mcc.h"
+#include "rtcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
 #include "checklistController.h"

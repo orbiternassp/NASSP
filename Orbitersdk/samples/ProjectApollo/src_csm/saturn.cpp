@@ -1569,6 +1569,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	bmag2.SaveState(scn);
 	SaveLVDC(scn);
 	mcc.SaveState(scn);
+	mcc.rtcc->SaveState(scn);
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -2253,6 +2254,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
 		mcc.LoadState(scn);
+	}
+	else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
+		mcc.rtcc->LoadState(scn);
 	}
 	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
 		LoadLVDC(scn);

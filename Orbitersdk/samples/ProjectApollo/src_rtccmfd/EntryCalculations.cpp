@@ -913,7 +913,22 @@ bool Entry::EntryIter()
 	}
 	if (critical == 0)
 	{
-		tigslip = Tguess*dlng / PI2;
+		if (ii == 0)
+		{
+			tigslip = Tguess*dlng / PI2;
+			dlng_old = dlng;
+			EntryTIGcor_old = EntryTIGcor;
+		}
+		else
+		{
+			tigslip = -dlng*(EntryTIGcor - EntryTIGcor_old) / (dlng - dlng_old);
+			EntryTIGcor_old = EntryTIGcor;
+			dlng_old = dlng;
+		}
+		if (abs(tigslip) > 100.0)
+		{
+			tigslip = 100.0*OrbMech::sign(tigslip);
+		}
 		EntryTIGcor += tigslip;
 	}
 		else
@@ -972,7 +987,7 @@ bool Entry::EntryIter()
 			if (abs(x - xlim) < OrbMech::power(2.0, -20.0) || abs(x + xlim) < OrbMech::power(2.0, -20.0) || ii == 60)
 			//if (ii == 40)
 			{
-				ii = 2;
+				ii = 0;
 				precision = 2;
 				return false;
 			}

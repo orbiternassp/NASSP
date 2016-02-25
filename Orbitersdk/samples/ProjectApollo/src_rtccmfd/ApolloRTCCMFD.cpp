@@ -495,18 +495,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f °", G->incdeg);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 6 * H / 14, "DVX", 3);
-		skp->Text(5 * W / 8, 8 * H / 14, "DVY", 3);
+
+		skp->Text(5 * W / 8, 8 * H / 14, "DVX", 3);
+		skp->Text(5 * W / 8, 9 * H / 14, "DVY", 3);
 		skp->Text(5 * W / 8, 10 * H / 14, "DVZ", 3);
-		//skp->Text(5 * W / 8, 12 * H / 14, "DVT", 3);
+		skp->Text(5 * W / 8, 12 * H / 14, "DVT", 3);
 		AGC_Display(Buffer, G->OrbAdjDVX.x / 0.3048);
-		skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, G->OrbAdjDVX.y / 0.3048);
 		skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->OrbAdjDVX.y / 0.3048);
+		skp->Text(6 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
 		AGC_Display(Buffer, G->OrbAdjDVX.z / 0.3048);
 		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		//AGC_Display(Buffer, length(G->OrbAdjDVX) / 0.3048);
-		//skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, length(G->OrbAdjDVX) / 0.3048);
+		skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 5)
 	{
