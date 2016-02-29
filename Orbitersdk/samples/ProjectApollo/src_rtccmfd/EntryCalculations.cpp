@@ -1,6 +1,6 @@
 #include "EntryCalculations.h"
 
-Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual)
+Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual)
 {
 	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
@@ -17,7 +17,6 @@ Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double
 
 	this->entrylongmanual = entrylongmanual;
 
-	this->vessel = v;
 	this->GETbase = GETbase;
 	this->EntryAng = EntryAng;
 
@@ -33,20 +32,15 @@ Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double
 
 	this->critical = critical;
 
-	VECTOR3 R0, V0;
 	double EntryInterface;
 
-	gravref = AGCGravityRef(vessel);
-
-	vessel->GetRelativePos(gravref, R0);
-	vessel->GetRelativeVel(gravref, V0);
-	mjd = oapiGetSimMJD();
+	this->gravref = gravref;
 
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
 
-	R0B = mul(Rot, _V(R0.x, R0.z, R0.y));
-	V0B = mul(Rot, _V(V0.x, V0.z, V0.y));
-
+	this->R0B = R0B;
+	this->V0B = V0B;
+	this->mjd = mjd;
 	get = (mjd - GETbase)*24.0*3600.0;
 
 	EntryInterface = 400000.0 * 0.3048;
@@ -59,7 +53,7 @@ Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double
 
 	EntryTIGcor = EntryTIG;
 
-	Tguess = PI2 / sqrt(mu)*OrbMech::power(length(R0), 1.5);
+	Tguess = PI2 / sqrt(mu)*OrbMech::power(length(R0B), 1.5);
 
 	tigslip = 100.0;
 	ii = 0;
@@ -116,6 +110,15 @@ Entry::Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double
 	}
 	precision = 1;
 	errorstate = 0;
+
+	if (critical == 2)
+	{
+		augekugelvel = 32000;
+	}
+	else
+	{
+		augekugelvel = 33625.0;
+	}
 }
 
 Entry::Entry(OBJHANDLE gravref, int critical)
@@ -140,6 +143,7 @@ Entry::Entry(OBJHANDLE gravref, int critical)
 	{
 		EMSAlt = 297431.0*0.3048;
 	}
+	augekugelvel = 33625.0;
 }
 
 void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
@@ -1033,7 +1037,7 @@ bool Entry::EntryIter()
 		//Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
-		EntryRET = t2 - EntryTIGcor + t32 + dt22;
+		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
 
 		EntryLngcor = theta_long;
@@ -1626,8 +1630,8 @@ bool Entry::EntryIter()
 
 void Entry::EntryUpdateCalc()
 {
-	VECTOR3 R0, V0, R0B, V0B, REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
-	double mjd, RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t2, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
+	VECTOR3 REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
+	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t2, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
 	MATRIX3 Rot, R;
 	OBJHANDLE hEarth;
 	VECTOR3 R05G, V05G;
@@ -1638,15 +1642,6 @@ void Entry::EntryUpdateCalc()
 	EntryInterface = 400000 * 0.3048;
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	mu = GGRAV*oapiGetMass(hEarth);
-
-	vessel->GetRelativePos(gravref, R0);
-	vessel->GetRelativeVel(gravref, V0);
-	mjd = oapiGetSimMJD();
-
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-	R0B = mul(Rot, _V(R0.x, R0.z, R0.y));
-	V0B = mul(Rot, _V(V0.x, V0.z, V0.y));
 
 	dt2 = OrbMech::time_radius_integ(R0B, V0B, mjd, RCON, -1, gravref, hEarth, REI, VEI);
 
@@ -1790,7 +1785,7 @@ void Entry::augekugel(double ve, double gammae, double &phie, double &Te)
 		}
 		else
 		{
-			K2 = 2.4 + 0.000285*(vefps - 33625.0);//32000
+			K2 = 2.4 + 0.000285*(vefps - augekugelvel);//33625.0);//32000
 		}
 	}
 	phie = K1 / (abs(gammaedeg) - K2);
@@ -1967,7 +1962,7 @@ TEI::TEI(VESSEL *v, double GETbase, VECTOR3 dV_LVLH, double TIG, double dt_guess
 bool TEI::TEIiter()
 {
 	double REIMJD, ddt, sing, cosg, x2, v2, x2des, dx2;
-	VECTOR3 REI, REI2, VEI2, N;
+	VECTOR3 REI, N;
 
 
 	REIMJD = GETbase + (TIG + dt) / 24.0 / 3600.0;

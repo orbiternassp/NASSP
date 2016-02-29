@@ -3065,15 +3065,13 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	V_cutoff = V + V_grav + V_thrust;
 }*/
 
-void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+void poweredflight(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
 {
-	double dt, dt_max, v_ex, f_T, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
+	double dt, dt_max, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
 	VECTOR3 U_TD, gp, g, R0, V0, Rnow, Vnow, dvdt;
 
 	dV = length(V_G);
 	U_TD = unit(V_G);
-	v_ex = vessel->GetThrusterIsp0(thruster);
-	f_T = vessel->GetThrusterMax0(thruster);
 	R0 = R;
 	V0 = V;
 	m0 = m;
@@ -3140,10 +3138,10 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref)
 	return g;
 }
 
-void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
-	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, f_T;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go;
 	int n, nmax;
 
 	nmax = 100;
@@ -3156,8 +3154,6 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravr
 	V_ref = V + DV;
 	i_y = -unit(crossp(R_ref, V_ref));
 
-	f_T = vessel->GetThrusterMax0(thruster);
-
 	while (abs(t_slip - t_slip_old) > 0.01)
 	{
 		n = 0;
@@ -3165,7 +3161,7 @@ void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravr
 		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
 		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
 		{
-			poweredflight(vessel, R_ig, V_ig, gravref, vessel->GetGroupThruster(THGROUP_MAIN, 0), m, V_go, R_p, V_p, t_go);
+			poweredflight(R_ig, V_ig, gravref, f_T, isp, m, V_go, R_p, V_p, t_go);
 			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
 			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
 			i_z = unit(crossp(R_d, i_y));

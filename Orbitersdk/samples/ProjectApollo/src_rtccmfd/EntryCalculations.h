@@ -6,7 +6,7 @@
 
 class Entry {
 public:
-	Entry(VESSEL *v, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual);
+	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, double entryrange, bool entrynominal, bool entrylongmanual);
 	Entry(OBJHANDLE gravref, int critical);
 	void EntryUpdateCalc();
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0);
@@ -50,7 +50,6 @@ private:
 	CoastIntegrator* coast;
 	//OrbMech* mech;
 	double MA1, C0, C1, C2, C3;
-	VESSEL* vessel;
 	VECTOR3 R0B, V0B;
 	MATRIX3 Rot;
 	double mjd;
@@ -84,6 +83,7 @@ private:
 	bool entrylongmanual;
 	double xlim;
 	double t21;
+	double augekugelvel; //different for abort vs. nominal range
 };
 
 class TEI {
@@ -98,6 +98,7 @@ public:
 	double TIG;
 	double dt; //TEI to EI
 	double EntryAng;
+	VECTOR3 REI2, VEI2;
 private:
 	VECTOR3 REIcalc(double lng, double REIMJD);
 

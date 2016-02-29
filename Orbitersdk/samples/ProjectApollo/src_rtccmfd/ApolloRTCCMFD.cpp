@@ -1115,13 +1115,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			if (G->vesseltype == 1)
 			{
-				sprintf(Buffer, "LM Weight: %5.0f", G->ManPADLMWeight);
+				sprintf(Buffer, "LM Weight: %5.0f", G->manpad.LMWeight);
 				skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
 			}
 
 			skp->Text((int)(0.5 * W / 8), 18 * H / 23, "Set Stars:", 10);
+			skp->Text((int)(0.5 * W / 8), 19 * H / 23, G->manpad.SetStars, strlen(G->manpad.SetStars));
 
-			if (length(G->GDCangles) == 0.0)
+			/*if (length(G->manpad.GDCangles) == 0.0)
 			{
 				skp->Text((int)(0.5 * W / 8), 19 * H / 23, "N/A", 3);
 			}
@@ -1139,13 +1140,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				{
 					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Acrux, Atria", 12);
 				}
-			}
+			}*/
 
-				sprintf(Buffer, "R %03.0f", OrbMech::round(G->GDCangles.x*DEG));
+				sprintf(Buffer, "R %03.0f", OrbMech::round(G->manpad.GDCangles.x));
 				skp->Text((int)(0.5 * W / 8), 20 * H / 23, Buffer, strlen(Buffer));
-				sprintf(Buffer, "P %03.0f", OrbMech::round(G->GDCangles.y*DEG));
+				sprintf(Buffer, "P %03.0f", OrbMech::round(G->manpad.GDCangles.y));
 				skp->Text((int)(0.5 * W / 8), 21 * H / 23, Buffer, strlen(Buffer));
-				sprintf(Buffer, "Y %03.0f", OrbMech::round(G->GDCangles.z*DEG));
+				sprintf(Buffer, "Y %03.0f", OrbMech::round(G->manpad.GDCangles.z));
 				skp->Text((int)(0.5 * W / 8), 22 * H / 23, Buffer, strlen(Buffer));
 
 			int hh, mm;
@@ -1159,14 +1160,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(7 * W / 8, 9 * H / 26, "N81", 3);
 			skp->Text(7 * W / 8, 15 * H / 26, "N44", 3);
 
-			sprintf(Buffer, "%+06.0f WGT", G->ManPADWeight);
+			sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
 			skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
 			if (G->ManPADSPS == 0)
 			{
-				sprintf(Buffer, "%+07.2f PTRIM", G->ManPADPTrim*DEG);
+				sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
 				skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f YTRIM", G->ManPADYTrim*DEG);
+				sprintf(Buffer, "%+07.2f YTRIM", G->manpad.yTrim);
 				skp->Text((int)(3.5 * W / 8), 5 * H / 26, Buffer, strlen(Buffer));
 			}
 			else
@@ -1189,31 +1190,31 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
 			skp->Text((int)(3.5 * W / 8), 11 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "XXX%03.0f R", OrbMech::imulimit(G->IMUangles.x*DEG));
+			sprintf(Buffer, "XXX%03.0f R", G->manpad.Att.x);
 			skp->Text((int)(3.5 * W / 8), 12 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f P", OrbMech::imulimit(G->IMUangles.y*DEG));
+			sprintf(Buffer, "XXX%03.0f P", G->manpad.Att.y);
 			skp->Text((int)(3.5 * W / 8), 13 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f Y", OrbMech::imulimit(G->IMUangles.z*DEG));
+			sprintf(Buffer, "XXX%03.0f Y", G->manpad.Att.z);
 			skp->Text((int)(3.5 * W / 8), 14 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+07.1f HA", min(9999.9, G->ManPADApo / 1852.0));
+			sprintf(Buffer, "%+07.1f HA", min(9999.9, G->manpad.HA));
 			skp->Text((int)(3.5 * W / 8), 15 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f HP", G->ManPADPeri / 1852.0);
+			sprintf(Buffer, "%+07.1f HP", G->manpad.HP);
 			skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f VT", length(G->dV_LVLH) / 0.3048);
 			skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
 
-			SStoHHMMSS(G->ManPADBurnTime, hh, mm, secs);
+			SStoHHMMSS(G->manpad.burntime, hh, mm, secs);
 
 			sprintf(Buffer, "XXX%d:%02.0f BT (MIN:SEC)", mm, secs);
 			skp->Text((int)(3.5 * W / 8), 18 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f VC", G->ManPADDVC / 0.3048);
+			sprintf(Buffer, "%+07.1f VC", G->manpad.Vc);
 			skp->Text((int)(3.5 * W / 8), 19 * H / 26, Buffer, strlen(Buffer));
 
 			//skp->Text(4 * W / 8, 13 * H / 20, "SXT star check", 14);
 
-			if (G->Manstaroct == 0)
+			if (G->manpad.Star == 0)
 			{
 				sprintf(Buffer, "N/A     SXTS");
 				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
@@ -1224,14 +1225,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 			else
 			{
-				sprintf(Buffer, "XXXX%02d SXTS", G->Manstaroct);
+				sprintf(Buffer, "XXXX%02d SXTS", G->manpad.Star);
 				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f SFT", G->Manshaft*DEG);
+				sprintf(Buffer, "%+07.2f SFT", G->manpad.Shaft);
 				skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.3f TRN", G->Mantrunnion*DEG);
+				sprintf(Buffer, "%+07.3f TRN", G->manpad.Trun);
 				skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
 			}
-			if (G->ManCOASstaroct == 0)
+			if (G->manpad.BSSStar == 0)
 			{
 				sprintf(Buffer, "N/A     BSS");
 				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
@@ -1242,11 +1243,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 			else
 			{
-				sprintf(Buffer, "XXXX%02d BSS", G->ManCOASstaroct);
+				sprintf(Buffer, "XXXX%02d BSS", G->manpad.BSSStar);
 				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f SPA", G->ManBSSpitch*DEG);
+				sprintf(Buffer, "%+07.2f SPA", G->manpad.SPA);
 				skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.3f SXP", G->ManBSSXPos*DEG);
+				sprintf(Buffer, "%+07.3f SXP", G->manpad.SXP);
 				skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
 			}
 		}
@@ -2751,26 +2752,39 @@ void ApolloRTCCMFD::lambertcalc()
 
 void ApolloRTCCMFD::menuEntryCalc()
 {
+	double SVMJD;
+	VECTOR3 R, V, R0B, V0B;
+	MATRIX3 Rot;
+
+	G->vessel->GetRelativePos(G->gravref, R);
+	G->vessel->GetRelativeVel(G->gravref, V);
+	SVMJD = oapiGetSimMJD();
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R.x, R.z, R.y));
+	V0B = mul(Rot, _V(V.x, V.z, V.y));
+
 	if (G->entrycalcmode == 0)
 	{
 		if (G->entrylongmanual)
 		{
-			G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+			G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
 		}
 		else
 		{
-			G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+			G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
 		}
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else if(G->entrycalcmode == 1)
 	{
-		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
+		G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
 		G->entrycalcstate = 2;// G->EntryUpdateCalc();
 	}
 	else if (G->entrycalcmode == 2)
 	{
-		G->entry = new Entry(G->vessel, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
+		G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
 	else

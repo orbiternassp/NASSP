@@ -161,17 +161,13 @@ public:
 	bool svtimemode; //0 = Now, 1 = GET
 
 	//MANEUVER PAD PAGE
-	VECTOR3 IMUangles, GDCangles;
-	int GDCset;
+	AP11MNV manpad;
+	char GDCset[64];
 	bool HeadsUp;
-	double ManPADPeri, ManPADApo, ManPADWeight, ManPADBurnTime, ManPADDVC, ManPADPTrim, ManPADYTrim, ManPADLMWeight;
-	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos;
-	int Manstaroct, ManCOASstaroct;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
-	//int ManPADVeh; //0 = CSM; 1 = CSM/LM
 	double sxtstardtime;
 	TLIPAD tlipad;
 
