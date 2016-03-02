@@ -1254,8 +1254,6 @@ int ARCore::subThread()
 	break;
 	case 3:	//Orbital Adjustment Targeting
 	{
-		maneuverplanet = gravref;
-
 		OrbAdjOpt opt;
 
 		opt.GETbase = GETbase;
@@ -1293,7 +1291,6 @@ int ARCore::subThread()
 		opt.GETbase = GETbase;
 		opt.LSLat = LSLat;
 		opt.LSLng = LSLng;
-		opt.maneuverplanet = maneuverplanet;
 		opt.mission = mission;
 		opt.P30TIG = P30TIG;
 		opt.P30TIG2 = LOI_TIG;
@@ -1592,7 +1589,6 @@ int ARCore::subThread()
 		opt.engopt = ManPADSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = HeadsUp;
-		opt.maneuverplanet = maneuverplanet;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sxtstardtime = sxtstardtime;
 		opt.TIG = P30TIG;

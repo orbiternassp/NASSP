@@ -1632,7 +1632,7 @@ void Entry::EntryUpdateCalc()
 {
 	VECTOR3 REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
 	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t2, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
-	MATRIX3 Rot, R;
+	MATRIX3 R;
 	OBJHANDLE hEarth;
 	VECTOR3 R05G, V05G;
 	double dt22;
@@ -1993,6 +1993,11 @@ bool TEI::TEIiter()
 	else
 	{
 		ddt = (dt - dt_apo) / (x2 - x2apo)*dx2;
+
+		if (abs(ddt) > 1000.0)
+		{
+			ddt = OrbMech::sign(ddt)*1000.0;
+		}
 		dt_apo = dt;
 		x2apo = x2;
 		dt += ddt;

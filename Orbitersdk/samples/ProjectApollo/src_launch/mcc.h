@@ -284,7 +284,35 @@
 
 #define MST_CP_LUNAR_ORBIT1	101
 // Ends at TEI Calculation
-#define MST_CP_LUNAR_ORBIT2 102
+#define MST_CP_LUNAR_ORBIT2	102
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT3	103
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT4	104
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT5	105
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT6	106
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT7	107
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT8	108
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT9	109
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT10 110
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT11 111
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT12 112
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT13 113
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT14 114
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT17 117
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT18 118
 // Ends at TEI BURN
 
 #define MST_CP_TRANSEARTH1	201

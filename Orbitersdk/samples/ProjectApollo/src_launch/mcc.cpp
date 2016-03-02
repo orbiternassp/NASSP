@@ -1238,12 +1238,30 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, 68 * 60 * 60 + 5 * 60, 14, MST_CP_TRANSLUNAR16);
 				break;
 			case MST_CP_TRANSLUNAR16: //LOI-1 to LOI-2
-				UpdateMacro(UTP_P30MANEUVER, 71 * 60 * 60 + 40 * 60, 15, MST_CP_LUNAR_ORBIT1);
+				UpdateMacro(UTP_P30MANEUVER, 71 * 60 * 60 + 40 * 60, 15, MST_CP_LUNAR_ORBIT2);
 				break;
-			case MST_CP_LUNAR_ORBIT1: //LOI-2 to TEI Calc
-				UpdateMacro(UTP_P30MANEUVER, 87 * 60 * 60 + 45 * 60, 16, MST_CP_LUNAR_ORBIT2);
+			case MST_CP_LUNAR_ORBIT2: //LOI-2 to SV Update
+				UpdateMacro(UTP_P30MANEUVER, 76 * 60 * 60 + 25 * 60, 102, MST_CP_LUNAR_ORBIT9);
 				break;
-			case MST_CP_LUNAR_ORBIT2: //TEI Calc to TEI
+			case MST_CP_LUNAR_ORBIT9: //SV Update to SV Update
+				UpdateMacro(UTP_UPLINKONLY, 78 * 60 * 60 + 25 * 60, 103, MST_CP_LUNAR_ORBIT11);
+				break;
+			case MST_CP_LUNAR_ORBIT11: //SV Update to SV Update
+				UpdateMacro(UTP_UPLINKONLY, 80 * 60 * 60 + 20 * 60, 103, MST_CP_LUNAR_ORBIT12);
+				break;
+			case MST_CP_LUNAR_ORBIT12: //SV Update to SV Update
+				UpdateMacro(UTP_UPLINKONLY, 82 * 60 * 60 + 20 * 60, 103, MST_CP_LUNAR_ORBIT13);
+				break;
+			case MST_CP_LUNAR_ORBIT13: //SV Update to SV Update
+				UpdateMacro(UTP_UPLINKONLY, 84 * 60 * 60 + 20 * 60, 103, MST_CP_LUNAR_ORBIT14);
+				break;
+			case MST_CP_LUNAR_ORBIT14: //SV Update to SV Update
+				UpdateMacro(UTP_UPLINKONLY, 86 * 60 * 60 + 20 * 60, 103, MST_CP_LUNAR_ORBIT17);
+				break;
+			case MST_CP_LUNAR_ORBIT17: //SV Update to TEI Calc
+				UpdateMacro(UTP_UPLINKONLY, 87 * 60 * 60 + 45 * 60, 103, MST_CP_LUNAR_ORBIT18);
+				break;
+			case MST_CP_LUNAR_ORBIT18: //TEI Calc to TEI
 				switch (SubState) {
 				case 0:
 				{
@@ -1534,7 +1552,7 @@ int MCC::subThread(){
 		case 11: // MISSION CP MCC3
 		case 13: // MISSION CP MCC4
 		case 15: // MISSION CP LOI-1
-		case 16: // MISSION CP LOI-2
+		case 102: // MISSION CP LOI-2
 		case 201: // MISSION CP TEI-10
 		case 203: // MISSION CP MCC-5
 		case 204: // MISSION CP MCC-6
@@ -1565,6 +1583,7 @@ int MCC::subThread(){
 			Result = 0;
 		}
 		break;
+		case 103: //CSM SV TO LM SLOT
 		case 202: //ENTRY REFSMMAT
 		{
 			rtcc->calcParams.src = cm;
@@ -2445,7 +2464,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && padState > -1) {
+			if (SubStateTime > 1) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
 				addMessage("Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");

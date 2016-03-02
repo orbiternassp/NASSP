@@ -1306,27 +1306,18 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
 	double dt1, sing, cosg, x2PRE, dt21,beta12,beta4,RF,phi4,dt21apo,beta13,dt2,beta14,mu;
-	bool stop;
-	VECTOR3 N;
-	CoastIntegrator* coast2;
+	VECTOR3 N, R0out, V0out;
 
-	mu = GGRAV*oapiGetMass(gravref);
+	mu = GGRAV*oapiGetMass(gravout);
 	beta12 = 1.0;
 	dt21apo = 100000000.0;
 	dt2 = 0.0;
 	dt21 = 1.0;
 
-	dt1 = time_radius(R, V, r, s, mu);
+	oneclickcoast(R, V, mjd0, 0.0, R0out, V0out, gravref, gravout);
+	dt1 = time_radius(R0out, V0out, r, s, mu);
 
-	coast2 = new CoastIntegrator(R, V, mjd0, dt1, gravref, gravout);
-	stop = false;
-	while (stop == false)
-	{
-		stop = coast2->iteration();
-	}
-	RPRE = coast2->R2;
-	VPRE = coast2->V2;
-	delete coast2;
+	oneclickcoast(R, V, mjd0, dt1, RPRE, VPRE, gravref, gravout);
 
 	while (abs(beta12) > 0.000007 && abs(dt21)>0.01)
 	{
@@ -1368,16 +1359,8 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		dt21apo = dt21;
 		if (abs(dt21) != 0.0)
 		{
-			coast2 = new CoastIntegrator(RPRE, VPRE, mjd0 + (dt1 + dt2) / 24.0 / 3600.0, dt21, gravref, gravout);
+			oneclickcoast(RPRE, VPRE, mjd0 + (dt1 + dt2) / 24.0 / 3600.0, dt21, RPRE, VPRE, gravout, gravout);
 			dt2 += dt21;
-			stop = false;
-			while (stop == false)
-			{
-				stop = coast2->iteration();
-			}
-			RPRE = coast2->R2;
-			VPRE = coast2->V2;
-			delete coast2;
 		}
 	}
 	return dt1 + dt2;

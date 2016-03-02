@@ -66,9 +66,9 @@ struct SV
 {
 	VECTOR3 R;
 	VECTOR3 V;
-	double MJD;
-	OBJHANDLE gravref;
-	double mass;
+	double MJD = 0.0;
+	OBJHANDLE gravref = NULL;
+	double mass = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -111,8 +111,7 @@ struct AP11ManPADOpt
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
-	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
-	OBJHANDLE maneuverplanet = NULL;
+	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
@@ -161,7 +160,6 @@ struct REFSMMATOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	double P30TIG2; //Time of Ignition 2nd maneuver
 	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
-	OBJHANDLE maneuverplanet; //The gravity reference of the maneuver might be different than the gravity reference now!
 	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
@@ -315,7 +313,8 @@ private:
 	char* V71Update(int* emem, int n);
 	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv);
+	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);
+	SV coast(SV sv0, double dt);
 
 	void CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL);
 	void CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL);
