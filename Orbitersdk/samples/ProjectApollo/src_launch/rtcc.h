@@ -205,6 +205,18 @@ struct EarthEntryPADOpt
 	double lng; //splashdown longitude
 };
 
+struct LunarEntryPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double P30TIG; //Time of Ignition (MCC)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
+	MATRIX3 REFSMMAT;
+	bool direct; //0 = with MCC, 1 = without
+	double lat; //splashdown latitude
+	double lng; //splashdown longitude
+};
+
 struct LOIMan
 {
 	VESSEL* vessel; //vessel
@@ -278,6 +290,7 @@ public:
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
+	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);

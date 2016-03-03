@@ -243,6 +243,8 @@
 #define UTP_SVNAVCHECK		6
 #define UTP_P27PAD			7
 #define UTP_TLIPAD			8
+#define UTP_LUNARENTRY		9
+#define UTP_FINALLUNARENTRY 10
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -329,6 +331,8 @@
 //Ends at MCC7 Update
 #define MST_CP_TRANSEARTH7	207
 //Ends at Entry Update
+#define MST_CP_TRANSEARTH8	208
+//Ends at Final Entry Update
 
 // Ends at entry interface, goes to entry.
 #define MST_CP_ABORT_ORBIT	300
@@ -449,6 +453,43 @@ struct AP7ENT{
 	double PB_RetBBO[2];// Ret to begin blackout
 	double PB_RetEBO[2];// Ret to end blackout
 	double PB_RetDrog[2];// Ret to drogue deploy
+};
+
+
+// APOLLO 11 - LUNAR ENTRY
+
+struct AP11ENT
+{
+	char Area[2][10];			// Splashdown area defined by target line
+	VECTOR3 Att05[2];			// Spacecraft IMU gimbal angles required for aerodynamic trim at 0.05G
+	double GETHorCheck[2];		// Time of Entry attitude horizon check at EI - 17 min
+	double PitchHorCheck[2];	// Pitch attitude for horizon check at EI - 17 min
+	double Lat[2];				// Latitude of target point
+	double Lng[2];				// Longitude of target point
+	double MaxG[2];				// Predicted maximum reentry acceleration
+	double V400K[2];			// Intertial velocity at entry interface
+	double Gamma400K[2];		// Inertial flight path angle at entry interface
+	double RTGO[2];				// Range to go from .05G to target for EMS initialization
+	double VIO[2];				// Inertial velocity at .05G for EMS initialization
+	double RRT[2];				// Reentry reference time based on GET of predicted 400K (GET start)
+	double RET05[2];			// Time of .05G from 400K (RRT)
+	double DLMax[2];			// Maximum acceptable value of predicted drag level (from CMC)
+	double DLMin[2];			// Minimum acceptable value of predicted drag level (from CMC)
+	double VLMax[2];			// Maximum acceptable value of exit velocity (from CMC)
+	double VLMin[2];			// Minimum acceptable value of exit velocity (from CMC)
+	double DO[2];				// Planned drag level during Constant G
+	double RETVCirc[2];			// Time from EI that S/C velocity becomes circular
+	double RETBBO[2];			// Time from EI to the beginning of blackout
+	double RETEBO[2];			// Time from EI to the end of blackout
+	double RETDRO[2];			// Time from EI to drogue deploy
+	int SXTS[2];				// Sextant star for entry attitude check
+	double SFT[2];				// Sextant shaft setting for entry attitude check
+	double TRN[2];				// Sextant trunnion setting for entry attitude check
+	int BSS[2];					// Boresight star for entry attitude check using the COAS
+	double SPA[2];				// BSS pitch angle on COAS for entry attitude check
+	double SXP[2];				// BSS X position on COAS for entry attitude check
+	char LiftVector[2][4];		// Lift vector desired at .05G's based on entry corridor
+	char remarks[2][128];		// Remarks
 };
 
 // APOLLO 11 - TRANSLUNAR INJECTION

@@ -699,7 +699,23 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		DeltaV_LVLH = dV_LVLH;
 		TimeofIgnition = P30TIG;
 
-		if (fcn == 205)
+		if (fcn == 203)//MCC5
+		{
+			sprintf(uplinkdata, "%s%s%s",  CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
+		}
+		else if (fcn == 204)//MCC6
+		{
+			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
+		}
+		else if (fcn == 205)//Prel. MCC7
 		{
 			sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, false));
 			if (upString != NULL) {
@@ -707,17 +723,9 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 				strncpy(upString, uplinkdata, 1024 * 3);
 			}
 		}
-		else if (fcn == 203 || fcn == 206)
+		else if (fcn == 206)//MCC7
 		{
-			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(P30TIG, latitude, longitude, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-			}
-		}
-		else
-		{
-			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(P30TIG, latitude, longitude, dV_LVLH));
+			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
@@ -727,12 +735,61 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 	break;
 	case 207: //MISSION CP PRELIMINARY ENTRY PAD
 	{
+		AP11ENT * form = (AP11ENT *)pad;
 
+		LunarEntryPADOpt entopt;
+		double GETbase;
+
+		GETbase = getGETBase();
+
+		entopt.direct = false;
+		entopt.dV_LVLH = DeltaV_LVLH;
+		entopt.GETbase = GETbase;
+		entopt.lat = SplashLatitude;
+		entopt.lng = SplashLongitude;
+		entopt.P30TIG = TimeofIgnition;
+		entopt.REFSMMAT = GetREFSMMATfromAGC();
+		entopt.vessel = calcParams.src;
+
+		LunarEntryPAD(&entopt, *form);
+		sprintf(form->Area[0], "MIDPAC");
+		sprintf(form->remarks[0], "Assumes MCC7");
 	}
 	break;
-	case 208: //MISSION CP FINAL ENTRY PAD AND STATE VECTOR
+	case 208: //MISSION CP FINAL ENTRY PAD AND STATE VECTORS
 	{
+		AP11ENT * form = (AP11ENT *)pad;
+		double SVGET;
+		VECTOR3 R0, V0;
+		SV sv;
 
+		LunarEntryPADOpt entopt;
+		double GETbase;
+
+		GETbase = getGETBase();
+
+		SVGET = 0;
+		StateVectorCalc(calcParams.src, SVGET, R0, V0); //State vector for uplink
+		sv.gravref = AGCGravityRef(calcParams.src);
+		sv.MJD = GETbase + SVGET / 24.0 / 3600.0;
+		sv.R = R0;
+		sv.V = V0;
+
+		entopt.direct = true;
+		entopt.GETbase = GETbase;
+		entopt.lat = SplashLatitude;
+		entopt.lng = SplashLongitude;
+		entopt.REFSMMAT = GetREFSMMATfromAGC();
+		entopt.vessel = calcParams.src;
+
+		LunarEntryPAD(&entopt, *form);
+		sprintf(form->Area[0], "MIDPAC");
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true), CMCStateVectorUpdate(sv, false));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+		}
 	}
 	break;
 	}
@@ -3158,7 +3215,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 			theta_rad = acos(dotp(URT, urh));
 		}
 
-		pad.Att400K[0] = _V(EIangles.x*DEG, EIangles.y*DEG, EIangles.z*DEG);
+		pad.Att400K[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
 		pad.dVTO[0] = 0.0;//-60832.18 / m1 / 0.3048;
 		if (opt->lat == 0)
 		{
@@ -3246,6 +3303,199 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		pad.PB_Ret05[0] = dt2 + dt3 + dt4 - dt;
 		pad.PB_VIO[0] = length(V05G) / 0.3048;
 	}
+}
+
+void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
+{
+	VECTOR3 R_A, V_A, R0B, V0B, R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
+	MATRIX3 Rot, M_R, Rot2;
+	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO;
+	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit;
+	OBJHANDLE gravref, hEarth;
+	SV sv0;		// "Now"
+	SV svEI;	// EI/400K
+	SV sv300K;  // 300K
+	SV sv05G;   // EMS Altitude / 0.05G
+	Entry *entry;
+
+	gravref = AGCGravityRef(opt->vessel);
+	hEarth = oapiGetObjectByName("Earth");
+
+	EIAlt = 400000.0*0.3048;
+	Alt300K = 300000.0*0.3048;
+	EMSAlt = 297431.0*0.3048;
+
+	opt->vessel->GetRelativePos(gravref, R_A);
+	opt->vessel->GetRelativeVel(gravref, V_A);
+	SVMJD = oapiGetSimMJD();
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+	sv0.gravref = gravref;
+	sv0.MJD = SVMJD;
+	sv0.R = R0B;
+	sv0.V = V0B;
+	sv0.mass = opt->vessel->GetMass();
+
+	if (opt->direct)
+	{
+		dt = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv0.gravref, hEarth, svEI.R, svEI.V);
+		svEI.gravref = hEarth;
+		svEI.mass = sv0.mass;
+		svEI.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+	}
+	else
+	{
+		SV sv1;
+
+		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0);
+
+		dt = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv1.gravref, hEarth, svEI.R, svEI.V);
+		svEI.gravref = hEarth;
+		svEI.mass = sv1.mass;
+		svEI.MJD = sv1.MJD + dt / 24.0 / 3600.0;
+	}
+
+	entry = new Entry(gravref, 1);
+	entry->Reentry(svEI.R, svEI.V, svEI.MJD);
+
+	LSMJD = svEI.MJD + entry->EntryRET / 24.0 / 3600.0;
+
+	delete entry;
+
+	dt2 = OrbMech::time_radius_integ(svEI.R, svEI.V, svEI.MJD, oapiGetSize(hEarth) + Alt300K, -1, hEarth, hEarth, sv300K.R, sv300K.V);
+	sv300K.gravref = hEarth;
+	sv300K.mass = svEI.mass;
+	sv300K.MJD = svEI.MJD + dt2 / 24.0 / 3600.0;
+
+	dt3 = OrbMech::time_radius_integ(sv300K.R, sv300K.V, sv300K.MJD, oapiGetSize(hEarth) + EMSAlt, -1, hEarth, hEarth, sv05G.R, sv05G.V);
+	sv05G.gravref = hEarth;
+	sv05G.mass = sv300K.mass;
+	sv05G.MJD = sv300K.MJD + dt3 / 24.0 / 3600.0;
+
+	EntryPADVIO = length(sv05G.V);
+
+	R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
+	Rot2 = OrbMech::GetRotationMatrix2(hEarth, LSMJD);
+	R_LS = mul(Rot2, R_P);
+	R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
+	URT0 = R_LS;
+	WIE = 72.9211505e-6;
+	UUZ = _V(0, 0, 1);
+	RTE = crossp(UUZ, URT0);
+	UTR = crossp(RTE, UUZ);
+	urh = unit(sv05G.R);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
+	theta_rad = acos(dotp(URT0, urh));
+	for (int i = 0;i < 10;i++)
+	{
+		WT = WIE*(KTETA*theta_rad);
+		URT = URT0 + UTR*(cos(WT) - 1.0) + RTE*sin(WT);
+		theta_rad = acos(dotp(URT, urh));
+	}
+	theta_nm = theta_rad*3437.7468;
+
+	UX = unit(sv05G.V);
+	UY = unit(crossp(UX, sv05G.R));
+	UZ = unit(crossp(UX, crossp(UX, sv05G.R)));
+
+	double aoa = -157.0*RAD;
+	VECTOR3 vunit = _V(0.0, 1.0, 0.0);
+	MATRIX3 Rotaoa;
+
+	Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+
+	S_FPA = dotp(unit(sv300K.R), sv300K.V) / length(sv300K.V);
+	g_T = asin(S_FPA);
+	V_T = length(sv300K.V);
+	v_BAR = (V_T / 0.3048 - 36000.0) / 20000.0;
+	EntryPADGMax = 4.0 / (1.0 + 4.8*v_BAR*v_BAR)*(abs(g_T)*DEG - 6.05 - 2.4*v_BAR*v_BAR) + 10.0;
+
+	UREI = unit(svEI.R);
+	EntryPADV400k = length(svEI.V);
+	S_FPA = dotp(UREI, svEI.V) / EntryPADV400k;
+	EntryPADgamma400k = asin(S_FPA);
+	EIGET = (svEI.MJD - opt->GETbase)*24.0*3600.0;
+	RET05 = (sv05G.MJD - svEI.MJD)*24.0*3600.0;
+
+	double vei;
+	vei = length(svEI.V) / 0.3048;
+
+	EntryPADDO = 4.2317708e-9*vei*vei + 1.4322917e-6*vei - 1.600664062;
+
+	liftline = 4.055351e-10*vei*vei - 3.149125e-5*vei + 0.503280635;
+	if (S_FPA > atan(liftline))
+	{
+		sprintf(pad.LiftVector[0], "DN");
+	}
+	else
+	{
+		sprintf(pad.LiftVector[0], "UP");
+	}
+
+	SV svHorCheck, svSxtCheck;
+	svHorCheck = coast(svEI, -17.0*60.0);
+	svSxtCheck = coast(svEI, -60.0*60.0);
+
+	EntryPADHorChkGET = EIGET - 17.0*60.0;
+
+	double Entrytrunnion, Entryshaft, EntryBSSpitch, EntryBSSXPos;
+	int Entrystaroct, EntryCOASstaroct;
+	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, oapiGetSize(hEarth), Entrystaroct, Entrytrunnion, Entryshaft);
+	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, oapiGetSize(hEarth), EntryCOASstaroct, EntryBSSpitch, EntryBSSXPos);
+
+	double horang, coastang, IGA, cosIGA, sinIGA;
+	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, A_MG;
+
+	horang = asin(oapiGetSize(gravref) / length(svHorCheck.R));
+	coastang = dotp(unit(svEI.R), unit(svHorCheck.R));
+
+	Z_NB = unit(-svEI.R);
+	Y_NB = unit(crossp(svEI.V, svEI.R));
+	X_NB = crossp(Y_NB, Z_NB);
+
+	X_SM = _V(opt->REFSMMAT.m11, opt->REFSMMAT.m12, opt->REFSMMAT.m13);
+	Y_SM = _V(opt->REFSMMAT.m21, opt->REFSMMAT.m22, opt->REFSMMAT.m23);
+	Z_SM = _V(opt->REFSMMAT.m31, opt->REFSMMAT.m32, opt->REFSMMAT.m33);
+	A_MG = unit(crossp(X_NB, Y_SM));
+	cosIGA = dotp(A_MG, Z_SM);
+	sinIGA = dotp(A_MG, X_SM);
+	IGA = atan2(sinIGA, cosIGA);
+
+	EntryPADHorChkPit = PI2 - (horang + coastang + 0.0*31.7*RAD) + IGA;	//Currently COAS, not 31.7° line
+
+	pad.Att05[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
+	pad.BSS[0] = EntryCOASstaroct;
+	pad.DLMax[0] = 0.0;
+	pad.DLMin[0] = 0.0;
+	pad.DO[0] = EntryPADDO;
+	pad.Gamma400K[0] = EntryPADgamma400k*DEG;
+	pad.GETHorCheck[0] = EntryPADHorChkGET;
+	pad.Lat[0] = opt->lat*DEG;
+	pad.Lng[0] = opt->lng*DEG;
+	pad.MaxG[0] = EntryPADGMax;
+	pad.PitchHorCheck[0] = OrbMech::imulimit(EntryPADHorChkPit*DEG);
+	pad.RET05[0] = RET05;
+	pad.RETBBO[0] = 0.0;
+	pad.RETDRO[0] = 0.0;
+	pad.RETEBO[0] = 0.0;
+	pad.RETVCirc[0] = 0.0;
+	pad.RRT[0] = EIGET;
+	pad.RTGO[0] = theta_nm;
+	pad.SXTS[0] = Entrystaroct;
+	pad.SFT[0] = Entryshaft*DEG;
+	pad.TRN[0] = Entrytrunnion*DEG;
+	pad.SPA[0] = EntryBSSpitch*DEG;
+	pad.SXP[0] = EntryBSSXPos*DEG;
+	pad.V400K[0] = EntryPADV400k / 0.3048;
+	pad.VIO[0] = EntryPADVIO / 0.3048;
+	pad.VLMax[0] = 0.0;
+	pad.VLMin[0] = 0.0;
 }
 
 MATRIX3 RTCC::GetREFSMMATfromAGC()

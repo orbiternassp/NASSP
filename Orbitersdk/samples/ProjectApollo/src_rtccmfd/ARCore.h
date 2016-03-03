@@ -172,19 +172,11 @@ public:
 	TLIPAD tlipad;
 
 	///ENTRY PAD PAGE
-	double Entrytrunnion, Entryshaft;
-	int Entrystaroct;
-	double EntryPADRTGO, EntryPADVIO, EntryPADRET05Earth, EntryPADRET05Lunar, EntryPADdVTO;
+	AP11ENT lunarentrypad;
+	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
-	double EntryPADGMax, EntryPADDO;
-	bool EntryPADLift;
-	double EntryPADHorChkGET, EntryPADHorChkPit;
-	double EntryPADV400k, EntryPADgamma400k, EntryPADRRT;
-	double EntryPADLat, EntryPADLng;
-	double EntryRET05, EntryRTGO, EntryVIO;
-	VECTOR3 EIangles;
+	double EntryRTGO;
 	bool EntryPADdirect;
-	double EntryPADPB_RTGO, EntryPADPB_R400K, EntryPADPB_Ret05, EntryPADPB_VIO;
 
 	//MAP UPDATE PAGE
 	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
