@@ -1073,12 +1073,13 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			}
+			break;
 		case MTP_C_PRIME:
 			/* *********************
 			* MISSION C PRIME: APOLLO 8 *
 			********************* */
 			switch (MissionState) {
-			case MST_C_INSERTION:
+			case MST_CP_INSERTION:
 				switch (SubState) {
 				case 0:
 					if (cm->GetMissionTime() > 3600.0 + 35.0*60.0)
@@ -1366,6 +1367,7 @@ void MCC::TimeStep(double simdt){
 					}
 				}
 			}
+			break;
 		}
 	}
 
