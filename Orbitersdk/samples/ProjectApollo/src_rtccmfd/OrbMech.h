@@ -139,13 +139,18 @@ namespace OrbMech {
 
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
 	double kepler_E(double e, double M);
+	double kepler_H(double e, double M);
 	double power(double b, double e);
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
+	VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot);
+	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2);
+	void SolveQuartic(double *A, double *R, int &N);
 	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
+	double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu);
 	void f_and_g_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &f, double &g, double mu);
 	void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &gdot, double mu);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
@@ -192,7 +197,7 @@ namespace OrbMech {
 	void poweredflight(VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref);
-	void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
+	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	//private:
@@ -241,6 +246,7 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
 

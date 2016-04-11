@@ -312,9 +312,13 @@
 // Ends at TEI Calculation
 #define MST_CP_LUNAR_ORBIT14 114
 // Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT15 115
+#define MST_CP_LUNAR_ORBIT16 116
 #define MST_CP_LUNAR_ORBIT17 117
 // Ends at TEI Calculation
 #define MST_CP_LUNAR_ORBIT18 118
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT19 119
 // Ends at TEI BURN
 
 #define MST_CP_TRANSEARTH1	201

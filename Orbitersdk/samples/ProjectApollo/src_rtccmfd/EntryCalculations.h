@@ -33,6 +33,7 @@ private:
 	void precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA);
 	void conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1);
 	void conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3);
+	double dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv);
 	void xdviterator(VECTOR3 R1B,VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
 	void xdviterator2(int f1, VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
 	void xdviterator3(VECTOR3 R1B, VECTOR3 V1B, double min, double xmax, double &x);
@@ -86,31 +87,44 @@ private:
 	double augekugelvel; //different for abort vs. nominal range
 };
 
-class TEI {
+class TEI
+{
 public:
-	TEI(VESSEL *v, double GETbase, VECTOR3 dV_LVLH, double TIG, double dt_guess, double EntryLng, bool entrylongmanual);
+	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int TEItype);
 	bool TEIiter();
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
 	VECTOR3 Entry_DV;
-	VECTOR3 Rguess, V1B, V1B_apo;
-	double TIG;
-	double dt; //TEI to EI
+	VECTOR3 R_EI, V_EI;
+	double EIMJD;
 	double EntryAng;
-	VECTOR3 REI2, VEI2;
+	VECTOR3 Rig, Vig, Vig_apo;
+	double TIG;
 private:
-	VECTOR3 REIcalc(double lng, double REIMJD);
+	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double r_s, double mu_E, double mu_M, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	void Abort(VECTOR3 R0, VECTOR3 V0, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double mu, double &lambda, double &phi);
+	void augekugel(double ve, double gammae, double &phie, double &Te);
+	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 Vguess;
-	double GETbase, dt_guess, EntryLng, RCON;
-	VECTOR3 HEI; //Fixed specific relative angular momentum
-	double D1, D2, D3, D4;
-	double dt_apo, x2apo;
-	int ii;
-	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+	MATRIX3 Rot;
+	double RCON;
+	VECTOR3 DV;
+	double DT_TEI_EI;	//Tiem between TEI and EI
+	double EntryLng;
+	double mu_E, mu_M;
+	double r_s; //Pseudostate sphere
+	CELBODY *cMoon;
+	double dlngapo, dtapo;
+	int ii, jj;
 	bool entrylongmanual;
+	int landingzone;
+	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
+	bool INRFVsign;
+	double dTIG, mjd0;
+	double dv[3], TIGvar[3];
 };
 
 double landingzonelong(int zone, double lat);

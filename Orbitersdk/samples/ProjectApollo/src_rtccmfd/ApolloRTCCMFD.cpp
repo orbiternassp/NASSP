@@ -176,10 +176,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
-	papiWriteScenario_double(scn, "ENTRYTIGGUESS", G->EntryTIGguess);
-	papiWriteScenario_vec(scn, "ENTRYDVGUESS", G->EntryDVguess);
-	papiWriteScenario_double(scn, "ENTRYBTGUESS", G->EntryBTguess);
-	papiWriteScenario_double(scn, "ENTRYGETGUESS", G->EntryGETguess);
 
 	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
 	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
@@ -266,10 +262,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
-		papiReadScenario_double(line, "ENTRYTIGGUESS", G->EntryTIGguess);
-		papiReadScenario_vec(line, "ENTRYDVGUESS", G->EntryDVguess);
-		papiReadScenario_double(line, "ENTRYBTGUESS", G->EntryBTguess);
-		papiReadScenario_double(line, "ENTRYGETGUESS", G->EntryGETguess);
 
 		papiReadScenario_string(line, "MANPLAN", Buffer2);
 		G->maneuverplanet = oapiGetObjectByName(Buffer2);
@@ -854,12 +846,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else //TEI
 		{
-			char Buffer2[100];
 			skp->Text(6 * W / 8, (int)(0.5 * H / 14), "TEI", 3);
 
-			GET_Display(Buffer2, G->EntryGETguess);
-			sprintf(Buffer, "EI GET: %s", Buffer2);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			double mu;
+			VECTOR3 R, V, HH, E;
+			OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+			mu = GGRAV*oapiGetMass(hMoon);
+			G->vessel->GetRelativePos(hMoon, R);
+			G->vessel->GetRelativeVel(hMoon, V);
+			HH = crossp(R, V);
+			E = crossp(V, HH) / mu - unit(R);
+
+			if (G->TEItype != 2)
+			{
+				GET_Display(Buffer, G->EntryTIG);
+				skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			}
 
 			if (G->entrylongmanual)
 			{
@@ -892,15 +894,51 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				}
 			}
 
-			skp->Text(1 * W / 8, 9 * H / 14, "Initial Guess:", 14);
-			GET_Display(Buffer, G->EntryTIGguess);
-			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->EntryDVguess.x / 0.3048);
-			skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->EntryDVguess.y / 0.3048);
-			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->EntryDVguess.z / 0.3048);
-			skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
+			if (G->returnspeed == 0)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "Slow Return", 11);
+			}
+			else if(G->returnspeed == 1)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "Normal Return", 13);
+			}
+			else if (G->returnspeed == 2)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "Fast Return", 11);
+			}
+
+			G->TEIfail = false;
+
+			if (G->TEItype == 0)
+			{
+				skp->Text(1 * W / 8, 12 * H / 14, "Trans Earth Injection", 21);
+
+				if (length(E) > 1.0)
+				{
+					G->TEIfail = true;
+					skp->Text(1 * W / 8, 8 * H / 14, "TEI not possible!", 17);
+				}
+			}
+			else if (G->TEItype == 1)
+			{
+				skp->Text(1 * W / 8, 12 * H / 14, "Flyby", 5);
+
+				if (length(E) < 1.0)
+				{
+					G->TEIfail = true;
+					skp->Text(1 * W / 8, 8 * H / 14, "Flyby not possible!", 19);
+				}
+			}
+			else if (G->TEItype == 2)
+			{
+				skp->Text(1 * W / 8, 12 * H / 14, "PC+2", 4);
+
+				if (length(E) < 1.0)
+				{
+					G->TEIfail = true;
+					skp->Text(1 * W / 8, 8 * H / 14, "PC+2 not possible!", 18);
+				}
+			}
 
 			if (G->entrycalcstate == 1)
 			{
@@ -923,6 +961,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
 			skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
 			skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
+			skp->Text(5 * W / 8, 13 * H / 14, "DVT", 3);
 
 			AGC_Display(Buffer, G->Entry_DV.x / 0.3048);
 			skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
@@ -930,6 +969,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
 			skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, length(G->Entry_DV) / 0.3048);
+			skp->Text(6 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 7)
@@ -1576,6 +1617,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.z / 0.3048);
 			skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
+			sprintf(Buffer, "%+07.1f", length(G->TLCC_dV_LVLH) / 0.3048);
+			skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+
 		}
 		else if (G->LOImaneuver == 1)
 		{
@@ -1655,6 +1699,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
 			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+		}
+		else if (G->LOImaneuver == 4)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TLI", 3);
+
+			GET_Display(Buffer, G->LOIGET);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, G->LOIPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LOILat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LOILng*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->LOIperi / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, G->TLCC_TIG);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(5 * W / 8, 17 * H / 21, "DVX", 3);
+			skp->Text(5 * W / 8, 18 * H / 21, "DVY", 3);
+			skp->Text(5 * W / 8, 19 * H / 21, "DVZ", 3);
+
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.x / 0.3048);
+			skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.y / 0.3048);
+			skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->TLCC_dV_LVLH.z / 0.3048);
+			skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.1f", length(G->TLCC_dV_LVLH) / 0.3048);
+			skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+
 		}
 	}
 	else if (screen == 13)
@@ -2082,8 +2163,11 @@ void ApolloRTCCMFD::set_CDHtime(double CDHtime)
 
 void ApolloRTCCMFD::EntryTimeDialogue()
 {
-	bool EntryGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", EntryGETInput, 0, 20, (void*)this);
+	if (!(G->TEItype == 2 && G->entrycalcmode == 3))
+	{
+		bool EntryGETInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", EntryGETInput, 0, 20, (void*)this);
+	}
 }
 
 bool EntryGETInput(void *id, char *str, void *data)
@@ -2101,14 +2185,7 @@ bool EntryGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_EntryTime(double time)
 {
-	if (G->entrycalcmode == 3)
-	{
-		this->G->EntryGETguess = time;
-	}
-	else
-	{
-		this->G->EntryTIG = time;
-	}
+	this->G->EntryTIG = time;
 }
 
 void ApolloRTCCMFD::EntryAngDialogue()
@@ -2768,6 +2845,7 @@ void ApolloRTCCMFD::menuEntryCalc()
 		else
 		{
 			G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
+
 		}
 		G->entrycalcstate = 1;// G->EntryCalc();
 	}
@@ -2783,8 +2861,18 @@ void ApolloRTCCMFD::menuEntryCalc()
 	}
 	else
 	{
-		G->teicalc = new TEI(G->vessel, G->GETbase, G->EntryDVguess, G->EntryTIGguess + 0.5 * G->EntryBTguess, G->EntryGETguess - G->EntryTIGguess, G->EntryLng, G->entrylongmanual);
-		G->entrycalcstate = 1;
+		if (!G->TEIfail)
+		{
+			if (G->entrylongmanual)
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype);
+			}
+			else
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype);
+			}
+			G->entrycalcstate = 1;
+		}
 	}
 }
 
@@ -2898,6 +2986,17 @@ void ApolloRTCCMFD::menuSwitchCritical()
 		else
 		{
 			G->entrycritical = 0;
+		}
+	}
+	else if (G->entrycalcmode == 3)
+	{
+		if (G->TEItype < 2)
+		{
+			G->TEItype++;
+		}
+		else
+		{
+			G->TEItype = 0;
 		}
 	}
 }
@@ -3193,6 +3292,17 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 	{
 		G->entrynominal = !G->entrynominal;
 	}
+	else if (G->entrycalcmode == 3)
+	{
+		if (G->returnspeed < 2)
+		{
+			G->returnspeed++;
+		}
+		else
+		{
+			G->returnspeed = 0;
+		}
+	}
 }
 
 void ApolloRTCCMFD::EntryLongitudeModeDialogue()
@@ -3205,7 +3315,7 @@ void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 
 void ApolloRTCCMFD::menuSwitchLOIManeuver()
 {
-	if (G->LOImaneuver < 3)
+	if (G->LOImaneuver < 4)
 	{
 		G->LOImaneuver++;
 	}
@@ -3217,7 +3327,7 @@ void ApolloRTCCMFD::menuSwitchLOIManeuver()
 
 void ApolloRTCCMFD::menuSetLOIGET()
 {
-	if (G->LOImaneuver == 0 || G->LOImaneuver == 1 || G->LOImaneuver == 2)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 1 || G->LOImaneuver == 2 || G->LOImaneuver == 4)
 	{
 		bool LOIGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", LOIGETInput, 0, 20, (void*)this);
@@ -3243,7 +3353,7 @@ void ApolloRTCCMFD::set_LOIGET(double time)
 
 void ApolloRTCCMFD::menuSetLOIPeriGET()
 {
-	if (G->LOImaneuver == 0)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
 	{
 		bool LOIPeriGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the Pericyntheon GET (Format: hhh:mm:ss)", LOIPeriGETInput, 0, 20, (void*)this);
@@ -3269,7 +3379,7 @@ void ApolloRTCCMFD::set_LOIPeriGET(double time)
 
 void ApolloRTCCMFD::menuSetLOILat()
 {
-	if (G->LOImaneuver == 0)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
 	{
 		bool LOILatInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the pericyntheon latitude:", LOILatInput, 0, 20, (void*)this);
@@ -3293,7 +3403,7 @@ void ApolloRTCCMFD::set_LOILat(double lat)
 
 void ApolloRTCCMFD::menuSetLOILng()
 {
-	if (G->LOImaneuver == 0)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
 	{
 		bool LOILngInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the pericyntheon longitude:", LOILngInput, 0, 20, (void*)this);
@@ -3464,23 +3574,6 @@ void ApolloRTCCMFD::menuRequestLTMFD()
 {
 	if (G->manpadopt == 0 || G->manpadopt == 2)
 	{
-		G->requesttype = 0;
-		if (G->g_Data.isRequesting)
-		{
-			G->StopIMFDRequest();
-		}
-		else
-		{
-			G->StartIMFDRequest();
-		}
-	}
-}
-
-void ApolloRTCCMFD::menuRequestLTMFDTEI()
-{
-	if (G->entrycalcmode == 3)
-	{
-		G->requesttype = 1;
 		if (G->g_Data.isRequesting)
 		{
 			G->StopIMFDRequest();

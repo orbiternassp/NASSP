@@ -57,7 +57,7 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40539.68194,
 	40687.80069,
 	40982.87711,
-	41128.56529,
+	41158.565278,
 	41423.74583,
 	41658.23125
 };
@@ -146,16 +146,18 @@ struct TEIOpt
 	VESSEL* vessel; //Reentry vessel
 	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG
-	VECTOR3 dV_LVLHguess; //Initial estimate for the DV
-	double GETEI;		//Initial guess for EI GET
+	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
 	double EntryLng;
+	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 struct REFSMMATOpt
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	bool REFSMMATdirect; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
+	bool REFSMMATdirect = true; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
 	double P30TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	double P30TIG2; //Time of Ignition 2nd maneuver
@@ -221,7 +223,7 @@ struct LOIMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-2 (w/o MCC), 3 = LOI-2
+	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-2 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double MCCGET; //GET for the last MCC
 	double lat; //target for MCC
 	double lng; //target for MCC
@@ -286,6 +288,7 @@ public:
 	void Calculation(int mission, int fcn,LPVOID &pad, char * upString = NULL);
 
 	void SetManeuverData(double TIG, VECTOR3 DV);
+	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
@@ -326,6 +329,7 @@ private:
 	char* V71Update(int* emem, int n);
 	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
+	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);
 	SV coast(SV sv0, double dt);
 

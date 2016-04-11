@@ -202,6 +202,56 @@ void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &g
 	gdot = 1 - mu*r0 / (h*h) * (1 - c);
 }
 
+double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu)
+{
+	double r, v, alpha, a, f, g, fdot, gdot, sigma0, r1, dt, h, p;
+
+	//double h, v_r, cotg, x, p;
+
+	r = length(R);
+	v = length(V);
+	alpha = 2.0 / r - v*v / mu;
+	a = 1.0 / alpha;
+	f_and_g_ta(R, V, dtheta, f, g, mu);
+	fDot_and_gDot_ta(R, V, dtheta, fdot, gdot, mu);
+	sigma0 = dotp(R, V) / sqrt(mu);
+
+	h = length(crossp(R, V));
+	p = h*h / mu;
+
+	r1 = r*p / (r + (p - r)*cos(dtheta) - sqrt(p)*sigma0*sin(dtheta));
+
+	if (alpha > 0)
+	{
+		double dE, cos_dE, sin_dE;
+
+		cos_dE = 1.0 - r / a*(1.0 - f);
+		sin_dE = -r*r1*fdot / sqrt(mu*a);
+		dE = atan2(sin_dE, cos_dE);
+		
+		dt = g + sqrt(power(a, 3.0) / mu)*(dE - sin_dE);
+	}
+	else if (alpha == 0.0)
+	{
+		double c, s;
+
+		c = sqrt(r*r + r1*r1 - 2 * r*r1*cos(dtheta));
+		s = (r + r1 + c) / 2.0;
+
+		dt =  2.0 / 3.0*sqrt(power(s, 3.0) / 2.0 / mu)*(1.0 - power((s - c) / s, 3.0 / 2.0));
+	}
+	else
+	{
+		double dH;
+
+		dH = acosh(1.0 - r / a*(1.0 - f));
+
+		dt = g + sqrt(power(-a, 3.0) / mu)*(sinh(dH) - dH);
+	}
+
+	return dt;
+}
+
 void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x)	//computes the state vector (R,V) from the initial state vector (R0,V0) and the elapsed time
 {
 	double r0, v0, vr0, alpha, f, g, fdot, gdot, r;
@@ -343,6 +393,35 @@ double kepler_E(double e, double M)
 	}
 	return E;
 } //kepler_E
+
+double kepler_H(double e, double M)
+{
+	double error2, F, ratio;
+	//{
+	//This function uses Newton's method to solve Kepler's equation
+	//	for the hyperbola e*sinh(F) - F = M for the hyperbolic
+	//		eccentric anomaly, given the eccentricity and the hyperbolic
+	//		mean anomaly.
+	//		F - hyperbolic eccentric anomaly(radians)
+	//		e - eccentricity, passed from the calling program
+	//		M - hyperbolic mean anomaly(radians), passed from the
+	//		calling program
+	//		User M - functions required : none
+	//		%}
+	// ----------------------------------------------
+	//...Set an error tolerance :
+	error2 = 1.0e-8;
+	//...Starting value for F:
+	F = M;
+	ratio = 1.0;
+
+	while (abs(ratio) > error2)
+	{
+		ratio = (e*sinh(F) - F - M) / (e*cosh(F) - 1.0);
+		F = F - ratio;
+	}
+	return F;
+}
 
 void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref)
 {
@@ -552,7 +631,7 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	c = length(R2 - R1);
 	s = (r1 + r2 + c) / 2;
 
-	c12 = crossp(R1, R2);
+	c12 = crossp(unit(R1), unit(R2));
 
 	theta = acos(dotp(R1, R2) / r1 / r2);
 	if ((prog == true && c12.z < 0) || (prog == false && c12.z >= 0))
@@ -668,6 +747,240 @@ void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	gravout = coast->outplanet;
 	delete coast;
 	stop = false;
+}
+
+VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot)
+{
+	VECTOR3 R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I;
+	double t_S, tol, dt_S;
+	OBJHANDLE hMoon, hEarth;
+	//R_I_star, delta_I_star, delta_I_star_dot, 
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+
+	tol = 1000.0;
+
+	//R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
+
+	do
+	{
+		do
+		{
+			R_I_sstar = R_m + R_I_star + delta_I_star;
+
+			if (t_I - t_E < 0)
+			{
+				V_I_sstar = elegant_lambert(R_I_sstar, _V(0.0, 0.0, 0.0), R_E, (t_E - t_I) * 24.0 * 3600.0, 0, true, mu_E);
+				V_I_star = V_I_sstar - V_m - delta_I_star_dot;
+				INRFV(R_I, V_I_star, r_s, true, mu_M, V_I, R_S, dt_S);
+			}
+			else
+			{
+
+				V_I_sstar = elegant_lambert(R_I_sstar, _V(0.0, 0.0, 0.0), R_E, -(t_E - t_I) * 24.0 * 3600.0, 0, false, mu_E);
+				V_I_sstar = -V_I_sstar;
+				V_I_star = V_I_sstar - V_m - delta_I_star_dot;
+				INRFV(R_I, -V_I_star, r_s, true, mu_M, V_I, R_S, dt_S);
+				V_I = -V_I;
+				dt_S *= -1.0;
+			}
+			t_S = t_I + dt_S / 24.0 / 3600.0;
+			R_I_star_apo = R_I_star;
+			R_I_star = R_S + V_I_star*(t_I - t_S) * 24.0 * 3600.0;
+
+		} while (length(R_I_star - R_I_star_apo) > tol);
+
+		OrbMech::oneclickcoast(R_I, V_I, t_I, (t_E - t_I) * 24.0 * 3600.0, R_E_apo, V_E_apo, hMoon, hEarth);
+		rv_from_r0v0(R_E_apo, V_E_apo, (t_I - t_E) * 24.0 * 3600.0, R_I_sstar, V_I_sstar, mu_E);
+		delta_I_star = R_I_sstar - R_m - R_I_star;
+		delta_I_star_dot = V_I_sstar - V_m - V_I_star;
+
+	} while (length(R_E - R_E_apo) > tol);
+
+	return V_I;
+}
+
+void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2)
+{
+	VECTOR3 r_1_cf, v_2_cf, c;
+	double cos_psi, sin_psi, A, B, C, r_1, v_2, theta, *AA, *RR, sin_beta_2, v_1, f, g, p, sgn;
+	int N;
+
+	if (direct)
+	{
+		sgn = 1.0;
+	}
+	else
+	{
+		sgn = -1.0;
+	}
+
+	AA = new double[5];
+	RR = new double[4];
+
+	r_1 = length(R_1);
+	v_2 = length(V_2);
+	r_1_cf = unit(R_1);
+	v_2_cf = unit(V_2);
+
+	cos_psi = dotp(unit(R_1), unit(V_2));
+	sin_psi = sgn*sqrt(1.0 - cos_psi*cos_psi);
+
+	A = r_2*r_2*v_2*v_2 / mu / r_1;
+	B = (1.0 - r_2*v_2*v_2 / mu)*sin_psi;
+	C = cos_psi*cos_psi;
+	
+	//solve quartic
+	AA[0] = A*A;
+	AA[1] = 2.0*A*B;
+	AA[2] = B*B + C - 2.0*A;
+	AA[3] = -2.0*B;
+	AA[4] = 1.0 - C;
+
+	SolveQuartic(AA, RR, N);
+
+	if (cos_psi > 0)
+	{
+		sin_beta_2 = RR[N-2];
+	}
+	else
+	{
+		sin_beta_2 = RR[N-1];
+	}
+
+	c = unit(crossp(r_1_cf, v_2_cf)/sin_psi);
+	theta = atan2(sin_psi, cos_psi) - sin_beta_2;
+	R_2 = (r_1_cf*cos(theta)+crossp(c,r_1_cf)*sin(theta))*r_2;
+	v_1 = sqrt(v_2 - 2.0*mu / r_2 + 2.0*mu / r_1);
+	p = r_2*r_2*v_2*v_2*sin_beta_2*sin_beta_2 / mu;
+	f = 1.0 - r_2*(1.0 - cos(theta)) / p;
+	g = r_2*r_1*sin(theta) / sqrt(mu*p);
+	V_1 = (R_2 - R_1*f) / g;
+
+	dt_2 = time_theta(R_1, V_1, theta, mu);
+}
+
+void SolveQuartic(double *A, double *R, int &N)
+{
+	double a, b, c, d, e, p, q, delta, delta0, delta1, S;
+
+	a = A[0];
+	b = A[1];
+	c = A[2];
+	d = A[3];
+	e = A[4];
+
+	p = (8.0*a*c - 3.0*b*b) / (8.0*a*a);
+	q = (b*b*b - 4.0*a*b*c + 8.0*a*a*d) / (8.0*a*a*a);
+
+	delta0 = c*c - 3.0*b*d + 12.0*a*e;
+	delta1 = 2.0*c*c*c - 9.0*b*c*d + 27.0*b*b*e + 27.0*a*d*d - 72.0*a*c*e;
+
+	delta = (delta1*delta1 - 4.0*delta0*delta0*delta0) / (-27.0);
+
+	if (delta > 0)
+	{
+		double P, D;
+
+		P = 8.0*a*c - 3.0 * b*b;
+		D = 64.0*a*a*a*e - 16.0*a*a*c*c + 16.0*a*b*b*c - 16.0*a*a*b*d - 3.0*b*b*b*b;
+		if (P < 0 && D < 0)
+		{
+			N = 4;
+
+			double x1, x2, x3, x4, phi;
+			
+			phi = acos(delta1 / (2.0*sqrt(delta0*delta0*delta0)));
+			S = 0.5*sqrt(-2.0 / 3.0*p + 2.0 / 3.0 / a*sqrt(delta0)*cos(phi / 3.0));
+
+			x1 = -b / 4.0 / a - S + 0.5*sqrt(-4.0*S*S - 2.0*p + q / S);
+			x2 = -b / 4.0 / a - S - 0.5*sqrt(-4.0*S*S - 2.0*p + q / S);
+			x3 = -b / 4.0 / a + S + 0.5*sqrt(-4.0*S*S - 2.0*p - q / S);
+			x4 = -b / 4.0 / a + S - 0.5*sqrt(-4.0*S*S - 2.0*p - q / S);
+
+			if (x4 < x2)
+			{
+				R[0] = x4;
+
+				if (x3 < x2)
+				{
+					R[1] = x3;
+					R[2] = x2;
+					R[3] = x1;
+				}
+				else
+				{
+					R[1] = x2;
+
+					if (x3 < x1)
+					{
+						R[2] = x3;
+						R[3] = x1;
+					}
+					else
+					{
+						R[2] = x1;
+						R[3] = x3;
+					}
+				}
+			}
+			else
+			{
+				R[0] = x2;
+
+				if (x1 < x4)
+				{
+					R[1] = x1;
+					R[2] = x4;
+					R[3] = x3;
+				}
+				else
+				{
+					R[1] = x4;
+
+					if (x1 < x3)
+					{
+						R[2] = x1;
+						R[3] = x3;
+					}
+					else
+					{
+						R[2] = x3;
+						R[3] = x1;
+					}
+				}
+			}
+		}
+		else
+		{
+			N = 0;
+		}
+	}
+	else
+	{
+		N = 2;
+
+		double Q;
+
+		Q = power((delta1 + sqrt(-27.0*delta)) / 2.0, 1.0 / 3.0);
+		S = 0.5*sqrt(-2.0 / 3.0*p + 1.0 / 3.0 / a*(Q + delta0 / Q));
+
+		if (-4.0*S*S - 2.0*p + q / S > 0)
+		{
+			R[0] = -b / 4.0 / a - S - 0.5*sqrt(-4.0*S*S - 2.0*p + q / S);
+			R[1] = -b / 4.0 / a - S + 0.5*sqrt(-4.0*S*S - 2.0*p + q / S);
+			R[2] = -b / 4.0 / a + S;
+			R[3] = 0.5*sqrt((-1.0)*(-4.0*S*S - 2.0*p - q / S));
+		}
+		else
+		{
+			R[0] = -b / 4.0 / a + S - 0.5*sqrt(-4.0*S*S - 2.0*p - q / S);
+			R[1] = -b / 4.0 / a + S + 0.5*sqrt(-4.0*S*S - 2.0*p - q / S);
+			R[2] = -b / 4.0 / a - S;
+			R[3] = 0.5*sqrt((-1.0)*(-4.0*S*S - 2.0*p + q / S));
+		}
+	}
 }
 
 VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess)
@@ -1192,11 +1505,11 @@ double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 		chi = -sqrt(a)*E_0;
 	}
 
-	alpha = 1 / a;
+	alpha = 1.0 / a;
 
 	r0 = length(R);
 	vr0 = dotp(R, V) / r0;
-	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1 - alpha*r0)*OrbMech::power(chi, 3) * stumpS(alpha*chi*chi) + r0*chi);
+	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
 }
 
 double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
@@ -2234,7 +2547,7 @@ unsigned long long BinToDec(unsigned long long num)
 
 double cot(double a)
 {
-	return tan(PI05 - a);
+	return cos(a) / sin(a);
 }
 
 
@@ -3121,7 +3434,7 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref)
 	return g;
 }
 
-void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go;
@@ -3385,6 +3698,18 @@ double round(double number)
 double trunc(double d)
 {
 	return (d > 0) ? floor(d) : ceil(d);
+}
+
+double quadratic(double *T, double *DV)
+{
+	double a, b, x;
+
+	a = -2.0*(-DV[0] * T[1] + DV[0] * T[2] + DV[1] * T[0] - DV[1] * T[2] - DV[2] * T[0] + DV[2] * T[1]) / ((T[1] - T[0])*(T[2] - T[0])*(T[1] - T[2]));
+	b = (DV[0] * T[1] * T[1] - DV[0] * T[2] * T[2] - DV[1] * T[0] * T[0] + DV[1] * T[2] * T[2] + DV[2] * T[0] * T[0] - DV[2] * T[1] * T[1]) / ((T[0] - T[1])*(T[0] - T[2])*(T[2] - T[1]));
+
+	x = -b / a;
+
+	return x;
 }
 
 }
@@ -3705,7 +4030,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		U_R = unit(R);
 		if (planet == hEarth)
 		{
-			U_Z = _V(0, 0, 1.0);// [0 0 1]';
+			U_Z = _V(0, 0, 1.0);// [0 0 1]'; 
 		}
 		else
 		{

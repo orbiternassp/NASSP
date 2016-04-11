@@ -173,15 +173,14 @@ ARCore::ARCore(VESSEL* v)
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycalcmode = 0;
-	entrycritical = 1; 
+	entrycritical = 1;
+	returnspeed = 1;
+	TEItype = 0;
+	TEIfail = false;
 	entrynominal = 1;
 	entrycalcstate = 0;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
-	EntryTIGguess = 0.0;
-	EntryDVguess = _V(0.0, 0.0, 0.0);
-	EntryBTguess = 0.0;
-	EntryGETguess = 0.0;
 	SVSlot = true; //true = CSM; false = Other
 	BRCSPos = _V(0.0, 0.0, 0.0);
 	BRCSVel = _V(0.0, 0.0, 0.0);
@@ -241,7 +240,7 @@ ARCore::ARCore(VESSEL* v)
 
 	rtcc = new RTCC();
 
-	LOImaneuver = 0;
+	LOImaneuver = 4;
 	LOIGET = 0.0;
 	LOIPeriGET = 0.0;
 	LOILat = 0.0;
@@ -262,8 +261,6 @@ ARCore::ARCore(VESSEL* v)
 
 	subThreadMode = 0;
 	subThreadStatus = 0;
-
-	requesttype = 0;
 
 	LmkLat = 0;
 	LmkLng = 0;
@@ -316,20 +313,8 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive) {
 			//g_Data.errorMessage = "IMFD not in Off-Axis, P30 Mode";
 			//g_Data.progState = PROGSTATE_TLI_ERROR;
-			if (requesttype == 0)
-			{
-				dV_LVLH = g_Data.burnData._dV_LVLH;
-				P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
-			}
-			else
-			{
-				EntryDVguess = g_Data.burnData._dV_LVLH;
-				EntryTIGguess = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
-				EntryBTguess = g_Data.burnData.BT;
-			}
-			//tlipad.BurnTime = g_Data.burnData.BT;
-			//tlipad.TB6P = P30TIG - 578.0;
-			//tlipad.IgnATT
+			dV_LVLH = g_Data.burnData._dV_LVLH;
+			P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
 		}
 		else {
 			//g_Data.progState = PROGSTATE_TLI_WAITING;
@@ -1172,7 +1157,7 @@ int ARCore::subThread()
 			opt.csmlmdocked = 1;
 		}
 
-		if (LOImaneuver == 0)
+		if (LOImaneuver == 0 || LOImaneuver == 4)
 		{
 			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG);
 			P30TIG = TLCC_TIG;
@@ -1264,25 +1249,28 @@ int ARCore::subThread()
 			entryprecision = teicalc->precision;
 			EntryLatcor = teicalc->EntryLatcor;
 			EntryLngcor = teicalc->EntryLngcor;
-			Entry_DV = teicalc->Entry_DV;
+			//Entry_DV = teicalc->Entry_DV;
 			maneuverplanet = oapiGetObjectByName("Moon");
-			P37GET400K = teicalc->TIG + teicalc->dt;
+			P37GET400K = (teicalc->EIMJD - GETbase)*24.0*3600.0;//teicalc->TIG_imp + teicalc->dt;
 			EntryAngcor = teicalc->EntryAng;
 
 			f_T = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-			OrbMech::impulsive(vessel, teicalc->Rguess, teicalc->V1B, GETbase + P30TIG / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), teicalc->V1B_apo - teicalc->V1B, Llambda, t_slip);
+			//OrbMech::impulsive(vessel, teicalc->Rguess, teicalc->Vguess, GETbase + P30TIG / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), teicalc->V1B_apo - teicalc->Vguess, Llambda, t_slip);
+			OrbMech::impulsive(teicalc->Rig, teicalc->Vig, teicalc->TIG, gravref, f_T, isp, vessel->GetMass(), teicalc->Vig_apo - teicalc->Vig, Llambda, t_slip);
 
 			mu = GGRAV*oapiGetMass(gravref);
-			OrbMech::rv_from_r0v0(teicalc->Rguess, teicalc->V1B, t_slip, R_cor, V_cor, mu);
+			//OrbMech::rv_from_r0v0(teicalc->Rguess, teicalc->Vguess, t_slip, R_cor, V_cor, mu);
+			OrbMech::rv_from_r0v0(teicalc->Rig, teicalc->Vig, t_slip, R_cor, V_cor, mu);
 
 			j = unit(crossp(V_cor, R_cor));
 			k = unit(-R_cor);
 			i = crossp(j, k);
 			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-			EntryTIGcor = teicalc->TIG + t_slip;
+			//EntryTIGcor = teicalc->TIG_imp + t_slip;
+			EntryTIGcor = (teicalc->TIG - GETbase)*24.0*3600.0 + t_slip;
 			P30TIG = EntryTIGcor;
 			dV_LVLH = mul(Q_Xx, Llambda);
 			Entry_DV = dV_LVLH;
@@ -1342,7 +1330,7 @@ int ARCore::subThread()
 				f_T = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-				OrbMech::impulsive(vessel, R, V, GETbase + entry->EntryTIGcor / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), DV, Llambda, t_slip);
+				OrbMech::impulsive(R, V, GETbase + entry->EntryTIGcor / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), DV, Llambda, t_slip);
 
 				mu = GGRAV*oapiGetMass(gravref);
 				OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);

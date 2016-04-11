@@ -92,7 +92,6 @@ public:
 	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool inhibUplLOS;
 	double TimeTag;
-	int requesttype; //0 = P30 for Maneuver PAD, 1 = TEI
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -147,10 +146,9 @@ public:
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
-	double EntryTIGguess;
-	VECTOR3 EntryDVguess;
-	double EntryBTguess;
-	double EntryGETguess;
+	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
+	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
+	bool TEIfail;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
@@ -183,7 +181,7 @@ public:
 	int mappage, mapgs;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;

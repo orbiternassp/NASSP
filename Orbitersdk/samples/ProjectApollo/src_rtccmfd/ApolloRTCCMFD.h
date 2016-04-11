@@ -183,7 +183,6 @@ public:
 	void set_LOIInc(double inc);
 	void menuLOICalc();
 	void menuRequestLTMFD();
-	void menuRequestLTMFDTEI();
 	void menuSetLandmarkTrkPage();
 	void menuSetLmkTime();
 	void set_LmkTime(double time);
