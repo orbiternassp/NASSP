@@ -152,7 +152,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		m0 = calcParams.src->GetEmptyMass();
 		mass = calcParams.src->GetMass();
 		dt1 = TimeofIgnition - SVGET;
-		sv.mass = (mass - m0)*exp(-boil*dt1);
+		sv.mass = m0 + (mass - m0)*exp(-boil*dt1);
 
 		CSMmass = 28862.0;
 		//thrust = 1023000.0;
@@ -230,6 +230,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		opt.REFSMMAT = GetREFSMMATfromAGC();
 		opt.TIG = TimeofIgnition;
 		opt.vessel = calcParams.src;
+		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
 
 		TLI_PAD(&opt, *form);
 
@@ -4856,28 +4857,46 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 {
-	OBJHANDLE hEarth;
-	MATRIX3 Rot, M_R;
-	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, Att, R2B, V2B;
-	double SVMJD, dt, v_e, F, theta_T, m1, t_go, dVC;
+	MATRIX3 M_R, Rot, M, M_RTM;
+	VECTOR3 R_A, V_A, R0, V0, UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, IgnAtt, SepATT;
+	double boil, SVMJD, m0, mass, dt, t_go, F, v_e, theta_T, dVC;
+	SV sv0, sv1, sv2, sv3;
 
-	hEarth = oapiGetObjectByName("Earth");
+	boil = (1.0 - 0.99998193) / 10.0;
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
 
-	opt->vessel->GetRelativePos(hEarth, R_A);
-	opt->vessel->GetRelativeVel(hEarth, V_A);
+	sv0.gravref = AGCGravityRef(opt->vessel);
+
+	opt->vessel->GetRelativePos(sv0.gravref, R_A);
+	opt->vessel->GetRelativeVel(sv0.gravref, V_A);
 	SVMJD = oapiGetSimMJD();
 
 	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	R0 = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0 = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
 
-	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
-	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+	m0 = opt->vessel->GetEmptyMass();
+	mass = opt->vessel->GetMass();
 
-	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, hEarth, hEarth);
+	sv0.MJD = SVMJD;
+	sv0.R = R0;
+	sv0.V = V0;
+	sv0.mass = mass;
 
-	UY = unit(crossp(V1B, R1B));
-	UZ = unit(-R1B);
+	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+	sv1 = coast(sv0, dt);
+	sv1.mass = m0 + (mass - m0)*exp(-boil*dt);
+
+	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1);
+
+	sv3 = coast(sv2, 900.0);
+
+	t_go = (sv2.MJD - sv1.MJD)*24.0*3600.0;
+
+	UY = unit(crossp(sv1.V, sv1.R));
+	UZ = unit(-sv1.R);
 	UX = crossp(UY, UZ);
 
 	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
@@ -4886,7 +4905,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 	if (length(DV_P) != 0.0)
 	{
-		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / F;
+		theta_T = length(crossp(sv1.R, sv1.V))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(sv1.R), 2.0) / F;
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH.y;
 	}
@@ -4896,27 +4915,33 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	}
 
 	U_TD = unit(V_G);
-
-	OrbMech::poweredflight(R1B, V1B, hEarth, F, v_e, opt->vessel->GetMass(), V_G, R2B, V2B, t_go);
-
 	X_B = unit(V_G);
-	UX = X_B;
-	UY = unit(crossp(X_B, -R1B));
-	UZ = unit(crossp(X_B, crossp(X_B, -R1B)));
 
+	UX = X_B;
+	UY = unit(crossp(X_B, -sv1.R));
+	UZ = unit(crossp(X_B, crossp(X_B, -sv1.R)));
 
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 
-	m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
+	IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
+
+	UY = unit(crossp(sv3.V, sv3.R));
+	UZ = unit(-sv3.R);
+	UX = crossp(UY, UZ);
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	M = OrbMech::CALCSMSC(opt->SeparationAttitude);
+	M_RTM = mul(OrbMech::transpose_matrix(M), M_R);
+
+	SepATT = OrbMech::CALCGAR(opt->REFSMMAT, M_RTM);
+
 	dVC = length(opt->dV_LVLH);
 
-	Att = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
-
-	pad.BurnTime = t_go;//v_e / F *opt->vessel->GetMass()*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
+	pad.BurnTime = t_go;
 	pad.dVC = dVC / 0.3048;
-	pad.IgnATT = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
+	pad.IgnATT = _V(OrbMech::imulimit(IgnAtt.x*DEG), OrbMech::imulimit(IgnAtt.y*DEG), OrbMech::imulimit(IgnAtt.z*DEG));
+	pad.SepATT = _V(OrbMech::imulimit(SepATT.x*DEG), OrbMech::imulimit(SepATT.y*DEG), OrbMech::imulimit(SepATT.z*DEG));
 	pad.TB6P = opt->TIG - 577.6;
-	pad.VI = length(V2B) / 0.3048;
+	pad.VI = length(sv2.V) / 0.3048;
 }
 
 char* RTCC::CMCExternalDeltaVUpdate(double P30TIG, VECTOR3 dV_LVLH)

@@ -258,6 +258,7 @@ struct TLIPADOpt
 	double TIG; //Time of Ignition (deorbit maneuver)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
 	MATRIX3 REFSMMAT;
+	VECTOR3 SeparationAttitude; //LVLH IMU angles
 };
 
 struct P27Opt

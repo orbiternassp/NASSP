@@ -1361,6 +1361,7 @@ int ARCore::subThread()
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = P30TIG;
 		opt.vessel = vessel;
+		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
 		rtcc->TLI_PAD(&opt, tlipad);
 		Result = 0;
 	}
