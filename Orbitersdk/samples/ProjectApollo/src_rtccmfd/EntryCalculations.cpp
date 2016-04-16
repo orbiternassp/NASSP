@@ -2019,11 +2019,11 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	E = crossp(Vig, H) / mu_M - unit(Rig);
 	if (length(E) > 1.0)
 	{
-		DT_TEI_EI = 66.0*3600.0 + OrbMech::timetoperi(Rig, Vig, mu_M);
+		DT_TEI_EI = 62.0*3600.0 + OrbMech::timetoperi(Rig, Vig, mu_M);
 	}
 	else
 	{
-		DT_TEI_EI = 66.0*3600.0;
+		DT_TEI_EI = 62.0*3600.0;
 	}
 
 	if (returnspeed == 0)

@@ -1708,11 +1708,11 @@ void orbitmidnight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool nig
 
 	aa = coe.h*coe.h / (mu*(1 - coe.e*coe.e));
 
-	if (beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
-	{
-		v1 = 0;
-		return;
-	}
+	//if (beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	//{
+	//	v1 = 0;
+	//	return;
+	//}
 	beta2 = dotp(sun, Q) / length(sun);
 	p = coe.h*coe.h / mu;
 	
