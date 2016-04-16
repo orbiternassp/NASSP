@@ -102,7 +102,7 @@ public:
 	VECTOR3 Rig, Vig, Vig_apo;
 	double TIG;
 private:
-	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double r_s, double mu_E, double mu_M, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	void Abort(VECTOR3 R0, VECTOR3 V0, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double mu, double &lambda, double &phi);
 	void augekugel(double ve, double gammae, double &phie, double &Te);
@@ -115,7 +115,7 @@ private:
 	double DT_TEI_EI;	//Tiem between TEI and EI
 	double EntryLng;
 	double mu_E, mu_M;
-	double r_s; //Pseudostate sphere
+	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double dlngapo, dtapo;
 	int ii, jj;

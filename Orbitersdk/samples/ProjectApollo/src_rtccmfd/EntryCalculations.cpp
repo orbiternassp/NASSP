@@ -1962,14 +1962,26 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	mu_E = GGRAV*oapiGetMass(hEarth);
 	mu_M = GGRAV*oapiGetMass(hMoon);
-	r_s = 24.0*oapiGetSize(hEarth);//64373760.0;//14.0*oapiGetSize(hEarth);
+	//r_s = 24.0*oapiGetSize(hEarth);//64373760.0;//14.0*oapiGetSize(hEarth);
 
 	if (TEItype == 0)
 	{
+		VECTOR3 RORB, VORB;
+		double dt;
 		INRFVsign = true;
 		TIG = MJDguess;
 
 		OrbMech::oneclickcoast(R0M, V0M, mjd0, (TIG - mjd0) * 24.0 * 3600.0, R1B, V1B, gravref, hMoon);
+
+		RORB = tmul(Rot, R1B);
+		RORB = _V(RORB.x, RORB.z, RORB.y);
+		VORB = tmul(Rot, V1B);
+		VORB = _V(VORB.x, VORB.z, VORB.y);
+
+		dt = OrbMech::sunrise(RORB, VORB, TIG, hMoon, hEarth, 1, 1, false);
+
+		OrbMech::oneclickcoast(R1B, V1B, TIG, dt, R1B, V1B, hMoon, hMoon);
+		TIG += dt / 24.0 / 3600.0;
 	}
 	else if (TEItype == 1)
 	{
@@ -2036,7 +2048,7 @@ bool TEI::TEIiter()
 
 	EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
 
-	Vig_apo = ThreeBodyAbort(TIG, EIMJD, Rig, Vig, r_s, mu_E, mu_M, R_EI, V_EI);
+	Vig_apo = ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, R_EI, V_EI);
 
 	landingsite(R_EI, V_EI, EIMJD, mu_E, theta_long, theta_lat);
 
@@ -2162,12 +2174,13 @@ bool TEI::TEIiter()
 	}
 }
 
-VECTOR3 TEI::ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double r_s, double mu_E, double mu_M, VECTOR3 &R_EI, VECTOR3 &V_EI)
+VECTOR3 TEI::ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, VECTOR3 &R_EI, VECTOR3 &V_EI)
 {
 	VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I_apo;
 	VECTOR3 dV_I_sstar, R_m, V_m;
-	double t_S, tol, dt_S;
+	double t_S, tol, dt_S, r_s;
 	double *MoonPos;
+	r_s = 24.0*oapiGetSize(hEarth);//64373760.0;//14.0*oapiGetSize(hEarth);
 
 	tol = 20.0;
 

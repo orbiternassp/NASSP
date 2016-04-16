@@ -2220,7 +2220,7 @@ bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
 	return true;
 }
 
-double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight)
+double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future)
 {
 	//midnight = 0-> rise=0:sunset, rise=1:sunrise
 	//midnight = 1-> rise=0:midday, rise=1:midnight
@@ -2315,7 +2315,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 		dt_alt = dt;
 		dt = t_f - t_0;
 
-		if (dt < 0)
+		if (dt < 0 && future)
 		{
 			dt += T;
 		}

@@ -519,14 +519,14 @@ void ARCore::MapUpdate()
 		hEarth = oapiGetObjectByName("Earth");
 		hSun = oapiGetObjectByName("Sun");
 
-		ttoLOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 0, 0);
-		ttoAOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 1, 0);
+		ttoLOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 0, 0, true);
+		ttoAOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 1, 0, true);
 
 		LOSGET = (MJD - GETbase)*24.0*3600.0 + ttoLOS;
 		AOSGET = (MJD - GETbase)*24.0*3600.0 + ttoAOS;
 
-		ttoSS = OrbMech::sunrise(R, V, MJD, gravref, hSun, 0, 0);
-		ttoSR = OrbMech::sunrise(R, V, MJD, gravref, hSun, 1, 0);
+		ttoSS = OrbMech::sunrise(R, V, MJD, gravref, hSun, 0, 0, true);
+		ttoSR = OrbMech::sunrise(R, V, MJD, gravref, hSun, 1, 0, true);
 
 		SSGET = (MJD - GETbase)*24.0*3600.0 + ttoSS;
 		SRGET = (MJD - GETbase)*24.0*3600.0 + ttoSR;
