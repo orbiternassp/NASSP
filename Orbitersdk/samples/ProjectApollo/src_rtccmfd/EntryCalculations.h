@@ -63,7 +63,7 @@ private:
 	int ii;
 	double EntryLng;
 	int entryphase;
-	int critical; //0 = Earth orbit reentry, 1 = MCC calculation, 2 = TLC or TEC abort
+	int critical; //0 = Earth orbit reentry, 1 = MCC calculation, 2 = TLC or TEC abort, 3 = MCC calculation (corridor control)
 	double xapo, dv_err;
 	VECTOR3 R11B, V11B;
 	int f2;

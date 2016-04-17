@@ -657,34 +657,37 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->EntryTIG);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-			if (G->entrylongmanual)
+			if (G->entrycritical != 3)
 			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
-				sprintf(Buffer, "%f °", G->EntryLng*DEG);
-				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
-				if (G->landingzone == 0)
+				if (G->entrylongmanual)
 				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
+					skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
+					sprintf(Buffer, "%f °", G->EntryLng*DEG);
+					skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 				}
-				else if (G->landingzone == 1)
+				else
 				{
-					skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
-				}
-				else if (G->landingzone == 2)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
-				}
-				else if (G->landingzone == 3)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
-				}
-				else if (G->landingzone == 4)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
+					skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
+					if (G->landingzone == 0)
+					{
+						skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
+					}
+					else if (G->landingzone == 1)
+					{
+						skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
+					}
+					else if (G->landingzone == 2)
+					{
+						skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
+					}
+					else if (G->landingzone == 3)
+					{
+						skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
+					}
+					else if (G->landingzone == 4)
+					{
+						skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
+					}
 				}
 			}
 
@@ -711,9 +714,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(1 * W / 8, 12 * H / 14, "Midcourse", 9);
 			}
-			else
+			else if (G->entrycritical == 2)
 			{
 				skp->Text(1 * W / 8, 12 * H / 14, "Abort", 5);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 12 * H / 14, "Corridor Control", 16);
 			}
 
 			if (G->entrycalcstate == 1)
@@ -2235,20 +2242,23 @@ void ApolloRTCCMFD::set_entrylat(double lat)
 
 void ApolloRTCCMFD::EntryLngDialogue()
 {
-	if (G->entrylongmanual)
+	if (G->entrycritical != 3)
 	{
-		bool EntryLngInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Longitude in degree (°):", EntryLngInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		if (G->landingzone < 4)
+		if (G->entrylongmanual)
 		{
-			G->landingzone++;
+			bool EntryLngInput(void* id, char *str, void *data);
+			oapiOpenInputBox("Longitude in degree (°):", EntryLngInput, 0, 20, (void*)this);
 		}
 		else
 		{
-			G->landingzone = 0;
+			if (G->landingzone < 4)
+			{
+				G->landingzone++;
+			}
+			else
+			{
+				G->landingzone = 0;
+			}
 		}
 	}
 }
@@ -2979,7 +2989,7 @@ void ApolloRTCCMFD::menuSwitchCritical()
 {
 	if (G->entrycalcmode == 0)
 	{
-		if (G->entrycritical < 2)
+		if (G->entrycritical < 3)
 		{
 			G->entrycritical++;
 		}
@@ -3309,7 +3319,10 @@ void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 {
 	if (G->entrycalcmode == 0 || G->entrycalcmode == 2 || G->entrycalcmode == 3)
 	{
-		G->entrylongmanual = !G->entrylongmanual;
+		if (G->entrycritical != 3)
+		{
+			G->entrylongmanual = !G->entrylongmanual;
+		}
 	}
 }
 

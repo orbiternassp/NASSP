@@ -972,6 +972,14 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "MCC-7");
 		}
 
+		if (MCCtime > calcParams.EI - 24.0*3600.0)
+		{
+			entopt.type = RTCC_ENTRY_CORRIDOR;
+		}
+		else
+		{
+			entopt.type = RTCC_ENTRY_MCC;
+		}
 		GETbase = getGETBase();
 
 		SVGET = 0;
@@ -989,7 +997,6 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.Range = 0;
 		entopt.ReA = 0;
 		entopt.TIGguess = MCCtime;
-		entopt.type = RTCC_ENTRY_MCC;
 		entopt.vessel = calcParams.src;
 
 		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO); //Target Load for uplink

@@ -1045,7 +1045,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
 				break;
 			case MST_C_COAST56:
-				UpdateMacro(UTP_ENTRY, cm->MissionTime > 0.0, 43, MST_ORBIT_ENTRY);
+				UpdateMacro(UTP_ENTRY, cm->stage == CM_STAGE, 43, MST_ORBIT_ENTRY);
 				break;
 			case MST_ORBIT_ENTRY:
 				switch (SubState) {
@@ -1347,7 +1347,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_LUNARENTRY, cm->MissionTime > rtcc->calcParams.EI - 45.0*60.0, 207, MST_CP_TRANSEARTH8);
 				break;
 			case MST_CP_TRANSEARTH8: //Final Entry PAD to Separation
-				UpdateMacro(UTP_FINALLUNARENTRY, true, 208, MST_ENTRY);
+				UpdateMacro(UTP_FINALLUNARENTRY, cm->stage == CM_STAGE, 208, MST_ENTRY);
 				break;
 			case MST_ENTRY:
 				switch (SubState) {
@@ -2660,7 +2660,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await separation
-			if (cm->stage == CM_STAGE)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2783,7 +2783,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (cm->stage == CM_STAGE)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);

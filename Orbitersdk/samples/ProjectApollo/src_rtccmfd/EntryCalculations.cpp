@@ -748,6 +748,10 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 					x = 0.0;
 				}
 			}
+			else if (critical == 3)
+			{
+				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+			}
 			//else
 			//{
 			//	dvcalc(V1B, theta1, theta2, theta3, x, U_R1, U_H, V2, DV, p_CON);
@@ -768,6 +772,10 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 					xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 				}
 			}
+			else if (critical == 3)
+			{
+				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
+			}
 			//else
 			//{
 			//	dvcalc(V1B, theta1, theta2, theta3, x, U_R1, U_H, V2, DV, p_CON);
@@ -782,7 +790,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 		beta1 = 1.0 + x2*x2;
 		beta5 = lambda*beta1;
 		beta6 = beta5*(2.0 - lambda) - 1.0;
-		if (critical == 0)
+		if (critical == 0 || critical == 3)
 		{
 			if (beta6 > 0)
 			{
@@ -974,34 +982,37 @@ bool Entry::EntryIter()
 		}
 		EntryTIGcor += tigslip;
 	}
+	else if (critical == 3)
+	{
+
+	}
+	else
+	{
+		if (ii == 0 && entryphase == 0)
+		{
+			dx = -dlng * RAD;
+			xapo = x;
+			dlngapo = theta_long;
+			x += dx;
+		}
 		else
 		{
-			if (ii == 0 && entryphase == 0)
+			dx = (x - xapo) / (theta_long - dlngapo)*dlng;
+			if (length(V2 - V1B) > 2804.0 && dx < 0)
 			{
-				dx = -dlng * RAD;
-				xapo = x;
-				dlngapo = theta_long;
-				x += dx;
-
+				dx = 0.5*max(1.0, revcor);
+				revcor++;
 			}
-			else
+			else if (abs(dx) > dxmax)
 			{
-				dx = (x - xapo) / (theta_long - dlngapo)*dlng;
-				if (length(V2 - V1B) > 2804.0 && dx < 0)
-				{
-					dx = 0.5*max(1.0, revcor);
-					revcor++;
-				}
-				else if (abs(dx) > dxmax)
-				{
-					dx = OrbMech::sign(dx)*dxmax;
-				}
-				xapo = x;
-				dlngapo = theta_long;
-				x += dx;
-
+				dx = OrbMech::sign(dx)*dxmax;
 			}
+			xapo = x;
+			dlngapo = theta_long;
+			x += dx;
+
 		}
+	}
 
 
 	ii++;
@@ -1011,9 +1022,9 @@ bool Entry::EntryIter()
 		entryphase = 1;
 		return false;
 	}
-	else if ((abs(dlng) > 0.005*RAD && ii < 60) || entryphase == 0)
+	else if (((abs(dlng) > 0.005*RAD && ii < 60) || entryphase == 0) && critical != 3)
 	{
-		if (abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD) && abs(dx)<0.1)
+		if (critical == 3 || abs(tigslip) < 10.0 || (critical > 0 && abs(dlng)<0.1*RAD) && abs(dx)<0.1)
 		{
 			if (entryphase == 0)
 			{

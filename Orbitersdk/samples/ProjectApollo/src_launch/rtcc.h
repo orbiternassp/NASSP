@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_DEORBIT 0
 #define RTCC_ENTRY_MCC 1
 #define RTCC_ENTRY_ABORT 2
+#define RTCC_ENTRY_CORRIDOR 3
 
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
