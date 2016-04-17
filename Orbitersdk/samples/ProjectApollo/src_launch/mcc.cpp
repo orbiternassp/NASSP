@@ -847,6 +847,10 @@ void MCC::TimeStep(double simdt){
 						this->CM_uplink_buffer();
 						// uplink_size = 0; // Reset
 						PCOption_Enabled = false; // No longer needed
+						if (upDescr[0] != 0)
+						{
+							addMessage(upDescr);
+						}
 						setSubState(6);
 					}
 					break;
@@ -872,176 +876,176 @@ void MCC::TimeStep(double simdt){
 				// The phasing burn was intended to place the spacecraft 76.5 n mi ahead of the S-IVB in 23 hours.
 				if (cm->MissionTime > 3 * 60 * 60 + 5 * 60)
 				{
-					UpdateMacro(UTP_P47MANEUVER, 4 * 60 * 60 + 45 * 60, 1, MST_C_COAST1);
+					UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 4 * 60 * 60 + 45 * 60, 1, MST_C_COAST1);
 				}
 				break;
 			case MST_C_COAST1: // 6-4 Deorbit Maneuver update to Block Data 2
-				UpdateMacro(UTP_P30MANEUVER, 10 * 60 * 60 + 30 * 60, 2, MST_C_COAST2);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 10 * 60 * 60 + 30 * 60, 2, MST_C_COAST2);
 				break;
 			case MST_C_COAST2: //Block Data 2 to 2nd Phasing Maneuver Update
-				UpdateMacro(UTP_BLOCKDATA, 14 * 60 * 60 + 16 * 60, 3, MST_C_COAST3);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 14 * 60 * 60 + 16 * 60, 3, MST_C_COAST3);
 				break;
 			case MST_C_COAST3: // 2nd Phasing Maneuver Update to Block Data 3
-				UpdateMacro(UTP_P47MANEUVER, 21 * 60 * 60 + 50 * 60, 4, MST_C_COAST4);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 21 * 60 * 60 + 50 * 60, 4, MST_C_COAST4);
 				break;
 			case MST_C_COAST4: // Block Data 3 to Preliminary NCC1 Update
-				UpdateMacro(UTP_BLOCKDATA, 22 * 60 * 60 + 25 * 60, 5, MST_C_COAST5);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 22 * 60 * 60 + 25 * 60, 5, MST_C_COAST5);
 				break;
 			case MST_C_COAST5: // Preliminary NCC1 Update to Final NCC1 Update
-				UpdateMacro(UTP_P30MANEUVER, 25 * 60 * 60 + 30 * 60, 6, MST_C_COAST6);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 25 * 60 * 60 + 30 * 60, 6, MST_C_COAST6);
 				break;
 			case MST_C_COAST6: // Final NCC1 Update to NCC2 Update
-				UpdateMacro(UTP_P30MANEUVER, 27 * 60 * 60, 7, MST_C_COAST7);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 27 * 60 * 60, 7, MST_C_COAST7);
 				break;
 			case MST_C_COAST7: //  NCC2 Update to NSR Update
-				UpdateMacro(UTP_P30MANEUVER, 27 * 60 * 60 + 32 * 60, 8, MST_C_COAST8);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 27 * 60 * 60 + 32 * 60, 8, MST_C_COAST8);
 				break;
 			case MST_C_COAST8: // NSR Update to TPI Update
-				UpdateMacro(UTP_P30MANEUVER, 28 * 60 * 60 + 50 * 60, 9, MST_C_COAST9);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 28 * 60 * 60 + 50 * 60, 9, MST_C_COAST9);
 				break;
 			case MST_C_COAST9: // TPI Update to Final Separation Maneuver update
-				UpdateMacro(UTP_TPI, 30 * 60 * 60 + 11 * 60, 10, MST_C_COAST10);
+				UpdateMacro(UTP_TPI, cm->MissionTime > 30 * 60 * 60 + 11 * 60, 10, MST_C_COAST10);
 				break;
 			case MST_C_COAST10: // Final Separation Maneuver update to Block Data 4
-				UpdateMacro(UTP_P47MANEUVER, 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
 				break;
 			case MST_C_COAST11: // Block Data 4 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 34 * 60 * 60 + 45 * 60, 12, MST_C_COAST12);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 34 * 60 * 60 + 45 * 60, 12, MST_C_COAST12);
 				break;
 			case MST_C_COAST12: // SV Update to Block Data 5
-				UpdateMacro(UTP_SVNAVCHECK, 39 * 60 * 60 + 21 * 60, 53, MST_C_COAST13);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 39 * 60 * 60 + 21 * 60, 53, MST_C_COAST13);
 				break;
 			case MST_C_COAST13: // Block Data 5 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 44 * 60 * 60, 13, MST_C_COAST14);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 44 * 60 * 60, 13, MST_C_COAST14);
 				break;
 			case MST_C_COAST14: // SV Update to Block Data 6
-				UpdateMacro(UTP_SVNAVCHECK, 49 * 60 * 60 + 12 * 60, 53, MST_C_COAST15);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 49 * 60 * 60 + 12 * 60, 53, MST_C_COAST15);
 				break;
 			case MST_C_COAST15: // Block Data 6 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 50 * 60 * 60 + 15 * 60, 14, MST_C_COAST16);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 50 * 60 * 60 + 15 * 60, 14, MST_C_COAST16);
 				break;
 			case MST_C_COAST16: // SV Update to Block Data 7
-				UpdateMacro(UTP_SVNAVCHECK, 57 * 60 * 60 + 4 * 60, 53, MST_C_COAST17);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 57 * 60 * 60 + 4 * 60, 53, MST_C_COAST17);
 				break;
 			case MST_C_COAST17: // Block Data 7 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 67 * 60 * 60 + 50 * 60, 15, MST_C_COAST18);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 67 * 60 * 60 + 50 * 60, 15, MST_C_COAST18);
 				break;
 			case MST_C_COAST18: // SV Update to Block Data 8
-				UpdateMacro(UTP_SVNAVCHECK, 68 * 60 * 60 + 37 * 60, 52, MST_C_COAST19);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 68 * 60 * 60 + 37 * 60, 52, MST_C_COAST19);
 				break;
 			case MST_C_COAST19: // Block Data 8 to SPS-3
-				UpdateMacro(UTP_BLOCKDATA, 72 * 60 * 60, 16, MST_C_COAST20);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 72 * 60 * 60, 16, MST_C_COAST20);
 				break;
 			case MST_C_COAST20: // SPS-3 to Block Data 9
-				UpdateMacro(UTP_P30MANEUVER, 77 * 60 * 60 + 5 * 60, 17, MST_C_COAST21);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 77 * 60 * 60 + 5 * 60, 17, MST_C_COAST21);
 				break;
 			case MST_C_COAST21: // Block Data 9 to Block Data 10
-				UpdateMacro(UTP_BLOCKDATA, 85 * 60 * 60 + 52 * 60, 18, MST_C_COAST22);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 85 * 60 * 60 + 52 * 60, 18, MST_C_COAST22);
 				break;
 			case MST_C_COAST22: // Block Data 10 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 90 * 60 * 60, 19, MST_C_COAST23);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 90 * 60 * 60, 19, MST_C_COAST23);
 				break;
 			case MST_C_COAST23: // SV Update to SV Update
-				UpdateMacro(UTP_SVNAVCHECK, 94 * 60 * 60, 52, MST_C_COAST24);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 94 * 60 * 60, 52, MST_C_COAST24);
 				break;
 			case MST_C_COAST24: // SV Update to Block Data 11
-				UpdateMacro(UTP_SVNAVCHECK, 96 * 60 * 60 + 21 * 60, 52, MST_C_COAST25);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 96 * 60 * 60 + 21 * 60, 52, MST_C_COAST25);
 				break;
 			case MST_C_COAST25: // Block Data 11 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 97 * 60 * 60 + 40 * 60, 20, MST_C_COAST26);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 97 * 60 * 60 + 40 * 60, 20, MST_C_COAST26);
 				break;
 			case MST_C_COAST26: // SV Update to Block Data 12
-				UpdateMacro(UTP_SVNAVCHECK, 105 * 60 * 60 + 10 * 60, 52, MST_C_COAST27);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 105 * 60 * 60 + 10 * 60, 52, MST_C_COAST27);
 				break;
 			case MST_C_COAST27: // Block Data 12 to Block Data 13
-				UpdateMacro(UTP_BLOCKDATA, 116 * 60 * 60 + 3 * 60, 21, MST_C_COAST28);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 116 * 60 * 60 + 3 * 60, 21, MST_C_COAST28);
 				break;
 			case MST_C_COAST28: // Block Data 13 to SPS-4
-				UpdateMacro(UTP_BLOCKDATA, 117 * 60 * 60 + 30 * 60, 22, MST_C_COAST29);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 117 * 60 * 60 + 30 * 60, 22, MST_C_COAST29);
 				break;
 			case MST_C_COAST29: // SPS-4 to SV Update
-				UpdateMacro(UTP_P30MANEUVER, 121 * 60 * 60 + 36 * 60, 23, MST_C_COAST30);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 121 * 60 * 60 + 36 * 60, 23, MST_C_COAST30);
 				break;
 			case MST_C_COAST30: // SV Update to SV Update
-				UpdateMacro(UTP_P27PAD, 123 * 60 * 60 + 40 * 60, -1, MST_C_COAST31);
+				UpdateMacro(UTP_P27PAD, cm->MissionTime > 123 * 60 * 60 + 40 * 60, -1, MST_C_COAST31);
 				break;
 			case MST_C_COAST31: // SV Update to Block Data 14
-				UpdateMacro(UTP_SVNAVCHECK, 125 * 60 * 60 + 12 * 60, 52, MST_C_COAST32);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 125 * 60 * 60 + 12 * 60, 52, MST_C_COAST32);
 				break;
 			case MST_C_COAST32: // Block Data 14 to Block Data 15
-				UpdateMacro(UTP_BLOCKDATA, 134 * 60 * 60 + 48 * 60, 24, MST_C_COAST33);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 134 * 60 * 60 + 48 * 60, 24, MST_C_COAST33);
 				break;
 			case MST_C_COAST33: // Block Data 15 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 139 * 60 * 60 + 40 * 60, 25, MST_C_COAST34);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 139 * 60 * 60 + 40 * 60, 25, MST_C_COAST34);
 				break;
 			case MST_C_COAST34: // SV Update to SV Update
-				UpdateMacro(UTP_P27PAD, 143 * 60 * 60 + 20 * 60, -1, MST_C_COAST35);
+				UpdateMacro(UTP_P27PAD, cm->MissionTime > 143 * 60 * 60 + 20 * 60, -1, MST_C_COAST35);
 				break;
 			case MST_C_COAST35: // SV Update to Block Data 16
-				UpdateMacro(UTP_SVNAVCHECK, 144 * 60 * 60 + 11 * 60, 52, MST_C_COAST36);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 144 * 60 * 60 + 11 * 60, 52, MST_C_COAST36);
 				break;
 			case MST_C_COAST36: // Block Data 16 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 147 * 60 * 60 + 10 * 60, 26, MST_C_COAST37);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 147 * 60 * 60 + 10 * 60, 26, MST_C_COAST37);
 				break;
 			case MST_C_COAST37: // SV Update to Block Data 17
-				UpdateMacro(UTP_SVNAVCHECK, 153 * 60 * 60 + 47 * 60, 52, MST_C_COAST38);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 153 * 60 * 60 + 47 * 60, 52, MST_C_COAST38);
 				break;
 			case MST_C_COAST38: // Block Data 17 to SPS-5
-				UpdateMacro(UTP_BLOCKDATA, 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST39);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 161 * 60 * 60 + 18 * 60, 27, MST_C_COAST39);
 				break;
 			case MST_C_COAST39: // SPS-5 to Block Data 18
-				UpdateMacro(UTP_P30MANEUVER, 161 * 60 * 60 + 59 * 60, 28, MST_C_COAST40);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 161 * 60 * 60 + 59 * 60, 28, MST_C_COAST40);
 				break;
 			case MST_C_COAST40: // Block Data 18 to SV Update
-				UpdateMacro(UTP_BLOCKDATA, 169 * 60 * 60, 29, MST_C_COAST41);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 169 * 60 * 60, 29, MST_C_COAST41);
 				break;
 			case MST_C_COAST41: // SV Update to Block Data 19
-				UpdateMacro(UTP_SVNAVCHECK, 172 * 60 * 60 + 42 * 60, 52, MST_C_COAST42);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 172 * 60 * 60 + 42 * 60, 52, MST_C_COAST42);
 				break;
 			case MST_C_COAST42: // Block Data 19 to Block Data 20
-				UpdateMacro(UTP_BLOCKDATA, 180 * 60 * 60 + 56 * 60, 30, MST_C_COAST43);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 180 * 60 * 60 + 56 * 60, 30, MST_C_COAST43);
 				break;
 			case MST_C_COAST43: // Block Data 20 to Block Data 21
-				UpdateMacro(UTP_BLOCKDATA, 192 * 60 * 60 + 17 * 60, 31, MST_C_COAST44);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 192 * 60 * 60 + 17 * 60, 31, MST_C_COAST44);
 				break;
 			case MST_C_COAST44: // Block Data 21 to Block Data 22
-				UpdateMacro(UTP_BLOCKDATA, 201 * 60 * 60 + 55 * 60, 32, MST_C_COAST45);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 201 * 60 * 60 + 55 * 60, 32, MST_C_COAST45);
 				break;
 			case MST_C_COAST45: // Block Data 22 to SPS-6
-				UpdateMacro(UTP_BLOCKDATA, 205 * 60 * 60 + 25 * 60, 33, MST_C_COAST46);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 205 * 60 * 60 + 25 * 60, 33, MST_C_COAST46);
 				break;
 			case MST_C_COAST46: // SPS-6 to Block Data 23
-				UpdateMacro(UTP_P30MANEUVER, 210 * 60 * 60 + 11 * 60, 34, MST_C_COAST47);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 210 * 60 * 60 + 11 * 60, 34, MST_C_COAST47);
 				break;
 			case MST_C_COAST47: // Block Data 23 to SV PAD
-				UpdateMacro(UTP_BLOCKDATA, 213 * 60 * 60, 35, MST_C_COAST48);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 213 * 60 * 60, 35, MST_C_COAST48);
 				break;
 			case MST_C_COAST48: // SV PAD to P27 PAD
-				UpdateMacro(UTP_SVNAVCHECK, 214 * 60 * 60 + 10 * 60, 52, MST_C_COAST49);
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 214 * 60 * 60 + 10 * 60, 52, MST_C_COAST49);
 				break;
 			case MST_C_COAST49: //P27 PAD to Block Data 24
-				UpdateMacro(UTP_P27PAD, 220 * 60 * 60 + 43 * 60, 36, MST_C_COAST50);
+				UpdateMacro(UTP_P27PAD, cm->MissionTime > 220 * 60 * 60 + 43 * 60, 36, MST_C_COAST50);
 				break;
 			case MST_C_COAST50: // Block Data 24 to Block Data 25
-				UpdateMacro(UTP_BLOCKDATA, 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST51);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST51);
 				break;
 			case MST_C_COAST51: // Block Data 25 to SPS-7
-				UpdateMacro(UTP_BLOCKDATA, 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST52);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST52);
 				break;
 			case MST_C_COAST52: // SPS-7 to Block Data 26
-				UpdateMacro(UTP_P30MANEUVER, 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST53);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST53);
 				break;
 			case MST_C_COAST53: // Block Data 26 to Block Data 27
-				UpdateMacro(UTP_BLOCKDATA, 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST54);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST54);
 				break;
 			case MST_C_COAST54: // Block Data 27 to Deorbit Maneuver
-				UpdateMacro(UTP_BLOCKDATA, 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST55);
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST55);
 				break;
 			case MST_C_COAST55: // Deorbit Maneuver PAD to Entry PAD
-				UpdateMacro(UTP_P30MANEUVER, 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
 				break;
 			case MST_C_COAST56:
-				UpdateMacro(UTP_ENTRY, 0.0, 43, MST_ORBIT_ENTRY);
+				UpdateMacro(UTP_ENTRY, cm->MissionTime > 0.0, 43, MST_ORBIT_ENTRY);
 				break;
 			case MST_ORBIT_ENTRY:
 				switch (SubState) {
@@ -1108,7 +1112,7 @@ void MCC::TimeStep(double simdt){
 					}
 					break;
 				case 2:
-					allocPad(8);// Allocate AP7 MNV Pad
+					allocPad(8);// Allocate AP11 MNV Pad
 					if (padForm != NULL) {
 						// If success
 						startSubthread(2); // Start subthread to fill PAD
@@ -1138,6 +1142,10 @@ void MCC::TimeStep(double simdt){
 						this->CM_uplink_buffer();
 						// uplink_size = 0; // Reset
 						PCOption_Enabled = false; // No longer needed
+						if (upDescr[0] != 0)
+						{
+							addMessage(upDescr);
+						}
 						setSubState(7);
 					}
 					break;
@@ -1230,116 +1238,116 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_CP_TRANSLUNAR3: //Block Data 1 to MCC1
-				UpdateMacro(UTP_P47MANEUVER, 8 * 60 * 60, 10, MST_CP_TRANSLUNAR4);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 5.0*3600.0, 10, MST_CP_TRANSLUNAR4);
 				break;
 			case MST_CP_TRANSLUNAR4: //MCC1 to Block Data 2
-				UpdateMacro(UTP_P30MANEUVER, 12 * 60 * 60, 20, MST_CP_TRANSLUNAR5);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0, 20, MST_CP_TRANSLUNAR5);
 				break;
 			case MST_CP_TRANSLUNAR5: //Block Data 2 to Block Data 3
-				UpdateMacro(UTP_P47MANEUVER, 25 * 60 * 60, 11, MST_CP_TRANSLUNAR6);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 22.0*3600.0, 11, MST_CP_TRANSLUNAR6);
 				break;
 			case MST_CP_TRANSLUNAR6: //Block Data 3 to MCC2
-				UpdateMacro(UTP_P47MANEUVER, 27 * 60 * 60, 12, MST_CP_TRANSLUNAR7);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 24.0*3600.0, 12, MST_CP_TRANSLUNAR7);
 				break;
 			case MST_CP_TRANSLUNAR7: //MCC2 to Block Data 4
-				UpdateMacro(UTP_P30MANEUVER, 35 * 60 * 60, 21, MST_CP_TRANSLUNAR8);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 32.0*3600.0, 21, MST_CP_TRANSLUNAR8);
 				break;
 			case MST_CP_TRANSLUNAR8: //Block Data 4 to Flyby
-				UpdateMacro(UTP_P47MANEUVER, 44 * 60 * 60, 13, MST_CP_TRANSLUNAR9);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 41.0*3600.0, 13, MST_CP_TRANSLUNAR9);
 				break;
 			case MST_CP_TRANSLUNAR9: //Flyby to MCC3
-				UpdateMacro(UTP_P47MANEUVER, 46 * 60 * 60, 40, MST_CP_TRANSLUNAR10);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 23.0*3600.0, 40, MST_CP_TRANSLUNAR10);
 				break;
 			case MST_CP_TRANSLUNAR10: //MCC3 to Fast PC+2
-				UpdateMacro(UTP_P30MANEUVER, 51 * 60 * 60, 22, MST_CP_TRANSLUNAR11);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 18.0*3600.0, 22, MST_CP_TRANSLUNAR11);
 				break;
 			case MST_CP_TRANSLUNAR11: //Fast PC+2 to MCC4
-				UpdateMacro(UTP_P47MANEUVER, 59 * 60 * 60 + 30 * 60, 42, MST_CP_TRANSLUNAR12);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 9.5*3600.0, 42, MST_CP_TRANSLUNAR12);
 				break;
 			case MST_CP_TRANSLUNAR12: //MCC4 to PC+2
-				UpdateMacro(UTP_P30MANEUVER, 66 * 60 * 60 + 35 * 60, 23, MST_CP_TRANSLUNAR13);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 2.5*3600.0, 23, MST_CP_TRANSLUNAR13);
 				break;
 			case MST_CP_TRANSLUNAR13: //PC+2 to Prel. LOI-1
-				UpdateMacro(UTP_P47MANEUVER, 67 * 60 * 60 + 20 * 60, 41, MST_CP_TRANSLUNAR14);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 50.0*60.0, 41, MST_CP_TRANSLUNAR14);
 				break;
 			case MST_CP_TRANSLUNAR14: //Prel. LOI-1 to Prel. TEI-1
-				UpdateMacro(UTP_P47MANEUVER, 67 * 60 * 60 + 25 * 60, 30, MST_CP_TRANSLUNAR15);
+				UpdateMacro(UTP_P47MANEUVER, StateTime > 5.0*60.0, 30, MST_CP_TRANSLUNAR15);
 				break;
 			case MST_CP_TRANSLUNAR15: //Prel. TEI-1 to LOI-1
-				UpdateMacro(UTP_P47MANEUVER, 68 * 60 * 60 + 5 * 60, 50, MST_CP_TRANSLUNAR16);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0, 50, MST_CP_TRANSLUNAR16);
 				break;
 			case MST_CP_TRANSLUNAR16: //LOI-1 to TEI-2
-				UpdateMacro(UTP_P30MANEUVER, 70 * 60 * 60 + 35 * 60, 31, MST_CP_LUNAR_ORBIT1);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 70 * 60 * 60 + 35 * 60, 31, MST_CP_LUNAR_ORBIT1);
 				break;
 			case MST_CP_LUNAR_ORBIT1: //TEI-2 to LOI-2
-				UpdateMacro(UTP_P47MANEUVER, 71 * 60 * 60 + 40 * 60, 105, MST_CP_LUNAR_ORBIT2);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 71 * 60 * 60 + 40 * 60, 105, MST_CP_LUNAR_ORBIT2);
 				break;
 			case MST_CP_LUNAR_ORBIT2: //LOI-2 to TEI-3 Calc
-				UpdateMacro(UTP_P30MANEUVER, 72 * 60 * 60 + 25 * 60, 102, MST_CP_LUNAR_ORBIT3);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 72 * 60 * 60 + 25 * 60, 102, MST_CP_LUNAR_ORBIT3);
 				break;
 			case MST_CP_LUNAR_ORBIT3: //TEI-3 Calc to TEI-4 Calc
-				UpdateMacro(UTP_P47MANEUVER, 74 * 60 * 60 + 55 * 60, 106, MST_CP_LUNAR_ORBIT7);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 74 * 60 * 60 + 55 * 60, 106, MST_CP_LUNAR_ORBIT7);
 				break;
 			case MST_CP_LUNAR_ORBIT7: //TEI-4 Calc to SV Update
-				UpdateMacro(UTP_P47MANEUVER, 76 * 60 * 60 + 25 * 60, 107, MST_CP_LUNAR_ORBIT9);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 76 * 60 * 60 + 25 * 60, 107, MST_CP_LUNAR_ORBIT9);
 				break;
 			case MST_CP_LUNAR_ORBIT9: //SV Update to TEI-5 Calc
-				UpdateMacro(UTP_UPLINKONLY, 76 * 60 * 60 + 40 * 60, 103, MST_CP_LUNAR_ORBIT10);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > 76 * 60 * 60 + 40 * 60, 103, MST_CP_LUNAR_ORBIT10);
 				break;
 			case MST_CP_LUNAR_ORBIT10: //TEI-5 Calc to TEI-6 Calc
-				UpdateMacro(UTP_P47MANEUVER, 78 * 60 * 60 + 25 * 60, 108, MST_CP_LUNAR_ORBIT11);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 78 * 60 * 60 + 25 * 60, 108, MST_CP_LUNAR_ORBIT11);
 				break;
 			case MST_CP_LUNAR_ORBIT11: //TEI-6 Calc to TEI-7 Calc
-				UpdateMacro(UTP_P30MANEUVER, 80 * 60 * 60 + 20 * 60, 109, MST_CP_LUNAR_ORBIT12);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 80 * 60 * 60 + 20 * 60, 109, MST_CP_LUNAR_ORBIT12);
 				break;
 			case MST_CP_LUNAR_ORBIT12: //TEI-7 Calc to TEI-8 Calc
-				UpdateMacro(UTP_P30MANEUVER, 82 * 60 * 60 + 20 * 60, 110, MST_CP_LUNAR_ORBIT13);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 82 * 60 * 60 + 20 * 60, 110, MST_CP_LUNAR_ORBIT13);
 				break;
 			case MST_CP_LUNAR_ORBIT13: //TEI-8 Calc to SV Update
-				UpdateMacro(UTP_P30MANEUVER, 84 * 60 * 60 + 20 * 60, 111, MST_CP_LUNAR_ORBIT14);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 84 * 60 * 60 + 20 * 60, 111, MST_CP_LUNAR_ORBIT14);
 				break;
 			case MST_CP_LUNAR_ORBIT14: //SV Update to TEI-9 Calc
-				UpdateMacro(UTP_UPLINKONLY, 84 * 60 * 60 + 35 * 60, 103, MST_CP_LUNAR_ORBIT15);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > 84 * 60 * 60 + 35 * 60, 103, MST_CP_LUNAR_ORBIT15);
 				break;
 			case MST_CP_LUNAR_ORBIT15: // TEI-9 Calc to Prel. TEI-10 Calc
-				UpdateMacro(UTP_P47MANEUVER, 86 * 60 * 60 + 20 * 60, 112, MST_CP_LUNAR_ORBIT17);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 86 * 60 * 60 + 20 * 60, 112, MST_CP_LUNAR_ORBIT17);
 				break;
 			case MST_CP_LUNAR_ORBIT17: //Prel. TEI-10 Calc to TEI-10 Calc
-				UpdateMacro(UTP_P30MANEUVER, 87 * 60 * 60 + 45 * 60, 113, MST_CP_LUNAR_ORBIT18);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 87 * 60 * 60 + 45 * 60, 113, MST_CP_LUNAR_ORBIT18);
 				break;
 			case MST_CP_LUNAR_ORBIT18: //TEI-10 Calc to TEI-11 Calc
-				UpdateMacro(UTP_P30MANEUVER, 87 * 60 * 60 + 50 * 60, 200, MST_CP_LUNAR_ORBIT19);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 87 * 60 * 60 + 50 * 60, 200, MST_CP_LUNAR_ORBIT19);
 				break;
 			case MST_CP_LUNAR_ORBIT19: //TEI-11 Calc to TEI
-				UpdateMacro(UTP_P47MANEUVER, rtcc->calcParams.TEI, 201, MST_CP_TRANSEARTH1);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TEI, 201, MST_CP_TRANSEARTH1);
 				break;
 			case MST_CP_TRANSEARTH1: //TEI to ENTRY REFSMMAT
-				if (cm->MissionTime > 90.0*3600.0)
+				if (cm->MissionTime > rtcc->calcParams.TEI + 45*60)
 				{
 					oapiSetTimeAcceleration(1.0);
 					setState(MST_CP_TRANSEARTH2);
 				}
 				break;
 			case MST_CP_TRANSEARTH2: //ENTRY REFSMMAT to MCC5 Update
-				UpdateMacro(UTP_UPLINKONLY, 102 * 60 * 60 + 35 * 60, 202, MST_CP_TRANSEARTH3);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 14.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
 				break;
 			case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
-				UpdateMacro(UTP_P30MANEUVER, 120 * 60 * 60 + 50 * 60, 203, MST_CP_TRANSEARTH4);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60, 203, MST_CP_TRANSEARTH4);
 				break;
 			case MST_CP_TRANSEARTH4: //MCC6 Update to Prel. MCC7 Update
-				UpdateMacro(UTP_P30MANEUVER, 132 * 60 * 60, 204, MST_CP_TRANSEARTH5);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 15.0 * 60 * 60, 204, MST_CP_TRANSEARTH5);
 				break;
 			case MST_CP_TRANSEARTH5: //Prel. MCC7 Update to MCC7 Update
-				UpdateMacro(UTP_P30MANEUVER, 143 * 60 * 60 + 15 * 60, 205, MST_CP_TRANSEARTH6);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60, 205, MST_CP_TRANSEARTH6);
 				break;
 			case MST_CP_TRANSEARTH6: //MCC7 Update to Prel. Entry PAD
-				UpdateMacro(UTP_P30MANEUVER, 143 * 60 * 60 + 20 * 60, 206, MST_CP_TRANSEARTH7);
+				UpdateMacro(UTP_P30MANEUVER, StateTime > 5 * 60, 206, MST_CP_TRANSEARTH7);
 				break;
 			case MST_CP_TRANSEARTH7: //Prel. Entry PAD to Final Entry PAD
-				UpdateMacro(UTP_LUNARENTRY, rtcc->calcParams.EI - 45.0*60.0, 207, MST_CP_TRANSEARTH8);
+				UpdateMacro(UTP_LUNARENTRY, cm->MissionTime > rtcc->calcParams.EI - 45.0*60.0, 207, MST_CP_TRANSEARTH8);
 				break;
 			case MST_CP_TRANSEARTH8: //Final Entry PAD to Separation
-				UpdateMacro(UTP_FINALLUNARENTRY, 0.0, 208, MST_ENTRY);
+				UpdateMacro(UTP_FINALLUNARENTRY, true, 208, MST_ENTRY);
 				break;
 			case MST_ENTRY:
 				switch (SubState) {
@@ -2365,7 +2373,7 @@ void MCC::keyDown(DWORD key){
 	}
 }
 
-void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate)
+void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate)
 {
 	if (type == UTP_BLOCKDATA) //Earth Orbit Block Data
 	{
@@ -2389,7 +2397,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2426,7 +2434,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2475,6 +2483,10 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset
 				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
 				setSubState(5);
 			}
 			break;
@@ -2485,7 +2497,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2515,7 +2527,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2548,6 +2560,10 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset
 				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
 				setSubState(5);
 			}
 			break;
@@ -2558,7 +2574,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2600,6 +2616,10 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset
 				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
 				setSubState(5);
 			}
 			break;
@@ -2610,7 +2630,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2677,7 +2697,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2707,7 +2727,7 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await separation
-			if (cm->GetMissionTime() > NextGET)
+			if (condition)
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
@@ -2749,6 +2769,10 @@ void MCC::UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset
 				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
 				setSubState(5);
 			}
 			break;
@@ -2793,8 +2817,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Ask RTCC for numbers
 		// Clobber string
 		upString[0] = 0;
+		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString);
+		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2833,8 +2858,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Ask RTCC for numbers
 		// Clobber string
 		upString[0] = 0;
+		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString);
+		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2846,8 +2872,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Ask RTCC for numbers
 		// Clobber string
 		upString[0] = 0;
+		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType,updatenumber, padForm, upString);
+		rtcc->Calculation(MissionType,updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2899,8 +2926,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Ask RTCC for numbers
 		// Clobber string
 		upString[0] = 0;
+		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString);
+		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);

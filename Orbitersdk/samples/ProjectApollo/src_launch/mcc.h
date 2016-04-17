@@ -579,7 +579,7 @@ public:
 	void drawPad();											// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
-	void UpdateMacro(int type, double NextGET, int updatenumber, int nextupdate);
+	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate);
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
@@ -620,6 +620,7 @@ public:
 	int padNumber;											// PAD display number
 	LPVOID padForm;											// Pointer to pad form buffer
 	char upString[1024 * 3];								// Uplink string buffer
+	char upDescr[1024];										// Uplink Description
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer

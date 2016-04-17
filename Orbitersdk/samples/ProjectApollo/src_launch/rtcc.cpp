@@ -75,19 +75,19 @@ void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
 }
-void RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString)
+void RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	if (mission == MTP_C)
 	{
-		CalculationMTP_C(fcn, pad, upString);
+		CalculationMTP_C(fcn, pad, upString, upDesc);
 	}
 	else if (mission == MTP_C_PRIME)
 	{
-		CalculationMTP_C_PRIME(fcn, pad, upString);
+		CalculationMTP_C_PRIME(fcn, pad, upString, upDesc);
 	}
 }
 
-void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
+void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
@@ -100,6 +100,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		VECTOR3 dV_LVLH;
 
 		GETbase = getGETBase();
+		calcParams.LOI = OrbMech::HHMMSSToSS(69, 10, 39);
 
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
@@ -107,7 +108,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		opt.lat = -8.6*RAD;
 		opt.lng = -172.0*RAD;
 		opt.man = 4;
-		opt.PeriGET = OrbMech::HHMMSSToSS(69, 10, 39);
+		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 		opt.MCCGET = OrbMech::HHMMSSToSS(2, 50, 30);
 
@@ -208,6 +209,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM and LM state vectors");
 			}
 		}
 		else
@@ -318,6 +320,16 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		SV sv;
 		char manname[8];
 
+		if (calcParams.TLI == 0)
+		{
+			calcParams.TLI = OrbMech::HHMMSSToSS(3, 0, 0);
+		}
+
+		if (calcParams.LOI == 0)
+		{
+			calcParams.LOI = OrbMech::HHMMSSToSS(69, 10, 39);
+		}
+
 		if (fcn == 20)
 		{
 			opt.MCCGET = calcParams.TLI + 6.0*3600.0;
@@ -332,13 +344,13 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		}
 		else if (fcn == 22)
 		{
-			opt.MCCGET = OrbMech::HHMMSSToSS(69, 10, 39) - 22.0*3600.0;
+			opt.MCCGET = calcParams.LOI - 22.0*3600.0;
 			sprintf(manname, "MCC3");
 			REFSMMAT = GetREFSMMATfromAGC();
 		}
 		else
 		{
-			opt.MCCGET = OrbMech::HHMMSSToSS(69, 10, 39) - 8.0*3600.0;
+			opt.MCCGET = calcParams.LOI - 8.0*3600.0;
 			sprintf(manname, "MCC4");
 		}
 
@@ -359,7 +371,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		opt.lat = -8.6*RAD;
 		opt.lng = -172.0*RAD;
 		opt.man = 0;
-		opt.PeriGET = OrbMech::HHMMSSToSS(69, 10, 39);
+		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
 		LOITargeting(&opt, dV_LVLH, P30TIG);
@@ -382,7 +394,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			opt2.useSV = true;
 			opt2.vessel = calcParams.src;
 			opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv);
-			opt2.MCCGET = OrbMech::HHMMSSToSS(69, 10, 39);
+			opt2.MCCGET = calcParams.LOI;
 
 			LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
 
@@ -417,6 +429,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector, target load, LOI-2 REFSMMAT");
 			}
 		}
 		else
@@ -425,6 +438,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector, target load");
 			}
 		}
 	}
@@ -455,7 +469,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		opt.h_peri = 60.0*1852.0;
 		opt.inc = 168.0*RAD;
 		opt.man = 2;
-		opt.MCCGET = OrbMech::HHMMSSToSS(69, 10, 39);
+		opt.MCCGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
 		LOITargeting(&opt, dV_LVLH, P30TIG);
@@ -481,6 +495,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
 			}
 		}
 	}
@@ -500,7 +515,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		entopt.GETbase = GETbase;
 		entopt.returnspeed = 1;
 		entopt.TEItype = 1;
-		entopt.TIGguess = OrbMech::HHMMSSToSS(69, 10, 39) - 8.0*3600.0;
+		entopt.TIGguess = calcParams.LOI - 8.0*3600.0;
 		entopt.vessel = calcParams.src;
 
 		TEITargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO);
@@ -710,6 +725,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -731,6 +747,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector");
 		}
 	}
 	break;
@@ -873,6 +890,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector");
 			}
 		}
 		else if (fcn == 200)
@@ -887,6 +905,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM and LM state vectors, target load");
 			}
 		}
 	}
@@ -907,6 +926,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Entry REFSMMAT");
 		}
 	}
 	break;
@@ -1023,6 +1043,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector, target load, Entry REFSMMAT");
 			}
 		}
 		else if (fcn == 204)//MCC6
@@ -1031,6 +1052,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector, target load");
 			}
 		}
 		else if (fcn == 205)//Prel. MCC7
@@ -1039,6 +1061,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector");
 			}
 		}
 		else if (fcn == 206)//MCC7
@@ -1047,6 +1070,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
 			}
 		}
 	}
@@ -1107,13 +1131,14 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors");
 		}
 	}
 	break;
 	}
 }
 
-void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
+void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
@@ -1205,6 +1230,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load, REFSMMAT");
 		}
 	}
 	break;
@@ -1354,6 +1380,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors, target load");
 		}
 	}
 	break;
@@ -1387,6 +1414,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Target load");
 		}
 	}
 	break;
@@ -1444,6 +1472,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors, target load");
 		}
 	}
 	break;
@@ -1677,6 +1706,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -1855,6 +1885,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -2023,6 +2054,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -2202,6 +2234,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -2354,6 +2387,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
@@ -2472,6 +2506,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load, Retrofire REFSMMAT");
 		}
 	}
 	break;
@@ -2543,6 +2578,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
 		}
 	}
 	break;
@@ -2572,6 +2608,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors");
 		}
 	}
 	break;
@@ -2597,6 +2634,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
 		}
 	}
 	break;
@@ -2630,6 +2668,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString)
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors");
 		}
 	}
 	break;
@@ -5275,6 +5314,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TEI", calcParams.TEI);
 	SAVE_DOUBLE("RTCC_EI", calcParams.EI);
 	SAVE_DOUBLE("RTCC_TLI", calcParams.TLI);
+	SAVE_DOUBLE("RTCC_LOI", calcParams.LOI);
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
@@ -5296,6 +5336,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TEI", calcParams.TEI);
 		LOAD_DOUBLE("RTCC_EI", calcParams.EI);
 		LOAD_DOUBLE("RTCC_TLI", calcParams.TLI);
+		LOAD_DOUBLE("RTCC_LOI", calcParams.LOI);
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 	}
 	return;

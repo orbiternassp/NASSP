@@ -277,6 +277,7 @@ struct calculationParameters {
 	double TEI;		// Time of TEI
 	double TLI;		// Time of TLI
 	double EI;		// Time of Entry Interface
+	double LOI;		// Time of LOI/Pericynthion
 };
 
 class RTCC {
@@ -286,7 +287,7 @@ class RTCC {
 public:
 	RTCC();
 	void Init(MCC *ptr);
-	void Calculation(int mission, int fcn,LPVOID &pad, char * upString = NULL);
+	void Calculation(int mission, int fcn,LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
@@ -334,8 +335,8 @@ private:
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);
 	SV coast(SV sv0, double dt);
 
-	void CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL);
-	void CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL);
+	void CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
+	void CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 
 protected:
 	double TimeofIgnition;
