@@ -111,6 +111,7 @@ MCC::MCC(){
 	PCOption_Text[0] = 0;
 	NCOption_Enabled = false;
 	NCOption_Text[0] = 0;
+	scrubbed = false;
 }
 
 void MCC::Init(Saturn *vs){
@@ -1061,7 +1062,7 @@ void MCC::TimeStep(double simdt){
 					setSubState(1);
 					// FALL INTO
 				case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
+					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(2);
@@ -1176,7 +1177,7 @@ void MCC::TimeStep(double simdt){
 					setSubState(10);
 					// FALL INTO
 				case 10: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
+					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(11);
@@ -1200,7 +1201,7 @@ void MCC::TimeStep(double simdt){
 					setSubState(13);
 					// FALL INTO
 				case 13: // Await pad read-up time (however long it took to compute it and give it to capcom)
-					if (SubStateTime > 10 && padState > -1) {
+					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
 						setSubState(14);
@@ -1566,7 +1567,7 @@ int MCC::subThread(){
 		case 1:	//MISSION CP TLI
 		{
 			rtcc->calcParams.src = cm;
-			rtcc->Calculation(MissionType, subThreadMode, padForm);
+			scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
 			Result = 0;
 		}
 		break;
@@ -2390,7 +2391,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
+			if (SubStateTime > 1 && padState > -1) {
 				addMessage("You can has PAD");
 				if (padAutoShow == true && padState == 0) { drawPad(); }
 				setSubState(2);
@@ -2427,10 +2428,23 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
-				addMessage("You can has PAD");
-				if (padAutoShow == true && padState == 0) { drawPad(); }
-				setSubState(2);
+			if (SubStateTime > 1 && padState > -1) {
+				if (scrubbed)
+				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					freePad();
+					scrubbed = false;
+					setSubState(2);
+				}
+				else
+				{
+					addMessage("You can has PAD");
+					if (padAutoShow == true && padState == 0) { drawPad(); }
+					setSubState(2);
+				}
 			}
 			break;
 		case 2: // Await burn
@@ -2465,13 +2479,27 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
 			if (SubStateTime > 1 && padState > -1) {
-				addMessage("You can has PAD");
-				if (padAutoShow == true && padState == 0) { drawPad(); }
-				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
-				addMessage("Ready for uplink?");
-				sprintf(PCOption_Text, "Ready for uplink");
-				PCOption_Enabled = true;
-				setSubState(2);
+				if (scrubbed)
+				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					freePad();
+					scrubbed = false;
+					setSubState(6);
+				}
+				else
+				{
+
+					addMessage("You can has PAD");
+					if (padAutoShow == true && padState == 0) { drawPad(); }
+					// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+					addMessage("Ready for uplink?");
+					sprintf(PCOption_Text, "Ready for uplink");
+					PCOption_Enabled = true;
+					setSubState(2);
+				}
 			}
 			break;
 		case 2: // Awaiting user response
@@ -2520,7 +2548,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
+			if (SubStateTime > 1 && padState > -1) {
 				addMessage("You can has PAD");
 				if (padAutoShow == true && padState == 0) { drawPad(); }
 				setSubState(2);
@@ -2653,7 +2681,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
+			if (SubStateTime > 1 && padState > -1) {
 				addMessage("You can has PAD");
 				if (padAutoShow == true && padState == 0) { drawPad(); }
 				setSubState(2);
@@ -2690,7 +2718,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
+			if (SubStateTime > 1 && padState > -1) {
 				addMessage("You can has PAD");
 				if (padAutoShow == true && padState == 0) { drawPad(); }
 				setSubState(2);
@@ -2720,7 +2748,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 10 && padState > -1) {
+			if (SubStateTime > 1 && padState > -1) {
 				addMessage("You can has PAD");
 				if (padAutoShow == true && padState == 0) { drawPad(); }
 				setSubState(2);
@@ -2819,7 +2847,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		upString[0] = 0;
 		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2839,7 +2867,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			AP11MNV * form = (AP11MNV *)padForm;
 		}
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType, updatenumber, padForm);
+		upString[0] = 0;
+		upDescr[0] = 0;
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2848,7 +2878,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7TPI * form = (AP7TPI *)padForm;
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType, updatenumber, padForm);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2860,7 +2890,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		upString[0] = 0;
 		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2874,7 +2904,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		upString[0] = 0;
 		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType,updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType,updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -2887,7 +2917,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		AP7ENT * form = (AP7ENT *)padForm;
 		// Ask RTCC for numbers
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2896,7 +2926,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		P27PAD * form = (P27PAD *)padForm;
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType,updatenumber, padForm);
+		scrubbed = rtcc->Calculation(MissionType,updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2905,7 +2935,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		TLIPAD * form = (TLIPAD *)padForm;
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType, updatenumber, padForm);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2915,7 +2945,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		AP11ENT * form = (AP11ENT *)padForm;
 		// Ask RTCC for numbers
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString);
 		// Done filling form, OK to show
 		padState = 0;
 		// Pretend we did the math
@@ -2928,7 +2958,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		upString[0] = 0;
 		upDescr[0] = 0;
 		// Do math
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);

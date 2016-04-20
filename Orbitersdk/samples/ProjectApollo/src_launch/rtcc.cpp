@@ -75,22 +75,25 @@ void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
 }
-void RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
+	bool scrubbed = false;
 	if (mission == MTP_C)
 	{
-		CalculationMTP_C(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_C(fcn, pad, upString, upDesc);
 	}
 	else if (mission == MTP_C_PRIME)
 	{
-		CalculationMTP_C_PRIME(fcn, pad, upString, upDesc);
+		scrubbed =  CalculationMTP_C_PRIME(fcn, pad, upString, upDesc);
 	}
+	return scrubbed;
 }
 
-void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
+	bool scrubbed = false;
 
 	switch (fcn) {
 	case 1: //TLI
@@ -376,69 +379,84 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LOITargeting(&opt, dV_LVLH, P30TIG);
 
-		if (fcn == 23)
+		if (fcn != 23)
 		{
-			LOIMan opt2;
-			REFSMMATOpt refsopt;
-			double P30TIG_LOI;
-			VECTOR3 dV_LVLH_LOI;
-
-			sv.mass = calcParams.src->GetMass();
-
-			opt2.csmlmdocked = false;
-			opt2.GETbase = GETbase;
-			opt2.h_apo = 170.0*1852.0;
-			opt2.h_peri = 60.0*1852.0;
-			opt2.inc = 168.0*RAD;
-			opt2.man = 1;
-			opt2.useSV = true;
-			opt2.vessel = calcParams.src;
-			opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv);
-			opt2.MCCGET = calcParams.LOI;
-
-			LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
-
-			refsopt.dV_LVLH = dV_LVLH;
-			refsopt.dV_LVLH2 = dV_LVLH_LOI;
-			refsopt.GETbase = GETbase;
-			refsopt.P30TIG = P30TIG;
-			refsopt.P30TIG2 = P30TIG_LOI;
-			refsopt.REFSMMATopt = 7;
-			refsopt.vessel = calcParams.src;
-
-			REFSMMAT = REFSMMATCalc(&refsopt);
+			if (length(dV_LVLH) < 5.0*0.3048)
+			{
+				scrubbed = true;
+			}
 		}
 
-		engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0))/calcParams.src->GetMass(), dV_LVLH);
-
-		manopt.dV_LVLH = dV_LVLH;
-		manopt.engopt = engopt;
-		manopt.GETbase = GETbase;
-		manopt.HeadsUp = false;
-		manopt.REFSMMAT = REFSMMAT;
-		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
-		manopt.vesseltype = 0;
-
-		AP11ManeuverPAD(&manopt, *form);
-		sprintf(form->purpose, manname);
-
-		if (fcn == 23)
+		if (scrubbed)
 		{
-			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector, target load, LOI-2 REFSMMAT");
-			}
+			sprintf(upDesc, "%s has been scrubbed.", manname);
 		}
 		else
 		{
-			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector, target load");
+			if (fcn == 23)
+			{
+				LOIMan opt2;
+				REFSMMATOpt refsopt;
+				double P30TIG_LOI;
+				VECTOR3 dV_LVLH_LOI;
+
+				sv.mass = calcParams.src->GetMass();
+
+				opt2.csmlmdocked = false;
+				opt2.GETbase = GETbase;
+				opt2.h_apo = 170.0*1852.0;
+				opt2.h_peri = 60.0*1852.0;
+				opt2.inc = 168.0*RAD;
+				opt2.man = 1;
+				opt2.useSV = true;
+				opt2.vessel = calcParams.src;
+				opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv);
+				opt2.MCCGET = calcParams.LOI;
+
+				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
+
+				refsopt.dV_LVLH = dV_LVLH;
+				refsopt.dV_LVLH2 = dV_LVLH_LOI;
+				refsopt.GETbase = GETbase;
+				refsopt.P30TIG = P30TIG;
+				refsopt.P30TIG2 = P30TIG_LOI;
+				refsopt.REFSMMATopt = 7;
+				refsopt.vessel = calcParams.src;
+
+				REFSMMAT = REFSMMATCalc(&refsopt);
+			}
+
+			engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0)) / calcParams.src->GetMass(), dV_LVLH);
+
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.engopt = engopt;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = REFSMMAT;
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 0;
+
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, manname);
+
+			if (fcn == 23)
+			{
+				sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "LM state vector, target load, LOI-2 REFSMMAT");
+				}
+			}
+			else
+			{
+				sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "LM state vector, target load");
+				}
 			}
 		}
 	}
@@ -513,7 +531,7 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
-		entopt.returnspeed = 1;
+		entopt.returnspeed = 0;
 		entopt.TEItype = 1;
 		entopt.TIGguess = calcParams.LOI - 8.0*3600.0;
 		entopt.vessel = calcParams.src;
@@ -1001,83 +1019,106 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		EntryTargeting(&entopt, dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO); //Target Load for uplink
 
-		engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0)) / calcParams.src->GetMass(), dV_LVLH);
-
-		if (fcn == 203 || fcn == 206)
+		if (MCCtime > calcParams.EI - 50.0*3600.0)
 		{
-			REFSMMATOpt refsopt;
-			refsopt.GETbase = GETbase;
-			refsopt.dV_LVLH = dV_LVLH;
-			refsopt.P30TIG = P30TIG;
-			refsopt.REFSMMATdirect = false;
-			refsopt.REFSMMATopt = 3;
-			refsopt.vessel = calcParams.src;
-
-			REFSMMAT = REFSMMATCalc(&refsopt);
+			if (length(dV_LVLH) < 1.0*0.3048)
+			{
+				scrubbed = true;
+			}
 		}
 		else
 		{
-			REFSMMAT = GetREFSMMATfromAGC();
-		}
-
-		opt.dV_LVLH = dV_LVLH;
-		opt.engopt = engopt;
-		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
-		opt.REFSMMAT = REFSMMAT;
-		opt.TIG = P30TIG;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
-
-		AP11ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, manname);
-		form->lat = latitude*DEG;
-		form->lng = longitude*DEG;
-		form->RTGO = RTGO;
-		form->VI0 = VIO / 0.3048;
-		form->GET05G = RET;
-
-		//Save for further use
-		calcParams.EI = RET - 28.0;
-		SplashLatitude = latitude;
-		SplashLongitude = longitude;
-		DeltaV_LVLH = dV_LVLH;
-		TimeofIgnition = P30TIG;
-
-		if (fcn == 203)//MCC5
-		{
-			sprintf(uplinkdata, "%s%s%s",  CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector, target load, Entry REFSMMAT");
+			if (length(dV_LVLH) < 2.0*0.3048)
+			{
+				scrubbed = true;
 			}
 		}
-		else if (fcn == 204)//MCC6
+
+		if (scrubbed)
 		{
-			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector, target load");
-			}
+			sprintf(upDesc, "%s has been scrubbed.", manname);
 		}
-		else if (fcn == 205)//Prel. MCC7
+		else
 		{
-			sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, false));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector");
+
+			engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0)) / calcParams.src->GetMass(), dV_LVLH);
+
+			if (fcn == 203 || fcn == 206)
+			{
+				REFSMMATOpt refsopt;
+				refsopt.GETbase = GETbase;
+				refsopt.dV_LVLH = dV_LVLH;
+				refsopt.P30TIG = P30TIG;
+				refsopt.REFSMMATdirect = false;
+				refsopt.REFSMMATopt = 3;
+				refsopt.vessel = calcParams.src;
+
+				REFSMMAT = REFSMMATCalc(&refsopt);
 			}
-		}
-		else if (fcn == 206)//MCC7
-		{
-			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+			else
+			{
+				REFSMMAT = GetREFSMMATfromAGC();
+			}
+
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = engopt;
+			opt.GETbase = GETbase;
+			opt.HeadsUp = false;
+			opt.REFSMMAT = REFSMMAT;
+			opt.TIG = P30TIG;
+			opt.vessel = calcParams.src;
+			opt.vesseltype = 0;
+
+			AP11ManeuverPAD(&opt, *form);
+			sprintf(form->purpose, manname);
+			form->lat = latitude*DEG;
+			form->lng = longitude*DEG;
+			form->RTGO = RTGO;
+			form->VI0 = VIO / 0.3048;
+			form->GET05G = RET;
+
+			//Save for further use
+			calcParams.EI = RET - 28.0;
+			SplashLatitude = latitude;
+			SplashLongitude = longitude;
+			DeltaV_LVLH = dV_LVLH;
+			TimeofIgnition = P30TIG;
+
+			if (fcn == 203)//MCC5
+			{
+				sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "LM state vector, target load, Entry REFSMMAT");
+				}
+			}
+			else if (fcn == 204)//MCC6
+			{
+				sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, false), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "LM state vector, target load");
+				}
+			}
+			else if (fcn == 205)//Prel. MCC7
+			{
+				sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, false));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "LM state vector");
+				}
+			}
+			else if (fcn == 206)//MCC7
+			{
+				sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true), CMCRetrofireExternalDeltaVUpdate(latitude, longitude, P30TIG, dV_LVLH), CMCREFSMMATUpdate(REFSMMAT));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+				}
 			}
 		}
 	}
@@ -1143,12 +1184,15 @@ void RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	}
 	break;
 	}
+
+	return scrubbed;
 }
 
-void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
+	bool scrubbed = false;
 
 	switch (fcn) {
 	case 1: // MISSION C PHASING BURN
@@ -1271,6 +1315,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertMan lambert;
 		double P30TIG;
 		VECTOR3 dV_LVLH;
+		int engopt;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -1278,19 +1323,32 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
-		opt.GETbase = getGETBase();
-		opt.vessel = calcParams.src;
-		opt.TIG = P30TIG;
-		opt.dV_LVLH = dV_LVLH;
-		opt.engopt = 1; //+X RCS Thrusters
-		opt.HeadsUp = true;
-		opt.sxtstardtime = 0;
-		opt.REFSMMAT = GetREFSMMATfromAGC();
-		opt.navcheckGET = 0;
+		if (length(dV_LVLH) < 1.0*0.3048)
+		{
+			scrubbed = true;
+		}
 
-		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "PHASING BURN");
-		sprintf(form->remarks, "heads up, +X thrusters");
+		if (scrubbed)
+		{
+			sprintf(upDesc, "Second Phasing Maneuver not necessary.");
+		}
+		else
+		{
+			engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0)) / calcParams.src->GetMass(), dV_LVLH);
+			opt.GETbase = getGETBase();
+			opt.vessel = calcParams.src;
+			opt.TIG = P30TIG;
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = engopt;
+			opt.HeadsUp = true;
+			opt.sxtstardtime = 0;
+			opt.REFSMMAT = GetREFSMMATfromAGC();
+			opt.navcheckGET = 0;
+
+			AP7ManeuverPAD(&opt, *form);
+			sprintf(form->purpose, "PHASING BURN");
+			sprintf(form->remarks, "heads up, +X thrusters");
+		}
 	}
 	break;
 	case 5: //MISSION C BLOCK DATA UPDATE 3
@@ -1397,6 +1455,7 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		double P30TIG;
 		VECTOR3 dV_LVLH;
+		int engopt;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -1404,24 +1463,38 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
-		opt.GETbase = getGETBase();
-		opt.vessel = calcParams.src;
-		opt.TIG = P30TIG;
-		opt.dV_LVLH = dV_LVLH;
-		opt.engopt = 1;
-		opt.HeadsUp = false;
-		opt.sxtstardtime = 0;
-		opt.REFSMMAT = GetREFSMMATfromAGC();
-		opt.navcheckGET = 0;
+		if (length(dV_LVLH) < 5.0*0.3048)
+		{
+			scrubbed = true;
+		}
 
-		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "NCC2");
+		if (scrubbed)
+		{
+			sprintf(upDesc, "NCC2 has been scrubbed.");
+		}
+		else
+		{
+			engopt = SPSRCSDecision(calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0)) / calcParams.src->GetMass(), dV_LVLH);
 
-		sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "Target load");
+			opt.GETbase = getGETBase();
+			opt.vessel = calcParams.src;
+			opt.TIG = P30TIG;
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = engopt;
+			opt.HeadsUp = false;
+			opt.sxtstardtime = 0;
+			opt.REFSMMAT = GetREFSMMATfromAGC();
+			opt.navcheckGET = 0;
+
+			AP7ManeuverPAD(&opt, *form);
+			sprintf(form->purpose, "NCC2");
+
+			sprintf(uplinkdata, "%s", CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "Target load");
+			}
 		}
 	}
 	break;
@@ -2694,6 +2767,8 @@ void RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	}
+
+	return scrubbed;
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)

@@ -621,6 +621,7 @@ public:
 	LPVOID padForm;											// Pointer to pad form buffer
 	char upString[1024 * 3];								// Uplink string buffer
 	char upDescr[1024];										// Uplink Description
+	bool scrubbed;											// Maneuver scrubbed
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer
