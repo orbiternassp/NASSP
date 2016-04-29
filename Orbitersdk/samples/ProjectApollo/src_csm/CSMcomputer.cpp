@@ -4519,21 +4519,24 @@ void CMOptics::TimeStep(double simdt) {
 				double A_t_dot, A_s_dot;
 				A_t_dot = 0.0;
 				A_s_dot = 0.0;
-				if ((OpticsManualMovement & 0x01) != 0 && SextTrunion < (RAD*59.0)) {
+
+				if ((OpticsManualMovement & 0x01) != 0) {// && SextTrunion < (RAD*59.0)) {
 					A_t_dot = OCDU_TRUNNION_STEP * TrunRate;
 				}
-				if ((OpticsManualMovement & 0x02) != 0 && SextTrunion > 0) {
+				if ((OpticsManualMovement & 0x02) != 0) {//&& SextTrunion > 0) {
 					A_t_dot = -OCDU_TRUNNION_STEP * TrunRate;
 				}
-				if ((OpticsManualMovement & 0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
+				if ((OpticsManualMovement & 0x04) != 0) {//&& OpticsShaft > -(RAD*270.0)) {
 					A_s_dot = -OCDU_SHAFT_STEP * ShaftRate;
 				}
-				if ((OpticsManualMovement & 0x08) != 0 && OpticsShaft < (RAD*270.0)) {
+				if ((OpticsManualMovement & 0x08) != 0) {//&& OpticsShaft < (RAD*270.0)) {
 					A_s_dot = OCDU_SHAFT_STEP * ShaftRate;
 				}
 
 				double dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot*sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
 				double dTrunion = A_s_dot*sin(OpticsShaft) + A_t_dot*cos(OpticsShaft);
+
+				TrunRate = abs(dTrunion) / OCDU_TRUNNION_STEP;	//Just so that the telescope trunnion moves correctly
 
 				if (OpticsShaft + dShaft > -(RAD*270.0) && OpticsShaft + dShaft < (RAD*270.0))
 				{
@@ -4605,7 +4608,7 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunion += OCDU_TRUNNION_STEP*TrunRate;
 		}else{
 			TeleTrunion = TeleTrunionTarget;
-		}				
+		}
 	}
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
