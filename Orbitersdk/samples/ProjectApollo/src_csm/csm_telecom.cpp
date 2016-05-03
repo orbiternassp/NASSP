@@ -528,33 +528,44 @@ void HGA::TimeStep(double simt, double simdt) {
 	ServoDrive(Pitch, PitchCmd, 5.0, simdt);
 	ServoDrive(Yaw, YawCmd, 5.0, simdt);
 
-	VECTOR3 U_RP, pos, R_E, U_R;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
-	double relang, beamwidth;
+	double relang, beamwidth, Moonrelang;
+
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = unit(_V(sin(Pitch*RAD + PI05)*sin(Yaw*RAD), -cos(Pitch*RAD + PI05), sin(Pitch*RAD + PI05)*cos(Yaw*RAD)));
 
-	//Global position of Earth and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(oapiGetObjectByName("Earth"), &R_E);
+	oapiGetGlobalPos(hEarth, &R_E);
+	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
 	
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, U_RP);
-	//relative angle between atenna pointing vector and direction of Earth
+	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
 	//Not based on reality and just for testing: relative angle greater 40° no signal strength, uses cosine function to get increase of signal strength from 0 to 100
-	
 	beamwidth = 40.0*RAD;
 
 	if (relang < beamwidth)
 	{
-		double a = acos(sqrt(0.5)) / (beamwidth); //Scaling for beamwidth 40°... I think
+		double a = acos(sqrt(0.5)) / (beamwidth / 2.0); //Scaling for beamwidth 40°... I think
 		SignalStrength = cos(a*relang)*cos(a*relang)*100.0;
 	}
 	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//Moon in the way
+	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+
+	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 	}
