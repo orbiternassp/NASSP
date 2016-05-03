@@ -474,13 +474,111 @@ void HGA::Init(Saturn *vessel){
 	SignalStrength = 0;
 }
 
+bool HGA::IsPowered()
+{
+	// Do we have power?
+	if (!sat->GHAPowerSwitch.IsUp()) return false;		// Switched off
+
+	// Ensure AC/DC power
+	if (!sat->HGAFLTBus1CB.IsPowered() ||
+		!sat->HGAGroup2CB.IsPowered()) return false;
+
+	return true;
+}
+
 // Draw power
 void HGA::SystemTimestep(double simdt) {	
+	// Do we have power?
+	if (!IsPowered()) return;
 
+	// see CSM Systems Handbook
+	if (sat->GHAServoElecSwitch.IsUp())
+	{
+		sat->HGAFLTBus1CB.DrawPower(16.45);
+	}
+	else
+	{
+		sat->HGAFLTBus1CB.DrawPower(22.84);
+	}
+	sat->HGAGroup2CB.DrawPower(34.5);
 }
 
 // Do work
-void HGA::TimeStep(double simt) {
+void HGA::TimeStep(double simt, double simdt) {
+	SignalStrength = 0;
+
+	// Do we have power?
+	if (!IsPowered()) return;
+
+	double PitchCmd, YawCmd;
+
+	//Only manual acquisition active
+	if (sat->GHATrackSwitch.IsCenter())
+	{
+		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*30.0 + 90.0;
+		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*30.0;
+	}
+	else
+	{
+		PitchCmd = 0.0;
+		YawCmd = 0.0;
+	}
+
+	//5°/s rate limit, not based on documentation; arbitrary for the moment
+	ServoDrive(Pitch, PitchCmd, 5.0, simdt);
+	ServoDrive(Yaw, YawCmd, 5.0, simdt);
+
+	VECTOR3 U_RP, pos, R_E, U_R;
+	MATRIX3 Rot;
+	double relang, beamwidth;
+
+	//Unit vector of antenna in vessel's local frame
+	U_RP = unit(_V(sin(Pitch*RAD + PI05)*sin(Yaw*RAD), -cos(Pitch*RAD + PI05), sin(Pitch*RAD + PI05)*cos(Yaw*RAD)));
+
+	//Global position of Earth and spacecraft, spacecraft rotation matrix from local to global
+	sat->GetGlobalPos(pos);
+	oapiGetGlobalPos(oapiGetObjectByName("Earth"), &R_E);
+	sat->GetRotationMatrix(Rot);
+	
+	//Calculate antenna pointing vector in global frame
+	U_R = mul(Rot, U_RP);
+	//relative angle between atenna pointing vector and direction of Earth
+	relang = acos(dotp(U_R, unit(R_E - pos)));
+
+	//Not based on reality and just for testing: relative angle greater 40° no signal strength, uses cosine function to get increase of signal strength from 0 to 100
+	
+	beamwidth = 40.0*RAD;
+
+	if (relang < beamwidth)
+	{
+		double a = acos(sqrt(0.5)) / (beamwidth); //Scaling for beamwidth 40°... I think
+		SignalStrength = cos(a*relang)*cos(a*relang)*100.0;
+	}
+	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf", Pitch, Yaw, SignalStrength, relang*DEG);
+}
+
+void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
+{
+	double dposcmd, poscmdsign, dpos;
+
+	dposcmd = AngleCmd - Angle;
+
+	poscmdsign = abs(AngleCmd - Angle) / (AngleCmd - Angle);
+
+	if (abs(dposcmd)>RateLimit*simdt)
+	{
+		dpos = poscmdsign*RateLimit*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	Angle += dpos;
 
 }
 

@@ -227,7 +227,7 @@ void Saturn::SystemsInit() {
 	// Flight Bus and its feeder
 	//
 
-	FlightBusFeeder.WireToBuses(MainBusA, MainBusB);
+	FlightBusFeeder.WireToBuses(&FLTBusMNACB, &FLTBusMNBCB);
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
 
@@ -566,7 +566,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
-		hga.TimeStep(MissionTime);
+		hga.TimeStep(MissionTime, simdt);
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data

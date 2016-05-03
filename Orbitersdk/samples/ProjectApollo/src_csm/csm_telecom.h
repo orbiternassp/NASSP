@@ -367,14 +367,17 @@ public:
 class HGA {
 public:
 	HGA();
-	void Init(Saturn *vessel);	       // Initialization
-	void TimeStep(double simt);        // TimeStep
-	void SystemTimestep(double simdt); // System Timestep
+	void Init(Saturn *vessel);					// Initialization
+	void TimeStep(double simt, double simdt);   // TimeStep
+	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 
-	Saturn *sat;					   // Ship we're installed in
-	double Pitch;					   // Antenna Pitch
-	double Yaw;						   // Antenna Yaw
-	double SignalStrength;			   // Signal Strength (0-100)
+	Saturn *sat;								// Ship we're installed in
+	double Pitch;								// Antenna Pitch
+	double Yaw;									// Antenna Yaw
+	double SignalStrength;						// Signal Strength (0-100)
+private:
+	bool IsPowered();
+	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 };

@@ -4474,6 +4474,7 @@ protected:
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class PMP;
 	friend class USB;
+	friend class HGA;
 	friend class DSE;
 	friend class EMS;
 	friend class ORDEAL;
