@@ -465,6 +465,7 @@ HGA::HGA(){
 	Pitch = 0;
 	Yaw = 0;
 	SignalStrength = 0;
+	scanlimitwarn = false;
 }
 
 void HGA::Init(Saturn *vessel){
@@ -472,6 +473,7 @@ void HGA::Init(Saturn *vessel){
 	Pitch = 0;
 	Yaw = 0;
 	SignalStrength = 0;
+	scanlimitwarn = false;
 }
 
 bool HGA::IsPowered()
@@ -570,6 +572,20 @@ void HGA::TimeStep(double simt, double simdt) {
 		SignalStrength = 0.0;
 	}
 
+	double YawScal, scanlimwarn;
+	//Warning light
+	YawScal = (Yaw - 180.0) / 116.8332;
+	//Scan limit warning function
+	scanlimwarn = -3.4845*pow(YawScal, 7) + 13.4789*pow(YawScal, 6) + 22.5672*pow(YawScal, 5) - 56.3628*pow(YawScal, 4) - 69.5117*pow(YawScal, 3) + 57.5809*pow(YawScal, 2) + 84.4028*YawScal - 7.2412;
+
+	if (Pitch > scanlimwarn)
+	{
+		scanlimitwarn = true;
+	}
+	else
+	{
+		scanlimitwarn = false;
+	}
 	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf", Pitch, Yaw, SignalStrength, relang*DEG);
 }
 
@@ -593,14 +609,23 @@ void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double si
 
 }
 
+bool HGA::ScanLimitWarning()
+{
+	return scanlimitwarn;
+}
+
 // Load
 void HGA::LoadState(char *line) {
-
+	sscanf(line + 15, "%lf %lf", &Pitch, &Yaw);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
+	char buffer[256];
 
+	sprintf(buffer, "%lf %lf", Pitch, Yaw);
+
+	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
 
 // Socket registration method (registers sockets to be deinitialized

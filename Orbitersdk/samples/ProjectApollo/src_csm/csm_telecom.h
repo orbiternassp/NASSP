@@ -372,11 +372,13 @@ public:
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
+	bool ScanLimitWarning();
 
 	Saturn *sat;								// Ship we're installed in
 	double Pitch;								// Antenna Pitch
 	double Yaw;									// Antenna Yaw
 	double SignalStrength;						// Signal Strength (0-100)
+	bool scanlimitwarn;
 private:
 	bool IsPowered();
 	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);

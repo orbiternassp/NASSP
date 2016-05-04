@@ -376,6 +376,8 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			SetLight(CSM_CWS_SM_RCS_B, SMRCSBad(&sat->SMQuadBRCS));
 			SetLight(CSM_CWS_SM_RCS_C, SMRCSBad(&sat->SMQuadCRCS));
 			SetLight(CSM_CWS_SM_RCS_D, SMRCSBad(&sat->SMQuadDRCS));
+
+			SetLight(CSM_CWS_HIGAIN_LIMIT, sat->hga.ScanLimitWarning());
 		}
 		else {
 			SetLight(CSM_CWS_FC1_LIGHT, false);
