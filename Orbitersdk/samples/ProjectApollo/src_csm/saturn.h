@@ -222,6 +222,7 @@ typedef struct {
 	double BatBusACurrent;
 	double BatBusBVoltage;
 	double BatBusBCurrent;
+	double BatteryRelayBusVoltage;
 } BatteryBusStatus;
 
 ///
@@ -284,6 +285,8 @@ typedef struct {
 ///
 typedef struct {
 	double chamberPressurePSI;
+	double PropellantLineTempF;
+	double OxidizerLineTempF;
 } SPSStatus;
 
 // LVDC save file start/end strings, here temporarily
@@ -2057,6 +2060,7 @@ protected:
 
 	SwitchRow SystemTestMeterRow;
 	DCVoltMeter SystemTestVoltMeter;
+	SaturnSystemTestAttenuator  SystemTestAttenuator;
 
 	//
 	// FDAI control switches.
@@ -4505,6 +4509,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
+	friend class SaturnSystemTestAttenuator;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

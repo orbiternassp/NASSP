@@ -373,6 +373,7 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool ScanLimitWarning();
+	bool IsPowered();
 
 	Saturn *sat;								// Ship we're installed in
 	double Pitch;								// Antenna Pitch
@@ -380,6 +381,5 @@ public:
 	double SignalStrength;						// Signal Strength (0-100)
 	bool scanlimitwarn;
 private:
-	bool IsPowered();
 	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 };

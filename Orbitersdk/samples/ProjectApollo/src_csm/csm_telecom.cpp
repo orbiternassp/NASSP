@@ -471,7 +471,7 @@ HGA::HGA(){
 void HGA::Init(Saturn *vessel){
 	sat = vessel;
 	Pitch = 0;
-	Yaw = 0;
+	Yaw = 180;
 	SignalStrength = 0;
 	scanlimitwarn = false;
 }
@@ -508,6 +508,7 @@ void HGA::SystemTimestep(double simdt) {
 // Do work
 void HGA::TimeStep(double simt, double simdt) {
 	SignalStrength = 0;
+	scanlimitwarn = false;
 
 	// Do we have power?
 	if (!IsPowered()) return;
@@ -523,7 +524,7 @@ void HGA::TimeStep(double simt, double simdt) {
 	else
 	{
 		PitchCmd = 0.0;
-		YawCmd = 0.0;
+		YawCmd = 180.0;
 	}
 
 	//5°/s rate limit, not based on documentation; arbitrary for the moment
@@ -582,10 +583,7 @@ void HGA::TimeStep(double simt, double simdt) {
 	{
 		scanlimitwarn = true;
 	}
-	else
-	{
-		scanlimitwarn = false;
-	}
+
 	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf", Pitch, Yaw, SignalStrength, relang*DEG);
 }
 
@@ -1123,14 +1121,16 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 116:		// SCI EXP #11
 							return(scale_data(0,0,100));
 						case 117:		// SPS FU FEED LINE TEMP
-							return(scale_data(0,0,200));
+							sat->GetSPSStatus(spsStatus);
+							return(scale_data(spsStatus.PropellantLineTempF,0,200));
 						case 118:		// SCI EXP #12
 							return(scale_data(0,0,100));
 						case 119:		// SCI EXP #13
 							return(scale_data(0,0,100));
 
 						case 120:		// SPS OX FEED LINE TEMP
-							return(scale_data(0,0,200));
+							sat->GetSPSStatus(spsStatus);
+							return(scale_data(spsStatus.OxidizerLineTempF,0,200));
 						case 121:		// SCI EXP #14
 							return(scale_data(0,0,100));
 						case 122:		// SCI EXP #15
@@ -1393,7 +1393,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetBatteryStatus( batteryStatus );
 							return(scale_data( batteryStatus.BatteryACurrent, 0, 100));
 						case 75:		// BAT RELAY BUS VOLTS
-							return(scale_data(0,0,45));
+							sat->GetBatteryBusStatus(batBusStat);
+							return(scale_data(batBusStat.BatteryRelayBusVoltage,0,45));
 						case 76:		// FC 1 CUR
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.Current, 0, 100));

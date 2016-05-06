@@ -2386,6 +2386,8 @@ void Saturn::ClearPanelSDKPointers()
 void Saturn::GetSPSStatus( SPSStatus &ss )
 {
 	ss.chamberPressurePSI = SPSEngine.GetChamberPressurePSI();
+	ss.PropellantLineTempF = SPSPropellant.GetPropellantLineTempF();
+	ss.OxidizerLineTempF = SPSPropellant.GetPropellantLineTempF();
 }
 
 //
@@ -3084,6 +3086,7 @@ void Saturn::GetBatteryBusStatus( BatteryBusStatus &bs )
 	bs.BatBusACurrent = BatteryBusA.Current();
 	bs.BatBusBVoltage = BatteryBusB.Voltage();
 	bs.BatBusBCurrent = BatteryBusB.Current();
+	bs.BatteryRelayBusVoltage = BatteryRelayBus.Voltage();
 }
 
 //

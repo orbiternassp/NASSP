@@ -1366,6 +1366,102 @@ void SaturnLVSPSPcMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
 
+SaturnSystemTestAttenuator::SaturnSystemTestAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut):
+	VoltageAttenuator(i_name, minIn, maxIn, minOut, maxOut)
+{
+}
+
+void SaturnSystemTestAttenuator::Init(Saturn* s, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch, e_object *Instrum)
+{
+	Sat = s;
+	LeftSystemTestRotarySwitch = leftsystemtestrotaryswitch;
+	RightSystemTestRotarySwitch = rightsystemtestrotaryswitch;
+
+	WireTo(Instrum);
+}
+
+double SaturnSystemTestAttenuator::GetValue()
+{
+	unsigned char val = NULL;
+	int left = LeftSystemTestRotarySwitch->GetState(); //0 = Off, 1 = 1 and so on
+	int right = RightSystemTestRotarySwitch->GetState();// 0 = A, 1 = B, 2 = C, 3 = D
+
+	switch(left)
+	{
+	case 1:
+		switch (right)
+		{
+		case 0:	//FC1 N2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 29);
+			break;
+		case 1:	//FC2 N2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 30);
+			break;
+		case 2:	//FC3 N2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 35);
+			break;
+		case 3:	//FC1 O2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 67);
+			break;
+		}
+		break;
+	case 2:
+		switch (right)
+		{
+		case 0:	//FC2 O2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 68);
+			break;
+		case 1: //FC3 O2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 69);
+			break;
+		case 2:	//FC1 H2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 70);
+			break;
+		case 3:	//FC2 H2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 71);
+			break;
+		}
+		break;
+	case 3:
+		switch (right)
+		{
+		case 0:	//FC3 H2 REG PRESS
+			val = Sat->pcm.measure(11, TLM_A, 72);
+			break;
+		case 1: //FC 1 RAD OUT TEMP
+			val = Sat->pcm.measure(10, TLM_A, 126);
+			break;
+		case 2: // FC 2 RAD OUT TEMP
+			val = Sat->pcm.measure(10, TLM_A, 129);
+			break;
+		case 3: // FC 3 RAD OUT TEMP
+			val = Sat->pcm.measure(10, TLM_A, 132);
+			break;
+		}
+		break;
+	case 4:
+		switch (right)
+		{
+		case 1:	//BAT RLY BUS VOLT
+			val = Sat->pcm.measure(11, TLM_A, 75);
+			break;
+		case 3:	//CSM TO LM CURRENT
+			val = Sat->pcm.measure(11, TLM_A, 47);
+			break;
+		}
+		break;
+	case 5:
+		switch (right)
+		{
+		case 0:	//SPS OX LINE TEMP
+			val = Sat->pcm.measure(10, TLM_A, 120);
+			break;
+		}
+		break;
+	}
+
+	return (double)val;
+}
 
 void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset)
 
@@ -2303,7 +2399,14 @@ void OrdealRotationalSwitch::LoadState(char *line) {
 }
 
 double SaturnHighGainAntennaPitchMeter::QueryValue(){
-	return Sat->hga.Pitch; 
+	if (Sat->hga.IsPowered())
+	{
+		return Sat->hga.Pitch;
+	}
+	else
+	{
+		return 90.0;
+	}
 }
 
 void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2323,7 +2426,14 @@ void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawS
 }
 
 double SaturnHighGainAntennaYawMeter::QueryValue(){
-	return Sat->hga.Yaw; 
+	if (Sat->hga.IsPowered())
+	{
+		return Sat->hga.Yaw;
+	}
+	else
+	{
+		return 0.0;
+	}
 }
 
 void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
