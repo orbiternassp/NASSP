@@ -1761,5 +1761,13 @@ void SaturnV::SwitchSelector(int item){
 		// S4B Startup
 		SetSIVbCMixtureRatio(5.0);
 		break;
+	case 6:
+		// S4B restart
+		SetSIVbCMixtureRatio(4.7);
+		break;
+	case 7:
+		// S4B MRS
+		SetSIVbCMixtureRatio(5.0);
+		break;
 	}
 }
