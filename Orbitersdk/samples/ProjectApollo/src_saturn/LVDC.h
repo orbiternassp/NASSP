@@ -45,6 +45,7 @@ public:
 	void LoadState(FILEHANDLE scn);
 
 	double SVCompare();
+	double LinInter(double x0, double x1, double y0, double y1, double x);
 private:
 	Saturn* owner;									// Saturn LV
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
@@ -71,8 +72,6 @@ private:
 	double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
 	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
-	VECTOR3 Velocity;								// Velocity
-	VECTOR3 Position;								// Position
 	VECTOR3 WV;										// Gravity
 	double sinceLastCycle;							// Time since last IGM run
 	double IGMInterval;								// IGM Interval
@@ -288,6 +287,7 @@ private:
 	VECTOR3 PosP;									// Position in parking orbit plane
 	VECTOR3 DotP;									// Velocity in parking orbit plane
 	VECTOR3 Sbar;									// Position of pseudonodal vector
+	VECTOR3 Sbardot;								// Velocity of pseudonodal vector
 	VECTOR3 Cbar_1;									// Unit vector normal to transfer ellipse plane
 	VECTOR3 Sbar_1;									// Unit vector normal to nodal vector
 	VECTOR3 DDotS_D;								// Atmospheric drag
@@ -354,7 +354,7 @@ private:
 	double cos_chi_Yit;
 	double sin_chi_Zit;
 	double cos_chi_Zit;
-	// TABLE15 and TABLE25
+	// TABLE15
 	/*
 		These tables store the precomputed out-of-orbit targeting data for the Saturn V launches.
 	TABLE15 is for the first injection opportunity, and TABLE25 is likewise for the second one.
@@ -364,11 +364,11 @@ private:
 	struct SVTABLE
 	{
 		// These variables store the targeting data that is fixed for each launch time 
-		static double theta_EO;		// Reference ecliptic longitude of launchpad
 		static double T_LO;			// Reference time of launch from midnight (doubles as opening of launch window)
 		double alphaS_TS;			// Nominal angle between nodal vector and target ellipse vector
 		double beta;				// Constant angle defining the pseudonodal vector relative to radius vector at TB6 time
-		int T_ST;					// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
+		double  T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
+		double f;					// True anomaly at cutoff of transfer ellipse
 
 		//This data structure stores the actual launch tables. Array indexing should make it easier to iterate through the launch times and select the desired launch information.
 		struct target_table {
@@ -380,10 +380,9 @@ private:
 			double e_N;			// Eccentricity of target ellispe
 			double RAS;			// Right ascension of apogee of target ellipse
 			double DEC;			// Declination of apogee of target ellispe
-			double f;			// True anomaly at cutoff of transfer ellipse
 			double alpha_D;		// Angle between perigee and descending node
 		}target[15];
-	}TABLE15,TABLE25;
+	}TABLE15[2];
 	int tgt_index;				// Non-LVDC variable to enable selecting the correct set of injection parameters
 
 	//flight control computer
