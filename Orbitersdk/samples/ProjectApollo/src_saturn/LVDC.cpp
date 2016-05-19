@@ -3157,6 +3157,7 @@ void LVDC::Init(Saturn* vs){
 	t_B2 = 0;
 	t_B3 = 0;								// Time from second S2 MRS signal
 	t_B4 = 0;
+	t_D = 0;
 	t_D0 = 0.0;
 	t_D1 = 0.0;
 	t_D2 = 10984.2;
@@ -3209,6 +3210,8 @@ void LVDC::Init(Saturn* vs){
 	T_RP = 0;
 	T_IGM = 583;
 	T_ST = 0;
+	alpha_TS = 0;
+	beta = 0;
 
 	//Not in boeing doc, but needed for nav:
 	a = 6378137;							// earth's equatorial radius
@@ -3386,6 +3389,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
+	papiWriteScenario_double(scn, "LVDC_alpha_TS", alpha_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
@@ -3395,6 +3399,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
 	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
 	papiWriteScenario_double(scn, "LVDC_B_22", B_22);
+	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
 	papiWriteScenario_double(scn, "LVDC_beta_p1c", beta_p1c);
@@ -3475,12 +3480,14 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_CG", CG);
 	papiWriteScenario_double(scn, "LVDC_cos_chi_Yit", cos_chi_Yit);
 	papiWriteScenario_double(scn, "LVDC_cos_chi_Zit", cos_chi_Zit);
+	papiWriteScenario_double(scn, "LVDC_cos_sigma", cos_sigma);
 	papiWriteScenario_double(scn, "LVDC_Ct", Ct);
 	papiWriteScenario_double(scn, "LVDC_Ct_o", Ct_o);
 	papiWriteScenario_double(scn, "LVDC_D", D);
 	papiWriteScenario_double(scn, "LVDC_d2", d2);
 	papiWriteScenario_double(scn, "LVDC_ddot_zeta_GT", ddot_zeta_GT);
 	papiWriteScenario_double(scn, "LVDC_ddot_xi_GT", ddot_xi_GT);
+	papiWriteScenario_double(scn, "LVDC_DEC", DEC);
 	papiWriteScenario_double(scn, "LVDC_DECA0", TABLE15[0].target[0].DEC);
 	papiWriteScenario_double(scn, "LVDC_DECA1", TABLE15[0].target[1].DEC);
 	papiWriteScenario_double(scn, "LVDC_DECA2", TABLE15[0].target[2].DEC);
@@ -3549,6 +3556,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dV", dV);
 	papiWriteScenario_double(scn, "LVDC_dV_B", dV_B);
 	papiWriteScenario_double(scn, "LVDC_e", e);
+	papiWriteScenario_double(scn, "LVDC_e_N", e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA0", TABLE15[0].target[0].e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA1", TABLE15[0].target[1].e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA2", TABLE15[0].target[2].e_N);
@@ -3730,6 +3738,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Q_Y", Q_Y);
 	papiWriteScenario_double(scn, "LVDC_Q_P", Q_P);
 	papiWriteScenario_double(scn, "LVDC_R", R);
+	papiWriteScenario_double(scn, "LVDC_RAS", RAS);
 	papiWriteScenario_double(scn, "LVDC_RASA0", TABLE15[0].target[0].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASA1", TABLE15[0].target[1].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASA2", TABLE15[0].target[2].RAS);
@@ -3835,6 +3844,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_tchi_p", tchi_p);
 	papiWriteScenario_double(scn, "LVDC_t_clock", t_clock);
 	papiWriteScenario_double(scn, "LVDC_T_CO", T_CO);
+	papiWriteScenario_double(scn, "LVDC_t_D", t_D);
 	papiWriteScenario_double(scn, "LVDC_t_D0", t_D0);
 	papiWriteScenario_double(scn, "LVDC_t_D1", t_D1);
 	papiWriteScenario_double(scn, "LVDC_t_D2", t_D2);
@@ -4036,6 +4046,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_alpha_1", alpha_1);
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
+		papiReadScenario_double(line, "LVDC_alpha_TS", alpha_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
@@ -4045,6 +4056,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_B_12", B_12);
 		papiReadScenario_double(line, "LVDC_B_21", B_21);
 		papiReadScenario_double(line, "LVDC_B_22", B_22);
+		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
 		papiReadScenario_double(line, "LVDC_beta_p1c", beta_p1c);
@@ -4125,12 +4137,14 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_CG", CG);
 		papiReadScenario_double(line, "LVDC_cos_chi_Yit", cos_chi_Yit);
 		papiReadScenario_double(line, "LVDC_cos_chi_Zit", cos_chi_Zit);
+		papiReadScenario_double(line, "LVDC_cos_sigma", cos_sigma);
 		papiReadScenario_double(line, "LVDC_Ct", Ct);
 		papiReadScenario_double(line, "LVDC_Ct_o", Ct_o);
 		papiReadScenario_double(line, "LVDC_D", D);
 		papiReadScenario_double(line, "LVDC_d2", d2);
 		papiReadScenario_double(line, "LVDC_ddot_xi_GT", ddot_xi_GT);
 		papiReadScenario_double(line, "LVDC_ddot_zeta_GT", ddot_zeta_GT);
+		papiReadScenario_double(line, "LVDC_DEC", DEC);
 		papiReadScenario_double(line, "LVDC_DECA0", TABLE15[0].target[0].DEC);
 		papiReadScenario_double(line, "LVDC_DECA1", TABLE15[0].target[1].DEC);
 		papiReadScenario_double(line, "LVDC_DECA2", TABLE15[0].target[2].DEC);
@@ -4199,6 +4213,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dV", dV);
 		papiReadScenario_double(line, "LVDC_dV_B", dV_B);
 		papiReadScenario_double(line, "LVDC_e", e);
+		papiReadScenario_double(line, "LVDC_e_N", e_N);
 		papiReadScenario_double(line, "LVDC_ENA0", TABLE15[0].target[0].e_N);
 		papiReadScenario_double(line, "LVDC_ENA1", TABLE15[0].target[1].e_N);
 		papiReadScenario_double(line, "LVDC_ENA2", TABLE15[0].target[2].e_N);
@@ -4380,6 +4395,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Q_P", Q_P);
 		papiReadScenario_double(line, "LVDC_Q_Y", Q_Y);
 		papiReadScenario_double(line, "LVDC_R", R);
+		papiReadScenario_double(line, "LVDC_RAS", RAS);
 		papiReadScenario_double(line, "LVDC_RASA0", TABLE15[0].target[0].RAS);
 		papiReadScenario_double(line, "LVDC_RASA1", TABLE15[0].target[1].RAS);
 		papiReadScenario_double(line, "LVDC_RASA2", TABLE15[0].target[2].RAS);
@@ -4485,6 +4501,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_tchi_y", tchi_y);
 		papiReadScenario_double(line, "LVDC_t_clock", t_clock);
 		papiReadScenario_double(line, "LVDC_T_CO", T_CO);
+		papiReadScenario_double(line, "LVDC_t_D", t_D);
 		papiReadScenario_double(line, "LVDC_t_D0", t_D0);
 		papiReadScenario_double(line, "LVDC_t_D1", t_D1);
 		papiReadScenario_double(line, "LVDC_t_D2", t_D2);
@@ -4965,21 +4982,26 @@ void LVDC::TimeStep(double simt, double simdt) {
 				{owner->SetThrusterGroupLevel(owner->thg_ver,1);} //Ullage thrust starts
 				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
 				{owner->SetThrusterGroupLevel(owner->thg_ver, 0);}//Ullage thrust ends
-				if(LVDC_TB_ETime>=577.6 && S4B_REIGN == false)
-				{LVDC_EI_On = true;}	//Engine start notification at T-0:01
-				if (LVDC_TB_ETime >= 578.6) {
+				if(LVDC_TB_ETime>=577.6 && S4B_REIGN == false && LVDC_EI_On == false)
+				{
+					LVDC_EI_On = true;	//Engine start notification at T-0:01
+					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
 					owner->SwitchSelector(6);
+					poweredflight = true;
+				}	
+				if (LVDC_TB_ETime >= 578.6 && S4B_REIGN == false) {
 					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
+					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, owner->GetThrusterLevel(owner->th_main[0]));
 				}
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
 					S4B_REIGN = true;
-					poweredflight = true;
+					owner->SetThrusterGroupLevel(owner->thg_main, 1);
 				}
-				if(LVDC_TB_ETime>=583)
+				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
 				{
-					owner->SwitchSelector(7);
-					owner->SetThrusterGroupLevel(owner->thg_main, 1);	//Final MRS
+					owner->SwitchSelector(7);//Final MRS
+					MRS = true;
 				}
 				break;
 			case 7:
@@ -5352,11 +5374,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 				V = pow(pow(DotS.x, 2) + pow(DotS.y, 2) + pow(DotS.z, 2), 0.5);
 
 				ddotG_last = ddotM_act; //For powered nav initialization
+				DotM_act = _V(0.0, 0.0, 0.0);
+				DotM_last = _V(0.0, 0.0, 0.0);
+				DotG_last = DotS;
+				lvimu.ZeroPIPACounters();
 
 				fprintf(lvlog, "Orbital Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
 				fprintf(lvlog, "DDotM: %f %f %f \r\n", ddotM_act.x, ddotM_act.y, ddotM_act.z);
-				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
 				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
 				fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
@@ -5489,10 +5514,13 @@ IGM:	if(HSL == false){
 				fprintf(lvlog, "S-IVB 2nd BURN\n");
 				if (MRS)
 				{
+					fprintf(lvlog, "MRS\r\n");
 					Tt_3 += T_2*(dotM_2 / dotM_3);
+					fprintf(lvlog, "Tt_3 = %f\r\n", Tt_3);
 					if(t_B2<=t_B4)
 					{goto relightentry1;}
 					t_B4 += dt_c;
+					fprintf(lvlog, "t_B4 = %f\r\n", t_B4);
 				}
 				else
 				{
@@ -5503,6 +5531,7 @@ IGM:	if(HSL == false){
 						{
 							MRS = true;
 							t_B2 = 0;
+							fprintf(lvlog, "MRS\r\n");
 						}
 					}
 					else
@@ -5660,18 +5689,21 @@ gtupdate:	// Target of jump from further down
 				fprintf(lvlog,"RANGE ANGLE 2\r\n");
 				sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1); 
 				// LVDC_GP_PC = 30; // STOP
-				sin_gam = ((PosS.x*DotS.x)+(PosS.y*DotS.y)+(PosS.z*DotS.z))/R*V;
-				cos_gam = pow(1-pow(sin_gam,2),0.5);
+				V = length(DotS);
+				R = length(PosS);
+				sin_gam = ((PosS.x*DotS.x)+(PosS.y*DotS.y)+(PosS.z*DotS.z))/(R*V);
+				cos_gam = pow(1.0-pow(sin_gam,2),0.5);
 				dot_phi_1 = (V*cos_gam)/R;
 				dot_phi_T = (V_T*cos(gamma_T))/R_T;
-				phi_T = ((atan(Pos4.z/Pos4.x))+(((dot_phi_1+dot_phi_T)/2)*Tt_T));
+				phi_T = atan2(Pos4.z,Pos4.x)+(((dot_phi_1+dot_phi_T)/2.0)*Tt_T);
+				fprintf(lvlog, "V = %f, dot_phi_1 = %f, dot_phi_T = %f, phi_T = %f\r\n", V, dot_phi_1, dot_phi_T, phi_T);
 			}else{
 				// RANGE ANGLE 1 (into orbit)
 				fprintf(lvlog,"RANGE ANGLE 1\r\n");
 				d2 = (V * Tt_T) - Jt_3 + (Lt_Y * Tt_3) - (ROV / V_ex3) * 
 					((tau1 - T_1) * L_1 + (tau2 - T_2) * L_2 + (tau3 - Tt_3) * Lt_3) *
 					(Lt_Y + V - V_T);
-				phi_T = ((atan2(Pos4.z,Pos4.x))+(((1/R_T)*(S_12+d2))*(cos(gamma_T))));
+				phi_T = (atan2(Pos4.z, Pos4.x) + (1.0 / R_T)*(S_12 + d2))*(cos(gamma_T));
 				fprintf(lvlog,"V = %f, d2 = %f, phi_T = %f\r\n",V,d2,phi_T);
 			}
 			// FREEZE TERMINAL CONDITIONS TEST
@@ -5680,7 +5712,7 @@ gtupdate:	// Target of jump from further down
 				fprintf(lvlog,"UPDATE TERMINAL CONDITIONS\r\n");
 				f = phi_T + alpha_D;
 				R_T = p/(1+((e*(cos(f)))));
-				fprintf(lvlog,"f = %f, R_T = %f\r\n",f,R_T);
+				fprintf(lvlog, "f = %f, R_T = %f, phi_T = %f, alpha_D = %f\r\n", f, R_T, phi_T, alpha_D);
 				V_T = K_5 * pow(1+((2*e)*(cos(f)))+pow(e,2),0.5);
 				gamma_T = atan2((e*(sin(f))),(1+(e*(cos(f)))));
 				G_T = -mu/pow(R_T,2);
@@ -5950,6 +5982,22 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 			// MRS TEST
 			fprintf(lvlog,"MRS TEST\r\n");
 			sprintf(oapiDebugString(),"LVDC: MRS TEST"); 
+			if (MRS)
+			{
+				if (t_B2 <= t_B4)
+				{
+					T_3 = T_3 - dt_c;
+				}
+				else
+				{
+					T_2 = (dotM_2*(t_B4 - t_B2) - dotM_3*t_B4)*dt_c / (dotM_2*t_B2);
+				}
+			}
+			else
+			{
+				T_2 = T_2 - dt_c;
+			}
+			fprintf(lvlog, "T_2 = %f, T_3 = %f, dt_c = %f\r\n", T_2, T_3, dt_c);
 			// LVDC_GP_PC = 30; // STOP
 		}
 		Tt_3 = T_3;
@@ -6300,35 +6348,41 @@ O3precalc:
 
 		//Nominal ellipse calculations go here
 		cos_psiT = Sbar*T_P;
-		sin_psiT = sqrt(1-pow(cos_psiT,2));
-		Sbar_1 =_V((1 / sin_psiT)*(Sbar.x*cos_psiT - T_P.x), (1 / sin_psiT)*(Sbar.y*cos_psiT - T_P.y), (1 / sin_psiT)*(Sbar.z*cos_psiT - T_P.z));
-		Cbar_1 = CrossProduct(Sbar_1, Sbar);
+		sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
+		Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
+		Cbar_1 = crossp(Sbar_1, Sbar);
 		Inclination = acos(_V(MX_A.m21, MX_A.m22, MX_A.m23)*Cbar_1);
-		X_1 = _V(MX_A.m31, MX_A.m32, MX_A.m33)*CrossProduct(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23));
-		X_2 = _V(MX_A.m11, MX_A.m12, MX_A.m13)*CrossProduct(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23));
-		theta_N = atan(X_1 / X_2);
-		p_N = mu / C_3*(pow(e_N, 2) - 1);
-		T_M = p_N / (1 - e_N*cos_sigma);
-		e = R/R_N*(e_N-1)+1;
-		p = mu / C_3*(pow(e, 2) - 1);
+		X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
+		X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
+		theta_N = atan2(X_1, X_2);
+		p_N = mu / C_3*(pow(e_N, 2) - 1.0);
+		T_M = p_N / (1.0 - e_N*cos_sigma);
+		R = length(PosS);
+		e = R/R_N*(e_N-1)+1.0;
+		p = mu / C_3*(pow(e, 2) - 1.0);
 
 		if (alpha_D_op)
 		{
-			alpha_D = acos(Sbar*T_P)-acos((1-p/T_M)/e)+atan(X_1/X_2);
+			alpha_D = acos(dotp(Sbar,T_P))-acos((1.0-p/T_M)/e)+atan2(X_1,X_2);
 		}
 		else
 		{
 			alpha_D = TABLE15[1].target[tgt_index].alpha_D;
 		}
+
+		fprintf(lvlog, "Elliptic parameters: Inc: %f, e: %f, p: %f\r\n", Inclination*DEG, e, p);
+
 	O3GMatrix:
 		MX_B = _M(cos(theta_N*RAD), 0, sin(theta_N*RAD), sin(theta_N*RAD)*sin(Inclination*RAD), cos(Inclination*RAD), -cos(theta_N*RAD)*sin(Inclination*RAD),
 			-sin(theta_N*RAD)*cos(Inclination*RAD), sin(Inclination*RAD), cos(theta_N*RAD)*cos(Inclination*RAD));
 		MX_G = mul(MX_B, MX_A);
-		R_T = p / (1 + e*cos(f*RAD));
+		R_T = p / (1.0 + e*cos(f));
 		K_5 = sqrt(mu / p);
-		V_T = K_5*sqrt(1 + 2 * e*cos(f) + pow(e, 2));
-		gamma_T = atan((e*sin(f*RAD)) / (1 + cos(f*RAD)));
+		V_T = K_5*sqrt(1.0 + 2.0 * e*cos(f) + pow(e, 2));
+		gamma_T = atan((e*sin(f)) / (1.0 + cos(f)));
 		G_T = -mu / pow(R_T, 2);
+
+		fprintf(lvlog, "TLI Targets: R_T: %f, V_T: %f, gamma_T: %f, G_T: %f\r\n", R_T, V_T, gamma_T, G_T);
 
 		//Update IGM parameters
 		Ct = 0.0;
@@ -6350,6 +6404,8 @@ O3precalc:
 		eps_3 = eps_3R;
 		eps_4 = eps_4R;
 		tau3 = tau3R - dTt_4;
+
+		fprintf(lvlog, "Tt_3 = %f, dTt_4 = %f\r\n", Tt_3, dTt_4);
 
 		//Bypass further burn calculations
 
@@ -6572,7 +6628,7 @@ minorloop:
 		}
 		// Debug if we're launched
 		if(LVDC_Timebase > -1){
-			if(LVDC_Timebase < 5){
+			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
 					T_1,T_2,Tt_3,Tt_T,
