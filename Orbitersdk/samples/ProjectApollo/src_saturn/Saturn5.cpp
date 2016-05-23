@@ -1182,12 +1182,12 @@ void SaturnV::SetVehicleStats(){
 				// Was making 8000000 @ S1C OECO				
 				THRUST_FIRST_VAC = 8000100; 
 				THRUST_SECOND_VAC = 1001000;
-				THRUST_THIRD_VAC = 901557;
+				THRUST_THIRD_VAC = 1001000;//901557;
 				// Masses from Apollo By The Numbers for AP8
 				SI_EmptyMass = 139641.0; // Minus retro weight, that gets added seperately
 				SI_FuelMass = 2038222.0;
 				Interstage_Mass = 5641;
-				SII_EmptyMass = 49744.0; // Includes S2/S4B interstage, does not include ullage jets
+				SII_EmptyMass = 44244.0;//49744.0; // Includes S2/S4B interstage, does not include ullage jets; changed for testing
 				SII_FuelMass = 430936.0; 
 				S4B_EmptyMass = 22981.0; // Includes S4B stage, IU, LM adapter, but NOT the LTA
 				S4B_FuelMass = 107318.0;
@@ -1763,7 +1763,7 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 6:
 		// S4B restart
-		SetSIVbCMixtureRatio(4.7);
+		SetSIVbCMixtureRatio(4.5);
 		break;
 	case 7:
 		// S4B MRS

@@ -3029,8 +3029,6 @@ void LVDC::Init(Saturn* vs){
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
-	e = 0;
-	f = 0;
 	C_3 = -60731530.2; // Stored as twice the etc etc.
 	  //C_3 = -60903382.7388059;
 	Direct_Ascent = false;					// flag for selecting direct ascent targeting; not used normally
@@ -3124,12 +3122,11 @@ void LVDC::Init(Saturn* vs){
 	MRS = false;							// MR Shift
 	dotM_1 = 1219.299283;					// Mass flowrate of S2 from approximately LET jettison to second MRS
 	dotM_2 = 961.8088872;					// Mass flowrate of S2 after second MRS
-	dotM_2R = 187.007;
+	dotM_2R = 188.221437;//187.007;
 	dotM_3 = 222.4339038;					// Mass flowrate of S4B during first burn
-	dotM_3R = 218.586;
+	dotM_3R = 217.6503205;//218.586;
 	ROT = false;
 	ROTR = true;
-	ROVR = false;
 	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	dV_BR = 2.8816;
 	ROV = 1.48119724870249; //0.75-17
@@ -3148,9 +3145,9 @@ void LVDC::Init(Saturn* vs){
 	T_2R = 10.0;
 	T_3 = 0;								// Time left in third and fifth stage IGM
 	T_1c = T_1 + T_2 + T_c;					// Sum of the burn times of IGM first, second, and coast guidance stages
-	T_4N = 120.565; //T_4N = 120.565;		// Nominal time of S4B first burn
-	Tt_3 = 188; //Tt_3 = 135.6;				// Estimated third or fifth stage burn time
-	Tt_3R = 120.565;
+	T_4N = 165.0;//120.565; //T_4N = 120.565;		// Nominal time of S4B first burn
+	Tt_3 = T_4N;//188; //Tt_3 = 135.6;				// Estimated third or fifth stage burn time
+	Tt_3R = 315.0;//340.0;
 	Tt_T = T_1c + Tt_3;						// Time-To-Go computed using Tt_3
 	t = 0;									// Time from accelerometer reading to next steering command
 	t_B1 = 4;								// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
@@ -3177,7 +3174,7 @@ void LVDC::Init(Saturn* vs){
 	V_ex2 = 4158.852692;
 	V_ex2R = 4228.02;
 	V_ex3 = 4130.010682;
-	V_ex3R = 4193.05;
+	V_ex3R = 4130.010682;//4193.05;
 	V_S2T = 7007.18;
 	V_TC = 300;
 	eps_1 = 0;								// IGM range angle calculation selection
@@ -3191,8 +3188,8 @@ void LVDC::Init(Saturn* vs){
 	mu = 398600420000000;					// Product of G and Earth's mass
 	tau2 = 308.95;							// Time to consume all fuel between MRS and S2 Cutoff
 	tau2N = 721;
-	tau3 = 748.7;							// Time to consume all fuel of SIVB
-	tau3R = 576;
+	tau3 = 709.7853;//748.7;							// Time to consume all fuel of SIVB
+	tau3R = tau3 - T_4N;//576;
 	tau3N = tau3;							// artificial tau3
 	omega_E = 4.17753e-3*RAD;
 	//rate limits: set in pre-igm
@@ -4890,6 +4887,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					if(oetl == 0){
 						fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
 						// S2 OECO, start TB4
+						owner->SetThrusterGroupLevel(owner->thg_main, 0);
 						S2_BURNOUT = true;
 						MRS = false;
 						TB4 = - simdt;
@@ -4908,7 +4906,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 			case 4:
 				// S2 STAGE SEP
-				if(LVDC_TB_ETime > 0.07 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
+				//if(LVDC_TB_ETime > 0.07 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
+				if (LVDC_TB_ETime > 0.8 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET) {
 					// S2ShutS.done(); No CECO on AP8
 					fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					owner->SPUShiftS.done(); // Make sure it's done
@@ -4982,14 +4981,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 				{owner->SetThrusterGroupLevel(owner->thg_ver,1);} //Ullage thrust starts
 				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
 				{owner->SetThrusterGroupLevel(owner->thg_ver, 0);}//Ullage thrust ends
-				if(LVDC_TB_ETime>=577.6 && S4B_REIGN == false && LVDC_EI_On == false)
+				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_EI_On == false)
 				{
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
 					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
 					owner->SwitchSelector(6);
 					poweredflight = true;
 				}	
-				if (LVDC_TB_ETime >= 578.6 && S4B_REIGN == false) {
+				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
 					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
 					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, owner->GetThrusterLevel(owner->th_main[0]));
 				}
@@ -5024,7 +5023,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 					}
 					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, owner->GetThrusterLevel(owner->th_main[0]));
 				}
-				if (LVDC_TB_ETime > 100) {
+				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true) {
+					LVDC_EI_On = false;
+				}
+
+				if (LVDC_TB_ETime > 20 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
 				}
@@ -5357,12 +5360,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// The messy RK3 having been done, we now commit the integrated position and velocity into platform data
 				PosS = PosS_8sec;
 				DotS = DotS_8sec;
+				R = length(PosS);
+				V = length(DotS);
 
 				if (OrbNavCycle == 1) //State Vector update
 				{
 					VECTOR3 pos, vel;
 					MATRIX3 mat;
-					mat = OrbMech::Orbiter2PACSS13(40211.53522, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
+					mat = OrbMech::Orbiter2PACSS13(40211.5352199074 + t_D / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
 					owner->GetRelativePos(owner->GetGravityRef(), pos);
 					owner->GetRelativeVel(owner->GetGravityRef(), vel);
 					PosS = mul(mat, pos);
@@ -5398,7 +5403,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 			CommandedAttitude.x =  (1.5* PI) + Azimuth;
 			CommandedAttitude.y =  0;
 			CommandedAttitude.z =  0;
-			fprintf(lvlog,"[%d+%f] Initial roll command: %f\r\n",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.x*DEG);
+			//Just clogs the lvlog
+			//fprintf(lvlog,"[%d+%f] Initial roll command: %f\r\n",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.x*DEG);
 			goto minorloop;
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
@@ -5406,7 +5412,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(TB5 < 20){ goto minorloop; }
 				if(TB6-T_IGM<0){goto restartprep;}else{goto IGM;};
 			}else{
-				goto orbitalguidance;
+				if (TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
 			}
 		} //TBD: 
 		if(directstageint == true){//direct stage interrupt update
@@ -5544,9 +5550,10 @@ IGM:	if(HSL == false){
 				{goto relightentry2;}
 				else
 				{
-					tau2 = tau2N + (V_ex2 * 1 / Fm - dt_c / 2 - tau2N)*pow(Ct / Ct_o, 4);
-					tau2N += dt_c;
+					tau2 = tau2N + (V_ex2 * 1.0 / Fm - dt_c / 2.0 - tau2N)*pow(Ct / Ct_o, 4);
+					tau2N -= dt_c;
 					Ct += dt_c;
+					fprintf(lvlog, "Art. Tau Mode 2: tau2 = %f, tau2N = %f, Ct = %f, Diff = %f\r\n", tau2, tau2N, Ct, tau2 - V_ex2 / Fm);
 					goto relightentry3;
 				}
 			}
@@ -5703,7 +5710,7 @@ gtupdate:	// Target of jump from further down
 				d2 = (V * Tt_T) - Jt_3 + (Lt_Y * Tt_3) - (ROV / V_ex3) * 
 					((tau1 - T_1) * L_1 + (tau2 - T_2) * L_2 + (tau3 - Tt_3) * Lt_3) *
 					(Lt_Y + V - V_T);
-				phi_T = (atan2(Pos4.z, Pos4.x) + (1.0 / R_T)*(S_12 + d2))*(cos(gamma_T));
+				phi_T = atan2(Pos4.z, Pos4.x) + (1.0 / R_T)*(S_12 + d2)*cos(gamma_T);
 				fprintf(lvlog,"V = %f, d2 = %f, phi_T = %f\r\n",V,d2,phi_T);
 			}
 			// FREEZE TERMINAL CONDITIONS TEST
@@ -5722,7 +5729,16 @@ gtupdate:	// Target of jump from further down
 			if(ROT){
 				// ROTATED TERMINAL CONDITIONS (out-of-orbit)
 				fprintf(lvlog,"ROTATED TERMINAL CONDITIONS\r\n");
-				sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
+				//sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
+				xi_T = R_T*cos(gamma_T);
+				dot_zeta_T = V_T;
+				dot_xi_T = 0.0;
+				ddot_zeta_GT = G_T*sin(gamma_T);
+				ddot_xi_GT = G_T*cos(gamma_T);
+				phi_T = phi_T - gamma_T;
+				fprintf(lvlog, "xi_T = %f, dot_zeta_T = %f, dot_xi_T = %f\r\n", xi_T, dot_zeta_T, dot_xi_T);
+				fprintf(lvlog, "ddot_zeta_GT = %f, ddot_xi_GT = %f\r\n", ddot_zeta_GT, ddot_xi_GT);
+
 				// LVDC_GP_PC = 30; // STOP
 			}else{
 				// UNROTATED TERMINAL CONDITIONS (into-orbit)
@@ -5914,10 +5930,12 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					fprintf(lvlog,"BOOST-TO-ORBIT ACTIVE\r\n");
 					// dT_4 CALCULATION
 					t_3i = TB4+T_c;
-					dT_4 = TAS-t_3i-T_4N;
+					//dT_4 = TAS-t_3i-T_4N;
+					dT_4 = t_3i - T_4N;
 					fprintf(lvlog,"t_3i = %f, dT_4 = %f\r\n",t_3i,dT_4);
 					if(fabs(dT_4) <= dT_LIM){							
 						dTt_4 = dT_4;
+						GGRAV;
 					}else{
 						fprintf(lvlog,"dTt_4 CLAMPED\r\n");
 						dTt_4 = dT_LIM;
@@ -5926,9 +5944,10 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				}else{
 					// TRANSLUNAR INJECTION VELOCITY
 					fprintf(lvlog,"TRANSLUNAR INJECTION\r\n");
-					V_T = sqrt(C_3 + 2 * mu / (R + ( ( dotp(PosS,DotS) / R)*(T_3 - dt) ) ) );
+					V_T = sqrt(C_3 + 2.0 * mu / (R + ( ( dotp(PosS,DotS) / R)*(T_3 - dt) ) ) );
 					dV_B = dV_BR;
 					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
+					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
 					// LVDC_GP_PC = 30; // STOP
 				}
 				// TGO DETERMINATION
@@ -5941,8 +5960,19 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				fprintf(lvlog,"a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n",a_2,a_1,T_GO,T_CO,V_T);
 
 				// S4B CUTOFF?
-				if(S4B_IGN == false){
+				if(S4B_IGN == false && LVDC_Timebase < 6){
 					fprintf(lvlog,"*** HSL EXIT SETTINGS ***\r\n");
+					GATE = false;
+					GATE5 = false;
+					Tt_T = 1000;
+					HSL = false;
+					BOOST = false;
+					goto minorloop;
+				}
+				// S4B 2ND CUTOFF?
+				if(S4B_REIGN == false && LVDC_Timebase >= 6) {
+					fprintf(lvlog, "*** HSL EXIT SETTINGS ***\r\n");
+					GATE = false;
 					GATE5 = false;
 					Tt_T = 1000;
 					HSL = false;
@@ -6112,8 +6142,19 @@ orbitalguidance:
 				}
 			}
 		}else{
-			//attitude for T&D					
-			CommandedAttitude = XLunarAttitude;
+			if (TB7 - 900 < 0) {
+				alpha_1 = 0 * RAD;
+				CommandedAttitude.x = 360 * RAD;
+				goto orbatt;
+			}
+			else
+			{
+				//attitude for T&D					
+				alpha_1 = XLunarAttitude.y;
+				alpha_2 = XLunarAttitude.z;
+				CommandedAttitude.x = XLunarAttitude.x;
+				goto orbatt;
+			}
 		} 
 		goto minorloop;
 
@@ -6299,7 +6340,7 @@ restartprep:
 			//Determination of S-bar and S-bar-dot
 			theta_E = theta_EO + omega_E*t_D;
 
-			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E*RAD), sin(theta_E*RAD), 0, 0, 0, -1, -sin(theta_E*RAD), cos(theta_E*RAD), 0));
+			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
 			T_P = mul(MX_EPH, unit(TargetVector));
 			N = unit(crossp(PosS, DotS));
@@ -6363,18 +6404,19 @@ O3precalc:
 
 		if (alpha_D_op)
 		{
-			alpha_D = acos(dotp(Sbar,T_P))-acos((1.0-p/T_M)/e)+atan2(X_1,X_2);
+			//alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(X_1, X_2);
+			alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(dotp(Sbar_1, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))), dotp(Sbar, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))));
 		}
 		else
 		{
 			alpha_D = TABLE15[1].target[tgt_index].alpha_D;
 		}
 
-		fprintf(lvlog, "Elliptic parameters: Inc: %f, e: %f, p: %f\r\n", Inclination*DEG, e, p);
+		fprintf(lvlog, "Elliptic parameters: Inc: %f°, e: %f, p: %f, theta_N: %f°, f: %f°\r\n", Inclination*DEG, e, p, theta_N*DEG, f*DEG);
 
 	O3GMatrix:
-		MX_B = _M(cos(theta_N*RAD), 0, sin(theta_N*RAD), sin(theta_N*RAD)*sin(Inclination*RAD), cos(Inclination*RAD), -cos(theta_N*RAD)*sin(Inclination*RAD),
-			-sin(theta_N*RAD)*cos(Inclination*RAD), sin(Inclination*RAD), cos(theta_N*RAD)*cos(Inclination*RAD));
+		MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),
+			-sin(theta_N)*cos(Inclination), sin(Inclination), cos(theta_N)*cos(Inclination));
 		MX_G = mul(MX_B, MX_A);
 		R_T = p / (1.0 + e*cos(f));
 		K_5 = sqrt(mu / p);
@@ -6422,6 +6464,15 @@ minorloop:
 			LVDC_TB_ETime = 0;
 			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
 		}
+		if (T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true) {
+			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
+			S4B_REIGN = false;
+			TB7 = -simdt;
+			LVDC_Timebase = 7;
+			LVDC_TB_ETime = 0;
+			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+		}
+
 	
 		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
 		if(CommandedAttitude.z > 45 * RAD){CommandedAttitude.z = 45 * RAD; }
@@ -6563,11 +6614,11 @@ minorloop:
 			owner->SetThrusterDir(owner->th_main[2],_V(beta_y1c,beta_p1c,1)); 
 			owner->SetThrusterDir(owner->th_main[3],_V(beta_y3c,beta_p3c,1)); 
 		}
-		if(LVDC_Timebase == 4){
+		if (LVDC_Timebase == 4 || (LVDC_Timebase == 6 && S4B_REIGN == true)) {
 			//SIVB powered flight
 			beta_p1c = beta_pc; //gimbal angles
 			beta_y1c = beta_yc;
-			owner->SetThrusterDir(owner->th_main[0],_V(beta_y1c,beta_p1c,1));
+			owner->SetThrusterDir(owner->th_main[0], _V(beta_y1c, beta_p1c, 1));
 			eps_p = 0; //we want neither the APS pitch thrusters to fire
 			eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 			eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
@@ -6577,15 +6628,6 @@ minorloop:
 			eps_p   = (a_0p * AttitudeError.y * DEG) + (a_1p * AttRate.y * DEG); //pitch thruster demand
 			eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
 			eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
-		}
-		if (LVDC_Timebase == 6 && S4B_REIGN == true) {
-			//SIVB powered flight
-			beta_p1c = beta_pc; //gimbal angles
-			beta_y1c = beta_yc;
-			owner->SetThrusterDir(owner->th_main[0], _V(beta_y1c, beta_p1c, 1));
-			eps_p = 0; //we want neither the APS pitch thrusters to fire
-			eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
-			eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
 		}
 		if((LVDC_Timebase == 4 && S4B_IGN == true)|| LVDC_Timebase == 5 || LVDC_Timebase == 6 || LVDC_Timebase == 7){
 			//APS thruster on/off control
@@ -6768,7 +6810,7 @@ double LVDC::SVCompare()
 {
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
-	mat = OrbMech::Orbiter2PACSS13(40211.53522, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
+	mat = OrbMech::Orbiter2PACSS13(40211.5352199074 + t_D/24.0/3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
 	owner->GetRelativePos(owner->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 
