@@ -128,6 +128,7 @@ private:
 	bool GATE3;										// Permit entry to IGM out-of-orbit targeting
 	bool GATE4;										// Permit only one pass through direct-staging guidance update
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
+	bool GATE6;										// Logic gate that ensures only one pass through separation attitude calculation
 	bool INH,INH1,INH2;								// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update

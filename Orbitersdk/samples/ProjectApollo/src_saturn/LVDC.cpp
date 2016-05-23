@@ -2662,6 +2662,7 @@ LVDC::LVDC(){
 	GATE3 = false;
 	GATE4 = false;
 	GATE5 = false;
+	GATE6 = false;
 	HSL = false;
 	INH = false;
 	INH1 = false;
@@ -3039,6 +3040,7 @@ void LVDC::Init(Saturn* vs){
 	GATE3 = false;							// allows single pass through out-of-orbit IGM precalculations when false
 	GATE4 = false;							// allows single pass through direct-staging guidance update when false
 	GATE5 = false;							// allows single pass through HSL initialization when false
+	GATE6 = false;
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
 	INH1 = false;							// inhibits first EPO roll/pitch maneuver
 	INH2 = false;							// inhibits second EPO roll/pitch maneuver
@@ -3343,6 +3345,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE3", GATE3);
 	oapiWriteScenario_int(scn, "LVDC_GATE4", GATE4);
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
+	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
@@ -3996,6 +3999,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE3", GATE3);
 		papiReadScenario_bool(line, "LVDC_GATE4", GATE4);
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
+		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
@@ -4693,15 +4697,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
 					owner->SwitchSelector(12);
-					//Determine the right index of the SV TABLEs for the out-of-orbit targeting
-					//while(owner->MissionTime > TABLE15.target[tgt_index].t_D)
-					//{
-					//	tgt_index++;
-					//}
 				}
-
-				
-
 
 				// At 10 seconds, play the countdown sound.
 				if (owner->MissionTime >= -10.3) { // Was -10.9
@@ -4973,6 +4969,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 				break;
 			case 6:
 				//TB6 timed events
+				if (poweredflight == false)
+				{poweredflight = true;}
 				if (S4B_REIGN == false)
 				{owner->SetSIISep();}	//Set SII SEP light to notify crew of TB6 start
 				if(LVDC_TB_ETime>=38 && S4B_REIGN==false)
@@ -4986,7 +4984,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
 					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
 					owner->SwitchSelector(6);
-					poweredflight = true;
 				}	
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
 					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
@@ -5626,7 +5623,7 @@ IGM:	if(HSL == false){
 					fprintf(lvlog,"T_1 = 0, T_2 = 0\r\n");
 					// Go to CHI-TILDE LOGIC
 				}
-				if(T_2 < 11){GATE = true;}//pre SIVB-staging chi-freeze
+				if(T_2 < 11 && !S4B_REIGN){GATE = true;}//pre SIVB-staging chi-freeze
 			}else{
 				fprintf(lvlog,"Pre-MRS\n");
 				if(T_1 < 0){	
@@ -6149,11 +6146,21 @@ orbitalguidance:
 			}
 			else
 			{
-				//attitude for T&D					
-				alpha_1 = XLunarAttitude.y;
-				alpha_2 = XLunarAttitude.z;
-				CommandedAttitude.x = XLunarAttitude.x;
-				goto orbatt;
+				if (GATE6)
+				{	
+					//attitude hold for T&D
+					CommandedAttitude = ACommandedAttitude;
+					goto minorloop;
+				}
+				else
+				{
+					//attitude for T&D					
+					alpha_1 = XLunarAttitude.y;
+					alpha_2 = XLunarAttitude.z;
+					CommandedAttitude.x = XLunarAttitude.x;
+					GATE6 = true;
+					goto orbatt;
+				}
 			}
 		} 
 		goto minorloop;
@@ -6199,7 +6206,8 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 		fprintf(lvlog,"*** COMMAND ISSUED ***\r\n");
 		fprintf(lvlog,"PITCH = %f, YAW = %f\r\n\r\n",X_Yi*DEG,X_Zi*DEG);
 		CommandedAttitude.y = X_Yi; // PITCH
-		CommandedAttitude.z = X_Zi; // YAW;				
+		CommandedAttitude.z = X_Zi; // YAW;
+		ACommandedAttitude = CommandedAttitude;
 		goto minorloop;
 
 restartprep:
@@ -6473,7 +6481,6 @@ minorloop:
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 		}
 
-	
 		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
 		if(CommandedAttitude.z > 45 * RAD){CommandedAttitude.z = 45 * RAD; }
 		double diff; //aux variable for limit test
@@ -6505,16 +6512,31 @@ minorloop:
 			}
 		}
 		PCommandedAttitude = CommandedAttitude;
+
 		/* **** LVDA **** */
+		VECTOR3 DeltaAtt;
+		double A1, A2, A3, A4, A5;
+		//calculate delta attitude
+		DeltaAtt.x = fmod((CurrentAttitude.x - CommandedAttitude.x + TWO_PI), TWO_PI);
+		if (DeltaAtt.x > PI) { DeltaAtt.x -= TWO_PI; }
+		DeltaAtt.y = fmod((CurrentAttitude.y - CommandedAttitude.y + TWO_PI), TWO_PI);
+		if (DeltaAtt.y > PI) { DeltaAtt.y -= TWO_PI; }
+		DeltaAtt.z = fmod((CurrentAttitude.z - CommandedAttitude.z + TWO_PI), TWO_PI);
+		if (DeltaAtt.z > PI) { DeltaAtt.z -= TWO_PI; }
+
+		//-euler correction-
+		//calculate correction factors
+		A1 = cos(CurrentAttitude.x) * cos(CurrentAttitude.z);
+		A2 = sin(CurrentAttitude.x);
+		A3 = sin(CurrentAttitude.z);
+		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
+		A5 = cos(CurrentAttitude.x);
 		// ROLL ERROR
-		AttitudeError.x = fmod((CommandedAttitude.x - CurrentAttitude.x + TWO_PI),TWO_PI);
-		if (AttitudeError.x > PI){ AttitudeError.x -= TWO_PI; }
+		AttitudeError.x = -(DeltaAtt.x + A3 * DeltaAtt.y);
 		// PITCH ERROR
-		AttitudeError.y = fmod((CommandedAttitude.y - CurrentAttitude.y + TWO_PI),TWO_PI);
-		if (AttitudeError.y > PI){ AttitudeError.y -= TWO_PI; }
+		AttitudeError.y = -(A1 * DeltaAtt.y + A2 * DeltaAtt.z);
 		// YAW ERROR
-		AttitudeError.z = fmod((CommandedAttitude.z - CurrentAttitude.z + TWO_PI),TWO_PI);
-		if (AttitudeError.z > PI){ AttitudeError.z -= TWO_PI; }	
+		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 
 		// LV takeover
 		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
