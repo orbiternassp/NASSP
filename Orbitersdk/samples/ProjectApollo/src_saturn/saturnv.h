@@ -190,6 +190,8 @@ protected:
 	
 	// DS20150804 LVDC++ ON WHEELS
 	LVDC* lvdc;
+
+	friend class ApolloRTCCMFD;
 };
 
 extern void LoadSat5Meshes();

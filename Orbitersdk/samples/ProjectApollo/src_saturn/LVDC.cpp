@@ -4646,6 +4646,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 		// Note that GenericTimestep will update MissionTime.
 
+		//Switch Check, TBD: Integrate with old CSM to IU Connector
+		INH = owner->TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
+
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){//this is the sequential event control logic
 			case -1: // LOOP WAITING FOR PTL
@@ -6326,7 +6329,11 @@ restartprep:
 					alpha_D		Angle between perigee and descending nodal vector of transfer ellipse
 					f			True anomaly of transfer ellipse
 					*/
+
+					fprintf(lvlog, "7-parameter update: T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f° \r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
+
 					alpha_D_op = 0;
+					first_op = false;
 
 					if (TB5 - T_RP < 0) //Sufficient time after TB6?
 					{
@@ -6360,9 +6367,7 @@ restartprep:
 
 			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
 			{
-				TB6= -simdt;
-				LVDC_TB_ETime = 0;
-				LVDC_Timebase = 6;
+				goto INHcheck;
 			}
 			else
 			{goto orbitalguidance;}
@@ -6371,14 +6376,18 @@ restartprep:
 			if (INH)	//XLUNAR switch to INHIBIT in the CSM?
 			{
 				GATE0 = GATE1 = false;	//Select second opportunity targeting
+				first_op = false;
 				goto orbitalguidance;
 			}
-			if (!GATE0)
+			else if (!GATE0)
 			{
 				GATE0 = true;	//Bypass targeting routines
+				TB6 = -simdt;
+				LVDC_TB_ETime = 0;
+				LVDC_Timebase = 6;
 				goto restartprep;
 			}
-			if (TB6 - T_RG < 0) //Time elapsed enough for TB6?
+			else if (TB6 - T_RG < 0) //Time elapsed enough for TB6?
 			{goto orbitalguidance;}
 		}
 

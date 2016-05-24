@@ -186,6 +186,7 @@ public:
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
+	VECTOR3 R_TLI, V_TLI;
 
 	//LANDMARK TRACKING PAGE
 	double LmkLat, LmkLng;

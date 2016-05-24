@@ -100,7 +100,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	{
 		LOIMan opt;
 		double GETbase, P30TIG;
-		VECTOR3 dV_LVLH;
+		VECTOR3 dV_LVLH, R_TLI, V_TLI;
 
 		GETbase = getGETBase();
 		calcParams.LOI = OrbMech::HHMMSSToSS(69, 10, 39);
@@ -115,7 +115,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.vessel = calcParams.src;
 		opt.MCCGET = OrbMech::HHMMSSToSS(2, 50, 30);
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, R_TLI, V_TLI);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;// +unit(dV_LVLH)*2.0;//(2.0 - 2.8816);	//2 m/s intentional overburn, but also 2.8816 m/s (?) thrust tailoff
@@ -377,7 +377,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		VECTOR3 Rcut, Vcut;
+		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut);
 
 		if (fcn != 23)
 		{
@@ -413,7 +414,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv);
 				opt2.MCCGET = calcParams.LOI;
 
-				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
+				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, Rcut, Vcut);
 
 				refsopt.dV_LVLH = dV_LVLH;
 				refsopt.dV_LVLH2 = dV_LVLH_LOI;
@@ -467,7 +468,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LOIMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, SVGET;
-		VECTOR3 dV_LVLH, R0, V0;
+		VECTOR3 dV_LVLH, R0, V0, Rcut, Vcut;
 		SV sv;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -490,7 +491,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.MCCGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
@@ -705,7 +706,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LOIMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, SVGET;
-		VECTOR3 dV_LVLH, R0, V0;
+		VECTOR3 dV_LVLH, R0, V0, Rcut, Vcut;
 		SV sv;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -725,7 +726,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.man = 3;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
@@ -2893,7 +2894,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 
 	if (opt->impulsive == RTCC_NONIMPULSIVE)
 	{
-		VECTOR3 Llambda, RA1_cor, VA1_cor,RA1,VA1,UX,UY,UZ,DV,i,j,k;
+		VECTOR3 Llambda, RA1_cor, VA1_cor,RA1,VA1,UX,UY,UZ,DV,i,j,k, Rcut, Vcut;
 		double t_slip, f_T, isp;
 		MATRIX3 Q_Xx;
 		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -2910,7 +2911,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 		f_T = 92100;//vessel->GetThrusterMax0(thruster);
 		isp = 3080;//vessel->GetThrusterIsp0(thruster);
 
-		OrbMech::impulsive(RA1, VA1, SVMJD + (P30TIG-GET)/24.0/3600.0, gravref, f_T, isp, m, DV, Llambda, t_slip);
+		OrbMech::impulsive(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, gravref, f_T, isp, m, DV, Llambda, t_slip, Rcut, Vcut);
 		OrbMech::oneclickcoast(RA1, VA1, SVMJD + (P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, gravref, gravref);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -3012,7 +3013,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	}
 	else
 	{
-		VECTOR3 Llambda,RA1_cor,VA1_cor;
+		VECTOR3 Llambda,RA1_cor,VA1_cor, Rcut, Vcut;
 		double t_slip, LMmass, mass, f_T, isp;
 		
 		if (lambert->csmlmdocked)
@@ -3041,7 +3042,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		f_T = lambert->vessel->GetThrusterMax0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		isp = lambert->vessel->GetThrusterIsp0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-		OrbMech::impulsive(RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, f_T, isp, mass, VA1_apo - VA1, Llambda, t_slip);
+		OrbMech::impulsive(RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, f_T, isp, mass, VA1_apo - VA1, Llambda, t_slip, Rcut, Vcut);
 		OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -4447,12 +4448,12 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	}
 	else
 	{
-		VECTOR3 Llambda, RA2_cor, VA2_cor;double t_slip, f_T, isp;
+		VECTOR3 Llambda, RA2_cor, VA2_cor, Rcut, Vcut;double t_slip, f_T, isp;
 
 		f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-		OrbMech::impulsive(RA2, VA2_alt, opt->GETbase + CDHtime_cor/24.0/3600.0, gravref, f_T, isp, opt->vessel->GetMass(), V_A2_apo - VA2_alt, Llambda, t_slip);
+		OrbMech::impulsive(RA2, VA2_alt, opt->GETbase + CDHtime_cor/24.0/3600.0, gravref, f_T, isp, opt->vessel->GetMass(), V_A2_apo - VA2_alt, Llambda, t_slip, Rcut, Vcut);
 
 		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
 
@@ -4519,7 +4520,7 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
 
-void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut)
 {
 	double SVMJD, GET, mass, LMmass;
 	VECTOR3 R_A, V_A, R0B, V0B;
@@ -4655,7 +4656,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-		OrbMech::impulsive(RA2, VA2, opt->GETbase + LOIGET/24.0/3600.0, hMoon, f_T, isp, mass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+		OrbMech::impulsive(RA2, VA2, opt->GETbase + LOIGET/24.0/3600.0, hMoon, f_T, isp, mass, DVX, Llambda, t_slip, Rcut, Vcut); //Calculate the impulsive equivalent of the maneuver
 
 		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 
@@ -4732,7 +4733,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 			m1 = (mass - m0)*exp(-boil*dt1);
 
-			OrbMech::impulsive(RA1, VA1, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+			OrbMech::impulsive(RA1, VA1, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut); //Calculate the impulsive equivalent of the maneuver
 
 			OrbMech::oneclickcoast(RA1, VA1, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
@@ -4933,7 +4934,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	}
 	else
 	{
-		VECTOR3 Llambda, R2_cor, V2_cor; 
+		VECTOR3 Llambda, R2_cor, V2_cor, Rcut, Vcut;
 		double t_slip, mass, LMmass, f_T, isp;
 
 		if (opt->csmlmdocked)
@@ -4962,7 +4963,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 		isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-		OrbMech::impulsive(R2, V2, SPSMJD, opt->gravref, f_T, isp, mass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+		OrbMech::impulsive(R2, V2, SPSMJD, opt->gravref, f_T, isp, mass, DVX, Llambda, t_slip, Rcut, Vcut); //Calculate the impulsive equivalent of the maneuver
 
 		OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
 
@@ -5489,7 +5490,7 @@ void RTCC::TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &l
 	bool endi = false;
 	double EMSAlt, dt22, mu_E;
 	VECTOR3 R05G, V05G, R_A, V_A, R0M, V0M;
-	VECTOR3 Llambda, R_cor, V_cor, i, j, k;
+	VECTOR3 Llambda, R_cor, V_cor, i, j, k, Rcut, Vcut;
 	double t_slip, f_T, isp, SVMJD, mass;
 	MATRIX3 Q_Xx, Rot;
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -5542,7 +5543,7 @@ void RTCC::TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &l
 	f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 	isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-	OrbMech::impulsive(teicalc->Rig, teicalc->Vig, teicalc->TIG, hMoon, f_T, isp, mass, teicalc->Vig_apo - teicalc->Vig, Llambda, t_slip);
+	OrbMech::impulsive(teicalc->Rig, teicalc->Vig, teicalc->TIG, hMoon, f_T, isp, mass, teicalc->Vig_apo - teicalc->Vig, Llambda, t_slip, Rcut, Vcut);
 
 	OrbMech::oneclickcoast(teicalc->Rig, teicalc->Vig, teicalc->TIG, t_slip, R_cor, V_cor, hMoon, hMoon);
 

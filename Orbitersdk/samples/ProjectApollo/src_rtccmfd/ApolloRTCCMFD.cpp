@@ -200,6 +200,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "LOIDV", G->LOI_dV_LVLH);
 	papiWriteScenario_double(scn, "TLCCTIG", G->TLCC_TIG);
 	papiWriteScenario_double(scn, "LOITIG", G->LOI_TIG);
+	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
+	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -287,6 +289,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "LOIDV", G->LOI_dV_LVLH);
 		papiReadScenario_double(line, "TLCCTIG", G->TLCC_TIG);
 		papiReadScenario_double(line, "LOITIG", G->LOI_TIG);
+		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
+		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -1802,7 +1806,56 @@ void ApolloRTCCMFD::menuEntryUpload()
 
 void ApolloRTCCMFD::menuP30Upload()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
+	if (screen == 12 && G->LOImaneuver == 4)
+	{
+		if (G->g_Data.progVessel->use_lvdc)
+		{
+			double T_RP, tb5start, mu, r, v, C3, inc, e, alpha_D, f, theta_N;
+			VECTOR3 HH, E, K, N;
+			SaturnV* testves;
+
+			testves = (SaturnV*)G->g_Data.progVessel;
+
+			tb5start = testves->lvdc->t_clock - testves->lvdc->TB5;
+			mu = testves->lvdc->mu;
+
+			T_RP = G->P30TIG - tb5start - testves->lvdc->T_RG;
+			r = length(G->R_TLI);
+			v = length(G->V_TLI);
+			C3 = v*v - 2.0*mu / r;
+			HH = crossp(G->R_TLI, G->V_TLI);
+			E = crossp(G->V_TLI, HH)/mu-unit(G->R_TLI);
+			e = length(E);
+			K = _V(0.0, 0.0, 1.0);
+			N = crossp(HH, K);
+			inc = acos(HH.z / length(HH));
+			alpha_D = acos(dotp(N, E) / e / length(N));
+			if (E.z < 0)
+			{
+				alpha_D = PI2 - alpha_D;
+			}
+			f = acos(dotp(E, G->R_TLI) / length(G->R_TLI) / length(E));
+			theta_N = acos(N.x / length(N));
+			if (N.y > 0)
+			{
+				theta_N = PI2 - theta_N;
+			}
+			theta_N -= -80.6041140*RAD;
+
+			testves->lvdc->TU = true;
+			testves->lvdc->TU10 = false;
+
+			testves->lvdc->T_RP = T_RP;
+			testves->lvdc->C_3 = C3;
+			testves->lvdc->Inclination = inc;
+			testves->lvdc->e = e;
+			testves->lvdc->alpha_D = alpha_D;
+			testves->lvdc->f = f;
+			testves->lvdc->theta_N = theta_N;
+
+		}
+	}
+	else if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
 		G->P30Uplink();
 	}
