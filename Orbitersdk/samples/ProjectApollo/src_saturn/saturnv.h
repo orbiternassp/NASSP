@@ -191,6 +191,7 @@ protected:
 	// DS20150804 LVDC++ ON WHEELS
 	LVDC* lvdc;
 
+	friend class MCC;
 	friend class ApolloRTCCMFD;
 };
 

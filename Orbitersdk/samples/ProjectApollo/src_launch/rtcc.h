@@ -279,6 +279,20 @@ struct calculationParameters {
 	double TLI;		// Time of TLI
 	double EI;		// Time of Entry Interface
 	double LOI;		// Time of LOI/Pericynthion
+	VECTOR3 R_TLI;	//TLI cutoff position vector
+	VECTOR3 V_TLI;	//TLI cutoff velocity vector
+};
+
+//For LVDC
+struct SevenParameterUpdate
+{
+	double T_RP;	//Time of Restart Preparation (TB6)
+	double C3;
+	double Inclination;
+	double e;
+	double alpha_D;
+	double f;
+	double theta_N;
 };
 
 class RTCC {
@@ -300,12 +314,13 @@ public:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
+	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double t_clock, double TB5, double mu, double T_RG);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state

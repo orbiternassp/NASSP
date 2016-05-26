@@ -409,6 +409,7 @@ private:
 	double eps_ymr;									//error command for APS engines: yaw mixed -roll
 	// TABLE25 is apparently only used on direct-ascent
 
+	friend class MCC;
 	friend class ApolloRTCCMFD;
 };
 

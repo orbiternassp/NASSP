@@ -1135,6 +1135,7 @@ int ARCore::subThread()
 	case 5: //LOI Targeting
 	{
 		LOIMan opt;
+		double MJDcut;
 
 		opt.GETbase = GETbase;
 		opt.h_apo = LOIapo;
@@ -1159,7 +1160,7 @@ int ARCore::subThread()
 
 		if (LOImaneuver == 0 || LOImaneuver == 4)
 		{
-			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI);
+			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}
@@ -1195,11 +1196,11 @@ int ARCore::subThread()
 			opt.RV_MCC = RV1;
 			opt.RV_MCC.V = V2;
 
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI);
+			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
 		}
 		else
 		{
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI);
+			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
 		}
@@ -1240,7 +1241,7 @@ int ARCore::subThread()
 		{
 			VECTOR3 Llambda, R_cor, V_cor, i, j, k, Rcut, Vcut;
 			MATRIX3 Q_Xx;
-			double t_slip, mu, f_T, isp;
+			double t_slip, mu, f_T, isp, tcut;
 
 			while (!endi)
 			{
@@ -1258,7 +1259,7 @@ int ARCore::subThread()
 			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
 			//OrbMech::impulsive(vessel, teicalc->Rguess, teicalc->Vguess, GETbase + P30TIG / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), teicalc->V1B_apo - teicalc->Vguess, Llambda, t_slip);
-			OrbMech::impulsive(teicalc->Rig, teicalc->Vig, teicalc->TIG, gravref, f_T, isp, vessel->GetMass(), teicalc->Vig_apo - teicalc->Vig, Llambda, t_slip, Rcut, Vcut);
+			OrbMech::impulsive(teicalc->Rig, teicalc->Vig, teicalc->TIG, gravref, f_T, isp, vessel->GetMass(), teicalc->Vig_apo - teicalc->Vig, Llambda, t_slip, Rcut, Vcut, tcut);
 
 			mu = GGRAV*oapiGetMass(gravref);
 			//OrbMech::rv_from_r0v0(teicalc->Rguess, teicalc->Vguess, t_slip, R_cor, V_cor, mu);
@@ -1304,7 +1305,7 @@ int ARCore::subThread()
 
 				VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k, Rcut, Vcut;
 				MATRIX3 Rot, mat, Q_Xx;
-				double SVMJD, t_slip, mu, f_T, isp;
+				double SVMJD, t_slip, mu, f_T, isp, tcut;
 
 
 				vessel->GetRelativePos(gravref, R0);
@@ -1330,7 +1331,7 @@ int ARCore::subThread()
 				f_T = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-				OrbMech::impulsive(R, V, GETbase + entry->EntryTIGcor / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), DV, Llambda, t_slip, Rcut, Vcut);
+				OrbMech::impulsive(R, V, GETbase + entry->EntryTIGcor / 24.0 / 3600.0, gravref, f_T, isp, vessel->GetMass(), DV, Llambda, t_slip, Rcut, Vcut, tcut);
 
 				mu = GGRAV*oapiGetMass(gravref);
 				OrbMech::rv_from_r0v0(R, V, t_slip, R_cor, V_cor, mu);

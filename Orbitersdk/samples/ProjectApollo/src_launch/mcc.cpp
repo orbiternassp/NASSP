@@ -40,6 +40,7 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
+#include "saturnv.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -1102,14 +1103,37 @@ void MCC::TimeStep(double simdt){
 				case 1:
 					if (subThreadStatus == 0)
 					{
-						VECTOR3 _RIgn, _VIgn, _dV_LVLH;
-						double IgnMJD;
+						if (cm->use_lvdc)
+						{
+							SaturnV *SatV = (SaturnV*)cm;
 
-						rtcc->calcParams.src = cm;
+							SevenParameterUpdate param = rtcc->TLICutoffToLVDCParameters(rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->TimeofIgnition, SatV->lvdc->t_clock, SatV->lvdc->TB5, SatV->lvdc->mu, SatV->lvdc->T_RG);
 
-						rtcc->GetTLIParameters(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
-						cm->GetIU()->StartTLIBurn(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
-						setSubState(2);
+							SatV->lvdc->TU = true;
+							SatV->lvdc->TU10 = false;
+
+							SatV->lvdc->T_RP = param.T_RP;
+							SatV->lvdc->C_3 = param.C3;
+							SatV->lvdc->Inclination = param.Inclination;
+							SatV->lvdc->e = param.e;
+							SatV->lvdc->alpha_D = param.alpha_D;
+							SatV->lvdc->f = param.f;
+							SatV->lvdc->theta_N = param.theta_N;
+
+							setSubState(2);
+						}
+						else
+						{
+
+							VECTOR3 _RIgn, _VIgn, _dV_LVLH;
+							double IgnMJD;
+
+							rtcc->calcParams.src = cm;
+
+							rtcc->GetTLIParameters(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
+							cm->GetIU()->StartTLIBurn(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
+							setSubState(2);
+						}
 					}
 					break;
 				case 2:
