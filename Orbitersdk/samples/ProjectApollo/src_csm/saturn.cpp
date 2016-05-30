@@ -5634,7 +5634,8 @@ void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 #define MR_STATS 5
 
 static double MixtureRatios[MR_STATS] = {6.0, 5.5, 5.0, 4.3, 4.0 };
-static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
+//static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
+static double MRISP[MR_STATS] = { 421.4 * G, 423.4 * G, 426.5 * G, 432.6 * G, 437.6 * G };
 static double MRThrust[MR_STATS] = { 1.1, 1.0, .898, .7391, .7 };
 
 double Saturn::GetJ2ISP(double ratio)

@@ -2655,6 +2655,7 @@ LVDC::LVDC(){
 	Direct_Ascent = false;
 	directstageint = false;
 	first_op = false;
+	TerminalConditions = false;
 	GATE = false;
 	GATE0 = false;
 	GATE1 = false;
@@ -2735,6 +2736,7 @@ LVDC::LVDC(){
 	d2 = 0;
 	ddot_zeta_GT = 0;
 	ddot_xi_GT = 0;
+	DEC = 0;
 	DescNodeAngle = 0;
 	deta = 0;
 	dxi = 0;
@@ -2768,6 +2770,7 @@ LVDC::LVDC(){
 	dV = 0;
 	dV_B = 0;
 	e = 0;
+	e_N = 0;
 	eps_1 = 0;
 	eps_2 = 0;
 	eps_3 = 0;
@@ -2806,6 +2809,24 @@ LVDC::LVDC(){
 	}
 	for (x = 0; x < 6; x++) {
 		Rho[x] = 0;
+	}
+	for (x = 0; x < 2; x++)
+	{
+		int y;
+		TABLE15[x].alphaS_TS = 0;
+		TABLE15[x].beta = 0;
+		TABLE15[x].f = 0;
+		TABLE15[x].T_ST = 0;
+		for (y = 0; y < 15; y++)
+		{
+			TABLE15[x].target[y].alpha_D = 0;
+			TABLE15[x].target[y].cos_sigma = 0;
+			TABLE15[x].target[y].C_3 = 0;
+			TABLE15[x].target[y].DEC = 0;
+			TABLE15[x].target[y].e_N = 0;
+			TABLE15[x].target[y].RAS = 0;
+			TABLE15[x].target[y].t_D = 0;
+		}
 	}
 	G_T = 0;
 	H = 0;
@@ -2857,6 +2878,7 @@ LVDC::LVDC(){
 	Q_Y = 0;
 	Q_P = 0;
 	R = 0;
+	RAS = 0;
 	RateGain = 0;
 	ErrorGain = 0;
 	ROV = 0;
@@ -3054,6 +3076,7 @@ void LVDC::Init(Saturn* vs){
 	alpha_D_op = true;
 	i_op = true;							// flag for selecting method of EPO inclination calculation
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
+	TerminalConditions = true;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3115,17 +3138,35 @@ void LVDC::Init(Saturn* vs){
 	gx[0] = 123.1935; gx[1] = -55.06485; gx[2] = -35.26208; gx[3] = 26.01324;
 	gx[4] = -1.47591; gx[5] = 0;         gx[6] = 0;	
 	// Launch azimuth from time polynomial
-	hx[0][0] = 72.124;	hx[0][1] = 0.0;	hx[0][2] = 0.0;	hx[0][3] = 0.0;	hx[0][4] = 0.0;
-	hx[1][0] = 72.124;	hx[1][1] = 0.0;	hx[1][2] = 0.0;	hx[1][3] = 0.0;	hx[1][4] = 0.0;
-	hx[2][0] = 72.124;	hx[2][1] = 0.0;	hx[2][2] = 0.0;	hx[2][3] = 0.0;	hx[2][4] = 0.0;
+	hx[0][0] = 72.0;	hx[0][1] = 0.0;	hx[0][2] = 0.0;	hx[0][3] = 0.0;	hx[0][4] = 0.0;
+	hx[1][0] = 72.0;	hx[1][1] = 0.0;	hx[1][2] = 0.0;	hx[1][3] = 0.0;	hx[1][4] = 0.0;
+	hx[2][0] = 72.0;	hx[2][1] = 0.0;	hx[2][2] = 0.0;	hx[2][3] = 0.0;	hx[2][4] = 0.0;
 	// Air density polynomial
 	Rho[0] = 0.179142e-6;	Rho[1] = -0.37213949e-11;	Rho[2] = 0.31057886e-16;
 	Rho[3] = -0.12962178e-21;	Rho[4] = 0.2698641e-27;	Rho[5] = -0.2238826e-33;
+	// Out-of-orbit parameters
+	TABLE15[0].alphaS_TS = 14.2691472;
+	TABLE15[0].beta = 61.89975;
+	TABLE15[0].f = 14.26968;
+	TABLE15[0].T_ST = 15000.0;
+	TABLE15[0].target[0].cos_sigma = 9.958662e-1;
+	TABLE15[0].target[1].cos_sigma = 9.958662e-1;
+	TABLE15[0].target[0].C_3 = -1.418676e6;
+	TABLE15[0].target[1].C_3 = -1.418676e6;
+	TABLE15[0].target[0].DEC = -26.646912;
+	TABLE15[0].target[1].DEC = -26.646912;
+	TABLE15[0].target[0].e_N = 0.9765500;
+	TABLE15[0].target[1].e_N = 0.9765500;
+	TABLE15[0].target[0].RAS = -114.382494;
+	TABLE15[0].target[1].RAS = -114.382494;
+	TABLE15[0].target[0].t_D = 0.0;
+	TABLE15[0].target[1].t_D = 1000.0;
+
 	MRS = false;							// MR Shift
-	dotM_1 = 1219.299283;					// Mass flowrate of S2 from approximately LET jettison to second MRS
-	dotM_2 = 961.8088872;					// Mass flowrate of S2 after second MRS
-	dotM_2R = 188.221437;//187.007;
-	dotM_3 = 222.4339038;					// Mass flowrate of S4B during first burn
+	dotM_1 = 1224.13817;//1219.299283;					// Mass flowrate of S2 from approximately LET jettison to second MRS
+	dotM_2 = 890.2122217;//61.8088872;					// Mass flowrate of S2 after second MRS
+	dotM_2R = 178.0424443;//188.221437;//187.007;
+	dotM_3 = 215.2292029;//222.4339038;					// Mass flowrate of S4B during first burn
 	dotM_3R = 217.6503205;//218.586;
 	ROT = false;
 	ROTR = true;
@@ -3172,11 +3213,11 @@ void LVDC::Init(Saturn* vs){
 	t_SD3 = 1233.6;
 	//dt: not set; dependend on cycle time
 	dT_LIM = 90;							// Limit to dT_4;
-	V_ex1 = 4148.668555;
-	V_ex2 = 4158.852692;
-	V_ex2R = 4228.02;
-	V_ex3 = 4130.010682;
-	V_ex3R = 4130.010682;//4193.05;
+	V_ex1 = 4153.941218;//4148.668555;
+	V_ex2 = 4221.827032;//4158.852692;
+	V_ex2R = 4221.827032;//4228.02;
+	V_ex3 = 4184.41823;//4130.010682;
+	V_ex3R = 4184.41823;//4130.010682;//4193.05;
 	V_S2T = 7007.18;
 	V_TC = 300;
 	eps_1 = 0;								// IGM range angle calculation selection
@@ -3187,13 +3228,13 @@ void LVDC::Init(Saturn* vs){
 	eps_3R = 3.59;
 	eps_4 = 3;								// Time to enable HSL loop & chi freeze
 	eps_4R = 3.59;
-	mu = 398600420000000;					// Product of G and Earth's mass
+	mu = 398603200000000;					// Product of G and Earth's mass
 	tau2 = 308.95;							// Time to consume all fuel between MRS and S2 Cutoff
 	tau2N = 721;
 	tau3 = 709.7853;//748.7;							// Time to consume all fuel of SIVB
 	tau3R = tau3 - T_4N;//576;
 	tau3N = tau3;							// artificial tau3
-	omega_E = 4.17753e-3*RAD;
+	omega_E = 2.32115e-5*PI;
 	//rate limits: set in pre-igm
 	alpha_1 = 0;							// orbital guidance pitch
 	alpha_2 = 0;							// orbital guidance yaw
@@ -3250,14 +3291,15 @@ void LVDC::Init(Saturn* vs){
 	d2=0;
 	f=0;									// True anomaly of the predicted cutoff radius vector
 	e=0;									// Eccentricity of the transfer ellipse
+	e_N = 0;
 	C_2=0; C_4=0;							// IGM coupling terms for pitch steering
 	p=0;									// semilatus rectum of terminal ellipse
 	K_1=0; K_2=0; K_3=0; K_4=0;				// Correction to chi-tilde steering angles, K_i
 	K_5=0;									// IGM terminal velocity constant
 	R=0;									// Instantaneous Radius Magnitude
-	R_T=0;									// Desired terminal radius
+	R_T=6563366.0;							// Desired terminal radius
 	V=0;									// Instantaneous vehicle velocity
-	V_T=0;									// Desired terminal velocity
+	V_T=7793.0429;							// Desired terminal velocity
 	V_i=0; V_0=0; V_1=0; V_2=0;				// Parameters for cutoff velocity computation
 	gamma_T=0;								// Desired terminal flight-path angle
 	MX_A=_M(0,0,0,0,0,0,0,0,0);				// Transform matrix from earth-centered plumbline to equatorial
@@ -3279,7 +3321,7 @@ void LVDC::Init(Saturn* vs){
 	DotG_last=_V(0,0,0);					// last computed velocity from gravity
 	alpha_D=0;								// Angle from perigee to DN vector
 	alpha_D_op=true;						// Option to determine alpha_D or load it
-	G_T=0;									// Magnitude of desired terminal gravitational acceleration
+	G_T= -9.255;							// Magnitude of desired terminal gravitational acceleration
 	xi_T=0; eta_T=0; zeta_T=0;				// Desired position components in the terminal reference system
 	PosXEZ=_V(0,0,0);						// Position components in the terminal reference system
 	DotXEZ=_V(0,0,0);						// Instantaneous something
@@ -3367,6 +3409,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_Startup", S2_Startup);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
+	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
@@ -3555,6 +3598,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dTt_4", dTt_4);
 	papiWriteScenario_double(scn, "LVDC_dV", dV);
 	papiWriteScenario_double(scn, "LVDC_dV_B", dV_B);
+	papiWriteScenario_double(scn, "LVDC_dV_BR", dV_BR);
 	papiWriteScenario_double(scn, "LVDC_e", e);
 	papiWriteScenario_double(scn, "LVDC_e_N", e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -4020,6 +4064,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_Startup", S2_Startup);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
+		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
@@ -4213,6 +4258,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dTt_4", dTt_4);
 		papiReadScenario_double(line, "LVDC_dV", dV);
 		papiReadScenario_double(line, "LVDC_dV_B", dV_B);
+		papiReadScenario_double(line, "LVDC_dV_BR", dV_BR);
 		papiReadScenario_double(line, "LVDC_e", e);
 		papiReadScenario_double(line, "LVDC_e_N", e_N);
 		papiReadScenario_double(line, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -5126,27 +5172,30 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 			fprintf(lvlog,"Rad Convert: Az / Inc / DNA = %f %f %f\r\n",Azimuth,Inclination,DescNodeAngle);
 
-			if(Direct_Ascent){
-				C_3 = TABLE15[0].target[0].C_3;
-				e = TABLE15[0].target[0].e_N;
-				f = TABLE15[0].f;
-				alpha_D = TABLE15[0].target[0].alpha_D;
-				eps_3 = 0;
-				sprintf(oapiDebugString(),"LVDC: DIRECT-ASCENT"); // STOP
+			if (TerminalConditions == false)
+			{
+				if (Direct_Ascent) {
+					C_3 = TABLE15[0].target[0].C_3;
+					e = TABLE15[0].target[0].e_N;
+					f = TABLE15[0].f;
+					alpha_D = TABLE15[0].target[0].alpha_D;
+					eps_3 = 0;
+					sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
+				}
+
+				// p is the semi-latus rectum of the desired terminal ellipse.
+				p = (mu / C_3)*(pow(e, 2) - 1);
+				fprintf(lvlog, "p = %f, mu = %f, e2 = %f, mu/C_3 = %f\r\n", p, mu, pow(e, 2), mu / C_3);
+
+				// K_5 is the IGM terminal velocity constant
+				K_5 = sqrt(mu / p);
+				fprintf(lvlog, "K_5 = %f\r\n", K_5);
+
+				R_T = p / (1 + e*cos(f));
+				V_T = K_5*sqrt((1 + 2 * e*cos(f) + pow(e, 2)));
+				gamma_T = atan2((e*(sin(f))), (1 + (e*(cos(f)))));
+				G_T = -mu / pow(R_T, 2);
 			}
-
-			// p is the semi-latus rectum of the desired terminal ellipse.
-			p = (mu/C_3)*(pow(e,2)-1);
-			fprintf(lvlog,"p = %f, mu = %f, e2 = %f, mu/C_3 = %f\r\n",p,mu,pow(e,2),mu/C_3);
-
-			// K_5 is the IGM terminal velocity constant
-			K_5 = sqrt(mu/p);
-			fprintf(lvlog,"K_5 = %f\r\n",K_5);
-
-			R_T = p/(1+e*cos(f));
-			V_T = K_5*sqrt((1+2*e*cos(f)+pow(e,2)));
-			gamma_T = atan2((e*(sin(f))),(1+(e*(cos(f)))));
-			G_T = -mu/pow(R_T,2);
 			fprintf(lvlog,"R_T = %f (Expecting 6,563,366), V_T = %f (Expecting 7793.0429), gamma_T = %f\r\n",R_T,V_T,gamma_T);
 
 			// G MATRIX CALCULATION
@@ -5367,7 +5416,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 				{
 					VECTOR3 pos, vel;
 					MATRIX3 mat;
-					mat = OrbMech::Orbiter2PACSS13(40211.5352199074 + t_D / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
+					double day;
+					modf(oapiGetSimMJD(), &day);
+					mat = OrbMech::Orbiter2PACSS13(day + (T_LO + t_D - 17.0) / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
 					owner->GetRelativePos(owner->GetGravityRef(), pos);
 					owner->GetRelativeVel(owner->GetGravityRef(), vel);
 					PosS = mul(mat, pos);
@@ -6841,7 +6892,10 @@ double LVDC::SVCompare()
 {
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
-	mat = OrbMech::Orbiter2PACSS13(40211.5352199074 + t_D/24.0/3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
+	double day;
+	modf(oapiGetSimMJD(), &day);
+	mat = OrbMech::Orbiter2PACSS13(day + (T_LO + t_D - 17.0) / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
+	//mat = OrbMech::Orbiter2PACSS13(40211.5352199074 + t_D/24.0/3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth); //Apollo 8
 	owner->GetRelativePos(owner->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 

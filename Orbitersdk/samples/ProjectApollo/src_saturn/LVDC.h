@@ -133,6 +133,7 @@ private:
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
+	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -365,10 +366,9 @@ private:
 	struct SVTABLE
 	{
 		// These variables store the targeting data that is fixed for each launch time 
-		static double T_LO;			// Reference time of launch from midnight (doubles as opening of launch window)
 		double alphaS_TS;			// Nominal angle between nodal vector and target ellipse vector
 		double beta;				// Constant angle defining the pseudonodal vector relative to radius vector at TB6 time
-		double  T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
+		double T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
 		double f;					// True anomaly at cutoff of transfer ellipse
 
 		//This data structure stores the actual launch tables. Array indexing should make it easier to iterate through the launch times and select the desired launch information.

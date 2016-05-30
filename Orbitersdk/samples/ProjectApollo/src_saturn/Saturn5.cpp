@@ -283,18 +283,18 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
 	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
 
-	if (ratio > 5.4 && ratio < 5.6) {	// 5.5
-		thrust = 1012506;
-		isp = 4152;
-	
-	} else if (ratio > 4.2 && ratio < 4.4) {	// 4.3
-		thrust = 783617.4;
-		isp = 4223.7;
-
-	} else {
+	//if (ratio > 5.4 && ratio < 5.6) {	// 5.5
+	//	thrust = 1012506;
+	//	isp = 4152;
+	//
+	//} else if (ratio > 4.2 && ratio < 4.4) {	// 4.3
+	//	thrust = 783617.4;
+	//	isp = 4223.7;
+	//
+	//} else {
 		isp = GetJ2ISP(ratio);
 		thrust = THRUST_SECOND_VAC * ThrustAdjust;
-	}
+	//}
 
 	//
 	// For simplicity assume no ISP change at sea-level: SII stage should always
@@ -328,18 +328,18 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
 	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
 
-	if (ratio > 4.8 && ratio < 5.0) {			// 4.9
-		thrust = 901557.;
-		isp = 4202.;
-	
-	} else if (ratio > 4.4 && ratio < 4.6) {	// 4.5
-		thrust = 799000.;
-		isp = 4245.;
-
-	} else {
+	//if (ratio > 4.8 && ratio < 5.0) {			// 4.9
+	//	thrust = 901557.;
+	//	isp = 4202.;
+	//
+	//} else if (ratio > 4.4 && ratio < 4.6) {	// 4.5
+	//	thrust = 799000.;
+	//	isp = 4245.;
+	//
+	//} else {
 		isp = GetJ2ISP(ratio);
 		thrust = THRUST_THIRD_VAC * ThrustAdjust;
-	}
+	//}
 
 	//
 	// For simplicity assume no ISP change at sea-level: SIVb stage should always
@@ -1181,8 +1181,8 @@ void SaturnV::SetVehicleStats(){
 				// 6782000 @ Sea Level, From AP8 LV Evaluation, averaged predicted value
 				// Was making 8000000 @ S1C OECO				
 				THRUST_FIRST_VAC = 8000100; 
-				THRUST_SECOND_VAC = 1001000;
-				THRUST_THIRD_VAC = 1001000;//901557;
+				THRUST_SECOND_VAC = 1017000;//1001000;
+				THRUST_THIRD_VAC = 1024009;//1001000;//901557;
 				// Masses from Apollo By The Numbers for AP8
 				SI_EmptyMass = 139641.0; // Minus retro weight, that gets added seperately
 				SI_FuelMass = 2038222.0;
