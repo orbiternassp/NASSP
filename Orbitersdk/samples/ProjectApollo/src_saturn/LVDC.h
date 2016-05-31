@@ -481,6 +481,7 @@ private:
 	bool GATE;										// Logic gate for switching IGM steering
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool INH,INH1,INH2;								// Dunno yet
+	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 	
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
