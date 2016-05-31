@@ -162,7 +162,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	//
 
 	char *binfile = "Config/ProjectApollo/Artemis072.bin";
-	if (MissionNo == 10)
+	if (MissionNo == 10 || MissionNo == 14)
 	{
 		binfile = "Config/ProjectApollo/Comanche055.bin";
 	}
@@ -2799,7 +2799,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// otherwise the P11 roll error needle isn't working properly			
 			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true); 
 
-			if (ApolloNo == 10) {// Comanche 055 criterium in SetMissionInfo
+			if (ApolloNo == 10 || ApolloNo == 14) {// Comanche 055 criterium in SetMissionInfo
 
 													// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -2820,7 +2820,18 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
-				double tephem = -374106000.;
+				double tephem;
+				
+				if (ApolloNo == 10)
+				{
+					tephem = -374106000.;
+				}
+				else
+				{
+					tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+						vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+						vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+				}
 				tephem = (tephem / 8640000.) + 40403.;
 				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
