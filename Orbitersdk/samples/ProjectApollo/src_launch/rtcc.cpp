@@ -105,13 +105,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		VECTOR3 dV_LVLH, R_TLI, V_TLI;
 
 		GETbase = getGETBase();
-		calcParams.LOI = OrbMech::HHMMSSToSS(69, 10, 39);
+		calcParams.LOI = OrbMech::HHMMSSToSS(69.0, 10.0, 39.0);//9.0, 29.4);
 
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
-		opt.h_peri = 65.82 * 1852.0;
-		opt.lat = -8.6*RAD;
-		opt.lng = -172.0*RAD;
+		opt.h_peri = 65.82*1852.0;//60.2 * 1852.0;
+		opt.lat = -8.6*RAD;//-9.1*RAD;
+		opt.lng = -172.0*RAD;//-174.8*RAD;
 		opt.man = 4;
 		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
@@ -340,7 +340,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (calcParams.LOI == 0)
 		{
-			calcParams.LOI = OrbMech::HHMMSSToSS(69, 10, 39);
+			calcParams.LOI = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 		}
 
 		if (fcn == 20)
@@ -380,9 +380,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
-		opt.h_peri = 65.82 * 1852.0;
-		opt.lat = -8.6*RAD;
-		opt.lng = -172.0*RAD;
+		opt.h_peri = 60.2 * 1852.0;
+		opt.lat = -9.1*RAD;
+		opt.lng = -174.8*RAD;
 		opt.man = 0;
 		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
@@ -418,7 +418,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.GETbase = GETbase;
 				opt2.h_apo = 170.0*1852.0;
 				opt2.h_peri = 60.0*1852.0;
-				opt2.inc = 168.0*RAD;
+				opt2.inc = 167.7*RAD;
 				opt2.man = 1;
 				opt2.useSV = true;
 				opt2.vessel = calcParams.src;
@@ -497,7 +497,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.GETbase = GETbase;
 		opt.h_apo = 170.0*1852.0;
 		opt.h_peri = 60.0*1852.0;
-		opt.inc = 168.0*RAD;
+		opt.inc = 167.7*RAD;
 		opt.man = 2;
 		opt.MCCGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
@@ -5628,7 +5628,7 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 	return false;
 }
 
-SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double t_clock, double TB5, double mu, double T_RG)
+SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
 {
 	double T_RP, tb5start, r, v, C3, inc, e, alpha_D, f, theta_N;
 	VECTOR3 HH, E, K, N;
@@ -5637,7 +5637,7 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 
 	//	testves = (SaturnV*)mcc->cm;
 
-	tb5start = t_clock - TB5;
+	tb5start = TB5 - 17.0;
 
 	T_RP = P30TIG - tb5start - T_RG;
 	r = length(R_TLI);

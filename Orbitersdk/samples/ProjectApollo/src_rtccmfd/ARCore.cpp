@@ -99,6 +99,11 @@ ARCore::ARCore(VESSEL* v)
 		mission = 12;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
+	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
+	{
+		mission = 14;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 75.558*RAD);
+	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
 		mission = 15;

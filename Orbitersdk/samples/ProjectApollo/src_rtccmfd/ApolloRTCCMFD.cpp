@@ -1816,7 +1816,7 @@ void ApolloRTCCMFD::menuP30Upload()
 
 			testves = (SaturnV*)G->g_Data.progVessel;
 
-			tb5start = testves->lvdc->t_clock - testves->lvdc->TB5;
+			tb5start = testves->lvdc->TB5 - 17.0;
 			mu = testves->lvdc->mu;
 
 			T_RP = G->P30TIG - tb5start - testves->lvdc->T_RG;

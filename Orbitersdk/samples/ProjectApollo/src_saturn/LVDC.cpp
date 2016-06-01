@@ -3052,7 +3052,7 @@ void LVDC::Init(Saturn* vs){
 	INH2 = false;							// inhibits second EPO roll/pitch maneuver
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
-	TB1 = TB2 = TB3 = TB4 = TB5 = TB6 = TB7 = -100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
+	TB1 = TB2 = TB3 = TB4 = TB4A = TB5 = TB6 = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	T_LET = 40.671;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
@@ -4820,7 +4820,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// LIFTOFF
 				if(owner->MissionTime >= 0){
-					TB1 = -simdt;
+					TB1 = TAS;//-simdt;
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
 					break;
@@ -4849,7 +4849,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					owner->SwitchSelector(16);
 					S1_Engine_Out = true;
 					// Begin timebase 2
-					TB2 = -simdt;
+					TB2 = TAS;//-simdt;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
 					break;
@@ -4867,7 +4867,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					// Set timer
 					S1_Sep_Time = owner->MissionTime;
 					// Begin timebase 3
-					TB3 = - simdt;
+					TB3 = TAS;//-simdt;
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
 				}
@@ -4922,21 +4922,26 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SetThrusterGroupLevel(owner->thg_main, 0);
 						S2_BURNOUT = true;
 						MRS = false;
-						TB4 = - simdt;
+						TB4 = TAS;//-simdt;
 						LVDC_Timebase = 4;
 						LVDC_TB_ETime = 0;					
 					}
 				}
-
-				// TODO: MANUAL S2 STAGING CHECK
 				
-				/*if (owner->SIISIVBSepSwitch.GetState())
+				if (owner->SIISIVBSepSwitch.GetState())
 				{
 					directstageint = true;
-				}*/
+					owner->SetThrusterGroupLevel(owner->thg_main, 0);
+					S2_BURNOUT = true;
+					MRS = false;
+					TB4A = TAS;
+					LVDC_Timebase = 40;
+					LVDC_TB_ETime = 0;
+				}
 				break;
 
 			case 4:
+			case 40:
 				// S2 STAGE SEP
 				//if(LVDC_TB_ETime > 0.07 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
 				if (LVDC_TB_ETime > 0.8 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET) {
@@ -5226,7 +5231,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 			goto minorloop;
 		}
 		// various clocks the LVDC needs...
-		if (TB7 > -100000){
+		/*if (TB7 > -100000){
 			TB7 += simdt;
 		}else{
 			//timebases
@@ -5253,7 +5258,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					}
 				}
 			}
-		}
+		}*/
 		if(LVDC_GRR == true){TAS += simdt;} //time since GRR
 		if(liftoff == true){t_clock += simdt;} //time since liftoff
 		if(S2_IGNITION == true && t_21 == 0){t_21 = t_clock;} //I hope this is the right way to determine t_21; the boeing doc is silent on that
@@ -5446,11 +5451,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 			goto minorloop;
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
-			if(TB7<0){
-				if(TB5 < 20){ goto minorloop; }
-				if(TB6-T_IGM<0){goto restartprep;}else{goto IGM;};
+			if(TAS - TB7<0){
+				if(TAS - TB5 < 20){ goto minorloop; }
+				if(TAS - TB6 - T_IGM<0){goto restartprep;}else{goto IGM;};
 			}else{
-				if (TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
+				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
 			}
 		} //TBD: 
 		if(directstageint == true){//direct stage interrupt update
@@ -5462,13 +5467,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 				T_1c = 0;
 				Tt_T = Tt_3;
 				ROV = ROVs;
-				S4B_IGN = true;
+				//S4B_IGN = true;
 				GATE4 = true;
 				fprintf(lvlog,"[%d+%f] Direct stage interrupt received! Guidance update executed!\r\n",LVDC_Timebase,LVDC_TB_ETime);
 			}
-			if(TB4A-TS4BS < 0){ goto minorloop; }else{ goto IGM; }						
+			if(TAS-TB4A-TS4BS < 0){ goto minorloop; }else{ goto IGM; }						
 		}
-		if(TB3-T_LET < 0){
+		if(TAS-TB3-T_LET < 0){
 			// Pre-IGM guidance:
 			if(S1_Engine_Out == true && T_EO1 == 0){
 				// S1C engine out interrupt handling
@@ -5967,13 +5972,19 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				if(BOOST == true){
 					fprintf(lvlog,"BOOST-TO-ORBIT ACTIVE\r\n");
 					// dT_4 CALCULATION
-					t_3i = TB4+T_c;
-					//dT_4 = TAS-t_3i-T_4N;
-					dT_4 = t_3i - T_4N;
+					if (LVDC_Timebase == 40)
+					{
+						t_3i = TB4A + T_c;
+					}
+					else
+					{
+						t_3i = TB4 + T_c;
+					}
+					dT_4 = TAS-t_3i-T_4N;
+					//dT_4 = t_3i - T_4N;
 					fprintf(lvlog,"t_3i = %f, dT_4 = %f\r\n",t_3i,dT_4);
 					if(fabs(dT_4) <= dT_LIM){							
 						dTt_4 = dT_4;
-						GGRAV;
 					}else{
 						fprintf(lvlog,"dTt_4 CLAMPED\r\n");
 						dTt_4 = dT_LIM;
@@ -5982,7 +5993,9 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				}else{
 					// TRANSLUNAR INJECTION VELOCITY
 					fprintf(lvlog,"TRANSLUNAR INJECTION\r\n");
-					V_T = sqrt(C_3 + 2.0 * mu / (R + ( ( dotp(PosS,DotS) / R)*(T_3 - dt) ) ) );
+					double dotR = dotp(PosS, DotS) / R;
+					R_T = R + dotR*(T_3 - dt);
+					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
 					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
 					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
@@ -5998,7 +6011,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				fprintf(lvlog,"a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n",a_2,a_1,T_GO,T_CO,V_T);
 
 				// S4B CUTOFF?
-				if(S4B_IGN == false && LVDC_Timebase < 6){
+				if(S4B_IGN == false && (LVDC_Timebase < 6 || LVDC_Timebase == 40)){
 					fprintf(lvlog,"*** HSL EXIT SETTINGS ***\r\n");
 					GATE = false;
 					GATE5 = false;
@@ -6008,7 +6021,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// S4B 2ND CUTOFF?
-				if(S4B_REIGN == false && LVDC_Timebase >= 6) {
+				if(S4B_REIGN == false && (LVDC_Timebase >= 6 && LVDC_Timebase != 40)) {
 					fprintf(lvlog, "*** HSL EXIT SETTINGS ***\r\n");
 					GATE = false;
 					GATE5 = false;
@@ -6138,11 +6151,11 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 orbitalguidance: 
 		//orbital guidance logic
 		fprintf(lvlog,"*** ORBITAL GUIDANCE ***\r\n");
-		if(TB7<0){
-			if(TB6<0){
-				if(TB5-TA1<0){
+		if(TAS-TB7<0){
+			if(TAS-TB6<0){
+				if(TAS-TB5-TA1<0){
 					// presettings for orbital maneuver; don't know if we ever need them, but at least it's there...
-					if(TB5-TA2<0){
+					if(TAS-TB5-TA2<0){
 						if(INH2){
 							alpha_1 = -20 * RAD;
 							CommandedAttitude.x = 180 * RAD;
@@ -6180,7 +6193,7 @@ orbitalguidance:
 				}
 			}
 		}else{
-			if (TB7 - 900 < 0) {
+			if (TAS - TB7 - 900 < 0) {
 				alpha_1 = 0 * RAD;
 				CommandedAttitude.x = 360 * RAD;
 				goto orbatt;
@@ -6373,7 +6386,7 @@ restartprep:
 					alpha_D_op = 0;
 					first_op = false;
 
-					if (TB5 - T_RP < 0) //Sufficient time after TB6?
+					if (TAS - TB5 - T_RP < 0) //Sufficient time after TB6?
 					{
 						goto O3precalc;
 					}
@@ -6384,9 +6397,9 @@ restartprep:
 				}
 			}
 			
-			if (TB5 - T_ST < 0) //Sufficient time before S*T_P test?
+			if (TAS - TB5 - T_ST < 0) //Sufficient time before S*T_P test?
 			{
-				fprintf(lvlog, "Time until first TB6 check = %f \r\n", TB5 - T_ST);
+				fprintf(lvlog, "Time until first TB6 check = %f \r\n", TAS - TB5 - T_ST);
 				goto orbitalguidance;
 			}
 
@@ -6420,12 +6433,12 @@ restartprep:
 			else if (!GATE0)
 			{
 				GATE0 = true;	//Bypass targeting routines
-				TB6 = -simdt;
+				TB6 = TAS;//-simdt;
 				LVDC_TB_ETime = 0;
 				LVDC_Timebase = 6;
 				goto restartprep;
 			}
-			else if (TB6 - T_RG < 0) //Time elapsed enough for TB6?
+			else if (TAS - TB6 - T_RG < 0) //Time elapsed enough for TB6?
 			{goto orbitalguidance;}
 		}
 
@@ -6514,7 +6527,7 @@ minorloop:
 		if(T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true){
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
 			S4B_IGN = false;
-			TB5 = - simdt;
+			TB5 = TAS;//-simdt;
 			LVDC_Timebase = 5;
 			LVDC_TB_ETime = 0;
 			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
@@ -6522,7 +6535,7 @@ minorloop:
 		if (T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true) {
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
 			S4B_REIGN = false;
-			TB7 = -simdt;
+			TB7 = TAS;//-simdt;
 			LVDC_Timebase = 7;
 			LVDC_TB_ETime = 0;
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
@@ -6633,7 +6646,7 @@ minorloop:
 			a_1p = a_1y = 0.74;
 			a_1r = 0.74;
 		}
-		if(LVDC_Timebase == 4){
+		if(LVDC_Timebase == 4 || LVDC_Timebase == 40){
 			a_0p = a_0y = 0.81;
 			a_0r = 1;
 			a_1p = a_1y = 0.97;
@@ -6683,7 +6696,7 @@ minorloop:
 			owner->SetThrusterDir(owner->th_main[2],_V(beta_y1c,beta_p1c,1)); 
 			owner->SetThrusterDir(owner->th_main[3],_V(beta_y3c,beta_p3c,1)); 
 		}
-		if (LVDC_Timebase == 4 || (LVDC_Timebase == 6 && S4B_REIGN == true)) {
+		if (LVDC_Timebase == 4 || LVDC_Timebase == 40 || (LVDC_Timebase == 6 && S4B_REIGN == true)) {
 			//SIVB powered flight
 			beta_p1c = beta_pc; //gimbal angles
 			beta_y1c = beta_yc;
@@ -6698,7 +6711,7 @@ minorloop:
 			eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
 			eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
 		}
-		if((LVDC_Timebase == 4 && S4B_IGN == true)|| LVDC_Timebase == 5 || LVDC_Timebase == 6 || LVDC_Timebase == 7){
+		if(((LVDC_Timebase == 4 || LVDC_Timebase == 40) && S4B_IGN == true)|| LVDC_Timebase == 5 || LVDC_Timebase == 6 || LVDC_Timebase == 7){
 			//APS thruster on/off control
 			if(eps_p > 1){
 				//fire+pitch
@@ -6745,7 +6758,13 @@ minorloop:
 					T_1,T_2,Tt_3,Tt_T,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 					V, R/1000);
-			}else{
+			} else if (LVDC_Timebase == 40)	{
+				sprintf(oapiDebugString(), "TB4A+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
+					LVDC_TB_ETime,
+					T_1, T_2, Tt_3, Tt_T,
+					AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG,
+					V, R / 1000);
+			} else{
 				sprintf(oapiDebugString(),"TB%d+%f |CMD %f %f %f | ERR %f %f %f | eps %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
