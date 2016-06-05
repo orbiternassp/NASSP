@@ -2721,7 +2721,6 @@ LVDC::LVDC(){
 	ddot_zeta_GT = 0;
 	ddot_xi_GT = 0;
 	DEC = 0;
-	DescNodeAngle = 0;
 	deta = 0;
 	dxi = 0;
 	dot_dxi = 0;
@@ -2801,6 +2800,7 @@ LVDC::LVDC(){
 		TABLE15[x].beta = 0;
 		TABLE15[x].f = 0;
 		TABLE15[x].T_ST = 0;
+		TABLE15[x].R_N = 0;
 		for (y = 0; y < 15; y++)
 		{
 			TABLE15[x].target[y].alpha_D = 0;
@@ -2933,6 +2933,7 @@ LVDC::LVDC(){
 	T_CO = 0;
 	t_fail = 0;
 	T_GO = 0;
+	theta_N = 0;
 	T_IGM = 0;
 	T_LET = 0;
 	T_RG = 0;
@@ -3132,6 +3133,7 @@ void LVDC::Init(Saturn* vs){
 	TABLE15[0].alphaS_TS = 14.2691472;
 	TABLE15[0].beta = 61.89975;
 	TABLE15[0].f = 14.26968;
+	TABLE15[0].R_N = 6575100;
 	TABLE15[0].T_ST = 15000.0;
 	TABLE15[0].target[0].cos_sigma = 9.958662e-1;
 	TABLE15[0].target[1].cos_sigma = 9.958662e-1;
@@ -3155,7 +3157,7 @@ void LVDC::Init(Saturn* vs){
 	ROT = false;
 	ROTR = true;
 	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
-	dV_BR = 4.17;//2.8816;
+	dV_BR = 2.8816;
 	ROV = 1.48119724870249; //0.75-17
 	ROVs = 1.5;
 	ROVR = 0.0;
@@ -3261,7 +3263,7 @@ void LVDC::Init(Saturn* vs){
 	tau1=0;									// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
-	DescNodeAngle=0;						// Descending Node Angle -- THETA_N
+	theta_N = 0;
 	cos_sigma = 0.0;
 	Azo=72.0; Azs=36.0;							// Variables for scaling the -from-azimuth polynomials
 	CommandedAttitude=_V(0,0,0);			// Commanded Attitude (RADIANS)
@@ -3548,7 +3550,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_DECB12", TABLE15[1].target[12].DEC);
 	papiWriteScenario_double(scn, "LVDC_DECB13", TABLE15[1].target[13].DEC);
 	papiWriteScenario_double(scn, "LVDC_DECB14", TABLE15[1].target[14].DEC);
-	papiWriteScenario_double(scn, "LVDC_DescNodeAngle", DescNodeAngle);
 	papiWriteScenario_double(scn, "LVDC_deta", deta);
 	papiWriteScenario_double(scn, "LVDC_dxi", dxi);
 	papiWriteScenario_double(scn, "LVDC_dot_dxi", dot_dxi);
@@ -3809,6 +3810,9 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Rho[3]", Rho[3]);
 	papiWriteScenario_double(scn, "LVDC_Rho[4]", Rho[4]);
 	papiWriteScenario_double(scn, "LVDC_Rho[5]", Rho[5]);
+	papiWriteScenario_double(scn, "LVDC_R_N", R_N);
+	papiWriteScenario_double(scn, "LVDC_RNA", TABLE15[0].R_N);
+	papiWriteScenario_double(scn, "LVDC_RNB", TABLE15[1].R_N);
 	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
 	papiWriteScenario_double(scn, "LVDC_ROVR", ROVR);
 	papiWriteScenario_double(scn, "LVDC_ROVs", ROVs);
@@ -3887,6 +3891,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
+	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -4208,7 +4213,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_DECB12", TABLE15[1].target[12].DEC);
 		papiReadScenario_double(line, "LVDC_DECB13", TABLE15[1].target[13].DEC);
 		papiReadScenario_double(line, "LVDC_DECB14", TABLE15[1].target[14].DEC);
-		papiReadScenario_double(line, "LVDC_DescNodeAngle", DescNodeAngle);
 		papiReadScenario_double(line, "LVDC_deta", deta);
 		papiReadScenario_double(line, "LVDC_dxi", dxi);
 		papiReadScenario_double(line, "LVDC_dot_dxi", dot_dxi);
@@ -4463,6 +4467,9 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_RateGain", RateGain);
 		papiReadScenario_double(line, "LVDC_ErrorGain", ErrorGain);
 		papiReadScenario_double(line, "LVDC_rho", rho);
+		papiReadScenario_double(line, "LVDC_R_N", R_N);
+		papiReadScenario_double(line, "LVDC_RNA", TABLE15[0].R_N);
+		papiReadScenario_double(line, "LVDC_RNB", TABLE15[1].R_N);
 		papiReadScenario_double(line, "LVDC_Rho[0]", Rho[0]);
 		papiReadScenario_double(line, "LVDC_Rho[1]", Rho[1]);
 		papiReadScenario_double(line, "LVDC_Rho[2]", Rho[2]);
@@ -4547,6 +4554,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_t_fail", t_fail);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
+		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -5136,12 +5144,12 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 			if (theta_N_op)
 			{
-				DescNodeAngle = gx[0] + gx[1]*(Azimuth - Azo) / Azs + gx[2]*pow((Azimuth - Azo) / Azs, 2) + gx[3]*pow((Azimuth - Azo) / Azs, 3)
+				theta_N = gx[0] + gx[1]*(Azimuth - Azo) / Azs + gx[2]*pow((Azimuth - Azo) / Azs, 2) + gx[3]*pow((Azimuth - Azo) / Azs, 3)
 					+ gx[4]*pow((Azimuth - Azo) / Azs, 4) + gx[5]*pow((Azimuth - Azo) / Azs, 5) + gx[6]*pow((Azimuth - Azo) / Azs, 6);
 			}
 			else
 			{
-				DescNodeAngle = gxt[0] + gxt[1]*(t_D - t_D0) / t_S + gxt[2]*pow((t_D - t_D0) / t_S, 2) + gxt[3]*pow((t_D - t_D0) / t_S, 3)
+				theta_N = gxt[0] + gxt[1]*(t_D - t_D0) / t_S + gxt[2]*pow((t_D - t_D0) / t_S, 2) + gxt[3]*pow((t_D - t_D0) / t_S, 3)
 					+ gxt[4]*pow((t_D - t_D0) / t_S, 4) + gxt[5]*pow((t_D - t_D0) / t_S, 5) + gxt[6]*pow((t_D - t_D0) / t_S, 6);
 			}
 
@@ -5155,14 +5163,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 			// Cheat a little more. (Apollo 8)
 			// DescNodeAngle = 123.004; 
-			fprintf(lvlog,"DescNodeAngle = %f\r\n",DescNodeAngle);
+			fprintf(lvlog,"DescNodeAngle = %f\r\n", theta_N);
 
 			// Need to make those into radians
 			Azimuth *= RAD;
 			Inclination *= RAD;
-			DescNodeAngle *= RAD;
+			theta_N *= RAD;
 
-			fprintf(lvlog,"Rad Convert: Az / Inc / DNA = %f %f %f\r\n",Azimuth,Inclination,DescNodeAngle);
+			fprintf(lvlog,"Rad Convert: Az / Inc / DNA = %f %f %f\r\n",Azimuth,Inclination, theta_N);
 
 			if (TerminalConditions == false)
 			{
@@ -5195,9 +5203,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 			MX_A.m21 = -sin(phi_L); MX_A.m22 = cos(phi_L)*sin(Azimuth); MX_A.m23 = -(cos(phi_L)*cos(Azimuth));
 			MX_A.m31 = 0;  MX_A.m32 = cos(Azimuth);  MX_A.m33 = sin(Azimuth);
 
-			MX_B.m11 = cos(DescNodeAngle); MX_B.m12 = 0; MX_B.m13 = sin(DescNodeAngle);
-			MX_B.m21 = sin(DescNodeAngle)*sin(Inclination); MX_B.m22 = cos(Inclination); MX_B.m23 = -cos(DescNodeAngle)*sin(Inclination);
-			MX_B.m31 = -sin(DescNodeAngle)*cos(Inclination); MX_B.m32 = sin(Inclination);MX_B.m33 = cos(DescNodeAngle)*cos(Inclination);
+			MX_B.m11 = cos(theta_N); MX_B.m12 = 0; MX_B.m13 = sin(theta_N);
+			MX_B.m21 = sin(theta_N)*sin(Inclination); MX_B.m22 = cos(Inclination); MX_B.m23 = -cos(theta_N)*sin(Inclination);
+			MX_B.m31 = -sin(theta_N)*cos(Inclination); MX_B.m32 = sin(Inclination);MX_B.m33 = cos(theta_N)*cos(Inclination);
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
 
@@ -6304,6 +6312,7 @@ restartprep:
 					beta = TABLE15[1].beta*RAD;
 					alpha_TS = TABLE15[1].alphaS_TS*RAD;
 					T_ST = TABLE15[1].T_ST;
+					R_N = TABLE15[1].R_N;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = true;
 				}
@@ -6336,6 +6345,7 @@ restartprep:
 					beta = TABLE15[0].beta*RAD;
 					alpha_TS = TABLE15[0].alphaS_TS*RAD;
 					T_ST = TABLE15[0].T_ST;
+					R_N = TABLE15[0].R_N;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = GATE2 = true;
 				}

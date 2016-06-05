@@ -226,7 +226,6 @@ private:
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
 	double Inclination;								// Inclination
-	double DescNodeAngle;							// Descending Node Angle -- THETA_N
 	double Azo,Azs;									// Variables for scaling the -from-azimuth polynomials
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
 	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
@@ -370,6 +369,7 @@ private:
 		double beta;				// Constant angle defining the pseudonodal vector relative to radius vector at TB6 time
 		double T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
 		double f;					// True anomaly at cutoff of transfer ellipse
+		double R_N;					// Restart radius
 
 		//This data structure stores the actual launch tables. Array indexing should make it easier to iterate through the launch times and select the desired launch information.
 		struct target_table {

@@ -615,6 +615,75 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 	return coe;
 }
 
+OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double r, v, C3, e, inc, alpha_D, f, theta_N;
+	VECTOR3 HH, E, K, N;
+	OELEMENTS coe;
+
+	r = length(R);
+	v = length(V);
+	C3 = v*v - 2.0*mu / r;
+	HH = crossp(R, V);
+	E = crossp(V, HH) / mu - unit(R);
+	e = length(E);
+	K = _V(0.0, 0.0, 1.0);
+	N = crossp(HH, K);
+	inc = acos(HH.z / length(HH));
+	alpha_D = acos(dotp(N, E) / e / length(N));
+
+	if (E.z < 0)
+	{
+		alpha_D = PI2 - alpha_D;
+	}
+	f = acos(dotp(E, R) / length(R) / length(E));
+	theta_N = acos(N.x / length(N));
+
+	if (N.y > 0)
+	{
+		theta_N = PI2 - theta_N;
+	}
+	theta_N = theta_N - -80.6041140*RAD;
+	if (theta_N > PI2)
+	{
+		theta_N = theta_N - PI2;
+	}
+
+	coe.e = e;
+	coe.h = C3;
+	coe.i = inc;
+	coe.RA = theta_N;
+	coe.TA = f;
+	coe.w = alpha_D;
+		//coe = [C3 inc theta_N e alpha_D f];
+	return coe;
+}
+
+void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V)
+{
+	double lng, C3, inc, theta_N, e, f, a, h, alpha_D;
+	OELEMENTS coe2;
+
+	lng = -80.604133*RAD;
+	C3 = coe.h;
+	inc = coe.i;
+	theta_N = coe.RA;
+	e = coe.e;
+	alpha_D = coe.w;
+	f = coe.TA;
+	a = -mu / C3;
+	h = sqrt(mu*a*(1.0 - e*e));
+	//coe2 = [h e pi - theta_N - lng inc pi - alpha_D f];
+	coe2.e = e;
+	coe2.h = h;
+	coe2.i = inc;
+	coe2.RA = PI - theta_N - lng;
+	coe2.TA = f;
+	coe2.w = PI - alpha_D;
+
+	sv_from_coe(coe2, mu, R, V);
+}
+
 VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu)
 {
 	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_new, A, root;

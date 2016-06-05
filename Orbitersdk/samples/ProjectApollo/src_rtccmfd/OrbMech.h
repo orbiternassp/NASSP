@@ -163,6 +163,8 @@ namespace OrbMech {
 	MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t);
 	MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
+	void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V);
+	OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu);
 	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
 	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
 	double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);

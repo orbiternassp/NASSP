@@ -1810,48 +1810,27 @@ void ApolloRTCCMFD::menuP30Upload()
 	{
 		if (G->g_Data.progVessel->use_lvdc)
 		{
-			double T_RP, tb5start, mu, r, v, C3, inc, e, alpha_D, f, theta_N;
-			VECTOR3 HH, E, K, N;
+			double T_RP, tb5start;
+			OELEMENTS coe;
 			SaturnV* testves;
 
 			testves = (SaturnV*)G->g_Data.progVessel;
 
 			tb5start = testves->lvdc->TB5 - 17.0;
-			mu = testves->lvdc->mu;
-
 			T_RP = G->P30TIG - tb5start - testves->lvdc->T_RG;
-			r = length(G->R_TLI);
-			v = length(G->V_TLI);
-			C3 = v*v - 2.0*mu / r;
-			HH = crossp(G->R_TLI, G->V_TLI);
-			E = crossp(G->V_TLI, HH)/mu-unit(G->R_TLI);
-			e = length(E);
-			K = _V(0.0, 0.0, 1.0);
-			N = crossp(HH, K);
-			inc = acos(HH.z / length(HH));
-			alpha_D = acos(dotp(N, E) / e / length(N));
-			if (E.z < 0)
-			{
-				alpha_D = PI2 - alpha_D;
-			}
-			f = acos(dotp(E, G->R_TLI) / length(G->R_TLI) / length(E));
-			theta_N = acos(N.x / length(N));
-			if (N.y > 0)
-			{
-				theta_N = PI2 - theta_N;
-			}
-			theta_N -= -80.6041140*RAD;
+
+			coe = OrbMech::coe_from_PACSS4(G->R_TLI, G->V_TLI, testves->lvdc->mu);
 
 			testves->lvdc->TU = true;
 			testves->lvdc->TU10 = false;
 
 			testves->lvdc->T_RP = T_RP;
-			testves->lvdc->C_3 = C3;
-			testves->lvdc->Inclination = inc;
-			testves->lvdc->e = e;
-			testves->lvdc->alpha_D = alpha_D;
-			testves->lvdc->f = f;
-			testves->lvdc->theta_N = theta_N;
+			testves->lvdc->C_3 = coe.h;
+			testves->lvdc->Inclination = coe.i;
+			testves->lvdc->e = coe.e;
+			testves->lvdc->alpha_D = coe.w;
+			testves->lvdc->f = coe.TA;
+			testves->lvdc->theta_N = coe.RA;
 
 		}
 	}

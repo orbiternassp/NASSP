@@ -4686,6 +4686,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 		VECTOR3 R_P, R_peri, RA1, VA1, VA1_apo, i, j, k, V_peri, RA2, R_m, V_m, DVX;
 		MATRIX3 Rot2, Q_Xx;
 		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+
 		double *MoonPos;
 		CELBODY *cMoon;
 		int ii;
@@ -4720,7 +4721,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 		boil = (1.0 - 0.99998193) / 10.0;
 		m0 = opt->vessel->GetEmptyMass();
 
-		while (abs(dTIG) > 0.005)
+		while (abs(dTIG) > 0.01)
 		{
 			TIGMJD = TIGguess / 24.0 / 3600.0 + opt->GETbase;
 			dt1 = TIGguess - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
@@ -4742,31 +4743,16 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 			DVX = VA1_apo - VA1;
 
-			m1 = (mass - m0)*exp(-boil*dt1);
-
-			OrbMech::impulsive(RA1, VA1, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut); //Calculate the impulsive equivalent of the maneuver
-
-			OrbMech::oneclickcoast(RA1, VA1, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
-
-			j = unit(crossp(V2_cor, R2_cor));
-			k = unit(-R2_cor);
-			i = crossp(j, k);
-			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
-
-			dVLVLH = mul(Q_Xx, Llambda);
-
-			TIG = TIGguess + t_slip;
-
 			if (ii < 2)
 			{
 				TIGvar[ii + 1] = (TIGMJD - SVMJD)*24.0*3600.0;
-				dv[ii + 1] = length(dVLVLH);
+				dv[ii + 1] = length(DVX);
 			}
 			else
 			{
 				dv[0] = dv[1];
 				dv[1] = dv[2];
-				dv[2] = length(dVLVLH);
+				dv[2] = length(DVX);
 				TIGvar[0] = TIGvar[1];
 				TIGvar[1] = TIGvar[2];
 				TIGvar[2] = (TIGMJD - SVMJD)*24.0*3600.0;
@@ -4782,6 +4768,22 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 			TIGguess += dTIG;
 			ii++;
 		}
+
+		m1 = (mass - m0)*exp(-boil*dt1);
+
+		OrbMech::impulsive(RA1, VA1, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut); //Calculate the impulsive equivalent of the maneuver
+
+		OrbMech::oneclickcoast(RA1, VA1, TIGMJD, 0.0, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
+
+		j = unit(crossp(V2_cor, R2_cor));
+		k = unit(-R2_cor);
+		i = crossp(j, k);
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+		dVLVLH = mul(Q_Xx, DVX);
+		TIG = TIGguess + t_slip;
+
+		OrbMech::oneclickcoast(RA1, VA1 + DVX, TIGMJD, 0.0, Rcut, Vcut, hEarth, hEarth);
 
 		P30TIG = TIG;
 		dV_LVLH = dVLVLH;
@@ -5630,44 +5632,21 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 
 SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
 {
-	double T_RP, tb5start, r, v, C3, inc, e, alpha_D, f, theta_N;
-	VECTOR3 HH, E, K, N;
+	double T_RP, tb5start;
 	SevenParameterUpdate param;
-	//SaturnV* testves;
-
-	//	testves = (SaturnV*)mcc->cm;
+	OELEMENTS coe;
 
 	tb5start = TB5 - 17.0;
-
 	T_RP = P30TIG - tb5start - T_RG;
-	r = length(R_TLI);
-	v = length(V_TLI);
-	C3 = v*v - 2.0*mu / r;
-	HH = crossp(R_TLI, V_TLI);
-	E = crossp(V_TLI, HH) / mu - unit(R_TLI);
-	e = length(E);
-	K = _V(0.0, 0.0, 1.0);
-	N = crossp(HH, K);
-	inc = acos(HH.z / length(HH));
-	alpha_D = acos(dotp(N, E) / e / length(N));
-	if (E.z < 0)
-	{
-		alpha_D = PI2 - alpha_D;
-	}
-	f = acos(dotp(E, R_TLI) / length(R_TLI) / length(E));
-	theta_N = acos(N.x / length(N));
-	if (N.y > 0)
-	{
-		theta_N = PI2 - theta_N;
-	}
-	theta_N -= -80.6041140*RAD;
 
-	param.alpha_D = alpha_D;
-	param.C3 = C3;
-	param.e = e;
-	param.f = f;
-	param.Inclination = inc;
-	param.theta_N = theta_N;
+	coe = OrbMech::coe_from_PACSS4(R_TLI, V_TLI, mu);
+
+	param.alpha_D = coe.w;
+	param.C3 = coe.h;
+	param.e = coe.e;
+	param.f = coe.TA;
+	param.Inclination = coe.i;
+	param.theta_N = coe.RA;
 	param.T_RP = T_RP;
 
 	return param;
