@@ -1105,7 +1105,7 @@ void MCC::TimeStep(double simdt){
 					{
 						if (cm->use_lvdc)
 						{
-							SaturnV *SatV = (SaturnV*)cm;
+							/*SaturnV *SatV = (SaturnV*)cm;
 
 							SevenParameterUpdate param = rtcc->TLICutoffToLVDCParameters(rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->TimeofIgnition, SatV->lvdc->TB5, SatV->lvdc->mu, SatV->lvdc->T_RG);
 
@@ -1118,7 +1118,7 @@ void MCC::TimeStep(double simdt){
 							SatV->lvdc->e = param.e;
 							SatV->lvdc->alpha_D = param.alpha_D;
 							SatV->lvdc->f = param.f;
-							SatV->lvdc->theta_N = param.theta_N;
+							SatV->lvdc->theta_N = param.theta_N;*/
 
 							setSubState(2);
 						}
