@@ -2745,6 +2745,7 @@ LVDC::LVDC(){
 	dt_c = 0;
 	dT_cost = 0;
 	dT_F = 0;
+	dt_g = 0;
 	dt_LET = 0;
 	dT_LIM = 0;
 	dtt_1 = 0;
@@ -2877,6 +2878,7 @@ LVDC::LVDC(){
 	S_Y = 0;
 	S1_Sep_Time = 0;
 	sinceLastCycle = 0;
+	sinceLastGuidanceCycle = 0;
 	sin_chi_Yit = 0;
 	sin_chi_Zit = 0;
 	sin_gam = 0;
@@ -3200,6 +3202,7 @@ void LVDC::Init(Saturn* vs){
 	t_SD2 = 5518.9;
 	t_SD3 = 1233.6;
 	//dt: not set; dependend on cycle time
+	dt_g = 1.0;
 	dT_LIM = 90;							// Limit to dT_4;
 	V_ex1 = 4153.941218;//4148.668555;
 	V_ex2 = 4221.827032;//4158.852692;
@@ -3349,6 +3352,7 @@ void LVDC::Init(Saturn* vs){
 	LVDC_Stop = 0;
 	IGMCycle = 0;
 	sinceLastCycle = 0;
+	sinceLastGuidanceCycle = 0;
 	OrbNavCycle = 0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	LVDC_EI_On = false;
@@ -3579,6 +3583,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
 	papiWriteScenario_double(scn, "LVDC_dT_cost", dT_cost);
 	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
+	papiWriteScenario_double(scn, "LVDC_dt_g", dt_g);
 	papiWriteScenario_double(scn, "LVDC_dt_LET", dt_LET);
 	papiWriteScenario_double(scn, "LVDC_dT_LIM", dT_LIM);
 	papiWriteScenario_double(scn, "LVDC_dtt_1", dtt_1);
@@ -3825,6 +3830,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_S_Y", S_Y);
 	papiWriteScenario_double(scn, "LVDC_S1_Sep_Time", S1_Sep_Time);
 	papiWriteScenario_double(scn, "LVDC_sinceLastCycle", sinceLastCycle);
+	papiWriteScenario_double(scn, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Yit", sin_chi_Yit);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Zit", sin_chi_Zit);
 	papiWriteScenario_double(scn, "LVDC_sin_gam", sin_gam);
@@ -4242,6 +4248,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
 		papiReadScenario_double(line, "LVDC_dT_cost", dT_cost);
 		papiReadScenario_double(line, "LVDC_dT_F", dT_F);
+		papiReadScenario_double(line, "LVDC_dt_g", dt_g);
 		papiReadScenario_double(line, "LVDC_dt_LET", dt_LET);
 		papiReadScenario_double(line, "LVDC_dT_LIM", dT_LIM);
 		papiReadScenario_double(line, "LVDC_dtt_1", dtt_1);
@@ -4488,6 +4495,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_S_Y", S_Y);
 		papiReadScenario_double(line, "LVDC_S1_Sep_Time", S1_Sep_Time);
 		papiReadScenario_double(line, "LVDC_sinceLastCycle", sinceLastCycle);
+		papiReadScenario_double(line, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 		papiReadScenario_double(line, "LVDC_sin_chi_Yit", sin_chi_Yit);
 		papiReadScenario_double(line, "LVDC_sin_chi_Zit", sin_chi_Zit);
 		papiReadScenario_double(line, "LVDC_sin_gam", sin_gam);
@@ -4911,7 +4919,17 @@ void LVDC::TimeStep(double simt, double simdt) {
 					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
 											// will start IGM anyway.
 					owner->SwitchSelector(22);					
-				}			
+				}		
+
+				// IECO
+				/*if (LVDC_TB_ETime >= 30.7)
+				{
+					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false && owner->GetApolloNo() >= 10)
+					{
+						S2_ENGINE_OUT = true;
+						owner->SwitchSelector(24);
+					}
+				}*/
 			
 				// MR Shift
 				if(LVDC_TB_ETime > 284.4 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
@@ -5020,10 +5038,18 @@ void LVDC::TimeStep(double simt, double simdt) {
 				//TB6 timed events
 				if (poweredflight == false)
 				{poweredflight = true;}
-				if (S4B_REIGN == false)
+
+				// SII SEP light
+				if (S4B_REIGN == false && owner->SIISepState == false && LVDC_TB_ETime < 38.0)
 				{owner->SetSIISep();}	//Set SII SEP light to notify crew of TB6 start
-				if(LVDC_TB_ETime>=38 && S4B_REIGN==false)
+				if(LVDC_TB_ETime>=38 && LVDC_TB_ETime < 493.6 && S4B_REIGN==false && owner->SIISepState == true)
 				{owner->ClearSIISep();} //This would signal the crew to start their event timer at 51:00, counting up
+				if (LVDC_TB_ETime >= 493.6 && LVDC_TB_ETime < 560.0 && owner->SIISepState == false)
+				{owner->SetSIISep();}
+				if (LVDC_TB_ETime >= 560.0 && owner->SIISepState == true)
+				{owner->ClearSIISep();}
+
+				//Ullage
 				if(LVDC_TB_ETime>=496.3 && S4B_REIGN == false)
 				{owner->SetThrusterGroupLevel(owner->thg_ver,1);} //Ullage thrust starts
 				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
@@ -5310,6 +5336,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "Powered Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
 				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
+				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n",lvimu.CDURegisters[LVRegPIPAX], lvimu.CDURegisters[LVRegPIPAY], lvimu.CDURegisters[LVRegPIPAZ]);
 				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
 				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
@@ -5326,6 +5353,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 			{
 				//Orbital navigation
 				sinceLastCycle += simdt;
+				sinceLastGuidanceCycle += simdt;
+				if (sinceLastGuidanceCycle>1.0)
+				{
+					dt_g = sinceLastGuidanceCycle;
+					sinceLastGuidanceCycle = 0.0;
+					goto GuidanceLoop;
+				}
 				if(sinceLastCycle<8.0)
 				{goto minorloop;}
 				dt_c = sinceLastCycle;
@@ -5450,6 +5484,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 			}
 			
 		}
+GuidanceLoop:
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (1.5* PI) + Azimuth;
 			CommandedAttitude.y =  0;
@@ -5646,9 +5681,9 @@ IGM:	if(HSL == false){
 				}				
 			}
 			if(S2_ENGINE_OUT == true && T_EO2 == 0){
-				T_1 = 5 * T_1 / 4;
-				T_2 = 5 * T_2 / 4;
-				tau2 = 5 * tau2 / 4;
+				T_1 = 5.0 * T_1 / 4.0;
+				T_2 = 5.0 * T_2 / 4.0;
+				tau2 = 5.0 * tau2 / 4.0;
 				T_EO2 = 1;
 			}
 			if(MRS == true){
@@ -6556,29 +6591,29 @@ minorloop:
 		double diff; //aux variable for limit test
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_c) > CommandRateLimits.x){
+		if(abs(diff/dt_g) > CommandRateLimits.x){
 			if(diff > 0){
-				CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_c;
+				CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_g;
 			}else{
-				CommandedAttitude.x = PCommandedAttitude.x - CommandRateLimits.x * dt_c;
+				CommandedAttitude.x = PCommandedAttitude.x - CommandRateLimits.x * dt_g;
 			}
 		}
 		diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_c) > CommandRateLimits.y){
+		if(abs(diff/dt_g) > CommandRateLimits.y){
 			if(diff > 0){
-				CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_c;
+				CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_g;
 			}else{
-				CommandedAttitude.y = PCommandedAttitude.y - CommandRateLimits.y * dt_c;
+				CommandedAttitude.y = PCommandedAttitude.y - CommandRateLimits.y * dt_g;
 			}
 		}
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_c) > CommandRateLimits.z){
+		if(abs(diff/dt_g) > CommandRateLimits.z){
 			if(diff > 0){
-				CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_c;
+				CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_g;
 			}else{
-				CommandedAttitude.z = PCommandedAttitude.z - CommandRateLimits.z * dt_c;
+				CommandedAttitude.z = PCommandedAttitude.z - CommandRateLimits.z * dt_g;
 			}
 		}
 		PCommandedAttitude = CommandedAttitude;

@@ -74,6 +74,7 @@ private:
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 WV;										// Gravity
 	double sinceLastCycle;							// Time since last IGM run
+	double sinceLastGuidanceCycle;					// Time since last guidance run during orbital flight
 	double IGMInterval;								// IGM Interval
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	int OrbNavCycle;								// Orbital cycle counter (for debugging)
@@ -341,6 +342,7 @@ private:
 	double dot_phi_1,dot_phi_T;						// ???
 	double dt;										// Nominal powered-flight or coast-guidance computation-cycle interval
 	double dt_c;									// Actual computation cycle time
+	double dt_g;									// Actual guidance cylce time
 	double dtt_1,dtt_2;								// Used in TGO determination
 	double a_1,a_2;									// Acceleration terms used to determine TGO
 	double T_GO;									// Time before S4B shutdown

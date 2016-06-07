@@ -1757,6 +1757,12 @@ void SaturnV::SwitchSelector(int item){
 		SPUShiftS.play(NOLOOP,255); 
 		SPUShiftS.done();
 		break;
+	case 24:
+		// SII IECO
+		SetThrusterResource(th_main[4], NULL);
+		S2ShutS.play(NOLOOP, 235);
+		S2ShutS.done();
+		break;
 	case 5:
 		// S4B Startup
 		SetSIVbCMixtureRatio(4.946);
