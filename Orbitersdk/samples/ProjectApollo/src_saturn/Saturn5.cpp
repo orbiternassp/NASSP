@@ -1187,9 +1187,9 @@ void SaturnV::SetVehicleStats(){
 				SI_EmptyMass = 139641.0; // Minus retro weight, that gets added seperately
 				SI_FuelMass = 2038222.0;
 				Interstage_Mass = 5641;
-				SII_EmptyMass = 44244.0;//49744.0; // Includes S2/S4B interstage, does not include ullage jets; changed for testing
+				SII_EmptyMass = 49744.0; // Includes S2/S4B interstage, does not include ullage jets; changed for testing
 				SII_FuelMass = 430936.0; 
-				S4B_EmptyMass = 22981.0; // Includes S4B stage, IU, LM adapter, but NOT the LTA
+				S4B_EmptyMass = 16489.0;//22981.0; // Includes S4B stage, IU, LM adapter, but NOT the LTA
 				S4B_FuelMass = 107318.0;
 			}
 		}else{

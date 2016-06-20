@@ -3103,7 +3103,7 @@ void LVDC::Init(Saturn* vs){
 	t_4 = 45;								// Upper bound of validity for first segment of pitch freeze
 	t_5 = 81;								// Upper bound of validity for second segment of pitch freeze
 	t_6 = 0;								// Time to terminate pitch freeze after S1C engine failure
-	T_ar = 145;								// S1C Tilt Arrest Time	   
+	T_ar = 147;								// S1C Tilt Arrest Time	   
 	T_S1 = 33.6;							// Pitch Polynomial Segment Times
 	T_S2 = 68.6;							// dto.
 	T_S3 = 95.6;							// dto.
@@ -5025,6 +5025,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
+				}
+
+				// Fuel boiloff every ten seconds.
+				if (owner->MissionTime >= owner->NextMissionEventTime) {
+					if (owner->GetThrusterLevel(owner->th_main[0]) < 0.5) {
+						owner->SIVBBoiloff();
+					}
+					owner->NextMissionEventTime = owner->MissionTime + 10.0;
 				}
 				// CSM/LV separation
 				if (owner->CSMLVPyros.Blown()) {

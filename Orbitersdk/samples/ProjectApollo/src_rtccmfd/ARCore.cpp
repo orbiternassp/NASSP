@@ -595,7 +595,7 @@ void ARCore::StateVectorUplink()
 		g_Data.emem[1] = 1501;
 
 		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
-		if (SVSlot == 0)
+		if (SVSlot)
 		{
 			g_Data.emem[2] = 2;
 		}
