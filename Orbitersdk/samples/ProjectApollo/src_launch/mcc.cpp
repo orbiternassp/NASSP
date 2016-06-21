@@ -103,6 +103,7 @@ MCC::MCC(){
 	padState = -1;
 	padNumber = 0;
 	padForm = NULL;
+	padAutoShow = true;
 	NHmenu = 0;
 	NHmessages = 0;
 	NHpad = 0;
@@ -859,6 +860,8 @@ void MCC::TimeStep(double simdt){
 				case 6: // Await uplink completion
 					if (cm->pcm.mcc_size == 0) {
 						addMessage("Uplink completed!");
+						NCOption_Enabled = true;
+						sprintf(NCOption_Text, "Repeat uplink");
 						setSubState(7);
 					}
 					break;
@@ -871,6 +874,12 @@ void MCC::TimeStep(double simdt){
 						break;
 					}
 					break;
+				case 8: //Repeat uplink
+					{
+						NCOption_Enabled = false;
+						setSubState(0);
+					}
+				break;
 				}
 				// FALL INTO
 			case MST_C_SEPARATION:
@@ -1177,19 +1186,27 @@ void MCC::TimeStep(double simdt){
 				case 7: // Await uplink completion
 					if (cm->pcm.mcc_size == 0) {
 						addMessage("Uplink completed!");
+						NCOption_Enabled = true;
+						sprintf(NCOption_Text, "Repeat uplink");
 						setSubState(8);
 					}
 					break;
 				case 8: // Await next PAD
 					if (SubStateTime > 300.0)
 					{
-						setSubState(9);
+						setSubState(10);
 					}
 					else {
 						break;
 					}
 					break;
-				case 9:
+				case 9: //Repeat uplink
+					{
+						NCOption_Enabled = false;
+						setSubState(2);
+					}
+				break;
+				case 10:
 					allocPad(8);// Allocate AP11 MNV PAD
 					if (padForm != NULL) {
 						// If success
@@ -1198,22 +1215,22 @@ void MCC::TimeStep(double simdt){
 					else {
 						// ERROR STATE
 					}
-					setSubState(10);
+					setSubState(11);
 					// FALL INTO
-				case 10: // Await pad read-up time (however long it took to compute it and give it to capcom)
+				case 11: // Await pad read-up time (however long it took to compute it and give it to capcom)
 					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(11);
-					}
-					break;
-				case 11: // Await next PAD
-					if (SubStateTime > 300.0)
-					{
 						setSubState(12);
 					}
 					break;
-				case 12:
+				case 12: // Await next PAD
+					if (SubStateTime > 300.0)
+					{
+						setSubState(13);
+					}
+					break;
+				case 13:
 					allocPad(10);// Allocate AP11 TLI PAD
 					if (padForm != NULL) {
 						// If success
@@ -1222,16 +1239,16 @@ void MCC::TimeStep(double simdt){
 					else {
 						// ERROR STATE
 					}
-					setSubState(13);
+					setSubState(14);
 					// FALL INTO
-				case 13: // Await pad read-up time (however long it took to compute it and give it to capcom)
+				case 14: // Await pad read-up time (however long it took to compute it and give it to capcom)
 					if (SubStateTime > 1 && padState > -1) {
 						addMessage("You can has PAD");
 						if (padAutoShow == true && padState == 0) { drawPad(); }
-						setSubState(14);
+						setSubState(15);
 					}
 					break;
-				case 14: // Next state
+				case 15: // Next state
 					setState(MST_CP_EPO1);
 					break;
 				}
@@ -2545,6 +2562,8 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 5: // Await uplink completion
 			if (cm->pcm.mcc_size == 0) {
 				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
 				setSubState(6);
 			}
 			break;
@@ -2555,6 +2574,12 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 				setState(nextupdate);
 			}
 			break;
+		case 7: //Repeat uplink
+		{
+			NCOption_Enabled = false;
+			setSubState(0);
+		}
+		break;
 		}
 	}
 	else if (type == UTP_TPI)//TPI PAD without uplink
@@ -2622,6 +2647,8 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 5: // Await uplink completion
 			if (cm->pcm.mcc_size == 0) {
 				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
 				setSubState(6);
 			}
 			break;
@@ -2632,6 +2659,12 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 				setState(nextupdate);
 			}
 			break;
+		case 7: //Repeat uplink
+		{
+			NCOption_Enabled = false;
+			setSubState(0);
+		}
+		break;
 		}
 	}
 	else if (type == UTP_SVNAVCHECK)//CSM SV Update and Nav Check PAD
@@ -2678,6 +2711,8 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 5: // Await uplink completion
 			if (cm->pcm.mcc_size == 0) {
 				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
 				setSubState(6);
 			}
 			break;
@@ -2686,6 +2721,12 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
+			}
+			break;
+		case 7: //Repeat uplink
+			{
+				NCOption_Enabled = false;
+				setSubState(0);
 			}
 			break;
 		}
@@ -2831,6 +2872,8 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 5: // Await uplink completion
 			if (cm->pcm.mcc_size == 0) {
 				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
 				setSubState(6);
 			}
 			break;
@@ -2839,6 +2882,12 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				oapiSetTimeAcceleration(1.0);
 				setState(nextupdate);
+			}
+			break;
+		case 7: //Repeat uplink
+			{
+				NCOption_Enabled = false;
+				setSubState(0);
 			}
 			break;
 		}
