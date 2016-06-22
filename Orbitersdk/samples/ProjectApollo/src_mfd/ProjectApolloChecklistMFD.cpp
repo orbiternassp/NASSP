@@ -1222,6 +1222,10 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 		case EARTH_ORBIT_INSERTION:
 			sprintf(buffer, "Earth Orbit Insertion");
 			break;
+		case CSM_LV_SEPARATION:
+		case CSM_LV_SEPARATION_DONE:
+			sprintf(buffer, "CSM/LV Separation");
+			break;
 
 		default:
 			sprintf(buffer, "(Unknown Event)");

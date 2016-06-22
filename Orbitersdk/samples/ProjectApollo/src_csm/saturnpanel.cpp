@@ -1981,9 +1981,12 @@ void Saturn::SetSwitches(int panel) {
 	// FCSMSPSASwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
 	// FCSMSPSBSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
 	EventTimerUpDownSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
+	EventTimerUpDownSwitch.SetDelayTime(1);
 	EventTimerContSwitch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
+	EventTimerContSwitch.SetDelayTime(1);
 	EventTimerMinutesSwitch.Init(172, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 	EventTimerSecondsSwitch.Init(215, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
+	SaturnEventTimerDisplay.Init(EventTimerRow, this); 	// dummy switch/display for checklist controller
 
 	//
 	// Main chute release.
@@ -5348,6 +5351,7 @@ void Saturn::InitSwitches() {
 	EventTimerContSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SaturnEventTimerDisplay.Register(PSH, "SaturnEventTimerDisplay", 0, 0, 0);	// dummy switch/display for checklist controller
 
 	MainReleaseSwitch.Register(PSH, "MainReleaseSwitch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
 

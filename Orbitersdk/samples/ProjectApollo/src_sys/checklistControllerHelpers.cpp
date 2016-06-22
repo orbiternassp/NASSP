@@ -262,7 +262,7 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 				return true;
 			}
 		} else {
-			if (position < 0) {
+			if (position == -1) {
 				return true;
 			} else if (conn->SetState(item, position, guard, hold)) {
 				return true;

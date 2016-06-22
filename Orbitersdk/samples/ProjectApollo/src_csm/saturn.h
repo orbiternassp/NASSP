@@ -1496,6 +1496,7 @@ protected:
 	/// \brief Event Timer display.
 	///
 	EventTimer EventTimerDisplay;
+	SaturnEventTimer SaturnEventTimerDisplay;	//Dummy for checklist controller
 	
 	//
 	// Center engine shutdown times for first and
@@ -4491,6 +4492,7 @@ protected:
 	friend class SaturnSCControlSetter;
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
+	friend class SaturnEventTimer;
 	friend class SECS;
 	friend class ELS;
 	friend class CrewStatus;

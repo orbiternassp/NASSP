@@ -3408,10 +3408,12 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		if (opt->engopt == 1)
 		{
 			UX = X_B;
+			pad.Vc = length(opt->dV_LVLH);
 		}
 		else
 		{
 			UX = -X_B;
+			pad.Vc = -length(opt->dV_LVLH);
 		}
 		UY = unit(crossp(UX, R1B*headsswitch));
 		UZ = unit(crossp(UX, crossp(UX, R1B*headsswitch)));
@@ -3419,8 +3421,6 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-
-		pad.Vc = length(opt->dV_LVLH);
 	}
 	Att = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
 	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);

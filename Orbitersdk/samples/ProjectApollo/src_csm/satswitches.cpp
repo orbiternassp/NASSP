@@ -1904,6 +1904,20 @@ void SaturnEMSDvDisplay::SetState(int value) {
 }
 
 
+void SaturnEventTimer::Init(SwitchRow &row, Saturn *s) {
+	MeterSwitch::Init(row);
+	Sat = s;
+}
+
+int SaturnEventTimer::GetState() {
+	return (int) (Sat->EventTimerDisplay.GetTime());
+}
+
+void SaturnEventTimer::SetState(int value) {
+	Sat->EventTimerDisplay.SetTime(value);
+}
+
+
 void SaturnEMSScrollDisplay::Init(SwitchRow &row, Saturn *s) {
 	MeterSwitch::Init(row);
 	Sat = s;
