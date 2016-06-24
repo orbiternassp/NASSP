@@ -246,6 +246,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.TIG = TimeofIgnition;
 		opt.vessel = calcParams.src;
 		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+		opt.uselvdc = mcc->cm->use_lvdc;
 
 		TLI_PAD(&opt, *form);
 
@@ -5024,41 +5025,63 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	sv1 = coast(sv0, dt);
 	sv1.mass = m0 + (mass - m0)*exp(-boil*dt);
 
-	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1);
-
-	sv3 = coast(sv2, 900.0);
-
-	t_go = (sv2.MJD - sv1.MJD)*24.0*3600.0;
-
-	UY = unit(crossp(sv1.V, sv1.R));
-	UZ = unit(-sv1.R);
-	UX = crossp(UY, UZ);
-
-	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-
-	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
-	if (length(DV_P) != 0.0)
+	if (opt->uselvdc)
 	{
-		theta_T = length(crossp(sv1.R, sv1.V))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(sv1.R), 2.0) / F;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + UY*opt->dV_LVLH.y;
+		t_go = calcParams.TLI - opt->TIG;
+
+		UY = unit(crossp(sv1.V, -sv1.R));
+		UZ = unit(sv1.R);
+		UX = crossp(UY, UZ);
+
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
+
+		sv2 = sv1;
+		sv2.R = calcParams.R_TLI;
+		sv2.V = calcParams.V_TLI;
+		sv2.MJD += t_go / 24.0 / 3600.0;
+
+		sv3 = coast(sv2, 900.0);
 	}
 	else
 	{
-		V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
+
+		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1);
+
+		sv3 = coast(sv2, 900.0);
+
+		t_go = (sv2.MJD - sv1.MJD)*24.0*3600.0;
+
+		UY = unit(crossp(sv1.V, sv1.R));
+		UZ = unit(-sv1.R);
+		UX = crossp(UY, UZ);
+
+		v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+
+		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+		if (length(DV_P) != 0.0)
+		{
+			theta_T = length(crossp(sv1.R, sv1.V))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(sv1.R), 2.0) / F;
+			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+			V_G = DV_C + UY*opt->dV_LVLH.y;
+		}
+		else
+		{
+			V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
+		}
+
+		U_TD = unit(V_G);
+		X_B = unit(V_G);
+
+		UX = X_B;
+		UY = unit(crossp(X_B, -sv1.R));
+		UZ = unit(crossp(X_B, crossp(X_B, -sv1.R)));
+
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+
+		IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 	}
-
-	U_TD = unit(V_G);
-	X_B = unit(V_G);
-
-	UX = X_B;
-	UY = unit(crossp(X_B, -sv1.R));
-	UZ = unit(crossp(X_B, crossp(X_B, -sv1.R)));
-
-	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-
-	IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 
 	UY = unit(crossp(sv3.V, sv3.R));
 	UZ = unit(-sv3.R);
@@ -5650,4 +5673,186 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 	param.T_RP = T_RP;
 
 	return param;
+}
+
+void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI)
+{
+	double GETbase, SVMJD, day, theta_E, MJD_GRR, mu_E, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
+	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil;
+	VECTOR3 R_A, V_A, PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, R0, V0, R1, V1, Sbar_1, Cbar_1, R2, V2;
+	MATRIX3 Rot, mat, MX_EPH, MX_B, MX_G;
+	OBJHANDLE gravref;
+	OELEMENTS coe;
+
+	//Constants
+	gravref = AGCGravityRef(calcParams.src);
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	mu_E = GGRAV*oapiGetMass(gravref);
+	boil = (1.0 - 0.99998193) / 10.0;
+
+	//State Vector
+	GETbase = getGETBase();
+	modf(oapiGetSimMJD(), &day);
+	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
+	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, 28.6082888*RAD, -80.6041140*RAD, lvdc.Azimuth);
+	calcParams.src->GetRelativePos(gravref, R_A);
+	calcParams.src->GetRelativeVel(gravref, V_A);
+	SVMJD = oapiGetSimMJD();
+	R0 = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
+	V0 = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+
+	//Find TB6 start
+	//Determination of S-bar and S-bar-dot
+	theta_E = lvdc.theta_EO + lvdc.omega_E*lvdc.t_D;
+	MX_EPH = mul(OrbMech::transpose_matrix(lvdc.MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	T_P = mul(MX_EPH, unit(lvdc.TargetVector));
+
+	MJD_TST = MJD_GRR + (lvdc.TB5 + lvdc.T_ST) / 24.0 / 3600.0;
+	OrbMech::oneclickcoast(R0, V0, SVMJD, (MJD_TST - SVMJD) * 24.0 * 3600.0, R1, V1, gravref, gravref);
+
+	dt = 0;
+
+	do
+	{
+		OrbMech::oneclickcoast(R1, V1, MJD_TST, dt, R2, V2, gravref, gravref);
+		R2 = tmul(Rot, R2);
+		V2 = tmul(Rot, V2);
+		R2 = _V(R2.x, R2.z, R2.y);
+		V2 = _V(V2.x, V2.z, V2.y);
+		PosS = mul(mat, R2);
+		DotS = mul(mat, V2);
+		//OrbMech::rv_from_r0v0(R1, V1, dt, PosS, DotS, mu_E);
+		N = unit(crossp(PosS, DotS));
+		PosP = crossp(N, unit(PosS));
+		Sbar = unit(PosS)*cos(lvdc.beta) + PosP*sin(lvdc.beta);
+		DotP = crossp(N, DotS / Mag(PosS));
+
+		Sbardot = DotS / Mag(PosS)*cos(lvdc.beta) + DotP*sin(lvdc.beta);
+		dt += 1.0;
+
+	} while (!((dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(lvdc.alpha_TS))));
+
+	//Advance to Ignition State
+	OrbMech::rv_from_r0v0(PosS, DotS, lvdc.T_RG, PosS, DotS, mu_E);
+
+	cos_psiT = Sbar*T_P;
+	sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
+	Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
+	Cbar_1 = crossp(Sbar_1, Sbar);
+	Inclination = acos(_V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)*Cbar_1);
+	X_1 = dotp(_V(lvdc.MX_A.m31, lvdc.MX_A.m32, lvdc.MX_A.m33), crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)));
+	X_2 = dotp(_V(lvdc.MX_A.m11, lvdc.MX_A.m12, lvdc.MX_A.m13), crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)));
+	theta_N = atan2(X_1, X_2);
+	p_N = lvdc.mu / lvdc.C_3*(pow(lvdc.e_N, 2) - 1.0);
+	T_M = p_N / (1.0 - lvdc.e_N*lvdc.cos_sigma);
+	R = length(PosS);
+	e = R / lvdc.R_N*(lvdc.e_N - 1.0) + 1.0;
+	p = lvdc.mu / lvdc.C_3*(pow(e, 2) - 1.0);
+
+	alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(dotp(Sbar_1, crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23))), dotp(Sbar, crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23))));
+
+	MJD_TIG = MJD_TST + (dt + lvdc.T_RG) / 24.0 / 3600.0;
+	P30TIG = (MJD_TIG - GETbase) * 24.0 * 3600.0;
+
+	MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),
+		-sin(theta_N)*cos(Inclination), sin(Inclination), cos(theta_N)*cos(Inclination));
+	MX_G = mul(MX_B, lvdc.MX_A);
+	R_T = p / (1.0 + e*cos(lvdc.f));
+	K_5 = sqrt(lvdc.mu / p);
+	V_T = K_5*sqrt(1.0 + 2.0 * e*cos(lvdc.f) + pow(e, 2));
+	gamma_T = atan((e*sin(lvdc.f)) / (1.0 + cos(lvdc.f)));
+	G_T = -lvdc.mu / pow(R_T, 2);
+
+	double Fs, V_ex, mass, a_T, tau, t_go, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m0, m1, dt1;
+	double dot_dxit, dot_detat, dot_dzetat, dV, dT, f, L, dL;
+	VECTOR3 Pos4, PosXEZ, DotXEZ, ddotG_act, DDotXEZ_G;
+	MATRIX3 MX_phi_T, MX_K;
+
+	Fs = calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
+	V_ex = calcParams.src->GetThrusterIsp0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
+	mass = calcParams.src->GetMass();
+	m0 = calcParams.src->GetEmptyMass();
+	dt1 = dt + (MJD_TST - SVMJD) * 24.0 * 3600.0;
+	m1 = (mass - m0)*exp(-boil*dt1);
+
+	a_T = Fs / (m0 + m1);
+	tau = V_ex / a_T;
+	t_go = 305.0;//Initial estimate
+	dT = 1.0;
+
+	while (abs(dT) > 0.01)
+	{
+		//IGM
+		ddotG_act = -PosS*mu_E / OrbMech::power(length(PosS), 3.0);
+		Pos4 = mul(MX_G, PosS);
+
+
+		L = V_ex * log(tau / (tau - t_go));
+
+		V = length(DotS);
+		R = length(PosS);
+		sin_gam = ((PosS.x*DotS.x) + (PosS.y*DotS.y) + (PosS.z*DotS.z)) / (R*V);
+		cos_gam = pow(1.0 - pow(sin_gam, 2), 0.5);
+		dot_phi_1 = (V*cos_gam) / R;
+		dot_phi_T = (V_T*cos(gamma_T)) / R_T;
+		phi_T = atan2(Pos4.z, Pos4.x) + (((dot_phi_1 + dot_phi_T) / 2.0)*t_go);
+
+		f = phi_T + alpha_D;
+		R_T = p / (1 + ((e*(cos(f)))));
+		V_T = K_5 * pow(1 + ((2 * e)*(cos(f))) + pow(e, 2), 0.5);
+		gamma_T = atan2((e*(sin(f))), (1 + (e*(cos(f)))));
+		G_T = -mu_E / pow(R_T, 2);
+
+		xi_T = R_T*cos(gamma_T);
+		dot_zeta_T = V_T;
+		dot_xi_T = 0.0;
+		ddot_zeta_GT = G_T*sin(gamma_T);
+		ddot_xi_GT = G_T*cos(gamma_T);
+		phi_T = phi_T - gamma_T;
+
+		MX_phi_T.m11 = (cos(phi_T));    MX_phi_T.m12 = 0; MX_phi_T.m13 = ((sin(phi_T)));
+		MX_phi_T.m21 = 0;               MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
+		MX_phi_T.m31 = (-sin(phi_T)); MX_phi_T.m32 = 0; MX_phi_T.m33 = (cos(phi_T));
+		MX_K = mul(MX_phi_T, MX_G);
+		PosXEZ = mul(MX_K, PosS);
+		DotXEZ = mul(MX_K, DotS);
+		VECTOR3 RTT_T1, RTT_T2;
+		RTT_T1.x = ddot_xi_GT; RTT_T1.y = 0;        RTT_T1.z = ddot_zeta_GT;
+		RTT_T2 = ddotG_act;
+		RTT_T2 = mul(MX_K, RTT_T2);
+		RTT_T1 = RTT_T1 + RTT_T2;
+		DDotXEZ_G = _V(0.5*RTT_T1.x, 0.5*RTT_T1.y, 0.5*RTT_T1.z);
+
+
+		dot_dxit = dot_xi_T - DotXEZ.x - (DDotXEZ_G.x*t_go);
+		dot_detat = -DotXEZ.y - (DDotXEZ_G.y * t_go);
+		dot_dzetat = dot_zeta_T - DotXEZ.z - (DDotXEZ_G.z * t_go);
+
+		dV = pow((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)), 0.5);
+		dL = (((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)) / L) - L) / 2;
+
+
+		dT = (dL*(tau - t_go)) / V_ex;
+		t_go = t_go + dT;
+
+		/*// TARGET PARAMETER UPDATE
+		if (!(UP > 0)) {
+			UP = 1;
+			L = L + dL;
+			J = J + (dL*t_go);
+			goto gtupdate; // Recycle. 
+		}*/
+	}
+
+	coe.e = e;
+	coe.h = lvdc.C_3;
+	coe.i = Inclination;
+	coe.RA = theta_N;
+	coe.TA = f;
+	coe.w = alpha_D;
+
+	OrbMech::PACSS4_from_coe(coe, mu_E, R_TLI, V_TLI);
+
+	T_TLI = P30TIG + t_go;
+	dV_LVLH = _V(1.0, 0.0, 0.0)*L;
 }

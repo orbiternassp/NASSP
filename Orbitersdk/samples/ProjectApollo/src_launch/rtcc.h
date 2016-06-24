@@ -257,9 +257,10 @@ struct TLIPADOpt
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition (deorbit maneuver)
-	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;
 	VECTOR3 SeparationAttitude; //LVLH IMU angles
+	bool uselvdc;	//LVDC in use/or not
 };
 
 struct P27Opt
@@ -295,6 +296,28 @@ struct SevenParameterUpdate
 	double theta_N;
 };
 
+struct LVDCTLIparam
+{
+	MATRIX3 MX_A;
+	VECTOR3 TargetVector;
+	double alpha_TS;
+	double Azimuth;
+	double beta;
+	double C_3;
+	double cos_sigma;
+	double e_N;
+	double f;
+	double mu;
+	double omega_E;
+	double R_N;
+	double theta_EO;
+	double TB5;
+	double T_L;
+	double t_D;
+	double T_RG;
+	double T_ST;
+};
+
 class RTCC {
 
 	friend class MCC;
@@ -321,6 +344,7 @@ public:
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
+	void LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state

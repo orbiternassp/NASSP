@@ -1099,12 +1099,22 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (cm->GetMissionTime() > 3600.0 + 35.0*60.0)
 					{
-						startSubthread(1);
+						rtcc->calcParams.src = cm;
+						oapiSetTimeAcceleration(1.0);
+						if (cm->use_lvdc)
+						{
+							SaturnV *SatV = (SaturnV*)cm;
+							LVDCTLIparam tliparam = SatV->lvdc->GetTLIParams();
+							rtcc->LVDCTLIPredict(tliparam, rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
+						}
+						else
+						{
+							startSubthread(1);
+						}
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
 						//rtcc->SetManeuverData(burnData.IgnMJD, burnData._dV_LVLH);
 						//if (rtcc->TimeofIgnition > 0)
 						//{
-							oapiSetTimeAcceleration(1.0);
 							setSubState(1);
 						//}
 					}
@@ -1136,8 +1146,6 @@ void MCC::TimeStep(double simdt){
 
 							VECTOR3 _RIgn, _VIgn, _dV_LVLH;
 							double IgnMJD;
-
-							rtcc->calcParams.src = cm;
 
 							rtcc->GetTLIParameters(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
 							cm->GetIU()->StartTLIBurn(_RIgn, _VIgn, _dV_LVLH, IgnMJD);

@@ -46,6 +46,7 @@ public:
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
+	LVDCTLIparam GetTLIParams();
 private:
 	Saturn* owner;									// Saturn LV
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
