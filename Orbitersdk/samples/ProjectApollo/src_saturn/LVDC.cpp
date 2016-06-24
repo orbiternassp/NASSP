@@ -2637,6 +2637,7 @@ LVDC::LVDC(){
 	CountPIPA = false;
 	Direct_Ascent = false;
 	directstageint = false;
+	directstagereset = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -3064,6 +3065,7 @@ void LVDC::Init(Saturn* vs){
 	i_op = true;							// flag for selecting method of EPO inclination calculation
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
+	directstagereset = true;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3372,6 +3374,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
 	oapiWriteScenario_int(scn, "LVDC_directstageint", directstageint);
+	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
 	oapiWriteScenario_int(scn, "LVDC_GATE0", GATE0);
@@ -4033,6 +4036,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
 		papiReadScenario_bool(line, "LVDC_directstageint", directstageint);
+		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
 		papiReadScenario_bool(line, "LVDC_GATE0", GATE0);
@@ -4697,6 +4701,12 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 		//Switch Check, TBD: Integrate with old CSM to IU Connector
 		INH = owner->TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
+		
+		//Reset Direct Staging switch for S-IVB shutdown
+		if (directstageint && !directstagereset && owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_DOWN)
+		{
+			directstagereset = true;
+		}
 
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){//this is the sequential event control logic
@@ -4954,9 +4964,10 @@ void LVDC::TimeStep(double simt, double simdt) {
 					}
 				}
 				
-				if (owner->SIISIVBSepSwitch.GetState())
+				if (LVDC_TB_ETime >= 1.4 && owner->SIISIVBSepSwitch.GetState())
 				{
 					directstageint = true;
+					directstagereset = false;
 					owner->SetThrusterGroupLevel(owner->thg_main, 0);
 					S2_BURNOUT = true;
 					MRS = false;
@@ -4991,6 +5002,16 @@ void LVDC::TimeStep(double simt, double simdt) {
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
 					owner->SetThrusterGroupLevel(owner->thg_ver, 0.0);
 					S4B_IGN=true;
+				}
+
+				//Manual S-IVB Shutdown
+				if (owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset && S4B_IGN == true)
+				{
+					S4B_IGN = false;
+					TB5 = TAS;//-simdt;
+					LVDC_Timebase = 5;
+					LVDC_TB_ETime = 0;
+					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 				}
 				break;
 			case 5:
@@ -5082,6 +5103,16 @@ void LVDC::TimeStep(double simt, double simdt) {
 				{
 					owner->SwitchSelector(7);//Final MRS
 					MRS = true;
+				}
+
+				//Manual S-IVB Shutdown
+				if (owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset && S4B_REIGN == true)
+				{
+					S4B_REIGN = false;
+					TB7 = TAS;//-simdt;
+					LVDC_Timebase = 7;
+					LVDC_TB_ETime = 0;
+					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 				}
 				break;
 			case 7:
