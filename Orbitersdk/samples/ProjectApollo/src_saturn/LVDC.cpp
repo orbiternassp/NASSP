@@ -4692,6 +4692,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 
 void LVDC::TimeStep(double simt, double simdt) {
 	if(owner == NULL){ return; }
+	if (owner->stage < PRELAUNCH_STAGE) { return; }
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
 		// Update timebase ET
@@ -5070,7 +5071,10 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// SII SEP light
 				if (S4B_REIGN == false && owner->SIISepState == false && LVDC_TB_ETime < 38.0)
-				{owner->SetSIISep();}	//Set SII SEP light to notify crew of TB6 start
+				{
+					owner->SetSIISep();	//Set SII SEP light to notify crew of TB6 start
+					owner->eventControl.TLI = owner->MissionTime + T_RG;
+				}
 				if(LVDC_TB_ETime>=38 && LVDC_TB_ETime < 493.6 && S4B_REIGN==false && owner->SIISepState == true)
 				{owner->ClearSIISep();} //This would signal the crew to start their event timer at 51:00, counting up
 				if (LVDC_TB_ETime >= 493.6 && LVDC_TB_ETime < 560.0 && owner->SIISepState == false)
@@ -5088,7 +5092,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
 					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
 					owner->SwitchSelector(6);
-					owner->TLI_Begun();
 				}	
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
 					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up

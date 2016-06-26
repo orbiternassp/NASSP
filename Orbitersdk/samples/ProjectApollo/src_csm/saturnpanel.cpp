@@ -4915,9 +4915,13 @@ void Saturn::InitSwitches() {
 	SCSTvcYawSwitch.Register(PSH, "SCSTvcYawSwitch", THREEPOSSWITCH_CENTER);
 
 	Pitch1Switch.Register(PSH, "Pitch1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Pitch1Switch.SetDelayTime(1);
 	Pitch2Switch.Register(PSH, "Pitch2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Pitch2Switch.SetDelayTime(1);
 	Yaw1Switch.Register(PSH, "Yaw1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw1Switch.SetDelayTime(1);
 	Yaw2Switch.Register(PSH, "Yaw2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw2Switch.SetDelayTime(1);
 
 	EMSRollSwitch.Register(PSH, "EMSRollSwitch", false);
 	GSwitch.Register(PSH, "GSwitch", false);

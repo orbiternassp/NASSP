@@ -1215,8 +1215,28 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 			}
 			break;
 
+		case CHECKLIST_RELATIVE:
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "After %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "After %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "After %d sec", (int)temptime.z);
+			}
+			break;
+
 		case SECOND_STAGE_STAGING:
 			sprintf(buffer, "First Staging");
+			break;
+
+		case SIVB_STAGE_STAGING:
+			sprintf(buffer, "Second Staging");
 			break;
 
 		case EARTH_ORBIT_INSERTION:
