@@ -3265,7 +3265,7 @@ void LVDC::Init(Saturn* vs){
 	S2_BURNOUT=false;						// SII Burn Out
 	LVDC_GRR = false;
 	S1_Engine_Out = false;		
-	tau1=0;									// Time to consume all fuel before S2 MRS
+	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
 	theta_N = 0;
@@ -4967,6 +4967,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				
 				if (LVDC_TB_ETime >= 1.4 && owner->SIISIVBSepSwitch.GetState())
 				{
+					owner->stage = LAUNCH_STAGE_TWO_ISTG_JET;
 					directstageint = true;
 					directstagereset = false;
 					owner->SetThrusterGroupLevel(owner->thg_main, 0);
@@ -4981,8 +4982,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 			case 4:
 			case 40:
 				// S2 STAGE SEP
-				//if(LVDC_TB_ETime > 0.07 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
-				if (LVDC_TB_ETime > 0.8 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET) {
+				if (LVDC_TB_ETime > 0.8 && owner->stage <= LAUNCH_STAGE_TWO_ISTG_JET) {
 					// S2ShutS.done(); No CECO on AP8
 					fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					owner->SPUShiftS.done(); // Make sure it's done
@@ -5006,13 +5006,22 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset && S4B_IGN == true)
+				if (S4B_IGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) || owner->GetThrusterLevel(owner->th_main[0]) == 0))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;//-simdt;
 					LVDC_Timebase = 5;
 					LVDC_TB_ETime = 0;
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+				}
+
+				// CSM/LV separation
+				if (owner->CSMLVPyros.Blown()) {
+					owner->SeparateStage(CSM_LEM_STAGE);
+					owner->SetStage(CSM_LEM_STAGE);
+					LVDC_EI_On = false;
+					//LVDC_Stop = true;
+					//return; // Stop here
 				}
 				break;
 			case 5:
@@ -5060,8 +5069,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if (owner->CSMLVPyros.Blown()) {
 					owner->SeparateStage(CSM_LEM_STAGE);
 					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_Stop = true;
-					return; // Stop here
+					LVDC_EI_On = false;
+					//LVDC_Stop = true;
+					//return; // Stop here
 				}
 				break;
 			case 6:
@@ -5109,7 +5119,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset && S4B_REIGN == true)
+				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) || owner->GetThrusterLevel(owner->th_main[0]) == 0))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;//-simdt;
@@ -5151,6 +5161,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				{
 					owner->SeparateStage(CSM_LEM_STAGE);
 					owner->SetStage(CSM_LEM_STAGE);
+					LVDC_EI_On = false;
 				}
 				break;
 		}
@@ -6689,7 +6700,7 @@ minorloop:
 		// LV takeover
 		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
 		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if(LVDC_Timebase > 1 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
+		if(LVDC_Timebase == 5 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
