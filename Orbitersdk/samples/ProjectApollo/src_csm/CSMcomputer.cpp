@@ -2816,8 +2816,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0317] = 037777;
 				vagc.Erasable[3][0320] = 037777;
 
-				// set DAP data to CSM mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
+				// set DAP data to LV mode
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 				double tephem;
@@ -2854,8 +2854,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0317] = 037777;
 				vagc.Erasable[3][0320] = 037777;
 
-				// set DAP data to CSM mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 011102;
+				// set DAP data to LV mode
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8,9 and 11 have proper scenarios
@@ -2886,8 +2886,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0315] = 037777;	
 				vagc.Erasable[3][0316] = 037777;	
 
-				// set DAP data to CSM mode 
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 011102;
+				// set DAP data to LV mode
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 
 				// Synchronize clock with launch time (TEPHEM), only Apollo 15 has a proper scenario
