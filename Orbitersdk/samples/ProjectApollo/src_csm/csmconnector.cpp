@@ -538,6 +538,13 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			return true;
 		}
 		break;
+	case IUCSM_TLI_ENDED:
+		if (OurVessel)
+		{
+			OurVessel->TLI_Ended();
+			return true;
+		}
+		break;
 	}
 
 	return false;

@@ -5967,6 +5967,11 @@ void Saturn::TLI_Begun()
 	eventControl.TLI = MissionTime;
 }
 
+void Saturn::TLI_Ended()
+{
+	eventControl.TLI_DONE = MissionTime;
+}
+
 
 //
 // LUA Interface

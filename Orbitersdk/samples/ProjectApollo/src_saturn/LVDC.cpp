@@ -5083,7 +5083,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if (S4B_REIGN == false && owner->SIISepState == false && LVDC_TB_ETime < 38.0)
 				{
 					owner->SetSIISep();	//Set SII SEP light to notify crew of TB6 start
-					owner->eventControl.TLI = owner->MissionTime + T_RG;
+					owner->TLI_Begun();
 				}
 				if(LVDC_TB_ETime>=38 && LVDC_TB_ETime < 493.6 && S4B_REIGN==false && owner->SIISepState == true)
 				{owner->ClearSIISep();} //This would signal the crew to start their event timer at 51:00, counting up
@@ -5150,6 +5150,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true) {
 					LVDC_EI_On = false;
+					owner->TLI_Ended();
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {

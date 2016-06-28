@@ -69,6 +69,8 @@ RelativeEvent checkEvent(const char* input, bool Group)
 		return CM_SM_SEPARATION_DONE;
 	if (!strnicmp(input,"CM_SM_SEPARATION",16))
 		return CM_SM_SEPARATION;
+	if (!strnicmp(input, "TLI_DONE", 8))
+		return TLI_DONE;
 	if (!strnicmp(input,"TLI",3))
 		return TLI;
 	return NO_TIME_DEF;
@@ -447,6 +449,13 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, dou
 		if (time > t)
 			return false;
 		break;
+	case TLI_DONE:
+		if (eventController.TLI_DONE == MINUS_INFINITY)
+			return false;
+		t = lastMissionTime - eventController.TLI_DONE;
+		if (time > t)
+			return false;
+		break;
 	case PAYLOAD_EXTRACTION:
 		if (eventController.PAYLOAD_EXTRACTION == MINUS_INFINITY)
 			return false;
@@ -672,6 +681,14 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 				return true;
 		}
 		break;
+	case TLI_DONE:
+		if (eventController.TLI_DONE != MINUS_INFINITY)
+		{
+			double t = lastMissionTime - eventController.TLI_DONE;
+			if (time <= t && t <= deadline)
+				return true;
+		}
+		break;
 	case PAYLOAD_EXTRACTION:
 		if (eventController.PAYLOAD_EXTRACTION != MINUS_INFINITY)
 		{
@@ -817,7 +834,7 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 SaturnEvents::SaturnEvents()
 {
 	PRIME_CREW_PRELAUNCH = SPLASHDOWN = EARTH_ORBIT_INSERTION = BACKUP_CREW_PRELAUNCH = SECOND_STAGE_STAGING = SIVB_STAGE_STAGING = TOWER_JETTISON = 
-		CSM_LV_SEPARATION_DONE = CSM_LV_SEPARATION = CM_SM_SEPARATION_DONE = CM_SM_SEPARATION = TLI = PAYLOAD_EXTRACTION = MINUS_INFINITY;
+		CSM_LV_SEPARATION_DONE = CSM_LV_SEPARATION = CM_SM_SEPARATION_DONE = CM_SM_SEPARATION = TLI = TLI_DONE = PAYLOAD_EXTRACTION = MINUS_INFINITY;
 }
 // Todo: Verify
 void SaturnEvents::save(FILEHANDLE scn)
@@ -831,6 +848,7 @@ void SaturnEvents::save(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "SIVB_STAGE_STAGING", SIVB_STAGE_STAGING);
 	oapiWriteScenario_float(scn, "EARTH_ORBIT_INSERTION", EARTH_ORBIT_INSERTION);
 	oapiWriteScenario_float(scn, "TLI", TLI);
+	oapiWriteScenario_float(scn, "TLI_DONE", TLI_DONE);
 	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION", CSM_LV_SEPARATION);
 	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION_DONE", CSM_LV_SEPARATION_DONE);
 	oapiWriteScenario_float(scn, "PAYLOAD_EXTRACTION", PAYLOAD_EXTRACTION);
@@ -920,6 +938,12 @@ void SaturnEvents::load(FILEHANDLE scn)
 		{
 			sscanf(line+21,"%f",&fcpt);
 			EARTH_ORBIT_INSERTION = fcpt;
+			found = true;
+		}
+		if (!found && !strnicmp(line, "TLI_DONE", 8))
+		{
+			sscanf(line + 8, "%f", &fcpt);
+			TLI_DONE = fcpt;
 			found = true;
 		}
 		if (!found && !strnicmp(line,"TLI",3))

@@ -591,6 +591,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		case 202:
 			if (MissionTime >= NextMissionEventTime) {
 				commandConnector.ClearEngineIndicator(1);
+				commandConnector.TLIEnded();
 
 				if (Realism < 2)
 					State = 100;
@@ -1306,6 +1307,15 @@ void IUToCSMCommandConnector::TLIBegun()
 	ConnectorMessage cm;
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = IUCSM_TLI_BEGUN;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::TLIEnded()
+{
+	ConnectorMessage cm;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_TLI_ENDED;
 
 	SendMessage(cm);
 }

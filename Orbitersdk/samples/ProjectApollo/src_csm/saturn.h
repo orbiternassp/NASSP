@@ -1186,6 +1186,7 @@ public:
 	/// \brief TLI event management
 	///
 	void TLI_Begun();
+	void TLI_Ended();
 
 	//
 	// LUA Interface
