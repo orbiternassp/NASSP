@@ -505,7 +505,7 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_gx[4] -1.47591
 	LVDC_gx[5] 0.0
 	LVDC_gx[6] 0.0
-	LVDC_H -0.575e-5
+	LVDC_H 0.575e-5
 	LVDC_hx[0][0] 72.019044
 	LVDC_hx[0][1] 33.294096
 	LVDC_hx[0][2] -12.8585844
