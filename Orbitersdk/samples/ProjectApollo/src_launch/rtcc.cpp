@@ -76,6 +76,7 @@ RTCC::RTCC()
 void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
+	calcParams.src = mcc->cm;
 }
 bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
@@ -105,13 +106,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		VECTOR3 dV_LVLH, R_TLI, V_TLI;
 
 		GETbase = getGETBase();
-		calcParams.LOI = OrbMech::HHMMSSToSS(69.0, 10.0, 39.0);//9.0, 29.4);
+		calcParams.LOI = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
-		opt.h_peri = 65.82*1852.0;//60.2 * 1852.0;
-		opt.lat = -8.6*RAD;//-9.1*RAD;
-		opt.lng = -172.0*RAD;//-174.8*RAD;
+		opt.h_peri = 60.2 * 1852.0;
+		opt.lat = -9.1*RAD;
+		opt.lng = -174.8*RAD;
 		opt.man = 4;
 		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;

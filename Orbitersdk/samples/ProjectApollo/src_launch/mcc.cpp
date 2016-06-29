@@ -117,10 +117,10 @@ MCC::MCC(){
 }
 
 void MCC::Init(Saturn *vs){
-	// Make a new RTCC if we don't have one already
-	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
 	// Set CM pointer
 	cm = vs;
+	// Make a new RTCC if we don't have one already
+	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
 
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
@@ -824,7 +824,7 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (cm->GetMissionTime() > 56.0*60.0)
 					{
-						oapiSetTimeAcceleration(1.0);
+						cm->SlowIfDesired();
 						setSubState(1);
 					}
 					break;
@@ -1081,7 +1081,7 @@ void MCC::TimeStep(double simdt){
 				case 2: // Await landing?
 					if (cm->stage == CM_ENTRY_STAGE_SEVEN)
 					{
-						oapiSetTimeAcceleration(1.0);
+						cm->SlowIfDesired();
 						setState(MST_LANDING);
 					}
 					break;
@@ -1099,8 +1099,7 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (cm->GetMissionTime() > 3600.0 + 35.0*60.0)
 					{
-						rtcc->calcParams.src = cm;
-						oapiSetTimeAcceleration(1.0);
+						cm->SlowIfDesired();
 						if (cm->use_lvdc)
 						{
 							SaturnV *SatV = (SaturnV*)cm;
@@ -1202,6 +1201,7 @@ void MCC::TimeStep(double simdt){
 				case 8: // Await next PAD
 					if (SubStateTime > 300.0)
 					{
+						cm->SlowIfDesired();
 						setSubState(10);
 					}
 					else {
@@ -1235,6 +1235,7 @@ void MCC::TimeStep(double simdt){
 				case 12: // Await next PAD
 					if (SubStateTime > 300.0)
 					{
+						cm->SlowIfDesired();
 						setSubState(13);
 					}
 					break;
@@ -1283,7 +1284,7 @@ void MCC::TimeStep(double simdt){
 			case MST_CP_TRANSLUNAR2: //
 				if (cm->MissionTime > 5.0*3600.0)
 				{
-					oapiSetTimeAcceleration(1.0);
+					cm->SlowIfDesired();
 					setState(MST_CP_TRANSLUNAR3);
 				}
 				break;
@@ -1374,7 +1375,7 @@ void MCC::TimeStep(double simdt){
 			case MST_CP_TRANSEARTH1: //TEI to ENTRY REFSMMAT
 				if (cm->MissionTime > rtcc->calcParams.TEI + 45*60)
 				{
-					oapiSetTimeAcceleration(1.0);
+					cm->SlowIfDesired();
 					setState(MST_CP_TRANSEARTH2);
 				}
 				break;
@@ -1615,7 +1616,6 @@ int MCC::subThread(){
 			break;
 		case 1:	//MISSION CP TLI
 		{
-			rtcc->calcParams.src = cm;
 			scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
 			Result = 0;
 		}
@@ -1637,7 +1637,6 @@ int MCC::subThread(){
 		case 205: // MISSION CP PREL. MCC-7
 		case 206: // MISSION CP MCC-7
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
 			Result = 0;
 		}
@@ -1659,14 +1658,12 @@ int MCC::subThread(){
 		case 112: // MISSION CP TEI-9
 		case 201: // MISSION CP TEI-11
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
 			Result = 0;
 		}
 		break;
 		case 4: //TLI PAD
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_TLIPAD, subThreadMode);
 			Result = 0;
 		}
@@ -1674,21 +1671,18 @@ int MCC::subThread(){
 		case 103: //CSM SV TO LM SLOT
 		case 202: //ENTRY REFSMMAT
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
 			Result = 0;
 		}
 		break;
 		case 207: //ENTRY PAD
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_LUNARENTRY, subThreadMode);
 			Result = 0;
 		}
 		break;
 		case 208: //FINAL ENTRY PAD and SV UPDATE
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_FINALLUNARENTRY, subThreadMode);
 			Result = 0;
 		}
@@ -1706,7 +1700,6 @@ int MCC::subThread(){
 		case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
 		{
 			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
 			Result = 0; // Done
@@ -1714,7 +1707,6 @@ int MCC::subThread(){
 		break;
 		case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P30MANEUVER, 2);
 			Result = 0; // Done
 		}
@@ -1747,7 +1739,6 @@ int MCC::subThread(){
 		case 40:
 		case 41:
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_BLOCKDATA, subThreadMode);
 			Result = 0; // Done
 		}
@@ -1755,7 +1746,6 @@ int MCC::subThread(){
 		case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
 		{
 			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_P30MANEUVER, 6);
 			Result = 0; // Done
@@ -1764,7 +1754,6 @@ int MCC::subThread(){
 		case 7: // FILL FINAL PAD AP7MNV FOR NCC1 MANEUVER
 		{
 			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_P30MANEUVER, 7);
 			Result = 0; // Done
@@ -1773,7 +1762,6 @@ int MCC::subThread(){
 		case 8: // FILL PAD AP7MNV FOR NCC2 MANEUVER
 		{
 			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_P30MANEUVER, 8);
 			Result = 0; // Done
@@ -1782,7 +1770,6 @@ int MCC::subThread(){
 		case 9: // FILL PAD AP7MNV FOR NSR MANEUVER
 		{
 			// Ask RTCC for numbers
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_P30MANEUVER, 9);
 			Result = 0; // Done
@@ -1790,7 +1777,6 @@ int MCC::subThread(){
 		break;
 		case 10: // FILL PAD AP7TPI FOR AP7 TPI PAD
 		{
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_TPI, 10);
 			Result = 0; // Done
@@ -1798,7 +1784,6 @@ int MCC::subThread(){
 		break;
 		case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P47MANEUVER, 11);
 			Result = 0; // Done
 		}
@@ -1810,7 +1795,6 @@ int MCC::subThread(){
 		case 39:
 		case 42:
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
 			Result = 0; // Done
 		}
@@ -1818,21 +1802,18 @@ int MCC::subThread(){
 		case 43: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
 		case 44:
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_ENTRY, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 		case 50: //GENERIC CSM STATE VECTOR UPDATE
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 		case 51: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE
 		{
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
 			Result = 0; // Done
@@ -1840,14 +1821,12 @@ int MCC::subThread(){
 		break;
 		case 52: //GENERIC CSM STATE VECTOR UPDATE AND NAV CHECK PAD
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
 			Result = 0; // Done
 		}
 		break;
 		case 53: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE AND NAV CHECK PAD
 		{
-			rtcc->calcParams.src = cm;
 			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
 			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
 			Result = 0; // Done
@@ -1855,7 +1834,6 @@ int MCC::subThread(){
 		break;
 		case 54: //GENERIC CSM STATE VECTOR PAD
 		{
-			rtcc->calcParams.src = cm;
 			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
 			Result = 0; // Done
 		}
@@ -2449,7 +2427,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2499,7 +2477,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2578,7 +2556,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 6: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2614,7 +2592,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2663,7 +2641,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 6: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2727,7 +2705,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 6: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2763,7 +2741,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await separation
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2800,7 +2778,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2830,7 +2808,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 2: // Await separation
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2888,7 +2866,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 6: // Await burn
 			if (condition)
 			{
-				oapiSetTimeAcceleration(1.0);
+				cm->SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
