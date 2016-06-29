@@ -5126,6 +5126,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					LVDC_Timebase = 7;
 					LVDC_TB_ETime = 0;
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					owner->TLI_Ended();
 				}
 				break;
 			case 7:
@@ -5150,7 +5151,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true) {
 					LVDC_EI_On = false;
-					owner->TLI_Ended();
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {
@@ -6639,6 +6639,7 @@ minorloop:
 			LVDC_Timebase = 7;
 			LVDC_TB_ETime = 0;
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+			owner->TLI_Ended();
 		}
 
 		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits

@@ -1246,6 +1246,36 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 		case CSM_LV_SEPARATION_DONE:
 			sprintf(buffer, "CSM/LV Separation");
 			break;
+		case TLI:
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "TB6 + %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "TB6 + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "TB6 + %d sec", (int)temptime.z);
+			}
+			break;
+		case TLI_DONE:
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "TB7 + %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "TB7 + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "TB7 + %d sec", (int)temptime.z);
+			}
+			break;
 
 		default:
 			sprintf(buffer, "(Unknown Event)");

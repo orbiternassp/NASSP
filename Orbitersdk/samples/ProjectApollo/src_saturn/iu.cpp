@@ -549,12 +549,14 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			// Wait for shutdown.
 			//
 			if ((!ExternalGNC && GNC.Get_tGO() < 1.2) || TLIBurnDone || lvCommandConnector.GetPropellantMass() < 0.001)	{
+				commandConnector.TLIEnded();
 				State++;
 			}
 
 			// TLI inhibit
 			if (SIISIVBSep) {
 				if (MissionTime >= NextMissionEventTime + 10.0) {	// non-permanent inhibit only until T+00:12, NextMissionEventTime is ignition + 2s
+					commandConnector.TLIEnded();
 					State++;
 				}
 				else
@@ -591,7 +593,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		case 202:
 			if (MissionTime >= NextMissionEventTime) {
 				commandConnector.ClearEngineIndicator(1);
-				commandConnector.TLIEnded();
 
 				if (Realism < 2)
 					State = 100;
