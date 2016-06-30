@@ -589,7 +589,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.EARTH_ORBIT_INSERTION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.EARTH_ORBIT_INSERTION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -597,7 +597,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SPLASHDOWN != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SPLASHDOWN;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -605,7 +605,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.BACKUP_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.BACKUP_CREW_PRELAUNCH;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -613,7 +613,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.PRIME_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.PRIME_CREW_PRELAUNCH;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -621,7 +621,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SECOND_STAGE_STAGING != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SECOND_STAGE_STAGING;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -629,7 +629,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SIVB_STAGE_STAGING != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SIVB_STAGE_STAGING;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -637,7 +637,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.TOWER_JETTISON != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.TOWER_JETTISON;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -645,7 +645,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CSM_LV_SEPARATION_DONE != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CSM_LV_SEPARATION_DONE;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -653,7 +653,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CSM_LV_SEPARATION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CSM_LV_SEPARATION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -661,7 +661,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CM_SM_SEPARATION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CM_SM_SEPARATION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -669,7 +669,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CM_SM_SEPARATION_DONE != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CM_SM_SEPARATION_DONE;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -677,7 +677,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.TLI != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.TLI;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -685,7 +685,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.TLI_DONE != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.TLI_DONE;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -693,7 +693,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.PAYLOAD_EXTRACTION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.PAYLOAD_EXTRACTION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
