@@ -275,6 +275,32 @@ ARCore::ARCore(VESSEL* v)
 	LmkRange = 0;
 	LmkN89Alt = 0;
 	LmkN89Lat = 0;
+
+	earthentrypad.Att400K[0] = _V(0, 0, 0);
+	earthentrypad.BankAN[0] = 0;
+	earthentrypad.DRE[0] = 0;
+	earthentrypad.dVTO[0] = 0;
+	earthentrypad.Lat[0] = 0;
+	earthentrypad.Lng[0] = 0;
+	earthentrypad.PB_BankAN[0] = 0;
+	earthentrypad.PB_DRE[0] = 0;
+	earthentrypad.PB_R400K[0] = 0;
+	earthentrypad.PB_Ret05[0] = 0;
+	earthentrypad.PB_Ret2[0] = 0;
+	earthentrypad.PB_RetBBO[0] = 0;
+	earthentrypad.PB_RetDrog[0] = 0;
+	earthentrypad.PB_RetEBO[0] = 0;
+	earthentrypad.PB_RetRB[0] = 0;
+	earthentrypad.PB_RTGO[0] = 0;
+	earthentrypad.PB_VIO[0] = 0;
+	earthentrypad.Ret05[0] = 0;
+	earthentrypad.Ret2[0] = 0;
+	earthentrypad.RetBBO[0] = 0;
+	earthentrypad.RetDrog[0] = 0;
+	earthentrypad.RetEBO[0] = 0;
+	earthentrypad.RetRB[0] = 0;
+	earthentrypad.RTGO[0] = 0;
+	earthentrypad.VIO[0] = 0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -421,9 +447,9 @@ void ARCore::EntryPAD()
 	{
 		EarthEntryPADOpt opt;
 
-		opt.dV_LVLH = dV_LVLH;
+		opt.dV_LVLH = Entry_DV;
 		opt.GETbase = GETbase;
-		opt.P30TIG = P30TIG;
+		opt.P30TIG = EntryTIGcor;
 		opt.REFSMMAT = REFSMMAT;
 		opt.vessel = vessel;
 

@@ -542,6 +542,8 @@ void MCC::setState(int newState){
 	SubState = 0;
 	StateTime = 0;
 	SubStateTime = 0;
+	NCOption_Enabled = false;
+	PCOption_Enabled = false;
 }
 
 void MCC::setSubState(int newState){
@@ -1202,6 +1204,7 @@ void MCC::TimeStep(double simdt){
 					if (SubStateTime > 300.0)
 					{
 						cm->SlowIfDesired();
+						NCOption_Enabled = false;
 						setSubState(10);
 					}
 					else {
@@ -2298,9 +2301,7 @@ void MCC::keyDown(DWORD key){
 			}
 			if (menuState == 2) {
 				// Increment State
-				MissionState++;
-				SubState = 0;
-				StateTime = SubStateTime = 0;
+				setState(MissionState + 1);
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
@@ -2324,9 +2325,7 @@ void MCC::keyDown(DWORD key){
 			}
 			if (menuState == 2) {
 				// Decrement State
-				MissionState--;
-				SubState = 0;
-				StateTime = SubStateTime = 0;
+				setState(MissionState - 1);
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
@@ -2341,8 +2340,7 @@ void MCC::keyDown(DWORD key){
 			}
 			if (menuState == 2) {
 				// Increment SubState				
-				SubState++; 
-				SubStateTime = 0;
+				setSubState(SubState + 1);
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
@@ -2358,8 +2356,7 @@ void MCC::keyDown(DWORD key){
 			*/
 			if (menuState == 2) {
 				// Decrement SubState				
-				SubState--;
-				SubStateTime = 0;
+				setSubState(SubState - 1);
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
