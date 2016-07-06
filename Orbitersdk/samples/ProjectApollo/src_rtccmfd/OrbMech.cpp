@@ -254,37 +254,63 @@ double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu)
 
 void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x)	//computes the state vector (R,V) from the initial state vector (R0,V0) and the elapsed time
 {
-	double r0, v0, vr0, alpha, f, g, fdot, gdot, r;
+	double r0, v0, vr0, alpha, f, g, fdot, gdot, r, xx, paratol, x0;
+
+	//If absolute value of alpha is smaller than paratol, then the parabolic initial guess is used
+	paratol = 0.00000001;
 
 	r0 = length(R0);
 	v0 = length(V0);
 	vr0 = dotp(R0, V0) / r0;
 	alpha = 2.0 / r0 - v0*v0 / mu;
-	x = kepler_U(t, r0, vr0, alpha, mu, x);
-	f_and_g(x, t, r0, alpha, f, g, mu);
+
+	//Initial guess supplied by the calling function
+	if (x != 0.0)
+	{
+		x0 = x;
+	}
+	//Calculate initial guess
+	else
+	{
+		//Initial guess for elliptical and hyperbolic orbits
+		if (abs(alpha) > paratol)
+		{
+			x0 = sqrt(mu)*abs(alpha)*t;
+		}
+		//Initial guess for (near) parabolic orbits
+		else
+		{
+			VECTOR3 H = crossp(R0, V0);
+			double hmag = length(H);
+			double p = hmag*hmag / mu;
+			double s = 0.5  * (PI05 - atan(3.0 *sqrt(mu / (p*p*p))* t));
+			double w = atan(power(tan(s), 1.0 / 3.0));
+			x0 = sqrt(p) * (2.0 *cot(2.0 *w));
+		}
+	}
+
+	xx = kepler_U(t, r0, vr0, alpha, mu, x0);
+	f_and_g(xx, t, r0, alpha, f, g, mu);
 	R1 = R0*f + V0*g;
 	r = length(R1);
-	fDot_and_gDot(x, r, r0, alpha, fdot, gdot, mu);
+	fDot_and_gDot(xx, r, r0, alpha, fdot, gdot, mu);
 	V1 = R0*fdot + V0*gdot;
 }
 
-double kepler_U(double dt, double ro, double vro, double a, double mu, double x) //This function uses Newton's method to solve the universal Kepler equation for the universal anomaly.
+double kepler_U(double dt, double ro, double vro, double a, double mu, double x0) //This function uses Newton's method to solve the universal Kepler equation for the universal anomaly.
 {
-	double error2, ratio, C, S, F, dFdx;
+	double error2, ratio, C, S, F, dFdx, x;
 	int n, nMax;
 
 	error2 = 1e-8;
 	nMax = 1000;
-	if (x == 0)
-	{
-		x = sqrt(mu)*abs(a)*dt;
-	}
 	n = 0;
 	ratio = 1;
 	C = 0;
 	S = 0;
 	F = 0;
 	dFdx = 0;
+	x = x0;
 	while ((abs(ratio) > error2) && (n <= nMax)) {
 		n = n + 1;
 		C = stumpC(a*x*x);
@@ -309,7 +335,7 @@ double stumpS(double z)
 		s = (sinh(sqrt(-z)) - sqrt(-z)) / OrbMech::power(sqrt(-z), 3);
 	}
 	else {
-		s = 1 / 6;
+		s = 1.0 / 6.0;
 	}
 	return s;
 }
@@ -319,10 +345,10 @@ double stumpC(double z)
 	double c;
 	c = 0;
 	if (z > 0) {
-		c = (1 - cos(sqrt(z))) / z;
+		c = (1.0 - cos(sqrt(z))) / z;
 	}
 	else if (z < 0) {
-		c = (cosh(sqrt(-z)) - 1) / (-z);
+		c = (cosh(sqrt(-z)) - 1.0) / (-z);
 	}
 	else {
 		c = 0.5;
