@@ -115,6 +115,14 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
+	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
+	{
+		R = _V(cos(decl)*cos(rtasc), cos(decl)*sin(rtasc), sin(decl))*rmag;
+		V.x = vmag*(cos(rtasc)*(-cos(az)*sin(fpav)*sin(decl) + cos(fpav)*cos(decl)) - sin(az)*sin(fpav)*sin(rtasc));
+		V.y = vmag*(sin(rtasc)*(-cos(az)*sin(fpav)*sin(decl) + cos(fpav)*cos(decl)) + sin(az)*sin(fpav)*cos(rtasc));
+		V.z = vmag*(cos(az)*cos(decl)*sin(fpav) + cos(fpav)*sin(decl));
+	}
+
 void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX)	//Creates a velocity vector from orbital elements
 {
 	//INPUTS:
@@ -272,8 +280,8 @@ void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, do
 	//Calculate initial guess
 	else
 	{
-		//Initial guess for elliptical and hyperbolic orbits
-		if (abs(alpha) > paratol)
+		//Initial guess for elliptical and hyperbolic orbits (and nonsensical orbits)
+		if (abs(alpha) > paratol || v0 == 0.0)
 		{
 			x0 = sqrt(mu)*abs(alpha)*t;
 		}

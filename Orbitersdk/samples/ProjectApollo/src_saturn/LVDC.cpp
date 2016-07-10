@@ -6580,7 +6580,7 @@ O3precalc:
 			alpha_D = TABLE15[1].target[tgt_index].alpha_D;
 		}
 
-		fprintf(lvlog, "Elliptic parameters: Inc: %f°, e: %f, p: %f, theta_N: %f°, f: %f°\r\n", Inclination*DEG, e, p, theta_N*DEG, f*DEG);
+		fprintf(lvlog, "Elliptic parameters: Inc: %f°, e: %f, p: %f, theta_N: %f°, alpha_D: %f°, f: %f°\r\n", Inclination*DEG, e, p, theta_N*DEG, alpha_D*DEG, f*DEG);
 
 	O3GMatrix:
 		MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),

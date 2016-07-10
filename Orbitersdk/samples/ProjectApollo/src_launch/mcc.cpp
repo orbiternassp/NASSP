@@ -2440,7 +2440,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			else
 			{
-				allocPad(8); // Allocate AP7 Maneuver Pad
+				allocPad(8); // Allocate AP11 Maneuver Pad
 			}
 			if (padForm != NULL) {
 				// If success
