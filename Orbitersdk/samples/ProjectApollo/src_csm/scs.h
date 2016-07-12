@@ -94,6 +94,7 @@ public:
 	Boiler *GetHeater() { return heater; };
 	bool IsPowered() { return powered; };
 	void SetPower(bool dc, bool ac);
+	double GetTempF();
 	void SaveState(FILEHANDLE scn); 
 	void LoadState(FILEHANDLE scn); 
 
@@ -103,7 +104,7 @@ protected:
 	e_object *dc_bus;					  	          					     // DC source to use when powered
 	e_object *ac_bus;														 // 3-Phase AC source to use when powered
 	Boiler *heater;															 // Heat coldplates when powered
-	int temperature;                                                         // Temperature
+	double temperature;                                                         // Temperature
 	VECTOR3 rates;                                                           // Detected rotation acceleration
 	VECTOR3 uncaged;														 // 0 = caged, 1 = not caged (each axis)
 	VECTOR3 targetAttitude;													 // Attitude when uncaged

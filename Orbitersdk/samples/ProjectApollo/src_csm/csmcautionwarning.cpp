@@ -376,8 +376,6 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			SetLight(CSM_CWS_SM_RCS_B, SMRCSBad(&sat->SMQuadBRCS));
 			SetLight(CSM_CWS_SM_RCS_C, SMRCSBad(&sat->SMQuadCRCS));
 			SetLight(CSM_CWS_SM_RCS_D, SMRCSBad(&sat->SMQuadDRCS));
-
-			SetLight(CSM_CWS_HIGAIN_LIMIT, sat->hga.ScanLimitWarning());
 		}
 		else {
 			SetLight(CSM_CWS_FC1_LIGHT, false);
@@ -391,6 +389,26 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 
 			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
 			SetLight(CSM_CWS_SPS_PRESS, false);
+		}
+
+		//BMAG1
+		if (sat->bmag1.GetTempF() > 172.0 || sat->bmag1.GetTempF() < 168.0)
+		{
+			SetLight(CSM_CWS_BMAG_1_TEMP, true);
+		}
+		else
+		{
+			SetLight(CSM_CWS_BMAG_1_TEMP, false);
+		}
+
+		//BMAG2
+		if (sat->bmag2.GetTempF() > 172.0 || sat->bmag2.GetTempF() < 168.0)
+		{
+			SetLight(CSM_CWS_BMAG_2_TEMP, true);
+		}
+		else
+		{
+			SetLight(CSM_CWS_BMAG_2_TEMP, false);
 		}
 
 		AtmosStatus atm;
@@ -672,7 +690,6 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	case CSM_CWS_PITCH_GIMBAL2:
 	case CSM_CWS_YAW_GIMBAL1:
 	case CSM_CWS_YAW_GIMBAL2:
-	case CSM_CWS_HIGAIN_LIMIT:
 	case CSM_CWS_FC1_LIGHT:
 	case CSM_CWS_FC2_LIGHT:
 	case CSM_CWS_FC3_LIGHT:

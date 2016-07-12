@@ -365,6 +365,7 @@ void BMAG::Init(int n, Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h) {
 	dc_bus = dcbus;
 	ac_bus = acbus;
 	heater = h;
+	temperature = 349.817;
 	AttitudeReference::Init(v);
 }
 
@@ -477,6 +478,13 @@ void BMAG::SetPower(bool dc, bool ac) {
 		ac_source = ac_bus;
 	else	
 		ac_source = NULL;
+}
+
+double BMAG::GetTempF() {
+
+	if (!sat) return 0;
+
+	return KelvinToFahrenheit(temperature);
 }
 
 void BMAG::SaveState(FILEHANDLE scn) {
@@ -2731,7 +2739,7 @@ void EMS::Init(Saturn *vessel) {
 void EMS::TimeStep(double MissionTime, double simdt) {
 
 	double position;
-	double dV, dV_res;
+	double dV;
 
 	AccelerometerTimeStep(simdt);
 
@@ -2779,7 +2787,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 		case EMS_STATUS_DVTEST:
 			dVTestTime -= simdt;
-			dVRangeCounter -= 160.0 * simdt;	// AOH SCS fig. 2.3-13
+			dVRangeCounter -= 5.*constG * simdt * FPS;	// AOH SCS fig. 2.3-13
 
 			if (dVTestTime < 0 || dVRangeCounter < -1000.0) {
 				if (dVTestTime < -0.176875) {	// Minimum -41.5 when starting with 1586.8
@@ -2796,7 +2804,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 				if (pt02GComparator(simdt) && !Manual05GInit()) ThresholdBreeched = false;
 
-				dV_res = 0.948*dV; //Resolution factor from RTCC requirements for reentry phase: https://archive.org/download/nasa_techdoc_19740074547/19740074547.pdf
+				double dV_res = 0.948*dV; //Resolution factor from RTCC requirements for reentry phase: https://archive.org/download/nasa_techdoc_19740074547/19740074547.pdf
 				ScrollPosition = ScrollPosition + (dV_res * ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
 				vinert -= dV_res;
 
