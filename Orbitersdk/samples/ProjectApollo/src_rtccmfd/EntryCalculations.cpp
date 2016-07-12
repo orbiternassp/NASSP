@@ -31,9 +31,6 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	}
 
 	this->critical = critical;
-
-	double EntryInterface;
-
 	this->gravref = gravref;
 
 	Rot = OrbMech::J2000EclToBRCS(40222.525);
@@ -336,7 +333,7 @@ void Entry::limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1
 	}
 }
 
-void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI)
+void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
 {
 	if (n1 == 0)
 	{
@@ -383,7 +380,7 @@ void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, d
 		t21 = OrbMech::time_radius(R1B, V2, RCON, -1, mu);
 		OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
 		x2_apo = x2;
-		reentryconstraints(n1, R1B, VEI);
+		reentryconstraints(n1, R1B, REI, VEI);
 		x2_err = x2_apo - x2;
 		//newxt2(n1, x2_err, x2_apo, x2, x2_err_apo);
 		n1++;
@@ -401,7 +398,7 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 
 	n1 = 0;
 	n2 = 0;
-	RCON = oapiGetSize(oapiGetObjectByName("Earth")) + 400000.0 * 0.3048;
+	RCON = oapiGetSize(hEarth) + EntryInterface;
 	RD = RCON;
 	R_ERR = 1000.0;
 	x2_err = 1.0;
@@ -462,7 +459,7 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 		x2_apo = x2;
 		if (critical > 0)
 		{
-			reentryconstraints(n2, R1B, VPRE);
+			reentryconstraints(n2, R1B, RPRE, VPRE);
 		}
 		x2_err = x2_apo - x2;
 		beta1 = 1.0 + x2*x2;
@@ -923,7 +920,7 @@ void Entry::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1,
 	MA2 = C0 + C1*r1b + C2*r1b*r1b + C3*r1b*r1b*r1b;
 	if (x2set)
 	{
-		reentryconstraints(0, R1B, _V(0, 0, 0));
+		reentryconstraints(0, R1B, _V(0, 0, 0), _V(0, 0, 0));
 	}
 }
 
@@ -2247,6 +2244,7 @@ void TEI::Abort(VECTOR3 R0, VECTOR3 V0, double dt, double mu, VECTOR3 &DV, VECTO
 	while (abs(x2_err) > 0.00001)
 	{
 		time_reentry(R0, V0, RCON, x2, dt, mu, V2, R_EI, V_EI);
+
 		v2 = length(V_EI);
 		x2_apo = x2;
 		x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;

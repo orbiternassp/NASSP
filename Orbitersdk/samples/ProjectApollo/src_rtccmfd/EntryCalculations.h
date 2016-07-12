@@ -40,7 +40,7 @@ private:
 	void precisionperi(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
 	void limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
 	void dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON);
-	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 VEI);
+	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI);
 	void newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, double &phi);
 	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
@@ -85,6 +85,7 @@ private:
 	double xlim;
 	double t21;
 	double augekugelvel; //different for abort vs. nominal range
+	double EntryInterface;
 };
 
 class TEI

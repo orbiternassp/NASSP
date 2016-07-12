@@ -701,7 +701,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC();
+		opt.RV_MCC = sv1;
 		opt.TIG = P30TIG;
+		opt.useSV = true;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
 
