@@ -513,7 +513,7 @@ void HGA::TimeStep(double simt, double simdt) {
 	// Do we have power?
 	if (!IsPowered()) return;
 
-	double PitchCmd, YawCmd;
+	double PitchCmd, YawCmd, gain;
 
 	//Only manual acquisition active
 	if (sat->GHATrackSwitch.IsCenter())
@@ -527,12 +527,14 @@ void HGA::TimeStep(double simt, double simdt) {
 		YawCmd = 180.0;
 	}
 
-	//5°/s rate limit, not based on documentation; arbitrary for the moment
+	//TBD: Convert to A- and C-Axis
+
+	//5°/s rate limit, not based on documentation; arbitrary for the moment; TBD: Drive A-, B-, and C-Axis
 	ServoDrive(Pitch, PitchCmd, 5.0, simdt);
 	ServoDrive(Yaw, YawCmd, 5.0, simdt);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
-	MATRIX3 Rot;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R, AxVec;
+	MATRIX3 Rot, AxRot;
 	double relang, beamwidth, Moonrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
@@ -540,6 +542,11 @@ void HGA::TimeStep(double simt, double simdt) {
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = unit(_V(sin(Pitch*RAD + PI05)*sin(Yaw*RAD), -cos(Pitch*RAD + PI05), sin(Pitch*RAD + PI05)*cos(Yaw*RAD)));
+
+	AxRot = _M(0.0, cos(52.25*RAD), -sin(52.25*RAD), -1.0, 0.0, 0.0, 0.0, sin(52.25*RAD), cos(52.25*RAD));
+
+	AxVec = mul(AxRot,_V(sin(Pitch*RAD), -sin(Pitch*RAD)*cos(Yaw*RAD), cos(Pitch*RAD)*cos(Yaw*RAD)));
+
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -552,13 +559,28 @@ void HGA::TimeStep(double simt, double simdt) {
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
-	//Not based on reality and just for testing: relative angle greater 40° no signal strength, uses cosine function to get increase of signal strength from 0 to 100
-	beamwidth = 40.0*RAD;
-
-	if (relang < beamwidth)
+	//Not based on reality and just for testing: relative angle greater beamwidth no signal strength, uses cosine function to get increase of signal strength from 0 to 100
+	if (sat->GHABeamSwitch.IsUp())		//Wide
 	{
-		double a = acos(sqrt(0.5)) / (beamwidth / 2.0); //Scaling for beamwidth 40°... I think
-		SignalStrength = cos(a*relang)*cos(a*relang)*100.0;
+		beamwidth = 40.0*RAD;
+		gain = 75.625;
+	}
+	else if (sat->GHABeamSwitch.IsCenter())	//Medium
+	{
+		beamwidth = 3.9*RAD;
+		gain = 99.375;
+	}
+	else								//Narrow
+	{
+		beamwidth = 3.9*RAD;
+		gain = 100.0;
+	}
+
+	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
+
+	if (relang < PI05/a)
+	{
+		SignalStrength = cos(a*relang)*cos(a*relang)*gain;
 	}
 	else
 	{
@@ -573,9 +595,12 @@ void HGA::TimeStep(double simt, double simdt) {
 		SignalStrength = 0.0;
 	}
 
-	double YawScal, scanlimwarn;
-	//Warning light
+	double YawScal, scanlim, scanlimwarn;
+	//Scaling for function
 	YawScal = (Yaw - 180.0) / 116.8332;
+
+	//Scan limit function
+	scanlim = -6.2637*pow(YawScal, 7) + 8.4309*pow(YawScal, 6) + 31.9103*pow(YawScal, 5) - 36.7725*pow(YawScal, 4) - 75.4615*pow(YawScal, 3) + 40.4809*pow(YawScal, 2) + 83.0710*YawScal + 10.5345;
 	//Scan limit warning function
 	scanlimwarn = -3.4845*pow(YawScal, 7) + 13.4789*pow(YawScal, 6) + 22.5672*pow(YawScal, 5) - 56.3628*pow(YawScal, 4) - 69.5117*pow(YawScal, 3) + 57.5809*pow(YawScal, 2) + 84.4028*YawScal - 7.2412;
 
@@ -584,7 +609,7 @@ void HGA::TimeStep(double simt, double simdt) {
 		scanlimitwarn = true;
 	}
 
-	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf", Pitch, Yaw, SignalStrength, relang*DEG);
+	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf, AxVec: %f %f %f", Pitch, Yaw, SignalStrength, relang*DEG, AxVec.x, AxVec.y, AxVec.z);
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
