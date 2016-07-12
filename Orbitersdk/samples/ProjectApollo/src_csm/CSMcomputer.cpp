@@ -4336,18 +4336,17 @@ void CMOptics::CMCShaftDrive(int val,int ch12) {
 }
 
 // Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
-// For now it's assumed to be CDU counts.
+// The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
 
 bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(OpticsShaft/OCDU_SHAFT_STEP);
-	if(value < 0){ value += 32767; }
+	int value = (int)(OpticsShaft*100.0*DEG);
+	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
 
 bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(SextTrunion/OCDU_TRUNNION_STEP);
-	value -= 7199;
-	if(value < 0){ value += 32767; }	
+	int value = (int)(TeleTrunion*1000.0*DEG);
+	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
 
