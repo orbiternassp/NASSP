@@ -484,7 +484,7 @@ LVDC_END
   CMPAD3402 76363
   CMPAD3403 60376
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 8 Checklists.xls
   </Checklist>  
 END
 Crawler-Transporter:ProjectApollo\Crawler
