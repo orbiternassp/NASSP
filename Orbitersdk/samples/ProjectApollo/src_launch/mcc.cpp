@@ -41,6 +41,7 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "saturnv.h"
+#include "OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -505,9 +506,9 @@ void MCC::Init(Saturn *vs){
 
 	// MISSION STATE
 	setState(MST_PRELAUNCH);
-	// Revolutions count up from 1.
+	// Earth Revolutions count up from 1, 1st Moon Revolution starts at -180° longitude around the time of LOI.
 	EarthRev = 1;
-	MoonRev = 1;
+	MoonRev = 0;
 
 	// CAPCOM INTERFACE INITIALIZATION
 	// Get handles to annotations.
@@ -560,67 +561,103 @@ void MCC::TimeStep(double simdt){
 	if(GT_Enabled == true){
 		LastAOSUpdate += simdt;
 		if(LastAOSUpdate > 1){
-			double LateralRange;	
-			double SlantRange;
+			double Moonrelang;
 			double LOSRange;
 			VECTOR3 CMGlobalPos = _V(0,0,0);
+			VECTOR3 MoonGlobalPos = _V(0, 0, 0);
+			VECTOR3 CM_Vector = _V(0, 0, 0);
+			VECTOR3 GSGlobalVector = _V(0, 0, 0);
+			VECTOR3 GSVector = _V(0, 0, 0);
+			double R_E, R_M;
+			bool MoonInTheWay;
 
 			LastAOSUpdate = 0;
 			// Bail out if we failed to find either major body
 			if(Earth == NULL){ addMessage("Can't find Earth"); GT_Enabled = false; return; }
 			if(Moon == NULL){ addMessage("Can't find Moon"); GT_Enabled = false; return; }
+
+			R_E = oapiGetSize(Earth);
+			R_M = oapiGetSize(Moon);
 				
 			// Update previous position data
 			CM_Prev_Position[0] = CM_Position[0];
 			CM_Prev_Position[1] = CM_Position[1];
 			CM_Prev_Position[2] = CM_Position[2];
-			// Obtain CM's global position
+			CM_Prev_MoonPosition[0] = CM_MoonPosition[0];
+			CM_Prev_MoonPosition[1] = CM_MoonPosition[1];
+			CM_Prev_MoonPosition[2] = CM_MoonPosition[2];
+			// Obtain global positions
 			cm->GetGlobalPos(CMGlobalPos);
+			oapiGetGlobalPos(Moon, &MoonGlobalPos);
+
 			// Convert to Earth equatorial
 			oapiGlobalToEqu(Earth,CMGlobalPos,&CM_Position[1],&CM_Position[0],&CM_Position[2]);
+			// Convert to Earth equatorial
+			oapiGlobalToLocal(Earth, &CMGlobalPos, &CM_Vector);
+			// Convert to Moon equatorial
+			oapiGlobalToEqu(Moon, CMGlobalPos, &CM_MoonPosition[1], &CM_MoonPosition[0], &CM_MoonPosition[2]);
 			// Convert from radians
 			CM_Position[0] *= DEG; 
 			CM_Position[1] *= DEG; 
 			// Convert from radial distance
 			CM_Position[2] -= 6373338; // Launch pad radius should be good enough
 
-			// If we just crossed the rev line, count it
-			if(CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB){
-				EarthRev++;
-				sprintf(buf,"Rev %d",EarthRev);
-				addMessage(buf);
+			//Within Lunar SOI
+			if (length(MoonGlobalPos - CMGlobalPos) < 0.0661e9)
+			{
+				// If we just crossed the rev line, count it (from -180 it jumps to 180)
+				if (CM_Prev_MoonPosition[1] < 0 && CM_MoonPosition[1] >= 0 && cm->stage >= STAGE_ORBIT_SIVB) {
+					MoonRev++;
+					sprintf(buf, "Rev %d", MoonRev);
+					addMessage(buf);
+				}
 			}
-
-			if(CM_Position[2] < 23546000){
-				// Our comm range is lunar even with an omni, so the determining factor for AOS-ness is angle above horizon.
-				// But we are lazy, so we'll figure our line-of-sight radio range from our altitude instead.
-				LOSRange = 4120*sqrt(CM_Position[2]); // In meters
-				if(LOSRange > 20000000){ LOSRange = 20000000; } // Cap it just in case
-			}else{
-				// We are high enough to cover the entire hemisphere. No point in doing the math.
-				LOSRange = 20000000;
+			//Within Earth SOI
+			else
+			{
+				// If we just crossed the rev line, count it
+				if (CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB) {
+					EarthRev++;
+					sprintf(buf, "Rev %d", EarthRev);
+					addMessage(buf);
+				}
 			}
 
 			y = 0;
-			while(x<MAX_GROUND_STATION){
-				if(GroundStations[x].Active == true){
-					// Get lateral range
-					LateralRange = sqrt(pow(GroundStations[x].Position[0]-CM_Position[0],2)+pow(GroundStations[x].Position[1]-CM_Position[1],2));
-					LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
-					// Figure slant range
-					SlantRange = sqrt((LateralRange*LateralRange)+(CM_Position[2]*CM_Position[2]));
-					// Check
-					if(SlantRange < LOSRange && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps&GSSC_VOICE)||(GroundStations[x].CommCaps&GSGC_VHFAG_VOICE))){
-						GroundStations[x].AOS = 1;
-						sprintf(buf,"AOS %s",GroundStations[x].Name);
+
+			while (x < MAX_GROUND_STATION) {
+				if (GroundStations[x].Active == true) {
+					GSVector = _V(cos(GroundStations[x].Position[1] * RAD)*cos(GroundStations[x].Position[0] * RAD), sin(GroundStations[x].Position[0] * RAD), sin(GroundStations[x].Position[1] * RAD)*cos(GroundStations[x].Position[0] * RAD))*R_E;
+					oapiLocalToGlobal(Earth, &GSVector, &GSGlobalVector);
+					MoonInTheWay = false;
+					if (GroundStations[x].StationPurpose&GSPT_LUNAR)
+					{
+						LOSRange = 5e8;
+					}
+					else
+					{
+						LOSRange = 2e7;
+					}
+					//Moon in the way
+					Moonrelang = dotp(unit(MoonGlobalPos - CMGlobalPos),  unit(GSGlobalVector - CMGlobalPos));
+					if (Moonrelang > cos(asin(R_M / length(MoonGlobalPos - CMGlobalPos))))
+					{
+						MoonInTheWay = true;
+					}
+					if (OrbMech::sight(CM_Vector, GSVector, R_E) && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps&GSSC_VOICE) || (GroundStations[x].CommCaps&GSGC_VHFAG_VOICE))) {
+						if (length(CM_Vector - GSVector) < LOSRange && !MoonInTheWay)
+						{
+							GroundStations[x].AOS = 1;
+							sprintf(buf, "AOS %s", GroundStations[x].Name);
+							addMessage(buf);
+						}
+					}
+					if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[x].AOS == 1) {
+						GroundStations[x].AOS = 0;
+						sprintf(buf, "LOS %s", GroundStations[x].Name);
 						addMessage(buf);
 					}
-					if(SlantRange > LOSRange && GroundStations[x].AOS == 1){
-						GroundStations[x].AOS = 0;
-						sprintf(buf,"LOS %s",GroundStations[x].Name);
-						addMessage(buf);
-					}			
-					if(GroundStations[x].AOS){ y++; }
+					if (GroundStations[x].AOS) { y++; }
 				}
 				x++;
 			}

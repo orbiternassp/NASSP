@@ -600,6 +600,8 @@ public:
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
+	double CM_MoonPosition[3];                              // CM's position and altitude relative to the Moon
+	double CM_Prev_MoonPosition[3];                         // CM's previous position and altitude relative to the Moon
 	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
 	bool   GT_Enabled;										// Ground tracking enable/disable
 	bool   MT_Enabled;										// Mission status tracking enable/disable
