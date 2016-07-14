@@ -84,6 +84,7 @@ enum RelativeEvent
 	SIVB_STAGE_STAGING,
 	EARTH_ORBIT_INSERTION,
 	TLI,
+	TLI_DONE,
 	CSM_LV_SEPARATION,
 	CSM_LV_SEPARATION_DONE,
 	PAYLOAD_EXTRACTION,
@@ -403,6 +404,7 @@ struct SaturnEvents
 	double SIVB_STAGE_STAGING;		// Time of S-II/S-IVB staging (or simultaneous with tower jettison in case of the Saturn 1B).
 	double EARTH_ORBIT_INSERTION;	// Time of Earth Parking Orbit (EPO) insertion.
 	double TLI;						// Time at which the TLI burn begins.
+	double TLI_DONE;				// Time at which the TLI burn ends.
 	double CSM_LV_SEPARATION;		// Time at which the CSM/LV separation sequence starts 
 	double CSM_LV_SEPARATION_DONE;	// Time at which the CSM/LV separation occured 
 	/// \todo The S-IVB has no checklist controller yet

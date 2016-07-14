@@ -1981,9 +1981,12 @@ void Saturn::SetSwitches(int panel) {
 	// FCSMSPSASwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
 	// FCSMSPSBSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
 	EventTimerUpDownSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
+	EventTimerUpDownSwitch.SetDelayTime(1);
 	EventTimerContSwitch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
+	EventTimerContSwitch.SetDelayTime(1);
 	EventTimerMinutesSwitch.Init(172, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 	EventTimerSecondsSwitch.Init(215, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
+	SaturnEventTimerDisplay.Init(EventTimerRow, this); 	// dummy switch/display for checklist controller
 
 	//
 	// Main chute release.
@@ -2608,12 +2611,15 @@ void Saturn::SetSwitches(int panel) {
 	RightIntegralRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 	RightFloodRotarySwitch.Init( 133,  0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 
+	SystemTestAttenuator.Init(this, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch, &FlightBus);
+
 	SystemTestRotariesRow.Init(AID_SYSTEMTESTROTARIES, MainPanel);
 	LeftSystemTestRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 	RightSystemTestRotarySwitch.Init(120, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 
 	SystemTestMeterRow.Init(AID_DCVOLTS_PANEL101, MainPanel);
-	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, &LeftSystemTestRotarySwitch);
+	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, &SystemTestAttenuator);
+
 	SystemTestVoltMeter.SetSurface(srf[SRF_DCVOLTS_PANEL101], 110, 110);
 
 	RNDZXPDRSwitchRow.Init(AID_RNDZXPDRSWITCH, MainPanel);
@@ -2648,16 +2654,16 @@ void Saturn::SetSwitches(int panel) {
 	Panel225CircuitBreakersRow.Init(AID_PANEL225CIRCUITBRAKERS, MainPanel);
 	PCMTLMGroup1CB.Init			(  0, 100, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	PCMTLMGroup2CB.Init			(  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	FLTBusMNACB.Init			( 77, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	FLTBusMNBCB.Init			( 77, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	FLTBusMNACB.Init			( 77, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusA);
+	FLTBusMNBCB.Init			( 77, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusB);
 	PMPPowerPrimCB.Init			( 77,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	PMPPowerAuxCB.Init			( 77,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus);
+	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch);
 	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	SBandFMXMTRGroup1CB.Init	(171,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	CentralTimingEquipMNACB.Init(264, 400, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
@@ -4909,9 +4915,13 @@ void Saturn::InitSwitches() {
 	SCSTvcYawSwitch.Register(PSH, "SCSTvcYawSwitch", THREEPOSSWITCH_CENTER);
 
 	Pitch1Switch.Register(PSH, "Pitch1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Pitch1Switch.SetDelayTime(1);
 	Pitch2Switch.Register(PSH, "Pitch2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Pitch2Switch.SetDelayTime(1);
 	Yaw1Switch.Register(PSH, "Yaw1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw1Switch.SetDelayTime(1);
 	Yaw2Switch.Register(PSH, "Yaw2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw2Switch.SetDelayTime(1);
 
 	EMSRollSwitch.Register(PSH, "EMSRollSwitch", false);
 	GSwitch.Register(PSH, "GSwitch", false);
@@ -5345,6 +5355,7 @@ void Saturn::InitSwitches() {
 	EventTimerContSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SaturnEventTimerDisplay.Register(PSH, "SaturnEventTimerDisplay", 0, 0, 0);	// dummy switch/display for checklist controller
 
 	MainReleaseSwitch.Register(PSH, "MainReleaseSwitch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
 
@@ -5542,9 +5553,9 @@ void Saturn::InitSwitches() {
 	HighGainAntennaYawPositionSwitch.AddPosition(11, 330);
 	HighGainAntennaYawPositionSwitch.Register(PSH, "HighGainAntennaYawPositionSwitch", 0);
 
-	HighGainAntennaPitchMeter.Register(PSH, "HighGainAntennaPitchMeter", -90, 90, 5);
+	HighGainAntennaPitchMeter.Register(PSH, "HighGainAntennaPitchMeter", -90, 90, 5, 90);
 	HighGainAntennaStrengthMeter.Register(PSH, "HighGainAntennaStrengthMeter", 0, 100, 5);
-	HighGainAntennaYawMeter.Register(PSH, "HighGainAntennaYawMeter", 0, 360, 5);
+	HighGainAntennaYawMeter.Register(PSH, "HighGainAntennaYawMeter", 0, 360, 5, 0);
 
 	EMSFunctionSwitch.AddPosition(0,  180);
 	EMSFunctionSwitch.AddPosition(1,  210);

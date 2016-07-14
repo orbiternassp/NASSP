@@ -30,6 +30,7 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "saturnv.h"
 #include "LEM.h"
 #include "Crawler.h"
 #include <stdio.h>
@@ -183,7 +184,14 @@ public:
 	void set_LOIInc(double inc);
 	void menuLOICalc();
 	void menuRequestLTMFD();
-	void menuSwitchVehicle();
+	void menuSetLandmarkTrkPage();
+	void menuSetLmkTime();
+	void set_LmkTime(double time);
+	void menuSetLmkLat();
+	void set_LmkLat(double lat);
+	void menuSetLmkLng();
+	void set_LmkLng(double lng);
+	void menuLmkPADCalc();
 
 protected:
 	oapi::Font *font;

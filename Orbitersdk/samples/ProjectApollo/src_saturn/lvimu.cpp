@@ -82,10 +82,6 @@ void LVIMU::Init()
 	Orbiter.AttitudeReference.m32 = 0;
 	Orbiter.AttitudeReference.m33 = 0;
 
-	Velocity.x = 0;
-	Velocity.y = 0;
-	Velocity.z = 0;
-
 	LastWeightAcceleration = _V(0, 0, 0);
 	LastGlobalVel = _V(0, 0, 0);
 
@@ -281,7 +277,7 @@ void LVIMU::Timestep(double simt)
 			PulsePIPA(LVRegPIPAY, pulses);
 			
 			pulses = (accel.z * deltaTime);
-			PulsePIPA(LVRegPIPAZ, pulses);			
+			PulsePIPA(LVRegPIPAZ, pulses);
 		}
 		LastTime = simt;
 	}	
@@ -495,17 +491,29 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.LastAttitude.Z = flt;
 		}
+		else if (!strnicmp(line, "WLX", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastWeightAcceleration.x = flt;
+		}
+		else if (!strnicmp(line, "WLY", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastWeightAcceleration.y = flt;
+		}
+		else if (!strnicmp(line, "WLZ", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastWeightAcceleration.z = flt;
+		}
 		else if (!strnicmp (line, "VLX", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Velocity.x = flt;
+			LastGlobalVel.x = flt;
 		}
 		else if (!strnicmp (line, "VLY", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Velocity.y = flt;
+			LastGlobalVel.y = flt;
 		}
 		else if (!strnicmp (line, "VLZ", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Velocity.z = flt;
+			LastGlobalVel.z = flt;
 		}
 		else if (!strnicmp (line, "M11", 3)) {
 			sscanf(line + 3, "%lf", &flt);
@@ -576,9 +584,12 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "LAX", Orbiter.LastAttitude.X);
 	papiWriteScenario_double(scn, "LAY", Orbiter.LastAttitude.Y);
 	papiWriteScenario_double(scn, "LAZ", Orbiter.LastAttitude.Z);
-	papiWriteScenario_double(scn, "VLX", Velocity.x);
-	papiWriteScenario_double(scn, "VLY", Velocity.y);
-	papiWriteScenario_double(scn, "VLZ", Velocity.z);
+	papiWriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
+	papiWriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
+	papiWriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
+	papiWriteScenario_double(scn, "VLX", LastGlobalVel.x);
+	papiWriteScenario_double(scn, "VLY", LastGlobalVel.y);
+	papiWriteScenario_double(scn, "VLZ", LastGlobalVel.z);
 	papiWriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
 	papiWriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
 	papiWriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);

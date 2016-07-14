@@ -50,6 +50,7 @@
 #include "csm_telecom.h"
 #include "sps.h"
 #include "mcc.h"
+#include "rtcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
 #include "checklistController.h"
@@ -221,6 +222,7 @@ typedef struct {
 	double BatBusACurrent;
 	double BatBusBVoltage;
 	double BatBusBCurrent;
+	double BatteryRelayBusVoltage;
 } BatteryBusStatus;
 
 ///
@@ -283,6 +285,8 @@ typedef struct {
 ///
 typedef struct {
 	double chamberPressurePSI;
+	double PropellantLineTempF;
+	double OxidizerLineTempF;
 } SPSStatus;
 
 // LVDC save file start/end strings, here temporarily
@@ -1182,6 +1186,7 @@ public:
 	/// \brief TLI event management
 	///
 	void TLI_Begun();
+	void TLI_Ended();
 
 	//
 	// LUA Interface
@@ -1492,6 +1497,7 @@ protected:
 	/// \brief Event Timer display.
 	///
 	EventTimer EventTimerDisplay;
+	SaturnEventTimer SaturnEventTimerDisplay;	//Dummy for checklist controller
 	
 	//
 	// Center engine shutdown times for first and
@@ -2056,6 +2062,7 @@ protected:
 
 	SwitchRow SystemTestMeterRow;
 	DCVoltMeter SystemTestVoltMeter;
+	SaturnSystemTestAttenuator  SystemTestAttenuator;
 
 	//
 	// FDAI control switches.
@@ -4473,6 +4480,7 @@ protected:
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class PMP;
 	friend class USB;
+	friend class HGA;
 	friend class DSE;
 	friend class EMS;
 	friend class ORDEAL;
@@ -4485,6 +4493,7 @@ protected:
 	friend class SaturnSCControlSetter;
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
+	friend class SaturnEventTimer;
 	friend class SECS;
 	friend class ELS;
 	friend class CrewStatus;
@@ -4503,6 +4512,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
+	friend class SaturnSystemTestAttenuator;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

@@ -65,7 +65,7 @@ static inline bool papiReadScenario_bool(char *line, char *item, bool &b) {
 	int i = 0;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!stricmp (buffer, item)) {
+		if (!strcmp (buffer, item)) {
 			if (sscanf(line, "%s %d", buffer, &i) == 2) {
 				b = (i != 0);
 				return true;
@@ -81,7 +81,7 @@ static inline bool papiReadScenario_int(char *line, char *item, int &i) {
 	int j;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!stricmp (buffer, item)) {
+		if (!strcmp (buffer, item)) {
 			if (sscanf(line, "%s %d", buffer, &j) == 2) {
 				i = j;
 				return true;
@@ -97,7 +97,7 @@ static inline bool papiReadScenario_double(char *line, char *item, double &d) {
 	double e;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!stricmp (buffer, item)) {
+		if (!strcmp(buffer, item)) {
 			if (sscanf(line, "%s %lf", buffer, &e) == 2) {
 				d = e;
 				return true;
@@ -113,7 +113,7 @@ static inline bool papiReadScenario_vec(char *line, char *item, VECTOR3 &v) {
 	VECTOR3 w;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!stricmp (buffer, item)) {
+		if (!strcmp (buffer, item)) {
 			if (sscanf(line, "%s %lf %lf %lf", buffer, &w.x, &w.y, &w.z) == 4) {
 				v = w;
 				return true;
@@ -212,7 +212,7 @@ static inline bool papiReadScenario_intarr(char *line, char *item, int *v, int l
 	int pos, cur;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!_stricmp(buffer, item)) {
+		if (!strcmp(buffer, item)) {
 			sscanf(line, "%s %n", buffer, &pos);
 			for (int i = 0; i < len; i++)
 			{
@@ -229,7 +229,7 @@ static inline bool papiReadScenario_string(char *line, char *item, char *i) {
 	char buffer[256];
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!_stricmp(buffer, item)) {
+		if (!strcmp(buffer, item)) {
 			if (sscanf(line, "%s %s", buffer, i) == 2) {
 				return true;
 			}
@@ -244,7 +244,7 @@ static inline bool papiReadScenario_mat(char *line, char *item, MATRIX3 &v) {
 	MATRIX3 w;
 
 	if (sscanf(line, "%s", buffer) == 1) {
-		if (!_stricmp(buffer, item)) {
+		if (!strcmp(buffer, item)) {
 			if (sscanf(line, "%s %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &w.m11, &w.m12, &w.m13, &w.m21, &w.m22, &w.m23, &w.m31, &w.m32, &w.m33) == 10) {
 				v = w;
 				return true;

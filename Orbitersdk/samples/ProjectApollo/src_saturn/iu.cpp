@@ -549,12 +549,14 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			// Wait for shutdown.
 			//
 			if ((!ExternalGNC && GNC.Get_tGO() < 1.2) || TLIBurnDone || lvCommandConnector.GetPropellantMass() < 0.001)	{
+				commandConnector.TLIEnded();
 				State++;
 			}
 
 			// TLI inhibit
 			if (SIISIVBSep) {
 				if (MissionTime >= NextMissionEventTime + 10.0) {	// non-permanent inhibit only until T+00:12, NextMissionEventTime is ignition + 2s
+					commandConnector.TLIEnded();
 					State++;
 				}
 				else
@@ -1306,6 +1308,15 @@ void IUToCSMCommandConnector::TLIBegun()
 	ConnectorMessage cm;
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = IUCSM_TLI_BEGUN;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::TLIEnded()
+{
+	ConnectorMessage cm;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_TLI_ENDED;
 
 	SendMessage(cm);
 }

@@ -222,10 +222,11 @@ protected:
 // Caution and warning light numbers for the CM panel.
 //
 
+#define CSM_CWS_BMAG_1_TEMP			0			///< CSM BMAG 1 temperature warning light.
+#define CSM_CWS_BMAG_2_TEMP			1			///< CSM BMAG 2 temperature warning light.
 #define CSM_CWS_CO2_LIGHT			3			///< CSM CO2 warning light.
 #define CSM_CWS_PITCH_GIMBAL1		4			///< CSM Gimbal 1 pitch warning light.
 #define CSM_CWS_YAW_GIMBAL1			5			///< CSM Gimbal 1 yaw warning light.
-#define CSM_CWS_HIGAIN_LIMIT		6			///< CSM High-Gain Antenna limit warning light.
 #define CSM_CWS_PITCH_GIMBAL2		8			///< CSM Gimbal 2 pitch warning light.
 #define CSM_CWS_YAW_GIMBAL2			9			///< CSM Gimbal 2 yaw warning light.
 #define CSM_CWS_CRYO_PRESS_LIGHT	10			///< CSM low cryogenic pressure warning light.
