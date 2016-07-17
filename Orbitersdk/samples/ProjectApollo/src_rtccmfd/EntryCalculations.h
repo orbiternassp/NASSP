@@ -91,7 +91,7 @@ private:
 class TEI
 {
 public:
-	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int TEItype);
+	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int TEItype, int RevsTillTEI);
 	bool TEIiter();
 
 	int precision;

@@ -144,14 +144,15 @@ struct EntryOpt
 
 struct TEIOpt
 {
-	VESSEL* vessel; //Reentry vessel
-	double GETbase; //usually MJD at launch
-	double TIGguess; //Initial estimate for the TIG
-	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
-	double EntryLng;
-	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
+	VESSEL* vessel;			//Reentry vessel
+	double GETbase;			//usually MJD at launch
+	double TIGguess = 0.0;	//Initial estimate for the TIG
+	int TEItype;			//0 = TEI, 1 = Flyby, 2 = PC+2
+	double EntryLng;		//Entry longitude
+	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
 	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
+	SV RV_MCC;				//State vector as input
+	int RevsTillTEI = 0;	//Revolutions until TEI
 };
 
 struct REFSMMATOpt
@@ -274,7 +275,7 @@ struct P27Opt
 
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
-	VESSEL *src;	// Our ship
+	Saturn *src;	// Our ship
 	VESSEL *tgt;	// Target ship
 	double TEI;		// Time of TEI
 	double TLI;		// Time of TLI

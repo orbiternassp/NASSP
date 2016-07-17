@@ -186,8 +186,10 @@ namespace OrbMech {
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future);
 	void orbitmidnight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool night, double &v1);
 	bool sight(VECTOR3 R1, VECTOR3 R2, double R_E);
+	double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d);
+	void latlong_from_BRCS(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng);
+	void latlong_from_r(VECTOR3 R, double &lat, double &lng);
 	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
-	double findlongitude(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lng);
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);

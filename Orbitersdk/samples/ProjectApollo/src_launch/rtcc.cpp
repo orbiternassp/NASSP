@@ -671,7 +671,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		entopt.TIGguess = OrbMech::HHMMSSToSS(71, 25, 4);
+		//entopt.TIGguess = OrbMech::HHMMSSToSS(71, 25, 4);
 		sprintf(manname, "TEI-1");
 
 		GETbase = getGETBase();
@@ -807,78 +807,57 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
+		entopt.RevsTillTEI = 1;
+
 		if (fcn == 104) //TEI-1
 		{
-			entopt.TIGguess = OrbMech::HHMMSSToSS(71, 25, 4);
+			entopt.RevsTillTEI = 0;
 			sprintf(manname, "TEI-1");
 		}
 		if (fcn == 105) //TEI-2
 		{
-			entopt.TIGguess = OrbMech::HHMMSSToSS(73, 21, 30);
 			sprintf(manname, "TEI-2");
 		}
 		if (fcn == 106) //TEI-3
 		{
-			//entopt.dV_LVLHguess = _V(3012.8, -54.0, 191.1)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 34, 50);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(75, 21, 28);
 			sprintf(manname, "TEI-3");
 			sprintf(form->remarks, "Assumes no LOI-2");
 		}
 		else if (fcn == 107) //TEI-4
 		{
-			//entopt.dV_LVLHguess = _V(3062.7, -62.5, 57.7)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 37, 21);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(77, 21, 28);
 			sprintf(manname, "TEI-4");
 		}
 		else if (fcn == 108) //TEI-5
 		{
-			//entopt.dV_LVLHguess = _V(3117.1, -76.7, -21.4)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 39, 44);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(79, 21, 26);
 			sprintf(manname, "TEI-5");
 		}
 		else if (fcn == 109) //TEI-6
 		{
-			//entopt.dV_LVLHguess = _V(3177.6, -82.3, -136.5)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 42, 4);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(81, 21, 24);
 			sprintf(manname, "TEI-6");
 		}
 		else if (fcn == 110) //TEI-7
 		{
-			//entopt.dV_LVLHguess = _V(3234.6, -116.8, 573.0)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 44, 14);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(83, 18, 21);
 			sprintf(manname, "TEI-7");
 		}
 		else if (fcn == 111) //TEI-8
 		{
-			//entopt.dV_LVLHguess = _V(3319.5, -126.7, 471.6)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 46, 18);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(85, 18, 19);
 			sprintf(manname, "TEI-8");
 		}
 		else if (fcn == 112) //TEI-9
 		{
-			//entopt.dV_LVLHguess = _V(3418.8, -135.3, 78.0)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 48, 16);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(87, 19, 20);
 			sprintf(manname, "TEI-9");
 		}
-		else if (fcn == 200 || fcn == 113) //TEI-10
+		else if (fcn == 113) //Preliminary TEI-10
 		{
-			//entopt.dV_LVLHguess = _V(3518.6, -151.2, -52.0)*0.3048;//DeltaV_LVLH;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 50, 5);//OrbMech::HHMMSSToSS(146, 51, 44);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(89.0, 19.0, 15.67);//TimeofIgnition;
+			sprintf(manname, "TEI-10");
+		}
+		else if (fcn == 200) //TEI-10
+		{
+			entopt.RevsTillTEI = 0;
 			sprintf(manname, "TEI-10");
 		}
 		else if (fcn == 201) //TEI-11
 		{
-			//entopt.dV_LVLHguess = _V(3625.5, -172.7, 142.8)*0.3048;
-			//entopt.GETEI = OrbMech::HHMMSSToSS(146, 51, 44);
-			entopt.TIGguess = OrbMech::HHMMSSToSS(91.0, 18.0, 12.24);
 			sprintf(manname, "TEI-11");
 		}
 
@@ -891,7 +870,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv.R = R0;
 		sv.V = V0;
 
-		
+		entopt.TIGguess = 0.0;
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
 		entopt.vessel = calcParams.src;
@@ -5531,7 +5510,7 @@ void RTCC::TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &l
 {
 	TEI* teicalc;
 	bool endi = false;
-	double EMSAlt, dt22, mu_E, tcut;
+	double EMSAlt, dt22, mu_E, tcut, MJDguess;
 	VECTOR3 R05G, V05G, R_A, V_A, R0M, V0M;
 	VECTOR3 Llambda, R_cor, V_cor, i, j, k, Rcut, Vcut;
 	double t_slip, f_T, isp, SVMJD, mass;
@@ -5564,7 +5543,18 @@ void RTCC::TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &l
 		mass = opt->vessel->GetMass();
 	}
 
-	teicalc = new TEI(R0M, V0M, SVMJD, gravref, opt->GETbase + opt->TIGguess/24.0/3600.0, opt->EntryLng, true, opt->returnspeed, opt->TEItype);
+
+	if (opt->TIGguess == 0.0)
+	{
+		//TEI targeting uses "now" as the initial guess
+		MJDguess = SVMJD;
+	}
+	else
+	{
+		MJDguess = opt->GETbase + opt->TIGguess / 24.0 / 3600.0;
+	}
+
+	teicalc = new TEI(R0M, V0M, SVMJD, gravref, MJDguess, opt->EntryLng, true, opt->returnspeed, opt->TEItype, opt->RevsTillTEI);
 
 	while (!endi)
 	{

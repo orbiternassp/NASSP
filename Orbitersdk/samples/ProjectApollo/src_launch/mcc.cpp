@@ -1368,46 +1368,46 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0, 50, MST_CP_TRANSLUNAR16);
 				break;
 			case MST_CP_TRANSLUNAR16: //LOI-1 to TEI-2
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 70 * 60 * 60 + 35 * 60, 31, MST_CP_LUNAR_ORBIT1);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 1.0*3600.0 + 25.0*60.0 + 31.0, 31, MST_CP_LUNAR_ORBIT1);
 				break;
 			case MST_CP_LUNAR_ORBIT1: //TEI-2 to LOI-2
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 71 * 60 * 60 + 40 * 60, 105, MST_CP_LUNAR_ORBIT2);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 2.0*3600.0 + 30.0*60.0 + 31.0, 105, MST_CP_LUNAR_ORBIT2);
 				break;
 			case MST_CP_LUNAR_ORBIT2: //LOI-2 to TEI-3 Calc
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 72 * 60 * 60 + 25 * 60, 102, MST_CP_LUNAR_ORBIT3);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 3.0*3600.0 + 15.0*60.0 + 31.0, 102, MST_CP_LUNAR_ORBIT3);
 				break;
 			case MST_CP_LUNAR_ORBIT3: //TEI-3 Calc to TEI-4 Calc
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 74 * 60 * 60 + 55 * 60, 106, MST_CP_LUNAR_ORBIT7);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 5.0*3600.0 + 45.0*60.0 + 31.0, 106, MST_CP_LUNAR_ORBIT7);
 				break;
 			case MST_CP_LUNAR_ORBIT7: //TEI-4 Calc to SV Update
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 76 * 60 * 60 + 25 * 60, 107, MST_CP_LUNAR_ORBIT9);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 7.0*3600.0 + 15.0*60.0 + 31.0, 107, MST_CP_LUNAR_ORBIT9);
 				break;
 			case MST_CP_LUNAR_ORBIT9: //SV Update to TEI-5 Calc
-				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > 76 * 60 * 60 + 40 * 60, 103, MST_CP_LUNAR_ORBIT10);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.LOI + 7.0*3600.0 + 30.0*60.0 + 31.0, 103, MST_CP_LUNAR_ORBIT10);
 				break;
 			case MST_CP_LUNAR_ORBIT10: //TEI-5 Calc to TEI-6 Calc
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 78 * 60 * 60 + 25 * 60, 108, MST_CP_LUNAR_ORBIT11);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 9.0*3600.0 + 15.0*60.0 + 31.0, 108, MST_CP_LUNAR_ORBIT11);
 				break;
 			case MST_CP_LUNAR_ORBIT11: //TEI-6 Calc to TEI-7 Calc
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 80 * 60 * 60 + 20 * 60, 109, MST_CP_LUNAR_ORBIT12);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 11.0*3600.0 + 10.0*60.0 + 31.0, 109, MST_CP_LUNAR_ORBIT12);
 				break;
 			case MST_CP_LUNAR_ORBIT12: //TEI-7 Calc to TEI-8 Calc
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 82 * 60 * 60 + 20 * 60, 110, MST_CP_LUNAR_ORBIT13);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 13.0*3600.0 + 10.0*60.0 + 31.0, 110, MST_CP_LUNAR_ORBIT13);
 				break;
 			case MST_CP_LUNAR_ORBIT13: //TEI-8 Calc to SV Update
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 84 * 60 * 60 + 20 * 60, 111, MST_CP_LUNAR_ORBIT14);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 15.0*3600.0 + 10.0*60.0 + 31.0, 111, MST_CP_LUNAR_ORBIT14);
 				break;
 			case MST_CP_LUNAR_ORBIT14: //SV Update to TEI-9 Calc
-				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > 84 * 60 * 60 + 35 * 60, 103, MST_CP_LUNAR_ORBIT15);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime >  rtcc->calcParams.LOI + 15.0*3600.0 + 25.0*60.0 + 31.0, 103, MST_CP_LUNAR_ORBIT15);
 				break;
 			case MST_CP_LUNAR_ORBIT15: // TEI-9 Calc to Prel. TEI-10 Calc
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 86 * 60 * 60 + 20 * 60, 112, MST_CP_LUNAR_ORBIT17);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 17.0*3600.0 + 10.0*60.0 + 31.0, 112, MST_CP_LUNAR_ORBIT17);
 				break;
 			case MST_CP_LUNAR_ORBIT17: //Prel. TEI-10 Calc to TEI-10 Calc
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 87 * 60 * 60 + 45 * 60, 113, MST_CP_LUNAR_ORBIT18);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 18.0*3600.0 + 35.0*60.0 + 31.0, 113, MST_CP_LUNAR_ORBIT18);
 				break;
 			case MST_CP_LUNAR_ORBIT18: //TEI-10 Calc to TEI-11 Calc
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 87 * 60 * 60 + 50 * 60, 200, MST_CP_LUNAR_ORBIT19);
+				UpdateMacro(UTP_P30MANEUVER, StateTime > 5.0*60.0, 200, MST_CP_LUNAR_ORBIT19);
 				break;
 			case MST_CP_LUNAR_ORBIT19: //TEI-11 Calc to TEI
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TEI, 201, MST_CP_TRANSEARTH1);

@@ -2905,13 +2905,22 @@ void ApolloRTCCMFD::menuEntryCalc()
 	{
 		if (!G->TEIfail)
 		{
-			if (G->entrylongmanual)
+			double MJDguess;
+			if (G->EntryTIG == 0.0 && G->TEItype == 0)
 			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype);
+				MJDguess = SVMJD;
 			}
 			else
 			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype);
+				MJDguess = G->GETbase + G->EntryTIG / 24.0 / 3600.0;
+			}
+			if (G->entrylongmanual)
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
+			}
+			else
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
 			}
 			G->entrycalcstate = 1;
 		}

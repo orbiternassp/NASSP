@@ -547,6 +547,10 @@ void ARCore::MapUpdate()
 		double ttoLOS, ttoAOS, ttoSS, ttoSR, ttoPM;
 		OBJHANDLE hEarth, hSun;
 
+		MATRIX3 Rot;
+		VECTOR3 R0B, V0B;
+		double t_lng;
+
 		hEarth = oapiGetObjectByName("Earth");
 		hSun = oapiGetObjectByName("Sun");
 
@@ -562,7 +566,14 @@ void ARCore::MapUpdate()
 		SSGET = (MJD - GETbase)*24.0*3600.0 + ttoSS;
 		SRGET = (MJD - GETbase)*24.0*3600.0 + ttoSR;
 
-		ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
+		Rot = OrbMech::J2000EclToBRCS(40222.525);
+
+		R0B = mul(Rot, _V(R.x, R.z, R.y));
+		V0B = mul(Rot, _V(V.x, V.z, V.y));
+
+		t_lng = OrbMech::P29TimeOfLongitude(R0B, V0B, MJD, gravref, -150.0*RAD);
+		ttoPM = (t_lng - MJD)*24.0 * 3600.0;
+		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
 		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
 	}
 }

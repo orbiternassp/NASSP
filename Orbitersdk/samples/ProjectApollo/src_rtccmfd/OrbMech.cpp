@@ -2081,63 +2081,143 @@ bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 	return los;
 }
 
-double findlongitude(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lng)
+double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
 {
-	double dt, dt_old, TA,h,e,theta0, a, T, n, E_0, t_0, E_1, t_f;
-	OELEMENTS coe;
-	double mu;
-	MATRIX3 Rot;
-	VECTOR3 H, E, lngvec, lngecl, lngecl2, dir, U_L;
-	
-	mu = GGRAV*oapiGetMass(planet);
+	MATRIX3 Rot, Rot2;
+	VECTOR3 mu_N, mu_S, mu_Z, U_Z, mu_E, mu_C, R, V, mu_D, mu_E_apo;
+	double mu, F, dphi, t, phi, lambda, eps_phi, absphidminphi, phidminphi, phi_0, theta_P, theta, t_F;
+	int n, s_G;
+	OBJHANDLE hEarth;
 
-	dt = 0;
-	dt_old = 1;
+	mu = GGRAV*oapiGetMass(gravref);
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	n = 0;
+	eps_phi = 0.0001*RAD;
+	hEarth = oapiGetObjectByName("Earth");
+	absphidminphi = 1.0;
 
-	H = crossp(R, V);
-	E = crossp(V, H) / mu - R / length(R);
+	U_Z = _V(0.0, 1.0, 0.0);
+	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
+	mu_Z = mul(Rot2, U_Z);
+	mu_Z = mul(Rot, _V(mu_Z.x, mu_Z.z, mu_Z.y));
 
-	while (abs(dt - dt_old) > 0.5)
+	mu_N = unit(crossp(R0, V0));
+	mu_S = unit(crossp(mu_N, R0));
+	mu_N = mu_N*sign(dotp(mu_N, mu_Z));
+	mu_E = unit(crossp(mu_Z, R0));
+	mu_C = unit(crossp(mu_Z, mu_E));
+
+	R = R0;
+	V = V0;
+	t = MJD;
+	dphi = 0.0;
+
+	if (gravref == hEarth)
 	{
-		lngvec = unit(_V(cos(lng), 0.0, sin(lng)));
-		Rot = GetRotationMatrix2(planet, MJD + dt / 24.0 / 3600.0);
-		lngecl = mul(Rot, lngvec);
-		dir = unit(crossp(unit(H), unit(lngecl)));
-		lngecl2 = unit(crossp(unit(dir), unit(H)));
-
-		U_L = unit(crossp(unit(H), lngecl2));
-		TA = acos(dotp(unit(E), lngecl2));
-		if (dotp(U_L, unit(E)) > 0)
-		{
-			TA = PI2 - TA;
-		}
-
-		coe = coe_from_sv(_V(R.x, R.z, R.y), _V(V.x, V.z, V.y), mu);
-		h = coe.h;
-		e = coe.e;
-		theta0 = coe.TA;
-
-		a = h*h / mu * 1.0 / (1.0 - e*e);
-		T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
-		n = PI2 / T;
-		E_0 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(theta0 / 2.0));
-		t_0 = (E_0 - e*sin(E_0)) / n;
-		E_1 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(TA / 2.0));
-		t_f = (E_1 - e*sin(E_1)) / n;
-		dt_old = dt;
-		dt = t_f - t_0;
-		if (dt < 0)
-		{
-			dt += T;
-		}
-		else if (dt > 0 && abs(dt - dt_old) > 0.5*T)
-		{
-			dt += T;
-		}
-
+		F = 16.0 / 15.0;
+	}
+	else
+	{
+		F = 327.8 / 328.8;
 	}
 
-	return dt;
+	while (absphidminphi > eps_phi && absphidminphi < PI2 - eps_phi)
+	{
+		latlong_from_BRCS(R, t, gravref, lambda, phi);
+
+		absphidminphi = abs(phi_d - phi);
+		phidminphi = phi_d - phi;
+
+		while (absphidminphi >= PI2)
+		{
+			absphidminphi -= PI2;
+		}
+
+		if (n == 0)
+		{
+			phi_0 = phi;
+			if (gravref == hEarth)
+			{
+				if (phidminphi < 0)
+				{
+					phidminphi = phidminphi - (sign(phidminphi))*PI2;
+				}
+			}
+			else
+			{
+				if (phidminphi >= 0)
+				{
+					phidminphi = phidminphi - (sign(phidminphi))*PI2;
+				}
+			}
+		}
+		else
+		{
+			if (sign((phi - phi_0)*(phi_0 - phi)) == 1)
+			{
+				if (sign(phi) + sign(phi_d) != 0)
+				{
+					phidminphi = phidminphi - (sign(phidminphi))*PI2;
+				}
+			}
+			else
+			{
+				if (sign(phi_d*phi) == -1)
+				{
+					phidminphi = phidminphi - (sign(phidminphi))*PI2;
+				}
+			}
+		}
+
+		dphi += F*phidminphi;
+		if (abs(dphi) > PI2)
+		{
+			theta_P = PI2;
+		}
+		else
+		{
+			theta_P = 0.0;
+		}
+		mu_E_apo = mu_E*cos(dphi) + mu_C*sin(dphi);
+		mu_D = unit(crossp(mu_E_apo, mu_N));
+		s_G = sign(dotp(mu_D, mu_S));
+		theta = PI*(1 - s_G) + s_G*acos(dotp(mu_D, R0) / length(R0)) + theta_P;
+
+		t_F = time_theta(R0, V0, theta, mu);
+		if (t_F < 0.0)
+		{
+			t_F += period(R0, V0, mu);
+		}
+		t = MJD + t_F / 24.0 / 3600.0;
+		rv_from_r0v0(R0, V0, (t - MJD)*24.0*3600.0, R, V, mu);
+		n++;
+	}
+
+	return t;
+}
+
+void latlong_from_BRCS(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng)
+{
+	MATRIX3 Rot, Rot2;
+	VECTOR3 R_ecl, R_equ;
+
+	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
+
+	R_ecl = tmul(Rot, R);
+	R_ecl = _V(R_ecl.x, R_ecl.z, R_ecl.y);
+	R_equ = tmul(Rot2, R_ecl);
+
+	latlong_from_r(_V(R_equ.x, R_equ.z, R_equ.y), lat, lng);
+}
+
+void latlong_from_r(VECTOR3 R, double &lat, double &lng)
+{
+	VECTOR3 u;
+
+	u = unit(R);
+	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
+	lng = atan2(u.y, u.x);
 }
 
 bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt)
