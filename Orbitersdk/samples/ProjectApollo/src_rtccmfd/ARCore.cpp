@@ -369,7 +369,7 @@ void ARCore::LmkCalc()
 	get = (SVMJD - GETbase)*24.0*3600.0;
 	MJDguess = GETbase + LmkTime / 24.0 / 3600.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	RA0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
 	VA0 = mul(Rot, _V(VA0_orb.x, VA0_orb.z, VA0_orb.y));
@@ -566,7 +566,7 @@ void ARCore::MapUpdate()
 		SSGET = (MJD - GETbase)*24.0*3600.0 + ttoSS;
 		SRGET = (MJD - GETbase)*24.0*3600.0 + ttoSR;
 
-		Rot = OrbMech::J2000EclToBRCS(40222.525);
+		Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 		R0B = mul(Rot, _V(R.x, R.z, R.y));
 		V0B = mul(Rot, _V(V.x, V.z, V.y));
@@ -588,7 +588,7 @@ void ARCore::StateVectorCalc()
 	svtarget->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R.x, R.z, R.y));
 	V0B = mul(Rot, _V(V.x, V.z, V.y));
@@ -1215,7 +1215,7 @@ int ARCore::subThread()
 			SV RV1;
 
 			hMoon = oapiGetObjectByName("Moon");
-			Rot = OrbMech::J2000EclToBRCS(40222.525);
+			Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 			vessel->GetRelativePos(hMoon, R_A);
 			vessel->GetRelativeVel(hMoon, V_A);
@@ -1354,7 +1354,7 @@ int ARCore::subThread()
 				vessel->GetRelativeVel(gravref, V0);
 				SVMJD = oapiGetSimMJD();
 
-				Rot = OrbMech::J2000EclToBRCS(40222.525);
+				Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 				R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
 				V0 = mul(Rot, _V(V0.x, V0.z, V0.y));

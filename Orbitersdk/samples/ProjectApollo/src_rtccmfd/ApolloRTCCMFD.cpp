@@ -2873,7 +2873,7 @@ void ApolloRTCCMFD::menuEntryCalc()
 	G->vessel->GetRelativeVel(G->gravref, V);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R.x, R.z, R.y));
 	V0B = mul(Rot, _V(V.x, V.z, V.y));

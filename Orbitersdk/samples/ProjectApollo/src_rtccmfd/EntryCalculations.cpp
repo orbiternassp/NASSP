@@ -33,7 +33,7 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	this->critical = critical;
 	this->gravref = gravref;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	this->R0B = R0B;
 	this->V0B = V0B;
@@ -130,7 +130,7 @@ Entry::Entry(OBJHANDLE gravref, int critical)
 	mu = GGRAV*oapiGetMass(hEarth);
 
 	RCON = oapiGetSize(hEarth) + EntryInterface;
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (critical == 0)
 	{
@@ -1965,7 +1965,7 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	this->TEItype = TEItype;
 	this->mjd0 = mjd0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	EntryInterface = 400000.0 * 0.3048;
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	mu_E = GGRAV*oapiGetMass(hEarth);

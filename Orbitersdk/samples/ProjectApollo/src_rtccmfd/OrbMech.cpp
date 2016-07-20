@@ -1300,25 +1300,25 @@ MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t)
 
 	if (plan == oapiGetObjectByName("Earth"))
 	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;// -9413040.4;						//Precession Period
-		L_0 = 0.007573;								//LAN in the "beginning"
-		e_rel = 0.409093;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.888008;						//Sidereal Rotational Offset
+		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
+		T_p = -9413040.4;							//Precession Period
+		L_0 = 0.0;									//LAN in the "beginning"
+		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.894957082;						//Sidereal Rotational Offset
 		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;								//Precession Obliquity
-		L_ref = 0;								//Precession LAN
+		e_ref = 0;									//Precession Obliquity
+		L_ref = 0;									//Precession LAN
 	}
 	else if (plan == oapiGetObjectByName("Moon"))
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;						//Precession Period
-		L_0 = 0.095487;						//LAN in the "beginning"
-		e_rel = 0.026721;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 0.573252;					//Sidereal Rotational Offset
-		T_s = 2360591.5968 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0.0;				//Precession Obliquity
-		L_ref = 0.0;					//Precession LAN
+		T_p = -6793.219721;						//Precession Period
+		L_0 = 1.71817749;						//LAN in the "beginning"
+		e_rel = 0.02692416821;					//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.769465382;					//Sidereal Rotational Offset
+		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
+		e_ref = 7.259562816e-005;				//Precession Obliquity
+		L_ref = 0.4643456618;					//Precession LAN
 	}
 
 	Rot1 = _M(cos(L_ref), 0, -sin(L_ref), 0, 1, 0, sin(L_ref), 0, cos(L_ref));
@@ -1374,25 +1374,25 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 
 	if (plan == oapiGetObjectByName("Earth"))
 	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;// -9413040.4;						//Precession Period
-		L_0 = 0.007573;								//LAN in the "beginning"
-		e_rel = 0.409093;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.888008;						//Sidereal Rotational Offset
+		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
+		T_p = -9413040.4;							//Precession Period
+		L_0 = 0.0;									//LAN in the "beginning"
+		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.894957082;						//Sidereal Rotational Offset
 		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;								//Precession Obliquity
-		L_ref = 0;								//Precession LAN
+		e_ref = 0;									//Precession Obliquity
+		L_ref = 0;									//Precession LAN
 	}
 	else if (plan == oapiGetObjectByName("Moon"))
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;						//Precession Period
-		L_0 = 0.095487;						//LAN in the "beginning"
-		e_rel = 0.026721;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 0.573252;					//Sidereal Rotational Offset
-		T_s = 2360591.5968 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0.0;				//Precession Obliquity
-		L_ref = 0.0;					//Precession LAN
+		T_p = -6793.219721;						//Precession Period
+		L_0 = 1.71817749;						//LAN in the "beginning"
+		e_rel = 0.02692416821;					//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.769465382;					//Sidereal Rotational Offset
+		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
+		e_ref = 7.259562816e-005;				//Precession Obliquity
+		L_ref = 0.4643456618;					//Precession LAN
 	}
 
 	Rot1 = _M(cos(L_ref), 0.0, -sin(L_ref), 0.0, 1.0, 0.0, sin(L_ref), 0.0, cos(L_ref));
@@ -1476,7 +1476,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	dt_max = 150.0;
 	dt_0 = 0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	w_A = PI2 / oapiGetPlanetPeriod(gravref);
 	if (gravref == oapiGetObjectByName("Moon"))
 	{
@@ -2090,7 +2090,7 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	OBJHANDLE hEarth;
 
 	mu = GGRAV*oapiGetMass(gravref);
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	n = 0;
 	eps_phi = 0.0001*RAD;
 	hEarth = oapiGetObjectByName("Earth");
@@ -2201,7 +2201,7 @@ void latlong_from_BRCS(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, do
 	MATRIX3 Rot, Rot2;
 	VECTOR3 R_ecl, R_equ;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
 
 	R_ecl = tmul(Rot, R);
@@ -2891,25 +2891,25 @@ MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t)
 
 	if (plan == oapiGetObjectByName("Earth"))
 	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;// -9413040.4;						//Precession Period
-		L_0 = 0.007573;								//LAN in the "beginning"
-		e_rel = 0.409093;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.888008;						//Sidereal Rotational Offset
+		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
+		T_p = -9413040.4;							//Precession Period
+		L_0 = 0.0;									//LAN in the "beginning"
+		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.894957082;						//Sidereal Rotational Offset
 		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;								//Precession Obliquity
-		L_ref = 0;								//Precession LAN
+		e_ref = 0;									//Precession Obliquity
+		L_ref = 0;									//Precession LAN
 	}
 	else if (plan == oapiGetObjectByName("Moon"))
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = HUGE_VAL;						//Precession Period
-		L_0 = 0.095487;						//LAN in the "beginning"
-		e_rel = 0.026721;					//Obliquity / axial tilt of the earth in radians
-		phi_0 = 0.573252;					//Sidereal Rotational Offset
-		T_s = 2360591.5968 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0.0;				//Precession Obliquity
-		L_ref = 0.0;					//Precession LAN
+		T_p = -6793.219721;						//Precession Period
+		L_0 = 1.71817749;						//LAN in the "beginning"
+		e_rel = 0.02692416821;					//Obliquity / axial tilt of the earth in radians
+		phi_0 = 4.769465382;					//Sidereal Rotational Offset
+		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
+		e_ref = 7.259562816e-005;				//Precession Obliquity
+		L_ref = 0.4643456618;					//Precession LAN
 	}
 
 	L_rel = L_0 + PI2*(t - t0) / T_p;
@@ -3395,7 +3395,7 @@ MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 	Rot1 = GetRotationMatrix2(hEarth, mjd);
 	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)));
 	R_ecl = mul(Rot1, R_P);
-	Rot = J2000EclToBRCS(40222.525);
+	Rot = J2000EclToBRCS(40221.525);
 	g_p = mul(Rot, _V(R_ecl.x, R_ecl.z, R_ecl.y));
 	U_Z = _V(0.0, 0.0, 1.0);
 	REFS6 = unit(g_p);
@@ -3954,7 +3954,7 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	}
 	hSun = oapiGetObjectByName("Sun");
 	mu_S = GGRAV*oapiGetMass(hSun);
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	oapiGetPlanetObliquityMatrix(planet, &obli);
 	obli = mul(Rot, mul(_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0), obli));
 	//obli = mul(transpose_matrix(obli), mul(_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0), transpose_matrix(Rot)));

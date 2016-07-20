@@ -2847,7 +2847,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, doubl
 
 	gravref = AGCGravityRef(opt->vessel);
 
-	obli = OrbMech::J2000EclToBRCS(40222.525);
+	obli = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (opt->useSV)
 	{
@@ -2934,7 +2934,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	lambert->target->GetRelativeVel(gravref, VP0_orb);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	mu = GGRAV*oapiGetMass(gravref);
 
 	RA0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
@@ -3067,7 +3067,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	double headsswitch;
 	OBJHANDLE gravref, maneuverplanet = NULL;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (opt->useSV)
 	{
@@ -3304,7 +3304,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -3464,7 +3464,7 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 
 	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -3574,7 +3574,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 	SVMJD = oapiGetSimMJD();
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -3763,7 +3763,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	opt->vessel->GetRelativeVel(gravref, V_A);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -3993,7 +3993,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	a = 6378166;
 	b = 6356784;
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
 
 	Recl = tmul(Rot, R);
@@ -4034,7 +4034,7 @@ void RTCC::StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECT
 	SVMJD = oapiGetSimMJD();
 	GETbase = getGETBase();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R0B = mul(Rot, _V(R.x, R.z, R.y));
 	V0B = mul(Rot, _V(V.x, V.z, V.y));
@@ -4099,7 +4099,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	opt->vessel->GetRelativeVel(gravref, V_A);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	R_A = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
 	V_A = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
@@ -4502,7 +4502,7 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	target->GetRelativeVel(gravref, VP0_orb);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	RA0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
 	VA0 = mul(Rot, _V(VA0_orb.x, VA0_orb.z, VA0_orb.y));
@@ -4522,7 +4522,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 	OBJHANDLE hMoon, gravref;
 
 	hMoon = oapiGetObjectByName("Moon");
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (opt->useSV)
 	{
@@ -4780,7 +4780,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	MATRIX3 obli, Q_Xx;
 	VECTOR3 VXvec[4], DVXvec[4];
 
-	obli = OrbMech::J2000EclToBRCS(40222.525);
+	obli = OrbMech::J2000EclToBRCS(40221.525);
 	mu = GGRAV*oapiGetMass(opt->gravref);									//Standard gravitational parameter GM
 
 	SPSMJD = opt->GETbase + opt->SPSGET / 24.0 / 60.0 / 60.0;					//The MJD of the maneuver
@@ -4981,7 +4981,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	SV sv0, sv1, sv2, sv3;
 
 	boil = (1.0 - 0.99998193) / 10.0;
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	sv0.gravref = AGCGravityRef(opt->vessel);
 
@@ -5520,7 +5520,7 @@ void RTCC::TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &l
 	OBJHANDLE gravref = AGCGravityRef(opt->vessel);
 
 	EMSAlt = 297431.0*0.3048;
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	mu_E = GGRAV*oapiGetMass(hEarth);
 
 	if (opt->useSV)
@@ -5626,7 +5626,7 @@ void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 
 
 	sv2 = coast(sv, (IgnMJD - sv.MJD)*24.0*3600.0);
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	RIgn = tmul(Rot, sv2.R);
 	VIgn = tmul(Rot, sv2.V);
@@ -5679,7 +5679,7 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, V
 
 	//Constants
 	gravref = AGCGravityRef(calcParams.src);
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	mu_E = GGRAV*oapiGetMass(gravref);
 	boil = (1.0 - 0.99998193) / 10.0;
 
