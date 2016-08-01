@@ -1750,7 +1750,7 @@ MATRIX3 J2000EclToBRCS(double mjd)
 	double rot = -r - PI05;
 	double lan = PI05 - L;
 	double inc = i;
-	double obl = 0.40909280422;
+	double obl = 0.40916190299;
 
 	return mul( mul(_MRz(rot),_MRx(inc)), mul(_MRz(lan),_MRx(-obl)) );
 }
