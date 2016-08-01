@@ -33,8 +33,6 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	this->critical = critical;
 	this->gravref = gravref;
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
-
 	this->R0B = R0B;
 	this->V0B = V0B;
 	this->mjd = mjd;
@@ -130,7 +128,7 @@ Entry::Entry(OBJHANDLE gravref, int critical)
 	mu = GGRAV*oapiGetMass(hEarth);
 
 	RCON = oapiGetSize(hEarth) + EntryInterface;
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
+	//Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (critical == 0)
 	{
@@ -633,7 +631,7 @@ void Entry::landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, dou
 	U_LS = UR3*Cphie + U_H3*Sphie;
 
 	tLSMJD = GETbase + t_LS / 24.0 / 3600.0;
-	U_LS = tmul(Rot, U_LS);
+	//U_LS = tmul(Rot, U_LS);
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
 	R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
 	LSEF = tmul(R, U_LS);
@@ -1712,7 +1710,7 @@ void Entry::EntryUpdateCalc()
 		U_LS = UR3*Cphie + U_H3*Sphie;
 
 		tLSMJD = mjd + t_LS / 24.0 / 3600.0;
-		U_LS = tmul(Rot, U_LS);
+		//U_LS = tmul(Rot, U_LS);
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
 		R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
 		LSEF = tmul(R, U_LS);
@@ -1769,7 +1767,7 @@ void Entry::Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0)
 	U_LS = UR3*Cphie + U_H3*Sphie;
 
 	tLSMJD = mjd0 + t_LS / 24.0 / 3600.0;
-	U_LS = tmul(Rot, U_LS);
+	//U_LS = tmul(Rot, U_LS);
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
 	R = OrbMech::GetRotationMatrix2(gravref, tLSMJD);
 	LSEF = tmul(R, U_LS);
@@ -1965,7 +1963,6 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	this->TEItype = TEItype;
 	this->mjd0 = mjd0;
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
 	EntryInterface = 400000.0 * 0.3048;
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	mu_E = GGRAV*oapiGetMass(hEarth);
@@ -2198,8 +2195,8 @@ VECTOR3 TEI::ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, d
 	MoonPos = new double[12];
 	cMoon->clbkEphemeris(t_I, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
 
-	R_m = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
-	V_m = mul(Rot, _V(MoonPos[3], MoonPos[5], MoonPos[4]));
+	R_m = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+	V_m = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
 
 	R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
 	V_I_star = V_I;
@@ -2278,7 +2275,6 @@ void TEI::landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double mu, double &la
 	U_H3 = unit(crossp(crossp(R3, V3), R3));
 	U_LS = UR3*Cphie + U_H3*Sphie;
 
-	U_LS = tmul(Rot, U_LS);
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
 	R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
 	LSEF = tmul(R, U_LS);

@@ -65,8 +65,8 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 
 struct SV
 {
-	VECTOR3 R;
-	VECTOR3 V;
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
 	double MJD = 0.0;
 	OBJHANDLE gravref = NULL;
 	double mass = 0.0;
@@ -354,9 +354,9 @@ public:
 	struct calculationParameters calcParams;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC();
+	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
+	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &J2000Pos, VECTOR3 &J2000Vel);
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
@@ -364,13 +364,13 @@ private:
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
-	char* CMCStateVectorUpdate(SV sv, bool csm);
-	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT);
-	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);
+	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);
-	void P27PADCalc(P27Opt *opt, P27PAD &pad);
+	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);

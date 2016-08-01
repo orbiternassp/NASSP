@@ -152,8 +152,8 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
-	VECTOR3 BRCSPos, BRCSVel;
-	double BRCSGET;
+	VECTOR3 J2000Pos, J2000Vel;
+	double J2000GET;
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET

@@ -64,6 +64,7 @@ ARCore::ARCore(VESSEL* v)
 	{
 		REFSMMAToct[i] = 0;
 	}
+
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
 		mission = 7;
@@ -74,15 +75,27 @@ ARCore::ARCore(VESSEL* v)
 		mission = 8;
 		REFSMMAT = A8REFSMMAT;
 	}
-	else if (strcmp(v->GetName(), "AS-504") == 0 || strcmp(v->GetName(), "Gumdrop") == 0)
+	else if (strcmp(v->GetName(), "AS-504") == 0)
 	{
 		mission = 9;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
-	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie Brown") == 0)
+	else if (strcmp(v->GetName(), "Gumdrop") == 0)
+	{
+		mission = 9;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		vesseltype = 2;
+	}
+	else if (strcmp(v->GetName(), "AS-505") == 0)
 	{
 		mission = 10;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+	}
+	else if (strcmp(v->GetName(), "Charlie Brown") == 0)
+	{
+		mission = 10;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		vesseltype = 2;
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
@@ -107,9 +120,21 @@ ARCore::ARCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
 		mission = 15;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission-7], 72.0*RAD);
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 80.088*RAD);
+	}
+	else if (strcmp(v->GetName(), "Falcon") == 0)
+	{
+		mission = 15;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 80.088*RAD);
+		vesseltype = 2;
 	}
 	GETbase = LaunchMJD[mission - 7];
+
+	if (vessel->DockingStatus(0) == 1)
+	{
+		vesseltype++;
+	}
+
 	MATRIX3 a;
 	a = REFSMMAT;
 
@@ -187,9 +212,9 @@ ARCore::ARCore(VESSEL* v)
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
 	SVSlot = true; //true = CSM; false = Other
-	BRCSPos = _V(0.0, 0.0, 0.0);
-	BRCSVel = _V(0.0, 0.0, 0.0);
-	BRCSGET = 0.0;
+	J2000Pos = _V(0.0, 0.0, 0.0);
+	J2000Vel = _V(0.0, 0.0, 0.0);
+	J2000GET = 0.0;
 	manpad.Trun = 0.0;
 	manpad.Shaft = 0.0;
 	manpad.Star = 0;
@@ -356,7 +381,6 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 void ARCore::LmkCalc()
 {
 	VECTOR3 RA0_orb, VA0_orb, RA0, VA0, R_P, RA1, VA1, u;
-	MATRIX3 Rot;
 	double SVMJD, dt1, dt2, get, MJDguess, sinl, gamma, r_0;
 	OBJHANDLE hEarth, hMoon;
 
@@ -369,10 +393,8 @@ void ARCore::LmkCalc()
 	get = (SVMJD - GETbase)*24.0*3600.0;
 	MJDguess = GETbase + LmkTime / 24.0 / 3600.0;
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
-
-	RA0 = mul(Rot, _V(RA0_orb.x, RA0_orb.z, RA0_orb.y));
-	VA0 = mul(Rot, _V(VA0_orb.x, VA0_orb.z, VA0_orb.y));
+	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
+	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
 
 	R_P = unit(_V(cos(LmkLng)*cos(LmkLat), sin(LmkLat), sin(LmkLng)*cos(LmkLat)))*oapiGetSize(gravref);
 
@@ -529,6 +551,10 @@ void ARCore::MapUpdate()
 	vessel->GetRelativePos(gravref, R);
 	vessel->GetRelativeVel(gravref, V);
 	MJD = oapiGetSimMJD();
+
+	R = _V(R.x, R.z, R.y);
+	V = _V(V.x, V.z, V.y);
+
 	if (mappage == 0)
 	{
 		int gstat;
@@ -547,8 +573,6 @@ void ARCore::MapUpdate()
 		double ttoLOS, ttoAOS, ttoSS, ttoSR, ttoPM;
 		OBJHANDLE hEarth, hSun;
 
-		MATRIX3 Rot;
-		VECTOR3 R0B, V0B;
 		double t_lng;
 
 		hEarth = oapiGetObjectByName("Earth");
@@ -566,12 +590,7 @@ void ARCore::MapUpdate()
 		SSGET = (MJD - GETbase)*24.0*3600.0 + ttoSS;
 		SRGET = (MJD - GETbase)*24.0*3600.0 + ttoSR;
 
-		Rot = OrbMech::J2000EclToBRCS(40221.525);
-
-		R0B = mul(Rot, _V(R.x, R.z, R.y));
-		V0B = mul(Rot, _V(V.x, V.z, V.y));
-
-		t_lng = OrbMech::P29TimeOfLongitude(R0B, V0B, MJD, gravref, -150.0*RAD);
+		t_lng = OrbMech::P29TimeOfLongitude(R, V, MJD, gravref, -150.0*RAD);
 		ttoPM = (t_lng - MJD)*24.0 * 3600.0;
 		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
 		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
@@ -581,26 +600,24 @@ void ARCore::MapUpdate()
 void ARCore::StateVectorCalc()
 {
 	VECTOR3 R, V,R0B,V0B,R1B,V1B;
-	MATRIX3 Rot;
+	//MATRIX3 Rot;
 	double SVMJD,dt;
 
 	svtarget->GetRelativePos(gravref, R);
 	svtarget->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
-
-	R0B = mul(Rot, _V(R.x, R.z, R.y));
-	V0B = mul(Rot, _V(V.x, V.z, V.y));
+	R0B = _V(R.x, R.z, R.y);
+	V0B = _V(V.x, V.z, V.y);
 
 	if (svtimemode)
 	{
-		dt = BRCSGET - (SVMJD - GETbase)*24.0*3600.0;
+		dt = J2000GET - (SVMJD - GETbase)*24.0*3600.0;
 		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
 	}
 	else
 	{
-		BRCSGET = (SVMJD - GETbase)*24.0*3600.0;
+		J2000GET = (SVMJD - GETbase)*24.0*3600.0;
 		R1B = R0B;
 		V1B = V0B;
 	}
@@ -609,8 +626,8 @@ void ARCore::StateVectorCalc()
 
 	//convmat = mul(_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0),mul(transpose_matrix(obl),_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0)));
 
-	BRCSPos = R1B;
-	BRCSVel = V1B;
+	J2000Pos = R1B;
+	J2000Vel = V1B;
 }
 
 void ARCore::StateVectorUplink()
@@ -621,10 +638,13 @@ void ARCore::StateVectorUplink()
 
 	VECTOR3 vel,pos;
 	double get;
+	MATRIX3 Rot;
 
-	pos = BRCSPos;
-	vel = BRCSVel*0.01;
-	get = BRCSGET;
+	Rot = OrbMech::J2000EclToBRCS(40221.525);
+
+	pos = mul(Rot, J2000Pos);
+	vel = mul(Rot, J2000Vel)*0.01;
+	get = J2000GET;
 
 	if (gravref == hMoon) {
 
@@ -1124,7 +1144,9 @@ int ARCore::subThread()
 
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
-		a = REFSMMAT;
+		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+
+		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(40221.525)));
 
 		if (REFSMMATupl == 0)
 		{
@@ -1211,17 +1233,16 @@ int ARCore::subThread()
 			OBJHANDLE hMoon;
 			VECTOR3 R_A, V_A, R0B, V0B, UX, UY, UZ, DV, V2;
 			double SVMJD;
-			MATRIX3 Rot;
+			//MATRIX3 Rot;
 			SV RV1;
 
 			hMoon = oapiGetObjectByName("Moon");
-			Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 			vessel->GetRelativePos(hMoon, R_A);
 			vessel->GetRelativeVel(hMoon, V_A);
 			SVMJD = oapiGetSimMJD();
-			R0B = mul(Rot, _V(R_A.x, R_A.z, R_A.y));
-			V0B = mul(Rot, _V(V_A.x, V_A.z, V_A.y));
+			R0B = _V(R_A.x, R_A.z, R_A.y);
+			V0B = _V(V_A.x, V_A.z, V_A.y);
 
 			OrbMech::oneclickcoast(R0B, V0B, SVMJD, TLCC_TIG - (SVMJD - GETbase)*24.0*3600.0, RV1.R, RV1.V, gravref, hMoon);
 			RV1.gravref = hMoon;
@@ -1346,7 +1367,8 @@ int ARCore::subThread()
 
 
 				VECTOR3 R0, V0, R, V, DV, Llambda, UX, UY, UZ, R_cor, V_cor, i, j, k, Rcut, Vcut;
-				MATRIX3 Rot, mat, Q_Xx;
+				//MATRIX3 Rot, mat, Q_Xx;
+				MATRIX3 mat, Q_Xx;
 				double SVMJD, t_slip, mu, f_T, isp, tcut;
 
 
@@ -1354,10 +1376,8 @@ int ARCore::subThread()
 				vessel->GetRelativeVel(gravref, V0);
 				SVMJD = oapiGetSimMJD();
 
-				Rot = OrbMech::J2000EclToBRCS(40221.525);
-
-				R0 = mul(Rot, _V(R0.x, R0.z, R0.y));
-				V0 = mul(Rot, _V(V0.x, V0.z, V0.y));
+				R0 = _V(R0.x, R0.z, R0.y);
+				V0 = _V(V0.x, V0.z, V0.y);
 
 				OrbMech::oneclickcoast(R0, V0, SVMJD, entry->EntryTIGcor - (SVMJD - GETbase) * 24.0 * 60.0 * 60.0, R, V, gravref, gravref);
 

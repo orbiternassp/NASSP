@@ -995,7 +995,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-			GET_Display(Buffer, G->BRCSGET);
+			GET_Display(Buffer, G->J2000GET);
 			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
@@ -1017,21 +1017,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
 		}
-		sprintf(Buffer, "%f", G->BRCSPos.x);
+		sprintf(Buffer, "%f", G->J2000Pos.x);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSPos.y);
+		sprintf(Buffer, "%f", G->J2000Pos.y);
 		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSPos.z);
+		sprintf(Buffer, "%f", G->J2000Pos.z);
 		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f", G->BRCSVel.x);
+		sprintf(Buffer, "%f", G->J2000Vel.x);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSVel.y);
+		sprintf(Buffer, "%f", G->J2000Vel.y);
 		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSVel.z);
+		sprintf(Buffer, "%f", G->J2000Vel.z);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f", G->BRCSGET);
+		sprintf(Buffer, "%f", G->J2000GET);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 8)
@@ -2395,29 +2395,15 @@ void ApolloRTCCMFD::set_lambertelev(double elev)
 		return;
 	}
 	double mu, SVMJD, dt1;
-	MATRIX3 obli;
 	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb,RA0,VA0,RP0,VP0;
 
 	mu = GGRAV*oapiGetMass(G->gravref);
-
-	//if (IterStage == 0)
-	//{
-
-	oapiGetPlanetObliquityMatrix(G->gravref, &obli);//oapiGetRotationMatrix(gravref, &obli);
 
 	G->vessel->GetRelativePos(G->gravref, RA0_orb);
 	G->vessel->GetRelativeVel(G->gravref, VA0_orb);
 	G->target->GetRelativePos(G->gravref, RP0_orb);
 	G->target->GetRelativeVel(G->gravref, VP0_orb);
-
-	//SVtime = oapiGetSimTime();
 	SVMJD = oapiGetSimMJD();
-
-
-	RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);	//Calculates the equatorial state vector from the ecliptic state vector
-	VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
-	RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
-	VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
 
 	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
 	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
@@ -2728,7 +2714,7 @@ bool SVGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_SVtime(double SVtime)
 {
-	G->BRCSGET = SVtime;
+	G->J2000GET = SVtime;
 }
 
 void ApolloRTCCMFD::t2dialogue()
@@ -2867,16 +2853,13 @@ void ApolloRTCCMFD::menuEntryCalc()
 {
 	double SVMJD;
 	VECTOR3 R, V, R0B, V0B;
-	MATRIX3 Rot;
 
 	G->vessel->GetRelativePos(G->gravref, R);
 	G->vessel->GetRelativeVel(G->gravref, V);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
-
-	R0B = mul(Rot, _V(R.x, R.z, R.y));
-	V0B = mul(Rot, _V(V.x, V.z, V.y));
+	R0B = _V(R.x, R.z, R.y);
+	V0B = _V(V.x, V.z, V.y);
 
 	if (G->entrycalcmode == 0)
 	{
@@ -3297,6 +3280,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
 			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
 			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(40221.525));
 			G->REFSMMATcur = G->REFSMMATopt;
 
 			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
