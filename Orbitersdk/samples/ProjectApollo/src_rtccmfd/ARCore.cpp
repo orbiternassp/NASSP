@@ -68,12 +68,12 @@ ARCore::ARCore(VESSEL* v)
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
 		mission = 7;
-		REFSMMAT = A7REFSMMAT;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.5217969*RAD, -80.5612465*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
 	else if (strcmp(v->GetName(), "AS-503")==0)
 	{
 		mission = 8;
-		REFSMMAT = A8REFSMMAT;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.124*RAD);
 	}
 	else if (strcmp(v->GetName(), "AS-504") == 0)
 	{
@@ -136,7 +136,7 @@ ARCore::ARCore(VESSEL* v)
 	}
 
 	MATRIX3 a;
-	a = REFSMMAT;
+	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(40221.525)));
 
 	REFSMMAToct[0] = 24;
 	REFSMMAToct[1] = 306;
@@ -158,6 +158,7 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
 	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+
 	REFSMMATdirect = true;
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = (oapiGetSimMJD()-GETbase)*24*60*60;

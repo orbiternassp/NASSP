@@ -4117,16 +4117,8 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 	if (opt->REFSMMATopt == 4)
 	{
-		//TODO: Nominal launchpad REFSMMATs for all missions
-		if (opt->mission == 7)
-		{
-		return A7REFSMMAT;
-		}
-		else if (opt->mission == 8)
-		{
-		return A8REFSMMAT;
-		}
-		return _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+		//For now a default LC-39A, 72° launch
+		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72*RAD);
 	}
 	else if (opt->REFSMMATopt == 5)
 	{

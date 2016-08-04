@@ -3389,22 +3389,25 @@ void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
 
 MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 {
-	VECTOR3 R_P, R_ecl, g_p, REFS0, REFS3, REFS6,E,S,U_Z;
-	MATRIX3 Rot1,Rot;
+	VECTOR3 R_P, g_p, REFS0, REFS3, REFS6, E, S, U_Z;
+	MATRIX3 Rot1;
 	OBJHANDLE hEarth;
 
 	hEarth = oapiGetObjectByName("Earth");
 	Rot1 = GetRotationMatrix2(hEarth, mjd);
-	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)));
-	R_ecl = mul(Rot1, R_P);
-	Rot = J2000EclToBRCS(40221.525);
-	g_p = mul(Rot, _V(R_ecl.x, R_ecl.z, R_ecl.y));
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
+	g_p = -unit(R_P);
 	U_Z = _V(0.0, 0.0, 1.0);
 	REFS6 = unit(g_p);
 	E = unit(crossp(REFS6, U_Z));
 	S = unit(crossp(E, REFS6));
 	REFS0 = E*sin(A_Z) + S*cos(A_Z);
 	REFS3 = unit(crossp(REFS6, REFS0));
+
+	REFS0 = rhmul(Rot1, REFS0);
+	REFS3 = rhmul(Rot1, REFS3);
+	REFS6 = rhmul(Rot1, REFS6);
+
 	return _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
 }
 
