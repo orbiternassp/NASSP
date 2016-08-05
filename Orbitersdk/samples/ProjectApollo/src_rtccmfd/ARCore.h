@@ -84,6 +84,7 @@ public:
 
 	//GENERAL PARAMETERS
 	double GETbase;			//Launch MJD
+	double AGCEpoch;
 	int mission;			//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
 	OBJHANDLE gravref;		//Earth or Moon
 	double P30TIG;			//Maneuver GET

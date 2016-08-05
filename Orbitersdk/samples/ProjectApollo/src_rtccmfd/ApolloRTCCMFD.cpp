@@ -1047,8 +1047,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "Apollo %i", G->mission);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		sprintf(Buffer, "%f", G->GETbase);
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "Launch MJD: %f", G->GETbase);
+		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
+		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->vesseltype == 0)
 		{
@@ -1072,17 +1075,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 8, 8 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", G->sxtstardtime);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 8, 10 * H / 14, "Uplink in LOS:", 14);
 
 		if (G->inhibUplLOS)
 		{
-			skp->Text(5 * W / 8, 10 * H / 14, "Inhibit", 7);
+			skp->Text(4 * W / 8, 10 * H / 14, "Inhibit", 7);
 		}
 		else
 		{
-			skp->Text(5 * W / 8, 10 * H / 14, "Enabled", 7);
+			skp->Text(4 * W / 8, 10 * H / 14, "Enabled", 7);
 		}
 
 		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
@@ -3145,6 +3148,30 @@ void ApolloRTCCMFD::set_launchmjd(double mjd)
 	this->G->GETbase = mjd;
 }
 
+void ApolloRTCCMFD::menuSetAGCEpoch()
+{
+	if (G->mission == 0)
+	{
+		bool AGCEpochInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the AGC Epoch:", AGCEpochInput, 0, 20, (void*)this);
+	}
+}
+
+bool AGCEpochInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEpoch(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEpoch(double mjd)
+{
+	this->G->AGCEpoch = mjd;
+}
+
 void ApolloRTCCMFD::menuChangeVesselType()
 {
 	if (G->vesseltype < 3)
@@ -3280,7 +3307,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
 			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
 			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(40221.525));
+			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
 			G->REFSMMATcur = G->REFSMMATopt;
 
 			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);

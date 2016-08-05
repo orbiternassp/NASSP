@@ -128,7 +128,6 @@ Entry::Entry(OBJHANDLE gravref, int critical)
 	mu = GGRAV*oapiGetMass(hEarth);
 
 	RCON = oapiGetSize(hEarth) + EntryInterface;
-	//Rot = OrbMech::J2000EclToBRCS(40221.525);
 
 	if (critical == 0)
 	{

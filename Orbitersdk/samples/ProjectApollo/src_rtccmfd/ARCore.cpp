@@ -43,6 +43,7 @@ ARCore::ARCore(VESSEL* v)
 	targetnumber = -1;
 	mission = 0;
 	GETbase = LaunchMJD[0];
+	AGCEpoch = 40221.525;
 	REFSMMAT = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
 	REFSMMATopt = 4; 
@@ -83,50 +84,56 @@ ARCore::ARCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "Gumdrop") == 0)
 	{
 		mission = 9;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		vesseltype = 2;
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "AS-505") == 0)
 	{
 		mission = 10;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Charlie Brown") == 0)
 	{
 		mission = 10;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		vesseltype = 2;
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
 		mission = 11;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
 		mission = 11;
 		vesseltype = 2;
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
 	{
 		mission = 12;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
 	{
 		mission = 14;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 75.558*RAD);
+		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
 		mission = 15;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 80.088*RAD);
+		AGCEpoch = 41317.251625;
 	}
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 80.088*RAD);
 		vesseltype = 2;
+		AGCEpoch = 40586.767239;
 	}
 	GETbase = LaunchMJD[mission - 7];
 
@@ -136,7 +143,7 @@ ARCore::ARCore(VESSEL* v)
 	}
 
 	MATRIX3 a;
-	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(40221.525)));
+	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
 
 	REFSMMAToct[0] = 24;
 	REFSMMAToct[1] = 306;
@@ -641,7 +648,7 @@ void ARCore::StateVectorUplink()
 	double get;
 	MATRIX3 Rot;
 
-	Rot = OrbMech::J2000EclToBRCS(40221.525);
+	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
 
 	pos = mul(Rot, J2000Pos);
 	vel = mul(Rot, J2000Vel)*0.01;
@@ -1147,7 +1154,7 @@ int ARCore::subThread()
 
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
 
-		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(40221.525)));
+		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
 
 		if (REFSMMATupl == 0)
 		{
