@@ -3625,7 +3625,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		MATRIX3 Rot2;
 		LSMJD = (dt + t_go + dt2 + dt3 + dt4) / 24.0 / 3600.0 + SVMJD;
 		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-		Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+		Rot2 = OrbMech::GetRotationMatrix(gravref, LSMJD);
 		R_LS = mul(Rot2, R_P);
 		//R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
 		R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
@@ -3708,7 +3708,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		VECTOR3 RTE, UTR, urh, URT0, URT;
 		LSMJD = EMSTime / 24.0 / 3600.0 + opt->GETbase;
 		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-		Rot2 = OrbMech::GetRotationMatrix2(gravref, LSMJD);
+		Rot2 = OrbMech::GetRotationMatrix(gravref, LSMJD);
 		R_LS = mul(Rot2, R_P);
 		//R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
 		R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
@@ -3806,7 +3806,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	EntryPADVIO = length(sv05G.V);
 
 	R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-	Rot2 = OrbMech::GetRotationMatrix2(hEarth, LSMJD);
+	Rot2 = OrbMech::GetRotationMatrix(hEarth, LSMJD);
 	R_LS = mul(Rot2, R_P);
 	//R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
 	R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
@@ -3987,7 +3987,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	a = 6378166;
 	b = 6356784;
 
-	Rot2 = OrbMech::GetRotationMatrix2(gravref, MJD);
+	Rot2 = OrbMech::GetRotationMatrix(gravref, MJD);
 
 	Recl = _V(R.x, R.z, R.y);
 
@@ -4131,7 +4131,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 		R_P = unit(_V(cos(opt->LSLng)*cos(opt->LSLat), sin(opt->LSLat), sin(opt->LSLng)*cos(opt->LSLat)));
 
-		Rot2 = OrbMech::GetRotationMatrix2(oapiGetObjectByName("Moon"), LSMJD);
+		Rot2 = OrbMech::GetRotationMatrix(oapiGetObjectByName("Moon"), LSMJD);
 
 		R_LS = mul(Rot2, R_P);
 		R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
@@ -4552,7 +4552,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
 
-		Rot2 = OrbMech::GetRotationMatrix2(hMoon, PeriMJD);
+		Rot2 = OrbMech::GetRotationMatrix(hMoon, PeriMJD);
 
 		R_peri = mul(Rot2, R_P);
 		//R_peri = unit(mul(Rot, _V(R_peri.x, R_peri.z, R_peri.y)))*(oapiGetSize(hMoon) + opt->h_peri);
@@ -4659,7 +4659,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 		PeriMJD = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
 		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-		Rot2 = OrbMech::GetRotationMatrix2(hMoon, PeriMJD);
+		Rot2 = OrbMech::GetRotationMatrix(hMoon, PeriMJD);
 
 		R_peri = mul(Rot2, R_P);
 		//R_peri = unit(mul(Rot, _V(R_peri.x, R_peri.z, R_peri.y)))*(oapiGetSize(hMoon) + opt->h_peri);

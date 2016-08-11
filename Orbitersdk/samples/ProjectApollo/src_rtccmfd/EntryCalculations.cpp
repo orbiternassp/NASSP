@@ -632,7 +632,7 @@ void Entry::landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double &lambda, dou
 	tLSMJD = GETbase + t_LS / 24.0 / 3600.0;
 	//U_LS = tmul(Rot, U_LS);
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-	R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
+	R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
 	LSEF = tmul(R, U_LS);
 	l = LSEF.x;
 	m = LSEF.z;
@@ -1711,7 +1711,7 @@ void Entry::EntryUpdateCalc()
 		tLSMJD = mjd + t_LS / 24.0 / 3600.0;
 		//U_LS = tmul(Rot, U_LS);
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-		R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
+		R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
 		LSEF = tmul(R, U_LS);
 		l = LSEF.x;
 		m = LSEF.z;
@@ -1768,7 +1768,7 @@ void Entry::Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0)
 	tLSMJD = mjd0 + t_LS / 24.0 / 3600.0;
 	//U_LS = tmul(Rot, U_LS);
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-	R = OrbMech::GetRotationMatrix2(gravref, tLSMJD);
+	R = OrbMech::GetRotationMatrix(gravref, tLSMJD);
 	LSEF = tmul(R, U_LS);
 	l = LSEF.x;
 	m = LSEF.z;
@@ -2275,7 +2275,7 @@ void TEI::landingsite(VECTOR3 REI, VECTOR3 VEI, double t2, double mu, double &la
 	U_LS = UR3*Cphie + U_H3*Sphie;
 
 	U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-	R = OrbMech::GetRotationMatrix2(hEarth, tLSMJD);
+	R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
 	LSEF = tmul(R, U_LS);
 	l = LSEF.x;
 	m = LSEF.z;
