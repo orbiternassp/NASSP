@@ -176,7 +176,7 @@ ARCore::ARCore(VESSEL* v)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;
-	if (vesseltype == 0)
+	if (vesseltype < 2)
 	{
 		g_Data.uplinkLEM = 0;
 	}

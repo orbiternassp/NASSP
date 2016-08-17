@@ -245,8 +245,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.GETbase = GETbase;
+		opt.R_TLI = calcParams.R_TLI;
+		opt.V_TLI = calcParams.V_TLI;
 		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
 		opt.TIG = TimeofIgnition;
+		opt.TLI = calcParams.TLI;
 		opt.vessel = calcParams.src;
 		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
 		opt.uselvdc = mcc->cm->use_lvdc;
@@ -4077,6 +4080,16 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	double theta_T, F, v_e;
 	OBJHANDLE hMoon, hEarth, gravref;
 	SV sv0, sv2;
+	THGROUP_TYPE th_main;
+
+	if (opt->vessel->GetGroupThruster(THGROUP_MAIN, 0) == NULL)
+	{
+		th_main = THGROUP_HOVER;
+	}
+	else
+	{
+		th_main = THGROUP_MAIN;
+	}
 
 	gravref = AGCGravityRef(opt->vessel);
 
@@ -4090,8 +4103,8 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	R_A = _V(R_A.x, R_A.z, R_A.y);
 	V_A = _V(V_A.x, V_A.z, V_A.y);
 
-	F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(th_main, 0));
+	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(th_main, 0));
 
 	sv0.gravref = gravref;
 	sv0.mass = opt->vessel->GetMass();
@@ -4959,7 +4972,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 
 	if (opt->uselvdc)
 	{
-		t_go = calcParams.TLI - opt->TIG;
+		t_go = opt->TLI - opt->TIG;
 
 		UY = unit(crossp(sv1.V, -sv1.R));
 		UZ = unit(sv1.R);
@@ -4969,8 +4982,8 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 		IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 
 		sv2 = sv1;
-		sv2.R = calcParams.R_TLI;
-		sv2.V = calcParams.V_TLI;
+		sv2.R = opt->R_TLI;
+		sv2.V = opt->V_TLI;
 		sv2.MJD += t_go / 24.0 / 3600.0;
 
 		sv3 = coast(sv2, 900.0);
@@ -5622,9 +5635,9 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 	return param;
 }
 
-void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI)
+void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI)
 {
-	double GETbase, SVMJD, day, theta_E, MJD_GRR, mu_E, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
+	double SVMJD, day, theta_E, MJD_GRR, mu_E, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
 	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil;
 	VECTOR3 R_A, V_A, PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, R0, V0, R1, V1, Sbar_1, Cbar_1, R2, V2;
 	MATRIX3 mat, MX_EPH, MX_B, MX_G;
@@ -5632,17 +5645,16 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, V
 	OELEMENTS coe;
 
 	//Constants
-	gravref = AGCGravityRef(calcParams.src);
+	gravref = AGCGravityRef(vessel);
 	mu_E = GGRAV*oapiGetMass(gravref);
 	boil = (1.0 - 0.99998193) / 10.0;
 
 	//State Vector
-	GETbase = getGETBase();
 	modf(oapiGetSimMJD(), &day);
 	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
 	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, 28.6082888*RAD, -80.6041140*RAD, lvdc.Azimuth);
-	calcParams.src->GetRelativePos(gravref, R_A);
-	calcParams.src->GetRelativeVel(gravref, V_A);
+	vessel->GetRelativePos(gravref, R_A);
+	vessel->GetRelativeVel(gravref, V_A);
 	SVMJD = oapiGetSimMJD();
 	R0 = _V(R_A.x, R_A.z, R_A.y);
 	V0 = _V(V_A.x, V_A.z, V_A.y);
@@ -5714,10 +5726,10 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, V
 	VECTOR3 Pos4, PosXEZ, DotXEZ, ddotG_act, DDotXEZ_G;
 	MATRIX3 MX_phi_T, MX_K;
 
-	Fs = calcParams.src->GetThrusterMax0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
-	V_ex = calcParams.src->GetThrusterIsp0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
-	mass = calcParams.src->GetMass();
-	m0 = calcParams.src->GetEmptyMass();
+	Fs = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	V_ex = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	mass = vessel->GetMass();
+	m0 = vessel->GetEmptyMass();
 	dt1 = dt + (MJD_TST - SVMJD) * 24.0 * 3600.0;
 	m1 = (mass - m0)*exp(-boil*dt1);
 

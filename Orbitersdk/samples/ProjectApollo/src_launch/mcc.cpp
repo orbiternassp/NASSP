@@ -1143,7 +1143,7 @@ void MCC::TimeStep(double simdt){
 						{
 							SaturnV *SatV = (SaturnV*)cm;
 							LVDCTLIparam tliparam = SatV->lvdc->GetTLIParams();
-							rtcc->LVDCTLIPredict(tliparam, rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
+							rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						}
 						else
 						{
