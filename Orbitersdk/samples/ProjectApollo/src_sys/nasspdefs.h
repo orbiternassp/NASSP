@@ -350,13 +350,6 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (55.0 * 60.0) + 10.0)
 
 //
-// We include a sizeable overlap here for the course correction earliest and latest times,
-// to allow for people using high time accelerations.
-//
-
-#define COURSE_CORRECTION_START_TIME	219400
-#define COURSE_CORRECTION_END_TIME	(COURSE_CORRECTION_START_TIME + 10000)
-
 //
 // Flags to show the mesh is visible externally and in the virtual cockpit.
 //
