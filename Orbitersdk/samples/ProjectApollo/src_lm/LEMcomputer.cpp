@@ -1329,7 +1329,7 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
 
-	switch (channel)
+	/*switch (channel)
 	{
 	case 030:
 		if ((bit == 1) && val) {
@@ -1339,7 +1339,7 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 			RunProgram(71);			// Abort with ascent stage.
 		}
 		break;
-	}
+	}*/
 }
 
 bool LEMcomputer::OrbitCalculationsValid()

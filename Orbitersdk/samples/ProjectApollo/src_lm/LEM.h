@@ -328,18 +328,62 @@ public:
 	LEM *lem;					// Pointer at LEM
 };
 
+class DPSGimbalActuator {
+
+public:
+	DPSGimbalActuator();
+	virtual ~DPSGimbalActuator();
+
+	void Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source);
+	void Timestep(double simt, double simdt);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+	double GetPosition() { return position; }
+	void ChangeLGCPosition(int pos);
+	void ZeroLGCPosition() { lgcPosition = 0; }
+	int GetLGCPosition() { return lgcPosition; }
+
+	void GimbalTimestep(double simdt);
+
+protected:
+	bool IsSystemPowered();
+	void DrawSystemPower();
+
+	double position;
+	int commandedPosition;
+	int lgcPosition;
+	int ttcaPosition;
+	bool motorRunning;
+
+	LEM *lem;
+	AGCIOSwitch *gimbalMotorSwitch;
+	e_object *motorSource;
+};
+
 // Descent Engine
 class LEM_DPS{
 public:
-	LEM_DPS();
+	LEM_DPS(THRUSTER_HANDLE *dps);
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void TimeStep(double simt, double simdt);
+	void SystemTimestep(double simdt);
+	void ProcessPitchChannel();
+	void ProcessRollChannel();
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
 	int EngineOn;				// Engine "On" Command
+
+	DPSGimbalActuator pitchGimbalActuator;
+	DPSGimbalActuator rollGimbalActuator;
+
+protected:
+
+	THRUSTER_HANDLE *dpsThruster;
+	
 };
 
 // Ascent Engine
@@ -733,7 +777,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	ToggleSwitch THRContSwitch;
+	AGCIOSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;
@@ -856,7 +900,7 @@ protected:
     UnguardedIMUCageSwitch IMUCageSwitch;
 
 	SwitchRow EngGimbalEnableSwitchRow;
-	ToggleSwitch EngGimbalEnableSwitch;
+	AGCIOSwitch EngGimbalEnableSwitch;
 
 	SwitchRow RadarAntTestSwitchesRow;
 	ThreePosSwitch LandingAntSwitch;
@@ -913,10 +957,10 @@ protected:
 	FivePosSwitch RadarSlewSwitch;
 
 	SwitchRow EventTimerSwitchRow;
-	ThreePosSwitch EventTimerCtlSwitch;
-	ThreePosSwitch EventTimerStartSwitch;
-	ThreePosSwitch EventTimerMinuteSwitch;
-	ThreePosSwitch EventTimerSecondSwitch;
+	EventTimerResetSwitch EventTimerCtlSwitch;
+	EventTimerControlSwitch EventTimerStartSwitch;
+	TimerUpdateSwitch EventTimerMinuteSwitch;
+	TimerUpdateSwitch EventTimerSecondSwitch;
 
 	//
 	// Currently these are just 0-5V meters; at some point we may want
@@ -1729,10 +1773,16 @@ protected:
 	friend class LMSuitPressMeter;
 	friend class LMCabinTempMeter;
 	friend class LMSuitTempMeter;
+	friend class DPSGimbalActuator;
+	friend class LEM_DPS;
 };
 
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);
 extern void FreeGParam();
+
+#define DPSGIMBALACTUATOR_PITCH_START_STRING "DPSGIMBALACTUATOR_PITCH_BEGIN"
+#define DPSGIMBALACTUATOR_ROLL_START_STRING "DPSGIMBALACTUATOR_ROLL_BEGIN"
+#define DPSGIMBALACTUATOR_END_STRING "DPSGIMBALACTUATOR_END"
 
 #endif

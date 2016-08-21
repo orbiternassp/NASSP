@@ -212,7 +212,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk),
-	deda(this,soundlib, aea, 015)
+	deda(this,soundlib, aea, 015),
+	DPS(th_hover)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -827,7 +828,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			ALTN1 = aALT;
 			SPEEDN1= aSpeed;
 		}
-	AttitudeLaunch1();
+	//AttitudeLaunch1();
 	if( toggleRCS){
 			if(P44switch){
 			SetAttitudeMode(2);
@@ -1201,6 +1202,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
+		else if (!strnicmp(line, DPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(DPSGIMBALACTUATOR_PITCH_START_STRING))) {
+			DPS.pitchGimbalActuator.LoadState(scn);
+		}
+		else if (!strnicmp(line, DPSGIMBALACTUATOR_ROLL_START_STRING, sizeof(DPSGIMBALACTUATOR_ROLL_START_STRING))) {
+			DPS.rollGimbalActuator.LoadState(scn);
+		}
 		else if (!strnicmp (line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
 			checkControl.load(scn);
@@ -1480,6 +1487,12 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
+
+	//Save pitch and roll gimbal actuators
+	oapiWriteLine(scn, DPSGIMBALACTUATOR_PITCH_START_STRING);
+	DPS.pitchGimbalActuator.SaveState(scn);
+	oapiWriteLine(scn, DPSGIMBALACTUATOR_ROLL_START_STRING);
+	DPS.rollGimbalActuator.SaveState(scn);
 	checkControl.save(scn);
 }
 

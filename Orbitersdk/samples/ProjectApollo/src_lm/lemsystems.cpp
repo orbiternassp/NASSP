@@ -46,6 +46,7 @@
 #include "LEM.h"
 
 #include "CollisionSDK/CollisionSDK.h"
+#include "papi.h"
 
 
 #define RR_SHAFT_STEP 0.000191747598876953125 
@@ -773,6 +774,8 @@ void LEM::SystemsInit()
 
 	// DPS and APS
 	DPS.Init(this);
+	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
+	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	APS.Init(this);
 
 	// DS20060413 Initialize joystick
@@ -1032,7 +1035,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);
-	DPS.TimeStep(simdt);
+	DPS.TimeStep(simt, simdt);
 	APS.TimeStep(simdt);
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
@@ -2852,8 +2855,14 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when difference in commanded and actual descent engine trim position is detected.
 	// Enabled when descent engine armed and engine gimbal switch is enabled.
 	// Disabled by stage deadface open.
-	// FIXME: We'll ignore this for now.
-	LightStatus[2][4] = 0;
+	if (lem->stage < 2 && (abs(lem->DPS.pitchGimbalActuator.GetPosition()) >= 6.0 || abs(lem->DPS.rollGimbalActuator.GetPosition()) >= 6.0))
+	{
+		LightStatus[2][4] = 1;
+	}
+	else
+	{
+		LightStatus[2][4] = 0;
+	}
 
 	// 6DS26 INVERTER FAILURE CAUTION
 	// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
@@ -3181,7 +3190,8 @@ double LEM_ECS::DescentOxyTankPressure(int tank){
 }
 
 // Descent Propulsion System
-LEM_DPS::LEM_DPS(){
+LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
+	dpsThruster(dps) {
 	lem = NULL;	
 	EngineOn = 0;
 	HePress[0] = 0; HePress[1] = 0;
@@ -3191,8 +3201,72 @@ void LEM_DPS::Init(LEM *s){
 	lem = s;
 }
 
-void LEM_DPS::TimeStep(double simdt){
+void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
+
+	if (lem->GuidContSwitch.IsUp()) {
+		// Check i/o channel
+		ChannelValue val11;
+		val11 = lem->agc.GetOutputChannel(011);
+		if (val11[EngineOn]) {
+			EngineOn = true;
+		}
+		else {
+			EngineOn = false;
+		}
+	}
+
+	ProcessPitchChannel();
+	ProcessRollChannel();
+
+	// Do time step
+	pitchGimbalActuator.Timestep(simt, simdt);
+	rollGimbalActuator.Timestep(simt, simdt);
+
+	VECTOR3 dpsvector;
+
+	if (lem->stage < 2 && dpsThruster[0]) {
+		// Directions X,Y,Z
+		dpsvector.x = -rollGimbalActuator.GetPosition() * RAD; // Convert deg to rad
+		dpsvector.z = pitchGimbalActuator.GetPosition() * RAD;
+		dpsvector.y = 1;
+		lem->SetThrusterDir(dpsThruster[0], dpsvector);
+		lem->SetThrusterDir(dpsThruster[1], dpsvector);
+
+		sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", EngineOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
+	}
+}
+
+void LEM_DPS::SystemTimestep(double simdt) {
+	pitchGimbalActuator.SystemTimestep(simdt);
+	rollGimbalActuator.SystemTimestep(simdt);
+}
+
+void LEM_DPS::ProcessPitchChannel() {
+
+	ChannelValue val12;
+	val12 = lem->agc.GetOutputChannel(012);
+
+	int valx = val12[PlusPitchVehicleMotion];
+	int valy = val12[MinusPitchVehicleMotion];
+
+	int val = valx - valy;
+
+	pitchGimbalActuator.ChangeLGCPosition(val);
+}
+
+void LEM_DPS::ProcessRollChannel() {
+
+	ChannelValue val12;
+	val12 = lem->agc.GetOutputChannel(012);
+
+	int valx = val12[PlusRollVehicleMotion];
+	int valy = val12[MinusRollVehicleMotion];
+
+	int val = valx - valy;
+
+
+	rollGimbalActuator.ChangeLGCPosition(val);
 }
 
 void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -3224,4 +3298,167 @@ void LEM_APS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 
 void LEM_APS::LoadState(FILEHANDLE scn,char *end_str){
 
+}
+
+DPSGimbalActuator::DPSGimbalActuator() {
+
+	position = 0;
+	commandedPosition = 0;
+	lgcPosition = 0;
+	ttcaPosition = 0;
+	motorRunning = false;
+	lem = 0;
+	gimbalMotorSwitch = 0;
+	motorSource = 0;
+}
+
+DPSGimbalActuator::~DPSGimbalActuator() {
+	// Nothing for now.
+}
+
+void DPSGimbalActuator::Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source) {
+
+	lem = s;
+	gimbalMotorSwitch = m1Switch;
+	motorSource = m1Source;
+}
+
+void DPSGimbalActuator::Timestep(double simt, double simdt) {
+
+	if (lem == NULL) { return; }
+
+	// After staging
+	if (lem->stage > 1) {
+		position = 0;
+		return;
+	}
+
+	//
+	// Motors
+	//
+
+	if (motorRunning) {
+		if (gimbalMotorSwitch->IsDown() || motorSource->Voltage() < SP_MIN_ACVOLTAGE) {
+			motorRunning = false;
+		}
+	}
+	else {
+		if (gimbalMotorSwitch->IsUp() && motorSource->Voltage() > SP_MIN_ACVOLTAGE) {
+			//if (motorStartSource->Voltage() > SP_MIN_ACVOLTAGE) {
+				motorRunning = true;
+			//	}
+		}
+	}
+
+	 //sprintf(oapiDebugString(), "Motor %d %f %d", gimbalMotorSwitch->IsUp(), motorSource->Voltage(), motorRunning);
+
+	//
+	// Process commanded position
+	//
+
+	if (lem->GuidContSwitch.IsUp())
+	{
+		commandedPosition = lgcPosition;
+	}
+	else {
+		commandedPosition = ttcaPosition;
+	}
+
+	if (IsSystemPowered() && motorRunning) {
+		//position = commandedPosition; // Instant positioning
+		GimbalTimestep(simdt);
+	}
+
+	// Only 6.0 degrees of travel allowed.
+	if (position > 6.0) { position = 6.0; }
+	if (position < -6.0) { position = -6.0; }
+
+	//sprintf(oapiDebugString(), "position %.3f commandedPosition %.3f lgcPosition %.3f", position, commandedPosition, lgcPosition);
+}
+
+void DPSGimbalActuator::GimbalTimestep(double simdt)
+{
+	double LMR, dpos;
+
+	LMR = 0.2;	//0.2°/s maximum gimbal speed
+
+	dpos = (double)commandedPosition*LMR*simdt;
+
+	position += dpos;
+}
+
+void DPSGimbalActuator::SystemTimestep(double simdt) {
+
+	if (lem->stage > 1) return;
+
+	if (IsSystemPowered() && motorRunning) {
+		DrawSystemPower();
+	}
+}
+
+bool DPSGimbalActuator::IsSystemPowered() {
+
+	if (gimbalMotorSwitch->IsUp())
+	{
+		if (motorSource->Voltage() > SP_MIN_ACVOLTAGE)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void DPSGimbalActuator::DrawSystemPower() {
+
+	if (gimbalMotorSwitch->IsUp())
+	{
+		motorSource->DrawPower(100);	/// \todo real power consumption is unknown 
+	}
+}
+
+void DPSGimbalActuator::ChangeLGCPosition(int pos) {
+
+	lgcPosition = pos;
+}
+
+void DPSGimbalActuator::SaveState(FILEHANDLE scn) {
+
+	// START_STRING is written in LEM
+	papiWriteScenario_double(scn, "POSITION", position);
+	oapiWriteScenario_int(scn, "COMMANDEDPOSITION", commandedPosition);
+	oapiWriteScenario_int(scn, "LGCPOSITION", lgcPosition);
+	oapiWriteScenario_int(scn, "TTCAPOSITION", ttcaPosition);
+	oapiWriteScenario_int(scn, "MOTORRUNNING", (motorRunning ? 1 : 0));
+
+	oapiWriteLine(scn, DPSGIMBALACTUATOR_END_STRING);
+}
+
+void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
+
+	char *line;
+	int i;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, DPSGIMBALACTUATOR_END_STRING, sizeof(DPSGIMBALACTUATOR_END_STRING))) {
+			return;
+		}
+
+		if (!strnicmp(line, "POSITION", 8)) {
+			sscanf(line + 8, "%lf", &position);
+		}
+		else if (!strnicmp(line, "COMMANDEDPOSITION", 17)) {
+			sscanf(line + 17, "%d", &commandedPosition);
+		}
+		else if (!strnicmp(line, "LGCPOSITION", 11)) {
+			sscanf(line + 11, "%d", &lgcPosition);
+		}
+		else if (!strnicmp(line, "TTCAPOSITION", 12)) {
+			sscanf(line + 12, "%d", &ttcaPosition);
+		}
+		else if (!strnicmp(line, "MOTORRUNNING", 13)) {
+			sscanf(line + 13, "%d", &i);
+			motorRunning = (i != 0);
+		}
+	}
 }
