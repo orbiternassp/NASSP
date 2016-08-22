@@ -636,7 +636,7 @@ void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double EngineThrustInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->GetThrusterLevel(lem->th_hover[0])*100.0;
 }
 
 void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -663,7 +663,7 @@ void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double CommandedThrustInd::QueryValue()
 
 {
-	return 50.0;
+	return 10.0;
 }
 
 void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
