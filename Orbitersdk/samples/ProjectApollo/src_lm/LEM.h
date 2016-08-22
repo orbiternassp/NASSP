@@ -375,7 +375,7 @@ public:
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int EngineOn;				// Engine "On" Command
+	int thrustOn;				// Engine "On" Command
 
 	DPSGimbalActuator pitchGimbalActuator;
 	DPSGimbalActuator rollGimbalActuator;
@@ -397,7 +397,7 @@ public:
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int EngineOn;				// Engine "On" Command
+	int thrustOn;				// Engine "On" Command
 };
 
 ///
@@ -1775,6 +1775,7 @@ protected:
 	friend class LMSuitTempMeter;
 	friend class DPSGimbalActuator;
 	friend class LEM_DPS;
+	friend class LEM_APS;
 };
 
 extern void LEMLoadMeshes();

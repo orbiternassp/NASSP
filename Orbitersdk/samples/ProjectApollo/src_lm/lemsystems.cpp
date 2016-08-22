@@ -2722,7 +2722,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 	// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 	LightStatus[2][0] = 0; // Default
-	if(lem->DPS.EngineOn){ // This should be forced off at staging
+	if(lem->DPS.thrustOn){ // This should be forced off at staging
 		if(lem->DPS.HePress[1] > 260 || lem->DPS.HePress[1] < 220){
 			LightStatus[2][0] = 1;
 		}
@@ -2845,7 +2845,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when less than 10 seconds of ascent propellant/oxidizer remains.
 	// Disabled when ascent engine is not firing.
 	// FIXME: This test probably used a fixed setpoint instead of division. Investigate.
-	if(lem->APS.EngineOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc)/lem->GetPropellantFlowrate(lem->ph_Asc) < 10)){
+	if(lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc)/lem->GetPropellantFlowrate(lem->ph_Asc) < 10)){
 		LightStatus[1][4] = 1;
 	}else{
 		LightStatus[1][4] = 0;
@@ -3193,7 +3193,7 @@ double LEM_ECS::DescentOxyTankPressure(int tank){
 LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsThruster(dps) {
 	lem = NULL;	
-	EngineOn = 0;
+	thrustOn = 0;
 	HePress[0] = 0; HePress[1] = 0;
 }
 
@@ -3204,15 +3204,25 @@ void LEM_DPS::Init(LEM *s){
 void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
 
-	if (lem->GuidContSwitch.IsUp()) {
+	if (lem->stage < 2 && lem->GuidContSwitch.IsUp()) {
 		// Check i/o channel
 		ChannelValue val11;
 		val11 = lem->agc.GetOutputChannel(011);
-		if (val11[EngineOn]) {
-			EngineOn = true;
+		if (val11[EngineOn] && !val11[EngineOff]) 
+		{
+			if (thrustOn == false)
+			{
+				lem->SetThrusterGroupLevel(lem->thg_hover, 0.1);
+			}
+			thrustOn = true;
 		}
-		else {
-			EngineOn = false;
+		if (!val11[EngineOn] && val11[EngineOff]) 
+		{
+			if (thrustOn == true)
+			{
+				lem->SetThrusterGroupLevel(lem->thg_hover, 0.0);
+			}
+			thrustOn = false;
 		}
 	}
 
@@ -3233,7 +3243,7 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
 		lem->SetThrusterDir(dpsThruster[1], dpsvector);
 
-		sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", EngineOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
+		sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
 	}
 }
 
@@ -3280,7 +3290,7 @@ void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
 // Ascent Propulsion System
 LEM_APS::LEM_APS(){
 	lem = NULL;	
-	EngineOn = 0;
+	thrustOn = 0;
 	HePress[0] = 0; HePress[1] = 0;
 }
 
@@ -3290,6 +3300,30 @@ void LEM_APS::Init(LEM *s){
 
 void LEM_APS::TimeStep(double simdt){
 	if(lem == NULL){ return; }
+
+	if (lem->stage > 1 && lem->GuidContSwitch.IsUp()) {
+		// Check i/o channel
+		ChannelValue val11;
+		val11 = lem->agc.GetOutputChannel(011);
+		if (val11[EngineOn] && !val11[EngineOff])
+		{
+			if (thrustOn == false)
+			{
+				lem->SetThrusterGroupLevel(lem->thg_hover, 1.0);
+			}
+			thrustOn = true;
+		}
+		if (!val11[EngineOn] && val11[EngineOff])
+		{
+			if (thrustOn == true)
+			{
+				lem->SetThrusterGroupLevel(lem->thg_hover, 0.0);
+			}
+			thrustOn = false;
+		}
+
+		sprintf(oapiDebugString(), "APS %d", thrustOn);
+	}
 }
 
 void LEM_APS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
