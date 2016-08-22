@@ -1199,14 +1199,17 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LEM_RR_START",sizeof("LEM_RR_START"))) {
 			eds.LoadState(scn,"LEM_RR_END");
 		}
-        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
-			Panelsdk.Load(scn);			//send the loading to the Panelsdk
+		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
+			fdaiLeft.LoadState(scn, FDAI_END_STRING);
 		}
 		else if (!strnicmp(line, DPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(DPSGIMBALACTUATOR_PITCH_START_STRING))) {
 			DPS.pitchGimbalActuator.LoadState(scn);
 		}
 		else if (!strnicmp(line, DPSGIMBALACTUATOR_ROLL_START_STRING, sizeof(DPSGIMBALACTUATOR_ROLL_START_STRING))) {
 			DPS.rollGimbalActuator.LoadState(scn);
+		}
+        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
 		else if (!strnicmp (line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
@@ -1487,6 +1490,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
+
+	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 
 	//Save pitch and roll gimbal actuators
 	oapiWriteLine(scn, DPSGIMBALACTUATOR_PITCH_START_STRING);
