@@ -650,6 +650,15 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				agc.SetInputChannelBit(016, MarkReject_LM, 1);  // Mark Reject
 				break;
 
+			case OAPI_KEY_NUMPAD0:
+				//TTCA Throttle up
+				ttca_throttle_vel = 1;
+				break;
+			case OAPI_KEY_DECIMAL:
+				//TTCA Throttle down
+				ttca_throttle_vel = -1;
+				break;
+
 		}
 	}else{
 		switch(key){
@@ -665,6 +674,13 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 			case OAPI_KEY_E:
 				agc.SetInputChannelBit(016, MarkReject_LM, 0);  // Mark Reject
+				break;
+
+			case OAPI_KEY_NUMPAD0:
+				ttca_throttle_vel = 0;
+				break;
+			case OAPI_KEY_DECIMAL:
+				ttca_throttle_vel = 0;
 				break;
 		}
 
@@ -740,6 +756,21 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		//decrease descent rate
 		agc.ChangeDescentRate(0.3077);
 		return 1;	
+
+	//
+	// Engine start and stop
+	//
+
+	case OAPI_KEY_ADD:
+		//Engine Start Button
+		ManualEngineStart.Push();
+		ButtonClick();
+		return 1;
+	case OAPI_KEY_SUBTRACT:
+		//Engine Stop Button
+		ManualEngineStop.Push();
+		ButtonClick();
+		return 1;
 	}
 
 	return 0;
@@ -1202,11 +1233,17 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
 		}
-		else if (!strnicmp(line, DPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(DPSGIMBALACTUATOR_PITCH_START_STRING))) {
+		else if (!strnicmp(line, "DPS_BEGIN", sizeof("DPS_BEGIN"))) {
+			DPS.LoadState(scn, "DPS_END");
+		}
+		else if (!strnicmp(line, "DPSGIMBALACTUATOR_PITCH_BEGIN", sizeof("DPSGIMBALACTUATOR_PITCH_BEGIN"))) {
 			DPS.pitchGimbalActuator.LoadState(scn);
 		}
-		else if (!strnicmp(line, DPSGIMBALACTUATOR_ROLL_START_STRING, sizeof(DPSGIMBALACTUATOR_ROLL_START_STRING))) {
+		else if (!strnicmp(line, "DPSGIMBALACTUATOR_ROLL_BEGIN", sizeof("DPSGIMBALACTUATOR_ROLL_BEGIN"))) {
 			DPS.rollGimbalActuator.LoadState(scn);
+		}
+		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
+			deca.LoadState(scn);
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1493,11 +1530,15 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 
+	//Save DPS
+	DPS.SaveState(scn, "DPS_BEGIN", "DPS_END");
 	//Save pitch and roll gimbal actuators
-	oapiWriteLine(scn, DPSGIMBALACTUATOR_PITCH_START_STRING);
+	oapiWriteLine(scn, "DPSGIMBALACTUATOR_PITCH_BEGIN");
 	DPS.pitchGimbalActuator.SaveState(scn);
-	oapiWriteLine(scn, DPSGIMBALACTUATOR_ROLL_START_STRING);
+	oapiWriteLine(scn, "DPSGIMBALACTUATOR_ROLL_BEGIN");
 	DPS.rollGimbalActuator.SaveState(scn);
+	oapiWriteLine(scn, "DECA_BEGIN");
+	deca.SaveState(scn);
 	checkControl.save(scn);
 }
 

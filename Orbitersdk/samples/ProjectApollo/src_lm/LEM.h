@@ -343,6 +343,7 @@ public:
 	void ChangeLGCPosition(int pos);
 	void ZeroLGCPosition() { lgcPosition = 0; }
 	int GetLGCPosition() { return lgcPosition; }
+	bool GimbalFail() { return gimbalfail; }
 
 	void GimbalTimestep(double simdt);
 
@@ -353,8 +354,9 @@ protected:
 	double position;
 	int commandedPosition;
 	int lgcPosition;
-	int ttcaPosition;
+	int atcaPosition;
 	bool motorRunning;
+	bool gimbalfail;
 
 	LEM *lem;
 	AGCIOSwitch *gimbalMotorSwitch;
@@ -370,12 +372,13 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
-	void ProcessPitchChannel();
-	void ProcessRollChannel();
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int thrustOn;				// Engine "On" Command
+	bool thrustOn;				// Engine "On" Command
+	bool thrustOff;				// Engine "Off" Command
+	bool engArm;				// Engine Arm Command
+	double thrustcommand;		// DPS Thrust Command
 
 	DPSGimbalActuator pitchGimbalActuator;
 	DPSGimbalActuator rollGimbalActuator;
@@ -397,7 +400,7 @@ public:
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int thrustOn;				// Engine "On" Command
+	bool thrustOn;				// Engine "On" Command
 };
 
 ///
@@ -596,7 +599,7 @@ public:
 	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
 	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
 	THRUSTER_HANDLE th_rcs_orbiter_lin[16];
-	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
+	//THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
 	double DebugLineClearTimer;			// Timer for clearing debug line
@@ -635,6 +638,9 @@ public:
 #define TTCA_MODE_THROTTLE 0
 #define TTCA_MODE_JETS 1
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
+	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
+	int ttca_throttle_vel;
+	double ttca_thrustcmd;
 	int js_current;
 
 
@@ -1106,6 +1112,8 @@ protected:
 	RotationalSwitch LtgAnunNumKnob;
 	RotationalSwitch LtgIntegralKnob;
 	// There's a +X TRANSLATION button here too
+	EngineStartButton ManualEngineStart;
+	EngineStopButton ManualEngineStop;
 
 	/////////////////
 	// LEM Panel 8 //
@@ -1712,6 +1720,7 @@ protected:
 
 	// GNC
 	ATCA atca;
+	DECA deca;
 	LEM_LR LR;
 	LEM_RR RR;
 
@@ -1776,14 +1785,13 @@ protected:
 	friend class DPSGimbalActuator;
 	friend class LEM_DPS;
 	friend class LEM_APS;
+	friend class DECA;
+	friend class CommandedThrustInd;
+	friend class EngineThrustInd;
 };
 
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);
 extern void FreeGParam();
-
-#define DPSGIMBALACTUATOR_PITCH_START_STRING "DPSGIMBALACTUATOR_PITCH_BEGIN"
-#define DPSGIMBALACTUATOR_ROLL_START_STRING "DPSGIMBALACTUATOR_ROLL_BEGIN"
-#define DPSGIMBALACTUATOR_END_STRING "DPSGIMBALACTUATOR_END"
 
 #endif

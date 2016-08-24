@@ -778,6 +778,9 @@ void LEM::SystemsInit()
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	APS.Init(this);
 
+	//DECA
+	deca.Init(this, &SCS_DECA_PWR_CB);
+
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -788,9 +791,14 @@ void LEM::SystemsInit()
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
-	thc_tjt_id = -1; // Disabled
+	thc_tjt_id = 0; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+
+	ttca_throttle_pos = 0;
+	ttca_throttle_vel = 0;
+	ttca_throttle_pos_dig = 0;
+	ttca_thrustcmd = 0;
 	
 	// Initialize other systems
 	atca.Init(this);
@@ -814,12 +822,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
 
 	// Joystick read
-	if(js_enabled > 0 && oapiGetFocusInterface() == this){		
-		if(thc_id != -1 && !(thc_id < js_enabled)){
-			sprintf(oapiDebugString(),"DX8JS: Joystick selected as THC does not exist.");
+	if (js_enabled > 0 && oapiGetFocusInterface() == this) {
+		if (thc_id != -1 && !(thc_id < js_enabled)) {
+			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}
-		if(rhc_id != -1 && !(rhc_id < js_enabled)){
-			sprintf(oapiDebugString(),"DX8JS: Joystick selected as RHC does not exist.");
+		if (rhc_id != -1 && !(rhc_id < js_enabled)) {
+			sprintf(oapiDebugString(), "DX8JS: Joystick selected as RHC does not exist.");
 		}
 		/* ACA OPERATION:
 
@@ -828,7 +836,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			The OUT OF DETENT switch closes at .5 degrees of travel, and enables the proportional
 			voltage circuit ("A" CIRCUIT) to operate.
 			The hand controller must be moved 2 degrees to generate a count.
-			8 degrees of usable travel, at .190 degrees per count.			
+			8 degrees of usable travel, at .190 degrees per count.
 			10 degrees total travel = 42 counts.
 
 		*/
@@ -842,143 +850,232 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if(rhc_id != -1 && dx8_joystick[rhc_id] != NULL){
+		if (rhc_id != -1 && dx8_joystick[rhc_id] != NULL) {
 			// CHECK FOR POWER HERE
-			hr=dx8_joystick[rhc_id]->Poll();
-			if(FAILED(hr)){ // Did that work?
+			hr = dx8_joystick[rhc_id]->Poll();
+			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
 				hr = dx8_joystick[rhc_id]->Acquire();
-				if(FAILED(hr)){
-					sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
-				}else{
-					hr=dx8_joystick[rhc_id]->Poll();
+				if (FAILED(hr)) {
+					sprintf(oapiDebugString(), "DX8JS: Cannot aquire RHC");
 				}
-			}		
-			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+				else {
+					hr = dx8_joystick[rhc_id]->Poll();
+				}
+			}
+			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]), &dx8_jstate[rhc_id]);
 			// Z-axis read.
 			int rhc_rot_pos = 32768; // Initialize to centered
-			if(rhc_rot_id != -1){ // If this is a rotator-type axis
-				switch(rhc_rot_id){
-					case 0:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
-					case 1:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
-					case 2:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
+			if (rhc_rot_id != -1) { // If this is a rotator-type axis
+				switch (rhc_rot_id) {
+				case 0:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
+				case 1:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
+				case 2:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
 				}
 			}
-			if(rhc_sld_id != -1){ // If this is a slider
+			if (rhc_sld_id != -1) { // If this is a slider
 				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
 			}
-			if(rhc_rzx_id != -1 && rhc_rot_id == -1){ // If we use the native Z-axis
+			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-			}	
-			if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
+			}
+			if (dx8_jstate[rhc_id].lX > 34028) { // Out of detent RIGHT
 				val31[ACAOutOfDetent] = 1;
 				val31[PlusAzimuth] = 1;
-				rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
+				rhc_pos[0] = dx8_jstate[rhc_id].lX - 34028; // Results are 0 - 31507
 			}
-			if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
+			if (dx8_jstate[rhc_id].lX < 31508) { // Out of detent LEFT
 				val31[ACAOutOfDetent] = 1;
 				val31[MinusAzimuth] = 1;
-				rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
+				rhc_pos[0] = dx8_jstate[rhc_id].lX - 31508; // Results are 0 - -31508
 			}
-			if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
+			if (dx8_jstate[rhc_id].lY > 34028) { // Out of detent UP
 				val31[ACAOutOfDetent] = 1;
 				val31[PlusElevation] = 1;
-				rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
+				rhc_pos[1] = dx8_jstate[rhc_id].lY - 34028; // Results are 0 - 31507
 			}
-			if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
+			if (dx8_jstate[rhc_id].lY < 31508) { // Out of detent DOWN
 				val31[ACAOutOfDetent] = 1;
 				val31[MinusElevation] = 1;
-				rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
+				rhc_pos[1] = dx8_jstate[rhc_id].lY - 31508; // Results are 0 - -31508
 			}
 			// YAW IS REVERSED
-			if(rhc_rot_pos > 34028){ // Out of detent RIGHT
+			if (rhc_rot_pos > 34028) { // Out of detent RIGHT
 				val31[ACAOutOfDetent] = 1;
 				val31[PlusYaw] = 1;
-				rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
+				rhc_pos[2] = 34028 - rhc_rot_pos; // Results are 0 - 31507
 			}
-			if(rhc_rot_pos < 31508){ // Out of detent LEFT
+			if (rhc_rot_pos < 31508) { // Out of detent LEFT
 				val31[ACAOutOfDetent] = 1;
 				val31[MinusYaw] = 1;
-				rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
+				rhc_pos[2] = 31508 - rhc_rot_pos; // Results are 0 - -31508
 			}
-		}else{
+
+
+			//Let's cheat and give the ACA a throttle lever
+			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
+			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+			if (ttca_throttle_pos_dig > 0.84)
+			{
+				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+			}
+			else
+			{
+				ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+			}
+		}
+		else {
 			// No JS
 		}
 		// sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0],rhc_pos[1],rhc_pos[2], rhc_rzx_id, rhc_rot_id); 
 		// And now the THC...
-		if(thc_id != -1 && thc_id < js_enabled){
+		if (thc_id != -1 && thc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			int thc_voltage = 5; // HAX
-			hr=dx8_joystick[thc_id]->Poll();
-			if(FAILED(hr)){ // Did that work?
+			hr = dx8_joystick[thc_id]->Poll();
+			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
 				hr = dx8_joystick[thc_id]->Acquire();
-				if(FAILED(hr)){
-					sprintf(oapiDebugString(),"DX8JS: Cannot aquire THC");
-				}else{
-					hr=dx8_joystick[thc_id]->Poll();
+				if (FAILED(hr)) {
+					sprintf(oapiDebugString(), "DX8JS: Cannot aquire THC");
 				}
-			}		
+				else {
+					hr = dx8_joystick[thc_id]->Poll();
+				}
+			}
 			// Read data
-			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
+			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
 			// The LM TTCA is even wierder than the CM THC...			
-			int thc_rot_pos = 32768,thc_tjt_pos=32768; // Initialize to centered			
-			if(thc_voltage > 0){
-				if(thc_tjt_id != -1){                    // If Throttle/Jets lever enabled
-					thc_tjt_pos = dx8_jstate[thc_id].lZ; // Read
+			int thc_rot_pos = 32768, thc_tjt_pos = 32768; // Initialize to centered			
+			if (thc_voltage > 0) {
+				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
+					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[0]; // Read
 				}
-				if(thc_tjt_pos < 10000){				 // Determine TTCA mode	
+				if (thc_tjt_pos < 10000) {				 // Determine TTCA mode	
 					ttca_mode = TTCA_MODE_THROTTLE;      // THROTTLE MODE					
 					ttca_throttle_pos = dx8_jstate[thc_id].lY; // Relay throttle position
-				}else{
+				}
+				else {
 					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
-					ttca_throttle_pos = 32768;           // Center of axis (just in case)
-					if(dx8_jstate[thc_id].lY < 16384){
+					ttca_throttle_pos = 65536;//32768;           // Zero throttle position
+					if (dx8_jstate[thc_id].lY < 16384) {
 						val31[PlusX] = 1;
 					}
-					if(dx8_jstate[thc_id].lY > 49152){						
+					if (dx8_jstate[thc_id].lY > 49152) {
 						val31[MinusX] = 1;
 					}
 				}
-				if(dx8_jstate[thc_id].lX > 49152){
+				if (dx8_jstate[thc_id].lX > 49152) {
 					val31[PlusY] = 1;
 				}
-				if(dx8_jstate[thc_id].lX < 16384){												
+				if (dx8_jstate[thc_id].lX < 16384) {
 					val31[MinusY] = 1;
-				}				
+				}
 				// Z-axis read.
-				if(thc_rot_id != -1){ // If this is a rotator-type axis
-					switch(thc_rot_id){
-						case 0:
-							thc_rot_pos = dx8_jstate[thc_id].lRx; break;
-						case 1:
-							thc_rot_pos = dx8_jstate[thc_id].lRy; break;
-						case 2:
-							thc_rot_pos = dx8_jstate[thc_id].lRz; break;
+				if (thc_rot_id != -1) { // If this is a rotator-type axis
+					switch (thc_rot_id) {
+					case 0:
+						thc_rot_pos = dx8_jstate[thc_id].lRx; break;
+					case 1:
+						thc_rot_pos = dx8_jstate[thc_id].lRy; break;
+					case 2:
+						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
 					}
 				}
-				if(thc_sld_id != -1){ // If this is a slider
+				if (thc_sld_id != -1) { // If this is a slider
 					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
 				}
-				if(thc_rzx_id != -1 && thc_rot_id == -1){ // If we use the native Z-axis
+				if (thc_rzx_id != -1 && thc_rot_id == -1) { // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
-				if(thc_rot_pos < 16384){
+				if (thc_rot_pos < 16384) {
 					val31[MinusZ] = 1;
 				}
-				if(thc_rot_pos > 49152){
+				if (thc_rot_pos > 49152) {
 					val31[PlusZ] = 1;
 				}
-				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d TJT = %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
-					thc_rot_pos,thc_tjt_pos); }
-			}else{
-				// No JS
+
+				//Let's try a throttle lever
+				//ttca_lever_pos = (double)dx8_jstate[thc_id].rglSlider[0];
+				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+				if (ttca_throttle_pos_dig > 0.84)
+				{
+					ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+				}
+				else
+				{
+					ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+				}
+
+				if (thc_debug != -1) {
+					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d", dx8_jstate[thc_id].lX, dx8_jstate[thc_id].lY,
+						thc_rot_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1]);
+				}
 			}
 		}
+		else {
+			// No JS
+			if (ttca_throttle_vel == 1)
+			{
+				ttca_throttle_pos_dig += 0.25*simdt;
+			}
+			else if (ttca_throttle_vel == -1)
+			{
+				ttca_throttle_pos_dig -= 0.25*simdt;
+			}
+			if (ttca_throttle_pos_dig > 1)
+			{
+				ttca_throttle_pos_dig = 1;
+			}
+			else if (ttca_throttle_pos_dig < 0)
+			{
+				ttca_throttle_pos_dig = 0;
+			}
+
+			if (ttca_throttle_pos_dig > 0.84)
+			{
+				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+			}
+			else
+			{
+				ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+			}
+
+			//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
+		}
 	}
+	else
+	{
+		if (ttca_throttle_vel == 1)
+		{
+			ttca_throttle_pos_dig += 0.25*simdt;
+		}
+		else if (ttca_throttle_vel == -1)
+		{
+			ttca_throttle_pos_dig -= 0.25*simdt;
+		}
+		if (ttca_throttle_pos_dig > 1)
+		{
+			ttca_throttle_pos_dig = 1;
+		}
+		else if (ttca_throttle_pos_dig < 0)
+		{
+			ttca_throttle_pos_dig = 0;
+		}
+
+		if (ttca_throttle_pos_dig > 0.84)
+		{
+			ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+		}
+		else
+		{
+			ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+		}
+	}
+
 	// Write back channel data
 	agc.SetInputChannel(031,val31);
 
@@ -1036,7 +1133,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);
 	DPS.TimeStep(simt, simdt);
+	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
+	deca.Timestep(simt);
+	deca.SystemTimestep(simdt);
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
@@ -3194,42 +3294,50 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsThruster(dps) {
 	lem = NULL;	
 	thrustOn = 0;
+	thrustOff = 0;
+	engArm = 0;
 	HePress[0] = 0; HePress[1] = 0;
+	thrustcommand = 0;
 }
 
 void LEM_DPS::Init(LEM *s){
 	lem = s;
+	HePress[0] = 240; 
+	HePress[1] = 240;
 }
 
 void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
 
-	if (lem->stage < 2 && lem->GuidContSwitch.IsUp()) {
-		// Check i/o channel
-		ChannelValue val11;
-		val11 = lem->agc.GetOutputChannel(011);
-		if (val11[EngineOn] && !val11[EngineOff]) 
+	//Descent Engine Command Override. If DECA power goes of, DPS stays running. No signal to throttle and GDAs though. So get power back quickly or abort.
+	if (lem->EngineDescentCommandOverrideSwitch.IsUp())
+	{
+		thrustOn = true;
+	}
+
+	if (lem->stage < 2 && dpsThruster[0]) {
+		//Only start/throttle engine with armed signal, thrustOn signal, thrustOff signal off. If DECA goes off, then no engine arm signal comes through from the DECA. But it's armed anyway.
+		if (engArm)
 		{
-			if (thrustOn == false)
+			if (thrustOn == true && thrustOff == false)
 			{
-				lem->SetThrusterGroupLevel(lem->thg_hover, 0.1);
+				lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
+				lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
 			}
-			thrustOn = true;
 		}
-		if (!val11[EngineOn] && val11[EngineOff]) 
+
+		//Shut down engine when:
+		//DECA says shutdown (thrustOff signal)
+		//Lack of any signal (can be overriden by the override switch)
+		//And engine actually running
+		if (!(thrustOff == false && thrustOn == true))
 		{
-			if (thrustOn == true)
-			{
-				lem->SetThrusterGroupLevel(lem->thg_hover, 0.0);
-			}
-			thrustOn = false;
+			lem->SetThrusterLevel(dpsThruster[0], 0.0);
+			lem->SetThrusterLevel(dpsThruster[1], 0.0);
 		}
 	}
 
-	ProcessPitchChannel();
-	ProcessRollChannel();
-
-	// Do time step
+	// Do GDA time steps
 	pitchGimbalActuator.Timestep(simt, simdt);
 	rollGimbalActuator.Timestep(simt, simdt);
 
@@ -3243,7 +3351,8 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
 		lem->SetThrusterDir(dpsThruster[1], dpsvector);
 
-		sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
+		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f thrustOn: %d thrustOff: %d", lem->ManualEngineStart.GetState(), lem->ManualEngineStop.GetState(), lem->ttca_lever_pos, thrustcommand, thrustOn, thrustOff);
+		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
 	}
 }
 
@@ -3252,39 +3361,36 @@ void LEM_DPS::SystemTimestep(double simdt) {
 	rollGimbalActuator.SystemTimestep(simdt);
 }
 
-void LEM_DPS::ProcessPitchChannel() {
-
-	ChannelValue val12;
-	val12 = lem->agc.GetOutputChannel(012);
-
-	int valx = val12[PlusPitchVehicleMotion];
-	int valy = val12[MinusPitchVehicleMotion];
-
-	int val = valx - valy;
-
-	pitchGimbalActuator.ChangeLGCPosition(val);
-}
-
-void LEM_DPS::ProcessRollChannel() {
-
-	ChannelValue val12;
-	val12 = lem->agc.GetOutputChannel(012);
-
-	int valx = val12[PlusRollVehicleMotion];
-	int valy = val12[MinusRollVehicleMotion];
-
-	int val = valx - valy;
-
-
-	rollGimbalActuator.ChangeLGCPosition(val);
-}
-
 void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
+	oapiWriteScenario_int(scn, "THRUSTOFF", (thrustOff ? 1 : 0));
+	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
+	int i;
+	int end_len = strlen(end_str);
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+
+		if (!strnicmp(line, "THRUSTON", 8)) {
+			sscanf(line + 8, "%d", &i);
+			thrustOn = (i != 0);
+		}
+		else if (!strnicmp(line, "THRUSTOFF", 9)) {
+			sscanf(line + 9, "%d", &i);
+			thrustOn = (i != 0);
+		}
+		else if (!strnicmp(line, "ENGARM", 6)) {
+			sscanf(line + 6, "%d", &i);
+			thrustOn = (i != 0);
+		}
+	}
 }
 
 // Ascent Propulsion System
@@ -3301,28 +3407,51 @@ void LEM_APS::Init(LEM *s){
 void LEM_APS::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 
-	if (lem->stage > 1 && lem->GuidContSwitch.IsUp()) {
-		// Check i/o channel
-		ChannelValue val11;
-		val11 = lem->agc.GetOutputChannel(011);
-		if (val11[EngineOn] && !val11[EngineOff])
-		{
-			if (thrustOn == false)
+	if (lem->stage > 1) {
+
+		if (lem->GuidContSwitch.IsUp()) {
+			//PGNS
+			// Check i/o channel
+			ChannelValue val11;
+			val11 = lem->agc.GetOutputChannel(011);
+			if (val11[EngineOn] && !val11[EngineOff])
 			{
-				lem->SetThrusterGroupLevel(lem->thg_hover, 1.0);
+				thrustOn = true;
 			}
-			thrustOn = true;
+			if (!val11[EngineOn] && val11[EngineOff])
+			{
+				thrustOn = false;
+			}
 		}
-		if (!val11[EngineOn] && val11[EngineOff])
+		else
 		{
-			if (thrustOn == true)
-			{
-				lem->SetThrusterGroupLevel(lem->thg_hover, 0.0);
-			}
+			//TBD: Thrust signal from AGS
 			thrustOn = false;
 		}
 
-		sprintf(oapiDebugString(), "APS %d", thrustOn);
+		//Manual start
+		if (lem->ManualEngineStart.GetState() == 1)
+		{
+			thrustOn = true;
+		}
+
+		//Abort Stage switch pressed in disables function of engine stop button
+		if (lem->ManualEngineStop.GetState() == 1 && lem->AbortStageSwitch.GetState() == 0)
+		{
+			thrustOn = false;
+		}
+
+		if (thrustOn && lem->EngineArmSwitch.IsUp())
+		{
+			lem->SetThrusterLevel(lem->th_hover[0], 1.0);
+			lem->SetThrusterLevel(lem->th_hover[1], 1.0);
+		}
+		else
+		{
+			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
+			lem->SetThrusterLevel(lem->th_hover[1], 0.0);
+		}
+		//sprintf(oapiDebugString(), "APS %d", thrustOn);
 	}
 }
 
@@ -3339,11 +3468,12 @@ DPSGimbalActuator::DPSGimbalActuator() {
 	position = 0;
 	commandedPosition = 0;
 	lgcPosition = 0;
-	ttcaPosition = 0;
+	atcaPosition = 0;
 	motorRunning = false;
 	lem = 0;
 	gimbalMotorSwitch = 0;
 	motorSource = 0;
+	gimbalfail = false;
 }
 
 DPSGimbalActuator::~DPSGimbalActuator() {
@@ -3395,7 +3525,7 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 		commandedPosition = lgcPosition;
 	}
 	else {
-		commandedPosition = ttcaPosition;
+		commandedPosition = atcaPosition;
 	}
 
 	if (IsSystemPowered() && motorRunning) {
@@ -3447,7 +3577,7 @@ void DPSGimbalActuator::DrawSystemPower() {
 
 	if (gimbalMotorSwitch->IsUp())
 	{
-		motorSource->DrawPower(100);	/// \todo real power consumption is unknown 
+		motorSource->DrawPower(17.5);	/// \todo apparently 35 Watts for both actuators
 	}
 }
 
@@ -3462,10 +3592,10 @@ void DPSGimbalActuator::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "POSITION", position);
 	oapiWriteScenario_int(scn, "COMMANDEDPOSITION", commandedPosition);
 	oapiWriteScenario_int(scn, "LGCPOSITION", lgcPosition);
-	oapiWriteScenario_int(scn, "TTCAPOSITION", ttcaPosition);
+	oapiWriteScenario_int(scn, "ATCAPOSITION", atcaPosition);
 	oapiWriteScenario_int(scn, "MOTORRUNNING", (motorRunning ? 1 : 0));
 
-	oapiWriteLine(scn, DPSGIMBALACTUATOR_END_STRING);
+	oapiWriteLine(scn, "DPSGIMBALACTUATOR_END");
 }
 
 void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
@@ -3474,7 +3604,7 @@ void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
 	int i;
 
 	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, DPSGIMBALACTUATOR_END_STRING, sizeof(DPSGIMBALACTUATOR_END_STRING))) {
+		if (!strnicmp(line, "DPSGIMBALACTUATOR_END", sizeof("DPSGIMBALACTUATOR_END"))) {
 			return;
 		}
 
@@ -3487,8 +3617,8 @@ void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp(line, "LGCPOSITION", 11)) {
 			sscanf(line + 11, "%d", &lgcPosition);
 		}
-		else if (!strnicmp(line, "TTCAPOSITION", 12)) {
-			sscanf(line + 12, "%d", &ttcaPosition);
+		else if (!strnicmp(line, "ATCAPOSITION", 12)) {
+			sscanf(line + 12, "%d", &atcaPosition);
 		}
 		else if (!strnicmp(line, "MOTORRUNNING", 13)) {
 			sscanf(line + 13, "%d", &i);

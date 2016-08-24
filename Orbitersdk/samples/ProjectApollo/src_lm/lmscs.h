@@ -40,5 +40,25 @@ public:
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
 };
 
+class DECA {
+	// DESCENT ENGINE CONTROL ASSEMBLY
+public:
+	DECA();									// Cons
+	void Init(LEM *vessel, e_object *dcbus);// Init
+	void Timestep(double simt);				// Timestep
+	void SystemTimestep(double simdt);		// System Timestep
+	double GetCommandedThrust() { return dpsthrustcommand; }
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+protected:
+	LEM *lem;
+	e_object *dc_source;			     // DC source to use when powered
+	bool powered;					 // Data valid flag.
+	int pitchactuatorcommand, rollactuatorcommand;
+	bool engOn, engOff;
+	double dpsthrustcommand;
+};
 
 

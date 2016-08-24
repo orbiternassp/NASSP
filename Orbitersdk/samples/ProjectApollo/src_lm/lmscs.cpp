@@ -39,6 +39,7 @@
 // #include "saturn.h"
 #include "lm_channels.h"
 #include "tracer.h"
+#include "papi.h"
 #include "LEM.h"
 
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
@@ -176,5 +177,205 @@ void ATCA::ProcessLGC(int ch, int val){
 			break;
 		default:
 			sprintf(oapiDebugString(),"ATCA::ProcessLGC: Bad channel %o",ch);
+	}
+}
+
+// DESCENT ENGINE CONTROL ASSEMBLY
+DECA::DECA() {
+	lem = NULL;
+	powered = FALSE;
+	dc_source = NULL;
+	pitchactuatorcommand = 0;
+	rollactuatorcommand = 0;
+	engOn = false;
+	engOff = false;
+	dpsthrustcommand = 0;
+}
+
+void DECA::Init(LEM *v, e_object *dcbus) {
+	// Initialize
+	lem = v;
+	dc_source = dcbus;
+}
+
+void DECA::Timestep(double simt) {
+	powered = false;
+	if (lem == NULL) return;
+
+	//Needs voltage and a descent stage. The DECA is mounted on it.
+	if (dc_source->Voltage() > SP_MIN_DCVOLTAGE && lem->stage < 2) {
+		powered = true;
+	}
+
+	if (!powered) //If off, send out all zeros
+	{
+		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.engArm = false;
+		lem->DPS.thrustOn = false;
+		lem->DPS.thrustOff = false;
+		dpsthrustcommand = 0;
+
+		return;
+	}
+
+	//Process input and output
+	//Input:
+	//-Descent Engine Arm (Switch)
+	//-Manual Descent Engine Start-Stop Commands (Buttons)
+	//-Automatic/Manual Throttle Select (Switch)
+	//-Automatic Descent Engine on-off commands (PGNS)
+	//-Automatic PGNS Descent Engine Trim Commands (PGNS)
+	//-Automatic Throttle Commands (PGNS)
+	//-Gimbal Feedback Commands (Actuators)
+	//-Manual Descent Engine Throttle Commands (TTCA)
+	//-Automatic AGS Descent Engine Trim Commands (ATCA)
+	//
+	//Output:
+	//-Descent Engine Trim Indication (PGNS)
+	//-Throttle Commands (DPS)
+	//-Engine On-Off Commands (DPS)
+	//-Engine Arm Command (DPS)
+	//-Gimbal Trim Commands(Actuators)
+
+	ChannelValue val11, val12;
+	val11 = lem->agc.GetOutputChannel(011);
+	val12 = lem->agc.GetOutputChannel(012);
+
+	if (lem->EngineArmSwitch.IsDown())
+	{
+		if (lem->GuidContSwitch.IsUp())
+		{
+			//Process Pitch Gimbal Actuator command
+			int valx = val12[PlusPitchVehicleMotion];
+			int valy = val12[MinusPitchVehicleMotion];
+			pitchactuatorcommand = valx - valy;
+
+			//Process Roll Gimbal Actuator command
+			valx = val12[PlusRollVehicleMotion];
+			valy = val12[MinusRollVehicleMotion];
+			rollactuatorcommand = valx - valy;
+		}
+		else
+		{
+			//TBD: AGS Trim Commands
+			pitchactuatorcommand = 0;
+			rollactuatorcommand = 0;
+		}
+	}
+
+	lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
+	lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
+
+	//Gimbal Failure Indication
+	if (lem->DPS.pitchGimbalActuator.GimbalFail() || lem->DPS.rollGimbalActuator.GimbalFail())
+	{
+		lem->agc.SetInputChannelBit(032, ApparentDecscentEngineGimbalsFailed, 1);
+	}
+
+	//Engine arm
+	lem->DPS.engArm = lem->EngineArmSwitch.IsDown();
+
+	//Engine On-Off
+	//TBD: Manual On-Off Logic
+	if (lem->GuidContSwitch.IsUp())	//PGNS signal
+	{
+		if (val11[EngineOn])
+		{
+			engOn = true;
+		}
+		else
+		{
+			engOn = false;
+		}
+		if (val11[EngineOff])
+		{
+			engOff = true;
+		}
+		else
+		{
+			engOff = false;
+		}
+	}
+	else
+	{
+		//TBD: AGS signal
+		engOn = false;
+		engOff = false;
+	}
+
+	//Manual engine start signal, overrides LGC and AGS
+	if (lem->ManualEngineStart.GetState() == 1)
+	{
+		engOn = true;
+		engOff = false;
+	}
+	
+	//Manual engine stop signal, overrides LGC and AGS
+	if (lem->ManualEngineStop.GetState() == 1)
+	{
+		engOn = false;
+		engOff = true;
+	}
+
+	//Send thrust signals to DPS
+	lem->DPS.thrustOn = engOn;
+	lem->DPS.thrustOff = engOff;
+
+	//Process Throttle Commands
+	if (lem->MANThrotSwitch.IsUp())
+	{
+		double compthrust = 0;
+		if (lem->GuidContSwitch.IsUp())
+		{
+			//TBD: Get LGC thrust command
+			//sprintf(oapiDebugString(), "Thrust pulses: %d", lem->agc.GetErasable(0, 055));
+			compthrust = 0;
+		}
+
+		dpsthrustcommand = compthrust + lem->ttca_thrustcmd;
+	}
+	else
+	{
+		dpsthrustcommand = lem->ttca_thrustcmd;
+	}
+
+	lem->DPS.thrustcommand = dpsthrustcommand;
+}
+
+void DECA::SystemTimestep(double simdt) {
+
+	if (powered && dc_source)
+		dc_source->DrawPower(113.0);  // take DC power
+}
+
+void DECA::SaveState(FILEHANDLE scn) {
+
+	// START_STRING is written in LEM
+	oapiWriteScenario_int(scn, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
+	oapiWriteScenario_int(scn, "ROLLACTUATORCOMMAND", rollactuatorcommand);
+	papiWriteScenario_double(scn, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+
+	oapiWriteLine(scn, "DECA_END");
+}
+
+void DECA::LoadState(FILEHANDLE scn) {
+
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, "DECA_END", sizeof("DECA_END"))) {
+			return;
+		}
+
+		if (!strnicmp(line, "PITCHACTUATORCOMMAND", 20)) {
+			sscanf(line + 20, "%d", &rollactuatorcommand);
+		}
+		else if (!strnicmp(line, "ROLLACTUATORCOMMAND", 19)) {
+			sscanf(line + 19, "%d", &pitchactuatorcommand);
+		}
+		else if (!strnicmp(line, "DPSTHRUSTCOMMAND", 16)) {
+			sscanf(line + 16, "%lf", &dpsthrustcommand);
+		}
 	}
 }

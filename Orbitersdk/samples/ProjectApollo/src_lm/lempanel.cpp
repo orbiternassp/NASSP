@@ -448,6 +448,8 @@ void LEM::InitSwitches() {
 	LtgIntegralKnob.AddPosition(7,  90);
 	LtgIntegralKnob.AddPosition(8, 120);
 	LtgIntegralKnob.Register(PSH, "LtgIntegralKnob", 0);
+	ManualEngineStart.Register(PSH, "ManualEngineStart", 0);
+	ManualEngineStop.Register(PSH, "ManualEngineStop", 0);
 
 	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
 	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN);
@@ -2135,6 +2137,8 @@ void LEM::SetSwitches(int panel) {
 			LtgFloodOhdFwdKnob.Init(173, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgAnunNumKnob.Init(333, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgIntegralKnob.Init(457, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
+			ManualEngineStart.Init(&ManualEngineStop);
+			ManualEngineStop.Init(&ManualEngineStart);
 
 			// Panel 8 is  431,916 to 1574,1258
 			Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);

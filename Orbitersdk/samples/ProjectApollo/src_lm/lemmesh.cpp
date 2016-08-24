@@ -167,7 +167,7 @@ void LEM::SetLmVesselDockStage()
 	th_hover[1] = CreateThruster (_V(0.013, -3.0, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
 																							//needed for visual gimbaling for corrected engine flames
 	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
+	//thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
 	AddExhaust(th_hover[1], 10.0, 1.2, exhaustTex);
 
 	SetCameraOffset (_V(-1,1.0,0.0));
@@ -252,7 +252,7 @@ void LEM::SetLmVesselHoverStage()
 	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.034), _V(0,1,0),     0, ph_Dsc, 0);	//this is a "virtual engine",no thrust and no fuel
 																							//needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
+	//thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
 	AddExhaust (th_hover[1], 10.0, 1.5, exhaustTex);
 		
 	SetCameraOffset (_V(-1,1.0,0.0));
@@ -321,7 +321,7 @@ void LEM::SetLmAscentHoverStage()
 	th_hover[1] = CreateThruster (_V( 0.01, -2.0, 0.0), _V( 0,1,0), 0,          ph_Asc, 0);		// this is a "virtual engine",no thrust and no fuel
 																								// needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
+	//thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
 	AddExhaust (th_hover[1], 6.0, 0.8, exhaustTex);
 	
 	SetCameraOffset (_V(-1,1.0,0.0));
