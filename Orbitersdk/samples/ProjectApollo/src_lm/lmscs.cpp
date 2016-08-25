@@ -190,6 +190,7 @@ DECA::DECA() {
 	engOn = false;
 	engOff = false;
 	dpsthrustcommand = 0;
+	lgcAutoThrust = 0;
 }
 
 void DECA::Init(LEM *v, e_object *dcbus) {
@@ -277,7 +278,6 @@ void DECA::Timestep(double simt) {
 	lem->DPS.engArm = lem->EngineArmSwitch.IsDown();
 
 	//Engine On-Off
-	//TBD: Manual On-Off Logic
 	if (lem->GuidContSwitch.IsUp())	//PGNS signal
 	{
 		if (val11[EngineOn])
@@ -323,21 +323,18 @@ void DECA::Timestep(double simt) {
 	lem->DPS.thrustOff = engOff;
 
 	//Process Throttle Commands
-	if (lem->MANThrotSwitch.IsUp())
+	if (lem->THRContSwitch.IsUp())
 	{
-		double compthrust = 0;
-		if (lem->GuidContSwitch.IsUp())
-		{
-			//TBD: Get LGC thrust command
-			//sprintf(oapiDebugString(), "Thrust pulses: %d", lem->agc.GetErasable(0, 055));
-			compthrust = 0;
-		}
+		//TBD: Get LGC thrust command
+		//sprintf(oapiDebugString(), "Thrust pulses: %o", lem->agc.GetErasable(0, 055));
+		lgcAutoThrust = 0.0;
 
-		dpsthrustcommand = compthrust + lem->ttca_thrustcmd;
+		dpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
 	}
 	else
 	{
 		dpsthrustcommand = lem->ttca_thrustcmd;
+		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
 	}
 
 	lem->DPS.thrustcommand = dpsthrustcommand;
@@ -355,6 +352,7 @@ void DECA::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
 	oapiWriteScenario_int(scn, "ROLLACTUATORCOMMAND", rollactuatorcommand);
 	papiWriteScenario_double(scn, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+	papiWriteScenario_double(scn, "LGCAUTOTHRUST", lgcAutoThrust);
 
 	oapiWriteLine(scn, "DECA_END");
 }
@@ -376,6 +374,62 @@ void DECA::LoadState(FILEHANDLE scn) {
 		}
 		else if (!strnicmp(line, "DPSTHRUSTCOMMAND", 16)) {
 			sscanf(line + 16, "%lf", &dpsthrustcommand);
+		}
+		else if (!strnicmp(line, "LGCAUTOTHRUST", 13)) {
+			sscanf(line + 13, "%lf", &lgcAutoThrust);
+		}
+	}
+}
+
+GASTA::GASTA()
+{
+	gasta_att = _V(0, 0, 0);
+}
+
+void GASTA::Init(LEM *v, e_object *dcsource, e_object *acsource, IMU* imu) {
+	// Initialize
+	lem = v;
+	dc_source = dcsource;
+	ac_source = acsource;
+	this->imu = imu;
+}
+
+bool GASTA::IsPowered()
+{
+	if (ac_source && dc_source) {
+		if (ac_source->Voltage() > SP_MIN_ACVOLTAGE && dc_source->Voltage() > SP_MIN_DCVOLTAGE)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void GASTA::Timestep(double simt)
+{
+	if (lem == NULL) return;
+
+	if (!IsPowered())
+	{
+		gasta_att = _V(0, 0, 0);	//I guess the FDAI would show all zeros when no attitude signal is supplied? It's not like turning off BMAG power in the CSM. There the attitude freezes.
+		return;
+	}
+
+	//This is all I do
+	gasta_att = imu->GetTotalAttitude();
+}
+
+void GASTA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		if (ac_source)
+		{
+			ac_source->DrawPower(10); //10 Watts from AC BUS A
+		}
+		if (dc_source)
+		{
+			dc_source->DrawPower(7.8); //7.8 Watts from CDR DC BUS
 		}
 	}
 }

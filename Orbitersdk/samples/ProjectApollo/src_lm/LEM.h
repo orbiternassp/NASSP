@@ -218,6 +218,10 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	double GetAntennaTempF();
+	bool IsRangeDataGood() { return rangeGood == 1; };
+	bool IsVelocityDataGood() { return velocityGood == 1; };
+	double GetAltitude() { return range*0.3048; };
+	double GetAltitudeRate() { return rate[0]*0.3048; };
 	double lastTemp;
 
 	bool IsPowered(); 
@@ -1723,6 +1727,7 @@ protected:
 	DECA deca;
 	LEM_LR LR;
 	LEM_RR RR;
+	GASTA gasta;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;

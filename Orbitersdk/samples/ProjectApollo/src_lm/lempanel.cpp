@@ -1365,7 +1365,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
 		
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 233, 625); // Was 135,625
-		//fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1103, 625);
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1201, 625);
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -3407,15 +3407,30 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
+
+			if (AttitudeMonSwitch.IsUp())	//PGNS
+			{
+				euler_rates = _V(0, 0, 0);
+				attitude = gasta.GetTotalAttitude();
+				errors = _V(0, 0, 0);
+			}
+			else							//AGS
+			{
+				euler_rates = _V(0, 0, 0);
+				attitude = _V(0, 0, 0);
+				errors = _V(0, 0, 0);
+			}
+
+
 			/*
 			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
 			switch(FDAISourceSwitch.GetState()){
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
-					euler_rates = gdc.rates; */
+					euler_rates = gdc.rates; 
 					euler_rates = _V(0,0,0);
 					attitude = imu.GetTotalAttitude();
 					errors = _V(0,0,0);
-					/* errors = eda.ReturnCMCErrorNeedles();
+					errors = eda.ReturnCMCErrorNeedles();
 					break;
 				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
 					euler_rates = gdc.rates;					
@@ -3467,9 +3482,18 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
-			euler_rates = _V(0,0,0);
-			attitude = imu.GetTotalAttitude();
-			errors = _V(0,0,0);
+			if (RightAttitudeMonSwitch.IsUp())	//PGNS
+			{
+				euler_rates = _V(0, 0, 0);
+				attitude = gasta.GetTotalAttitude();
+				errors = _V(0, 0, 0);
+			}
+			else							//AGS
+			{
+				euler_rates = _V(0, 0, 0);
+				attitude = _V(0, 0, 0);
+				errors = _V(0, 0, 0);
+			}
 			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
 		return true;
