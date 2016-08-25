@@ -1723,6 +1723,7 @@ protected:
 	DECA deca;
 	LEM_LR LR;
 	LEM_RR RR;
+	GASTA gasta;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;

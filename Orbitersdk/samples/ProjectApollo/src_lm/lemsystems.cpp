@@ -781,6 +781,9 @@ void LEM::SystemsInit()
 	//DECA
 	deca.Init(this, &SCS_DECA_PWR_CB);
 
+	//GASTA
+	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, &imu);
+
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -1137,6 +1140,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	APS.TimeStep(simdt);
 	deca.Timestep(simt);
 	deca.SystemTimestep(simdt);
+	gasta.Timestep(simt);
+	gasta.SystemTimestep(simdt);
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
@@ -2063,11 +2068,45 @@ void LEM_LR::TimeStep(double simdt){
 }
 
 void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_double(scn, "RANGE", range);
+	papiWriteScenario_double(scn, "ANTENNAANGLE", antennaAngle);
+	oapiWriteScenario_int(scn, "RUPTSEND", ruptSent);
+	oapiWriteScenario_int(scn, "RANGEGOOD", rangeGood);
+	oapiWriteScenario_int(scn, "VELOCITYGOOD", velocityGood);
+	papiWriteScenario_vec(scn, "RATE", _V(rate[0], rate[1], rate[2]));
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
+	double dec = 0;
+	int end_len = strlen(end_str);
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "RANGE", 5)) {
+			sscanf(line + 5, "%lf", &dec);
+			range = dec;
+		}
+		if (!strnicmp(line, "ANTENNAANGLE", 12)) {
+			sscanf(line + 12, "%lf", &dec);
+			antennaAngle = dec;
+		}
+		if (!strnicmp(line, "RUPTSEND", 8)) {
+			sscanf(line + 8, "%d", &ruptSent);
+		}
+		if (!strnicmp(line, "RANGEGOOD", 9)) {
+			sscanf(line + 9, "%d", &rangeGood);
+		}
+		if (!strnicmp(line, "VELOCITYGOOD", 12)) {
+			sscanf(line + 12, "%d", &velocityGood);
+		}
+		if (!strnicmp(line, "RATE", 4)) {
+			sscanf(line + 4, "%lf %lf %lf", &rate[0], &rate[1], &rate[2]);
+		}
+	}
 }
 
 double LEM_LR::GetAntennaTempF(){

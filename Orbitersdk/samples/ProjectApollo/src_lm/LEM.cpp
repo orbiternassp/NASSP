@@ -1228,7 +1228,10 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			eds.LoadState(scn,"LEM_EDS_END");
 		}
 		else if (!strnicmp (line, "LEM_RR_START",sizeof("LEM_RR_START"))) {
-			eds.LoadState(scn,"LEM_RR_END");
+			RR.LoadState(scn,"LEM_RR_END");
+		}
+		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
+			LR.LoadState(scn, "LEM_LR_END");
 		}
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
@@ -1527,6 +1530,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
+	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
 
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 
