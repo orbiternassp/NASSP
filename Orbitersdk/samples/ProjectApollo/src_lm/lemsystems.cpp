@@ -2765,17 +2765,31 @@ void LEM_RadarTape::TimeStep(double simdt) {
 		}
 	} else {
 		// LR
-		setRange(0);
-		setRate(0);
+		if (lem->LR.IsRangeDataGood())
+		{
+			setRange(lem->LR.GetAltitude());
+		}
+		else
+		{
+			setRange(0);
+		}
+		if (lem->LR.IsVelocityDataGood())
+		{
+			setRate(lem->LR.GetAltitudeRate());
+		}
+		else
+		{
+			setRate(0);
+		}
 	}
 	//
 	//  Missing code to smooth out tape scrolling
-	if( reqRange < (120000 *3.2808399) ) {
+	if( reqRange < (120000.0 * 0.3048) ) {
 		dispRange = 6443 - 82 - (reqRange * 3.2808399) * 40 / 1000 ;
 	} else {
-		dispRange = 1642 - 82 - (reqRange * 0.000539956803)  * 40 / 1000 ;
+		dispRange = 81 + 1642 - 82 - (reqRange * 0.000539956803*100.0)  * 40 / 1000 ;
 	}
-	dispRate  = 2881 - 82 -  reqRate * 3.3 * 40 / 1000 ; 
+	dispRate  = 2881 - 82 -  reqRate * 3.2808399 * 40 * 100 / 1000 ;
 }
 
 
