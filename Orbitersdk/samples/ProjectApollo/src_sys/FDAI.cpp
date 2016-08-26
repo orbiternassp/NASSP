@@ -51,7 +51,7 @@ FDAI::FDAI() {
 
 	lastPaintTime = -1;
 	newRegistered = false;
-
+	LM_FDAI = false;
 	DCSource = NULL;
 	ACSource = NULL;
 	noAC = false;
@@ -327,40 +327,85 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// Conversion rates are 3609.694608, 721.938921, and 72.193892
 	// Offset = Conversion * Rate
 
+	// For the LM FDAI, the width is 100 pixels (50 px/side), with roll/yaw center at 119
+	// and pitch center at 120. 5 deg/s conversion factor is 572.967398, 25 deg/s is 114.593480.
+
 	if (IsPowered())
 		lastRates = rates;
 	else
 		rates = lastRates;
 	
-	switch(ratescale){
+	if (!LM_FDAI)
+	{
+		switch (ratescale) {
 		case 2: // THREEPOSSWITCH_UP:
-			targetX = (int)(117+(3609.694608 * rates.z));
-			targetY = (int)(117-(3609.694608 * rates.x));
-			targetZ = (int)(117-(3609.694608 * rates.y));
+			targetX = (int)(117 + (3609.694608 * rates.z));
+			targetY = (int)(117 - (3609.694608 * rates.x));
+			targetZ = (int)(117 - (3609.694608 * rates.y));
 			break;
 		case 1: // THREEPOSSWITCH_CENTER:
-			targetX = (int)(117+(721.938921 * rates.z));
-			targetY = (int)(117-(721.938921 * rates.x));
-			targetZ = (int)(117-(721.938921 * rates.y));
+			targetX = (int)(117 + (721.938921 * rates.z));
+			targetY = (int)(117 - (721.938921 * rates.x));
+			targetZ = (int)(117 - (721.938921 * rates.y));
 			break;
 		case 0: // THREEPOSSWITCH_DOWN:
-			targetX = (int)(117+( 72.193892 * rates.z));
-			targetY = (int)(117-(360.969460 * rates.x));
-			targetZ = (int)(117-(360.969460 * rates.y));
+			targetX = (int)(117 + (72.193892 * rates.z));
+			targetY = (int)(117 - (360.969460 * rates.x));
+			targetZ = (int)(117 - (360.969460 * rates.y));
 			break;
+		}
 	}
+	else
+	{
+		switch (ratescale) {
+			case 1: // TOGGLESWITCH_UP (25 deg/s scale)
+				targetX = (int)(119 + (114.593480*rates.z));
+				targetY = (int)(120 - (114.593480*rates.x));
+				targetZ = (int)(119 - (114.593480*rates.y));
+				break;
+			case 0: // TOGGLESWITCH_DOWN (5 deg/s scale)
+				targetX = (int)(119 + (572.967398 * rates.z));
+				targetY = (int)(120 - (572.967398 * rates.x));
+				targetZ = (int)(119 - (572.967398 * rates.y));
+				break;
+		}
+	}
+	
 	// Enforce Limits
-	if(targetX > 180){ targetX = 180; }else{ if(targetX < 54){ targetX = 54; }}
-	if(targetY > 180){ targetY = 180; }else{ if(targetY < 54){ targetY = 54; }}
-	if(targetZ > 180){ targetZ = 180; }else{ if(targetZ < 54){ targetZ = 54; }}
+	if(!LM_FDAI)
+	{
+		if (targetX > 180) { targetX = 180; } else { if (targetX < 54) { targetX = 54; } }
+		if (targetY > 180) { targetY = 180; } else { if (targetY < 54) { targetY = 54; } }
+		if (targetZ > 180) { targetZ = 180; } else { if (targetZ < 54) { targetZ = 54; } }
+	}
+	else
+	{
+		if (targetX > 169) { targetX = 169; } else { if (targetX < 69) { targetX = 69; } }
+		if (targetY > 170) { targetY = 170; } else { if (targetY < 70) { targetY = 70; } }
+		if (targetZ > 169) { targetZ = 169; } else { if (targetZ < 69) { targetZ = 69; } }
+	}
+	
 	// 60-176
 
-	// Draw Roll-Rate Needle
-	oapiBlt (surf, hFDAINeedles, targetX, 4, 16, 3, 12, 11, SURF_PREDEF_CK);
-	// Draw Pitch-Rate Needle
-	oapiBlt (surf, hFDAINeedles, 225, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
-	// Draw Yaw-Rate Needle
-	oapiBlt (surf, hFDAINeedles, targetZ, 224, 4, 3, 12, 11, SURF_PREDEF_CK);
+	if (LM_FDAI)
+	{
+		// Draw Roll-Rate Needle
+		oapiBlt(surf, hFDAINeedles, targetX, 14, 10, 3, 7, 14, SURF_PREDEF_CK);
+		// Draw Pitch-Rate Needle
+		oapiBlt(surf, hFDAINeedles, 218, targetY, 17, 3, 14, 7, SURF_PREDEF_CK);
+		// Draw Yaw-Rate Needle
+		oapiBlt(surf, hFDAINeedles, targetZ, 218, 3, 3, 7, 14, SURF_PREDEF_CK);
+	}
+	else
+	{
+		// Draw Roll-Rate Needle
+		oapiBlt(surf, hFDAINeedles, targetX, 4, 16, 3, 12, 11, SURF_PREDEF_CK);
+		// Draw Pitch-Rate Needle
+		oapiBlt(surf, hFDAINeedles, 225, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
+		// Draw Yaw-Rate Needle
+		oapiBlt(surf, hFDAINeedles, targetZ, 224, 4, 3, 12, 11, SURF_PREDEF_CK);
+	}
+	
 
 	// Draw Roll-Error Needle
 	// 122,42 is the center, 41 px left-right variance, 11 px up-down variance.
@@ -370,15 +415,29 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 		lastErrors = errors;
 	else
 		errors = lastErrors;
+	if (!LM_FDAI)
+	{
+		targetY = (int)(fabs(errors.x) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.x, 42 + targetY, 0, 0, 2, 72 - targetY, SURF_PREDEF_CK);
+		// Draw Pitch-Error Needle
+		targetY = (int)(fabs(errors.y) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 169, 122 + (int)errors.y, 4, 0, 69 - targetY, 2, SURF_PREDEF_CK);
+		// Draw Yaw-Error Needle
+		targetY = (int)(fabs(errors.z) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.z, 135, 0, 0, 2, 69 - targetY, SURF_PREDEF_CK);
+	}
+	else
+	{
+		targetY = (int)(fabs(errors.x) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.x, 54 + targetY, 0, 0, 2, 31 - targetY, SURF_PREDEF_CK);
+		// Draw Pitch-Error Needle
+		targetY = (int)(fabs(errors.y) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 161, 122 + (int)errors.y, 3, 0, 31 - targetY, 2, SURF_PREDEF_CK);
+		// Draw Yaw-Error Needle
+		targetY = (int)(fabs(errors.z) * 0.268292);
+		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.z, 161, 0, 0, 2, 31 - targetY, SURF_PREDEF_CK);
+	}
 
-	targetY = (int)(fabs(errors.x) * 0.268292);
-	oapiBlt (surf, hFDAINeedles, 122+(int)errors.x, 42+targetY, 0, 0, 2, 72-targetY, SURF_PREDEF_CK);
-	// Draw Pitch-Error Needle
-	targetY = (int)(fabs(errors.y) * 0.268292);
-	oapiBlt (surf, hFDAINeedles, 135, 122+(int)errors.y, 4, 0, 69-targetY, 2, SURF_PREDEF_CK);
-	// Draw Yaw-Error Needle
-	targetY = (int)(fabs(errors.z) * 0.268292);
-	oapiBlt (surf, hFDAINeedles, 122+(int)errors.z, 135, 0, 0, 2, 69-targetY, SURF_PREDEF_CK);
 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
 	// Off-flag
@@ -767,6 +826,11 @@ bool FDAI::IsPowered()
 			return true;
 	}
 	return false;
+}
+
+void FDAI::SetLMmode()
+{
+	LM_FDAI = true;
 }
 
 //

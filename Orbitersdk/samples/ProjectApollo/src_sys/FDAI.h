@@ -43,8 +43,9 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	bool IsPowered();
+	void SetLMmode();
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
-	/// \todo temporary hack for the LM
+	bool LM_FDAI;
 	void WireTo(e_object *dc) { DCSource = dc; noAC = true; };
 
 protected:
