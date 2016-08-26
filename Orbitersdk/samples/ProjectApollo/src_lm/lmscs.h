@@ -80,6 +80,7 @@ protected:
 	e_object *dc_source;			     // DC source to use when powered
 	e_object *ac_source;			     // AC source to use when powered
 	IMU *imu;							 //Connected IMU
+	VECTOR3 imu_att;
 	VECTOR3 gasta_att;
 };
 

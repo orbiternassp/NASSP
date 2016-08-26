@@ -415,8 +415,35 @@ void GASTA::Timestep(double simt)
 		return;
 	}
 
-	//This is all I do
-	gasta_att = imu->GetTotalAttitude();
+	//This is all I do. P.S. Now I do more!
+	imu_att = imu->GetTotalAttitude();
+
+	gasta_att.z = asin(-cos(imu_att.z)*sin(imu_att.x));
+	if (abs(sin(gasta_att.z)) != 1.0)
+	{
+		gasta_att.y = atan2(((sin(imu_att.y)*cos(imu_att.x) + cos(imu_att.y)*sin(imu_att.z)*sin(imu_att.x)) / cos(gasta_att.z)), (cos(imu_att.y)*cos(imu_att.x) - sin(imu_att.y)*sin(imu_att.z)*sin(imu_att.x)) / cos(gasta_att.z));
+	}
+
+	if (abs(sin(gasta_att.z)) != 1.0)
+	{
+		gasta_att.x = atan2(sin(imu_att.z), cos(imu_att.z)*cos(imu_att.x));
+	}
+
+	//Map angles between 0° and 360°, just to be sure
+	if (gasta_att.x < 0)
+	{
+		gasta_att.x += PI2;
+	}
+	if (gasta_att.y < 0)
+	{
+		gasta_att.y += PI2;
+	}
+	if (gasta_att.z < 0)
+	{
+		gasta_att.z += PI2;
+	}
+
+	//sprintf(oapiDebugString(), "OGA: %f, IGA: %f, MGA: %f, Roll: %f, Pitch: %f, Yaw: %f", imu_att.x*DEG, imu_att.y*DEG, imu_att.z*DEG, gasta_att.x*DEG, gasta_att.y*DEG, gasta_att.z*DEG);
 }
 
 void GASTA::SystemTimestep(double simdt)
