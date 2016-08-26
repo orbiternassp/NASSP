@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by LEMResources.rc
 //
-
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
 #define AID_ALTITUDE1                   13
@@ -200,6 +199,9 @@
 #define IDB_AOT_SHAFT_KNOB              321
 #define IDB_BITMAP1                     323
 #define IDB_DEDA_LIGHTS                 323
+#define IDB_LEM_FDAI_NEEDLES            327
+#define IDB_BITMAP2                     328
+#define IDB_LEM_ABORT                   328
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_FUELCELLREACTANTSSWITCHES   410
 #define ADI_MAINBUSAINDICATORS          411
@@ -736,30 +738,31 @@
 #define AID_LM_DEDA_DISP                1010
 #define AID_LM_DEDA_HOLD                1011
 #define AID_LM_DEDA_ADR                 1012
-#define IDB_LEM_STAGESWITCH				1013
-#define IDB_DIGITALDISP2				1014
+#define IDB_LEM_STAGESWITCH             1013
+#define IDB_DIGITALDISP2                1014
 #define AID_MPS_REG_CONTROLS_RIGHT      1015
-#define AID_RR_GYRO_SEL_SWITCH			1016
-#define AID_LM_ECSIND_UPPER				1017
-#define AID_LM_ECSIND_LOWER				1018
-#define AID_LM_RCSIND					1019
+#define AID_RR_GYRO_SEL_SWITCH          1016
+#define AID_LM_ECSIND_UPPER             1017
+#define AID_LM_ECSIND_LOWER             1018
+#define AID_LM_RCSIND                   1019
 #define AID_TEMPMONITORIND              1020
-#define AID_MAIN_PROP_AND_ENGINE_IND	1021
-#define AID_LM_CWS_LEFT					1022
-#define AID_LM_CWS_RIGHT				1023
-#define IDB_RR_NOTRACK					1024
-#define AID_RR_NOTRACK					1025
+#define AID_MAIN_PROP_AND_ENGINE_IND    1021
+#define AID_LM_CWS_LEFT                 1022
+#define AID_LM_CWS_RIGHT                1023
+#define IDB_RR_NOTRACK                  1024
+#define AID_RR_NOTRACK                  1025
 #define IDB_RADAR_TAPE                  1026
 #define AID_RANGE_TAPE                  1027
 #define AID_RATE_TAPE                   1028
+#define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        324
+#define _APS_NEXT_RESOURCE_VALUE        329
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           10006
+#define _APS_NEXT_SYMED_VALUE           10007
 #endif
 #endif

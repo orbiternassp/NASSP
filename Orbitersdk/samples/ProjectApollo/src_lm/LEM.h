@@ -732,7 +732,7 @@ protected:
 	SwitchRow AbortSwitchesRow;
 
 	PushSwitch AbortSwitch;
-	PushSwitch AbortStageSwitch;
+	GuardedPushSwitch AbortStageSwitch;
 	bool AbortStageSwitchLight;
 
 	

@@ -159,7 +159,7 @@ void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
 void LEM::InitSwitches() {
 
 	AbortSwitch.Register     (PSH, "AbortSwitch", false);
-	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);
+	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false, false);
 	AbortStageSwitchLight = false;
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
@@ -448,8 +448,6 @@ void LEM::InitSwitches() {
 	LtgIntegralKnob.AddPosition(7,  90);
 	LtgIntegralKnob.AddPosition(8, 120);
 	LtgIntegralKnob.Register(PSH, "LtgIntegralKnob", 0);
-	ManualEngineStart.Register(PSH, "ManualEngineStart", 0);
-	ManualEngineStop.Register(PSH, "ManualEngineStop", 0);
 
 	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
 	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN);
@@ -1168,13 +1166,13 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
-		srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));
-		srf[SRF_FDAIROLL]       	= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
+		//srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));		//The LM FDAI texture doesn't need this
+		srf[SRF_FDAIROLL]       	= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_ROLL));
 		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
 		srf[SRF_FDAIOFFFLAG]       	= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
-		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
+		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_NEEDLES));
 		srf[SRF_CIRCUITBRAKER]		= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
@@ -1364,8 +1362,10 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterMFD (MFD_LEFT,  mfds_left);
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
 		
-		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 233, 625); // Was 135,625
-		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1201, 625);
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 234, 625); // Was 135,625
+		fdaiLeft.SetLMmode();
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1202, 625); // Was 1103, 625
+		fdaiRight.SetLMmode();
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -1378,7 +1378,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_CWS_LEFT,					    _R( 349,   54,  670,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_RIGHT,				    _R(1184,   54, 1484,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
-		//oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
 	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 263,  1078, 297, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// 2 pos Descent Engine Command Override Lever
@@ -1596,10 +1596,10 @@ void LEM::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
-	//switch(panel){
-	//	case LMPANEL_MAIN:
-	//	case LMPANEL_LEFTWINDOW:
-	//	case LMPANEL_RIGHTWINDOW:
+	switch(panel){
+		case LMPANEL_MAIN:
+		case LMPANEL_LEFTWINDOW:
+		case LMPANEL_RIGHTWINDOW:
 
 			MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
 			EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
@@ -1631,8 +1631,9 @@ void LEM::SetSwitches(int panel) {
 			LMWaterQtyMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
 
 			AbortSwitchesRow.Init(AID_ABORT, MainPanel);
-			AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 64);
-			AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], AbortSwitchesRow);
+			AbortSwitch.Init     (18, 18, 55, 56, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 119);
+			AbortStageSwitch.Init(58, 0, 108, 118, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], AbortSwitchesRow, 109, 0, 216, 0);
+			AbortStageSwitch.InitGuard(58, 0, 108, 118, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], 0, 0);
 
 			EngineArmSwitchesRow.Init(AID_ENG_ARM, MainPanel);
 			EngineArmSwitch.Init (0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], EngineArmSwitchesRow);
@@ -1828,9 +1829,9 @@ void LEM::SetSwitches(int panel) {
 			EventTimerMinuteSwitch.Init(111, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 			EventTimerSecondSwitch.Init(167, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
 
-	//		break;
+			break;
 
-	//	case LMPANEL_RIGHTPANEL: // LEM Right Panel
+		case LMPANEL_RIGHTPANEL: // LEM Right Panel
 			Panel16CB1SwitchRow.Init(AID_LEM_P16_CB_ROW1, MainPanel);
 			LMP_EVT_TMR_FDAI_DC_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
 			SE_XPTR_DC_CB.Init(64, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB1SwitchRow, &LMPs28VBus, 2.0);
@@ -2022,9 +2023,9 @@ void LEM::SetSwitches(int panel) {
 			AGSOperateSwitchRow.Init(AID_LM_AGS_OPERATE_SWITCH,MainPanel);
 			AGSOperateSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], AGSOperateSwitchRow);
 
-	//		break;
+			break;
 
-	//	case LMPANEL_LEFTPANEL:
+		case LMPANEL_LEFTPANEL:
 			Panel11CB1SwitchRow.Init(AID_LEM_P11_CB_ROW1, MainPanel);
 			SE_WND_HTR_AC_CB.Init(3, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			HE_PQGS_PROP_DISP_AC_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
@@ -2137,8 +2138,6 @@ void LEM::SetSwitches(int panel) {
 			LtgFloodOhdFwdKnob.Init(173, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgAnunNumKnob.Init(333, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgIntegralKnob.Init(457, 222, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
-			ManualEngineStart.Init(&ManualEngineStop);
-			ManualEngineStop.Init(&ManualEngineStart);
 
 			// Panel 8 is  431,916 to 1574,1258
 			Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
@@ -2173,17 +2172,17 @@ void LEM::SetSwitches(int panel) {
 			CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
-	//		break;
+			break;
 
-	//	case LMPANEL_AOTVIEW:			
+		case LMPANEL_AOTVIEW:			
 			RRGyroSelSwitchRow.Init(AID_RR_GYRO_SEL_SWITCH, MainPanel);
 			RRGyroSelSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], RRGyroSelSwitchRow);
-	//		break;
+			break;
 
-	//	case LMPANEL_LPDWINDOW:
-	//		break;
+		case LMPANEL_LPDWINDOW:
+			break;
 
-	//}
+	}
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
@@ -2206,6 +2205,7 @@ void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 		if (s->IsDown()) {
 			AbortFire();
 			AbortStageSwitchLight = true;
+
 			SeparateStage(stage);
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
@@ -3407,72 +3407,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
-
-			if (AttitudeMonSwitch.IsUp())	//PGNS
-			{
-				euler_rates = _V(0, 0, 0);
-				attitude = gasta.GetTotalAttitude();
-				errors = _V(0, 0, 0);
-			}
-			else							//AGS
-			{
-				euler_rates = _V(0, 0, 0);
-				attitude = _V(0, 0, 0);
-				errors = _V(0, 0, 0);
-			}
-
-
-			/*
-			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
-			switch(FDAISourceSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
-					euler_rates = gdc.rates; 
-					euler_rates = _V(0,0,0);
-					attitude = imu.GetTotalAttitude();
-					errors = _V(0,0,0);
-					errors = eda.ReturnCMCErrorNeedles();
-					break;
-				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
-					euler_rates = gdc.rates;					
-					switch(FDAISelectSwitch.GetState()){
-						case THREEPOSSWITCH_UP:   // IMU
-							attitude = imu.GetTotalAttitude();
-							errors = eda.ReturnCMCErrorNeedles();
-							break;
-						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							// Get attutude
-							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
-								attitude = imu.GetTotalAttitude();
-							}else{
-								attitude = gdc.attitude;
-							}
-							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
-							break;
-						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.attitude;
-							errors = eda.ReturnBMAG1Error();
-							break;
-					}
-					break;				
-				case THREEPOSSWITCH_CENTER: // 2
-					attitude = _V(0,0,0);   // No
-					errors = _V(0,0,0);
-					euler_rates = gdc.rates;
-					// euler_rates = _V(0,0,0); // Does not disconnect rate inputs?
-					no_att = 1;
-					break;
-			}
-			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
-			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
-			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
-			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
-			*/
+			GetAngularVel(euler_rates);		//Brief cheat to test FDAI animations, will replace with ASA sensors later
+			attitude = imu.GetTotalAttitude();
+			errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+			
 			if((RateErrorMonSwitch.GetState() == 1 ) && (RR.IsPowered()) ) {
 				errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD) ;
 				errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD) ;
 			}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
@@ -3482,19 +3425,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
-			if (RightAttitudeMonSwitch.IsUp())	//PGNS
-			{
-				euler_rates = _V(0, 0, 0);
-				attitude = gasta.GetTotalAttitude();
-				errors = _V(0, 0, 0);
-			}
-			else							//AGS
-			{
-				euler_rates = _V(0, 0, 0);
-				attitude = _V(0, 0, 0);
-				errors = _V(0, 0, 0);
-			}
-			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			GetAngularVel(euler_rates);		//Brief cheat to test FDAI animations, will replace with ASA sensors later
+			attitude = imu.GetTotalAttitude();
+			errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
