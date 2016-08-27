@@ -1168,13 +1168,13 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
-		srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));
-		srf[SRF_FDAIROLL]       	= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
-		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
-		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
-		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
-		srf[SRF_FDAIOFFFLAG]       	= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
-		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
+		//srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));		//The LM FDAI texture doesn't need this
+		srf[SRF_FDAIROLL]			= oapiCreateSurface(LOADBMP(IDB_LEM_FDAI_ROLL));
+		srf[SRF_CWSLIGHTS]			= oapiCreateSurface(LOADBMP(IDB_CWS_LIGHTS));
+		srf[SRF_DSKYKEY]			= oapiCreateSurface(LOADBMP(IDB_DSKY_KEY));
+		srf[SRF_LEMROTARY]			= oapiCreateSurface(LOADBMP(IDB_LEMROTARY));
+		srf[SRF_FDAIOFFFLAG]		= oapiCreateSurface(LOADBMP(IDB_FDAIOFFFLAG));
+		srf[SRF_FDAINEEDLES]		= oapiCreateSurface(LOADBMP(IDB_LEM_FDAI_NEEDLES));
 		srf[SRF_CIRCUITBRAKER]		= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
@@ -1364,8 +1364,10 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterMFD (MFD_LEFT,  mfds_left);
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
 		
-		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 233, 625); // Was 135,625
-		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1201, 625);
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 234, 625); // Was 135,625
+		fdaiLeft.SetLMmode();
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1202, 625);
+		fdaiRight.SetLMmode();
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R( 125, 1564,  550, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -3402,77 +3404,39 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_FDAI_LEFT:
-		if (!fdaiDisabled){			
+		if (!fdaiDisabled) {
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
 
+			GetAngularVel(euler_rates);
+
 			if (AttitudeMonSwitch.IsUp())	//PGNS
 			{
-				euler_rates = _V(0, 0, 0);
 				attitude = gasta.GetTotalAttitude();
-				errors = _V(0, 0, 0);
 			}
 			else							//AGS
 			{
-				euler_rates = _V(0, 0, 0);
 				attitude = _V(0, 0, 0);
-				errors = _V(0, 0, 0);
 			}
 
-
-			/*
-			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
-			switch(FDAISourceSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
-					euler_rates = gdc.rates; 
-					euler_rates = _V(0,0,0);
-					attitude = imu.GetTotalAttitude();
-					errors = _V(0,0,0);
-					errors = eda.ReturnCMCErrorNeedles();
-					break;
-				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
-					euler_rates = gdc.rates;					
-					switch(FDAISelectSwitch.GetState()){
-						case THREEPOSSWITCH_UP:   // IMU
-							attitude = imu.GetTotalAttitude();
-							errors = eda.ReturnCMCErrorNeedles();
-							break;
-						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							// Get attutude
-							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
-								attitude = imu.GetTotalAttitude();
-							}else{
-								attitude = gdc.attitude;
-							}
-							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
-							break;
-						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.attitude;
-							errors = eda.ReturnBMAG1Error();
-							break;
-					}
-					break;				
-				case THREEPOSSWITCH_CENTER: // 2
-					attitude = _V(0,0,0);   // No
-					errors = _V(0,0,0);
-					euler_rates = gdc.rates;
-					// euler_rates = _V(0,0,0); // Does not disconnect rate inputs?
-					no_att = 1;
-					break;
+			if (RateErrorMonSwitch.GetState() == 1)
+			{
+				if (RR.IsPowered()) {
+					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
+					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+				}
+				else
+				{
+					errors = _V(0, 0, 0);
+				}
 			}
-			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
-			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
-			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
-			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
-			*/
-			if((RateErrorMonSwitch.GetState() == 1 ) && (RR.IsPowered()) ) {
-				errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD) ;
-				errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD) ;
+			else
+			{
+				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
@@ -3482,19 +3446,34 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
+
+			GetAngularVel(euler_rates);
+
 			if (RightAttitudeMonSwitch.IsUp())	//PGNS
 			{
-				euler_rates = _V(0, 0, 0);
 				attitude = gasta.GetTotalAttitude();
-				errors = _V(0, 0, 0);
 			}
 			else							//AGS
 			{
-				euler_rates = _V(0, 0, 0);
 				attitude = _V(0, 0, 0);
-				errors = _V(0, 0, 0);
 			}
-			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+
+			if (RightRateErrorMonSwitch.GetState() == 1)
+			{
+				if (RR.IsPowered()) {
+					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
+					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+				}
+				else
+				{
+					errors = _V(0, 0, 0);
+				}
+			}
+			else
+			{
+				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+			}
+			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 

@@ -36,15 +36,16 @@ public:
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
-	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
-		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
+	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI,
+		SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	bool IsPowered();
+	void SetLMmode();
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
-	/// \todo temporary hack for the LM
+	bool LM_FDAI;
 	void WireTo(e_object *dc) { DCSource = dc; noAC = true; };
 
 protected:
