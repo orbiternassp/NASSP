@@ -213,7 +213,7 @@ public:
 class LEM_LR : public e_object{
 public:
 	LEM_LR();
-	void Init(LEM *s,e_object *dc_src);
+	void Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -227,8 +227,8 @@ public:
 	bool IsPowered(); 
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;		// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;		// Source of DC power
 	double range;				// Range in feet
 	double rate[3];				// Velocity X/Y/Z in feet/second
@@ -242,7 +242,7 @@ public:
 class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s,e_object *dc_src, e_object *ac_src);
+	void Init(LEM *s,e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -267,8 +267,8 @@ private:
 	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;			// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;
 	e_object *ac_source;
 	double tstime;
@@ -603,7 +603,7 @@ public:
 	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
 	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
 	THRUSTER_HANDLE th_rcs_orbiter_lin[16];
-	//THGROUP_HANDLE thg_hover;		          // handles for thruster groups
+	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
 	double DebugLineClearTimer;			// Timer for clearing debug line
@@ -1581,8 +1581,8 @@ protected:
 
 	DSKY dsky;
 	LEMcomputer agc;
-	Boiler imuheater; // IMU Standby Heater
-	h_Radiator imucase; // IMU Case
+	Boiler *imuheater; // IMU Standby Heater
+	h_Radiator *imucase; // IMU Case
 	IMU imu;	
 	LMOptics optics;
 

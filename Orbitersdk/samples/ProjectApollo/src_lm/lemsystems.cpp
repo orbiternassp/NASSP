@@ -558,7 +558,7 @@ void LEM::SystemsInit()
 	dsky.Init(&NUM_LTG_AC_CB, &LtgAnunNumKnob);
 
 	// AGS stuff
-	asa.Init(this);
+	asa.Init(this, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-Heater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));
 	aea.Init(this);
 	deda.Init(&SCS_AEA_CB);
 
@@ -570,15 +570,17 @@ void LEM::SystemsInit()
 	IMU_SBY_CB.MaxAmps = 5.0;
 	IMU_SBY_CB.WireTo(&CDRs28VBus);	
 	// Set up IMU heater stuff
-	imucase.isolation = 1.0; 
-	imucase.Area = 3165.31625; // Surface area of 12.5 inch diameter sphere in cm
-	imucase.mass = 19050;
-	imucase.SetTemp(327); 
-	imuheater.WireTo(&IMU_SBY_CB);
-	Panelsdk.AddHydraulic(&imucase);
-	Panelsdk.AddElectrical(&imuheater,false);
-	imuheater.Enable();
-	imuheater.SetPumpAuto();
+	imucase = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case");
+	imucase->isolation = 1.0; 
+	imucase->Area = 3165.31625; // Surface area of 12.5 inch diameter sphere in cm
+	//imucase.mass = 19050;
+	//imucase.SetTemp(327); 
+	imuheater = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater");
+	imuheater->WireTo(&IMU_SBY_CB);
+	//Panelsdk.AddHydraulic(&imucase);
+	//Panelsdk.AddElectrical(&imuheater,false);
+	imuheater->Enable();
+	imuheater->SetPumpAuto();
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
@@ -622,7 +624,7 @@ void LEM::SystemsInit()
 	// Landing Radar
 	PGNS_LDG_RDR_CB.MaxAmps = 10.0; // Primary DC power
 	PGNS_LDG_RDR_CB.WireTo(&CDRs28VBus);
-	LR.Init(this,&PGNS_LDG_RDR_CB);
+	LR.Init(this,&PGNS_LDG_RDR_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-LR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater"));
 	// Rdz Radar
 	RDZ_RDR_AC_CB.MaxAmps = 5.0;
 	RDZ_RDR_AC_CB.WireTo(&CDRs28VBus);
@@ -632,7 +634,7 @@ void LEM::SystemsInit()
 
 	RDZ_RDR_AC_CB.MaxAmps = 2.0; // Primary AC power
 	RDZ_RDR_AC_CB.WireTo(&ACBusA);
-	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB); // This goes to the CB instead.
+	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater")); // This goes to the CB instead.
 
 	RadarTape.Init(this);
 	// CWEA
@@ -640,7 +642,7 @@ void LEM::SystemsInit()
 
 	// COMM
 	// S-Band Steerable Ant
-	SBandSteerable.Init(this);
+	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"));
 	// SBand System
 	SBand.Init(this);
 	// VHF System
@@ -921,7 +923,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			//Let's cheat and give the ACA a throttle lever
 			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
 			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
-			if (ttca_throttle_pos_dig > 0.84)
+			if (ttca_throttle_pos_dig > 0.51/0.66)
 			{
 				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
 			}
@@ -1004,7 +1006,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				//Let's try a throttle lever
 				//ttca_lever_pos = (double)dx8_jstate[thc_id].rglSlider[0];
 				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
-				if (ttca_throttle_pos_dig > 0.84)
+				if (ttca_throttle_pos_dig > 0.51/0.66)
 				{
 					ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
 				}
@@ -1038,7 +1040,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				ttca_throttle_pos_dig = 0;
 			}
 
-			if (ttca_throttle_pos_dig > 0.84)
+			if (ttca_throttle_pos_dig > 0.51/0.66)
 			{
 				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
 			}
@@ -1069,7 +1071,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			ttca_throttle_pos_dig = 0;
 		}
 
-		if (ttca_throttle_pos_dig > 0.84)
+		if (ttca_throttle_pos_dig > 0.51/0.66)
 		{
 			ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
 		}
@@ -1104,11 +1106,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
-		if(imuheater.h_pump != 0){ imuheater.SetPumpOff(); } // Disable standby heater if enabled
+		if(imuheater->h_pump != 0){ imuheater->SetPumpOff(); } // Disable standby heater if enabled
 		// FIXME: IMU Enabled-Mode Heat Generation Goes Here
 	}else{
 		// IMU is not operating.
-		if(imuheater.h_pump != 1){ imuheater.SetPumpAuto(); } // Enable standby heater if disabled.
+		if(imuheater->h_pump != 1){ imuheater->SetPumpAuto(); } // Enable standby heater if disabled.
 	}
 	// FIXME: Maintenance of IMU temperature channel bit should go here when ECS is complete
 
@@ -1811,32 +1813,34 @@ void LEM_EDS::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 // Landing Radar
-LEM_LR::LEM_LR() : antenna("LEM-LR-Antenna",_vector3(0.013, -3.0, -0.03),0.03,0.04),
-	antheater("LEM-LR-Antenna-Heater",1,NULL,35,55,0,285.9,294.2,&antenna)
+LEM_LR::LEM_LR()// : antenna("LEM-LR-Antenna",_vector3(0.013, -3.0, -0.03),0.03,0.04),
+	//antheater("LEM-LR-Antenna-Heater",1,NULL,35,55,0,285.9,294.2,&antenna)
 {
 	lem = NULL;
 	lastTemp = 0;
 	antennaAngle = 24; // Position 1
 }
 
-void LEM_LR::Init(LEM *s,e_object *dc_src){
+void LEM_LR::Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat){
 	lem = s;
 	// Set up antenna.
 	// LR antenna is designed to operate between 0F and 185F
 	// The heater switches on if the temperature gets below +55F and turns it off again when the temperature reaches +70F
 	// Values in the constructor are name, pos, vol, isol
-	antenna.isolation = 1.0; 
-	antenna.Area = 1250; // 1250 cm
-	antenna.mass = 10000;
-	antenna.SetTemp(295.0); // 70-ish
-	lastTemp = antenna.Temp;
+	antenna = ant;
+	antheater = anheat;
+	antenna->isolation = 1.0; 
+	antenna->Area = 1250; // 1250 cm
+	//antenna.mass = 10000;
+	//antenna.SetTemp(295.0); // 70-ish
+	lastTemp = antenna->Temp;
 	if(lem != NULL){
-		antheater.WireTo(&lem->HTR_LR_CB);
-		lem->Panelsdk.AddHydraulic(&antenna);
+		antheater->WireTo(&lem->HTR_LR_CB);
+		//lem->Panelsdk.AddHydraulic(&antenna);
 		// lem->Panelsdk.AddThermal(&antenna);  // This gives nonsensical results
-		lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater.Enable();
-		antheater.SetPumpAuto();
+		//lem->Panelsdk.AddElectrical(&antheater,false);
+		antheater->Enable();
+		antheater->SetPumpAuto();
 	}
 	// Attach power source
 	dc_source = dc_src;
@@ -1861,7 +1865,7 @@ bool LEM_LR::IsPowered()
 void LEM_LR::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 	// sprintf(oapiDebugString(),"LR Antenna Temp: %f DT %f Change: %f, AH %f",antenna.Temp,simdt,(lastTemp-antenna.Temp)/simdt,antheater.pumping);
-	lastTemp = antenna.Temp;
+	lastTemp = antenna->Temp;
 	// char debugmsg[256];
 	ChannelValue val12;
 	ChannelValue val13;
@@ -2116,13 +2120,13 @@ double LEM_LR::GetAntennaTempF(){
 
 // Rendezvous Radar
 // Position and draw numbers are just guesses!
-LEM_RR::LEM_RR() : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	antheater("LEM-RR-Antenna-Heater",1,NULL,15,20,0,255,288,&antenna)
+LEM_RR::LEM_RR()// : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	//antheater("LEM-RR-Antenna-Heater",1,NULL,15,20,0,255,288,&antenna)
 {
 	lem = NULL;	
 }
 
-void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat) {
 	lem = s;
 	// Set up antenna.
 	// LR antenna is designed to operate between ??F and 75F
@@ -2130,20 +2134,22 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src){
 	// The CWEA complains if the temperature is outside of -54F to +148F
 	// Values in the constructor are name, pos, vol, isol
 	// The DC side of the RR is most of it, the AC provides the transmit source.
-	antenna.isolation = 1.0; 
-	antenna.Area = 9187.8912; // Area of reflecting dish, probably good enough
-	antenna.mass = 10000;
-	antenna.SetTemp(255.1); 
+	antenna = ant;
+	antheater = anheat;
+	antenna->isolation = 1.0; 
+	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
+	//antenna.mass = 10000;
+	//antenna.SetTemp(255.1); 
 	trunnionAngle = 0 * RAD; lastTrunnionAngle = trunnionAngle; 
 	trunnionMoved = 0 * RAD;
 	shaftAngle = -180 * RAD; lastShaftAngle = shaftAngle; // Stow
 	shaftMoved = -180 * RAD;
 	if(lem != NULL){
-		antheater.WireTo(&lem->HTR_RR_STBY_CB);
-		lem->Panelsdk.AddHydraulic(&antenna);
-		lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater.Enable();
-		antheater.SetPumpAuto();
+		antheater->WireTo(&lem->HTR_RR_STBY_CB);
+		//lem->Panelsdk.AddHydraulic(&antenna);
+		//lem->Panelsdk.AddElectrical(&antheater,false);
+		antheater->Enable();
+		antheater->SetPumpAuto();
 	}
 	dc_source = dc_src;
 	ac_source = ac_src;
@@ -3590,7 +3596,7 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 	if (position > 6.0) { position = 6.0; }
 	if (position < -6.0) { position = -6.0; }
 
-	//sprintf(oapiDebugString(), "position %.3f commandedPosition %.3f lgcPosition %.3f", position, commandedPosition, lgcPosition);
+	//sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
 }
 
 void DPSGimbalActuator::GimbalTimestep(double simdt)
