@@ -432,7 +432,7 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.x, 42 + targetY, 0, 0, 2, 72 - targetY, SURF_PREDEF_CK);
 		// Draw Pitch-Error Needle
 		targetY = (int)(fabs(errors.y) * 0.268292);
-		oapiBlt(surf, hFDAINeedles, 169, 122 + (int)errors.y, 4, 0, 69 - targetY, 2, SURF_PREDEF_CK);
+		oapiBlt(surf, hFDAINeedles, 135, 122 + (int)errors.y, 4, 0, 69 - targetY, 2, SURF_PREDEF_CK);
 		// Draw Yaw-Error Needle
 		targetY = (int)(fabs(errors.z) * 0.268292);
 		oapiBlt(surf, hFDAINeedles, 122 + (int)errors.z, 135, 0, 0, 2, 69 - targetY, SURF_PREDEF_CK);

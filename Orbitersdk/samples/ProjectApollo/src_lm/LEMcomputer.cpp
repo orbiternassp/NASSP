@@ -1329,17 +1329,20 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
 
-	/*switch (channel)
+	if (!Yaagc)
 	{
-	case 030:
-		if ((bit == 1) && val) {
-			RunProgram(70);			// Abort with descent stage
+		switch (channel)
+		{
+		case 030:
+			if ((bit == 1) && val) {
+				RunProgram(70);			// Abort with descent stage
+			}
+			else if ((bit == 4) && val) {
+				RunProgram(71);			// Abort with ascent stage.
+			}
+			break;
 		}
-		else if ((bit == 4) && val) {
-			RunProgram(71);			// Abort with ascent stage.
-		}
-		break;
-	}*/
+	}
 }
 
 bool LEMcomputer::OrbitCalculationsValid()
@@ -1458,6 +1461,12 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_ena = 1;
 			}
 		}else{
+			if (sat->gdc.fdai_err_ena == 1) {
+				// sprintf(oapiDebugString(),"FDAI: RESET");
+				sat->gdc.fdai_err_x = 0;
+				sat->gdc.fdai_err_y = 0;
+				sat->gdc.fdai_err_z = 0;
+			}
 			lem->atca.lgc_err_ena = 0;
 		}
 		break;
