@@ -163,7 +163,7 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),  _V(0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),  _V(0,1,0), 46706.3, ph_Dsc, 3107);
 	th_hover[1] = CreateThruster (_V(0.013, -3.0, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
 																							//needed for visual gimbaling for corrected engine flames
 	DelThrusterGroup(THGROUP_HOVER,true);
@@ -248,7 +248,7 @@ void LEM::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),   _V(0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster (_V(0.0  , -2.0,  0.0),   _V(0,1,0), 46706.3, ph_Dsc, 3107);
 	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.034), _V(0,1,0),     0, ph_Dsc, 0);	//this is a "virtual engine",no thrust and no fuel
 																							//needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
@@ -294,7 +294,7 @@ void LEM::SetLmAscentHoverStage()
 	SetSize (5);
 	SetCOG_elev (5);
 	SetEmptyMass (1920.0);
-	SetPMI (_V(2.8,2.29,2.37));
+	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
