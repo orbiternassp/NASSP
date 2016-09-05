@@ -1722,7 +1722,7 @@ agc_engine (agc_t * State)
 			{
 			  State->InterruptRequests[1] = 1;
 			   // Triggering a T6RUPT disables T6 by clearing the CH13 bit
-			   CpuWriteIO(State, 013, c(RegTIME6) & 037777);
+			   CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
 			 }
 		 }
 #ifdef _DEBUG
