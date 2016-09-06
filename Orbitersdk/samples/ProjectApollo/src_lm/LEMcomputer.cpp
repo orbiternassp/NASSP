@@ -1438,6 +1438,11 @@ void LEMcomputer::ProcessChannel161(ChannelValue val) {
 	lem->RR.RRTrunionDrive(val.to_ulong(),val12);
 }
 
+void LEMcomputer::ProcessChannel162(ChannelValue val) {
+
+	LEM *lem = (LEM *)OurVessel;
+	lem->deca.ProcessLGCThrustCommands(val.to_ulong());
+}
 
 // Process IMU CDU error counters.
 void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){

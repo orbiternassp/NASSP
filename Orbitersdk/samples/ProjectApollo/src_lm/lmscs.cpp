@@ -42,6 +42,8 @@
 #include "papi.h"
 #include "LEM.h"
 
+#define DECA_AUTOTHRUST_STEP 0.00026828571
+
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
@@ -127,7 +129,7 @@ void ATCA::Timestep(double simt){
 		}
 		if(jet_stop[x] > 0 && (simt > jet_stop[x]+0.0075 && simt < jet_stop[x]+0.0175)){
 		    // Ramp down
-			power = 1-((simt-jet_stop[x])/0.0175);
+			power = 1.0 - ((simt - jet_stop[x] - 0.0075) / 0.01);
 		}
 		if(jet_stop[x] > 0 && simt > jet_stop[x]+0.0175){
 			// Thruster off
@@ -325,11 +327,13 @@ void DECA::Timestep(double simt) {
 	//Process Throttle Commands
 	if (lem->THRContSwitch.IsUp())
 	{
-		//TBD: Get LGC thrust command
-		//sprintf(oapiDebugString(), "Thrust pulses: %o", lem->agc.GetErasable(0, 055));
-		lgcAutoThrust = 0.0;
+		//Auto Thrust commands are generated in ProcessLGCThrustCommands()
 
 		dpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
+		if (dpsthrustcommand > 0.925)
+		{
+			dpsthrustcommand = 0.925;
+		}
 	}
 	else
 	{
@@ -338,6 +342,38 @@ void DECA::Timestep(double simt) {
 	}
 
 	lem->DPS.thrustcommand = dpsthrustcommand;
+
+	//sprintf(oapiDebugString(), "%d %d", engOn, engOff);
+}
+
+void DECA::ProcessLGCThrustCommands(int val) {
+
+	int pulses;
+	double thrust_cmd;
+
+	if (powered == 0) { return; }
+
+	if (val & 040000) { // Negative
+		pulses = -((~val) & 077777);
+	}
+	else {
+		pulses = val & 077777;
+	}
+
+	thrust_cmd = (DECA_AUTOTHRUST_STEP*pulses);
+
+	lgcAutoThrust += thrust_cmd;
+
+	if (lgcAutoThrust > 0.825)
+	{
+		lgcAutoThrust = 0.825;
+	}
+	else if (lgcAutoThrust < 0)
+	{
+		lgcAutoThrust = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "Thrust val: %o, Thrust pulses: %d, thrustchange: %f, lgcAutoThrust: %f", val, pulses, thrust_cmd, lgcAutoThrust);
 }
 
 void DECA::SystemTimestep(double simdt) {
@@ -383,6 +419,7 @@ void DECA::LoadState(FILEHANDLE scn) {
 
 GASTA::GASTA()
 {
+	imu_att = _V(0, 0, 0);
 	gasta_att = _V(0, 0, 0);
 }
 

@@ -43,11 +43,12 @@ public:
 class DECA {
 	// DESCENT ENGINE CONTROL ASSEMBLY
 public:
-	DECA();									// Cons
-	void Init(LEM *vessel, e_object *dcbus);// Init
-	void Timestep(double simt);				// Timestep
-	void SystemTimestep(double simdt);		// System Timestep
+	DECA();										// Cons
+	void Init(LEM *vessel, e_object *dcbus);	// Init
+	void Timestep(double simt);					// Timestep
+	void SystemTimestep(double simdt);			// System Timestep
 	double GetCommandedThrust() { return dpsthrustcommand; }
+	void ProcessLGCThrustCommands(int val);
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
