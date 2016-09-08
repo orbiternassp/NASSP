@@ -595,14 +595,22 @@ public:
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 
+	///
+	/// Since we can now run with either the Virtual AGC emulator or the C++ AGC, this function
+	/// allows you to check which we're using.
+	/// \brief Are we running a Virtual AGC?
+	/// \return True for Virtual AGC, false for C++ AGC.
+	///
+	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
+
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
-	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
-	THRUSTER_HANDLE th_rcs_orbiter_lin[16];
+	//THRUSTER_HANDLE th_rcs_orbiter_rot[24];
+	//THRUSTER_HANDLE th_rcs_orbiter_lin[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
@@ -694,6 +702,7 @@ protected:
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
+	void JoystickTimestep(double simdt);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
 	// Save/Load support functions.
@@ -1576,6 +1585,7 @@ protected:
 	int Realism;
 	int ApolloNo;
 	int Landed;
+	bool OrbiterAttitudeDisabled;
 
 	int SwitchFocusToLeva;
 
@@ -1793,6 +1803,8 @@ protected:
 	friend class DECA;
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
+
+	friend class ApolloRTCCMFD;
 };
 
 extern void LEMLoadMeshes();

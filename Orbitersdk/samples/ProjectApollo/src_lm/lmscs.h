@@ -32,12 +32,22 @@ public:
 	void Timestep(double simt);			// Timestep
 	void ProcessLGC(int ch, int val);   // To process LGC commands
 
+	bool GetDirectPitchActive() { return DirectPitchActive; }
+	bool GetDirectYawActive() { return DirectYawActive; }
+	bool GetDirectRollActive() { return DirectRollActive; }
+	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
+	void SetDirectYawActive(bool active) { DirectYawActive = active; }
+	void SetDirectRollActive(bool active) { DirectRollActive = active; }
+
 	LEM *lem;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
+
+protected:
+	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
 };
 
 class DECA {

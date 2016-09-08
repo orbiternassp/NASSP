@@ -308,6 +308,7 @@ void LEM::Init()
 	AscentFuelMassKg = 2345.0;
 
 	Realism = REALISM_DEFAULT;
+	OrbiterAttitudeDisabled = false;
 	ApolloNo = 0;
 	Landed = false;
 
@@ -649,6 +650,14 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_E:
 				agc.SetInputChannelBit(016, MarkReject_LM, 1);  // Mark Reject
 				break;
+			case OAPI_KEY_MINUS:
+				//increase descent rate
+				agc.SetInputChannelBit(016, DescendMinus, 1);
+				break;
+			case OAPI_KEY_EQUALS:
+				//decrease descent rate
+				agc.SetInputChannelBit(016, DescendPlus, 1);
+				break;
 
 			case OAPI_KEY_NUMPAD0:
 				//TTCA Throttle up
@@ -675,6 +684,14 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_E:
 				agc.SetInputChannelBit(016, MarkReject_LM, 0);  // Mark Reject
 				break;
+			case OAPI_KEY_MINUS:
+				//increase descent rate
+				agc.SetInputChannelBit(016, DescendMinus, 0);
+				break;
+			case OAPI_KEY_EQUALS:
+				//decrease descent rate
+				agc.SetInputChannelBit(016, DescendPlus, 0);
+				break;
 
 			case OAPI_KEY_NUMPAD0:
 				ttca_throttle_vel = 0;
@@ -689,6 +706,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
 	}
+
 	switch (key) {
 
 	case OAPI_KEY_K:
@@ -1307,6 +1325,24 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 	agc.SetMissionInfo(ApolloNo, Realism);
 
+
+	//
+	// Realism Mode Settings
+	//
+
+	// Enable Orbiter's attitude control for unmanned missions
+	// as long as they rely on Orbiter's navmodes (killrot etc.)
+
+	if (!Crewed) {
+		OrbiterAttitudeDisabled = false;
+	}
+
+	// Disable it when not in Quickstart mode
+
+	else if (Realism) {
+		OrbiterAttitudeDisabled = true;
+	}
+
 	//
 	// Load sounds, this is mandatory if loading in cockpit view, 
 	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
@@ -1670,6 +1706,29 @@ void LEM::SetRCSJetLevelPrimary(int jet, double level) {
 	// The thruster is a Marquardt R-4D, which uses 46 watts @ 28 volts to fire.
 	// This applies to the SM as well, someone should probably tell them about this.
 	// RCS pressurized?
+
+	//Direct override
+	if (atca.GetDirectRollActive())
+	{
+		if (jet == 0 || jet == 3 || jet == 4 || jet == 7 || jet == 8 || jet == 11 || jet == 12 || jet == 15)
+		{
+			return;
+		}
+	}
+	if (atca.GetDirectPitchActive())
+	{
+		if (jet == 0 || jet == 3 || jet == 4 || jet == 7 || jet == 8 || jet == 11 || jet == 12 || jet == 15)
+		{
+			return;
+		}
+	}
+	if (atca.GetDirectYawActive())
+	{
+		if (jet == 1 || jet == 2 || jet == 5 || jet == 6 || jet == 9 || jet == 10 || jet == 13 || jet == 14)
+		{
+			return;
+		}
+	}
 
 	// Is this thruster on?	
 	switch(jet){

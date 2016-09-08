@@ -135,60 +135,75 @@ void LEM::AddRCS_LMH(double TRANZ)
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
+	/*
 	// Setup Orbiter thruster groups
 	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
 	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
 	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
 	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-	CreateThrusterGroup (th_rcs_orbiter_rot+0, 4, THGROUP_ATT_PITCHDOWN);
+	
 	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
 	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
 	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
 	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-	CreateThrusterGroup (th_rcs_orbiter_rot+4, 4, THGROUP_ATT_PITCHUP);
+	
 	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
 	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
 	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
 	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-	CreateThrusterGroup (th_rcs_orbiter_rot+8, 4, THGROUP_ATT_BANKLEFT);
+	
 	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
 	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
 	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
 	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-	CreateThrusterGroup (th_rcs_orbiter_rot+12, 4,THGROUP_ATT_BANKRIGHT);
+	
 	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
 	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
 	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
 	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-	CreateThrusterGroup (th_rcs_orbiter_rot+16, 4,THGROUP_ATT_YAWLEFT);
+	
 	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
 	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
 	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
 	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-	CreateThrusterGroup (th_rcs_orbiter_rot+20, 4,THGROUP_ATT_YAWRIGHT);
+	
 
 	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
 	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
 	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
 	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-	CreateThrusterGroup (th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+	
 	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
 	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
 	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
 	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-	CreateThrusterGroup (th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+	
 	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
 	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-	CreateThrusterGroup (th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+	
 	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
 	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-	CreateThrusterGroup (th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+	
 	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
 	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-	CreateThrusterGroup (th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+	
 	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
 	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-	CreateThrusterGroup (th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
+
+	if (!OrbiterAttitudeDisabled) {
+		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
+	}*/
 
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
@@ -276,59 +291,73 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// Setup Orbiter thruster groups
-	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
+	/*th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
 	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
 	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
 	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-	CreateThrusterGroup (th_rcs_orbiter_rot+0, 4, THGROUP_ATT_PITCHDOWN);
+
 	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
 	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
 	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
 	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-	CreateThrusterGroup (th_rcs_orbiter_rot+4, 4, THGROUP_ATT_PITCHUP);
+
 	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
 	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
 	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
 	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-	CreateThrusterGroup (th_rcs_orbiter_rot+8, 4, THGROUP_ATT_BANKLEFT);
+
 	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
 	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
 	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
 	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-	CreateThrusterGroup (th_rcs_orbiter_rot+12, 4,THGROUP_ATT_BANKRIGHT);
+
 	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
 	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
 	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
 	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-	CreateThrusterGroup (th_rcs_orbiter_rot+16, 4,THGROUP_ATT_YAWLEFT);
+
 	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
 	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
 	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
 	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-	CreateThrusterGroup (th_rcs_orbiter_rot+20, 4,THGROUP_ATT_YAWRIGHT);
+
 
 	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
 	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
 	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
 	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-	CreateThrusterGroup (th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+
 	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
 	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
 	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
 	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-	CreateThrusterGroup (th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+
 	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
 	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-	CreateThrusterGroup (th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+
 	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
 	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-	CreateThrusterGroup (th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+
 	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
 	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-	CreateThrusterGroup (th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+
 	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
 	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-	CreateThrusterGroup (th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
+
+	if (!OrbiterAttitudeDisabled) {
+		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
+		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
+	}*/
 }
 
 bool LEM::CabinFansActive()
@@ -809,25 +838,24 @@ void LEM::SystemsInit()
 	atca.Init(this);
 }
 
-void LEM::SystemsTimestep(double simt, double simdt) 
-
+void LEM::JoystickTimestep(double simdt)
 {
-	// Clear debug line when timer runs out
-	if(DebugLineClearTimer > 0){
-		DebugLineClearTimer -= simdt;
-		if(DebugLineClearTimer < 0){
-			sprintf(oapiDebugString(),"");
-			DebugLineClearTimer = 0;
-		}
-	}
-
 	// Zero ACA and TTCA bits in channel 31
 	ChannelValue val31;
 	val31 = agc.GetInputChannel(031);
 	val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
 
-	// Joystick read
-	if (js_enabled > 0 && oapiGetFocusInterface() == this) {
+	int thc_x_pos = 0;
+	int thc_y_pos = 0;
+	int thc_z_pos = 0;
+	int thc_rot_pos = 0;
+
+	rhc_pos[0] = 0; // Initialize
+	rhc_pos[1] = 0;
+	rhc_pos[2] = 0;
+
+					 // Joystick read
+	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
 		if (thc_id != -1 && !(thc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}
@@ -836,21 +864,18 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		}
 		/* ACA OPERATION:
 
-			The LM ACA is a lot different from the CM RHC.
-			The ACA works on a D/A converter.
-			The OUT OF DETENT switch closes at .5 degrees of travel, and enables the proportional
-			voltage circuit ("A" CIRCUIT) to operate.
-			The hand controller must be moved 2 degrees to generate a count.
-			8 degrees of usable travel, at .190 degrees per count.
-			10 degrees total travel = 42 counts.
+		The LM ACA is a lot different from the CM RHC.
+		The ACA works on a D/A converter.
+		The OUT OF DETENT switch closes at .5 degrees of travel, and enables the proportional
+		voltage circuit ("A" CIRCUIT) to operate.
+		The hand controller must be moved 2 degrees to generate a count.
+		8 degrees of usable travel, at .190 degrees per count.
+		10 degrees total travel = 42 counts.
 
 		*/
 		// Axes have 32768 points of travel for the 13 degrees to hard stop
 		// 2520 points per degree. It breaks out of detent at .5 degres, or 1260 pulses.
 		// 480 points per count.
-		rhc_pos[0] = 0; // Initialize
-		rhc_pos[1] = 0;
-		rhc_pos[2] = 0;
 
 		// Read data
 		HRESULT hr;
@@ -859,7 +884,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
-				// Attempt to acquire the device
+							  // Attempt to acquire the device
 				hr = dx8_joystick[rhc_id]->Acquire();
 				if (FAILED(hr)) {
 					sprintf(oapiDebugString(), "DX8JS: Cannot aquire RHC");
@@ -887,62 +912,236 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
+
 			if (dx8_jstate[rhc_id].lX > 34028) { // Out of detent RIGHT
-				val31[ACAOutOfDetent] = 1;
-				val31[PlusAzimuth] = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX - 34028; // Results are 0 - 31507
 			}
 			if (dx8_jstate[rhc_id].lX < 31508) { // Out of detent LEFT
-				val31[ACAOutOfDetent] = 1;
-				val31[MinusAzimuth] = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX - 31508; // Results are 0 - -31508
 			}
 			if (dx8_jstate[rhc_id].lY > 34028) { // Out of detent UP
-				val31[ACAOutOfDetent] = 1;
-				val31[PlusElevation] = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY - 34028; // Results are 0 - 31507
 			}
 			if (dx8_jstate[rhc_id].lY < 31508) { // Out of detent DOWN
-				val31[ACAOutOfDetent] = 1;
-				val31[MinusElevation] = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY - 31508; // Results are 0 - -31508
 			}
 			// YAW IS REVERSED
 			if (rhc_rot_pos > 34028) { // Out of detent RIGHT
-				val31[ACAOutOfDetent] = 1;
-				val31[PlusYaw] = 1;
 				rhc_pos[2] = 34028 - rhc_rot_pos; // Results are 0 - 31507
 			}
 			if (rhc_rot_pos < 31508) { // Out of detent LEFT
-				val31[ACAOutOfDetent] = 1;
-				val31[MinusYaw] = 1;
 				rhc_pos[2] = 31508 - rhc_rot_pos; // Results are 0 - -31508
 			}
-
 
 			//Let's cheat and give the ACA a throttle lever
 			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
 			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
-			if (ttca_throttle_pos_dig > 0.51/0.66)
-			{
-				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
-			}
-			else
-			{
-				ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-			}
 		}
 		else {
+
 			// No JS
+
+			// Roll
+			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
+				rhc_pos[0] = (int)((-GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
+			}
+			else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
+				rhc_pos[0] = (int)(GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768.);
+			}
+			// Pitch
+			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
+				rhc_pos[1] = (int)((-GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 32768.);
+			}
+			else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
+				rhc_pos[1] = (int)(GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768.);
+			}
+			// Yaw
+			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
+				rhc_pos[2] = (int)((GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 32768.);
+			}
+			else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
+				rhc_pos[2] = (int)(-GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768.);
+			}
 		}
-		// sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0],rhc_pos[1],rhc_pos[2], rhc_rzx_id, rhc_rot_id); 
+
+		if (rhc_pos[0] < 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[MinusAzimuth] = 1;
+		}
+		if (rhc_pos[1] < 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[MinusElevation] = 1;
+		}
+		if (rhc_pos[0] > 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[PlusAzimuth] = 1;
+		}
+		if (rhc_pos[1] > 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[PlusElevation] = 1;
+		}
+		if (rhc_pos[2] < 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[MinusYaw] = 1;
+		}
+		if (rhc_pos[2] > 0) {
+			val31[ACAOutOfDetent] = 1;
+			val31[PlusYaw] = 1;
+		}
+
+		//
+		// DIRECT
+		//
+
+		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
+
+		if (LeftACA4JetSwitch.IsUp() && SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+		{
+			if (rhc_pos[0] < -28770) {
+				// MINUS ROLL
+				SetRCSJet(3, 0);
+				SetRCSJet(7, 0);
+				SetRCSJet(8, 0);
+				SetRCSJet(12, 0);
+				SetRCSJet(0, 1);
+				SetRCSJet(4, 1);
+				SetRCSJet(11, 1);
+				SetRCSJet(15, 1);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(200); // Four thrusters worth
+
+				atca.SetDirectRollActive(true);
+				rflag = 1;
+			}
+			if (rhc_pos[0] > 28770) {
+				// PLUS ROLL
+				SetRCSJet(3, 1);
+				SetRCSJet(7, 1);
+				SetRCSJet(8, 1);
+				SetRCSJet(12, 1);
+				SetRCSJet(0, 0);
+				SetRCSJet(4, 0);
+				SetRCSJet(11, 0);
+				SetRCSJet(15, 0);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(200);
+
+				atca.SetDirectRollActive(true);
+				rflag = 1;
+			}
+			if (rhc_pos[1] < -28770) {
+				// MINUS PITCH
+				SetRCSJet(0, 1);
+				SetRCSJet(7, 1);
+				SetRCSJet(11, 1);
+				SetRCSJet(12, 1);
+				SetRCSJet(3, 0);
+				SetRCSJet(4, 0);
+				SetRCSJet(8, 0);
+				SetRCSJet(15, 0);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+				atca.SetDirectPitchActive(true);
+				pflag = 1;
+			}
+			if (rhc_pos[1] > 28770) {
+				// PLUS PITCH
+				SetRCSJet(0, 0);
+				SetRCSJet(7, 0);
+				SetRCSJet(11, 0);
+				SetRCSJet(12, 0);
+				SetRCSJet(3, 1);
+				SetRCSJet(4, 1);
+				SetRCSJet(8, 1);
+				SetRCSJet(15, 1);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+				atca.SetDirectPitchActive(true);
+				pflag = 1;
+			}
+			if (rhc_pos[2] < -28770) {
+				// MINUS YAW
+				SetRCSJet(1, 0);
+				SetRCSJet(5, 0);
+				SetRCSJet(10, 0);
+				SetRCSJet(14, 0);
+				SetRCSJet(2, 1);
+				SetRCSJet(6, 1);
+				SetRCSJet(9, 1);
+				SetRCSJet(13, 1);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+				atca.SetDirectYawActive(true);
+				yflag = 1;
+			}
+			if (rhc_pos[2] > 28770) {
+				// PLUS YAW
+				SetRCSJet(1, 1);
+				SetRCSJet(5, 1);
+				SetRCSJet(10, 1);
+				SetRCSJet(14, 1);
+				SetRCSJet(2, 0);
+				SetRCSJet(6, 0);
+				SetRCSJet(9, 0);
+				SetRCSJet(13, 0);
+
+				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+				atca.SetDirectYawActive(true);
+				yflag = 1;
+			}
+		}
+		if (atca.GetDirectRollActive() == true && rflag == 0) { // Turn off direct roll
+			SetRCSJet(3, 0);
+			SetRCSJet(7, 0);
+			SetRCSJet(8, 0);
+			SetRCSJet(12, 0);
+			SetRCSJet(0, 0);
+			SetRCSJet(4, 0);
+			SetRCSJet(11, 0);
+			SetRCSJet(15, 0);
+
+			atca.SetDirectRollActive(false);
+		}
+		if (atca.GetDirectPitchActive() == true && pflag == 0) { // Turn off direct pitch
+			SetRCSJet(0, 0);
+			SetRCSJet(7, 0);
+			SetRCSJet(11, 0);
+			SetRCSJet(12, 0);
+			SetRCSJet(3, 0);
+			SetRCSJet(4, 0);
+			SetRCSJet(8, 0);
+			SetRCSJet(15, 0);
+
+			atca.SetDirectPitchActive(false);
+		}
+		if (atca.GetDirectYawActive() == true && yflag == 0) { // Turn off direct yaw
+			SetRCSJet(1, 0);
+			SetRCSJet(5, 0);
+			SetRCSJet(10, 0);
+			SetRCSJet(14, 0);
+			SetRCSJet(2, 0);
+			SetRCSJet(6, 0);
+			SetRCSJet(9, 0);
+			SetRCSJet(13, 0);
+
+			atca.SetDirectYawActive(false);
+		}
+
+		if (rhc_debug != -1)
+		{
+			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id);
+		}
 		// And now the THC...
 		if (thc_id != -1 && thc_id < js_enabled) {
 			// CHECK FOR POWER HERE
-			int thc_voltage = 5; // HAX
+			double thc_voltage = SCS_ATCA_AGS_CB.Voltage(); // HAX
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
-				// Attempt to acquire the device
+							  // Attempt to acquire the device
 				hr = dx8_joystick[thc_id]->Acquire();
 				if (FAILED(hr)) {
 					sprintf(oapiDebugString(), "DX8JS: Cannot aquire THC");
@@ -954,8 +1153,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
 			// The LM TTCA is even wierder than the CM THC...			
-			int thc_rot_pos = 32768, thc_tjt_pos = 32768; // Initialize to centered			
-			if (thc_voltage > 0) {
+			int thc_tjt_pos = 32768; // Initialize to centered	
+
+			if (thc_voltage > 0 && LeftTTCATranslSwitch.IsUp()) {
 				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
 					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[0]; // Read
 				}
@@ -967,17 +1167,17 @@ void LEM::SystemsTimestep(double simt, double simdt)
 					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
 					ttca_throttle_pos = 65536;//32768;           // Zero throttle position
 					if (dx8_jstate[thc_id].lY < 16384) {
-						val31[PlusX] = 1;
+						thc_y_pos = dx8_jstate[thc_id].lY - 16384;
 					}
 					if (dx8_jstate[thc_id].lY > 49152) {
-						val31[MinusX] = 1;
+						thc_y_pos = dx8_jstate[thc_id].lY - 49152;
 					}
 				}
 				if (dx8_jstate[thc_id].lX > 49152) {
-					val31[PlusY] = 1;
+					thc_x_pos = dx8_jstate[thc_id].lX - 49152;
 				}
 				if (dx8_jstate[thc_id].lX < 16384) {
-					val31[MinusY] = 1;
+					thc_x_pos = dx8_jstate[thc_id].lX - 16384;
 				}
 				// Z-axis read.
 				if (thc_rot_id != -1) { // If this is a rotator-type axis
@@ -996,93 +1196,115 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				if (thc_rzx_id != -1 && thc_rot_id == -1) { // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
-				if (thc_rot_pos < 16384) {
-					val31[MinusZ] = 1;
-				}
+
 				if (thc_rot_pos > 49152) {
-					val31[PlusZ] = 1;
+					thc_z_pos = thc_rot_pos - 49152;
+				}
+				if (thc_rot_pos < 16384) {
+					thc_z_pos = thc_rot_pos - 16384;
 				}
 
 				//Let's try a throttle lever
 				//ttca_lever_pos = (double)dx8_jstate[thc_id].rglSlider[0];
 				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
-				if (ttca_throttle_pos_dig > 0.51/0.66)
-				{
-					ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
-				}
-				else
-				{
-					ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-				}
 
 				if (thc_debug != -1) {
-					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d", dx8_jstate[thc_id].lX, dx8_jstate[thc_id].lY,
-						thc_rot_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1]);
+					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d, thc_rot_id: %d, thc_rzx_id: %d", thc_x_pos, thc_y_pos,
+						thc_z_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1], thc_rot_id, thc_rzx_id);
 				}
 			}
 		}
 		else {
 			// No JS
-			if (ttca_throttle_vel == 1)
-			{
-				ttca_throttle_pos_dig += 0.25*simdt;
-			}
-			else if (ttca_throttle_vel == -1)
-			{
-				ttca_throttle_pos_dig -= 0.25*simdt;
-			}
-			if (ttca_throttle_pos_dig > 1)
-			{
-				ttca_throttle_pos_dig = 1;
-			}
-			else if (ttca_throttle_pos_dig < 0)
-			{
-				ttca_throttle_pos_dig = 0;
-			}
 
-			if (ttca_throttle_pos_dig > 0.51/0.66)
-			{
-				ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+			// Up/down
+			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
+				thc_y_pos = (int)((-GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
 			}
-			else
-			{
-				ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+			else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
+				thc_y_pos = (int)(GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
+			}
+			// Left/right
+			if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
+				thc_x_pos = (int)((-GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
+			}
+			else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
+				thc_x_pos = (int)(GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
+			}
+			// Forward/Back
+			if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
+				thc_z_pos = (int)((-GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
+			}
+			else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
+				thc_z_pos = (int)(GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
 			}
 
 			//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
 		}
+
+		if (thc_y_pos < 0) {
+			val31[MinusX] = 1;
+		}
+		if (thc_x_pos < 0) {
+			val31[MinusY] = 1;
+		}
+		if (thc_y_pos > 0) {
+			val31[PlusX] = 1;
+		}
+		if (thc_x_pos > 0) {
+			val31[PlusY] = 1;
+		}
+		if (thc_z_pos < 0) {
+			val31[MinusZ] = 1;
+		}
+		if (thc_z_pos > 0) {
+			val31[PlusZ] = 1;
+		}
+
+
+	}
+
+	if (ttca_throttle_vel == 1)
+	{
+		ttca_throttle_pos_dig += 0.25*simdt;
+	}
+	else if (ttca_throttle_vel == -1)
+	{
+		ttca_throttle_pos_dig -= 0.25*simdt;
+	}
+	if (ttca_throttle_pos_dig > 1)
+	{
+		ttca_throttle_pos_dig = 1;
+	}
+	else if (ttca_throttle_pos_dig < 0)
+	{
+		ttca_throttle_pos_dig = 0;
+	}
+
+	if (ttca_throttle_pos_dig > 0.51 / 0.66)
+	{
+		ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
 	}
 	else
 	{
-		if (ttca_throttle_vel == 1)
-		{
-			ttca_throttle_pos_dig += 0.25*simdt;
-		}
-		else if (ttca_throttle_vel == -1)
-		{
-			ttca_throttle_pos_dig -= 0.25*simdt;
-		}
-		if (ttca_throttle_pos_dig > 1)
-		{
-			ttca_throttle_pos_dig = 1;
-		}
-		else if (ttca_throttle_pos_dig < 0)
-		{
-			ttca_throttle_pos_dig = 0;
-		}
-
-		if (ttca_throttle_pos_dig > 0.51/0.66)
-		{
-			ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
-		}
-		else
-		{
-			ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-		}
+		ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
 	}
 
 	// Write back channel data
-	agc.SetInputChannel(031,val31);
+	agc.SetInputChannel(031, val31);
+}
+
+void LEM::SystemsTimestep(double simt, double simdt) 
+
+{
+	// Clear debug line when timer runs out
+	if(DebugLineClearTimer > 0){
+		DebugLineClearTimer -= simdt;
+		if(DebugLineClearTimer < 0){
+			sprintf(oapiDebugString(),"");
+			DebugLineClearTimer = 0;
+		}
+	}
 
 	// Each timestep is passed to the SPSDK
 	// to perform internal computations on the 
@@ -1126,6 +1348,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	fdaiRight.SystemTimestep(simdt);
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
+	JoystickTimestep(simdt);
 	eds.TimeStep();                                         // Do Work
 	optics.TimeStep(simdt);									// Do Work
 	LR.TimeStep(simdt);										// I don't wanna work
@@ -1869,11 +2092,9 @@ void LEM_LR::TimeStep(double simdt){
 	// char debugmsg[256];
 	ChannelValue val12;
 	ChannelValue val13;
-	ChannelValue val14;
 	ChannelValue val33;
 	val12 = lem->agc.GetInputChannel(012);
 	val13 = lem->agc.GetInputChannel(013);
-	val14 = lem->agc.GetInputChannel(014);
 	val33 = lem->agc.GetCh33Switches();
 
 	if (!IsPowered() ) { 
@@ -2006,14 +2227,14 @@ void LEM_LR::TimeStep(double simdt){
 		switch(radarBits){
 		case 1: 
 			// LR (LR VEL X)
-			if(ruptSent != 1){
-				// 12288 COUNTS = -000000 F/S
-				// SIGN REVERSED				
-				// 0.643966 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288-(rate[0]/0.643966));
-				lem->agc.GenerateRadarupt();
-				ruptSent = 1;
-			}
+			// 12288 COUNTS = -000000 F/S
+			// SIGN REVERSED				
+			// 0.643966 F/S PER COUNT
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288-(rate[0]/0.643966));
+			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+			lem->agc.GenerateRadarupt();
+			ruptSent = 1;
+
 			break;
 		case 2:
 			// RR RANGE RATE
@@ -2021,13 +2242,13 @@ void LEM_LR::TimeStep(double simdt){
 			break;
 		case 3:
 			// LR (LR VEL Z)
-			if(ruptSent != 3){
-				// 12288 COUNTS = +00000 F/S
-				// 0.866807 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[2]/0.866807));
-				lem->agc.GenerateRadarupt();
-				ruptSent = 3;
-			}
+			// 12288 COUNTS = +00000 F/S
+			// 0.866807 F/S PER COUNT
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[2]/0.866807));
+			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+			lem->agc.GenerateRadarupt();
+			ruptSent = 3;
+
 			break;
 		case 4:
 			// RR RANGE
@@ -2035,40 +2256,42 @@ void LEM_LR::TimeStep(double simdt){
 			break;
 		case 5:
 			// LR (LR VEL Y)
-			if(ruptSent != 5){
-				// 12288 COUNTS = +000000 F/S
-				// 1.211975 F/S PER COUNT
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[1]/1.211975));
-				lem->agc.GenerateRadarupt();
-				ruptSent = 5;
-			}
+			// 12288 COUNTS = +000000 F/S
+			// 1.211975 F/S PER COUNT
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[1]/1.211975));
+			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+			lem->agc.GenerateRadarupt();
+			ruptSent = 5;
+
 			break;
 		case 7: 
 			// LR (LR RANGE)
-			if(ruptSent != 7){
-				// High range is 5.395 feet per count
-				// Low range is 1.079 feet per count
-				if(val33[LRRangeLowScale] == 1){
-					// Hi Range
-					lem->agc.vagc.Erasable[0][RegRNRAD] = range/5.395;
-				}else{
-					// Lo Range
-					lem->agc.vagc.Erasable[0][RegRNRAD] = range/1.079;
-				}
-				
-				lem->agc.GenerateRadarupt();
-				ruptSent = 7;
+			// High range is 5.395 feet per count
+			// Low range is 1.079 feet per count
+			if(val33[LRRangeLowScale] == 1){
+				// Hi Range
+				lem->agc.vagc.Erasable[0][RegRNRAD] = range/5.395;
+			}else{
+				// Lo Range
+				lem->agc.vagc.Erasable[0][RegRNRAD] = range/1.079;
 			}
+			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+			lem->agc.GenerateRadarupt();
+			ruptSent = 7;
+
 			break;
 			/*
 		default:
 			sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
 			*/
 		}
+
 	}else{
 		ruptSent = 0; 
 	}
 
+
+	//sprintf(oapiDebugString(), "rangeGood: %d velocityGood: %d ruptSent: %d  RadarActivity: %d Position %f° Range: %f", rangeGood, velocityGood, ruptSent, val13[RadarActivity] == 1, antennaAngle, range);
 }
 
 void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -2433,6 +2656,49 @@ void LEM_RR::TimeStep(double simdt){
 		radarDataGood = 0;
 		range = 0;
 		rate = 0;
+
+		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRL, R;
+		MATRIX3 Rot;
+		double relang;
+
+		VESSEL *csm = lem->agc.GetCSM();
+
+		//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+		lem->GetGlobalPos(LMPos);
+		csm->GetGlobalPos(CSMPos);
+		//oapiGetGlobalPos(hEarth, &R_E);
+		//oapiGetGlobalPos(hMoon, &R_M);
+		lem->GetRotationMatrix(Rot);
+
+		//Unit vector of antenna in navigation base vessel's local frame
+		U_RRL = unit(_V(cos(shaftAngle)*sin(trunnionAngle), sin(shaftAngle), cos(shaftAngle)*cos(trunnionAngle)));
+
+		//U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
+
+		//Calculate antenna pointing vector in global frame
+		U_RR = mul(Rot, U_RRL);
+
+		//Vector pointing from LM to CSM
+		R = CSMPos - LMPos;
+
+		//Unit vector of it
+		U_R = unit(R);
+
+		//relative angle between antenna pointing vector and direction of CSM
+		relang = acos(dotp(U_RR, U_R));
+
+		if (relang < 2.0*RAD)
+		{
+			radarDataGood = 1;
+			range = length(R);
+
+			lem->GetGlobalVel(LMVel);
+			csm->GetGlobalVel(CSMVel);
+
+			rate = dotp(CSMVel - LMVel, U_R);
+		}
+
+		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG);
 	}
 
 	// Let's test.
@@ -2470,7 +2736,7 @@ void LEM_RR::TimeStep(double simdt){
 			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
 				shaftAngle += RR_SHAFT_STEP * ShaftRate;
 			}
-			if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
+			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
 			// FALL INTO
 		case 2: // AGC
 			// Watch shaft/trunnion movement. The LGC gets told when we move.
@@ -2555,13 +2821,13 @@ void LEM_RR::TimeStep(double simdt){
 					break;
 				case 2:
 					// RR RANGE RATE
-					if(ruptSent != 2){
-						// Our center point is at 17000 counts.
-						// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate						
-						lem->agc.vagc.Erasable[0][RegRNRAD] = 17000-(rate/0.191361);
-						lem->agc.GenerateRadarupt();
-						ruptSent = 2;
-					}
+					// Our center point is at 17000 counts.
+					// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate						
+					lem->agc.vagc.Erasable[0][RegRNRAD] = 17000-(rate/0.191361);
+					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+					lem->agc.GenerateRadarupt();
+					ruptSent = 2;
+
 					break;
 				case 3:
 					// LR (LR VEL Z)
@@ -2569,20 +2835,20 @@ void LEM_RR::TimeStep(double simdt){
 					break;
 				case 4:
 					// RR RANGE
-					if(ruptSent != 4){
-						// We use high scale above 50.6nm, and low scale below that.
-						if(range > 93700){ 
-							// HI SCALE
-							// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-							lem->agc.vagc.Erasable[0][RegRNRAD] = range/22.8722;
-						}else{
-							// LO SCALE
-							// Should be 9.38 feet/bit
-							lem->agc.vagc.Erasable[0][RegRNRAD] = range/2.85902;
-						}
-						lem->agc.GenerateRadarupt();
-						ruptSent = 4;
+					// We use high scale above 50.6nm, and low scale below that.
+					if(range > 93700){ 
+						// HI SCALE
+						// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+						lem->agc.vagc.Erasable[0][RegRNRAD] = range/22.8722;
+					}else{
+						// LO SCALE
+						// Should be 9.38 feet/bit
+						lem->agc.vagc.Erasable[0][RegRNRAD] = range/2.85902;
 					}
+					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+					lem->agc.GenerateRadarupt();
+					ruptSent = 4;
+
 					break;
 				case 5:
 					// LR (LR VEL Y)
@@ -2597,9 +2863,11 @@ void LEM_RR::TimeStep(double simdt){
 					sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
 					*/
 				}
+
 			}else{
 				ruptSent = 0; 
 			}
+
 			// Watch for CDU Zero
 			if(val12[ZeroRRCDUs] != 0){
 				// Clear shaft and trunnion read counters 
@@ -2613,6 +2881,10 @@ void LEM_RR::TimeStep(double simdt){
 			}
 			break;
 	}
+
+	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
+
+
 	return;
 
 	// Old stuff here for reference
@@ -2741,11 +3013,11 @@ void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
 		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp (line, "RR_TRUN", 7)) {
-			sscanf(line + 7, "%f", &dec);
+			sscanf(line + 7, "%lf", &dec);
 			trunnionAngle = dec;
 		}
 		if (!strnicmp (line, "RR_SHAFT", 7)) {
-			sscanf(line + 7, "%f", &dec);
+			sscanf(line + 7, "%lf", &dec);
 			shaftAngle = dec;
 		}
 	}

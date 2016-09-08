@@ -47,6 +47,9 @@
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
+	DirectPitchActive = false;
+	DirectYawActive = false;
+	DirectRollActive = false;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -343,7 +346,7 @@ void DECA::Timestep(double simt) {
 
 	lem->DPS.thrustcommand = dpsthrustcommand;
 
-	//sprintf(oapiDebugString(), "%d %d", engOn, engOff);
+	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
