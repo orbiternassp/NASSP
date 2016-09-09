@@ -435,6 +435,8 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(CabinFans, "cabin.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(Vox, "vox.wav");
 	soundlib.LoadSound(Afire, "des_abort.wav");
+	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -898,6 +900,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		Sswitch1=false;
 		Undock(0);
 		}
+
+	//
+	// Play RCS sound in case of Orbiter's attitude control is disabled
+	//
+
+	RCSSoundTimestep();
 
 	if (stage == 0)	{
 		if (EngineArmSwitch.IsDown()) { //  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
@@ -1772,3 +1780,40 @@ void LEM::SetRCSJetLevelPrimary(int jet, double level) {
 	SetThrusterLevel(th_rcs[jet], level);
 }
 
+void LEM::RCSSoundTimestep() {
+
+	// In case of disabled Orbiter attitude thruster groups OrbiterSound plays no
+	// engine sound, so this needs to be done manually
+
+	int i;
+	bool on = false;
+	if (OrbiterAttitudeDisabled) {
+		// LM RCS
+		for (i = 1; i < 5; i++) {
+			if (th_rcs[i]) {
+				if (GetThrusterLevel(th_rcs[i])) on = true;
+			}
+			if (th_rcs[i]) {
+				if (GetThrusterLevel(th_rcs[i])) on = true;
+			}
+			if (th_rcs[i]) {
+				if (GetThrusterLevel(th_rcs[i])) on = true;
+			}
+			if (th_rcs[i]) {
+				if (GetThrusterLevel(th_rcs[i])) on = true;
+			}
+		}
+		// Play/stop sounds
+		if (on) {
+			if (RCSFireSound.isPlaying()) {
+				RCSSustainSound.play(LOOP);
+			}
+			else if (!RCSSustainSound.isPlaying()) {
+				RCSFireSound.play();
+			}
+		}
+		else {
+			RCSSustainSound.stop();
+		}
+	}
+}

@@ -695,6 +695,7 @@ protected:
 	void InitSwitches();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
+	void RCSSoundTimestep();
 	// void GetDockStatus();
 
 	bool CabinFansActive();
@@ -1643,6 +1644,8 @@ protected:
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
+	Sound RCSFireSound;
+	Sound RCSSustainSound;
 
 	//
 	// Connectors.
