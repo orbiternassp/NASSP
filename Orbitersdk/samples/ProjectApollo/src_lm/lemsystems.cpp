@@ -2190,6 +2190,45 @@ void LEM_LR::TimeStep(double simdt){
 		// Operate Mode
 		rangeGood = 0;
 		velocityGood = 0;
+
+		MATRIX3 Rot;
+		VECTOR3 pos, lrvec_glob;
+		OBJHANDLE gravref;
+		double alt, ang;
+
+		//Gravity reference
+		gravref = lem->GetGravityRef();
+
+		//Altitude
+		alt = lem->GetAltitude();
+
+		//Rotation matrix
+		lem->GetRotationMatrix(Rot);
+
+		//state vector
+		lem->GetRelativePos(gravref, pos);
+
+		//convert -y axis vector to global frame. TODO: LR vector.
+		lrvec_glob = mul(Rot, _V(0, -1, 0));
+
+		//Angle between local vertical and LR vector
+		ang = acos(dotp(unit(-pos), unit(lrvec_glob))) - antennaAngle*RAD - 20.38*RAD;
+
+		//Assumption: Moon is flat
+		range = alt / cos(ang)/0.3048;
+
+		//Doesn't point at the moon
+		if (range < 0)
+		{
+			range = 1000000.0;
+		}
+
+		if (range > 10.0 && range < 50000.0) //Arbitrary, goal is lock on at 40,000 feet altitude
+		{
+			rangeGood = 1;
+		}
+
+		sprintf(oapiDebugString(), "Alt: %f, Range: %f", alt, range*0.3048);
 	}
 
 	// Computer interface
@@ -2230,7 +2269,7 @@ void LEM_LR::TimeStep(double simdt){
 			// 12288 COUNTS = -000000 F/S
 			// SIGN REVERSED				
 			// 0.643966 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288-(rate[0]/0.643966));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0-(rate[0]/0.643966));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 1;
@@ -2244,7 +2283,7 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR VEL Z)
 			// 12288 COUNTS = +00000 F/S
 			// 0.866807 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[2]/0.866807));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0+(rate[2]/0.866807));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 3;
@@ -2258,7 +2297,7 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR VEL Y)
 			// 12288 COUNTS = +000000 F/S
 			// 1.211975 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (12288+(rate[1]/1.211975));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0+(rate[1]/1.211975));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 5;
@@ -2270,10 +2309,10 @@ void LEM_LR::TimeStep(double simdt){
 			// Low range is 1.079 feet per count
 			if(val33[LRRangeLowScale] == 1){
 				// Hi Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = range/5.395;
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/5.395);
 			}else{
 				// Lo Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = range/1.079;
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/1.079);
 			}
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
@@ -2743,7 +2782,7 @@ void LEM_RR::TimeStep(double simdt){
 			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
 			trunnionMoved += (trunnionAngle-lastTrunnionAngle);						// Keep track of how far we moved it so far
 			lastTrunnionAngle = trunnionAngle;										// Update
-			int trunnionSteps = trunnionMoved / RR_TRUNNION_STEP;					// How many (positive) steps is that?
+			int trunnionSteps = (int)(trunnionMoved / RR_TRUNNION_STEP);					// How many (positive) steps is that?
 			while(trunnionSteps > 0){												// Is it more than one?
 				lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
 				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
@@ -2759,7 +2798,7 @@ void LEM_RR::TimeStep(double simdt){
 			// Now for the shaft			
 			shaftMoved += (shaftAngle-lastShaftAngle);
 			lastShaftAngle = shaftAngle;
-			int shaftSteps = shaftMoved / RR_SHAFT_STEP;
+			int shaftSteps = (int)(shaftMoved / RR_SHAFT_STEP);
 			while(shaftSteps < 0){
 				lem->agc.vagc.Erasable[0][RegOPTX]--;
 				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
@@ -2823,7 +2862,7 @@ void LEM_RR::TimeStep(double simdt){
 					// RR RANGE RATE
 					// Our center point is at 17000 counts.
 					// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate						
-					lem->agc.vagc.Erasable[0][RegRNRAD] = 17000-(rate/0.191361);
+					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0-(rate/0.191361));
 					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 					lem->agc.GenerateRadarupt();
 					ruptSent = 2;
@@ -2839,11 +2878,11 @@ void LEM_RR::TimeStep(double simdt){
 					if(range > 93700){ 
 						// HI SCALE
 						// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-						lem->agc.vagc.Erasable[0][RegRNRAD] = range/22.8722;
+						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/22.8722);
 					}else{
 						// LO SCALE
 						// Should be 9.38 feet/bit
-						lem->agc.vagc.Erasable[0][RegRNRAD] = range/2.85902;
+						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/2.85902);
 					}
 					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 					lem->agc.GenerateRadarupt();
@@ -2899,11 +2938,11 @@ void LEM_RR::TimeStep(double simdt){
 		if (val13[RadarActivity] && val13[RadarA]) { // Request Range R-567-sec4-rev7-R10-R56.pdf R22.
 			if ( range > 93681.639 ) { // Ref R-568-sec6.prf p 6-59
 				val33[RRRangeLowScale] = 1; // Inverted bits
-				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) range * 0.043721214 ;
+				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) (range * 0.043721214);
 			}
 			else {
 				val33[RRRangeLowScale] = 0; // Inverted bits
-				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) range * 0.34976971 ;
+				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) (range * 0.34976971);
 			}	
 			lem->agc.GenerateRadarupt();
 		} else if (val13[RadarActivity] && val13[RadarB]) {
@@ -3063,11 +3102,11 @@ void LEM_RadarTape::TimeStep(double simdt) {
 	//
 	//  Missing code to smooth out tape scrolling
 	if( reqRange < (120000.0 * 0.3048) ) {
-		dispRange = 6443 - 82 - (reqRange * 3.2808399) * 40 / 1000 ;
+		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 / 1000.0);
 	} else {
-		dispRange = 81 + 1642 - 82 - (reqRange * 0.000539956803*100.0)  * 40 / 1000 ;
+		dispRange = 81 + 1642 - 82 - (int)((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
 	}
-	dispRate  = 2881 - 82 -  reqRate * 3.2808399 * 40 * 100 / 1000 ;
+	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
 }
 
 

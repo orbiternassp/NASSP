@@ -300,16 +300,16 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
-	void setRange(int range) { reqRange = range; };
-	void setRate(int rate) { reqRate = rate ; }; 
+	void setRange(double range) { reqRange = range; };
+	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
 	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
 
 
 private:
 	LEM *lem;					// Pointer at LEM
-	int  reqRange;
-	int	 reqRate;
+	double reqRange;
+	double reqRate;
 	int  dispRange;
 	int  dispRate;
 };
