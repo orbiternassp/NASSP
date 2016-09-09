@@ -241,6 +241,10 @@
 				can only be triggered by a ZOUT from DINC. TIME6
 				only counts when enabled, and is disabled upon
 				triggering T6RUPT.
+		09/08/16 MAS	Added a special case for DV -- when the dividend
+				+is 0 and the divisor is not, the quotient and
+				remainder are both 0 with the sign matching the
+				dividend.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -1675,13 +1679,16 @@ agc_engine (agc_t * State)
   // This can only iterate once, but I use 'while' just in case.
   while (ScalerCounter >= SCALER_OVERFLOW)
     {
-      // First, update SCALER1 and SCALER2.
+	  // First, update SCALER1 and SCALER2. These are direct views into
+	  // the clock dividers in the Scaler module, and so don't take CPU
+	  // time to 'increment'
       ScalerCounter -= SCALER_OVERFLOW;
-      if (CounterPINC (&State->InputChannel[ChanSCALER1]))
-	{
-	  State->ExtraDelay++;
-	  CounterPINC (&State->InputChannel[ChanSCALER2]);
-	}
+	  State->InputChannel[ChanSCALER1]++;
+	  if (State->InputChannel[ChanSCALER1] == 037777)
+		{
+		  State->InputChannel[ChanSCALER1] = 0;
+		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
+		}
       // Check whether there was a pulse into bit 5 of SCALER1.
       // If so, the 10 ms. timers TIME1 and TIME3 are updated.
       // Recall that the registers are in AGC integer format,
@@ -1697,15 +1704,16 @@ agc_engine (agc_t * State)
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME3)))
 	    State->InterruptRequests[3] = 1;
-	  // I have very little data about what TIME5 is supposed to do.
-	  // From the table on p. 1-64 of Savage & Drake, I assume
-	  // it works just like TIME3.
+	}
+	// TIME5 is the same as TIME3, but 5 ms. out of phase.
+	if (010 == (017 & State->InputChannel[ChanSCALER1]))
+	{
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME5)))
 	    State->InterruptRequests[2] = 1;
 	}
-      // TIME4 is the same as TIME3, but 5 ms. out of phase.
-      if (010 == (017 & State->InputChannel[ChanSCALER1]))
+	// TIME4 is the same as TIME3, but 7.5ms out of phase
+	if (014 == (017 & State->InputChannel[ChanSCALER1]))
 	{
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME4)))
@@ -2557,6 +2565,21 @@ agc_engine (agc_t * State)
 		c (RegL) = SignExtend (*WhereWord);
 	      }
 	    c (RegA) = SignExtend (Operand16);
+	  }
+	else if (AbsA == 0 && AbsL == 0 && AbsK != 0)
+	  {
+		// The divisor is 0 but the dividend is not. The quotient and
+		// the remainder both receive 0 with the sign matching the dividend
+		if (Dividend == 0)
+		  {
+			c(RegA) = AGC_P0;
+			c(RegL) = AGC_P0;
+		  }
+		else
+		  {
+			c(RegA) = SignExtend(AGC_M0);
+			c(RegL) = SignExtend(AGC_M0);
+		  }
 	  }
 	else
 	  {
