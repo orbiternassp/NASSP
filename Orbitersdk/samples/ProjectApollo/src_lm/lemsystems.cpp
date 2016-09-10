@@ -666,6 +666,8 @@ void LEM::SystemsInit()
 	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater")); // This goes to the CB instead.
 
 	RadarTape.Init(this);
+	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
+	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 	// CWEA
 	CWEA.Init(this);
 
@@ -1354,6 +1356,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	LR.TimeStep(simdt);										// I don't wanna work
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
 	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
+	crossPointerLeft.TimeStep(simdt);
+	crossPointerLeft.SystemTimeStep(simdt);
+	crossPointerRight.TimeStep(simdt);
+	crossPointerRight.SystemTimeStep(simdt);
 	SBandSteerable.TimeStep(simdt);							// Back to work...
 	VHF.SystemTimestep(simdt);
 	VHF.TimeStep(simt);
@@ -2078,7 +2084,7 @@ void LEM_LR::Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat){
 bool LEM_LR::IsPowered()
 
 {
-	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) { 
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE && lem->stage < 2) { 
 		return false;
 	}
 	return true;
@@ -2228,7 +2234,7 @@ void LEM_LR::TimeStep(double simdt){
 			rangeGood = 1;
 		}
 
-		sprintf(oapiDebugString(), "Alt: %f, Range: %f", alt, range*0.3048);
+		//sprintf(oapiDebugString(), "Alt: %f, Range: %f", alt, range*0.3048);
 	}
 
 	// Computer interface
@@ -2763,17 +2769,23 @@ void LEM_RR::TimeStep(double simdt){
 
 		case 1: // SLEW
 			// Watch the SLEW switch. 
+			trunnionVel = 0;
+			shaftVel = 0;
 			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){	// Can we move up?
 				trunnionAngle += RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
+				trunnionVel = RR_TRUNNION_STEP * TrunRate;
 			}
 			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){	// Can we move down?
 				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
+				trunnionVel = -RR_TRUNNION_STEP * TrunRate;
 			}
 			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
 				shaftAngle -= RR_SHAFT_STEP * ShaftRate;
+				shaftVel = RR_SHAFT_STEP * ShaftRate;
 			}
 			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
 				shaftAngle += RR_SHAFT_STEP * ShaftRate;
+				shaftVel = -RR_SHAFT_STEP * ShaftRate;
 			}
 			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
 			// FALL INTO
@@ -3149,6 +3161,97 @@ void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
 double LEM_RR::GetAntennaTempF(){
 
 	return(0);
+}
+
+//Cross Pointer
+
+CrossPointer::CrossPointer()
+{
+	lem = NULL;
+	rateErrMonSw = NULL;
+	scaleSwitch = NULL;
+	dc_source = NULL;
+	vel_x = 0;
+	vel_y = 0;
+}
+
+void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
+{
+	lem = s;
+	dc_source = dc_src;
+	scaleSwitch = scaleSw;
+	rateErrMonSw = rateErrMon;
+}
+
+bool CrossPointer::IsPowered()
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) {
+		return false;
+	}
+	return true;
+}
+
+void CrossPointer::SystemTimeStep(double simdt)
+{
+	if (IsPowered() && dc_source)
+		dc_source->DrawPower(8.0);  // take DC power
+}
+
+void CrossPointer::TimeStep(double simdt)
+{
+	if (!IsPowered())
+	{
+		vel_x = 0;
+		vel_y = 0;
+		return;
+	}
+
+	if (rateErrMonSw->IsUp()) //Rendezvous Radar
+	{
+		if (lem->RR.IsPowered())
+		{
+			vel_x = lem->RR.GetRadarTrunnionVel()*1000.0;
+			vel_y = lem->RR.GetRadarShaftVel()*1000.0;
+		}
+		else
+		{
+			vel_x = 0;
+			vel_y = 0;
+		}
+	}
+	else //Landing Radar, Computer
+	{
+		if (lem->ModeSelSwitch.IsUp()) //Landing Radar
+		{
+			vel_x = 0;//vx / 0.3048 * 20.0 / 240.0;
+			vel_y = 0;//vy / 0.3048 * 20.0 / 240.0;
+		}
+		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
+		{
+			vel_x = 0;
+			vel_y = 0;
+		}
+		else //AGS
+		{
+			vel_x = 0;
+			vel_y = 0;
+		}
+	}
+
+	//10 times finer scale
+	if (scaleSwitch->IsDown())
+	{
+		vel_x *= 10.0;
+		vel_y *= 10.0;
+	}
+
+	//The output scaling is 20 for full deflection.
+}
+
+void CrossPointer::GetVelocities(double &vx, double &vy)
+{
+	vx = vel_x;
+	vy = vel_y;
 }
 
 // CWEA 

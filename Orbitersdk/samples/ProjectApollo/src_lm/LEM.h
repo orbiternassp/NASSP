@@ -314,6 +314,25 @@ private:
 	int  dispRate;
 };
 
+class CrossPointer
+{
+public:
+	CrossPointer();
+	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
+	void TimeStep(double simdt);
+	void SystemTimeStep(double simdt);
+	void GetVelocities(double &vx, double &vy);
+
+	bool IsPowered();
+protected:
+	LEM *lem;
+	e_object *dc_source;
+	ToggleSwitch *scaleSwitch;
+	ToggleSwitch *rateErrMonSw;
+
+	double vel_x, vel_y;
+};
+
 
 // Caution and Warning Electronics Assembly
 class LEM_CWEA{
@@ -670,7 +689,7 @@ protected:
     PanelSDK Panelsdk;
 
 	void RedrawPanel_Thrust (SURFHANDLE surf);
-	void RedrawPanel_XPointer (SURFHANDLE surf);
+	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
@@ -757,6 +776,8 @@ protected:
 	int fdaiDisabled;
 	int fdaiSmooth;
 
+	CrossPointer crossPointerLeft;
+
 	HBITMAP hBmpFDAIRollIndicator;
 
 	SwitchRow LeftXPointerSwitchRow;
@@ -814,6 +835,8 @@ protected:
 	/////////////////
 
 	FDAI fdaiRight;
+
+	CrossPointer crossPointerRight;
 
 	SwitchRow RCSIndicatorRow;
 	LMRCSATempInd LMRCSATempInd;
@@ -1806,6 +1829,7 @@ protected:
 	friend class DECA;
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
+	friend class CrossPointer;
 
 	friend class ApolloRTCCMFD;
 };

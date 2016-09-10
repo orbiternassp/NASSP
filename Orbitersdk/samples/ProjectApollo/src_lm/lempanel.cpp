@@ -1061,19 +1061,15 @@ void LEM::RedrawPanel_Thrust (SURFHANDLE surf)
 	oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 }
 
-void LEM::RedrawPanel_XPointer (SURFHANDLE surf) {
+void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 
 	int ix, iy;
 	double vx, vy;
 	HDC hDC;
 
 	//draw the crosspointers
-	if((RateErrorMonSwitch.GetState() == 1) && (RR.IsPowered()) )
-	{
-		vx = RR.GetRadarTrunnionVel();
-		vy = RR.GetRadarShaftVel();
-	} else
-		agc.GetHorizVelocity(vx, vy);
+	cp->GetVelocities(vx, vy);
+
 	ix = (int)(-3.0 * vx);
 	if(ix < -60) ix = -60;
 	if(ix > 60) ix = 60;
@@ -1087,7 +1083,6 @@ void LEM::RedrawPanel_XPointer (SURFHANDLE surf) {
 	MoveToEx(hDC, 67 + iy, 0, NULL);
 	LineTo(hDC, 67 + iy, 131);
 	oapiReleaseDC(surf, hDC);
-
 }
 
 void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
@@ -1483,7 +1478,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiCameraSetCockpitDir(0,0);
 		break;
 
-	case LMPANEL_LPDWINDOW: // LDP Window
+	case LMPANEL_LPDWINDOW: // LPD Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		oapiRegisterPanelArea (AID_XPOINTER,		_R(822,  35,  959, 168), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -3356,15 +3351,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_XPOINTER:
-		RedrawPanel_XPointer(surf);
+		RedrawPanel_XPointer(&crossPointerLeft, surf);
 		return true;
 
 	case AID_XPOINTERCDR:
-		RedrawPanel_XPointer(surf);
+		RedrawPanel_XPointer( &crossPointerLeft, surf);
 		return true;
 
 	case AID_XPOINTERLMP:
-		RedrawPanel_XPointer(surf);
+		RedrawPanel_XPointer(&crossPointerRight, surf);
 		return true;
 
 	case AID_CONTACTLIGHT1:

@@ -741,25 +741,25 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	case OAPI_KEY_COMMA:
 		// move landing site left
-		agc.RedesignateTarget(1,1.0);
+		//agc.RedesignateTarget(1,1.0);
 		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_PERIOD:
 		// move landing site right
-		agc.RedesignateTarget(1,-1.0);
+		//agc.RedesignateTarget(1,-1.0);
 		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_HOME:
 		//move the landing site downrange
-		agc.RedesignateTarget(0,-1.0);
+		//agc.RedesignateTarget(0,-1.0);
 		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_END:
 		//move the landing site closer
-		agc.RedesignateTarget(0,1.0);
+		//agc.RedesignateTarget(0,1.0);
 		ButtonClick();
 		return 1;
 
@@ -769,12 +769,12 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	case OAPI_KEY_MINUS:
 		//increase descent rate
-		agc.ChangeDescentRate(-0.3077);
+		//agc.ChangeDescentRate(-0.3077);
 		return 1;
 
 	case OAPI_KEY_EQUALS:
 		//decrease descent rate
-		agc.ChangeDescentRate(0.3077);
+		//agc.ChangeDescentRate(0.3077);
 		return 1;	
 
 	//
@@ -1789,16 +1789,7 @@ void LEM::RCSSoundTimestep() {
 	bool on = false;
 	if (OrbiterAttitudeDisabled) {
 		// LM RCS
-		for (i = 1; i < 5; i++) {
-			if (th_rcs[i]) {
-				if (GetThrusterLevel(th_rcs[i])) on = true;
-			}
-			if (th_rcs[i]) {
-				if (GetThrusterLevel(th_rcs[i])) on = true;
-			}
-			if (th_rcs[i]) {
-				if (GetThrusterLevel(th_rcs[i])) on = true;
-			}
+		for (i = 0; i < 16; i++) {
 			if (th_rcs[i]) {
 				if (GetThrusterLevel(th_rcs[i])) on = true;
 			}
