@@ -2198,9 +2198,9 @@ void LEM_LR::TimeStep(double simdt){
 		velocityGood = 0;
 
 		MATRIX3 Rot;
-		VECTOR3 pos, lrvec_glob;
+		VECTOR3 pos, lrvec_glob, U_XAB, U_YAB, U_ZAB, U_RBA, U_RBB, U_RBB_lh;
 		OBJHANDLE gravref;
-		double alt, ang;
+		double alt, ang, alpha, beta;
 
 		//Gravity reference
 		gravref = lem->GetGravityRef();
@@ -2214,11 +2214,26 @@ void LEM_LR::TimeStep(double simdt){
 		//state vector
 		lem->GetRelativePos(gravref, pos);
 
-		//convert -y axis vector to global frame. TODO: LR vector.
-		lrvec_glob = mul(Rot, _V(0, -1, 0));
+		//Radar Beams Orientation Subroutine
+		alpha = 6.0*RAD;
+		beta = antennaAngle*RAD;
+
+		U_XAB = _V(cos(beta), sin(alpha)*sin(beta), -sin(beta)*cos(alpha));
+		U_YAB = _V(0, cos(alpha), sin(alpha));
+		U_ZAB = _V(sin(beta), -sin(alpha)*cos(beta), cos(beta)*cos(alpha));
+
+		U_RBA = _V(-cos(20.38*RAD), 0, -sin(20.38*RAD));
+
+		U_RBB = tmul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), U_RBA);
+
+		//Now Left handed. But also needs to change coordinate system differences
+		U_RBB_lh = _V(U_RBB.y, U_RBB.x, U_RBB.z);
+
+		//convert local LR vector to global frame.
+		lrvec_glob = mul(Rot, U_RBB_lh);
 
 		//Angle between local vertical and LR vector
-		ang = acos(dotp(unit(-pos), unit(lrvec_glob))) - antennaAngle*RAD - 20.38*RAD;
+		ang = acos(dotp(unit(-pos), unit(lrvec_glob)));
 
 		//Assumption: Moon is flat
 		range = alt / cos(ang)/0.3048;
@@ -2233,6 +2248,17 @@ void LEM_LR::TimeStep(double simdt){
 		{
 			rangeGood = 1;
 		}
+
+		//Now velocity data
+		VECTOR3 vel;
+
+		lem->GetHorizonAirspeedVector(vel);
+
+		//In LM navigation base coordinates
+
+
+		//Rotate to LR position
+
 
 		//sprintf(oapiDebugString(), "Alt: %f, Range: %f", alt, range*0.3048);
 	}
