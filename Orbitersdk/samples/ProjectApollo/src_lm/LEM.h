@@ -295,7 +295,7 @@ private:
 class LEM_RadarTape : public e_object {
 public:
 	LEM_RadarTape();
-	void Init(LEM *s);
+	void Init(LEM *s, e_object * dc_src, e_object *ac_src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -305,9 +305,11 @@ public:
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
 	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
 
-
+	bool IsPowered();
 private:
 	LEM *lem;					// Pointer at LEM
+	e_object *dc_source;
+	e_object *ac_source;
 	double reqRange;
 	double reqRate;
 	int  dispRange;

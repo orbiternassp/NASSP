@@ -665,7 +665,7 @@ void LEM::SystemsInit()
 	RDZ_RDR_AC_CB.WireTo(&ACBusA);
 	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater")); // This goes to the CB instead.
 
-	RadarTape.Init(this);
+	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 	// CWEA
@@ -1356,6 +1356,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	LR.TimeStep(simdt);										// I don't wanna work
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
 	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
+	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
 	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
@@ -2084,7 +2085,7 @@ void LEM_LR::Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat){
 bool LEM_LR::IsPowered()
 
 {
-	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE && lem->stage < 2) { 
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || lem->stage > 1) { 
 		return false;
 	}
 	return true;
@@ -2250,17 +2251,26 @@ void LEM_LR::TimeStep(double simdt){
 		}
 
 		//Now velocity data
-		VECTOR3 vel;
+		VECTOR3 vel, vel_lh, vel_LR;
 
-		lem->GetHorizonAirspeedVector(vel);
+		lem->GetShipAirspeedVector(vel_lh);
 
 		//In LM navigation base coordinates
-
+		vel = _V(vel_lh.y, vel_lh.x, vel_lh.z);
 
 		//Rotate to LR position
+		vel_LR = mul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), vel);
 
+		rate[0] = vel_LR.x / 0.3048;
+		rate[1] = vel_LR.y / 0.3048;
+		rate[2] = vel_LR.z / 0.3048;
 
-		//sprintf(oapiDebugString(), "Alt: %f, Range: %f", alt, range*0.3048);
+		if (range < 30000.0)
+		{
+			velocityGood = 1;
+		}
+
+		//sprintf(oapiDebugString(), "Alt: %f, Range: %f, Velocity: %f %f %f", alt/0.3048, range, rate[0], rate[1], rate[2]);
 	}
 
 	// Computer interface
@@ -2301,7 +2311,7 @@ void LEM_LR::TimeStep(double simdt){
 			// 12288 COUNTS = -000000 F/S
 			// SIGN REVERSED				
 			// 0.643966 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0-(rate[0]/0.643966));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 - (rate[0] / 0.643966));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 1;
@@ -2315,7 +2325,7 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR VEL Z)
 			// 12288 COUNTS = +00000 F/S
 			// 0.866807 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0+(rate[2]/0.866807));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[2] / 0.866807));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 3;
@@ -2329,7 +2339,7 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR VEL Y)
 			// 12288 COUNTS = +000000 F/S
 			// 1.211975 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0+(rate[1]/1.211975));
+			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[1] / 1.211975));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
 			ruptSent = 5;
@@ -2339,12 +2349,13 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR RANGE)
 			// High range is 5.395 feet per count
 			// Low range is 1.079 feet per count
-			if(val33[LRRangeLowScale] == 1){
+			if (val33[LRRangeLowScale] == 1) {
 				// Hi Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/5.395);
-			}else{
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 5.395);
+			}
+			else {
 				// Lo Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/1.079);
+				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 1.079);
 			}
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 			lem->agc.GenerateRadarupt();
@@ -2358,7 +2369,7 @@ void LEM_LR::TimeStep(double simdt){
 		}
 
 	}else{
-		ruptSent = 0; 
+		ruptSent = 0;
 	}
 
 
@@ -2899,8 +2910,8 @@ void LEM_RR::TimeStep(double simdt){
 				case 2:
 					// RR RANGE RATE
 					// Our center point is at 17000 counts.
-					// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate						
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0-(rate/0.191361));
+					// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
+					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
 					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 					lem->agc.GenerateRadarupt();
 					ruptSent = 2;
@@ -2913,14 +2924,15 @@ void LEM_RR::TimeStep(double simdt){
 				case 4:
 					// RR RANGE
 					// We use high scale above 50.6nm, and low scale below that.
-					if(range > 93700){ 
+					if (range > 93700) {
 						// HI SCALE
 						// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/22.8722);
-					}else{
+						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
+					}
+					else {
 						// LO SCALE
 						// Should be 9.38 feet/bit
-						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range/2.85902);
+						lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
 					}
 					lem->agc.SetInputChannelBit(013, RadarActivity, 0);
 					lem->agc.GenerateRadarupt();
@@ -3102,14 +3114,28 @@ void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
 
 LEM_RadarTape::LEM_RadarTape()
 {
-
+	lem = NULL;
+	ac_source = NULL;
+	dc_source = NULL;
+	reqRange = 0;
+	reqRate = 0;
+	dispRange = 0;
+	dispRate = 0;
 }
 
-void LEM_RadarTape::Init(LEM *s){
+void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src){
 	lem = s;
+	dc_source = dc_src;
+	ac_source = ac_src;
 }
 
 void LEM_RadarTape::TimeStep(double simdt) {
+	
+	if (!IsPowered())
+	{
+		return;
+	}
+	
 	if( lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP ) {
 		if( lem->RR.IsRadarDataGood() ){
 			setRange(lem->RR.GetRadarRange());
@@ -3145,6 +3171,25 @@ void LEM_RadarTape::TimeStep(double simdt) {
 		dispRange = 81 + 1642 - 82 - (int)((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
 	}
 	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+}
+
+void LEM_RadarTape::SystemTimeStep(double simdt) {
+	if (!IsPowered())
+		return;
+
+	if (ac_source)
+		ac_source->DrawPower(2.0);
+
+	if (dc_source)
+		dc_source->DrawPower(2.1);
+}
+
+bool LEM_RadarTape::IsPowered()
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || ac_source->Voltage() < SP_MIN_ACVOLTAGE) {
+		return false;
+	}
+	return true;
 }
 
 
@@ -3247,21 +3292,28 @@ void CrossPointer::TimeStep(double simdt)
 	}
 	else //Landing Radar, Computer
 	{
+		double vx = 0, vy = 0;
+
 		if (lem->ModeSelSwitch.IsUp()) //Landing Radar
 		{
-			vel_x = 0;//vx / 0.3048 * 20.0 / 240.0;
-			vel_y = 0;//vy / 0.3048 * 20.0 / 240.0;
+			if (lem->LR.IsVelocityDataGood())
+			{
+				vx = lem->LR.rate[2] * 0.3048;
+				vy = lem->LR.rate[1] * 0.3048;
+			}
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
-			vel_x = 0;
-			vel_y = 0;
+			vx = 0;
+			vy = 0;
 		}
 		else //AGS
 		{
-			vel_x = 0;
-			vel_y = 0;
+			vx = 0;
+			vy = 0;
 		}
+		vel_x = vx / 0.3048 * 20.0 / 240.0;
+		vel_y = vy / 0.3048 * 20.0 / 240.0;
 	}
 
 	//10 times finer scale
