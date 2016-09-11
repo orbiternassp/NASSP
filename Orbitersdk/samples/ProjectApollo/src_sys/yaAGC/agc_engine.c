@@ -242,7 +242,7 @@
 				only counts when enabled, and is disabled upon
 				triggering T6RUPT.
 		09/08/16 MAS	Added a special case for DV -- when the dividend
-				+is 0 and the divisor is not, the quotient and
+				is 0 and the divisor is not, the quotient and
 				remainder are both 0 with the sign matching the
 				dividend.
   
@@ -2568,18 +2568,12 @@ agc_engine (agc_t * State)
 	  }
 	else if (AbsA == 0 && AbsL == 0 && AbsK != 0)
 	  {
-		// The divisor is 0 but the dividend is not. The quotient and
-		// the remainder both receive 0 with the sign matching the dividend
-		if (Dividend == 0)
-		  {
-			c(RegA) = AGC_P0;
-			c(RegL) = AGC_P0;
-		  }
+		// The dividend is 0 but the divisor is not. The standard DV sign
+		// convention applies to A, and L remains unchanged.
+		if ((040000 & c(RegL)) == (040000 & *WhereWord))
+		  c(RegA) = AGC_P0;
 		else
-		  {
-			c(RegA) = SignExtend(AGC_M0);
-			c(RegL) = SignExtend(AGC_M0);
-		  }
+		  c(RegA) = SignExtend(AGC_M0);
 	  }
 	else
 	  {
