@@ -967,6 +967,7 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		if (rhc_pos[0] < 0) {
+			
 			val31[ACAOutOfDetent] = 1;
 			val31[MinusAzimuth] = 1;
 		}
@@ -989,6 +990,11 @@ void LEM::JoystickTimestep(double simdt)
 		if (rhc_pos[2] > 0) {
 			val31[ACAOutOfDetent] = 1;
 			val31[PlusYaw] = 1;
+		}
+
+		if (agc.GetInputChannelBit(031, ACAOutOfDetent) == 0 && val31[ACAOutOfDetent] == 1)
+		{
+			agc.GenerateHandrupt();
 		}
 
 		//
@@ -2201,19 +2207,24 @@ void LEM_LR::TimeStep(double simdt){
 		MATRIX3 Rot;
 		VECTOR3 pos, lrvec_glob, U_XAB, U_YAB, U_ZAB, U_RBA, U_RBB, U_RBB_lh;
 		OBJHANDLE gravref;
-		double alt, ang, alpha, beta;
+		double alt, ang, alpha, beta, dh;
+
+		//landing radar under CoG of LM
+		dh = 3.0;
 
 		//Gravity reference
 		gravref = lem->GetGravityRef();
 
 		//Altitude
-		alt = lem->GetAltitude();
+		alt = lem->GetAltitude() - dh;
 
 		//Rotation matrix
 		lem->GetRotationMatrix(Rot);
 
 		//state vector
 		lem->GetRelativePos(gravref, pos);
+
+		pos = pos*(length(pos) - dh) / length(pos);
 
 		//Radar Beams Orientation Subroutine
 		alpha = 6.0*RAD;
@@ -3145,23 +3156,36 @@ void LEM_RadarTape::TimeStep(double simdt) {
 			setRate(0);
 		}
 	} else {
-		// LR
-		if (lem->LR.IsRangeDataGood())
+		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
-			setRange(lem->LR.GetAltitude());
+			if (lem->LR.IsRangeDataGood())
+			{
+				setRange(lem->LR.GetAltitude());
+			}
+			else
+			{
+				setRange(0);
+			}
+			if (lem->LR.IsVelocityDataGood())
+			{
+				setRate(lem->LR.GetAltitudeRate());
+			}
+			else
+			{
+				setRate(0);
+			}
 		}
-		else
+		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
 			setRange(0);
-		}
-		if (lem->LR.IsVelocityDataGood())
-		{
-			setRate(lem->LR.GetAltitudeRate());
-		}
-		else
-		{
 			setRate(0);
 		}
+		else //AGS
+		{
+			setRange(0);
+			setRate(0);
+		}
+
 	}
 	//
 	//  Missing code to smooth out tape scrolling
@@ -3300,6 +3324,11 @@ void CrossPointer::TimeStep(double simdt)
 			{
 				vx = lem->LR.rate[2] * 0.3048;
 				vy = lem->LR.rate[1] * 0.3048;
+			}
+			else
+			{
+				vx = 0;
+				vy = 0;
 			}
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS

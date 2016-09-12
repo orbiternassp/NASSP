@@ -4588,6 +4588,10 @@ void ApolloGuidance::ProcessChannel162(ChannelValue val) {
 void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 }
 
+void ApolloGuidance::GenerateHandrupt() {
+	GenerateHANDRUPT(&vagc);
+}
+
 // DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
 	GenerateDOWNRUPT(&vagc);

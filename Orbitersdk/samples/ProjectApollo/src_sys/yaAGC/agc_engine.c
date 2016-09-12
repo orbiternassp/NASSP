@@ -463,6 +463,12 @@ CpuWriteIO (agc_t * State, int Address, int Value)
 }
 
 void
+GenerateHANDRUPT(agc_t * State)
+{
+	State->InterruptRequests[10] = 1;	// HANDRUPT
+}
+
+void
 GenerateRADARUPT (agc_t * State)
 {
 	State->InterruptRequests[9] = 1;	// RADARUPT
