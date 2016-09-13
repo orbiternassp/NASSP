@@ -1879,6 +1879,12 @@ agc_engine (agc_t * State)
 	  State->Erasable[0][055] = 0;
   }
 
+  if ((State->Erasable[0][060] != 0 && State->Erasable[0][060] != 077777)
+	  && 0 != (State->InputChannel[014] & 04)) {
+	  ChannelOutput(State, 0163, State->Erasable[0][060]); // ALTITUDE METER DRIVE
+	  State->Erasable[0][060] = 0;
+  }
+
   //----------------------------------------------------------------------  
   // Okay, here's the stuff that actually has to do with decoding instructions.
 

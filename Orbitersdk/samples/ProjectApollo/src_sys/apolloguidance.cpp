@@ -4549,6 +4549,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	case 0162:
 		ProcessChannel162(val);
 		break;
+	case 0163:
+		ProcessChannel163(val);
+		break;
 
 	case 033: 
 		/* No longer needed DS20061226
@@ -4582,6 +4585,10 @@ void ApolloGuidance::ProcessChannel161(ChannelValue val){
 
 // Stub for LGC thrust drive
 void ApolloGuidance::ProcessChannel162(ChannelValue val) {
+}
+
+// Stub for LGC altitude meter drive
+void ApolloGuidance::ProcessChannel163(ChannelValue val) {
 }
 
 // DS20060308 Stub for FDAI

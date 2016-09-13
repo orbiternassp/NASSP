@@ -967,7 +967,6 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		if (rhc_pos[0] < 0) {
-			
 			val31[ACAOutOfDetent] = 1;
 			val31[MinusAzimuth] = 1;
 		}
@@ -3132,6 +3131,8 @@ LEM_RadarTape::LEM_RadarTape()
 	reqRate = 0;
 	dispRange = 0;
 	dispRate = 0;
+	lgc_alt = 0;
+	lgc_altrate = 0;
 }
 
 void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src){
@@ -3177,8 +3178,8 @@ void LEM_RadarTape::TimeStep(double simdt) {
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
-			setRange(0);
-			setRate(0);
+			setRange(lgc_alt);
+			setRate(lgc_altrate);
 		}
 		else //AGS
 		{
@@ -3216,6 +3217,37 @@ bool LEM_RadarTape::IsPowered()
 	return true;
 }
 
+void LEM_RadarTape::SetLGCAltitude(int val) {
+
+	int pulses;
+
+	if (!IsPowered()) { return; }
+
+	//if (val & 040000) { // Negative
+	//	pulses = -((~val) & 077777);
+	//}
+	//else {
+		pulses = val & 077777;
+	//}
+
+	lgc_alt = (2.345*0.3048*pulses);
+}
+
+void LEM_RadarTape::SetLGCAltitudeRate(int val) {
+
+	int pulses;
+
+	if (!IsPowered()) { return; }
+
+	if (val & 040000) { // Negative
+		pulses = -((~val) & 077777);
+	}
+	else {
+		pulses = val & 077777;
+	}
+
+	lgc_altrate = -(0.5*0.3048*pulses);
+}
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
@@ -3268,6 +3300,8 @@ CrossPointer::CrossPointer()
 	dc_source = NULL;
 	vel_x = 0;
 	vel_y = 0;
+	lgc_forward = 0;
+	lgc_lateral = 0;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -3333,16 +3367,16 @@ void CrossPointer::TimeStep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
-			vx = 0;
-			vy = 0;
+			vx = lgc_forward*0.3048;
+			vy = lgc_lateral*0.3048;
 		}
 		else //AGS
 		{
 			vx = 0;
 			vy = 0;
 		}
-		vel_x = vx / 0.3048 * 20.0 / 240.0;
-		vel_y = vy / 0.3048 * 20.0 / 240.0;
+		vel_x = vx / 0.3048 * 20.0 / 200.0;
+		vel_y = vy / 0.3048 * 20.0 / 200.0;
 	}
 
 	//10 times finer scale
@@ -3359,6 +3393,44 @@ void CrossPointer::GetVelocities(double &vx, double &vy)
 {
 	vx = vel_x;
 	vy = vel_y;
+}
+
+void CrossPointer::SetForwardVelocity(int val, ChannelValue ch12) {
+
+	int pulses;
+	ChannelValue val12;
+	val12 = ch12;
+
+	if (!IsPowered()) { return; }
+
+	if (val & 040000) { // Negative
+		pulses = -((~val) & 077777);
+	}
+	else {
+		pulses = val & 077777;
+	}
+	if (val12[EnableRRCDUErrorCounter]) {
+		lgc_forward = (0.5571*pulses);
+	}
+}
+
+void CrossPointer::SetLateralVelocity(int val, ChannelValue ch12) {
+
+	int pulses;
+	ChannelValue val12;
+	val12 = ch12;
+
+	if (!IsPowered()) { return; }
+
+	if (val & 040000) { // Negative
+		pulses = -((~val) & 077777);
+	}
+	else {
+		pulses = val & 077777;
+	}
+	if (val12[EnableRRCDUErrorCounter]) {
+		lgc_lateral = (0.5571*pulses);
+	}
 }
 
 // CWEA 

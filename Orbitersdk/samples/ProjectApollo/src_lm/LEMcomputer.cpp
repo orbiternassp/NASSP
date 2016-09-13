@@ -1396,14 +1396,14 @@ void LEMcomputer::ProcessChannel13(ChannelValue val){
 		
 		WriteMemory(042,rhc_count[1]); // PITCH 
 		WriteMemory(043,rhc_count[2]); // YAW   
-		WriteMemory(044,rhc_count[0]); // ROLL  		
+		WriteMemory(044,rhc_count[0]); // ROLL
 		/*
 		sprintf(oapiDebugString(),"LM CH13: %o RHC: SENT %d %d %d",val,
 			rhc_count[0],rhc_count[1],rhc_count[2]);
 		return;
 		*/
 	}
-//	sprintf(oapiDebugString(),"LM CH13: %o",val);	
+//	sprintf(oapiDebugString(),"LM CH13: %o",val);
 
 }
 
@@ -1425,9 +1425,16 @@ void LEMcomputer::ProcessChannel160(ChannelValue val) {
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
-	
-	lem->RR.RRShaftDrive(val.to_ulong(),val12);
-	
+
+	if (val12[DispayInertialData])
+	{
+		lem->crossPointerLeft.SetForwardVelocity(val.to_ulong(), val12);
+		lem->crossPointerRight.SetForwardVelocity(val.to_ulong(), val12);
+	}
+	else
+	{
+		lem->RR.RRShaftDrive(val.to_ulong(), val12);
+	}
 }
 
 void LEMcomputer::ProcessChannel161(ChannelValue val) {
@@ -1435,13 +1442,39 @@ void LEMcomputer::ProcessChannel161(ChannelValue val) {
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
-	lem->RR.RRTrunionDrive(val.to_ulong(),val12);
+
+	if (val12[DispayInertialData])
+	{
+		lem->crossPointerLeft.SetLateralVelocity(val.to_ulong(), val12);
+		lem->crossPointerRight.SetLateralVelocity(val.to_ulong(), val12);
+	}
+	else
+	{
+		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
+	}
 }
 
 void LEMcomputer::ProcessChannel162(ChannelValue val) {
 
 	LEM *lem = (LEM *)OurVessel;
 	lem->deca.ProcessLGCThrustCommands(val.to_ulong());
+}
+
+void LEMcomputer::ProcessChannel163(ChannelValue val) {
+
+	ChannelValue val14;
+	val14 = GetOutputChannel(014);
+	LEM *lem = (LEM *)OurVessel;
+
+	if (val14[AltitudeRate])
+	{
+		lem->RadarTape.SetLGCAltitudeRate(val.to_ulong());
+		sprintf(oapiDebugString(), "Alt Rate: %d", val.to_ulong());
+	}
+	else
+	{
+		lem->RadarTape.SetLGCAltitude(val.to_ulong());
+	}
 }
 
 // Process IMU CDU error counters.

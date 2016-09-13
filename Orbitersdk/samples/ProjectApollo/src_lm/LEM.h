@@ -304,6 +304,8 @@ public:
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
 	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
+	void SetLGCAltitude(int val);
+	void SetLGCAltitudeRate(int val);
 
 	bool IsPowered();
 private:
@@ -314,6 +316,7 @@ private:
 	double reqRate;
 	int  dispRange;
 	int  dispRate;
+	double lgc_alt, lgc_altrate;
 };
 
 class CrossPointer
@@ -324,6 +327,8 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	void GetVelocities(double &vx, double &vy);
+	void SetForwardVelocity(int val, ChannelValue ch12);
+	void SetLateralVelocity(int val, ChannelValue ch12);
 
 	bool IsPowered();
 protected:
@@ -333,6 +338,7 @@ protected:
 	ToggleSwitch *rateErrMonSw;
 
 	double vel_x, vel_y;
+	double lgc_forward, lgc_lateral;
 };
 
 
@@ -795,7 +801,7 @@ protected:
 
 	SwitchRow GuidContSwitchRow;
 	ToggleSwitch GuidContSwitch;
-	ThreePosSwitch ModeSelSwitch;
+	ModeSelectSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
 	SwitchRow LeftMonitorSwitchRow;
