@@ -1432,7 +1432,13 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
-	if (!strnicmp (line, "MULTITHREAD", 11)) {
+	if (!strnicmp(line, "FDAIDISABLED", 12)) {
+		sscanf(line + 12, "%i", &fdaiDisabled);
+	}
+	else if (!strnicmp(line, "FDAISMOOTH", 10)) {
+			sscanf(line + 10, "%i", &fdaiSmooth);
+	}
+	else if (!strnicmp (line, "MULTITHREAD", 11)) {
 		int value;
 		sscanf (line+11, "%d", &value);
 		isMultiThread=(value>0)?true:false;
