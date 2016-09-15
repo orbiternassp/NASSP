@@ -151,9 +151,9 @@
 // The abort state is entered when the astronauts or the MCC initiates a mission abort.
 // Mission-specific aborts may have their own state.
 // Prelaunch abort
-#define MST_ABORT_PL		90
+#define MST_ABORT_PL		900
 // Launch abort, return to Earth
-#define MST_LAUNCH_ABORT	91
+#define MST_LAUNCH_ABORT	901
 // Abort from orbit is handled by mission-specific abort state and goes to entry.
 
 // MISSION STATES: MISSION C
@@ -187,24 +187,161 @@
 // Ends at DEORBIT BURN, goes to
 #define MST_C_COAST13		24
 // Ends at entry interface, goes to entry.
-#define MST_C_ABORT			25
+#define MST_C_COAST14		25
+#define MST_C_COAST15		26
+#define MST_C_COAST16		27
+#define MST_C_COAST17		28
+#define MST_C_COAST18		29
+#define MST_C_COAST19		30
+#define MST_C_COAST20		31
+#define MST_C_COAST21		32
+#define MST_C_COAST22		33
+#define MST_C_COAST23		34
+#define MST_C_COAST24		35
+#define MST_C_COAST25		36
+#define MST_C_COAST26		37
+#define MST_C_COAST27		38
+#define MST_C_COAST28		39
+#define MST_C_COAST29		40
+#define MST_C_COAST30		41
+#define MST_C_COAST31		42
+#define MST_C_COAST32		43
+#define MST_C_COAST33		44
+#define MST_C_COAST34		45
+#define MST_C_COAST35		46
+#define MST_C_COAST36		47
+#define MST_C_COAST37		48
+#define MST_C_COAST38		49
+#define MST_C_COAST39		50
+#define MST_C_COAST40		51
+#define MST_C_COAST41		52
+#define MST_C_COAST42		53
+#define MST_C_COAST43		54
+#define MST_C_COAST44		55
+#define MST_C_COAST45		56
+#define MST_C_COAST46		57
+#define MST_C_COAST47		58
+#define MST_C_COAST48		59
+#define MST_C_COAST49		60
+#define MST_C_COAST50		61
+#define MST_C_COAST51		62
+#define MST_C_COAST52		63
+#define MST_C_COAST53		64
+#define MST_C_COAST54		65
+#define MST_C_COAST55		66
+#define MST_C_COAST56		67
+#define MST_C_ABORT			75
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
+
+//UPDATE TYPES
+#define UTP_BLOCKDATA		0
+#define UTP_P47MANEUVER		1
+#define UTP_P30MANEUVER		2
+#define UTP_TPI				3
+#define UTP_ENTRY			4
+#define UTP_UPLINKONLY		5
+#define UTP_SVNAVCHECK		6
+#define UTP_P27PAD			7
+#define UTP_TLIPAD			8
+#define UTP_LUNARENTRY		9
+#define UTP_FINALLUNARENTRY 10
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
+// Ends at TLI Update
+#define MST_CP_EPO1			11
 // Ends at TLI BURN
-#define MST_CP_TRANSLUNAR1	11
+#define MST_CP_TRANSLUNAR1	21
 // Ends at separation
-#define MST_CP_TRANSLUNAR2	12
-// Includes MCC burns as necessary.
-// Ends at LOI BURN
-#define MST_CP_LUNAR_ORBIT	13
+#define MST_CP_TRANSLUNAR2	22
+//Ends at Block Data 1 Update
+#define MST_CP_TRANSLUNAR3	23
+//Ends at MCC1 Update
+#define MST_CP_TRANSLUNAR4	24
+//Ends at Block Data 2 Update
+#define MST_CP_TRANSLUNAR5	25
+//Ends at Block Data 3 Update
+#define MST_CP_TRANSLUNAR6	26
+//Ends at MCC2 Update
+#define MST_CP_TRANSLUNAR7	27
+//Ends at Block Data 4 Update
+#define MST_CP_TRANSLUNAR8	28
+//Ends at Block Data 5 Update
+#define MST_CP_TRANSLUNAR9	29
+//Ends at MCC3 Update
+#define MST_CP_TRANSLUNAR10	30
+//Ends at Block Data 6 Update
+#define MST_CP_TRANSLUNAR11	31
+//Ends at MCC4 Update
+#define MST_CP_TRANSLUNAR12	32
+//Ends at Preliminary LOI-1 Update
+#define MST_CP_TRANSLUNAR13	33
+//Ends at Block Data 7 Update
+#define MST_CP_TRANSLUNAR14	34
+//Ends at Map Update
+#define MST_CP_TRANSLUNAR15	35
+//Ends at LOI-1 Update
+#define MST_CP_TRANSLUNAR16	36
+//Ends at LOI-2 Update
+
+#define MST_CP_LUNAR_ORBIT1	101
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT2	102
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT3	103
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT4	104
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT5	105
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT6	106
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT7	107
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT8	108
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT9	109
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT10 110
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT11 111
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT12 112
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT13 113
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT14 114
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT15 115
+#define MST_CP_LUNAR_ORBIT16 116
+#define MST_CP_LUNAR_ORBIT17 117
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT18 118
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT19 119
 // Ends at TEI BURN
-#define MST_CP_TRANSEARTH	14
+
+#define MST_CP_TRANSEARTH1	201
+//Ends at Entry REFSMMAT update
+#define MST_CP_TRANSEARTH2	202
+//Ends at MCC5 Update
+#define MST_CP_TRANSEARTH3	203
+//Ends at MCC6 Update
+#define MST_CP_TRANSEARTH4	204
+//Ends at Preliminary MCC7 Update
+#define MST_CP_TRANSEARTH5	205
+//Ends at Preliminary Entry Update
+#define MST_CP_TRANSEARTH6	206
+//Ends at MCC7 Update
+#define MST_CP_TRANSEARTH7	207
+//Ends at Entry Update
+#define MST_CP_TRANSEARTH8	208
+//Ends at Final Entry Update
+
 // Ends at entry interface, goes to entry.
-#define MST_CP_ABORT_ORBIT	20
+#define MST_CP_ABORT_ORBIT	300
 // Abort from earth orbit, goes to MST_ORBIT_ENTRY
-#define MST_CP_ABORT		21
+#define MST_CP_ABORT		301
 // post-TLI abort, ends at abort burn (if any)
 // goes to MST_CP_TRANSEARTH with an abort flag.
 
@@ -267,6 +404,7 @@ struct AP7MNV{
 	double lat;			// Latitude for N43
 	double lng;			// Longitude for N43
 	double alt;			// Altitude for N43
+	char remarks[128];	// remarks
 };
 
 // APOLLO 7 - TERMINAL PHASE INITIATE
@@ -321,6 +459,43 @@ struct AP7ENT{
 	double PB_RetDrog[2];// Ret to drogue deploy
 };
 
+
+// APOLLO 11 - LUNAR ENTRY
+
+struct AP11ENT
+{
+	char Area[2][10];			// Splashdown area defined by target line
+	VECTOR3 Att05[2];			// Spacecraft IMU gimbal angles required for aerodynamic trim at 0.05G
+	double GETHorCheck[2];		// Time of Entry attitude horizon check at EI - 17 min
+	double PitchHorCheck[2];	// Pitch attitude for horizon check at EI - 17 min
+	double Lat[2];				// Latitude of target point
+	double Lng[2];				// Longitude of target point
+	double MaxG[2];				// Predicted maximum reentry acceleration
+	double V400K[2];			// Intertial velocity at entry interface
+	double Gamma400K[2];		// Inertial flight path angle at entry interface
+	double RTGO[2];				// Range to go from .05G to target for EMS initialization
+	double VIO[2];				// Inertial velocity at .05G for EMS initialization
+	double RRT[2];				// Reentry reference time based on GET of predicted 400K (GET start)
+	double RET05[2];			// Time of .05G from 400K (RRT)
+	double DLMax[2];			// Maximum acceptable value of predicted drag level (from CMC)
+	double DLMin[2];			// Minimum acceptable value of predicted drag level (from CMC)
+	double VLMax[2];			// Maximum acceptable value of exit velocity (from CMC)
+	double VLMin[2];			// Minimum acceptable value of exit velocity (from CMC)
+	double DO[2];				// Planned drag level during Constant G
+	double RETVCirc[2];			// Time from EI that S/C velocity becomes circular
+	double RETBBO[2];			// Time from EI to the beginning of blackout
+	double RETEBO[2];			// Time from EI to the end of blackout
+	double RETDRO[2];			// Time from EI to drogue deploy
+	int SXTS[2];				// Sextant star for entry attitude check
+	double SFT[2];				// Sextant shaft setting for entry attitude check
+	double TRN[2];				// Sextant trunnion setting for entry attitude check
+	int BSS[2];					// Boresight star for entry attitude check using the COAS
+	double SPA[2];				// BSS pitch angle on COAS for entry attitude check
+	double SXP[2];				// BSS X position on COAS for entry attitude check
+	char LiftVector[2][4];		// Lift vector desired at .05G's based on entry corridor
+	char remarks[2][128];		// Remarks
+};
+
 // APOLLO 11 - TRANSLUNAR INJECTION
 struct TLIPAD{
 	double TB6P;		// Predicted start of TB6	
@@ -356,6 +531,35 @@ struct P27PAD{
 	double alt;			// Altitude for N43
 };
 
+// APOLLO 11 - MANEUVER
+struct AP11MNV {
+	char purpose[64];	// PURPOSE
+	char PropGuid[64];	// Propulsion & Guidance System
+	double Weight;		// Vehicle weight
+	double pTrim, yTrim;// SPS pitch/yaw trim
+	double GETI;		// TIG
+	VECTOR3 dV;			// P30 dV
+	VECTOR3 Att;		// Attitude at TIG
+	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double Vt;			//Total dV
+	double burntime;	// Burn time
+	double Vc;			// EMS dV
+	int Star;			// Nav star for orientation check
+	double Shaft, Trun; // Shaft and trunnion values for orientation check
+	int BSSStar;		// Boresight star
+	double SPA, SXP;	// Boresight star angles
+	double lat;			// Latitude for N61
+	double lng;			// Longitude for N61
+	double RTGO;		// EMS Range
+	double VI0;			// Inertial velocity for EMS
+	double GET05G;		// GET at 0.05G
+	char SetStars[32]; // Stars for Backup GDC Alignment
+	VECTOR3 GDCangles;	// Backup GDC Align
+	char remarks[128];	// remarks
+
+	double LMWeight;	// LM weight
+};
+
 // Mission Control Center class
 class MCC {	
 public:
@@ -375,8 +579,10 @@ public:
 	void drawPad();											// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
+	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate);
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
+	void subThreadMacro(int type, int updatenumber);
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC
@@ -394,6 +600,8 @@ public:
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
+	double CM_MoonPosition[3];                              // CM's position and altitude relative to the Moon
+	double CM_Prev_MoonPosition[3];                         // CM's previous position and altitude relative to the Moon
 	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
 	bool   GT_Enabled;										// Ground tracking enable/disable
 	bool   MT_Enabled;										// Mission status tracking enable/disable
@@ -414,6 +622,8 @@ public:
 	int padNumber;											// PAD display number
 	LPVOID padForm;											// Pointer to pad form buffer
 	char upString[1024 * 3];								// Uplink string buffer
+	char upDescr[1024];										// Uplink Description
+	bool scrubbed;											// Maneuver scrubbed
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer

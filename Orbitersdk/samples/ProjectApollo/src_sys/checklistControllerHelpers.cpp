@@ -69,6 +69,8 @@ RelativeEvent checkEvent(const char* input, bool Group)
 		return CM_SM_SEPARATION_DONE;
 	if (!strnicmp(input,"CM_SM_SEPARATION",16))
 		return CM_SM_SEPARATION;
+	if (!strnicmp(input, "TLI_DONE", 8))
+		return TLI_DONE;
 	if (!strnicmp(input,"TLI",3))
 		return TLI;
 	return NO_TIME_DEF;
@@ -262,7 +264,7 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 				return true;
 			}
 		} else {
-			if (position < 0) {
+			if (position == -1) {
 				return true;
 			} else if (conn->SetState(item, position, guard, hold)) {
 				return true;
@@ -447,6 +449,13 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, dou
 		if (time > t)
 			return false;
 		break;
+	case TLI_DONE:
+		if (eventController.TLI_DONE == MINUS_INFINITY)
+			return false;
+		t = lastMissionTime - eventController.TLI_DONE;
+		if (time > t)
+			return false;
+		break;
 	case PAYLOAD_EXTRACTION:
 		if (eventController.PAYLOAD_EXTRACTION == MINUS_INFINITY)
 			return false;
@@ -580,7 +589,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.EARTH_ORBIT_INSERTION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.EARTH_ORBIT_INSERTION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -588,7 +597,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SPLASHDOWN != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SPLASHDOWN;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -596,7 +605,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.BACKUP_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.BACKUP_CREW_PRELAUNCH;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -604,7 +613,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.PRIME_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.PRIME_CREW_PRELAUNCH;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -612,7 +621,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SECOND_STAGE_STAGING != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SECOND_STAGE_STAGING;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -620,7 +629,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.SIVB_STAGE_STAGING != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.SIVB_STAGE_STAGING;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -628,7 +637,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.TOWER_JETTISON != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.TOWER_JETTISON;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -636,7 +645,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CSM_LV_SEPARATION_DONE != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CSM_LV_SEPARATION_DONE;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -644,7 +653,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CSM_LV_SEPARATION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CSM_LV_SEPARATION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -652,7 +661,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CM_SM_SEPARATION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CM_SM_SEPARATION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -660,7 +669,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.CM_SM_SEPARATION_DONE != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.CM_SM_SEPARATION_DONE;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -668,7 +677,15 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.TLI != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.TLI;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
+				return true;
+		}
+		break;
+	case TLI_DONE:
+		if (eventController.TLI_DONE != MINUS_INFINITY)
+		{
+			double t = lastMissionTime - eventController.TLI_DONE;
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -676,7 +693,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (eventController.PAYLOAD_EXTRACTION != MINUS_INFINITY)
 		{
 			double t = lastMissionTime - eventController.PAYLOAD_EXTRACTION;
-			if (time <= t && t <= deadline)
+			if (time <= t && t - time <= deadline)
 				return true;
 		}
 		break;
@@ -817,7 +834,7 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 SaturnEvents::SaturnEvents()
 {
 	PRIME_CREW_PRELAUNCH = SPLASHDOWN = EARTH_ORBIT_INSERTION = BACKUP_CREW_PRELAUNCH = SECOND_STAGE_STAGING = SIVB_STAGE_STAGING = TOWER_JETTISON = 
-		CSM_LV_SEPARATION_DONE = CSM_LV_SEPARATION = CM_SM_SEPARATION_DONE = CM_SM_SEPARATION = TLI = PAYLOAD_EXTRACTION = MINUS_INFINITY;
+		CSM_LV_SEPARATION_DONE = CSM_LV_SEPARATION = CM_SM_SEPARATION_DONE = CM_SM_SEPARATION = TLI = TLI_DONE = PAYLOAD_EXTRACTION = MINUS_INFINITY;
 }
 // Todo: Verify
 void SaturnEvents::save(FILEHANDLE scn)
@@ -831,6 +848,7 @@ void SaturnEvents::save(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "SIVB_STAGE_STAGING", SIVB_STAGE_STAGING);
 	oapiWriteScenario_float(scn, "EARTH_ORBIT_INSERTION", EARTH_ORBIT_INSERTION);
 	oapiWriteScenario_float(scn, "TLI", TLI);
+	oapiWriteScenario_float(scn, "TLI_DONE", TLI_DONE);
 	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION", CSM_LV_SEPARATION);
 	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION_DONE", CSM_LV_SEPARATION_DONE);
 	oapiWriteScenario_float(scn, "PAYLOAD_EXTRACTION", PAYLOAD_EXTRACTION);
@@ -920,6 +938,12 @@ void SaturnEvents::load(FILEHANDLE scn)
 		{
 			sscanf(line+21,"%f",&fcpt);
 			EARTH_ORBIT_INSERTION = fcpt;
+			found = true;
+		}
+		if (!found && !strnicmp(line, "TLI_DONE", 8))
+		{
+			sscanf(line + 8, "%f", &fcpt);
+			TLI_DONE = fcpt;
 			found = true;
 		}
 		if (!found && !strnicmp(line,"TLI",3))

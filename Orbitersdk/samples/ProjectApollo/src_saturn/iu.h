@@ -49,6 +49,7 @@ enum IUCSMMessageType
 	IUCSM_PLAY_TLISTART_SOUND,				///< Play/stop TLI start sound.
 	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
 	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
+	IUCSM_TLI_ENDED,						///< Indicate for the event manager that the TLI burn has ended
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
@@ -133,6 +134,7 @@ public:
 	void LoadTLISounds();
 	void ClearTLISounds();
 	void TLIBegun();
+	void TLIEnded();
 
 	void PlayCountSound(bool StartStop);
 	void PlaySecoSound(bool StartStop);

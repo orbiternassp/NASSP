@@ -690,7 +690,10 @@ protected:
 	virtual void ProcessChannel14(ChannelValue val);
 	virtual void ProcessChannel160(ChannelValue val);
 	virtual void ProcessChannel161(ChannelValue val);
+	virtual void ProcessChannel162(ChannelValue val);
+	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+	public: virtual void GenerateHandrupt();
 	public: virtual void GenerateDownrupt();
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();

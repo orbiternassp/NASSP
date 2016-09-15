@@ -213,18 +213,22 @@ public:
 class LEM_LR : public e_object{
 public:
 	LEM_LR();
-	void Init(LEM *s,e_object *dc_src);
+	void Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	double GetAntennaTempF();
+	bool IsRangeDataGood() { return rangeGood == 1; };
+	bool IsVelocityDataGood() { return velocityGood == 1; };
+	double GetAltitude() { return range*0.3048; };
+	double GetAltitudeRate() { return rate[0]*0.3048; };
 	double lastTemp;
 
 	bool IsPowered(); 
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;		// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;		// Source of DC power
 	double range;				// Range in feet
 	double rate[3];				// Velocity X/Y/Z in feet/second
@@ -238,7 +242,7 @@ public:
 class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s,e_object *dc_src, e_object *ac_src);
+	void Init(LEM *s,e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -263,8 +267,8 @@ private:
 	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;			// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
     e_object *dc_source;
 	e_object *ac_source;
 	double tstime;
@@ -291,23 +295,50 @@ private:
 class LEM_RadarTape : public e_object {
 public:
 	LEM_RadarTape();
-	void Init(LEM *s);
+	void Init(LEM *s, e_object * dc_src, e_object *ac_src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
-	void setRange(int range) { reqRange = range; };
-	void setRate(int rate) { reqRate = rate ; }; 
+	void setRange(double range) { reqRange = range; };
+	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
 	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
+	void SetLGCAltitude(int val);
+	void SetLGCAltitudeRate(int val);
 
-
+	bool IsPowered();
 private:
 	LEM *lem;					// Pointer at LEM
-	int  reqRange;
-	int	 reqRate;
+	e_object *dc_source;
+	e_object *ac_source;
+	double reqRange;
+	double reqRate;
 	int  dispRange;
 	int  dispRate;
+	double lgc_alt, lgc_altrate;
+};
+
+class CrossPointer
+{
+public:
+	CrossPointer();
+	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
+	void TimeStep(double simdt);
+	void SystemTimeStep(double simdt);
+	void GetVelocities(double &vx, double &vy);
+	void SetForwardVelocity(int val, ChannelValue ch12);
+	void SetLateralVelocity(int val, ChannelValue ch12);
+
+	bool IsPowered();
+protected:
+	LEM *lem;
+	e_object *dc_source;
+	ToggleSwitch *scaleSwitch;
+	ToggleSwitch *rateErrMonSw;
+
+	double vel_x, vel_y;
+	double lgc_forward, lgc_lateral;
 };
 
 
@@ -328,18 +359,65 @@ public:
 	LEM *lem;					// Pointer at LEM
 };
 
+class DPSGimbalActuator {
+
+public:
+	DPSGimbalActuator();
+	virtual ~DPSGimbalActuator();
+
+	void Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source);
+	void Timestep(double simt, double simdt);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+	double GetPosition() { return position; }
+	void ChangeLGCPosition(int pos);
+	void ZeroLGCPosition() { lgcPosition = 0; }
+	int GetLGCPosition() { return lgcPosition; }
+	bool GimbalFail() { return gimbalfail; }
+
+	void GimbalTimestep(double simdt);
+
+protected:
+	bool IsSystemPowered();
+	void DrawSystemPower();
+
+	double position;
+	int commandedPosition;
+	int lgcPosition;
+	int atcaPosition;
+	bool motorRunning;
+	bool gimbalfail;
+
+	LEM *lem;
+	AGCIOSwitch *gimbalMotorSwitch;
+	e_object *motorSource;
+};
+
 // Descent Engine
 class LEM_DPS{
 public:
-	LEM_DPS();
+	LEM_DPS(THRUSTER_HANDLE *dps);
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void TimeStep(double simt, double simdt);
+	void SystemTimestep(double simdt);
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int EngineOn;				// Engine "On" Command
+	bool thrustOn;				// Engine "On" Command
+	bool thrustOff;				// Engine "Off" Command
+	bool engArm;				// Engine Arm Command
+	double thrustcommand;		// DPS Thrust Command
+
+	DPSGimbalActuator pitchGimbalActuator;
+	DPSGimbalActuator rollGimbalActuator;
+
+protected:
+
+	THRUSTER_HANDLE *dpsThruster;
+	
 };
 
 // Ascent Engine
@@ -353,7 +431,7 @@ public:
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
-	int EngineOn;				// Engine "On" Command
+	bool thrustOn;				// Engine "On" Command
 };
 
 ///
@@ -544,14 +622,22 @@ public:
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 
+	///
+	/// Since we can now run with either the Virtual AGC emulator or the C++ AGC, this function
+	/// allows you to check which we're using.
+	/// \brief Are we running a Virtual AGC?
+	/// \return True for Virtual AGC, false for C++ AGC.
+	///
+	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
+
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
-	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
-	THRUSTER_HANDLE th_rcs_orbiter_lin[16];
+	//THRUSTER_HANDLE th_rcs_orbiter_rot[24];
+	//THRUSTER_HANDLE th_rcs_orbiter_lin[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
@@ -591,6 +677,9 @@ public:
 #define TTCA_MODE_THROTTLE 0
 #define TTCA_MODE_JETS 1
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
+	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
+	int ttca_throttle_vel;
+	double ttca_thrustcmd;
 	int js_current;
 
 
@@ -608,7 +697,7 @@ protected:
     PanelSDK Panelsdk;
 
 	void RedrawPanel_Thrust (SURFHANDLE surf);
-	void RedrawPanel_XPointer (SURFHANDLE surf);
+	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
@@ -633,6 +722,7 @@ protected:
 	void InitSwitches();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
+	void RCSSoundTimestep();
 	// void GetDockStatus();
 
 	bool CabinFansActive();
@@ -640,6 +730,7 @@ protected:
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
+	void JoystickTimestep(double simdt);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
 	// Save/Load support functions.
@@ -693,6 +784,8 @@ protected:
 	int fdaiDisabled;
 	int fdaiSmooth;
 
+	CrossPointer crossPointerLeft;
+
 	HBITMAP hBmpFDAIRollIndicator;
 
 	SwitchRow LeftXPointerSwitchRow;
@@ -708,7 +801,7 @@ protected:
 
 	SwitchRow GuidContSwitchRow;
 	ToggleSwitch GuidContSwitch;
-	ThreePosSwitch ModeSelSwitch;
+	ModeSelectSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
 	SwitchRow LeftMonitorSwitchRow;
@@ -733,7 +826,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	ToggleSwitch THRContSwitch;
+	AGCIOSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;
@@ -750,6 +843,8 @@ protected:
 	/////////////////
 
 	FDAI fdaiRight;
+
+	CrossPointer crossPointerRight;
 
 	SwitchRow RCSIndicatorRow;
 	LMRCSATempInd LMRCSATempInd;
@@ -856,7 +951,7 @@ protected:
     UnguardedIMUCageSwitch IMUCageSwitch;
 
 	SwitchRow EngGimbalEnableSwitchRow;
-	ToggleSwitch EngGimbalEnableSwitch;
+	AGCIOSwitch EngGimbalEnableSwitch;
 
 	SwitchRow RadarAntTestSwitchesRow;
 	ThreePosSwitch LandingAntSwitch;
@@ -913,10 +1008,10 @@ protected:
 	FivePosSwitch RadarSlewSwitch;
 
 	SwitchRow EventTimerSwitchRow;
-	ThreePosSwitch EventTimerCtlSwitch;
-	ThreePosSwitch EventTimerStartSwitch;
-	ThreePosSwitch EventTimerMinuteSwitch;
-	ThreePosSwitch EventTimerSecondSwitch;
+	EventTimerResetSwitch EventTimerCtlSwitch;
+	EventTimerControlSwitch EventTimerStartSwitch;
+	TimerUpdateSwitch EventTimerMinuteSwitch;
+	TimerUpdateSwitch EventTimerSecondSwitch;
 
 	//
 	// Currently these are just 0-5V meters; at some point we may want
@@ -1062,6 +1157,8 @@ protected:
 	RotationalSwitch LtgAnunNumKnob;
 	RotationalSwitch LtgIntegralKnob;
 	// There's a +X TRANSLATION button here too
+	EngineStartButton ManualEngineStart;
+	EngineStopButton ManualEngineStop;
 
 	/////////////////
 	// LEM Panel 8 //
@@ -1520,13 +1617,14 @@ protected:
 	int Realism;
 	int ApolloNo;
 	int Landed;
+	bool OrbiterAttitudeDisabled;
 
 	int SwitchFocusToLeva;
 
 	DSKY dsky;
 	LEMcomputer agc;
-	Boiler imuheater; // IMU Standby Heater
-	h_Radiator imucase; // IMU Case
+	Boiler *imuheater; // IMU Standby Heater
+	h_Radiator *imucase; // IMU Case
 	IMU imu;	
 	LMOptics optics;
 
@@ -1577,6 +1675,8 @@ protected:
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
+	Sound RCSFireSound;
+	Sound RCSSustainSound;
 
 	//
 	// Connectors.
@@ -1668,8 +1768,10 @@ protected:
 
 	// GNC
 	ATCA atca;
+	DECA deca;
 	LEM_LR LR;
 	LEM_RR RR;
+	GASTA gasta;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1729,6 +1831,15 @@ protected:
 	friend class LMSuitPressMeter;
 	friend class LMCabinTempMeter;
 	friend class LMSuitTempMeter;
+	friend class DPSGimbalActuator;
+	friend class LEM_DPS;
+	friend class LEM_APS;
+	friend class DECA;
+	friend class CommandedThrustInd;
+	friend class EngineThrustInd;
+	friend class CrossPointer;
+
+	friend class ApolloRTCCMFD;
 };
 
 extern void LEMLoadMeshes();

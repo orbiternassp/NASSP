@@ -1750,7 +1750,7 @@ MATRIX3 J2000EclToBRCS(double mjd)
 	double rot = -r - PI05;
 	double lan = PI05 - L;
 	double inc = i;
-	double obl = 0.40909280422;
+	double obl = 0.4090928023;
 
 	return mul( mul(_MRz(rot),_MRx(inc)), mul(_MRz(lan),_MRx(-obl)) );
 }
@@ -1797,7 +1797,7 @@ void ProjectApolloMFD::GetStateVector (void)
 	OBJHANDLE hMoon  = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	MATRIX3 Rot = J2000EclToBRCS(40222.525);
+	MATRIX3 Rot = J2000EclToBRCS(40221.525);
 	
 	pos = mul(Rot, _V(pos.x, pos.z, pos.y));
 	vel = mul(Rot, _V(vel.x, vel.z, vel.y)) * 0.01;
@@ -1934,7 +1934,7 @@ void ProjectApolloMFD::IMFDP31Uplink(void)
 	
 	VECTOR3 _L  = pbd->_LAP;
 
-	MATRIX3 Rot = J2000EclToBRCS(40222.525);
+	MATRIX3 Rot = J2000EclToBRCS(40221.525);
 
 	_L = mul(Rot, _V(_L.x, _L.z, _L.y));
 

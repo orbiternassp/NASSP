@@ -203,6 +203,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CSMDCVoltMeter(20.0, 45.0),
 	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
+	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
@@ -1569,6 +1570,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	bmag2.SaveState(scn);
 	SaveLVDC(scn);
 	mcc.SaveState(scn);
+	mcc.rtcc->SaveState(scn);
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -2253,6 +2255,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
 		mcc.LoadState(scn);
+	}
+	else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
+		mcc.rtcc->LoadState(scn);
 	}
 	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
 		LoadLVDC(scn);
@@ -5219,20 +5224,6 @@ void Saturn::StageSix(double simt)
 	}
 
 	//
-	// Check for course correction time and shut down time acceleration if appropriate.
-	//
-
-	if (TLICapableBooster && !Scorrec && MissionTime >= COURSE_CORRECTION_START_TIME && MissionTime < COURSE_CORRECTION_END_TIME){
-		double TimeW = oapiGetTimeAcceleration ();
-		if (TimeW > 1.0){
-			oapiSetTimeAcceleration (1.0);
-		}
-		SCorrection.play(NOLOOP,255);
-		SCorrection.done();
-		Scorrec = true;
-	}
-
-	//
 	// Handle automation of unmanned launches.
 	//
 
@@ -5630,7 +5621,8 @@ void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 #define MR_STATS 5
 
 static double MixtureRatios[MR_STATS] = {6.0, 5.5, 5.0, 4.3, 4.0 };
-static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
+//static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
+static double MRISP[MR_STATS] = { 421.4 * G, 423.4 * G, 426.5 * G, 432.6 * G, 437.6 * G };
 static double MRThrust[MR_STATS] = { 1.1, 1.0, .898, .7391, .7 };
 
 double Saturn::GetJ2ISP(double ratio)
@@ -5960,6 +5952,11 @@ ChecklistController *Saturn::GetChecklistControl()
 void Saturn::TLI_Begun()
 {
 	eventControl.TLI = MissionTime;
+}
+
+void Saturn::TLI_Ended()
+{
+	eventControl.TLI_DONE = MissionTime;
 }
 
 

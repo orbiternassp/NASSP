@@ -26,13 +26,14 @@
 class LEM_ASA{
 public:
 	LEM_ASA();							// Cons
-	void Init(LEM *s); // Init
+	void Init(LEM *s, Boiler *hb, h_Radiator *hr); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	LEM *lem;					// Pointer at LEM
-	h_Radiator hsink;			// Case (Connected to primary coolant loop)
-	Boiler heater;				// Heater
+protected:
+	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
+	Boiler *heater;				// Heater
 };
 
 // ABORT ELECTRONICS ASSEMBLY (AEA)

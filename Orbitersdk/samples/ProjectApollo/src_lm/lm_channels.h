@@ -89,6 +89,7 @@ enum ChannelValue11_Bits {
 	TestConnectorOutB,
 	CautionReset,
 	Spare1,
+	Spare2,
 	EngineOn,
 	EngineOff
 };

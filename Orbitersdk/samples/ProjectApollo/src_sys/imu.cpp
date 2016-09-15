@@ -580,15 +580,9 @@ VECTOR3 IMU::GetTotalAttitude()
 
 {
 	VECTOR3 v;
-	if(LEM){
-		v.x = Gimbal.Z;
-		v.y = Gimbal.Y;
-		v.z = -Gimbal.X;
-	}else{
-		v.x = Gimbal.X;
-		v.y = Gimbal.Y;
-		v.z = Gimbal.Z;
-	}
+	v.x = Gimbal.X;
+	v.y = Gimbal.Y;
+	v.z = Gimbal.Z;
 	return v;
 }
 

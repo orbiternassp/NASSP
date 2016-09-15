@@ -636,7 +636,14 @@ void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double EngineThrustInd::QueryValue()
 
 {
-	return 50.0;
+	if (lem->stage < 2)
+	{
+		return lem->GetThrusterLevel(lem->th_hover[0])*100.0;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -663,7 +670,7 @@ void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double CommandedThrustInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->deca.GetCommandedThrust()*100.0;
 }
 
 void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -1186,4 +1193,41 @@ double LEMVoltCB::Current()
 	return Amperes;
 }
 
+void EngineStartButton::Init(ToggleSwitch* stopbutton) {
+	this->stopbutton = stopbutton;
+}
 
+bool EngineStartButton::Push()
+
+{
+	//Can only be switched when off and engine stop button is also off
+	if (stopbutton->GetState() == 0 && state == 0)
+	{
+		if (ToggleSwitch::SwitchTo(1)) {
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void EngineStopButton::Init(ToggleSwitch* startbutton) {
+	this->startbutton = startbutton;
+}
+
+bool EngineStopButton::Push()
+
+{
+	int newstate = !state;
+	if (ToggleSwitch::SwitchTo(newstate)) {
+		
+		if (newstate = 1)
+		{
+			startbutton->SwitchTo(0);
+		}
+		return true;
+	}
+
+	return false;
+}

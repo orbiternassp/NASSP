@@ -493,6 +493,17 @@ protected:
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 
+class SaturnSystemTestAttenuator : public VoltageAttenuator {
+public:
+	SaturnSystemTestAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	void Init(Saturn* S, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch, e_object *Instrum);
+	double GetValue();
+protected:
+	Saturn *Sat;
+	RotationalSwitch *LeftSystemTestRotarySwitch;
+	RotationalSwitch *RightSystemTestRotarySwitch;
+};
+
 class DCBusIndicatorSwitch: public IndicatorSwitch {
 public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DCBusController *d, int fc);
@@ -700,6 +711,19 @@ protected:
 
 
 // Dummy switches/displays for checklist controller
+
+class SaturnEventTimer : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, Saturn *s);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	Saturn *Sat;
+};
 
 class SaturnEMSScrollDisplay : public MeterSwitch {
 public:

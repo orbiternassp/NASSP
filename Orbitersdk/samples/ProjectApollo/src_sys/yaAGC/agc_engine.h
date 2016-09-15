@@ -683,6 +683,7 @@ void GenerateDOWNRUPT(agc_t * State);
 // DS20070101 And UPRUPT
 void GenerateUPRUPT(agc_t * State);
 void GenerateRADARUPT(agc_t * State);
+void GenerateHANDRUPT(agc_t * State);
 int IsUPRUPTActive (agc_t * State);
 // DS20060827 Change bits in channel 33
 void SetCh33Bits(agc_t * State, int16_t Value);

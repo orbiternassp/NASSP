@@ -411,3 +411,22 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
+class EngineStartButton : public ToggleSwitch {
+
+public:
+	EngineStartButton() {};
+	void Init(ToggleSwitch* stopbutton);
+	bool Push();
+protected:
+	ToggleSwitch* stopbutton;
+};
+
+class EngineStopButton : public ToggleSwitch {
+
+public:
+	EngineStopButton() {};
+	void Init(ToggleSwitch* startbutton);
+	bool Push();
+protected:
+	ToggleSwitch* startbutton;
+};

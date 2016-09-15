@@ -33,7 +33,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LOI", OAPI_KEY_S, &ApolloRTCCMFD::menuSetLOIPage);
 
 	RegisterFunction("SV", OAPI_KEY_V, &ApolloRTCCMFD::menuSetSVPage);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LMK", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLandmarkTrkPage);
 	RegisterFunction("MAP", OAPI_KEY_U, &ApolloRTCCMFD::menuSetMapUpdatePage);
 	RegisterFunction("MAN", OAPI_KEY_K, &ApolloRTCCMFD::menuSetManPADPage);
 	RegisterFunction("ENP", OAPI_KEY_L, &ApolloRTCCMFD::menuSetEntryPADPage);
@@ -237,7 +237,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuEntryCalc);
 	RegisterFunction("MOD", OAPI_KEY_V, &ApolloRTCCMFD::CycleEntryOpt);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("RAN", OAPI_KEY_R, &ApolloRTCCMFD::EntryRangeDialogue);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEntryUpload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
@@ -286,7 +286,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Set launch MJD", 0, 'M' },
-		{ "", 0, ' ' },
+		{ "Set AGC Epoch", 0, 'E' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -303,7 +303,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("MJD", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLaunchMJD);
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("EPO", OAPI_KEY_E, &ApolloRTCCMFD::menuSetAGCEpoch);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
@@ -329,7 +329,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu9, sizeof(mnu9) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuSwitchVehicle);
+	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchManPADEngine);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuSwitchHeadsUp);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
@@ -443,6 +443,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLOILng);
 	RegisterFunction("ALT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLOIAlt);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30Upload);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
+
+
+	static const MFDBUTTONMENU mnu13[] =
+	{
+		{ "T1 guess", 0, 'T' },
+		{ "Landmark Latitude", 0, 'A' },
+		{ "Landmark Longitude", 0, 'O' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Calculate PAD", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to main menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu13, sizeof(mnu13) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLmkTime);
+	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuSetLmkLat);
+	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLmkLng);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLmkPADCalc);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 }
 

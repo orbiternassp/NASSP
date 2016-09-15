@@ -3,43 +3,43 @@
 
 #include "Orbitersdk.h"
 
-const VECTOR3 navstars[37] = { _V(0.874918332, 0.025891699, 0.483577844),
-_V(0.934272669, 0.173297383, -0.311612896),
-_V(0.477674628, 0.116493556, 0.870779077),
-_V(0.491735562, 0.220378448, -0.842395084),
-_V(0.013195584, 0.007804379, 0.999882477),
-_V(0.545066281, 0.531373849, -0.648494088),
-_V(0.703388365, 0.707427419, 0.069218892),
-_V(0.410749287, 0.498719061, 0.763259013),
-_V(0.350958745, 0.892554545, 0.283150744),
-_V(0.201342646, 0.96898881, -0.143254406),
-_V(0.137394808, 0.681339885, 0.718956624),
-_V(-0.061436077, 0.603170011, -0.795243074),
-_V(-0.181895715, 0.940531813, -0.286903917),
-_V(-0.411650263, 0.906638731, 0.092467679),
-_V(-0.36119376, 0.574807784, -0.734258183),
-_V(-0.465616592, 0.477580472, 0.745062468),
-_V(-0.774136025, 0.615423403, -0.148214205),
-_V(-0.860697047, 0.463812741, 0.209948412),
-_V(-0.965624024, 0.052806754, 0.254522476),
-_V(-0.952563351, -0.05913135, -0.298540694),
-_V(-0.452441663, -0.049270067, -0.890431917),
-_V(-0.917106528, -0.350009879, -0.190810644),
-_V(-0.58119438, -0.290787715, 0.760036576),
-_V(-0.68999017, -0.418081795, -0.590864771),
-_V(-0.786255214, -0.52162654, 0.33122272),
-_V(-0.532804238, -0.71594486, 0.45115696),
-_V(-0.351877285, -0.823996717, -0.444085338),
-_V(-0.114790631, -0.33994374, -0.933413823),
-_V(-0.112626554, -0.969467959, 0.217823635),
-_V(0.121617192, -0.770301475, 0.625975156),
-_V(0.206714527, -0.872034942, -0.443648695),
-_V(0.45353611, -0.878053717, 0.152730701),
-_V(0.551816004, -0.793442209, -0.256804515),
-_V(0.320001422, -0.443674048, -0.837109568),
-_V(0.454057002, -0.539338315, 0.709187155),
-_V(0.81387539, -0.555906349, 0.169041359),
-_V(0.834195321, -0.239436257, -0.496778065) 
+const VECTOR3 navstars[37] = { _V(0.87325707, 0.222717753, 0.433380771),
+_V(0.933983515, 0.0421048982, -0.354826677),
+_V(0.474230235, 0.456854026, 0.75258892),
+_V(0.492731712, -0.129171941, -0.860540568),
+_V(0.010128911, 0.40497893, 0.914269912),
+_V(0.543321089, 0.233682862, -0.806346398),
+_V(0.698256178, 0.681882483, -0.217886645),
+_V(0.404981298, 0.764255442, 0.501900156),
+_V(0.343908924, 0.93415959, -0.0952497353),
+_V(0.195051858, 0.833544498, -0.516873623),
+_V(0.130502244, 0.912114029, 0.388609268),
+_V(-0.0632195158, 0.236597063, -0.969548928),
+_V(-0.187545554, 0.747401122, -0.637352514),
+_V(-0.418201486, 0.865470289, -0.27580554),
+_V(-0.362955763, 0.232568134, -0.902316561),
+_V(-0.471158209, 0.73100027, 0.493607686),
+_V(-0.777933252, 0.49981843, -0.380790484),
+_V(-0.864519888, 0.502532948, 0.00812396612),
+_V(-0.96672924, 0.142390103, 0.212507964),
+_V(-0.951226902, -0.180199054, -0.250391056),
+_V(-0.449404749, -0.402805961, -0.797359849),
+_V(-0.914079394, -0.403947962, -0.0358455889),
+_V(-0.581451821, 0.0311390298, 0.812984712),
+_V(-0.685292494, -0.623812256, -0.375809082),
+_V(-0.783614901, -0.352762709, 0.511376728),
+_V(-0.529185544, -0.481419898, 0.698711344),
+_V(-0.344817825, -0.935282024, -0.0796756118),
+_V(-0.109619054, -0.684031025, -0.721169342),
+_V(-0.106559622, -0.803652501, 0.585480746),
+_V(0.125067322, -0.456806946, 0.88073014),
+_V(0.214089696, -0.974959511, -0.0601627197),
+_V(0.459149324, -0.741396708, 0.489400469),
+_V(0.558073669, -0.825925685, 0.0800033956),
+_V(0.325589471, -0.737606353, -0.591547432),
+_V(0.455646022, -0.209297007, 0.865206025),
+_V(0.817196194, -0.436629484, 0.376224766),
+_V(0.837327731, -0.410968743, -0.360537048)
 };
 
 #define NUMBEROFGROUNDSTATIONS 18
@@ -123,10 +123,9 @@ private:
 	OBJHANDLE hEarth, hMoon, hSun, planet;
 	double mu_Q, mu_S;
 	double mjd0;
-	MATRIX3 Rot;
 	double rect1, rect2;
 	CELBODY *cMoon, *cEarth, *cSun;
-	MATRIX3 obli;
+	VECTOR3 U_Z_E, U_Z_M;
 	int B, P;
 	VECTOR3 R_ES0, V_ES0;
 	double W_ES;
@@ -137,15 +136,20 @@ namespace OrbMech {
 	//public:
 		//OrbMech(VESSEL *v, OBJHANDLE gravref);
 
-	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
+	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
 	double kepler_E(double e, double M);
+	double kepler_H(double e, double M);
 	double power(double b, double e);
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
+	VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot);
+	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2);
+	void SolveQuartic(double *A, double *R, int &N);
 	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
+	double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu);
 	void f_and_g_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &f, double &g, double mu);
 	void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &gdot, double mu);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
@@ -156,10 +160,13 @@ namespace OrbMech {
 	double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu);
 	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t);
-	MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
+	//MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
+	void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V);
+	OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu);
 	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
-	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, OBJHANDLE plan, double mjd0, double E, OBJHANDLE gravref);
+	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
+	double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
 	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E);
@@ -175,10 +182,13 @@ namespace OrbMech {
 	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
-	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight);
+	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future);
 	void orbitmidnight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool night, double &v1);
 	bool sight(VECTOR3 R1, VECTOR3 R2, double R_E);
-	double findlongitude(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lng);
+	double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d);
+	void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng);
+	void latlong_from_r(VECTOR3 R, double &lat, double &lng);
+	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
@@ -187,10 +197,10 @@ namespace OrbMech {
 	VECTOR3 DOI_calc(VECTOR3 R, VECTOR3 V, double r_LS, double h_p, double mu);
 	void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, double &t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
 	void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff);
-	void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
+	void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
-	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref);
-	void impulsive(VESSEL* vessel, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, THRUSTER_HANDLE thruster, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip);
+	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0);
+	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	//private:
@@ -223,8 +233,8 @@ namespace OrbMech {
 	VECTOR3 Polar2Cartesian(double r, double lat, double lng);
 	VECTOR3 Polar2CartesianVel(double r, double lat, double lng, double r_dot, double lat_dot, double lng_dot);
 	int decimal_octal(int n);
-	void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x = 0);
-	double kepler_U(double dt, double ro, double vro, double a, double mu, double x = 0);
+	void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x = 0.0);
+	double kepler_U(double dt, double ro, double vro, double a, double mu, double x0);
 	double stumpC(double z);
 	double stumpS(double z);
 	void f_and_g(double x, double t, double ro, double a, double &f, double &g, double mu);
@@ -239,8 +249,10 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
+	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
@@ -254,6 +266,8 @@ namespace OrbMech {
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
+VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
+VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
 
 //void(*)(double*, double, double*)
 #endif

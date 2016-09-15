@@ -32,12 +32,67 @@ public:
 	void Timestep(double simt);			// Timestep
 	void ProcessLGC(int ch, int val);   // To process LGC commands
 
+	bool GetDirectPitchActive() { return DirectPitchActive; }
+	bool GetDirectYawActive() { return DirectYawActive; }
+	bool GetDirectRollActive() { return DirectRollActive; }
+	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
+	void SetDirectYawActive(bool active) { DirectYawActive = active; }
+	void SetDirectRollActive(bool active) { DirectRollActive = active; }
+
 	LEM *lem;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
+
+protected:
+	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+};
+
+class DECA {
+	// DESCENT ENGINE CONTROL ASSEMBLY
+public:
+	DECA();										// Cons
+	void Init(LEM *vessel, e_object *dcbus);	// Init
+	void Timestep(double simt);					// Timestep
+	void SystemTimestep(double simdt);			// System Timestep
+	double GetCommandedThrust() { return dpsthrustcommand; }
+	void ProcessLGCThrustCommands(int val);
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+protected:
+	LEM *lem;
+	e_object *dc_source;			     // DC source to use when powered
+	bool powered;					 // Data valid flag.
+	int pitchactuatorcommand, rollactuatorcommand;
+	bool engOn, engOff;
+	double dpsthrustcommand;
+	double lgcAutoThrust;
+};
+
+class GASTA {
+	//GIMBAL ANGLE SEQUENCING TRANSFORMATION ASSEMBLY
+public:
+	GASTA();
+	void Init(LEM *s, e_object *dcsource, e_object *acsource, IMU* imu);
+	void Timestep(double simt);				// Timestep
+	void SystemTimestep(double simdt);		// System Timestep
+	bool IsPowered();
+	VECTOR3 GetTotalAttitude() { return gasta_att; }
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+protected:
+	LEM *lem;
+	e_object *dc_source;			     // DC source to use when powered
+	e_object *ac_source;			     // AC source to use when powered
+	IMU *imu;							 //Connected IMU
+	VECTOR3 imu_att;
+	VECTOR3 gasta_att;
 };
 
 

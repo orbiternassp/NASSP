@@ -227,7 +227,7 @@ void Saturn::SystemsInit() {
 	// Flight Bus and its feeder
 	//
 
-	FlightBusFeeder.WireToBuses(MainBusA, MainBusB);
+	FlightBusFeeder.WireToBuses(&FLTBusMNACB, &FLTBusMNBCB);
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
 
@@ -566,7 +566,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
-		hga.TimeStep(MissionTime);
+		hga.TimeStep(MissionTime, simdt);
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
@@ -2386,6 +2386,8 @@ void Saturn::ClearPanelSDKPointers()
 void Saturn::GetSPSStatus( SPSStatus &ss )
 {
 	ss.chamberPressurePSI = SPSEngine.GetChamberPressurePSI();
+	ss.PropellantLineTempF = SPSPropellant.GetPropellantLineTempF();
+	ss.OxidizerLineTempF = SPSPropellant.GetPropellantLineTempF();
 }
 
 //
@@ -3084,6 +3086,7 @@ void Saturn::GetBatteryBusStatus( BatteryBusStatus &bs )
 	bs.BatBusACurrent = BatteryBusA.Current();
 	bs.BatBusBVoltage = BatteryBusB.Voltage();
 	bs.BatBusBCurrent = BatteryBusB.Current();
+	bs.BatteryRelayBusVoltage = BatteryRelayBus.Voltage();
 }
 
 //

@@ -138,7 +138,6 @@ public: MATRIX3 getRotationMatrixX(double angle);
 
 	VECTOR3 LastWeightAcceleration;
 	VECTOR3 LastGlobalVel;
-	VECTOR3 Velocity;
 
 	double LastTime;	// in seconds
 };

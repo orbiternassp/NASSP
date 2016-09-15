@@ -51,25 +51,27 @@ static char SixSpace[] = "      ";
 static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 
 // Abort Sensor Assembly
-LEM_ASA::LEM_ASA() : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	heater("LEM-ASA-Heater",1,NULL,15,20,0,272,274,&hsink)
+LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	//heater("LEM-ASA-Heater",1,NULL,15,20,0,272,274,&hsink)
 {
 	lem = NULL;	
 }
 
-void LEM_ASA::Init(LEM *s){
+void LEM_ASA::Init(LEM *s, Boiler *hb, h_Radiator *hr) {
 	lem = s;
+	heater = hb;
+	hsink = hr;
 	// Therm setup
-	hsink.isolation = 1.0; 
-	hsink.Area = 975.0425; 
-	hsink.mass = 9389.36206;
-	hsink.SetTemp(270);
-	if(lem != NULL){
-		heater.WireTo(&lem->SCS_ASA_CB);
-		lem->Panelsdk.AddHydraulic(&hsink);
-		lem->Panelsdk.AddElectrical(&heater,false);
-		heater.Enable();
-		heater.SetPumpAuto();
+	hsink->isolation = 1.0;
+	hsink->Area = 975.0425;
+	//hsink.mass = 9389.36206;
+	//hsink.SetTemp(270);
+	if (lem != NULL) {
+		heater->WireTo(&lem->SCS_ASA_CB);
+		//lem->Panelsdk.AddHydraulic(&hsink);
+		//lem->Panelsdk.AddElectrical(&heater, false);
+		heater->Enable();
+		heater->SetPumpAuto();
 	}
 }
 
