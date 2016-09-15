@@ -198,6 +198,7 @@ public:
 protected:
 	oapi::Font *font;
 	Saturn *saturn;
+	LEM *lem;
 	int screen;
 	static struct ScreenData {
 		int screen;

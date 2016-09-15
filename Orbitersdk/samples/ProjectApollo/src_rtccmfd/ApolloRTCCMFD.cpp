@@ -1100,38 +1100,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->manpadopt == 0)
 		{
-			skp->Text(5 * W / 8,(int)(0.5 * H / 14), "Maneuver PAD", 12);
-
-			if (G->ManPADSPS == 0)
-			{
-				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "SPS", 3);
-			}
-			else if (G->ManPADSPS == 1)
-			{
-				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
-			}
-
-			if (G->HeadsUp)
-			{
-				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Up", 8);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
-			}
-
-			if (G->vesseltype == 0)
-			{
-				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM", 3);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM/LM", 6);
-			}
 
 			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "REFSMMAT:", 9);
 
@@ -1168,34 +1136,69 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "LOI-2", 5);
 			}
 
-			if (G->vesseltype == 1)
+			if (G->vesseltype < 2)
 			{
-				sprintf(Buffer, "LM Weight: %5.0f", G->manpad.LMWeight);
-				skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
-			}
+				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 Maneuver", 12);
 
-			skp->Text((int)(0.5 * W / 8), 18 * H / 23, "Set Stars:", 10);
-			skp->Text((int)(0.5 * W / 8), 19 * H / 23, G->manpad.SetStars, strlen(G->manpad.SetStars));
-
-			/*if (length(G->manpad.GDCangles) == 0.0)
-			{
-				skp->Text((int)(0.5 * W / 8), 19 * H / 23, "N/A", 3);
-			}
-			else
-			{
-				if (G->GDCset == 0)
+				if (G->vesseltype == 0)
 				{
-					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Vega, Deneb", 11);
-				}
-				else if (G->GDCset == 1)
-				{
-					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Navi, Polaris", 13);
+					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM", 3);
 				}
 				else
 				{
-					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Acrux, Atria", 12);
+					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM/LM", 6);
 				}
-			}*/
+
+				if (G->ManPADSPS == 0)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "SPS", 3);
+				}
+				else if (G->ManPADSPS == 1)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
+				}
+
+				if (G->HeadsUp)
+				{
+					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Up", 8);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
+				}
+
+				if (G->vesseltype == 1)
+				{
+					sprintf(Buffer, "LM Weight: %5.0f", G->manpad.LMWeight);
+					skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
+				}
+
+				skp->Text((int)(0.5 * W / 8), 18 * H / 23, "Set Stars:", 10);
+				skp->Text((int)(0.5 * W / 8), 19 * H / 23, G->manpad.SetStars, strlen(G->manpad.SetStars));
+
+				/*if (length(G->manpad.GDCangles) == 0.0)
+				{
+					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "N/A", 3);
+				}
+				else
+				{
+					if (G->GDCset == 0)
+					{
+						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Vega, Deneb", 11);
+					}
+					else if (G->GDCset == 1)
+					{
+						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Navi, Polaris", 13);
+					}
+					else
+					{
+						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Acrux, Atria", 12);
+					}
+				}*/
 
 				sprintf(Buffer, "R %03.0f", OrbMech::round(G->manpad.GDCangles.x));
 				skp->Text((int)(0.5 * W / 8), 20 * H / 23, Buffer, strlen(Buffer));
@@ -1204,106 +1207,207 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "Y %03.0f", OrbMech::round(G->manpad.GDCangles.z));
 				skp->Text((int)(0.5 * W / 8), 22 * H / 23, Buffer, strlen(Buffer));
 
-			int hh, mm;
-			double secs;
+				int hh, mm;
+				double secs;
 
-			SStoHHMMSS(G->P30TIG, hh, mm, secs);
+				SStoHHMMSS(G->P30TIG, hh, mm, secs);
 
-			skp->Text(7 * W / 8, 3 * H / 26, "N47", 3);
-			skp->Text(7 * W / 8, 4 * H / 26, "N48", 3);
-			skp->Text(7 * W / 8, 6 * H / 26, "N33", 3);
-			skp->Text(7 * W / 8, 9 * H / 26, "N81", 3);
-			skp->Text(7 * W / 8, 15 * H / 26, "N44", 3);
+				skp->Text(7 * W / 8, 3 * H / 26, "N47", 3);
+				skp->Text(7 * W / 8, 4 * H / 26, "N48", 3);
+				skp->Text(7 * W / 8, 6 * H / 26, "N33", 3);
+				skp->Text(7 * W / 8, 9 * H / 26, "N81", 3);
+				skp->Text(7 * W / 8, 15 * H / 26, "N44", 3);
 
-			sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
-			skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
+				skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
-			if (G->ManPADSPS == 0)
+				if (G->ManPADSPS == 0)
+				{
+					sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
+					skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.2f YTRIM", G->manpad.yTrim);
+					skp->Text((int)(3.5 * W / 8), 5 * H / 26, Buffer, strlen(Buffer));
+				}
+				else
+				{
+					skp->Text((int)(3.5 * W / 8), 4 * H / 26, "N/A      PTRIM", 14);
+					skp->Text((int)(3.5 * W / 8), 5 * H / 26, "N/A      YTRIM", 14);
+				}
+
+				sprintf(Buffer, "%+06d HRS GETI", hh);
+				skp->Text((int)(3.5 * W / 8), 6 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+06d MIN", mm);
+				skp->Text((int)(3.5 * W / 8), 7 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
+				skp->Text((int)(3.5 * W / 8), 8 * H / 26, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 9 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 10 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 11 * H / 26, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "XXX%03.0f R", G->manpad.Att.x);
+				skp->Text((int)(3.5 * W / 8), 12 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P", G->manpad.Att.y);
+				skp->Text((int)(3.5 * W / 8), 13 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f Y", G->manpad.Att.z);
+				skp->Text((int)(3.5 * W / 8), 14 * H / 26, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%+07.1f HA", min(9999.9, G->manpad.HA));
+				skp->Text((int)(3.5 * W / 8), 15 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f HP", G->manpad.HP);
+				skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%+07.1f VT", length(G->dV_LVLH) / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
+
+				SStoHHMMSS(G->manpad.burntime, hh, mm, secs);
+
+				sprintf(Buffer, "XXX%d:%02.0f BT (MIN:SEC)", mm, secs);
+				skp->Text((int)(3.5 * W / 8), 18 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f VC", G->manpad.Vc);
+				skp->Text((int)(3.5 * W / 8), 19 * H / 26, Buffer, strlen(Buffer));
+
+				//skp->Text(4 * W / 8, 13 * H / 20, "SXT star check", 14);
+
+				if (G->manpad.Star == 0)
+				{
+					sprintf(Buffer, "N/A     SXTS");
+					skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     SFT");
+					skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     TRN");
+					skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
+				}
+				else
+				{
+					sprintf(Buffer, "XXXX%02d SXTS", G->manpad.Star);
+					skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.2f SFT", G->manpad.Shaft);
+					skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.3f TRN", G->manpad.Trun);
+					skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
+				}
+				if (G->manpad.BSSStar == 0)
+				{
+					sprintf(Buffer, "N/A     BSS");
+					skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     SPA");
+					skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     SXP");
+					skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
+				}
+				else
+				{
+					sprintf(Buffer, "XXXX%02d BSS", G->manpad.BSSStar);
+					skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.2f SPA", G->manpad.SPA);
+					skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.3f SXP", G->manpad.SXP);
+					skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
+				}
+			}
+			else
 			{
-				sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
-				skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f YTRIM", G->manpad.yTrim);
+				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 LM Maneuver", 15);
+
+				if (G->ManPADSPS == 0)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "DPS", 3);
+				}
+				else if (G->ManPADSPS == 1)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
+				}
+
+				if (G->vesseltype == 2)
+				{
+					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "LM", 3);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "LM/CSM", 6);
+				}
+
+				sprintf(Buffer, "LM Weight: %5.0f", G->lmmanpad.LMWeight);
+				skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
+
+				if (G->vesseltype == 3)
+				{
+					sprintf(Buffer, "CSM Weight: %5.0f", G->lmmanpad.CSMWeight);
+					skp->Text((int)(0.5 * W / 8), 11 * H / 14, Buffer, strlen(Buffer));
+				}
+
+				int hh, mm;
+				double secs;
+
+				SStoHHMMSS(G->P30TIG, hh, mm, secs);
+
+				sprintf(Buffer, "%+06d HRS GETI", hh);
 				skp->Text((int)(3.5 * W / 8), 5 * H / 26, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text((int)(3.5 * W / 8), 4 * H / 26, "N/A      PTRIM", 14);
-				skp->Text((int)(3.5 * W / 8), 5 * H / 26, "N/A      YTRIM", 14);
-			}
+				sprintf(Buffer, "%+06d MIN", mm);
+				skp->Text((int)(3.5 * W / 8), 6 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
+				skp->Text((int)(3.5 * W / 8), 7 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+06d HRS GETI", hh);
-			skp->Text((int)(3.5 * W / 8), 6 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+06d MIN", mm);
-			skp->Text((int)(3.5 * W / 8), 7 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
-			skp->Text((int)(3.5 * W / 8), 8 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 8 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 9 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 10 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 9 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 10 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 11 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f HA", min(9999.9, G->lmmanpad.HA));
+				skp->Text((int)(3.5 * W / 8), 11 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f HP", G->lmmanpad.HP);
+				skp->Text((int)(3.5 * W / 8), 12 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "XXX%03.0f R", G->manpad.Att.x);
-			skp->Text((int)(3.5 * W / 8), 12 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f P", G->manpad.Att.y);
-			skp->Text((int)(3.5 * W / 8), 13 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f Y", G->manpad.Att.z);
-			skp->Text((int)(3.5 * W / 8), 14 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVR", length(G->dV_LVLH) / 0.3048);
+				skp->Text((int)(3.5 * W / 8), 13 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+07.1f HA", min(9999.9, G->manpad.HA));
-			skp->Text((int)(3.5 * W / 8), 15 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f HP", G->manpad.HP);
-			skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
+				SStoHHMMSS(G->lmmanpad.burntime, hh, mm, secs);
 
-			sprintf(Buffer, "%+07.1f VT", length(G->dV_LVLH) / 0.3048);
-			skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%d:%02.0f BT", mm, secs);
+				skp->Text((int)(3.5 * W / 8), 14 * H / 26, Buffer, strlen(Buffer));
 
-			SStoHHMMSS(G->manpad.burntime, hh, mm, secs);
+				sprintf(Buffer, "XXX%03.0f R", G->lmmanpad.Att.x);
+				skp->Text((int)(3.5 * W / 8), 15 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P", G->lmmanpad.Att.y);
+				skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "XXX%d:%02.0f BT (MIN:SEC)", mm, secs);
-			skp->Text((int)(3.5 * W / 8), 18 * H / 26, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f VC", G->manpad.Vc);
-			skp->Text((int)(3.5 * W / 8), 19 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVX AGS N86", G->lmmanpad.dV_AGS.x);
+				skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVY AGS", G->lmmanpad.dV_AGS.y);
+				skp->Text((int)(3.5 * W / 8), 18 * H / 26, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f DVZ AGS", G->lmmanpad.dV_AGS.z);
+				skp->Text((int)(3.5 * W / 8), 19 * H / 26, Buffer, strlen(Buffer));
 
-			//skp->Text(4 * W / 8, 13 * H / 20, "SXT star check", 14);
+				if (G->lmmanpad.BSSStar == 0)
+				{
+					sprintf(Buffer, "N/A     BSS");
+					skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     SPA");
+					skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "N/A     SXP");
+					skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
+				}
+				else
+				{
+					sprintf(Buffer, "XXXX%02d BSS", G->lmmanpad.BSSStar);
+					skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.2f SPA", G->lmmanpad.SPA);
+					skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
+					sprintf(Buffer, "%+07.3f SXP", G->lmmanpad.SXP);
+					skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
+				}
 
-			if (G->manpad.Star == 0)
-			{
-				sprintf(Buffer, "N/A     SXTS");
-				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "N/A     SFT");
-				skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "N/A     TRN");
-				skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				sprintf(Buffer, "XXXX%02d SXTS", G->manpad.Star);
-				skp->Text((int)(3.5 * W / 8), 20 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f SFT", G->manpad.Shaft);
-				skp->Text((int)(3.5 * W / 8), 21 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.3f TRN", G->manpad.Trun);
-				skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
-			}
-			if (G->manpad.BSSStar == 0)
-			{
-				sprintf(Buffer, "N/A     BSS");
-				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "N/A     SPA");
-				skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "N/A     SXP");
-				skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				sprintf(Buffer, "XXXX%02d BSS", G->manpad.BSSStar);
-				skp->Text((int)(3.5 * W / 8), 23 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.2f SPA", G->manpad.SPA);
-				skp->Text((int)(3.5 * W / 8), 24 * H / 26, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.3f SXP", G->manpad.SXP);
-				skp->Text((int)(3.5 * W / 8), 25 * H / 26, Buffer, strlen(Buffer));
+				skp->Text((int)(0.5 * W / 8), 24 * H / 26, G->lmmanpad.remarks, strlen(G->lmmanpad.remarks));
 			}
 		}
 		else if (G->manpadopt == 1)
@@ -2974,7 +3078,7 @@ void ApolloRTCCMFD::set_spherical()
 
 void ApolloRTCCMFD::menuSwitchHeadsUp()
 {
-	if (G->manpadopt == 0)
+	if (G->manpadopt == 0 && G->vesseltype < 2)
 	{
 		G->HeadsUp = !G->HeadsUp;
 	}
@@ -3319,24 +3423,28 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 		else
 		{
 			unsigned short REFSoct[20];
-			REFSoct[2] = saturn->agc.vagc.Erasable[0][01735];
-			REFSoct[3] = saturn->agc.vagc.Erasable[0][01736];
-			REFSoct[4] = saturn->agc.vagc.Erasable[0][01737];
-			REFSoct[5] = saturn->agc.vagc.Erasable[0][01740];
-			REFSoct[6] = saturn->agc.vagc.Erasable[0][01741];
-			REFSoct[7] = saturn->agc.vagc.Erasable[0][01742];
-			REFSoct[8] = saturn->agc.vagc.Erasable[0][01743];
-			REFSoct[9] = saturn->agc.vagc.Erasable[0][01744];
-			REFSoct[10] = saturn->agc.vagc.Erasable[0][01745];
-			REFSoct[11] = saturn->agc.vagc.Erasable[0][01746];
-			REFSoct[12] = saturn->agc.vagc.Erasable[0][01747];
-			REFSoct[13] = saturn->agc.vagc.Erasable[0][01750];
-			REFSoct[14] = saturn->agc.vagc.Erasable[0][01751];
-			REFSoct[15] = saturn->agc.vagc.Erasable[0][01752];
-			REFSoct[16] = saturn->agc.vagc.Erasable[0][01753];
-			REFSoct[17] = saturn->agc.vagc.Erasable[0][01754];
-			REFSoct[18] = saturn->agc.vagc.Erasable[0][01755];
-			REFSoct[19] = saturn->agc.vagc.Erasable[0][01756];
+			int REFSMMATaddress;
+
+			REFSMMATaddress = 01735;
+
+			REFSoct[2] = saturn->agc.vagc.Erasable[0][REFSMMATaddress];
+			REFSoct[3] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 1];
+			REFSoct[4] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 2];
+			REFSoct[5] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 3];
+			REFSoct[6] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 4];
+			REFSoct[7] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 5];
+			REFSoct[8] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 6];
+			REFSoct[9] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 7];
+			REFSoct[10] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 8];
+			REFSoct[11] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 9];
+			REFSoct[12] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 10];
+			REFSoct[13] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 11];
+			REFSoct[14] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 12];
+			REFSoct[15] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 13];
+			REFSoct[16] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 14];
+			REFSoct[17] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 15];
+			REFSoct[18] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 16];
+			REFSoct[19] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 17];
 
 			for (int i = 2; i < 20; i++)
 			{
@@ -3357,6 +3465,58 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 			G->REFSMMATcur = G->REFSMMATopt;
 
 			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
+		}
+	}
+	else
+	{
+		lem = (LEM *)G->vessel;
+		if (lem->IsVirtualAGC() == FALSE)
+		{
+
+		}
+		else
+		{
+			unsigned short REFSoct[20];
+			int REFSMMATaddress;
+
+			REFSMMATaddress = 01733;
+
+			REFSoct[2] = lem->agc.vagc.Erasable[0][REFSMMATaddress];
+			REFSoct[3] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 1];
+			REFSoct[4] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 2];
+			REFSoct[5] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 3];
+			REFSoct[6] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 4];
+			REFSoct[7] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 5];
+			REFSoct[8] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 6];
+			REFSoct[9] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 7];
+			REFSoct[10] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 8];
+			REFSoct[11] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 9];
+			REFSoct[12] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 10];
+			REFSoct[13] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 11];
+			REFSoct[14] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 12];
+			REFSoct[15] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 13];
+			REFSoct[16] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 14];
+			REFSoct[17] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 15];
+			REFSoct[18] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 16];
+			REFSoct[19] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 17];
+
+			for (int i = 2; i < 20; i++)
+			{
+				sprintf(Buffer, "%05o", REFSoct[i]);
+				G->REFSMMAToct[i] = atoi(Buffer);
+			}
+
+			G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+			G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+			G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+			G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+			G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+			G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
+			G->REFSMMATcur = G->REFSMMATopt;
 		}
 	}
 }
@@ -3683,15 +3843,18 @@ void ApolloRTCCMFD::set_LmkLng(double lng)
 
 void ApolloRTCCMFD::menuRequestLTMFD()
 {
-	if (G->manpadopt == 0 || G->manpadopt == 2)
+	if (G->vesseltype < 2)
 	{
-		if (G->g_Data.isRequesting)
+		if (G->manpadopt == 0 || G->manpadopt == 2)
 		{
-			G->StopIMFDRequest();
-		}
-		else
-		{
-			G->StartIMFDRequest();
+			if (G->g_Data.isRequesting)
+			{
+				G->StopIMFDRequest();
+			}
+			else
+			{
+				G->StartIMFDRequest();
+			}
 		}
 	}
 }

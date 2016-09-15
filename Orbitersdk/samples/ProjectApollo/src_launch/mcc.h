@@ -560,6 +560,24 @@ struct AP11MNV {
 	double LMWeight;	// LM weight
 };
 
+// APOLLO 11 LM - MANEUVER
+struct AP11LMMNV {
+	char purpose[64];	// PURPOSE
+	double GETI;		// TIG
+	VECTOR3 dV;			// P30 dV
+	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double dVR;			// Total dV
+	double burntime;	// Burn time
+	VECTOR3 Att;		// Attitude at TIG (only Roll and Pitch)
+	VECTOR3 dV_AGS;		// AGS DV
+	int BSSStar;		// Boresight star
+	double SPA, SXP;	// Boresight star angles
+
+	char remarks[128];	// remarks
+	double LMWeight;	// Vehicle weight
+	double CSMWeight;	// CSM weight
+};
+
 // Mission Control Center class
 class MCC {	
 public:

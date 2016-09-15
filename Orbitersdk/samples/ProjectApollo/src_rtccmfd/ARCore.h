@@ -161,6 +161,7 @@ public:
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
+	AP11LMMNV lmmanpad;
 	char GDCset[64];
 	bool HeadsUp;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;

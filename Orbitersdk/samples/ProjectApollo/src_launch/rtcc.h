@@ -32,9 +32,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_LAMBERT_SPHERICAL 0
 #define RTCC_LAMBERT_PERTURBED 1
 
-#define RTCC_LAMBERT_RETROGRADE 0
-#define RTCC_LAMBERT_PROGRADE 1
-
 #define RTCC_IMPULSIVE 0
 #define RTCC_NONIMPULSIVE 1
 
@@ -81,7 +78,7 @@ struct LambertMan //Data for Lambert targeting
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
 	double PhaseAngle; //Phase angle to target, will overwrite offset
-	bool prograde; //Prograde or retrograde solution
+	//bool prograde; //Prograde or retrograde solution
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
@@ -110,6 +107,20 @@ struct AP11ManPADOpt
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+};
+
+struct AP11LMManPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	int engopt; //0 = DPS, 1 = RCS+X, 2 = RCS-X
+	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
+	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
+	int vesseltype = 2; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
@@ -342,6 +353,7 @@ public:
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad);
+	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
@@ -361,7 +373,7 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
+	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
 	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);
@@ -375,6 +387,7 @@ private:
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);
 	SV coast(SV sv0, double dt);
+	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);

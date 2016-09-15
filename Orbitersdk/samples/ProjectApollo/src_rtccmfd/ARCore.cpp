@@ -87,13 +87,13 @@ ARCore::ARCore(VESSEL* v)
 		vesseltype = 2;
 		AGCEpoch = 40586.767239;
 	}
-	else if (strcmp(v->GetName(), "AS-505") == 0)
+	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie Brown") == 0)
 	{
 		mission = 10;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
 	}
-	else if (strcmp(v->GetName(), "Charlie Brown") == 0)
+	else if (strcmp(v->GetName(), "Snoopy") == 0)
 	{
 		mission = 10;
 		vesseltype = 2;
@@ -243,6 +243,20 @@ ARCore::ARCore(VESSEL* v)
 	manpad.Vc = 0.0;
 	manpad.pTrim = 0.0;
 	manpad.yTrim = 0.0;
+	lmmanpad.Att = _V(0, 0, 0);
+	lmmanpad.BSSStar = 0;
+	lmmanpad.burntime = 0.0;
+	lmmanpad.CSMWeight = 0.0;
+	lmmanpad.dV = _V(0, 0, 0);
+	lmmanpad.dVR = 0.0;
+	lmmanpad.dV_AGS = _V(0, 0, 0);
+	lmmanpad.GETI = 0.0;
+	lmmanpad.HA = 0.0;
+	lmmanpad.HP = 0.0;
+	lmmanpad.LMWeight = 0.0;
+	lmmanpad.SPA = 0.0;
+	lmmanpad.SXP = 0.0;
+	sprintf(lmmanpad.remarks,"");
 	TimeTag = 0.0;
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
@@ -837,7 +851,14 @@ void ARCore::P30Uplink(void)
 	double getign = P30TIG;// (pbd->IgnMJD - liftoff) * 86400.0;
 
 	g_Data.emem[0] = 12;
-	g_Data.emem[1] = 3404;
+	if (vesseltype < 2)
+	{
+		g_Data.emem[1] = 3404;
+	}
+	else
+	{
+		g_Data.emem[1] = 3433;
+	}
 	g_Data.emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
 	g_Data.emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
 	g_Data.emem[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
@@ -1066,11 +1087,18 @@ int ARCore::subThread()
 		opt.Offset = offvec;
 		opt.Perturbation = lambertopt;
 		opt.PhaseAngle = 0.0;
-		opt.prograde = true;
 		opt.T1 = T1;
 		opt.T2 = T2;
 		opt.target = target;
 		opt.vessel = vessel;
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
 		rtcc->LambertTargeting(&opt, dV_LVLH, P30TIG);
 		LambertdeltaV = dV_LVLH;
 
@@ -1116,13 +1144,13 @@ int ARCore::subThread()
 		opt.SPSGET = SPSGET;
 		opt.vessel = vessel;
 		opt.useSV = false;
-		if (vesseltype == 0)
+		if (vesseltype == 0 || vesseltype == 2)
 		{
-			opt.csmlmdocked = 0;
+			opt.csmlmdocked = false;
 		}
-		else if (vesseltype == 1)
+		else
 		{
-			opt.csmlmdocked = 1;
+			opt.csmlmdocked = true;
 		}
 
 		rtcc->OrbitAdjustCalc(&opt, OrbAdjDVX, P30TIG);
@@ -1221,13 +1249,13 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.useSV = false;
 
-		if (vesseltype == 0)
+		if (vesseltype == 0 || vesseltype == 2)
 		{
-			opt.csmlmdocked = 0;
+			opt.csmlmdocked = false;
 		}
-		else if (vesseltype == 1)
+		else
 		{
-			opt.csmlmdocked = 1;
+			opt.csmlmdocked = true;
 		}
 
 		if (LOImaneuver == 0 || LOImaneuver == 4)
@@ -1440,19 +1468,38 @@ int ARCore::subThread()
 	break;
 	case 9: //Maneuver PAD
 	{
-		AP11ManPADOpt opt;
+		if (vesseltype < 2)
+		{
+			AP11ManPADOpt opt;
 
-		opt.dV_LVLH = dV_LVLH;
-		opt.engopt = ManPADSPS;
-		opt.GETbase = GETbase;
-		opt.HeadsUp = HeadsUp;
-		opt.REFSMMAT = REFSMMAT;
-		opt.sxtstardtime = sxtstardtime;
-		opt.TIG = P30TIG;
-		opt.vessel = vessel;
-		opt.vesseltype = vesseltype;
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = ManPADSPS;
+			opt.GETbase = GETbase;
+			opt.HeadsUp = HeadsUp;
+			opt.REFSMMAT = REFSMMAT;
+			opt.sxtstardtime = sxtstardtime;
+			opt.TIG = P30TIG;
+			opt.vessel = vessel;
+			opt.vesseltype = vesseltype;
 
-		rtcc->AP11ManeuverPAD(&opt, manpad);
+			rtcc->AP11ManeuverPAD(&opt, manpad);
+		}
+		else
+		{
+			AP11LMManPADOpt opt;
+
+			opt.dV_LVLH = dV_LVLH;
+			opt.engopt = ManPADSPS;
+			opt.GETbase = GETbase;
+			opt.REFSMMAT = REFSMMAT;
+			opt.sxtstardtime = sxtstardtime;
+			opt.TIG = P30TIG;
+			opt.vessel = vessel;
+			opt.vesseltype = vesseltype;
+
+			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
+		}
+
 		Result = 0;
 	}
 	break;

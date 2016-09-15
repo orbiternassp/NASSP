@@ -1206,7 +1206,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.tgt, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(3, 20, 0), OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
+		lambert = set_lambertoptions(calcParams.tgt, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(3, 20, 0), OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -1321,7 +1321,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(15, 52, 0), OrbMech::HHMMSSToSS(26, 25, 0), 7, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(15, 52, 0), OrbMech::HHMMSSToSS(26, 25, 0), 7, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -1409,7 +1409,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(26, 25, 0), OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_LAMBERT_PROGRADE, RTCC_NONIMPULSIVE);
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(26, 25, 0), OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_NONIMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -1461,7 +1461,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(27, 30, 0), OrbMech::HHMMSSToSS(28, 0, 0), 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(27, 30, 0), OrbMech::HHMMSSToSS(28, 0, 0), 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_IMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -1571,7 +1571,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		T1 = lambertelev(calcParams.src, calcParams.tgt, GETbase, 27.45*RAD);
 		T2 = T1 + 35.0*60.0;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, GETbase, T1, T2, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0, RTCC_LAMBERT_PROGRADE, RTCC_IMPULSIVE);
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, GETbase, T1, T2, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0, RTCC_IMPULSIVE);
 	
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
@@ -2930,8 +2930,18 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	VECTOR3 RA1, VA1, RP2, VP2;
 	double SVMJD,dt1,dt2,mu;
 	OBJHANDLE gravref;
+	bool prograde;
 
 	gravref = AGCGravityRef(lambert->vessel);
+
+	if (gravref == oapiGetObjectByName("Earth"))	//Hardcoded: Always prograde for Earth, always retrograde for Moon
+	{
+		prograde = true;
+	}
+	else
+	{
+		prograde = false;
+	}
 
 	lambert->vessel->GetRelativePos(gravref, RA0_orb);
 	lambert->vessel->GetRelativeVel(gravref, VA0_orb);
@@ -2986,17 +2996,17 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{
-		VA1_apo = OrbMech::Vinti(RA1, VA1, RP2off, SVMJD + dt1 / 24.0 / 3600.0, dt2, lambert->N, lambert->prograde, gravref, gravref, gravref, _V(0.0, 0.0, 0.0)); //Vinti Targeting: For non-spherical gravity
+		VA1_apo = OrbMech::Vinti(RA1, VA1, RP2off, SVMJD + dt1 / 24.0 / 3600.0, dt2, lambert->N, prograde, gravref, gravref, gravref, _V(0.0, 0.0, 0.0)); //Vinti Targeting: For non-spherical gravity
 	}
 	else
 	{
 		if (lambert->axis == RTCC_LAMBERT_MULTIAXIS)
 		{
-			VA1_apo = OrbMech::elegant_lambert(RA1, VA1, RP2off, dt2, lambert->N, lambert->prograde, mu);	//Lambert Targeting
+			VA1_apo = OrbMech::elegant_lambert(RA1, VA1, RP2off, dt2, lambert->N, prograde, mu);	//Lambert Targeting
 		}
 		else
 		{
-			OrbMech::xaxislambert(RA1, VA1, RP2off, dt2, lambert->N, lambert->prograde, mu, VA1_apo, lambert->Offset.z);	//Lambert Targeting
+			OrbMech::xaxislambert(RA1, VA1, RP2off, dt2, lambert->N, prograde, mu, VA1_apo, lambert->Offset.z);	//Lambert Targeting
 		}
 	}
 
@@ -3012,7 +3022,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	else
 	{
 		VECTOR3 Llambda,RA1_cor,VA1_cor, Rcut, Vcut;
-		double t_slip, LMmass, mass, f_T, isp, tcut;
+		double t_slip, LMmass, mass, f_T, isp, tcut, F_average;
 		
 		if (lambert->csmlmdocked)
 		{
@@ -3037,10 +3047,25 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 		}
 		mass = LMmass + lambert->vessel->GetMass();
 
-		f_T = lambert->vessel->GetThrusterMax0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-		isp = lambert->vessel->GetThrusterIsp0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		if (lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0))
+		{
+			f_T = lambert->vessel->GetThrusterMax0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+			isp = lambert->vessel->GetThrusterIsp0(lambert->vessel->GetGroupThruster(THGROUP_MAIN, 0));
 
-		OrbMech::impulsive(RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, f_T, isp, mass, VA1_apo - VA1, Llambda, t_slip, Rcut, Vcut, tcut);
+			F_average = f_T;
+		}
+		else
+		{
+			double bt, bt_var;
+			int step;
+
+			f_T = lambert->vessel->GetThrusterMax0(lambert->vessel->GetGroupThruster(THGROUP_HOVER, 0));
+			isp = lambert->vessel->GetThrusterIsp0(lambert->vessel->GetGroupThruster(THGROUP_HOVER, 0));
+
+			LMThrottleProgram(f_T, isp, mass, length(VA1_apo - VA1), F_average, bt, bt_var, step);
+		}
+
+		OrbMech::impulsive(RA1, VA1, SVMJD + dt1/24.0/3600.0, gravref, F_average, isp, mass, VA1_apo - VA1, Llambda, t_slip, Rcut, Vcut, tcut);
 		OrbMech::rv_from_r0v0(RA1, VA1, t_slip, RA1_cor, VA1_cor, mu);
 
 		j = unit(crossp(VA1_cor, RA1_cor));
@@ -3056,6 +3081,226 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TI
 	{
 		dV_LVLH.y = 0.0;
 	}
+}
+
+void RTCC::LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step)
+{
+	double bt, dv_10p, mass40p, bt_40p, dv_40p, mass100p, bt_100p;
+
+	bt = v_e / (0.1*F) *(mass)*(1.0 - exp(-dV_LVLH / v_e)); //burn time at 10% thrust
+
+	if (bt > 5.0 + 16.0)	//Burn longer than 5+16 seconds at 10%
+	{
+
+		dv_10p = v_e*log((mass) / (mass - 0.1*F / v_e*5.0)); //Five seconds at 10%
+		mass40p = mass - 0.1*F / v_e*5.0;
+		bt_40p = v_e / (0.4*F) *(mass40p)*(1.0 - exp(-(dV_LVLH - dv_10p) / v_e)); // rest burn time at 40% thrust
+
+		if (bt_40p > 21.0 + 10.0)	//Burn at 40% longer than 21+10 seconds
+		{
+			dv_40p = v_e*log((mass40p) / (mass40p - 0.4*F / v_e*21.0)); //21 seconds at 40%
+			mass100p = mass40p - 0.4*F / v_e*21.0;
+			bt_100p = v_e / F *(mass100p)*(1.0 - exp(-(dV_LVLH - dv_10p - dv_40p) / v_e)); // rest burn time at 100% thrust
+
+			F_average = (0.1 * 5.0 + 0.4*21.0 + bt_100p) / (21.0 + 5.0 + bt_100p)*F;
+			ManPADBurnTime = bt_100p + 26.0;
+			bt_var = bt_100p;
+
+			step = 2;
+		}
+		else
+		{
+			F_average = (0.1 * 5.0 + 0.4*bt_40p) / (bt_40p + 5.0)*F;
+			ManPADBurnTime = bt_40p + 5.0;
+			bt_var = bt_40p;
+
+			step = 1;
+		}
+	}
+	else
+	{
+		F_average = 0.1*F;	//Full burn at 10%
+		ManPADBurnTime = bt;
+		bt_var = bt;
+
+		step = 0;
+	}
+}
+
+void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
+{
+	int ManCOASstaroct, step;
+	double SVMJD, LMmass, dt, mu, CSMmass, ManPADBurnTime, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, theta_T;
+	double F_average, t_go, bt;
+	VECTOR3 R0B, V0B, R_A, V_A, R1B, V1B, UX, UY, UZ, DV, V_G, X_B, IMUangles, DV_P, DV_C, R2B, V2B, FDAIangles;
+	MATRIX3 M, M_R, Q_Xx;
+	OBJHANDLE gravref, maneuverplanet = NULL;
+
+	if (opt->useSV)
+	{
+		R0B = opt->RV_MCC.R;
+		V0B = opt->RV_MCC.V;
+		SVMJD = opt->RV_MCC.MJD;
+		gravref = opt->RV_MCC.gravref;
+		LMmass = opt->RV_MCC.mass;
+	}
+	else
+	{
+		gravref = AGCGravityRef(opt->vessel);
+		opt->vessel->GetRelativePos(gravref, R_A);
+		opt->vessel->GetRelativeVel(gravref, V_A);
+		SVMJD = oapiGetSimMJD();
+		R0B = _V(R_A.x, R_A.z, R_A.y);
+		V0B = _V(V_A.x, V_A.z, V_A.y);
+		LMmass = opt->vessel->GetMass();
+	}
+
+	dt = opt->TIG - (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+	OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, maneuverplanet);
+
+	mu = GGRAV*oapiGetMass(maneuverplanet);
+
+	UY = unit(crossp(V1B, R1B));
+	UZ = unit(-R1B);
+	UX = crossp(UY, UZ);
+
+	Q_Xx = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+
+	DV = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
+
+	if (opt->vesseltype == 3)
+	{
+		DOCKHANDLE dock;
+		OBJHANDLE hCSM;
+		VESSEL* csm;
+		if (opt->vessel->DockingStatus(0) == 1)
+		{
+			dock = opt->vessel->GetDockHandle(0);
+			hCSM = opt->vessel->GetDockStatus(dock);
+			csm = oapiGetVesselInterface(hCSM);
+			CSMmass = csm->GetMass();
+		}
+		else
+		{
+			CSMmass = 0.0;
+		}
+	}
+	else
+	{
+		CSMmass = 0.0;
+	}
+
+	double v_e, F;
+	if (opt->engopt == 0)
+	{
+		v_e = 3107.0;//opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		F = 44910;//opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	}
+	else
+	{
+		v_e = 2706.64;
+		F = 400 * 4.448222;
+	}
+
+	LMThrottleProgram(F, v_e, CSMmass + LMmass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
+
+	if (step == 0)
+	{
+		sprintf(pad.remarks, "%.0f sec at 10%%.", bt);
+	}
+	else if (step == 1)
+	{
+		sprintf(pad.remarks, " 5 sec at 10%%, %.0f sec at 40%%.", bt);
+	}
+	else
+	{
+		sprintf(pad.remarks, " 5 sec at 10%%, 21 sec at 40%%, %.0f sec at 100%%.", bt);
+	}
+
+	DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
+	if (length(DV_P) != 0.0)
+	{
+		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*(CSMmass + LMmass) / OrbMech::power(length(R1B), 2.0) / F;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + UY*opt->dV_LVLH.y;
+	}
+	else
+	{
+		V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
+	}
+
+	OrbMech::poweredflight(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, maneuverplanet, F_average, v_e, CSMmass + LMmass, V_G, R2B, V2B, t_go);
+
+	OrbMech::periapo(R2B, V2B, mu, apo, peri);
+	ManPADApo = apo - oapiGetSize(maneuverplanet);
+	ManPADPeri = peri - oapiGetSize(maneuverplanet);
+
+	X_B = unit(V_G);
+	if (opt->engopt == 2)
+	{
+		UX = -X_B;
+	}
+	else
+	{
+		UX = X_B;
+	}
+	UY = unit(crossp(UX, R1B));
+	UZ = unit(crossp(UX, crossp(UX, R1B)));
+
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+
+
+	ManPADDVR = length(opt->dV_LVLH);
+
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+
+	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.y = atan2(((sin(IMUangles.y)*cos(IMUangles.x) + cos(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z)), (cos(IMUangles.y)*cos(IMUangles.x) - sin(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z));
+	}
+
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.x = atan2(sin(IMUangles.z), cos(IMUangles.z)*cos(IMUangles.x));
+	}
+
+	if (FDAIangles.x < 0)
+	{
+		FDAIangles.x += PI2;
+	}
+	if (FDAIangles.y < 0)
+	{
+		FDAIangles.y += PI2;
+	}
+	if (FDAIangles.z < 0)
+	{
+		FDAIangles.z += PI2;
+	}
+
+	VECTOR3 Rsxt, Vsxt;
+
+	OrbMech::oneclickcoast(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, opt->sxtstardtime*60.0, Rsxt, Vsxt, maneuverplanet, maneuverplanet);
+
+	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, oapiGetSize(maneuverplanet), ManCOASstaroct, ManBSSpitch, ManBSSXPos);
+	
+	pad.Att = _V(OrbMech::imulimit(FDAIangles.x*DEG), OrbMech::imulimit(FDAIangles.y*DEG), OrbMech::imulimit(FDAIangles.z*DEG));
+	pad.BSSStar = ManCOASstaroct;
+	pad.burntime = ManPADBurnTime;
+	pad.dV = opt->dV_LVLH / 0.3048;
+	pad.dV_AGS = mul(Q_Xx, V_G) / 0.3048;
+	pad.GETI = opt->TIG;
+	pad.HA = min(9999.9, ManPADApo / 1852.0);
+	pad.HP = ManPADPeri / 1852.0;
+
+	pad.SPA = ManBSSpitch*DEG;
+	pad.SXP = ManBSSXPos*DEG;
+	pad.dVR = ManPADDVR / 0.3048;
+	pad.CSMWeight = CSMmass / 0.45359237;
+	pad.LMWeight = LMmass / 0.45359237;
 }
 
 void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
@@ -4460,7 +4705,7 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	return dh_CDH;
 }
 
-LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, bool prograde, int impulsive)
+LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive)
 {
 	LambertMan opt;
 
@@ -4471,7 +4716,6 @@ LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETba
 	opt.Offset = Offset;
 	opt.Perturbation = Perturbation;
 	opt.PhaseAngle = PhaseAngle;
-	opt.prograde = prograde;
 	opt.T1 = T1;
 	opt.T2 = T2;
 	opt.target = target;
