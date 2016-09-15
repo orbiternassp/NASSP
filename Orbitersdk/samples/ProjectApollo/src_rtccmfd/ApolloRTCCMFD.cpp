@@ -329,6 +329,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 	if (screen == 0)
 	{
+		if (G->vesseltype < 2)
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
+		}
+		else
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
+		}
+
 		skp->Text(1 * W / 8, 2 * H / 14, "Lambert", 7);
 		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
 		skp->Text(1 * W / 8, 6 * H / 14, "Orbit Adjustment", 16);
@@ -1718,7 +1727,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.3f°", G->LOILng*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.2f NM", G->LOIperi/1852.0);
+			sprintf(Buffer, "%.2f NM", G->LOIperi / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, G->TLCC_TIG);
@@ -1855,6 +1864,39 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 
 		}
+		else if (G->LOImaneuver == 5)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "DOI", 3);
+
+			GET_Display(Buffer, G->LOIGET);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LOILat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LOILng*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->LOIperi / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, G->LOI_TIG);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(5 * W / 8, 17 * H / 21, "DVX", 3);
+			skp->Text(5 * W / 8, 18 * H / 21, "DVY", 3);
+			skp->Text(5 * W / 8, 19 * H / 21, "DVZ", 3);
+
+			sprintf(Buffer, "%+07.1f", G->LOI_dV_LVLH.x / 0.3048);
+			skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->LOI_dV_LVLH.y / 0.3048);
+			skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->LOI_dV_LVLH.z / 0.3048);
+			skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.1f", length(G->LOI_dV_LVLH) / 0.3048);
+			skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+		}
 	}
 	else if (screen == 13)
 	{
@@ -1893,6 +1935,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "Alt %+07.2f NM", G->LmkN89Alt/1852.0);
 		skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
+
 	return true;
 }
 
@@ -3586,7 +3629,7 @@ void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 
 void ApolloRTCCMFD::menuSwitchLOIManeuver()
 {
-	if (G->LOImaneuver < 4)
+	if (G->LOImaneuver < 5)
 	{
 		G->LOImaneuver++;
 	}
@@ -3602,6 +3645,11 @@ void ApolloRTCCMFD::menuSetLOIGET()
 	{
 		bool LOIGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", LOIGETInput, 0, 20, (void*)this);
+	}
+	else if (G->LOImaneuver == 5)
+	{
+		bool LOIGETInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the earliest GET for the DOI maneuver (Format: hhh:mm:ss)", LOIGETInput, 0, 20, (void*)this);
 	}
 }
 
@@ -3650,7 +3698,7 @@ void ApolloRTCCMFD::set_LOIPeriGET(double time)
 
 void ApolloRTCCMFD::menuSetLOILat()
 {
-	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4 || G->LOImaneuver == 5)
 	{
 		bool LOILatInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the pericyntheon latitude:", LOILatInput, 0, 20, (void*)this);
@@ -3674,7 +3722,7 @@ void ApolloRTCCMFD::set_LOILat(double lat)
 
 void ApolloRTCCMFD::menuSetLOILng()
 {
-	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4 || G->LOImaneuver == 5)
 	{
 		bool LOILngInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the pericyntheon longitude:", LOILngInput, 0, 20, (void*)this);
@@ -3767,7 +3815,14 @@ void ApolloRTCCMFD::set_LOIInc(double inc)
 
 void ApolloRTCCMFD::menuLOICalc()
 {
-	G->LOICalc();
+	if (G->LOImaneuver < 5)
+	{
+		G->LOICalc();
+	}
+	else
+	{
+		G->DOICalc();
+	}
 }
 
 void ApolloRTCCMFD::menuLmkPADCalc()

@@ -454,6 +454,11 @@ void ARCore::LOICalc()
 	startSubthread(5);
 }
 
+void ARCore::DOICalc()
+{
+	startSubthread(10);
+}
+
 void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic burn
 {
 	startSubthread(2);
@@ -1499,6 +1504,33 @@ int ARCore::subThread()
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
+
+		Result = 0;
+	}
+	break;
+	case 10:	//DOI Targeting
+	{
+		DOIMan opt;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
+		opt.EarliestGET = LOIGET;
+		opt.GETbase = GETbase;
+		opt.lat = LOILat;
+		opt.lng = LOILng;
+		opt.alt = LOIperi;
+		opt.vessel = vessel;
+
+		rtcc->DOITargeting(&opt, LOI_dV_LVLH, LOI_TIG);
+
+		P30TIG = LOI_TIG;
+		dV_LVLH = LOI_dV_LVLH;
 
 		Result = 0;
 	}

@@ -246,6 +246,19 @@ struct LOIMan
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
 
+struct DOIMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double EarliestGET;	//Earliest GET for the DOI maneuver
+	double lat; //landing site latitude
+	double lng; //landing site longitude
+	double alt;	//altitude of the landing site
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+};
+
 struct OrbAdjOpt
 {
 	VESSEL* vessel;
@@ -350,6 +363,7 @@ public:
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad);

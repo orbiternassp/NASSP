@@ -3455,7 +3455,7 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 		tLMJD = t_L / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
 		Rot = GetRotationMatrix(plan, tLMJD);
-		R_LS = mul(Rot, R_LSA);
+		R_LS = rhmul(Rot, R_LSA);
 		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
 		er = length(U_L - U_LS);
 		alpha = sign(dotp(U_N, crossp(U_L, U_LS)))*acos(dotp(U_L, U_LS));

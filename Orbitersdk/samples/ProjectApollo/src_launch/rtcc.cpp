@@ -4748,6 +4748,99 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
 
+void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	double SVMJD, GET, mass, LMmass, h_DP, theta_F, t_F, mu, t_DOI, t_PDI, t_L, CR, f_T, isp, t_slip, tcut, F_average;
+	VECTOR3 R_A, V_A, R0B, V0B, R_LSA, DV_DOI, RA2, VA2, Llambda, Rcut, Vcut, R2_cor, V2_cor, i, j, k;
+	MATRIX3 Q_Xx;
+	OBJHANDLE hMoon, gravref;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	if (opt->useSV)
+	{
+		R0B = opt->RV_MCC.R;
+		V0B = opt->RV_MCC.V;
+		SVMJD = opt->RV_MCC.MJD;
+		gravref = opt->RV_MCC.gravref;
+	}
+	else
+	{
+		gravref = AGCGravityRef(opt->vessel);
+		opt->vessel->GetRelativePos(gravref, R_A);
+		opt->vessel->GetRelativeVel(gravref, V_A);
+		SVMJD = oapiGetSimMJD();
+		R0B = _V(R_A.x, R_A.z, R_A.y);
+		V0B = _V(V_A.x, V_A.z, V_A.y);
+	}
+
+	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+
+	if (opt->csmlmdocked)
+	{
+		DOCKHANDLE dock;
+		OBJHANDLE hLM;
+		VESSEL* lm;
+		if (opt->vessel->DockingStatus(0) == 1)
+		{
+			dock = opt->vessel->GetDockHandle(0);
+			hLM = opt->vessel->GetDockStatus(dock);
+			lm = oapiGetVesselInterface(hLM);
+			LMmass = lm->GetMass();
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+	mass = LMmass + opt->vessel->GetMass();
+
+
+	R_LSA = _V(cos(opt->lng)*cos(opt->lat), sin(opt->lng)*cos(opt->lat), sin(opt->lat))*(oapiGetSize(hMoon) + opt->alt);
+	h_DP = 50000.0*0.3048;
+	theta_F = 15.0*RAD;
+	t_F = 718.0;
+	mu = GGRAV*oapiGetMass(hMoon);
+	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, t_DOI, t_PDI, t_L, DV_DOI, CR);
+
+	if (opt->vessel->GetGroupThruster(THGROUP_MAIN, 0))
+	{
+		f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+
+		F_average = f_T;
+	}
+	else
+	{
+		double bt, bt_var;
+		int step;
+
+		f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_HOVER, 0));
+		isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_HOVER, 0));
+
+		LMThrottleProgram(f_T, isp, mass, length(DV_DOI), F_average, bt, bt_var, step);
+	}
+
+	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
+
+	OrbMech::impulsive(RA2, VA2, opt->GETbase + t_DOI / 24.0 / 3600.0, hMoon, F_average, isp, mass, DV_DOI, Llambda, t_slip, Rcut, Vcut, tcut); //Calculate the impulsive equivalent of the maneuver
+
+	OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+
+	j = unit(crossp(V2_cor, R2_cor));
+	k = unit(-R2_cor);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+	dV_LVLH = mul(Q_Xx, Llambda);
+
+	P30TIG = t_DOI + t_slip;
+}
+
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
 {
 	double SVMJD, GET, mass, LMmass;

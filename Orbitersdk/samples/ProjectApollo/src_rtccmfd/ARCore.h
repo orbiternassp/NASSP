@@ -36,6 +36,7 @@ public:
 	void CDHcalc();
 	void OrbitAdjustCalc();
 	void REFSMMATCalc();
+	void DOICalc();
 	void LOICalc();
 	void LmkCalc();
 	//void EntryCalc();
@@ -183,7 +184,7 @@ public:
 	int mappage, mapgs;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI, 5 = DOI
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
