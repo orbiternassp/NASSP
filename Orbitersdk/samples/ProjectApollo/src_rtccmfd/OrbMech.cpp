@@ -3464,7 +3464,7 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 	}
 	t_DOI = t_D;
 	t_PDI = t_DOI + t_H;
-	DV_DOI = V_D - V_DH;
+	DV_DOI = V_DH - V_D;
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
