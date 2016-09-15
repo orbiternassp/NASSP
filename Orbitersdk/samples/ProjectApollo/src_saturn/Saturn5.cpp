@@ -188,7 +188,6 @@ void SaturnV::initSaturnV()
 	// load wave (Handle defined in begining of file)
 	soundlib.LoadSound(SpeedS, "reentry.wav");
 	soundlib.LoadSound(DockS, "docking.wav");
-	soundlib.LoadSound(SCorrection, "Correction.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
 

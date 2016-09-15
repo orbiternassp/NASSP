@@ -46,9 +46,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
 
-const MATRIX3 A7REFSMMAT = _M(-0.097435921, -0.957429007, 0.271727726, -0.516196772, -0.184815392, -0.836291939, 0.850909933, -0.221749939, -0.476214282);
-const MATRIX3 A8REFSMMAT = _M(0.496776313, -0.82489121, 0.269755125, -0.303982571, -0.456513584, -0.836175814, 0.812900983, 0.333391495, -0.477537684);
-
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40140.62691,
 	40211.535417,
@@ -57,16 +54,16 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40418.563889,
 	40539.68194,
 	40687.80069,
-	40982.87711,
-	41158.565278,
+	40982.877106,
+	41158.5652869,
 	41423.74583,
 	41658.23125
 };
 
 struct SV
 {
-	VECTOR3 R;
-	VECTOR3 V;
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
 	double MJD = 0.0;
 	OBJHANDLE gravref = NULL;
 	double mass = 0.0;
@@ -144,14 +141,15 @@ struct EntryOpt
 
 struct TEIOpt
 {
-	VESSEL* vessel; //Reentry vessel
-	double GETbase; //usually MJD at launch
-	double TIGguess; //Initial estimate for the TIG
-	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
-	double EntryLng;
-	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
+	VESSEL* vessel;			//Reentry vessel
+	double GETbase;			//usually MJD at launch
+	double TIGguess = 0.0;	//Initial estimate for the TIG
+	int TEItype;			//0 = TEI, 1 = Flyby, 2 = PC+2
+	double EntryLng;		//Entry longitude
+	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
 	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
+	SV RV_MCC;				//State vector as input
+	int RevsTillTEI = 0;	//Revolutions until TEI
 };
 
 struct REFSMMATOpt
@@ -256,10 +254,13 @@ struct TLIPADOpt
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	double TIG; //Time of Ignition (deorbit maneuver)
+	double TIG; //Time of Ignition
+	double TLI;	//Time of Injection
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;
 	VECTOR3 SeparationAttitude; //LVLH IMU angles
+	VECTOR3 R_TLI;
+	VECTOR3 V_TLI;
 	bool uselvdc;	//LVDC in use/or not
 };
 
@@ -274,7 +275,7 @@ struct P27Opt
 
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
-	VESSEL *src;	// Our ship
+	Saturn *src;	// Our ship
 	VESSEL *tgt;	// Target ship
 	double TEI;		// Time of TEI
 	double TLI;		// Time of TLI
@@ -344,7 +345,7 @@ public:
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
-	void LVDCTLIPredict(LVDCTLIparam lvdc, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
+	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -353,9 +354,9 @@ public:
 	struct calculationParameters calcParams;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC();
+	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &BRCSPos, VECTOR3 &BRCSVel);
+	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &J2000Pos, VECTOR3 &J2000Vel);
 	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
@@ -363,13 +364,13 @@ private:
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle,bool prograde, int impulsive);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
-	char* CMCStateVectorUpdate(SV sv, bool csm);
-	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT);
-	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT);
+	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);
+	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);
-	void P27PADCalc(P27Opt *opt, P27PAD &pad);
+	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);

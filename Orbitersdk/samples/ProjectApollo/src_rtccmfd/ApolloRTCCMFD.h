@@ -155,6 +155,8 @@ public:
 	void set_CDHtimemode();
 	void menuSetLaunchMJD();
 	void set_launchmjd(double mjd);
+	void menuSetAGCEpoch();
+	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
 	void cycleREFSMMATupl();
 	void set_svtarget();

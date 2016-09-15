@@ -3057,8 +3057,8 @@ void LVDC::Init(Saturn* vs){
 	GATE5 = false;							// allows single pass through HSL initialization when false
 	GATE6 = false;
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
-	INH1 = false;							// inhibits first EPO roll/pitch maneuver
-	INH2 = false;							// inhibits second EPO roll/pitch maneuver
+	INH1 = true;							// inhibits first EPO roll/pitch maneuver
+	INH2 = true;							// inhibits second EPO roll/pitch maneuver
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
 	TB1 = TB2 = TB3 = TB4 = TB4A = TB5 = TB6 = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
@@ -6256,26 +6256,30 @@ orbitalguidance:
 		fprintf(lvlog,"*** ORBITAL GUIDANCE ***\r\n");
 		if(TAS-TB7<0){
 			if(TAS-TB6<0){
-				if(TAS-TB5-TA1<0){
-					// presettings for orbital maneuver; don't know if we ever need them, but at least it's there...
-					if(TAS-TB5-TA2<0){
+				if(TAS-TB5-TA1 >= 0){
+					// presettings for orbital maneuver; don't know if we ever need them, but at least it's there...for Apollo 9!
+					if(TAS-TB5-TA2 >= 0){
 						if(INH2){
-							alpha_1 = -20 * RAD;
-							CommandedAttitude.x = 180 * RAD;
-							goto orbatt;
-						}else{
 							alpha_1 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
+							fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
 							goto orbatt;
+						}else{
+							CommandedAttitude = ACommandedAttitude;
+							fprintf(lvlog, "Attitude hold\r\n");
+							goto minorloop;
 						}
 					}else{
 						if(INH1){
 							alpha_1 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
+							fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
 							goto orbatt;
 						}else{
-							alpha_1 = -20 * RAD;
-							CommandedAttitude.x = 180 * RAD;
+							alpha_1 = XLunarAttitude.y;
+							alpha_2 = XLunarAttitude.z;
+							CommandedAttitude.x = XLunarAttitude.x;
+							fprintf(lvlog, "Pitch down\r\n");
 							goto orbatt;
 						}
 					}
@@ -6307,6 +6311,7 @@ orbitalguidance:
 				{	
 					//attitude hold for T&D
 					CommandedAttitude = ACommandedAttitude;
+					fprintf(lvlog, "T&D attitude hold\r\n");
 					goto minorloop;
 				}
 				else
@@ -6316,6 +6321,7 @@ orbitalguidance:
 					alpha_2 = XLunarAttitude.z;
 					CommandedAttitude.x = XLunarAttitude.x;
 					GATE6 = true;
+					fprintf(lvlog, "T&D attitude\r\n");
 					goto orbatt;
 				}
 			}

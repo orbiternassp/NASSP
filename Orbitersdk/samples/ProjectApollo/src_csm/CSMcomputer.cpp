@@ -160,15 +160,21 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
+	// same criterium in CSMcomputer::Timestep because of pad load
 
-	char *binfile = "Config/ProjectApollo/Artemis072.bin";
-	if (MissionNo == 10 || MissionNo == 14)
+	char *binfile;
+
+	if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
+	{
+		binfile = "Config/ProjectApollo/Colossus249.bin";
+	}
+	else if (ApolloNo < 15)	// Comanche 055
 	{
 		binfile = "Config/ProjectApollo/Comanche055.bin";
 	}
-	else if (MissionNo < 15 || MissionNo == 1301)	// same criterium in CSMcomputer::Timestep because of pad load
+	else	//Artemis 072
 	{
-		binfile = "Config/ProjectApollo/Colossus249.bin";
+		binfile = "Config/ProjectApollo/Artemis072.bin";
 	}
 
 	InitVirtualAGC(binfile);
@@ -2797,11 +2803,41 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 			// set launch pad azimuth, the VAGC wants to have the negative angle here
 			// otherwise the P11 roll error needle isn't working properly			
-			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true); 
+			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
 
-			if (ApolloNo == 10 || ApolloNo == 14) {// Comanche 055 criterium in SetMissionInfo
+			if (ApolloNo < 10 || ApolloNo == 1301)	//Colossus 249 and criterium in SetMissionInfo
+			{
+				// set launch pad longitude
+				if (longitude < 0) { longitude += TWO_PI; }
+				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
 
-													// set launch pad longitude
+				// set launch pad altitude
+				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
+				vagc.Erasable[2][0272] = 0;
+				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
+
+				// z-component of the normalized earth's rotational vector in basic reference coord.
+				// x and y are 0313 and 0315 and are defined in the scenario
+				vagc.Erasable[3][0317] = 037777;
+				vagc.Erasable[3][0320] = 037777;
+
+				// set DAP data to LV mode
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+
+				// Synchronize clock with launch time (TEPHEM)
+				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+				tephem = (tephem / 8640000.) + 40038.;
+				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
+				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
+				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+			}
+			else if (ApolloNo < 15)	// Comanche 055
+			{
+				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
 				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
 				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
@@ -2821,7 +2857,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 				double tephem;
-				
+
 				if (ApolloNo == 10)
 				{
 					tephem = -374106000.;
@@ -2836,41 +2872,9 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
-
-			} else if (ApolloNo < 15 || ApolloNo == 1301) {// Colossus 249 and criterium in SetMissionInfo
-			
-				// set launch pad longitude
-				if (longitude < 0){ longitude += TWO_PI; }
-				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0272] = 0;
-				vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
-			
-				// z-component of the normalized earth's rotational vector in basic reference coord.
-				// x and y are 0313 and 0315 and are defined in the scenario
-				vagc.Erasable[3][0317] = 037777;
-				vagc.Erasable[3][0320] = 037777;
-
-				// set DAP data to LV mode
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
-
-				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8,9 and 11 have proper scenarios
-				if (ApolloNo == 7 || ApolloNo == 8 || ApolloNo == 9 || ApolloNo == 11) {
-					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] + 
-									vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-									vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-					tephem = (tephem / 8640000.) + 40038.;
-					double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double) -28.);
-					vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-					vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
-				}
-			
-			} else { // Artemis 072
-
+			}
+			else	//Artemis 072
+			{
 				// set launch pad longitude
 				if (longitude < 0) longitude += TWO_PI;
 				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
@@ -2879,12 +2883,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// set launch pad altitude
 				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
 				vagc.Erasable[2][0133] = 0;
-				vagc.Erasable[2][0134] = (int16_t) (0.5 * OurVessel->GetAltitude());
+				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
 
 				// z-component of the normalized earth's rotational vector in basic reference coord.
 				// x and y are 0313 and 0315 and are zero
-				vagc.Erasable[3][0315] = 037777;	
-				vagc.Erasable[3][0316] = 037777;	
+				vagc.Erasable[3][0315] = 037777;
+				vagc.Erasable[3][0316] = 037777;
 
 				// set DAP data to LV mode
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;

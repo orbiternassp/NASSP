@@ -227,13 +227,13 @@ public:
 class LEM_SteerableAnt{
 public:
 	LEM_SteerableAnt();
-	void Init(LEM *s);
+	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	double GetAntennaTempF();
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;			// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
 };

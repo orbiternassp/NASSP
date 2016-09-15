@@ -4201,7 +4201,6 @@ protected:
 	Sound CrewDeadSound;
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
-	Sound SCorrection;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
 

@@ -806,6 +806,11 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
+class ModeSelectSwitch : public AGCThreePoswitch {
+public:
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
+
 class GuardedToggleSwitch: public ToggleSwitch {
 
 public:

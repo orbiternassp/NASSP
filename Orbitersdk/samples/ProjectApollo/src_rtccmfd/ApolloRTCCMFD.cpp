@@ -995,7 +995,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-			GET_Display(Buffer, G->BRCSGET);
+			GET_Display(Buffer, G->J2000GET);
 			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
@@ -1017,21 +1017,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
 		}
-		sprintf(Buffer, "%f", G->BRCSPos.x);
+		sprintf(Buffer, "%f", G->J2000Pos.x);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSPos.y);
+		sprintf(Buffer, "%f", G->J2000Pos.y);
 		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSPos.z);
+		sprintf(Buffer, "%f", G->J2000Pos.z);
 		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f", G->BRCSVel.x);
+		sprintf(Buffer, "%f", G->J2000Vel.x);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSVel.y);
+		sprintf(Buffer, "%f", G->J2000Vel.y);
 		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->BRCSVel.z);
+		sprintf(Buffer, "%f", G->J2000Vel.z);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f", G->BRCSGET);
+		sprintf(Buffer, "%f", G->J2000GET);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 8)
@@ -1047,8 +1047,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "Apollo %i", G->mission);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		sprintf(Buffer, "%f", G->GETbase);
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "Launch MJD: %f", G->GETbase);
+		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
+		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->vesseltype == 0)
 		{
@@ -1072,17 +1075,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 8, 8 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", G->sxtstardtime);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 8, 10 * H / 14, "Uplink in LOS:", 14);
 
 		if (G->inhibUplLOS)
 		{
-			skp->Text(5 * W / 8, 10 * H / 14, "Inhibit", 7);
+			skp->Text(4 * W / 8, 10 * H / 14, "Inhibit", 7);
 		}
 		else
 		{
-			skp->Text(5 * W / 8, 10 * H / 14, "Enabled", 7);
+			skp->Text(4 * W / 8, 10 * H / 14, "Enabled", 7);
 		}
 
 		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
@@ -2395,29 +2398,15 @@ void ApolloRTCCMFD::set_lambertelev(double elev)
 		return;
 	}
 	double mu, SVMJD, dt1;
-	MATRIX3 obli;
 	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb,RA0,VA0,RP0,VP0;
 
 	mu = GGRAV*oapiGetMass(G->gravref);
-
-	//if (IterStage == 0)
-	//{
-
-	oapiGetPlanetObliquityMatrix(G->gravref, &obli);//oapiGetRotationMatrix(gravref, &obli);
 
 	G->vessel->GetRelativePos(G->gravref, RA0_orb);
 	G->vessel->GetRelativeVel(G->gravref, VA0_orb);
 	G->target->GetRelativePos(G->gravref, RP0_orb);
 	G->target->GetRelativeVel(G->gravref, VP0_orb);
-
-	//SVtime = oapiGetSimTime();
 	SVMJD = oapiGetSimMJD();
-
-
-	RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);	//Calculates the equatorial state vector from the ecliptic state vector
-	VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
-	RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
-	VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
 
 	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
 	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
@@ -2728,7 +2717,7 @@ bool SVGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_SVtime(double SVtime)
 {
-	G->BRCSGET = SVtime;
+	G->J2000GET = SVtime;
 }
 
 void ApolloRTCCMFD::t2dialogue()
@@ -2867,16 +2856,13 @@ void ApolloRTCCMFD::menuEntryCalc()
 {
 	double SVMJD;
 	VECTOR3 R, V, R0B, V0B;
-	MATRIX3 Rot;
 
 	G->vessel->GetRelativePos(G->gravref, R);
 	G->vessel->GetRelativeVel(G->gravref, V);
 	SVMJD = oapiGetSimMJD();
 
-	Rot = OrbMech::J2000EclToBRCS(40222.525);
-
-	R0B = mul(Rot, _V(R.x, R.z, R.y));
-	V0B = mul(Rot, _V(V.x, V.z, V.y));
+	R0B = _V(R.x, R.z, R.y);
+	V0B = _V(V.x, V.z, V.y);
 
 	if (G->entrycalcmode == 0)
 	{
@@ -2905,13 +2891,22 @@ void ApolloRTCCMFD::menuEntryCalc()
 	{
 		if (!G->TEIfail)
 		{
-			if (G->entrylongmanual)
+			double MJDguess;
+			if (G->EntryTIG == 0.0 && G->TEItype == 0)
 			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype);
+				MJDguess = SVMJD;
 			}
 			else
 			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, G->GETbase + G->EntryTIG / 24.0 / 3600.0, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype);
+				MJDguess = G->GETbase + G->EntryTIG / 24.0 / 3600.0;
+			}
+			if (G->entrylongmanual)
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
+			}
+			else
+			{
+				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
 			}
 			G->entrycalcstate = 1;
 		}
@@ -3000,7 +2995,53 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	}
 	else
 	{
-		G->TLI_PAD();
+		if (G->g_Data.progVessel->use_lvdc)
+		{
+			TLIPADOpt opt;
+			double T_TLI;
+
+			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
+
+			LVDCTLIparam tliparam;
+
+			tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+			tliparam.Azimuth = SatV->lvdc->Azimuth;
+			tliparam.beta = SatV->lvdc->beta;
+			tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+			tliparam.C_3 = SatV->lvdc->C_3;
+			tliparam.e_N = SatV->lvdc->e_N;
+			tliparam.f = SatV->lvdc->f;
+			tliparam.mu = SatV->lvdc->mu;
+			tliparam.MX_A = SatV->lvdc->MX_A;
+			tliparam.omega_E = SatV->lvdc->omega_E;
+			tliparam.R_N = SatV->lvdc->R_N;
+			tliparam.TargetVector = SatV->lvdc->TargetVector;
+			tliparam.TB5 = SatV->lvdc->TB5;
+			tliparam.theta_EO = SatV->lvdc->theta_EO;
+			tliparam.t_D = SatV->lvdc->t_D;
+			tliparam.T_L = SatV->lvdc->T_L;
+			tliparam.T_RG = SatV->lvdc->T_RG;
+			tliparam.T_ST = SatV->lvdc->T_ST;
+
+			G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
+
+			opt.dV_LVLH = G->dV_LVLH;
+			opt.GETbase = G->GETbase;
+			opt.REFSMMAT = G->REFSMMAT;
+			opt.TIG = G->P30TIG;
+			opt.vessel = G->vessel;
+			opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+			opt.TLI = T_TLI;
+			opt.R_TLI = G->R_TLI;
+			opt.V_TLI = G->V_TLI;
+			opt.uselvdc = true;
+
+			G->rtcc->TLI_PAD(&opt, G->tlipad);
+		}
+		else
+		{
+			G->TLI_PAD();
+		}
 	}
 }
 
@@ -3153,6 +3194,30 @@ void ApolloRTCCMFD::set_launchmjd(double mjd)
 	this->G->GETbase = mjd;
 }
 
+void ApolloRTCCMFD::menuSetAGCEpoch()
+{
+	if (G->mission == 0)
+	{
+		bool AGCEpochInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the AGC Epoch:", AGCEpochInput, 0, 20, (void*)this);
+	}
+}
+
+bool AGCEpochInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEpoch(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEpoch(double mjd)
+{
+	this->G->AGCEpoch = mjd;
+}
+
 void ApolloRTCCMFD::menuChangeVesselType()
 {
 	if (G->vesseltype < 3)
@@ -3288,6 +3353,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
 			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
 			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
 			G->REFSMMATcur = G->REFSMMATopt;
 
 			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);

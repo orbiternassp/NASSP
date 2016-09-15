@@ -3625,6 +3625,25 @@ bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
 	return false;
 }
 
+bool ModeSelectSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (AGCThreePoswitch::SwitchTo(newState, dontspring)) {
+		if (agc) {
+			bool PGNS = false;
+
+			if (IsCenter()) {
+				PGNS = true;
+			}
+
+			//Actually Display Inertial Data
+			agc->SetInputChannelBit(030, GuidanceReferenceRelease, PGNS);
+		}
+		return true;
+	}
+
+	return false;
+}
+
 //
 // If we add more caution and warning system switches which use toggle-switch, they could be derived from a new
 // class which has the generic init function to set the cws.

@@ -52,7 +52,6 @@ private:
 	//OrbMech* mech;
 	double MA1, C0, C1, C2, C3;
 	VECTOR3 R0B, V0B;
-	MATRIX3 Rot;
 	double mjd;
 	double GETbase, get;
 	double RCON, RD;
@@ -91,7 +90,7 @@ private:
 class TEI
 {
 public:
-	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int TEItype);
+	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int TEItype, int RevsTillTEI);
 	bool TEIiter();
 
 	int precision;
@@ -110,7 +109,6 @@ private:
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 
 	OBJHANDLE hMoon, hEarth;
-	MATRIX3 Rot;
 	double RCON;
 	VECTOR3 DV;
 	double DT_TEI_EI;	//Tiem between TEI and EI

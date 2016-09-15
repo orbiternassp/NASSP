@@ -236,6 +236,17 @@
 				high-rate and low-rate CDU counter updates.
 				PCDU/MCDU commands 1/3 are slow mode, and
 				PCDU/MCDU commands 021/023 are fast mode.
+		08/31/16 MAS	Corrected implementation of DINC and TIME6.
+				DINC now uses AddSP16() to do its math. T6RUPT
+				can only be triggered by a ZOUT from DINC. TIME6
+				only counts when enabled, and is disabled upon
+				triggering T6RUPT.
+		09/08/16 MAS	Added a special case for DV -- when the dividend
+				is 0 and the divisor is not, the quotient and
+				remainder are both 0 with the sign matching the
+				dividend.
+		09/11/16 MAS	Applied Gergo's fix for multi-MCT instructions
+				taking a cycle longer than they should.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -449,6 +460,12 @@ CpuWriteIO (agc_t * State, int Address, int Value)
       Downlink = 0;
     }
 	*/
+}
+
+void
+GenerateHANDRUPT(agc_t * State)
+{
+	State->InterruptRequests[10] = 1;	// HANDRUPT
 }
 
 void
@@ -1089,63 +1106,36 @@ CounterMCDU (int16_t * Counter)
 int
 CounterDINC (agc_t *State, int CounterNum, int16_t * Counter)
 {
-  //static int CountTIME6 = 0;
   int RetVal = 0;
-  //int IsTIME6, FlushTIME6;
   int16_t i;
-  //IsTIME6 = (Counter == &c (RegTIME6));
-  //FlushTIME6 = 0;
   i = *Counter;
   if (i == AGC_P0 || i == AGC_M0)	// Zero?
     {
       // Emit a ZOUT.
       if (CounterNum != 0)
         ChannelOutput (State, 0x80 | CounterNum, 017);
+
+	  RetVal = 1;
     }
   else if (040000 & i)			// Negative?
     {
-      i++;
-      if (i == AGC_M0)
-        {
-          RetVal = -1;
-	  //if (IsTIME6)
-	  //  FlushTIME6 = 1;
-	}  
-      //else if (IsTIME6)
-      //  {
-      //    CountTIME6--;
-      //    if (CountTIME6 <= -160)
-      //      FlushTIME6 = 1;
-      //  }
+	  i = AddSP16(SignExtend(i), SignExtend(AGC_P1)) & 077777;
+
       // Emit a MOUT.
       if (CounterNum != 0)
         ChannelOutput (State, 0x80 | CounterNum, 016);
     }
   else					// Positive?
     {
-      i--;
-      if (i == AGC_P0)
-        {
-          RetVal = 1;
-	  //if (IsTIME6)
-	  //  FlushTIME6 = 1;
-	}
-      //else if (IsTIME6)
-      //  {
-      //    CountTIME6++;
-      //    if (CountTIME6 >= 160)
-      //      FlushTIME6 = 1;
-      //  }
+	  i = AddSP16(SignExtend(i), SignExtend(AGC_M1)) & 077777;
+
       // Emit a POUT.
       if (CounterNum != 0)
         ChannelOutput (State, 0x80 | CounterNum, 015);
     }
+
   *Counter = i;
-  //if (FlushTIME6 && CountTIME6)
-  //  {
-  //    ChannelOutput (State, 0165, CountTIME6);
-  //    CountTIME6 = 0;
-  //  }
+
   return (RetVal);
 }
 
@@ -1188,14 +1178,14 @@ InterruptRequests (agc_t * State, int16_t Address10, int Sum)
     return;
   if (IsReg (Address10, RegTIME1))
     CounterPINC (&c (RegTIME2));
-  else if (IsReg (Address10, RegTIME6))
-    State->InterruptRequests[1] = 1;
   else if (IsReg (Address10, RegTIME5))
     State->InterruptRequests[2] = 1;
   else if (IsReg (Address10, RegTIME3))
     State->InterruptRequests[3] = 1;
   else if (IsReg (Address10, RegTIME4))
     State->InterruptRequests[4] = 1;
+  // TIME6 requires a ZOUT to happen during a DINC sequence for its
+  // interrupt to fire
 }
 
 //-------------------------------------------------------------------------------
@@ -1697,13 +1687,16 @@ agc_engine (agc_t * State)
   // This can only iterate once, but I use 'while' just in case.
   while (ScalerCounter >= SCALER_OVERFLOW)
     {
-      // First, update SCALER1 and SCALER2.
+	  // First, update SCALER1 and SCALER2. These are direct views into
+	  // the clock dividers in the Scaler module, and so don't take CPU
+	  // time to 'increment'
       ScalerCounter -= SCALER_OVERFLOW;
-      if (CounterPINC (&State->InputChannel[ChanSCALER1]))
-	{
-	  State->ExtraDelay++;
-	  CounterPINC (&State->InputChannel[ChanSCALER2]);
-	}
+	  State->InputChannel[ChanSCALER1]++;
+	  if (State->InputChannel[ChanSCALER1] == 037777)
+		{
+		  State->InputChannel[ChanSCALER1] = 0;
+		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
+		}
       // Check whether there was a pulse into bit 5 of SCALER1.
       // If so, the 10 ms. timers TIME1 and TIME3 are updated.
       // Recall that the registers are in AGC integer format,
@@ -1719,33 +1712,38 @@ agc_engine (agc_t * State)
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME3)))
 	    State->InterruptRequests[3] = 1;
-	  // I have very little data about what TIME5 is supposed to do.
-	  // From the table on p. 1-64 of Savage & Drake, I assume
-	  // it works just like TIME3.
+	}
+	// TIME5 is the same as TIME3, but 5 ms. out of phase.
+	if (010 == (017 & State->InputChannel[ChanSCALER1]))
+	{
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME5)))
 	    State->InterruptRequests[2] = 1;
 	}
-      // TIME4 is the same as TIME3, but 5 ms. out of phase.
-      if (010 == (017 & State->InputChannel[ChanSCALER1]))
+	// TIME4 is the same as TIME3, but 7.5ms out of phase
+	if (014 == (017 & State->InputChannel[ChanSCALER1]))
 	{
 	  State->ExtraDelay++;
 	  if (CounterPINC (&c (RegTIME4)))
 	    State->InterruptRequests[4] = 1;
 	}
-      // I'm not sure if TIME6 is supposed to count when the T6 RUPT
-      // is disabled or not.  For the sake of argument, I'll assume
-      // that it is.  Nor am I sure how many bits this counter has.
-      // I'll assume 14.  Nor if it's out of phase with SCALER1.
-      // Nor ... well, you get the idea.
-      State->ExtraDelay++;
-      if (CounterDINC (State, 0, &c (RegTIME6)))
-		  if (040000 & State->InputChannel[013]) {
-	  State->InterruptRequests[1] = 1;
+	// TIME6 only increments when it has been enabled via CH13 bit 15.
+	// It increments 0.3125ms after TIME1/TIME3, half of the 1/1600 second
+	// clock period as accounted for here. I'm assuming that difference
+	// is small enough, though, and just incrementing along with TIME1
+	if (040000 & State->InputChannel[013])
+		{
+		  State->ExtraDelay++;
+		  if (CounterDINC(State, 0, &c(RegTIME6)))
+			{
+			  State->InterruptRequests[1] = 1;
+			   // Triggering a T6RUPT disables T6 by clearing the CH13 bit
+			   CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+			 }
+		 }
 #ifdef _DEBUG
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
-		  }
       // Return, so as to account for the time occupied by updating the
       // counters.
       return (0);
@@ -1875,6 +1873,18 @@ agc_engine (agc_t * State)
     State->Erasable[0][053] = 0;
   }
 
+  if ((State->Erasable[0][055] != 0 && State->Erasable[0][055] != 077777)
+	  && 0 != (State->InputChannel[014] & 010)) {
+	  ChannelOutput(State, 0162, State->Erasable[0][055]); // LGC THRUST DRIVE
+	  State->Erasable[0][055] = 0;
+  }
+
+  if ((State->Erasable[0][060] != 0 && State->Erasable[0][060] != 077777)
+	  && 0 != (State->InputChannel[014] & 04)) {
+	  ChannelOutput(State, 0163, State->Erasable[0][060]); // ALTITUDE METER DRIVE
+	  State->Erasable[0][060] = 0;
+  }
+
   //----------------------------------------------------------------------  
   // Okay, here's the stuff that actually has to do with decoding instructions.
 
@@ -1986,7 +1996,7 @@ agc_engine (agc_t * State)
       if (i)
 	{
 	  State->PendFlag = 1;
-	  State->PendDelay = i;
+	  State->PendDelay = i-1;
 	  return (0);
 	}
     }
@@ -2570,6 +2580,15 @@ agc_engine (agc_t * State)
 	      }
 	    c (RegA) = SignExtend (Operand16);
 	  }
+	else if (AbsA == 0 && AbsL == 0 && AbsK != 0)
+	  {
+		// The dividend is 0 but the divisor is not. The standard DV sign
+		// convention applies to A, and L remains unchanged.
+		if ((040000 & c(RegL)) == (040000 & *WhereWord))
+		  c(RegA) = AGC_P0;
+		else
+		  c(RegA) = SignExtend(AGC_M0);
+	  }
 	else
 	  {
 	    // The divisor is larger than the dividend.  Okay to actually divide!
@@ -2621,16 +2640,21 @@ agc_engine (agc_t * State)
 	if (Address10 < REG16)
 	  {
 	    ui = 0177777 & Accumulator;
-	    uj = 0177777 & c (Address10);
+	    uj = 0177777 & ~c(Address10);
 	  }
 	else
 	  {
 	    ui = (077777 & OverflowCorrected (Accumulator));
-	    uj = (077777 & *WhereWord);
+	    uj = (077777 & ~*WhereWord);
 	  }
-	diff = ui - uj;
-	if (diff < 0)
-	  diff--;
+	diff = ui + uj + 1; // Two's complement subtraction -- add the complement plus one
+	// The AGC sign-extends the result from A15 to A16, then checks A16 to see if
+	// one needs to be subtracted. We'll go in the opposite order, which also works
+	if (diff & 040000)
+	  {
+	    diff |= 0100000; // Sign-extend A15 into A16
+	    diff--; // Subtract one from the result
+	  }
 	if (IsQ (Address10))
 	  c (RegA) = 0177777 & diff;
 	else
@@ -2883,6 +2907,9 @@ AllDone:
       c (RegEB) &= 03400;
       c (RegFB) &= 076000;
       c (RegBB) &= 076007;
+	  // Correct overflow in the L register (this is done on read in the original,
+	  // but is much easier here)
+	  c(RegL) = SignExtend(OverflowCorrected(c(RegL)));
     }
   return (0);
 }

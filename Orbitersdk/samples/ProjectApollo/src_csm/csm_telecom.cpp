@@ -478,6 +478,9 @@ void HGA::Init(Saturn *vessel){
 
 bool HGA::IsPowered()
 {
+	// Do we have a HGA?
+	if (sat->NoHGA) return false;
+
 	// Do we have power?
 	if (!sat->GHAPowerSwitch.IsUp()) return false;		// Switched off
 

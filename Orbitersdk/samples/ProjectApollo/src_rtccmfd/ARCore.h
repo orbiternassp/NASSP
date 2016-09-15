@@ -84,6 +84,7 @@ public:
 
 	//GENERAL PARAMETERS
 	double GETbase;			//Launch MJD
+	double AGCEpoch;
 	int mission;			//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
 	OBJHANDLE gravref;		//Earth or Moon
 	double P30TIG;			//Maneuver GET
@@ -152,8 +153,8 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
-	VECTOR3 BRCSPos, BRCSVel;
-	double BRCSGET;
+	VECTOR3 J2000Pos, J2000Vel;
+	double J2000GET;
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET

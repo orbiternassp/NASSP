@@ -5224,20 +5224,6 @@ void Saturn::StageSix(double simt)
 	}
 
 	//
-	// Check for course correction time and shut down time acceleration if appropriate.
-	//
-
-	if (TLICapableBooster && !Scorrec && MissionTime >= COURSE_CORRECTION_START_TIME && MissionTime < COURSE_CORRECTION_END_TIME){
-		double TimeW = oapiGetTimeAcceleration ();
-		if (TimeW > 1.0){
-			oapiSetTimeAcceleration (1.0);
-		}
-		SCorrection.play(NOLOOP,255);
-		SCorrection.done();
-		Scorrec = true;
-	}
-
-	//
 	// Handle automation of unmanned launches.
 	//
 
