@@ -312,6 +312,10 @@ void LEM::Init()
 	ApolloNo = 0;
 	Landed = false;
 
+	// DS20160916 Physical parameters updation
+	CurrentFuelWeight = 0;
+	LastFuelWeight = 999999; // Ensure update at first opportunity
+
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 
@@ -848,6 +852,22 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	MissionTime = MissionTime + deltat;
 	SystemsTimestep(MissionTime, deltat);
+
+	// DS20160916 Physical parameters updation
+	CurrentFuelWeight = 0;
+	if (ph_Asc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Asc); }
+	if (ph_Dsc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Dsc); }
+	if (ph_RCSA != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSA); }
+	if (ph_RCSB != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSB); }
+	// If the weight has changed by more than this value, update things.
+	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
+	//   but are sufficiently fine to keep the LGC happy.
+	if ((LastFuelWeight - CurrentFuelWeight) > 5) {
+		// Update physical parameters
+		// Use SetPMI, ShiftCentreOfMass, etc.
+		// All done!
+		LastFuelWeight = CurrentFuelWeight;
+	}
 
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
 	actualALT = GetAltitude() ;

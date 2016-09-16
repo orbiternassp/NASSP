@@ -612,6 +612,9 @@ public:
 	void SetRCSJetLevelPrimary(int jet, double level);
 	void CheckRCS();
 
+	// DS20160916 Physical parameters updation
+	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
+
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
