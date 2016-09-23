@@ -1205,6 +1205,7 @@ bool EngineStartButton::Push()
 	{
 		if (ToggleSwitch::SwitchTo(1)) {
 
+			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", GetState(), stopbutton->GetState());
 			return true;
 		}
 	}
@@ -1225,6 +1226,7 @@ bool EngineStopButton::Push()
 		if (newstate = 1)
 		{
 			startbutton->SwitchTo(0);
+			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
 		}
 		return true;
 	}

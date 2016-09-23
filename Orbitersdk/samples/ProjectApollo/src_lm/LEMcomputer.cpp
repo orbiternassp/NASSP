@@ -1404,7 +1404,6 @@ void LEMcomputer::ProcessChannel13(ChannelValue val){
 		*/
 	}
 //	sprintf(oapiDebugString(),"LM CH13: %o",val);
-
 }
 
 void LEMcomputer::ProcessChannel5(ChannelValue val){
@@ -1469,7 +1468,6 @@ void LEMcomputer::ProcessChannel163(ChannelValue val) {
 	if (val14[AltitudeRate])
 	{
 		lem->RadarTape.SetLGCAltitudeRate(val.to_ulong());
-		sprintf(oapiDebugString(), "Alt Rate: %d", val.to_ulong());
 	}
 	else
 	{
