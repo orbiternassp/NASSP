@@ -1276,7 +1276,9 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 				sprintf(buffer, "TB7 + %d sec", (int)temptime.z);
 			}
 			break;
-
+		case CM_SM_SEPARATION_DONE:
+			sprintf(buffer, "CM/SM Separation");
+			break;
 		default:
 			sprintf(buffer, "(Unknown Event)");
 			break;
