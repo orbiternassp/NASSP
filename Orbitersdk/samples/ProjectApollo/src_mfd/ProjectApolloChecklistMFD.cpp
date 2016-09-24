@@ -1291,6 +1291,21 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 				sprintf(buffer, "CM/SM Separation + %d sec", (int)temptime.z);
 			}
 			break;
+		case SPLASHDOWN:
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "Splashdown + %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "Splashdown + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "Splashdown + %d sec", (int)temptime.z);
+			}
+			break;
 		default:
 			sprintf(buffer, "(Unknown Event)");
 			break;

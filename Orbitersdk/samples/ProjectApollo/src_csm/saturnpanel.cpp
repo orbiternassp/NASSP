@@ -1995,6 +1995,7 @@ void Saturn::SetSwitches(int panel) {
 	MainReleaseRow.Init(AID_MAIN_RELEASE_SWITCH, MainPanel);
 	MainReleaseSwitch.Init(1, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], MainReleaseRow);
 	MainReleaseSwitch.InitGuard(0, 0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69]);
+	MainReleaseSwitch.SetDelayTime(1);
 
 	//
 	// Abort switches.
