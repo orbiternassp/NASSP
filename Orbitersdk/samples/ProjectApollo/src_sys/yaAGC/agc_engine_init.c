@@ -280,6 +280,11 @@ Done:
 void
 MakeCoreDump (agc_t * State, const char *CoreDump)
 {
+#if defined (WIN32) || defined (__APPLE__)  
+  uint64_t lli;
+#else
+  unsigned long long lli;
+#endif
   FILE *cd = NULL;
   int i, j, Bank;
 
@@ -308,6 +313,21 @@ MakeCoreDump (agc_t * State, const char *CoreDump)
   fprintf (cd, "%o\n", State->PendDelay);
   fprintf (cd, "%o\n", State->ExtraDelay);
   //fprintf (cd, "%o\n", State->RegQ16);
+
+  // 03/27/09 RSB.  Extra agc_t fields that weren't being saved before
+  // now.  I've made no analysis to determine that all of these are 
+  // actually needed for anything.
+  fprintf  (cd, "%o\n", State->OutputChannel7);
+  for (i = 0; i < 16; i++)
+    fprintf (cd, "%o\n", State->OutputChannel10[i]);
+  fprintf (cd, "%o\n", State->IndexValue);
+  for (i = 0; i < 1 + NUM_INTERRUPT_TYPES; i++)
+    fprintf (cd, "%o\n", State->InterruptRequests[i]);
+  fprintf (cd, "%o\n", State->InIsr);
+  fprintf (cd, "%o\n", State->SubstituteInstruction);
+  fprintf (cd, "%o\n", State->DownruptTimeValid);
+  fprintf (cd, "%llo\n", lli = State->DownruptTime);
+  fprintf (cd, "%o\n", 0);
 
   printf ("Core-dump file \"%s\" created.\n", CoreDump);
   fclose (cd);
