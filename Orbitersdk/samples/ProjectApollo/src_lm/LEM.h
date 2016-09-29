@@ -633,6 +633,11 @@ public:
 	///
 	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
 
+	///
+	/// \brief Triggers Virtual AGC core dump
+	///
+	virtual void VirtualAGCCoreDump() { agc.VirtualAGCCoreDump("ProjectApollo LGC.core"); }
+
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
