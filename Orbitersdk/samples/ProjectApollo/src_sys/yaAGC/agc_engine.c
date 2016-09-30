@@ -247,6 +247,9 @@
 				dividend.
 		09/11/16 MAS	Applied Gergo's fix for multi-MCT instructions
 				taking a cycle longer than they should.
+		09/30/16 MAS	Added emulation of the Night Watchman hardware
+				alarm, alarm-generated resets, and the CH77
+				restart monitor module.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -425,6 +428,11 @@ WriteIO (agc_t * State, int Address, int Value)
 	// Any write pulse here resets 11-15, but it does so on a delay.
 	State->Ch33Switches |= 076000;
   }
+
+  // Similarly, the CH77 Restart Monitor Alarm Box has latches for
+  // alarm codes that are reset when CH77 is written to.
+  if (Address == 077)
+    Value = 0;
 
   State->InputChannel[Address] = Value;
   if (Address == 010)
@@ -1687,6 +1695,8 @@ agc_engine (agc_t * State)
   // This can only iterate once, but I use 'while' just in case.
   while (ScalerCounter >= SCALER_OVERFLOW)
     {
+	  int TriggeredAlarm = 0;
+	  
 	  // First, update SCALER1 and SCALER2. These are direct views into
 	  // the clock dividers in the Scaler module, and so don't take CPU
 	  // time to 'increment'
@@ -1702,51 +1712,91 @@ agc_engine (agc_t * State)
       // Recall that the registers are in AGC integer format,
       // and therefore are actually shifted left one space.
       if (0 == (017 & State->InputChannel[ChanSCALER1]))
-	{
-	  State->ExtraDelay++;
-	  if (CounterPINC (&c (RegTIME1)))
+	    {
+	       State->ExtraDelay++;
+	      if (CounterPINC (&c (RegTIME1)))
+	        {
+	          State->ExtraDelay++;
+	         CounterPINC (&c (RegTIME2));
+	        }
+	      State->ExtraDelay++;
+	      if (CounterPINC (&c (RegTIME3)))
+	        State->InterruptRequests[3] = 1;
+	    }
+	  // TIME5 is the same as TIME3, but 5 ms. out of phase.
+	  if (010 == (017 & State->InputChannel[ChanSCALER1]))
 	    {
 	      State->ExtraDelay++;
-	      CounterPINC (&c (RegTIME2));
+	      if (CounterPINC (&c (RegTIME5)))
+	        State->InterruptRequests[2] = 1;
 	    }
-	  State->ExtraDelay++;
-	  if (CounterPINC (&c (RegTIME3)))
-	    State->InterruptRequests[3] = 1;
-	}
-	// TIME5 is the same as TIME3, but 5 ms. out of phase.
-	if (010 == (017 & State->InputChannel[ChanSCALER1]))
-	{
-	  State->ExtraDelay++;
-	  if (CounterPINC (&c (RegTIME5)))
-	    State->InterruptRequests[2] = 1;
-	}
-	// TIME4 is the same as TIME3, but 7.5ms out of phase
-	if (014 == (017 & State->InputChannel[ChanSCALER1]))
-	{
-	  State->ExtraDelay++;
-	  if (CounterPINC (&c (RegTIME4)))
-	    State->InterruptRequests[4] = 1;
-	}
-	// TIME6 only increments when it has been enabled via CH13 bit 15.
-	// It increments 0.3125ms after TIME1/TIME3, half of the 1/1600 second
-	// clock period as accounted for here. I'm assuming that difference
-	// is small enough, though, and just incrementing along with TIME1
-	if (040000 & State->InputChannel[013])
+	  // TIME4 is the same as TIME3, but 7.5ms out of phase
+	  if (014 == (017 & State->InputChannel[ChanSCALER1]))
+	    {
+	      State->ExtraDelay++;
+	      if (CounterPINC (&c (RegTIME4)))
+	        State->InterruptRequests[4] = 1;
+	    }
+	  // TIME6 only increments when it has been enabled via CH13 bit 15.
+	  // It increments 0.3125ms after TIME1/TIME3, half of the 1/1600 second
+	  // clock period as accounted for here. I'm assuming that difference
+	  // is small enough, though, and just incrementing along with TIME1
+	  if (040000 & State->InputChannel[013])
 		{
 		  State->ExtraDelay++;
 		  if (CounterDINC(State, 0, &c(RegTIME6)))
-			{
+		    {
 			  State->InterruptRequests[1] = 1;
-			   // Triggering a T6RUPT disables T6 by clearing the CH13 bit
-			   CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
-			 }
-		 }
+			  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
+			  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+			}
+		}
 #ifdef _DEBUG
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
-      // Return, so as to account for the time occupied by updating the
-      // counters.
-      return (0);
+      
+      // Check alarms
+	  if (02000 == (03777 & State->InputChannel[ChanSCALER1]))
+	    {
+	      // The Night Watchman begins looking once every 1.28s...
+		  State->NightWatchman = 1;
+        }
+	  else if (State->NightWatchman && 00000 == (03777 & State->InputChannel[ChanSCALER1]))
+	    {
+		  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
+	      TriggeredAlarm = 1;
+
+		  // Set the NIGHT WATCHMAN bit in channel 77. Don't go through CpuWriteIO() because
+		  // instructions writing to CH77 clear it. We'll broadcast changes to it in the
+		  // generic alarm handler a bit further down.
+		  State->InputChannel[077] |= CH77_NIGHT_WATCHMAN;
+	    }
+
+      // If we triggered any alarms, simulate a GOJAM
+	  if (TriggeredAlarm)
+	    {
+		  if (!InhibitAlarms) // ...but only if doing so isn't inhibited
+		    {
+			  // Two single-MCT instruction sequences, GOJAM and TC 4000, are about to happen
+		      State->ExtraDelay += 2;
+
+			  // The net result of those two is Z = 4000. Interrupt state is cleared.
+			  c(RegZ) = 04000;
+			  State->InIsr = 0;
+		    }
+
+		  // Push the CH77 updates to the outside world
+		  ChannelOutput(State, 077, State->InputChannel[077]);
+	    }
+
+
+	  if (State->ExtraDelay)
+	    {
+		  // Return, so as to account for the time occupied by updating the
+	      // counters and/or GOJAM.
+	      State->ExtraDelay--;
+		  return (0);
+	    }
     }
 
   //----------------------------------------------------------------------
@@ -2910,6 +2960,13 @@ AllDone:
 	  // Correct overflow in the L register (this is done on read in the original,
 	  // but is much easier here)
 	  c(RegL) = SignExtend(OverflowCorrected(c(RegL)));
+
+	  // Check to see if NEWJOB (67) has been accessed for Night Watchman
+	  if (Address12 == 067 && !(0100 == ExtendedOpcode & 0170)) // I/O instructions cannot access address 67
+	    {
+		  // Address 67 has been accessed in some way. Clear the Night Watchman.
+		  State->NightWatchman = 0;
+		}
     }
   return (0);
 }

@@ -81,6 +81,9 @@
 				Mark Grant; similarly, added the 
 				agc_clientdata field to agc_t.
 		08/22/05 RSB	"unsigned long long" replaced by uint64_t.
+		09/30/16 MAS	Added InhibitAlarms as a configuration global,
+						NightWatchman to state, and the first constant
+						related to channel 77.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -219,6 +222,8 @@ extern long random (void);
 #define ChanSCALER1 04
 #define ChanS 07
 
+#define CH77_NIGHT_WATCHMAN 00020
+
 #define NUM_INTERRUPT_TYPES 10
 
 // Max number of 15-bit words in a downlink-telemetry list.
@@ -312,6 +317,7 @@ typedef struct
   unsigned ExtraDelay:3;	// ... and extra, for special cases.
   //unsigned RegQ16:1;		// Bit "16" of register Q.
   unsigned DownruptTimeValid:1;	// Set if the DownruptTime field is valid.
+  unsigned NightWatchman:1;     // Set when Night Watchman is watching. Cleared by accessing address 67.
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   // The following pointer is present for whatever use the Orbiter
@@ -334,10 +340,12 @@ typedef struct
 } DebugRule_t;
 #ifdef AGC_ENGINE_C
 int DebugDsky = 0;
+int InhibitAlarms = 0;
 int NumDebugRules = 0;
 DebugRule_t DebugRules[MAX_DEBUG_RULES];
 #else
 extern int DebugDsky;
+extern int InhibitAlarms;
 extern int NumDebugRules;
 extern DebugRule_t DebugRules[MAX_DEBUG_RULES];
 #endif

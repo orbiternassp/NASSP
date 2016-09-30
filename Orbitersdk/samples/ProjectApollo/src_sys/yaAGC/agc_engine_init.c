@@ -55,6 +55,7 @@
 	 	07/05/05 RSB	Added AllOrErasable.
 		07/07/05 RSB	On a resume, now restores 010 on up (rather
 				than 020 on up), on Hugh's advice.
+		09/30/16 MAS	Added initialization of NightWatchman.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -200,6 +201,8 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
 
   // Reset voltage alarm
   State->VoltageAlarm = 0;
+
+  State->NightWatchman = 0;
 
   if (CoreDump != NULL)
     {
