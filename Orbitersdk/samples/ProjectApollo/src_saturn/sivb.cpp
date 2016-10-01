@@ -335,7 +335,7 @@ void SIVB::SetS4b()
 
 	VECTOR3 dockpos = {0,0.03, 12.6};
 	VECTOR3 dockdir = {0,0,1};
-	VECTOR3 dockrot = {-0.705,-0.705,0};
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
 
 	if (SaturnVStage)
 	{

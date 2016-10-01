@@ -179,7 +179,7 @@ void LEM::SetLmVesselDockStage()
 
 	VECTOR3 dockpos = {0.0 ,2.6, 0.0};
     VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
@@ -264,7 +264,7 @@ void LEM::SetLmVesselHoverStage()
 
 	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
 	VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
@@ -339,7 +339,7 @@ void LEM::SetLmAscentHoverStage()
 	VECTOR3 dockpos = {0.0 ,0.58, 0.0};
 	VECTOR3 dockdir = {0,1,0};
 
-	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
