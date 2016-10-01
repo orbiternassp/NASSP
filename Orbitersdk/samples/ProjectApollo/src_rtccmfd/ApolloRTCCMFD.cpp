@@ -177,8 +177,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
 
-	oapiGetObjectName(G->maneuverplanet, Buffer2, 20);
-	oapiWriteScenario_string(scn, "MANPLAN", Buffer2);
 	papiWriteScenario_double(scn, "P37GET400K", G->P37GET400K);
 	oapiWriteScenario_int(scn, "MAPPAGE", G->mappage);
 	papiWriteScenario_bool(scn, "INHIBITUPLINK", G->inhibUplLOS);
@@ -264,9 +262,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
-
-		papiReadScenario_string(line, "MANPLAN", Buffer2);
-		G->maneuverplanet = oapiGetObjectByName(Buffer2);
 
 		papiReadScenario_double(line, "P37GET400K", G->P37GET400K);
 		papiReadScenario_int(line, "MAPPAGE", G->mappage);
@@ -736,11 +731,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text(1 * W / 8, 12 * H / 14, "Corridor Control", 16);
 			}
 
-			if (G->entrycalcstate == 1)
+			if (G->subThreadStatus > 0)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
-			else if (G->entrycalcstate == 0)
+			else if (G->subThreadStatus == 0)
 			{
 				if (G->entryprecision == 0)
 				{
@@ -783,11 +778,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
 			skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-
-			if (G->maneuverplanet == oapiGetObjectByName("Moon"))
-			{
-				skp->Text(6 * W / 8, 13 * H / 14, "Moon SOI", 8);
-			}
 		}
 		else if (G->entrycalcmode == 1)
 		{
@@ -849,7 +839,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%f °", G->EntryAng*DEG);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-			if (G->entrycalcstate == 1)
+			if (G->subThreadStatus > 0)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
@@ -960,7 +950,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				}
 			}
 
-			if (G->entrycalcstate == 1)
+			if (G->subThreadStatus > 0)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
@@ -1706,7 +1696,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Lunar Insertion", 15);
 
-		if (G->subThreadStatus == 2)
+		if (G->subThreadStatus > 0)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 		}
@@ -1943,13 +1933,20 @@ void ApolloRTCCMFD::menuEntryUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		if (G->entrycalcmode == 0 || G->entrycalcmode == 3)
+		if (G->vesseltype < 2)
 		{
-			G->EntryUplink();
+			if (G->entrycalcmode == 0 || G->entrycalcmode == 3)
+			{
+				G->EntryUplink();
+			}
+			else
+			{
+				G->EntryUpdateUplink();
+			}
 		}
-		else
+		else //LM has no entry update
 		{
-			G->EntryUpdateUplink();
+			G->P30Uplink();
 		}
 	}
 }
@@ -3001,61 +2998,19 @@ void ApolloRTCCMFD::lambertcalc()
 
 void ApolloRTCCMFD::menuEntryCalc()
 {
-	double SVMJD;
-	VECTOR3 R, V, R0B, V0B;
-
-	G->vessel->GetRelativePos(G->gravref, R);
-	G->vessel->GetRelativeVel(G->gravref, V);
-	SVMJD = oapiGetSimMJD();
-
-	R0B = _V(R.x, R.z, R.y);
-	V0B = _V(V.x, V.z, V.y);
-
-	if (G->entrycalcmode == 0)
+	if (G->entrycalcmode == 1)
 	{
-		if (G->entrylongmanual)
-		{
-			G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
-		}
-		else
-		{
-			G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, (double)G->landingzone, G->entrycritical, 0, G->entrynominal, G->entrylongmanual);
-
-		}
-		G->entrycalcstate = 1;// G->EntryCalc();
+		G->EntryUpdateCalc();
 	}
-	else if(G->entrycalcmode == 1)
+	else if (G->entrycalcmode < 3)
 	{
-		G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, G->entrycritical, G->entryrange, G->entrynominal, true);
-		G->entrycalcstate = 2;// G->EntryUpdateCalc();
-	}
-	else if (G->entrycalcmode == 2)
-	{
-		G->entry = new Entry(R0B, V0B, SVMJD, G->gravref, G->GETbase, G->EntryTIG, G->EntryAng, G->EntryLng, 2, 0, 0, true);
-		G->entrycalcstate = 1;// G->EntryCalc();
+		G->EntryCalc();
 	}
 	else
 	{
 		if (!G->TEIfail)
 		{
-			double MJDguess;
-			if (G->EntryTIG == 0.0 && G->TEItype == 0)
-			{
-				MJDguess = SVMJD;
-			}
-			else
-			{
-				MJDguess = G->GETbase + G->EntryTIG / 24.0 / 3600.0;
-			}
-			if (G->entrylongmanual)
-			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, G->EntryLng, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
-			}
-			else
-			{
-				G->teicalc = new TEI(R0B, V0B, SVMJD, G->gravref, MJDguess, (double)G->landingzone, G->entrylongmanual, G->returnspeed, G->TEItype, 0);
-			}
-			G->entrycalcstate = 1;
+			G->TEICalc();
 		}
 	}
 }

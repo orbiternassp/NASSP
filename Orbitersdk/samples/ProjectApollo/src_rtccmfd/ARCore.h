@@ -39,8 +39,9 @@ public:
 	void DOICalc();
 	void LOICalc();
 	void LmkCalc();
-	//void EntryCalc();
-	//void EntryUpdateCalc();
+	void TEICalc();
+	void EntryCalc();
+	void EntryUpdateCalc();
 	void StateVectorCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
@@ -71,10 +72,6 @@ public:
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
-	//OrbMech* mech;
-	CoastIntegrator* coast;
-	Entry* entry;
-	TEI* teicalc;
 	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 
@@ -90,7 +87,6 @@ public:
 	OBJHANDLE gravref;		//Earth or Moon
 	double P30TIG;			//Maneuver GET
 	VECTOR3 dV_LVLH;		//LVLH maneuver vector
-	OBJHANDLE maneuverplanet;
 	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool inhibUplLOS;
 	double TimeTag;
@@ -142,7 +138,6 @@ public:
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
-	int entrycalcstate;
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input

@@ -578,6 +578,15 @@ struct AP11LMMNV {
 	double CSMWeight;	// CSM weight
 };
 
+// APOLLO 11 PDI PAD
+struct AP11PDIPAD {
+	double GETI;		// TIG PDI
+	double t_go;		// Time-to-go in P63
+	double CR;			// Crossrange
+	VECTOR3 Att;		// Attitude at TIG
+};
+
+
 // Mission Control Center class
 class MCC {	
 public:

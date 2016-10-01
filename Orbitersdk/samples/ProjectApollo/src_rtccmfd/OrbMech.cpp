@@ -3301,7 +3301,7 @@ MATRIX3 CALCSMSC(VECTOR3 GA)
 	return _M(X_NB.x, X_NB.y, X_NB.z, Y_NB.x, Y_NB.y, Y_NB.z, Z_NB.x, Z_NB.y, Z_NB.z);
 }
 
-VECTOR3 CALCSGTA(MATRIX3 des)
+VECTOR3 CALCGTA(MATRIX3 des)
 {
 	VECTOR3 X_D, Y_D, Z_D, Z_D_apo;
 	double tx, ty, tz, sintx, sinty, sintz, costx, costy, costz;
@@ -3549,7 +3549,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	V_cutoff = V + V_grav + V_thrust;
 }*/
 
-void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go)
 {
 	double dt, dt_max, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
 	VECTOR3 U_TD, gp, g, R0, V0, Rnow, Vnow, dvdt;
@@ -3588,6 +3588,7 @@ void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double 
 	}
 	R_cutoff = Rnow;
 	V_cutoff = Vnow;
+	m_cutoff = mnow;
 	t_go = t;
 	
 }
@@ -3625,10 +3626,10 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
-	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
 	int n, nmax;
 
 	nmax = 100;
@@ -3648,7 +3649,7 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
 		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
 		{
-			poweredflight(R_ig, V_ig, MJD, gravref, f_T, isp, m, V_go, R_p, V_p, t_go);
+			poweredflight(R_ig, V_ig, MJD, gravref, f_T, isp, m, V_go, R_p, V_p, m_p, t_go);
 			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
 			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
 			i_z = unit(crossp(R_d, i_y));
@@ -3698,6 +3699,7 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 
 	R_cutoff = R_p;
 	V_cutoff = V_p;
+	m_cutoff = m_p;
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 

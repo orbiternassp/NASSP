@@ -1420,7 +1420,7 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_CP_TRANSEARTH2: //ENTRY REFSMMAT to MCC5 Update
-				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 14.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 13.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
 				break;
 			case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60, 203, MST_CP_TRANSEARTH4);

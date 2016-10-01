@@ -1675,7 +1675,7 @@ bool Entry::EntryIter()
 void Entry::EntryUpdateCalc()
 {
 	VECTOR3 REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
-	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t2, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
+	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
 	MATRIX3 R;
 	OBJHANDLE hEarth;
 	VECTOR3 R05G, V05G;
@@ -1683,7 +1683,7 @@ void Entry::EntryUpdateCalc()
 
 	hEarth = oapiGetObjectByName("Earth");
 
-	EntryInterface = 400000 * 0.3048;
+	EntryInterface = 400000.0 * 0.3048;
 	RCON = oapiGetSize(hEarth) + EntryInterface;
 	mu = GGRAV*oapiGetMass(hEarth);
 
@@ -1701,14 +1701,14 @@ void Entry::EntryUpdateCalc()
 
 	for (int iii = 0;iii < rangeiter;iii++)
 	{
-		t2 = dt2;
+		t2 = (mjd - GETbase) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
 		t_LS = t2 + t32 + te;
 		Sphie = sin(0.00029088821*phie);
 		Cphie = cos(0.00029088821*phie);
 		U_H3 = unit(crossp(crossp(R3, V3), R3));
 		U_LS = UR3*Cphie + U_H3*Sphie;
 
-		tLSMJD = mjd + t_LS / 24.0 / 3600.0;
+		tLSMJD = GETbase + t_LS / 24.0 / 3600.0;
 		//U_LS = tmul(Rot, U_LS);
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
 		R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
@@ -1742,7 +1742,7 @@ void Entry::EntryUpdateCalc()
 		}
 	}
 	EntryVIO = length(V05G);
-	EntryRET = dt2 + t32 + dt22;
+	EntryRET = t2 + t32 + dt22;
 }
 
 void Entry::Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0)

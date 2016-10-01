@@ -94,6 +94,9 @@ struct AP7ManPADOpt
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
 	double navcheckGET; //Time for the navcheck. 0 = no nav check
+	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 struct AP11ManPADOpt
@@ -140,14 +143,25 @@ struct EntryOpt
 	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG or baseline TIG for abort and MCC maneuvers
 	int type; //Type of reentry maneuver
-	double ReA; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
+	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
-	double Range;  //Desired range from 0.05g to splashdown, 0 uses AUGEKUGEL function to determine range
+	double Range = 0;  //Desired range from 0.05g to splashdown, 0 uses AUGEKUGEL function to determine range
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
+	bool prediction = false;	//0 = Entry maneuver, 1 = Entry prediction
+};
+
+struct EntryResults
+{
+	VECTOR3 dV_LVLH;
+	double P30TIG;
+	double latitude, longitude;
+	double GET05G, GET400K, RTGO, VIO, ReA;
+	int precision;
 };
 
 struct TEIOpt
@@ -161,6 +175,8 @@ struct TEIOpt
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;				//State vector as input
 	int RevsTillTEI = 0;	//Revolutions until TEI
+	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
+	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
 };
 
 struct REFSMMATOpt
@@ -291,7 +307,6 @@ struct TLIPADOpt
 struct P27Opt
 {
 	VESSEL* vessel; //vessel
-	OBJHANDLE gravref; //
 	double GETbase; //usually MJD at launch
 	double SVGET; //GET of the state vector
 	double navcheckGET; //GET of the Nav Check
@@ -362,6 +377,7 @@ public:
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
+	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -369,9 +385,14 @@ public:
 	void NavCheckPAD(SV sv, AP7NAV &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
-	void TEITargeting(TEIOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
+	void TEITargeting(TEIOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &EntryAngcor);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
 	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
+	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
+	void FiniteBurntimeCompensation(VESSEL *vessel, SV sv, double attachedMass, VECTOR3 DV, VECTOR3 &DV_imp, double &t_slip);
+	void FiniteBurntimeCompensation(VESSEL *vessel, SV sv, double attachedMass, VECTOR3 DV, VECTOR3 &DV_imp, double &t_slip, SV &sv_out);
+	void GetThrusterParameters(VESSEL *vessel, double &f_T, double &isp);
+	double GetDockedVesselMass(VESSEL *vessel);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -382,8 +403,7 @@ private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	void StateVectorCalc(VESSEL *vessel, double &SVGET, VECTOR3 &J2000Pos, VECTOR3 &J2000Vel);
-	void EntryTargeting(EntryOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO);
+	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
@@ -399,9 +419,9 @@ private:
 	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double F = 0.0, double isp = 0.0);
+	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
+	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
 	SV coast(SV sv0, double dt);
-	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
