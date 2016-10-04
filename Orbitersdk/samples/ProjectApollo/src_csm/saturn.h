@@ -1171,6 +1171,11 @@ public:
 	void SetOpticsCoverMesh();
 
 	///
+	/// \brief Set nosecap mesh
+	///
+	void SetNosecapMesh();
+
+	///
 	/// Check whether the Launch Escape Tower is attached.
 	/// \brief Is the LET still attached?
 	/// \return True if attached, false if not.
@@ -1348,6 +1353,8 @@ protected:
 	void JettisonDockingProbe();
 
 	void JettisonOpticsCover();
+
+	void JettisonNosecap();
 
 	//
 	// State that needs to be saved.
@@ -3858,6 +3865,8 @@ protected:
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
 	int opticscoveridx;
+	int nosecapidx;
+	int meshLM_1;
 
 	bool ASTPMission;
 
@@ -3973,6 +3982,7 @@ protected:
 	OBJHANDLE hDrogueChute;
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
+	OBJHANDLE hNosecapVessel;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.

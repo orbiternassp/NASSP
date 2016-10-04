@@ -214,6 +214,7 @@ private:
 	double omega_E;									// Rotational rate of the Earth
 	double K_pc;									// Constant time used to force MRS in out-of-orbit mode
 	double R_N;										// Nominal radius at SIVB reignition
+	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -520,7 +521,7 @@ private:
 	double K_P2;
 	double K_Y1;
 	double K_Y2;
-	
+	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial

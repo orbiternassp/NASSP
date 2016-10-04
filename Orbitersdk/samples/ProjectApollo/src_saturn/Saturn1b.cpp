@@ -103,6 +103,7 @@ void Saturn1b::initSaturn1b()
 	RelPos = _V(0.0,0.0,0.0);
 	hSoyuz = 0;
 	hAstpDM = 0;
+	hNosecapVessel = 0;
 	Burned = false;
 
 	if (strcmp(GetName(), "AS-211")==0)
@@ -293,6 +294,8 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hMainChute = oapiGetVesselByName(VName);	
 	GetApolloName(VName); strcat (VName, "-OPTICSCOVER");
 	hOpticsCover = oapiGetVesselByName(VName);	
+	GetApolloName(VName); strcat(VName, "-NOSECAP");
+	hNosecapVessel = oapiGetVesselByName(VName);
 }
 
 void Saturn1b::StageOne(double simt, double simdt)

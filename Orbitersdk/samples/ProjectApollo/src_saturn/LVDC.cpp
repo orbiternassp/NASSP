@@ -265,6 +265,7 @@ LVDC1B::LVDC1B(){
 	T_CO = 0;
 	t_fail = 0;
 	T_GO = 0;
+	TI5F2 = 0;
 	T_LET = 0;
 	T_S1 = 0;
 	T_S2 = 0;
@@ -410,6 +411,7 @@ void LVDC1B::init(Saturn* own){
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 25;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
+	TI5F2 = 20.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	cos_phi_L = 0.878635524;					// cos of the Geodetic Launch site latitude
@@ -608,7 +610,14 @@ void LVDC1B::timestep(double simt, double simdt) {
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime >= -17){
 					lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-					lvimu.DriveGimbals((Azimuth - 100)*RAD,0,0);	// Now bring to alignment 
+					if (owner->ApolloNo == 5)
+					{
+						lvimu.DriveGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment 
+					}
+					else
+					{
+						lvimu.DriveGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
+					}
 					lvimu.SetCaged(false);							// Release IMU
 					CountPIPA = true;								// Enable PIPA storage			
 					BOOST = true;
@@ -891,6 +900,52 @@ void LVDC1B::timestep(double simt, double simdt) {
 					LVDC_Stop = true;
 					return; // Stop here
 				}
+
+				if (owner->ApolloNo == 5)
+				{
+					//
+					// Separate nosecap
+					//
+
+					if (!owner->Crewed && owner->NosecapAttached && !owner->hNosecapVessel && LVDC_TB_ETime >= 45.0)
+					{
+						owner->SlowIfDesired();
+						owner->NosecapAttached = false;
+						owner->SetNosecapMesh();
+						owner->JettisonNosecap();
+					}
+
+					//
+					// For unmanned launches, seperate the payload on timer.
+					//
+
+					bool PayloadDeployed = false;
+
+					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0 - 20.))
+					{
+						owner->SlowIfDesired();
+					}
+
+					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0))
+					{
+						owner->SlowIfDesired();
+						PayloadDeployed = true;
+						// Payload deploy
+						owner->SeparateStage(CSM_LEM_STAGE);
+						owner->SetStage(CSM_LEM_STAGE);
+					}
+
+					//
+					// If the payload was deployed, delete us. Note that this just means that the SLA panels have
+					// been blown off of the SIVB; the SIVB will have to do the actual payload deployment.
+					//
+					if (PayloadDeployed && owner->hs4bM)
+					{
+						oapiSetFocusObject(owner->hs4bM);
+						oapiDeleteVessel(owner->GetHandle(), owner->hs4bM);
+					}
+				}
+
 				break;
 		}
 		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
@@ -1110,7 +1165,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 			goto minorloop;
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
-			if(LVDC_Timebase == 4 && (LVDC_TB_ETime > 20)){
+			if(LVDC_Timebase == 4 && (LVDC_TB_ETime > TI5F2)){
 				goto orbitalguidance;
 			}else{
 				goto minorloop;
@@ -2178,6 +2233,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_CO", T_CO);
 	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
+	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
@@ -2540,6 +2596,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_CO", T_CO);
 		papiReadScenario_double(line, "LVDC_t_fail", t_fail);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
+		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
@@ -2937,6 +2994,7 @@ LVDC::LVDC(){
 	t_fail = 0;
 	T_GO = 0;
 	theta_N = 0;
+	TI5F2 = 0;
 	T_IGM = 0;
 	T_LET = 0;
 	T_RG = 0;
@@ -3197,6 +3255,7 @@ void LVDC::Init(Saturn* vs){
 	t_DS2 = 16503.1;
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
+	TI5F2 = 20.0;
 
 	double day;
 	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - owner->MissionTime - 17.0;
@@ -3901,6 +3960,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
+	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -4567,6 +4627,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
+		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -5550,7 +5611,7 @@ GuidanceLoop:
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
 			if(TAS - TB7<0){
-				if(TAS - TB5 < 20){ goto minorloop; }
+				if(TAS - TB5 < TI5F2){ goto minorloop; }
 				if(TAS - TB6 - T_IGM<0){goto restartprep;}else{goto IGM;};
 			}else{
 				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}

@@ -753,6 +753,19 @@ void Saturn::SetOpticsCoverMesh() {
 	}
 }
 
+void Saturn::SetNosecapMesh() {
+
+	if (nosecapidx == -1)
+		return;
+
+	if (NosecapAttached) {
+		SetMeshVisibilityMode(nosecapidx, MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(nosecapidx, MESHVIS_NEVER);
+	}
+}
+
 void Saturn::SetReentryStage ()
 
 {
@@ -1435,4 +1448,23 @@ void Saturn::JettisonOpticsCover()
 	GetApolloName(VName); 
 	strcat (VName, "-OPTICSCOVER");
 	hOpticsCover = oapiCreateVessel(VName, "ProjectApollo/CMOpticsCover", vs4b);
+}
+
+void Saturn::JettisonNosecap()
+
+{
+	char VName[256];
+
+	// Use VC offset to calculate the optics cover offset
+	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 vel = { 0.0, 0.0, 2.5 };
+	VESSELSTATUS vs4b;
+	GetStatus(vs4b);
+	StageTransform(this, &vs4b, ofs, vel);
+	vs4b.vrot.x = 0.0;
+	vs4b.vrot.y = 0.0;
+	vs4b.vrot.z = 0.0;
+	GetApolloName(VName);
+	strcat(VName, "-NOSECAP");
+	hNosecapVessel = oapiCreateVessel(VName, "ProjectApollo/Sat1Aerocap", vs4b);
 }
