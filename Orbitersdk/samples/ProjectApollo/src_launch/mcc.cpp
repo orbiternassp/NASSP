@@ -954,7 +954,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 28 * 60 * 60 + 50 * 60, 9, MST_C_COAST9);
 				break;
 			case MST_C_COAST9: // TPI Update to Final Separation Maneuver update
-				UpdateMacro(UTP_TPI, cm->MissionTime > 30 * 60 * 60 + 11 * 60, 10, MST_C_COAST10);
+				UpdateMacro(UTP_TPI, cm->MissionTime > 30 * 60 * 60 + 9 * 60, 10, MST_C_COAST10);
 				break;
 			case MST_C_COAST10: // Final Separation Maneuver update to Block Data 4
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
@@ -1073,28 +1073,37 @@ void MCC::TimeStep(double simdt){
 			case MST_C_COAST48: // SV PAD to P27 PAD
 				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 214 * 60 * 60 + 10 * 60, 52, MST_C_COAST49);
 				break;
-			case MST_C_COAST49: //P27 PAD to Block Data 24
-				UpdateMacro(UTP_P27PAD, cm->MissionTime > 220 * 60 * 60 + 43 * 60, 36, MST_C_COAST50);
+			case MST_C_COAST49: //P27 PAD to SV PAD
+				UpdateMacro(UTP_P27PAD, cm->MissionTime > 216 * 60 * 60, 36, MST_C_COAST50);
 				break;
-			case MST_C_COAST50: // Block Data 24 to Block Data 25
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST51);
+			case MST_C_COAST50: //SV PAD to Block Data 24
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 220 * 60 * 60 + 43 * 60, 52, MST_C_COAST51);
 				break;
-			case MST_C_COAST51: // Block Data 25 to SPS-7
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST52);
+			case MST_C_COAST51: // Block Data 24 to Block Data 25
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST52);
 				break;
-			case MST_C_COAST52: // SPS-7 to Block Data 26
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST53);
+			case MST_C_COAST52: // Block Data 25 to SPS-7
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST53);
 				break;
-			case MST_C_COAST53: // Block Data 26 to Block Data 27
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST54);
+			case MST_C_COAST53: // SPS-7 to SV PAD
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 240 * 60 * 60 + 20 * 60, 39, MST_C_COAST54);
 				break;
-			case MST_C_COAST54: // Block Data 27 to Deorbit Maneuver
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST55);
+			case MST_C_COAST54: // SV PAD to Block Data 26
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 241 * 60 * 60 + 39 * 60, 52, MST_C_COAST55);
 				break;
-			case MST_C_COAST55: // Deorbit Maneuver PAD to Entry PAD
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
+			case MST_C_COAST55: // Block Data 26 to Block Data 27
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST56);
 				break;
-			case MST_C_COAST56:
+			case MST_C_COAST56: // Block Data 27 to SV PAD
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 255 * 60 * 60, 41, MST_C_COAST57);
+				break;
+			case MST_C_COAST57: // SV PAD to Deorbit Maneuver
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 257 * 60 * 60 + 20 * 60, 52, MST_C_COAST58);
+				break;
+			case MST_C_COAST58: // Deorbit Maneuver PAD to Entry PAD
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST59);
+				break;
+			case MST_C_COAST59:
 				UpdateMacro(UTP_ENTRY, cm->stage == CM_STAGE, 43, MST_ORBIT_ENTRY);
 				break;
 			case MST_ORBIT_ENTRY:

@@ -230,6 +230,9 @@
 #define MST_C_COAST54		65
 #define MST_C_COAST55		66
 #define MST_C_COAST56		67
+#define MST_C_COAST57		68
+#define MST_C_COAST58		69
+#define MST_C_COAST59		70
 #define MST_C_ABORT			75
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
 
