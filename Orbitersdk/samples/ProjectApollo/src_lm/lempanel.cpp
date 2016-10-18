@@ -289,10 +289,10 @@ void LEM::InitSwitches() {
 	TempPressMonRotary.AddPosition(3,  70);
 	TempPressMonRotary.Register(PSH, "TempPressMonRotary", 0);
 
-	ClycolRotary.AddPosition(0,  45);
-	ClycolRotary.AddPosition(1,  70);
-	ClycolRotary.AddPosition(2, 110);
-	ClycolRotary.Register(PSH, "ClycolRotary", 2);
+	GlycolRotary.AddPosition(0,  45);
+	GlycolRotary.AddPosition(1,  70);
+	GlycolRotary.AddPosition(2, 110);
+	GlycolRotary.Register(PSH, "GlycolRotary", 2);
 	
 	SuitFanRotary.AddPosition(0,  45);
 	SuitFanRotary.AddPosition(1,  70);
@@ -471,7 +471,7 @@ void LEM::InitSwitches() {
 	CDRAudSBandSwitch.Register(PSH,"CDRAudSBandSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudICSSwitch.Register(PSH,"CDRAudICSSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudRelaySwitch.Register(PSH,"CDRAudRelaySwitch",TOGGLESWITCH_DOWN);
-	CDRAudVOXSwitch.Register(PSH,"CDRAudICSSwitch",THREEPOSSWITCH_CENTER);
+	CDRAudVOXSwitch.Register(PSH,"CDRAudVOXSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudioControlSwitch.Register(PSH,"CDRAudioControlSwitch",TOGGLESWITCH_UP);
 	CDRAudVHFASwitch.Register(PSH,"CDRAudVHFASwitch",THREEPOSSWITCH_CENTER);
 	CDRAudVHFBSwitch.Register(PSH,"CDRAudVHFBSwitch",THREEPOSSWITCH_CENTER);
@@ -486,7 +486,7 @@ void LEM::InitSwitches() {
 	LMPAudSBandSwitch.Register(PSH,"LMPAudSBandSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudICSSwitch.Register(PSH,"LMPAudICSSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudRelaySwitch.Register(PSH,"LMPAudRelaySwitch",TOGGLESWITCH_DOWN);
-	LMPAudVOXSwitch.Register(PSH,"LMPAudICSSwitch",THREEPOSSWITCH_CENTER);
+	LMPAudVOXSwitch.Register(PSH,"LMPAudVOXSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudVHFASwitch.Register(PSH,"LMPAudVHFASwitch",THREEPOSSWITCH_CENTER);
 	LMPAudVHFBSwitch.Register(PSH,"LMPAudVHFBSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudSBandVol.Register(PSH,"LMPAudSBandVol",6,9);
@@ -1414,7 +1414,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RCS_XFEED_SWITCH,				_R( 900,  921,  934,  960), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_TALKBACKS,				_R(1045,  871, 1138,  894), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_SWITCHES,			    _R(1039,  922, 1144,  961), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,			_R(1196,  926, 1280, 1130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLSUITFANROTARIES,			_R(1196,  926, 1280, 1130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_QTYMONROTARY,					_R(1382,  986, 1466, 1070), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ENGGIMBALENABLESWITCH,			_R( 199, 1227,  233, 1268), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RADARANTTESTSWITCHES,			_R( 269, 1227,  304, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1455,7 +1455,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea(AID_XPOINTERLMP,						_R( 237,  246,  374,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RIGHTMONITORSWITCHES,				_R (333,  532,  368,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_CLYCOLSUITFANROTARIES,			_R(  31,  746,  116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_GLYCOLSUITFANROTARIES,			_R(  31,  746,  116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_QTYMONROTARY,						_R( 215,  806,  300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
@@ -1754,9 +1754,9 @@ void LEM::SetSwitches(int panel) {
 			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
 			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
 
-			ClycolSuitFanRotaryRow.Init(AID_CLYCOLSUITFANROTARIES, MainPanel);
-			ClycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], ClycolSuitFanRotaryRow);
-			SuitFanRotary.Init(0, 120, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], ClycolSuitFanRotaryRow);
+			GlycolSuitFanRotaryRow.Init(AID_GLYCOLSUITFANROTARIES, MainPanel);
+			GlycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
+			SuitFanRotary.Init(0, 120, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
 
 			QtyMonRotaryRow.Init(AID_QTYMONROTARY, MainPanel);
 			QtyMonRotary.Init(0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], QtyMonRotaryRow);

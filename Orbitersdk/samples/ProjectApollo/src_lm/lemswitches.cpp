@@ -304,7 +304,7 @@ double LMGlycolTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->ClycolRotary.GetState() == 0){
+	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
 		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
 	}else{
@@ -338,7 +338,7 @@ double LMGlycolPressMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->ClycolRotary.GetState() == 0){
+	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
 		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
 	}else{

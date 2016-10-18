@@ -936,8 +936,8 @@ protected:
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
 
-	SwitchRow ClycolSuitFanRotaryRow;
-	RotationalSwitch ClycolRotary;
+	SwitchRow GlycolSuitFanRotaryRow;
+	RotationalSwitch GlycolRotary;
 	RotationalSwitch SuitFanRotary;
 
 	SwitchRow QtyMonRotaryRow;

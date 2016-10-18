@@ -507,7 +507,7 @@
 #define AID_RIGHTMONITORSWITCHES                            788
 #define AID_TEMPPRESSMONROTARY                              789
 #define AID_ACAPROPSWITCH                                   790
-#define AID_CLYCOLSUITFANROTARIES                           791
+#define AID_GLYCOLSUITFANROTARIES                           791
 #define AID_QTYMONROTARY                                    792
 #define IDB_FDAIOFFFLAG                                     793
 #define AID_RADARANTTESTSWITCHES                            794
