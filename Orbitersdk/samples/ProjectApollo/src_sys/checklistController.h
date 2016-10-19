@@ -485,6 +485,17 @@ public:
 /// -------------------------------------------------------------
 	bool init(char *checkFile);
 /// -------------------------------------------------------------
+/// This method initializes any vessel for any mission.  Uses a
+/// custom checklist file where the checkFile parameter is the
+/// proper path to the file.  Otherwise, pass in null to indicate
+/// should use default file. FileNameSet sets the FileName
+/// string. This can be used when init is called outside of the
+/// Checklist Controller class.
+/// WARNING:  once this is called, you cannot call any other init
+/// function!
+/// -------------------------------------------------------------
+	bool init(char *checkFile, bool SetFileName);
+/// -------------------------------------------------------------
 /// called to save checklistController state.
 /// -------------------------------------------------------------
 	void save(FILEHANDLE scn);

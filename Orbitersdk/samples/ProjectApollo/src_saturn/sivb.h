@@ -95,7 +95,13 @@ struct SIVBSettings
 	int LMPadCount;					///< Count of LM PAD data.
 	unsigned int *LMPad;			///< LM PAD data.
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; };
+	///
+	/// LEM checklist file
+	///
+	char LEMCheck[100];
+	bool LEMCheckAuto;
+
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; LEMCheckAuto = 0; };
 
 };
 
@@ -446,6 +452,12 @@ protected:
 	char PayloadName[64];			///< Name of payload, if appropriate.
 
 	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
+
+	///
+	/// LEM checklist file
+	///
+	char LEMCheck[100];
+	bool LEMCheckAuto;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

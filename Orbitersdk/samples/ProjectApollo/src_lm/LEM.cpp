@@ -1659,7 +1659,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	agc.SetVirtualAGC(ls.Yaagc);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
-	checkControl.init(ls.checklistFile);
+	checkControl.init(ls.checklistFile, true);
 	checkControl.autoExecute(ls.checkAutoExecute);
 	// Sounds are initialized during the first timestep
 

@@ -662,6 +662,8 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
 	S4Config.LMPad = LMPad;
 	S4Config.LMPadCount = LMPadCount;
+	sprintf(S4Config.LEMCheck, LEMCheck);
+	S4Config.LEMCheckAuto = LEMCheckAuto;
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);

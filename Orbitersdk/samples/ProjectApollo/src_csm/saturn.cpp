@@ -1492,11 +1492,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (PayloadName[0])
 		oapiWriteScenario_string (scn, "PAYN", PayloadName);
 
-	if (LEMCheck[0]) {
-		oapiWriteScenario_string (scn, "LEMCHECK", LEMCheck);
-		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
-	}
 	if (!PayloadDataTransfer) {
+		if (LEMCheck[0]) {
+			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
+			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
+		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 	}
@@ -2532,9 +2532,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		}
-		else if (!strnicmp(line, "LEMCHECK", 8)) {
-			strcpy(LEMCheck,line+8);
-		}
 		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
 			int temp = 0;
 			sscanf(line+12, "%i", &temp);
@@ -2542,6 +2539,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 				LEMCheckAuto = true;
 			else
 				LEMCheckAuto = false;
+		} else if (!strnicmp(line, "LEMCHECK", 8)) {
+			strcpy(LEMCheck, line + 9);
 		} else if (!strnicmp(line, SaturnEventStartString, strlen(SaturnEventStartString))) {
 			eventControl.load(scn);
 		} else if (!strnicmp(line, RJEC_START_STRING, sizeof(RJEC_START_STRING))) {
