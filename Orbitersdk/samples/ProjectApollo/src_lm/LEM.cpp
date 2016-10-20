@@ -1051,6 +1051,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	{	
 	}
 
+	checkControl.timestep(MissionTime, DummyEvents);
+
     // x15 landing sound management
 #ifdef DIRECTSOUNDENABLED
 

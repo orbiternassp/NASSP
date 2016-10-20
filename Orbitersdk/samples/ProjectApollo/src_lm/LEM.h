@@ -1665,6 +1665,9 @@ protected:
 	// ChecklistController
 	ChecklistController checkControl;
 
+	//Dummy events, not functional
+	SaturnEvents DummyEvents;
+
 	SoundLib soundlib;
 
 	Sound Sclick;
