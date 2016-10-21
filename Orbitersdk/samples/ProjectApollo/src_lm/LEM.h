@@ -1625,7 +1625,21 @@ protected:
 	int Realism;
 	int ApolloNo;
 	int Landed;
+
+	//
+	// Quickstart Mode settings
+	//
+
+	bool ChecklistAutoSlow;
+	bool ChecklistAutoDisabled;
 	bool OrbiterAttitudeDisabled;
+
+	//
+	// VAGC Mode settings
+	//
+
+	bool VAGCChecklistAutoSlow;
+	bool VAGCChecklistAutoEnabled;
 
 	int SwitchFocusToLeva;
 
