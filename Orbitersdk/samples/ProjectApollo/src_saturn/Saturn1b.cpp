@@ -667,7 +667,7 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 	if(use_lvdc){
 		if(stage < CSM_LEM_STAGE){
 			if(lvdc != NULL){
-				lvdc->timestep(simt, simdt);
+				lvdc->TimeStep(simt, simdt);
 			}
 		}else{
 			if(lvdc != NULL){

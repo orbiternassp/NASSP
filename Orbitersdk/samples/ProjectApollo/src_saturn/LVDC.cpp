@@ -562,7 +562,7 @@ void LVDC1B::init(Saturn* own){
 }
 	
 // DS20070205 LVDC++ EXECUTION
-void LVDC1B::timestep(double simt, double simdt) {
+void LVDC1B::TimeStep(double simt, double simdt) {
 	// Bail if uninitialized
 	if(owner == NULL){ return; }
 	// Update timebase ET
@@ -592,11 +592,11 @@ void LVDC1B::timestep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					if (owner->MissionTime < -1200){
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 						break;
 					}else{
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
 			
@@ -721,7 +721,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 					}
 				}else{
 					// Get 100% thrust on all engines.
-					sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
+					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
 					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
@@ -1863,7 +1863,7 @@ minorloop: //minor loop;
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | eps %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1880,7 +1880,7 @@ minorloop: //minor loop;
 					AttRate.x * DEG, AttRate.y * DEG, AttRate.z * DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}
+		}*/
 	}
 
 	/*
@@ -4791,7 +4791,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 					break;
 				}
@@ -4804,9 +4804,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime < -17){
-					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
+					/*sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
 						lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
+						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));*/
 					break;
 				}else{
 					LVDC_Timebase = 0;
@@ -5322,7 +5322,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					f = TABLE15[0].f;
 					alpha_D = TABLE15[0].target[0].alpha_D;
 					eps_3 = 0;
-					sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
+					//sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
 				}
 
 				// p is the semi-latus rectum of the desired terminal ellipse.
@@ -5896,7 +5896,7 @@ gtupdate:	// Target of jump from further down
 			if(Tt_T <= eps_1){
 				// RANGE ANGLE 2 (out-of orbit)
 				fprintf(lvlog,"RANGE ANGLE 2\r\n");
-				sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1); 
+				//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 				// LVDC_GP_PC = 30; // STOP
 				V = length(DotS);
 				R = length(PosS);
@@ -6156,7 +6156,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					R_T = R + dotR*(T_3 - dt);
 					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
-					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
+					//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
 					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
 					// LVDC_GP_PC = 30; // STOP
 				}
@@ -6190,7 +6190,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// Done, go to navigation
-				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
+				//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 				goto minorloop;
 			}
 			// End of high-speed loop
@@ -6221,7 +6221,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		}else{
 			// MRS TEST
 			fprintf(lvlog,"MRS TEST\r\n");
-			sprintf(oapiDebugString(),"LVDC: MRS TEST"); 
+			//sprintf(oapiDebugString(),"LVDC: MRS TEST");
 			if (MRS)
 			{
 				if (t_B2 <= t_B4)
@@ -6247,7 +6247,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		if(GATE){
 			// FREEZE CHI
 			fprintf(lvlog,"Thru GATE; CHI FREEZE\r\n");
-			sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
+			//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
 			goto minorloop;
 		}else{
 			// IGM STEERING ANGLES
@@ -6919,7 +6919,7 @@ minorloop:
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -6939,7 +6939,7 @@ minorloop:
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);				
 			}
-		}
+		}*/
 		/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
 			LVDC_Timebase,LVDC_TB_ETime,

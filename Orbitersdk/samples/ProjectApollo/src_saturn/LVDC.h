@@ -426,7 +426,7 @@ class LVDC1B {
 public:
 	LVDC1B();										// Constructor
 	void init(Saturn* own);
-	void timestep(double simt, double simdt);
+	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 private:
