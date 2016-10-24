@@ -1213,6 +1213,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_32x160]		= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
 		srf[SRF_BORDER_72x72]		= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
+		srf[SRF_BORDER_34x39]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x39));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
@@ -1281,7 +1282,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_32x160], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x72], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_75x64], g_Param.col[4]);
-
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
 
 
 //		break;	
