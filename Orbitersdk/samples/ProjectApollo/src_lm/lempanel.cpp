@@ -567,7 +567,7 @@ void LEM::InitSwitches() {
 	HE_PQGS_PROP_DISP_AC_CB.Register(PSH,"HE_PQGS_PROP_DISP_AC_CB",0);
 	SBD_ANT_AC_CB.Register(PSH,"SBD_ANT_AC_CB",0);
 	ORDEAL_AC_CB.Register(PSH,"ORDEAL_AC_CB",0);
-	AQS_AC_CB.Register(PSH,"AQS_AC_CB",0);
+	AGS_AC_CB.Register(PSH,"AGS_AC_CB",0);
 	AOT_LAMP_ACB_CB.Register(PSH,"AOT_LAMP_ACB_CB",0);
 	LMP_FDAI_AC_CB.Register(PSH,"LMP_FDAI_AC_CB",0);
 	NUM_LTG_AC_CB.Register(PSH,"NUM_LTG_AC_CB",0);
@@ -2049,7 +2049,7 @@ void LEM::SetSwitches(int panel) {
 			HE_PQGS_PROP_DISP_AC_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			SBD_ANT_AC_CB.Init(131, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			ORDEAL_AC_CB.Init(195, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
-			AQS_AC_CB.Init(318, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
+			AGS_AC_CB.Init(318, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			AOT_LAMP_ACB_CB.Init(382, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			LMP_FDAI_AC_CB.Init(446, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			NUM_LTG_AC_CB.Init( 510, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);

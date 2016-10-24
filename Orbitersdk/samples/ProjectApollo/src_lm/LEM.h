@@ -1051,7 +1051,7 @@ protected:
 	CircuitBrakerSwitch HE_PQGS_PROP_DISP_AC_CB;
 	CircuitBrakerSwitch SBD_ANT_AC_CB;
 	CircuitBrakerSwitch ORDEAL_AC_CB;
-	CircuitBrakerSwitch AQS_AC_CB;
+	CircuitBrakerSwitch AGS_AC_CB;
 	CircuitBrakerSwitch AOT_LAMP_ACB_CB;
 	CircuitBrakerSwitch LMP_FDAI_AC_CB;
 	CircuitBrakerSwitch NUM_LTG_AC_CB;
