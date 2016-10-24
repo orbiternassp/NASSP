@@ -164,7 +164,11 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 
 	char *binfile;
 
-	if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
+	if (ApolloNo < 9)	// Colossus 237
+	{
+		binfile = "Config/ProjectApollo/Colossus237.bin";
+	}
+	else if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
 	{
 		binfile = "Config/ProjectApollo/Colossus249.bin";
 	}
