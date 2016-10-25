@@ -1673,13 +1673,17 @@ void LEM::SetSwitches(int panel) {
 			ASCHeReg1TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			ASCHeReg1Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			ASCHeReg1Switch.SetDelayTime(1);
 			DESHeReg1Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			DESHeReg1Switch.SetDelayTime(1);
 
 			MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
 			ASCHeReg2TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			ASCHeReg2Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
-			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);			
+			ASCHeReg2Switch.SetDelayTime(1);
+			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
+			DESHeReg2Switch.SetDelayTime(1);
 
 			FDAILowerSwitchRow.Init(AID_FDAILOWERSWITCHROW, MainPanel);
 			ShiftTruSwitch.Init (  0,  5, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FDAILowerSwitchRow);
@@ -1716,35 +1720,55 @@ void LEM::SetSwitches(int panel) {
 			RCSAscFeed2ATB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed1BTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed2BTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
+
 			RCSAscFeedSwitchRow.Init(AID_RCS_ASC_FEED_SWITCHES, MainPanel);
 			RCSAscFeed1ASwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1ASwitch.SetDelayTime(1);
 			RCSAscFeed2ASwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2ASwitch.SetDelayTime(1);
 			RCSAscFeed1BSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1BSwitch.SetDelayTime(1);
 			RCSAscFeed2BSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2BSwitch.SetDelayTime(1);
+
 			RCSQuad14TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS, MainPanel);
 			RCSQuad1ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
+
 			RCSQuad14SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_SWITCHES, MainPanel);
 			RCSQuad1ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad1BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSQuad23TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS, MainPanel);
 			RCSQuad2ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
+
 			RCSQuad23SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_SWITCHES, MainPanel);
 			RCSQuad2ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad2BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
 			RCSXFeedTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow);
+
 			RCSXfeedSwitchRow.Init(AID_RCS_XFEED_SWITCH, MainPanel);
 			RCSXFeedSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);
+			RCSXFeedSwitch.SetDelayTime(1);
 
 			// DS20060406 HERE WE GO!
 			RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
@@ -1753,7 +1777,9 @@ void LEM::SetSwitches(int panel) {
 
 			RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
 			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
+			RCSMainSovASwitch.SetDelayTime(1);
 			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
+			RCSMainSovBSwitch.SetDelayTime(1);
 
 			GlycolSuitFanRotaryRow.Init(AID_GLYCOLSUITFANROTARIES, MainPanel);
 			GlycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
@@ -1843,7 +1869,9 @@ void LEM::SetSwitches(int panel) {
 
 			EventTimerSwitchRow.Init(AID_LM_EVENT_TIMER_SWITCHES, MainPanel);
 			EventTimerCtlSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerCtlSwitch.SetDelayTime(1);
 			EventTimerStartSwitch.Init(55, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerStartSwitch.SetDelayTime(1);
 			EventTimerMinuteSwitch.Init(111, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 			EventTimerSecondSwitch.Init(167, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
 
