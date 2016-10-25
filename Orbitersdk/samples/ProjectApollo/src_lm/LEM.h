@@ -546,6 +546,7 @@ public:
 		SRF_BORDER_72x72,
 		SRF_BORDER_75x64,
 		SRF_BORDER_34x39,
+		SRF_BORDER_38x38,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -1041,6 +1042,31 @@ protected:
 	SwitchRow Panel4RightSwitchRow;
 	ToggleSwitch RightACA4JetSwitch;
 	ToggleSwitch RightTTCATranslSwitch;
+
+	///////////////////////
+	// DSKYs             //
+	///////////////////////
+
+	SwitchRow DskySwitchRow;
+	DSKYPushSwitch DskySwitchVerb;
+	DSKYPushSwitch DskySwitchNoun;
+	DSKYPushSwitch DskySwitchPlus;
+	DSKYPushSwitch DskySwitchMinus;
+	DSKYPushSwitch DskySwitchZero;
+	DSKYPushSwitch DskySwitchOne;
+	DSKYPushSwitch DskySwitchTwo;
+	DSKYPushSwitch DskySwitchThree;
+	DSKYPushSwitch DskySwitchFour;
+	DSKYPushSwitch DskySwitchFive;
+	DSKYPushSwitch DskySwitchSix;
+	DSKYPushSwitch DskySwitchSeven;
+	DSKYPushSwitch DskySwitchEight;
+	DSKYPushSwitch DskySwitchNine;
+	DSKYPushSwitch DskySwitchClear;
+	DSKYPushSwitch DskySwitchProg;
+	DSKYPushSwitch DskySwitchKeyRel;
+	DSKYPushSwitch DskySwitchEnter;
+	DSKYPushSwitch DskySwitchReset;
 
 	//////////////////
 	// LEM panel 11 //

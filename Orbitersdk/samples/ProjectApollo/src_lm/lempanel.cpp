@@ -745,6 +745,48 @@ void LEM::InitSwitches() {
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
 
+	DskySwitchVerb.Register(PSH, "DskySwitchVerb", false);
+	DskySwitchNoun.Register(PSH, "DskySwitchNoun", false);
+	DskySwitchPlus.Register(PSH, "DskySwitchPlus", false);
+	DskySwitchMinus.Register(PSH, "DskySwitchMinus", false);
+	DskySwitchZero.Register(PSH, "DskySwitchZero", false);
+	DskySwitchOne.Register(PSH, "DskySwitchOne", false);
+	DskySwitchTwo.Register(PSH, "DskySwitchTwo", false);
+	DskySwitchThree.Register(PSH, "DskySwitchThree", false);
+	DskySwitchFour.Register(PSH, "DskySwitchFour", false);
+	DskySwitchFive.Register(PSH, "DskySwitchFive", false);
+	DskySwitchSix.Register(PSH, "DskySwitchSix", false);
+	DskySwitchSeven.Register(PSH, "DskySwitchSeven", false);
+	DskySwitchEight.Register(PSH, "DskySwitchEight", false);
+	DskySwitchNine.Register(PSH, "DskySwitchNine", false);
+	DskySwitchClear.Register(PSH, "DskySwitchClear", false);
+	DskySwitchProg.Register(PSH, "DskySwitchProg", false);
+	DskySwitchKeyRel.Register(PSH, "DskySwitchKeyRel", false);
+	DskySwitchEnter.Register(PSH, "DskySwitchEnter", false);
+	DskySwitchReset.Register(PSH, "DskySwitchReset", false);
+
+	DskySwitchVerb.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::VerbCallback));
+	DskySwitchNoun.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::NounCallback));
+	DskySwitchPlus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::PlusCallback));
+	DskySwitchMinus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::MinusCallback));
+	DskySwitchZero.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::zeroCallback));
+	DskySwitchOne.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::oneCallback));
+	DskySwitchTwo.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::twoCallback));
+	DskySwitchThree.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::threeCallback));
+	DskySwitchFour.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fourCallback));
+	DskySwitchFive.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fiveCallback));
+	DskySwitchSix.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sixCallback));
+	DskySwitchSeven.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sevenCallback));
+	DskySwitchEight.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::eightCallback));
+	DskySwitchNine.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::nineCallback));
+	DskySwitchProg.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ProgCallback));
+	DskySwitchClear.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ClearCallback));
+	DskySwitchKeyRel.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::KeyRelCallback));
+	DskySwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::EnterCallback));
+	DskySwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ResetCallback));
+
+	DskySwitchProg.SetDelayTime(1.5);
+
 	//
 	// Old stuff.
 	//
@@ -1214,6 +1256,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_72x72]		= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
 		srf[SRF_BORDER_34x39]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x39));
+		srf[SRF_BORDER_38x38]		= oapiCreateSurface(LOADBMP(IDB_BORDER_38x38));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
@@ -1283,6 +1326,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x72], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_75x64], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_38x38], g_Param.col[4]);
 
 
 //		break;	
@@ -1386,7 +1430,7 @@ bool LEM::clbkLoadPanel (int id) {
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 860, 1560,  965, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 716, 1565,  818, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 696, 1755,  986, 1878), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 698, 1756,  984, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R( 171,  286,  313,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER,						_R( 387,  286,  468,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUEL_DIGIT,						_R( 555,  245,  594,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1673,13 +1717,17 @@ void LEM::SetSwitches(int panel) {
 			ASCHeReg1TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			ASCHeReg1Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			ASCHeReg1Switch.SetDelayTime(1);
 			DESHeReg1Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			DESHeReg1Switch.SetDelayTime(1);
 
 			MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
 			ASCHeReg2TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			ASCHeReg2Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
-			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);			
+			ASCHeReg2Switch.SetDelayTime(1);
+			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
+			DESHeReg2Switch.SetDelayTime(1);
 
 			FDAILowerSwitchRow.Init(AID_FDAILOWERSWITCHROW, MainPanel);
 			ShiftTruSwitch.Init (  0,  5, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FDAILowerSwitchRow);
@@ -1716,35 +1764,55 @@ void LEM::SetSwitches(int panel) {
 			RCSAscFeed2ATB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed1BTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed2BTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
+
 			RCSAscFeedSwitchRow.Init(AID_RCS_ASC_FEED_SWITCHES, MainPanel);
 			RCSAscFeed1ASwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1ASwitch.SetDelayTime(1);
 			RCSAscFeed2ASwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2ASwitch.SetDelayTime(1);
 			RCSAscFeed1BSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1BSwitch.SetDelayTime(1);
 			RCSAscFeed2BSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2BSwitch.SetDelayTime(1);
+
 			RCSQuad14TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS, MainPanel);
 			RCSQuad1ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
+
 			RCSQuad14SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_SWITCHES, MainPanel);
 			RCSQuad1ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad1BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSQuad23TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS, MainPanel);
 			RCSQuad2ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
+
 			RCSQuad23SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_SWITCHES, MainPanel);
 			RCSQuad2ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad2BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
 			RCSXFeedTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow);
+
 			RCSXfeedSwitchRow.Init(AID_RCS_XFEED_SWITCH, MainPanel);
 			RCSXFeedSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);
+			RCSXFeedSwitch.SetDelayTime(1);
 
 			// DS20060406 HERE WE GO!
 			RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
@@ -1753,7 +1821,9 @@ void LEM::SetSwitches(int panel) {
 
 			RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
 			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
+			RCSMainSovASwitch.SetDelayTime(1);
 			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
+			RCSMainSovBSwitch.SetDelayTime(1);
 
 			GlycolSuitFanRotaryRow.Init(AID_GLYCOLSUITFANROTARIES, MainPanel);
 			GlycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
@@ -1843,9 +1913,36 @@ void LEM::SetSwitches(int panel) {
 
 			EventTimerSwitchRow.Init(AID_LM_EVENT_TIMER_SWITCHES, MainPanel);
 			EventTimerCtlSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerCtlSwitch.SetDelayTime(1);
 			EventTimerStartSwitch.Init(55, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerStartSwitch.SetDelayTime(1);
 			EventTimerMinuteSwitch.Init(111, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 			EventTimerSecondSwitch.Init(167, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
+
+			//
+			// DSKY
+			//
+
+			DskySwitchRow.Init(AID_DSKY_KEY, MainPanel);
+			DskySwitchVerb.Init(0, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 20);
+			DskySwitchNoun.Init(0, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 60);
+			DskySwitchPlus.Init(41, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 0);
+			DskySwitchMinus.Init(41, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 40);
+			DskySwitchZero.Init(41, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 80);
+			DskySwitchSeven.Init(82, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 0);
+			DskySwitchFour.Init(82, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 40);
+			DskySwitchOne.Init(82, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 80);
+			DskySwitchEight.Init(123, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 0);
+			DskySwitchFive.Init(123, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 40);
+			DskySwitchTwo.Init(123, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 80);
+			DskySwitchNine.Init(164, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 0);
+			DskySwitchSix.Init(164, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 40);
+			DskySwitchThree.Init(164, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 80);
+			DskySwitchClear.Init(205, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 0);
+			DskySwitchProg.Init(205, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 40);
+			DskySwitchKeyRel.Init(205, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 80);
+			DskySwitchEnter.Init(246, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 20);
+			DskySwitchReset.Init(246, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 60);
 
 	//		break;
 
@@ -2338,13 +2435,13 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	switch (id) {
 	// panel 0 events:
-	case AID_DSKY_KEY:
+	/*case AID_DSKY_KEY:
 		if (event & PANEL_MOUSE_LBDOWN) {
 			dsky.ProcessKeyPress(mx, my);
 		} else if (event & PANEL_MOUSE_LBUP) {
 			dsky.ProcessKeyRelease(mx, my);
 		}
-		return true;
+		return true;*/
 
 	case AID_LM_DEDA_KEYS:
 		if (event & PANEL_MOUSE_LBDOWN) {
@@ -3318,9 +3415,9 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
-	case AID_DSKY_KEY:
+	/*case AID_DSKY_KEY:
 		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
-		return true;
+		return true;*/
 
 	case AID_LM_DEDA_LIGHTS:
 		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTS]);
