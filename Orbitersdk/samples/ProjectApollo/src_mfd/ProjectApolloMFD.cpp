@@ -1641,11 +1641,20 @@ void ProjectApolloMFD::Update (HDC hDC)
 			// We need to find the CM.
 			// In all of the scenarios in which the LM is present and selectable, the CM is already separated from the S4B.
 			object = oapiGetVesselByName("Gumdrop"); // A9
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-504"); // A9
+			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Charlie Brown"); // A10
 			}
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-505"); // A10
+			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Columbia"); // A11
+			}
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-506"); // A11
 			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Yankee Clipper"); // A12
