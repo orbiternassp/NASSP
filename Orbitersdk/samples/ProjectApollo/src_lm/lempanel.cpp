@@ -164,7 +164,7 @@ void LEM::InitSwitches() {
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
-	ModeControlPNGSSwitch.Register(PSH,"ModeControlPNGSSwitch", THREEPOSSWITCH_DOWN);
+	ModeControlPGNSSwitch.Register(PSH,"ModeControlPGNSSwitch", THREEPOSSWITCH_DOWN);
 	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_DOWN);
 	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
 	LeftXPointerSwitch.Register(PSH, "LeftXPointerSwitch", true);
@@ -1837,7 +1837,7 @@ void LEM::SetSwitches(int panel) {
 
 			ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
 
-			ModeControlPNGSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
+			ModeControlPGNSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
 			ModeControlAGSSwitch.Init (93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 
 			IMUCageSwitch.Init(191, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], ModeControlSwitchesRow, &imu);
