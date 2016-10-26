@@ -92,7 +92,7 @@ public:
 	LEMInverterSwitch() { inv1 = NULL; inv2 = NULL; };
 class LEM_ECA;	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_INV *lem_inv_1, LEM_INV *lem_inv_2);
 	//bool CheckMouseClick(int event, int mx, int my);
-	virtual bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	bool ChangeState(int newState);
 
 protected:

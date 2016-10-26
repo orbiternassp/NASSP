@@ -978,7 +978,7 @@ void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	sprintf(oapiDebugString(),"NewState %d",newState);
+	//sprintf(oapiDebugString(),"NewState %d",newState);
 	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// Check for control power
 		if (afl == 1) {
@@ -1069,7 +1069,7 @@ bool LEMDeadFaceSwitch::SwitchTo(int newState, bool dontspring)
 
 {
 	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
-		switch (state) {
+		switch (newState) {
 		case THREEPOSSWITCH_UP:
 			// Connect descent stage
 			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
@@ -1152,9 +1152,9 @@ bool LEMInverterSwitch::ChangeState(int newState){
 	return true;	
 }
 
-bool LEMInverterSwitch::SwitchTo(int newState)
+bool LEMInverterSwitch::SwitchTo(int newState, bool dontspring)
 {
-	if (LEMThreePosSwitch::SwitchTo(newState)) {
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		return ChangeState(newState);
