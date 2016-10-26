@@ -134,7 +134,7 @@ bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
 	// Perform function
 	switch (sw) {
 	case 0: // Run-Stop-Reset
-		switch (GetState()) {
+		switch (newState) {
 		case THREEPOSSWITCH_UP: // RUN
 			lem->MissionTimerDisplay.SetRunning(true); break;
 		case THREEPOSSWITCH_CENTER: // STOP
@@ -144,7 +144,7 @@ bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
 		}
 		break;
 	case 1: // Hours Inc
-		switch (GetState()) {
+		switch (newState) {
 		case THREEPOSSWITCH_UP: // RUN
 			lem->MissionTimerDisplay.UpdateHours(10); break;
 		case THREEPOSSWITCH_DOWN: // RESET
@@ -152,7 +152,7 @@ bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
 		}
 		break;
 	case 2: // Minutes Inc
-		switch (GetState()) {
+		switch (newState) {
 		case THREEPOSSWITCH_UP: // RUN
 			lem->MissionTimerDisplay.UpdateMinutes(10); break;
 		case THREEPOSSWITCH_DOWN: // RESET
@@ -160,7 +160,7 @@ bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
 		}
 		break;
 	case 3: // Seconds Inc
-		switch (GetState()) {
+		switch (newState) {
 		case THREEPOSSWITCH_UP: // RUN
 			lem->MissionTimerDisplay.UpdateSeconds(10); break;
 		case THREEPOSSWITCH_DOWN: // RESET

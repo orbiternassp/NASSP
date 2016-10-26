@@ -2256,7 +2256,9 @@ void LEM::SetSwitches(int panel) {
 			// Panel 5 is 1000,1300 to 1560, 1620
 			Panel5SwitchRow.Init(AID_LEM_PANEL_5, MainPanel);
 			TimerContSwitch.Init(233, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 0);
+			TimerContSwitch.SetDelayTime(1);
 			TimerSlewHours.Init(333, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 1);
+			TimerSlewHours.SetDelayTime(1);
 			TimerSlewMinutes.Init(405, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 2);
 			TimerSlewSeconds.Init(477, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
 			LtgORideAnunSwitch.Init(323, 147, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
