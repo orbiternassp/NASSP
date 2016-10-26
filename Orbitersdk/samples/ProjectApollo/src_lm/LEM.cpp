@@ -1064,7 +1064,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	else if (stage == 4)
 	{	
 	}
-
+	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime, DummyEvents);
 
     // x15 landing sound management
@@ -1378,6 +1378,8 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	//
 
 	agc.SetMissionInfo(ApolloNo, Realism);
+
+	MainPanel.SetRealism(Realism);
 
 
 	///
