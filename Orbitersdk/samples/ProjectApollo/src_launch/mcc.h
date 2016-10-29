@@ -614,6 +614,7 @@ public:
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn);							// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
+	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC

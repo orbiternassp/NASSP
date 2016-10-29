@@ -2226,6 +2226,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
 	}
+	else if (!strnicmp(line, "MISSIONTRACKING", 15)) {
+		int i;
+		sscanf(line + 15, "%d", &i);
+		if (i)
+			mcc.enableMissionTracking();
+	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
 	}
