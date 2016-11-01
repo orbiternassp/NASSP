@@ -105,6 +105,7 @@ MCC::MCC(){
 	padNumber = 0;
 	padForm = NULL;
 	padAutoShow = true;
+	padBuffer[0] = 0;
 	NHmenu = 0;
 	NHmessages = 0;
 	NHpad = 0;
@@ -115,6 +116,7 @@ MCC::MCC(){
 	NCOption_Enabled = false;
 	NCOption_Text[0] = 0;
 	scrubbed = false;
+	upString[0] = 0;
 }
 
 void MCC::Init(Saturn *vs){
@@ -1938,7 +1940,224 @@ void MCC::SaveState(FILEHANDLE scn) {
 	if (PCOption_Enabled == true) { SAVE_STRING("MCC_PCOption_Text", PCOption_Text); }
 	if (NCOption_Enabled == true) { SAVE_STRING("MCC_NCOption_Text", NCOption_Text); }
 	// Write PAD here!
+	//SAVE_INT("MCC_padState", padState);
+	if (padNumber != 0) { SAVE_INT("MCC_padNumber", padNumber); }
+	if (padState >= 0 && padForm != NULL)
+	{
+		if (padNumber == 1)
+		{
+			char tmpbuf[36];
+			AP7BLK * form = (AP7BLK *)padForm;
+
+			for (int i = 0;i < 8;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7BLK_Area[%d]", i);
+				SAVE_STRING(tmpbuf, form->Area[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_dVC[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->dVC[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_GETI[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GETI[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lat[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lng[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lng[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
+				SAVE_STRING(tmpbuf, form->Wx[i]);
+			}
+		}
+		else if (padNumber == 2)
+		{
+			char tmpbuf[36];
+			P27PAD * form = (P27PAD *)padForm;
+
+			SAVE_DOUBLE("MCC_P27PAD_alt", form->alt);
+			for (int i = 0;i < 16;i++)
+			{
+				sprintf(tmpbuf, "MCC_P27PAD_Data[%d]", i);
+				SAVE_INT(tmpbuf, form->Data[0][i]);
+			}
+			SAVE_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
+			SAVE_INT("MCC_P27PAD_GET", form->Index[0]);
+			SAVE_DOUBLE("MCC_P27PAD_lat", form->lat);
+			SAVE_DOUBLE("MCC_P27PAD_lng", form->lng);
+			SAVE_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
+			SAVE_STRING("MCC_P27PAD_Purpose", form->Purpose[0]);
+			SAVE_INT("MCC_P27PAD_Verb", form->Verb[0]);
+		}
+		else if (padNumber == 3)
+		{
+			AP7NAV * form = (AP7NAV *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7NAV_alt", form->alt[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+		}
+		else if (padNumber == 4)
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7MNV_alt", form->alt);
+			SAVE_V3("MCC_AP7MNV_Att", form->Att);
+			SAVE_DOUBLE("MCC_AP7MNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP7MNV_dV", form->dV);
+			SAVE_DOUBLE("MCC_AP7MNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP7MNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP7MNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP7MNV_lat", form->lat);
+			SAVE_DOUBLE("MCC_AP7MNV_lng", form->lng);
+			SAVE_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
+			SAVE_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
+			SAVE_STRING("MCC_AP7MNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP7MNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
+			SAVE_INT("MCC_AP7MNV_Star", form->Star);
+			SAVE_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
+			SAVE_DOUBLE("MCC_AP7MNV_Vc", form->Vc);
+			SAVE_DOUBLE("MCC_AP7MNV_Weight", form->Weight);
+			SAVE_DOUBLE("MCC_AP7MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 5)
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7TPI_AZ", form->AZ);
+			SAVE_V3("MCC_AP7TPI_Backup_bT", form->Backup_bT);
+			SAVE_V3("MCC_AP7TPI_Backup_dV", form->Backup_dV);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_Max", form->dH_Max);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_Min", form->dH_Min);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_TPI", form->dH_TPI);
+			SAVE_DOUBLE("MCC_AP7TPI_dTT", form->dTT);
+			SAVE_DOUBLE("MCC_AP7TPI_E", form->E);
+			SAVE_DOUBLE("MCC_AP7TPI_EL", form->EL);
+			SAVE_DOUBLE("MCC_AP7TPI_GET", form->GET);
+			SAVE_DOUBLE("MCC_AP7TPI_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP7TPI_R", form->R);
+			SAVE_DOUBLE("MCC_AP7TPI_Rdot", form->Rdot);
+			SAVE_V3("MCC_AP7TPI_Vg", form->Vg);
+		}
+		else if (padNumber == 6)
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+
+			SAVE_STRING("MCC_AP7ENT_Area", form->Area[0]);
+			SAVE_V3("MCC_AP7ENT_Att400K", form->Att400K[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_BankAN", form->BankAN[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_DRE", form->DRE[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_dVTO", form->dVTO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Lat", form->Lat[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Lng", form->Lng[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_BankAN", form->PB_BankAN[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_DRE", form->PB_DRE[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_R400K", form->PB_R400K[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_Ret05", form->PB_Ret05[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_Ret2", form->PB_Ret2[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetBBO", form->PB_RetBBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetDrog", form->PB_RetDrog[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetEBO", form->PB_RetEBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetRB", form->PB_RetRB[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RTGO", form->PB_RTGO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_VIO", form->PB_VIO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Ret05", form->Ret05[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Ret2", form->Ret2[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetBBO", form->RetBBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetDrog", form->RetDrog[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetEBO", form->RetEBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetRB", form->RetRB[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RTGO", form->RTGO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_VIO", form->VIO[0]);
+		}
+		else if (padNumber == 7)
+		{
+			P37PAD * form = (P37PAD *)padForm;
+
+			SAVE_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
+			SAVE_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
+			SAVE_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
+			SAVE_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+		}
+		else if (padNumber == 8)
+		{
+			AP11MNV * form = (AP11MNV *)padForm;
+
+			SAVE_V3("MCC_AP11MNV_Att", form->Att);
+			SAVE_INT("MCC_AP11MNV_BSSStar", form->BSSStar);
+			SAVE_DOUBLE("MCC_AP11MNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP11MNV_dV", form->dV);
+			SAVE_V3("MCC_AP11MNV_GDCangles", form->GDCangles);
+			SAVE_DOUBLE("MCC_AP11MNV_GET05G", form->GET05G);
+			SAVE_DOUBLE("MCC_AP11MNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP11MNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP11MNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP11MNV_lat", form->lat);
+			SAVE_DOUBLE("MCC_AP11MNV_lng", form->lng);
+			SAVE_STRING("MCC_AP11MNV_PropGuid", form->PropGuid);
+			SAVE_DOUBLE("MCC_AP11MNV_pTrim", form->pTrim);
+			SAVE_STRING("MCC_AP11MNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP11MNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP11MNV_RTGO", form->RTGO);
+			SAVE_STRING("MCC_AP11MNV_SetStars", form->SetStars);
+			SAVE_DOUBLE("MCC_AP11MNV_Shaft", form->Shaft);
+			SAVE_DOUBLE("MCC_AP11MNV_SPA", form->SPA);
+			SAVE_INT("MCC_AP11MNV_Star", form->Star);
+			SAVE_DOUBLE("MCC_AP11MNV_SXP", form->SXP);
+			SAVE_DOUBLE("MCC_AP11MNV_Trun", form->Trun);
+			SAVE_DOUBLE("MCC_AP11MNV_Vc", form->Vc);
+			SAVE_DOUBLE("MCC_AP11MNV_VI0", form->VI0);
+			SAVE_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
+			SAVE_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
+			SAVE_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 9)
+		{
+			AP11ENT * form = (AP11ENT *)padForm;
+
+			SAVE_STRING("MCC_AP11ENT_Area", form->Area[0]);
+			SAVE_V3("MCC_AP11ENT_Att05", form->Att05[0]);
+			SAVE_INT("MCC_AP11ENT_BSS", form->BSS[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DLMax", form->DLMax[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DLMin", form->DLMin[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DO", form->DO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Gamma400K", form->Gamma400K[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_GETHorCheck", form->GETHorCheck[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Lat", form->Lat[0]);
+			SAVE_STRING("MCC_AP11ENT_LiftVector", form->LiftVector[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Lng", form->Lng[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_MaxG", form->MaxG[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_PitchHorCheck", form->PitchHorCheck[0]);
+			SAVE_STRING("MCC_AP11ENT_remarks", form->remarks[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RET05", form->RET05[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETBBO", form->RETBBO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETDRO", form->RETDRO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETEBO", form->RETEBO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETVCirc", form->RETVCirc[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RRT", form->RRT[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RTGO", form->RTGO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SFT", form->SFT[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SPA", form->SPA[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SXP", form->SXP[0]);
+			SAVE_INT("MCC_AP11ENT_SXTS", form->SXTS[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_TRN", form->TRN[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_V400K", form->V400K[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VIO", form->VIO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VLMax", form->VLMax[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VLMin", form->VLMin[0]);
+		}
+		else if (padNumber == 10)
+		{
+			TLIPAD * form = (TLIPAD *)padForm;
+
+			SAVE_DOUBLE("MCC_TLIPAD_BurnTime", form->BurnTime);
+			SAVE_DOUBLE("MCC_TLIPAD_dVC", form->dVC);
+			SAVE_V3("MCC_TLIPAD_ExtATT", form->ExtATT);
+			SAVE_V3("MCC_TLIPAD_IgnATT", form->IgnATT);
+			SAVE_V3("MCC_TLIPAD_SepATT", form->SepATT);
+			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
+			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
+		}
+	}
 	// Write uplink buffer here!
+	if (upString[0] != 0) { SAVE_STRING("MCC_upString", upString); }
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
 }
@@ -1947,6 +2166,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 void MCC::LoadState(FILEHANDLE scn) {
 	char *line;
 	int tmp = 0; // Used in boolean type loader
+	bool padisallocated = false;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
@@ -1967,7 +2187,237 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_SubStateTime", SubStateTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
+		LOAD_INT("MCC_padNumber", padNumber);
+		//LOAD_INT("MCC_padState", padState);
+		if (padNumber > 0)
+		{
+			if (!padisallocated)
+			{
+				allocPad(padNumber);
+				padState = 0;
+				padisallocated = true;
+			}
+		}
+		if (padNumber == 1)
+		{
+			char tmpbuf[36];
+			
+			AP7BLK * form = (AP7BLK *)padForm;
+
+			for (int i = 0;i < 8;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7BLK_Area[%d]", i);
+				LOAD_STRING(tmpbuf, form->Area[i], 10);
+				sprintf(tmpbuf, "MCC_AP7BLK_dVC[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->dVC[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_GETI[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GETI[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lat[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lng[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lng[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
+				LOAD_STRING(tmpbuf, form->Wx[i], 10);
+			}
+		}
+		else if (padNumber == 2)
+		{
+			char tmpbuf[36];
+			P27PAD * form = (P27PAD *)padForm;
+
+			LOAD_DOUBLE("MCC_P27PAD_alt", form->alt);
+			for (int i = 0;i < 16;i++)
+			{
+				sprintf(tmpbuf, "MCC_P27PAD_Data[%d]", i);
+				LOAD_INT(tmpbuf, form->Data[0][i]);
+			}
+			LOAD_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
+			LOAD_INT("MCC_P27PAD_GET", form->Index[0]);
+			LOAD_DOUBLE("MCC_P27PAD_lat", form->lat);
+			LOAD_DOUBLE("MCC_P27PAD_lng", form->lng);
+			LOAD_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
+			LOAD_STRING("MCC_P27PAD_Purpose", form->Purpose[0], 64);
+			LOAD_INT("MCC_P27PAD_Verb", form->Verb[0]);
+		}
+		else if (padNumber == 3)
+		{
+			AP7NAV * form = (AP7NAV *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7NAV_alt", form->alt[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+		}
+		else if (padNumber == 4)
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7MNV_alt", form->alt);
+			LOAD_V3("MCC_AP7MNV_Att", form->Att);
+			LOAD_DOUBLE("MCC_AP7MNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP7MNV_dV", form->dV);
+			LOAD_DOUBLE("MCC_AP7MNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP7MNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP7MNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP7MNV_lat", form->lat);
+			LOAD_DOUBLE("MCC_AP7MNV_lng", form->lng);
+			LOAD_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
+			LOAD_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
+			LOAD_STRING("MCC_AP7MNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
+			LOAD_INT("MCC_AP7MNV_Star", form->Star);
+			LOAD_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
+			LOAD_DOUBLE("MCC_AP7MNV_Vc", form->Vc);
+			LOAD_DOUBLE("MCC_AP7MNV_Weight", form->Weight);
+			LOAD_DOUBLE("MCC_AP7MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 5)
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7TPI_AZ", form->AZ);
+			LOAD_V3("MCC_AP7TPI_Backup_bT", form->Backup_bT);
+			LOAD_V3("MCC_AP7TPI_Backup_dV", form->Backup_dV);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_Max", form->dH_Max);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_Min", form->dH_Min);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_TPI", form->dH_TPI);
+			LOAD_DOUBLE("MCC_AP7TPI_dTT", form->dTT);
+			LOAD_DOUBLE("MCC_AP7TPI_E", form->E);
+			LOAD_DOUBLE("MCC_AP7TPI_EL", form->EL);
+			LOAD_DOUBLE("MCC_AP7TPI_GET", form->GET);
+			LOAD_DOUBLE("MCC_AP7TPI_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP7TPI_R", form->R);
+			LOAD_DOUBLE("MCC_AP7TPI_Rdot", form->Rdot);
+			LOAD_V3("MCC_AP7TPI_Vg", form->Vg);
+		}
+		else if (padNumber == 6)
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+
+			LOAD_STRING("MCC_AP7ENT_Area", form->Area[0], 10);
+			LOAD_V3("MCC_AP7ENT_Att400K", form->Att400K[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_BankAN", form->BankAN[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_DRE", form->DRE[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_dVTO", form->dVTO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Lat", form->Lat[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Lng", form->Lng[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_BankAN", form->PB_BankAN[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_DRE", form->PB_DRE[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_R400K", form->PB_R400K[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_Ret05", form->PB_Ret05[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_Ret2", form->PB_Ret2[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetBBO", form->PB_RetBBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetDrog", form->PB_RetDrog[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetEBO", form->PB_RetEBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetRB", form->PB_RetRB[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RTGO", form->PB_RTGO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_VIO", form->PB_VIO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Ret05", form->Ret05[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Ret2", form->Ret2[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetBBO", form->RetBBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetDrog", form->RetDrog[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetEBO", form->RetEBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetRB", form->RetRB[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RTGO", form->RTGO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_VIO", form->VIO[0]);
+		}
+		else if (padNumber == 7)
+		{
+			P37PAD * form = (P37PAD *)padForm;
+
+			LOAD_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
+			LOAD_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
+			LOAD_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
+			LOAD_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+		}
+		else if (padNumber == 8)
+		{
+			AP11MNV * form = (AP11MNV *)padForm;
+
+			LOAD_V3("MCC_AP11MNV_Att", form->Att);
+			LOAD_INT("MCC_AP11MNV_BSSStar", form->BSSStar);
+			LOAD_DOUBLE("MCC_AP11MNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP11MNV_dV", form->dV);
+			LOAD_V3("MCC_AP11MNV_GDCangles", form->GDCangles);
+			LOAD_DOUBLE("MCC_AP11MNV_GET05G", form->GET05G);
+			LOAD_DOUBLE("MCC_AP11MNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP11MNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP11MNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP11MNV_lat", form->lat);
+			LOAD_DOUBLE("MCC_AP11MNV_lng", form->lng);
+			LOAD_STRING("MCC_AP11MNV_PropGuid", form->PropGuid, 64);
+			LOAD_DOUBLE("MCC_AP11MNV_pTrim", form->pTrim);
+			LOAD_STRING("MCC_AP11MNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP11MNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP11MNV_RTGO", form->RTGO);
+			LOAD_STRING("MCC_AP11MNV_SetStars", form->SetStars, 32);
+			LOAD_DOUBLE("MCC_AP11MNV_Shaft", form->Shaft);
+			LOAD_DOUBLE("MCC_AP11MNV_SPA", form->SPA);
+			LOAD_INT("MCC_AP11MNV_Star", form->Star);
+			LOAD_DOUBLE("MCC_AP11MNV_SXP", form->SXP);
+			LOAD_DOUBLE("MCC_AP11MNV_Trun", form->Trun);
+			LOAD_DOUBLE("MCC_AP11MNV_Vc", form->Vc);
+			LOAD_DOUBLE("MCC_AP11MNV_VI0", form->VI0);
+			LOAD_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
+			LOAD_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
+			LOAD_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 9)
+		{
+			AP11ENT * form = (AP11ENT *)padForm;
+
+			LOAD_STRING("MCC_AP11ENT_Area", form->Area[0], 10);
+			LOAD_V3("MCC_AP11ENT_Att05", form->Att05[0]);
+			LOAD_INT("MCC_AP11ENT_BSS", form->BSS[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DLMax", form->DLMax[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DLMin", form->DLMin[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DO", form->DO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_Gamma400K", form->Gamma400K[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_GETHorCheck", form->GETHorCheck[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_Lat", form->Lat[0]);
+			LOAD_STRING("MCC_AP11ENT_LiftVector", form->LiftVector[0], 4);
+			LOAD_DOUBLE("MCC_AP11ENT_Lng", form->Lng[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_MaxG", form->MaxG[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_PitchHorCheck", form->PitchHorCheck[0]);
+			LOAD_STRING("MCC_AP11ENT_remarks", form->remarks[0], 128);
+			LOAD_DOUBLE("MCC_AP11ENT_RET05", form->RET05[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETBBO", form->RETBBO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETDRO", form->RETDRO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETEBO", form->RETEBO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETVCirc", form->RETVCirc[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RRT", form->RRT[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RTGO", form->RTGO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SFT", form->SFT[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SPA", form->SPA[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SXP", form->SXP[0]);
+			LOAD_INT("MCC_AP11ENT_SXTS", form->SXTS[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_TRN", form->TRN[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_V400K", form->V400K[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VIO", form->VIO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VLMax", form->VLMax[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VLMin", form->VLMin[0]);
+		}
+		else if (padNumber == 10)
+		{
+			TLIPAD * form = (TLIPAD *)padForm;
+
+			LOAD_DOUBLE("MCC_TLIPAD_BurnTime", form->BurnTime);
+			LOAD_DOUBLE("MCC_TLIPAD_dVC", form->dVC);
+			LOAD_V3("MCC_TLIPAD_ExtATT", form->ExtATT);
+			LOAD_V3("MCC_TLIPAD_IgnATT", form->IgnATT);
+			LOAD_V3("MCC_TLIPAD_SepATT", form->SepATT);
+			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
+			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
+		}
+
+		LOAD_STRING("MCC_upString", upString, 3072);
 	}
+
+	if (upString[0] != 0) {
+		this->pushCMCUplinkString(upString);
+	}
+
 	return;
 }
 
@@ -2185,6 +2635,9 @@ void MCC::drawPad(){
 		break;
 	}
 	padState = 1;
+
+	//Save PAD string
+	sprintf(padBuffer, buffer);
 }
 
 // Allocate PAD
