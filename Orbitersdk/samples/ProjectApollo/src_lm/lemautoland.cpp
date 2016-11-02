@@ -821,8 +821,8 @@ void LEMcomputer::Prog64(double simt)
 			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
 			fprintf(outstr,"cbrg: %.3f tbrg:%.3f rbrg:%.3f hdg:%.3f time:%.2f\n",
 				cbrg*DEG, tbrg*DEG, rbrg*DEG, heading*DEG, simt);
-			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position);
-			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity);
+			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position.x, position.y, position.z);
+			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity.x, velocity.y, velocity.z);
 		}
 
 	}
@@ -977,8 +977,8 @@ void LEMcomputer::Prog65(double simt)
 			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
 			fprintf(outstr,"cbrg: %.3f tbrg:%.3f rbrg:%.3f hdg:%.3f time:%.2f\n",
 				cbrg*DEG, tbrg*DEG, rbrg*DEG, heading*DEG, simt);
-			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position);
-			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity);
+			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position.x, position.y, position.z);
+			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity.x, velocity.y, velocity.z);
 		}
 
 
@@ -1049,9 +1049,9 @@ void LEMcomputer::Prog65(double simt)
 		tgtatt.y=0.0;
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
 		if(LOGFILE) {
-			fprintf(outstr,"acc: %.6f %.6f %.6f \n", acc);
-			fprintf(outstr,"tgt: %.3f %.3f %.3f \n", tgtatt*DEG);
-			fprintf(outstr,"act: %.3f %.3f %.3f \n", actatt*DEG);
+			fprintf(outstr,"acc: %.6f %.6f %.6f \n", acc.x, acc.y, acc.z);
+			fprintf(outstr,"tgt: %.3f %.3f %.3f \n", tgtatt.x*DEG, tgtatt.y*DEG, tgtatt.z*DEG);
+			fprintf(outstr,"act: %.3f %.3f %.3f \n", actatt.x*DEG, actatt.y*DEG, actatt.z*DEG);
 			fprintf(outstr,"thr: %.3f yrate: %.3f\n", cthrust*100., yrate);
 		}
 			

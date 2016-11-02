@@ -1669,11 +1669,11 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 			}
 		break;
 		case LTLM_DS:  // DIGITAL SERIAL
-			switch(ccode){
-				default:
+			//switch(ccode){
+			//	default:
 					sprintf(oapiDebugString(),"MEASURE: UNKNOWN DS-0x%x",ccode);
-					break;
-			}
+			//		break;
+			//}
 		break;
 		case LTLM_E:  // EVENT
 			if(channel == 200){

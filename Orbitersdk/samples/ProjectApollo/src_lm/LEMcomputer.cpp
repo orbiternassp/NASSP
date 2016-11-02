@@ -1058,11 +1058,11 @@ void LEMcomputer::Timestep(double simt, double simdt)
 
 	}
 
-	switch (VerbRunning) {
+	//switch (VerbRunning) {
 
-	default:
-		break;
-	}
+	//default:
+	//	break;
+	//}
 }
 
 void LEMcomputer::ProgPressed(int R1, int R2, int R3)
@@ -1109,11 +1109,11 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 void LEMcomputer::TerminateProgram()
 
 {
-	switch (ProgRunning) {
-	default:
+	//switch (ProgRunning) {
+	//default:
 		TerminateCommonProgram();
-		break;
-	}
+	//	break;
+	//}
 
 	//
 	// In general, just switch to idle and wait for a
