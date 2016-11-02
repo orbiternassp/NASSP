@@ -26,6 +26,7 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
+#include "inttypes.h"
 #include <stdio.h>
 #include <math.h>
 #include "soundlib.h"
@@ -4131,10 +4132,10 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			OutputChannel[num] = val;
 		}
 		else if (!strnicmp (line, "VOC7", 4)) {
-			sscanf (line+4, "%d", &vagc.OutputChannel7);
+			sscanf (line+4, "%" SCNd16, &vagc.OutputChannel7);
 		}
 		else if (!strnicmp (line, "IDXV", 4)) {
-			sscanf (line+4, "%d", &vagc.IndexValue);
+			sscanf (line+4, "%" SCNd16, &vagc.IndexValue);
 		}
 		else if (!strnicmp (line, "NEXTZ", 5)) {
 			sscanf (line+5, "%d", &NextZ);
@@ -4146,7 +4147,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf (line+7, "%d", &ChannelRoutineCount);
 		}
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
-			sscanf (line+12, "%d", &vagc.Ch33Switches);
+			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
 		}
 		/*
 		TODO Do NOT load CycleCounter until CduFifos are saved/loaded, too

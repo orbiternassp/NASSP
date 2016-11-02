@@ -126,16 +126,16 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
 		r = b*theta;
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI);
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI));
 	}
 	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
 	// Draw Archemedes screw #2
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
 		r = b*theta;
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI);
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI));
 	}
 	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
 
@@ -2258,7 +2258,6 @@ void LEM::SetSwitches(int panel) {
 			TimerContSwitch.Init(233, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 0);
 			TimerContSwitch.SetDelayTime(1);
 			TimerSlewHours.Init(333, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 1);
-			TimerSlewHours.SetDelayTime(1);
 			TimerSlewMinutes.Init(405, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 2);
 			TimerSlewSeconds.Init(477, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
 			LtgORideAnunSwitch.Init(323, 147, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);

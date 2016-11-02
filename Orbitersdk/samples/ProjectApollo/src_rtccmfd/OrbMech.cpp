@@ -2687,8 +2687,8 @@ double OctToDouble(int oct1, int oct2)
 	double dec1, dec2,dubb;
 	bin1 = octal_binary(oct1);
 	bin2 = octal_binary(oct2);
-	dec1 = BinToDec(bin1);
-	dec2 = BinToDec(bin2);
+	dec1 = (double)BinToDec(bin1);
+	dec2 = (double)BinToDec(bin2);
 	dubb = dec1*OrbMech::power(2.0, -14.0) + dec2*OrbMech::power(2.0, -28.0);
 	if (dubb > 0.5)
 	{
@@ -2702,7 +2702,7 @@ unsigned long long octal_binary(int n)  /* Function to convert octal to binary.*
 	unsigned long long decimal = 0, binary = 0, i = 0;
 	while (n != 0)
 	{
-		decimal += (n % 10)*OrbMech::power(8, i);
+		decimal += (n % 10)*(int)pow(8, i);
 		++i;
 		n /= 10;
 	}
