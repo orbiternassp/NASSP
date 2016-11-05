@@ -711,9 +711,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			case SATSYSTEMS_CABINCLOSEOUT:
 				if (MissionTime >= -6000) {	// 1h 40min before launch
 
-					// Play cabin closeout sound
-					CabincloseoutS.play();
-					CabincloseoutS.done();
+					if (SaturnType == SAT_SATURNV) {
+						// Play cabin closeout sound
+						CabincloseoutS.play();
+						CabincloseoutS.done();
+					}
 
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_1;
