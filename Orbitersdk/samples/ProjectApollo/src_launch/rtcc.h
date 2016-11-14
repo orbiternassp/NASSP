@@ -80,7 +80,7 @@ struct LambertMan //Data for Lambert targeting
 	double PhaseAngle; //Phase angle to target, will overwrite offset
 	//bool prograde; //Prograde or retrograde solution
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
-	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+	bool csmlmdocked = false; //0 = CSM alone, 1 = CSM/LM
 };
 
 struct AP7ManPADOpt
@@ -407,7 +407,7 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive);
+	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked = false);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
 	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);

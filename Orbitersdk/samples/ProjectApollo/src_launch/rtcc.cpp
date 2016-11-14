@@ -1330,20 +1330,22 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		LambertMan lambert;
 		AP7ManPADOpt opt;
-		double P30TIG;
+		double P30TIG, GETBase;
 		VECTOR3 dV_LVLH;
 		SV sv_A, sv_P;
+
+		GETBase = getGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, getGETBase(), OrbMech::HHMMSSToSS(26, 25, 0), OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_NONIMPULSIVE);
+		lambert = set_lambertoptions(calcParams.src, calcParams.tgt, GETBase, OrbMech::HHMMSSToSS(26, 25, 0), OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD, RTCC_NONIMPULSIVE);
 
 		LambertTargeting(&lambert, dV_LVLH, P30TIG);
 
-		opt.GETbase = getGETBase();
+		opt.GETbase = GETBase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
@@ -1354,7 +1356,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			REFSMMATOpt refsopt;
 
-			refsopt.GETbase = getGETBase();
+			refsopt.GETbase = GETBase;
 			refsopt.REFSMMATdirect = true;
 			refsopt.REFSMMATopt = 2;
 			refsopt.REFSMMATTime = 23 * 60 * 60 + 24 * 60 + 8;
@@ -4411,11 +4413,12 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	return dh_CDH;
 }
 
-LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive)
+LambertMan RTCC::set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked)
 {
 	LambertMan opt;
 
 	opt.axis = axis;
+	opt.csmlmdocked = csmlmdocked;
 	opt.GETbase = GETbase;
 	opt.impulsive = impulsive;
 	opt.N = N;
