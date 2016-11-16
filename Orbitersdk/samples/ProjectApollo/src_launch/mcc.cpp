@@ -2158,7 +2158,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 	}
 	// Write uplink buffer here!
-	if (upString[0] != 0) { SAVE_STRING("MCC_upString", upString); }
+	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
 }
