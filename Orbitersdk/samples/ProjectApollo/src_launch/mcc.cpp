@@ -117,6 +117,7 @@ MCC::MCC(){
 	NCOption_Text[0] = 0;
 	scrubbed = false;
 	upString[0] = 0;
+	upDescr[0] = 0;
 }
 
 void MCC::Init(Saturn *vs){
@@ -3381,6 +3382,9 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 
 void MCC::subThreadMacro(int type, int updatenumber)
 {
+	// Clobber string
+	upString[0] = 0;
+	upDescr[0] = 0;
 	if (type == UTP_BLOCKDATA)
 	{
 		AP7BLK * form = (AP7BLK *)padForm;
@@ -3401,9 +3405,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			AP11MNV * form = (AP11MNV *)padForm;
 		}
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -3425,8 +3426,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			AP11MNV * form = (AP11MNV *)padForm;
 		}
 		// Ask RTCC for numbers
-		upString[0] = 0;
-		upDescr[0] = 0;
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Done filling form, OK to show
 		padState = 0;
@@ -3444,9 +3443,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_UPLINKONLY)
 	{
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -3458,9 +3454,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7NAV * form = (AP7NAV *)padForm;
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType,updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -3512,9 +3505,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP11ENT * form = (AP11ENT *)padForm;
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
