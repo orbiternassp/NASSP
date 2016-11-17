@@ -1470,8 +1470,6 @@ void MCC::TimeStep(double simdt){
 		}
 	}
 
-	sprintf(oapiDebugString(), "%d %c", uplink_size, upString[0]);
-
 	// MESSAGE LIST MAINTENANCE should come last that way if any of the above prints anything,
 	// it gets printed in this timestep rather than the next.
 	x = currentMessage+1;					// Index, Point beyond tail
@@ -3168,6 +3166,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	// Clobber string
 	upString[0] = 0;
 	upDescr[0] = 0;
+	uplink_size = 0;
 	if (type == UTP_BLOCKDATA)
 	{
 		AP7BLK * form = (AP7BLK *)padForm;
