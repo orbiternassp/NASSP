@@ -249,6 +249,7 @@
 #define UTP_TLIPAD			8
 #define UTP_LUNARENTRY		9
 #define UTP_FINALLUNARENTRY 10
+#define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -612,7 +613,7 @@ public:
 	void freePad();											// Free memory occupied by PAD form
 	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate);
 	int  subThread();										// Subthread entry point
-	int startSubthread(int fcn);							// Subthread start request
+	int startSubthread(int fcn, int type);					// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
 	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
 	void SaveState(FILEHANDLE scn);							// Save state
@@ -625,6 +626,7 @@ public:
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
+	int subThreadType;										// What type of subthread?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
 	// GROUND TRACKING NETWORK
@@ -656,7 +658,6 @@ public:
 	char upString[1024 * 3];								// Uplink string buffer
 	char upDescr[1024];										// Uplink Description
 	bool scrubbed;											// Maneuver scrubbed
-	char padBuffer[512];
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer

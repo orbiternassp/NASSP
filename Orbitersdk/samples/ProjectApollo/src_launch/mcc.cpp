@@ -105,7 +105,6 @@ MCC::MCC(){
 	padNumber = 0;
 	padForm = NULL;
 	padAutoShow = true;
-	padBuffer[0] = 0;
 	NHmenu = 0;
 	NHmessages = 0;
 	NHpad = 0;
@@ -871,7 +870,7 @@ void MCC::TimeStep(double simdt){
 					}
 					break;
 				case 1:
-					startSubthread(50); // Start subthread to fill PAD
+					startSubthread(50, UTP_UPLINKONLY); // Start subthread to fill PAD
 					setSubState(2);
 					// FALL INTO
 				case 2: // Await pad read-up time (however long it took to compute it and give it to capcom)
@@ -1118,7 +1117,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(6);// Allocate AP7 Entry Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(44); // Start subthread to fill PAD
+						startSubthread(44, UTP_ENTRY); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1162,7 +1161,7 @@ void MCC::TimeStep(double simdt){
 						}
 						else
 						{
-							startSubthread(1);
+							startSubthread(1, UTP_NONE);
 						}
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
 						//rtcc->SetManeuverData(burnData.IgnMJD, burnData._dV_LVLH);
@@ -1210,7 +1209,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(8);// Allocate AP11 MNV Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(2); // Start subthread to fill PAD
+						startSubthread(2, UTP_P30MANEUVER); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1273,7 +1272,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(8);// Allocate AP11 MNV PAD
 					if (padForm != NULL) {
 						// If success
-						startSubthread(3); // Start subthread to fill PAD
+						startSubthread(3, UTP_P47MANEUVER); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1298,7 +1297,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(10);// Allocate AP11 TLI PAD
 					if (padForm != NULL) {
 						// If success
-						startSubthread(4); // Start subthread to fill PAD
+						startSubthread(4, UTP_TLIPAD); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1470,6 +1469,8 @@ void MCC::TimeStep(double simdt){
 			break;
 		}
 	}
+
+	sprintf(oapiDebugString(), "%d %c", uplink_size, upString[0]);
 
 	// MESSAGE LIST MAINTENANCE should come last that way if any of the above prints anything,
 	// it gets printed in this timestep rather than the next.
@@ -1662,238 +1663,22 @@ int MCC::CM_uplink_buffer() {
 int MCC::subThread(){
 	int Result = 0;
 	subThreadStatus = 2; // Running
-	if (MissionType == MTP_C_PRIME)
+	
+	if (subThreadMode == 0)
 	{
-		switch (subThreadMode) {
-		case 0: // Test
-			Sleep(5000); // Waste 5 seconds
-			Result = 0;  // Success (negative = error)
-			break;
-		case 1:	//MISSION CP TLI
-		{
-			scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
-			Result = 0;
-		}
-		break;
-		case 2: // FILL PAD AP11MNV FOR TLI+90 MANEUVER
-		case 20: // MISSION CP MCC1
-		case 21: // MISSION CP MCC2
-		case 22: // MISSION CP MCC3
-		case 23: // MISSION CP MCC4
-		case 31: // MISSION CP LOI-1
-		case 102: // MISSION CP LOI-2
-		case 109: // MISSION CP TEI-6
-		case 110: // MISSION CP TEI-7
-		case 111: // MISSION CP TEI-8
-		case 113: // MISSION CP PRELIMINARY TEI-10
-		case 200: // MISSION CP TEI-10
-		case 203: // MISSION CP MCC-5
-		case 204: // MISSION CP MCC-6
-		case 205: // MISSION CP PREL. MCC-7
-		case 206: // MISSION CP MCC-7
-		{
-			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 3: // FILL PAD AP11MNV FOR TLI+4 MANEUVER
-		case 10: //MISSION CP BLOCK DATA 1
-		case 11: //MISSION CP BLOCK DATA 2
-		case 12: //MISSION CP BLOCK DATA 3
-		case 13: //MISSION CP BLOCK DATA 4
-		case 40: //MISSION CP FLYBY MANEUVER
-		case 41: //MISSION CP PC+2 MANEUVER
-		case 42: //MISSION CP FAST PC+2 MANEUVER
-		case 30://MISSION CP PRELIMINARY LOI-1 MANEUVER
-		case 50: //MISSION PRELIMINARY TEI-1 MANEUVER
-		case 105: // MISSION CP TEI-2
-		case 106: // MISSION CP TEI-3
-		case 107: // MISSION CP TEI-4
-		case 108: // MISSION CP TEI-5
-		case 112: // MISSION CP TEI-9
-		case 201: // MISSION CP TEI-11
-		{
-			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 4: //TLI PAD
-		{
-			subThreadMacro(UTP_TLIPAD, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 103: //CSM SV TO LM SLOT
-		case 202: //ENTRY REFSMMAT
-		{
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 207: //ENTRY PAD
-		{
-			subThreadMacro(UTP_LUNARENTRY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 208: //FINAL ENTRY PAD and SV UPDATE
-		{
-			subThreadMacro(UTP_FINALLUNARENTRY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		}
+		Sleep(5000); // Waste 5 seconds
+		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_C_PRIME)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_C)
 	{
-		switch (subThreadMode) {
-		case 0: // Test
-			Sleep(5000); // Waste 5 seconds
-			Result = 0;  // Success (negative = error)
-			break;
-		case 1: // FILL PAD AP7MNV FOR AP7 PHASING BURN
-		case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
-		{
-			subThreadMacro(UTP_P30MANEUVER, 2);
-			Result = 0; // Done
-		}
-		break;
-		case 3: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
-		case 5:
-		case 12:
-		case 13:
-		case 14:
-		case 15:
-		case 16:
-		case 18:
-		case 19:
-		case 20:
-		case 21:
-		case 22:
-		case 24:
-		case 25:
-		case 26:
-		case 27:
-		case 29:
-		case 30:
-		case 31:
-		case 32:
-		case 33:
-		case 35:
-		case 36:
-		case 37:
-		case 38:
-		case 40:
-		case 41:
-		{
-			subThreadMacro(UTP_BLOCKDATA, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 6);
-			Result = 0; // Done
-		}
-		break;
-		case 7: // FILL FINAL PAD AP7MNV FOR NCC1 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 7);
-			Result = 0; // Done
-		}
-		break;
-		case 8: // FILL PAD AP7MNV FOR NCC2 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 8);
-			Result = 0; // Done
-		}
-		break;
-		case 9: // FILL PAD AP7MNV FOR NSR MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 9);
-			Result = 0; // Done
-		}
-		break;
-		case 10: // FILL PAD AP7TPI FOR AP7 TPI PAD
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_TPI, 10);
-			Result = 0; // Done
-		}
-		break;
-		case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
-		{
-			subThreadMacro(UTP_P47MANEUVER, 11);
-			Result = 0; // Done
-		}
-		break;
-		case 17: //FILL PAD AP7MNV FOR AP7 SPS-X PAD
-		case 23:
-		case 28:
-		case 34:
-		case 39:
-		case 42:
-		{
-			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 43: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
-		case 44:
-		{
-			subThreadMacro(UTP_ENTRY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 50: //GENERIC CSM STATE VECTOR UPDATE
-		{
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 51: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 52: //GENERIC CSM STATE VECTOR UPDATE AND NAV CHECK PAD
-		{
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 53: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE AND NAV CHECK PAD
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 54: //GENERIC CSM STATE VECTOR PAD
-		{
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		}
+		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0; // Done
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
@@ -1902,10 +1687,11 @@ int MCC::subThread(){
 }
 
 // Subthread initiation
-int MCC::startSubthread(int fcn){
+int MCC::startSubthread(int fcn, int type){
 	if(subThreadStatus < 1){
 		// Punt thread
 		subThreadMode = fcn;
+		subThreadType = type;
 		subThreadStatus = 1; // Busy
 		DWORD id = 0;
 		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
@@ -2636,9 +2422,6 @@ void MCC::drawPad(){
 		break;
 	}
 	padState = 1;
-
-	//Save PAD string
-	sprintf(padBuffer, buffer);
 }
 
 // Allocate PAD
@@ -2910,7 +2693,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(1);// Allocate AP7 Block Data Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2947,7 +2730,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2997,7 +2780,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3075,7 +2858,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(5);// Allocate AP7 TPI Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3102,7 +2885,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 	{
 		switch (SubState) {
 		case 0:
-			startSubthread(updatenumber); // Start subthread to fill PAD
+			startSubthread(updatenumber, type); // Start subthread to fill PAD
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
@@ -3160,7 +2943,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(3); // Allocate AP7 Nav Check Pad					
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3224,7 +3007,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(6);// Allocate AP7 Entry Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3256,11 +3039,11 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 				// If success
 				if (updatenumber == -1)	//Generic Update if -1
 				{
-					startSubthread(54); // Start subthread to fill PAD
+					startSubthread(54, type); // Start subthread to fill PAD
 				}
 				else
 				{
-					startSubthread(updatenumber); // Start subthread to fill PAD
+					startSubthread(updatenumber, type); // Start subthread to fill PAD
 				}
 			}
 			else {
@@ -3291,7 +3074,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(9);// Allocate AP11 Entry Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3321,7 +3104,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(9); // Allocate Lunar Entry PAD					
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -3513,5 +3296,9 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		}
 		padState = 0;
 		// Pretend we did the math
+	}
+	else if (type == UTP_NONE)
+	{
+		scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
 	}
 }
