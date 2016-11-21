@@ -2547,7 +2547,7 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	double a,SA,TA,dTA;
-	VECTOR3 s_NBA, s_NBB,s_SMB, s_SMA,X_NB,Y_NB,Z_NB,X,Y,Z,X_SM,Y_SM,Z_SM,imuang;
+	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
 	a = -0.5676353234;
@@ -2584,19 +2584,7 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 		//s_SMA = navstars[29];// mul(REFS, navstars[29]);
 		//s_SMB = navstars[34]; //mul(REFS, navstars[34]);
 
-		X_NB = s_NBA;
-		Y_NB = unit(crossp(s_NBA, s_NBB));
-		Z_NB = crossp(X_NB, Y_NB);
-
-		X_SM = s_SMA;
-		Y_SM = unit(crossp(s_SMA, s_SMB));
-		Z_SM = crossp(X_SM, Y_SM);
-
-		X = X_SM*X_NB.x + Y_SM*Y_NB.x + Z_SM*Z_NB.x;
-		Y = X_SM*X_NB.y + Y_SM*Y_NB.y + Z_SM*Z_NB.y;
-		Z = X_SM*X_NB.z + Y_SM*Y_NB.z + Z_SM*Z_NB.z;
-
-		SMNB = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+		SMNB = AXISGEN(s_NBA, s_NBB, s_SMA, s_SMB);
 
 		imuang = CALCGAR(REFS, SMNB);
 
@@ -3366,6 +3354,25 @@ void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP)
 	
 	SXP = atan(S_SB.y / S_SB.z);//asin(S_SB.x);
 	SPA = asin(S_SB.x);//atan(-S_SB.y / S_SB.z);
+}
+
+MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB)
+{
+	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, X, Y, Z;
+
+	X_NB = s_NBA;
+	Y_NB = unit(crossp(s_NBA, s_NBB));
+	Z_NB = crossp(X_NB, Y_NB);
+
+	X_SM = s_SMA;
+	Y_SM = unit(crossp(s_SMA, s_SMB));
+	Z_SM = crossp(X_SM, Y_SM);
+
+	X = X_SM*X_NB.x + Y_SM*Y_NB.x + Z_SM*Z_NB.x;
+	Y = X_SM*X_NB.y + Y_SM*Y_NB.y + Z_SM*Z_NB.y;
+	Z = X_SM*X_NB.z + Y_SM*Y_NB.z + Z_SM*Z_NB.z;
+
+	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)

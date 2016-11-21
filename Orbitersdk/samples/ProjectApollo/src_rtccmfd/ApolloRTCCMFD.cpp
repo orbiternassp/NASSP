@@ -345,7 +345,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 6 * H / 14, "Map Update", 10);
 		skp->Text(5 * W / 8, 8 * H / 14, "Maneuver PAD", 12);
 		skp->Text(5 * W / 8, 10 * H / 14, "Entry PAD", 9);
-		skp->Text(5 * W / 8, 12 * H / 14, "Configuration", 13);
+		skp->Text(5 * W / 8, 12 * H / 14, "Next Page", 9);
 	}
 	else if (screen == 1)
 	{
@@ -424,7 +424,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f NM", G->offvec.z / 1852);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
-
 	else if (screen == 3)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "CDH", 3);
@@ -1925,7 +1924,61 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "Alt %+07.2f NM", G->LmkN89Alt/1852.0);
 		skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 14)
+	{
+		if (G->vesseltype < 2)
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
+		}
+		else
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
+		}
 
+		skp->Text(1 * W / 8, 12 * H / 14, "Previous Page", 13);
+		skp->Text(1 * W / 8, 2 * H / 14, "VECPOINT", 8);
+		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
+	}
+	else if (screen == 15)
+	{
+		if (G->VECbody != NULL)
+		{
+			oapiGetObjectName(G->VECbody, Buffer, 20);
+			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (G->VECdirection == 0)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "+X", 2);
+		}
+		else if (G->VECdirection == 1)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "-X", 2);
+		}
+		else if (G->VECdirection == 2)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "+Y", 2);
+		}
+		else if (G->VECdirection == 3)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "-Y", 2);
+		}
+		else if (G->VECdirection == 4)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "+Z", 2);
+		}
+		else if (G->VECdirection == 5)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "-Z", 2);
+		}
+
+		sprintf(Buffer, "XXX%03.0f R", G->VECangles.x*DEG);
+		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "XXX%03.0f P", G->VECangles.y*DEG);
+		skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "XXX%03.0f Y", G->VECangles.z*DEG);
+		skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -2115,6 +2168,18 @@ void ApolloRTCCMFD::menuSetLOIPage()
 void ApolloRTCCMFD::menuSetLandmarkTrkPage()
 {
 	screen = 13;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSet2ndMenu()
+{
+	screen = 14;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetVECPOINTPage()
+{
+	screen = 15;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3388,6 +3453,44 @@ bool OffVecInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_offvec(VECTOR3 off)
 {
 	G->offvec = off;
+}
+
+void ApolloRTCCMFD::cycleVECDirOpt()
+{
+	if (G->VECdirection < 5)
+	{
+		G->VECdirection++;
+	}
+	else
+	{
+		G->VECdirection = 0;
+	}
+}
+
+void ApolloRTCCMFD::vecbodydialogue()
+{
+	bool VECbodyInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Pointing Body:", VECbodyInput, 0, 20, (void*)this);
+}
+
+bool VECbodyInput(void *id, char *str, void *data)
+{
+	if (oapiGetGbodyByName(str) != NULL)
+	{
+		((ApolloRTCCMFD*)data)->set_vecbody(oapiGetGbodyByName(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_vecbody(OBJHANDLE body)
+{
+	G->VECbody = body;
+}
+
+void ApolloRTCCMFD::menuVECPOINTCalc()
+{
+	G->VecPointCalc();
 }
 
 void ApolloRTCCMFD::StoreStatus(void) const

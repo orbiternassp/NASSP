@@ -43,6 +43,7 @@ public:
 	void EntryCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void VecPointCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
@@ -192,6 +193,11 @@ public:
 	double LmkT1, LmkT2;
 	double LmkRange;
 	double LmkN89Lat, LmkN89Alt;
+
+	//VECPOINT PAGE
+	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
+	OBJHANDLE VECbody;	//handle for the desired body
+	VECTOR3 VECangles;	//IMU angles
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };
