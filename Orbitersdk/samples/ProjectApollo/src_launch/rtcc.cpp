@@ -210,6 +210,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		else
 		{
 			sprintf(form->purpose, "TLI+4");
+
+			//Save parameters for further use
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.TEI = res.P30TIG;
+			calcParams.EI = res.GET400K;
 		}
 	}
 	break;
@@ -303,6 +309,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 20: // MISSION CP MCC1
@@ -897,6 +909,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 204: //MISSION CP MCC6
 	case 205: //MISSION CP PRELIMINARY MCC7
 	case 206: //MISSION CP MCC7
+	case 300: //MISSION CP Generic MCC
 	{
 		EntryOpt entopt;
 		EntryResults res;
@@ -929,10 +942,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			MCCtime = calcParams.TEI + 33.0*3600.0;
 			sprintf(manname, "MCC-6");
 		}
-		else
+		else if (fcn == 205 || fcn == 206)
 		{
 			MCCtime = calcParams.EI - 2.0*3600.0;
 			sprintf(manname, "MCC-7");
+		}
+		else
+		{
+			MCCtime = calcParams.TEI + 5.0*3600.0;
+			sprintf(manname, "MCC");
 		}
 
 		//Only corridor control after EI-24h
@@ -1061,6 +1079,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
 					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+				}
+			}
+			else if (fcn == 300)//generic MCC
+			{
+				sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCRetrofireExternalDeltaVUpdate(res.latitude, res.longitude, res.P30TIG, res.dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, target load, Desired Entry REFSMMAT");
 				}
 			}
 		}

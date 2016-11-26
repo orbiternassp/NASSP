@@ -507,7 +507,8 @@ void MCC::Init(Saturn *vs){
 	GroundStations[42].Active = true;
 
 	// MISSION STATE
-	setState(MST_PRELAUNCH);
+	MissionPhase = 0;
+	setState(MMST_PRELAUNCH);
 	// Earth Revolutions count up from 1, 1st Moon Revolution starts at -180° longitude around the time of LOI.
 	EarthRev = 1;
 	MoonRev = 0;
@@ -734,6 +735,7 @@ void MCC::TimeStep(double simdt){
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
+					MissionPhase = MMST_BOOST;
 					setState(MST_1B_LAUNCH);
 				}
 			}
@@ -748,6 +750,7 @@ void MCC::TimeStep(double simdt){
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
+					MissionPhase = MMST_BOOST;
 					setState(MST_SV_LAUNCH);
 				}
 			}
@@ -806,6 +809,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C:
 						addMessage("INSERTION");
+						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_C_INSERTION);
 						break;
 					}				
@@ -833,6 +837,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C_PRIME:
 						addMessage("INSERTION");
+						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
 						break;
 					}				
@@ -1114,6 +1119,7 @@ void MCC::TimeStep(double simdt){
 			case MST_ORBIT_ENTRY:
 				switch (SubState) {
 				case 0:
+					MissionPhase = MMST_ENTRY;
 					allocPad(6);// Allocate AP7 Entry Pad
 					if (padForm != NULL) {
 						// If success
@@ -1138,6 +1144,17 @@ void MCC::TimeStep(double simdt){
 						setState(MST_LANDING);
 					}
 					break;
+				}
+				break;
+			case MST_C_ABORT:
+				{
+					if (AbortMode == 5) //Earth Orbit Abort
+					{
+						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+						{
+							setState(MST_LANDING);
+						}
+					}
 				}
 				break;
 			}
@@ -1320,6 +1337,7 @@ void MCC::TimeStep(double simdt){
 				if (cm->MissionTime > rtcc->calcParams.TLI)
 				{
 					addMessage("TLI");
+					MissionPhase = MMST_TL_COAST;
 					setState(MST_CP_TRANSLUNAR1);
 				}
 				else {
@@ -1382,6 +1400,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0, 50, MST_CP_TRANSLUNAR16);
 				break;
 			case MST_CP_TRANSLUNAR16: //LOI-1 to TEI-2
+				if (MissionPhase == MMST_TL_COAST &&  cm->MissionTime > rtcc->calcParams.LOI)
+				{
+					MissionPhase = MMST_LUNAR_ORBIT;
+				}
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 1.0*3600.0 + 25.0*60.0 + 31.0, 31, MST_CP_LUNAR_ORBIT1);
 				break;
 			case MST_CP_LUNAR_ORBIT1: //TEI-2 to LOI-2
@@ -1427,6 +1449,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TEI, 201, MST_CP_TRANSEARTH1);
 				break;
 			case MST_CP_TRANSEARTH1: //TEI to ENTRY REFSMMAT
+				if (cm->MissionTime > rtcc->calcParams.TEI && MissionPhase == MMST_LUNAR_ORBIT)
+				{
+					MissionPhase = MMST_TE_COAST;
+				}
 				if (cm->MissionTime > rtcc->calcParams.TEI + 45*60)
 				{
 					cm->SlowIfDesired();
@@ -1458,11 +1484,144 @@ void MCC::TimeStep(double simdt){
 				switch (SubState) {
 					case 0:
 					{
+						MissionPhase = MMST_ENTRY;
+						setSubState(1);
+					}
+					break;
+					case 1:
+					{
 						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
 						{
 							setState(MST_LANDING);
 						}
+					}
+					break;
+				}
+				break;
+			case MST_CP_ABORT_ORBIT:
+				{
+					if (AbortMode == 5) //Earth Orbit Abort
+					{
+						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+						{
+							setState(MST_LANDING);
+						}
+					}
+				}
+				break;
+			case MST_CP_ABORT:
+				if (AbortMode == 6)	//Translunar Coast
+				{
+					switch (SubState) {
+					case 0:
+					{
+						if (cm->MissionTime > rtcc->calcParams.TEI)
+						{
+							setSubState(1);
+						}
+					}
+					break;
+					case 1:
+						if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+						{
+							setSubState(2);//Skip directly to normal entry procedures
+						}
+						else
+						{
+							setSubState(3);	//Include another course correction
+						}
 						break;
+					case 2:
+						{
+							if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
+							{
+								cm->SlowIfDesired();
+								setState(MST_CP_TRANSEARTH6);
+							}
+						}
+						break;
+					case 3:
+						{
+							if (cm->MissionTime > rtcc->calcParams.TEI + 4.0 * 60 * 60)
+							{
+								setSubState(4);
+							}
+						}
+						break;
+					
+					case 4:
+						allocPad(8); // Allocate AP7 Maneuver Pad
+						if (padForm != NULL) {
+							// If success
+							startSubthread(300, UTP_P30MANEUVER); // Start subthread to fill PAD
+						}
+						else {
+							// ERROR STATE
+						}
+						setSubState(5);
+						// FALL INTO
+					case 5: // Await pad read-up time (however long it took to compute it and give it to capcom)
+						if (SubStateTime > 1 && padState > -1) {
+							if (scrubbed)
+							{
+								if (upDescr[0] != 0)
+								{
+									addMessage(upDescr);
+								}
+								freePad();
+								scrubbed = false;
+								setSubState(10);
+							}
+							else
+							{
+
+								addMessage("You can has PAD");
+								if (padAutoShow == true && padState == 0) { drawPad(); }
+								// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+								addMessage("Ready for uplink?");
+								sprintf(PCOption_Text, "Ready for uplink");
+								PCOption_Enabled = true;
+								setSubState(6);
+							}
+						}
+						break;
+					case 6: // Awaiting user response
+					case 7: // Negative response / not ready for uplink
+						break;
+					case 8: // Ready for uplink
+						if (SubStateTime > 1 && padState > -1) {
+							// The uplink should also be ready, so flush the uplink buffer to the CMC
+							this->CM_uplink_buffer();
+							// uplink_size = 0; // Reset
+							PCOption_Enabled = false; // No longer needed
+							if (upDescr[0] != 0)
+							{
+								addMessage(upDescr);
+							}
+							setSubState(9);
+						}
+						break;
+					case 9: // Await uplink completion
+						if (cm->pcm.mcc_size == 0) {
+							addMessage("Uplink completed!");
+							NCOption_Enabled = true;
+							sprintf(NCOption_Text, "Repeat uplink");
+							setSubState(10);
+						}
+						break;
+					case 10: // Await burn
+						if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
+						{
+							cm->SlowIfDesired();
+							setState(MST_CP_TRANSEARTH6);
+						}
+						break;
+					case 11: //Repeat uplink
+					{
+						NCOption_Enabled = false;
+						setSubState(4);
+					}
+					break;
 					}
 				}
 			}
@@ -1713,6 +1872,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 	// Integers
 	SAVE_INT("MCC_MissionType", MissionType);
+	SAVE_INT("MCC_MissionPhase", MissionPhase);
 	SAVE_INT("MCC_MissionState", MissionState);
 	SAVE_INT("MCC_SubState", SubState);
 	SAVE_INT("MCC_EarthRev", EarthRev);
@@ -1963,6 +2123,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);		
 		LOAD_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 		LOAD_INT("MCC_MissionType", MissionType);
+		LOAD_INT("MCC_MissionPhase", MissionPhase);
 		LOAD_INT("MCC_MissionState", MissionState);
 		LOAD_INT("MCC_SubState", SubState);
 		LOAD_INT("MCC_EarthRev", EarthRev);
@@ -2500,7 +2661,7 @@ void MCC::keyDown(DWORD key){
 				buf[0] = 0;
 				if (PCOption_Enabled == true) { sprintf(buf, "2: %s\n", PCOption_Text); }
 				if (NCOption_Enabled == true) { sprintf(buf, "%s3: %s\n", buf, NCOption_Text); }
-				sprintf(menubuf, "CAPCOM MENU\n1: Voice Check\n%s4: Toggle Auto PAD\n5: Hide/Show PAD\n6: Redisplay Messages\n9: Debug Options", buf);
+				sprintf(menubuf, "CAPCOM MENU\n1: Voice Check\n%s4: Toggle Auto PAD\n5: Hide/Show PAD\n6: Redisplay Messages\n8: Request Abort\n9: Debug Options", buf);
 				oapiAnnotationSetText(NHmenu,menubuf); // Present menu
 				// 2: Toggle Ground Trk\n3: Toggle Mission Trk\n
 				menuState = 1;
@@ -2529,6 +2690,13 @@ void MCC::keyDown(DWORD key){
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
 			}
+			if (menuState == 3) {
+				sprintf(buf, "Abort confirmed!");
+				addMessage(buf);
+				initiateAbort();
+				oapiAnnotationSetText(NHmenu, ""); // Clear menu
+				menuState = 0;
+			}
 			break;
 		case OAPI_KEY_2:
 			if (menuState == 1 && PCOption_Enabled == true) {
@@ -2548,6 +2716,12 @@ void MCC::keyDown(DWORD key){
 					MT_Enabled = false;
 					sprintf(buf, "Mission Tracking Disabled");
 				}
+				addMessage(buf);
+				oapiAnnotationSetText(NHmenu, ""); // Clear menu
+				menuState = 0;
+			}
+			if (menuState == 3) {
+				sprintf(buf, "Abort rejected!");
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
@@ -2648,12 +2822,11 @@ void MCC::keyDown(DWORD key){
 			}
 			break;
 		case OAPI_KEY_8:
-			/*
+			
 			if (menuState == 1) {
-				oapiAnnotationSetText(NHmenu, ""); // Clear menu
-				menuState = 0;
+				oapiAnnotationSetText(NHmenu, "ABORT MENU\n1: Confirm Abort\n2: Reject Abort"); // Abort menu
+				menuState = 3;
 			}
-			*/
 			if (menuState == 2) {
 				// Reset State				
 				SubState = 0;
@@ -3299,5 +3472,36 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_NONE)
 	{
 		scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
+	}
+}
+
+void MCC::initiateAbort()
+{
+	if (MissionPhase == MMST_EARTH_ORBIT)
+	{
+		AbortMode = 5;
+		if (MissionType == MTP_C)
+		{
+			setState(MST_C_ABORT);
+		}
+		else if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT_ORBIT);
+		}
+	}
+	else if (MissionPhase == MMST_TL_COAST)
+	{
+		AbortMode = 6;
+		setState(MST_CP_ABORT);
+	}
+	else if (MissionPhase == MMST_LUNAR_ORBIT)
+	{
+		AbortMode = 7;
+		setState(MST_CP_ABORT);
+	}
+	else if (MissionPhase == MMST_TE_COAST)
+	{
+		AbortMode = 8;
+		setState(MST_CP_ABORT);
 	}
 }
