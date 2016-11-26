@@ -105,15 +105,6 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	}
 	precision = 1;
 	errorstate = 0;
-
-	if (critical == 2)
-	{
-		augekugelvel = 32000;
-	}
-	else
-	{
-		augekugelvel = 33625.0;
-	}
 }
 
 Entry::Entry(OBJHANDLE gravref, int critical)
@@ -137,7 +128,6 @@ Entry::Entry(OBJHANDLE gravref, int critical)
 	{
 		EMSAlt = 297431.0*0.3048;
 	}
-	augekugelvel = 33625.0;
 }
 
 void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
@@ -1829,7 +1819,7 @@ void Entry::augekugel(double ve, double gammae, double &phie, double &Te)
 		}
 		else
 		{
-			K2 = 2.4 + 0.000285*(vefps - augekugelvel);//33625.0);//32000
+			K2 = 2.4 + 0.000285*(vefps - 33625.0);
 		}
 	}
 	phie = K1 / (abs(gammaedeg) - K2);
@@ -2325,7 +2315,7 @@ void TEI::augekugel(double ve, double gammae, double &phie, double &Te)
 		}
 		else
 		{
-			K2 = 2.4 + 0.000285*(vefps - 33625.0);//33625.0);//32000
+			K2 = 2.4 + 0.000285*(vefps - 33625.0);
 		}
 	}
 	phie = K1 / (abs(gammaedeg) - K2);

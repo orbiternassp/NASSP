@@ -83,7 +83,6 @@ private:
 	bool entrylongmanual;
 	double xlim;
 	double t21;
-	double augekugelvel; //different for abort vs. nominal range
 	double EntryInterface;
 };
 
