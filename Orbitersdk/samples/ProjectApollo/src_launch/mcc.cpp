@@ -1522,7 +1522,11 @@ void MCC::TimeStep(double simdt){
 					}
 					break;
 					case 1:
-						if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+						if (rtcc->AGCGravityRef(cm) == oapiGetObjectByName("Moon"))
+						{
+							setSubState(12);//Flyby
+						}
+						else if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
 						{
 							setSubState(2);//Skip directly to normal entry procedures
 						}
@@ -1622,7 +1626,26 @@ void MCC::TimeStep(double simdt){
 						setSubState(4);
 					}
 					break;
+					case 12: //Flyby, go to MCC6
+					{
+						if (cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60)
+						{
+							setState(MST_CP_TRANSEARTH4);
+						}
 					}
+					break;
+					}
+				}
+				else if (AbortMode == 7) //Lunar Orbit
+				{
+					if (cm->MissionTime > rtcc->calcParams.TEI)
+					{
+						setState(MST_CP_TRANSEARTH1);
+					}
+				}
+				else if (AbortMode == 8)
+				{
+					//How to Abort?
 				}
 			}
 			break;

@@ -575,6 +575,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 41:	// MISSION CP PC+2 MANEUVER
@@ -644,6 +650,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+
+		if (fcn == 41)
+		{
+			//Save parameters for further use
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.TEI = res.P30TIG;
+			calcParams.EI = res.GET400K;
+		}
 	}
 	break;
 	case 50:	// MISSION CP TEI-1 (Pre LOI)
@@ -694,6 +709,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
@@ -870,18 +891,21 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 200)
 		{
-			//Save parameters for further use
-			SplashLatitude = res.latitude;
-			SplashLongitude = res.longitude;
-			calcParams.TEI = res.P30TIG;
-			calcParams.EI = res.GET400K;
-
 			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCStateVectorUpdate(sv, false, AGCEpoch), CMCExternalDeltaVUpdate(res.P30TIG, res.dV_LVLH));
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
 				sprintf(upDesc, "CSM and LM state vectors, target load");
 			}
+		}
+
+		if (fcn != 201)	//Don't save it for TEI-11
+		{
+			//Save parameters for further use
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.TEI = res.P30TIG;
+			calcParams.EI = res.GET400K;
 		}
 	}
 	break;
