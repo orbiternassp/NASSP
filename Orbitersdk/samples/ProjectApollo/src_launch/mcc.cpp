@@ -1856,7 +1856,11 @@ int MCC::subThread(){
 	}
 	else if (MissionType == MTP_C)
 	{
-		rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
+		OBJHANDLE ves = oapiGetVesselByName("AS-205-S4BSTG");
+		if (ves != NULL)
+		{
+			rtcc->calcParams.tgt = oapiGetVesselInterface(ves); // Should be user-programmable later
+		}
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0; // Done
 	}
