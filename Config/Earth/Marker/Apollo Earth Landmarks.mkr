@@ -1,0 +1,11 @@
+; Apollo Earth Landmarks
+
+BEGIN_HEADER
+InitialState on
+ColourIdx 1
+ShapeIdx 5
+END_HEADER
+
+BEGIN_DATA
+
+-112.584 +28.714         : Punta Yoyameko (10)
