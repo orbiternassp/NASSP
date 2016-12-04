@@ -4601,7 +4601,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// OPTICS
 	case AID_OPTICSCLKAREASEXT:
 		if (optics.SextDualView && optics.SextDVLOSTog){
-			oapiCameraSetCockpitDir (0.0,-PI/2.,true); //when both are true show fixed line of sight
+			oapiCameraSetCockpitDir (-optics.OpticsShaft,-PI/2.,true); //when both are true show fixed line of sight
 		}
 		else
 		{
