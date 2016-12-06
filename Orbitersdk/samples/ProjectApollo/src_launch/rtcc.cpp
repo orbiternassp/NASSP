@@ -891,7 +891,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 200)
 		{
-			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCStateVectorUpdate(sv, false, AGCEpoch), CMCExternalDeltaVUpdate(res.P30TIG, res.dV_LVLH));
+			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCStateVectorUpdate(sv, false, AGCEpoch), CMCRetrofireExternalDeltaVUpdate(res.latitude, res.longitude, res.P30TIG, res.dV_LVLH));
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
@@ -1066,9 +1066,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			form->VI0 = res.VIO / 0.3048;
 			form->GET05G = res.GET05G;
 
-			SplashLatitude = res.latitude;
-			SplashLongitude = res.longitude;
-
 			if (fcn == 203)//MCC5
 			{
 				sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, false, AGCEpoch), CMCRetrofireExternalDeltaVUpdate(res.latitude, res.longitude, res.P30TIG, res.dV_LVLH), CMCREFSMMATUpdate(REFSMMAT, AGCEpoch));
@@ -1120,6 +1117,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		calcParams.EI = res.GET400K;
 		DeltaV_LVLH = res.dV_LVLH;
 		TimeofIgnition = res.P30TIG;
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
 	}
 	break;
 	case 207: //MISSION CP PRELIMINARY ENTRY PAD
@@ -1177,11 +1176,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 
-		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCStateVectorUpdate(sv, false, AGCEpoch));
+		sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCStateVectorUpdate(sv, false, AGCEpoch), CMCEntryUpdate(SplashLatitude, SplashLongitude));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors");
+			sprintf(upDesc, "CSM and LM state vectors, entry target");
 		}
 	}
 	break;
