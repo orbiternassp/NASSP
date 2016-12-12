@@ -4252,6 +4252,8 @@ CMOptics::CMOptics() {
 	TeleTrunion = 0.0;
 	ShaftMoved = 0.0;
 	TrunionMoved = 0.0;
+	dTrunion = 0.0;
+	dShaft = 0.0;
 	OpticsManualMovement = 0;
 	Powered = 0;
 	SextDualView = false;
@@ -4496,40 +4498,23 @@ void CMOptics::TimeStep(double simdt) {
 			http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
 			*/
 
+			dTrunion = 0.0;
+			dShaft = 0.0;
+
 			switch (sat->ControllerCouplingSwitch.GetState()) {
 			case TOGGLESWITCH_UP: // DIRECT
 
 				if ((OpticsManualMovement & 0x01) != 0 && SextTrunion < (RAD*59.0)) {
-					SextTrunion += OCDU_TRUNNION_STEP * TrunRate;
-					while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTY]++;
-						sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-						TrunionMoved += OCDU_TRUNNION_STEP;
-					}
+					dTrunion = OCDU_TRUNNION_STEP * TrunRate;
 				}
 				if ((OpticsManualMovement & 0x02) != 0 && SextTrunion > 0) {
-					SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;
-					while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTY]--;
-						sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-						TrunionMoved -= OCDU_TRUNNION_STEP;
-					}
+					dTrunion = -OCDU_TRUNNION_STEP * TrunRate;
 				}
 				if ((OpticsManualMovement & 0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
-					OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;
-					while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTX]--;
-						sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-						ShaftMoved -= OCDU_SHAFT_STEP;
-					}
+					dShaft = -OCDU_SHAFT_STEP * ShaftRate;
 				}
 				if ((OpticsManualMovement & 0x08) != 0 && OpticsShaft < (RAD*270.0)) {
-					OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;
-					while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTX]++;
-						sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-						ShaftMoved += OCDU_SHAFT_STEP;
-					}
+					dShaft = OCDU_SHAFT_STEP * ShaftRate;
 				}
 				break;
 
@@ -4551,50 +4536,64 @@ void CMOptics::TimeStep(double simdt) {
 					A_s_dot = OCDU_SHAFT_STEP * ShaftRate;
 				}
 
-				double dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot*sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
-				double dTrunion = A_s_dot*sin(OpticsShaft) + A_t_dot*cos(OpticsShaft);
+				dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot*sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
+				dTrunion = A_s_dot*sin(OpticsShaft) + A_t_dot*cos(OpticsShaft);
 
 				TrunRate = abs(dTrunion) / OCDU_TRUNNION_STEP;	//Just so that the telescope trunnion moves correctly
 
-				if (OpticsShaft + dShaft > -(RAD*270.0) && OpticsShaft + dShaft < (RAD*270.0))
-				{
-					OpticsShaft += dShaft;
-				}
-				if (SextTrunion + dTrunion < (RAD*59.0) && SextTrunion + dTrunion > 0)
-				{
-					SextTrunion += dTrunion;
-				}
-
-				if (dTrunion > 0) {
-					while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTY]++;
-						sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-						TrunionMoved += OCDU_TRUNNION_STEP;
-					}
-				}
-				if (dTrunion < 0) {
-					while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTY]--;
-						sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-						TrunionMoved -= OCDU_TRUNNION_STEP;
-					}
-				}
-				if (dShaft < 0) {
-					while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTX]--;
-						sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-						ShaftMoved -= OCDU_SHAFT_STEP;
-					}
-				}
-				if (dShaft > 0) {
-					while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-						sat->agc.vagc.Erasable[0][RegOPTX]++;
-						sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-						ShaftMoved += OCDU_SHAFT_STEP;
-					}
-				}
 				break;
 			}
+
+			OpticsShaft += dShaft;
+			SextTrunion += dTrunion;
+
+			//Limits
+			if (OpticsShaft > 270.0*RAD)
+			{
+				OpticsShaft = 270.0*RAD;
+			}
+			if (OpticsShaft < -270.0*RAD)
+			{
+				OpticsShaft = -270.0*RAD;
+			}
+			if (SextTrunion < 0.0)
+			{
+				SextTrunion = 0.0;
+			}
+			if (SextTrunion > 59.0*RAD)
+			{
+				SextTrunion = 59.0*RAD;
+			}
+
+			if (dTrunion > 0) {
+				while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
+					sat->agc.vagc.Erasable[0][RegOPTY]++;
+					sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+					TrunionMoved += OCDU_TRUNNION_STEP;
+				}
+			}
+			if (dTrunion < 0) {
+				while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
+					sat->agc.vagc.Erasable[0][RegOPTY]--;
+					sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+					TrunionMoved -= OCDU_TRUNNION_STEP;
+				}
+			}
+			if (dShaft < 0) {
+				while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
+					sat->agc.vagc.Erasable[0][RegOPTX]--;
+					sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					ShaftMoved -= OCDU_SHAFT_STEP;
+				}
+			}
+			if (dShaft > 0) {
+				while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
+					sat->agc.vagc.Erasable[0][RegOPTX]++;
+					sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+					ShaftMoved += OCDU_SHAFT_STEP;
+				}
+			}
+
 			break;
 	}
 
