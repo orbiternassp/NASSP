@@ -830,11 +830,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
 					S4B_IGN=true;
 				}
-				if(LVDC_TB_ETime > 20 && owner->LESAttached){
-					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-											// will start IGM anyway.
-					owner->JettisonLET();				
-				}
 				if(LVDC_TB_ETime > 311.5 && MRS == false){
 					// MR Shift
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
@@ -4984,14 +4979,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && owner->SIISepState == true){
 					owner->SwitchSelector(21);
 					owner->SIISepState = false;
-				}
-
-				// And jettison LET
-				if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET  && LVDC_TB_ETime > dt_LET && owner->LESAttached){
-					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-											// will start IGM anyway.
-					owner->SwitchSelector(22);					
-				}		
+				}	
 
 				// IECO
 				/*if (LVDC_TB_ETime >= 30.7)

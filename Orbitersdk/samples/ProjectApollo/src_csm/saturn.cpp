@@ -3105,9 +3105,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	if (LESAttached)
 	{
-		if ((MissionTime >= LESJettisonTime  && (stage < CSM_LEM_STAGE) && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
-			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
-			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
+		if (TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
 		{
 			JettisonLET();
 		}
