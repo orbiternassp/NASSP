@@ -1548,6 +1548,7 @@ void MCC::TimeStep(double simdt){
 						{
 							if (cm->MissionTime > rtcc->calcParams.TEI + 4.0 * 60 * 60)
 							{
+								cm->SlowIfDesired();
 								setSubState(4);
 							}
 						}
