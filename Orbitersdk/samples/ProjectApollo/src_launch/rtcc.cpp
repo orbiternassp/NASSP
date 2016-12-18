@@ -6122,3 +6122,23 @@ double RTCC::GetDockedVesselMass(VESSEL *vessel)
 
 	return LMmass;
 }
+
+double RTCC::PericynthionTime(VESSEL *vessel)
+{
+	OBJHANDLE gravref;
+	VECTOR3 R_A, V_A, R0, V0;
+	double SVMJD, mu, dt, GETbase;
+
+	GETbase = getGETBase();
+	gravref = AGCGravityRef(vessel);
+
+	mu = GGRAV*oapiGetMass(gravref);
+	vessel->GetRelativePos(gravref, R_A);
+	vessel->GetRelativeVel(gravref, V_A);
+	SVMJD = oapiGetSimMJD();
+	R0 = _V(R_A.x, R_A.z, R_A.y);
+	V0 = _V(V_A.x, V_A.z, V_A.y);
+
+	dt = OrbMech::timetoperi(R0, V0, mu);
+	return (SVMJD-GETbase)*24.0*3600.0 + dt;
+}

@@ -1627,11 +1627,21 @@ void MCC::TimeStep(double simdt){
 						setSubState(4);
 					}
 					break;
-					case 12: //Flyby, go to MCC6
+					case 12:
 					{
-						if (cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60)
+						//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
+						if (cm->MissionTime > rtcc->calcParams.TEI + 10.0*60.0)
 						{
-							setState(MST_CP_TRANSEARTH4);
+							rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+							setSubState(13);
+						}
+					}
+					case 13: //Flyby, go to nominal TEC procedures
+					{
+						if (cm->MissionTime > rtcc->calcParams.LOI + 45.0*60.0 && cm->MissionTime > rtcc->calcParams.TEI + 45.0*60.0)
+						{
+							rtcc->calcParams.TEI = rtcc->calcParams.LOI;
+							setState(MST_CP_TRANSEARTH1);
 						}
 					}
 					break;
