@@ -261,6 +261,13 @@
 				 how interrupt priorities are handled, and
 				 corrected ZRUPT to be return addr+1.
 				 Aurora 12 now passes all of SELFCHK in yaAGC.
+		12/19/16 MAS	Corrected one more bug in the DV instruction;
+				 the case of a number being divided by itself
+				 was not sign-extending the result in the L
+				 register. The overflow correction of the L
+				 register was then destroying the calculated
+				 sign. This was caught by Retread; apparently
+				 Aurora doesn't test for it.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -2687,8 +2694,8 @@ agc_engine (agc_t * State)
 	      {
 		Operand16 = (077777 & ~037777);	// Max negative value.
 	      }
-		c(RegL) = AccPair[0];
-		c (RegA) = SignExtend (Operand16);
+		c (RegL) = SignExtend(AccPair[0]);
+		c (RegA) = SignExtend(Operand16);
 	  }
 	else
 	  {
