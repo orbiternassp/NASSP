@@ -1739,6 +1739,16 @@ void RJEC::TimeStep(double simdt){
 	//
 
 	// Roll
+	
+	td[9] = ThrusterDemand[9];
+	td[10] = ThrusterDemand[10];
+	td[11] = ThrusterDemand[11];
+	td[12] = ThrusterDemand[12];
+	td[13] = ThrusterDemand[13];
+	td[14] = ThrusterDemand[14];
+	td[15] = ThrusterDemand[15];
+	td[16] = ThrusterDemand[16];
+
 	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_x < 28673) {  // MINUS
 			td[10] = true;
@@ -1752,18 +1762,15 @@ void RJEC::TimeStep(double simdt){
 			td[13] = true;
 			td[15] = true;
 		}
-	} else {
-		td[9] = ThrusterDemand[9];
-		td[10] = ThrusterDemand[10];
-		td[11] = ThrusterDemand[11];
-		td[12] = ThrusterDemand[12];
-		td[13] = ThrusterDemand[13];
-		td[14] = ThrusterDemand[14];
-		td[15] = ThrusterDemand[15];
-		td[16] = ThrusterDemand[16];	
 	}
 
 	// Pitch
+	
+	td[1] = ThrusterDemand[1];
+	td[2] = ThrusterDemand[2];
+	td[3] = ThrusterDemand[3];
+	td[4] = ThrusterDemand[4];
+
 	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_y < 28673) {  // MINUS
 			td[2] = true;
@@ -1773,14 +1780,15 @@ void RJEC::TimeStep(double simdt){
 			td[1] = true;
 			td[3] = true;
 		}
-	} else {
-		td[1] = ThrusterDemand[1];
-		td[2] = ThrusterDemand[2];
-		td[3] = ThrusterDemand[3];
-		td[4] = ThrusterDemand[4];
 	}
 
 	// Yaw
+	
+	td[5] = ThrusterDemand[5];
+	td[6] = ThrusterDemand[6];
+	td[7] = ThrusterDemand[7];
+	td[8] = ThrusterDemand[8];
+	
 	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_z < 28673) {  // MINUS
 			td[6] = true;
@@ -1790,13 +1798,7 @@ void RJEC::TimeStep(double simdt){
 			td[5] = true;
 			td[7] = true;
 		}
-	} else {
-		td[5] = ThrusterDemand[5];
-		td[6] = ThrusterDemand[6];
-		td[7] = ThrusterDemand[7];
-		td[8] = ThrusterDemand[8];
 	}
-
 
 	// Ensure AC logic power, see Systems Handbook 8.2 
 	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {

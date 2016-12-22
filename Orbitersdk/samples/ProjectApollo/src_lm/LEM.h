@@ -546,6 +546,7 @@ public:
 		SRF_BORDER_72x72,
 		SRF_BORDER_75x64,
 		SRF_BORDER_34x39,
+		SRF_BORDER_38x38,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -612,6 +613,9 @@ public:
 	void SetRCSJetLevelPrimary(int jet, double level);
 	void CheckRCS();
 
+	// DS20160916 Physical parameters updation
+	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
+
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
@@ -629,6 +633,11 @@ public:
 	/// \return True for Virtual AGC, false for C++ AGC.
 	///
 	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
+
+	///
+	/// \brief Triggers Virtual AGC core dump
+	///
+	virtual void VirtualAGCCoreDump() { agc.VirtualAGCCoreDump("ProjectApollo LGC.core"); }
 
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
@@ -928,8 +937,8 @@ protected:
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
 
-	SwitchRow ClycolSuitFanRotaryRow;
-	RotationalSwitch ClycolRotary;
+	SwitchRow GlycolSuitFanRotaryRow;
+	RotationalSwitch GlycolRotary;
 	RotationalSwitch SuitFanRotary;
 
 	SwitchRow QtyMonRotaryRow;
@@ -946,7 +955,7 @@ protected:
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	SwitchRow ModeControlSwitchesRow;
-	PGNSSwitch ModeControlPNGSSwitch;
+	PGNSSwitch ModeControlPGNSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
 
@@ -1034,6 +1043,31 @@ protected:
 	ToggleSwitch RightACA4JetSwitch;
 	ToggleSwitch RightTTCATranslSwitch;
 
+	///////////////////////
+	// DSKYs             //
+	///////////////////////
+
+	SwitchRow DskySwitchRow;
+	DSKYPushSwitch DskySwitchVerb;
+	DSKYPushSwitch DskySwitchNoun;
+	DSKYPushSwitch DskySwitchPlus;
+	DSKYPushSwitch DskySwitchMinus;
+	DSKYPushSwitch DskySwitchZero;
+	DSKYPushSwitch DskySwitchOne;
+	DSKYPushSwitch DskySwitchTwo;
+	DSKYPushSwitch DskySwitchThree;
+	DSKYPushSwitch DskySwitchFour;
+	DSKYPushSwitch DskySwitchFive;
+	DSKYPushSwitch DskySwitchSix;
+	DSKYPushSwitch DskySwitchSeven;
+	DSKYPushSwitch DskySwitchEight;
+	DSKYPushSwitch DskySwitchNine;
+	DSKYPushSwitch DskySwitchClear;
+	DSKYPushSwitch DskySwitchProg;
+	DSKYPushSwitch DskySwitchKeyRel;
+	DSKYPushSwitch DskySwitchEnter;
+	DSKYPushSwitch DskySwitchReset;
+
 	//////////////////
 	// LEM panel 11 //
 	//////////////////
@@ -1043,7 +1077,7 @@ protected:
 	CircuitBrakerSwitch HE_PQGS_PROP_DISP_AC_CB;
 	CircuitBrakerSwitch SBD_ANT_AC_CB;
 	CircuitBrakerSwitch ORDEAL_AC_CB;
-	CircuitBrakerSwitch AQS_AC_CB;
+	CircuitBrakerSwitch AGS_AC_CB;
 	CircuitBrakerSwitch AOT_LAMP_ACB_CB;
 	CircuitBrakerSwitch LMP_FDAI_AC_CB;
 	CircuitBrakerSwitch NUM_LTG_AC_CB;
@@ -1617,7 +1651,21 @@ protected:
 	int Realism;
 	int ApolloNo;
 	int Landed;
+
+	//
+	// Quickstart Mode settings
+	//
+
+	bool ChecklistAutoSlow;
+	bool ChecklistAutoDisabled;
 	bool OrbiterAttitudeDisabled;
+
+	//
+	// VAGC Mode settings
+	//
+
+	bool VAGCChecklistAutoSlow;
+	bool VAGCChecklistAutoEnabled;
 
 	int SwitchFocusToLeva;
 
@@ -1656,6 +1704,9 @@ protected:
 
 	// ChecklistController
 	ChecklistController checkControl;
+
+	//Dummy events, not functional
+	SaturnEvents DummyEvents;
 
 	SoundLib soundlib;
 

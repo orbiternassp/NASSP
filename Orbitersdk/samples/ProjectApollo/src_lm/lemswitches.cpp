@@ -57,7 +57,7 @@ void LEMMissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, 
 	sw = id;
 }
 
-bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	bool rv;
 	// Is the event timer powered?
@@ -110,6 +110,63 @@ bool LEMMissionTimerSwitch::CheckMouseClick(int event, int mx, int my)
 					lem->MissionTimerDisplay.UpdateSeconds(1); break;
 			}
 			break;
+	}
+	return rv;
+}*/
+
+bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	bool rv;
+	// Is the event timer powered?
+	if (lem->MissionTimerDisplay.IsPowered()) {
+		// Yes, print the time
+		sprintf(oapiDebugString(), "LM MT: %.2d:%.2d:%.2d",
+			lem->MissionTimerDisplay.GetHours(),
+			lem->MissionTimerDisplay.GetMinutes(),
+			lem->MissionTimerDisplay.GetSeconds());
+		lem->DebugLineClearTimer = 5;
+	}
+	//if (event & PANEL_MOUSE_RBDOWN || event & PANEL_MOUSE_RBUP) {
+	//	return false; // Disregard this
+	//}
+	// Animate switch
+	rv = LEMThreePosSwitch::SwitchTo(newState, dontspring);
+	// Perform function
+	switch (sw) {
+	case 0: // Run-Stop-Reset
+		switch (newState) {
+		case THREEPOSSWITCH_UP: // RUN
+			lem->MissionTimerDisplay.SetRunning(true); break;
+		case THREEPOSSWITCH_CENTER: // STOP
+			lem->MissionTimerDisplay.SetRunning(false); break;
+		case THREEPOSSWITCH_DOWN: // RESET
+			lem->MissionTimerDisplay.Reset(); break;
+		}
+		break;
+	case 1: // Hours Inc
+		switch (newState) {
+		case THREEPOSSWITCH_UP: // RUN
+			lem->MissionTimerDisplay.UpdateHours(10); break;
+		case THREEPOSSWITCH_DOWN: // RESET
+			lem->MissionTimerDisplay.UpdateHours(1); break;
+		}
+		break;
+	case 2: // Minutes Inc
+		switch (newState) {
+		case THREEPOSSWITCH_UP: // RUN
+			lem->MissionTimerDisplay.UpdateMinutes(10); break;
+		case THREEPOSSWITCH_DOWN: // RESET
+			lem->MissionTimerDisplay.UpdateMinutes(1); break;
+		}
+		break;
+	case 3: // Seconds Inc
+		switch (newState) {
+		case THREEPOSSWITCH_UP: // RUN
+			lem->MissionTimerDisplay.UpdateSeconds(10); break;
+		case THREEPOSSWITCH_DOWN: // RESET
+			lem->MissionTimerDisplay.UpdateSeconds(1); break;
+		}
+		break;
 	}
 	return rv;
 }
@@ -304,7 +361,7 @@ double LMGlycolTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->ClycolRotary.GetState() == 0){
+	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
 		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
 	}else{
@@ -338,7 +395,7 @@ double LMGlycolPressMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->ClycolRotary.GetState() == 0){
+	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
 		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
 	}else{
@@ -822,7 +879,7 @@ void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHAN
 	Indicator = ind;
 }
 
-bool LEMValveSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool LEMValveSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
@@ -831,12 +888,12 @@ bool LEMValveSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool LEMValveSwitch::SwitchTo(int newState)
+bool LEMValveSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (LEMThreePosSwitch::SwitchTo(newState)) {
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		CheckValve(newState);
@@ -877,7 +934,7 @@ void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	srcno = src_no;
 }
 
-bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
+/*bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	// If our associated CB has no power, do nothing.
@@ -916,16 +973,45 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
-bool LEMBatterySwitch::SwitchTo(int newState)
+bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	sprintf(oapiDebugString(),"NewState %d",newState);
-	if (LEMThreePosSwitch::SwitchTo(newState)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		// CheckValve(newState);
+	//sprintf(oapiDebugString(),"NewState %d",newState);
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+		// Check for control power
+		if (afl == 1) {
+			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
+		}
+		else {
+			if (lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24) { return true; }
+		}
+		switch (state) {
+		case THREEPOSSWITCH_UP:
+			switch (srcno) {
+			case 1: // HV
+				eca->input = 1;
+				if (eca->dc_source_tb != NULL) {
+					eca->dc_source_tb->SetState(1);
+				}
+				break;
+			case 2: // LV
+				eca->input = 2;
+				if (eca->dc_source_tb != NULL) {
+					eca->dc_source_tb->SetState(2);
+				}
+				break;
+			}
+			break;
+		case THREEPOSSWITCH_DOWN:
+			if (eca->dc_source_tb != NULL) {
+				eca->dc_source_tb->SetState(0);
+			}
+			eca->input = 0;
+			break;
+		}
+
 		return true;
 	}
 
@@ -938,7 +1024,7 @@ void LEMDeadFaceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 }
 
-bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
@@ -977,14 +1063,44 @@ bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}	
 	return false;
-}
+}*/
 
-bool LEMDeadFaceSwitch::SwitchTo(int newState)
+bool LEMDeadFaceSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	sprintf(oapiDebugString(),"NewState %d",newState);
-	if (LEMThreePosSwitch::SwitchTo(newState)) {
-		// Stuff goes here later
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+		switch (newState) {
+		case THREEPOSSWITCH_UP:
+			// Connect descent stage
+			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
+			if (lem->stage < 2) {
+				// Reconnect ECA outputs
+				lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1a);
+				lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1b);
+				lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2a);
+				lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2b);
+				// Reconnect EPS monitor stuff
+				lem->EPSMonitorSelectRotary.SetSource(1, lem->Battery1);
+				lem->EPSMonitorSelectRotary.SetSource(2, lem->Battery2);
+				lem->EPSMonitorSelectRotary.SetSource(3, lem->Battery3);
+				lem->EPSMonitorSelectRotary.SetSource(4, lem->Battery4);
+				lem->DSCBattFeedTB.SetState(1);
+			}
+			break;
+		case THREEPOSSWITCH_DOWN:
+			// Disconnect descent stage
+			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
+			lem->DES_LMPs28VBusA.Disconnect();
+			lem->DES_LMPs28VBusB.Disconnect();
+			lem->DES_CDRs28VBusA.Disconnect();
+			lem->DES_CDRs28VBusB.Disconnect();
+			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
+			lem->DSCBattFeedTB.SetState(0);
+			break;
+		}
 		return true;
 	}
 
@@ -1003,14 +1119,14 @@ void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 	inv2 = lem_inv_2;
 }
 
-bool LEMInverterSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool LEMInverterSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
 		return ChangeState(state);		
 	}	
 	return false;
-}
+}*/
 
 bool LEMInverterSwitch::ChangeState(int newState){
 	switch(newState){
@@ -1036,14 +1152,12 @@ bool LEMInverterSwitch::ChangeState(int newState){
 	return true;	
 }
 
-bool LEMInverterSwitch::SwitchTo(int newState)
+bool LEMInverterSwitch::SwitchTo(int newState, bool dontspring)
 {
-	sprintf(oapiDebugString(),"NewState %d",newState);
-	if (LEMThreePosSwitch::SwitchTo(newState)) {
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
-		// CheckValve(newState);
-		return true;
+		return ChangeState(newState);
 	}
 	return false;
 }
@@ -1205,6 +1319,7 @@ bool EngineStartButton::Push()
 	{
 		if (ToggleSwitch::SwitchTo(1)) {
 
+			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", GetState(), stopbutton->GetState());
 			return true;
 		}
 	}
@@ -1225,6 +1340,7 @@ bool EngineStopButton::Push()
 		if (newstate = 1)
 		{
 			startbutton->SwitchTo(0);
+			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
 		}
 		return true;
 	}

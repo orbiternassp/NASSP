@@ -265,6 +265,7 @@ LVDC1B::LVDC1B(){
 	T_CO = 0;
 	t_fail = 0;
 	T_GO = 0;
+	TI5F2 = 0;
 	T_LET = 0;
 	T_S1 = 0;
 	T_S2 = 0;
@@ -410,6 +411,7 @@ void LVDC1B::init(Saturn* own){
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 25;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
+	TI5F2 = 20.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	cos_phi_L = 0.878635524;					// cos of the Geodetic Launch site latitude
@@ -560,7 +562,7 @@ void LVDC1B::init(Saturn* own){
 }
 	
 // DS20070205 LVDC++ EXECUTION
-void LVDC1B::timestep(double simt, double simdt) {
+void LVDC1B::TimeStep(double simt, double simdt) {
 	// Bail if uninitialized
 	if(owner == NULL){ return; }
 	// Update timebase ET
@@ -590,11 +592,11 @@ void LVDC1B::timestep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					if (owner->MissionTime < -1200){
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 						break;
 					}else{
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
 			
@@ -608,7 +610,14 @@ void LVDC1B::timestep(double simt, double simdt) {
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime >= -17){
 					lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-					lvimu.DriveGimbals((Azimuth - 100)*RAD,0,0);	// Now bring to alignment 
+					if (owner->ApolloNo == 5)
+					{
+						lvimu.DriveGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment 
+					}
+					else
+					{
+						lvimu.DriveGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
+					}
 					lvimu.SetCaged(false);							// Release IMU
 					CountPIPA = true;								// Enable PIPA storage			
 					BOOST = true;
@@ -717,9 +726,10 @@ void LVDC1B::timestep(double simt, double simdt) {
 				}
 				else {
 					// Get 100% thrust on all engines.
-					sprintf(oapiDebugString(), "LVDC: T %f | TB0 + %f | TH = 100%%", owner->MissionTime, LVDC_TB_ETime);
-					owner->SetThrusterGroupLevel(owner->thg_main, 1);
-					owner->contrailLevel = 1;
+					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
+					owner->SetThrusterGroupLevel(owner->thg_main,1);
+					owner->contrailLevel = 1;				
+					// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
 				}
 
@@ -826,11 +836,6 @@ void LVDC1B::timestep(double simt, double simdt) {
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
 					S4B_IGN=true;
 				}
-				if(LVDC_TB_ETime > 20 && owner->LESAttached){
-					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-											// will start IGM anyway.
-					owner->JettisonLET();				
-				}
 				if(LVDC_TB_ETime > 311.5 && MRS == false){
 					// MR Shift
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
@@ -896,6 +901,52 @@ void LVDC1B::timestep(double simt, double simdt) {
 					LVDC_Stop = true;
 					return; // Stop here
 				}
+
+				if (owner->ApolloNo == 5)
+				{
+					//
+					// Separate nosecap
+					//
+
+					if (!owner->Crewed && owner->NosecapAttached && !owner->hNosecapVessel && LVDC_TB_ETime >= 45.0)
+					{
+						owner->SlowIfDesired();
+						owner->NosecapAttached = false;
+						owner->SetNosecapMesh();
+						owner->JettisonNosecap();
+					}
+
+					//
+					// For unmanned launches, seperate the payload on timer.
+					//
+
+					bool PayloadDeployed = false;
+
+					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0 - 20.))
+					{
+						owner->SlowIfDesired();
+					}
+
+					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0))
+					{
+						owner->SlowIfDesired();
+						PayloadDeployed = true;
+						// Payload deploy
+						owner->SeparateStage(CSM_LEM_STAGE);
+						owner->SetStage(CSM_LEM_STAGE);
+					}
+
+					//
+					// If the payload was deployed, delete us. Note that this just means that the SLA panels have
+					// been blown off of the SIVB; the SIVB will have to do the actual payload deployment.
+					//
+					if (PayloadDeployed && owner->hs4bM)
+					{
+						oapiSetFocusObject(owner->hs4bM);
+						oapiDeleteVessel(owner->GetHandle(), owner->hs4bM);
+					}
+				}
+
 				break;
 		}
 		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
@@ -1115,7 +1166,7 @@ void LVDC1B::timestep(double simt, double simdt) {
 			goto minorloop;
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
-			if(LVDC_Timebase == 4 && (LVDC_TB_ETime > 20)){
+			if(LVDC_Timebase == 4 && (LVDC_TB_ETime > TI5F2)){
 				goto orbitalguidance;
 			}else{
 				goto minorloop;
@@ -1813,7 +1864,7 @@ minorloop: //minor loop;
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | eps %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1830,7 +1881,7 @@ minorloop: //minor loop;
 					AttRate.x * DEG, AttRate.y * DEG, AttRate.z * DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}
+		}*/
 	}
 
 	/*
@@ -2183,6 +2234,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_CO", T_CO);
 	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
+	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
@@ -2545,6 +2597,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_CO", T_CO);
 		papiReadScenario_double(line, "LVDC_t_fail", t_fail);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
+		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
@@ -2942,6 +2995,7 @@ LVDC::LVDC(){
 	t_fail = 0;
 	T_GO = 0;
 	theta_N = 0;
+	TI5F2 = 0;
 	T_IGM = 0;
 	T_LET = 0;
 	T_RG = 0;
@@ -3202,6 +3256,7 @@ void LVDC::Init(Saturn* vs){
 	t_DS2 = 16503.1;
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
+	TI5F2 = 20.0;
 
 	double day;
 	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - owner->MissionTime - 17.0;
@@ -3906,6 +3961,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
+	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -4572,6 +4628,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
+		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -4735,7 +4792,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 					break;
 				}
@@ -4748,9 +4805,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime < -17){
-					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
+					/*sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
 						lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
+						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));*/
 					break;
 				}else{
 					LVDC_Timebase = 0;
@@ -4928,14 +4985,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && owner->SIISepState == true){
 					owner->SwitchSelector(21);
 					owner->SIISepState = false;
-				}
-
-				// And jettison LET
-				if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET  && LVDC_TB_ETime > dt_LET && owner->LESAttached){
-					T_LET = LVDC_TB_ETime;	// Update this. If the LET jettison never happens, the placeholder value
-											// will start IGM anyway.
-					owner->SwitchSelector(22);					
-				}		
+				}	
 
 				// IECO
 				/*if (LVDC_TB_ETime >= 30.7)
@@ -5266,7 +5316,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					f = TABLE15[0].f;
 					alpha_D = TABLE15[0].target[0].alpha_D;
 					eps_3 = 0;
-					sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
+					//sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
 				}
 
 				// p is the semi-latus rectum of the desired terminal ellipse.
@@ -5555,7 +5605,7 @@ GuidanceLoop:
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
 			if(TAS - TB7<0){
-				if(TAS - TB5 < 20){ goto minorloop; }
+				if(TAS - TB5 < TI5F2){ goto minorloop; }
 				if(TAS - TB6 - T_IGM<0){goto restartprep;}else{goto IGM;};
 			}else{
 				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
@@ -5840,7 +5890,7 @@ gtupdate:	// Target of jump from further down
 			if(Tt_T <= eps_1){
 				// RANGE ANGLE 2 (out-of orbit)
 				fprintf(lvlog,"RANGE ANGLE 2\r\n");
-				sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1); 
+				//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 				// LVDC_GP_PC = 30; // STOP
 				V = length(DotS);
 				R = length(PosS);
@@ -6100,7 +6150,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					R_T = R + dotR*(T_3 - dt);
 					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
-					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
+					//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
 					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
 					// LVDC_GP_PC = 30; // STOP
 				}
@@ -6134,7 +6184,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// Done, go to navigation
-				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
+				//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 				goto minorloop;
 			}
 			// End of high-speed loop
@@ -6165,7 +6215,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		}else{
 			// MRS TEST
 			fprintf(lvlog,"MRS TEST\r\n");
-			sprintf(oapiDebugString(),"LVDC: MRS TEST"); 
+			//sprintf(oapiDebugString(),"LVDC: MRS TEST");
 			if (MRS)
 			{
 				if (t_B2 <= t_B4)
@@ -6191,7 +6241,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		if(GATE){
 			// FREEZE CHI
 			fprintf(lvlog,"Thru GATE; CHI FREEZE\r\n");
-			sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
+			//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
 			goto minorloop;
 		}else{
 			// IGM STEERING ANGLES
@@ -6863,7 +6913,7 @@ minorloop:
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -6883,7 +6933,7 @@ minorloop:
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);				
 			}
-		}
+		}*/
 		/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
 			LVDC_Timebase,LVDC_TB_ETime,

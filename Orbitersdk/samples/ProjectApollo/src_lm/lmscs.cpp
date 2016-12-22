@@ -88,7 +88,7 @@ void ATCA::Timestep(double simt){
 			// In this case, thruster demand is direct from the LGC. We have nothing to do.
 			if(lem->agc.Yaagc){	lem->agc.SetInputChannelBit(030, GNControlOfSC,1); } // Tell the LGC it has control.
 			if(haspower == 1 && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ haspower = 0; } // PNGS path requires this.
-			if(lem->ModeControlPNGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
+			if(lem->ModeControlPGNSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
 			break;
 
 		case TOGGLESWITCH_DOWN:  // ABORT MODE

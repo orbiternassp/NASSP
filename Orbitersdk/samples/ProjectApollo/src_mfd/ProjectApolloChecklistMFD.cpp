@@ -1262,21 +1262,73 @@ std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem
 			}
 			break;
 		case TLI_DONE:
+			temptime.x = floor(fabs(item->time) / 3600);
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.x >= 1.0)
+			{
+				if (((int)temptime.y) == 0) {
+					if (((int)temptime.z) == 0) {
+						sprintf(buffer, "TLI + %d hrs", (int)temptime.x);
+					}
+					else
+					{
+						sprintf(buffer, "TLI + %d hrs %02d sec", (int)temptime.x, (int)temptime.z);
+					}
+				}
+				else
+				{
+					if (((int)temptime.z) == 0) {
+						sprintf(buffer, "TLI + %d hrs %02d min", (int)temptime.x, (int)temptime.z);
+					}
+					else
+					{
+						sprintf(buffer, "TLI + %d hrs %02d min %02d sec", (int)temptime.x, (int)temptime.y, (int)temptime.z);
+					}
+				}
+			}
+			else if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "TLI + %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "TLI + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "TLI + %d sec", (int)temptime.z);
+			}
+			break;
+		case CM_SM_SEPARATION_DONE:
 			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
 			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
 			if (temptime.y >= 1.0) {
 				if (((int)temptime.z) == 0) {
-					sprintf(buffer, "TB7 + %d min", (int)temptime.y);
+					sprintf(buffer, "CM/SM Separation + %d min", (int)temptime.y);
 				}
 				else {
-					sprintf(buffer, "TB7 + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+					sprintf(buffer, "CM/SM Separation + %d min %02d sec", (int)temptime.y, (int)temptime.z);
 				}
 			}
 			else {
-				sprintf(buffer, "TB7 + %d sec", (int)temptime.z);
+				sprintf(buffer, "CM/SM Separation + %d sec", (int)temptime.z);
 			}
 			break;
-
+		case SPLASHDOWN:
+			temptime.y = floor((fabs(item->time) - (temptime.x * 3600)) / 60);
+			temptime.z = fabs(item->time) - (temptime.x * 3600) - (temptime.y * 60);
+			if (temptime.y >= 1.0) {
+				if (((int)temptime.z) == 0) {
+					sprintf(buffer, "Splashdown + %d min", (int)temptime.y);
+				}
+				else {
+					sprintf(buffer, "Splashdown + %d min %02d sec", (int)temptime.y, (int)temptime.z);
+				}
+			}
+			else {
+				sprintf(buffer, "Splashdown + %d sec", (int)temptime.z);
+			}
+			break;
 		default:
 			sprintf(buffer, "(Unknown Event)");
 			break;

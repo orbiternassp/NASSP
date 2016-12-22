@@ -259,6 +259,13 @@ void SIVB::InitS4b()
 	Payloaddatatransfer = false;
 
 	//
+	// Checklist
+	//
+
+	LEMCheck[0] = 0;
+	LEMCheckAuto = 0;
+
+	//
 	// LM PAD data.
 	//
 
@@ -335,7 +342,7 @@ void SIVB::SetS4b()
 
 	VECTOR3 dockpos = {0,0.03, 12.6};
 	VECTOR3 dockdir = {0,0,1};
-	VECTOR3 dockrot = {-0.705,-0.705,0};
+	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
 
 	if (SaturnVStage)
 	{
@@ -781,9 +788,12 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	{
 		oapiWriteScenario_string (scn, "PAYN", PayloadName);
 	}
-
 	if (!Payloaddatatransfer)
 	{
+		if (LEMCheck[0]) {
+			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
+			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
+		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 		if (LMPadCount > 0 && LMPad) {
@@ -1183,6 +1193,17 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (SIVbState) i;
 		}
+		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
+			int temp = 0;
+			sscanf(line + 12, "%i", &temp);
+			if (temp != 0)
+				LEMCheckAuto = true;
+			else
+				LEMCheckAuto = false;
+		}
+		else if (!strnicmp(line, "LEMCHECK", 8)) {
+			strcpy(LEMCheck, line + 9);
+		}
 		else if (!strnicmp(line, "PAYN", 4)) {
 			strncpy (PayloadName, line + 5, 64);
 		}
@@ -1362,6 +1383,11 @@ void SIVB::SetState(SIVBSettings &state)
 		if (state.PayloadName[0])
 		{
 			strcpy(PayloadName, state.PayloadName);
+		}
+
+		if (state.LEMCheck[0]) {
+			strcpy(LEMCheck, state.LEMCheck);
+			LEMCheckAuto = state.LEMCheckAuto;
 		}
 
 		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
@@ -1620,6 +1646,15 @@ void SIVB::StartSeparationPyros()
 	vslm2.version = 2;
 
 	OBJHANDLE hPayload = oapiCreateVesselEx(PayloadName, plName, &vslm2);
+
+	//
+	// We have already gotten these information from the CSM
+	//
+
+	ps.DescentFuelKg = LMDescentFuelMassKg;
+	ps.AscentFuelKg = LMAscentFuelMassKg;
+	sprintf(ps.checklistFile, LEMCheck);
+	ps.checkAutoExecute = LEMCheckAuto;
 
 	//
 	// Initialise the state of the LEM AGC information.

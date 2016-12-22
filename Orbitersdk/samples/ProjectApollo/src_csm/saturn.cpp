@@ -1492,11 +1492,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (PayloadName[0])
 		oapiWriteScenario_string (scn, "PAYN", PayloadName);
 
-	if (LEMCheck[0]) {
-		oapiWriteScenario_string (scn, "LEMCHECK", LEMCheck);
-		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
-	}
 	if (!PayloadDataTransfer) {
+		if (LEMCheck[0]) {
+			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
+			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
+		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 	}
@@ -2226,6 +2226,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
 	}
+	else if (!strnicmp(line, "MISSIONTRACKING", 15)) {
+		int i;
+		sscanf(line + 15, "%d", &i);
+		if (i)
+			mcc.enableMissionTracking();
+	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
 	}
@@ -2532,9 +2538,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		}
-		else if (!strnicmp(line, "LEMCHECK", 8)) {
-			strcpy(LEMCheck,line+8);
-		}
 		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
 			int temp = 0;
 			sscanf(line+12, "%i", &temp);
@@ -2542,6 +2545,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 				LEMCheckAuto = true;
 			else
 				LEMCheckAuto = false;
+		} else if (!strnicmp(line, "LEMCHECK", 8)) {
+			strcpy(LEMCheck, line + 9);
 		} else if (!strnicmp(line, SaturnEventStartString, strlen(SaturnEventStartString))) {
 			eventControl.load(scn);
 		} else if (!strnicmp(line, RJEC_START_STRING, sizeof(RJEC_START_STRING))) {
@@ -3100,9 +3105,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	if (LESAttached)
 	{
-		if ((MissionTime >= LESJettisonTime  && (stage < CSM_LEM_STAGE) && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
-			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
-			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
+		if (TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
 		{
 			JettisonLET();
 		}
@@ -4409,7 +4412,8 @@ void Saturn::GenericLoadStateSetup()
 
 		if (!UseATC) {
 			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
-			soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
+			if (SaturnType == SAT_SATURNV)
+				soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
 			LaunchS.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 		}
 	}

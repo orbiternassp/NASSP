@@ -1,5 +1,7 @@
 BEGIN_DESC
 Join Frank Borman, James Lovell and Bill Anders on Mankind's first trek a quarter of a million miles to the moon at December 21, 1968. The scenario starts at T-4h00min, crew ingress is at T-2h40min, launch azimuth is +72.12°. (AS-503)
+
+Enabled features: Virtual AGC and LVDC++
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -314,7 +316,8 @@ LVDC_BEGIN
   LVDC_TSTB 1.403517e4
   LVDC_XLunarAttitude 3.141589512 2.094395207 0.000000000000
 LVDC_END
-  CMPAD0110 1116
+LVIMU_BEGIN
+LVIMU_END
   CMPAD1351 6506
   CMPAD1352 24774
   CMPAD1353 632

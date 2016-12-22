@@ -92,14 +92,14 @@
 #define MAX_MSGSIZE			128
 #define MSG_DISPLAY_TIME	10
 
-// Mission major state numbers
-#define MST_PRELAUNCH		0
-#define MST_BOOST			1
-#define MST_EARTH_ORBIT		2
-#define MST_TL_COAST		3
-#define MST_LUNAR_ORBIT		4
-#define MST_TE_COAST		5
-#define MST_ENTRY			6
+// Mission major phase numbers
+#define MMST_PRELAUNCH		0
+#define MMST_BOOST			1
+#define MMST_EARTH_ORBIT	2
+#define MMST_TL_COAST		3
+#define MMST_LUNAR_ORBIT	4
+#define MMST_TE_COAST		5
+#define MMST_ENTRY			6
 
 // Mission Types
 // Unmanned and unflown missions are included for completeness. I don't intend to support them, or at least it's not a priority.
@@ -230,6 +230,10 @@
 #define MST_C_COAST54		65
 #define MST_C_COAST55		66
 #define MST_C_COAST56		67
+#define MST_C_COAST57		68
+#define MST_C_COAST58		69
+#define MST_C_COAST59		70
+#define MST_C_COAST60		71
 #define MST_C_ABORT			75
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
 
@@ -245,6 +249,7 @@
 #define UTP_TLIPAD			8
 #define UTP_LUNARENTRY		9
 #define UTP_FINALLUNARENTRY 10
+#define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -560,6 +565,33 @@ struct AP11MNV {
 	double LMWeight;	// LM weight
 };
 
+// APOLLO 11 LM - MANEUVER
+struct AP11LMMNV {
+	char purpose[64];	// PURPOSE
+	double GETI;		// TIG
+	VECTOR3 dV;			// P30 dV
+	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double dVR;			// Total dV
+	double burntime;	// Burn time
+	VECTOR3 Att;		// Attitude at TIG (only Roll and Pitch)
+	VECTOR3 dV_AGS;		// AGS DV
+	int BSSStar;		// Boresight star
+	double SPA, SXP;	// Boresight star angles
+
+	char remarks[128];	// remarks
+	double LMWeight;	// Vehicle weight
+	double CSMWeight;	// CSM weight
+};
+
+// APOLLO 11 PDI PAD
+struct AP11PDIPAD {
+	double GETI;		// TIG PDI
+	double t_go;		// Time-to-go in P63
+	double CR;			// Crossrange
+	VECTOR3 Att;		// Attitude at TIG
+};
+
+
 // Mission Control Center class
 class MCC {	
 public:
@@ -581,8 +613,10 @@ public:
 	void freePad();											// Free memory occupied by PAD form
 	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate);
 	int  subThread();										// Subthread entry point
-	int startSubthread(int fcn);							// Subthread start request
+	int startSubthread(int fcn, int type);					// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
+	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
+	void initiateAbort();
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC
@@ -593,6 +627,7 @@ public:
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
+	int subThreadType;										// What type of subthread?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
 	// GROUND TRACKING NETWORK
@@ -609,6 +644,7 @@ public:
 	// MISSION STATE
 	int MissionType;										// Mission Type
 	int MissionState;										// Major state
+	int MissionPhase;										// Major mission phase
 	int SubState;											// Substate number
 	int EarthRev;											// Revolutions around Earth
 	int MoonRev;											// Revolutions around moon

@@ -36,11 +36,14 @@ public:
 	void CDHcalc();
 	void OrbitAdjustCalc();
 	void REFSMMATCalc();
+	void DOICalc();
 	void LOICalc();
 	void LmkCalc();
-	//void EntryCalc();
-	//void EntryUpdateCalc();
+	void TEICalc();
+	void EntryCalc();
+	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void VecPointCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
@@ -70,10 +73,6 @@ public:
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
-	//OrbMech* mech;
-	CoastIntegrator* coast;
-	Entry* entry;
-	TEI* teicalc;
 	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 
@@ -89,7 +88,6 @@ public:
 	OBJHANDLE gravref;		//Earth or Moon
 	double P30TIG;			//Maneuver GET
 	VECTOR3 dV_LVLH;		//LVLH maneuver vector
-	OBJHANDLE maneuverplanet;
 	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool inhibUplLOS;
 	double TimeTag;
@@ -141,7 +139,6 @@ public:
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
-	int entrycalcstate;
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
@@ -161,6 +158,7 @@ public:
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
+	AP11LMMNV lmmanpad;
 	char GDCset[64];
 	bool HeadsUp;
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
@@ -182,7 +180,7 @@ public:
 	int mappage, mapgs;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI, 5 = DOI
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
@@ -195,6 +193,11 @@ public:
 	double LmkT1, LmkT2;
 	double LmkRange;
 	double LmkN89Lat, LmkN89Alt;
+
+	//VECPOINT PAGE
+	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
+	OBJHANDLE VECbody;	//handle for the desired body
+	VECTOR3 VECangles;	//IMU angles
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

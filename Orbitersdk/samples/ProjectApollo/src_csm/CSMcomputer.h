@@ -702,6 +702,8 @@ public:
 	double TargetTrunion;											// Reserved
 	double ShaftMoved;												// Movement counters for manual mode
 	double TrunionMoved;
+	double dShaft;
+	double dTrunion;
 	bool SextDualView;												// Toggle logical for sextant dual-view
 	bool SextDVLOSTog;												// Alternating flag that controls LineOfSight cycling in Dual-View mode
 	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second

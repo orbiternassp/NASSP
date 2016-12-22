@@ -876,6 +876,8 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} else if (key == OAPI_KEY_D) {
 			if (saturn)
 				saturn->VirtualAGCCoreDump();
+			else if (lem)
+				lem->VirtualAGCCoreDump();
 			return true;
 		} else if (key == OAPI_KEY_K) {
 			g_Data.killrot ? g_Data.killrot = 0 : g_Data.killrot = 1;				
@@ -1128,7 +1130,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
-	static const DWORD btkeyLgc[1] = { OAPI_KEY_B };	
+	static const DWORD btkeyLgc[1] = { OAPI_KEY_B };
 
 	if (screen == PROG_GNC) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyGNC[bt]);
@@ -1639,11 +1641,20 @@ void ProjectApolloMFD::Update (HDC hDC)
 			// We need to find the CM.
 			// In all of the scenarios in which the LM is present and selectable, the CM is already separated from the S4B.
 			object = oapiGetVesselByName("Gumdrop"); // A9
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-504"); // A9
+			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Charlie Brown"); // A10
 			}
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-505"); // A10
+			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Columbia"); // A11
+			}
+			if (object == NULL) {
+				object = oapiGetVesselByName("AS-506"); // A11
 			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Yankee Clipper"); // A12

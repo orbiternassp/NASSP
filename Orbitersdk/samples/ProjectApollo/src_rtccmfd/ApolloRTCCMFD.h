@@ -194,10 +194,17 @@ public:
 	void menuSetLmkLng();
 	void set_LmkLng(double lng);
 	void menuLmkPADCalc();
+	void menuSet2ndMenu();
+	void menuSetVECPOINTPage();
+	void cycleVECDirOpt();
+	void vecbodydialogue();
+	void set_vecbody(OBJHANDLE body);
+	void menuVECPOINTCalc();
 
 protected:
 	oapi::Font *font;
 	Saturn *saturn;
+	LEM *lem;
 	int screen;
 	static struct ScreenData {
 		int screen;

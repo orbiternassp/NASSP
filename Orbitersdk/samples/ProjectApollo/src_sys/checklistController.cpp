@@ -168,6 +168,13 @@ bool ChecklistController::init(char *checkFile)
 	}
 	return true;
 }
+
+bool ChecklistController::init(char *checkFile, bool SetFileName)
+{
+	if (SetFileName)
+		strncpy(FileName, checkFile, 100);
+	return init(checkFile);
+}
 // Todo: Verify
 void ChecklistController::save(FILEHANDLE scn)
 {

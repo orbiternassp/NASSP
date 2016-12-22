@@ -2547,7 +2547,7 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	double a,SA,TA,dTA;
-	VECTOR3 s_NBA, s_NBB,s_SMB, s_SMA,X_NB,Y_NB,Z_NB,X,Y,Z,X_SM,Y_SM,Z_SM,imuang;
+	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
 	a = -0.5676353234;
@@ -2584,19 +2584,7 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 		//s_SMA = navstars[29];// mul(REFS, navstars[29]);
 		//s_SMB = navstars[34]; //mul(REFS, navstars[34]);
 
-		X_NB = s_NBA;
-		Y_NB = unit(crossp(s_NBA, s_NBB));
-		Z_NB = crossp(X_NB, Y_NB);
-
-		X_SM = s_SMA;
-		Y_SM = unit(crossp(s_SMA, s_SMB));
-		Z_SM = crossp(X_SM, Y_SM);
-
-		X = X_SM*X_NB.x + Y_SM*Y_NB.x + Z_SM*Z_NB.x;
-		Y = X_SM*X_NB.y + Y_SM*Y_NB.y + Z_SM*Z_NB.y;
-		Z = X_SM*X_NB.z + Y_SM*Y_NB.z + Z_SM*Z_NB.z;
-
-		SMNB = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+		SMNB = AXISGEN(s_NBA, s_NBB, s_SMA, s_SMB);
 
 		imuang = CALCGAR(REFS, SMNB);
 
@@ -2687,8 +2675,8 @@ double OctToDouble(int oct1, int oct2)
 	double dec1, dec2,dubb;
 	bin1 = octal_binary(oct1);
 	bin2 = octal_binary(oct2);
-	dec1 = BinToDec(bin1);
-	dec2 = BinToDec(bin2);
+	dec1 = (double)BinToDec(bin1);
+	dec2 = (double)BinToDec(bin2);
 	dubb = dec1*OrbMech::power(2.0, -14.0) + dec2*OrbMech::power(2.0, -28.0);
 	if (dubb > 0.5)
 	{
@@ -2702,7 +2690,7 @@ unsigned long long octal_binary(int n)  /* Function to convert octal to binary.*
 	unsigned long long decimal = 0, binary = 0, i = 0;
 	while (n != 0)
 	{
-		decimal += (n % 10)*OrbMech::power(8, i);
+		decimal += (n % 10)*(int)pow(8, i);
 		++i;
 		n /= 10;
 	}
@@ -3301,7 +3289,7 @@ MATRIX3 CALCSMSC(VECTOR3 GA)
 	return _M(X_NB.x, X_NB.y, X_NB.z, Y_NB.x, Y_NB.y, Y_NB.z, Z_NB.x, Z_NB.y, Z_NB.z);
 }
 
-VECTOR3 CALCSGTA(MATRIX3 des)
+VECTOR3 CALCGTA(MATRIX3 des)
 {
 	VECTOR3 X_D, Y_D, Z_D, Z_D_apo;
 	double tx, ty, tz, sintx, sinty, sintz, costx, costy, costz;
@@ -3366,6 +3354,25 @@ void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP)
 	
 	SXP = atan(S_SB.y / S_SB.z);//asin(S_SB.x);
 	SPA = asin(S_SB.x);//atan(-S_SB.y / S_SB.z);
+}
+
+MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB)
+{
+	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, X, Y, Z;
+
+	X_NB = s_NBA;
+	Y_NB = unit(crossp(s_NBA, s_NBB));
+	Z_NB = crossp(X_NB, Y_NB);
+
+	X_SM = s_SMA;
+	Y_SM = unit(crossp(s_SMA, s_SMB));
+	Z_SM = crossp(X_SM, Y_SM);
+
+	X = X_SM*X_NB.x + Y_SM*Y_NB.x + Z_SM*Z_NB.x;
+	Y = X_SM*X_NB.y + Y_SM*Y_NB.y + Z_SM*Z_NB.y;
+	Z = X_SM*X_NB.z + Y_SM*Y_NB.z + Z_SM*Z_NB.z;
+
+	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
@@ -3455,7 +3462,7 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 		tLMJD = t_L / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
 		Rot = GetRotationMatrix(plan, tLMJD);
-		R_LS = mul(Rot, R_LSA);
+		R_LS = rhmul(Rot, R_LSA);
 		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
 		er = length(U_L - U_LS);
 		alpha = sign(dotp(U_N, crossp(U_L, U_LS)))*acos(dotp(U_L, U_LS));
@@ -3464,7 +3471,7 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 	}
 	t_DOI = t_D;
 	t_PDI = t_DOI + t_H;
-	DV_DOI = V_D - V_DH;
+	DV_DOI = V_DH - V_D;
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
@@ -3549,7 +3556,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	V_cutoff = V + V_grav + V_thrust;
 }*/
 
-void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
+void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go)
 {
 	double dt, dt_max, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
 	VECTOR3 U_TD, gp, g, R0, V0, Rnow, Vnow, dvdt;
@@ -3588,6 +3595,7 @@ void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double 
 	}
 	R_cutoff = Rnow;
 	V_cutoff = Vnow;
+	m_cutoff = mnow;
 	t_go = t;
 	
 }
@@ -3625,10 +3633,10 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
-	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
 	int n, nmax;
 
 	nmax = 100;
@@ -3648,7 +3656,7 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
 		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
 		{
-			poweredflight(R_ig, V_ig, MJD, gravref, f_T, isp, m, V_go, R_p, V_p, t_go);
+			poweredflight(R_ig, V_ig, MJD, gravref, f_T, isp, m, V_go, R_p, V_p, m_p, t_go);
 			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
 			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
 			i_z = unit(crossp(R_d, i_y));
@@ -3698,6 +3706,7 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 
 	R_cutoff = R_p;
 	V_cutoff = V_p;
+	m_cutoff = m_p;
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 

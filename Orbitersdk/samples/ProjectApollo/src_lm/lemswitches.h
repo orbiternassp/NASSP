@@ -39,7 +39,8 @@ class LEMMissionTimerSwitch : public LEMThreePosSwitch {
 public:
 	LEMMissionTimerSwitch() { lem = 0; sw = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int id);
-	bool CheckMouseClick(int event, int mx, int my);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	LEM *lem;
@@ -50,8 +51,8 @@ class LEMValveSwitch: public LEMThreePosSwitch {
 public:
 	LEMValveSwitch() { Valve = 0; Indicator = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckValve(int s);
@@ -64,8 +65,8 @@ class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; lem = NULL; srcno=0; afl=0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_ECAch *lem_eca, int src_no, int asc);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckValve(int s);
@@ -79,8 +80,8 @@ class LEMDeadFaceSwitch: public LEMThreePosSwitch {
 public:
 	LEMDeadFaceSwitch() { };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckValve(int s);
@@ -90,8 +91,8 @@ class LEMInverterSwitch: public LEMThreePosSwitch {
 public:
 	LEMInverterSwitch() { inv1 = NULL; inv2 = NULL; };
 class LEM_ECA;	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_INV *lem_inv_1, LEM_INV *lem_inv_2);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	bool ChangeState(int newState);
 
 protected:

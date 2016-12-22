@@ -126,16 +126,16 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
 		r = b*theta;
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI);
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI));
 	}
 	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
 	// Draw Archemedes screw #2
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
 		r = b*theta;
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI);
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI));
 	}
 	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
 
@@ -164,7 +164,7 @@ void LEM::InitSwitches() {
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
-	ModeControlPNGSSwitch.Register(PSH,"ModeControlPNGSSwitch", THREEPOSSWITCH_DOWN);
+	ModeControlPGNSSwitch.Register(PSH,"ModeControlPGNSSwitch", THREEPOSSWITCH_DOWN);
 	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_DOWN);
 	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
 	LeftXPointerSwitch.Register(PSH, "LeftXPointerSwitch", true);
@@ -289,10 +289,10 @@ void LEM::InitSwitches() {
 	TempPressMonRotary.AddPosition(3,  70);
 	TempPressMonRotary.Register(PSH, "TempPressMonRotary", 0);
 
-	ClycolRotary.AddPosition(0,  45);
-	ClycolRotary.AddPosition(1,  70);
-	ClycolRotary.AddPosition(2, 110);
-	ClycolRotary.Register(PSH, "ClycolRotary", 2);
+	GlycolRotary.AddPosition(0,  45);
+	GlycolRotary.AddPosition(1,  70);
+	GlycolRotary.AddPosition(2, 110);
+	GlycolRotary.Register(PSH, "GlycolRotary", 2);
 	
 	SuitFanRotary.AddPosition(0,  45);
 	SuitFanRotary.AddPosition(1,  70);
@@ -471,7 +471,7 @@ void LEM::InitSwitches() {
 	CDRAudSBandSwitch.Register(PSH,"CDRAudSBandSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudICSSwitch.Register(PSH,"CDRAudICSSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudRelaySwitch.Register(PSH,"CDRAudRelaySwitch",TOGGLESWITCH_DOWN);
-	CDRAudVOXSwitch.Register(PSH,"CDRAudICSSwitch",THREEPOSSWITCH_CENTER);
+	CDRAudVOXSwitch.Register(PSH,"CDRAudVOXSwitch",THREEPOSSWITCH_CENTER);
 	CDRAudioControlSwitch.Register(PSH,"CDRAudioControlSwitch",TOGGLESWITCH_UP);
 	CDRAudVHFASwitch.Register(PSH,"CDRAudVHFASwitch",THREEPOSSWITCH_CENTER);
 	CDRAudVHFBSwitch.Register(PSH,"CDRAudVHFBSwitch",THREEPOSSWITCH_CENTER);
@@ -486,7 +486,7 @@ void LEM::InitSwitches() {
 	LMPAudSBandSwitch.Register(PSH,"LMPAudSBandSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudICSSwitch.Register(PSH,"LMPAudICSSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudRelaySwitch.Register(PSH,"LMPAudRelaySwitch",TOGGLESWITCH_DOWN);
-	LMPAudVOXSwitch.Register(PSH,"LMPAudICSSwitch",THREEPOSSWITCH_CENTER);
+	LMPAudVOXSwitch.Register(PSH,"LMPAudVOXSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudVHFASwitch.Register(PSH,"LMPAudVHFASwitch",THREEPOSSWITCH_CENTER);
 	LMPAudVHFBSwitch.Register(PSH,"LMPAudVHFBSwitch",THREEPOSSWITCH_CENTER);
 	LMPAudSBandVol.Register(PSH,"LMPAudSBandVol",6,9);
@@ -567,7 +567,7 @@ void LEM::InitSwitches() {
 	HE_PQGS_PROP_DISP_AC_CB.Register(PSH,"HE_PQGS_PROP_DISP_AC_CB",0);
 	SBD_ANT_AC_CB.Register(PSH,"SBD_ANT_AC_CB",0);
 	ORDEAL_AC_CB.Register(PSH,"ORDEAL_AC_CB",0);
-	AQS_AC_CB.Register(PSH,"AQS_AC_CB",0);
+	AGS_AC_CB.Register(PSH,"AGS_AC_CB",0);
 	AOT_LAMP_ACB_CB.Register(PSH,"AOT_LAMP_ACB_CB",0);
 	LMP_FDAI_AC_CB.Register(PSH,"LMP_FDAI_AC_CB",0);
 	NUM_LTG_AC_CB.Register(PSH,"NUM_LTG_AC_CB",0);
@@ -684,7 +684,7 @@ void LEM::InitSwitches() {
 	LTG_TRACK_CB.Register(PSH,"LTG_TRACK_CB",0);
 	LTG_ANUN_DOCK_COMPNT_CB.Register(PSH,"LTG_ANUN_DOCK_COMPNT_CB",0);
 	LTG_MASTER_ALARM_CB.Register(PSH,"LTG_MASTER_ALARM_CB",0);
-	EDS_CB_LOGIC_B.Register(PSH,"EDS_CB_LOGIC_B",1);
+	EDS_CB_LOGIC_B.Register(PSH,"EDS_CB_LOGIC_B",0);
 	SCS_AEA_CB.Register(PSH,"SCS_AEA_CB",0);
 	SCS_ENG_ARM_CB.Register(PSH,"SCS_ENG_ARM_CB",0);
 	SCS_ASA_CB.Register(PSH,"SCS_ASA_CB",1);
@@ -744,6 +744,48 @@ void LEM::InitSwitches() {
 	LEMCoas2Enabled = true;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
+
+	DskySwitchVerb.Register(PSH, "DskySwitchVerb", false);
+	DskySwitchNoun.Register(PSH, "DskySwitchNoun", false);
+	DskySwitchPlus.Register(PSH, "DskySwitchPlus", false);
+	DskySwitchMinus.Register(PSH, "DskySwitchMinus", false);
+	DskySwitchZero.Register(PSH, "DskySwitchZero", false);
+	DskySwitchOne.Register(PSH, "DskySwitchOne", false);
+	DskySwitchTwo.Register(PSH, "DskySwitchTwo", false);
+	DskySwitchThree.Register(PSH, "DskySwitchThree", false);
+	DskySwitchFour.Register(PSH, "DskySwitchFour", false);
+	DskySwitchFive.Register(PSH, "DskySwitchFive", false);
+	DskySwitchSix.Register(PSH, "DskySwitchSix", false);
+	DskySwitchSeven.Register(PSH, "DskySwitchSeven", false);
+	DskySwitchEight.Register(PSH, "DskySwitchEight", false);
+	DskySwitchNine.Register(PSH, "DskySwitchNine", false);
+	DskySwitchClear.Register(PSH, "DskySwitchClear", false);
+	DskySwitchProg.Register(PSH, "DskySwitchProg", false);
+	DskySwitchKeyRel.Register(PSH, "DskySwitchKeyRel", false);
+	DskySwitchEnter.Register(PSH, "DskySwitchEnter", false);
+	DskySwitchReset.Register(PSH, "DskySwitchReset", false);
+
+	DskySwitchVerb.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::VerbCallback));
+	DskySwitchNoun.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::NounCallback));
+	DskySwitchPlus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::PlusCallback));
+	DskySwitchMinus.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::MinusCallback));
+	DskySwitchZero.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::zeroCallback));
+	DskySwitchOne.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::oneCallback));
+	DskySwitchTwo.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::twoCallback));
+	DskySwitchThree.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::threeCallback));
+	DskySwitchFour.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fourCallback));
+	DskySwitchFive.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::fiveCallback));
+	DskySwitchSix.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sixCallback));
+	DskySwitchSeven.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::sevenCallback));
+	DskySwitchEight.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::eightCallback));
+	DskySwitchNine.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::nineCallback));
+	DskySwitchProg.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ProgCallback));
+	DskySwitchClear.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ClearCallback));
+	DskySwitchKeyRel.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::KeyRelCallback));
+	DskySwitchEnter.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::EnterCallback));
+	DskySwitchReset.SetCallback(new PanelSwitchCallback<DSKY>(&dsky, &DSKY::ResetCallback));
+
+	DskySwitchProg.SetDelayTime(1.5);
 
 	//
 	// Old stuff.
@@ -1213,6 +1255,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_32x160]		= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
 		srf[SRF_BORDER_72x72]		= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
+		srf[SRF_BORDER_34x39]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x39));
+		srf[SRF_BORDER_38x38]		= oapiCreateSurface (LOADBMP(IDB_BORDER_38x38));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
@@ -1281,7 +1325,8 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_32x160], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x72], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_75x64], g_Param.col[4]);
-
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_38x38], g_Param.col[4]);
 
 
 //		break;	
@@ -1354,7 +1399,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 	switch (id) {
 	case LMPANEL_MAIN: // LEM Main panel
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiRegisterMFD (MFD_LEFT,  mfds_left);
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
@@ -1385,7 +1430,7 @@ bool LEM::clbkLoadPanel (int id) {
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 860, 1560,  965, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 716, 1565,  818, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 696, 1755,  986, 1878), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 698, 1756,  984, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R( 171,  286,  313,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER,						_R( 387,  286,  468,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUEL_DIGIT,						_R( 555,  245,  594,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1414,7 +1459,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RCS_XFEED_SWITCH,				_R( 900,  921,  934,  960), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_TALKBACKS,				_R(1045,  871, 1138,  894), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_SWITCHES,			    _R(1039,  922, 1144,  961), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,			_R(1196,  926, 1280, 1130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLSUITFANROTARIES,			_R(1196,  926, 1280, 1130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_QTYMONROTARY,					_R(1382,  986, 1466, 1070), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ENGGIMBALENABLESWITCH,			_R( 199, 1227,  233, 1268), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RADARANTTESTSWITCHES,			_R( 269, 1227,  304, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1433,8 +1478,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_EXTERIORLTGSWITCH,				_R(1451, 1432, 1485, 1461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4LEFTSWITCHROW,				_R( 584, 1614,  618, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4RIGHTSWITCHROW,			_R(1062, 1614, 1096, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_XPOINTERCDR,						_R( 163,  426,  300,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_XPOINTERLMP,						_R(1400,  426, 1537,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTERCDR,						_R( 165,  426,  302,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTERLMP,						_R(1404, 426, 1541,   559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LMRADARSIGNALSTRENGTH,			_R( 342, 1229,  433, 1319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LMRADARSLEWSWITCH,			    _R( 367, 1433,  408, 1472), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_EVENT_TIMER_SWITCHES,			_R(1013, 1233, 1214, 1264), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1447,55 +1492,75 @@ bool LEM::clbkLoadPanel (int id) {
 		break;	
 		
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_XPOINTERLMP,					_R( 235, 246, 372,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	        PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,		_R( 333, 532, 368,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,		_R(  31, 746, 116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_QTYMONROTARY,				_R( 215, 806, 300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 36, 445);
+		fdaiRight.SetLMmode();
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
+
+		oapiRegisterPanelArea(AID_XPOINTERLMP,						_R( 237,  246,  374,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RIGHTMONITORSWITCHES,				_R (333,  532,  368,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_GLYCOLSUITFANROTARIES,			_R(  31,  746,  116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_QTYMONROTARY,						_R( 215,  806,  300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		break;
 
 	case LMPANEL_LEFTWINDOW: // LEM Left Window
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-		
-		oapiRegisterPanelArea (AID_LEM_COAS2,					_R( 555,    0, 1095,  540), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MISSION_CLOCK,				_R(1335,  106, 1477,  130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_EVENT_TIMER,					_R(1551,  106, 1632,  128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CONTACTLIGHT1,				_R(1584,  246, 1633,  295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,			_R(1592,  335, 1627,  365), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,			_R(1313,  532, 1347,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_XPOINTERCDR,					_R(1327,  246, 1464,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,			_R(1400,  740, 1576,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,	_R(1472,  826, 1582,  938), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,		_R(1616,  738, 1652,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1517, 445); // Was 135,625
+		fdaiLeft.SetLMmode();
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
+
+		oapiRegisterPanelArea(AID_LEM_COAS2,						_R( 675,    0, 1215,  540), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MISSION_CLOCK,					_R(1455,  106, 1597,  130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_EVENT_TIMER,						_R(1671,  106, 1752,  128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_CONTACTLIGHT1,					_R(1704,  246, 1753,  295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEFTXPOINTERSWITCH,				_R(1712,  335, 1747,  365), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEFTMONITORSWITCHES,				_R(1433,  532, 1467,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_XPOINTERCDR,						_R(1449,  246, 1586,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_FDAILOWERSWITCHROW,				_R(1520,  740, 1696,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_ENGINETHRUSTCONTSWITCHES,			_R(1592,  826, 1702,  938), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_REG_CONTROLS_LEFT,			_R(1736,  738, 1772,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RANGE_TAPE,						_R(1826,  480, 1870,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RATE_TAPE,						_R(1877,  480, 1915,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_FUEL_DIGIT,						_R(1839,   65, 1878,  139), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		// 3 pos Engine Arm Lever
-	    oapiRegisterPanelArea (AID_ENG_ARM,						_R(1427,  898, 1461,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea(AID_ENG_ARM,							_R(1547,  898, 1581,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-		oapiCameraSetCockpitDir(0,0);
+		oapiCameraSetCockpitDir(0, 0);
 		break;
 
 	case LMPANEL_LPDWINDOW: // LPD Window
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_XPOINTER,		_R(822,  35,  959, 168), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	       PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CONTACTLIGHT1,	_R(955, 713, 1004, 762), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
-		
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1320, 243); // Was 135,625
+		fdaiLeft.SetLMmode();
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
+
+		oapiRegisterPanelArea(AID_XPOINTER,							_R(1252,   44, 1389,  177), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_CONTACTLIGHT1,					_R(1507,   44, 1556,   93), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_DSKY_DISPLAY,						_R(1410,  888, 1515, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_DSKY_LIGHTS,						_R(1266,  893, 1368, 1062), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RANGE_TAPE,						_R(1629,  278, 1673,  441), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RATE_TAPE,						_R(1680,  278, 1718,  441), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_FUEL_DIGIT,						_R(1574,  874, 1613,  948), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));
-		oapiCameraSetCockpitDir(0,0);
-
+		oapiCameraSetCockpitDir(0, 0);
+		
 		break;
 
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_LEM_COAS1,				_R( 739, 0, 1570, 831), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea(AID_LEM_COAS1, _R(833, 0, 1664, 831), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
-		oapiCameraSetCockpitDir(0,0);
+		oapiCameraSetCockpitDir(0, 0);
 		break;
 
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
@@ -1553,15 +1618,15 @@ bool LEM::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_AOT_RETICLE,                      _R( 572, 257, 1107,  792),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,						PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_AOT_RETICLE_KNOB,                 _R(1334, 694, 1409, 1021),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,      PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_AOT_SHAFT_KNOB,                   _R(1340,   0, 1403,  156),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,						PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RR_GYRO_SEL_SWITCH,               _R( 207,  66,  242,   96),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,						PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 665,  257, 1199,  792), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,					_R(1427,  694, 1502, 1021), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
-		oapiCameraSetCockpitDir(0,0);
+		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
 
@@ -1652,13 +1717,17 @@ void LEM::SetSwitches(int panel) {
 			ASCHeReg1TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
 			ASCHeReg1Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			ASCHeReg1Switch.SetDelayTime(1);
 			DESHeReg1Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
+			DESHeReg1Switch.SetDelayTime(1);
 
 			MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
 			ASCHeReg2TB.Init(6,   0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
 			ASCHeReg2Switch.Init(0,  43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
-			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);			
+			ASCHeReg2Switch.SetDelayTime(1);
+			DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
+			DESHeReg2Switch.SetDelayTime(1);
 
 			FDAILowerSwitchRow.Init(AID_FDAILOWERSWITCHROW, MainPanel);
 			ShiftTruSwitch.Init (  0,  5, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FDAILowerSwitchRow);
@@ -1695,35 +1764,55 @@ void LEM::SetSwitches(int panel) {
 			RCSAscFeed2ATB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed1BTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
 			RCSAscFeed2BTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow);
+
 			RCSAscFeedSwitchRow.Init(AID_RCS_ASC_FEED_SWITCHES, MainPanel);
 			RCSAscFeed1ASwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1ASwitch.SetDelayTime(1);
 			RCSAscFeed2ASwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2ASwitch.SetDelayTime(1);
 			RCSAscFeed1BSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed1BSwitch.SetDelayTime(1);
 			RCSAscFeed2BSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
+			RCSAscFeed2BSwitch.SetDelayTime(1);
+
 			RCSQuad14TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS, MainPanel);
 			RCSQuad1ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
 			RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
+
 			RCSQuad14SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_SWITCHES, MainPanel);
 			RCSQuad1ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad1BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad1BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad4BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+			RCSQuad4BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSQuad23TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS, MainPanel);
 			RCSQuad2ACmdEnableTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3ACmdEnableTB.Init( 70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
 			RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
+
 			RCSQuad23SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_SWITCHES, MainPanel);
 			RCSQuad2ACmdEnableSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3ACmdEnableSwitch.Init( 69,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3ACmdEnableSwitch.SetDelayTime(1);
 			RCSQuad2BCmdEnableSwitch.Init(144,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad2BCmdEnableSwitch.SetDelayTime(1);
 			RCSQuad3BCmdEnableSwitch.Init(213,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+			RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
+
 			RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
 			RCSXFeedTB.Init(  0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow);
+
 			RCSXfeedSwitchRow.Init(AID_RCS_XFEED_SWITCH, MainPanel);
 			RCSXFeedSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);
+			RCSXFeedSwitch.SetDelayTime(1);
 
 			// DS20060406 HERE WE GO!
 			RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
@@ -1732,11 +1821,13 @@ void LEM::SetSwitches(int panel) {
 
 			RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
 			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
+			RCSMainSovASwitch.SetDelayTime(1);
 			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
+			RCSMainSovBSwitch.SetDelayTime(1);
 
-			ClycolSuitFanRotaryRow.Init(AID_CLYCOLSUITFANROTARIES, MainPanel);
-			ClycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], ClycolSuitFanRotaryRow);
-			SuitFanRotary.Init(0, 120, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], ClycolSuitFanRotaryRow);
+			GlycolSuitFanRotaryRow.Init(AID_GLYCOLSUITFANROTARIES, MainPanel);
+			GlycolRotary.Init (0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
+			SuitFanRotary.Init(0, 120, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], GlycolSuitFanRotaryRow);
 
 			QtyMonRotaryRow.Init(AID_QTYMONROTARY, MainPanel);
 			QtyMonRotary.Init(0,   0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], QtyMonRotaryRow);
@@ -1746,7 +1837,7 @@ void LEM::SetSwitches(int panel) {
 
 			ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
 
-			ModeControlPNGSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
+			ModeControlPGNSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
 			ModeControlAGSSwitch.Init (93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 
 			IMUCageSwitch.Init(191, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], ModeControlSwitchesRow, &imu);
@@ -1822,9 +1913,36 @@ void LEM::SetSwitches(int panel) {
 
 			EventTimerSwitchRow.Init(AID_LM_EVENT_TIMER_SWITCHES, MainPanel);
 			EventTimerCtlSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerCtlSwitch.SetDelayTime(1);
 			EventTimerStartSwitch.Init(55, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, &EventTimerDisplay);
+			EventTimerStartSwitch.SetDelayTime(1);
 			EventTimerMinuteSwitch.Init(111, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 			EventTimerSecondSwitch.Init(167, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerSwitchRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
+
+			//
+			// DSKY
+			//
+
+			DskySwitchRow.Init(AID_DSKY_KEY, MainPanel);
+			DskySwitchVerb.Init(0, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 20);
+			DskySwitchNoun.Init(0, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 0, 60);
+			DskySwitchPlus.Init(41, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 0);
+			DskySwitchMinus.Init(41, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 40);
+			DskySwitchZero.Init(41, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 41, 80);
+			DskySwitchSeven.Init(82, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 0);
+			DskySwitchFour.Init(82, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 40);
+			DskySwitchOne.Init(82, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 82, 80);
+			DskySwitchEight.Init(123, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 0);
+			DskySwitchFive.Init(123, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 40);
+			DskySwitchTwo.Init(123, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 123, 80);
+			DskySwitchNine.Init(164, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 0);
+			DskySwitchSix.Init(164, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 40);
+			DskySwitchThree.Init(164, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 164, 80);
+			DskySwitchClear.Init(205, 0, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 0);
+			DskySwitchProg.Init(205, 40, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 40);
+			DskySwitchKeyRel.Init(205, 80, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 205, 80);
+			DskySwitchEnter.Init(246, 20, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 20);
+			DskySwitchReset.Init(246, 60, 38, 38, srf[SRF_DSKYKEY], srf[SRF_BORDER_38x38], DskySwitchRow, 246, 60);
 
 	//		break;
 
@@ -1923,16 +2041,25 @@ void LEM::SetSwitches(int panel) {
 
 			DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1HVSwitch.Init( 0,  5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1a,1,0);
+			DSCSEBat1HVSwitch.SetDelayTime(1);
 			DSCSEBat2HVSwitch.Init( 69,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1b,1,0);
+			DSCSEBat2HVSwitch.SetDelayTime(1);
 			DSCCDRBat3HVSwitch.Init(151,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2a,1,0);
+			DSCCDRBat3HVSwitch.SetDelayTime(1);
 			DSCCDRBat4HVSwitch.Init(220,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2b,1,0);
+			DSCCDRBat4HVSwitch.SetDelayTime(1);
 			DSCBattFeedSwitch.Init(291,  0, 34, 39,srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], DSCHiVoltageSwitchRow, this);
+			DSCBattFeedSwitch.SetDelayTime(1);
 
 			DSCLoVoltageSwitchRow.Init(AID_DSC_LOW_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1LVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this,&ECA_1a,2,0);
+			DSCSEBat1LVSwitch.SetDelayTime(1);
 			DSCSEBat2LVSwitch.Init( 69,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_1b,2,0);
+			DSCSEBat2LVSwitch.SetDelayTime(1);
 			DSCCDRBat3LVSwitch.Init( 151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2a,2,0);
+			DSCCDRBat3LVSwitch.SetDelayTime(1);
 			DSCCDRBat4LVSwitch.Init( 220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2b,2,0);
+			DSCCDRBat4LVSwitch.SetDelayTime(1);
 
 			DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
 			DSCBattery1TB.Init(0,  0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
@@ -1949,9 +2076,13 @@ void LEM::SetSwitches(int panel) {
 
 			ASCBatterySwitchRow.Init(AID_ASC_BATTERY_SWITCHES, MainPanel);
 			ASCBat5SESwitch.Init ( 0,    0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3a,1,1);
+			ASCBat5SESwitch.SetDelayTime(1);
 			ASCBat5CDRSwitch.Init( 69,   0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3b,1,1);
+			ASCBat5CDRSwitch.SetDelayTime(1);
 			ASCBat6CDRSwitch.Init( 138,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4a,1,1);
+			ASCBat6CDRSwitch.SetDelayTime(1);
 			ASCBat6SESwitch.Init ( 221,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4b,1,1);
+			ASCBat6SESwitch.SetDelayTime(1);
 			UpDataSquelchSwitch.Init(295, 0, 34, 29,srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
 
 			Panel12AudioCtlSwitchRow.Init(AID_LM_P12_AUDIO_CONT_SWITCH, MainPanel);
@@ -2028,7 +2159,7 @@ void LEM::SetSwitches(int panel) {
 			HE_PQGS_PROP_DISP_AC_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			SBD_ANT_AC_CB.Init(131, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			ORDEAL_AC_CB.Init(195, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
-			AQS_AC_CB.Init(318, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
+			AGS_AC_CB.Init(318, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			AOT_LAMP_ACB_CB.Init(382, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			LMP_FDAI_AC_CB.Init(446, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
 			NUM_LTG_AC_CB.Init( 510, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusB, 2.0);
@@ -2125,6 +2256,7 @@ void LEM::SetSwitches(int panel) {
 			// Panel 5 is 1000,1300 to 1560, 1620
 			Panel5SwitchRow.Init(AID_LEM_PANEL_5, MainPanel);
 			TimerContSwitch.Init(233, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 0);
+			TimerContSwitch.SetDelayTime(1);
 			TimerSlewHours.Init(333, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 1);
 			TimerSlewMinutes.Init(405, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 2);
 			TimerSlewSeconds.Init(477, 43, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
@@ -2317,13 +2449,13 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	switch (id) {
 	// panel 0 events:
-	case AID_DSKY_KEY:
+	/*case AID_DSKY_KEY:
 		if (event & PANEL_MOUSE_LBDOWN) {
 			dsky.ProcessKeyPress(mx, my);
 		} else if (event & PANEL_MOUSE_LBUP) {
 			dsky.ProcessKeyRelease(mx, my);
 		}
-		return true;
+		return true;*/
 
 	case AID_LM_DEDA_KEYS:
 		if (event & PANEL_MOUSE_LBDOWN) {
@@ -3297,9 +3429,9 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
-	case AID_DSKY_KEY:
+	/*case AID_DSKY_KEY:
 		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
-		return true;
+		return true;*/
 
 	case AID_LM_DEDA_LIGHTS:
 		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTS]);

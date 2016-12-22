@@ -115,6 +115,8 @@ MCC::MCC(){
 	NCOption_Enabled = false;
 	NCOption_Text[0] = 0;
 	scrubbed = false;
+	upString[0] = 0;
+	upDescr[0] = 0;
 }
 
 void MCC::Init(Saturn *vs){
@@ -505,7 +507,8 @@ void MCC::Init(Saturn *vs){
 	GroundStations[42].Active = true;
 
 	// MISSION STATE
-	setState(MST_PRELAUNCH);
+	MissionPhase = 0;
+	setState(MMST_PRELAUNCH);
 	// Earth Revolutions count up from 1, 1st Moon Revolution starts at -180° longitude around the time of LOI.
 	EarthRev = 1;
 	MoonRev = 0;
@@ -732,6 +735,7 @@ void MCC::TimeStep(double simdt){
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
+					MissionPhase = MMST_BOOST;
 					setState(MST_1B_LAUNCH);
 				}
 			}
@@ -746,6 +750,7 @@ void MCC::TimeStep(double simdt){
 				if(cm->stage == LAUNCH_STAGE_ONE){
 					// Normal Liftoff
 					addMessage("LIFTOFF!");
+					MissionPhase = MMST_BOOST;
 					setState(MST_SV_LAUNCH);
 				}
 			}
@@ -804,6 +809,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C:
 						addMessage("INSERTION");
+						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_C_INSERTION);
 						break;
 					}				
@@ -831,6 +837,7 @@ void MCC::TimeStep(double simdt){
 					switch(MissionType){
 					case MTP_C_PRIME:
 						addMessage("INSERTION");
+						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
 						break;
 					}				
@@ -868,7 +875,7 @@ void MCC::TimeStep(double simdt){
 					}
 					break;
 				case 1:
-					startSubthread(50); // Start subthread to fill PAD
+					startSubthread(50, UTP_UPLINKONLY); // Start subthread to fill PAD
 					setSubState(2);
 					// FALL INTO
 				case 2: // Await pad read-up time (however long it took to compute it and give it to capcom)
@@ -954,7 +961,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 28 * 60 * 60 + 50 * 60, 9, MST_C_COAST9);
 				break;
 			case MST_C_COAST9: // TPI Update to Final Separation Maneuver update
-				UpdateMacro(UTP_TPI, cm->MissionTime > 30 * 60 * 60 + 11 * 60, 10, MST_C_COAST10);
+				UpdateMacro(UTP_TPI, cm->MissionTime > 30 * 60 * 60 + 9 * 60, 10, MST_C_COAST10);
 				break;
 			case MST_C_COAST10: // Final Separation Maneuver update to Block Data 4
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > 30 * 60 * 60 + 54 * 60, 11, MST_C_COAST11);
@@ -1073,37 +1080,50 @@ void MCC::TimeStep(double simdt){
 			case MST_C_COAST48: // SV PAD to P27 PAD
 				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 214 * 60 * 60 + 10 * 60, 52, MST_C_COAST49);
 				break;
-			case MST_C_COAST49: //P27 PAD to Block Data 24
-				UpdateMacro(UTP_P27PAD, cm->MissionTime > 220 * 60 * 60 + 43 * 60, 36, MST_C_COAST50);
+			case MST_C_COAST49: //P27 PAD to SV PAD
+				UpdateMacro(UTP_P27PAD, cm->MissionTime > 216 * 60 * 60, 36, MST_C_COAST50);
 				break;
-			case MST_C_COAST50: // Block Data 24 to Block Data 25
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST51);
+			case MST_C_COAST50: //SV PAD to SV PAD
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 217 * 60 * 60, 52, MST_C_COAST51);
 				break;
-			case MST_C_COAST51: // Block Data 25 to SPS-7
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST52);
+			case MST_C_COAST51: //SV PAD to Block Data 24
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 220 * 60 * 60 + 43 * 60, 52, MST_C_COAST52);
 				break;
-			case MST_C_COAST52: // SPS-7 to Block Data 26
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 241 * 60 * 60 + 39 * 60, 39, MST_C_COAST53);
+			case MST_C_COAST52: // Block Data 24 to Block Data 25
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 230 * 60 * 60 + 24 * 60, 37, MST_C_COAST53);
 				break;
-			case MST_C_COAST53: // Block Data 26 to Block Data 27
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST54);
+			case MST_C_COAST53: // Block Data 25 to SPS-7
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 233 * 60 * 60 + 27 * 60, 38, MST_C_COAST54);
 				break;
-			case MST_C_COAST54: // Block Data 27 to Deorbit Maneuver
-				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 257 * 60 * 60 + 20 * 60, 41, MST_C_COAST55);
+			case MST_C_COAST54: // SPS-7 to SV PAD
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 240 * 60 * 60 + 20 * 60, 39, MST_C_COAST55);
 				break;
-			case MST_C_COAST55: // Deorbit Maneuver PAD to Entry PAD
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST56);
+			case MST_C_COAST55: // SV PAD to Block Data 26
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 241 * 60 * 60 + 39 * 60, 52, MST_C_COAST56);
 				break;
-			case MST_C_COAST56:
+			case MST_C_COAST56: // Block Data 26 to Block Data 27
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 248 * 60 * 60 + 56 * 60, 40, MST_C_COAST57);
+				break;
+			case MST_C_COAST57: // Block Data 27 to SV PAD
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 255 * 60 * 60, 41, MST_C_COAST58);
+				break;
+			case MST_C_COAST58: // SV PAD to Deorbit Maneuver
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 257 * 60 * 60 + 20 * 60, 52, MST_C_COAST59);
+				break;
+			case MST_C_COAST59: // Deorbit Maneuver PAD to Entry PAD
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 257 * 60 * 60 + 25 * 60, 42, MST_C_COAST60);
+				break;
+			case MST_C_COAST60:
 				UpdateMacro(UTP_ENTRY, cm->stage == CM_STAGE, 43, MST_ORBIT_ENTRY);
 				break;
 			case MST_ORBIT_ENTRY:
 				switch (SubState) {
 				case 0:
+					MissionPhase = MMST_ENTRY;
 					allocPad(6);// Allocate AP7 Entry Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(44); // Start subthread to fill PAD
+						startSubthread(44, UTP_ENTRY); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1124,6 +1144,17 @@ void MCC::TimeStep(double simdt){
 						setState(MST_LANDING);
 					}
 					break;
+				}
+				break;
+			case MST_C_ABORT:
+				{
+					if (AbortMode == 5) //Earth Orbit Abort
+					{
+						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+						{
+							setState(MST_LANDING);
+						}
+					}
 				}
 				break;
 			}
@@ -1147,7 +1178,7 @@ void MCC::TimeStep(double simdt){
 						}
 						else
 						{
-							startSubthread(1);
+							startSubthread(1, UTP_NONE);
 						}
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
 						//rtcc->SetManeuverData(burnData.IgnMJD, burnData._dV_LVLH);
@@ -1195,7 +1226,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(8);// Allocate AP11 MNV Pad
 					if (padForm != NULL) {
 						// If success
-						startSubthread(2); // Start subthread to fill PAD
+						startSubthread(2, UTP_P30MANEUVER); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1258,7 +1289,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(8);// Allocate AP11 MNV PAD
 					if (padForm != NULL) {
 						// If success
-						startSubthread(3); // Start subthread to fill PAD
+						startSubthread(3, UTP_P47MANEUVER); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1283,7 +1314,7 @@ void MCC::TimeStep(double simdt){
 					allocPad(10);// Allocate AP11 TLI PAD
 					if (padForm != NULL) {
 						// If success
-						startSubthread(4); // Start subthread to fill PAD
+						startSubthread(4, UTP_TLIPAD); // Start subthread to fill PAD
 					}
 					else {
 						// ERROR STATE
@@ -1306,6 +1337,7 @@ void MCC::TimeStep(double simdt){
 				if (cm->MissionTime > rtcc->calcParams.TLI)
 				{
 					addMessage("TLI");
+					MissionPhase = MMST_TL_COAST;
 					setState(MST_CP_TRANSLUNAR1);
 				}
 				else {
@@ -1368,6 +1400,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0, 50, MST_CP_TRANSLUNAR16);
 				break;
 			case MST_CP_TRANSLUNAR16: //LOI-1 to TEI-2
+				if (MissionPhase == MMST_TL_COAST &&  cm->MissionTime > rtcc->calcParams.LOI)
+				{
+					MissionPhase = MMST_LUNAR_ORBIT;
+				}
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 1.0*3600.0 + 25.0*60.0 + 31.0, 31, MST_CP_LUNAR_ORBIT1);
 				break;
 			case MST_CP_LUNAR_ORBIT1: //TEI-2 to LOI-2
@@ -1413,6 +1449,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TEI, 201, MST_CP_TRANSEARTH1);
 				break;
 			case MST_CP_TRANSEARTH1: //TEI to ENTRY REFSMMAT
+				if (cm->MissionTime > rtcc->calcParams.TEI && MissionPhase == MMST_LUNAR_ORBIT)
+				{
+					MissionPhase = MMST_TE_COAST;
+				}
 				if (cm->MissionTime > rtcc->calcParams.TEI + 45*60)
 				{
 					cm->SlowIfDesired();
@@ -1420,7 +1460,7 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_CP_TRANSEARTH2: //ENTRY REFSMMAT to MCC5 Update
-				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 14.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 13.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
 				break;
 			case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60, 203, MST_CP_TRANSEARTH4);
@@ -1444,12 +1484,179 @@ void MCC::TimeStep(double simdt){
 				switch (SubState) {
 					case 0:
 					{
+						MissionPhase = MMST_ENTRY;
+						setSubState(1);
+					}
+					break;
+					case 1:
+					{
 						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
 						{
 							setState(MST_LANDING);
 						}
-						break;
 					}
+					break;
+				}
+				break;
+			case MST_CP_ABORT_ORBIT:
+				{
+					if (AbortMode == 5) //Earth Orbit Abort
+					{
+						if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+						{
+							setState(MST_LANDING);
+						}
+					}
+				}
+				break;
+			case MST_CP_ABORT:
+				if (AbortMode == 6)	//Translunar Coast
+				{
+					switch (SubState) {
+					case 0:
+					{
+						if (cm->MissionTime > rtcc->calcParams.TEI)
+						{
+							setSubState(1);
+						}
+					}
+					break;
+					case 1:
+						if (rtcc->AGCGravityRef(cm) == oapiGetObjectByName("Moon"))
+						{
+							setSubState(12);//Flyby
+						}
+						else if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+						{
+							setSubState(2);//Skip directly to normal entry procedures
+						}
+						else
+						{
+							setSubState(3);	//Include another course correction
+						}
+						break;
+					case 2:
+						{
+							if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
+							{
+								cm->SlowIfDesired();
+								setState(MST_CP_TRANSEARTH6);
+							}
+						}
+						break;
+					case 3:
+						{
+							if (cm->MissionTime > rtcc->calcParams.TEI + 4.0 * 60 * 60)
+							{
+								cm->SlowIfDesired();
+								setSubState(4);
+							}
+						}
+						break;
+					
+					case 4:
+						allocPad(8); // Allocate AP7 Maneuver Pad
+						if (padForm != NULL) {
+							// If success
+							startSubthread(300, UTP_P30MANEUVER); // Start subthread to fill PAD
+						}
+						else {
+							// ERROR STATE
+						}
+						setSubState(5);
+						// FALL INTO
+					case 5: // Await pad read-up time (however long it took to compute it and give it to capcom)
+						if (SubStateTime > 1 && padState > -1) {
+							if (scrubbed)
+							{
+								if (upDescr[0] != 0)
+								{
+									addMessage(upDescr);
+								}
+								freePad();
+								scrubbed = false;
+								setSubState(10);
+							}
+							else
+							{
+
+								addMessage("You can has PAD");
+								if (padAutoShow == true && padState == 0) { drawPad(); }
+								// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+								addMessage("Ready for uplink?");
+								sprintf(PCOption_Text, "Ready for uplink");
+								PCOption_Enabled = true;
+								setSubState(6);
+							}
+						}
+						break;
+					case 6: // Awaiting user response
+					case 7: // Negative response / not ready for uplink
+						break;
+					case 8: // Ready for uplink
+						if (SubStateTime > 1 && padState > -1) {
+							// The uplink should also be ready, so flush the uplink buffer to the CMC
+							this->CM_uplink_buffer();
+							// uplink_size = 0; // Reset
+							PCOption_Enabled = false; // No longer needed
+							if (upDescr[0] != 0)
+							{
+								addMessage(upDescr);
+							}
+							setSubState(9);
+						}
+						break;
+					case 9: // Await uplink completion
+						if (cm->pcm.mcc_size == 0) {
+							addMessage("Uplink completed!");
+							NCOption_Enabled = true;
+							sprintf(NCOption_Text, "Repeat uplink");
+							setSubState(10);
+						}
+						break;
+					case 10: // Await burn
+						if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
+						{
+							cm->SlowIfDesired();
+							setState(MST_CP_TRANSEARTH6);
+						}
+						break;
+					case 11: //Repeat uplink
+					{
+						NCOption_Enabled = false;
+						setSubState(4);
+					}
+					break;
+					case 12:
+					{
+						//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
+						if (cm->MissionTime > rtcc->calcParams.TEI + 10.0*60.0)
+						{
+							rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+							setSubState(13);
+						}
+					}
+					case 13: //Flyby, go to nominal TEC procedures
+					{
+						if (cm->MissionTime > rtcc->calcParams.LOI + 45.0*60.0 && cm->MissionTime > rtcc->calcParams.TEI + 45.0*60.0)
+						{
+							rtcc->calcParams.TEI = rtcc->calcParams.LOI;
+							setState(MST_CP_TRANSEARTH1);
+						}
+					}
+					break;
+					}
+				}
+				else if (AbortMode == 7) //Lunar Orbit
+				{
+					if (cm->MissionTime > rtcc->calcParams.TEI)
+					{
+						setState(MST_CP_TRANSEARTH1);
+					}
+				}
+				else if (AbortMode == 8)
+				{
+					//How to Abort?
 				}
 			}
 			break;
@@ -1647,238 +1854,26 @@ int MCC::CM_uplink_buffer() {
 int MCC::subThread(){
 	int Result = 0;
 	subThreadStatus = 2; // Running
-	if (MissionType == MTP_C_PRIME)
+	
+	if (subThreadMode == 0)
 	{
-		switch (subThreadMode) {
-		case 0: // Test
-			Sleep(5000); // Waste 5 seconds
-			Result = 0;  // Success (negative = error)
-			break;
-		case 1:	//MISSION CP TLI
-		{
-			scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
-			Result = 0;
-		}
-		break;
-		case 2: // FILL PAD AP11MNV FOR TLI+90 MANEUVER
-		case 20: // MISSION CP MCC1
-		case 21: // MISSION CP MCC2
-		case 22: // MISSION CP MCC3
-		case 23: // MISSION CP MCC4
-		case 31: // MISSION CP LOI-1
-		case 102: // MISSION CP LOI-2
-		case 109: // MISSION CP TEI-6
-		case 110: // MISSION CP TEI-7
-		case 111: // MISSION CP TEI-8
-		case 113: // MISSION CP PRELIMINARY TEI-10
-		case 200: // MISSION CP TEI-10
-		case 203: // MISSION CP MCC-5
-		case 204: // MISSION CP MCC-6
-		case 205: // MISSION CP PREL. MCC-7
-		case 206: // MISSION CP MCC-7
-		{
-			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 3: // FILL PAD AP11MNV FOR TLI+4 MANEUVER
-		case 10: //MISSION CP BLOCK DATA 1
-		case 11: //MISSION CP BLOCK DATA 2
-		case 12: //MISSION CP BLOCK DATA 3
-		case 13: //MISSION CP BLOCK DATA 4
-		case 40: //MISSION CP FLYBY MANEUVER
-		case 41: //MISSION CP PC+2 MANEUVER
-		case 42: //MISSION CP FAST PC+2 MANEUVER
-		case 30://MISSION CP PRELIMINARY LOI-1 MANEUVER
-		case 50: //MISSION PRELIMINARY TEI-1 MANEUVER
-		case 105: // MISSION CP TEI-2
-		case 106: // MISSION CP TEI-3
-		case 107: // MISSION CP TEI-4
-		case 108: // MISSION CP TEI-5
-		case 112: // MISSION CP TEI-9
-		case 201: // MISSION CP TEI-11
-		{
-			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 4: //TLI PAD
-		{
-			subThreadMacro(UTP_TLIPAD, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 103: //CSM SV TO LM SLOT
-		case 202: //ENTRY REFSMMAT
-		{
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 207: //ENTRY PAD
-		{
-			subThreadMacro(UTP_LUNARENTRY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		case 208: //FINAL ENTRY PAD and SV UPDATE
-		{
-			subThreadMacro(UTP_FINALLUNARENTRY, subThreadMode);
-			Result = 0;
-		}
-		break;
-		}
+		Sleep(5000); // Waste 5 seconds
+		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_C_PRIME)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_C)
 	{
-		switch (subThreadMode) {
-		case 0: // Test
-			Sleep(5000); // Waste 5 seconds
-			Result = 0;  // Success (negative = error)
-			break;
-		case 1: // FILL PAD AP7MNV FOR AP7 PHASING BURN
-		case 4: // FILL PAD AP7MNV FOR 2ND PHASING MANEUVER
+		OBJHANDLE ves = oapiGetVesselByName("AS-205-S4BSTG");
+		if (ves != NULL)
 		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P47MANEUVER, subThreadMode);
-			Result = 0; // Done
+			rtcc->calcParams.tgt = oapiGetVesselInterface(ves); // Should be user-programmable later
 		}
-		break;
-		case 2: //FILL PAD AP7MNV FOR AP7 6-4 CONTINGENCY DEORBIT MANEUVER
-		{
-			subThreadMacro(UTP_P30MANEUVER, 2);
-			Result = 0; // Done
-		}
-		break;
-		case 3: // FILL PAD AP7BLK FOR AP7 BLOCK DATA
-		case 5:
-		case 12:
-		case 13:
-		case 14:
-		case 15:
-		case 16:
-		case 18:
-		case 19:
-		case 20:
-		case 21:
-		case 22:
-		case 24:
-		case 25:
-		case 26:
-		case 27:
-		case 29:
-		case 30:
-		case 31:
-		case 32:
-		case 33:
-		case 35:
-		case 36:
-		case 37:
-		case 38:
-		case 40:
-		case 41:
-		{
-			subThreadMacro(UTP_BLOCKDATA, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 6: // FILL PRELIMINARY PAD AP7MNV FOR NCC1 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 6);
-			Result = 0; // Done
-		}
-		break;
-		case 7: // FILL FINAL PAD AP7MNV FOR NCC1 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 7);
-			Result = 0; // Done
-		}
-		break;
-		case 8: // FILL PAD AP7MNV FOR NCC2 MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 8);
-			Result = 0; // Done
-		}
-		break;
-		case 9: // FILL PAD AP7MNV FOR NSR MANEUVER
-		{
-			// Ask RTCC for numbers
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_P30MANEUVER, 9);
-			Result = 0; // Done
-		}
-		break;
-		case 10: // FILL PAD AP7TPI FOR AP7 TPI PAD
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_TPI, 10);
-			Result = 0; // Done
-		}
-		break;
-		case 11: //FILL PAD AP7MNV FOR AP7 FINAL SEPARATION PAD
-		{
-			subThreadMacro(UTP_P47MANEUVER, 11);
-			Result = 0; // Done
-		}
-		break;
-		case 17: //FILL PAD AP7MNV FOR AP7 SPS-X PAD
-		case 23:
-		case 28:
-		case 34:
-		case 39:
-		case 42:
-		{
-			subThreadMacro(UTP_P30MANEUVER, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 43: //FILL PAD AP7ENT FOR AP7 NOMINAL DEORBIT
-		case 44:
-		{
-			subThreadMacro(UTP_ENTRY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 50: //GENERIC CSM STATE VECTOR UPDATE
-		{
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 51: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_UPLINKONLY, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 52: //GENERIC CSM STATE VECTOR UPDATE AND NAV CHECK PAD
-		{
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 53: //GENERIC CSM AND S-IVB STATE VECTOR UPDATE AND NAV CHECK PAD
-		{
-			rtcc->calcParams.tgt = oapiGetVesselInterface(oapiGetVesselByName("AS-205-S4BSTG")); // Should be user-programmable later
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		case 54: //GENERIC CSM STATE VECTOR PAD
-		{
-			subThreadMacro(UTP_SVNAVCHECK, subThreadMode);
-			Result = 0; // Done
-		}
-		break;
-		}
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0; // Done
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
@@ -1887,10 +1882,11 @@ int MCC::subThread(){
 }
 
 // Subthread initiation
-int MCC::startSubthread(int fcn){
+int MCC::startSubthread(int fcn, int type){
 	if(subThreadStatus < 1){
 		// Punt thread
 		subThreadMode = fcn;
+		subThreadType = type;
 		subThreadStatus = 1; // Busy
 		DWORD id = 0;
 		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
@@ -1914,6 +1910,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 	// Integers
 	SAVE_INT("MCC_MissionType", MissionType);
+	SAVE_INT("MCC_MissionPhase", MissionPhase);
 	SAVE_INT("MCC_MissionState", MissionState);
 	SAVE_INT("MCC_SubState", SubState);
 	SAVE_INT("MCC_EarthRev", EarthRev);
@@ -1926,7 +1923,224 @@ void MCC::SaveState(FILEHANDLE scn) {
 	if (PCOption_Enabled == true) { SAVE_STRING("MCC_PCOption_Text", PCOption_Text); }
 	if (NCOption_Enabled == true) { SAVE_STRING("MCC_NCOption_Text", NCOption_Text); }
 	// Write PAD here!
+	//SAVE_INT("MCC_padState", padState);
+	if (padNumber != 0) { SAVE_INT("MCC_padNumber", padNumber); }
+	if (padState >= 0 && padForm != NULL)
+	{
+		if (padNumber == 1)
+		{
+			char tmpbuf[36];
+			AP7BLK * form = (AP7BLK *)padForm;
+
+			for (int i = 0;i < 8;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7BLK_Area[%d]", i);
+				SAVE_STRING(tmpbuf, form->Area[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_dVC[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->dVC[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_GETI[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GETI[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lat[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lng[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lng[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
+				SAVE_STRING(tmpbuf, form->Wx[i]);
+			}
+		}
+		else if (padNumber == 2)
+		{
+			char tmpbuf[36];
+			P27PAD * form = (P27PAD *)padForm;
+
+			SAVE_DOUBLE("MCC_P27PAD_alt", form->alt);
+			for (int i = 0;i < 16;i++)
+			{
+				sprintf(tmpbuf, "MCC_P27PAD_Data[%d]", i);
+				SAVE_INT(tmpbuf, form->Data[0][i]);
+			}
+			SAVE_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
+			SAVE_INT("MCC_P27PAD_GET", form->Index[0]);
+			SAVE_DOUBLE("MCC_P27PAD_lat", form->lat);
+			SAVE_DOUBLE("MCC_P27PAD_lng", form->lng);
+			SAVE_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
+			SAVE_STRING("MCC_P27PAD_Purpose", form->Purpose[0]);
+			SAVE_INT("MCC_P27PAD_Verb", form->Verb[0]);
+		}
+		else if (padNumber == 3)
+		{
+			AP7NAV * form = (AP7NAV *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7NAV_alt", form->alt[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
+			SAVE_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+		}
+		else if (padNumber == 4)
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7MNV_alt", form->alt);
+			SAVE_V3("MCC_AP7MNV_Att", form->Att);
+			SAVE_DOUBLE("MCC_AP7MNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP7MNV_dV", form->dV);
+			SAVE_DOUBLE("MCC_AP7MNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP7MNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP7MNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP7MNV_lat", form->lat);
+			SAVE_DOUBLE("MCC_AP7MNV_lng", form->lng);
+			SAVE_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
+			SAVE_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
+			SAVE_STRING("MCC_AP7MNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP7MNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
+			SAVE_INT("MCC_AP7MNV_Star", form->Star);
+			SAVE_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
+			SAVE_DOUBLE("MCC_AP7MNV_Vc", form->Vc);
+			SAVE_DOUBLE("MCC_AP7MNV_Weight", form->Weight);
+			SAVE_DOUBLE("MCC_AP7MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 5)
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+
+			SAVE_DOUBLE("MCC_AP7TPI_AZ", form->AZ);
+			SAVE_V3("MCC_AP7TPI_Backup_bT", form->Backup_bT);
+			SAVE_V3("MCC_AP7TPI_Backup_dV", form->Backup_dV);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_Max", form->dH_Max);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_Min", form->dH_Min);
+			SAVE_DOUBLE("MCC_AP7TPI_dH_TPI", form->dH_TPI);
+			SAVE_DOUBLE("MCC_AP7TPI_dTT", form->dTT);
+			SAVE_DOUBLE("MCC_AP7TPI_E", form->E);
+			SAVE_DOUBLE("MCC_AP7TPI_EL", form->EL);
+			SAVE_DOUBLE("MCC_AP7TPI_GET", form->GET);
+			SAVE_DOUBLE("MCC_AP7TPI_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP7TPI_R", form->R);
+			SAVE_DOUBLE("MCC_AP7TPI_Rdot", form->Rdot);
+			SAVE_V3("MCC_AP7TPI_Vg", form->Vg);
+		}
+		else if (padNumber == 6)
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+
+			SAVE_STRING("MCC_AP7ENT_Area", form->Area[0]);
+			SAVE_V3("MCC_AP7ENT_Att400K", form->Att400K[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_BankAN", form->BankAN[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_DRE", form->DRE[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_dVTO", form->dVTO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Lat", form->Lat[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Lng", form->Lng[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_BankAN", form->PB_BankAN[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_DRE", form->PB_DRE[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_R400K", form->PB_R400K[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_Ret05", form->PB_Ret05[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_Ret2", form->PB_Ret2[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetBBO", form->PB_RetBBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetDrog", form->PB_RetDrog[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetEBO", form->PB_RetEBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RetRB", form->PB_RetRB[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_RTGO", form->PB_RTGO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_PB_VIO", form->PB_VIO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Ret05", form->Ret05[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_Ret2", form->Ret2[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetBBO", form->RetBBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetDrog", form->RetDrog[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetEBO", form->RetEBO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RetRB", form->RetRB[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_RTGO", form->RTGO[0]);
+			SAVE_DOUBLE("MCC_AP7ENT_VIO", form->VIO[0]);
+		}
+		else if (padNumber == 7)
+		{
+			P37PAD * form = (P37PAD *)padForm;
+
+			SAVE_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
+			SAVE_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
+			SAVE_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
+			SAVE_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+		}
+		else if (padNumber == 8)
+		{
+			AP11MNV * form = (AP11MNV *)padForm;
+
+			SAVE_V3("MCC_AP11MNV_Att", form->Att);
+			SAVE_INT("MCC_AP11MNV_BSSStar", form->BSSStar);
+			SAVE_DOUBLE("MCC_AP11MNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP11MNV_dV", form->dV);
+			SAVE_V3("MCC_AP11MNV_GDCangles", form->GDCangles);
+			SAVE_DOUBLE("MCC_AP11MNV_GET05G", form->GET05G);
+			SAVE_DOUBLE("MCC_AP11MNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP11MNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP11MNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP11MNV_lat", form->lat);
+			SAVE_DOUBLE("MCC_AP11MNV_lng", form->lng);
+			SAVE_STRING("MCC_AP11MNV_PropGuid", form->PropGuid);
+			SAVE_DOUBLE("MCC_AP11MNV_pTrim", form->pTrim);
+			SAVE_STRING("MCC_AP11MNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP11MNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP11MNV_RTGO", form->RTGO);
+			SAVE_STRING("MCC_AP11MNV_SetStars", form->SetStars);
+			SAVE_DOUBLE("MCC_AP11MNV_Shaft", form->Shaft);
+			SAVE_DOUBLE("MCC_AP11MNV_SPA", form->SPA);
+			SAVE_INT("MCC_AP11MNV_Star", form->Star);
+			SAVE_DOUBLE("MCC_AP11MNV_SXP", form->SXP);
+			SAVE_DOUBLE("MCC_AP11MNV_Trun", form->Trun);
+			SAVE_DOUBLE("MCC_AP11MNV_Vc", form->Vc);
+			SAVE_DOUBLE("MCC_AP11MNV_VI0", form->VI0);
+			SAVE_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
+			SAVE_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
+			SAVE_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 9)
+		{
+			AP11ENT * form = (AP11ENT *)padForm;
+
+			SAVE_STRING("MCC_AP11ENT_Area", form->Area[0]);
+			SAVE_V3("MCC_AP11ENT_Att05", form->Att05[0]);
+			SAVE_INT("MCC_AP11ENT_BSS", form->BSS[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DLMax", form->DLMax[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DLMin", form->DLMin[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_DO", form->DO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Gamma400K", form->Gamma400K[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_GETHorCheck", form->GETHorCheck[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Lat", form->Lat[0]);
+			SAVE_STRING("MCC_AP11ENT_LiftVector", form->LiftVector[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_Lng", form->Lng[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_MaxG", form->MaxG[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_PitchHorCheck", form->PitchHorCheck[0]);
+			SAVE_STRING("MCC_AP11ENT_remarks", form->remarks[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RET05", form->RET05[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETBBO", form->RETBBO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETDRO", form->RETDRO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETEBO", form->RETEBO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RETVCirc", form->RETVCirc[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RRT", form->RRT[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_RTGO", form->RTGO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SFT", form->SFT[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SPA", form->SPA[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_SXP", form->SXP[0]);
+			SAVE_INT("MCC_AP11ENT_SXTS", form->SXTS[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_TRN", form->TRN[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_V400K", form->V400K[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VIO", form->VIO[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VLMax", form->VLMax[0]);
+			SAVE_DOUBLE("MCC_AP11ENT_VLMin", form->VLMin[0]);
+		}
+		else if (padNumber == 10)
+		{
+			TLIPAD * form = (TLIPAD *)padForm;
+
+			SAVE_DOUBLE("MCC_TLIPAD_BurnTime", form->BurnTime);
+			SAVE_DOUBLE("MCC_TLIPAD_dVC", form->dVC);
+			SAVE_V3("MCC_TLIPAD_ExtATT", form->ExtATT);
+			SAVE_V3("MCC_TLIPAD_IgnATT", form->IgnATT);
+			SAVE_V3("MCC_TLIPAD_SepATT", form->SepATT);
+			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
+			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
+		}
+	}
 	// Write uplink buffer here!
+	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
 }
@@ -1935,6 +2149,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 void MCC::LoadState(FILEHANDLE scn) {
 	char *line;
 	int tmp = 0; // Used in boolean type loader
+	bool padisallocated = false;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
@@ -1946,6 +2161,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);		
 		LOAD_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 		LOAD_INT("MCC_MissionType", MissionType);
+		LOAD_INT("MCC_MissionPhase", MissionPhase);
 		LOAD_INT("MCC_MissionState", MissionState);
 		LOAD_INT("MCC_SubState", SubState);
 		LOAD_INT("MCC_EarthRev", EarthRev);
@@ -1955,7 +2171,237 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_SubStateTime", SubStateTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
+		LOAD_INT("MCC_padNumber", padNumber);
+		//LOAD_INT("MCC_padState", padState);
+		if (padNumber > 0)
+		{
+			if (!padisallocated)
+			{
+				allocPad(padNumber);
+				padState = 0;
+				padisallocated = true;
+			}
+		}
+		if (padNumber == 1)
+		{
+			char tmpbuf[36];
+			
+			AP7BLK * form = (AP7BLK *)padForm;
+
+			for (int i = 0;i < 8;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7BLK_Area[%d]", i);
+				LOAD_STRING(tmpbuf, form->Area[i], 10);
+				sprintf(tmpbuf, "MCC_AP7BLK_dVC[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->dVC[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_GETI[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GETI[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lat[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Lng[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lng[i]);
+				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
+				LOAD_STRING(tmpbuf, form->Wx[i], 10);
+			}
+		}
+		else if (padNumber == 2)
+		{
+			char tmpbuf[36];
+			P27PAD * form = (P27PAD *)padForm;
+
+			LOAD_DOUBLE("MCC_P27PAD_alt", form->alt);
+			for (int i = 0;i < 16;i++)
+			{
+				sprintf(tmpbuf, "MCC_P27PAD_Data[%d]", i);
+				LOAD_INT(tmpbuf, form->Data[0][i]);
+			}
+			LOAD_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
+			LOAD_INT("MCC_P27PAD_GET", form->Index[0]);
+			LOAD_DOUBLE("MCC_P27PAD_lat", form->lat);
+			LOAD_DOUBLE("MCC_P27PAD_lng", form->lng);
+			LOAD_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
+			LOAD_STRING("MCC_P27PAD_Purpose", form->Purpose[0], 64);
+			LOAD_INT("MCC_P27PAD_Verb", form->Verb[0]);
+		}
+		else if (padNumber == 3)
+		{
+			AP7NAV * form = (AP7NAV *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7NAV_alt", form->alt[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
+			LOAD_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+		}
+		else if (padNumber == 4)
+		{
+			AP7MNV * form = (AP7MNV *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7MNV_alt", form->alt);
+			LOAD_V3("MCC_AP7MNV_Att", form->Att);
+			LOAD_DOUBLE("MCC_AP7MNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP7MNV_dV", form->dV);
+			LOAD_DOUBLE("MCC_AP7MNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP7MNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP7MNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP7MNV_lat", form->lat);
+			LOAD_DOUBLE("MCC_AP7MNV_lng", form->lng);
+			LOAD_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
+			LOAD_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
+			LOAD_STRING("MCC_AP7MNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
+			LOAD_INT("MCC_AP7MNV_Star", form->Star);
+			LOAD_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
+			LOAD_DOUBLE("MCC_AP7MNV_Vc", form->Vc);
+			LOAD_DOUBLE("MCC_AP7MNV_Weight", form->Weight);
+			LOAD_DOUBLE("MCC_AP7MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 5)
+		{
+			AP7TPI * form = (AP7TPI *)padForm;
+
+			LOAD_DOUBLE("MCC_AP7TPI_AZ", form->AZ);
+			LOAD_V3("MCC_AP7TPI_Backup_bT", form->Backup_bT);
+			LOAD_V3("MCC_AP7TPI_Backup_dV", form->Backup_dV);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_Max", form->dH_Max);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_Min", form->dH_Min);
+			LOAD_DOUBLE("MCC_AP7TPI_dH_TPI", form->dH_TPI);
+			LOAD_DOUBLE("MCC_AP7TPI_dTT", form->dTT);
+			LOAD_DOUBLE("MCC_AP7TPI_E", form->E);
+			LOAD_DOUBLE("MCC_AP7TPI_EL", form->EL);
+			LOAD_DOUBLE("MCC_AP7TPI_GET", form->GET);
+			LOAD_DOUBLE("MCC_AP7TPI_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP7TPI_R", form->R);
+			LOAD_DOUBLE("MCC_AP7TPI_Rdot", form->Rdot);
+			LOAD_V3("MCC_AP7TPI_Vg", form->Vg);
+		}
+		else if (padNumber == 6)
+		{
+			AP7ENT * form = (AP7ENT *)padForm;
+
+			LOAD_STRING("MCC_AP7ENT_Area", form->Area[0], 10);
+			LOAD_V3("MCC_AP7ENT_Att400K", form->Att400K[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_BankAN", form->BankAN[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_DRE", form->DRE[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_dVTO", form->dVTO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Lat", form->Lat[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Lng", form->Lng[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_BankAN", form->PB_BankAN[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_DRE", form->PB_DRE[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_R400K", form->PB_R400K[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_Ret05", form->PB_Ret05[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_Ret2", form->PB_Ret2[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetBBO", form->PB_RetBBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetDrog", form->PB_RetDrog[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetEBO", form->PB_RetEBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RetRB", form->PB_RetRB[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_RTGO", form->PB_RTGO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_PB_VIO", form->PB_VIO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Ret05", form->Ret05[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_Ret2", form->Ret2[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetBBO", form->RetBBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetDrog", form->RetDrog[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetEBO", form->RetEBO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RetRB", form->RetRB[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_RTGO", form->RTGO[0]);
+			LOAD_DOUBLE("MCC_AP7ENT_VIO", form->VIO[0]);
+		}
+		else if (padNumber == 7)
+		{
+			P37PAD * form = (P37PAD *)padForm;
+
+			LOAD_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
+			LOAD_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
+			LOAD_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
+			LOAD_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+		}
+		else if (padNumber == 8)
+		{
+			AP11MNV * form = (AP11MNV *)padForm;
+
+			LOAD_V3("MCC_AP11MNV_Att", form->Att);
+			LOAD_INT("MCC_AP11MNV_BSSStar", form->BSSStar);
+			LOAD_DOUBLE("MCC_AP11MNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP11MNV_dV", form->dV);
+			LOAD_V3("MCC_AP11MNV_GDCangles", form->GDCangles);
+			LOAD_DOUBLE("MCC_AP11MNV_GET05G", form->GET05G);
+			LOAD_DOUBLE("MCC_AP11MNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP11MNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP11MNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP11MNV_lat", form->lat);
+			LOAD_DOUBLE("MCC_AP11MNV_lng", form->lng);
+			LOAD_STRING("MCC_AP11MNV_PropGuid", form->PropGuid, 64);
+			LOAD_DOUBLE("MCC_AP11MNV_pTrim", form->pTrim);
+			LOAD_STRING("MCC_AP11MNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP11MNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP11MNV_RTGO", form->RTGO);
+			LOAD_STRING("MCC_AP11MNV_SetStars", form->SetStars, 32);
+			LOAD_DOUBLE("MCC_AP11MNV_Shaft", form->Shaft);
+			LOAD_DOUBLE("MCC_AP11MNV_SPA", form->SPA);
+			LOAD_INT("MCC_AP11MNV_Star", form->Star);
+			LOAD_DOUBLE("MCC_AP11MNV_SXP", form->SXP);
+			LOAD_DOUBLE("MCC_AP11MNV_Trun", form->Trun);
+			LOAD_DOUBLE("MCC_AP11MNV_Vc", form->Vc);
+			LOAD_DOUBLE("MCC_AP11MNV_VI0", form->VI0);
+			LOAD_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
+			LOAD_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
+			LOAD_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+		}
+		else if (padNumber == 9)
+		{
+			AP11ENT * form = (AP11ENT *)padForm;
+
+			LOAD_STRING("MCC_AP11ENT_Area", form->Area[0], 10);
+			LOAD_V3("MCC_AP11ENT_Att05", form->Att05[0]);
+			LOAD_INT("MCC_AP11ENT_BSS", form->BSS[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DLMax", form->DLMax[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DLMin", form->DLMin[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_DO", form->DO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_Gamma400K", form->Gamma400K[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_GETHorCheck", form->GETHorCheck[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_Lat", form->Lat[0]);
+			LOAD_STRING("MCC_AP11ENT_LiftVector", form->LiftVector[0], 4);
+			LOAD_DOUBLE("MCC_AP11ENT_Lng", form->Lng[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_MaxG", form->MaxG[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_PitchHorCheck", form->PitchHorCheck[0]);
+			LOAD_STRING("MCC_AP11ENT_remarks", form->remarks[0], 128);
+			LOAD_DOUBLE("MCC_AP11ENT_RET05", form->RET05[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETBBO", form->RETBBO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETDRO", form->RETDRO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETEBO", form->RETEBO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RETVCirc", form->RETVCirc[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RRT", form->RRT[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_RTGO", form->RTGO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SFT", form->SFT[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SPA", form->SPA[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_SXP", form->SXP[0]);
+			LOAD_INT("MCC_AP11ENT_SXTS", form->SXTS[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_TRN", form->TRN[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_V400K", form->V400K[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VIO", form->VIO[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VLMax", form->VLMax[0]);
+			LOAD_DOUBLE("MCC_AP11ENT_VLMin", form->VLMin[0]);
+		}
+		else if (padNumber == 10)
+		{
+			TLIPAD * form = (TLIPAD *)padForm;
+
+			LOAD_DOUBLE("MCC_TLIPAD_BurnTime", form->BurnTime);
+			LOAD_DOUBLE("MCC_TLIPAD_dVC", form->dVC);
+			LOAD_V3("MCC_TLIPAD_ExtATT", form->ExtATT);
+			LOAD_V3("MCC_TLIPAD_IgnATT", form->IgnATT);
+			LOAD_V3("MCC_TLIPAD_SepATT", form->SepATT);
+			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
+			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
+		}
+
+		LOAD_STRING("MCC_upString", upString, 3072);
 	}
+
+	if (upString[0] != 0) {
+		this->pushCMCUplinkString(upString);
+	}
+
 	return;
 }
 
@@ -2253,7 +2699,7 @@ void MCC::keyDown(DWORD key){
 				buf[0] = 0;
 				if (PCOption_Enabled == true) { sprintf(buf, "2: %s\n", PCOption_Text); }
 				if (NCOption_Enabled == true) { sprintf(buf, "%s3: %s\n", buf, NCOption_Text); }
-				sprintf(menubuf, "CAPCOM MENU\n1: Voice Check\n%s4: Toggle Auto PAD\n5: Hide/Show PAD\n6: Redisplay Messages\n9: Debug Options", buf);
+				sprintf(menubuf, "CAPCOM MENU\n1: Voice Check\n%s4: Toggle Auto PAD\n5: Hide/Show PAD\n6: Redisplay Messages\n8: Request Abort\n9: Debug Options", buf);
 				oapiAnnotationSetText(NHmenu,menubuf); // Present menu
 				// 2: Toggle Ground Trk\n3: Toggle Mission Trk\n
 				menuState = 1;
@@ -2282,6 +2728,13 @@ void MCC::keyDown(DWORD key){
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
 			}
+			if (menuState == 3) {
+				sprintf(buf, "Abort confirmed!");
+				addMessage(buf);
+				initiateAbort();
+				oapiAnnotationSetText(NHmenu, ""); // Clear menu
+				menuState = 0;
+			}
 			break;
 		case OAPI_KEY_2:
 			if (menuState == 1 && PCOption_Enabled == true) {
@@ -2301,6 +2754,12 @@ void MCC::keyDown(DWORD key){
 					MT_Enabled = false;
 					sprintf(buf, "Mission Tracking Disabled");
 				}
+				addMessage(buf);
+				oapiAnnotationSetText(NHmenu, ""); // Clear menu
+				menuState = 0;
+			}
+			if (menuState == 3) {
+				sprintf(buf, "Abort rejected!");
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
@@ -2401,12 +2860,11 @@ void MCC::keyDown(DWORD key){
 			}
 			break;
 		case OAPI_KEY_8:
-			/*
+			
 			if (menuState == 1) {
-				oapiAnnotationSetText(NHmenu, ""); // Clear menu
-				menuState = 0;
+				oapiAnnotationSetText(NHmenu, "ABORT MENU\n1: Confirm Abort\n2: Reject Abort"); // Abort menu
+				menuState = 3;
 			}
-			*/
 			if (menuState == 2) {
 				// Reset State				
 				SubState = 0;
@@ -2444,7 +2902,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(1);// Allocate AP7 Block Data Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2481,7 +2939,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2531,7 +2989,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2609,7 +3067,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(5);// Allocate AP7 TPI Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2636,7 +3094,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 	{
 		switch (SubState) {
 		case 0:
-			startSubthread(updatenumber); // Start subthread to fill PAD
+			startSubthread(updatenumber, type); // Start subthread to fill PAD
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
@@ -2694,7 +3152,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(3); // Allocate AP7 Nav Check Pad					
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2758,7 +3216,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(6);// Allocate AP7 Entry Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2790,11 +3248,11 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 				// If success
 				if (updatenumber == -1)	//Generic Update if -1
 				{
-					startSubthread(54); // Start subthread to fill PAD
+					startSubthread(54, type); // Start subthread to fill PAD
 				}
 				else
 				{
-					startSubthread(updatenumber); // Start subthread to fill PAD
+					startSubthread(updatenumber, type); // Start subthread to fill PAD
 				}
 			}
 			else {
@@ -2825,7 +3283,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(9);// Allocate AP11 Entry Pad
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2855,7 +3313,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			allocPad(9); // Allocate Lunar Entry PAD					
 			if (padForm != NULL) {
 				// If success
-				startSubthread(updatenumber); // Start subthread to fill PAD
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
 			}
 			else {
 				// ERROR STATE
@@ -2916,6 +3374,10 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 
 void MCC::subThreadMacro(int type, int updatenumber)
 {
+	// Clobber string
+	upString[0] = 0;
+	upDescr[0] = 0;
+	uplink_size = 0;
 	if (type == UTP_BLOCKDATA)
 	{
 		AP7BLK * form = (AP7BLK *)padForm;
@@ -2936,9 +3398,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			AP11MNV * form = (AP11MNV *)padForm;
 		}
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -2960,8 +3419,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			AP11MNV * form = (AP11MNV *)padForm;
 		}
 		// Ask RTCC for numbers
-		upString[0] = 0;
-		upDescr[0] = 0;
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Done filling form, OK to show
 		padState = 0;
@@ -2979,9 +3436,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_UPLINKONLY)
 	{
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -2993,9 +3447,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP7NAV * form = (AP7NAV *)padForm;
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType,updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -3047,9 +3498,6 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		AP11ENT * form = (AP11ENT *)padForm;
 		// Ask RTCC for numbers
-		// Clobber string
-		upString[0] = 0;
-		upDescr[0] = 0;
 		// Do math
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Give resulting uplink string to CMC
@@ -3058,5 +3506,40 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		}
 		padState = 0;
 		// Pretend we did the math
+	}
+	else if (type == UTP_NONE)
+	{
+		scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
+	}
+}
+
+void MCC::initiateAbort()
+{
+	if (MissionPhase == MMST_EARTH_ORBIT)
+	{
+		AbortMode = 5;
+		if (MissionType == MTP_C)
+		{
+			setState(MST_C_ABORT);
+		}
+		else if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT_ORBIT);
+		}
+	}
+	else if (MissionPhase == MMST_TL_COAST)
+	{
+		AbortMode = 6;
+		setState(MST_CP_ABORT);
+	}
+	else if (MissionPhase == MMST_LUNAR_ORBIT)
+	{
+		AbortMode = 7;
+		setState(MST_CP_ABORT);
+	}
+	else if (MissionPhase == MMST_TE_COAST)
+	{
+		AbortMode = 8;
+		setState(MST_CP_ABORT);
 	}
 }
