@@ -1,4 +1,4 @@
-version: 7.0-Beta-{branch}-{build}
+version: 7.0-RC-{branch}-{build}
 skip_tags: true
 os: Visual Studio 2015
 configuration: Release
@@ -27,7 +27,7 @@ artifacts:
 deploy:
 - provider: GitHub
   tag: NASSP-V$(appveyor_build_version)
-  description: V7.0 Beta Release
+  description: V7.0 Release Candidate
   auth_token:
     secure: IQ7NMbd0zOFrOgF1Kmp2i5/6C/bTng4X83G4tu9YAoYViKEvjWTPcn7r/0kKJ7M2
   artifact: NASSP
