@@ -1460,16 +1460,16 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_CP_TRANSEARTH2: //ENTRY REFSMMAT to MCC5 Update
-				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 13.0 * 60 * 60 + 30 * 60, 202, MST_CP_TRANSEARTH3);
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TEI + 13.5 * 3600.0, 202, MST_CP_TRANSEARTH3);
 				break;
 			case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TEI + 31.0 * 60 * 60 + 30 * 60, 203, MST_CP_TRANSEARTH4);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TEI + 31.5 * 3600.0, 203, MST_CP_TRANSEARTH4, rtcc->calcParams.TEI + 37.0*3600.0 > rtcc->calcParams.EI - 2.0*3600.0, cm->MissionTime > rtcc->calcParams.EI - 3.5 * 3600.0, MST_CP_TRANSEARTH6);
 				break;
 			case MST_CP_TRANSEARTH4: //MCC6 Update to Prel. MCC7 Update
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 15.0 * 60 * 60, 204, MST_CP_TRANSEARTH5);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 15.0 * 3600.0, 204, MST_CP_TRANSEARTH5, rtcc->calcParams.TEI + 34.0*3600.0 > rtcc->calcParams.EI - 15.0*3600.0, cm->MissionTime > rtcc->calcParams.EI - 3.5 * 3600.0, MST_CP_TRANSEARTH6);
 				break;
 			case MST_CP_TRANSEARTH5: //Prel. MCC7 Update to MCC7 Update
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60, 205, MST_CP_TRANSEARTH6);
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.EI - 3.5 * 3600.0, 205, MST_CP_TRANSEARTH6);
 				break;
 			case MST_CP_TRANSEARTH6: //MCC7 Update to Prel. Entry PAD
 				UpdateMacro(UTP_P30MANEUVER, StateTime > 5 * 60, 206, MST_CP_TRANSEARTH7);
@@ -2893,7 +2893,7 @@ void MCC::keyDown(DWORD key){
 	}
 }
 
-void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate)
+void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate, bool altcriterium, bool altcondition, int altnextupdate)
 {
 	if (type == UTP_BLOCKDATA) //Earth Orbit Block Data
 	{
@@ -2917,7 +2917,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -2967,7 +2975,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -2985,7 +3001,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			else
 			{
-				allocPad(8); // Allocate AP7 Maneuver Pad
+				allocPad(8); // Allocate AP11 Maneuver Pad
 			}
 			if (padForm != NULL) {
 				// If success
@@ -3046,7 +3062,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3082,7 +3106,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3131,7 +3163,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3195,7 +3235,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3231,7 +3279,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await separation
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3268,7 +3324,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3298,7 +3362,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 2: // Await separation
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
@@ -3356,7 +3428,15 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			}
 			break;
 		case 6: // Await burn
-			if (condition)
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					cm->SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
 			{
 				cm->SlowIfDesired();
 				setState(nextupdate);
