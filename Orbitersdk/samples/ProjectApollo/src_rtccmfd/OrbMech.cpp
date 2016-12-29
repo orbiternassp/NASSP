@@ -1955,7 +1955,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	}
 	if (rise)
 	{
-		if (4.0*a*pow(cosv[0], 3) + 3.0*b*pow(cosv[0], 2) + 2.0*c*cosv[0] + d < 0)
+		if (-4.0*a*sinv[0] * pow(cosv[0], 3) - 3.0*b*sinv[0] * pow(cosv[0], 2) - 2.0*c*sinv[0] * cosv[0] < 0)
 		{
 			v1 = atan2(sinv[0], cosv[0]);
 		}
@@ -1966,7 +1966,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	}
 	else
 	{
-		if (4.0*a*pow(cosv[0], 3) + 3.0*b*pow(cosv[0], 2) + 2.0*c*cosv[0] + d > 0)
+		if (-4.0*a*sinv[0] * pow(cosv[0], 3) - 3.0*b*sinv[0] * pow(cosv[0], 2) - 2.0*c*sinv[0] * cosv[0] > 0)
 		{
 			v1 = atan2(sinv[0], cosv[0]);
 		}
