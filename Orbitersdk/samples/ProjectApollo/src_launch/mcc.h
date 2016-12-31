@@ -611,7 +611,7 @@ public:
 	void drawPad();											// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
-	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate);
+	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate, bool altcriterium = false, bool altcondition = false, int altnextupdate = 0);
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn, int type);					// Subthread start request
 	void subThreadMacro(int type, int updatenumber);

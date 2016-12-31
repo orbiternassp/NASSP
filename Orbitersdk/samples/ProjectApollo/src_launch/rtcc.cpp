@@ -651,14 +651,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
 
-		if (fcn == 41)
-		{
-			//Save parameters for further use
-			SplashLatitude = res.latitude;
-			SplashLongitude = res.longitude;
-			calcParams.TEI = res.P30TIG;
-			calcParams.EI = res.GET400K;
-		}
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 50:	// MISSION CP TEI-1 (Pre LOI)

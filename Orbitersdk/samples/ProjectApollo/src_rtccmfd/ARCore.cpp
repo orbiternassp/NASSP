@@ -1357,8 +1357,8 @@ int ARCore::subThread()
 
 			hMoon = oapiGetObjectByName("Moon");
 
-			vessel->GetRelativePos(hMoon, R_A);
-			vessel->GetRelativeVel(hMoon, V_A);
+			vessel->GetRelativePos(gravref, R_A);
+			vessel->GetRelativeVel(gravref, V_A);
 			SVMJD = oapiGetSimMJD();
 			R0B = _V(R_A.x, R_A.z, R_A.y);
 			V0B = _V(V_A.x, V_A.z, V_A.y);
@@ -1366,6 +1366,7 @@ int ARCore::subThread()
 			OrbMech::oneclickcoast(R0B, V0B, SVMJD, TLCC_TIG - (SVMJD - GETbase)*24.0*3600.0, RV1.R, RV1.V, gravref, hMoon);
 			RV1.gravref = hMoon;
 			RV1.MJD = GETbase + TLCC_TIG / 24.0 / 3600.0;
+			RV1.mass = vessel->GetMass();
 			opt.useSV = true;
 
 			UY = unit(crossp(RV1.V, RV1.R));
