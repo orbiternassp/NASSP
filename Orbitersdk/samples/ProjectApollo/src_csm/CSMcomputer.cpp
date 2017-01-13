@@ -4630,6 +4630,8 @@ void CMOptics::TimeStep(double simdt) {
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 	//sprintf(oapiDebugString(), "Sext Trunion EMEM %o", sat->agc.vagc.Erasable[0][RegOPTY]);
+
+	sprintf(oapiDebugString(), "Standby: %d %d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed);
 }
 
 void CMOptics::SaveState(FILEHANDLE scn) {

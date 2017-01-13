@@ -280,7 +280,7 @@ public:
 	///
 	/// \brief Is the AGC in standby mode?
 	///
-	bool OnStandby() { return (!Yaagc && Standby); };
+	bool OnStandby() { return ((!Yaagc && Standby) || (Yaagc && vagc.Standby)); };
 
 	///
 	/// \brief Is the AGC out of reset?

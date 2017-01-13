@@ -1562,7 +1562,7 @@ BurstOutput (agc_t *State, int DriveBitMask, int CounterRegister, int Channel)
 // it requires slightly more processing, in order to conform as obviously
 // as possible to the MIT docs.
 
-#define SCALER_OVERFLOW 160
+#define SCALER_OVERFLOW 80
 #define SCALER_DIVIDER 3
 
 ///
@@ -1713,8 +1713,8 @@ agc_engine (agc_t * State)
     }
   
   //----------------------------------------------------------------------
-  // Here we take care of counter-timers.  There is a basic 1/1600 second
-  // clock that is used to drive the timers.  1/1600 second happens to
+  // Here we take care of counter-timers.  There is a basic 1/3200 second
+  // clock that is used to drive the timers.  1/3200 second happens to
   // be SCALER_OVERFLOW/SCALER_DIVIDER machine cycles, and the variable
   // ScalerCounter has already been updated the correct number of 
   // multiples of SCALER_DIVIDER.  Note that incrementing a timer register
@@ -1735,100 +1735,133 @@ agc_engine (agc_t * State)
 		  State->InputChannel[ChanSCALER1] = 0;
 		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
 		}
-      // Check whether there was a pulse into bit 5 of SCALER1.
-      // If so, the 10 ms. timers TIME1 and TIME3 are updated.
-      // Recall that the registers are in AGC integer format,
-      // and therefore are actually shifted left one space.
-      if (0 == (017 & State->InputChannel[ChanSCALER1]))
-	    {
-	       State->ExtraDelay++;
-	      if (CounterPINC (&c (RegTIME1)))
-	        {
-	          State->ExtraDelay++;
-	         CounterPINC (&c (RegTIME2));
-	        }
-	      State->ExtraDelay++;
-	      if (CounterPINC (&c (RegTIME3)))
-	        State->InterruptRequests[3] = 1;
-	    }
-	  // TIME5 is the same as TIME3, but 5 ms. out of phase.
-	  if (010 == (017 & State->InputChannel[ChanSCALER1]))
-	    {
-	      State->ExtraDelay++;
-	      if (CounterPINC (&c (RegTIME5)))
-	        State->InterruptRequests[2] = 1;
-	    }
-	  // TIME4 is the same as TIME3, but 7.5ms out of phase
-	  if (014 == (017 & State->InputChannel[ChanSCALER1]))
-	    {
-	      State->ExtraDelay++;
-	      if (CounterPINC (&c (RegTIME4)))
-	        State->InterruptRequests[4] = 1;
-	    }
-	  // TIME6 only increments when it has been enabled via CH13 bit 15.
-	  // It increments 0.3125ms after TIME1/TIME3, half of the 1/1600 second
-	  // clock period as accounted for here. I'm assuming that difference
-	  // is small enough, though, and just incrementing along with TIME1
-	  if (040000 & State->InputChannel[013])
-		{
-		  State->ExtraDelay++;
-		  if (CounterDINC(State, 0, &c(RegTIME6)))
-		    {
-			  State->InterruptRequests[1] = 1;
-			  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
-			  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
-			}
-		}
 #ifdef _DEBUG
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
       
-      // Check alarms
-	  if (02000 == (03777 & State->InputChannel[ChanSCALER1]))
-	    {
-	      // The Night Watchman begins looking once every 1.28s...
-		  State->NightWatchman = 1;
-        }
-	  else if (State->NightWatchman && 00000 == (03777 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
-	      TriggeredAlarm = 1;
+      // Check alarms first, since there's a chance we might go to standby
+	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
+	  {
+		  // The Night Watchman begins looking once every 1.28s...
+		  if (!State->Standby)
+			  State->NightWatchman = 1;
 
-		  // Set the NIGHT WATCHMAN bit in channel 77. Don't go through CpuWriteIO() because
-		  // instructions writing to CH77 clear it. We'll broadcast changes to it in the
-		  // generic alarm handler a bit further down.
-		  State->InputChannel[077] |= CH77_NIGHT_WATCHMAN;
-	    }
+		  // Same with Standby
+		  if (0 == (State->InputChannel[032] & 020000))
+			  State->SbyPressed = 1;
+	  }
+	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
+	  {
+		  if (State->SbyPressed && State->InputChannel[013] & 002000)
+		  {
+			  if (!State->Standby)
+			  {
+				  // Standby is enabled, and PRO has been held down for the required amount of time.
+				  State->Standby = 1;
 
-	  if (0200 == (0377 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // The Rupt Lock alarm watches ISR state starting every 160ms
-		  State->RuptLock = 1;
-		  State->NoRupt = 1;
-		}
-	  else if ((State->RuptLock || State->NoRupt) && 0140 == (0377 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // We've either had no interrupts, or stuck in one, for 140ms. Sound the alarm!
-		  TriggeredAlarm = 1;
+				  // While this isn't technically an alarm, it causes GOJAM just like all the rest
+				  TriggeredAlarm = 1;
+			  }
+			  else
+			  {
+				  // PRO was pressed for long enough to turn us back on. Let's get going!
+				  State->Standby = 0;
 
-		  // Set the RUPT LOCK bit in channel 77.
-		  State->InputChannel[077] |= CH77_RUPT_LOCK;
-		}
+			  }
+		  }
+		  if (!State->Standby && State->NightWatchman)
+		  {
+			  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
+			  TriggeredAlarm = 1;
 
-	  if (010 == (017 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // The TC Trap alarm watches executing instructions every 5ms
-		  State->TCTrap = 1;
-		  State->NoTC = 1;
-		}
-	  else if ((State->TCTrap || State->NoTC) && 000 == (017 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // We've either executed no TC at all, or only TCs, for the past 5ms. Sound the alarm!
-		  TriggeredAlarm = 1;
+			  // Set the NIGHT WATCHMAN bit in channel 77. Don't go through CpuWriteIO() because
+			  // instructions writing to CH77 clear it. We'll broadcast changes to it in the
+			  // generic alarm handler a bit further down.
+			  State->InputChannel[077] |= CH77_NIGHT_WATCHMAN;
+		  }
+	  }
+	 
+	  // All the rest of this is switched off during standby.
+	  if (!State->Standby)
+	  {
+		  if (0400 == (0777 & State->InputChannel[ChanSCALER1]))
+		  {
+			  // The Rupt Lock alarm watches ISR state starting every 160mos
+			  State->RuptLock = 1;
+			  State->NoRupt = 1;
+		  }
+		  else if ((State->RuptLock || State->NoRupt) && 0300 == (0777 & State->InputChannel[ChanSCALER1]))
+		  {
+			  // We've either had no interrupts, or stuck in one, for 140ms. Sound the alarm!
+			  TriggeredAlarm = 1;
 
-		  // Set the TC TRAP bit in channel 77.
-		  State->InputChannel[077] |= CH77_TC_TRAP;
-		}
+			  // Set the RUPT LOCK bit in channel 77.
+			  State->InputChannel[077] |= CH77_RUPT_LOCK;
+		  }
+
+		  if (020 == (037 & State->InputChannel[ChanSCALER1]))
+		  {
+			  // The TC Trap alarm watches executing instructions every 5ms
+			  State->TCTrap = 1;
+			  State->NoTC = 1;
+		  }
+		  else if ((State->TCTrap || State->NoTC) && 000 == (037 & State->InputChannel[ChanSCALER1]))
+		  {
+			  // We've either executed no TC at all, or only TCs, for the past 5ms. Sound the alarm!
+			  TriggeredAlarm = 1;
+
+			  // Set the TC TRAP bit in channel 77.
+			  State->InputChannel[077] |= CH77_TC_TRAP;
+		  }
+		  // Now that that's taken care of...
+		  // If so, the 10 ms. timers TIME1 and TIME3 are updated.
+		  // Recall that the registers are in AGC integer format,
+		  // and therefore are actually shifted left one space.
+		  // When taking a reset, the real AGC would skip unprogrammed
+		  // sequences and go straight to GOJAM. The requests, however,
+		  // would be saved and the counts would happen immediately
+		  // after the first instruction at 4000, so doing them now
+		  // is not too inaccurate.
+		  if (0 == (037 & State->InputChannel[ChanSCALER1]))
+		  {
+			  State->ExtraDelay++;
+			  if (CounterPINC(&c(RegTIME1)))
+			  {
+				  State->ExtraDelay++;
+				  CounterPINC(&c(RegTIME2));
+			  }
+			  State->ExtraDelay++;
+			  if (CounterPINC(&c(RegTIME3)))
+				  State->InterruptRequests[3] = 1;
+		  }
+		  // TIME5 is the same as TIME3, but 5 ms. out of phase.
+		  if (020 == (037 & State->InputChannel[ChanSCALER1]))
+		  {
+			  State->ExtraDelay++;
+			  if (CounterPINC(&c(RegTIME5)))
+				  State->InterruptRequests[2] = 1;
+		  }
+		  // TIME4 is the same as TIME3, but 7.5ms out of phase
+		  if (030 == (037 & State->InputChannel[ChanSCALER1]))
+		  {
+			  State->ExtraDelay++;
+			  if (CounterPINC(&c(RegTIME4)))
+				  State->InterruptRequests[4] = 1;
+		  }
+		  // TIME6 only increments when it has been enabled via CH13 bit 15.
+		  // It increments 0.3125ms after TIME1/TIME3
+		  if (040000 & State->InputChannel[013] && (State->InputChannel[ChanSCALER1] &01) == 01)
+		  {
+			  State->ExtraDelay++;
+			  if (CounterDINC(State, 0, &c(RegTIME6)))
+			  {
+				  State->InterruptRequests[1] = 1;
+				  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
+				  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+			  }
+		  }
+	  }
+
 
       // If we triggered any alarms, simulate a GOJAM
 	  if (TriggeredAlarm)
@@ -1856,6 +1889,11 @@ agc_engine (agc_t * State)
 		  return (0);
 	    }
     }
+
+  // If we're in standby mode, this is all we can accomplish --
+  // everything else is switched off.
+  if (State->Standby)
+	  return (0);
 
   //----------------------------------------------------------------------
   // Same principle as for the counter-timers (above), but for handling 
