@@ -85,44 +85,8 @@ static int g_MFDmode; // identifier for new MFD mode
 #define  UPLINK_SV				0
 #define  UPLINK_P30				1
 #define  UPLINK_P31				2
-#define  UPLINK_REFSMMAT		3
 
 
-int apolloLandSiteRefsmmat[7][18] = 
-{
-	// Apollo 11 - These values gotten from EMEM 1735 after P51 execution on CSM above landing site pointing up on Jul 20th 1969 20:17. Not the actual values
-	{14417,31562, 11111, 14164 , 3727 , 27344, 77640, 53206, 71722, 53530, 16626, 36644, 11744, 33312, 64274, 40123, 73254, 77567},
-	// Apollo 12
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 13 
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 14
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 15
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 16
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 17
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-};
-
-int apolloLandSiteLiftOffRefsmmat[7][18] = 
-{
-	// Apollo 11
-	{14417,31562, 11111, 14164 , 3727 , 27344, 77640, 53206, 71722, 53530, 16626, 36644, 11744, 33312, 64274, 40123, 73254, 77567},
-	// Apollo 12
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 13
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 14
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 15
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 16
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	// Apollo 17
-	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-};
 // Time to ejection when the IU is programmed
 #define IUSTARTTIME 900
 
@@ -667,7 +631,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "LS", "", "SLT"};
+	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "", "", "SLT"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 	static char *labelLGC[1] = {"BCK"};
@@ -752,7 +716,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Change Reference Body", 0, 'R'},
 		{"Toggle burn data requests", 0, 'I'},
 		{"Clock Update", 0, 'C'},
-		{"REFSMMAT Upd.", 0, 'F'},
+		{0,0,0},
 		{0,0,0},
 		{"State Vector Slot", 0, 'T'}
 	};
@@ -989,18 +953,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				oapiOpenInputBox("Set Reference", ReferencePlanetInput, 0, 20, (void*)this);
 			}
 			return true;
-		} else if (key == OAPI_KEY_F) {
-			if (saturn || lem) {
-				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
-					g_Data.uplinkDataReady = 1;
-					g_Data.uplinkDataType = UPLINK_REFSMMAT;
-				}
-				else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_REFSMMAT) {
-					if(!saturn){ g_Data.uplinkLEM = 1; }else{ g_Data.uplinkLEM = 0; } // LEM flag
-					UpLinkRefsmmat();
-				}
-			}
-			return true;
 		} else if (key == OAPI_KEY_T) {
 			if (g_Data.uplinkDataReady == 0) {
 				if (g_Data.uplinkSlot == 0) {
@@ -1127,7 +1079,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, OAPI_KEY_F, 0, OAPI_KEY_T };
+	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, 0, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 	static const DWORD btkeyLgc[1] = { OAPI_KEY_B };
@@ -1514,18 +1466,6 @@ void ProjectApolloMFD::Update (HDC hDC)
 					sprintf(buffer, "Press P30 to start upload");
 				else if (g_Data.uplinkDataType == UPLINK_P31)
 					sprintf(buffer, "Press P31 to start upload");
-				else if (g_Data.uplinkDataType == UPLINK_REFSMMAT) {
-					if( saturn )
-						sprintf(buffer, "LS Desired REFSMMAT");
-					else {
-						if ( lem->GetAltitude() < 1 ) // Landed on the moon, Upload the Lift off REFSMMAT
-							sprintf(buffer, "LiftOff REFSMMAT");
-						else
-							sprintf(buffer, "LS REFSMMAT");
-					}
-					TextOut(hDC, width / 2, (int) (height * 0.75), buffer, strlen(buffer));
-					sprintf(buffer, "Press LS to start upload");
-				}
 			}
 			else
 				sprintf(buffer, "Press CLK to start upload");
@@ -1572,15 +1512,6 @@ void ProjectApolloMFD::Update (HDC hDC)
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "324   %ld", g_Data.emem[16]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-			}
-			if (g_Data.uplinkDataType >= UPLINK_REFSMMAT) {
-				sprintf(buffer, "325   %ld", g_Data.emem[17]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-				sprintf(buffer, "326   %ld", g_Data.emem[18]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-				sprintf(buffer, "327   %ld", g_Data.emem[19]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-
 			}
 		}
 		SetTextAlign (hDC, TA_LEFT);
@@ -1764,33 +1695,6 @@ MATRIX3 J2000EclToBRCS(double mjd)
 	double obl = 0.4090928023;
 
 	return mul( mul(_MRz(rot),_MRx(inc)), mul(_MRz(lan),_MRx(-obl)) );
-}
-
-void ProjectApolloMFD::UpLinkRefsmmat ()
-{
-		g_Data.emem[0] = 24;
-		// 
-		// If in CSM or in LM landed, upload Desired RESFMMAT
-		//
-		if( saturn || (lem && ( lem->GetAltitude() < 1) ) ) {
-				g_Data.emem[1] = 306; // XSMD	
-				g_Data.uplinkDataType = UPLINK_REFSMMAT;
-		} else {
-			//
-			// Upload REFSMMAT  ( LM powerup )
-			g_Data.uplinkDataType = UPLINK_REFSMMAT;
-			g_Data.emem[1] = 1733;	// Luminary99 REFSMMAT
-		}
-
-		if (lem && ( lem->GetAltitude() < 1) ) // In LEM and Landed on the moon, Upload the Lift off REFSMMAT
-			for(int i = 0 ; i<18 ; i++)
-				g_Data.emem[2+i] = apolloLandSiteLiftOffRefsmmat[saturn->GetApolloNo()-11][i];
-		else
-			for(int i = 0 ; i<18 ; i++)
-				g_Data.emem[2+i] = apolloLandSiteRefsmmat[saturn->GetApolloNo()-11][i];
-		g_Data.uplinkDataType = UPLINK_REFSMMAT;
-		g_Data.uplinkDataReady = 2;
-		UplinkData(); // Go for uplink
 }
 
 void ProjectApolloMFD::GetStateVector (void)
