@@ -1456,6 +1456,29 @@ double SaturnSystemTestAttenuator::GetValue()
 		case 0:	//SPS OX LINE TEMP
 			val = Sat->pcm.measure(10, TLM_A, 120);
 			break;
+		case 2:	//TEMP -P ENG INJECTOR SYS B
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
+		case 3:	//TEMP +Y ENG INJECTOR SYS B
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
+		}
+		break;
+	case 6:
+		switch (right)
+		{
+		case 0:	//TEMP CCW ENG INJECTOR SYS A
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
+		case 1:	//TEMP -P ENG INJECTOR SYS A
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
+		case 2:	//TEMP -Y ENG INJECTOR SYS A
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
+		case 3:	//TEMP CW ENG INJECTOR SYS B
+			val = Sat->pcm.scale_data(30, -50, 50);
+			break;
 		}
 		break;
 	}
