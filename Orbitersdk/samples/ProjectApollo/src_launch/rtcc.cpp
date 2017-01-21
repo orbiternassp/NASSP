@@ -3555,9 +3555,12 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 	double dt3; //from EI to 300k
 	double dt4; //from 300k to 0.05g
 	VECTOR3 R_A, V_A, R0B, V0B, R1B, V1B, UX, UY, UZ, DV_P, DV_C, V_G, R2B, V2B, R05G, V05G, EIangles, REI, VEI, R300K, V300K;
+	VECTOR3 UXD, UYD, UZD;
 	MATRIX3 M_R;
 	OBJHANDLE gravref;
 	Entry* entry;
+
+	double ALFATRIM = -20.0*RAD;
 
 	gravref = AGCGravityRef(opt->vessel);
 	mu = GGRAV*oapiGetMass(gravref);
@@ -3604,18 +3607,16 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		lat = entry->EntryLatPred;
 		lng = entry->EntryLngPred;
 
-		UX = unit(V05G);
-		UY = unit(crossp(UX, R05G));
-		UZ = unit(crossp(UX, crossp(UX, R05G)));
+		UX = unit(-V05G);
+		UY = unit(crossp(UX, -R05G));
+		UZ = unit(crossp(UX, crossp(UX, -R05G)));
 
-		double aoa = -157.0*RAD;
-		VECTOR3 vunit = _V(0.0, 1.0, 0.0);
-		MATRIX3 Rotaoa;
+		UYD = UY;
+		UXD = unit(crossp(UYD, UX))*sin(ALFATRIM) + UX*cos(ALFATRIM);
+		UZD = crossp(UXD, UYD);
 
-		Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+		M_R = _M(UXD.x, UXD.y, UXD.z, UYD.x, UYD.y, UYD.z, UZD.x, UZD.y, UZD.z);
+		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 
 		m1 = opt->vessel->GetMass()*exp(-length(opt->dV_LVLH) / v_e);
 
@@ -3669,18 +3670,16 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		dt3 = OrbMech::time_radius_integ(REI, VEI, SVMJD + dt2 / 24.0 / 3600.0, oapiGetSize(gravref) + 300000.0*0.3048, -1, gravref, gravref, R300K, V300K);
 		dt4 = OrbMech::time_radius_integ(R300K, V300K, SVMJD + (dt2 + dt3) / 24.0 / 3600.0, oapiGetSize(gravref) + EMSAlt, -1, gravref, gravref, R05G, V05G);
 
-		UX = unit(V05G);
-		UY = unit(crossp(UX, R05G));
-		UZ = unit(crossp(UX, crossp(UX, R05G)));
+		UX = unit(-V05G);
+		UY = unit(crossp(UX, -R05G));
+		UZ = unit(crossp(UX, crossp(UX, -R05G)));
 
-		double aoa = -157.0*RAD;
-		VECTOR3 vunit = _V(0.0, 1.0, 0.0);
-		MATRIX3 Rotaoa;
+		UYD = UY;
+		UXD = unit(crossp(UYD, UX))*sin(ALFATRIM) + UX*cos(ALFATRIM);
+		UZD = crossp(UXD, UYD);
 
-		Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+		M_R = _M(UXD.x, UXD.y, UXD.z, UYD.x, UYD.y, UYD.z, UZD.x, UZD.y, UZD.z);
+		EIangles = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 
 		dt5 = 500.0;
 		EMSTime = dt2 + dt3 + dt4 + (SVMJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
@@ -3824,18 +3823,19 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	}
 	theta_nm = theta_rad*3437.7468;
 
-	UX = unit(sv05G.V);
-	UY = unit(crossp(UX, sv05G.R));
-	UZ = unit(crossp(UX, crossp(UX, sv05G.R)));
+	UX = unit(-sv05G.V);
+	UY = unit(crossp(UX, -sv05G.R));
+	UZ = unit(crossp(UX, crossp(UX, -sv05G.R)));
 
-	double aoa = -157.0*RAD;
-	VECTOR3 vunit = _V(0.0, 1.0, 0.0);
-	MATRIX3 Rotaoa;
+	double ALFATRIM = -20.0*RAD;
+	VECTOR3 UXD, UYD, UZD;
 
-	Rotaoa = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)*cos(aoa) + OrbMech::skew(vunit)*sin(aoa) + outerp(vunit, vunit)*(1.0 - cos(aoa));
+	UYD = UY;
+	UXD = unit(crossp(UYD, UX))*sin(ALFATRIM) + UX*cos(ALFATRIM);
+	UZD = crossp(UXD, UYD);
 
-	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	EIangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(Rotaoa, M_R));
+	M_R = _M(UXD.x, UXD.y, UXD.z, UYD.x, UYD.y, UYD.z, UZD.x, UZD.y, UZD.z);
+	EIangles = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
 
 	S_FPA = dotp(unit(sv300K.R), sv300K.V) / length(sv300K.V);
 	g_T = asin(S_FPA);
