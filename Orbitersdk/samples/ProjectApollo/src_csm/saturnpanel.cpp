@@ -5275,7 +5275,7 @@ void Saturn::InitSwitches() {
 	if (!SkylabCM)
 		IUUplinkSwitch.Register(PSH, "IUUplinkSwitch", TOGGLESWITCH_DOWN);
 
-	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
+	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
 	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", TOGGLESWITCH_UP);
 
 	RCSQuantityMeter.Register(PSH, "RCSQuantityMeter", 0.0, 1.0, 2);

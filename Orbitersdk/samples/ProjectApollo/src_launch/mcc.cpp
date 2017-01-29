@@ -1960,7 +1960,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_INT(tmpbuf, form->Data[0][i]);
 			}
 			SAVE_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
-			SAVE_INT("MCC_P27PAD_GET", form->Index[0]);
+			SAVE_INT("MCC_P27PAD_Index", form->Index[0]);
 			SAVE_DOUBLE("MCC_P27PAD_lat", form->lat);
 			SAVE_DOUBLE("MCC_P27PAD_lng", form->lng);
 			SAVE_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
@@ -2216,7 +2216,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 				LOAD_INT(tmpbuf, form->Data[0][i]);
 			}
 			LOAD_DOUBLE("MCC_P27PAD_GET", form->GET[0]);
-			LOAD_INT("MCC_P27PAD_GET", form->Index[0]);
+			LOAD_INT("MCC_P27PAD_Index", form->Index[0]);
 			LOAD_DOUBLE("MCC_P27PAD_lat", form->lat);
 			LOAD_DOUBLE("MCC_P27PAD_lng", form->lng);
 			LOAD_DOUBLE("MCC_P27PAD_NavChk", form->NavChk);
