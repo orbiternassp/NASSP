@@ -82,7 +82,7 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 	timeafterpdi = -1.0;
 
 	/* FIXME LOAD FILE SHOULD BE SET IN SCENARIO */
-	InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
+	//InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
 
 	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
 	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11  - OFFICIAL VERSION */
@@ -96,6 +96,39 @@ LEMcomputer::~LEMcomputer()
 	//
 	// Nothing for now.
 	//
+}
+
+void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+
+{
+	//
+	// Pick the appropriate AGC binary file based on the mission number.
+	//
+
+	char *binfile;
+
+	if (ApolloNo < 11)	// Luminary 069
+	{
+		binfile = "Config/ProjectApollo/Luminary069.bin";
+	}
+	else if (ApolloNo < 12)	// Luminary 099
+	{
+		binfile = "Config/ProjectApollo/Luminary099.bin";
+	}
+	else if (ApolloNo < 13)	// Luminary 116
+	{
+		binfile = "Config/ProjectApollo/Luminary116.bin";
+	}
+	else if (ApolloNo < 14)	// Luminary 131
+	{
+		binfile = "Config/ProjectApollo/Luminary131.bin";
+	}
+	else	//Luminary 210
+	{
+		binfile = "Config/ProjectApollo/Luminary210.bin";
+	}
+
+	InitVirtualAGC(binfile);
 }
 
 //

@@ -154,6 +154,8 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 
+	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+
 	VESSEL *GetCSM();
 protected:
 	// DS20060413
