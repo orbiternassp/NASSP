@@ -1749,6 +1749,8 @@ agc_engine (agc_t * State)
 		  // Same with Standby
 		  if (0 == (State->InputChannel[032] & 020000))
 			  State->SbyPressed = 1;
+		  else
+			  State->SbyPressed = 0;
 	  }
 	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
