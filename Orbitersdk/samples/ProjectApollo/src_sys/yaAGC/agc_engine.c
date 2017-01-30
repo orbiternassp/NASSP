@@ -1712,6 +1712,12 @@ agc_engine (agc_t * State)
       return (0);
     }
   
+  // Same with Standby
+  if (0 == (State->InputChannel[032] & 020000))
+	  State->SbyPressed = 1;
+  else
+	  State->SbyPressed = 0;
+
   //----------------------------------------------------------------------
   // Here we take care of counter-timers.  There is a basic 1/3200 second
   // clock that is used to drive the timers.  1/3200 second happens to
@@ -1746,11 +1752,7 @@ agc_engine (agc_t * State)
 		  if (!State->Standby)
 			  State->NightWatchman = 1;
 
-		  // Same with Standby
-		  if (0 == (State->InputChannel[032] & 020000))
-			  State->SbyPressed = 1;
-		  else
-			  State->SbyPressed = 0;
+		  
 	  }
 	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
