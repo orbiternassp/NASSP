@@ -101,6 +101,7 @@ LEMcomputer::~LEMcomputer()
 void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
 
 {
+	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
@@ -132,7 +133,7 @@ void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 		binfile = "Config/ProjectApollo/Luminary210.bin";
 	}
 
-	InitVirtualAGC(binfile);
+	agc_load_binfile(&vagc, binfile);
 }
 
 //
