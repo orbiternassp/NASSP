@@ -107,7 +107,11 @@ void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 
 	char *binfile;
 
-	if (ApolloNo < 11)	// Luminary 069
+	if (ApolloNo < 9)	// Sunburst 120
+	{
+		binfile = "Config/ProjectApollo/Sunburst120.bin";
+	}
+	else if (ApolloNo < 11)	// Luminary 069
 	{
 		binfile = "Config/ProjectApollo/Luminary069.bin";
 	}
