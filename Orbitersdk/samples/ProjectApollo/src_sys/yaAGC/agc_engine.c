@@ -1712,10 +1712,8 @@ agc_engine (agc_t * State)
       return (0);
     }
   
-  // Same with Standby
-  if (0 == (State->InputChannel[032] & 020000))
-	  State->SbyPressed = 1;
-  else
+  // PRO release processed immediately
+  if (1 == (State->InputChannel[032] & 020000))
 	  State->SbyPressed = 0;
 
   //----------------------------------------------------------------------
@@ -1728,23 +1726,28 @@ agc_engine (agc_t * State)
 
   // This can only iterate once, but I use 'while' just in case.
   while (ScalerCounter >= SCALER_OVERFLOW)
-    {
+  {
 	  int TriggeredAlarm = 0;
-	  
+
 	  // First, update SCALER1 and SCALER2. These are direct views into
 	  // the clock dividers in the Scaler module, and so don't take CPU
 	  // time to 'increment'
-      ScalerCounter -= SCALER_OVERFLOW;
+	  ScalerCounter -= SCALER_OVERFLOW;
 	  State->InputChannel[ChanSCALER1]++;
 	  if (State->InputChannel[ChanSCALER1] == 040000)
-		{
+	  {
 		  State->InputChannel[ChanSCALER1] = 0;
 		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
-		}
+	  }
 #ifdef _DEBUG
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
-      
+
+	  //Check for PRO
+	  if (0 == (State->InputChannel[032] & 020000))
+	  {State->SbyPressed = 1;}
+
+
       // Check alarms first, since there's a chance we might go to standby
 	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
