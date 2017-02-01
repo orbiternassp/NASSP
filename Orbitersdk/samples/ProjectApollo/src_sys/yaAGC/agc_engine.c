@@ -1713,7 +1713,7 @@ agc_engine (agc_t * State)
     }
   
   // PRO release processed immediately
-  if (1 == (State->InputChannel[032] & 020000))
+  if (State->InputChannel[032] & 020000)
 	  State->SbyPressed = 0;
 
   //----------------------------------------------------------------------
