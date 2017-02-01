@@ -3740,6 +3740,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit;
 	OBJHANDLE gravref, hEarth;
 	SV sv0;		// "Now"
+	SV sv1;		// "Now" or just after the maneuver
 	SV svEI;	// EI/400K
 	SV sv300K;  // 300K
 	SV sv05G;   // EMS Altitude / 0.05G
@@ -3765,24 +3766,19 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	sv0.V = V0B;
 	sv0.mass = opt->vessel->GetMass();
 
-	if (opt->direct)
+	if (opt->direct || length(opt->dV_LVLH) == 0.0)	//Check against a DV of 0
 	{
-		dt = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv0.gravref, hEarth, svEI.R, svEI.V);
-		svEI.gravref = hEarth;
-		svEI.mass = sv0.mass;
-		svEI.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+		sv1 = sv0;
 	}
 	else
 	{
-		SV sv1;
-
 		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
-
-		dt = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv1.gravref, hEarth, svEI.R, svEI.V);
-		svEI.gravref = hEarth;
-		svEI.mass = sv1.mass;
-		svEI.MJD = sv1.MJD + dt / 24.0 / 3600.0;
 	}
+
+	dt = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv1.gravref, hEarth, svEI.R, svEI.V);
+	svEI.gravref = hEarth;
+	svEI.mass = sv1.mass;
+	svEI.MJD = sv1.MJD + dt / 24.0 / 3600.0;
 
 	entry = new Entry(gravref, 1);
 	entry->Reentry(svEI.R, svEI.V, svEI.MJD);
@@ -4112,7 +4108,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
 		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG2, opt->dV_LVLH2, sv1, 0);
 	}
-	else if (opt->REFSMMATdirect == false)
+	else if (opt->REFSMMATdirect == false && length(opt->dV_LVLH) != 0.0 )	//Check against DV = 0, some calculations could break down
 	{
 		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
 	}
