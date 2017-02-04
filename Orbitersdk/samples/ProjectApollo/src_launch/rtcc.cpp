@@ -4500,9 +4500,9 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
 
-void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR)
 {
-	double SVMJD, GET, mass, LMmass, h_DP, theta_F, t_F, mu, t_DOI, t_PDI, t_L, CR, t_slip, CSMmass;
+	double SVMJD, GET, mass, LMmass, h_DP, theta_F, t_F, mu, t_DOI, t_slip, CSMmass;
 	VECTOR3 R_A, V_A, R0B, V0B, R_LSA, DV_DOI, RA2, VA2, Llambda, R2_cor, V2_cor, i, j, k;
 	MATRIX3 Q_Xx;
 	OBJHANDLE hMoon, gravref;
@@ -4546,8 +4546,8 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	theta_F = 15.0*RAD;
 	t_F = 718.0;
 	mu = GGRAV*oapiGetMass(hMoon);
-	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, t_DOI, t_PDI, t_L, DV_DOI, CR);
 
+	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
 	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
 
 	SV sv_tig;
@@ -5253,7 +5253,7 @@ char* RTCC::CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch)
 	return str;
 }
 
-char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch)
+char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset)
 {
 	MATRIX3 a;
 	int emem[24];
@@ -5262,7 +5262,7 @@ char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch)
 	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
 
 	emem[0] = 24;
-	emem[1] = 1735;
+	emem[1] = 1735 + offset;
 	emem[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
 	emem[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
 	emem[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);

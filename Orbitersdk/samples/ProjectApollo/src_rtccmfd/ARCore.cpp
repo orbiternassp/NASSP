@@ -24,7 +24,7 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 
 ARCore::ARCore(VESSEL* v)
 {
-	T1 = 0;	
+	T1 = 0;
 	T2 = 0;
 	CDHtime = 0;
 	CDHtime_cor = 0;
@@ -46,11 +46,12 @@ ARCore::ARCore(VESSEL* v)
 	AGCEpoch = 40221.525;
 	REFSMMAT = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
-	REFSMMATopt = 4; 
+	REFSMMATopt = 4;
 	REFSMMATcur = 4;
 	REFSMMATupl = 0;
 	LSLat = 0.0;
 	LSLng = 0.0;
+	LSAlt = 0.0;
 	manpadopt = 0;
 	vesseltype = 0;
 	gravref = oapiGetObjectByName("Earth");
@@ -71,7 +72,7 @@ ARCore::ARCore(VESSEL* v)
 		mission = 7;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.5217969*RAD, -80.5612465*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
-	else if (strcmp(v->GetName(), "AS-503")==0)
+	else if (strcmp(v->GetName(), "AS-503") == 0)
 	{
 		mission = 8;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.124*RAD);
@@ -85,7 +86,6 @@ ARCore::ARCore(VESSEL* v)
 	{
 		mission = 9;
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie Brown") == 0)
 	{
@@ -97,7 +97,6 @@ ARCore::ARCore(VESSEL* v)
 	{
 		mission = 10;
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
@@ -133,7 +132,7 @@ ARCore::ARCore(VESSEL* v)
 	{
 		mission = 15;
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
+		AGCEpoch = 41317.251625;
 	}
 	GETbase = LaunchMJD[mission - 7];
 
@@ -168,7 +167,7 @@ ARCore::ARCore(VESSEL* v)
 
 	REFSMMATdirect = true;
 	OrbAdjDVX = _V(0, 0, 0);
-	SPSGET = (oapiGetSimMJD()-GETbase)*24*60*60;
+	SPSGET = (oapiGetSimMJD() - GETbase) * 24 * 60 * 60;
 	apo_desnm = 0;
 	peri_desnm = 0;
 	incdeg = 0;
@@ -255,7 +254,7 @@ ARCore::ARCore(VESSEL* v)
 	lmmanpad.LMWeight = 0.0;
 	lmmanpad.SPA = 0.0;
 	lmmanpad.SXP = 0.0;
-	sprintf(lmmanpad.remarks,"");
+	sprintf(lmmanpad.remarks, "");
 	TimeTag = 0.0;
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
@@ -327,6 +326,21 @@ ARCore::ARCore(VESSEL* v)
 	VECbody = NULL;
 	VECangles = _V(0, 0, 0);
 
+	DOI_N = 0;
+	DOI_dV_LVLH = _V(0, 0, 0);
+	DOI_TIG = 0.0;
+	DOI_t_PDI = 0.0;
+	DOI_t_L = 0.0;
+	DOI_CR = 0.0;
+	DOIGET = 0.0;
+
+	if (mission = 11)
+	{
+		LSLat = 0.71388888*RAD;
+		LSLng = 23.7077777*RAD;
+		LSAlt = -3073.263;
+	}
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -352,6 +366,27 @@ ARCore::ARCore(VESSEL* v)
 	earthentrypad.RetRB[0] = 0;
 	earthentrypad.RTGO[0] = 0;
 	earthentrypad.VIO[0] = 0;
+
+	lunarentrypad.Att05[0] = _V(0, 0, 0);
+	lunarentrypad.BSS[0] = 0;
+	lunarentrypad.DO[0] = 0.0;
+	lunarentrypad.Gamma400K[0] = 0.0;
+	lunarentrypad.GETHorCheck[0] = 0.0;
+	lunarentrypad.Lat[0] = 0.0;
+	lunarentrypad.LiftVector[0][0] = 0;
+	lunarentrypad.Lng[0] = 0.0;
+	lunarentrypad.MaxG[0] = 0.0;
+	lunarentrypad.PitchHorCheck[0] = 0.0;
+	lunarentrypad.RET05[0] = 0.0;
+	lunarentrypad.RRT[0] = 0.0;
+	lunarentrypad.RTGO[0] = 0.0;
+	lunarentrypad.SFT[0] = 0.0;
+	lunarentrypad.SPA[0] = 0.0;
+	lunarentrypad.SXP[0] = 0.0;
+	lunarentrypad.SXTS[0] = 0;
+	lunarentrypad.TRN[0] = 0;
+	lunarentrypad.V400K[0] = 0.0;
+	lunarentrypad.VIO[0] = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -1288,6 +1323,11 @@ int ARCore::subThread()
 			{
 				REFSMMAToct[1] = 1733;
 			}
+
+			if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+			{
+				REFSMMAToct[1] -= 2;
+			}
 		}
 
 		REFSMMAToct[0] = 24;
@@ -1538,17 +1578,18 @@ int ARCore::subThread()
 		{
 			opt.csmlmdocked = true;
 		}
-		opt.EarliestGET = LOIGET;
+		opt.EarliestGET = DOIGET;
 		opt.GETbase = GETbase;
-		opt.lat = LOILat;
-		opt.lng = LOILng;
-		opt.alt = LOIperi;
+		opt.lat = LSLat;
+		opt.lng = LSLng;
+		opt.alt = LSAlt;
 		opt.vessel = vessel;
+		opt.N = DOI_N;
 
-		rtcc->DOITargeting(&opt, LOI_dV_LVLH, LOI_TIG);
+		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, DOI_t_L, DOI_CR);
 
-		P30TIG = LOI_TIG;
-		dV_LVLH = LOI_dV_LVLH;
+		P30TIG = DOI_TIG;
+		dV_LVLH = DOI_dV_LVLH;
 
 		Result = 0;
 	}

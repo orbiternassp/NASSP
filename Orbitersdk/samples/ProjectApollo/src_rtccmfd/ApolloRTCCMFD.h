@@ -200,6 +200,14 @@ public:
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
 	void menuVECPOINTCalc();
+	void menuSetDOIGET();
+	void set_DOIGET(double time);
+	void menuLSAlt();
+	void set_LSAlt(double alt);
+	void menuSetDOIRevs();
+	void set_DOIRevs(int N);
+	void menuDOICalc();
+	void menuSetDOIPage();
 
 protected:
 	oapi::Font *font;

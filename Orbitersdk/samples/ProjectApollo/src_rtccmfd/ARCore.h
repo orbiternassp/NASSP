@@ -89,6 +89,7 @@ public:
 	double P30TIG;			//Maneuver GET
 	VECTOR3 dV_LVLH;		//LVLH maneuver vector
 	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	bool inhibUplLOS;
 	double TimeTag;
 
@@ -124,7 +125,6 @@ public:
 	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
-	double LSLat, LSLng;
 	bool REFSMMATdirect;
 
 	//ENTY PAGE	
@@ -180,7 +180,7 @@ public:
 	int mappage, mapgs;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI, 5 = DOI
+	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
 	double LOIapo, LOIperi, LOIinc;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
@@ -198,6 +198,15 @@ public:
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
+
+
+	//DOI Page
+	int DOI_N;							//Number of revolutions between DOI and PDI
+	double DOIGET;						//Initial guess for the DOI TIG
+	double DOI_TIG;						//Integrated DOI TIG
+	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
+	double DOI_t_PDI, DOI_t_L, DOI_CR;	//Time of PDI, time of landing, cross range at PDI
+
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

@@ -249,7 +249,7 @@ struct LOIMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-2 (w/o MCC), 3 = LOI-2, 4 = TLI
+	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double MCCGET; //GET for the last MCC
 	double lat; //target for MCC
 	double lng; //target for MCC
@@ -273,6 +273,7 @@ struct DOIMan
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+	int N = 0;	// Revolutions between DOI and PDI
 };
 
 struct OrbAdjOpt
@@ -379,7 +380,7 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad);
@@ -412,7 +413,7 @@ private:
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
 	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);
 	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
-	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0);
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);

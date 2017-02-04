@@ -3418,23 +3418,10 @@ MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 	return _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
 }
 
-VECTOR3 DOI_calc(VECTOR3 R, VECTOR3 V, double r_LS, double h_p, double mu)
+void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
 {
-	double r, r_p;
-	VECTOR3 U_R, U_V, U_Z, V_R;
-	r = length(R);
-	r_p = h_p + r_LS;
-	U_R = unit(R);
-	U_V = unit(V);
-	U_Z = unit(crossp(U_V, U_R));
-	V_R = crossp(U_R, U_Z)*sqrt(2.0*mu*r_p/(r*r+r*r_p));
-	return V_R;
-}
-
-void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
-{
-	double er,nmax,t_U,r_DP,r_P,r_A,r_D,v_D,a_D,t_H,tLMJD,alpha;
-	VECTOR3 U_N, U_L, U_LS,V_DH,R_PP,V_PP,R_LS;
+	double er, nmax, t_U, r_DP, r_P, r_A, r_D, v_D, a_D, t_H, tLMJD, alpha, t_D;
+	VECTOR3 U_N, U_L, U_LS, V_DH, R_PP, V_PP, R_LS, R_D, V_D;
 	MATRIX3 Rot;
 	int n;
 
@@ -3442,22 +3429,26 @@ void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VE
 	nmax = 15;
 	n = 0;
 
+	R_D = R_0;
+	V_D = V_0;
+	t_D = t_0;
+
 	t_U = t_E - t_D;
 	r_DP = length(R_LSA) + h_DP;
 
 	while (abs(er) > 0.0005 && nmax >= n)
 	{
+		oneclickcoast(R_D, V_D, GETbase + t_D / 24.0 / 3600.0, t_U, R_D, V_D, plan, plan);
 		t_D += t_U;
-		rv_from_r0v0(R_D, V_D, t_U, R_D, V_D, mu);
 		r_P = r_DP;
 		r_A = length(R_D);
 		r_D = length(R_D);
 		v_D = length(V_D);
 		U_N = unit(crossp(R_D, V_D));
 		a_D = mu*r_D / (2.0*mu - r_D*v_D*v_D);
-		t_H = PI*sqrt(OrbMech::power(r_A + r_P, 3.0) / (8.0*mu));
-		V_DH = DOI_calc(R_D, V_D, length(R_LSA), h_DP, mu);
-		rv_from_r0v0(R_D, V_DH, t_H, R_PP, V_PP, mu);
+		t_H = ((double)N*PI2 + PI)*sqrt(OrbMech::power(r_A + r_P, 3.0) / (8.0*mu));
+		V_DH = unit(crossp(U_N, R_D))*sqrt(2.0*mu*r_P / (r_A*(r_P + r_A)));
+		oneclickcoast(R_D, V_DH, GETbase + t_D / 24.0 / 3600.0, t_H, R_PP, V_PP, plan, plan);
 		t_L = t_D + t_H + t_F;
 		tLMJD = t_L / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
