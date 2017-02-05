@@ -3977,7 +3977,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state2.u.VAGCStandby = vagc.Standby;
 	state2.u.SbyPressed = vagc.SbyPressed;
 
-	oapiWriteScenario_int (scn, "STATE2", state2.word);
+	oapiWriteScenario_int (scn, "VAGCSTATE2", state2.word);
 
 	//
 	// Write out any non-zero EMEM state.
@@ -4221,9 +4221,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.DownruptTimeValid = state.u.DownruptTimeValid;
 			PadLoaded = state.u.PadLoaded;
 		}
-		else if (!strnicmp(line, "STATE2", 6)) {
+		else if (!strnicmp(line, "VAGCSTATE2", 10)) {
 			AGCState2 state2;
-			sscanf(line + 6, "%d", &state2.word);
+			sscanf(line + 10, "%d", &state2.word);
 
 			vagc.NightWatchman = state2.u.NightWatchman;
 			vagc.RuptLock = state2.u.RuptLock;
