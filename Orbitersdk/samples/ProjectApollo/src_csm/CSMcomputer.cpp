@@ -2688,6 +2688,7 @@ void CSMcomputer::agcTimestep(double simt, double simdt)
 	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt); 
+		sat->pcm.last_update = LastCycled;
 	}	  
 	double ThisTime = LastCycled;			// Save here
 	
