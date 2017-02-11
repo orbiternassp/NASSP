@@ -313,6 +313,45 @@ struct P27Opt
 	double navcheckGET; //GET of the Nav Check
 };
 
+struct SkyRendOpt
+{
+	VESSEL* vessel;		//vessel
+	VESSEL* target;		//Target vessel
+	double GETbase;		//usually MJD at launch
+	int man;			//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
+	bool PCManeuver;	//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
+	bool NPCOption;		//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90° later
+	double TPIGuess;	//Estimate for the TPI time
+	double t_TPI;		//Time of TPI
+	double E_L;			//Elevation angle at TPI
+	double t_C;			//Time of Ignition
+	double DH1;			//Delta Height at NCC
+	double DH2;			//Delta Height at NSR
+	double n_C;
+	double t_NC;		//Reference time for the NPC maneuver
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/DM
+};
+
+struct SkylabRendezvousResults
+{
+	double P30TIG;
+	VECTOR3 dV_LVLH;
+
+	double t_NC2;
+	double t_NCC;
+	double t_NSR;
+	double t_TPI;
+
+	double dv_NC2;
+	double dv_NCC;
+
+	double dH_NC2;
+
+	VECTOR3 dV_NSR;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;	// Our ship
@@ -394,6 +433,14 @@ public:
 	void FiniteBurntimeCompensation(VESSEL *vessel, SV sv, double attachedMass, VECTOR3 DV, VECTOR3 &DV_imp, double &t_slip, SV &sv_out);
 	void GetThrusterParameters(VESSEL *vessel, double &f_T, double &isp);
 	double GetDockedVesselMass(VESSEL *vessel);
+	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
+
+	//Skylark
+	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
+	bool NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC = false);
+	void NCCProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh, VECTOR3 &dV_NCC_LVLH, double &t_NSR, VECTOR3 &dV_NSR_LVLH);
+	void NSRProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t2, double t3, VECTOR3 &dV_NSR_LVLH);
+	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -404,7 +451,6 @@ private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);

@@ -105,6 +105,7 @@ public:
 	void gravrefdialogue();
 	void set_gravref(OBJHANDLE body);
 	double timetoperi();
+	double timetoapo();
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuP30Upload();
@@ -208,6 +209,23 @@ public:
 	void set_DOIRevs(int N);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuSetSkylabPage();
+	void menuSwitchSkylabManeuver();
+	void menuSetSkylabGET();
+	void set_SkylabGET(double time);
+	void menuSkylabCalc();
+	void menuSetSkylabNC();
+	void set_SkylabNC(double N);
+	void menuSetSkylabDH1();
+	void set_SkylabDH1(double dh);
+	void menuSetSkylabDH2();
+	void set_SkylabDH2(double dh);
+	void menuSetSkylabEL();
+	void set_SkylabEL(double E_L);
+	void set_SkylabTPI(double time);
+	void menuCyclePlaneChange();
+	void menuCyclePCManeuver();
+	void set_SkylabDTTPM(double dt);
 
 protected:
 	oapi::Font *font;

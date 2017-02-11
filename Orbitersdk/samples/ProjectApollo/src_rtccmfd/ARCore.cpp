@@ -341,6 +341,17 @@ ARCore::ARCore(VESSEL* v)
 		LSAlt = -3073.263;
 	}
 
+	Skylabmaneuver = 0;
+	SkylabTPIGuess = 0.0;
+	Skylab_n_C = 0;
+	SkylabDH1 = 0.0;
+	SkylabDH2 = 0.0;
+	Skylab_E_L = 0.0;
+	SkylabSolGood = true;
+	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
+	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_t_TPI = Skylab_dt_TPM = 0.0;
+	Skylab_NPCOption = Skylab_PCManeuver = false;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -483,6 +494,11 @@ void ARCore::LOICalc()
 void ARCore::DOICalc()
 {
 	startSubthread(10);
+}
+
+void ARCore::SkylabCalc()
+{
+	startSubthread(12);
 }
 
 void ARCore::EntryUpdateCalc()
@@ -1650,6 +1666,104 @@ int ARCore::subThread()
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
 		
+		Result = 0;
+	}
+	break;
+	case 12: //Skylab Rendezvous Targeting
+	{
+		SkyRendOpt opt;
+		SkylabRendezvousResults res;
+
+		opt.E_L = Skylab_E_L;
+		opt.GETbase = GETbase;
+		opt.man = Skylabmaneuver;
+		opt.DH1 = SkylabDH1;
+		opt.DH2 = SkylabDH2;
+		opt.n_C = Skylab_n_C;
+		opt.target = target;
+		opt.t_TPI = Skylab_t_TPI;
+		opt.PCManeuver = Skylab_PCManeuver;
+		opt.NPCOption = Skylab_NPCOption;
+		opt.vessel = vessel;
+
+		if (Skylabmaneuver == 0)
+		{
+			opt.TPIGuess = SkylabTPIGuess;
+		}
+		else if (Skylabmaneuver == 1)
+		{
+			opt.t_C = Skylab_t_NC1;
+		}
+		else if (Skylabmaneuver == 2)
+		{
+			opt.t_C = Skylab_t_NC2;
+		}
+		else if (Skylabmaneuver == 3)
+		{
+			opt.t_C = Skylab_t_NCC;
+		}
+		else if (Skylabmaneuver == 4)
+		{
+			opt.t_C = Skylab_t_NSR;
+		}
+		else if (Skylabmaneuver == 5)
+		{
+			opt.t_C = Skylab_t_TPI;
+		}
+		else if (Skylabmaneuver == 6)
+		{
+			opt.t_C = Skylab_t_TPI + Skylab_dt_TPM;
+		}
+		else if (Skylabmaneuver == 7)
+		{
+			if (Skylab_PCManeuver == 0)
+			{
+				opt.t_NC = Skylab_t_NC1;
+			}
+			else
+			{
+				opt.t_NC = Skylab_t_NC2;
+			}
+		}
+
+		SkylabSolGood = rtcc->SkylabRendezvous(&opt, &res);
+
+		if (SkylabSolGood)
+		{
+			if (Skylabmaneuver == 0)
+			{
+				Skylab_t_TPI = res.t_TPI;
+			}
+			else
+			{
+				dV_LVLH = res.dV_LVLH;
+				P30TIG = res.P30TIG;
+			}
+			
+			if (Skylabmaneuver == 1)
+			{
+				Skylab_dH_NC2 = res.dH_NC2;
+				Skylab_dv_NC2 = res.dv_NC2;
+				Skylab_dv_NCC = res.dv_NCC;
+				Skylab_dV_NSR = res.dV_NSR;
+				Skylab_t_NC2 = res.t_NC2;
+				Skylab_t_NCC = res.t_NCC;
+				Skylab_t_NSR = res.t_NSR;
+			}
+			else if (Skylabmaneuver == 2)
+			{
+				Skylab_dv_NCC = res.dv_NCC;
+				Skylab_dV_NSR = res.dV_NSR;
+				Skylab_t_NCC = res.t_NCC;
+				Skylab_t_NSR = res.t_NSR;
+			}
+			else if (Skylabmaneuver == 3)
+			{
+				Skylab_dV_NSR = res.dV_NSR;
+				Skylab_t_NSR = res.t_NSR;
+			}
+		}
+
 		Result = 0;
 	}
 	break;

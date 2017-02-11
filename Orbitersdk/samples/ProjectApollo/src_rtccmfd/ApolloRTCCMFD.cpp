@@ -201,6 +201,22 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "LOITIG", G->LOI_TIG);
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
+
+	papiWriteScenario_bool(scn, "SKYLABNPCOPTION", G->Skylab_NPCOption);
+	papiWriteScenario_bool(scn, "SKYLABPCMANEUVER", G->Skylab_PCManeuver);
+	oapiWriteScenario_int(scn, "SKYLABMANEUVER", G->Skylabmaneuver);
+	papiWriteScenario_double(scn, "SKYLAB_N_C", G->Skylab_n_C);
+	papiWriteScenario_double(scn, "SKYLAB_NC1", G->Skylab_t_NC1);
+	papiWriteScenario_double(scn, "SKYLAB_NC2", G->Skylab_t_NC2);
+	papiWriteScenario_double(scn, "SKYLAB_NCC", G->Skylab_t_NCC);
+	papiWriteScenario_double(scn, "SKYLAB_NSR", G->Skylab_t_NSR);
+	papiWriteScenario_double(scn, "SKYLAB_TPI", G->Skylab_t_TPI);
+	//papiWriteScenario_double(scn, "SKYLAB_NPC", G->Skylab_t_NPC);
+	papiWriteScenario_double(scn, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
+	papiWriteScenario_double(scn, "SKYLAB_E_L", G->Skylab_E_L);
+	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
+	papiWriteScenario_double(scn, "SKYLAB_DH2", G->SkylabDH2);
+
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -288,6 +304,21 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "LOITIG", G->LOI_TIG);
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
+
+		papiReadScenario_bool(line, "SKYLABNPCOPTION", G->Skylab_NPCOption);
+		papiReadScenario_bool(line, "SKYLABPCMANEUVER", G->Skylab_PCManeuver);
+		papiReadScenario_int(line, "SKYLABMANEUVER", G->Skylabmaneuver);
+		papiReadScenario_double(line, "SKYLAB_N_C", G->Skylab_n_C);
+		papiReadScenario_double(line, "SKYLAB_NC1", G->Skylab_t_NC1);
+		papiReadScenario_double(line, "SKYLAB_NC2", G->Skylab_t_NC2);
+		papiReadScenario_double(line, "SKYLAB_NCC", G->Skylab_t_NCC);
+		papiReadScenario_double(line, "SKYLAB_NSR", G->Skylab_t_NSR);
+		papiReadScenario_double(line, "SKYLAB_TPI", G->Skylab_t_TPI);
+		//papiReadScenario_double(line, "SKYLAB_NPC", G->Skylab_t_NPC);
+		papiReadScenario_double(line, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
+		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
+		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
+		papiReadScenario_double(line, "SKYLAB_DH2", G->SkylabDH2);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -1907,6 +1938,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 12 * H / 14, "Previous Page", 13);
 		skp->Text(1 * W / 8, 2 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 4 * H / 14, "DOI", 3);
+		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
 		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 15)
@@ -1998,6 +2030,180 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%+07.1f", length(G->DOI_dV_LVLH) / 0.3048);
 		skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+	}
+	else if (screen == 17)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Skylab Rendezvous", 17);
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (G->Skylabmaneuver != 0)
+		{
+			skp->Text(4 * W / 8, 16 * H / 21, "TIG", 3);
+			GET_Display(Buffer, G->P30TIG);
+			skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		if (G->Skylabmaneuver < 7)
+		{
+			skp->Text(4 * W / 8, 5 * H / 21, "TPI", 3);
+			GET_Display(Buffer, G->Skylab_t_TPI);
+			skp->Text(5 * W / 8, 5 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		if (!G->SkylabSolGood)
+		{
+			skp->Text(3 * W / 8, 7 * H / 14, "Calculation failed!", 19);
+		}
+
+		if (G->Skylabmaneuver == 0)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TPI Search", 10);
+
+			GET_Display(Buffer, G->SkylabTPIGuess);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 1 || G->Skylabmaneuver == 2)
+		{
+			sprintf(Buffer, "%.1f NM", G->SkylabDH2 / 1852.0);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f°", G->Skylab_E_L*DEG);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 10 * H / 21, "NCC", 3);
+			GET_Display(Buffer, G->Skylab_t_NCC);
+			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", G->Skylab_dv_NCC / 0.3048);
+			skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 12 * H / 21, "NSR", 3);
+			GET_Display(Buffer, G->Skylab_t_NSR);
+			skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", length(G->Skylab_dV_NSR) / 0.3048);
+			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 1)
+		{
+			if (G->Skylab_NPCOption)
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NC1 with Plane Change", 21);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NC1", 3);
+			}
+
+			GET_Display(Buffer, G->Skylab_t_NC1);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			
+			sprintf(Buffer, "%.1f", G->Skylab_n_C);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.1f NM", G->SkylabDH1 / 1852.0);
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 7 * H / 21, "NC2", 3);
+			GET_Display(Buffer, G->Skylab_t_NC2);
+			skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", G->Skylab_dv_NC2 / 0.3048);
+			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "DH: %.1f NM", G->Skylab_dH_NC2 / 1852.0);
+			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 14 * H / 21, "DVT", 3);
+			sprintf(Buffer, "%+07.1f ft/s", (length(G->dV_LVLH) + G->Skylab_dv_NC2 + G->Skylab_dv_NCC + length(G->Skylab_dV_NSR)) / 0.3048);
+			skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 2)
+		{
+			if (G->Skylab_NPCOption)
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NC2 with Plane Change", 21);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NC2", 3);
+			}
+
+			GET_Display(Buffer, G->Skylab_t_NC2);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 14 * H / 21, "DVT", 3);
+			sprintf(Buffer, "%+07.1f ft/s", (length(G->dV_LVLH) + G->Skylab_dv_NCC + length(G->Skylab_dV_NSR)) / 0.3048);
+			skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 3)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "NCC", 3);
+
+			GET_Display(Buffer, G->Skylab_t_NCC);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.1f NM", G->SkylabDH2 / 1852.0);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f°", G->Skylab_E_L*DEG);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 10 * H / 21, "NSR", 3);
+			GET_Display(Buffer, G->Skylab_t_NSR);
+			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->Skylab_dV_NSR.x / 0.3048);
+			skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->Skylab_dV_NSR.y / 0.3048);
+			skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->Skylab_dV_NSR.z / 0.3048);
+			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 4)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "NSR", 3);
+
+			GET_Display(Buffer, G->Skylab_t_NSR);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f°", G->Skylab_E_L*DEG);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 5)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TPI", 3);
+
+			skp->Text(1 * W / 8, 4 * H / 14, "Calculate TPI TIG", 17);
+
+			sprintf(Buffer, "%.2f°", G->Skylab_E_L*DEG);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 6)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TPM", 3);
+
+			sprintf(Buffer, "DT = %.1f mins", G->Skylab_dt_TPM / 60.0);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+		if (G->Skylabmaneuver == 7)
+		{
+			if (G->Skylab_PCManeuver == 0)
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NPC after NC1", 13);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "NPC after NC2", 13);
+			}
+		}
 	}
 	return true;
 }
@@ -2206,6 +2412,12 @@ void ApolloRTCCMFD::menuSetVECPOINTPage()
 void ApolloRTCCMFD::menuSetDOIPage()
 {
 	screen = 16;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetSkylabPage()
+{
+	screen = 17;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2600,6 +2812,19 @@ double ApolloRTCCMFD::timetoperi()
 	G->vessel->GetRelativeVel(G->gravref, V);
 	mu = GGRAV*oapiGetMass(G->gravref);
 	pet = OrbMech::timetoperi(R, V, mu);
+	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
+	return (mjd - G->GETbase)*24.0*3600.0;
+}
+
+double ApolloRTCCMFD::timetoapo()
+{
+	VECTOR3 R, V;
+	double mu, pet, mjd;
+
+	G->vessel->GetRelativePos(G->gravref, R);
+	G->vessel->GetRelativeVel(G->gravref, V);
+	mu = GGRAV*oapiGetMass(G->gravref);
+	pet = OrbMech::timetoapo(R, V, mu);
 	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
 	return (mjd - G->GETbase)*24.0*3600.0;
 }
@@ -4042,6 +4267,254 @@ void ApolloRTCCMFD::set_DOIRevs(int N)
 void ApolloRTCCMFD::menuDOICalc()
 {
 	G->DOICalc();
+}
+
+void ApolloRTCCMFD::menuSwitchSkylabManeuver()
+{
+	if (G->Skylabmaneuver < 7)
+	{
+		G->Skylabmaneuver++;
+	}
+	else
+	{
+		G->Skylabmaneuver = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuCyclePlaneChange()
+{
+	if (G->Skylabmaneuver == 1 || G->Skylabmaneuver == 2)
+	{
+		G->Skylab_NPCOption = !G->Skylab_NPCOption;
+	}
+}
+
+void ApolloRTCCMFD::menuCyclePCManeuver()
+{
+	if (G->Skylabmaneuver == 7)
+	{
+		G->Skylab_PCManeuver = !G->Skylab_PCManeuver;
+	}
+}
+
+void ApolloRTCCMFD::menuSetSkylabGET()
+{
+	if (G->Skylabmaneuver == 5)
+	{
+		if (G->target == NULL)
+		{
+			return;
+		}
+
+		double mu, SVMJD, dt1;
+		VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb, RA0, VA0, RP0, VP0;
+
+		mu = GGRAV*oapiGetMass(G->gravref);
+
+		G->vessel->GetRelativePos(G->gravref, RA0_orb);
+		G->vessel->GetRelativeVel(G->gravref, VA0_orb);
+		G->target->GetRelativePos(G->gravref, RP0_orb);
+		G->target->GetRelativeVel(G->gravref, VP0_orb);
+		SVMJD = oapiGetSimMJD();
+
+		RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
+		VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
+		RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
+		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
+
+		dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->Skylab_E_L, G->gravref);
+		G->Skylab_t_TPI = dt1 + (SVMJD - G->GETbase) * 24.0 * 60.0 * 60.0;
+	}
+	else if (G->Skylabmaneuver == 6)
+	{
+		bool SkylabDTTPMInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the relative time to TPI for the maneuver", SkylabDTTPMInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		bool SkylabGETInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", SkylabGETInput, 0, 20, (void*)this);
+	}
+}
+
+bool SkylabGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "TPI=%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_SkylabTPI(t1time);
+		return true;
+	}
+	else if (strcmp(str, "PeT") == 0)
+	{
+		double pet;
+		pet = ((ApolloRTCCMFD*)data)->timetoperi();
+		((ApolloRTCCMFD*)data)->set_SkylabGET(pet);
+		return true;
+	}
+	else if (strcmp(str, "ApT") == 0)
+	{
+		double pet;
+		pet = ((ApolloRTCCMFD*)data)->timetoapo();
+		((ApolloRTCCMFD*)data)->set_SkylabGET(pet);
+		return true;
+	}
+	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_SkylabGET(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabGET(double time)
+{
+	if (G->Skylabmaneuver == 0)
+	{
+		G->SkylabTPIGuess = time;
+	}
+	else if (G->Skylabmaneuver == 1)
+	{
+		G->Skylab_t_NC1 = time;
+	}
+	else if (G->Skylabmaneuver == 2)
+	{
+		G->Skylab_t_NC2 = time;
+	}
+	else if (G->Skylabmaneuver == 3)
+	{
+		G->Skylab_t_NCC = time;
+	}
+	else if (G->Skylabmaneuver == 4)
+	{
+		G->Skylab_t_NSR = time;
+	}
+}
+
+bool SkylabDTTPMInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_SkylabDTTPM(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabDTTPM(double dt)
+{
+	this->G->Skylab_dt_TPM = dt*60.0;
+}
+
+void ApolloRTCCMFD::set_SkylabTPI(double time)
+{
+	G->Skylab_t_TPI = time;
+}
+
+void ApolloRTCCMFD::menuSkylabCalc()
+{
+	if (G->target != NULL)
+	{
+		G->SkylabCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuSetSkylabNC()
+{
+	if (G->Skylabmaneuver == 1)
+	{
+		bool SkylabNCInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the number of revolutions:", SkylabNCInput, 0, 20, (void*)this);
+	}
+}
+
+bool SkylabNCInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_SkylabNC(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabNC(double N)
+{
+	this->G->Skylab_n_C = N;
+}
+
+void ApolloRTCCMFD::menuSetSkylabDH1()
+{
+	if (G->Skylabmaneuver == 1)
+	{
+		bool SkylabDH1Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the landing site altitude:", SkylabDH1Input, 0, 20, (void*)this);
+	}
+}
+
+bool SkylabDH1Input(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_SkylabDH1(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabDH1(double dh)
+{
+	this->G->SkylabDH1 = dh*1852.0;
+}
+
+void ApolloRTCCMFD::menuSetSkylabDH2()
+{
+	if (G->Skylabmaneuver == 1 || G->Skylabmaneuver == 2 || G->Skylabmaneuver == 3)
+	{
+		bool SkylabDH2Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the Delta Height at NSR:", SkylabDH2Input, 0, 20, (void*)this);
+	}
+}
+
+bool SkylabDH2Input(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_SkylabDH2(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabDH2(double dh)
+{
+	this->G->SkylabDH2 = dh*1852.0;
+}
+
+void ApolloRTCCMFD::menuSetSkylabEL()
+{
+	if (G->Skylabmaneuver > 0 && G->Skylabmaneuver <= 5)
+	{
+		bool SkylabELInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the elevation angle at TPI:", SkylabELInput, 0, 20, (void*)this);
+	}
+}
+
+bool SkylabELInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_SkylabEL(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SkylabEL(double E_L)
+{
+	this->G->Skylab_E_L = E_L*RAD;
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

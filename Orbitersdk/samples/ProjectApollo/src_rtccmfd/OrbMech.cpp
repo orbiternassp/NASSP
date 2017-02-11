@@ -1624,6 +1624,27 @@ double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
 }
 
+double timetoapo(VECTOR3 R, VECTOR3 V, double mu)
+{
+	OELEMENTS coe;
+	double a, chi, alpha, r0, vr0;
+
+	coe = coe_from_sv(R, V, mu);
+	//[h e RA incl w TA a]
+
+	a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e);
+
+	double E_0;
+	E_0 = 2 * atan(sqrt((1.0 - coe.e) / (1.0 + coe.e))*tan(coe.TA / 2.0));
+	chi = sqrt(a)*(PI - E_0);
+
+	alpha = 1.0 / a;
+
+	r0 = length(R);
+	vr0 = dotp(R, V) / r0;
+	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
+}
+
 double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 {
 	double r0, v0, vr0, alpha, a, e, x, dt;
@@ -3464,6 +3485,114 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 	t_PDI = t_DOI + t_H;
 	DV_DOI = V_DH - V_D;
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
+}
+
+void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t)
+{
+	double a;
+
+	a = 1.0 / (2.0/length(R) - dotp(V, V) / mu);
+	t = n*2.0*PI*sqrt(power(a, 3) / mu);
+	rv_from_r0v0(R, V, t, R1, V1, mu);
+}
+
+void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECTOR3 &V_W1)
+{
+	double theta, dt;
+
+	theta = sign(dotp(crossp(R_W, R_C), crossp(R_W, V_W)))*acos(dotp(R_W / length(R_W), R_C / length(R_C)));
+	dt = time_theta(R_W, V_W, theta, mu);
+	rv_from_r0v0(R_W, V_W, dt, R_W1, V_W1, mu);
+}
+
+void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C)
+{
+	double a, a_D, v_V;
+
+	a = 1.0 / (2.0 / length(R) - dotp(V, V) / mu);
+	a_D = a - h;
+	v_V = dotp(V, R)*power(a / a_D, 1.5) / length(R);
+	R_C = R - unit(R)*h;
+	V_C = unit(crossp(crossp(R, V), R))*sqrt(mu*(2.0 / length(R_C) - 1.0 / a_D) - v_V*v_V) + R_C*v_V/length(R_C);
+}
+
+void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo)
+{
+	double dx;
+
+	if (c == 0)
+	{
+		dx = 1.0;
+		c = c + 1.0;eo = e;xo = x;x = x - dx;
+	}
+	else if (c == 0.5)
+	{
+		dx = e / p;
+		c = c + 1.0;eo = e;xo = x;x = x - dx;
+	}
+	else
+	{
+		if (e - eo == 0)
+		{
+			dx = 3.0;
+			c = c + 1.0;eo = e;xo = x;x = x - dx;
+		}
+		else
+		{
+			p = (e - eo) / (x - xo);
+			if (c > 15)
+			{
+				s = 1;
+			}
+			else
+			{
+				dx = e / p;
+				c = c + 1.0;eo = e;xo = x;x = x - dx;
+			}
+		}
+	}
+}
+
+bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J)
+{
+	int s_F;
+	double c, t, e_T, e_To, to, eps1, p;
+
+	eps1 = 0.00001;
+	p = 1.0;
+
+	c = t = 0.0;
+	s_F = 0;
+	
+	if (E_L > PI)
+	{
+		E_L = E_L - PI;
+	}
+
+	do
+	{
+		if (s == 1)
+		{
+			oneclickcoast(R, V, MJD, t, R_J, V_J, gravref, gravref);
+		}
+		else
+		{
+			rv_from_r0v0(R, V, t, R_J, V_J, mu);
+		}
+
+		e_T = PI05 - E_L - asin(((length(R_J) - dh)*cos(E_L) / length(R))) - acos(dotp(unit(R), unit(R_J)))*sign(dotp(crossp(R_J, R), crossp(R, V)));
+
+		if (abs(e_T) >= eps1)
+		{
+			ITER(c, s_F, e_T, p, t, e_To, to);
+			if (s_F == 1)
+			{
+				return false;
+			}
+		}
+
+	} while (abs(e_T) >= eps1);
+	return true;
 }
 
 void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
