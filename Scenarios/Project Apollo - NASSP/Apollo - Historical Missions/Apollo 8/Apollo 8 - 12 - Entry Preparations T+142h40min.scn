@@ -2619,8 +2619,8 @@ PANELSWITCHES_BEGIN
   DockProbeMnACircuitBraker 0 0
   EMSMnBCircuitBraker 1 0
   EMSMnACircuitBraker 1 0
-  RCSLogicMnBCircuitBraker 1 0
-  RCSLogicMnACircuitBraker 1 0
+  RCSLogicMnBCircuitBraker 0 0
+  RCSLogicMnACircuitBraker 0 0
   PrplntIsolMnBCircuitBraker 1 0
   PrplntIsolMnACircuitBraker 1 0
   SMHeatersDMnACircuitBraker 1 0
@@ -2891,8 +2891,8 @@ PANELSWITCHES_BEGIN
   dVThrust1Switch 0 0
   RotPowerDirect2Switch 1 0
   RotPowerDirect1Switch 1 0
-  RotPowerNormal2Switch 1 0
-  RotPowerNormal1Switch 1 0
+  RotPowerNormal2Switch 2 0
+  RotPowerNormal1Switch 2 0
   CsmLmFinalSep2Switch 0 0
   CsmLmFinalSep1Switch 0 0
   EDSSwitch 0 0
