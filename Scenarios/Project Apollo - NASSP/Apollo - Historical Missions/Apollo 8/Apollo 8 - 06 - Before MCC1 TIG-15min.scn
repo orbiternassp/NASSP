@@ -2566,8 +2566,8 @@ PANELSWITCHES_BEGIN
   DockProbeMnACircuitBraker 0 0
   EMSMnBCircuitBraker 1 0
   EMSMnACircuitBraker 1 0
-  RCSLogicMnBCircuitBraker 1 0
-  RCSLogicMnACircuitBraker 1 0
+  RCSLogicMnBCircuitBraker 0 0
+  RCSLogicMnACircuitBraker 0 0
   PrplntIsolMnBCircuitBraker 1 0
   PrplntIsolMnACircuitBraker 1 0
   SMHeatersDMnACircuitBraker 1 0
