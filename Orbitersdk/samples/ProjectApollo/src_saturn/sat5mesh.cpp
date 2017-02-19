@@ -680,14 +680,14 @@ void SaturnV::SetSecondStageEngines(double offset)
 		AddExhaust (th_main[i], 30.0, 2.9 , J2Tex);
 
 	if (SII_UllageNum) {
-		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
-		th_ull[1] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),100000, ph_2nd, 3000);
-		th_ull[2] = CreateThruster (m_exhaust_pos12, _V( 0,0,1),100000, ph_2nd, 3000);
-		th_ull[3] = CreateThruster (m_exhaust_pos13, _V( 0,0,1),100000, ph_2nd, 3000);
-		th_ull[4] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[5] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[6] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[7] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 100000 , ph_2nd, 3000);
+		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),102000 , ph_2nd, 2516);
+		th_ull[1] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),102000, ph_2nd, 2516);
+		th_ull[2] = CreateThruster (m_exhaust_pos12, _V( 0,0,1),102000, ph_2nd, 2516);
+		th_ull[3] = CreateThruster (m_exhaust_pos13, _V( 0,0,1),102000, ph_2nd, 2516);
+		th_ull[4] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), 102000 , ph_2nd, 2516);
+		th_ull[5] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), 102000 , ph_2nd, 2516);
+		th_ull[6] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 102000 , ph_2nd, 2516);
+		th_ull[7] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 102000 , ph_2nd, 2516);
 
 		for (i = 0; i < SII_UllageNum; i ++) {
 			AddExhaust (th_ull[i], 5.0, 0.3, exhaust_tex);
