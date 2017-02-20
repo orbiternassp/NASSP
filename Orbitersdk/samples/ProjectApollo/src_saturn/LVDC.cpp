@@ -5102,11 +5102,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 					owner->SetStage(STAGE_ORBIT_SIVB);
 					LVDC_EI_On = false;
 				}
-				if(LVDC_TB_ETime < 87 && owner->GetThrusterGroupLevel(owner->thg_ver) < 1){//ullage thrust on
-					owner->SetThrusterGroupLevel(owner->thg_ver, 1);
+				if(LVDC_TB_ETime < 87 && owner->GetThrusterGroupLevel(owner->thg_aps) < 1){//ullage thrust on
+					owner->SetThrusterGroupLevel(owner->thg_aps, 1);
 				}
-				if(LVDC_TB_ETime >= 87 && owner->GetThrusterGroupLevel(owner->thg_ver) > 0){//ullage thrust off
-					owner->SetThrusterGroupLevel(owner->thg_ver, 0);
+				if(LVDC_TB_ETime >= 87 && owner->GetThrusterGroupLevel(owner->thg_aps) > 0){//ullage thrust off
+					owner->SetThrusterGroupLevel(owner->thg_aps, 0);
 				}
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
@@ -5149,9 +5149,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				//Ullage
 				if(LVDC_TB_ETime>=496.3 && S4B_REIGN == false)
-				{owner->SetThrusterGroupLevel(owner->thg_ver,1);} //Ullage thrust starts
+				{owner->SetThrusterGroupLevel(owner->thg_aps,1);} //Ullage thrust starts
 				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
-				{owner->SetThrusterGroupLevel(owner->thg_ver, 0);}//Ullage thrust ends
+				{owner->SetThrusterGroupLevel(owner->thg_aps, 0);}//Ullage thrust ends
 				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_EI_On == false)
 				{
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
