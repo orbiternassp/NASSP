@@ -1272,7 +1272,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		SPSEngine.Timestep(MissionTime, simdt);
 
 		// Better acceleration measurement stability
-		imu.Timestep(MissionTime);		
+		imu.Timestep(simdt);
 		ems.TimeStep(MissionTime, simdt);
 		CrewStatus.Timestep(simdt);
 

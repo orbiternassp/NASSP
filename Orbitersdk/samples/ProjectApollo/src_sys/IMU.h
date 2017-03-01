@@ -39,7 +39,7 @@ public:
 
 	void Init();
 	void ChannelOutput(int address, ChannelValue value);
-	void Timestep(double simt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt); 
 	void TurnOn();
 	void TurnOff();
@@ -143,7 +143,7 @@ protected:
 	GuardedToggleSwitch *PowerSwitch;
 
 	double pipaRate;	// PIPA pulse representation of speed change
-	double LastTime;	// in seconds
+	double LastSimDT;	// in seconds
 
 	// Allow the MFD to touch our privates
 	friend class ProjectApolloMFD;

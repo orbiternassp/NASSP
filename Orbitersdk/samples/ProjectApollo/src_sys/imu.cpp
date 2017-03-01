@@ -97,7 +97,7 @@ void IMU::Init()
 	PowerSwitch = 0;
 
 	DoZeroIMUCDUs();
-	LastTime = -1;
+	LastSimDT = -1;
 	
 	LogInit();
 }
@@ -299,12 +299,12 @@ void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
 	IMUHeater->WireTo(&DCHeaterPower);
 }
 
-void IMU::Timestep(double simt) 
+void IMU::Timestep(double simdt) 
 
 {
 	TRACESETUP("IMU::Timestep");
 
-	double deltaTime, pulses;
+	double pulses;
 	ChannelValue val12;
 
 	if (!Operate) {
@@ -351,19 +351,17 @@ void IMU::Timestep(double simt)
 
 		OurVessel->GetGlobalVel(LastGlobalVel);
 
-		LastTime = simt;
+		LastSimDT = simdt;
 		Initialized = true;
 	} 
 	else {
-		deltaTime = (simt - LastTime);
-
 		// Calculate accelerations
 		VECTOR3 w, vel;
 		OurVessel->GetWeightVector(w);
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(tinv, w) / OurVessel->GetMass();
 		OurVessel->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
+		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
@@ -416,19 +414,19 @@ void IMU::Timestep(double simt)
 			//sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f l %.10f", accel.x, accel.y, accel.z, length(accel));								
 
 			// pulse PIPAs
-			pulses = RemainingPIPA.X + (accel.x * deltaTime / pipaRate);
+			pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);
 			PulsePIPA(RegPIPAX, (int) pulses);
 			RemainingPIPA.X = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Y + (accel.y * deltaTime / pipaRate);
+			pulses = RemainingPIPA.Y + (accel.y * LastSimDT / pipaRate);
 			PulsePIPA(RegPIPAY, (int) pulses);
 			RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accel.z * deltaTime / pipaRate);
+			pulses = RemainingPIPA.Z + (accel.z * LastSimDT / pipaRate);
 			PulsePIPA(RegPIPAZ, (int) pulses);
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
-		LastTime = simt;
+		LastSimDT = simdt;
 	}	
 }
 
@@ -703,9 +701,9 @@ void IMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m33 = flt;
 		}
-		else if (!strnicmp (line, "LTM", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastTime = flt;
+		else if (!strnicmp (line, "LSDT", 4)) {
+			sscanf(line + 4, "%lf", &flt);
+			LastSimDT = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			IMUState state;
@@ -748,7 +746,7 @@ void IMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
 	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
 	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	papiWriteScenario_double(scn, "LTM", LastTime);
+	papiWriteScenario_double(scn, "LSTD", LastSimDT);
 
 	//
 	// Copy internal state to the structure.

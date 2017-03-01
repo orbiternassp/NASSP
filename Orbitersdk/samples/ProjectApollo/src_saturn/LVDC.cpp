@@ -592,11 +592,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					if (owner->MissionTime < -1200){
-						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 						break;
 					}else{
-						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
 			
@@ -949,7 +949,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
 		/*
@@ -1149,6 +1149,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"DotM: %f %f %f \r\n", DotM_act.x,DotM_act.y,DotM_act.z);
 			fprintf(lvlog,"Gravity velocity: %f %f %f \r\n", DotG_act.x,DotG_act.y,DotG_act.z);
 			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
+			fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
 			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",DotS.x,DotS.y,DotS.z);
 			fprintf(lvlog,"Sensed Acceleration: %f \r\n",Fm);	
 			fprintf(lvlog,"Gravity Acceleration: %f \r\n",CG);	
@@ -1864,7 +1865,7 @@ minorloop: //minor loop;
 			}
 		}
 		// Debug if we're launched
-		/*if(LVDC_Timebase > -1){
+		if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | eps %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1881,7 +1882,7 @@ minorloop: //minor loop;
 					AttRate.x * DEG, AttRate.y * DEG, AttRate.z * DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}*/
+		}
 	}
 
 	/*
@@ -2678,6 +2679,19 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		}
 	}
 	return;
+}
+
+double LVDC1B::SVCompare()
+{
+	VECTOR3 pos, newpos;
+	MATRIX3 mat;
+	double day;
+	modf(oapiGetSimMJD(), &day);
+	mat = OrbMech::Orbiter2PACSS13(40140.626701, 28.5217969*RAD, -80.5612465*RAD, Azimuth);
+	owner->GetRelativePos(owner->GetGravityRef(), pos);
+	newpos = mul(mat, pos);
+
+	return length(PosS - newpos);
 }
 
 // ***************************
@@ -5221,7 +5235,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				break;
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
 		AttRate = lvrg.GetRates();							// Get rates	

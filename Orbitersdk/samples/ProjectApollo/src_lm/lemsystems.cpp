@@ -1330,7 +1330,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	asa.TimeStep(simdt);									// Do work
 	aea.TimeStep(simdt);
 	deda.TimeStep(simdt);
-	imu.Timestep(MissionTime);								// Do work
+	imu.Timestep(simdt);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){

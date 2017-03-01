@@ -429,6 +429,7 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	double SVCompare();
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
