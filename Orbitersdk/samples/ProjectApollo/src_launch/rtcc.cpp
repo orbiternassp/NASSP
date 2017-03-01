@@ -4816,17 +4816,15 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 		OrbMech::impulsive(RA1, VA1, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
 
-		OrbMech::oneclickcoast(RA1, VA1, TIGMJD, 0.0, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
+		OrbMech::oneclickcoast(RA1, VA1, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
 		j = unit(crossp(V2_cor, R2_cor));
 		k = unit(-R2_cor);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
 
-		dVLVLH = mul(Q_Xx, DVX);
+		dVLVLH = mul(Q_Xx, Llambda);
 		TIG = TIGguess + t_slip;
-
-		OrbMech::oneclickcoast(RA1, VA1 + DVX, TIGMJD, 0.0, Rcut, Vcut, hEarth, hEarth);
 
 		P30TIG = TIG;
 		dV_LVLH = dVLVLH;
