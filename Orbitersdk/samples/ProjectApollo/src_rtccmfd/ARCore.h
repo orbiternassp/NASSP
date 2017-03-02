@@ -47,7 +47,6 @@ public:
 	void VecPointCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
-	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
 
 	void UplinkData();
 	void UplinkData2();

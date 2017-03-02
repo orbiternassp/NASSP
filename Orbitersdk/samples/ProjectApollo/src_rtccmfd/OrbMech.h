@@ -259,6 +259,7 @@ namespace OrbMech {
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
+	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

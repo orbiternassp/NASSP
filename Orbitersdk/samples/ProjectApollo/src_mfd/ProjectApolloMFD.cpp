@@ -43,6 +43,7 @@
 #include "LEM.h"
 #include "Crawler.h"
 #include "papi.h"
+#include "OrbMech.h"
 #include <stdio.h>
 
 #include "MFDResource.h"
@@ -117,6 +118,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	OBJHANDLE planet;
 	VESSEL *vessel;
 
+	VECTOR3 V42angles;
+
 	int killrot;
 } g_Data;
 
@@ -171,6 +174,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 		sprintf(debugWinsock,"DISCONNECTED");
 	}
 	g_Data.uplinkBufferSimt = 0;
+	g_Data.V42angles = _V(0, 0, 0);
 	g_Data.killrot = 0;
 }
 
@@ -634,7 +638,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "", "", "SLT"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
-	static char *labelLGC[1] = {"BCK"};
+	static char *labelLGC[5] = {"BCK", "", "", "", "V42"};
 
 	//If we are working with an unsupported vehicle, we don't want to return any button labels.
 	if (!saturn && !lem) {
@@ -662,7 +666,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		return (bt < 12 ? labelDEBUG[bt] : 0);
 	}
 	else if (screen == PROG_LGC) {
-		return (bt < 1 ? labelLGC[bt] : 0);
+		return (bt < 5 ? labelLGC[bt] : 0);
 	}
 	return (bt < 12 ? labelNone[bt] : 0);
 }
@@ -738,8 +742,12 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Freeze debug line",0,'F'},
 		{"Back",0,'B'}
 	};
-	static const MFDBUTTONMENU mnuLGC[1] = {
-		{"Back", 0, 'B'}
+	static const MFDBUTTONMENU mnuLGC[5] = {
+		{"Back", 0, 'B'},
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ "Calculate V42 Angles", 0, 'F' }
 	};
 	// We don't want to display a menu if we are in an unsupported vessel.
 	if (!saturn && !lem) {
@@ -779,7 +787,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	else if (screen == PROG_LGC)
 	{
 		if (menu) *menu = mnuLGC;
-		return 1;
+		return 5;
 	}
 	else {
 		if (menu) *menu = mnuNone;
@@ -1065,6 +1073,11 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
+		else if (key == OAPI_KEY_F)
+		{
+			CalculateV42Angles();
+			return true;
+		}
 	}
 	return false;
 }
@@ -1082,7 +1095,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, 0, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
-	static const DWORD btkeyLgc[1] = { OAPI_KEY_B };
+	static const DWORD btkeyLgc[5] = { OAPI_KEY_B, 0, 0, 0, OAPI_KEY_F };
 
 	if (screen == PROG_GNC) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyGNC[bt]);
@@ -1104,7 +1117,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	}
 	else if (screen == PROG_LGC)
 	{
-		if (bt < 1) return ConsumeKeyBuffered (btkeyLgc[bt]);
+		if (bt < 5) return ConsumeKeyBuffered (btkeyLgc[bt]);
 	}
 	else {		
 		if (bt < 12) return ConsumeKeyBuffered (btkeyNone[bt]);
@@ -1644,6 +1657,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 							sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x, LMattitude.y, LMattitude.z);
 							TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
+							//Docked IMU Fine Alignment
+							TextOut(hDC, width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
+
+							sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
+							TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+
 						}
 						saturn = NULL; // Clobber
 				}
@@ -1978,6 +1997,74 @@ bool ProjectApolloMFD::SetSecECSTestHeaterPower (char *rstr)
 		return true;
 	}
 	return false;
+}
+
+void ProjectApolloMFD::CalculateV42Angles()
+{
+
+	OBJHANDLE object;
+	VESSEL *vessel;
+
+	object = oapiGetVesselByName("Gumdrop"); // A9
+	if (object == NULL) {
+		object = oapiGetVesselByName("AS-504"); // A9
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Charlie Brown"); // A10
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("AS-505"); // A10
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Columbia"); // A11
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("AS-506"); // A11
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Yankee Clipper"); // A12
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Odyssey"); // A13
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Kitty Hawk"); // A14
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Endeavour"); // A15
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("Casper"); // A16
+	}
+	if (object == NULL) {
+		object = oapiGetVesselByName("America"); // A17
+	}
+	if (object != NULL) {
+		vessel = oapiGetVesselInterface(object);
+		// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
+		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+			saturn = (Saturn *)vessel;
+
+			if (saturn && lem)
+			{
+				VECTOR3 lmn20, csmn20;
+
+				csmn20.x = saturn->imu.Gimbal.X;
+				csmn20.y = saturn->imu.Gimbal.Y;
+				csmn20.z = saturn->imu.Gimbal.Z;
+
+				lmn20.x = lem->imu.Gimbal.X;
+				lmn20.y = lem->imu.Gimbal.Y;
+				lmn20.z = lem->imu.Gimbal.Z;
+
+				g_Data.V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+			}
+		}
+	}
+	saturn = NULL;
 }
 
 void ProjectApolloMFD::StoreStatus (void) const

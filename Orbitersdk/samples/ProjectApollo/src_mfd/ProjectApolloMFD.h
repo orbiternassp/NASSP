@@ -45,6 +45,7 @@ public:
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
+	void CalculateV42Angles(void);
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);

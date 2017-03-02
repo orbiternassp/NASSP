@@ -4043,6 +4043,17 @@ double quadratic(double *T, double *DV)
 	return x;
 }
 
+VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM noun 20
+{
+	MATRIX3 lmmat, csmmat, summat, expmat;
+
+	lmmat = OrbMech::CALCSMSC(lmn20);
+	csmmat = OrbMech::CALCSMSC(csmn20);
+	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
+	expmat = mul(summat, csmmat);
+	return OrbMech::CALCGTA(mul(OrbMech::transpose_matrix(expmat), lmmat));
+}
+
 }
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
