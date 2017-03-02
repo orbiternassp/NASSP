@@ -1891,6 +1891,7 @@ protected:
 	friend class CrossPointer;
 
 	friend class ApolloRTCCMFD;
+	friend class ProjectApolloMFD;
 };
 
 extern void LEMLoadMeshes();
