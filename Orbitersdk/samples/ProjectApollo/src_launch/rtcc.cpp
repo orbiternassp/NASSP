@@ -24,23 +24,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 // To force orbitersdk.h to use <fstream> in any compiler version
 //#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "soundlib.h"
-#include "resource.h"
-#include "nasspdefs.h"
-#include "nasspsound.h"
-#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "papi.h"
 #include "saturn.h"
-#include "ioChannels.h"
-#include "tracer.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "rtcc.h"
@@ -3183,8 +3173,8 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	if (opt->engopt == 0)
 	{
 		double x1 = LMmass / (sv1.mass + LMmass)*6.2;
-		ManPADPTrim = atan2(SPS_PITCH_OFFSET * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
-		ManPADYTrim = atan2(SPS_YAW_OFFSET * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
+		ManPADPTrim = atan2(-2.15 * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
+		ManPADYTrim = atan2(0.95 * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
 
 		p_T = -2.15*RAD + ManPADPTrim;
 		y_T = 0.95*RAD + ManPADYTrim;
@@ -3360,8 +3350,8 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	if (opt->engopt == 0)
 	{
 		double x1 = LMmass / (sv1.mass + LMmass)*6.2;
-		ManPADPTrim = atan2(SPS_PITCH_OFFSET * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
-		ManPADYTrim = atan2(SPS_YAW_OFFSET * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
+		ManPADPTrim = atan2(-2.15 * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
+		ManPADYTrim = atan2(0.95 * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
 
 		p_T = -2.15*RAD + ManPADPTrim;
 		y_T = 0.95*RAD + ManPADYTrim;
@@ -3548,7 +3538,7 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 
 void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 {
-	double mu, SVMJD, GET, EMSAlt, theta_T, m1,v_e, EIAlt, lat, lng;
+	double mu, SVMJD, GET, EMSAlt, theta_T, m1,v_e, EIAlt, lat, lng, KTETA;
 	double dt;//from SV time to deorbit maneuver
 	double t_go; //from deorbit TIG to shutdown
 	double dt2; //from shutdown to EI
@@ -3575,6 +3565,8 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 
 	EMSAlt = 284643.0*0.3048;
 	EIAlt = 400000.0*0.3048;
+
+	KTETA = 1000.0;
 
 	if (opt->preburn)
 		{
@@ -3737,7 +3729,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	VECTOR3 R_A, V_A, R0B, V0B, R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
 	MATRIX3 M_R, Rot2;
 	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO;
-	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit;
+	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit, KTETA;
 	OBJHANDLE gravref, hEarth;
 	SV sv0;		// "Now"
 	SV sv1;		// "Now" or just after the maneuver
@@ -3806,6 +3798,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
 	URT0 = R_LS;
 	WIE = 72.9211505e-6;
+	KTETA = 1000.0;
 	UUZ = _V(0, 0, 1);
 	RTE = crossp(UUZ, URT0);
 	UTR = crossp(RTE, UUZ);
@@ -5863,9 +5856,9 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 		N = unit(crossp(PosS, DotS));
 		PosP = crossp(N, unit(PosS));
 		Sbar = unit(PosS)*cos(lvdc.beta) + PosP*sin(lvdc.beta);
-		DotP = crossp(N, DotS / Mag(PosS));
+		DotP = crossp(N, DotS / length(PosS));
 
-		Sbardot = DotS / Mag(PosS)*cos(lvdc.beta) + DotP*sin(lvdc.beta);
+		Sbardot = DotS / length(PosS)*cos(lvdc.beta) + DotP*sin(lvdc.beta);
 		dt += 1.0;
 
 	} while (!((dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(lvdc.alpha_TS))));
@@ -5873,11 +5866,11 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	//Advance to Ignition State
 	OrbMech::rv_from_r0v0(PosS, DotS, lvdc.T_RG, PosS, DotS, mu_E);
 
-	cos_psiT = Sbar*T_P;
+	cos_psiT = dotp(Sbar,T_P);
 	sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
 	Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
 	Cbar_1 = crossp(Sbar_1, Sbar);
-	Inclination = acos(_V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)*Cbar_1);
+	Inclination = acos(dotp(_V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23),Cbar_1));
 	X_1 = dotp(_V(lvdc.MX_A.m31, lvdc.MX_A.m32, lvdc.MX_A.m33), crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)));
 	X_2 = dotp(_V(lvdc.MX_A.m11, lvdc.MX_A.m12, lvdc.MX_A.m13), crossp(Cbar_1, _V(lvdc.MX_A.m21, lvdc.MX_A.m22, lvdc.MX_A.m23)));
 	theta_N = atan2(X_1, X_2);

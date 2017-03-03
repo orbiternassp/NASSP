@@ -16,25 +16,14 @@
 #define __ApolloRTCCMFD_H
 
 #include "ARCore.h"
-#include "math.h"
-#include "windows.h"
-#include "nasspsound.h"
-#include "OrbiterSoundSDK40.h"
 #include "soundlib.h"
-#include "tracer.h"
-#include "nasspdefs.h"
-#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
-#include "Crawler.h"
-#include <stdio.h>
-
 
 class ApolloRTCCMFD: public MFD2 {
 public:
