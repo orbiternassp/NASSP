@@ -109,13 +109,13 @@ ARCore::ARCore(VESSEL* v)
 		vesseltype = 2;
 		AGCEpoch = 40586.767239;
 	}
-	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
+	else if (strcmp(v->GetName(), "Yankee Clipper") == 0)
 	{
 		mission = 12;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
 	}
-	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
+	else if (strcmp(v->GetName(), "Kitty Hawk") == 0)
 	{
 		mission = 14;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 75.558*RAD);

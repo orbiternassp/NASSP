@@ -4647,7 +4647,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 		SV1.MJD = SVMJD;
 		SV1.R = R0B;
 		SV1.V = V0B;
-		SV1.mass = mass;
+		SV1.mass = CSMmass;
 		orbopt.RV_MCC = SV1;
 
 		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
