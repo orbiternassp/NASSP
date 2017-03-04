@@ -188,7 +188,7 @@ struct REFSMMATOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	double P30TIG2; //Time of Ignition 2nd maneuver
 	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landign site REFSMMAT
@@ -434,6 +434,8 @@ public:
 	void GetThrusterParameters(VESSEL *vessel, double &f_T, double &isp);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
+	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
+	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -466,8 +468,6 @@ private:
 	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
 	SV coast(SV sv0, double dt);
 	double PericynthionTime(VESSEL* vessel);
 

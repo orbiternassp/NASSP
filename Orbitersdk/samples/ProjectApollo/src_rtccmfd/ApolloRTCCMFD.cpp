@@ -657,29 +657,44 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->REFSMMATTime);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->REFSMMATopt == 7)
+		else if (G->REFSMMATopt == 7 || G->REFSMMATopt == 8)
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "LOI-2", 5);
+			if (G->REFSMMATopt == 7)
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "LOI-2", 5);
+			}
+			else
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "LS during TLC", 13);
 
-			skp->Text(5 * W / 8, 6 * H / 21, "MCC", 3);
+				GET_Display(Buffer, G->REFSMMATTime);
+				skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%f°", G->LSLat*DEG);
+				skp->Text((int)(5.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%f°", G->LSLng*DEG);
+				skp->Text((int)(5.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
+			}
+
+			skp->Text(1 * W / 8, 8 * H / 21, "MCC", 3);
 			GET_Display(Buffer, G->TLCC_TIG);
-			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVX", G->TLCC_dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVY", G->TLCC_dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVZ", G->TLCC_dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(5 * W / 8, 13 * H / 21, "LOI-1", 5);
+			skp->Text(1 * W / 8, 14 * H / 21, "LOI-1", 5);
 			GET_Display(Buffer, G->LOI_TIG);
-			skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVX", G->LOI_dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVY", G->LOI_dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		}
 
 		for (int i = 0; i < 20; i++)
@@ -2287,7 +2302,7 @@ char* ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 
 void ApolloRTCCMFD::CycleREFSMMATopt()
 {
-	if (G->REFSMMATopt < 7)
+	if (G->REFSMMATopt < 8)
 	{
 		G->REFSMMATopt++;
 	}
@@ -2779,7 +2794,7 @@ void ApolloRTCCMFD::set_sextantstartime(double time)
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
-	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 5 || G->REFSMMATopt == 6)
+	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 5 || G->REFSMMATopt == 6 || G->REFSMMATopt == 8)
 	{
 		bool REFSMMATGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
@@ -2909,7 +2924,7 @@ void ApolloRTCCMFD::set_gravref(OBJHANDLE body)
 
 void ApolloRTCCMFD::menuLSLat()
 {
-	if (G->REFSMMATopt == 5)
+	if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
 		bool LSLatInput(void* id, char *str, void *data);
 		oapiOpenInputBox("Latitude in degrees:", LSLatInput, 0, 20, (void*)this);
@@ -2933,7 +2948,7 @@ void ApolloRTCCMFD::set_LSLat(double lat)
 
 void ApolloRTCCMFD::menuLSLng()
 {
-	if (G->REFSMMATopt == 5)
+	if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
 		bool LSLngInput(void* id, char *str, void *data);
 		oapiOpenInputBox("Longitude in degrees:", LSLngInput, 0, 20, (void*)this);

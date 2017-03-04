@@ -254,7 +254,6 @@ ARCore::ARCore(VESSEL* v)
 	lmmanpad.SPA = 0.0;
 	lmmanpad.SXP = 0.0;
 	sprintf(lmmanpad.remarks, "");
-	TimeTag = 0.0;
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
 	ManPADSPS = 0;
@@ -989,17 +988,6 @@ void ARCore::EntryUpdateUplink(void)
 	UplinkData(); // Go for uplink
 }
 
-void ARCore::TimeTagUplink(void)
-{
-	g_Data.emem[0] = 05;
-	g_Data.emem[1] = 1045;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(TimeTag*100, 28, 1);
-	g_Data.emem[3] = 1046;
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(TimeTag*100, 28, 0);
-
-	//g_Data.uplinkDataReady = 2;
-	UplinkData2(); // Go for uplink
-}
 void ARCore::UplinkData()
 {
 	if (g_Data.connStatus == 0) {
@@ -1393,35 +1381,13 @@ int ARCore::subThread()
 		}
 		else if (LOImaneuver == 1)
 		{
-			OBJHANDLE hMoon;
-			VECTOR3 R_A, V_A, R0B, V0B, UX, UY, UZ, DV, V2;
-			double SVMJD;
-			//MATRIX3 Rot;
-			SV RV1;
+			SV RV1, RV2;
 
-			hMoon = oapiGetObjectByName("Moon");
+			RV1 = rtcc->StateVectorCalc(vessel);
+			RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
 
-			vessel->GetRelativePos(gravref, R_A);
-			vessel->GetRelativeVel(gravref, V_A);
-			SVMJD = oapiGetSimMJD();
-			R0B = _V(R_A.x, R_A.z, R_A.y);
-			V0B = _V(V_A.x, V_A.z, V_A.y);
-
-			OrbMech::oneclickcoast(R0B, V0B, SVMJD, TLCC_TIG - (SVMJD - GETbase)*24.0*3600.0, RV1.R, RV1.V, gravref, hMoon);
-			RV1.gravref = hMoon;
-			RV1.MJD = GETbase + TLCC_TIG / 24.0 / 3600.0;
-			RV1.mass = vessel->GetMass();
 			opt.useSV = true;
-
-			UY = unit(crossp(RV1.V, RV1.R));
-			UZ = unit(-RV1.R);
-			UX = crossp(UY, UZ);
-
-			DV = UX*TLCC_dV_LVLH.x + UY*TLCC_dV_LVLH.y + UZ*TLCC_dV_LVLH.z;
-			V2 = RV1.V + DV;
-
-			opt.RV_MCC = RV1;
-			opt.RV_MCC.V = V2;
+			opt.RV_MCC = RV2;
 
 			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
 		}

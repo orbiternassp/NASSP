@@ -902,7 +902,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 
 		refsopt.GETbase = getGETBase();
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 3;
 		refsopt.vessel = calcParams.src;
 
@@ -1243,7 +1242,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.GETbase = getGETBase();
 		refsopt.dV_LVLH = res.dV_LVLH;
 		refsopt.P30TIG = res.P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 1;
 
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
@@ -1394,7 +1392,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			REFSMMATOpt refsopt;
 
 			refsopt.GETbase = GETBase;
-			refsopt.REFSMMATdirect = true;
 			refsopt.REFSMMATopt = 2;
 			refsopt.REFSMMATTime = 23 * 60 * 60 + 24 * 60 + 8;
 			refsopt.vessel = calcParams.src;
@@ -1715,7 +1712,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
 		refsopt.P30TIG = P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
 
@@ -1887,7 +1883,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = OrbMech::HHMMSSToSS(120, 43, 0);
 
 		refsopt.GETbase = GETbase;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 2;
 		refsopt.REFSMMATTime = OrbMech::HHMMSSToSS(120, 43, 0);
 		refsopt.vessel = calcParams.src;
@@ -2047,7 +2042,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
 		refsopt.P30TIG = P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
 
@@ -2224,7 +2218,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
 		refsopt.P30TIG = P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
 
@@ -2370,7 +2363,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
 		refsopt.P30TIG = P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
 
@@ -2481,7 +2473,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.GETbase = getGETBase();
 		refsopt.dV_LVLH = res.dV_LVLH;
 		refsopt.P30TIG = res.P30TIG;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 1;
 
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
@@ -2519,7 +2510,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.GETbase = getGETBase();
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.P30TIG = TimeofIgnition;
-		refsopt.REFSMMATdirect = true;
 		refsopt.REFSMMATopt = 1;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
@@ -4094,7 +4084,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	sv0.R = R_A;
 	sv0.V = V_A;
 
-	if (opt->REFSMMATopt == 7)
+	if (opt->REFSMMATopt == 7 || opt->REFSMMATopt == 8)
 	{
 		SV sv1;
 
@@ -4115,7 +4105,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		//For now a default LC-39A, 72° launch
 		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72*RAD);
 	}
-	else if (opt->REFSMMATopt == 5)
+	else if (opt->REFSMMATopt == 5 || opt->REFSMMATopt == 8)
 	{
 		double LSMJD;
 		VECTOR3 R_P, R_LS, H_C;
