@@ -428,6 +428,22 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 			//g_Data.progState = PROGSTATE_TLI_ERROR;
 			dV_LVLH = g_Data.burnData._dV_LVLH;
 			P30TIG = (g_Data.burnData.IgnMJD - GETbase)*24.0*3600.0;
+
+			double *EarthPos;
+			EarthPos = new double[12];
+			VECTOR3 EarthVec, EarthVecVel;
+			CELBODY *cEarth;
+
+			cEarth = oapiGetCelbodyInterface(gravref);
+			cEarth->clbkEphemeris(g_Data.burnData.IgnMJD + g_Data.burnData.BT / 24.0 / 3600.0, EPHEM_BARYPOS | EPHEM_BARYVEL, EarthPos);
+
+			EarthVec = _V(EarthPos[0], EarthPos[1], EarthPos[2]);
+			EarthVecVel = _V(EarthPos[3], EarthPos[4], EarthPos[5]);
+
+			R_TLI = g_Data.burnData._RCut - EarthVec;
+			R_TLI = _V(R_TLI.x, R_TLI.z, R_TLI.y);
+			V_TLI = g_Data.burnData._VCut - EarthVecVel;
+			V_TLI = _V(V_TLI.x, V_TLI.z, V_TLI.y);
 		}
 		else {
 			//g_Data.progState = PROGSTATE_TLI_WAITING;
