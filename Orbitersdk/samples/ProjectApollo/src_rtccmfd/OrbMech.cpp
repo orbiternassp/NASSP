@@ -672,7 +672,7 @@ OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
 	E = crossp(V, HH) / mu - unit(R);
 	e = length(E);
 	K = _V(0.0, 0.0, 1.0);
-	N = crossp(HH, K);
+	N = crossp(HH, K);	//Nonstandard, vector pointing to DESCENDING node
 	inc = acos(HH.z / length(HH));
 	alpha_D = acos(dotp(N, E) / e / length(N));
 
@@ -683,7 +683,7 @@ OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
 	f = acos(dotp(E, R) / length(R) / length(E));
 	theta_N = acos(N.x / length(N));
 
-	if (N.y > 0)
+	if (N.y < 0)
 	{
 		theta_N = PI2 - theta_N;
 	}

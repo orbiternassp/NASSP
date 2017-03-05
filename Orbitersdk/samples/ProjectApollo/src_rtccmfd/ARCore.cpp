@@ -350,6 +350,12 @@ ARCore::ARCore(VESSEL* v)
 	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_t_TPI = Skylab_dt_TPM = 0.0;
 	Skylab_NPCOption = Skylab_PCManeuver = false;
 
+	PCAlignGET = 0.0;
+	PClanded = true;
+	PC_dV_LVLH = _V(0, 0, 0);
+	PC_TIG = 0;
+	PCEarliestGET = 0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -513,6 +519,11 @@ void ARCore::DOICalc()
 void ARCore::SkylabCalc()
 {
 	startSubthread(12);
+}
+
+void ARCore::PCCalc()
+{
+	startSubthread(13);
 }
 
 void ARCore::EntryUpdateCalc()
@@ -1733,6 +1744,36 @@ int ARCore::subThread()
 				Skylab_t_NSR = res.t_NSR;
 			}
 		}
+
+		Result = 0;
+	}
+	break;
+	case 13:	//PC Targeting
+	{
+		PCMan opt;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
+		opt.EarliestGET = PCEarliestGET;
+		opt.GETbase = GETbase;
+		opt.lat = LSLat;
+		opt.lng = LSLng;
+		opt.alt = LSAlt;
+		opt.vessel = vessel;
+		opt.target = target;
+		opt.landed = PClanded;
+		opt.t_A = PCAlignGET;
+
+		rtcc->PlaneChangeTargeting(&opt, PC_dV_LVLH, PC_TIG);
+
+		P30TIG = PC_TIG;
+		dV_LVLH = PC_dV_LVLH;
 
 		Result = 0;
 	}

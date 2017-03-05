@@ -217,6 +217,12 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
 	papiWriteScenario_double(scn, "SKYLAB_DH2", G->SkylabDH2);
 
+	papiWriteScenario_bool(scn, "PCLANDED", G->PClanded);
+	papiWriteScenario_double(scn, "PCALIGNGET", G->PCAlignGET);
+	papiWriteScenario_double(scn, "PCEARLIESTGET", G->PCEarliestGET);
+	papiWriteScenario_double(scn, "PCTIG", G->PC_TIG);
+	papiWriteScenario_vec(scn, "PC_DV_LVLH", G->PC_dV_LVLH);
+
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -319,6 +325,12 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
 		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
 		papiReadScenario_double(line, "SKYLAB_DH2", G->SkylabDH2);
+
+		papiReadScenario_bool(line, "PCLANDED", G->PClanded);
+		papiReadScenario_double(line, "PCALIGNGET", G->PCAlignGET);
+		papiReadScenario_double(line, "PCEARLIESTGET", G->PCEarliestGET);
+		papiReadScenario_double(line, "PCTIG", G->PC_TIG);
+		papiReadScenario_vec(line, "PC_DV_LVLH", G->PC_dV_LVLH);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -1953,6 +1965,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 12 * H / 14, "Previous Page", 13);
 		skp->Text(1 * W / 8, 2 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 4 * H / 14, "DOI", 3);
+		skp->Text(1 * W / 8, 6 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
 		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
 	}
@@ -2220,6 +2233,59 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 		}
 	}
+	else if (screen == 18)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Plane Change", 12);
+
+		GET_Display(Buffer, G->PCEarliestGET);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->PCAlignGET);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->PClanded)
+		{
+			skp->Text(1 * W / 8, 6 * H / 14, "LM on surface", 13);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 6 * H / 14, "Coordinates", 11);
+		}
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (!G->PClanded)
+		{
+			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LSLng*DEG);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		GET_Display(Buffer, G->PC_TIG);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 17 * H / 21, "DVX", 3);
+		skp->Text(5 * W / 8, 18 * H / 21, "DVY", 3);
+		skp->Text(5 * W / 8, 19 * H / 21, "DVZ", 3);
+
+		sprintf(Buffer, "%+07.1f", G->PC_dV_LVLH.x / 0.3048);
+		skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->PC_dV_LVLH.y / 0.3048);
+		skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->PC_dV_LVLH.z / 0.3048);
+		skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f", length(G->PC_dV_LVLH) / 0.3048);
+		skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -2256,10 +2322,11 @@ void ApolloRTCCMFD::menuP30Upload()
 
 			testves = (SaturnV*)G->g_Data.progVessel;
 
-			coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
+			coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
 
 			testves->lvdc->TU = true;
 			testves->lvdc->TU10 = false;
+			testves->lvdc->GATE3 = false;
 
 			testves->lvdc->T_RP = coe.T_RP;
 			testves->lvdc->C_3 = coe.C3;
@@ -2429,6 +2496,12 @@ void ApolloRTCCMFD::menuSetDOIPage()
 void ApolloRTCCMFD::menuSetSkylabPage()
 {
 	screen = 17;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetPCPage()
+{
+	screen = 18;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3465,7 +3538,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 				opt.REFSMMAT = G->REFSMMAT;
 				opt.TIG = G->P30TIG;
 				opt.vessel = G->vessel;
-				opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+				opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
 				opt.TLI = T_TLI;
 				opt.R_TLI = G->R_TLI;
 				opt.V_TLI = G->V_TLI;
@@ -4533,6 +4606,65 @@ bool SkylabELInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_SkylabEL(double E_L)
 {
 	this->G->Skylab_E_L = E_L*RAD;
+}
+
+void ApolloRTCCMFD::menuPCCalc()
+{
+	if (G->target != NULL || !G->PClanded)
+	{
+		G->PCCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuSetPCTIGguess()
+{
+	bool PCGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", PCGETInput, 0, 20, (void*)this);
+}
+
+bool PCGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_PCTIGguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_PCTIGguess(double time)
+{
+	G->PCEarliestGET = time;
+}
+
+void ApolloRTCCMFD::menuSetPCAlignGET()
+{
+	bool PCAlignGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the alignment time (Format: hhh:mm:ss)", PCAlignGETInput, 0, 20, (void*)this);
+}
+
+bool PCAlignGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_PCAlignGET(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_PCAlignGET(double time)
+{
+	G->PCAlignGET = time;
+}
+
+void ApolloRTCCMFD::menuSetPCLanded()
+{
+	G->PClanded = !G->PClanded;
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

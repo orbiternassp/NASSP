@@ -215,6 +215,13 @@ public:
 	void menuCyclePlaneChange();
 	void menuCyclePCManeuver();
 	void set_SkylabDTTPM(double dt);
+	void menuSetPCPage();
+	void menuPCCalc();
+	void menuSetPCTIGguess();
+	void set_PCTIGguess(double time);
+	void menuSetPCAlignGET();
+	void set_PCAlignGET(double time);
+	void menuSetPCLanded();
 
 protected:
 	oapi::Font *font;

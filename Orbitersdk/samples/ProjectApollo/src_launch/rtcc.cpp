@@ -4555,6 +4555,84 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t
 	P30TIG = t_DOI + t_slip;
 }
 
+void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	double SVMJD, cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass, t_slip;
+	MATRIX3 Rot, Q_Xx;
+	VECTOR3 R_A, V_A, RLS, n1, u, n2, V_PC2, DV, i, j, k, loc, Llambda;
+	SV sv0, sv1, sv_PC, sv_cor;
+
+	if (opt->useSV)
+	{
+		sv0 = opt->RV_MCC;
+	}
+	else
+	{
+		sv0.gravref = AGCGravityRef(opt->vessel);
+		opt->vessel->GetRelativePos(sv0.gravref, R_A);
+		opt->vessel->GetRelativeVel(sv0.gravref, V_A);
+		SVMJD = oapiGetSimMJD();
+		sv0.R = _V(R_A.x, R_A.z, R_A.y);
+		sv0.V = _V(V_A.x, V_A.z, V_A.y);
+		sv0.mass = opt->vessel->GetMass();
+	}
+
+	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+	MJD_A = opt->GETbase + opt->t_A / 24.0 / 3600.0;
+	Rot = OrbMech::GetRotationMatrix(sv0.gravref, MJD_A);
+	mu = GGRAV*oapiGetMass(sv0.gravref);
+
+	if (opt->csmlmdocked)
+	{
+		LMmass = GetDockedVesselMass(opt->vessel);
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+
+	mass = LMmass + sv0.mass;
+
+	if (opt->landed)
+	{
+		opt->target->GetEquPos(lng, lat, rad);
+		loc = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*rad;
+	}
+	else
+	{
+		loc = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)))*oapiGetSize(sv0.gravref);
+	}
+
+	RLS = mul(Rot, loc);
+	RLS = _V(RLS.x, RLS.z, RLS.y);
+	sv1 = coast(sv0, opt->EarliestGET - GET);
+
+	n1 = unit(crossp(sv1.R, sv1.V));
+	u = unit(crossp(-RLS, n1));
+	cosA = dotp(u, unit(sv1.R));
+	sinA = sqrt(1.0 - cosA*cosA);
+	A = atan2(sinA, cosA);
+	dt = OrbMech::time_theta(sv1.R, sv1.V, A, mu);
+	sv_PC = coast(sv1, dt);
+	n2 = unit(crossp(sv_PC.R, -RLS));
+	V_PC2 = unit(crossp(n2, sv_PC.R))*length(sv_PC.V);
+
+	DV = V_PC2 - sv_PC.V;
+
+	FiniteBurntimeCompensation(opt->vessel, sv_PC, LMmass, DV, Llambda, t_slip);
+
+	sv_cor = coast(sv_PC, t_slip);
+
+	j = unit(crossp(sv_cor.V, sv_cor.R));
+	k = unit(-sv_cor.R);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+	dV_LVLH = mul(Q_Xx, Llambda);
+
+	P30TIG = opt->EarliestGET + dt + t_slip;
+}
+
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
 {
 	double SVMJD, GET, mass, CSMmass, LMmass;
@@ -4966,7 +5044,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 		FiniteBurntimeCompensation(opt->vessel, sv_tig, LMmass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 
-		OrbMech::rv_from_r0v0(R2, V2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+		OrbMech::oneclickcoast(R2, V2, SPSMJD, t_slip, R2_cor, V2_cor, opt->gravref, opt->gravref); //Calculate the state vector at the corrected ignition time
 
 		j = unit(crossp(V2_cor, R2_cor));
 		k = unit(-R2_cor);
@@ -5772,8 +5850,14 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 	return false;
 }
 
-SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
+SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG)
 {
+	//Inputs:
+	//
+	//R_TLI: TLI cutoff position vector, right-handed, ecliptic coordinate system
+	//V_TLI: TLI cutoff velocity vector, right-handed, ecliptic coordinate system
+
+	MATRIX3 Rot;
 	VECTOR3 R_TLI2, V_TLI2;
 	double T_RP, tb5start;
 	SevenParameterUpdate param;
@@ -5782,8 +5866,13 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 	tb5start = TB5 - 17.0;
 	T_RP = P30TIG - tb5start - T_RG;
 
-	R_TLI2 = mul(OrbMech::J2000EclToBRCS(40221.525), R_TLI);	//Temporary fix
-	V_TLI2 = mul(OrbMech::J2000EclToBRCS(40221.525), V_TLI);
+	Rot = OrbMech::GetRotationMatrix(oapiGetObjectByName("Earth"), GETbase - 17.0 / 24.0 / 3600.0);
+
+	R_TLI2 = tmul(Rot, _V(R_TLI.x, R_TLI.z, R_TLI.y));
+	V_TLI2 = tmul(Rot, _V(V_TLI.x, V_TLI.z, V_TLI.y));
+
+	R_TLI2 = _V(R_TLI2.x, R_TLI2.z, R_TLI2.y);
+	V_TLI2 = _V(V_TLI2.x, V_TLI2.z, V_TLI2.y);
 
 	coe = OrbMech::coe_from_PACSS4(R_TLI2, V_TLI2, mu);
 

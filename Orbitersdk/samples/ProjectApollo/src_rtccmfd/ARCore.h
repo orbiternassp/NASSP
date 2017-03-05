@@ -37,6 +37,7 @@ public:
 	void REFSMMATCalc();
 	void SkylabCalc();
 	void DOICalc();
+	void PCCalc();
 	void LOICalc();
 	void LmkCalc();
 	void TEICalc();
@@ -217,6 +218,13 @@ public:
 	VECTOR3 Skylab_dV_NSR, Skylab_dV_NCC;//, Skylab_dV_NPC;
 	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
 	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_t_TPI, Skylab_dt_TPM; //Skylab_t_NPC
+
+	//PC Page
+	double PCAlignGET;		//time when the orbit is aligned with the landing site
+	bool PClanded;			//0 = use lat/lng/alt to calculate landing site, 1 = target vessel on the surface
+	VECTOR3 PC_dV_LVLH;
+	double PCEarliestGET;	//Initial guess for the PC TIG
+	double PC_TIG;			//Corrected PC TIG
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
