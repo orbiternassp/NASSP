@@ -4046,7 +4046,7 @@ double RTCC::getGETBase()
 
 MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 {
-	double SVMJD, dt;
+	double SVMJD, dt, LMmass;
 	VECTOR3 R_A, V_A, UX, UY, UZ, X_B;
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T, F, v_e;
@@ -4078,6 +4078,15 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(th_main, 0));
 	v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(th_main, 0));
 
+	if (opt->csmlmdocked)
+	{
+		LMmass = GetDockedVesselMass(opt->vessel);
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+
 	sv0.gravref = gravref;
 	sv0.mass = opt->vessel->GetMass();
 	sv0.MJD = SVMJD;
@@ -4088,12 +4097,12 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	{
 		SV sv1;
 
-		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG2, opt->dV_LVLH2, sv1, 0);
+		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, LMmass);
+		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG2, opt->dV_LVLH2, sv1, LMmass);
 	}
 	else if (opt->REFSMMATdirect == false && length(opt->dV_LVLH) != 0.0 )	//Check against DV = 0, some calculations could break down
 	{
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
+		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, LMmass);
 	}
 	else
 	{
@@ -4164,7 +4173,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		if (opt->REFSMMATopt == 2)
 		{
 			dt = opt->REFSMMATTime - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-			OrbMech::oneclickcoast(sv2.R, sv2.V, sv2.MJD, dt, sv4.R, sv4.V, sv2.gravref, sv4.gravref);
+			sv4 = coast(sv2, dt);
 		}
 		else if (opt->REFSMMATopt == 7)
 		{
@@ -4183,7 +4192,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		else if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
 			dt = opt->P30TIG - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-			OrbMech::oneclickcoast(sv2.R, sv2.V, sv2.MJD, dt, sv4.R, sv4.V, gravref, sv4.gravref);
+			sv4 = coast(sv2, dt);
 		}
 		else
 		{
@@ -4199,12 +4208,12 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
 			MATRIX3 M, M_R, M_RTM;
-			double p_T, y_T;
+			double p_T, y_T, headsswitch;
 
 			DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 			if (length(DV_P) != 0.0)
 			{
-				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(sv4.R), 2.0) / 92100.0;
+				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*(sv4.mass + LMmass) / OrbMech::power(length(sv4.R), 2.0) / 92100.0;
 				DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 				V_G = DV_C + UY*opt->dV_LVLH.y;
 			}
@@ -4214,18 +4223,27 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			}
 			if (opt->REFSMMATopt == 0)
 			{
+				if (opt->HeadsUp)
+				{
+					headsswitch = 1.0;
+				}
+				else
+				{
+					headsswitch = -1.0;
+				}
+
 				p_T = -2.15*RAD;
 				X_B = unit(V_G);// tmul(REFSMMAT, dV_LVLH));
 			}
 			else
 			{
+				headsswitch = 1.0;
 				p_T = 2.15*RAD;
 				X_B = -unit(V_G);// tmul(REFSMMAT, dV_LVLH));
 			}
 			UX = X_B;
-			UY = unit(crossp(X_B, sv4.R));
-			UZ = unit(crossp(X_B, crossp(X_B, sv4.R)));
-
+			UY = unit(crossp(X_B, sv4.R*headsswitch));
+			UZ = unit(crossp(X_B, crossp(X_B, sv4.R*headsswitch)));
 
 			y_T = 0.95*RAD;
 
@@ -4698,12 +4716,31 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, outplanet);
 
-		j = unit(crossp(VA1, RA1));
-		k = unit(-RA1);
+		VECTOR3 Llambda, R2_cor, V2_cor;
+		double t_slip;
+		SV sv_tig, sv_out;
+
+		sv_tig.gravref = hMoon;
+		sv_tig.mass = CSMmass;
+		sv_tig.MJD = opt->GETbase + opt->MCCGET / 24.0 / 3600.0;
+		sv_tig.R = RA1;
+		sv_tig.V = VA1;
+
+		FiniteBurntimeCompensation(opt->vessel, sv_tig, LMmass, VA1_apo - VA1, Llambda, t_slip, sv_out); //Calculate the impulsive equivalent of the maneuver
+
+		Rcut = sv_out.R;
+		Vcut = sv_out.V;
+
+		OrbMech::oneclickcoast(RA1, VA1, sv_tig.MJD, t_slip, R2_cor, V2_cor, outplanet, outplanet);//Calculate the state vector at the corrected ignition time
+
+		j = unit(crossp(V2_cor, R2_cor));
+		k = unit(-R2_cor);
 		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);
-		P30TIG = opt->MCCGET;
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+		dV_LVLH = mul(Q_Xx, Llambda);
+
+		P30TIG = opt->MCCGET + t_slip;
 	}
 	else if (opt->man == 1 || opt->man == 2)
 	{
@@ -5625,6 +5662,7 @@ SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 
 	OrbMech::poweredflight(sv2.R, sv2.V, sv2.MJD, sv2.gravref, F, isp, sv2.mass + attachedMass, V_G, sv3.R, sv3.V, sv3.mass, t_go);
 	sv3.gravref = sv2.gravref;
 	sv3.MJD = sv2.MJD + t_go / 24.0 / 3600.0;
+	sv3.mass -= attachedMass;
 
 	return sv3;
 }

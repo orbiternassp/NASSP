@@ -165,6 +165,8 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 	REFSMMATdirect = true;
+	REFSMMATHeadsUp = true;
+
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = (oapiGetSimMJD() - GETbase) * 24 * 60 * 60;
 	apo_desnm = 0;
@@ -332,7 +334,7 @@ ARCore::ARCore(VESSEL* v)
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
 
-	if (mission = 11)
+	if (mission == 11)
 	{
 		LSLat = 0.71388888*RAD;
 		LSLng = 23.7077777*RAD;
@@ -1314,6 +1316,16 @@ int ARCore::subThread()
 		opt.REFSMMATopt = REFSMMATopt;
 		opt.REFSMMATTime = REFSMMATTime;
 		opt.vessel = vessel;
+		opt.HeadsUp = REFSMMATHeadsUp;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
 
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
@@ -1334,6 +1346,8 @@ int ARCore::subThread()
 		}
 		else
 		{
+			REFSMMAToct[1] = REFSMMAT_Address();
+
 			if (vesseltype < 2)
 			{
 				REFSMMAToct[1] = 1735;
@@ -1795,4 +1809,24 @@ void ARCore::StopIMFDRequest() {
 
 	g_Data.isRequesting = false;
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
+}
+
+int ARCore::REFSMMAT_Address()
+{
+	int addr;
+
+	if (vesseltype < 2)
+	{
+		addr = 01735;
+	}
+	else
+	{
+		addr = 01733;
+	}
+	
+	if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+	{
+		addr -= 02;
+	}
+	return addr;
 }
