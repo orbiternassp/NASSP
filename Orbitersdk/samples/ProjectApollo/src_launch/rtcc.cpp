@@ -4698,12 +4698,31 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, outplanet);
 
-		j = unit(crossp(VA1, RA1));
-		k = unit(-RA1);
+		VECTOR3 Llambda, R2_cor, V2_cor;
+		double t_slip;
+		SV sv_tig, sv_out;
+
+		sv_tig.gravref = hMoon;
+		sv_tig.mass = CSMmass;
+		sv_tig.MJD = opt->GETbase + opt->MCCGET / 24.0 / 3600.0;
+		sv_tig.R = RA1;
+		sv_tig.V = VA1;
+
+		FiniteBurntimeCompensation(opt->vessel, sv_tig, LMmass, VA1_apo - VA1, Llambda, t_slip, sv_out); //Calculate the impulsive equivalent of the maneuver
+
+		Rcut = sv_out.R;
+		Vcut = sv_out.V;
+
+		OrbMech::oneclickcoast(RA1, VA1, sv_tig.MJD, t_slip, R2_cor, V2_cor, outplanet, outplanet);//Calculate the state vector at the corrected ignition time
+
+		j = unit(crossp(V2_cor, R2_cor));
+		k = unit(-R2_cor);
 		i = crossp(j, k);
-		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-		dV_LVLH = mul(Q_Xx, VA1_apo - VA1);
-		P30TIG = opt->MCCGET;
+		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+		dV_LVLH = mul(Q_Xx, Llambda);
+
+		P30TIG = opt->MCCGET + t_slip;
 	}
 	else if (opt->man == 1 || opt->man == 2)
 	{
