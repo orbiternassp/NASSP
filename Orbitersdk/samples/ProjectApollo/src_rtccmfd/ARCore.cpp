@@ -332,7 +332,7 @@ ARCore::ARCore(VESSEL* v)
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
 
-	if (mission = 11)
+	if (mission == 11)
 	{
 		LSLat = 0.71388888*RAD;
 		LSLng = 23.7077777*RAD;
@@ -1795,4 +1795,24 @@ void ARCore::StopIMFDRequest() {
 
 	g_Data.isRequesting = false;
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
+}
+
+int ARCore::REFSMMAT_Address()
+{
+	int addr;
+
+	if (vesseltype < 2)
+	{
+		addr = 01735;
+	}
+	else
+	{
+		addr = 01733;
+	}
+	
+	if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+	{
+		addr -= 02;
+	}
+	return addr;
 }

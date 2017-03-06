@@ -62,6 +62,7 @@ public:
 	void TPIPAD();
 	void TLI_PAD();
 	void MapUpdate();
+	int REFSMMAT_Address();
 
 	int startSubthread(int fcn);
 	int subThread();

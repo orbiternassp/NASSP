@@ -3868,7 +3868,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 			unsigned short REFSoct[20];
 			int REFSMMATaddress;
 
-			REFSMMATaddress = 01735;
+			REFSMMATaddress = G->REFSMMAT_Address();
 
 			REFSoct[2] = saturn->agc.vagc.Erasable[0][REFSMMATaddress];
 			REFSoct[3] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 1];
