@@ -165,6 +165,8 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 	REFSMMATdirect = true;
+	REFSMMATHeadsUp = true;
+
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = (oapiGetSimMJD() - GETbase) * 24 * 60 * 60;
 	apo_desnm = 0;
@@ -1314,6 +1316,16 @@ int ARCore::subThread()
 		opt.REFSMMATopt = REFSMMATopt;
 		opt.REFSMMATTime = REFSMMATTime;
 		opt.vessel = vessel;
+		opt.HeadsUp = REFSMMATHeadsUp;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
 
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
@@ -1334,6 +1346,8 @@ int ARCore::subThread()
 		}
 		else
 		{
+			REFSMMAToct[1] = REFSMMAT_Address();
+
 			if (vesseltype < 2)
 			{
 				REFSMMAToct[1] = 1735;

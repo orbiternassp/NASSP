@@ -193,6 +193,8 @@ struct REFSMMATOpt
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landign site REFSMMAT
 	int mission; //Just for the launch REFSMMAT
+	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
+	bool HeadsUp = true; //Orientation during the maneuver
 };
 
 struct CDHOpt

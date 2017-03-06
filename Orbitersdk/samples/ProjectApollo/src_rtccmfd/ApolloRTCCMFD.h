@@ -72,6 +72,7 @@ public:
 	void menuSetOrbAdjPage();
 	void menuSetMapUpdatePage();
 	void REFSMMATTimeDialogue();
+	void cycleREFSMMATHeadsUp();
 	void set_REFSMMATTime(double time);
 	void calcREFSMMAT();
 	void OrbAdjApoDialogue();

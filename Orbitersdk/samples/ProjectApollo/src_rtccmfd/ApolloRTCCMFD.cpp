@@ -135,6 +135,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
 	oapiWriteScenario_int(scn, "REFSMMATupl", G->REFSMMATupl);
 	papiWriteScenario_bool(scn, "REFSMMATdirect", G->REFSMMATdirect);
+	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", G->T1);
 	papiWriteScenario_double(scn, "T2", G->T2);
 	papiWriteScenario_double(scn, "CDHTIME", G->CDHtime);
@@ -242,6 +243,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
 		papiReadScenario_int(line, "REFSMMATupl", G->REFSMMATupl);
 		papiReadScenario_bool(line, "REFSMMATdirect", G->REFSMMATdirect);
+		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", G->T1);
 		papiReadScenario_double(line, "T2", G->T2);
 		papiReadScenario_double(line, "CDHTIME", G->CDHtime);
@@ -568,7 +570,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->REFSMMATopt == 0) //P30 Maneuver
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "P30", 3);
+			if (G->REFSMMATHeadsUp)
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "P30 (Heads up)", 14);
+			}
+			else
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "P30 (Heads down)", 16);
+			}
 
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
@@ -2997,11 +3006,8 @@ void ApolloRTCCMFD::set_gravref(OBJHANDLE body)
 
 void ApolloRTCCMFD::menuLSLat()
 {
-	if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
-	{
-		bool LSLatInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Latitude in degrees:", LSLatInput, 0, 20, (void*)this);
-	}
+	bool LSLatInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Latitude in degrees:", LSLatInput, 0, 20, (void*)this);
 }
 
 bool LSLatInput(void *id, char *str, void *data)
@@ -3021,11 +3027,8 @@ void ApolloRTCCMFD::set_LSLat(double lat)
 
 void ApolloRTCCMFD::menuLSLng()
 {
-	if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
-	{
-		bool LSLngInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Longitude in degrees:", LSLngInput, 0, 20, (void*)this);
-	}
+	bool LSLngInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Longitude in degrees:", LSLngInput, 0, 20, (void*)this);
 }
 
 bool LSLngInput(void *id, char *str, void *data)
@@ -3757,6 +3760,14 @@ void ApolloRTCCMFD::cycleREFSMMATupl()
 	else
 	{
 		G->REFSMMATupl = 0;
+	}
+}
+
+void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
+{
+	if (G->REFSMMATopt == 0)
+	{
+		G->REFSMMATHeadsUp = !G->REFSMMATHeadsUp;
 	}
 }
 

@@ -125,6 +125,7 @@ public:
 	int REFSMMATcur; //Currently saved REFSMMAT
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
 	bool REFSMMATdirect;
+	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
 	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
