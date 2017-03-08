@@ -491,79 +491,6 @@ void ApolloGuidance::UpdateTwoDigitEntry(int n)
 // Keyboard interface.
 //
 
-void ApolloGuidance::ProcessInputChannel15(ChannelValue val)
-
-{
-	//
-	// Do nothing until the AGC has reset.
-	//
-	if (!OutOfReset())
-		return;
-
-	//
-	// The DSKY keys (other than Prog) come through on this
-	// channel.
-	//
-	switch (val.to_ulong()) {
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-	case 5:
-	case 6:
-	case 7:
-	case 8:
-	case 9:
-		NumberPressed(val.to_ulong());
-		break;
-
-	case 16:
-		NumberPressed(0);
-		break;
-
-	case 17:
-		VerbPressed();
-		break;
-
-	case 18:
-		ResetPressed();
-		break;
-
-	case 25:
-		KeyRel();
-		break;
-
-	case 26:
-		PlusPressed();
-		break;
-
-	case 27:
-		MinusPressed();
-		break;
-
-	case 28:
-		EnterPressed();
-		break;
-
-	case 30:
-		ClearPressed();
-		break;
-
-	case 31:
-		NounPressed();
-		break;
-	}
-}
-
-void ApolloGuidance::ProcessInputChannel32(int bit, bool val)
-
-{
-	if (bit == 14) {
-		if (val)
-			ProgKeyPressed();
-	}
-}
-
 void ApolloGuidance::ProgKeyPressed()
 
 {
@@ -572,33 +499,6 @@ void ApolloGuidance::ProgKeyPressed()
 	//
 	if (!OutOfReset())
 		return;
-
-	//
-	// If AGC is in standby mode, then start it up.
-	//
-
-	if (OnStandby()) {
-		Startup();
-		return;
-	}
-
-	//
-	// Else if program 6 is running, shut it down to
-	// standby mode.
-	//
-
-	if (Prog == 06) {
-		GoStandby();
-		return;
-	}
-
-	//
-	// Now we have a value in R2, we can process verb 1 or 11.
-	//
-
-	if (Verb == 1 || Verb == 11 || Verb == 21) {
-		VerbNounEntered(Verb, Noun);
-	}
 
 	//
 	// Otherwise tell the AGC that it's been pressed.
@@ -630,13 +530,6 @@ void ApolloGuidance::ProgKeyPressed()
 void ApolloGuidance::ResetPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	RSetPressed();
 
 	UpdateAll();
@@ -653,26 +546,12 @@ void ApolloGuidance::ReleaseKeyboard()
 void ApolloGuidance::KeyRel()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	ReleaseKeyboard();
 }
 
 void ApolloGuidance::VerbPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringNoun) {
 		LightOprErr();
 		return;
@@ -692,13 +571,6 @@ void ApolloGuidance::VerbPressed()
 void ApolloGuidance::NounPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringVerb) {
 		if(EnterPos!=2){
 			LightOprErr();
@@ -725,13 +597,6 @@ void ApolloGuidance::NounPressed()
 void ApolloGuidance::EnterPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	//
 	// Must complete entering the data before pressing
 	// ENTER.
@@ -873,13 +738,6 @@ void ApolloGuidance::UpdateEntry()
 void ApolloGuidance::ClearPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringData) {
 		EnterPos = 0;
 		strncpy (FiveDigitEntry, "      ", 6);
@@ -893,13 +751,6 @@ void ApolloGuidance::ClearPressed()
 void ApolloGuidance::PlusPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringData && !EnterPos) {
 		EnterPositive = true;
 		StartFiveDigitEntry(false);
@@ -914,13 +765,6 @@ void ApolloGuidance::PlusPressed()
 void ApolloGuidance::MinusPressed()
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringData && !EnterPos) {
 		EnterPositive = false;
 		StartFiveDigitEntry(false);
@@ -936,13 +780,6 @@ void ApolloGuidance::MinusPressed()
 void ApolloGuidance::NumberPressed(int n)
 
 {
-	//
-	// If AGC is in standby mode, do nothing.
-	//
-	if (OnStandby()) {
-		return;
-	}
-
 	if (EnteringOctal && n > 7) {
 		LightOprErr();
 		return;

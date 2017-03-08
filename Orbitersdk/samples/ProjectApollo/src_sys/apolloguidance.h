@@ -677,10 +677,6 @@ protected:
 
 	void SetChannel10Lights(int bit, bool val);
 
-	void ProcessInputChannel15(ChannelValue val);
-	void ProcessInputChannel30(int bit, bool val);
-	void ProcessInputChannel32(int bit, bool val);
-
 	virtual void ProcessChannel5(ChannelValue val);
 	virtual void ProcessChannel6(ChannelValue val);
 	virtual void ProcessChannel10(ChannelValue val);

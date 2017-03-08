@@ -4399,20 +4399,6 @@ void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val)
 			WriteIO(&vagc, channel, val.to_ulong());
 		}
 	}
-	else {
-		switch (channel) {
-		case 015:
-			ProcessInputChannel15(val);
-			break;
-		//
-		// Channel 016 is slightly different to 015, but for now we'll
-		// just call the same function.
-		//
-		case 016:
-			ProcessInputChannel15(val);
-			break;
-		}
-	}
 }
 
 void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
@@ -4483,30 +4469,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 		WriteIO(&vagc, channel, data);
 
-	}
-	else {
-		switch (channel) {
-		case 030:
-			ProcessInputChannel30(bit, val);
-			break;
-
-		case 032:
-			ProcessInputChannel32(bit, val);
-			break;
-		}
-	}
-}
-
-void ApolloGuidance::ProcessInputChannel30(int bit, bool val)
-
-{	
-	if (bit == 14) {	// Answer to ISSTurnOnRequest
-		if (val) {
-			ChannelValue val12;
-	    	val12 = 0;
-			val12[ISSTurnOnDelayComplete] = 1;
-			imu.ChannelOutput(012, val12);
-		}
 	}
 }
 
