@@ -4548,17 +4548,17 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// DS20060225 Enable SPS gimbal control
 	// Ficticious channels 160 & 161 have the optics shaft & trunion angles.
 	case 0160:
-		ProcessChannel160(val);
+		ProcessChannel140(val);
 		break;
 
 	case 0161:		
-		ProcessChannel161(val);
+		ProcessChannel141(val);
 		break;
 	case 0162:
-		ProcessChannel162(val);
+		ProcessChannel142(val);
 		break;
 	case 0163:
-		ProcessChannel163(val);
+		ProcessChannel143(val);
 		break;
 
 	case 033: 
@@ -4585,18 +4585,18 @@ void ApolloGuidance::ProcessChannel6(ChannelValue val){
 void ApolloGuidance::ProcessChannel14(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel160(ChannelValue val){
+void ApolloGuidance::ProcessChannel140(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel161(ChannelValue val){
+void ApolloGuidance::ProcessChannel141(ChannelValue val){
 }
 
 // Stub for LGC thrust drive
-void ApolloGuidance::ProcessChannel162(ChannelValue val) {
+void ApolloGuidance::ProcessChannel142(ChannelValue val) {
 }
 
 // Stub for LGC altitude meter drive
-void ApolloGuidance::ProcessChannel163(ChannelValue val) {
+void ApolloGuidance::ProcessChannel143(ChannelValue val) {
 }
 
 // DS20060308 Stub for FDAI

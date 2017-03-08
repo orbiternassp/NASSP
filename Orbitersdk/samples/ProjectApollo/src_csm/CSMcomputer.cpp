@@ -4137,7 +4137,7 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 
 // TVC / Optics control
 
-void CSMcomputer::ProcessChannel160(ChannelValue val) {
+void CSMcomputer::ProcessChannel140(ChannelValue val) {
 	
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
@@ -4167,7 +4167,7 @@ void CSMcomputer::ProcessChannel160(ChannelValue val) {
 	}	
 }
 
-void CSMcomputer::ProcessChannel161(ChannelValue val) {
+void CSMcomputer::ProcessChannel141(ChannelValue val) {
 
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);

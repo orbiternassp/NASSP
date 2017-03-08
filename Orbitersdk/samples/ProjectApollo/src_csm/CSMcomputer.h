@@ -382,8 +382,8 @@ protected:
 	void ProcessChannel11(ChannelValue val);
 	// DS20060226 TVC / Optics
 	void ProcessChannel14(ChannelValue val);
-	void ProcessChannel160(ChannelValue val);
-	void ProcessChannel161(ChannelValue val);
+	void ProcessChannel140(ChannelValue val);
+	void ProcessChannel141(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 

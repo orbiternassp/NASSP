@@ -381,7 +381,7 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 }
 
 
-void LEMcomputer::ProcessChannel160(ChannelValue val) {
+void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
@@ -398,7 +398,7 @@ void LEMcomputer::ProcessChannel160(ChannelValue val) {
 	}
 }
 
-void LEMcomputer::ProcessChannel161(ChannelValue val) {
+void LEMcomputer::ProcessChannel141(ChannelValue val) {
 
 	ChannelValue val12;
 	val12 = GetOutputChannel(012);
@@ -415,13 +415,13 @@ void LEMcomputer::ProcessChannel161(ChannelValue val) {
 	}
 }
 
-void LEMcomputer::ProcessChannel162(ChannelValue val) {
+void LEMcomputer::ProcessChannel142(ChannelValue val) {
 
 	LEM *lem = (LEM *)OurVessel;
 	lem->deca.ProcessLGCThrustCommands(val.to_ulong());
 }
 
-void LEMcomputer::ProcessChannel163(ChannelValue val) {
+void LEMcomputer::ProcessChannel143(ChannelValue val) {
 
 	ChannelValue val14;
 	val14 = GetOutputChannel(014);
