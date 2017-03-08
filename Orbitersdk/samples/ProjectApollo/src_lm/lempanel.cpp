@@ -2342,10 +2342,6 @@ void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 			stage = 2;
 			startimer = false;
 			AbortStageSwitchLight = true;
-			if(agc.GetProgRunning() > 14 ) {
-				SetEngineLevel(ENGINE_HOVER, 1);
-				agc.SetInputChannelBit(030, AbortWithAscentStage, true);
-			}
 		}
 
 	} 

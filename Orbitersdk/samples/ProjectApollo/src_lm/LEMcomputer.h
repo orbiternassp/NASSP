@@ -33,79 +33,6 @@
 // used.
 //
 
-///
-/// \ingroup AGCFlags
-///
-typedef union {
-	struct {
-		unsigned P66PROFL:1;
-		unsigned R10FLAG:1;
-		unsigned FREEFBIT:1;
-		unsigned NEEDLBIT:1;
-		unsigned LOKONBIT:1;
-		unsigned RRNBSW:1;
-		unsigned RNDVZBIT:1;
-		unsigned IMUSE:1;
-		unsigned P25FLAG:1;
-		unsigned FSPASFLG:1;
-		unsigned P21FLAG:1;
-		unsigned MOONFLAG:1;
-		unsigned MIDFLAG:1;
-		unsigned JSWITCH:1;
-		unsigned NEED2BIT:1;
-	} u;
-	unsigned int word;
-} LEMFlagWord0;
-
-///
-/// \ingroup AGCFlags
-///
-typedef union {
-	struct {
-		unsigned NOTASSIGNED:1;
-		unsigned GUESSW:1;
-		unsigned SLOPESW:1;
-		unsigned NOTASSIGNED2:1;
-		unsigned TRACKBIT:1;
-		unsigned NOUPFBIT:1;
-		unsigned UPDATBIT:1;
-		unsigned VEHUPFLG:1;
-		unsigned NOTASSIGNED3:1;
-		unsigned R61FLAG:1;
-		unsigned NOTERBT:1;
-		unsigned RODFLAG:1;
-		unsigned ERADFLAG:1;
-		unsigned DIDFLBIT:1;
-		unsigned NJETSFLG:1;
-	} u;
-	unsigned int word;
-} LEMFlagWord1;
-
-///
-/// \ingroup AGCFlags
-///
-typedef union {
-	struct {
-		unsigned NODOBIT:1;
-		unsigned CALCMAN2:1;
-		unsigned CALCMAN3:1;
-		unsigned PFRATBIT:1;
-		unsigned AVFLAG:1;
-		unsigned FINALFLG:1;
-		unsigned ETPIFLAG:1;
-		unsigned XDELVFLG:1;
-		unsigned IMPULBIT:1;
-		unsigned NOTASSIGNED:1;
-		unsigned STEERBIT:1;
-		unsigned LOSCMBIT:1;
-		unsigned ACMODFLG:1;
-		unsigned SRCHOBIT:1;
-		unsigned DRFTBIT:1;
-	} u;
-	unsigned int word;
-} LEMFlagWord2;
-
-
 class Saturn;
 ///
 /// \ingroup AGC
@@ -130,7 +57,6 @@ public:
 	void ChangeDescentRate(double delta);
 	void RedesignateTarget(int axis, double direction);
 	void GetHorizVelocity(double &forward, double &lateral);
-	int GetProgRunning();
 
 	void Timestep(double simt, double simdt);
 	void Run() ;
@@ -173,36 +99,12 @@ protected:
 	void ProgPressed(int R1, int R2, int R3);
 	void ProceedNoData();
 	void TerminateProgram();
-	// Descent, Abort, Ascent and Rendezvous routines
-	void Prog12(double simt);
-	void Prog30(double simt);
-	void Prog32(double simt);
-	void Prog33(double simt);
-	void Prog34(double simt);
-	void Prog35(double simt);
-	void Prog36(double simt);
-	void Prog40(double simt);
-	void Prog41(double simt);
-	void Prog42(double simt);
-	void Prog63(double simt);
-	void Prog64(double simt);
-	void Prog65(double simt);
-	void Prog66(double simt);
-	void Prog68(double simt);
-	void Prog70(double simt);
-	void Prog71(double simt);
+
 	void AbortAscent(double simt);
 	void Phase(double &phase, double &delta);
 	void Radar(double &range, double &rate);
 	void GetIMUOrientation(int type, double arg, VECTOR3 &x, VECTOR3 &y, VECTOR3 &z);
-	void Prog12Pressed(int R1, int R2, int R3);
-	void Prog34Pressed(int R1, int R2, int R3);
-	void Prog41Pressed(int R1, int R2, int R3);
-	void Prog63Pressed(int R1, int R2, int R3);
-	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
 	bool OrbitCalculationsValid();
-	bool DescentPhase();
-	bool AscentPhase();
 	void ResetAttitudeLevel();
 	void AddAttitudeRotLevel(VECTOR3 level);
 	void AddAttitudeLinLevel(VECTOR3 level);
@@ -215,11 +117,6 @@ protected:
 	///
 	virtual void BurnMainEngine(double thrust);
 
-
-	LEMFlagWord0 FlagWord0;
-	LEMFlagWord1 FlagWord1;
-	LEMFlagWord2 FlagWord2;
-
 	double RCSCommand[16];
 	VECTOR3 CommandedAttitudeRotLevel;	// store current thrust levels between the guidance loop steps
 	VECTOR3 CommandedAttitudeLinLevel;	
@@ -228,14 +125,6 @@ protected:
 	// log file for autoland debugging
 	//
 	FILE *outstr;
-
-	//
-	//	Ascent Auto-Pilot Data
-	//
-
-	void Prog13(double simt);
-	void Prog13Pressed(int R1, int R2, int R3);
-	double iba;							//		Misc stuff, disregard
 
 	Sound LunarAscent;
 
