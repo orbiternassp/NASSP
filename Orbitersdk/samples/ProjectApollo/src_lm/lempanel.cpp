@@ -3560,6 +3560,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			if (errors.x > 41) { errors.x = 41; }
+			else { if (errors.x < -41) { errors.x = -41; } }
+			if (errors.y > 41) { errors.y = 41; }
+			else { if (errors.y < -41) { errors.y = -41; } }
+			if (errors.z > 41) { errors.z = 41; }
+			else { if (errors.z < -41) { errors.z = -41; } }
 			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
@@ -3597,6 +3604,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			if (errors.x > 41) { errors.x = 41; }
+			else { if (errors.x < -41) { errors.x = -41; } }
+			if (errors.y > 41) { errors.y = 41; }
+			else { if (errors.y < -41) { errors.y = -41; } }
+			if (errors.z > 41) { errors.z = 41; }
+			else { if (errors.z < -41) { errors.z = -41; } }
 			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
