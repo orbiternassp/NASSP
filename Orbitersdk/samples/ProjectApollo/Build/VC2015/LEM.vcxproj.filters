@@ -63,12 +63,6 @@
     <ClCompile Include="..\..\src_lm\LEM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_lm\lemautoascent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_lm\lemautoland.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_lm\LEMcomputer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
