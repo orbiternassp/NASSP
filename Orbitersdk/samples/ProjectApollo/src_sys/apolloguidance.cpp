@@ -4546,18 +4546,18 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		break;
 
 	// DS20060225 Enable SPS gimbal control
-	// Ficticious channels 160 & 161 have the optics shaft & trunion angles.
-	case 0160:
+	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
+	case 0140:
 		ProcessChannel140(val);
 		break;
 
-	case 0161:		
+	case 0141:
 		ProcessChannel141(val);
 		break;
-	case 0162:
+	case 0142:
 		ProcessChannel142(val);
 		break;
-	case 0163:
+	case 0143:
 		ProcessChannel143(val);
 		break;
 
