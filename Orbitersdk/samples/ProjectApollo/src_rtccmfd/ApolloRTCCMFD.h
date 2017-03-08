@@ -199,6 +199,7 @@ public:
 	void set_DOIRevs(int N);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();
 	void menuSetSkylabGET();

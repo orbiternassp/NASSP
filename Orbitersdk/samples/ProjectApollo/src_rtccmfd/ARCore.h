@@ -57,6 +57,7 @@ public:
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
 	void StateVectorUplink();
+	void TLANDUplink(void);
 	void ManeuverPAD();
 	void EntryPAD();
 	void TPIPAD();

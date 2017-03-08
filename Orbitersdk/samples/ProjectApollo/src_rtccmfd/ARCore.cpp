@@ -1017,6 +1017,29 @@ void ARCore::EntryUpdateUplink(void)
 	UplinkData(); // Go for uplink
 }
 
+void ARCore::TLANDUplink(void)
+{
+	if (vesseltype > 1)
+	{
+		g_Data.emem[0] = 5;
+
+		if (mission < 15)
+		{
+			g_Data.emem[1] = 2400;
+			g_Data.emem[3] = 2401;
+		}
+		else
+		{
+			g_Data.emem[1] = 2026;
+			g_Data.emem[3] = 2027;
+		}
+		g_Data.emem[2] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 1);
+		g_Data.emem[4] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 0);
+
+		UplinkData2(); // Go for uplink
+	}
+}
+
 void ARCore::UplinkData()
 {
 	if (g_Data.connStatus == 0) {

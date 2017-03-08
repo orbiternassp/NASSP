@@ -2037,6 +2037,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
+		skp->Text(5 * W / 8, 4 * H / 14, "Uplink TLAND", 12);
+
 		skp->Text(4 * W / 8, 11 * H / 21, "DOI:", 4);
 		skp->Text(4 * W / 8, 12 * H / 21, "PDI:", 4);
 		skp->Text(4 * W / 8, 13 * H / 21, "t_L:", 4);
@@ -2351,6 +2353,11 @@ void ApolloRTCCMFD::menuP30Upload()
 	{
 		G->P30Uplink();
 	}
+}
+
+void ApolloRTCCMFD::menuTLANDUpload()
+{
+	G->TLANDUplink();
 }
 
 char* ApolloRTCCMFD::GET_Display(char* Buff, double time) //Display a time in the format hhh:mm:ss
