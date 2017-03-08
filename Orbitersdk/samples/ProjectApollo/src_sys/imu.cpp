@@ -746,7 +746,7 @@ void IMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
 	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
 	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	papiWriteScenario_double(scn, "LSTD", LastSimDT);
+	papiWriteScenario_double(scn, "LSDT", LastSimDT);
 
 	//
 	// Copy internal state to the structure.
