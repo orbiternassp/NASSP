@@ -323,8 +323,6 @@ public:
 	///
 	void SetDesiredInclination(double val) { DesiredInclination = val; };
 
-	void SetBurnTime(double val) { BurnTime = val; };
-
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
@@ -335,24 +333,6 @@ public:
 
 protected:
 
-	void ProgPressed(int R1, int R2, int R3);
-
-	///
-	/// Calculate the current gravitational acceleration.
-	///
-	/// \brief Get current g.
-	/// \return Current gravitational accelerations in m/s^2.
-	///
-	double CurrentG();
-
-	///
-	/// The real CSM could only perform orbit calculations while running certain specific programs. We
-	/// simulate this through this call: the calculations will only be performed if it returns true.
-	///
-	/// \brief Can the AGC perform orbit calculations at this time?
-	/// \return True if the current program supports orbit calculation.
-	///
-	bool OrbitCalculationsValid();
 	void SetAttitudeRotLevel(VECTOR3 level);
 
 	void ProcessChannel5(ChannelValue val);
@@ -366,12 +346,6 @@ protected:
 	void ProcessChannel141(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-
-	///
-	/// \brief Set the thrust level of the main engine.
-	/// \param thrust Thrust level (0.0 to 1.0).
-	///
-	virtual void BurnMainEngine(double thrust);
 
 	FILE *Dfile;
 	int count;

@@ -3845,13 +3845,11 @@ void PCM::handle_uplink() {
 			sat->UPTLMSwitch.GetState() == TOGGLESWITCH_DOWN) {
 			rx_offset = 0; uplink_state = 0; break;
 		}
-		// Must be in vAGC mode
-		if (sat->agc.Yaagc) {
-			// Move to INLINK
-			sat->agc.vagc.Erasable[0][045] = cmc_uplink_wd;
-			// Cause UPRUPT
-			sat->agc.GenerateUprupt();
-		}
+		// Move to INLINK
+		sat->agc.vagc.Erasable[0][045] = cmc_uplink_wd;
+		// Cause UPRUPT
+		sat->agc.GenerateUprupt();
+
 		//sprintf(oapiDebugString(),"CMC UPLINK DATA %05o",cmc_uplink_wd);
 		rx_offset = 0; uplink_state = 0;
 	}

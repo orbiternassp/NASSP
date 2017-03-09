@@ -1129,22 +1129,6 @@ void IUToCSMCommandConnector::SetAGCOutputChannel(int channel, int value)
 	SendMessage(cm);
 }
 
-bool IUToCSMCommandConnector::IsVirtualAGC()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_IS_VIRTUAL_AGC;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
 void IUToCSMCommandConnector::SetSIISep()
 
 {

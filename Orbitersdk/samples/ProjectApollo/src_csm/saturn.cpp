@@ -462,7 +462,6 @@ void Saturn::initSaturn()
 	agc.SetDesiredApogee(220);
 	agc.SetDesiredPerigee(215);
 	agc.SetDesiredAzimuth(45);
-	agc.SetVesselStats(SPS_ISP, SPS_THRUST, false);
 
 	IGMStartTime = 204.1 ;
 
@@ -2575,7 +2574,6 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.MissionNo = ApolloNo;
 	ls.MissionTime = MissionTime;
 	ls.Realism = Realism;
-	ls.Yaagc = agc.IsVirtualAGC();
 	strncpy (ls.checklistFile, LEMCheck, 100);
 	ls.checkAutoExecute = LEMCheckAuto;
 }
@@ -3089,13 +3087,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		agrav *= GKSI * mass / (radius * radius2);
 		aZAcc += agrav;
 	}
-
-	//
-	// Update parameters for AGC processing? Should these be here?
-	//
-
-	agc.SetFuel(actualFUEL);
-	agc.SetRVel(aSpeed);
 
 	SystemsTimestep(simt, simdt, mjd);
 
@@ -4404,7 +4395,6 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	if (MissionTime < 0) {
-		agc.SetBurnTime(0);
 
 		//
 		// Open the countdown sound file.
@@ -4437,10 +4427,6 @@ void Saturn::GenericLoadStateSetup()
 	else
 	{
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-	}
-
-	if (stage < PRELAUNCH_STAGE) {
-		agc.BlankAll();
 	}
 
 	if (stage < LAUNCH_STAGE_TWO) {
@@ -4611,8 +4597,6 @@ bool Saturn::CheckForLaunchShutdown()
 			S4CutS.done();
 
 			ActivateNavmode(NAVMODE_KILLROT);
-
-			agc.LaunchShutdown();
 
 			// Reset autopilot commands
 			AtempP  = 0;

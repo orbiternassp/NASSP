@@ -560,10 +560,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		SideHatch.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
-		if (!agc.Yaagc) { 
-			// PCM update unless yaAGC did it earlier
-			pcm.TimeStep(MissionTime); 
-		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
 		hga.TimeStep(MissionTime, simdt);
@@ -3305,7 +3301,7 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 		
 	aws.PGNSWarning = false;
 	// Restart alarm
-	if (agc.Yaagc && agc.vagc.VoltageAlarm != 0) 
+	if (agc.vagc.VoltageAlarm != 0) 
 		aws.PGNSWarning = true;
 	// Gimbal Lock 
 	if (agc.GetGimbalLockAlarm()) 

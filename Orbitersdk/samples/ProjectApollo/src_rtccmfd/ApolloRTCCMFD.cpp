@@ -3877,108 +3877,97 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
-		if (saturn->IsVirtualAGC() == FALSE)
+		
+		unsigned short REFSoct[20];
+		int REFSMMATaddress;
+
+		REFSMMATaddress = G->REFSMMAT_Address();
+
+		REFSoct[2] = saturn->agc.vagc.Erasable[0][REFSMMATaddress];
+		REFSoct[3] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 1];
+		REFSoct[4] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 2];
+		REFSoct[5] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 3];
+		REFSoct[6] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 4];
+		REFSoct[7] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 5];
+		REFSoct[8] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 6];
+		REFSoct[9] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 7];
+		REFSoct[10] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 8];
+		REFSoct[11] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 9];
+		REFSoct[12] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 10];
+		REFSoct[13] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 11];
+		REFSoct[14] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 12];
+		REFSoct[15] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 13];
+		REFSoct[16] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 14];
+		REFSoct[17] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 15];
+		REFSoct[18] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 16];
+		REFSoct[19] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 17];
+
+		for (int i = 2; i < 20; i++)
 		{
-
+			sprintf(Buffer, "%05o", REFSoct[i]);
+			G->REFSMMAToct[i] = atoi(Buffer);
 		}
-		else
-		{
-			unsigned short REFSoct[20];
-			int REFSMMATaddress;
+		
+		G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+		G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+		G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+		G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+		G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+		G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+		G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+		G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+		G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+		G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
+		G->REFSMMATcur = G->REFSMMATopt;
 
-			REFSMMATaddress = G->REFSMMAT_Address();
+		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 
-			REFSoct[2] = saturn->agc.vagc.Erasable[0][REFSMMATaddress];
-			REFSoct[3] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 1];
-			REFSoct[4] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 2];
-			REFSoct[5] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 3];
-			REFSoct[6] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 4];
-			REFSoct[7] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 5];
-			REFSoct[8] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 6];
-			REFSoct[9] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 7];
-			REFSoct[10] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 8];
-			REFSoct[11] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 9];
-			REFSoct[12] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 10];
-			REFSoct[13] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 11];
-			REFSoct[14] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 12];
-			REFSoct[15] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 13];
-			REFSoct[16] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 14];
-			REFSoct[17] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 15];
-			REFSoct[18] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 16];
-			REFSoct[19] = saturn->agc.vagc.Erasable[0][REFSMMATaddress + 17];
-
-			for (int i = 2; i < 20; i++)
-			{
-				sprintf(Buffer, "%05o", REFSoct[i]);
-				G->REFSMMAToct[i] = atoi(Buffer);
-			}
-
-			G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-			G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-			G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-			G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-			G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-			G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
-			G->REFSMMATcur = G->REFSMMATopt;
-
-			//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
-		}
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
-		if (lem->IsVirtualAGC() == FALSE)
+		
+		unsigned short REFSoct[20];
+		int REFSMMATaddress;
+
+		REFSMMATaddress = 01733;
+
+		REFSoct[2] = lem->agc.vagc.Erasable[0][REFSMMATaddress];
+		REFSoct[3] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 1];
+		REFSoct[4] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 2];
+		REFSoct[5] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 3];
+		REFSoct[6] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 4];
+		REFSoct[7] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 5];
+		REFSoct[8] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 6];
+		REFSoct[9] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 7];
+		REFSoct[10] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 8];
+		REFSoct[11] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 9];
+		REFSoct[12] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 10];
+		REFSoct[13] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 11];
+		REFSoct[14] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 12];
+		REFSoct[15] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 13];
+		REFSoct[16] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 14];
+		REFSoct[17] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 15];
+		REFSoct[18] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 16];
+		REFSoct[19] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 17];
+
+		for (int i = 2; i < 20; i++)
 		{
-
+			sprintf(Buffer, "%05o", REFSoct[i]);
+			G->REFSMMAToct[i] = atoi(Buffer);
 		}
-		else
-		{
-			unsigned short REFSoct[20];
-			int REFSMMATaddress;
 
-			REFSMMATaddress = 01733;
-
-			REFSoct[2] = lem->agc.vagc.Erasable[0][REFSMMATaddress];
-			REFSoct[3] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 1];
-			REFSoct[4] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 2];
-			REFSoct[5] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 3];
-			REFSoct[6] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 4];
-			REFSoct[7] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 5];
-			REFSoct[8] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 6];
-			REFSoct[9] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 7];
-			REFSoct[10] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 8];
-			REFSoct[11] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 9];
-			REFSoct[12] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 10];
-			REFSoct[13] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 11];
-			REFSoct[14] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 12];
-			REFSoct[15] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 13];
-			REFSoct[16] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 14];
-			REFSoct[17] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 15];
-			REFSoct[18] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 16];
-			REFSoct[19] = lem->agc.vagc.Erasable[0][REFSMMATaddress + 17];
-
-			for (int i = 2; i < 20; i++)
-			{
-				sprintf(Buffer, "%05o", REFSoct[i]);
-				G->REFSMMAToct[i] = atoi(Buffer);
-			}
-
-			G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-			G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-			G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-			G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-			G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-			G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-			G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-			G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-			G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-			G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
-			G->REFSMMATcur = G->REFSMMATopt;
-		}
+		G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+		G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+		G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+		G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+		G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+		G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+		G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+		G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+		G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+		G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
+		G->REFSMMATcur = G->REFSMMATopt;
 	}
 }
 

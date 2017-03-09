@@ -414,10 +414,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 	switch (messageType)
 	{
-	case IUCSM_IS_VIRTUAL_AGC:
-		m.val1.bValue = agc.IsVirtualAGC();
-		return true;
-
 	case IUCSM_SET_OUTPUT_CHANNEL:
 		agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
 		return true;

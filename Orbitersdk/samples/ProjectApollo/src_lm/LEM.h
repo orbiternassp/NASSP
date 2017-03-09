@@ -627,14 +627,6 @@ public:
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 
 	///
-	/// Since we can now run with either the Virtual AGC emulator or the C++ AGC, this function
-	/// allows you to check which we're using.
-	/// \brief Are we running a Virtual AGC?
-	/// \return True for Virtual AGC, false for C++ AGC.
-	///
-	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
-
-	///
 	/// \brief Triggers Virtual AGC core dump
 	///
 	virtual void VirtualAGCCoreDump() { agc.VirtualAGCCoreDump("ProjectApollo LGC.core"); }

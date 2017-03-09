@@ -174,7 +174,7 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
-	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+	if(agc.vagc.VoltageAlarm != 0){
 		RestartLight = true;
 	}else{
 		RestartLight = false;
@@ -394,7 +394,7 @@ void DSKY::ResetPressed()
 		ClearRestart(); 
 	}
 
-	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+	if(agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;
 	}
 }
@@ -454,7 +454,7 @@ void DSKY::ProcessChannel13(ChannelValue val)
 
 {
 	/// \todo Other conditions restart light
-	if (val[TestAlarms] || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
+	if (val[TestAlarms] || (agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);
 	}

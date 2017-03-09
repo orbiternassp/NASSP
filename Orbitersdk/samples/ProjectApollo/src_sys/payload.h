@@ -39,7 +39,6 @@ struct PayloadSettings {
 	bool Crewed;
 	bool AutoSlow;
 	int Realism;
-	bool Yaagc;
 	char checklistFile[100];
 	bool checkAutoExecute;
 

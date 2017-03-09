@@ -49,13 +49,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 
 	isLGC = true;
 
-	ProgFlag01 = false;
-	ProgFlag02 = false;
-	ProgFlag03 = false;
-	ProgFlag04 = false;
-	RetroFlag = false;
-	BurnFlag = false;
-
 	int i;
 	for (i = 0; i < 16; i++) {
 		RCSCommand[i] = 0;
@@ -70,8 +63,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 	DesiredApogee = 82.250;
 	DesiredPerigee = 74.360;
 	DesiredAzimuth = 270.0;
-
-	InOrbit = 1;
 
     mode = -1;
 	simcomputert = -1.0;
@@ -131,26 +122,6 @@ void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	}
 
 	agc_load_binfile(&vagc, binfile);
-}
-
-bool LEMcomputer::ValidateVerbNoun(int verb, int noun)
-{
-	return false;
-}
-
-void LEMcomputer::DisplayNounData(int noun)
-{
-
-}
-
-void LEMcomputer::ProcessVerbNoun(int verb, int noun)
-{
-
-}
-
-bool LEMcomputer::ValidateProgram(int prog)
-{
-	return false;
 }
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
@@ -241,15 +212,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	return;
 }
 
-void LEMcomputer::ProgPressed(int R1, int R2, int R3)
-
-{
-	if (GenericProgPressed(R1, R2, R3))
-		return;
-
-	LightOprErr();
-}
-
 //
 // Access simulated erasable memory.
 //
@@ -274,11 +236,6 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
-}
-
-bool LEMcomputer::OrbitCalculationsValid()
-{
-	return false;
 }
 
 int LEMcomputer::GetStatus(double *simcomputert,
@@ -476,18 +433,6 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		break;
 	}
 
-}
-
-void LEMcomputer::BurnMainEngine(double thrust)
-
-{
-	/// \todo This function is used by the AGC++ burn programs
-	/// and should simulate the VAGC behaviour, i.e. I/O channels etc.
-	/// to control the main engine
-
-	OurVessel->SetEngineLevel(ENGINE_HOVER, thrust);
-
-	ApolloGuidance::BurnMainEngine(thrust);
 }
 
 /// \todo Dirty Hack for the AGC++ RCS burn control, 

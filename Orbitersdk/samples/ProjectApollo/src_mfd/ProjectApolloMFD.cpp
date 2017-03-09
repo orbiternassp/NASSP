@@ -1626,44 +1626,39 @@ void ProjectApolloMFD::Update (HDC hDC)
 					!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
 					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 						saturn = (Saturn *)vessel;
-						// Is this a vAGC CM?
-						if(saturn->IsVirtualAGC() == FALSE){
-							TextOut(hDC, width / 2, (int) (height * 0.4), "Only for Virtual AGC mode", 25);
-						}else{
-							// Yes
-							VECTOR3 CMattitude,LMattitude;
-							unsigned short tephem[3]; 
-							// Obtain CM attitude.
-							// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
-							CMattitude.x = saturn->imu.Gimbal.X*DEG; // OUTER
-							CMattitude.y = saturn->imu.Gimbal.Y*DEG; // INNER
-							CMattitude.z = saturn->imu.Gimbal.Z*DEG; // MIDDLE
-							// Docking tunnel angle is assumed to be zero.
-							LMattitude.x = 300-CMattitude.x; if(LMattitude.x < 0){ LMattitude.x += 360; }
-							LMattitude.y = 180+CMattitude.y; if(LMattitude.y > 360){ LMattitude.y -= 360; }
-							LMattitude.z = 360-CMattitude.z; if(LMattitude.z < 0){ LMattitude.x += 360; }
-							// We should obtain and print CSM time, but...
-							// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
-							// Just initialize from the mission timer.
-							// Obtain TEPHEM
-							tephem[0] = saturn->agc.vagc.Erasable[0][01706];
-							tephem[1] = saturn->agc.vagc.Erasable[0][01707];
-							tephem[2] = saturn->agc.vagc.Erasable[0][01710];
-							sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
-							TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
-							// Format gimbal angles and print them
-							sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x, CMattitude.y, CMattitude.z);
-							TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-							sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x, LMattitude.y, LMattitude.z);
-							TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
-							//Docked IMU Fine Alignment
-							TextOut(hDC, width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
+						VECTOR3 CMattitude,LMattitude;
+						unsigned short tephem[3];
+						// Obtain CM attitude.
+						// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
+						CMattitude.x = saturn->imu.Gimbal.X*DEG; // OUTER
+						CMattitude.y = saturn->imu.Gimbal.Y*DEG; // INNER
+						CMattitude.z = saturn->imu.Gimbal.Z*DEG; // MIDDLE
+						// Docking tunnel angle is assumed to be zero.
+						LMattitude.x = 300-CMattitude.x; if(LMattitude.x < 0){ LMattitude.x += 360; }
+						LMattitude.y = 180+CMattitude.y; if(LMattitude.y > 360){ LMattitude.y -= 360; }
+						LMattitude.z = 360-CMattitude.z; if(LMattitude.z < 0){ LMattitude.x += 360; }
+						// We should obtain and print CSM time, but...
+						// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
+						// Just initialize from the mission timer.
+						// Obtain TEPHEM
+						tephem[0] = saturn->agc.vagc.Erasable[0][01706];
+						tephem[1] = saturn->agc.vagc.Erasable[0][01707];
+						tephem[2] = saturn->agc.vagc.Erasable[0][01710];
+						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
+						TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
+						// Format gimbal angles and print them
+						sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x, CMattitude.y, CMattitude.z);
+						TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
+						sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x, LMattitude.y, LMattitude.z);
+						TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
-							sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
-							TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+						//Docked IMU Fine Alignment
+						TextOut(hDC, width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
 
-						}
+						sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
+						TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+
 						saturn = NULL; // Clobber
 				}
 			}

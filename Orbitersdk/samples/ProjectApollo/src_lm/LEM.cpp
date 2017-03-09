@@ -1718,7 +1718,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	AscentFuelMassKg = ls.AscentFuelKg;
 
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
-	agc.SetVirtualAGC(ls.Yaagc);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
@@ -1788,10 +1787,7 @@ void LEM::CheckRCS(){
 }
 
 void LEM::SetRCSJet(int jet, bool fire) {
-	/// \todo Only for the Virtual AGC for now
-	if (agc.IsVirtualAGC()) {
-		SetThrusterLevel(th_rcs[jet], fire);
-	}
+	SetThrusterLevel(th_rcs[jet], fire);
 }
 
 

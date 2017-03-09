@@ -48,14 +48,9 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 
 {
 	isLGC = false;
-	BurnTime = 0;
-	BurnStartTime = 0;
-	CutOffVel = 0;
 	lastOrbitalElementsTime = 0;
 
 	VesselStatusDisplay = 0;
-
-	MainThrusterIsHover = false;
 
 	//
 	// Generic thrust decay value. This still needs tweaking.
@@ -114,38 +109,6 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	InitVirtualAGC(binfile);
 }
 
-//
-// Are the apogee/perigee orbit calculations valid?
-//
-
-bool CSMcomputer::OrbitCalculationsValid()
-
-{
-	switch (ProgRunning)
-	{
-	case 11:
-	case 15:
-		return true;
-
-	case 37:
-		if (ProgState >= 2)
-			return true;
-		break;
-	}
-
-	return false;
-}
-
-double CSMcomputer::CurrentG()
-
-{
-	OBJHANDLE hbody = OurVessel->GetGravityRef();
-	double bradius = oapiGetSize(hbody);
-
-	double CurrentDist = bradius + CurrentAlt;
-	return (G * bradius * bradius) / (CurrentDist * CurrentDist);
-}
-
 void CSMcomputer::agcTimestep(double simt, double simdt)
 {
 	// Do single timesteps to maintain sync with telemetry engine
@@ -188,7 +151,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 	// DS20060302 For joystick stuff below
 	sat = (Saturn *) OurVessel;
 
-	if (Yaagc){
 		//
 		// Reduce time acceleration as per configured, not to jump to x100 or x1000 and freeze the simulation
 		//
@@ -402,20 +364,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//sprintf(oapiDebugString(), "Standby: %d %d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed);
 
 		return;
-	}
-}
-
-//
-// The prog button has been pressed, so process it.
-//
-
-void CSMcomputer::ProgPressed(int R1, int R2, int R3)
-
-{
-	if (GenericProgPressed(R1, R2, R3))
-		return;
-
-	LightOprErr();
 }
 
 //
@@ -538,18 +486,6 @@ void CSMcomputer::ProcessChannel11(ChannelValue val){
 	dsky2.ProcessChannel11(val);
 
 	LastOut11 = val.to_ulong();
-}
-
-void CSMcomputer::BurnMainEngine(double thrust)
-
-{
-	// This is the same the real VAGC does
-	if (thrust)
-		SetOutputChannelBit(011, 13, 1);
-	else
-		SetOutputChannelBit(011, 13, 0);
-
-	ApolloGuidance::BurnMainEngine(thrust);
 }
 
 //

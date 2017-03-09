@@ -3910,47 +3910,41 @@ MATRIX3 RTCC::GetREFSMMATfromAGC(double AGCEpoch)
 	char Buffer[100];
 	int REFSMMAToct[20];
 
-	if (mcc->cm->IsVirtualAGC() == FALSE)
+	unsigned short REFSoct[20];
+	REFSoct[2] = mcc->cm->agc.vagc.Erasable[0][01735];
+	REFSoct[3] = mcc->cm->agc.vagc.Erasable[0][01736];
+	REFSoct[4] = mcc->cm->agc.vagc.Erasable[0][01737];
+	REFSoct[5] = mcc->cm->agc.vagc.Erasable[0][01740];
+	REFSoct[6] = mcc->cm->agc.vagc.Erasable[0][01741];
+	REFSoct[7] = mcc->cm->agc.vagc.Erasable[0][01742];
+	REFSoct[8] = mcc->cm->agc.vagc.Erasable[0][01743];
+	REFSoct[9] = mcc->cm->agc.vagc.Erasable[0][01744];
+	REFSoct[10] = mcc->cm->agc.vagc.Erasable[0][01745];
+	REFSoct[11] = mcc->cm->agc.vagc.Erasable[0][01746];
+	REFSoct[12] = mcc->cm->agc.vagc.Erasable[0][01747];
+	REFSoct[13] = mcc->cm->agc.vagc.Erasable[0][01750];
+	REFSoct[14] = mcc->cm->agc.vagc.Erasable[0][01751];
+	REFSoct[15] = mcc->cm->agc.vagc.Erasable[0][01752];
+	REFSoct[16] = mcc->cm->agc.vagc.Erasable[0][01753];
+	REFSoct[17] = mcc->cm->agc.vagc.Erasable[0][01754];
+	REFSoct[18] = mcc->cm->agc.vagc.Erasable[0][01755];
+	REFSoct[19] = mcc->cm->agc.vagc.Erasable[0][01756];
+	for (int i = 2; i < 20; i++)
 	{
-		
+		sprintf(Buffer, "%05o", REFSoct[i]);
+		REFSMMAToct[i] = atoi(Buffer);
 	}
-	else
-	{
-		unsigned short REFSoct[20];
-		REFSoct[2] = mcc->cm->agc.vagc.Erasable[0][01735];
-		REFSoct[3] = mcc->cm->agc.vagc.Erasable[0][01736];
-		REFSoct[4] = mcc->cm->agc.vagc.Erasable[0][01737];
-		REFSoct[5] = mcc->cm->agc.vagc.Erasable[0][01740];
-		REFSoct[6] = mcc->cm->agc.vagc.Erasable[0][01741];
-		REFSoct[7] = mcc->cm->agc.vagc.Erasable[0][01742];
-		REFSoct[8] = mcc->cm->agc.vagc.Erasable[0][01743];
-		REFSoct[9] = mcc->cm->agc.vagc.Erasable[0][01744];
-		REFSoct[10] = mcc->cm->agc.vagc.Erasable[0][01745];
-		REFSoct[11] = mcc->cm->agc.vagc.Erasable[0][01746];
-		REFSoct[12] = mcc->cm->agc.vagc.Erasable[0][01747];
-		REFSoct[13] = mcc->cm->agc.vagc.Erasable[0][01750];
-		REFSoct[14] = mcc->cm->agc.vagc.Erasable[0][01751];
-		REFSoct[15] = mcc->cm->agc.vagc.Erasable[0][01752];
-		REFSoct[16] = mcc->cm->agc.vagc.Erasable[0][01753];
-		REFSoct[17] = mcc->cm->agc.vagc.Erasable[0][01754];
-		REFSoct[18] = mcc->cm->agc.vagc.Erasable[0][01755];
-		REFSoct[19] = mcc->cm->agc.vagc.Erasable[0][01756];
-		for (int i = 2; i < 20; i++)
-		{
-			sprintf(Buffer, "%05o", REFSoct[i]);
-			REFSMMAToct[i] = atoi(Buffer);
-		}
-
-		REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-		REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-		REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-		REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-		REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-		REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-		REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-		REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-		REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-	}
+	
+	REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+	REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+	REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+	REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+	REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+	REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+	REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+	
 	return mul(REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch));
 }
 
