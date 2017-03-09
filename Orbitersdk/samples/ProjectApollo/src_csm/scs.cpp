@@ -3030,16 +3030,7 @@ void EMS::AccelerometerTimeStep(double simdt) {
 		xacc = -avg.z;
 		// Ground test switch
 	
-		// Handle different gravity and size of the Earth
-		if (sat->IsVirtualAGC()) {
-			constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-		} else {
-			if (sat->NonsphericalGravityEnabled()) {
-				constG = 9.7988;
-			} else {
-				constG = 9.7939;
-			}
-		}
+		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
 
 		if (sat->GTASwitch.IsUp()) {
 			xacc -= constG;
