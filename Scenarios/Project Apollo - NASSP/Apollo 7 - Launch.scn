@@ -52,9 +52,6 @@ AS-205:ProjectApollo/Saturn1B
   SIIPUT 455.77
   LANG English
   AUTOSLOW 1
-  AGC_BEGIN
-    YAAGC 1
-  AGC_END
   ASCP_BEGIN
     OPX 152.000
   ASCP_END
