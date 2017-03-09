@@ -239,14 +239,6 @@ protected:
 	bool VerbFlashing;
 	bool NounFlashing;
 
-	//
-	// FlashOn tracks whether flashing displays should currently be shown or
-	// blanked out. LastFlashTime tracks when the state was updated.
-	//
-
-	bool FlashOn;
-	double LastFlashTime;
-
 	int	EnterPos;
 	int EnterVal;
 

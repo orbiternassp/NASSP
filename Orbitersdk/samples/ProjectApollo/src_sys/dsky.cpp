@@ -195,15 +195,6 @@ void DSKY::Reset()
 
 	VerbFlashing = false;
 	NounFlashing = false;
-
-	FlashOn = true;
-
-	//
-	// LastFlashTime needs to be set a long way back in the past so
-	// that it will flash the digits prior to launch.
-	//
-
-	LastFlashTime = MINUS_INFINITY;
 }
 
 DSKY::~DSKY()
@@ -242,16 +233,6 @@ void DSKY::Timestep(double simt)
 		FirstTimeStep = false;
 	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
-
-	//
-	// Flash counter. For simplicity we'll always update
-	// this even though nothing may be flashing.
-	//
-
-	if (simt > (LastFlashTime + 0.5)) {
-		LastFlashTime = simt;
-		FlashOn = !FlashOn;
-	}
 }
 
 void DSKY::SystemTimestep(double simdt)
@@ -274,8 +255,8 @@ void DSKY::SystemTimestep(double simdt)
 	if (UplinkLit()) LightsLit++;
 	if (NoAttLit()) LightsLit++;
 	if (StbyLit()) LightsLit++;
-	if (KbRelLit() && FlashOn) LightsLit++;
-	if (OprErrLit() && FlashOn) LightsLit++;
+	if (KbRelLit()) LightsLit++;
+	if (OprErrLit()) LightsLit++;
 	if (TempLit()) LightsLit++;
 	if (GimbalLockLit()) LightsLit++;
 	if (ProgLit()) LightsLit++;
@@ -290,7 +271,7 @@ void DSKY::SystemTimestep(double simdt)
 	if (CompActy) 
 		SegmentsLit += 4;
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, true);
 	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing);
 	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing);
 
@@ -328,7 +309,6 @@ void DSKY::VerbPressed()
 {
 	KeyClick();
 
-	VerbFlashing = false;
 	SendKeyCode(17);
 }
 
@@ -337,7 +317,6 @@ void DSKY::NounPressed()
 {	
 	KeyClick();
 
-	NounFlashing = false;
 	SendKeyCode(31);
 }
 
@@ -475,8 +454,8 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 0, 25, NoAttLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 0, 49, StbyLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit() && FlashOn, xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit() && FlashOn, xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 73, KbRelLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 97, OprErrLit(), xOffset, yOffset);
 
 	DSKYLightBlt(surf, lights, 52, 0,  TempLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit(), xOffset, yOffset);
@@ -645,7 +624,7 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 {
 	int Curdigit;
 
-	if (Flash && !FlashOn)
+	if (!Flash)
 		return;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -664,7 +643,7 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
 {
 	int Curdigit, s = 0;
 
-	if (Flash && !FlashOn)
+	if (!Flash)
 		return s;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -745,7 +724,7 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int x
 		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, true);
 	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing);
 	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing);
 
