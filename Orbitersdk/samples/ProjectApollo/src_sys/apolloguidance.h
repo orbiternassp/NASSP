@@ -677,10 +677,6 @@ protected:
 
 	void SetChannel10Lights(int bit, bool val);
 
-	void ProcessInputChannel15(ChannelValue val);
-	void ProcessInputChannel30(int bit, bool val);
-	void ProcessInputChannel32(int bit, bool val);
-
 	virtual void ProcessChannel5(ChannelValue val);
 	virtual void ProcessChannel6(ChannelValue val);
 	virtual void ProcessChannel10(ChannelValue val);
@@ -688,10 +684,10 @@ protected:
 	virtual void ProcessChannel11(ChannelValue val);
 	virtual void ProcessChannel13(ChannelValue val);
 	virtual void ProcessChannel14(ChannelValue val);
-	virtual void ProcessChannel160(ChannelValue val);
-	virtual void ProcessChannel161(ChannelValue val);
-	virtual void ProcessChannel162(ChannelValue val);
-	virtual void ProcessChannel163(ChannelValue val);
+	virtual void ProcessChannel140(ChannelValue val);
+	virtual void ProcessChannel141(ChannelValue val);
+	virtual void ProcessChannel142(ChannelValue val);
+	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	public: virtual void GenerateHandrupt();
 	public: virtual void GenerateDownrupt();

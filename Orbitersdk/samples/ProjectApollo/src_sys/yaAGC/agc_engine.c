@@ -2014,27 +2014,28 @@ agc_engine (agc_t * State)
   // fictitious port as a giant lump.
   
   // DS20060225 Send optics shaft & trunnion angles on channels 160 & 161
+  // NB20170308 Now 20 channels lower!
   // Don't pulse negative-zero (77777)
   if ((State->Erasable[0][054] != 0 && State->Erasable[0][054] != 077777) 
 	  && 0 != (State->InputChannel[014] & 02000)){	  
-    ChannelOutput (State, 0160, State->Erasable[0][054]); // TVC PITCH / OPTICS SHAFT 	  
+    ChannelOutput (State, 0140, State->Erasable[0][054]); // TVC PITCH / OPTICS SHAFT 	  
     State->Erasable[0][054] = 0;
   }
   if ((State->Erasable[0][053] != 0 && State->Erasable[0][053] != 077777)
 	  && 0 != (State->InputChannel[014] & 04000)){
-    ChannelOutput (State, 0161, State->Erasable[0][053]); // TVC YAW / OPTICS TRUNNION
+    ChannelOutput (State, 0141, State->Erasable[0][053]); // TVC YAW / OPTICS TRUNNION
     State->Erasable[0][053] = 0;
   }
 
   if ((State->Erasable[0][055] != 0 && State->Erasable[0][055] != 077777)
 	  && 0 != (State->InputChannel[014] & 010)) {
-	  ChannelOutput(State, 0162, State->Erasable[0][055]); // LGC THRUST DRIVE
+	  ChannelOutput(State, 0142, State->Erasable[0][055]); // LGC THRUST DRIVE
 	  State->Erasable[0][055] = 0;
   }
 
   if ((State->Erasable[0][060] != 0 && State->Erasable[0][060] != 077777)
 	  && 0 != (State->InputChannel[014] & 04)) {
-	  ChannelOutput(State, 0163, State->Erasable[0][060]); // ALTITUDE METER DRIVE
+	  ChannelOutput(State, 0143, State->Erasable[0][060]); // ALTITUDE METER DRIVE
 	  State->Erasable[0][060] = 0;
   }
 

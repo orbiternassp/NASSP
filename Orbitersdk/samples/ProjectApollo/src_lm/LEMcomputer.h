@@ -90,10 +90,10 @@ protected:
 	void ProcessChannel6(ChannelValue val);
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-	void ProcessChannel160(ChannelValue val);
-	void ProcessChannel161(ChannelValue val);
-	void ProcessChannel162(ChannelValue val);
-	void ProcessChannel163(ChannelValue val);
+	void ProcessChannel140(ChannelValue val);
+	void ProcessChannel141(ChannelValue val);
+	void ProcessChannel142(ChannelValue val);
+	void ProcessChannel143(ChannelValue val);
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);

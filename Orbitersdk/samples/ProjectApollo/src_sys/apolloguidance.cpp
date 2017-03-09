@@ -4399,20 +4399,6 @@ void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val)
 			WriteIO(&vagc, channel, val.to_ulong());
 		}
 	}
-	else {
-		switch (channel) {
-		case 015:
-			ProcessInputChannel15(val);
-			break;
-		//
-		// Channel 016 is slightly different to 015, but for now we'll
-		// just call the same function.
-		//
-		case 016:
-			ProcessInputChannel15(val);
-			break;
-		}
-	}
 }
 
 void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
@@ -4483,30 +4469,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 		WriteIO(&vagc, channel, data);
 
-	}
-	else {
-		switch (channel) {
-		case 030:
-			ProcessInputChannel30(bit, val);
-			break;
-
-		case 032:
-			ProcessInputChannel32(bit, val);
-			break;
-		}
-	}
-}
-
-void ApolloGuidance::ProcessInputChannel30(int bit, bool val)
-
-{	
-	if (bit == 14) {	// Answer to ISSTurnOnRequest
-		if (val) {
-			ChannelValue val12;
-	    	val12 = 0;
-			val12[ISSTurnOnDelayComplete] = 1;
-			imu.ChannelOutput(012, val12);
-		}
 	}
 }
 
@@ -4584,19 +4546,19 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		break;
 
 	// DS20060225 Enable SPS gimbal control
-	// Ficticious channels 160 & 161 have the optics shaft & trunion angles.
-	case 0160:
-		ProcessChannel160(val);
+	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
+	case 0140:
+		ProcessChannel140(val);
 		break;
 
-	case 0161:		
-		ProcessChannel161(val);
+	case 0141:
+		ProcessChannel141(val);
 		break;
-	case 0162:
-		ProcessChannel162(val);
+	case 0142:
+		ProcessChannel142(val);
 		break;
-	case 0163:
-		ProcessChannel163(val);
+	case 0143:
+		ProcessChannel143(val);
 		break;
 
 	case 033: 
@@ -4623,18 +4585,18 @@ void ApolloGuidance::ProcessChannel6(ChannelValue val){
 void ApolloGuidance::ProcessChannel14(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel160(ChannelValue val){
+void ApolloGuidance::ProcessChannel140(ChannelValue val){
 }
 
-void ApolloGuidance::ProcessChannel161(ChannelValue val){
+void ApolloGuidance::ProcessChannel141(ChannelValue val){
 }
 
 // Stub for LGC thrust drive
-void ApolloGuidance::ProcessChannel162(ChannelValue val) {
+void ApolloGuidance::ProcessChannel142(ChannelValue val) {
 }
 
 // Stub for LGC altitude meter drive
-void ApolloGuidance::ProcessChannel163(ChannelValue val) {
+void ApolloGuidance::ProcessChannel143(ChannelValue val) {
 }
 
 // DS20060308 Stub for FDAI

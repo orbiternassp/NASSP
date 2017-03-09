@@ -453,18 +453,6 @@ char DSKY::ValueChar(unsigned val)
 void DSKY::ProcessChannel13(ChannelValue val)
 
 {
-
-
-	/// \todo Standby light with PRO key?
-	if (val[EnableStandby] || val[TestAlarms])
-	{
-		SetStby(true);
-	}
-	else
-	{
-		SetStby(false);
-	}
-
 	/// \todo Other conditions restart light
 	if (val[TestAlarms] || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
