@@ -912,6 +912,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	case 0143:
 		ProcessChannel143(val);
 		break;
+	case 0163:	//Virtual AGC DSKY stuff
+		ProcessChannel163(val);
+		break;
 
 	case 033: 
 		/* No longer needed DS20061226

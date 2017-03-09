@@ -144,6 +144,7 @@ public:
 	void ProcessChannel13(ChannelValue val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(ChannelValue val);
+	void ProcessChannel163(ChannelValue val);
 
 	//
 	// Helper functions.

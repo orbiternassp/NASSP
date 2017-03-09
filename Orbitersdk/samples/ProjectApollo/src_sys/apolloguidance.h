@@ -365,6 +365,7 @@ protected:
 	virtual void ProcessChannel141(ChannelValue val);
 	virtual void ProcessChannel142(ChannelValue val);
 	virtual void ProcessChannel143(ChannelValue val);
+	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	public: virtual void GenerateHandrupt();
 	public: virtual void GenerateDownrupt();

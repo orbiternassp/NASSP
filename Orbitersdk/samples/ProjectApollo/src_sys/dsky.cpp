@@ -389,11 +389,6 @@ void DSKY::ResetPressed()
 	KeyClick();
 	SendKeyCode(18);
 
-	// DS20061225 If the RESTART light is lit, this resets it externally to the AGC program. CSM 104 SYS HBK pg 399
-	if (RestartLit()) {
-		ClearRestart(); 
-	}
-
 	if(agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;
 	}
@@ -453,15 +448,7 @@ char DSKY::ValueChar(unsigned val)
 void DSKY::ProcessChannel13(ChannelValue val)
 
 {
-	/// \todo Other conditions restart light
-	if (val[TestAlarms] || (agc.vagc.VoltageAlarm != 0))
-	{
-		SetRestart(true);
-	}
-	else
-	{
-		SetRestart(false);
-	}
+	//Handled by Channel 163 now
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
@@ -956,16 +943,37 @@ void DSKY::ProcessChannel11(ChannelValue val)
 	SetCompActy(val11[LightComputerActivity]);
 	SetUplink(val11[LightUplink]);
 	SetTemp(val11[LightTempCaution]);
-	SetKbRel(val11[LightKbRel]);
-	SetOprErr(val11[LightOprErr]);
+	//SetKbRel(val11[LightKbRel]);
+	//SetOprErr(val11[LightOprErr]);
 
-	if (val11[FlashVerbNoun]) {
+	/*if (val11[FlashVerbNoun]) {
 		SetVerbDisplayFlashing();
 		SetNounDisplayFlashing();
 	}
 	else {
 		ClearVerbDisplayFlashing();
 		ClearNounDisplayFlashing();
+	}*/
+}
+
+void DSKY::ProcessChannel163(ChannelValue val)
+
+{
+	ChannelValue val163;
+
+	val163 = val;
+	SetKbRel(val163[Ch163LightKbRel]);
+	SetOprErr(val163[Ch163LightOprErr]);
+	SetStby(val163[Ch163LightStandby]);
+	SetRestart(val163[Ch163LightRestart]);
+
+	if (val163[Ch163FlashVerbNoun]) {
+		ClearVerbDisplayFlashing();
+		ClearNounDisplayFlashing();
+	}
+	else {
+		SetVerbDisplayFlashing();
+		SetNounDisplayFlashing();
 	}
 }
 
@@ -992,7 +1000,7 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	case 4:
 		SetTemp(val);
 		break;
-
+/*
 	// 5 - Kbd Rel
 	case 5:
 		SetKbRel(val);
@@ -1013,7 +1021,7 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	// 7 - Opr Err
 	case 7:
 		SetOprErr(val);
-		break;
+		break;*/
 	}
 }
 

@@ -74,3 +74,10 @@ void ApolloGuidance::ProcessChannel11(ChannelValue val)
 	if (dsky2) dsky2->ProcessChannel11(val);
 }
 
+void ApolloGuidance::ProcessChannel163(ChannelValue val)
+
+{
+	dsky.ProcessChannel163(val);
+	if (dsky2) dsky2->ProcessChannel163(val);
+}
+
