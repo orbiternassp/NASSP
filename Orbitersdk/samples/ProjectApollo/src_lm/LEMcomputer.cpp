@@ -251,39 +251,6 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 }
 
 //
-// We've been told to terminate the program.
-//
-
-void LEMcomputer::TerminateProgram()
-{
-
-}
-
-//
-// We've been told to proceed with no data. Check where we are
-// in the program and proceed apropriately.
-//
-
-void LEMcomputer::ProceedNoData()
-
-{
-	if (CommonProceedNoData())
-		return;
-
-	LightOprErr();
-}
-
-unsigned int LEMcomputer::GetFlagWord(int num)
-{
-	return 0;
-}
-
-void LEMcomputer::SetFlagWord(int num, unsigned int val)
-{
-
-}
-
-//
 // Access simulated erasable memory.
 //
 

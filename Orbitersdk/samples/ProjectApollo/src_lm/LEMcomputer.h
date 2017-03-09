@@ -50,8 +50,6 @@ public:
 	bool ValidateVerbNoun(int verb, int noun);
 	void ProcessVerbNoun(int verb, int noun);
 	bool ValidateProgram(int prog);
-	unsigned int GetFlagWord(int num);
-	void SetFlagWord(int num, unsigned int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void WriteMemory(unsigned int loc, int val);
 	void ChangeDescentRate(double delta);
@@ -97,8 +95,6 @@ protected:
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);
-	void ProceedNoData();
-	void TerminateProgram();
 
 	void AbortAscent(double simt);
 	void Phase(double &phase, double &delta);

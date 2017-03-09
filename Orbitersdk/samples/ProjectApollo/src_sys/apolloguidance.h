@@ -81,71 +81,12 @@ public:
 	virtual ~ApolloGuidance();
 
 	///
-	/// \brief Start running a program.
-	/// \param prog Program number (major mode) to start running.
-	///
-	void RunProgram(int prog);
-
-	///
-	/// This function is called when the user enters a verb and noun in order to determine
-	/// whether the combination is valid. It's a pure virtual class because it will be defined in
-	/// the derived classes: verbs and nouns for the CSM AGC aren't the same as the LEM AGC.
-	/// \brief Validate a VERB/NOUN combination.
-	/// \param verb Verb number to start running.
-	/// \param noun Noun number to start running.
-	/// \return True if the combination is valid.
-	///
-	virtual bool ValidateVerbNoun(int verb, int noun) = 0;
-
-	///
-	/// \brief Process a new verb and noun combination.
-	/// \param verb The new Verb.
-	/// \param noun The new Noun.
-	///
-	virtual void ProcessVerbNoun(int verb, int noun) = 0;
-
-	///
-	/// Validate program number for programs specific to a derived
-	/// class of computer.
-	///
-	/// \brief Validate program number.
-	/// \param prog Program number.
-	/// \return True if the program is supported.
-	///
-	virtual bool ValidateProgram(int prog) = 0;
-	virtual void DisplayNounData(int noun) = 0;
-
-	///
 	/// \brief Update program status for CSM or LEM programs when the PRO key is pressed.
 	/// \param R1 Contents of DSKY register 1.
 	/// \param R2 Contents of DSKY register 2.
 	/// \param R3 Contents of DSKY register 3.
 	///
 	virtual void ProgPressed(int R1, int R2, int R3) = 0;
-
-	///
-	/// \brief Proceed in program without the user entering data, making a best guess.
-	///
-	virtual void ProceedNoData() = 0;
-
-	///
-	/// \brief Terminate the current program.
-	///
-	virtual void TerminateProgram() = 0;
-
-	///
-	/// \brief Get a flagword value.
-	/// \param num Flagword number.
-	/// \return Flagword value.
-	///
-	virtual unsigned int GetFlagWord(int num) = 0;
-
-	///
-	/// \brief Set a flagword value.
-	/// \param num Flagword number.
-	/// \param val Flagword value to set.
-	///
-	virtual void SetFlagWord(int num, unsigned int val) = 0;
 
 	///
 	/// \brief Read from simulated erasable memory.
@@ -172,23 +113,6 @@ public:
 	void RSetPressed();
 
 	///
-	/// A new Verb and Noun have been entered. Validate them and raise an error if they can't
-	/// be validated.
-	///
-	/// \brief Process Verb/Noun entry.
-	/// \param verb New Verb.
-	/// \param noun New Noun.
-	///
-	void VerbNounEntered(int verb, int noun);
-
-	///
-	/// \brief Validate common Verb and Noun combinations which are used in both CSM and LEM.
-	/// \param verb New Verb.
-	/// \param noun New Noun.
-	///
-	bool ValidateCommonVerbNoun(int verb, int noun);
-
-	///
 	/// \brief Validate a generic program used in both CSM and LEM.
 	/// \param prog Program to validate.
 	/// \return True if it's a valid program.
@@ -203,12 +127,6 @@ public:
 	/// \param R3 Contents of DSKY register 3.
 	///
 	bool GenericProgPressed(int R1, int R2, int R3);
-	void ProcessCommonVerbNoun(int verb, int noun);
-
-	///
-	/// \brief Proceed in generic program without the user entering data, making a best guess.
-	///
-	bool CommonProceedNoData();
 
 	///
 	/// \brief Orbiter timestep processing.
@@ -314,12 +232,6 @@ public:
 	/// \brief Terminate a generic program.
 	///
 	void TerminateCommonProgram();
-
-	///
-	/// \brief Abort the current program and raise a Program Alarm.
-	/// \param ErrNo Program alarm to raise.
-	///
-	void AbortWithError(int ErrNo);
 
 	///
 	/// \brief Convert from velocity in meters per second to velocity in display units based on AGC setup.
@@ -598,76 +510,6 @@ protected:
 	///
 	void ResetProg(double simt);
 
-	///
-	/// \brief Run Program 16.
-	/// \param simt Current Mission Elapsed Time.
-	///
-	void Prog16(double simt);
-
-	///
-	/// \brief Process Pro key while running Program 16.
-	/// \param R1 Value in DSKY R1 register.
-	/// \param R2 Value in DSKY R2 register.
-	/// \param R3 Value in DSKY R3 register.
-	///
-	void Prog16Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Run Program 16.
-	/// \param simt Current Mission Elapsed Time.
-	///
-	void Prog17(double simt);
-
-	///
-	/// \brief Process Pro key while running Program 17.
-	/// \param R1 Value in DSKY R1 register.
-	/// \param R2 Value in DSKY R2 register.
-	/// \param R3 Value in DSKY R3 register.
-	///
-	void Prog17Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Run Program 16.
-	/// \param simt Current Mission Elapsed Time.
-	///
-	void Prog18(double simt);
-
-	///
-	/// \brief Process Pro key while running Program 18.
-	/// \param R1 Value in DSKY R1 register.
-	/// \param R2 Value in DSKY R2 register.
-	/// \param R3 Value in DSKY R3 register.
-	///
-	void Prog18Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Run Program 19.
-	/// \param simt Current Mission Elapsed Time.
-	///
-	void Prog19(double simt);
-
-	///
-	/// \brief Process Pro key while running Program 19.
-	/// \param R1 Value in DSKY R1 register.
-	/// \param R2 Value in DSKY R2 register.
-	/// \param R3 Value in DSKY R3 register.
-	///
-	void Prog19Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Run Program 37.
-	/// \param simt Current Mission Elapsed Time.
-	///
-	void Prog37(double simt);
-
-	///
-	/// \brief Process Pro key while running Program 37.
-	/// \param R1 Value in DSKY R1 register.
-	/// \param R2 Value in DSKY R2 register.
-	/// \param R3 Value in DSKY R3 register.
-	///
-	void Prog37Pressed(int R1, int R2, int R3);
-
 	//
 	// DSKY interface.
 	//
@@ -851,23 +693,6 @@ protected:
 	void DisplayTime(double t);
 
 	///
-	/// Flash Verb 37 on the DSKY to indicate that the user should switch to a new program. This
-	/// will normally be called when one program has completed (e.g. after launch shutdown).
-	///
-	/// \brief Indicate thatthe user should switch to a new program.
-	///
-	void AwaitProgram();
-
-	///
-	/// Sets a verb and noun combination and flashes them on the DSKY.
-	///
-	/// \brief Set a Verb and Noun display and flash them.
-	/// \param Verb Verb to display.
-	/// \param Noun Noun to display.
-	///
-	void SetVerbNounAndFlash(int Verb, int Noun);
-
-	///
 	/// Sets a verb and noun combination and shows them on the DSKY.
 	///
 	/// \brief Set a Verb and Noun display.
@@ -891,7 +716,6 @@ protected:
 	///
 	virtual void BurnMainEngine(double thrust);
 
-	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();
@@ -1065,7 +889,7 @@ protected:
 
 	void PlusPressed();
 	void MinusPressed();
-	void EnterPressed();
+	//void EnterPressed();
 	void NumberPressed(int val);
 
 	void LightsOff();
@@ -1228,7 +1052,6 @@ protected:
 	double DesiredPlaneChange;
 	double DesiredLAN;
 
-	unsigned int BankSumNum;
 	unsigned int CurrentEMEMAddr;
 
 #define MAX_INPUT_CHANNELS	0200
