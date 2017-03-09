@@ -56,6 +56,7 @@
 		07/07/05 RSB	On a resume, now restores 010 on up (rather
 				than 020 on up), on Hugh's advice.
 		09/30/16 MAS	Added initialization of NightWatchman.
+		01/04/17 MAS    Added initialization of ParityFail.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -207,6 +208,7 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->NoRupt = 0;
   State->TCTrap = 0;
   State->NoTC = 0;
+  State->ParityFail = 0;
 
   State->Standby = 0;
   State->SbyPressed = 0;

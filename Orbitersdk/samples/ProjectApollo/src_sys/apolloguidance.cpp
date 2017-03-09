@@ -398,8 +398,9 @@ typedef union
 		unsigned NoRupt:1;
 		unsigned TCTrap:1;
 		unsigned NoTC:1;
-		unsigned VAGCStandby:1;
+		unsigned Standby:1;
 		unsigned SbyPressed:1;
+		unsigned ParityFail:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -453,8 +454,9 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.NoRupt = vagc.NoRupt;
 	state.u.TCTrap = vagc.TCTrap;
 	state.u.NoTC = vagc.NoTC;
-	state.u.VAGCStandby = vagc.Standby;
+	state.u.Standby = vagc.Standby;
 	state.u.SbyPressed = vagc.SbyPressed;
+	state.u.ParityFail = vagc.ParityFail;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -640,8 +642,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.NoRupt = state.u.NoRupt;
 			vagc.TCTrap = state.u.TCTrap;
 			vagc.NoTC = state.u.NoTC;
-			vagc.Standby = state.u.VAGCStandby;
+			vagc.Standby = state.u.Standby;
 			vagc.SbyPressed = state.u.SbyPressed;
+			vagc.ParityFail = state.u.ParityFail;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
