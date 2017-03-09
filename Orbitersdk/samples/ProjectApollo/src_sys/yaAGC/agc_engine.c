@@ -261,6 +261,15 @@
 				 how interrupt priorities are handled, and
 				 corrected ZRUPT to be return addr+1.
 				 Aurora 12 now passes all of SELFCHK in yaAGC.
+		10/04/16 MAS	Added support for standby mode, added the
+				 standby light to the light test, and fixed
+				 the speed of scaler counting and phasing of
+				 TIME6.
+		11/12/16 MAS	Stopped preventing interrupts on Q and L
+				 overflow (only A overflow should do so). This
+				 was causing the O-UFLOW check in Validation
+				 to never allow interrupts, triggering a rupt
+				 lock alarm.
 		12/19/16 MAS	Corrected one more bug in the DV instruction;
 				 the case of a number being divided by itself
 				 was not sign-extending the result in the L
@@ -2151,12 +2160,9 @@ agc_engine (agc_t * State)
 			    SignExtend (*WhereWord)));
       Instruction &= 077777;
       // Handle interrupts.
-      if (DebuggerInterruptMasks[0] &&
-	  !State->InIsr && State->AllowInterrupt && !State->ExtraCode &&
-	  State->IndexValue == 0 && !State->PendFlag && !Overflow &&
-	  ValueOverflowed (c (RegL)) == AGC_P0 &&
-	  ValueOverflowed (c (RegQ)) == AGC_P0 &&
-	  //ProgramCounter > 060 && 
+      if (DebuggerInterruptMasks[0] && !State->InIsr && State->AllowInterrupt 
+		  && !State->ExtraCode && State->IndexValue == 0 && !State->PendFlag
+		  && !Overflow &&  //ProgramCounter > 060 && 
 	  Instruction != 3 && Instruction != 4 && Instruction != 6)
 	{
 	  int i;
