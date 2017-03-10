@@ -296,7 +296,9 @@
 				 when running with a ROM that contains
 				 parity bits.
 		03/09/17 MAS	Prevented yaAGC from exiting standby if PRO is
-				 still held down from entry to standby.
+				 still held down from entry to standby. Also
+				 corrected turning off of RESTART, and in the
+				 process improved DSKY light latency.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -435,6 +437,7 @@ FILE *CduLog = NULL;
 #define DSKY_FLASH_PERIOD 4
 static unsigned DskyTimer = 0;
 static unsigned DskyFlash = 0;
+static unsigned RestartLight = 0;
 static unsigned DskyChannel163 = 0;
 
 //-----------------------------------------------------------------------------
@@ -495,7 +498,7 @@ WriteIO (agc_t * State, int Address, int Value)
   // light is turned off without need for software intervention.
   if ((Address == 011 && (Value & 01000)) ||
     ((Address == 015 || Address == 016) && Value == 022))
-  DskyChannel163 &= ~DSKY_RESTART;
+	  RestartLight = 0;
 
   State->InputChannel[Address] = Value;
   if (Address == 010)
@@ -1701,8 +1704,7 @@ agc_engine (agc_t * State)
   // The first time through the loop, light up the DSKY RESTART light
   if (State->CycleCounter == 0)
     {
-	  DskyChannel163 |= DSKY_RESTART;
-	  ChannelOutput(State, 0163, DskyChannel163);
+	  RestartLight = 1;
     }
 
   State->CycleCounter++;
@@ -1752,19 +1754,32 @@ agc_engine (agc_t * State)
   if (ChannelInput (State))
     return (0);
 
-  // Update DSKY-related timing before we potentially leave due to 
+  // Update DSKY lights before we potentially leave due to 
   // --debug-dsky mode
+  unsigned LastChannel163 = DskyChannel163;
+
+  if (State->InputChannel[013] & 01000)
+    // The light test is active. Light RESTART and STBY.
+	DskyChannel163 |= DSKY_RESTART | DSKY_STBY; // 
+  else
+    {
+	  // Otherwise, if we're not in standby, clear the STBY light.
+	  if (!State->Standby)
+		DskyChannel163 &= ~DSKY_STBY;
+
+	  // Make the RESTART light mirror RestartLight.
+	  if (RestartLight)
+	    DskyChannel163 |= DSKY_RESTART;
+	  else
+		DskyChannel163 &= ~DSKY_RESTART;
+	}
+
+  // Check for timing-related DSKY changes
   while (DskyTimer >= DSKY_OVERFLOW)
     {
 	  DskyTimer -= DSKY_OVERFLOW;
 	  DskyFlash = (DskyFlash + 1) % DSKY_FLASH_PERIOD;
 	  DskyChannel163 &= ~(DSKY_KEY_REL | DSKY_VN_FLASH | DSKY_OPER_ERR);
-
-	  // ... but turn it on if the alarm test is active
-	  if (State->InputChannel[013] & 01000)
-		  DskyChannel163 |= DSKY_RESTART | DSKY_STBY;
-	  else if (!State->Standby)
-		  DskyChannel163 &= ~DSKY_STBY;
 
 	  // Flashing lights on the DSKY have a period of 1.28s, and a 75% duty cycle
 	  if (!State->Standby)
@@ -1784,10 +1799,11 @@ agc_engine (agc_t * State)
 				DskyChannel163 |= DSKY_OPER_ERR;
 			 }
 		}
-
-	  // Send out updated display information
-	  ChannelOutput(State, 0163, DskyChannel163);
 	}
+
+  // Send out updated display information, if something on the DSKY changed
+  if (DskyChannel163 != LastChannel163)
+    ChannelOutput(State, 0163, DskyChannel163);
 
   // If in --debug-dsky mode, don't want to take the chance of executing
   // any AGC code, since there isn't any loaded anyway.
@@ -2007,8 +2023,7 @@ agc_engine (agc_t * State)
 			  // Light the RESTART light on the DSKY, if we're not going into standby
 			  if (!State->Standby)
 			    {
-				  DskyChannel163 |= DSKY_RESTART;
-				  ChannelOutput(State, 0163, DskyChannel163);
+				  RestartLight = 1;
 				}
 
 		    }
