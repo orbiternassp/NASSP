@@ -1704,10 +1704,10 @@ agc_engine (agc_t * State)
   */
 
   // The first time through the loop, light up the DSKY RESTART light
-  if (State->CycleCounter == 0)
-    {
-	  RestartLight = 1;
-    }
+  //if (State->CycleCounter == 0)
+  //  {
+	//  RestartLight = 1;
+  //  }
 
   State->CycleCounter++;
   
