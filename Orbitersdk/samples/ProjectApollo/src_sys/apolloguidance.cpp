@@ -401,6 +401,7 @@ typedef union
 		unsigned Standby:1;
 		unsigned SbyPressed:1;
 		unsigned ParityFail:1;
+		unsigned CheckParity:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -457,6 +458,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.Standby = vagc.Standby;
 	state.u.SbyPressed = vagc.SbyPressed;
 	state.u.ParityFail = vagc.ParityFail;
+	state.u.CheckParity = vagc.CheckParity;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -645,6 +647,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.Standby = state.u.Standby;
 			vagc.SbyPressed = state.u.SbyPressed;
 			vagc.ParityFail = state.u.ParityFail;
+			vagc.CheckParity = state.u.CheckParity;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);

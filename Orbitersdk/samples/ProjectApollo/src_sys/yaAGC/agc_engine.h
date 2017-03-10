@@ -85,6 +85,8 @@
 						alarm flags to state, and the constants related to
 						channel 77.
 		01/04/17 MAS	Added the fixed parity fail CH77 bit.
+		01/30/17 MAS	Added storage for parity bits and a flag to enable
+			      		parity bit checking.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -107,7 +109,9 @@ extern "C" {
 #ifdef WIN32
 // Win32
 typedef short int16_t;
+typedef unsigned char uint8_t;
 typedef signed char int8_t;
+typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned __int64 uint64_t;
 typedef __int64 int64_t;
@@ -307,6 +311,7 @@ typedef struct
   // numbers by the AGC can theoretically go 0-39 (0-047).  Therefore, I
   // provide some extra.
   int16_t Fixed[40][02000];	// Banks 2,3 are "fixed-fixed".
+  uint32_t Parities[40 * (02000 / 32)];
   // There are also "input/output channels".  Output channels are acted upon
   // immediately, but input channels are buffered from asynchronous data.
   int16_t InputChannel[NUM_CHANNELS];
@@ -335,6 +340,7 @@ typedef struct
   unsigned Standby:1;           // Set while the computer is in standby mode.
   unsigned SbyPressed:1;        // Set while PRO is being held down; cleared by releasing PRO
   unsigned ParityFail:1;        // Set when a parity failure is encountered accessing memory (in yaAGC, just hitting banks 44+)
+  unsigned CheckParity:1;       // Enable parity checking for fixed memory.
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   // The following pointer is present for whatever use the Orbiter
