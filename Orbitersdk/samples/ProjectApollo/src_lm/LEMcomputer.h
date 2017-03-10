@@ -47,16 +47,8 @@ public:
 	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
 	virtual ~LEMcomputer();
 
-	bool ValidateVerbNoun(int verb, int noun);
-	void ProcessVerbNoun(int verb, int noun);
-	bool ValidateProgram(int prog);
-	unsigned int GetFlagWord(int num);
-	void SetFlagWord(int num, unsigned int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void WriteMemory(unsigned int loc, int val);
-	void ChangeDescentRate(double delta);
-	void RedesignateTarget(int axis, double direction);
-	void GetHorizVelocity(double &forward, double &lateral);
 
 	void Timestep(double simt, double simdt);
 	void Run() ;
@@ -95,27 +87,11 @@ protected:
 	void ProcessChannel142(ChannelValue val);
 	void ProcessChannel143(ChannelValue val);
 
-	void DisplayNounData(int noun);
-	void ProgPressed(int R1, int R2, int R3);
-	void ProceedNoData();
-	void TerminateProgram();
-
-	void AbortAscent(double simt);
-	void Phase(double &phase, double &delta);
-	void Radar(double &range, double &rate);
-	void GetIMUOrientation(int type, double arg, VECTOR3 &x, VECTOR3 &y, VECTOR3 &z);
-	bool OrbitCalculationsValid();
 	void ResetAttitudeLevel();
 	void AddAttitudeRotLevel(VECTOR3 level);
 	void AddAttitudeLinLevel(VECTOR3 level);
 	void AddAttitudeLinLevel(int axis, double level);
 	void SetAttitudeRotLevel(VECTOR3 level);
-	
-	///
-	/// \brief Set the thrust level of the main engine.
-	/// \param thrust Thrust level (0.0 to 1.0).
-	///
-	virtual void BurnMainEngine(double thrust);
 
 	double RCSCommand[16];
 	VECTOR3 CommandedAttitudeRotLevel;	// store current thrust levels between the guidance loop steps

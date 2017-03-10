@@ -324,13 +324,18 @@ class CrossPointer
 public:
 	CrossPointer();
 	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	void GetVelocities(double &vx, double &vy);
 	void SetForwardVelocity(int val, ChannelValue ch12);
 	void SetLateralVelocity(int val, ChannelValue ch12);
+	void ZeroLGCVelocity() {lgc_forward = 0.0;lgc_lateral = 0.0;}
 
 	bool IsPowered();
+
+	bool lgcErrorCountersEnabled;
 protected:
 	LEM *lem;
 	e_object *dc_source;
@@ -340,6 +345,10 @@ protected:
 	double vel_x, vel_y;
 	double lgc_forward, lgc_lateral;
 };
+
+#define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
+#define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
+#define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
 
 
 // Caution and Warning Electronics Assembly
@@ -625,14 +634,6 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
-
-	///
-	/// Since we can now run with either the Virtual AGC emulator or the C++ AGC, this function
-	/// allows you to check which we're using.
-	/// \brief Are we running a Virtual AGC?
-	/// \return True for Virtual AGC, false for C++ AGC.
-	///
-	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
 
 	///
 	/// \brief Triggers Virtual AGC core dump

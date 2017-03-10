@@ -1320,6 +1320,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
 			deca.LoadState(scn);
 		}
+		else if (!strnicmp(line, CROSSPOINTER_LEFT_START_STRING, sizeof(CROSSPOINTER_LEFT_START_STRING))) {
+			crossPointerLeft.LoadState(scn);
+		}
+		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
+			crossPointerRight.LoadState(scn);
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1675,6 +1681,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	DPS.rollGimbalActuator.SaveState(scn);
 	oapiWriteLine(scn, "DECA_BEGIN");
 	deca.SaveState(scn);
+	oapiWriteLine(scn, CROSSPOINTER_LEFT_START_STRING);
+	crossPointerLeft.SaveState(scn);
+	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
+	crossPointerRight.SaveState(scn);
 	checkControl.save(scn);
 }
 
@@ -1718,7 +1728,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	AscentFuelMassKg = ls.AscentFuelKg;
 
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
-	agc.SetVirtualAGC(ls.Yaagc);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
@@ -1788,10 +1797,7 @@ void LEM::CheckRCS(){
 }
 
 void LEM::SetRCSJet(int jet, bool fire) {
-	/// \todo Only for the Virtual AGC for now
-	if (agc.IsVirtualAGC()) {
-		SetThrusterLevel(th_rcs[jet], fire);
-	}
+	SetThrusterLevel(th_rcs[jet], fire);
 }
 
 

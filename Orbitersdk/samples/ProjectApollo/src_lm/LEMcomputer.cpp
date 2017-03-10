@@ -49,13 +49,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 
 	isLGC = true;
 
-	ProgFlag01 = false;
-	ProgFlag02 = false;
-	ProgFlag03 = false;
-	ProgFlag04 = false;
-	RetroFlag = false;
-	BurnFlag = false;
-
 	int i;
 	for (i = 0; i < 16; i++) {
 		RCSCommand[i] = 0;
@@ -70,8 +63,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 	DesiredApogee = 82.250;
 	DesiredPerigee = 74.360;
 	DesiredAzimuth = 270.0;
-
-	InOrbit = 1;
 
     mode = -1;
 	simcomputert = -1.0;
@@ -131,26 +122,6 @@ void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	}
 
 	agc_load_binfile(&vagc, binfile);
-}
-
-bool LEMcomputer::ValidateVerbNoun(int verb, int noun)
-{
-	return false;
-}
-
-void LEMcomputer::DisplayNounData(int noun)
-{
-
-}
-
-void LEMcomputer::ProcessVerbNoun(int verb, int noun)
-{
-
-}
-
-bool LEMcomputer::ValidateProgram(int prog)
-{
-	return false;
 }
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
@@ -241,48 +212,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	return;
 }
 
-void LEMcomputer::ProgPressed(int R1, int R2, int R3)
-
-{
-	if (GenericProgPressed(R1, R2, R3))
-		return;
-
-	LightOprErr();
-}
-
-//
-// We've been told to terminate the program.
-//
-
-void LEMcomputer::TerminateProgram()
-{
-
-}
-
-//
-// We've been told to proceed with no data. Check where we are
-// in the program and proceed apropriately.
-//
-
-void LEMcomputer::ProceedNoData()
-
-{
-	if (CommonProceedNoData())
-		return;
-
-	LightOprErr();
-}
-
-unsigned int LEMcomputer::GetFlagWord(int num)
-{
-	return 0;
-}
-
-void LEMcomputer::SetFlagWord(int num, unsigned int val)
-{
-
-}
-
 //
 // Access simulated erasable memory.
 //
@@ -307,11 +236,6 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
-}
-
-bool LEMcomputer::OrbitCalculationsValid()
-{
-	return false;
 }
 
 int LEMcomputer::GetStatus(double *simcomputert,
@@ -467,6 +391,23 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 			}
 			lem->atca.lgc_err_ena = 0;
 		}
+
+		// Reset cross pointer needles
+		if (val12[DisplayInertialData]) {
+			if (val12[EnableRRCDUErrorCounter]) {
+				if (!lem->crossPointerLeft.lgcErrorCountersEnabled) {	//Dirty hack: voltage for cross pointers originates in RRCDU, the displays just get the voltages
+					lem->crossPointerLeft.ZeroLGCVelocity();
+					lem->crossPointerRight.ZeroLGCVelocity();
+					lem->crossPointerLeft.lgcErrorCountersEnabled = true;
+					lem->crossPointerRight.lgcErrorCountersEnabled = true;
+				}
+			}
+			else {
+				lem->crossPointerLeft.lgcErrorCountersEnabled = false;
+				lem->crossPointerRight.lgcErrorCountersEnabled = false;
+			}
+		}
+
 		break;
 
 	case 0174: // YAW ERROR
@@ -509,18 +450,6 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		break;
 	}
 
-}
-
-void LEMcomputer::BurnMainEngine(double thrust)
-
-{
-	/// \todo This function is used by the AGC++ burn programs
-	/// and should simulate the VAGC behaviour, i.e. I/O channels etc.
-	/// to control the main engine
-
-	OurVessel->SetEngineLevel(ENGINE_HOVER, thrust);
-
-	ApolloGuidance::BurnMainEngine(thrust);
 }
 
 /// \todo Dirty Hack for the AGC++ RCS burn control, 

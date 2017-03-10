@@ -243,6 +243,17 @@ enum ChannelValue33_Bits {
 		AGCOscillatorAlarm,
 } ;
 
+enum ChannelValue163_Bits {
+
+	Ch163LightKbRel = 4,			///< Turn on the Keyboard Release light.
+	Ch163FlashVerbNoun,				///< Flash the Verb and Noun displays.			
+	Ch163LightOprErr,				///< Light the Operator Error light
+	Ch163LightRestart,				///< Light the Restart light
+	Ch163LightStandby,				///< Light the Standby light
+	Ch163ELOff,						///< Switch off EL panel power
+
+};
+
 ///
 /// \ingroup AGCIO
 /// \brief AGC input channel 177.

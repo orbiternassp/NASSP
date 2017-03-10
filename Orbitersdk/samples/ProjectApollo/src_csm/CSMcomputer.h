@@ -260,13 +260,6 @@ public:
 	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
 	virtual ~CSMcomputer();
 
-	bool ValidateVerbNoun(int verb, int noun);
-	void ProcessVerbNoun(int verb, int noun);
-	bool ValidateProgram(int prog);
-	void ProceedNoData();
-	void TerminateProgram();
-	unsigned int GetFlagWord(int num);
-	void SetFlagWord(int num, unsigned int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void WriteMemory(unsigned int loc, int val);
 
@@ -330,8 +323,6 @@ public:
 	///
 	void SetDesiredInclination(double val) { DesiredInclination = val; };
 
-	void SetBurnTime(double val) { BurnTime = val; };
-
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
@@ -342,37 +333,6 @@ public:
 
 protected:
 
-	void DisplayNounData(int noun);
-	void ProgPressed(int R1, int R2, int R3);
-
-	///
-	/// Approximate method to calculate 'Time of Free Fall': the time in seconds that the CM would
-	/// take to free fall to 300,000 feet if the engines were to fail at this time.
-	///
-	/// \brief Calculate TFF for DSKY display.
-	/// \param vy Vertical velocity relative to Earth in m/s.
-	/// \param r0 Current altitude in meters.
-	/// \param g Current gravitational acceleration in m/s^2
-	///
-	double CalcTFF(double vy, double r0, double g);
-
-	///
-	/// Calculate the current gravitational acceleration.
-	///
-	/// \brief Get current g.
-	/// \return Current gravitational accelerations in m/s^2.
-	///
-	double CurrentG();
-
-	///
-	/// The real CSM could only perform orbit calculations while running certain specific programs. We
-	/// simulate this through this call: the calculations will only be performed if it returns true.
-	///
-	/// \brief Can the AGC perform orbit calculations at this time?
-	/// \return True if the current program supports orbit calculation.
-	///
-	bool OrbitCalculationsValid();
-	void DisplayBankSum();
 	void SetAttitudeRotLevel(VECTOR3 level);
 
 	void ProcessChannel5(ChannelValue val);
@@ -387,184 +347,10 @@ protected:
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 
-	///
-	/// \brief Set the thrust level of the main engine.
-	/// \param thrust Thrust level (0.0 to 1.0).
-	///
-	virtual void BurnMainEngine(double thrust);
-
-
-	//
-	// Programs we can run.
-	//
-
-	///
-	/// Program 01 simulates pre-launch IMU setup.
-	///
-	/// \brief Run program 01.
-	/// \param simt Current Mission Elapsed Time in seconds.
-	///
-	void Prog01(double simt);
-
-	///
-	/// Program 02 simulates pre-launch trajectory configuration.
-	///
-	/// \brief Run program 02.
-	/// \param simt Current Mission Elapsed Time in seconds.
-	///
-	void Prog02(double simt);
-
-	///
-	/// Program 06 puts the AGC into standby mode.
-	///
-	/// \brief Run program 06.
-	/// \param simt Current Mission Elapsed Time in seconds.
-	///
-	void Prog06(double simt);
-
-	///
-	/// Program 11 simulates the launch monitor and control program.
-	///
-	/// \brief Run program 11.
-	/// \param simt Current Mission Elapsed Time in seconds.
-	///
-	void Prog11(double simt);
-
-	///
-	/// Program 15 is the TLI (Trans Lunar Injection) program used to send the SIVb and CSM to the moon.
-	///
-	/// \brief Run program 15.
-	/// \param simt Current Mission Time.
-	///
-	void Prog15(double simt);
-
-	///
-	/// Program 59 is a generic docked vessel control program, which didn't exist in real life.
-	///
-	/// Enter 00001 to start venting program. The DSKY will display remaining SIVb fuel in R1,
-	/// press PRO to start or stop venting.
-	///
-	/// \brief Run program 59.
-	/// \param simt Current Mission Time.
-	///
-	void Prog59(double simt);
-	void Prog61(double simt);
-	void Prog62(double simt);
-	void Prog63(double simt);
-	void Prog64(double simt);
-
-	//
-	// Program support
-	//
-
-	void DoTLICalcs(double simt);
-	void UpdateTLICalcs(double simt);
-
-	//
-	// Program input processing.
-	//
-
-	///
-	/// \brief Process PRO key during Prog 02.
-	/// \param R1 Value in DSKY register R1.
-	/// \param R2 Value in DSKY register R2.
-	/// \param R3 Value in DSKY register R3.
-	///
-	void Prog02Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Process PRO key during Prog 15.
-	/// \param R1 Value in DSKY register R1.
-	/// \param R2 Value in DSKY register R2.
-	/// \param R3 Value in DSKY register R3.
-	///
-	void Prog15Pressed(int R1, int R2, int R3);
-
-	///
-	/// \brief Process PRO key during Prog 59.
-	/// \param R1 Value in DSKY register R1.
-	/// \param R2 Value in DSKY register R2.
-	/// \param R3 Value in DSKY register R3.
-	///
-	void Prog59Pressed(int R1, int R2, int R3);
-	void Prog61Pressed(int R1, int R2, int R3);
-	void Prog62Pressed(int R1, int R2, int R3);
-	void Prog63Pressed(int R1, int R2, int R3);
-
-	void HoldAttitude(double roll, double pitch, double yaw);
-
-	//
-	// Program data.
-	//
-	
-	
-	double LastAlt;
-// G-force calculation variables
-	double ZAcc;
-	double aTime;
-	double XSPEEDN1;
-	double YSPEEDN1;
-	double ZSPEEDN1;
-// autopilot variables
-	bool GONEPAST;
-	bool EGSW;
-	bool HIND;
-	bool LATSW;
-	bool RELVELSW;
-	bool INRLSW;
-	bool GONEBY;
-	bool NOSWITCH;
-	int ACALC;
-	int RollCode;
-	int K2ROLL;
-	int SELECTOR;
-	double KA;
-	double Dzero;
-	double LoverD;
-	double Q7;
-	double FACTOR;
-	double FACT1;
-	double FACT2;
-	double DIFFOLD;
-	double LEWD;
-	double DLEWD;
-	double A0;
-	double A1;
-	double VS1;
-	double ALP;
-	double AHOOK;
-	double DHOOK;
-	double V1;
-
-// DSKY display variables
-	double V;
-	double D;
-	double PREDGMAX;
-	double VPRED;
-	double GAMMAEI;
-	double TIME5;
-	double RANGETOGO;
-	double RTOSPLASH;
-	double TIMETOGO;
-	double VIO;
-	double ROLLC;
-	double LATANG;
-	double XRNGERR;
-	double DNRNGERR;
-	double RDOT;
-	double VL;
-
 	FILE *Dfile;
 	int count;
 
 	double lastOrbitalElementsTime;
-
-	CSMFlagWord0 FlagWord0;
-	CSMFlagWord1 FlagWord1;
-	CSMFlagWord2 FlagWord2;
-	CSMFlagWord3 FlagWord3;
-	CSMFlagWord4 FlagWord4;
-	CSMFlagWord5 FlagWord5;
 
 	unsigned int LastOut5;
 	unsigned int LastOut6;

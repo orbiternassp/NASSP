@@ -261,6 +261,18 @@
 				 how interrupt priorities are handled, and
 				 corrected ZRUPT to be return addr+1.
 				 Aurora 12 now passes all of SELFCHK in yaAGC.
+		10/04/16 MAS	Added support for standby mode, added the
+				 standby light to the light test, and fixed
+				 the speed of scaler counting and phasing of
+				 TIME6.
+		11/12/16 MAS	Stopped preventing interrupts on Q and L
+				 overflow (only A overflow should do so). This
+				 was causing the O-UFLOW check in Validation
+				 to never allow interrupts, triggering a rupt
+				 lock alarm.
+		11/12/16 MAS	Apparently CH11 bit 10 only turns off RESTART
+				 *on write*, with the actual value of the
+				 channel being otherwise  meaningless.
 		12/19/16 MAS	Corrected one more bug in the DV instruction;
 				 the case of a number being divided by itself
 				 was not sign-extending the result in the L
@@ -268,6 +280,27 @@
 				 register was then destroying the calculated
 				 sign. This was caught by Retread; apparently
 				 Aurora doesn't test for it.
+		12/22/16 MAS	Fixed the No TC hardware alarm, discovered
+				 to be erroneously counting EXTENDS by
+				 BOREALIS.
+		01/04/17 MAS	Added parity fail alarms caused by accessing
+				 nonexistent superbanks. There's still no way
+				 to get an erasable parity fail, because I
+				 haven't come up with a program that can cause
+				 one to happen.
+		01/29/17 MAS	Hard-wired the DKSY's RSET button to turning
+				 off the RESTART light (the button had its
+				 own discrete to reset the RESTART flip flop
+				 in the real AGC/DSKY).
+		01/30/17 MAS	Added parity bit checking for fixed memory
+				 when running with a ROM that contains
+				 parity bits.
+		03/09/17 MAS	Prevented yaAGC from exiting standby if PRO is
+				 still held down from entry to standby. Also
+				 corrected turning off of RESTART, and in the
+				 process improved DSKY light latency. Last,
+			     added a new channel 163 bit that indicates
+				 power for the DSKY EL panel is switched off.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -401,6 +434,15 @@ unsigned IoWriteCounts[01000];
 FILE *CduLog = NULL;
 
 //-----------------------------------------------------------------------------
+// DSKY handling constants and variables.
+#define DSKY_OVERFLOW 81920
+#define DSKY_FLASH_PERIOD 4
+static unsigned DskyTimer = 0;
+static unsigned DskyFlash = 0;
+static unsigned RestartLight = 0;
+static unsigned DskyChannel163 = 0;
+
+//-----------------------------------------------------------------------------
 // Functions for reading or writing from/to i/o channels.  The reason we have
 // to provide a function for this rather than accessing the i/o-channel buffer
 // directly is that the L and Q registers appear in both memory and i/o space,
@@ -451,6 +493,14 @@ WriteIO (agc_t * State, int Address, int Value)
   // alarm codes that are reset when CH77 is written to.
   if (Address == 077)
     Value = 0;
+
+  // The DSKY RESTART light is reset whenever CH11 bit 10 is written
+  // with a 1. The controlling flip-flop in the AGC also has a hard
+  // line to the DSKY's RSET button, so on depression of RSET the
+  // light is turned off without need for software intervention.
+  if ((Address == 011 && (Value & 01000)) ||
+    ((Address == 015 || Address == 016) && Value == 022))
+	  RestartLight = 0;
 
   State->InputChannel[Address] = Value;
   if (Address == 010)
@@ -559,6 +609,7 @@ FindMemoryWord (agc_t * State, int Address12)
 {
   //int PseudoAddress;
   int AdjustmentEB, AdjustmentFB;
+  int16_t *Addr;
 
   // Get rid of the parity bit.
   Address12 = Address12;
@@ -593,13 +644,35 @@ FindMemoryWord (agc_t * State, int Address12)
       AdjustmentFB = (037 & (c (RegFB) >> 10));
       // Account for the superbank bit. 
       if (030 == (AdjustmentFB & 030) && (State->OutputChannel7 & 0100) != 0)
-	AdjustmentFB += 010;
-      return (&State->Fixed[AdjustmentFB][Address12 & 01777]);
+	  AdjustmentFB += 010;
     }
   else if (Address12 < 06000)	// Fixed-fixed.
-    return (&State->Fixed[2][Address12 & 01777]);
-  else				// Fixed-fixed (continued).
-    return (&State->Fixed[3][Address12 & 01777]);
+    AdjustmentFB = 2;
+  else			  // Fixed-fixed (continued).
+    AdjustmentFB = 3;
+
+  Addr = (&State->Fixed[AdjustmentFB][Address12 & 01777]);
+
+  if (State->CheckParity)
+    {
+	  // Check parity for fixed memory if such checking is enabled
+	  int16_t LinearAddr = AdjustmentFB * 02000 + (Address12 & 01777);
+	  int16_t ExpectedParity = (State->Parities[LinearAddr / 32] >> (LinearAddr % 32)) & 1;
+	  int16_t Word = ((*Addr) << 1) | ExpectedParity;
+	  Word ^= (Word >> 8);
+	  Word ^= (Word >> 4);
+	  Word ^= (Word >> 2);
+	  Word ^= (Word >> 1);
+	  Word &= 1;
+	  if (Word != 1)
+	    {
+		  // The program is trying to access unused fixed memory, which
+		  // will trigger a parity alarm.
+		  State->ParityFail = 1;
+		  State->InputChannel[077] |= CH77_PARITY_FAIL;
+		}
+    }
+  return Addr;
 }
 
 // Same thing, basically, but for collecting coverage data.
@@ -1630,6 +1703,12 @@ agc_engine (agc_t * State)
     }
   */
 
+  // The first time through the loop, light up the DSKY RESTART light
+  //if (State->CycleCounter == 0)
+  //  {
+	//  RestartLight = 1;
+  //  }
+
   State->CycleCounter++;
   
   //----------------------------------------------------------------------
@@ -1658,6 +1737,7 @@ agc_engine (agc_t * State)
   // second happens to be 160/3 machine cycles.
 
   ScalerCounter += SCALER_DIVIDER;
+  DskyTimer += SCALER_DIVIDER;
 
   //-------------------------------------------------------------------------
 
@@ -1675,6 +1755,57 @@ agc_engine (agc_t * State)
   // counter-increment was performed.
   if (ChannelInput (State))
     return (0);
+
+  // Update DSKY lights before we potentially leave due to 
+  // --debug-dsky mode
+  unsigned LastChannel163 = DskyChannel163;
+
+  if (State->InputChannel[013] & 01000)
+    // The light test is active. Light RESTART and STBY.
+	DskyChannel163 |= DSKY_RESTART | DSKY_STBY; // 
+  else
+    {
+	  // Otherwise, if we're not in standby, clear the STBY light.
+	  if (!State->Standby)
+		DskyChannel163 &= ~DSKY_STBY;
+
+	  // Make the RESTART light mirror RestartLight.
+	  if (RestartLight)
+	    DskyChannel163 |= DSKY_RESTART;
+	  else
+		DskyChannel163 &= ~DSKY_RESTART;
+	}
+
+  // Check for timing-related DSKY changes
+  while (DskyTimer >= DSKY_OVERFLOW)
+    {
+	  DskyTimer -= DSKY_OVERFLOW;
+	  DskyFlash = (DskyFlash + 1) % DSKY_FLASH_PERIOD;
+	  DskyChannel163 &= ~(DSKY_KEY_REL | DSKY_VN_FLASH | DSKY_OPER_ERR);
+
+	  // Flashing lights on the DSKY have a period of 1.28s, and a 75% duty cycle
+	  if (!State->Standby)
+	    {
+		  if (DskyFlash == 0)
+		    {
+			  // If V/N FLASH is high, then the lights are turned off
+			  if (State->InputChannel[011] & DSKY_VN_FLASH)
+			    DskyChannel163 |= DSKY_VN_FLASH;
+			 }
+		  else
+			{
+			  // If KEY REL or OPER ERR are high, those lights are turned on
+			  if (State->InputChannel[011] & DSKY_KEY_REL)
+			    DskyChannel163 |= DSKY_KEY_REL;
+			  if (State->InputChannel[011] & DSKY_OPER_ERR)
+				DskyChannel163 |= DSKY_OPER_ERR;
+			 }
+		}
+	}
+
+  // Send out updated display information, if something on the DSKY changed
+  if (DskyChannel163 != LastChannel163)
+    ChannelOutput(State, 0163, DskyChannel163);
 
   // If in --debug-dsky mode, don't want to take the chance of executing
   // any AGC code, since there isn't any loaded anyway.
@@ -1712,9 +1843,12 @@ agc_engine (agc_t * State)
       return (0);
     }
   
-  // PRO release processed immediately
   if (State->InputChannel[032] & 020000)
+    {
 	  State->SbyPressed = 0;
+	  State->SbyStillPressed = 0;
+    }
+
 
   //----------------------------------------------------------------------
   // Here we take care of counter-timers.  There is a basic 1/3200 second
@@ -1743,11 +1877,6 @@ agc_engine (agc_t * State)
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
 
-	  //Check for PRO
-	  if (0 == (State->InputChannel[032] & 020000))
-	  {State->SbyPressed = 1;}
-
-
       // Check alarms first, since there's a chance we might go to standby
 	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
@@ -1755,7 +1884,9 @@ agc_engine (agc_t * State)
 		  if (!State->Standby)
 			  State->NightWatchman = 1;
 
-		  
+		  // Same with Standby
+		  if (0 == (State->InputChannel[032] & 020000))
+			  State->SbyPressed = 1;
 	  }
 	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
@@ -1765,15 +1896,23 @@ agc_engine (agc_t * State)
 			  {
 				  // Standby is enabled, and PRO has been held down for the required amount of time.
 				  State->Standby = 1;
+				  State->SbyStillPressed = 1;
 
 				  // While this isn't technically an alarm, it causes GOJAM just like all the rest
 				  TriggeredAlarm = 1;
+
+				  // Turn on the STBY light, and switch off the EL segments
+				  DskyChannel163 |= DSKY_STBY | DSKY_EL_OFF;
+				  ChannelOutput(State, 0163, DskyChannel163);
 			  }
-			  else
+			  else if (!State->SbyStillPressed)
 			  {
 				  // PRO was pressed for long enough to turn us back on. Let's get going!
 				  State->Standby = 0;
 
+				  // Turn off the STBY light
+				  DskyChannel163 &= ~(DSKY_STBY | DSKY_EL_OFF);
+				  ChannelOutput(State, 0163, DskyChannel163);
 			  }
 		  }
 		  if (!State->Standby && State->NightWatchman)
@@ -1871,7 +2010,7 @@ agc_engine (agc_t * State)
 
 
       // If we triggered any alarms, simulate a GOJAM
-	  if (TriggeredAlarm)
+	  if (TriggeredAlarm || State->ParityFail)
 	    {
 		  if (!InhibitAlarms) // ...but only if doing so isn't inhibited
 		    {
@@ -1881,6 +2020,14 @@ agc_engine (agc_t * State)
 			  // The net result of those two is Z = 4000. Interrupt state is cleared.
 			  c(RegZ) = 04000;
 			  State->InIsr = 0;
+			  State->ParityFail = 0;
+
+			  // Light the RESTART light on the DSKY, if we're not going into standby
+			  if (!State->Standby)
+			    {
+				  RestartLight = 1;
+				}
+
 		    }
 
 		  // Push the CH77 updates to the outside world
@@ -2014,7 +2161,7 @@ agc_engine (agc_t * State)
   // fictitious port as a giant lump.
   
   // DS20060225 Send optics shaft & trunnion angles on channels 160 & 161
-  // NB20170308 Now 20 channels lower!
+  // NB20170308 Now 20 channels lower
   // Don't pulse negative-zero (77777)
   if ((State->Erasable[0][054] != 0 && State->Erasable[0][054] != 077777) 
 	  && 0 != (State->InputChannel[014] & 02000)){	  
@@ -2080,12 +2227,9 @@ agc_engine (agc_t * State)
 			    SignExtend (*WhereWord)));
       Instruction &= 077777;
       // Handle interrupts.
-      if (DebuggerInterruptMasks[0] &&
-	  !State->InIsr && State->AllowInterrupt && !State->ExtraCode &&
-	  State->IndexValue == 0 && !State->PendFlag && !Overflow &&
-	  ValueOverflowed (c (RegL)) == AGC_P0 &&
-	  ValueOverflowed (c (RegQ)) == AGC_P0 &&
-	  //ProgramCounter > 060 && 
+      if (DebuggerInterruptMasks[0] && !State->InIsr && State->AllowInterrupt 
+		  && !State->ExtraCode && State->IndexValue == 0 && !State->PendFlag
+		  && !Overflow &&  //ProgramCounter > 060 && 
 	  Instruction != 3 && Instruction != 4 && Instruction != 6)
 	{
 	  int i;
@@ -2202,9 +2346,9 @@ agc_engine (agc_t * State)
 	  if (ValueK != RegQ)	// If not a RETURN instruction ...
 	    c (RegQ) = 0177777 & NextZ;
 	  NextZ = Address12;
+	    ExecutedTC = 1;
 	}
 
-	  ExecutedTC = 1;
       break;
     case 010:			// CCS. 
     case 011:

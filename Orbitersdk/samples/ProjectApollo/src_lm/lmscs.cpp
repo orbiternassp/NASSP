@@ -86,7 +86,7 @@ void ATCA::Timestep(double simt){
 	switch(GC_Mode){
 		case TOGGLESWITCH_UP:    // PGNS MODE
 			// In this case, thruster demand is direct from the LGC. We have nothing to do.
-			if(lem->agc.Yaagc){	lem->agc.SetInputChannelBit(030, GNControlOfSC,1); } // Tell the LGC it has control.
+			lem->agc.SetInputChannelBit(030, GNControlOfSC,1); // Tell the LGC it has control.
 			if(haspower == 1 && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ haspower = 0; } // PNGS path requires this.
 			if(lem->ModeControlPGNSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
 			break;
@@ -94,7 +94,7 @@ void ATCA::Timestep(double simt){
 		case TOGGLESWITCH_DOWN:  // ABORT MODE
 			// In this case, we have to generate thruster demand ourselves, taking "suggestions" from the AGS.
 			// FIXME: Implement this.
-			if(lem->agc.Yaagc){	lem->agc.SetInputChannelBit(030, GNControlOfSC,0); } // Tell the LGC it doesn't have control
+			lem->agc.SetInputChannelBit(030, GNControlOfSC,0); // Tell the LGC it doesn't have control
 			if(haspower == 1 && lem->SCS_ATCA_AGS_CB.Voltage() < 24){ haspower = 0; } // AGS path requires this.
 			if(lem->ModeControlAGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
 			break;
@@ -196,6 +196,7 @@ DECA::DECA() {
 	engOff = false;
 	dpsthrustcommand = 0;
 	lgcAutoThrust = 0;
+	LMR = 0.859;
 }
 
 void DECA::Init(LEM *v, e_object *dcbus) {
@@ -204,7 +205,7 @@ void DECA::Init(LEM *v, e_object *dcbus) {
 	dc_source = dcbus;
 }
 
-void DECA::Timestep(double simt) {
+void DECA::Timestep(double simdt) {
 	powered = false;
 	if (lem == NULL) return;
 
@@ -344,7 +345,19 @@ void DECA::Timestep(double simt) {
 		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
 	}
 
-	lem->DPS.thrustcommand = dpsthrustcommand;
+	//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
+	//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
+	dposcmd = dpsthrustcommand - lem->DPS.thrustcommand;
+	poscmdsign = abs(dpsthrustcommand - lem->DPS.thrustcommand) / (dpsthrustcommand - lem->DPS.thrustcommand);
+	if (abs(dposcmd)>LMR*simdt)
+	{
+		dpos = poscmdsign*LMR*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	lem->DPS.thrustcommand += dpos;
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 }

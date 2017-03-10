@@ -55,7 +55,7 @@ class DECA {
 public:
 	DECA();										// Cons
 	void Init(LEM *vessel, e_object *dcbus);	// Init
-	void Timestep(double simt);					// Timestep
+	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
 	double GetCommandedThrust() { return dpsthrustcommand; }
 	void ProcessLGCThrustCommands(int val);
@@ -71,6 +71,9 @@ protected:
 	bool engOn, engOff;
 	double dpsthrustcommand;
 	double lgcAutoThrust;
+
+private:
+	double LMR, dposcmd, dpos, poscmdsign;
 };
 
 class GASTA {

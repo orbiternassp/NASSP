@@ -84,6 +84,14 @@
 		09/30/16 MAS	Added InhibitAlarms as a configuration global,
 						alarm flags to state, and the constants related to
 						channel 77.
+		01/04/17 MAS	Added the fixed parity fail CH77 bit.
+		01/30/17 MAS	Added storage for parity bits and a flag to enable
+			      		parity bit checking.
+		03/09/17 MAS	Added a bit, SbyStillPressed, that makes sure PRO
+						is released before standby can be exited. Also
+                        added a new channel 163 bit, DSKY_EL_OFF, that
+                        signifies when the power supply for the EL lights
+                        should go off. yaDSKY2 support to follow.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -106,7 +114,9 @@ extern "C" {
 #ifdef WIN32
 // Win32
 typedef short int16_t;
+typedef unsigned char uint8_t;
 typedef signed char int8_t;
+typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned __int64 uint64_t;
 typedef __int64 int64_t;
@@ -222,9 +232,17 @@ extern long random (void);
 #define ChanSCALER1 04
 #define ChanS 07
 
-#define CH77_TC_TRAP        00004
-#define CH77_RUPT_LOCK      00010
-#define CH77_NIGHT_WATCHMAN 00020
+#define CH77_PARITY_FAIL    000001
+#define CH77_TC_TRAP        000004
+#define CH77_RUPT_LOCK      000010
+#define CH77_NIGHT_WATCHMAN 000020
+
+#define DSKY_KEY_REL  000020
+#define DSKY_VN_FLASH 000040
+#define DSKY_OPER_ERR 000100
+#define DSKY_RESTART  000200
+#define DSKY_STBY     000400
+#define DSKY_EL_OFF   001000
 
 #define NUM_INTERRUPT_TYPES 10
 
@@ -299,6 +317,7 @@ typedef struct
   // numbers by the AGC can theoretically go 0-39 (0-047).  Therefore, I
   // provide some extra.
   int16_t Fixed[40][02000];	// Banks 2,3 are "fixed-fixed".
+  uint32_t Parities[40 * (02000 / 32)];
   // There are also "input/output channels".  Output channels are acted upon
   // immediately, but input channels are buffered from asynchronous data.
   int16_t InputChannel[NUM_CHANNELS];
@@ -326,6 +345,9 @@ typedef struct
   unsigned NoTC:1;              // Set when TC is being watched. Cleared by executing TC or TCF
   unsigned Standby:1;           // Set while the computer is in standby mode.
   unsigned SbyPressed:1;        // Set while PRO is being held down; cleared by releasing PRO
+  unsigned SbyStillPressed:1;   // Set upon entry to standby, until PRO is released
+  unsigned ParityFail:1;        // Set when a parity failure is encountered accessing memory (in yaAGC, just hitting banks 44+)
+  unsigned CheckParity:1;       // Enable parity checking for fixed memory.
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   // The following pointer is present for whatever use the Orbiter

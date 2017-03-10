@@ -174,7 +174,7 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
-	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+	if(agc.vagc.VoltageAlarm != 0){
 		RestartLight = true;
 	}else{
 		RestartLight = false;
@@ -182,6 +182,8 @@ void DSKY::Reset()
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
+	NoDAPLight = false;
+	PrioDispLight = false;
 
 	LightsLit = 0;
 	SegmentsLit = 0;
@@ -195,15 +197,7 @@ void DSKY::Reset()
 
 	VerbFlashing = false;
 	NounFlashing = false;
-
-	FlashOn = true;
-
-	//
-	// LastFlashTime needs to be set a long way back in the past so
-	// that it will flash the digits prior to launch.
-	//
-
-	LastFlashTime = MINUS_INFINITY;
+	ELOff = false;
 }
 
 DSKY::~DSKY()
@@ -242,16 +236,6 @@ void DSKY::Timestep(double simt)
 		FirstTimeStep = false;
 	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
-
-	//
-	// Flash counter. For simplicity we'll always update
-	// this even though nothing may be flashing.
-	//
-
-	if (simt > (LastFlashTime + 0.5)) {
-		LastFlashTime = simt;
-		FlashOn = !FlashOn;
-	}
 }
 
 void DSKY::SystemTimestep(double simdt)
@@ -274,8 +258,8 @@ void DSKY::SystemTimestep(double simdt)
 	if (UplinkLit()) LightsLit++;
 	if (NoAttLit()) LightsLit++;
 	if (StbyLit()) LightsLit++;
-	if (KbRelLit() && FlashOn) LightsLit++;
-	if (OprErrLit() && FlashOn) LightsLit++;
+	if (KbRelLit()) LightsLit++;
+	if (OprErrLit()) LightsLit++;
 	if (TempLit()) LightsLit++;
 	if (GimbalLockLit()) LightsLit++;
 	if (ProgLit()) LightsLit++;
@@ -290,13 +274,13 @@ void DSKY::SystemTimestep(double simdt)
 	if (CompActy) 
 		SegmentsLit += 4;
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, true, ELOff);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
 
-	SegmentsLit += SixDigitDisplaySegmentsLit(R1);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R2);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R3);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 	// 10 lights with together max. 6W, 184 segments with together max. 4W  
 	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
@@ -328,7 +312,6 @@ void DSKY::VerbPressed()
 {
 	KeyClick();
 
-	VerbFlashing = false;
 	SendKeyCode(17);
 }
 
@@ -337,7 +320,6 @@ void DSKY::NounPressed()
 {	
 	KeyClick();
 
-	NounFlashing = false;
 	SendKeyCode(31);
 }
 
@@ -389,12 +371,7 @@ void DSKY::ResetPressed()
 	KeyClick();
 	SendKeyCode(18);
 
-	// DS20061225 If the RESTART light is lit, this resets it externally to the AGC program. CSM 104 SYS HBK pg 399
-	if (RestartLit()) {
-		ClearRestart(); 
-	}
-
-	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+	if(agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;
 	}
 }
@@ -453,15 +430,7 @@ char DSKY::ValueChar(unsigned val)
 void DSKY::ProcessChannel13(ChannelValue val)
 
 {
-	/// \todo Other conditions restart light
-	if (val[TestAlarms] || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
-	{
-		SetRestart(true);
-	}
-	else
-	{
-		SetRestart(false);
-	}
+	//Handled by Channel 163 now
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
@@ -475,7 +444,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 	}
 }
 
-void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel)
+void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
 
 {
 	if (!IsPowered())
@@ -488,8 +457,8 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 0, 25, NoAttLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 0, 49, StbyLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit() && FlashOn, xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit() && FlashOn, xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 73, KbRelLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 97, OprErrLit(), xOffset, yOffset);
 
 	DSKYLightBlt(surf, lights, 52, 0,  TempLit(), xOffset, yOffset);
 	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit(), xOffset, yOffset);
@@ -500,6 +469,11 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	if (hasAltVel) {
 		DSKYLightBlt(surf, lights, 52, 121, AltLit(), xOffset, yOffset);
 		DSKYLightBlt(surf, lights, 52, 144, VelLit(), xOffset, yOffset);
+	}
+
+	if (hasDAPPrioDisp) {
+		DSKYLightBlt(surf, lights, 0, 121, PrioDispLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 0, 144, NoDAPLit(), xOffset, yOffset);
 	}
 }
 
@@ -653,12 +627,12 @@ void DSKY::ResetKeyDown()
 	KeyDown_Reset = false;
 }
 
-void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash)
+void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off)
 
 {
 	int Curdigit;
 
-	if (Flash && !FlashOn)
+	if (!Flash || Off)
 		return;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -672,12 +646,12 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
-int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
+int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 
 {
 	int Curdigit, s = 0;
 
-	if (Flash && !FlashOn)
+	if (!Flash || Off)
 		return s;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -692,11 +666,14 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
 	return s;
 }
 
-void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
 
 {
 	int	Curdigit;
 	int i;
+
+	if (Off)
+		return;
 
 	if (Str[0] == '-') {
 		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
@@ -716,11 +693,14 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
-int DSKY::SixDigitDisplaySegmentsLit(char *Str)
+int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 
 {
 	int	Curdigit;
 	int i, s = 0;
+
+	if (Off)
+		return s;
 
 	if (Str[0] == '-') 
 		s += 1;
@@ -758,17 +738,17 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int x
 		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false);
-	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing);
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, true, ELOff);
+	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1, ELOff);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2, ELOff);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3, ELOff);
 }
 
 void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
@@ -846,6 +826,9 @@ typedef union
 		unsigned EnteringNoun:1;
 		unsigned EnteringOctal:1;
 		unsigned CompActy:1;
+		unsigned ELOff:1;
+		unsigned PrioDispLight:1;
+		unsigned NoDAPLight:1;
 	} u;
 	unsigned long word;
 } DSKYState;
@@ -884,6 +867,9 @@ void DSKY::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	state.u.TrackerLight = TrackerLight;
 	state.u.AltLight = AltLight;
 	state.u.VelLight = VelLight;
+	state.u.ELOff = ELOff;
+	state.u.NoDAPLight = NoDAPLight;
+	state.u.PrioDispLight = PrioDispLight;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -924,6 +910,7 @@ void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 
 			VerbFlashing = state.u.VerbFlashing;
 			NounFlashing = state.u.NounFlashing;
+			ELOff = state.u.ELOff;
 
 			CompActy = (state.u.CompActy != 0);
 			UplinkLight = state.u.UplinkLight;
@@ -938,6 +925,8 @@ void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 			TrackerLight = state.u.TrackerLight;
 			AltLight = (state.u.AltLight != 0);
 			VelLight = (state.u.VelLight != 0);
+			PrioDispLight = (state.u.PrioDispLight != 0);
+			NoDAPLight = (state.u.NoDAPLight != 0);
 		}
 	}
 }
@@ -956,16 +945,45 @@ void DSKY::ProcessChannel11(ChannelValue val)
 	SetCompActy(val11[LightComputerActivity]);
 	SetUplink(val11[LightUplink]);
 	SetTemp(val11[LightTempCaution]);
-	SetKbRel(val11[LightKbRel]);
-	SetOprErr(val11[LightOprErr]);
+	//SetKbRel(val11[LightKbRel]);
+	//SetOprErr(val11[LightOprErr]);
 
-	if (val11[FlashVerbNoun]) {
+	/*if (val11[FlashVerbNoun]) {
 		SetVerbDisplayFlashing();
 		SetNounDisplayFlashing();
 	}
 	else {
 		ClearVerbDisplayFlashing();
 		ClearNounDisplayFlashing();
+	}*/
+}
+
+void DSKY::ProcessChannel163(ChannelValue val)
+
+{
+	ChannelValue val163;
+
+	val163 = val;
+	SetKbRel(val163[Ch163LightKbRel]);
+	SetOprErr(val163[Ch163LightOprErr]);
+	SetStby(val163[Ch163LightStandby]);
+	SetRestart(val163[Ch163LightRestart]);
+
+	if (val163[Ch163ELOff]) {
+		ELOff = true;
+	}
+	else
+	{
+		ELOff = false;
+	}
+
+	if (val163[Ch163FlashVerbNoun]) {
+		ClearVerbDisplayFlashing();
+		ClearNounDisplayFlashing();
+	}
+	else {
+		SetVerbDisplayFlashing();
+		SetNounDisplayFlashing();
 	}
 }
 
@@ -992,7 +1010,7 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	case 4:
 		SetTemp(val);
 		break;
-
+/*
 	// 5 - Kbd Rel
 	case 5:
 		SetKbRel(val);
@@ -1013,7 +1031,7 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	// 7 - Opr Err
 	case 7:
 		SetOprErr(val);
-		break;
+		break;*/
 	}
 }
 
@@ -1120,6 +1138,8 @@ void DSKY::ProcessChannel10(ChannelValue val){
 
 	// 12 - set light states.
 	case 12:
+		SetPrioDisp((out_val.Value & (1 << 0)) != 0);
+		SetNoDAP((out_val.Value & (1 << 1)) != 0);
 		SetVel((out_val.Value & (1 << 2)) != 0);
 		SetNoAtt((out_val.Value & (1 << 3)) != 0);
 		SetAlt((out_val.Value & (1 << 4)) != 0);

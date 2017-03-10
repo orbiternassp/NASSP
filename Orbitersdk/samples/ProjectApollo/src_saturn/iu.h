@@ -35,7 +35,6 @@ class IU;
 enum IUCSMMessageType
 {
 	IUCSM_SET_OUTPUT_CHANNEL,				///< Set an AGC output channel value.
-	IUCSM_IS_VIRTUAL_AGC,					///< Check whether the CSM is running Virtual AGC.
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SLOW_IF_DESIRED,					///< Slow if desired.
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
@@ -116,7 +115,6 @@ public:
 	void SetSIISep();
 	void ClearSIISep();
 	void SlowIfDesired();
-	bool IsVirtualAGC();
 	void SetEngineIndicator(int eng);
 	void ClearEngineIndicator(int eng);
 

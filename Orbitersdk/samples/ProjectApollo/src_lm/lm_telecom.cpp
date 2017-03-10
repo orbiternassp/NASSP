@@ -359,14 +359,11 @@ void LM_VHF::perform_io(double simt){
 								int lgc_uplink_wd = rx_data[rx_offset-1];
 								lgc_uplink_wd <<= 8;
 								lgc_uplink_wd |= rx_data[rx_offset];
-								// Must be in vAGC mode
-								if(lem->agc.Yaagc){
-									// Move to INLINK
-									lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
-									// Cause UPRUPT
-									lem->agc.GenerateUprupt();
+								// Move to INLINK
+								lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
+								// Cause UPRUPT
+								lem->agc.GenerateUprupt();
 
-								}
 								//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
 								rx_offset = 0; uplink_state = 0;
 							}

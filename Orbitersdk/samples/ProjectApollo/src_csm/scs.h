@@ -347,6 +347,7 @@ protected:
 	bool dVInitialized;
 	VECTOR3 lastWeight;
 	VECTOR3 lastGlobalVel;
+	double lastSimDT;
 	double dVRangeCounter;
 	double dVTestTime;
 

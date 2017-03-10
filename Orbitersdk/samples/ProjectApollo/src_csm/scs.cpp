@@ -3011,15 +3011,17 @@ void EMS::AccelerometerTimeStep(double simdt) {
 	if (!dVInitialized) {
 		lastWeight = w;
 		lastGlobalVel = vel;
+		lastSimDT = simdt;
 		dVInitialized = true;
 
 	} else {
 		// Acceleration calculation, see IMU
-		VECTOR3 dvel = (vel - lastGlobalVel) / simdt;
+		VECTOR3 dvel = (vel - lastGlobalVel) / lastSimDT;
 		VECTOR3 dw1 = w - dvel;
 		VECTOR3 dw2 = lastWeight - dvel;
 		lastWeight = w;
 		lastGlobalVel = vel;
+		lastSimDT = simdt;
 
 		// Transform to vessel coordinates
 		MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
@@ -3030,16 +3032,7 @@ void EMS::AccelerometerTimeStep(double simdt) {
 		xacc = -avg.z;
 		// Ground test switch
 	
-		// Handle different gravity and size of the Earth
-		if (sat->IsVirtualAGC()) {
-			constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-		} else {
-			if (sat->NonsphericalGravityEnabled()) {
-				constG = 9.7988;
-			} else {
-				constG = 9.7939;
-			}
-		}
+		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
 
 		if (sat->GTASwitch.IsUp()) {
 			xacc -= constG;
@@ -3271,6 +3264,7 @@ void EMS::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
 	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
 	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
+	papiWriteScenario_double(scn, "LASTSIMDT", lastSimDT);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
@@ -3308,6 +3302,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 10, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
 		} else if (!strnicmp (line, "LASTGLOBALVEL", 13)) {
 			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
+		} else if (!strnicmp(line, "LASTSIMDT", 9)) {
+			sscanf(line + 9, "%lf", &lastSimDT);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "VINERTIAL", 9)) {

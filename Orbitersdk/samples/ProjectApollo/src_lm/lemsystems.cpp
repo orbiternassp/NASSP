@@ -1375,7 +1375,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
-	deca.Timestep(simt);
+	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
 	gasta.Timestep(simt);
 	gasta.SystemTimestep(simdt);
@@ -3302,6 +3302,7 @@ CrossPointer::CrossPointer()
 	vel_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
+	lgcErrorCountersEnabled = false;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -3410,7 +3411,7 @@ void CrossPointer::SetForwardVelocity(int val, ChannelValue ch12) {
 		pulses = val & 077777;
 	}
 	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_forward = (0.5571*pulses);
+		lgc_forward += (0.5571*pulses);
 	}
 }
 
@@ -3429,7 +3430,24 @@ void CrossPointer::SetLateralVelocity(int val, ChannelValue ch12) {
 		pulses = val & 077777;
 	}
 	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_lateral = (0.5571*pulses);
+		lgc_lateral += (0.5571*pulses);
+	}
+}
+
+void CrossPointer::SaveState(FILEHANDLE scn) {
+	papiWriteScenario_bool(scn, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
+	oapiWriteLine(scn, CROSSPOINTER_END_STRING);
+}
+
+void CrossPointer::LoadState(FILEHANDLE scn) {
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, CROSSPOINTER_END_STRING, sizeof(CROSSPOINTER_END_STRING))) {
+			return;
+		}
+
+		papiReadScenario_bool(line, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
 	}
 }
 
@@ -3961,7 +3979,7 @@ void LEM_DPS::Init(LEM *s){
 void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
 
-	//Descent Engine Command Override. If DECA power goes of, DPS stays running. No signal to throttle and GDAs though. So get power back quickly or abort.
+	//Descent Engine Command Override. If DECA power goes off, DPS stays running. No signal to throttle and GDAs though. So get power back quickly or abort.
 	if (lem->EngineDescentCommandOverrideSwitch.IsUp())
 	{
 		thrustOn = true;
@@ -4003,7 +4021,7 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
 		lem->SetThrusterDir(dpsThruster[1], dpsvector);
 
-		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f thrustOn: %d thrustOff: %d", lem->ManualEngineStart.GetState(), lem->ManualEngineStop.GetState(), lem->ttca_lever_pos, thrustcommand, thrustOn, thrustOff);
+		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f thrustOn: %d thrustOff: %d", lem->ManualEngineStart.GetState(), lem->ManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, thrustOn, thrustOff);
 		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
 	}
 }

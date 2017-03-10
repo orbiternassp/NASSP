@@ -309,7 +309,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	// Give the AGC our new stats.
 	//
 
-	agc.SetVesselStats(isp, thrust, false);
 	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
@@ -352,7 +351,6 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	// Give the AGC our new stats.
 	//
 
-	agc.SetVesselStats(isp, thrust, false);
 	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;

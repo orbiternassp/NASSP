@@ -57,6 +57,8 @@ public:
 	bool TrackerLit()	{ return TrackerLight; };
 	bool VelLit()		{ return VelLight; };
 	bool AltLit()		{ return AltLight; };
+	bool NoDAPLit()		{ return NoDAPLight; };
+	bool PrioDispLit()	{ return PrioDispLight; };
 
 	//
 	// Set light status.
@@ -78,6 +80,8 @@ public:
 	void SetTracker(bool val)		{ TrackerLight = val; };
 	void SetVel(bool val)			{ VelLight = val; };
 	void SetAlt(bool val)			{ AltLight = val; };
+	void SetPrioDisp(bool val)		{ PrioDispLight = val; };
+	void SetNoDAP(bool val)			{ NoDAPLight = val; };
 
 	void ClearStby()		{ StbyLight = false; };
 	void ClearRestart()		{ RestartLight = false; };
@@ -137,13 +141,14 @@ public:
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true, bool hasDAPPrioDisp = false);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 	void ProcessChannel10(ChannelValue val);
 	void ProcessChannel13(ChannelValue val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(ChannelValue val);
+	void ProcessChannel163(ChannelValue val);
 
 	//
 	// Helper functions.
@@ -190,6 +195,8 @@ protected:
 	bool TrackerLight;
 	bool VelLight;
 	bool AltLight;
+	bool PrioDispLight;
+	bool NoDAPLight;
 
 	//
 	// Keyboard state.
@@ -237,14 +244,7 @@ protected:
 
 	bool VerbFlashing;
 	bool NounFlashing;
-
-	//
-	// FlashOn tracks whether flashing displays should currently be shown or
-	// blanked out. LastFlashTime tracks when the state was updated.
-	//
-
-	bool FlashOn;
-	double LastFlashTime;
+	bool ELOff;
 
 	int	EnterPos;
 	int EnterVal;
@@ -281,10 +281,10 @@ protected:
 
 	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset);
 	void DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
-	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash);
-	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
-	int TwoDigitDisplaySegmentsLit(char *Str, bool Flash);
-	int SixDigitDisplaySegmentsLit(char *Str);
+	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off);
+	int TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off);
+	int SixDigitDisplaySegmentsLit(char *Str, bool Off);
 };
 
 //

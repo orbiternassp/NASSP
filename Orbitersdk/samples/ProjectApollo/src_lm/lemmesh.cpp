@@ -117,7 +117,6 @@ void LEM::SetLmVesselDockStage()
 	double fuelmass;
 	int mnumber;
 	ClearThrusterDefinitions();
-	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
 	//
 	// Changed to reflect mission-specific empty and fuel mass
 	//
@@ -201,7 +200,6 @@ void LEM::SetLmVesselDockStage()
 void LEM::SetLmVesselHoverStage()
 {
 	ClearThrusterDefinitions();
-	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
 
 	SetEmptyMass(AscentFuelMassKg + 4374.0);
 
@@ -289,7 +287,6 @@ void LEM::SetLmAscentHoverStage()
 
 {
 	ClearThrusterDefinitions();
-	agc.SetVesselStats(APS_ISP, APS_THRUST, true);
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);

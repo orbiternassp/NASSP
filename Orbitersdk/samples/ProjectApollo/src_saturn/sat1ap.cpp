@@ -266,8 +266,6 @@ void Saturn1b::AutoPilot(double autoT)
 			if (oapiGetTimeAcceleration() > 1.0)
 				oapiSetTimeAcceleration(1.0);
 
-			agc.LaunchShutdown();
-
 			// Reset autopilot commands
 			AtempP  = 0;
 			AtempY  = 0;
