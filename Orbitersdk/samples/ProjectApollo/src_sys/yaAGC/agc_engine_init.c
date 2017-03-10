@@ -61,6 +61,7 @@
 						produced with --hardware, by looking for any set
 		                parity bits. If such a file is detected, parity
 		                bit checking is enabled.
+		03/09/17 MAS    Added initialization of SbyStillPressed.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -255,6 +256,7 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
 
   State->Standby = 0;
   State->SbyPressed = 0;
+  State->SbyStillPressed = 0;
 
   if (CoreDump != NULL)
     {

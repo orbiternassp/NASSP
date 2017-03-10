@@ -400,6 +400,7 @@ typedef union
 		unsigned NoTC:1;
 		unsigned Standby:1;
 		unsigned SbyPressed:1;
+		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
 		unsigned CheckParity:1;
 	} u;
@@ -457,6 +458,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.NoTC = vagc.NoTC;
 	state.u.Standby = vagc.Standby;
 	state.u.SbyPressed = vagc.SbyPressed;
+	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
 	state.u.CheckParity = vagc.CheckParity;
 
@@ -646,6 +648,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.NoTC = state.u.NoTC;
 			vagc.Standby = state.u.Standby;
 			vagc.SbyPressed = state.u.SbyPressed;
+			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
 			vagc.CheckParity = state.u.CheckParity;
 		}
@@ -753,12 +756,6 @@ void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val)
 
 		if (channel >= 030 && channel <= 034){
 			val ^= 077777;
-		}
-
-		// Standby stuff
-		if (channel == 032 && 0 != (val.to_ulong() & 020000))
-		{
-			vagc.SbyPressed = 0;
 		}
 
 		WriteIO(&vagc, channel, val.to_ulong());
