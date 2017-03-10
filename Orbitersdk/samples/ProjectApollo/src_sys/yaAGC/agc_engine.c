@@ -1859,11 +1859,6 @@ agc_engine (agc_t * State)
 	  fprintf(State->out_file, "T6RUPT\n");
 #endif
 
-	  //Check for PRO
-	  if (0 == (State->InputChannel[032] & 020000))
-	  {State->SbyPressed = 1;}
-
-
       // Check alarms first, since there's a chance we might go to standby
 	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
@@ -1871,7 +1866,9 @@ agc_engine (agc_t * State)
 		  if (!State->Standby)
 			  State->NightWatchman = 1;
 
-		  
+		  // Same with Standby
+		  if (0 == (State->InputChannel[032] & 020000))
+			  State->SbyPressed = 1;
 	  }
 	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
