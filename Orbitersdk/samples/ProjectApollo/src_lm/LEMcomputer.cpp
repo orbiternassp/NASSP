@@ -391,6 +391,23 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 			}
 			lem->atca.lgc_err_ena = 0;
 		}
+
+		// Reset cross pointer needles
+		if (val12[DisplayInertialData]) {
+			if (val12[EnableRRCDUErrorCounter]) {
+				if (!lem->crossPointerLeft.lgcErrorCountersEnabled) {	//Dirty hack: voltage for cross pointers originates in RRCDU, the displays just get the voltages
+					lem->crossPointerLeft.ZeroLGCVelocity();
+					lem->crossPointerRight.ZeroLGCVelocity();
+					lem->crossPointerLeft.lgcErrorCountersEnabled = true;
+					lem->crossPointerRight.lgcErrorCountersEnabled = true;
+				}
+			}
+			else {
+				lem->crossPointerLeft.lgcErrorCountersEnabled = false;
+				lem->crossPointerRight.lgcErrorCountersEnabled = false;
+			}
+		}
+
 		break;
 
 	case 0174: // YAW ERROR
