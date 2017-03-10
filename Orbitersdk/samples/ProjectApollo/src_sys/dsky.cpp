@@ -182,6 +182,8 @@ void DSKY::Reset()
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
+	NoDAPLight = false;
+	PrioDispLight = false;
 
 	LightsLit = 0;
 	SegmentsLit = 0;
@@ -442,7 +444,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 	}
 }
 
-void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel)
+void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
 
 {
 	if (!IsPowered())
@@ -467,6 +469,11 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	if (hasAltVel) {
 		DSKYLightBlt(surf, lights, 52, 121, AltLit(), xOffset, yOffset);
 		DSKYLightBlt(surf, lights, 52, 144, VelLit(), xOffset, yOffset);
+	}
+
+	if (hasDAPPrioDisp) {
+		DSKYLightBlt(surf, lights, 0, 121, PrioDispLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 0, 144, NoDAPLit(), xOffset, yOffset);
 	}
 }
 
@@ -820,6 +827,8 @@ typedef union
 		unsigned EnteringOctal:1;
 		unsigned CompActy:1;
 		unsigned ELOff:1;
+		unsigned PrioDispLight:1;
+		unsigned NoDAPLight:1;
 	} u;
 	unsigned long word;
 } DSKYState;
@@ -859,6 +868,8 @@ void DSKY::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	state.u.AltLight = AltLight;
 	state.u.VelLight = VelLight;
 	state.u.ELOff = ELOff;
+	state.u.NoDAPLight = NoDAPLight;
+	state.u.PrioDispLight = PrioDispLight;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -914,6 +925,8 @@ void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 			TrackerLight = state.u.TrackerLight;
 			AltLight = (state.u.AltLight != 0);
 			VelLight = (state.u.VelLight != 0);
+			PrioDispLight = (state.u.PrioDispLight != 0);
+			NoDAPLight = (state.u.NoDAPLight != 0);
 		}
 	}
 }
@@ -1125,6 +1138,8 @@ void DSKY::ProcessChannel10(ChannelValue val){
 
 	// 12 - set light states.
 	case 12:
+		SetPrioDisp((out_val.Value & (1 << 0)) != 0);
+		SetNoDAP((out_val.Value & (1 << 1)) != 0);
 		SetVel((out_val.Value & (1 << 2)) != 0);
 		SetNoAtt((out_val.Value & (1 << 3)) != 0);
 		SetAlt((out_val.Value & (1 << 4)) != 0);

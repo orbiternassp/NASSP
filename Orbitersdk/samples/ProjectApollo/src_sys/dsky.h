@@ -57,6 +57,8 @@ public:
 	bool TrackerLit()	{ return TrackerLight; };
 	bool VelLit()		{ return VelLight; };
 	bool AltLit()		{ return AltLight; };
+	bool NoDAPLit()		{ return NoDAPLight; };
+	bool PrioDispLit()	{ return PrioDispLight; };
 
 	//
 	// Set light status.
@@ -78,6 +80,8 @@ public:
 	void SetTracker(bool val)		{ TrackerLight = val; };
 	void SetVel(bool val)			{ VelLight = val; };
 	void SetAlt(bool val)			{ AltLight = val; };
+	void SetPrioDisp(bool val)		{ PrioDispLight = val; };
+	void SetNoDAP(bool val)			{ NoDAPLight = val; };
 
 	void ClearStby()		{ StbyLight = false; };
 	void ClearRestart()		{ RestartLight = false; };
@@ -137,7 +141,7 @@ public:
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true, bool hasDAPPrioDisp = false);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 	void ProcessChannel10(ChannelValue val);
@@ -191,6 +195,8 @@ protected:
 	bool TrackerLight;
 	bool VelLight;
 	bool AltLight;
+	bool PrioDispLight;
+	bool NoDAPLight;
 
 	//
 	// Keyboard state.

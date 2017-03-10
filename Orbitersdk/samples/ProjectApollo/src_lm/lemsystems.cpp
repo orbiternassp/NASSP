@@ -3441,17 +3441,13 @@ void CrossPointer::SaveState(FILEHANDLE scn) {
 
 void CrossPointer::LoadState(FILEHANDLE scn) {
 	char *line;
-	int value = 0;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, CROSSPOINTER_END_STRING, sizeof(CROSSPOINTER_END_STRING))) {
 			return;
 		}
 
-		if (!strnicmp(line, "LGCERRORCOUNTERSENABLED", 23)) {
-			sscanf(line + 23, "%d", &value);
-			lgcErrorCountersEnabled = value;
-		}
+		papiReadScenario_bool(line, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
 	}
 }
 
