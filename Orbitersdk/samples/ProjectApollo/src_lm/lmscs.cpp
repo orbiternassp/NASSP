@@ -196,6 +196,7 @@ DECA::DECA() {
 	engOff = false;
 	dpsthrustcommand = 0;
 	lgcAutoThrust = 0;
+	LMR = 0.859;
 }
 
 void DECA::Init(LEM *v, e_object *dcbus) {
@@ -204,7 +205,7 @@ void DECA::Init(LEM *v, e_object *dcbus) {
 	dc_source = dcbus;
 }
 
-void DECA::Timestep(double simt) {
+void DECA::Timestep(double simdt) {
 	powered = false;
 	if (lem == NULL) return;
 
@@ -344,7 +345,19 @@ void DECA::Timestep(double simt) {
 		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
 	}
 
-	lem->DPS.thrustcommand = dpsthrustcommand;
+	//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
+	//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
+	dposcmd = dpsthrustcommand - lem->DPS.thrustcommand;
+	poscmdsign = abs(dpsthrustcommand - lem->DPS.thrustcommand) / (dpsthrustcommand - lem->DPS.thrustcommand);
+	if (abs(dposcmd)>LMR*simdt)
+	{
+		dpos = poscmdsign*LMR*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	lem->DPS.thrustcommand += dpos;
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 }

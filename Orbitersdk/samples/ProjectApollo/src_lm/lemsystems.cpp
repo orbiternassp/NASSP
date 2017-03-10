@@ -1375,7 +1375,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
-	deca.Timestep(simt);
+	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
 	gasta.Timestep(simt);
 	gasta.SystemTimestep(simdt);
