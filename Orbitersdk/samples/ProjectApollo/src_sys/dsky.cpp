@@ -195,6 +195,7 @@ void DSKY::Reset()
 
 	VerbFlashing = false;
 	NounFlashing = false;
+	ELOff = false;
 }
 
 DSKY::~DSKY()
@@ -271,13 +272,13 @@ void DSKY::SystemTimestep(double simdt)
 	if (CompActy) 
 		SegmentsLit += 4;
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, true);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, true, ELOff);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
 
-	SegmentsLit += SixDigitDisplaySegmentsLit(R1);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R2);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R3);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 	// 10 lights with together max. 6W, 184 segments with together max. 4W  
 	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
@@ -619,12 +620,12 @@ void DSKY::ResetKeyDown()
 	KeyDown_Reset = false;
 }
 
-void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash)
+void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off)
 
 {
 	int Curdigit;
 
-	if (!Flash)
+	if (!Flash || Off)
 		return;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -638,12 +639,12 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
-int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
+int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 
 {
 	int Curdigit, s = 0;
 
-	if (!Flash)
+	if (!Flash || Off)
 		return s;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -658,11 +659,14 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
 	return s;
 }
 
-void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
 
 {
 	int	Curdigit;
 	int i;
+
+	if (Off)
+		return;
 
 	if (Str[0] == '-') {
 		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
@@ -682,11 +686,14 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
-int DSKY::SixDigitDisplaySegmentsLit(char *Str)
+int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 
 {
 	int	Curdigit;
 	int i, s = 0;
+
+	if (Off)
+		return s;
 
 	if (Str[0] == '-') 
 		s += 1;
@@ -724,17 +731,17 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int x
 		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, true);
-	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing);
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, true, ELOff);
+	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1, ELOff);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2, ELOff);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3, ELOff);
 }
 
 void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
@@ -812,6 +819,7 @@ typedef union
 		unsigned EnteringNoun:1;
 		unsigned EnteringOctal:1;
 		unsigned CompActy:1;
+		unsigned ELOff:1;
 	} u;
 	unsigned long word;
 } DSKYState;
@@ -850,6 +858,7 @@ void DSKY::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	state.u.TrackerLight = TrackerLight;
 	state.u.AltLight = AltLight;
 	state.u.VelLight = VelLight;
+	state.u.ELOff = ELOff;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -890,6 +899,7 @@ void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 
 			VerbFlashing = state.u.VerbFlashing;
 			NounFlashing = state.u.NounFlashing;
+			ELOff = state.u.ELOff;
 
 			CompActy = (state.u.CompActy != 0);
 			UplinkLight = state.u.UplinkLight;
@@ -945,6 +955,14 @@ void DSKY::ProcessChannel163(ChannelValue val)
 	SetOprErr(val163[Ch163LightOprErr]);
 	SetStby(val163[Ch163LightStandby]);
 	SetRestart(val163[Ch163LightRestart]);
+
+	if (val163[Ch163ELOff]) {
+		ELOff = true;
+	}
+	else
+	{
+		ELOff = false;
+	}
 
 	if (val163[Ch163FlashVerbNoun]) {
 		ClearVerbDisplayFlashing();

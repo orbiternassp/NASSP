@@ -250,6 +250,7 @@ enum ChannelValue163_Bits {
 	Ch163LightOprErr,				///< Light the Operator Error light
 	Ch163LightRestart,				///< Light the Restart light
 	Ch163LightStandby,				///< Light the Standby light
+	Ch163ELOff,						///< Switch off EL panel power
 
 };
 

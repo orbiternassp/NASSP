@@ -238,6 +238,7 @@ protected:
 
 	bool VerbFlashing;
 	bool NounFlashing;
+	bool ELOff;
 
 	int	EnterPos;
 	int EnterVal;
@@ -274,10 +275,10 @@ protected:
 
 	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset);
 	void DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
-	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash);
-	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
-	int TwoDigitDisplaySegmentsLit(char *Str, bool Flash);
-	int SixDigitDisplaySegmentsLit(char *Str);
+	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off);
+	int TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off);
+	int SixDigitDisplaySegmentsLit(char *Str, bool Off);
 };
 
 //
