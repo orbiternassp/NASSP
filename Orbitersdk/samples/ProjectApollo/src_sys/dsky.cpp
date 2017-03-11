@@ -274,7 +274,7 @@ void DSKY::SystemTimestep(double simdt)
 	if (CompActy) 
 		SegmentsLit += 4;
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, true, ELOff);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false, ELOff);
 	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
 	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
 
@@ -632,7 +632,7 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 {
 	int Curdigit;
 
-	if (!Flash || Off)
+	if (Flash || Off)
 		return;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -651,7 +651,7 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 {
 	int Curdigit, s = 0;
 
-	if (!Flash || Off)
+	if (Flash || Off)
 		return s;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -738,7 +738,7 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int x
 		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, true, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false, ELOff);
 	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
 	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
 
@@ -978,12 +978,12 @@ void DSKY::ProcessChannel163(ChannelValue val)
 	}
 
 	if (val163[Ch163FlashVerbNoun]) {
-		ClearVerbDisplayFlashing();
-		ClearNounDisplayFlashing();
-	}
-	else {
 		SetVerbDisplayFlashing();
 		SetNounDisplayFlashing();
+	}
+	else {
+		ClearVerbDisplayFlashing();
+		ClearNounDisplayFlashing();
 	}
 }
 
