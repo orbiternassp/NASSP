@@ -48,7 +48,6 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 
 {
 	isLGC = false;
-	lastOrbitalElementsTime = 0;
 
 	VesselStatusDisplay = 0;
 
@@ -77,10 +76,10 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
 
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
@@ -361,7 +360,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
 		}
 		// Done!
-		//sprintf(oapiDebugString(), "Standby: %d %d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed);
+		//sprintf(oapiDebugString(), "Standby: %d %d %I64d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed, sat->agc.vagc.CycleCounter);
 
 		return;
 }

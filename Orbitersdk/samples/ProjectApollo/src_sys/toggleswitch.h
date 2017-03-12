@@ -1274,12 +1274,11 @@ public:
 class PanelSwitches {
 
 public:
-	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; lastexecutedtime=MINUS_INFINITY;};
+	PanelSwitches() { PanelID = 0; RowList = 0; lastexecutedtime=MINUS_INFINITY;};
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
-	void SetRealism(int r) { Realism = r; };
 	void timestep(double missionTime);
 
 	///
@@ -1302,7 +1301,6 @@ protected:
 	PanelSwitchListener *listener;
 	int	PanelID;
 	SwitchRow *RowList;
-	int Realism;
 	double lastexecutedtime;
 
 	friend class ToggleSwitch;

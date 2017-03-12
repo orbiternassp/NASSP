@@ -60,7 +60,6 @@ typedef struct {
 	SIISettingFlags SettingsType;
 
 	int VehicleNo;					///< Saturn vehicle number.
-	int Realism;					///< Realism level.
 	int RetroNum;					///< Number of retros.
 
 	double THRUST_SECOND_VAC;		///< Thrust of each engine in vacuum (Newtons)
@@ -156,7 +155,6 @@ protected:
 	int MissionNo;
 	int VehicleNo;
 	SIIState State;
-	int Realism;
 	int RetroNum;
 
 	bool RetrosFired;

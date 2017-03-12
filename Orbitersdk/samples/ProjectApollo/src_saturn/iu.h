@@ -299,7 +299,7 @@ public:
 	
 	void SetVesselStats(double ISP, double Thrust);
 	void GetVesselStats(double &ISP, double &Thrust);
-	void SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee);
+	void SetMissionInfo(bool tlicapable, bool crewed, double sivbburnstart, double sivbapogee);
 
 	///
 	/// \brief Move to or hold attitude v in LVLH coordinates (by setting attitude thrusters, call each timestep)
@@ -371,7 +371,6 @@ protected:
 	// Saturn stuff
 	//
 
-	int Realism;
 	bool Crewed;
 	bool TLICapable;
 	double VesselISP;

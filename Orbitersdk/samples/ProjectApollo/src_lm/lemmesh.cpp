@@ -88,7 +88,6 @@ void LEM::ToggleEVA()
 			LEVASettings evas;
 
 			evas.MissionNo = agc.GetApolloNo();
-			evas.Realism = Realism;
 			leva->SetEVAStats(evas);
 		}
 	}
@@ -217,7 +216,16 @@ void LEM::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	SetTouchdownPoints (_V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
+	static const DWORD ntdvtx = 4;
+	static TOUCHDOWNVTX tdvtx[4] = {
+	{ _V(0, -3.86, 5), 1e6, 1.8e5, 3.0, 3.0 },
+	{ _V(-5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
+	{ _V(5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
+	{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
+	};
+	SetTouchdownPoints(tdvtx, ntdvtx);
+
+	//SetTouchdownPoints (_V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 	VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	

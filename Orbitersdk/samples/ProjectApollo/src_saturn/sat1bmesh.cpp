@@ -234,7 +234,21 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	tdpoints[2].mu_lng = 1;
 	tdpoints[2].stiffness = 1;
 
-	// SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
+	static const DWORD ntdvtx = 8;
+	static TOUCHDOWNVTX tdvtx[8] = {
+		{ _V(0, -9.899495, TCP), 2e4, 1e2, 0.5 },
+		{ _V(-7, 7, TCP), 2e4, 1e2, 0.5 },
+		{ _V(7, 7, TCP), 2e4, 1e2, 0.5 },
+		{ _V(-7, -7, 40), 2e4, 1e2, 0.5 },
+		{ _V(7, -7, 40), 2e4, 1e2, 0.5 },
+		{ _V(-7, 7, 40), 2e4, 1e2, 0.5 },
+		{ _V(7, 7, 40), 2e4, 1e2, 0.5 },
+		{ _V(0, 0, 60), 2e4, 1e2, 0.5 }
+	};
+
+	//SetTouchdownPoints(tdvtx, ntdvtx);
+
+	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
 	// SetTouchdownPoints(tdpoints,3);
 	VECTOR3 mesh_dir=_V(0,0,offset);
@@ -696,7 +710,6 @@ void Saturn1b::SeparateStage (int new_stage)
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
 			S1Config.MissionTime = MissionTime;
-			S1Config.Realism = Realism;
 			S1Config.VehicleNo = VehicleNo;
 			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
@@ -753,7 +766,6 @@ void Saturn1b::SeparateStage (int new_stage)
 		SMConfig.RCSCFuelKg = GetPropellantMass(ph_rcs2);
 		SMConfig.RCSDFuelKg = GetPropellantMass(ph_rcs3);
 		SMConfig.MissionTime = MissionTime;
-		SMConfig.Realism = Realism;
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = !NoHGA;

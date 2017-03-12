@@ -327,7 +327,7 @@ public:
 	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
-	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
 
 	void LVGuidanceSwitchToggled(PanelSwitchItem *s);
 
@@ -349,8 +349,6 @@ protected:
 
 	FILE *Dfile;
 	int count;
-
-	double lastOrbitalElementsTime;
 
 	unsigned int LastOut5;
 	unsigned int LastOut6;

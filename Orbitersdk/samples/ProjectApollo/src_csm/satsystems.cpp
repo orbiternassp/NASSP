@@ -506,7 +506,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	if (stage == ONPAD_STAGE && MissionTime >= -10800) {	// 3h 00min before launch
 		// Slow down time acceleration
-		if (Realism && oapiGetTimeAcceleration() > 1.0)
+		if (oapiGetTimeAcceleration() > 1.0)
 			oapiSetTimeAcceleration(1.0);
 
 		stage = PRELAUNCH_STAGE;
@@ -1201,7 +1201,7 @@ void Saturn::JoystickTimestep()
 {
 	// Read joysticks and feed data to the computer
 	// Do not do this if we aren't the active vessel.
-	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
+	if (oapiGetFocusInterface() == this) {
 
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
@@ -1351,7 +1351,7 @@ void Saturn::JoystickTimestep()
 				}
 			}
 		// Use Orbiter's attitude control as RHC
-		} else if (OrbiterAttitudeDisabled) {
+		} else {
 			// Roll
 			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
 				rhc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
@@ -1818,7 +1818,7 @@ void Saturn::JoystickTimestep()
 			}
 
 		// Use Orbiter's attitude control as THC
-		} else if (OrbiterAttitudeDisabled) {
+		} else {
 			// Up/down
 			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
 				thc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
@@ -2183,74 +2183,6 @@ void Saturn::ClearLiftoffLight()
 
 {
 	LAUNCHIND[0] = false;
-}
-
-//
-// These switches weren't lit for real, but can be useful in low-realism
-// scenarios.
-//
-
-void Saturn::SetLESMotorLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	LesMotorFireSwitch.SetLit(lit);
-}
-
-void Saturn::SetCanardDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CanardDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetDrogueDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	DrogueDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetCSMLVSepLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CsmLvSepSwitch.SetLit(lit);
-}
-
-void Saturn::SetApexCoverLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	ApexCoverJettSwitch.SetLit(lit);
-}
-
-void Saturn::SetMainDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	MainDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetCmRcsHeDumpSwitch(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CmRcsHeDumpSwitch.SetLit(lit);
 }
 
 void Saturn::SetLVGuidLight()
@@ -3409,41 +3341,39 @@ void Saturn::RCSSoundTimestep() {
 
 	int i;
 	bool on = false;
-	if (OrbiterAttitudeDisabled) {
-		// CSM RCS
-		if (stage == CSM_LEM_STAGE) {
-			for (i = 1; i < 5; i++) {
-				if (th_rcs_a[i]) {
-					if (GetThrusterLevel(th_rcs_a[i])) on = true;
-				}
-				if (th_rcs_b[i]) {
-					if (GetThrusterLevel(th_rcs_b[i])) on = true;
-				}
-				if (th_rcs_c[i]) {
-					if (GetThrusterLevel(th_rcs_c[i])) on = true;
-				}
-				if (th_rcs_d[i]) {
-					if (GetThrusterLevel(th_rcs_d[i])) on = true;
-				}
+	// CSM RCS
+	if (stage == CSM_LEM_STAGE) {
+		for (i = 1; i < 5; i++) {
+			if (th_rcs_a[i]) {
+				if (GetThrusterLevel(th_rcs_a[i])) on = true;
+			}
+			if (th_rcs_b[i]) {
+				if (GetThrusterLevel(th_rcs_b[i])) on = true;
+			}
+			if (th_rcs_c[i]) {
+				if (GetThrusterLevel(th_rcs_c[i])) on = true;
+			}
+			if (th_rcs_d[i]) {
+				if (GetThrusterLevel(th_rcs_d[i])) on = true;
 			}
 		}
-		// CM RCS
-		if (stage >= CSM_LEM_STAGE) {
-			for (i = 0; i < 12; i++) {
-				if (th_att_cm[i]) {
-					if (GetThrusterLevel(th_att_cm[i])) on = true;
-				}
-			}		
-		}
-		// Play/stop sounds
-		if (on) {
-			if (RCSFireSound.isPlaying()) {
-				RCSSustainSound.play(LOOP);
-			} else if (!RCSSustainSound.isPlaying()) {
-				RCSFireSound.play();
-			}				
-		} else {
-			RCSSustainSound.stop();
-		}
+	}
+	// CM RCS
+	if (stage >= CSM_LEM_STAGE) {
+		for (i = 0; i < 12; i++) {
+			if (th_att_cm[i]) {
+				if (GetThrusterLevel(th_att_cm[i])) on = true;
+			}
+		}		
+	}
+	// Play/stop sounds
+	if (on) {
+		if (RCSFireSound.isPlaying()) {
+			RCSSustainSound.play(LOOP);
+		} else if (!RCSSustainSound.isPlaying()) {
+			RCSFireSound.play();
+		}				
+	} else {
+		RCSSustainSound.stop();
 	}
 }

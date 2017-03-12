@@ -582,30 +582,11 @@ void SPSEngine::Timestep(double simt, double simdt) {
 			engineOnCommanded = true;
 
 		} else {
-			if (saturn->Realism) {
-				// Stop engine
-				saturn->SetThrusterResource(spsThruster, NULL);
-				saturn->SetThrusterLevel(spsThruster, 0);
-				saturn->rjec.SetSPSActive(false);
-				engineOnCommanded = false;
-			} else {
-				// Manual engine if REALISM 0
-				saturn->SetThrusterResource(spsThruster, saturn->GetSPSPropellant()->Handle());
-
-				// Reset automatically commanded thrust
-				if (engineOnCommanded) {
-					saturn->SetThrusterLevel(spsThruster, 0);
-					engineOnCommanded = false;
-				}
-				if (saturn->GetThrusterLevel(spsThruster) > 0) {
-					saturn->rjec.SetSPSActive(true);
-					// Show all injector valves open
-					injectorValves12Open = true;
-					injectorValves34Open = true;
-				} else {
-					saturn->rjec.SetSPSActive(false);
-				}
-			}
+			// Stop engine
+			saturn->SetThrusterResource(spsThruster, NULL);
+			saturn->SetThrusterLevel(spsThruster, 0);
+			saturn->rjec.SetSPSActive(false);
+			engineOnCommanded = false;
 		}
 	} else {
 		saturn->rjec.SetSPSActive(false);
@@ -665,14 +646,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
 		VECTOR3 spsvector;
-		// Main engine offset only in Virtual AGC mode
-		if (saturn->Realism) {
-			spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
-			spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
-		} else {
-			spsvector.x = yawGimbalActuator.GetPosition() * RAD; // Convert deg to rad
-			spsvector.y = pitchGimbalActuator.GetPosition() * RAD;
-		}
+		spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
+		spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
 		spsvector.z = 1;
 		saturn->SetThrusterDir(spsThruster, spsvector);
 	}

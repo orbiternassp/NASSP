@@ -307,17 +307,8 @@ void LEM::Init()
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
 
-	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
 	Landed = false;
-
-	//
-	// Quickstart Mode settings
-	//
-
-	ChecklistAutoSlow = false;
-	ChecklistAutoDisabled = false;
-	OrbiterAttitudeDisabled = false;
 
 	//
 	// VAGC Mode settings
@@ -734,13 +725,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		return 1;
 
 	case OAPI_KEY_E:
-		if (!Realism) {
-			ToggleEva = true;
-			return 1;
-		}
-		else {
-			return 0;
-		}
+		return 0;
 
 	case OAPI_KEY_6:
 		viewpos = LMVIEW_CDR;
@@ -1218,9 +1203,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
-			sscanf (line+7, "%d", &Realism);
-		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
 			sscanf (line+8, "%d", &ApolloNo);
 		}
@@ -1237,11 +1219,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
-		}
-		else if (!strnicmp(line, "CHECKLISTAUTODISABLED", 21)) {
-			int i;
-			sscanf(line + 21, "%d", &i);
-			ChecklistAutoDisabled = (i != 0);
 		}
 		else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
 			int i;
@@ -1383,10 +1360,7 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// Pass on the mission number and realism setting to the AGC.
 	//
 
-	agc.SetMissionInfo(ApolloNo, Realism);
-
-	MainPanel.SetRealism(Realism);
-
+	agc.SetMissionInfo(ApolloNo);
 
 	///
 	// Realism Mode Settings
@@ -1396,8 +1370,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// as long as they rely on Orbiter's navmodes (killrot etc.)
 
 	if (!Crewed) {
-		OrbiterAttitudeDisabled = false;
-
 		checkControl.autoExecute(true);
 		checkControl.autoExecuteSlow(false);
 		checkControl.autoExecuteAllItemsAutomatic(true);
@@ -1406,20 +1378,11 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// Disable it and do some other settings when not in
 	// Quickstart mode
 
-	else if (Realism) {
-		OrbiterAttitudeDisabled = true;
-
+	else {
 		checkControl.autoExecute(VAGCChecklistAutoEnabled);
 		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
 		checkControl.autoExecuteAllItemsAutomatic(false);
 
-		// Quickstart mode
-
-	}
-	else {
-		checkControl.autoExecute(!ChecklistAutoDisabled);
-		checkControl.autoExecuteSlow(ChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(true);
 	}
 
 	//
@@ -1565,17 +1528,9 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 		rhc_thctoggle = true;
 	}
-	else if (!strnicmp(line, "CHECKLISTAUTOSLOW", 17)) {
-		sscanf(line + 17, "%i", &i);
-		ChecklistAutoSlow = (i != 0);
-	}
 	else if (!strnicmp(line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 		sscanf(line + 21, "%i", &i);
 		VAGCChecklistAutoSlow = (i != 0);
-	}
-	else if (!strnicmp(line, "ORBITERATTITUDEDISABLED", 23)) {
-		sscanf(line + 23, "%i", &i);
-		OrbiterAttitudeDisabled = (i != 0);
 	}
 	return true;
 }
@@ -1607,15 +1562,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
 
-	if (Realism != REALISM_DEFAULT) {
-		oapiWriteScenario_int (scn, "REALISM", Realism);
-	}
-
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 
-	oapiWriteScenario_int(scn, "CHECKLISTAUTODISABLED", ChecklistAutoDisabled);
 	oapiWriteScenario_int(scn, "VAGCCHECKLISTAUTOENABLED", VAGCChecklistAutoEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
@@ -1721,26 +1671,20 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
-	Realism = ls.Realism;
 	ApolloNo = ls.MissionNo;
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
 
-	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
+	agc.SetMissionInfo(ApolloNo, CSMName);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
 	checkControl.autoExecute(ls.checkAutoExecute);
 
 	//Set the transfered payload setting for the checklist controller
-	if (!Crewed) {
-		ChecklistAutoDisabled = !ls.checkAutoExecute;
-	} else if (Realism) {
-		VAGCChecklistAutoEnabled = ls.checkAutoExecute;
-	} else {
-		ChecklistAutoDisabled = !ls.checkAutoExecute;
-	}
+	VAGCChecklistAutoEnabled = ls.checkAutoExecute;
+
 	// Sounds are initialized during the first timestep
 
 	return true;
@@ -1890,24 +1834,22 @@ void LEM::RCSSoundTimestep() {
 
 	int i;
 	bool on = false;
-	if (OrbiterAttitudeDisabled) {
-		// LM RCS
-		for (i = 0; i < 16; i++) {
-			if (th_rcs[i]) {
-				if (GetThrusterLevel(th_rcs[i])) on = true;
-			}
+	// LM RCS
+	for (i = 0; i < 16; i++) {
+		if (th_rcs[i]) {
+			if (GetThrusterLevel(th_rcs[i])) on = true;
 		}
-		// Play/stop sounds
-		if (on) {
-			if (RCSFireSound.isPlaying()) {
-				RCSSustainSound.play(LOOP);
-			}
-			else if (!RCSSustainSound.isPlaying()) {
-				RCSFireSound.play();
-			}
+	}
+	// Play/stop sounds
+	if (on) {
+		if (RCSFireSound.isPlaying()) {
+			RCSSustainSound.play(LOOP);
 		}
-		else {
-			RCSSustainSound.stop();
+		else if (!RCSSustainSound.isPlaying()) {
+			RCSFireSound.play();
 		}
+	}
+	else {
+		RCSSustainSound.stop();
 	}
 }

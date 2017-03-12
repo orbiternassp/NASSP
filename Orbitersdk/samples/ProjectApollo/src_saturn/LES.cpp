@@ -123,7 +123,6 @@ void LES::InitLES()
 	EmptyMass = 2023.0;
 	MainFuel = 1405.0;
 	JettisonFuel = 159.0;
-	Realism = REALISM_DEFAULT;
 
 	FireMain = false;
 	LowRes = false;
@@ -244,7 +243,6 @@ void LES::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "STATE", State);
-	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
 	oapiWriteScenario_float (scn, "JMASS", JettisonFuel);
@@ -432,10 +430,6 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (LESState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7))
-		{
-			sscanf (line+7, "%d", &Realism);
-		}
 		else
 		{
 			ParseScenarioLineEx (line, vstatus);
@@ -464,7 +458,6 @@ void LES::SetState(LESSettings &state)
 	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
-		Realism = state.Realism;
 		LowRes = state.LowRes;
 		ProbeAttached = state.ProbeAttached;
 	}

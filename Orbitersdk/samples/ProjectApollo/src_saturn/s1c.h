@@ -59,7 +59,6 @@ typedef struct {
 	S1cSettingFlags SettingsType;			///< Which settings are valid?
 
 	int VehicleNo;							///< Saturn vehicle number.
-	int Realism;							///< Realism level.
 	int RetroNum;							///< Number of retros.
 	int EngineNum;							///< Number of engines.
 
@@ -176,7 +175,6 @@ protected:
 	int MissionNo;
 	int VehicleNo;
 	S1cState State;
-	int Realism;
 	int RetroNum;
 	int EngineNum;
 

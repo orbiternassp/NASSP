@@ -78,8 +78,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 
 	ApolloNo = 0;
 
-	Realism = REALISM_DEFAULT;
-
 	OtherVesselName[0] = 0;
 
 	//
@@ -259,11 +257,9 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue, char *OtherName) 
+void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName) 
 
 {
-	Realism = RealismValue;
-
 	//
 	// Older scenarios saved the mission number in the AGC. For backwards
 	// compatibility we'll only let the new number overwrite the saved value
