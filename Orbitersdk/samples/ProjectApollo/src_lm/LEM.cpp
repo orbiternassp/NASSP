@@ -212,6 +212,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	//imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	//imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk),
+	aea(Panelsdk),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover)
 {
@@ -1384,6 +1385,7 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	//
 
 	agc.SetMissionInfo(ApolloNo, Realism);
+	aea.SetMissionInfo(ApolloNo);
 
 	MainPanel.SetRealism(Realism);
 

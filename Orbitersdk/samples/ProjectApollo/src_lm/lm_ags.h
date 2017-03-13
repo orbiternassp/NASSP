@@ -22,6 +22,8 @@
 
   **************************************************************************/
 
+#include "yaAGS/aea_engine.h"
+
 // ABORT SENSOR ASSEMBLY (ASA)
 class LEM_ASA{
 public:
@@ -39,12 +41,21 @@ protected:
 // ABORT ELECTRONICS ASSEMBLY (AEA)
 class LEM_AEA{
 public:
-	LEM_AEA();							// Cons
+	LEM_AEA(PanelSDK &p);							// Cons
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	void InitVirtualAGS(char *binfile);
+	void SetMissionInfo(int MissionNo);
+	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
+	bool IsPowered();
 	LEM *lem;					// Pointer at LEM
+
+protected:
+	ags_t vags;
+	PowerMerge DCPower;
+	ThreePosSwitch *PowerSwitch;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)

@@ -589,6 +589,7 @@ void LEM::SystemsInit()
 	// AGS stuff
 	asa.Init(this, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-Heater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));
 	aea.Init(this);
+	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
 	deda.Init(&SCS_AEA_CB);
 
 	// IMU OPERATE power (Logic DC power)

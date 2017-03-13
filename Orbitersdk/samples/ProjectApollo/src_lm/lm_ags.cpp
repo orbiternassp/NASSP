@@ -29,6 +29,8 @@
 #include "math.h"
 #include "lmresource.h"
 
+#include "yaAGS/aea_engine.h"
+
 #include "nasspdefs.h"
 #include "nasspsound.h"
 
@@ -105,8 +107,16 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 // Abort Electronics Assembly
-LEM_AEA::LEM_AEA(){
+LEM_AEA::LEM_AEA(PanelSDK &p) : DCPower(0, p) {
 	lem = NULL;	
+
+	PowerSwitch = 0;
+
+	//
+	// Virtual AGS.
+	//
+	memset(&vags, 0, sizeof(vags));
+	vags.ags_clientdata = this;
 }
 
 void LEM_AEA::Init(LEM *s){
@@ -115,6 +125,56 @@ void LEM_AEA::Init(LEM *s){
 
 void LEM_AEA::TimeStep(double simdt){
 	if(lem == NULL){ return; }
+
+	if (!IsPowered()) return;
+
+	int i;
+
+	int cycles = (long)((simdt) * AEA_PER_SECOND);
+
+	for (i = 0; i < cycles; i++) {
+		aea_engine(&vags);
+	}
+}
+
+void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
+
+{
+	DCPower.WireToBuses(a, b);
+	PowerSwitch = s;
+}
+
+bool LEM_AEA::IsPowered()
+{
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	if (PowerSwitch) {
+		if (!PowerSwitch->IsUp()) { return false; }
+	}
+
+	return true;
+}
+
+void LEM_AEA::InitVirtualAGS(char *binfile)
+
+{
+	aea_engine_init(&vags, binfile, NULL);
+}
+
+void LEM_AEA::SetMissionInfo(int MissionNo)
+
+{
+	char *binfile;
+
+	if (MissionNo < 12)	// Flight Program 6
+	{
+		binfile = "Config/ProjectApollo/FP6.bin";
+	}
+	else				//Flight Program 8
+	{
+		binfile = "Config/ProjectApollo/FP8.bin";
+	}
+
+	InitVirtualAGS(binfile);
 }
 
 void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
