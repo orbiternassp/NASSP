@@ -217,7 +217,7 @@ void LEM::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	static int ntdvtx = 4;
+	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
 		{ _V(0, -3.86, 5), 1e6, 1.8e5, 3.0, 3.0 },
 		{ _V(-5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
