@@ -333,8 +333,6 @@ public:
 
 protected:
 
-	void SetAttitudeRotLevel(VECTOR3 level);
-
 	void ProcessChannel5(ChannelValue val);
 	void ProcessChannel6(ChannelValue val);
 	void ProcessChannel10(ChannelValue val);

@@ -796,25 +796,6 @@ void CSMcomputer::ProcessChannel14(ChannelValue val){
 	} */
 }
 
-/// \todo Dirty Hack for the AGC++ attitude control, 
-/// remove this and use I/O channels and pulsed thrusters 
-/// identical to the VAGC instead
-
-void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
-	
-	Saturn *sat = (Saturn *) OurVessel;
-	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
-		// Ensure RJ/EC power, Auto RCS is not checked currently
-		if (sat->SIGCondDriverBiasPower1Switch.Voltage() >= SP_MIN_ACVOLTAGE && 
-			sat->SIGCondDriverBiasPower2Switch.Voltage() >= SP_MIN_ACVOLTAGE) {
-
-			sat->SetAttitudeRotLevel(level);
-			// Disable RJ/EC for the AGC++ control loop
-			sat->rjec.SetAGCActiveTimer(2.0); //ApolloGuidance DELTAT
-		}
-	}
-}
-
 void CSMcomputer::LVGuidanceSwitchToggled(PanelSwitchItem *s) {
 	ChannelValue val30;
 

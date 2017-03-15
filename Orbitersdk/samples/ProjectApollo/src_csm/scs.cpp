@@ -1594,7 +1594,6 @@ RJEC::RJEC() {
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
-	AGCActiveTimer = 0;
 
 	int i = 0;
 	while (i < 20) {
@@ -1718,13 +1717,6 @@ void RJEC::TimeStep(double simdt){
 		}
 	}
 
-	/// \todo Dirty Hack for the AGC++ attitude control
-	// see CSMcomputer::SetAttitudeRotLevel(VECTOR3 level)
-	if (AGCActiveTimer > 0) {
-		AGCActiveTimer = max(0, AGCActiveTimer - simdt);
-		return;
-	}
-
 	// Reset thruster power demand
 	bool td[20];
 	int i;
@@ -1733,21 +1725,11 @@ void RJEC::TimeStep(double simdt){
 		PoweredSwitch[i] = NULL;
 	}
 
-
 	//
 	// ACCEL CMD: ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
 	//
 
 	// Roll
-	
-	td[9] = ThrusterDemand[9];
-	td[10] = ThrusterDemand[10];
-	td[11] = ThrusterDemand[11];
-	td[12] = ThrusterDemand[12];
-	td[13] = ThrusterDemand[13];
-	td[14] = ThrusterDemand[14];
-	td[15] = ThrusterDemand[15];
-	td[16] = ThrusterDemand[16];
 
 	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_x < 28673) {  // MINUS
@@ -1763,13 +1745,19 @@ void RJEC::TimeStep(double simdt){
 			td[15] = true;
 		}
 	}
+	else
+	{
+		td[9] = ThrusterDemand[9];
+		td[10] = ThrusterDemand[10];
+		td[11] = ThrusterDemand[11];
+		td[12] = ThrusterDemand[12];
+		td[13] = ThrusterDemand[13];
+		td[14] = ThrusterDemand[14];
+		td[15] = ThrusterDemand[15];
+		td[16] = ThrusterDemand[16];
+	}
 
 	// Pitch
-	
-	td[1] = ThrusterDemand[1];
-	td[2] = ThrusterDemand[2];
-	td[3] = ThrusterDemand[3];
-	td[4] = ThrusterDemand[4];
 
 	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_y < 28673) {  // MINUS
@@ -1781,13 +1769,15 @@ void RJEC::TimeStep(double simdt){
 			td[3] = true;
 		}
 	}
+	else
+	{
+		td[1] = ThrusterDemand[1];
+		td[2] = ThrusterDemand[2];
+		td[3] = ThrusterDemand[3];
+		td[4] = ThrusterDemand[4];
+	}
 
 	// Yaw
-	
-	td[5] = ThrusterDemand[5];
-	td[6] = ThrusterDemand[6];
-	td[7] = ThrusterDemand[7];
-	td[8] = ThrusterDemand[8];
 	
 	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_z < 28673) {  // MINUS
@@ -1798,6 +1788,13 @@ void RJEC::TimeStep(double simdt){
 			td[5] = true;
 			td[7] = true;
 		}
+	}
+	else
+	{
+		td[5] = ThrusterDemand[5];
+		td[6] = ThrusterDemand[6];
+		td[7] = ThrusterDemand[7];
+		td[8] = ThrusterDemand[8];
 	}
 
 	// Ensure AC logic power, see Systems Handbook 8.2 
@@ -1820,6 +1817,45 @@ void RJEC::TimeStep(double simdt){
 		td[13] = false;
 		td[15] = false;
 		td[16] = false;
+	}
+
+	//
+	// TRANSLATION HANDLING
+	//
+
+	// CM/SM transfer handling
+	bool sm_sep = false;
+	if (GetCMTransferMotor1() || GetCMTransferMotor2()) sm_sep = true;
+
+	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep) {
+		if (sat->eca.thc_x < 16384) { // PLUS X
+			td[14] = true;
+			td[15] = true;
+		}
+		if (sat->eca.thc_x > 49152) { // MINUS X
+			td[16] = true;
+			td[13] = true;
+		}
+		if (sat->eca.thc_y > 49152) { // MINUS Y (FORWARD)
+			td[1] = true;
+			td[2] = true;
+			td[5] = true;
+			td[6] = true;
+		}
+		if (sat->eca.thc_y < 16384) { // PLUS Y (BACKWARD)
+			td[3] = true;
+			td[4] = true;
+			td[7] = true;
+			td[8] = true;
+		}
+		if (sat->eca.thc_z > 49152) { // MINUS Z (UP)
+			td[11] = true;
+			td[12] = true;
+		}
+		if (sat->eca.thc_z < 16384) { // PLUS Z (DOWN)
+			td[9] = true;
+			td[10] = true;
+		}
 	}
 
 	int thruster = 1;
@@ -1904,7 +1940,6 @@ void RJEC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive); 
 	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive); 
 	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive); 
-	papiWriteScenario_double(scn, "AGCACTIVETIMER", AGCActiveTimer); 
 
 	oapiWriteLine(scn, RJEC_END_STRING);
 }
@@ -1935,7 +1970,6 @@ void RJEC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive); 
 		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive); 
 		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive); 
-		papiReadScenario_double(line, "AGCACTIVETIMER", AGCActiveTimer); 
 	}
 }
 
@@ -1962,9 +1996,6 @@ ECA::ECA() {
 	mnimp_pitch_trigger = 0;
 	accel_yaw_trigger = 0;
 	mnimp_yaw_trigger = 0;
-	trans_x_trigger = 0;
-	trans_y_trigger = 0;
-	trans_z_trigger = 0;
 	pseudorate = _V(0,0,0);
 
 	sat = NULL;
@@ -2575,77 +2606,6 @@ void ECA::TimeStep(double simdt) {
 		mnimp_yaw_trigger=0;
 	}
 	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
-
-	//
-	// TRANSLATION HANDLING
-	//
-
-	int trans_x_flag=0,trans_y_flag=0,trans_z_flag=0;
-	// CM/SM transfer handling
-	bool sm_sep = false;
-	if (sat->rjec.GetCMTransferMotor1() || sat->rjec.GetCMTransferMotor2()) sm_sep = true;
-
-	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep){
-		if(thc_x < 16384){ // PLUS X
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(14,1); }else{ sat->rjec.SetThruster(14,0); }
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(15,1); }else{ sat->rjec.SetThruster(15,0); }
-			trans_x_trigger=1; trans_x_flag=1;
-		}
-		if(thc_x > 49152){ // MINUS X
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(16,1); }else{ sat->rjec.SetThruster(16,0); }
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(13,1); }else{ sat->rjec.SetThruster(13,0); }
-			trans_x_trigger=1; trans_x_flag=1;
-		}
-		if(thc_y > 49152){ // MINUS Y (FORWARD)
-			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(1,1); }else{ sat->rjec.SetThruster(1,0); }
-			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(2,1); }else{ sat->rjec.SetThruster(2,0); }
-			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(5,1); }else{ sat->rjec.SetThruster(5,0); }
-			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(6,1); }else{ sat->rjec.SetThruster(6,0); }
-			trans_y_trigger=1; trans_y_flag=1;
-		}
-		if(thc_y < 16384){ // PLUS Y (BACKWARD)
-			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(3,1); }else{ sat->rjec.SetThruster(3,0); }
-			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(4,1); }else{ sat->rjec.SetThruster(4,0); }
-			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(7,1); }else{ sat->rjec.SetThruster(7,0); }
-			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(8,1); }else{ sat->rjec.SetThruster(8,0); }
-			trans_y_trigger=1; trans_y_flag=1;
-		}
-		if(thc_z > 49152){ // MINUS Z (UP)
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(11,1); }else{ sat->rjec.SetThruster(11,0); }
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(12,1); }else{ sat->rjec.SetThruster(12,0); }
-			trans_z_trigger=1; trans_z_flag=1;
-		}
-		if(thc_z < 16384){ // PLUS Z (DOWN)
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(9,1);  }else{ sat->rjec.SetThruster(9,0);  }
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(10,1); }else{ sat->rjec.SetThruster(10,0); }
-			trans_z_trigger=1; trans_z_flag=1;
-		}
-	}
-	if(!trans_x_flag && trans_x_trigger){
-		sat->rjec.SetThruster(13,0);
-		sat->rjec.SetThruster(14,0);
-		sat->rjec.SetThruster(15,0);
-		sat->rjec.SetThruster(16,0);
-		trans_x_trigger=0;
-	}
-	if(!trans_y_flag && trans_y_trigger){
-		sat->rjec.SetThruster(3,0); 
-		sat->rjec.SetThruster(7,0); 
-		sat->rjec.SetThruster(4,0); 
-		sat->rjec.SetThruster(8,0); 
-		sat->rjec.SetThruster(2,0);
-		sat->rjec.SetThruster(6,0);
-		sat->rjec.SetThruster(1,0); 
-		sat->rjec.SetThruster(5,0); 
-		trans_y_trigger=0;
-	}
-	if(!trans_z_flag && trans_z_trigger){
-		sat->rjec.SetThruster(9,0);
-		sat->rjec.SetThruster(10,0);
-		sat->rjec.SetThruster(11,0);
-		sat->rjec.SetThruster(12,0);
-		trans_z_trigger=0;
-	}
 }
 
 

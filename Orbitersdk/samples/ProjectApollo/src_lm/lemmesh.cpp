@@ -218,10 +218,10 @@ void LEM::SetLmVesselHoverStage()
 
 	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
-	{ _V(0, -3.86, 5), 1e6, 1.8e5, 3.0, 3.0 },
-	{ _V(-5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
-	{ _V(5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
-	{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
+		{ _V(0, -3.86, 5), 1e6, 1.8e5, 3.0, 3.0 },
+		{ _V(-5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
+		{ _V(5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
+		{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
 	};
 	SetTouchdownPoints(tdvtx, ntdvtx);
 
