@@ -248,8 +248,6 @@ public: // Same stuff about speed and I'm lazy too.
 	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
 	void SetDirectYawActive(bool active)   { DirectYawActive = active; }
 	void SetDirectRollActive(bool active)  { DirectRollActive = active; }
-	
-	void SetAGCActiveTimer(double timer) { AGCActiveTimer = timer; }
 
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
@@ -260,7 +258,6 @@ protected:
 	bool CMTransferMotor1, CMTransferMotor2;						// CM/SM transfer motor switches 
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
-	double AGCActiveTimer;											/// \todo Dirty Hack for the AGC++ attitude control
 
 	Saturn *sat;
 	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
@@ -290,9 +287,6 @@ public:
 	int mnimp_pitch_trigger;                                        // Joystick triggered pitch thrust in MIN IMP mode
 	int accel_yaw_trigger;                                          // Joystick triggered yaw thrust in RATE CMD mode
 	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
-	int trans_x_trigger;                                            // Translation triggers
-	int trans_y_trigger;
-	int trans_z_trigger;
 	Saturn *sat;
 	VECTOR3 pseudorate;
 };
