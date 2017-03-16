@@ -2976,7 +2976,7 @@ void EMS::AccelerometerTimeStep(double simdt) {
 
 	} else {
 		// Acceleration calculation, see IMU
-		VECTOR3 dvel = (vel - lastGlobalVel) / lastSimDT;
+		VECTOR3 dvel = (vel - lastGlobalVel) / simdt;
 		VECTOR3 dw1 = w - dvel;
 		VECTOR3 dw2 = lastWeight - dvel;
 		lastWeight = w;

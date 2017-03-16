@@ -361,7 +361,7 @@ void IMU::Timestep(double simdt)
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(tinv, w) / OurVessel->GetMass();
 		OurVessel->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
+		VECTOR3 dvel = (vel - LastGlobalVel) / simdt;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
@@ -414,15 +414,15 @@ void IMU::Timestep(double simdt)
 			//sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f l %.10f", accel.x, accel.y, accel.z, length(accel));								
 
 			// pulse PIPAs
-			pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);
+			pulses = RemainingPIPA.X + (accel.x * simdt / pipaRate);
 			PulsePIPA(RegPIPAX, (int) pulses);
 			RemainingPIPA.X = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Y + (accel.y * LastSimDT / pipaRate);
+			pulses = RemainingPIPA.Y + (accel.y * simdt / pipaRate);
 			PulsePIPA(RegPIPAY, (int) pulses);
 			RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accel.z * LastSimDT / pipaRate);
+			pulses = RemainingPIPA.Z + (accel.z * simdt / pipaRate);
 			PulsePIPA(RegPIPAZ, (int) pulses);
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}

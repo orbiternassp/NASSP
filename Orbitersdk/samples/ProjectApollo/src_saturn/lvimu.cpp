@@ -207,7 +207,7 @@ void LVIMU::Timestep(double simdt)
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(tinv, w) / OurVessel->GetMass();
 		OurVessel->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
+		VECTOR3 dvel = (vel - LastGlobalVel) / simdt;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
@@ -268,13 +268,13 @@ void LVIMU::Timestep(double simdt)
 			//PulsePIPA(LVRegPIPAZ, (int) pulses);
 			//RemainingPIPA.Z = pulses - (int) pulses;			
 
-			pulses = (accel.x * LastSimDT);
+			pulses = (accel.x * simdt);
 			PulsePIPA(LVRegPIPAX, pulses);
 						
-			pulses = (accel.y * LastSimDT);
+			pulses = (accel.y * simdt);
 			PulsePIPA(LVRegPIPAY, pulses);
 			
-			pulses = (accel.z * LastSimDT);
+			pulses = (accel.z * simdt);
 			PulsePIPA(LVRegPIPAZ, pulses);
 		}
 		LastSimDT = simdt;
