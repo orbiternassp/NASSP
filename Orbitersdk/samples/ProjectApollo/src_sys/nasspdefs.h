@@ -211,7 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 70000		///< Current NASSP version.
+#define NASSP_VERSION 80000		///< Current NASSP version.
 
 //
 // Realism values.
