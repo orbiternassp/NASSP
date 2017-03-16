@@ -216,27 +216,9 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 
 {
 	double TCP=-54.485-TCPO;//STG0O;
-	TOUCHDOWNVTX tdpoints[4];
-
-	tdpoints[0].pos = _V(0,-1.0,TCP);
-	tdpoints[0].damping = 1;
-	tdpoints[0].mu = 1;
-	tdpoints[0].mu_lng = 1;
-	tdpoints[0].stiffness = 1;
-	tdpoints[1].pos = _V(-.5,.5,TCP);
-	tdpoints[1].damping = 1;
-	tdpoints[1].mu = 1;
-	tdpoints[1].mu_lng = 1;
-	tdpoints[1].stiffness = 1;
-	tdpoints[2].pos = _V(.5,.5,TCP);
-	tdpoints[2].damping = 1;
-	tdpoints[2].mu = 1;
-	tdpoints[2].mu_lng = 1;
-	tdpoints[2].stiffness = 1;
 
 	// SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
-	// SetTouchdownPoints(tdpoints,3);
 	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
