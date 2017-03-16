@@ -5081,6 +5081,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 					TB5 = TAS;//-simdt;
 					LVDC_Timebase = 5;
 					LVDC_TB_ETime = 0;
+
+					//HSL Exit settings
+					GATE = false;
+					GATE5 = false;
+					Tt_T = 1000;
+					HSL = false;
+					BOOST = false;
+
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 				}
 
@@ -5194,6 +5202,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 					TB7 = TAS;//-simdt;
 					LVDC_Timebase = 7;
 					LVDC_TB_ETime = 0;
+
+					//HSL Exit settings
+					GATE = false;
+					GATE5 = false;
+					Tt_T = 1000;
+					HSL = false;
+					BOOST = false;
+
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 					owner->TLI_Ended();
 				}
@@ -6777,7 +6793,7 @@ minorloop:
 		// LV takeover
 		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
 		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if(LVDC_Timebase == 5 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
+		if ((LVDC_Timebase == 5 || (owner->ApolloNo >= 11 && LVDC_Timebase > 0)) && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;

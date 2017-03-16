@@ -324,16 +324,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 
-				// Synchronize clock with launch time (TEPHEM), only Apollo 15 has a proper scenario
-				if (ApolloNo == 15) {
-					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-						vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-						vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-					tephem = (tephem / 8640000.) + 41133.;
-					double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
-					vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-					vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
-				}
+				// Synchronize clock with launch time (TEPHEM)
+				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+				tephem = (tephem / 8640000.) + 41133.;
+				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
+				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
+				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
 			PadLoaded = true;
 		}

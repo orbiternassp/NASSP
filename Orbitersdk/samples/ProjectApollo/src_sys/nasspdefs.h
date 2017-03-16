@@ -211,7 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 70000		///< Current NASSP version.
+#define NASSP_VERSION 80000		///< Current NASSP version.
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,
