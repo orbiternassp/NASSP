@@ -2215,7 +2215,7 @@ void LEM_LR::TimeStep(double simdt){
 		gravref = lem->GetGravityRef();
 
 		//Altitude
-		alt = lem->GetAltitude(ALTMODE_GROUND) - dh;
+		alt = lem->GetAltitude() - dh;
 
 		//Rotation matrix
 		lem->GetRotationMatrix(Rot);
@@ -2263,7 +2263,7 @@ void LEM_LR::TimeStep(double simdt){
 		//Now velocity data
 		VECTOR3 vel, vel_lh, vel_LR;
 
-		lem->GetGroundspeedVector(FRAME_LOCAL, vel_lh);
+		lem->GetShipAirspeedVector(vel_lh);
 
 		//In LM navigation base coordinates
 		vel = _V(vel_lh.y, vel_lh.x, vel_lh.z);
