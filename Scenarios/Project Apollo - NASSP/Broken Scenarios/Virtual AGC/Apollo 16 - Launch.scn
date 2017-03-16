@@ -3,7 +3,7 @@ John Young, Charlie Duke and Ken Mattingly make mans second detailed exploration
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo\Sol_VirtualAGC
   Date MJD 41423.579167
 END_ENVIRONMENT
 
@@ -54,7 +54,7 @@ Casper:ProjectApollo\Saturn5
   MISSNTIME -14400
   TOAPO 169.458
   TOPER 165.9392
-  TOHDG 80.088
+  TOHDG 72.034
   MOONLAT 3.64
   MOONLONG 26.13
   MOONALT 0.0
@@ -316,9 +316,7 @@ Casper:ProjectApollo\Saturn5
   LMPAD 3432 00000
   AUTOSLOW 1
   LVDC_BEGIN
-  LVDC_fx[0][0] 29.685
-  LVDC_gx[0][0] 109.330
-  LVDC_hx[0][0] 80.088
+  LVDC_hx[0][0] 72.034
   LVDC_G_T -9.305
   LVDC_R_T 6544846.0
   LVDC_V_T 7804.0
