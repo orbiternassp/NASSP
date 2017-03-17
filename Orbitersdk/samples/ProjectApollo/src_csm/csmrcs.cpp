@@ -463,7 +463,6 @@ void CMRCSPropellantSource::OpenHeliumValves() {
 
 void CMRCSPropellantSource::OpenPurgeValves() {
 
-	our_vessel->SetCmRcsHeDumpSwitch(true);
 	purgeValvesOpen = true;
 }
 

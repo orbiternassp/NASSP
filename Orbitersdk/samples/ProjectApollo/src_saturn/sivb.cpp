@@ -200,7 +200,6 @@ void SIVB::InitS4b()
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
-	Realism = REALISM_DEFAULT;
 
 	THRUST_THIRD_VAC = 1000.0;
 	ISP_THIRD_VAC = 300.0;
@@ -305,9 +304,6 @@ void SIVB::InitS4b()
 void SIVB::Boiloff()
 
 {
-	if (Realism < 2)
-		return;
-
 	//
 	// The SIVB stage boils off a small amount of fuel while in orbit.
 	//
@@ -456,7 +452,7 @@ void SIVB::SetS4b()
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
 		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true, Realism, 0.0, 0.0);
+		iu.SetMissionInfo(true, true, 0.0, 0.0);
 
 		//
 		// Set up the IU connections.
@@ -770,7 +766,6 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "STATE", State);
-	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
@@ -1232,10 +1227,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				LMPad[LMPadLoadCount++] = val;
 			}
 		}
-		else if (!strnicmp (line, "REALISM", 7))
-		{
-			sscanf (line+7, "%d", &Realism);
-		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			iu.LoadState(scn);
 		}
@@ -1414,7 +1405,6 @@ void SIVB::SetState(SIVBSettings &state)
 		SaturnVStage = state.SaturnVStage;
 		PanelsHinged = state.PanelsHinged;
 		VehicleNo = state.VehicleNo;
-		Realism = state.Realism;
 		LowRes = state.LowRes;
 
 		//

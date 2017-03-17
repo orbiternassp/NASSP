@@ -179,7 +179,6 @@ void LRV::init()
 	speedlock = false;
 
 	ApolloNo = 0;
-	Realism = 0;
 
 	// power and temperature (currently simplistic and/or faked)
 	Bat1Cap = 120;  // remaining capacity of battery 1 [Ah]
@@ -654,7 +653,6 @@ void LRV::SetLRVStats(LRVSettings &lrvs)
 
 {
 	ApolloNo = lrvs.MissionNo;
-	Realism = lrvs.Realism;
 	StateSet = true;
 }
 
@@ -1007,10 +1005,6 @@ void LRV::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		{
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
-		else if (!strnicmp (line, "REALISM", 7)) 
-		{
-			sscanf(line + 7, "%d", &Realism);
-		}
 		else 
 		{
             ParseScenarioLineEx (line, vs);
@@ -1088,7 +1082,6 @@ void LRV::clbkSaveState(FILEHANDLE scn)
 	if (ApolloNo != 0) {
 		oapiWriteScenario_int (scn, "MISSIONNO", ApolloNo);
 	}
-	oapiWriteScenario_int (scn, "REALISM", Realism);
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)

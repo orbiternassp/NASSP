@@ -52,7 +52,6 @@ typedef struct
 {
 	LESSettingFlags SettingsType;		///< Which of the settings are valid?
 	int VehicleNo;						///< Saturn vehicle number.
-	int Realism;						///< Realism value.
 
 	double ISP_LET_VAC;					///< LET ISP in a vacuum
 	double ISP_LET_SL;					///< LET ISP at sea level.
@@ -186,11 +185,6 @@ protected:
 	/// \brief Current state for automated operations.
 	///
 	LESState State;
-
-	///
-	/// \brief Realism value.
-	///
-	int Realism;
 
 	///
 	/// \brief Flag use of low-res meshes if possible, to reduce graphics lag.

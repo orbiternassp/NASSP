@@ -71,7 +71,6 @@ void S1B::InitS1b()
 
 	EmptyMass = 37500.0;
 	MainFuel = 5000.0;
-	Realism = REALISM_DEFAULT;
 
 	CurrentThrust = 0.0;
 
@@ -170,7 +169,6 @@ void S1B::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "STATE", State);
-	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
@@ -349,10 +347,6 @@ void S1B::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (S1bState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7))
-		{
-			sscanf (line+7, "%d", &Realism);
-		}
 		else
 		{
 			ParseScenarioLineEx (line, vstatus);
@@ -402,7 +396,6 @@ void S1B::SetState(S1BSettings &state)
 	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
-		Realism = state.Realism;
 		RetroNum = state.RetroNum;
 	}
 

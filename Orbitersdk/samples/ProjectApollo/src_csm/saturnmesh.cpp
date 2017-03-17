@@ -498,12 +498,7 @@ void Saturn::SetCSMStage ()
 
 	// *********************** thruster definitions ********************************
 
-	// Main engine offset only in Virtual AGC mode
-	if (Realism) {
-		th_main[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
-	} else {
-		th_main[0] = CreateThruster(_V(0, 0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
-	}
+	th_main[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
 
 	DelThrusterGroup(THGROUP_MAIN, true);
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
@@ -649,7 +644,6 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
 	S4Config.MissionTime = MissionTime;
-	S4Config.Realism = Realism;
 	S4Config.LowRes = LowRes;
 	S4Config.ISP_VAC = ISP_THIRD_VAC;
 	S4Config.THRUST_VAC = THRUST_THIRD_VAC;
@@ -1009,8 +1003,6 @@ void Saturn::StageEight(double simt)
 		}
 	}
 
-	SetApexCoverLight(true);
-
 	//
 	// Create the apex cover vessel
 	//
@@ -1065,8 +1057,6 @@ void Saturn::SetChuteStage1()
 	SetView(-1.35);
 
 	DeactivateNavmode(NAVMODE_KILLROT);
-
-	SetDrogueDeployLight(true);
 }
 
 void Saturn::SetChuteStage2()
@@ -1148,8 +1138,6 @@ void Saturn::SetChuteStage4()
 	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
-
-	SetMainDeployLight(true);
 }
 
 void Saturn::SetSplashStage()
@@ -1352,7 +1340,6 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	LESConfig.FireMain = UseMain;
 
 	LESConfig.MissionTime = MissionTime;
-	LESConfig.Realism = Realism;
 	LESConfig.VehicleNo = VehicleNo;
 	LESConfig.LowRes = LowRes;
 	LESConfig.ProbeAttached = AbortJettison && HasProbe;
@@ -1403,8 +1390,6 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 		SwindowS.play();
 	}
 	SwindowS.done();
-
-	SetLESMotorLight(true);
 
 	//
 	// Event management

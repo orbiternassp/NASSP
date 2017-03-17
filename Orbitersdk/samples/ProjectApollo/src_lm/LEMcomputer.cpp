@@ -86,10 +86,10 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//

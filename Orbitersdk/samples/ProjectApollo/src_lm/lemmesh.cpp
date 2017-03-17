@@ -88,7 +88,6 @@ void LEM::ToggleEVA()
 			LEVASettings evas;
 
 			evas.MissionNo = agc.GetApolloNo();
-			evas.Realism = Realism;
 			leva->SetEVAStats(evas);
 		}
 	}

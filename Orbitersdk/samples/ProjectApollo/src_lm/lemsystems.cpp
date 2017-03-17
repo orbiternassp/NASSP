@@ -135,76 +135,6 @@ void LEM::AddRCS_LMH(double TRANZ)
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
-	/*
-	// Setup Orbiter thruster groups
-	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-	
-	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
-	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-	
-	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
-	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-	
-	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
-	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-	
-	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
-	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
-	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
-	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-	
-	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
-	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
-	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
-	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-	
-
-	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
-	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
-	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-	
-	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
-	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
-	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-	
-	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
-	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-	
-	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
-	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-	
-	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
-	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-	
-	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
-	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-
-	if (!OrbiterAttitudeDisabled) {
-		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
-	}*/
-
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
 		1	A1F		9	A3R
@@ -289,75 +219,6 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	// A4D
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
-
-	// Setup Orbiter thruster groups
-	/*th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-
-	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
-	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-
-	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
-	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-
-	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
-	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-
-	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
-	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
-	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
-	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-
-	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
-	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
-	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
-	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-
-
-	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
-	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
-	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-
-	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
-	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
-	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-
-	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
-	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-
-	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
-	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-
-	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
-	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-
-	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
-	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-
-	if (!OrbiterAttitudeDisabled) {
-		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
-	}*/
 }
 
 bool LEM::CabinFansActive()
@@ -857,7 +718,7 @@ void LEM::JoystickTimestep(double simdt)
 	rhc_pos[2] = 0;
 
 					 // Joystick read
-	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
+	if (oapiGetFocusInterface() == this) {
 		if (thc_id != -1 && !(thc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}

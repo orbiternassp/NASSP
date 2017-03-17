@@ -877,7 +877,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if (LVDC_TB_ETime >= 5773) {				
 					if (owner->GetThrusterLevel(owner->th_main[0]) > 0) {
 						owner->SetJ2ThrustLevel(0);
-						if (owner->Realism){ owner->EnableDisableJ2(false); }
+						owner->EnableDisableJ2(false);
 					}
 				}else{
 					if (LVDC_TB_ETime >= 5052) {					

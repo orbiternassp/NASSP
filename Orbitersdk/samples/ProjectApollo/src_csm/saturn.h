@@ -1245,56 +1245,6 @@ protected:
 	void ClearLiftoffLight();
 
 	///
-	/// Turn the control panel LES Motor light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the LES Motor light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetLESMotorLight(bool lit);
-
-	///
-	/// Turn the control panel Canard Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the Canard Deploy light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetCanardDeployLight(bool lit);
-
-	///
-	/// Turn the control panel CSM/LV Sep light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the CSM/LV Sep light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetCSMLVSepLight(bool lit);
-
-	///
-	/// Turn the control panel Apex Cover light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the Apex Cover Sep light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetApexCoverLight(bool lit);
-
-	///
-	/// Turn the control panel Drogue Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the Drogue Deploy light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetDrogueDeployLight(bool lit);
-
-	///
-	/// Turn the control panel Main Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
-	/// as the real panel didn't have a light for this button.
-	/// \brief Set or clear the Main Deploy light.
-	/// \param lit True to turn light on, false to turn light off.
-	///
-	void SetMainDeployLight(bool lit);
-
-	void SetCmRcsHeDumpSwitch(bool lit);
-
-	///
 	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
 	/// failure.
 	/// \brief Set the LV Guidance light.
@@ -1576,13 +1526,6 @@ protected:
 	/// \brief Orbitersound ATC enabled.
 	///
 	bool UseATC;
-
-	///
-	/// Realism is a value from 0 to 10, determining how realistic the systems simulation will be.
-	/// Zero is basically 'arcade mode' whereas 10 is as realistic as we can make it.
-	/// \brief Simulation realism level.
-	///
-	int Realism;
 
 	///
 	/// Flag to indicate that we've told the user to make a course correction.
@@ -3802,15 +3745,6 @@ protected:
 	double CSMAccelTime;
 	double CSMAccelEnd;
 	double CSMAccelPitch;
-
-	//
-	// Quickstart Mode settings
-	//
-
-	bool ChecklistAutoSlow;
-	bool ChecklistAutoDisabled;
-	bool OrbiterAttitudeDisabled;
-	bool SequencerSwitchLightingDisabled;
 
 	//
 	// VAGC Mode settings
