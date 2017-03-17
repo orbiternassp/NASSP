@@ -2000,6 +2000,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "DOI", 3);
 		skp->Text(1 * W / 8, 6 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
+		skp->Text(5 * W / 8, 8 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 15)
@@ -2321,6 +2322,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f", length(G->PC_dV_LVLH) / 0.3048);
 		skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
+	else if (screen == 19)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Terrain Model", 13);
+
+		sprintf(Buffer, "%.3f°", G->TMLat*DEG);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->TMLng*DEG);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->TMAzi*DEG);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f ft", G->TMDistance / 0.3048);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f ft", G->TMStepSize / 0.3048);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 9 * H / 14, "LS Height:", 10);
+		sprintf(Buffer, "%.2f NM", G->TMAlt / 1852.0);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -2542,6 +2566,12 @@ void ApolloRTCCMFD::menuSetSkylabPage()
 void ApolloRTCCMFD::menuSetPCPage()
 {
 	screen = 18;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetTerrainModelPage()
+{
+	screen = 19;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4737,6 +4767,116 @@ void ApolloRTCCMFD::set_PCAlignGET(double time)
 void ApolloRTCCMFD::menuSetPCLanded()
 {
 	G->PClanded = !G->PClanded;
+}
+
+void ApolloRTCCMFD::menuTMLat()
+{
+	bool TMLatInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Latitude in degrees:", TMLatInput, 0, 20, (void*)this);
+}
+
+bool TMLatInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMLat(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMLat(double lat)
+{
+	this->G->TMLat = lat*RAD;
+}
+
+void ApolloRTCCMFD::menuTMLng()
+{
+	bool TMLngInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Longitude in degrees:", TMLngInput, 0, 20, (void*)this);
+}
+
+bool TMLngInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMLng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMLng(double lng)
+{
+	this->G->TMLng = lng*RAD;
+}
+
+void ApolloRTCCMFD::menuTMAzi()
+{
+	bool TMAziInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Approach azimuth in degrees:", TMAziInput, 0, 20, (void*)this);
+}
+
+bool TMAziInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMAzi(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMAzi(double azi)
+{
+	this->G->TMAzi = azi*RAD;
+}
+
+void ApolloRTCCMFD::menuTMDistance()
+{
+	bool TMDistanceInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Distance in feet:", TMDistanceInput, 0, 20, (void*)this);
+}
+
+bool TMDistanceInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMDistance(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMDistance(double distance)
+{
+	this->G->TMDistance = distance*0.3048;
+}
+
+void ApolloRTCCMFD::menuTMStepSize()
+{
+	bool TMStepSizeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Step size in feet:", TMStepSizeInput, 0, 20, (void*)this);
+}
+
+bool TMStepSizeInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMStepSize(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMStepSize(double step)
+{
+	this->G->TMStepSize = step*0.3048;
+}
+
+void ApolloRTCCMFD::menuTerrainModelCalc()
+{
+	G->TerrainModelCalc();
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()
