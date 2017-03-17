@@ -54,6 +54,13 @@ SECS::SECS()
 	PyroBusAMotor = false;
 	PyroBusBMotor = false;
 
+	BoosterCutoffAbortStartRelayA = false;
+	BoosterCutoffAbortStartRelayB = false;
+	LETPhysicalSeperationMonitorA = false;
+	LETPhysicalSeperationMonitorB = false;
+	LESAbortRelayA = false;
+	LESAbortRelayB = false;
+
 	Sat = 0;
 }
 
@@ -254,6 +261,80 @@ void SECS::Timestep(double simt, double simdt)
 		Sat->HasProbe = false;
 		Sat->SetDockingProbeMesh();
 	}
+
+	// Monitor LET Status
+	if (IsLogicPoweredAndArmedA())
+	{
+		if (Sat->LESAttached)
+		{
+			LETPhysicalSeperationMonitorA = true;
+		}
+		else
+		{
+			LETPhysicalSeperationMonitorA = false;
+		}
+	}
+	if (IsLogicPoweredAndArmedB())
+	{
+		if (Sat->LESAttached)
+		{
+			LETPhysicalSeperationMonitorB = true;
+		}
+		else
+		{
+			LETPhysicalSeperationMonitorB = false;
+		}
+	}
+
+	// Abort Handling
+	if (Sat->THCRotary.IsCounterClockwise())
+	{
+		if (IsLogicPoweredAndArmedA())
+		{
+			BoosterCutoffAbortStartRelayA = true;
+		}
+		if (IsLogicPoweredAndArmedB())
+		{
+			BoosterCutoffAbortStartRelayB = true;
+		}
+	}
+
+	//Abort Start
+
+	if (BoosterCutoffAbortStartRelayA || BoosterCutoffAbortStartRelayB)
+	{
+		Sat->bAbort = true;
+
+		//
+		// Event timer resets to zero on abort.
+		//
+
+		Sat->EventTimerDisplay.Reset();
+		Sat->EventTimerDisplay.SetRunning(true);
+		Sat->EventTimerDisplay.SetEnabled(true);
+
+		if (IsLogicPoweredAndArmedA())
+		{
+			if (LETPhysicalSeperationMonitorA)
+			{
+				LESAbortRelayA = true;
+			}
+		}
+		if (IsLogicPoweredAndArmedB())
+		{
+			if (LETPhysicalSeperationMonitorB)
+			{
+				LESAbortRelayB = true;
+			}
+		}
+	}
+
+	//LET Abort Start
+
+	if (LESAbortRelayA || LESAbortRelayB)
+	{
+
+	}
 }
 
 bool SECS::IsLogicPoweredAndArmedA() {
@@ -282,6 +363,8 @@ void SECS::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	papiWriteScenario_bool(scn, "PYROBUSAMOTOR", PyroBusAMotor);
 	papiWriteScenario_bool(scn, "PYROBUSBMOTOR", PyroBusBMotor);
+	papiWriteScenario_bool(scn, "BOOSTERCUTOFFABORTSTARTRELAYA", BoosterCutoffAbortStartRelayA);
+	papiWriteScenario_bool(scn, "BOOSTERCUTOFFABORTSTARTRELAYB", BoosterCutoffAbortStartRelayB);
 	
 	oapiWriteLine(scn, SECS_END_STRING);
 }
@@ -301,6 +384,8 @@ void SECS::LoadState(FILEHANDLE scn)
 		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 		papiReadScenario_bool(line, "PYROBUSAMOTOR", PyroBusAMotor);
 		papiReadScenario_bool(line, "PYROBUSBMOTOR", PyroBusBMotor);
+		papiReadScenario_bool(line, "BOOSTERCUTOFFABORTSTARTRELAYA", BoosterCutoffAbortStartRelayA);
+		papiReadScenario_bool(line, "BOOSTERCUTOFFABORTSTARTRELAYB", BoosterCutoffAbortStartRelayB);
 	}
 
 	// connect pyro buses

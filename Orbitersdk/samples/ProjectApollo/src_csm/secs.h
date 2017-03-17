@@ -56,6 +56,13 @@ protected:
 	bool PyroBusAMotor;
 	bool PyroBusBMotor;
 
+	bool BoosterCutoffAbortStartRelayA;
+	bool BoosterCutoffAbortStartRelayB;
+	bool LETPhysicalSeperationMonitorA;
+	bool LETPhysicalSeperationMonitorB;
+	bool LESAbortRelayA;
+	bool LESAbortRelayB;
+
 	Saturn *Sat;
 };
 
