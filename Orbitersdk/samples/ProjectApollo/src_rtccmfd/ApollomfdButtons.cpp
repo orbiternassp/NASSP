@@ -251,8 +251,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "State Vector Slot", 0, 'D' },
 		{ "", 0, ' ' },
 
+		{ "Choose Calculation Mode", 0, 'M' },
 		{ "Calculate State Vector", 0, 'C' },
-		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Upload State Vector", 0, 'U' },
@@ -268,8 +268,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("SLT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchSVSlot);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
+	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleSVMode);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuSVCalc);
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_L, &ApolloRTCCMFD::menuSVUpload);

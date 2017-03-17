@@ -156,6 +156,7 @@ public:
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
 	void menuCycleSVTimeMode();
+	void menuCycleSVMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void EntryLongitudeModeDialogue();

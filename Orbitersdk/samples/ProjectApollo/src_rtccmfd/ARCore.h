@@ -44,6 +44,8 @@ public:
 	void EntryCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void LandingSiteUpdate();
+	void LandingSiteUplink();
 	void VecPointCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
@@ -156,6 +158,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	int svmode;		//0 = state vector, 1 = landing site update
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;

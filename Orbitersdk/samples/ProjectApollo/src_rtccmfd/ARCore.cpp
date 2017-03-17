@@ -282,6 +282,7 @@ ARCore::ARCore(VESSEL* v)
 	svtarget = NULL;
 	svtargetnumber = -1;
 	svtimemode = 0;
+	svmode = 0;
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
 	landingzone = 0;
@@ -725,6 +726,54 @@ void ARCore::MapUpdate()
 		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
 		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
 	}
+}
+
+void ARCore::LandingSiteUpdate()
+{
+	double lat, lng, rad;
+	svtarget->GetEquPos(lng, lat, rad);
+
+	LSLat = lat;
+	LSLng = lng;
+	LSAlt = rad - oapiGetSize(svtarget->GetGravityRef());
+}
+
+void ARCore::LandingSiteUplink()
+{
+	VECTOR3 R_P, R;
+	double r_0;
+
+	R_P = unit(_V(cos(LSLng)*cos(LSLat), sin(LSLng)*cos(LSLat), sin(LSLat)));
+	r_0 = oapiGetSize(svtarget->GetGravityRef());
+
+	R = R_P*(r_0 + LSAlt);
+
+	g_Data.emem[0] = 10;
+
+	if (vesseltype < 2)
+	{
+		g_Data.emem[1] = 2025;
+	}
+	else
+	{
+		if (mission < 15)
+		{
+			g_Data.emem[1] = 2022;
+		}
+		else
+		{
+			g_Data.emem[1] = 2020;
+		}
+	}
+
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
+	g_Data.emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
+	g_Data.emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
+	g_Data.emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
+	g_Data.emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
+	g_Data.emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
+
+	UplinkData(); // Go for uplink
 }
 
 void ARCore::StateVectorCalc()
@@ -1380,7 +1429,7 @@ int ARCore::subThread()
 				REFSMMAToct[1] = 1733;
 			}
 
-			if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+			if (mission >= 15)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
 			{
 				REFSMMAToct[1] -= 2;
 			}

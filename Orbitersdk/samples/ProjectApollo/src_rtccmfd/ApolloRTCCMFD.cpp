@@ -1053,17 +1053,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 7)
 	{
-		skp->Text(6 * W / 8,(int)(0.5 * H / 14), "State Vector", 12);
-
-		if (!G->svtimemode)
+		if (G->svmode == 0)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Now", 3);
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "State Vector", 12);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-			GET_Display(Buffer, G->J2000GET);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Landing Site Update", 19);
+		}
+
+		if (G->svmode == 0)
+		{
+			if (!G->svtimemode)
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "Now", 3);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
+				GET_Display(Buffer, G->J2000GET);
+				skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			}
 		}
 
 		oapiGetObjectName(G->gravref, Buffer, 20);
@@ -1076,30 +1086,44 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->SVSlot)
+		if (G->svmode == 0)
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "CSM", 3);
+			if (G->SVSlot)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "CSM", 3);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
+			}
+			sprintf(Buffer, "%f", G->J2000Pos.x);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Pos.y);
+			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Pos.z);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%f", G->J2000Vel.x);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Vel.y);
+			skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Vel.z);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%f", G->J2000GET);
+			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
+			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LSLng*DEG);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
+			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
-		sprintf(Buffer, "%f", G->J2000Pos.x);
-		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Pos.y);
-		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Pos.z);
-		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%f", G->J2000Vel.x);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Vel.y);
-		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Vel.z);
-		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%f", G->J2000GET);
-		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 8)
 	{
@@ -3241,10 +3265,13 @@ void ApolloRTCCMFD::set_Zoff(double z)
 
 void ApolloRTCCMFD::menuSetSVTime()
 {
-	if (G->svtimemode)
+	if (G->svmode == 0)
 	{
-		bool SVGETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss)", SVGETInput, 0, 20, (void*)this);
+		if (G->svtimemode)
+		{
+			bool SVGETInput(void *id, char *str, void *data);
+			oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss)", SVGETInput, 0, 20, (void*)this);
+		}
 	}
 }
 
@@ -3453,20 +3480,43 @@ void ApolloRTCCMFD::menuSVCalc()
 {
 	if (G->svtarget != NULL)
 	{
-		G->StateVectorCalc();
+		if (G->svmode == 0)
+		{
+			G->StateVectorCalc();
+		}
+		else
+		{
+			if (G->svtarget->GroundContact())
+			{
+				G->LandingSiteUpdate();
+			}
+		}
 	}
 }
 
 void ApolloRTCCMFD::menuSwitchSVSlot()
 {
-	G->SVSlot = !G->SVSlot;
+	if (G->svmode == 0)
+	{
+		G->SVSlot = !G->SVSlot;
+	}
 }
 
 void ApolloRTCCMFD::menuSVUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->StateVectorUplink();
+		if (G->svmode == 0)
+		{
+			G->StateVectorUplink();
+		}
+		else
+		{
+			if (G->svtarget->GroundContact())
+			{
+				G->LandingSiteUplink();
+			}
+		}
 	}
 }
 
@@ -3867,9 +3917,24 @@ void ApolloRTCCMFD::RecallStatus(void)
 
 ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
+void ApolloRTCCMFD::menuCycleSVMode()
+{
+	if (G->svmode < 1)
+	{
+		G->svmode++;
+	}
+	else
+	{
+		G->svmode = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuCycleSVTimeMode()
 {
-	G->svtimemode = !G->svtimemode;
+	if (G->svmode == 0)
+	{
+		G->svtimemode = !G->svtimemode;
+	}
 }
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
