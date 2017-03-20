@@ -156,6 +156,7 @@ public:
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
 	void menuCycleSVTimeMode();
+	void menuCycleSVMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void EntryLongitudeModeDialogue();
@@ -224,6 +225,18 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuTMLat();
+	void set_TMLat(double lat);
+	void menuTMLng();
+	void set_TMLng(double lng);
+	void menuTMAzi();
+	void set_TMAzi(double azi);
+	void menuSetTerrainModelPage();
+	void menuTMDistance();
+	void set_TMDistance(double distance);
+	void menuTMStepSize();
+	void set_TMStepSize(double step);
+	void menuTerrainModelCalc();
 
 protected:
 	oapi::Font *font;

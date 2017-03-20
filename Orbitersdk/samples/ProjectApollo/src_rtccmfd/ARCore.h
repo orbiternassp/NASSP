@@ -44,7 +44,10 @@ public:
 	void EntryCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void LandingSiteUpdate();
+	void LandingSiteUplink();
 	void VecPointCalc();
+	void TerrainModelCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -156,6 +159,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	int svmode;		//0 = state vector, 1 = landing site update
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
@@ -228,6 +232,10 @@ public:
 	VECTOR3 PC_dV_LVLH;
 	double PCEarliestGET;	//Initial guess for the PC TIG
 	double PC_TIG;			//Corrected PC TIG
+
+
+	//Terrain Model
+	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

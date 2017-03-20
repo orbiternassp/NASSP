@@ -1521,8 +1521,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 			//
 			// This event makes this T5+0.04 or so
 
-			if (Realism)
-				SetThrusterResource(th_main[0], NULL);
+			SetThrusterResource(th_main[0], NULL);
 
 			SetEngineIndicator(1);
 			SetThrusterGroupLevel(thg_aps, 1.0);

@@ -305,17 +305,16 @@ public:
 
 	///
 	/// Pass information about the mission to the AGC, which needs to know which vessels
-	/// it's working with, the mission it's flying, and the realism level.
+	/// it's working with and the mission it's flying.
 	///
 	/// Amongst other things, we need to know the mission number so that we know which version
 	/// of the Colossus software to load into the Virtual AGC.
 	///
 	/// \brief Set mission info in AGC.
 	/// \param MissionNo Apollo mission number.
-	/// \param RealismValue Current realism level.
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
-	virtual void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+	virtual void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
 
 	///
 	/// \brief Initialise the Virtual AGC.
@@ -417,11 +416,6 @@ protected:
 	/// \brief Apollo mission number.
 	///
 	int ApolloNo;
-
-	///
-	/// \brief Realism level.
-	///
-	int Realism;
 
 	double LastTimestep;
 	double LastCycled;

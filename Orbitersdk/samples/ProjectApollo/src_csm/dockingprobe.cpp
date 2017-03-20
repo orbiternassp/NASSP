@@ -92,7 +92,6 @@ DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sou
 	UndockNextTimestep = false;
 	IgnoreNextDockEvent = 0;
 	DockingMethod = MODIFIEDORBITER;
-	Realism = REALISM_DEFAULT;
 	ourPort = port;
 	Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
 	Dockparam[0] = Dockparam[1] = Dockparam[2] = _V(0, 0, 0);
@@ -177,11 +176,6 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 			Status = 0.9;
 			CaptureSound.play();			
 			Dockproc = DOCKINGPROBE_PROC_SOFTDOCKED;
-
-			// Retract automatically if REALISM 0
-			if (!Realism) {
-				Retract();
-			}
 		}
 	}
 }

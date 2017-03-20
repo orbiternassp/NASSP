@@ -1,0 +1,688 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{ab456d8e-64db-4fea-8393-279797af6155}</UniqueIdentifier>
+      <Extensions>.cpp</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{52abc06b-5854-4607-8955-b572b566ba7b}</UniqueIdentifier>
+      <Extensions>.h</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{c6228fa1-9ee6-4666-bc78-2e329b31049a}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="yaAGC">
+      <UniqueIdentifier>{687579ac-bcca-47aa-9d8d-af8601821d87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CollisionSDK">
+      <UniqueIdentifier>{3b876e47-cbcd-4b03-92ea-bab351bc32f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IMFD">
+      <UniqueIdentifier>{eb34811c-2870-49dc-8800-957020947082}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\BasicExcelVC6.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\cautionwarning.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\checklistController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\checklistControllerHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\connector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\csm_telecom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\csmcautionwarning.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\CSMcomputer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\csmconnector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\csmrcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\dockingprobe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\dsky.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\dskyinterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\ecs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\FDAI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\imu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\imulog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\imumath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\iu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\lvimu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\mcc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_mfd\MFDconnector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\missiontimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\powersource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\Prediction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\pyro.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\sat1ap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\sat1bmesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\satswitches.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\satsystems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\saturn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\Saturn1b.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\saturnap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\saturnmesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\saturnpanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\saturnvc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\scs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\secs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\soundevents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\soundlib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\sps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\toggleswitch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\tracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\yaAGC\agc_engine.c">
+      <Filter>yaAGC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\yaAGC\agc_engine_init.c">
+      <Filter>yaAGC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\yaAGC\Backtrace.c">
+      <Filter>yaAGC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\yaAGC\random.c">
+      <Filter>yaAGC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
+      <Filter>yaAGC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
+      <Filter>CollisionSDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp">
+      <Filter>IMFD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\LVDC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\rtcc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src_sys\apolloguidance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\cautionwarning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\checklistController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\connector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\csm_telecom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\csmcautionwarning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\CSMcomputer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\csmconnector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\csmrcs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\dockingprobe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\dsky.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\FDAI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\IMU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\ioChannels.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\iu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_mfd\MFDconnector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\missiontimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\nasspdefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\nasspsound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\OrbiterMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\payload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\powersource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\pyro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\s1b.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\satswitches.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\saturn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\Saturn1b.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\saturnv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\scs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\secs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\sivb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\sm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\soundevents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\soundlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\toggleswitch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\tracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h">
+      <Filter>yaAGC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
+      <Filter>yaAGC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
+      <Filter>CollisionSDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h">
+      <Filter>IMFD</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
+      <Filter>IMFD</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\rtcc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\abort.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ACVolts.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\allround.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Altimeter.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Annonciators.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\circuit_breaker.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\CMMFDFrame.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\coas.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_cabin_press_panel.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_hatch_window.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_left_les_window_cover.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_left_panel.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_left_rndz_window.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_main_panel.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_main_panel_les_window_cover.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_right_les_window_cover.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_right_panel.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_right_rndz_les_window_cover.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\csm_right_rndz_window.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\cw_lights.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\DCAmps.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\dcvolts.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\digitaldisp.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\direct_o2_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\docking.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\docking_ilm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\DockingSwitches-ilm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\DockingSwitches.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\dsky_1.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\dsky_disp.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\dsky_keys.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\dsky_lights.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ECSGlycolpump_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ECSIndicator.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ECSRotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\event_timer.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FCSM.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAI.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAI_needles.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAI_off_flag.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAIPower_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAIRoll.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\FDAIRollindicator.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\fonts_black.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\fonts_white.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\glycol_lever.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Gmeter.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\gn_lower_equip_bay.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\gta_cover.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\guarded_switch20.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\guardswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Horizon.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Horizon2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmabort.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmallround.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmAnnonciators.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmdsky_1.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmFCSM.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmguardswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmlaunchlight.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmlights2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmlv_eng.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmmasteralarm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmpswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmswitch_lever.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmswitchup.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\ilmthreeposswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Indicator.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\launchlight.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\light_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\lights2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\lv_eng.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\masteralarm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\masteralarmbright.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\MFDFrame-ilm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\MFDFrame.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\MFDPower-ilm.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\MFDPower.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\needle.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\needle1.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Panel1.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\panelCSM-ILM.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\post_lndg_vlv_lever.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Pswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\RCSGlycolpump_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\RotationalSwitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SCSBMAGPower_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SequencerButtons.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SequencerSwitches.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SPSmax_indicator.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SuitCabinDeltaPMeter.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch20.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch20_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch30.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch305_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch30_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switch_lever.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SwitchGuardPanel15.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\SwitchGuards.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switchup.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\switchupsmall.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threepos.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch20.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch20_2pos.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch20_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch30.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch305.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch305_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\threeposswitch30_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\Thrustmeter.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\thumbwheel_large_fonts.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\thumbwheel_small_fonts.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\thumbwheel_small_fonts_diagonal.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\thumbwheel_small_fonts_diagonal_left.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\VHFAntenna_rotary.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src_csm\Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

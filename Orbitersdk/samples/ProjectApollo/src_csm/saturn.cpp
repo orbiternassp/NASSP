@@ -701,7 +701,6 @@ void Saturn::initSaturn()
 
 	ClearLVGuidLight();
 	ClearLVRateLight();
-	SetLESMotorLight(false);
 	ClearLiftoffLight();
 
 	for (i = 0; i < 8; i++)
@@ -777,7 +776,6 @@ void Saturn::initSaturn()
 	LMAscentFuelMassKg = 2345.0;
 
 	UseATC = false;
-	Realism = REALISM_DEFAULT;
 
 	SIISepState = false;
 	bRecovery = false;
@@ -822,15 +820,6 @@ void Saturn::initSaturn()
 	opticscoveridx = -1;
 
 	Scorrec = false;
-
-	//
-	// Quickstart Mode settings
-	//
-
-	ChecklistAutoSlow = false;
-	ChecklistAutoDisabled = false;
-	OrbiterAttitudeDisabled = false;
-	SequencerSwitchLightingDisabled = false;
 
 	//
 	// VAGC Mode settings
@@ -1314,10 +1303,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
-
-	if (Realism != REALISM_DEFAULT) {
-		oapiWriteScenario_int (scn, "REALISM", Realism);
-	}
 
 	if (buildstatus < 6) {
 		oapiWriteScenario_int (scn, "BUILDSTATUS", buildstatus);
@@ -1988,9 +1973,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+5, "%o %o", &addr, &val);
 		agc.PadLoad(addr, val);
 	}
-	else if (!strnicmp (line, "REALISM", 7)) {
-		sscanf (line+7, "%d", &Realism);
-	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
 	}
@@ -2414,14 +2396,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
 		} 
-		else if (!strnicmp (line, "CHECKLISTAUTOSLOW", 17)) {
-			sscanf (line + 17, "%i", &i);
-			ChecklistAutoSlow = (i != 0);
-		} 
-		else if (!strnicmp (line, "CHECKLISTAUTODISABLED", 21)) {
-			sscanf (line + 21, "%i", &i);
-			ChecklistAutoDisabled = (i != 0);
-		} 
 		else if (!strnicmp (line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 			sscanf (line + 21, "%i", &i);
 			VAGCChecklistAutoSlow = (i != 0);
@@ -2430,14 +2404,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf (line + 24, "%i", &i);
 			VAGCChecklistAutoEnabled = (i != 0);
 		} 
-		else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
-			sscanf (line + 23, "%i", &i);
-			OrbiterAttitudeDisabled = (i != 0);
-		} 
-		else if (!strnicmp (line, "SEQUENCERSWITCHLIGHTINGDISABLED", 31)) {
-			sscanf (line + 31, "%i", &i);
-			SequencerSwitchLightingDisabled = (i != 0);
-		}
 		else if (!strnicmp (line, "OPTICSDSKYENABLED", 17)) {
 			sscanf (line + 17, "%i", &opticsDskyEnabled);
 		}
@@ -2573,7 +2539,6 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	strncpy (ls.CSMName, GetName(), 63);
 	ls.MissionNo = ApolloNo;
 	ls.MissionTime = MissionTime;
-	ls.Realism = Realism;
 	strncpy (ls.checklistFile, LEMCheck, 100);
 	ls.checkAutoExecute = LEMCheckAuto;
 }
@@ -2635,20 +2600,13 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	agc.SetMissionInfo(ApolloNo, Realism, PayloadName);
-
-	//
-	// Tell various systems the realism setting
-	//
-
-	MainPanel.SetRealism(Realism);
-	dockingprobe.SetRealism(Realism);
+	agc.SetMissionInfo(ApolloNo, PayloadName);
 
 	//
 	// Set random failures if appropriate.
 	//
 
-	if (!ApolloNo && (Realism > 4)) {
+	if (!ApolloNo) {
 		SetRandomFailures();
 	}
 
@@ -2660,8 +2618,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// as long as they rely on Orbiter's navmodes (killrot etc.)
 
 	if (!Crewed) {
-		OrbiterAttitudeDisabled = false;
-
 		checkControl.autoExecute(true);
 		checkControl.autoExecuteSlow(false);
 		checkControl.autoExecuteAllItemsAutomatic(true);
@@ -2670,20 +2626,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// Disable it and do some other settings when not in 
 	// Quickstart mode
 
-	else if (Realism) {
-		OrbiterAttitudeDisabled = true;
-		SequencerSwitchLightingDisabled = true;
-
+	else {
 		checkControl.autoExecute(VAGCChecklistAutoEnabled);
 		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
 		checkControl.autoExecuteAllItemsAutomatic(false);
 	
-	// Quickstart mode
-
-	} else {
-		checkControl.autoExecute(!ChecklistAutoDisabled);
-		checkControl.autoExecuteSlow(ChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(true);
 	}
 }
 
@@ -2869,10 +2816,6 @@ void Saturn::SetStage(int s)
 	//
 
 	if (stage == CSM_LEM_STAGE) {
-		SetCSMLVSepLight(true);
-
-		// Set LM landing site in the AGC for Simple AGC P16 etc.
-		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
 
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		ClearTLISounds();
@@ -3452,31 +3395,6 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 	}
 
-	// Separate stages and undock with keypress if REALISM 0
-	if (Crewed && !Realism && key == OAPI_KEY_J && down == true) {
-
-		if (stage < STAGE_ORBIT_SIVB) {
-			// Trigger abort
-			bAbort = true;
-			
-		} else if (stage < CSM_LEM_STAGE) {
-			// Raise checklist event
-			eventControl.CSM_LV_SEPARATION = MissionTime;
-
-		} else if (stage == CSM_LEM_STAGE) {			
-			// Raise checklist event
-			eventControl.CM_SM_SEPARATION = MissionTime;
-			
-		} else if (stage == CM_ENTRY_STAGE_SEVEN) {
-			if (!SideHatch.IsOpen()) {
-				SideHatch.Toggle(true);
-			} else {
-				bRecovery = true;
-			}
-		}
-		return 1;
-	}
-
 	if (key == OAPI_KEY_9 && down == true && InVC && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
 		if (viewpos == SATVIEW_LEFTDOCK){
 			viewpos = SATVIEW_RIGHTDOCK;
@@ -3641,22 +3559,6 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR3,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
 
-	if (!OrbiterAttitudeDisabled) { 
-		CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
-		CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
-		CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
-		CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
-		CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
-		CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
-
-		CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
-	}
-
 	for (i = 0; i < 24; i++) {
 		if (th_att_lin[i])
 			AddExhaust (th_att_lin[i], 1.2, 0.1, SMExhaustTex); 
@@ -3792,17 +3694,6 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset, bool createThrusterGroup
 	cmrcsdump[11] = AddParticleStream(&cmrcsdump_spec, _V(ATTCOOR2/1.42 - 0.08, (ATTCOOR2/1.42) - 0.11, TRANZ + 0.11), _V(0.98, -0.17, -0.21), CMRCS1.GetPurgeLevelRef(5));	
 	AddExhaust(th_att_cm[11], 1.0, 0.1, SMExhaustTex); 
 
-
-	// Enable Orbter's attitude control after CM/SM separation
-	if (!OrbiterAttitudeDisabled && createThrusterGroups) {
-		CreateThrusterGroup(th_att_cm, 2, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup(th_att_cm + 2, 2, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup(th_att_cm + 4, 2, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup(th_att_cm + 6, 2, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup(th_att_cm + 8, 2, THGROUP_ATT_BANKRIGHT);
-		CreateThrusterGroup(th_att_cm + 10, 2, THGROUP_ATT_BANKLEFT);
-	}
-
 	//
 	// Thruster helper arrays per system
 	//
@@ -3886,30 +3777,12 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_lin[0], 7, 0.15, SIVBRCSTex);
 	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
 
-	//
-	// Orbiter's attitude control
-	//
-
-	if (!OrbiterAttitudeDisabled) { 
-		CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
-
-		CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
-
-		CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
-
-		thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
-
-	} else {
-		thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_USER);
-	}
+	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_USER);
 }
 
 void Saturn::SetSaturnAttitudeRotLevel(VECTOR3 th) {
 
-	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && OrbiterAttitudeDisabled) {
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)) {
 		if (th_att_rot[0] != 0) {
 			if (th.x >= 0) {
 				SetThrusterLevel(th_att_rot[0], th.x);
@@ -3948,7 +3821,7 @@ void Saturn::SetSaturnAttitudeRotLevel(VECTOR3 th) {
 
 double Saturn::GetSaturnMaxThrust(ENGINETYPE eng) {
 
-	if (stage == STAGE_ORBIT_SIVB && OrbiterAttitudeDisabled && eng == ENGINE_ATTITUDE) { 
+	if (stage == STAGE_ORBIT_SIVB && eng == ENGINE_ATTITUDE) { 
 		// thrust of the THGROUP_ATT_PITCHUP thruster (Orbiter API manual)
 		return SIVB_RCS_PITCH_THRUST;
 	} else {
@@ -4260,8 +4133,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			//
 			eventControl.SPLASHDOWN = MissionTime;
 		}
-		if ((MainReleasePyroACircuitBraker.IsPowered() || MainReleasePyroBCircuitBraker.IsPowered()) && ChutesAttached && ELSActive() && 
-			(MainReleaseSwitch.IsUp() || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
+		if ((MainReleasePyroACircuitBraker.IsPowered() || MainReleasePyroBCircuitBraker.IsPowered()) && ChutesAttached && ELSActive() && MainReleaseSwitch.IsUp()) {
 			// Detach Main 
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			if (GetAttachmentStatus(ah) != NULL) {
@@ -4509,7 +4381,7 @@ void Saturn::GenericLoadStateSetup()
 	// Initialize the IU
 	//
 
-	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, SIVBBurnStart, SIVBApogee); 
+	iu.SetMissionInfo(TLICapableBooster, Crewed, SIVBBurnStart, SIVBApogee); 
 
 	//
 	// Disable master alarm sound on unmanned flights.
@@ -4843,9 +4715,6 @@ void Saturn::LoadDefaultSounds()
 void Saturn::SIVBBoiloff()
 
 {
-	if (Realism < 2)
-		return;
-
 	//
 	// The SIVB stage boils off a small amount of fuel while in orbit.
 	//
@@ -4897,7 +4766,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		if (MissionTime >= SIVBCutoffTime + 5773) {
 			if (GetThrusterLevel(th_main[0]) > 0) {
 				SetJ2ThrustLevel(0);
-				if (Realism) EnableDisableJ2(false);
+				EnableDisableJ2(false);
 			}
 		} else if (MissionTime >= SIVBCutoffTime + 5052) {
 			if (GetThrusterLevel(th_main[0]) == 0) {
@@ -4984,10 +4853,8 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			// Apollo 11 seperation knocked out propellant valves for RCS Quad B.
 			//
 
-			if (Realism) {
-				SMQuadBRCS.GetPrimPropellantValve()->SetState(false);  
-				SMQuadBRCS.GetSecPropellantValve()->SetState(false);  
-			}
+			SMQuadBRCS.GetPrimPropellantValve()->SetState(false);  
+			SMQuadBRCS.GetSecPropellantValve()->SetState(false);  
 		}
 	}
 

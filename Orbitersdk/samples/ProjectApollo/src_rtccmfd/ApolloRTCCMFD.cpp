@@ -1053,17 +1053,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 7)
 	{
-		skp->Text(6 * W / 8,(int)(0.5 * H / 14), "State Vector", 12);
-
-		if (!G->svtimemode)
+		if (G->svmode == 0)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Now", 3);
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "State Vector", 12);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-			GET_Display(Buffer, G->J2000GET);
-			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Landing Site Update", 19);
+		}
+
+		if (G->svmode == 0)
+		{
+			if (!G->svtimemode)
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "Now", 3);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
+				GET_Display(Buffer, G->J2000GET);
+				skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			}
 		}
 
 		oapiGetObjectName(G->gravref, Buffer, 20);
@@ -1076,30 +1086,44 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->SVSlot)
+		if (G->svmode == 0)
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "CSM", 3);
+			if (G->SVSlot)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "CSM", 3);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
+			}
+			sprintf(Buffer, "%f", G->J2000Pos.x);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Pos.y);
+			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Pos.z);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%f", G->J2000Vel.x);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Vel.y);
+			skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->J2000Vel.z);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%f", G->J2000GET);
+			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
+			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.3f°", G->LSLng*DEG);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
+			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
-		sprintf(Buffer, "%f", G->J2000Pos.x);
-		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Pos.y);
-		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Pos.z);
-		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%f", G->J2000Vel.x);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Vel.y);
-		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->J2000Vel.z);
-		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%f", G->J2000GET);
-		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 8)
 	{
@@ -1976,6 +2000,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "DOI", 3);
 		skp->Text(1 * W / 8, 6 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
+		skp->Text(5 * W / 8, 8 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 15)
@@ -2297,6 +2322,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f", length(G->PC_dV_LVLH) / 0.3048);
 		skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
+	else if (screen == 19)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Terrain Model", 13);
+
+		sprintf(Buffer, "%.3f°", G->TMLat*DEG);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->TMLng*DEG);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->TMAzi*DEG);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f ft", G->TMDistance / 0.3048);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f ft", G->TMStepSize / 0.3048);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 9 * H / 14, "LS Height:", 10);
+		sprintf(Buffer, "%.2f NM", G->TMAlt / 1852.0);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -2518,6 +2566,12 @@ void ApolloRTCCMFD::menuSetSkylabPage()
 void ApolloRTCCMFD::menuSetPCPage()
 {
 	screen = 18;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetTerrainModelPage()
+{
+	screen = 19;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3241,10 +3295,13 @@ void ApolloRTCCMFD::set_Zoff(double z)
 
 void ApolloRTCCMFD::menuSetSVTime()
 {
-	if (G->svtimemode)
+	if (G->svmode == 0)
 	{
-		bool SVGETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss)", SVGETInput, 0, 20, (void*)this);
+		if (G->svtimemode)
+		{
+			bool SVGETInput(void *id, char *str, void *data);
+			oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss)", SVGETInput, 0, 20, (void*)this);
+		}
 	}
 }
 
@@ -3453,20 +3510,43 @@ void ApolloRTCCMFD::menuSVCalc()
 {
 	if (G->svtarget != NULL)
 	{
-		G->StateVectorCalc();
+		if (G->svmode == 0)
+		{
+			G->StateVectorCalc();
+		}
+		else
+		{
+			if (G->svtarget->GroundContact())
+			{
+				G->LandingSiteUpdate();
+			}
+		}
 	}
 }
 
 void ApolloRTCCMFD::menuSwitchSVSlot()
 {
-	G->SVSlot = !G->SVSlot;
+	if (G->svmode == 0)
+	{
+		G->SVSlot = !G->SVSlot;
+	}
 }
 
 void ApolloRTCCMFD::menuSVUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->StateVectorUplink();
+		if (G->svmode == 0)
+		{
+			G->StateVectorUplink();
+		}
+		else
+		{
+			if (G->svtarget->GroundContact())
+			{
+				G->LandingSiteUplink();
+			}
+		}
 	}
 }
 
@@ -3867,9 +3947,24 @@ void ApolloRTCCMFD::RecallStatus(void)
 
 ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
+void ApolloRTCCMFD::menuCycleSVMode()
+{
+	if (G->svmode < 1)
+	{
+		G->svmode++;
+	}
+	else
+	{
+		G->svmode = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuCycleSVTimeMode()
 {
-	G->svtimemode = !G->svtimemode;
+	if (G->svmode == 0)
+	{
+		G->svtimemode = !G->svtimemode;
+	}
 }
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
@@ -4672,6 +4767,116 @@ void ApolloRTCCMFD::set_PCAlignGET(double time)
 void ApolloRTCCMFD::menuSetPCLanded()
 {
 	G->PClanded = !G->PClanded;
+}
+
+void ApolloRTCCMFD::menuTMLat()
+{
+	bool TMLatInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Latitude in degrees:", TMLatInput, 0, 20, (void*)this);
+}
+
+bool TMLatInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMLat(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMLat(double lat)
+{
+	this->G->TMLat = lat*RAD;
+}
+
+void ApolloRTCCMFD::menuTMLng()
+{
+	bool TMLngInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Longitude in degrees:", TMLngInput, 0, 20, (void*)this);
+}
+
+bool TMLngInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMLng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMLng(double lng)
+{
+	this->G->TMLng = lng*RAD;
+}
+
+void ApolloRTCCMFD::menuTMAzi()
+{
+	bool TMAziInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Approach azimuth in degrees:", TMAziInput, 0, 20, (void*)this);
+}
+
+bool TMAziInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMAzi(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMAzi(double azi)
+{
+	this->G->TMAzi = azi*RAD;
+}
+
+void ApolloRTCCMFD::menuTMDistance()
+{
+	bool TMDistanceInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Distance in feet:", TMDistanceInput, 0, 20, (void*)this);
+}
+
+bool TMDistanceInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMDistance(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMDistance(double distance)
+{
+	this->G->TMDistance = distance*0.3048;
+}
+
+void ApolloRTCCMFD::menuTMStepSize()
+{
+	bool TMStepSizeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Step size in feet:", TMStepSizeInput, 0, 20, (void*)this);
+}
+
+bool TMStepSizeInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TMStepSize(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TMStepSize(double step)
+{
+	this->G->TMStepSize = step*0.3048;
+}
+
+void ApolloRTCCMFD::menuTerrainModelCalc()
+{
+	G->TerrainModelCalc();
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

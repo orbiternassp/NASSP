@@ -29,7 +29,6 @@
 typedef struct {
 
 	int MissionNo;			///< Apollo mission number.
-	int Realism;			///< Realism level.
 
 } LEVASettings;
 
@@ -111,7 +110,6 @@ protected:
 
 	int ApolloNo;
 	int StepCount;
-	int Realism;
 
 	OBJHANDLE hMaster;
 	bool GoDock1;

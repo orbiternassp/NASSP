@@ -55,7 +55,6 @@ typedef struct {
 	SMSettingFlags SettingsType;		///< Which parts are valid.
 
 	int VehicleNo;						///< Saturn vehicle number.
-	int Realism;						///< Realism level.
 
 	double MissionTime;					///< Current MET in seconds.
 	double EmptyMass;					///< Empty mass in kg.
@@ -228,11 +227,6 @@ protected:
 	/// \brief Main state.
 	///
 	SMState State;
-
-	///
-	/// \brief Realism level.
-	///
-	int Realism;
 
 	bool RetrosFired;
 
