@@ -217,20 +217,6 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 {
 	double TCP=-54.485-TCPO;//STG0O;
 
-	static const DWORD ntdvtx = 8;
-	static TOUCHDOWNVTX tdvtx[8] = {
-		{ _V(0, -9.899495, TCP), 2e4, 1e2, 0.5 },
-		{ _V(-7, 7, TCP), 2e4, 1e2, 0.5 },
-		{ _V(7, 7, TCP), 2e4, 1e2, 0.5 },
-		{ _V(-7, -7, 40), 2e4, 1e2, 0.5 },
-		{ _V(7, -7, 40), 2e4, 1e2, 0.5 },
-		{ _V(-7, 7, 40), 2e4, 1e2, 0.5 },
-		{ _V(7, 7, 40), 2e4, 1e2, 0.5 },
-		{ _V(0, 0, 60), 2e4, 1e2, 0.5 }
-	};
-
-	//SetTouchdownPoints(tdvtx, ntdvtx);
-
 	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
 	VECTOR3 mesh_dir=_V(0,0,offset);

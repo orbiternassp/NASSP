@@ -1273,52 +1273,7 @@ void ARCore::VecPointCalc()
 
 void ARCore::TerrainModelCalc()
 {
-	MATRIX3 Rot3, Rot4;
-	VECTOR3 R_P, UX10, UY10, UZ10, axis, R_loc;
-	double ang, r_0, anginc, dist, lat, lng, alt;
-	OBJHANDLE hMoon;
 
-	hMoon = oapiGetObjectByName("Moon");
-	ang = 0.0;
-	dist = 0.0;
-
-	R_P = unit(_V(cos(TMLng)*cos(TMLat), sin(TMLng)*cos(TMLat), sin(TMLat)));
-
-	TMAlt = oapiSurfaceElevation(hMoon, TMLng, TMLat);
-	r_0 = TMAlt + oapiGetSize(hMoon);
-	anginc = TMStepSize / r_0;
-
-	UX10 = R_P;
-	UY10 = unit(crossp(_V(0.0, 0.0, 1.0), UX10));
-	UZ10 = crossp(UX10, UY10);
-
-	Rot3 = _M(UX10.x, UX10.y, UX10.z, UY10.x, UY10.y, UY10.z, UZ10.x, UZ10.y, UZ10.z);
-	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(TMAzi), -sin(TMAzi), 0.0, sin(TMAzi), cos(TMAzi));
-
-	axis = mul(OrbMech::transpose_matrix(Rot3), mul(Rot4, _V(0.0, 1.0, 0.0)));
-
-
-	FILE *file = fopen("TerrainModel.txt", "w");
-
-	fprintf(file, "%f;%f\n", -dist, 0.0);
-
-	while (dist < TMDistance)
-	{
-		ang += anginc;
-		dist += TMStepSize;
-
-		R_loc = OrbMech::RotateVector(axis, -ang, R_P);
-		R_loc = unit(R_loc);
-
-		lat = atan2(R_loc.z, sqrt(R_loc.x*R_loc.x + R_loc.y*R_loc.y));
-		lng = atan2(R_loc.y, R_loc.x);
-
-		alt = oapiSurfaceElevation(hMoon, lng, lat);
-
-		fprintf(file, "%f;%f\n", -dist, alt - TMAlt);
-	}
-
-	if (file) fclose(file);
 }
 
 int ARCore::startSubthread(int fcn) {
