@@ -33,6 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
+#include "mcc.h"
 #include "rtcc.h"
 
 // SCENARIO FILE MACROLOGY

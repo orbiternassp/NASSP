@@ -65,6 +65,74 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
+#define ORBITER_MODULE
+
+MCCVessel::MCCVessel(OBJHANDLE hVessel, int flightmodel)
+	: VESSEL4(hVessel, flightmodel)
+{
+
+}
+
+void MCCVessel::clbkSaveState(FILEHANDLE scn)
+{
+	VESSEL4::clbkSaveState(scn);
+
+	mcc.SaveState(scn);
+	mcc.rtcc->SaveState(scn);
+}
+
+void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, "MISSIONTRACKING", 15)) {
+			int i;
+			sscanf(line + 15, "%d", &i);
+			if (i)
+				mcc.enableMissionTracking();
+		}
+		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
+			mcc.LoadState(scn);
+		}
+		else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
+			mcc.rtcc->LoadState(scn);
+		}
+		else ParseScenarioLineEx(line, status);
+	}
+
+	// Ground Systems Init
+	mcc.Init(cm);
+}
+
+int MCCVessel::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+	// MCC CAPCOM interface key handling                                                                                                
+	if (down && !KEYMOD_SHIFT(kstate)) {
+		switch (key) {
+		case OAPI_KEY_TAB:
+		case OAPI_KEY_1:
+		case OAPI_KEY_2:
+		case OAPI_KEY_3:
+		case OAPI_KEY_4:
+		case OAPI_KEY_5:
+		case OAPI_KEY_6:
+		case OAPI_KEY_7:
+		case OAPI_KEY_8:
+		case OAPI_KEY_9:
+		case OAPI_KEY_0:
+			mcc.keyDown(key);
+			break;
+		}
+	}
+	return 0;
+}
+
+void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
+{
+	// Update Ground Data
+	mcc.TimeStep(simdt);
+}
+
 // CONS
 MCC::MCC(){
 	// Reset data
@@ -786,7 +854,7 @@ void MCC::TimeStep(double simdt){
 			// Abort?
 			if(cm->bAbort){
 				// What type?
-				if(cm->LETAttached()){
+				if(cm->LESAttached){
 					// ABORT MODE 1
 					addMessage("ABORT MODE 1");
 					setState(MST_LAUNCH_ABORT);
@@ -820,7 +888,7 @@ void MCC::TimeStep(double simdt){
 			// Abort?
 			if(cm->bAbort){
 				// What type?
-				if(cm->LETAttached()){
+				if(cm->LESAttached){
 					// ABORT MODE 1
 					addMessage("ABORT MODE 1");
 					setState(MST_LAUNCH_ABORT);
@@ -870,7 +938,7 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (cm->GetMissionTime() > 56.0*60.0)
 					{
-						cm->SlowIfDesired();
+						SlowIfDesired();
 						setSubState(1);
 					}
 					break;
@@ -1140,7 +1208,7 @@ void MCC::TimeStep(double simdt){
 				case 2: // Await landing?
 					if (cm->stage == CM_ENTRY_STAGE_SEVEN)
 					{
-						cm->SlowIfDesired();
+						SlowIfDesired();
 						setState(MST_LANDING);
 					}
 					break;
@@ -1169,11 +1237,32 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (cm->GetMissionTime() > 3600.0 + 35.0*60.0)
 					{
-						cm->SlowIfDesired();
+						SlowIfDesired();
 						if (cm->use_lvdc)
 						{
 							SaturnV *SatV = (SaturnV*)cm;
-							LVDCTLIparam tliparam = SatV->lvdc->GetTLIParams();
+
+							LVDCTLIparam tliparam;
+
+							tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+							tliparam.Azimuth = SatV->lvdc->Azimuth;
+							tliparam.beta = SatV->lvdc->beta;
+							tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+							tliparam.C_3 = SatV->lvdc->C_3;
+							tliparam.e_N = SatV->lvdc->e_N;
+							tliparam.f = SatV->lvdc->f;
+							tliparam.mu = SatV->lvdc->mu;
+							tliparam.MX_A = SatV->lvdc->MX_A;
+							tliparam.omega_E = SatV->lvdc->omega_E;
+							tliparam.R_N = SatV->lvdc->R_N;
+							tliparam.TargetVector = SatV->lvdc->TargetVector;
+							tliparam.TB5 = SatV->lvdc->TB5;
+							tliparam.theta_EO = SatV->lvdc->theta_EO;
+							tliparam.t_D = SatV->lvdc->t_D;
+							tliparam.T_L = SatV->lvdc->T_L;
+							tliparam.T_RG = SatV->lvdc->T_RG;
+							tliparam.T_ST = SatV->lvdc->T_ST;
+
 							rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						}
 						else
@@ -1271,7 +1360,7 @@ void MCC::TimeStep(double simdt){
 				case 8: // Await next PAD
 					if (SubStateTime > 300.0)
 					{
-						cm->SlowIfDesired();
+						SlowIfDesired();
 						NCOption_Enabled = false;
 						setSubState(10);
 					}
@@ -1306,7 +1395,7 @@ void MCC::TimeStep(double simdt){
 				case 12: // Await next PAD
 					if (SubStateTime > 300.0)
 					{
-						cm->SlowIfDesired();
+						SlowIfDesired();
 						setSubState(13);
 					}
 					break;
@@ -1356,7 +1445,7 @@ void MCC::TimeStep(double simdt){
 			case MST_CP_TRANSLUNAR2: //
 				if (cm->MissionTime > 5.0*3600.0)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(MST_CP_TRANSLUNAR3);
 				}
 				break;
@@ -1455,7 +1544,7 @@ void MCC::TimeStep(double simdt){
 				}
 				if (cm->MissionTime > rtcc->calcParams.TEI + 45*60)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(MST_CP_TRANSEARTH2);
 				}
 				break;
@@ -1539,7 +1628,7 @@ void MCC::TimeStep(double simdt){
 						{
 							if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
 							{
-								cm->SlowIfDesired();
+								SlowIfDesired();
 								setState(MST_CP_TRANSEARTH6);
 							}
 						}
@@ -1548,7 +1637,7 @@ void MCC::TimeStep(double simdt){
 						{
 							if (cm->MissionTime > rtcc->calcParams.TEI + 4.0 * 60 * 60)
 							{
-								cm->SlowIfDesired();
+								SlowIfDesired();
 								setSubState(4);
 							}
 						}
@@ -1617,7 +1706,7 @@ void MCC::TimeStep(double simdt){
 					case 10: // Await burn
 						if (cm->MissionTime > rtcc->calcParams.EI - 3.5 * 60 * 60)
 						{
-							cm->SlowIfDesired();
+							SlowIfDesired();
 							setState(MST_CP_TRANSEARTH6);
 						}
 						break;
@@ -2921,13 +3010,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -2979,13 +3068,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3066,13 +3155,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3110,13 +3199,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3167,13 +3256,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3239,13 +3328,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3283,13 +3372,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3328,13 +3417,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3366,13 +3455,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3432,13 +3521,13 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				if (altcondition)
 				{
-					cm->SlowIfDesired();
+					SlowIfDesired();
 					setState(altnextupdate);
 				}
 			}
 			else if (condition)
 			{
-				cm->SlowIfDesired();
+				SlowIfDesired();
 				setState(nextupdate);
 			}
 			break;
@@ -3621,5 +3710,13 @@ void MCC::initiateAbort()
 	{
 		AbortMode = 8;
 		setState(MST_CP_ABORT);
+	}
+}
+
+void MCC::SlowIfDesired()
+
+{
+	if (oapiGetTimeAcceleration() > 1.0) {
+		oapiSetTimeAcceleration(1.0);
 	}
 }

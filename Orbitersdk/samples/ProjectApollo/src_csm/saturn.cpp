@@ -1553,8 +1553,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
 	SaveLVDC(scn);
-	mcc.SaveState(scn);
-	mcc.rtcc->SaveState(scn);
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -2207,12 +2205,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
 	}
-	else if (!strnicmp(line, "MISSIONTRACKING", 15)) {
-		int i;
-		sscanf(line + 15, "%d", &i);
-		if (i)
-			mcc.enableMissionTracking();
-	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
 	}
@@ -2239,12 +2231,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, BMAG2_START_STRING, sizeof(BMAG2_START_STRING))) {
 		bmag2.LoadState(scn);
-	}
-	else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
-		mcc.LoadState(scn);
-	}
-	else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
-		mcc.rtcc->LoadState(scn);
 	}
 	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
 		LoadLVDC(scn);
@@ -3373,25 +3359,6 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			case OAPI_KEY_E: 
 				agc.SetInputChannelBit(016,MarkReject,0);
 				return 1;
-		}
-	}
-
-	// MCC CAPCOM interface key handling                                                                                                
-	if(down && !InVC && !KEYMOD_SHIFT(kstate)){
-		switch(key){
-		case OAPI_KEY_TAB:
-		case OAPI_KEY_1:
-		case OAPI_KEY_2:
-		case OAPI_KEY_3:
-		case OAPI_KEY_4:
-		case OAPI_KEY_5:
-		case OAPI_KEY_6:
-		case OAPI_KEY_7:
-		case OAPI_KEY_8:
-		case OAPI_KEY_9:
-		case OAPI_KEY_0:
-			mcc.keyDown(key);
-			break;
 		}
 	}
 

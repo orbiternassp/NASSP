@@ -617,6 +617,7 @@ public:
 	void subThreadMacro(int type, int updatenumber);
 	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
 	void initiateAbort();
+	void SlowIfDesired();
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state	
 	class RTCC *rtcc;										// Pointer to RTCC
@@ -681,6 +682,23 @@ public:
 
 	// FRIEND CLASSES
 	friend class RTCC;										// RTCC can handle our data
+};
+
+class MCCVessel: public VESSEL4
+{
+public:
+	MCCVessel(OBJHANDLE hVessel, int flightmodel);
+	//~MCCVessel();
+
+	//void clbkPostCreation();
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+private:
+	MCC mcc;
+
+	Saturn *cm;												// Pointer to CM
 };
 
 #endif // _PA_MCC_H
