@@ -93,7 +93,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	switch (fcn) {
 	case 1: //TLI
 	{
-		LOIMan opt;
+		MCCMan opt;
 		double GETbase, P30TIG, MJDcut;
 		VECTOR3 dV_LVLH, R_TLI, V_TLI;
 
@@ -110,7 +110,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.vessel = calcParams.src;
 		opt.MCCGET = OrbMech::HHMMSSToSS(2, 50, 30);
 
-		LOITargeting(&opt, dV_LVLH, P30TIG, R_TLI, V_TLI, MJDcut);
+		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, R_TLI, V_TLI, MJDcut);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;// +unit(dV_LVLH)*2.0;//(2.0 - 2.8816);	//2 m/s intentional overburn, but also 2.8816 m/s (?) thrust tailoff
@@ -312,7 +312,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 22: // MISSION CP MCC3
 	case 23: // MISSION CP MCC4
 	{
-		LOIMan opt;
+		MCCMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
@@ -372,7 +372,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		VECTOR3 Rcut, Vcut;
 		double tcut;
-		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
+		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
 
 		if (fcn != 23)
 		{
@@ -390,7 +390,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			if (fcn == 23)
 			{
-				LOIMan opt2;
+				MCCMan opt2;
 				REFSMMATOpt refsopt;
 				double P30TIG_LOI, tcut;
 				VECTOR3 dV_LVLH_LOI;
@@ -408,7 +408,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
 				opt2.MCCGET = calcParams.LOI;
 
-				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, Rcut, Vcut, tcut);
+				TranslunarMidcourseCorrectionTargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, Rcut, Vcut, tcut);
 
 				refsopt.dV_LVLH = dV_LVLH;
 				refsopt.dV_LVLH2 = dV_LVLH_LOI;
@@ -459,7 +459,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 30:	// MISSION CP PRELIMINARY LOI-1 MANEUVER
 	case 31:	// MISSION CP LOI-1 MANEUVER
 	{
-		LOIMan opt;
+		MCCMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, tcut;
 		VECTOR3 dV_LVLH, Rcut, Vcut;
@@ -480,7 +480,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.MCCGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
+		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
@@ -706,7 +706,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
 	{
-		LOIMan opt;
+		MCCMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, tcut;
 		VECTOR3 dV_LVLH, Rcut, Vcut;
@@ -724,7 +724,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.man = 3;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
+		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
@@ -4645,7 +4645,146 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	P30TIG = opt->EarliestGET + dt + t_slip;
 }
 
-void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
+void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	SV sv0, sv1;
+	VECTOR3 R_P, UX10, UY10, UZ10, axis, u_LPO, H, u_LAH, u_node, R_node, V_node, p, q, R_ref, V_ref, E;
+	MATRIX3 Rot3, Rot4, Rot;
+	double Lat, Lng, Azi, MJD_LAND, mu, dt, theta, dt_node, GET_node, MJD_node, R_M, apo, peri, a, e, h, mass, LMmass, GET, r;
+	OBJHANDLE hMoon;
+
+	if (opt->useSV)
+	{
+		sv0 = opt->RV_MCC;
+	}
+	else
+	{
+		sv0 = StateVectorCalc(opt->vessel);
+	}
+
+	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
+
+	if (opt->csmlmdocked)
+	{
+		LMmass = GetDockedVesselMass(opt->vessel);
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+
+	mass = LMmass + sv0.mass;
+
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	//TODO: Replace hardcoded parameters
+	Lat = -2.9425*RAD;
+	Lng = -23.44333*RAD;
+	Azi = -75.0*RAD;
+	MJD_LAND = opt->GETbase + 102.0 / 24.0;
+
+	//Landing site vector in local coordinates
+	R_P = unit(_V(cos(Lng)*cos(Lat), sin(Lng)*cos(Lat), sin(Lat)));
+
+	//Initial guess for the node, at pericynthion
+	dt = OrbMech::timetoperi(sv0.R, sv0.V, mu);
+	sv1 = coast(sv0, dt);
+	H = crossp(sv1.R, sv1.V);
+
+	//Lunar Approach Hyperbola orientation
+	u_LAH = unit(H);
+	E = crossp(sv1.V, H) / mu - unit(sv1.R);
+
+	UX10 = R_P;
+	UY10 = unit(crossp(_V(0.0, 0.0, 1.0), UX10));
+	UZ10 = crossp(UX10, UY10);
+
+	Rot3 = _M(UX10.x, UX10.y, UX10.z, UY10.x, UY10.y, UY10.z, UZ10.x, UZ10.y, UZ10.z);
+	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(Azi), -sin(Azi), 0.0, sin(Azi), cos(Azi));
+
+	//Orbital plane in local coordinates
+	axis = mul(OrbMech::transpose_matrix(Rot3), mul(Rot4, _V(0.0, 1.0, 0.0)));
+
+	Rot = OrbMech::GetRotationMatrix(hMoon, MJD_LAND);
+
+	//Lunar Parking Orbit orientation
+	u_LPO = rhmul(Rot, unit(axis));
+
+	//TODO: Node can have two directions, only the one close to the vector pointing at pericynthion will yield a solution
+	u_node = unit(crossp(u_LPO, u_LAH));
+
+	//angle between pericynthion and node
+	theta = OrbMech::sign(dotp(crossp(sv1.R, u_node), crossp(sv1.R, sv1.V)))*acos(dotp(sv1.R / length(sv1.R), u_node));
+
+	//time between pericynthion and node
+	dt_node = OrbMech::time_theta(sv1.R, sv1.V, theta, mu);
+
+	//state vector at node
+	OrbMech::rv_from_r0v0(sv1.R, sv1.V, dt_node, R_node, V_node, mu);
+
+	//Time at node
+	GET_node = GET + dt + dt_node;
+	MJD_node = opt->GETbase + GET_node / 24.0 / 3600.0;
+
+
+	R_M = oapiGetSize(hMoon);// +opt->alt;
+	apo = R_M + opt->h_apo;
+	peri = R_M + opt->h_peri;
+	a = (apo + peri) / 2.0;
+	e = (apo - peri) / (apo + peri);
+	r = length(R_node);
+	h = sqrt(mu*a*(1.0 - e*e));
+
+	//node equals perilune
+
+	double ta[2];
+	double f_T, isp, t_slip[2], t_sl, MJD_cut, m_cut;
+	VECTOR3 Llambda[2], R_cut, V_cut, R_cor, V_cor, i, j, k, DV;
+	MATRIX3 Q_Xx;
+
+	ta[0] = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
+	ta[1] = PI2 - ta[0];												//Calculates the second possible true anomaly of the desired orbit
+
+	for (int ii = 0;ii < 2;ii++)
+	{
+
+		p = OrbMech::RotateVector(u_LPO, -ta[ii], u_node);
+		p = unit(p);
+		q = unit(crossp(u_LPO, p));
+
+		R_ref = (p*cos(ta[ii]) + q*sin(ta[ii]))*h*h / mu / (1.0 + e*cos(ta[ii]));
+		V_ref = (-p*sin(ta[ii]) + q*(e + cos(ta[ii])))*mu / h;
+
+		GetThrusterParameters(opt->vessel, f_T, isp);
+
+		OrbMech::impulsive(R_node, V_node, MJD_node, hMoon, f_T, isp, mass, R_ref, V_ref, Llambda[ii], t_slip[ii], R_cut, V_cut, MJD_cut, m_cut);
+	}
+
+	if (length(Llambda[1]) < length(Llambda[0]))
+	{
+		DV = Llambda[1];
+		t_sl = t_slip[1];
+	}
+	else
+	{
+		DV = Llambda[0];
+		t_sl = t_slip[0];
+	}
+
+	OrbMech::oneclickcoast(R_node, V_node, MJD_node, t_sl, R_cor, V_cor, hMoon, hMoon); //Calculate the state vector at the corrected ignition time
+
+	j = unit(crossp(V_cor, R_cor));
+	k = unit(-R_cor);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+	dV_LVLH = mul(Q_Xx, DV);
+	P30TIG = GET_node + t_sl;
+
+}
+
+void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
 {
 	double SVMJD, GET, mass, CSMmass, LMmass;
 	VECTOR3 R_A, V_A, R0B, V0B;

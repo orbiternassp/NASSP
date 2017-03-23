@@ -1519,7 +1519,7 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
-		LOIMan opt;
+		MCCMan opt;
 		double MJDcut;
 
 		opt.GETbase = GETbase;
@@ -1545,7 +1545,7 @@ int ARCore::subThread()
 
 		if (LOImaneuver == 0 || LOImaneuver == 4)
 		{
-			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}
@@ -1559,11 +1559,31 @@ int ARCore::subThread()
 			opt.useSV = true;
 			opt.RV_MCC = RV2;
 
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
+			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
 		}
 		else
 		{
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
+			//rtcc->TranslunarMidcourseCorrectionTargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
+
+			LOIMan loiopt;
+
+			loiopt.GETbase = GETbase;
+			loiopt.h_apo = LOIapo;
+			loiopt.h_peri = LOIperi;
+			loiopt.lat = LOILat;
+			loiopt.lng = LOILng;
+			loiopt.vessel = vessel;
+			loiopt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				loiopt.csmlmdocked = false;
+			}
+			else
+			{
+				loiopt.csmlmdocked = true;
+			}
+			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
 		}

@@ -3830,6 +3830,81 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+{
+	VECTOR3 R_ig, V_ig, V_go, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
+	int n, nmax;
+
+	nmax = 100;
+	t_slip = 0;
+	t_slip_old = 1;
+	dt_go = 1;
+	mu = GGRAV*oapiGetMass(gravref);
+	V_go = V_ref - V;
+	i_y = -unit(crossp(R_ref, V_ref));
+
+	while (abs(t_slip - t_slip_old) > 0.01)
+	{
+		n = 0;
+		//rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
+		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
+		{
+			poweredflight(R_ig, V_ig, MJD, gravref, f_T, isp, m, V_go, R_p, V_p, m_p, t_go);
+			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
+			i_z = unit(crossp(R_d, i_y));
+			dr_z = dotp(i_z, R_d - R_p);
+			v_goz = dotp(i_z, V_go);
+			dt_go = -2.0 * dr_z / v_goz;
+			dV_go = V_d - V_p;
+			//dV_go = (V_go_apo - V_go)*0.5;
+			V_go = V_go + dV_go;
+			n++;
+		}
+		t_slip_old = t_slip;
+		t_slip += dt_go*0.1;
+	}
+	if (n >= nmax)
+	{
+		sprintf(oapiDebugString(), "Iteration failed!");
+	}
+	//Llambda = V_go;
+
+	//double apo, peri;
+	//periapo(R_p, V_p, mu, apo, peri);
+
+	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
+
+	MATRIX3 Q_Xx;
+	double theta_T;
+
+	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
+	Y = unit(crossp(V_ig, R_ig));
+	Z = -unit(R_ig);
+
+	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+	dV_LV = mul(Q_Xx, V_go);
+	DV_P = X*dV_LV.x + Z*dV_LV.z;
+	if (length(DV_P) != 0.0)
+	{
+		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C + Y*dV_LV.y;
+	}
+	else
+	{
+		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
+	}
+	Llambda = V_G;
+
+	R_cutoff = R_p;
+	V_cutoff = V_p;
+	m_cutoff = m_p;
+	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
+}
+
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
 {
 	MATRIX3 Rot;

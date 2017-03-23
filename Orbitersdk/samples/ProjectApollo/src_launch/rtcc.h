@@ -247,7 +247,7 @@ struct LunarEntryPADOpt
 	double lng; //splashdown longitude
 };
 
-struct LOIMan
+struct MCCMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
@@ -259,6 +259,20 @@ struct LOIMan
 	double h_apo;	//for LOI-1
 	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
 	double inc;		//Inclination (equatorial) for LOI-1
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+};
+
+struct LOIMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double lat; //landing site latitude
+	double lng; //landing site longitude
+	double azi;		//landing site approach azimuth
+	double h_apo;	//for LOI-1
+	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
@@ -436,7 +450,8 @@ public:
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
