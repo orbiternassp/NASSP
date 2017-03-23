@@ -624,16 +624,16 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			// 286.48 300 (L)
 
 			case OAPI_KEY_A:
-				optics.OpticsShaft++;
-				if(optics.OpticsShaft > 5){
-					optics.OpticsShaft = 0; // Clobber
+				optics.OpticsShaft--;
+				if (optics.OpticsShaft < 0) {
+					optics.OpticsShaft = 5; // Clobber
 				}
 				break;
 
 			case OAPI_KEY_D:
-				optics.OpticsShaft--;
-				if (optics.OpticsShaft < 0){
-					optics.OpticsShaft = 5; // Clobber
+				optics.OpticsShaft++;
+				if (optics.OpticsShaft > 5) {
+					optics.OpticsShaft = 0; // Clobber
 				}
 				break;
 

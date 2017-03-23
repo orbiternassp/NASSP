@@ -4348,7 +4348,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_AOT_SHAFT_KNOB:
 		oapiBlt(surf,srf[SRF_AOTSHAFTKNOB],0,0,optics.OpticsShaft*62,0,62,155);
 		
-		oapiCameraSetCockpitDir (optics.OpticsShaft*PI/3+PI/2,PI/4,true);
+		oapiCameraSetCockpitDir (-optics.OpticsShaft*PI/3+PI/2,PI/4,true);
 		return true;
 
 	case AID_COAS:
