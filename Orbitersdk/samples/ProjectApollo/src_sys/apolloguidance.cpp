@@ -411,6 +411,7 @@ extern "C" {
 	extern int NextZ;
 	extern int ScalerCounter;
 	extern int ChannelRoutineCount;
+	extern unsigned DskyChannel163;
 }
 
 void ApolloGuidance::SaveState(FILEHANDLE scn)
@@ -508,6 +509,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "NEXTZ", NextZ);
 	oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
 	oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
+	oapiWriteScenario_int(scn, "DSKYCHANNEL163", DskyChannel163);
 	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
@@ -605,6 +607,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
 			sscanf (line+7, "%d", &ChannelRoutineCount);
+		}
+		else if (!strnicmp(line, "DSKYCHANNEL163", 14)) {
+			sscanf(line + 14, "%d", &DskyChannel163);
 		}
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
 			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
@@ -832,19 +837,17 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	OutputChannel[channel] = val.to_ulong();
 
 #ifdef _DEBUG
-	if (Yaagc) {
-		switch (channel) {
-		case 010:
-		case 034:
-		case 035:
-		case 01:
-		case 02:
-			break;
+	switch (channel) {
+	case 010:
+	case 034:
+	case 035:
+	case 01:
+	case 02:
+		break;
 
-		default:
-			fprintf(out_file, "AGC write %05o to %04o\n", val, channel);
-			break;
-		}
+	default:
+		fprintf(out_file, "AGC write %05o to %04o\n", val, channel);
+		break;
 	}
 #endif
 
