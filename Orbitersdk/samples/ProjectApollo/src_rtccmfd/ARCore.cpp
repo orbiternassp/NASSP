@@ -90,7 +90,6 @@ ARCore::ARCore(VESSEL* v)
 	{
 		mission = 10;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
-		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Snoopy") == 0)
 	{
@@ -115,11 +114,35 @@ ARCore::ARCore(VESSEL* v)
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
 	}
+	else if (strcmp(v->GetName(), "Intrepid") == 0)
+	{
+		mission = 12;
+		vesseltype = 2;
+		AGCEpoch = 40586.767239;
+	}
+	else if (strcmp(v->GetName(), "Odyssey") == 0)
+	{
+		mission = 13;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 40586.767239;
+	}
+	else if (strcmp(v->GetName(), "Aquarius") == 0)
+	{
+		mission = 13;
+		vesseltype = 2;
+		AGCEpoch = 40586.767239;
+	}
 	else if (strcmp(v->GetName(), "Kitty Hawk") == 0)
 	{
 		mission = 14;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 75.558*RAD);
-		AGCEpoch = 40586.767239;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.067*RAD);
+		AGCEpoch = 40952.009432;
+	}
+	else if (strcmp(v->GetName(), "Antares") == 0)
+	{
+		mission = 14;
+		vesseltype = 2;
+		AGCEpoch = 40952.009432;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
@@ -130,6 +153,30 @@ ARCore::ARCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
+		vesseltype = 2;
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Casper") == 0)
+	{
+		mission = 16;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Orion") == 0)
+	{
+		mission = 16;
+		vesseltype = 2;
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "America") == 0)
+	{
+		mission = 17;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Challenger") == 0)
+	{
+		mission = 17;
 		vesseltype = 2;
 		AGCEpoch = 41317.251625;
 	}
