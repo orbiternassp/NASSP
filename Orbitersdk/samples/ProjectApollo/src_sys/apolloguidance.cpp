@@ -403,17 +403,6 @@ typedef union
 	unsigned long word;
 } AGCState;
 
-//
-// Global variables in agc_engine.c which probably have to be saved, too
-//
-
-extern "C" {
-	extern int NextZ;
-	extern int ScalerCounter;
-	extern int ChannelRoutineCount;
-	extern unsigned DskyChannel163;
-}
-
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
@@ -506,10 +495,10 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "VOC7", vagc.OutputChannel7);
 	oapiWriteScenario_int (scn, "IDXV", vagc.IndexValue);
-	oapiWriteScenario_int (scn, "NEXTZ", NextZ);
-	oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
-	oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
-	oapiWriteScenario_int(scn, "DSKYCHANNEL163", DskyChannel163);
+	oapiWriteScenario_int (scn, "NEXTZ", vagc.NextZ);
+	oapiWriteScenario_int (scn, "SCALERCOUNTER", vagc.ScalerCounter);
+	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
+	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
 	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
@@ -600,16 +589,16 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf (line+4, "%" SCNd16, &vagc.IndexValue);
 		}
 		else if (!strnicmp (line, "NEXTZ", 5)) {
-			sscanf (line+5, "%d", &NextZ);
+			sscanf (line+5, "%d", &vagc.NextZ);
 		}
 		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
-			sscanf (line+13, "%d", &ScalerCounter);
+			sscanf (line+13, "%d", &vagc.ScalerCounter);
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
-			sscanf (line+7, "%d", &ChannelRoutineCount);
+			sscanf (line+7, "%d", &vagc.ChannelRoutineCount);
 		}
 		else if (!strnicmp(line, "DSKYCHANNEL163", 14)) {
-			sscanf(line + 14, "%d", &DskyChannel163);
+			sscanf(line + 14, "%d", &vagc.DskyChannel163);
 		}
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
 			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
