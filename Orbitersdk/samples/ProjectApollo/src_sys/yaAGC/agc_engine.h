@@ -92,6 +92,9 @@
                         added a new channel 163 bit, DSKY_EL_OFF, that
                         signifies when the power supply for the EL lights
                         should go off. yaDSKY2 support to follow.
+		03/26/17 RSB	A couple of additional integer types faked up for
+						Win10+Msys specifically, but probably for some other
+						Windows configurations as well.  Thanks to Romain Lamour.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -114,9 +117,9 @@ extern "C" {
 #ifdef WIN32
 // Win32
 typedef short int16_t;
-typedef unsigned char uint8_t;
 typedef signed char int8_t;
-typedef unsigned int uint32_t;
+typedef unsigned char uint8_t; // 20170326
+typedef unsigned int uint32_t; // 20170326
 typedef int int32_t;
 typedef unsigned __int64 uint64_t;
 typedef __int64 int64_t;
