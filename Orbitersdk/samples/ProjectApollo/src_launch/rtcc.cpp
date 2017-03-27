@@ -5604,6 +5604,11 @@ SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 
 	//OUTPUT:
 	//sv3: state vector at cutoff
 
+	if (length(dV_LVLH) == 0.0)
+	{
+		return sv;
+	}
+
 	double t_go, theta_T;
 	VECTOR3 UX, UY, UZ, DV, DV_P, V_G, DV_C;
 	SV sv2, sv3;
