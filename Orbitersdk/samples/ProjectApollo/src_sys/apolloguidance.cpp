@@ -399,6 +399,7 @@ typedef union
 		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
 		unsigned CheckParity:1;
+		unsigned NightWatchmanTripped:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -447,6 +448,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
 	state.u.CheckParity = vagc.CheckParity;
+	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -641,6 +643,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
 			vagc.CheckParity = state.u.CheckParity;
+			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);

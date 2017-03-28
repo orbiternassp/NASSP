@@ -63,8 +63,9 @@
 		                bit checking is enabled.
 		03/09/17 MAS    Added initialization of SbyStillPressed.
 		03/26/17 MAS    Added initialization of previously-static things
-		                from agc_engine.c that are now in agc_t.
-		03/27/17 MAS    Fixed a parity-related program loading bug.
+		                 from agc_engine.c that are now in agc_t.
+		03/27/17 MAS    Fixed a parity-related program loading bug and
+                         added initialization of a new night watchman bit.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -251,6 +252,7 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->VoltageAlarm = 0;
 
   State->NightWatchman = 0;
+  State->NightWatchmanTripped = 0;
   State->RuptLock = 0;
   State->NoRupt = 0;
   State->TCTrap = 0;
