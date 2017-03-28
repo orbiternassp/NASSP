@@ -244,7 +244,7 @@ AS-504:ProjectApollo\Saturn5
   LMPAD 3427 01407
   LMPAD 3430 57777
   AUTOSLOW 1  
-  LEMCHECK  Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
+  LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 9 LM Checklists.xls
 LVDC_BEGIN
   LVDC_INH1 0
   LVDC_INH2 0
