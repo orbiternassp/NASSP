@@ -62,6 +62,10 @@
 		                parity bits. If such a file is detected, parity
 		                bit checking is enabled.
 		03/09/17 MAS    Added initialization of SbyStillPressed.
+		03/26/17 MAS    Added initialization of previously-static things
+		                 from agc_engine.c that are now in agc_t.
+		03/27/17 MAS    Fixed a parity-related program loading bug and
+                         added initialization of a new night watchman bit.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -130,7 +134,7 @@ agc_load_binfile(agc_t *State, const char *RomImage)
     {
       unsigned char In[2];
 	  uint8_t Parity;
-	  int16_t RawValue;
+	  uint16_t RawValue;
       m = fread (In, 1, 2, fp);
       if (m != 2)
 	goto Done;
@@ -248,15 +252,25 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->VoltageAlarm = 0;
 
   State->NightWatchman = 0;
+  State->NightWatchmanTripped = 0;
   State->RuptLock = 0;
   State->NoRupt = 0;
   State->TCTrap = 0;
   State->NoTC = 0;
   State->ParityFail = 0;
 
+  State->RestartLight = 0;
   State->Standby = 0;
   State->SbyPressed = 0;
   State->SbyStillPressed = 0;
+
+  State->NextZ = 0;
+  State->ScalerCounter = 0;
+  State->ChannelRoutineCount = 0;
+
+  State->DskyTimer = 0;
+  State->DskyFlash = 0;
+  State->DskyChannel163 = 0;
 
   if (CoreDump != NULL)
     {

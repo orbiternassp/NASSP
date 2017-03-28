@@ -624,16 +624,26 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			// 286.48 300 (L)
 
 			case OAPI_KEY_A:
-				optics.OpticsShaft++;
-				if(optics.OpticsShaft > 5){
-					optics.OpticsShaft = 0; // Clobber
+				optics.OpticsShaft--;
+				if (optics.OpticsShaft < 0) {
+					optics.OpticsShaft = 5; // Clobber
+				}
+				//Load panel to trigger change of the default camera direction
+				if (PanelId == LMPANEL_AOTVIEW)
+				{
+					oapiSetPanel(LMPANEL_AOTVIEW);
 				}
 				break;
 
 			case OAPI_KEY_D:
-				optics.OpticsShaft--;
-				if (optics.OpticsShaft < 0){
-					optics.OpticsShaft = 5; // Clobber
+				optics.OpticsShaft++;
+				if (optics.OpticsShaft > 5) {
+					optics.OpticsShaft = 0; // Clobber
+				}
+				//Load panel to trigger change of the default camera direction
+				if (PanelId == LMPANEL_AOTVIEW)
+				{
+					oapiSetPanel(LMPANEL_AOTVIEW);
 				}
 				break;
 
@@ -1285,6 +1295,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
 		}
+		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
+			fdaiRight.LoadState(scn, FDAI2_END_STRING);
+		}
 		else if (!strnicmp(line, "DPS_BEGIN", sizeof("DPS_BEGIN"))) {
 			DPS.LoadState(scn, "DPS_END");
 		}
@@ -1620,7 +1633,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
 
+	// Save FDAIs
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
+	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	//Save DPS
 	DPS.SaveState(scn, "DPS_BEGIN", "DPS_END");

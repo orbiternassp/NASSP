@@ -116,6 +116,10 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Luminary131.bin";
 	}
+	else if (ApolloNo < 15)	// Luminary 210, modified for Apollo 14
+	{
+		binfile = "Config/ProjectApollo/Luminary210NBY71.bin";
+	}
 	else	//Luminary 210
 	{
 		binfile = "Config/ProjectApollo/Luminary210.bin";
@@ -624,7 +628,6 @@ LMOptics::LMOptics() {
 	ReticleMoved = 0;
 	RetDimmer = 255;
 	KnobTurning = 0;
-	
 }
 
 void LMOptics::Init(LEM *vessel) {
@@ -643,7 +646,12 @@ void LMOptics::SystemTimestep(double simdt) {
 
 void LMOptics::TimeStep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
+
+	if (ReticleMoved)
+	{
+		sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
+	}
+
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
 }

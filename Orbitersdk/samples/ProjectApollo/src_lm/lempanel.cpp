@@ -1625,7 +1625,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI/3.0)), optics.OpticsShaft*PI / 3.0);
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
@@ -3245,6 +3245,11 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
 		ButtonClick();
+		//Load panel to trigger change of the default camera direction
+		if (PanelId == LMPANEL_AOTVIEW)
+		{
+			oapiSetPanel(LMPANEL_AOTVIEW);
+		}
 		return true;
 
 
@@ -4347,8 +4352,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	
 	case AID_AOT_SHAFT_KNOB:
 		oapiBlt(surf,srf[SRF_AOTSHAFTKNOB],0,0,optics.OpticsShaft*62,0,62,155);
-		
-		oapiCameraSetCockpitDir (optics.OpticsShaft*PI/3+PI/2,PI/4,true);
 		return true;
 
 	case AID_COAS:
