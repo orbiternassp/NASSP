@@ -133,6 +133,11 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 	mcc.TimeStep(simdt);
 }
 
+void MCCVessel::keyDown(DWORD key)
+{
+	mcc.keyDown(key);
+}
+
 // CONS
 MCC::MCC(){
 	// Reset data

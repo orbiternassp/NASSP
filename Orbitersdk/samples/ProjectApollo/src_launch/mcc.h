@@ -695,6 +695,8 @@ public:
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	void keyDown(DWORD key);								// Notification of keypress	
 private:
 	MCC mcc;
 

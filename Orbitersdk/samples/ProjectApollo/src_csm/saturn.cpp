@@ -952,6 +952,17 @@ void Saturn::clbkPostCreation() {
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
+
+	//Find MCC, if it exists
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC != NULL) {
+		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
+		if (pVessel) {
+			if (!_strnicmp(pVessel->GetClassName(), "MCCVessel", 7)) hMCC = static_cast<MCCVessel*>(pVessel);
+		}
+		else hMCC = NULL;
+	}
+
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -3359,6 +3370,25 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			case OAPI_KEY_E: 
 				agc.SetInputChannelBit(016,MarkReject,0);
 				return 1;
+		}
+	}
+
+	// MCC CAPCOM interface key handling                                                                                                
+	if (down && !KEYMOD_SHIFT(kstate)) {
+		switch (key) {
+		case OAPI_KEY_TAB:
+		case OAPI_KEY_1:
+		case OAPI_KEY_2:
+		case OAPI_KEY_3:
+		case OAPI_KEY_4:
+		case OAPI_KEY_5:
+		case OAPI_KEY_6:
+		case OAPI_KEY_7:
+		case OAPI_KEY_8:
+		case OAPI_KEY_9:
+		case OAPI_KEY_0:
+			hMCC->keyDown(key);
+			break;
 		}
 	}
 

@@ -49,6 +49,7 @@
 #include "scs.h"
 #include "csm_telecom.h"
 #include "sps.h"
+#include "mcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
 #include "checklistController.h"
@@ -1577,6 +1578,11 @@ protected:
 	// *** LVDC++ ITEMS ***
 	//
 	bool use_lvdc; // LVDC use flag
+
+	//
+	// Ground Systems
+	//
+	MCCVessel *hMCC;
 
 	//
 	// ChecklistController
