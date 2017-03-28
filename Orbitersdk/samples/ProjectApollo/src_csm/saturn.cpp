@@ -48,6 +48,7 @@
 #include "lemcomputer.h"
 #include "LEM.h"
 #include "papi.h"
+#include "mcc.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
