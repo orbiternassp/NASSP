@@ -258,7 +258,7 @@ struct MCCMan
 	double PeriGET; //time of periapsis (for MCC)
 	double h_apo;	//for LOI-1
 	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
-	double inc;		//Inclination (equatorial) for LOI-1
+	double inc;
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
@@ -266,16 +266,18 @@ struct MCCMan
 
 struct LOIMan
 {
-	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
-	double lat; //landing site latitude
-	double lng; //landing site longitude
-	double azi;		//landing site approach azimuth
-	double h_apo;	//for LOI-1
-	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+	VESSEL* vessel;		//vessel
+	double GETbase;		//usually MJD at launch
+	double lat;			//landing site latitude
+	double lng;			//landing site longitude
+	double alt;			//landing site height
+	double azi;			//landing site approach azimuth
+	double t_land;		//time of landing
+	double h_apo;		//apolune altitude
+	double h_peri;		//perilune altitude
+	bool useSV = false;	//true if state vector is to be used
+	SV RV_MCC;			//State vector as input
+	bool csmlmdocked;	//0 = CSM alone, 1 = CSM/LM
 };
 
 struct DOIMan

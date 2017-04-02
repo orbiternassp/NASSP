@@ -607,7 +607,7 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 		RA = 0;
 	}
 
-	E = (R*(OrbMech::power(v, 2) - mu / r) - V*r*vr) * 1 / mu;
+	E = (R*(OrbMech::power(v, 2) - mu / r) - V*r*vr) * 1.0 / mu;
 	e = length(E);
 
 	if (n != 0)
@@ -617,7 +617,7 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 			w = acos(dotp(N, E) / n / e);
 			if (E.z < 0)
 			{
-				w = 2 * PI - w;
+				w = PI2 - w;
 			}
 		}
 		else
@@ -631,10 +631,10 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 	}
 	if (e > eps)
 	{
-		TA = acos(dotp(E, R) / e / r);
-		if (vr < 0)
+		TA = acos(dotp(unit(E), unit(R)));
+		if (vr < 0.0)
 		{
-			TA = 2 * PI - TA;
+			TA = PI2 - TA;
 		}
 	}
 	else
@@ -642,11 +642,11 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 		cp = crossp(N, R);
 		if (cp.z >= 0)
 		{
-			TA = acos(dotp(N, R) / n / r);
+			TA = acos(dotp(unit(N), unit(R)));
 		}
 		else
 		{
-			TA = 2 * PI - acos(dotp(N, R) / n / r);
+			TA = PI2 - acos(dotp(unit(N), unit(R)));
 		}
 	}
 	//a = OrbMech::power(h,2) / mu / (1 - OrbMech::power(e,2));
@@ -1588,6 +1588,69 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	range = theta_0*r_P;
 
 	return t;
+}
+
+double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2)
+{
+	VECTOR3 R0, V0, R1, V1;
+	double mu, dt, dt_total;
+
+	mu = GGRAV*oapiGetMass(ref_peri);
+	dt_total = 0.0;
+
+	if (gravref != ref_peri)
+	{
+		oneclickcoast(R, V, MJD, 0.0, R0, V0, gravref, ref_peri);
+	}
+	else
+	{
+		R0 = R;
+		V0 = V;
+	}
+
+	dt = timetoperi(R0, V0, mu);
+	oneclickcoast(R, V, MJD, dt, R1, V1, gravref, ref_peri);
+	dt_total += dt;
+
+	while (abs(dt) > 0.009)
+	{
+		dt = timetoperi(R1, V1, mu);
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, ref_peri, ref_peri);
+		dt_total += dt;
+	}
+
+	R2 = R1;
+	V2 = V1;
+
+	return dt_total;
+}
+
+double timetonode_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2)
+{
+	VECTOR3 R1, V1;
+	double mu, dt, dt_total, theta;
+
+	mu = GGRAV*oapiGetMass(gravref);
+	dt_total = 0.0;
+
+	theta = OrbMech::sign(dotp(crossp(R, u_node), crossp(R, V)))*acos(dotp(R / length(R), u_node));
+	dt = OrbMech::time_theta(R, V, theta, mu);
+
+	oneclickcoast(R, V, MJD, dt, R1, V1, gravref, gravref);
+	dt_total += dt;
+
+	while (abs(dt) > 0.01)
+	{
+		theta = OrbMech::sign(dotp(crossp(R1, u_node), crossp(R1, V1)))*acos(dotp(R1 / length(R1), u_node));
+		dt = OrbMech::time_theta(R1, V1, theta, mu);
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, gravref, gravref);
+		dt_total += dt;
+	}
+
+	R2 = R1;
+	V2 = V1;
+
+	return dt_total;
 }
 
 double timetoperi(VECTOR3 R, VECTOR3 V, double mu)

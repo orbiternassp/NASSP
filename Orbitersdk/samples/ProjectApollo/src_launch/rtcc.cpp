@@ -4648,9 +4648,9 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
 	SV sv0, sv1;
-	VECTOR3 R_P, UX10, UY10, UZ10, axis, u_LPO, H, u_LAH, u_node, R_node, V_node, p, q, R_ref, V_ref, E;
-	MATRIX3 Rot3, Rot4, Rot;
-	double Lat, Lng, Azi, MJD_LAND, mu, dt, theta, dt_node, GET_node, MJD_node, R_M, apo, peri, a, e, h, mass, LMmass, GET, r;
+	VECTOR3 axis, u_LPO, H, u_LAH, u_node, R_node, V_node, p, q, R_ref, V_ref, H_LPO;
+	MATRIX3 Rot;
+	double MJD_LAND, mu, dt, dt_node, GET_node, MJD_node, R_M, apo, peri, a, e, h, mass, LMmass, GET, r;
 	OBJHANDLE hMoon;
 
 	if (opt->useSV)
@@ -4678,65 +4678,61 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	hMoon = oapiGetObjectByName("Moon");
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	//TODO: Replace hardcoded parameters
-	Lat = -2.9425*RAD;
-	Lng = -23.44333*RAD;
-	Azi = -75.0*RAD;
-	MJD_LAND = opt->GETbase + 102.0 / 24.0;
+	//Lat = -2.9425*RAD;
+	//Lng = -23.44333*RAD;
+	//Azi = -75.0*RAD;
+	MJD_LAND = opt->GETbase + opt->t_land / 24.0 / 3600.0;
 
-	//Landing site vector in local coordinates
-	R_P = unit(_V(cos(Lng)*cos(Lat), sin(Lng)*cos(Lat), sin(Lat)));
+	//Lunar radius above LLS
+	R_M = oapiGetSize(hMoon) + opt->alt;
 
 	//Initial guess for the node, at pericynthion
-	dt = OrbMech::timetoperi(sv0.R, sv0.V, mu);
+	dt = OrbMech::timetoperi_integ(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hMoon, sv1.R, sv1.V);
 	sv1 = coast(sv0, dt);
 	H = crossp(sv1.R, sv1.V);
 
 	//Lunar Approach Hyperbola orientation
 	u_LAH = unit(H);
-	E = crossp(sv1.V, H) / mu - unit(sv1.R);
 
-	UX10 = R_P;
-	UY10 = unit(crossp(_V(0.0, 0.0, 1.0), UX10));
-	UZ10 = crossp(UX10, UY10);
+	VECTOR3 R_LPO, V_LPO;
+	double r_LPO, v_LPO;
 
-	Rot3 = _M(UX10.x, UX10.y, UX10.z, UY10.x, UY10.y, UY10.z, UZ10.x, UZ10.y, UZ10.z);
-	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(Azi), -sin(Azi), 0.0, sin(Azi), cos(Azi));
+	r_LPO = R_M + 60.0*1852.0;
+	v_LPO = sqrt(mu / r_LPO);
 
-	//Orbital plane in local coordinates
-	axis = mul(OrbMech::transpose_matrix(Rot3), mul(Rot4, _V(0.0, 1.0, 0.0)));
+	OrbMech::adbar_from_rv(r_LPO, v_LPO, opt->lng, opt->lat, PI05, opt->azi, R_LPO, V_LPO);
+
+	H_LPO = crossp(R_LPO, V_LPO);
+
+	axis = unit(H_LPO);
 
 	Rot = OrbMech::GetRotationMatrix(hMoon, MJD_LAND);
 
 	//Lunar Parking Orbit orientation
-	u_LPO = rhmul(Rot, unit(axis));
+	u_LPO = unit(rhmul(Rot, axis));
 
-	//TODO: Node can have two directions, only the one close to the vector pointing at pericynthion will yield a solution
+	//Node unit vector
 	u_node = unit(crossp(u_LPO, u_LAH));
 
-	//angle between pericynthion and node
-	theta = OrbMech::sign(dotp(crossp(sv1.R, u_node), crossp(sv1.R, sv1.V)))*acos(dotp(sv1.R / length(sv1.R), u_node));
+	//Periapsis vector and node should be within 90°, if not the actual intersection is in the other direction
+	if (dotp(u_node, unit(sv1.R)) < 0.0)
+	{
+		u_node = -u_node;
+	}
 
-	//time between pericynthion and node
-	dt_node = OrbMech::time_theta(sv1.R, sv1.V, theta, mu);
-
-	//state vector at node
-	OrbMech::rv_from_r0v0(sv1.R, sv1.V, dt_node, R_node, V_node, mu);
+	//state vector at the node
+	dt_node = OrbMech::timetonode_integ(sv1.R, sv1.V, sv1.MJD, hMoon, u_node, R_node, V_node);
 
 	//Time at node
 	GET_node = GET + dt + dt_node;
 	MJD_node = opt->GETbase + GET_node / 24.0 / 3600.0;
 
-
-	R_M = oapiGetSize(hMoon);// +opt->alt;
 	apo = R_M + opt->h_apo;
 	peri = R_M + opt->h_peri;
 	a = (apo + peri) / 2.0;
 	e = (apo - peri) / (apo + peri);
 	r = length(R_node);
 	h = sqrt(mu*a*(1.0 - e*e));
-
-	//node equals perilune
 
 	double ta[2];
 	double f_T, isp, t_slip[2], t_sl, MJD_cut, m_cut;
@@ -4746,17 +4742,16 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	ta[0] = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
 	ta[1] = PI2 - ta[0];												//Calculates the second possible true anomaly of the desired orbit
 
+	GetThrusterParameters(opt->vessel, f_T, isp);
+
 	for (int ii = 0;ii < 2;ii++)
 	{
 
 		p = OrbMech::RotateVector(u_LPO, -ta[ii], u_node);
-		p = unit(p);
 		q = unit(crossp(u_LPO, p));
 
 		R_ref = (p*cos(ta[ii]) + q*sin(ta[ii]))*h*h / mu / (1.0 + e*cos(ta[ii]));
 		V_ref = (-p*sin(ta[ii]) + q*(e + cos(ta[ii])))*mu / h;
-
-		GetThrusterParameters(opt->vessel, f_T, isp);
 
 		OrbMech::impulsive(R_node, V_node, MJD_node, hMoon, f_T, isp, mass, R_ref, V_ref, Llambda[ii], t_slip[ii], R_cut, V_cut, MJD_cut, m_cut);
 	}
