@@ -173,7 +173,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if (!IsPowered()){
 			// HARDWARE MUST RESTART
-			if(vagc.Erasable[0][05] != 04000){				
 				// Clear flip-flop based registers
 				vagc.Erasable[0][00] = 0;     // A
 				vagc.Erasable[0][01] = 0;     // L
@@ -206,6 +205,10 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+				// Reset standby flip-flop
+				vagc.Standby = 0;
+				// Reset fake DSKYChannel163
+				vagc.DskyChannel163 = 0;
 				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
 				InputChannel[033] &= 017777;
 				vagc.InputChannel[033] &= 017777;				
@@ -214,11 +217,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;
+				vagc.RestartLight = 1;
 				sat->dsky.LightRestart();
 				sat->dsky2.LightRestart();
 				// Reset last cycling time
 				LastCycled = 0;
-			}
 			// We should issue telemetry though.
 			sat->pcm.TimeStep(simt);
 			return;
