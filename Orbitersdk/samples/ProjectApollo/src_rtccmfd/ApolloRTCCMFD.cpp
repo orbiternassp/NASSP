@@ -160,6 +160,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "LSLat", G->LSLat);
 	papiWriteScenario_double(scn, "LSLng", G->LSLng);
 	papiWriteScenario_double(scn, "LSAlt", G->LSAlt);
+	papiWriteScenario_double(scn, "TLAND", G->t_Land);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
 	papiWriteScenario_double(scn, "ENTRYTIG", G->EntryTIG);
@@ -270,6 +271,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "LSLat", G->LSLat);
 		papiReadScenario_double(line, "LSLng", G->LSLng);
 		papiReadScenario_double(line, "LSAlt", G->LSAlt);
+		papiReadScenario_double(line, "TLAND", G->t_Land);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
 		papiReadScenario_double(line, "ENTRYTIG", G->EntryTIG);
@@ -4290,8 +4292,16 @@ void ApolloRTCCMFD::set_LOILng(double lng)
 
 void ApolloRTCCMFD::menuSetLOIAlt()
 {
-	bool LOIAltInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the pericyntheon altitude:", LOIAltInput, 0, 20, (void*)this);
+	if (G->LOImaneuver == 0 || G->LOImaneuver == 4)
+	{
+		bool LOIAltInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the pericynthion altitude:", LOIAltInput, 0, 20, (void*)this);
+	}
+	else if (G->LOImaneuver == 1 || G->LOImaneuver == 2)
+	{
+		bool LSAltInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the landing site altitude:", LSAltInput, 0, 20, (void*)this);
+	}
 }
 
 bool LOIAltInput(void *id, char *str, void *data)
@@ -4314,7 +4324,7 @@ void ApolloRTCCMFD::menuSetLOIApo()
 	if (G->LOImaneuver == 1 || G->LOImaneuver == 2)
 	{
 		bool LOIApoInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the apocyntheon altitude:", LOIApoInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Choose the apocynthion altitude:", LOIApoInput, 0, 20, (void*)this);
 	}
 }
 
@@ -4331,6 +4341,30 @@ bool LOIApoInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LOIApo(double alt)
 {
 	this->G->LOIapo = alt*1852.0;
+}
+
+void ApolloRTCCMFD::menuSetLOIPeri()
+{
+	if (G->LOImaneuver == 1 || G->LOImaneuver == 2 || G->LOImaneuver == 3)
+	{
+		bool LOIPeriInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the pericynthion altitude:", LOIPeriInput, 0, 20, (void*)this);
+	}
+}
+
+bool LOIPeriInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LOIPeri(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOIPeri(double alt)
+{
+	this->G->LOIperi = alt*1852.0;
 }
 
 void ApolloRTCCMFD::menuSetLOIAzi()

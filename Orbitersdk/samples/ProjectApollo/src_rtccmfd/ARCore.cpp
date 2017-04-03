@@ -289,6 +289,7 @@ ARCore::ARCore(VESSEL* v)
 	manpad.Vc = 0.0;
 	manpad.pTrim = 0.0;
 	manpad.yTrim = 0.0;
+	manpad.LMWeight = 0.0;
 	lmmanpad.Att = _V(0, 0, 0);
 	lmmanpad.BSSStar = 0;
 	lmmanpad.burntime = 0.0;

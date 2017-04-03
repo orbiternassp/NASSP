@@ -434,7 +434,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIM", OAPI_KEY_G, &ApolloRTCCMFD::menuSetLOIGET);
 	RegisterFunction("GET", OAPI_KEY_P, &ApolloRTCCMFD::menuSetLOIPeriGET);
 	RegisterFunction("APA", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLOIApo);
-	RegisterFunction("PEA", OAPI_KEY_N, &ApolloRTCCMFD::menuSetLOIAlt);
+	RegisterFunction("PEA", OAPI_KEY_N, &ApolloRTCCMFD::menuSetLOIPeri);
 	RegisterFunction("AZI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetLOIAzi);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLOICalc);

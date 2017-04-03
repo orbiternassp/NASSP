@@ -174,6 +174,8 @@ public:
 	void set_LOIAlt(double alt);
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
+	void menuSetLOIPeri();
+	void set_LOIPeri(double alt);
 	void menuSetLOIAzi();
 	void set_LOIAzi(double inc);
 	void menuLOICalc();
