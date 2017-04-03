@@ -1605,6 +1605,29 @@ int ARCore::subThread()
 			dV_LVLH = LOI_dV_LVLH;
 
 		}
+		else if (LOImaneuver == 3)
+		{
+			LOI2Man opt;
+
+			opt.alt = LSAlt;
+			opt.GETbase = GETbase;
+			opt.h_circ = LOIperi;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			rtcc->LOI2Targeting(&opt, LOI_dV_LVLH, LOI_TIG);
+			P30TIG = LOI_TIG;
+			dV_LVLH = LOI_dV_LVLH;
+		}
 		else
 		{
 			MCCMan opt;
@@ -1630,12 +1653,9 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 
-			if (LOImaneuver == 0 || LOImaneuver == 4)
-			{
-				rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
-				P30TIG = TLCC_TIG;
-				dV_LVLH = TLCC_dV_LVLH;
-			}
+			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
 		}
 
 		Result = 0;

@@ -282,6 +282,17 @@ struct LOIMan
 	bool csmlmdocked;	//0 = CSM alone, 1 = CSM/LM
 };
 
+struct LOI2Man
+{
+	VESSEL* vessel;			//vessel
+	double GETbase;			//usually MJD at launch
+	double h_circ;			//altitude of circular orbit
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;				//State vector as input
+	bool csmlmdocked;		//0 = CSM alone, 1 = CSM/LM
+	double alt = 0.0;		//altitude of the landing site
+};
+
 struct DOIMan
 {
 	VESSEL* vessel; //vessel
@@ -456,6 +467,7 @@ public:
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);

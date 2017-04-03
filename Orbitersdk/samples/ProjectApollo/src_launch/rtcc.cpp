@@ -4795,6 +4795,72 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 }
 
+void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+{
+	SV sv0, sv1;
+	double GET, LMmass, mass, mu;
+	OBJHANDLE hMoon;
+
+	if (opt->useSV)
+	{
+		sv0 = opt->RV_MCC;
+	}
+	else
+	{
+		sv0 = StateVectorCalc(opt->vessel);
+	}
+
+	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
+
+	if (opt->csmlmdocked)
+	{
+		LMmass = GetDockedVesselMass(opt->vessel);
+	}
+	else
+	{
+		LMmass = 0.0;
+	}
+
+	mass = LMmass + sv0.mass;
+
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	double a, dt2, LOIGET, v_circ;
+	VECTOR3 U_H, U_hor, VA2_apo, DVX, i, j, k;
+	MATRIX3 Q_Xx;
+
+	mu = GGRAV*oapiGetMass(hMoon);
+	a = oapiGetSize(hMoon) + opt->h_circ + opt->alt;
+
+	dt2 = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, a, -1, hMoon, hMoon, sv1.R, sv1.V);
+	sv1 = coast(sv0, dt2);
+	LOIGET = dt2 + (sv0.MJD - opt->GETbase) * 24 * 60 * 60;
+
+	U_H = unit(crossp(sv1.R, sv1.V));
+	U_hor = unit(crossp(U_H, unit(sv1.R)));
+	v_circ = sqrt(mu*(2.0 / length(sv1.R) - 1.0 / a));
+	VA2_apo = U_hor*v_circ;
+
+	DVX = VA2_apo - sv1.V;
+
+	VECTOR3 Llambda;
+	double t_slip;
+	SV sv_tig, sv_out;
+
+	FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, DVX, Llambda, t_slip, sv_out); //Calculate the impulsive equivalent of the maneuver
+	sv_tig = coast(sv1, t_slip);
+
+	j = unit(crossp(sv_tig.V, sv_tig.R));
+	k = unit(-sv_tig.R);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+	dV_LVLH = mul(Q_Xx, Llambda);
+
+	P30TIG = LOIGET + t_slip;
+}
+
 void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
 {
 	double SVMJD, GET, mass, CSMmass, LMmass;
