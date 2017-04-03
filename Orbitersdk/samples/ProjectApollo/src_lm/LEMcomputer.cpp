@@ -112,7 +112,7 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Luminary116.bin";
 	}
-	else if (ApolloNo < 14)	// Luminary 131
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
 	{
 		binfile = "Config/ProjectApollo/Luminary131.bin";
 	}

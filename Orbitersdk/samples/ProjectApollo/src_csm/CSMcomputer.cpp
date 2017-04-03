@@ -92,7 +92,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Colossus237.bin";
 	}
-	else if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
+	else if (ApolloNo < 10)	// Colossus 249
 	{
 		binfile = "Config/ProjectApollo/Colossus249.bin";
 	}
@@ -100,7 +100,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
 	}
-	else if (ApolloNo < 14)	// Comanche 055
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 	{
 		binfile = "Config/ProjectApollo/Comanche055.bin";
 	}
@@ -246,7 +246,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// otherwise the P11 roll error needle isn't working properly			
 			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
 
-			if (ApolloNo < 10 || ApolloNo == 1301)	//Colossus 249 and criterium in SetMissionInfo
+			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -276,7 +276,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
-			else if (ApolloNo < 15)	// Comanche 055
+			else if (ApolloNo < 15 || ApolloNo == 1301)	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
