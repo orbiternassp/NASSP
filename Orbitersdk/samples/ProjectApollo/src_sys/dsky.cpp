@@ -448,7 +448,19 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 
 {
 	if (!IsPowered())
+	{
+		if (hasAltVel) {
+			DSKYLightBlt(surf, lights, 52, 121, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 52, 144, false, xOffset, yOffset);
+		}
+
+		if (hasDAPPrioDisp) {
+			DSKYLightBlt(surf, lights, 0, 121, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 0, 144, false, xOffset, yOffset);
+		}
+
 		return;
+	}
 
 	//
 	// Check the lights.
