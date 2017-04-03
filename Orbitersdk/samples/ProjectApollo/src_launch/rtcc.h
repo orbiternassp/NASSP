@@ -112,6 +112,7 @@ struct AP11ManPADOpt
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	double alt = 0.0;	//Altitude above mean radius
 };
 
 struct AP11LMManPADOpt
@@ -126,6 +127,7 @@ struct AP11LMManPADOpt
 	int vesseltype = 2; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	double alt = 0.0;	//Altitude above mean radius
 };
 
 struct AP7TPIPADOpt

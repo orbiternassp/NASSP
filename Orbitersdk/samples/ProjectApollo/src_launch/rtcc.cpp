@@ -2981,7 +2981,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 {
 	MATRIX3 M_R, M, Q_Xx;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos;
+	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E;
 	int step, ManCOASstaroct;
 	SV sv, sv1, sv2;
 
@@ -3028,10 +3028,19 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, CSMmass, Q_Xx, V_G, F, v_e);
 
 	mu = GGRAV*oapiGetMass(sv1.gravref);
+	//Only use landing site radius for the Moon
+	if (sv1.gravref == oapiGetObjectByName("Moon"))
+	{
+		R_E = oapiGetSize(sv1.gravref) + opt->alt;
+	}
+	else
+	{
+		R_E = oapiGetSize(sv1.gravref);
+	}
 
 	OrbMech::periapo(sv2.R, sv2.V, mu, apo, peri);
-	ManPADApo = apo - oapiGetSize(sv2.gravref);
-	ManPADPeri = peri - oapiGetSize(sv2.gravref);
+	ManPADApo = apo - R_E;
+	ManPADPeri = peri - R_E;
 
 	X_B = unit(V_G);
 	if (opt->engopt == 2)
@@ -3105,7 +3114,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	MATRIX3 Q_Xx, M_R, M, M_RTM;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, GDCangles;
 	double dt, LMmass, F, v_e, headsswitch, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, p_T, y_T, ManPADDVC, ManPADBurnTime;
-	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos;
+	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos, R_E;
 	int GDCset, Manstaroct, ManCOASstaroct;
 	SV sv, sv1, sv2;
 
@@ -3147,6 +3156,16 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 	mu = GGRAV*oapiGetMass(sv1.gravref);
 
+	//Only use landing site radius for the Moon
+	if (sv1.gravref == oapiGetObjectByName("Moon"))
+	{
+		R_E = oapiGetSize(sv1.gravref) + opt->alt;
+	}
+	else
+	{
+		R_E = oapiGetSize(sv1.gravref);
+	}
+
 	if (opt->HeadsUp)
 	{
 		headsswitch = 1.0;
@@ -3157,8 +3176,8 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	}
 
 	OrbMech::periapo(sv2.R, sv2.V, mu, apo, peri);
-	ManPADApo = apo - oapiGetSize(sv2.gravref);
-	ManPADPeri = peri - oapiGetSize(sv2.gravref);
+	ManPADApo = apo - R_E;
+	ManPADPeri = peri - R_E;
 
 	if (opt->engopt == 0)
 	{
@@ -4678,9 +4697,6 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	hMoon = oapiGetObjectByName("Moon");
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	//Lat = -2.9425*RAD;
-	//Lng = -23.44333*RAD;
-	//Azi = -75.0*RAD;
 	MJD_LAND = opt->GETbase + opt->t_land / 24.0 / 3600.0;
 
 	//Lunar radius above LLS

@@ -1573,8 +1573,8 @@ int ARCore::subThread()
 			loiopt.GETbase = GETbase;
 			loiopt.h_apo = LOIapo;
 			loiopt.h_peri = LOIperi;
-			loiopt.lat = LOILat;
-			loiopt.lng = LOILng;
+			loiopt.lat = LSLat;
+			loiopt.lng = LSLng;
 			loiopt.alt = LSAlt;
 			loiopt.t_land = t_Land;
 			loiopt.azi = LOIazi;
@@ -1754,6 +1754,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11ManeuverPAD(&opt, manpad);
 		}
@@ -1769,6 +1770,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
