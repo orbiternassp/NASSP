@@ -174,8 +174,8 @@ public:
 	void set_LOIAlt(double alt);
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
-	void menuSetLOIInc();
-	void set_LOIInc(double inc);
+	void menuSetLOIAzi();
+	void set_LOIAzi(double inc);
 	void menuLOICalc();
 	void menuRequestLTMFD();
 	void menuSetLandmarkTrkPage();
@@ -237,6 +237,7 @@ public:
 	void menuTMStepSize();
 	void set_TMStepSize(double step);
 	void menuTerrainModelCalc();
+	void set_TLand(double time);
 
 protected:
 	oapi::Font *font;

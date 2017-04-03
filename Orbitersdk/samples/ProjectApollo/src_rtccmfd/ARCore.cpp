@@ -344,7 +344,7 @@ ARCore::ARCore(VESSEL* v)
 	LOILng = 0.0;
 	LOIapo = 0.0;
 	LOIperi = 0.0;
-	LOIinc = 0.0;
+	LOIazi = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	TLCC_TIG = 0.0;
@@ -378,7 +378,7 @@ ARCore::ARCore(VESSEL* v)
 	DOI_dV_LVLH = _V(0, 0, 0);
 	DOI_TIG = 0.0;
 	DOI_t_PDI = 0.0;
-	DOI_t_L = 0.0;
+	t_Land = 0.0;
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
 
@@ -1136,8 +1136,8 @@ void ARCore::TLANDUplink(void)
 			g_Data.emem[1] = 2026;
 			g_Data.emem[3] = 2027;
 		}
-		g_Data.emem[2] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 1);
-		g_Data.emem[4] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 0);
+		g_Data.emem[2] = OrbMech::DoubleToBuffer(t_Land*100.0, 28, 1);
+		g_Data.emem[4] = OrbMech::DoubleToBuffer(t_Land*100.0, 28, 0);
 
 		UplinkData2(); // Go for uplink
 	}
@@ -1566,53 +1566,76 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
-		LOIMan opt;
-		double MJDcut;
-
-		opt.GETbase = GETbase;
-		opt.h_apo = LOIapo;
-		opt.h_peri = LOIperi;
-		opt.inc = LOIinc;
-		opt.lat = LOILat;
-		opt.lng = LOILng;
-		opt.man = LOImaneuver;
-		opt.MCCGET = LOIGET;
-		opt.PeriGET = LOIPeriGET;
-		opt.vessel = vessel;
-		opt.useSV = false;
-
-		if (vesseltype == 0 || vesseltype == 2)
+		if (LOImaneuver == 1 || LOImaneuver == 2)
 		{
-			opt.csmlmdocked = false;
-		}
-		else
-		{
-			opt.csmlmdocked = true;
-		}
+			LOIMan loiopt;
 
-		if (LOImaneuver == 0 || LOImaneuver == 4)
-		{
-			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-		}
-		else if (LOImaneuver == 1)
-		{
-			SV RV1, RV2;
+			loiopt.GETbase = GETbase;
+			loiopt.h_apo = LOIapo;
+			loiopt.h_peri = LOIperi;
+			loiopt.lat = LSLat;
+			loiopt.lng = LSLng;
+			loiopt.alt = LSAlt;
+			loiopt.t_land = t_Land;
+			loiopt.azi = LOIazi;
+			loiopt.vessel = vessel;
 
-			RV1 = rtcc->StateVectorCalc(vessel);
-			RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				loiopt.csmlmdocked = false;
+			}
+			else
+			{
+				loiopt.csmlmdocked = true;
+			}
 
-			opt.useSV = true;
-			opt.RV_MCC = RV2;
+			if (LOImaneuver == 1)
+			{
+				SV RV1, RV2;
 
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
-		}
-		else
-		{
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
+				RV1 = rtcc->StateVectorCalc(vessel);
+				RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
+
+				loiopt.useSV = true;
+				loiopt.RV_MCC = RV2;
+			}
+
+			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
+
+		}
+		else
+		{
+			MCCMan opt;
+			double MJDcut;
+
+			opt.GETbase = GETbase;
+			opt.h_apo = LOIapo;
+			opt.h_peri = LOIperi;
+			opt.lat = LOILat;
+			opt.lng = LOILng;
+			opt.man = LOImaneuver;
+			opt.MCCGET = LOIGET;
+			opt.PeriGET = LOIPeriGET;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			if (LOImaneuver == 0 || LOImaneuver == 4)
+			{
+				rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+				P30TIG = TLCC_TIG;
+				dV_LVLH = TLCC_dV_LVLH;
+			}
 		}
 
 		Result = 0;
@@ -1731,6 +1754,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11ManeuverPAD(&opt, manpad);
 		}
@@ -1746,6 +1770,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
@@ -1773,7 +1798,7 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.N = DOI_N;
 
-		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, DOI_t_L, DOI_CR);
+		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;
