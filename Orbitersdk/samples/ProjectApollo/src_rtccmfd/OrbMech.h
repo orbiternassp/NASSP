@@ -278,6 +278,7 @@ namespace OrbMech {
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
 VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
 VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
+double acos2(double _X);
 
 //void(*)(double*, double, double*)
 #endif

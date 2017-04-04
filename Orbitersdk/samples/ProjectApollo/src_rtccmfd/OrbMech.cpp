@@ -1594,9 +1594,12 @@ double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJ
 {
 	VECTOR3 R0, V0, R1, V1;
 	double mu, dt, dt_total;
+	int n, nmax;
 
 	mu = GGRAV*oapiGetMass(ref_peri);
 	dt_total = 0.0;
+	n = 0;
+	nmax = 10;
 
 	if (gravref != ref_peri)
 	{
@@ -1612,12 +1615,13 @@ double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJ
 	oneclickcoast(R, V, MJD, dt, R1, V1, gravref, ref_peri);
 	dt_total += dt;
 
-	while (abs(dt) > 0.009)
+	do
 	{
 		dt = timetoperi(R1, V1, mu);
 		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, ref_peri, ref_peri);
 		dt_total += dt;
-	}
+		n++;
+	} while (abs(dt) > 0.01 && nmax >= n);
 
 	R2 = R1;
 	V2 = V1;
@@ -1629,23 +1633,27 @@ double timetonode_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VEC
 {
 	VECTOR3 R1, V1;
 	double mu, dt, dt_total, theta;
+	int n, nmax;
 
 	mu = GGRAV*oapiGetMass(gravref);
 	dt_total = 0.0;
+	n = 0;
+	nmax = 10;
 
-	theta = OrbMech::sign(dotp(crossp(R, u_node), crossp(R, V)))*acos(dotp(R / length(R), u_node));
+	theta = OrbMech::sign(dotp(crossp(R, u_node), crossp(R, V)))*acos2(dotp(R / length(R), u_node));
 	dt = OrbMech::time_theta(R, V, theta, mu);
 
 	oneclickcoast(R, V, MJD, dt, R1, V1, gravref, gravref);
 	dt_total += dt;
 
-	while (abs(dt) > 0.01)
+	do
 	{
-		theta = OrbMech::sign(dotp(crossp(R1, u_node), crossp(R1, V1)))*acos(dotp(R1 / length(R1), u_node));
+		theta = OrbMech::sign(dotp(crossp(R1, u_node), crossp(R1, V1)))*acos2(dotp(unit(R1), u_node));
 		dt = OrbMech::time_theta(R1, V1, theta, mu);
 		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, gravref, gravref);
 		dt_total += dt;
-	}
+		n++;
+	} while (abs(dt) > 0.1 && nmax >= n);
 
 	R2 = R1;
 	V2 = V1;
@@ -4594,4 +4602,9 @@ VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b)
 		A.m11*b.x + A.m21*b.z + A.m31*b.y,
 		A.m13*b.x + A.m23*b.z + A.m33*b.y,
 		A.m12*b.x + A.m22*b.z + A.m32*b.y);
+}
+
+double acos2(double _X)
+{
+	return acos(min(1.0, max(-1.0, _X)));
 }
