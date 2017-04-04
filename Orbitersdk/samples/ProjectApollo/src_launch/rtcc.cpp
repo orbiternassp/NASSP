@@ -88,7 +88,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	bool preliminary = true;
 	bool scrubbed = false;
 
+	//Hardcoded for now, better solution at some point...
 	double AGCEpoch = 40221.525;
+	double LSLat = 2.6317*RAD;
+	double LSLng = 34.0253*RAD;
+	double LSAlt = -0.82*1852.0;
+	double LSAzi = -78.0*RAD;
+	double t_land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 
 	switch (fcn) {
 	case 1: //TLI
@@ -390,9 +396,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			if (fcn == 23)
 			{
-				MCCMan opt2;
+				LOIMan opt2;
 				REFSMMATOpt refsopt;
-				double P30TIG_LOI, tcut;
+				double P30TIG_LOI;
 				VECTOR3 dV_LVLH_LOI;
 
 				sv.mass = calcParams.src->GetMass();
@@ -401,14 +407,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.GETbase = GETbase;
 				opt2.h_apo = 170.0*1852.0;
 				opt2.h_peri = 60.0*1852.0;
-				opt2.inc = 167.7*RAD;
-				opt2.man = 1;
+				opt2.alt = LSAlt;
+				opt2.azi = LSAzi;
+				opt2.lat = LSLat;
+				opt2.lng = LSLng;
 				opt2.useSV = true;
 				opt2.vessel = calcParams.src;
+				opt2.t_land = t_land;
 				opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
-				opt2.MCCGET = calcParams.LOI;
 
-				TranslunarMidcourseCorrectionTargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, Rcut, Vcut, tcut);
+				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
 
 				refsopt.dV_LVLH = dV_LVLH;
 				refsopt.dV_LVLH2 = dV_LVLH_LOI;
@@ -459,10 +467,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 30:	// MISSION CP PRELIMINARY LOI-1 MANEUVER
 	case 31:	// MISSION CP LOI-1 MANEUVER
 	{
-		MCCMan opt;
+		LOIMan opt;
 		AP11ManPADOpt manopt;
-		double GETbase, P30TIG, tcut;
-		VECTOR3 dV_LVLH, Rcut, Vcut;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
 		SV sv;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -475,13 +483,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.GETbase = GETbase;
 		opt.h_apo = 170.0*1852.0;
 		opt.h_peri = 60.0*1852.0;
-		opt.inc = 167.7*RAD;
-		opt.man = 2;
-		opt.MCCGET = calcParams.LOI;
+		opt.alt = LSAlt;
+		opt.azi = LSAzi;
+		opt.lat = LSLat;
+		opt.lng = LSLng;
+		opt.t_land = t_land;
 		opt.vessel = calcParams.src;
 
-		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
+		LOITargeting(&opt, dV_LVLH, P30TIG);
 
+		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
 		manopt.GETbase = GETbase;
@@ -528,6 +539,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
+		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.engopt = 0;
 		opt.GETbase = GETbase;
@@ -604,6 +616,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
+		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.engopt = 0;
 		opt.GETbase = GETbase;
@@ -678,6 +691,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
+		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.engopt = 0;
 		opt.GETbase = GETbase;
@@ -726,6 +740,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
 
+		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.engopt = 0;
 		manopt.GETbase = GETbase;
@@ -850,6 +865,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		TEITargeting(&entopt, &res);
 
+		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.engopt = 0;
 		opt.GETbase = GETbase;
