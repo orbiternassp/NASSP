@@ -383,7 +383,13 @@ ARCore::ARCore(VESSEL* v)
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
 
-	if (mission == 11)
+	if (mission == 8)
+	{
+		LSLat = 2.6317*RAD;
+		LSLng = 34.0253*RAD;
+		LSAlt = -0.82*1852.0;
+	}
+	else if (mission == 11)
 	{
 		LSLat = 0.71388888*RAD;
 		LSLng = 23.7077777*RAD;
