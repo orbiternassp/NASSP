@@ -365,7 +365,6 @@ void Saturn::initSaturn()
 	J2IsActive = true;
 
 	DockAngle = 0;
-	SeparationSpeed = 0;
 
 	AtempP  = 0;
 	AtempY  = 0;
@@ -1213,18 +1212,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		FovSave = papiCameraAperture();
 		papiCameraSetAperture(FovSaveExternal);
 		FovExternal = 0;	
-	}
-
-	//
-	// dV because of staging
-	//
-
-	if (SeparationSpeed > 0) {
-		// For unknown reasons we need twice the force. 
-		// This may be related to the staging event.
-		double F = 2. * GetMass() * SeparationSpeed / simdt;
-		AddForce(_V(0, 0, F), _V(0,0,0));
-		SeparationSpeed = 0;
 	}
 
 	//
