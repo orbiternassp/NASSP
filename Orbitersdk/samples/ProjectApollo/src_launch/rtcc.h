@@ -112,6 +112,7 @@ struct AP11ManPADOpt
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	double alt = 0.0;	//Altitude above mean radius
 };
 
 struct AP11LMManPADOpt
@@ -126,6 +127,7 @@ struct AP11LMManPADOpt
 	int vesseltype = 2; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	double alt = 0.0;	//Altitude above mean radius
 };
 
 struct AP7TPIPADOpt
@@ -247,7 +249,7 @@ struct LunarEntryPADOpt
 	double lng; //splashdown longitude
 };
 
-struct LOIMan
+struct MCCMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
@@ -258,10 +260,37 @@ struct LOIMan
 	double PeriGET; //time of periapsis (for MCC)
 	double h_apo;	//for LOI-1
 	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
-	double inc;		//Inclination (equatorial) for LOI-1
+	double inc;
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+};
+
+struct LOIMan
+{
+	VESSEL* vessel;		//vessel
+	double GETbase;		//usually MJD at launch
+	double lat;			//landing site latitude
+	double lng;			//landing site longitude
+	double alt;			//landing site height
+	double azi;			//landing site approach azimuth
+	double t_land;		//time of landing
+	double h_apo;		//apolune altitude
+	double h_peri;		//perilune altitude
+	bool useSV = false;	//true if state vector is to be used
+	SV RV_MCC;			//State vector as input
+	bool csmlmdocked;	//0 = CSM alone, 1 = CSM/LM
+};
+
+struct LOI2Man
+{
+	VESSEL* vessel;			//vessel
+	double GETbase;			//usually MJD at launch
+	double h_circ;			//altitude of circular orbit
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;				//State vector as input
+	bool csmlmdocked;		//0 = CSM alone, 1 = CSM/LM
+	double alt = 0.0;		//altitude of the landing site
 };
 
 struct DOIMan
@@ -436,7 +465,9 @@ public:
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);

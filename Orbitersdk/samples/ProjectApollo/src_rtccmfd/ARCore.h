@@ -44,7 +44,10 @@ public:
 	void EntryCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void LandingSiteUpdate();
+	void LandingSiteUplink();
 	void VecPointCalc();
+	void TerrainModelCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -85,12 +88,13 @@ public:
 	//GENERAL PARAMETERS
 	double GETbase;			//Launch MJD
 	double AGCEpoch;
-	int mission;			//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
-	OBJHANDLE gravref;		//Earth or Moon
-	double P30TIG;			//Maneuver GET
-	VECTOR3 dV_LVLH;		//LVLH maneuver vector
-	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
+	OBJHANDLE gravref;			//Earth or Moon
+	double P30TIG;				//Maneuver GET
+	VECTOR3 dV_LVLH;			//LVLH maneuver vector
+	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
+	double t_Land;				//Time of landing
 	bool inhibUplLOS;
 
 	//LAMBERT PAGE
@@ -156,6 +160,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	int svmode;		//0 = state vector, 1 = landing site update
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
@@ -183,7 +188,7 @@ public:
 	//LOI PAGE
 	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double LOIGET, LOIPeriGET, LOILat, LOILng;
-	double LOIapo, LOIperi, LOIinc;
+	double LOIapo, LOIperi, LOIazi;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
 	VECTOR3 R_TLI, V_TLI;
@@ -206,7 +211,7 @@ public:
 	double DOIGET;						//Initial guess for the DOI TIG
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
-	double DOI_t_PDI, DOI_t_L, DOI_CR;	//Time of PDI, time of landing, cross range at PDI
+	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -228,6 +233,10 @@ public:
 	VECTOR3 PC_dV_LVLH;
 	double PCEarliestGET;	//Initial guess for the PC TIG
 	double PC_TIG;			//Corrected PC TIG
+
+
+	//Terrain Model
+	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

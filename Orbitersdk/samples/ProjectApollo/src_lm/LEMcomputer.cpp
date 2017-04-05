@@ -112,9 +112,13 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Luminary116.bin";
 	}
-	else if (ApolloNo < 14)	// Luminary 131
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
 	{
 		binfile = "Config/ProjectApollo/Luminary131.bin";
+	}
+	else if (ApolloNo < 15)	// Luminary 210, modified for Apollo 14
+	{
+		binfile = "Config/ProjectApollo/Luminary210NBY71.bin";
 	}
 	else	//Luminary 210
 	{
@@ -149,7 +153,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
-		if (vagc.Erasable[0][05] != 04000) {
 			// Clear flip-flop based registers
 			vagc.Erasable[0][00] = 0;     // A
 			vagc.Erasable[0][01] = 0;     // L
@@ -182,6 +185,10 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.PendDelay = 0;
 			// Don't disturb erasable core
 			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+			// Reset standby flip-flop
+			vagc.Standby = 0;
+			// Reset fake DSKYChannel163
+			vagc.DskyChannel163 = 0;
 			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it
 			// Those two bits are what causes the CWEA to notice.
 			InputChannel[033] &= 017777;
@@ -191,8 +198,9 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.VoltageAlarm = 1;
+			vagc.RestartLight = 1;
 			dsky.LightRestart();
-		}
+
 		// and do nothing more.
 		return;
 	}
@@ -624,7 +632,6 @@ LMOptics::LMOptics() {
 	ReticleMoved = 0;
 	RetDimmer = 255;
 	KnobTurning = 0;
-	
 }
 
 void LMOptics::Init(LEM *vessel) {
@@ -643,7 +650,12 @@ void LMOptics::SystemTimestep(double simdt) {
 
 void LMOptics::TimeStep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
+
+	if (ReticleMoved)
+	{
+		sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
+	}
+
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
 }

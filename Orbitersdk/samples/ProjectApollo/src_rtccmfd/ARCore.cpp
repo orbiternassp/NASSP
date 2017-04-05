@@ -90,7 +90,6 @@ ARCore::ARCore(VESSEL* v)
 	{
 		mission = 10;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[mission - 7], 72.0*RAD);
-		AGCEpoch = 40586.767239;
 	}
 	else if (strcmp(v->GetName(), "Snoopy") == 0)
 	{
@@ -115,11 +114,35 @@ ARCore::ARCore(VESSEL* v)
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
 	}
+	else if (strcmp(v->GetName(), "Intrepid") == 0)
+	{
+		mission = 12;
+		vesseltype = 2;
+		AGCEpoch = 40586.767239;
+	}
+	else if (strcmp(v->GetName(), "Odyssey") == 0)
+	{
+		mission = 13;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 40586.767239;
+	}
+	else if (strcmp(v->GetName(), "Aquarius") == 0)
+	{
+		mission = 13;
+		vesseltype = 2;
+		AGCEpoch = 40586.767239;
+	}
 	else if (strcmp(v->GetName(), "Kitty Hawk") == 0)
 	{
 		mission = 14;
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 75.558*RAD);
-		AGCEpoch = 40586.767239;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.067*RAD);
+		AGCEpoch = 40952.009432;
+	}
+	else if (strcmp(v->GetName(), "Antares") == 0)
+	{
+		mission = 14;
+		vesseltype = 2;
+		AGCEpoch = 40952.009432;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
@@ -130,6 +153,30 @@ ARCore::ARCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
+		vesseltype = 2;
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Casper") == 0)
+	{
+		mission = 16;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Orion") == 0)
+	{
+		mission = 16;
+		vesseltype = 2;
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "America") == 0)
+	{
+		mission = 17;
+		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
+		AGCEpoch = 41317.251625;
+	}
+	else if (strcmp(v->GetName(), "Challenger") == 0)
+	{
+		mission = 17;
 		vesseltype = 2;
 		AGCEpoch = 41317.251625;
 	}
@@ -242,6 +289,7 @@ ARCore::ARCore(VESSEL* v)
 	manpad.Vc = 0.0;
 	manpad.pTrim = 0.0;
 	manpad.yTrim = 0.0;
+	manpad.LMWeight = 0.0;
 	lmmanpad.Att = _V(0, 0, 0);
 	lmmanpad.BSSStar = 0;
 	lmmanpad.burntime = 0.0;
@@ -282,6 +330,7 @@ ARCore::ARCore(VESSEL* v)
 	svtarget = NULL;
 	svtargetnumber = -1;
 	svtimemode = 0;
+	svmode = 0;
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
 	landingzone = 0;
@@ -296,7 +345,7 @@ ARCore::ARCore(VESSEL* v)
 	LOILng = 0.0;
 	LOIapo = 0.0;
 	LOIperi = 0.0;
-	LOIinc = 0.0;
+	LOIazi = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	TLCC_TIG = 0.0;
@@ -330,11 +379,17 @@ ARCore::ARCore(VESSEL* v)
 	DOI_dV_LVLH = _V(0, 0, 0);
 	DOI_TIG = 0.0;
 	DOI_t_PDI = 0.0;
-	DOI_t_L = 0.0;
+	t_Land = 0.0;
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
 
-	if (mission == 11)
+	if (mission == 8)
+	{
+		LSLat = 2.6317*RAD;
+		LSLng = 34.0253*RAD;
+		LSAlt = -0.82*1852.0;
+	}
+	else if (mission == 11)
 	{
 		LSLat = 0.71388888*RAD;
 		LSLng = 23.7077777*RAD;
@@ -357,6 +412,13 @@ ARCore::ARCore(VESSEL* v)
 	PC_dV_LVLH = _V(0, 0, 0);
 	PC_TIG = 0;
 	PCEarliestGET = 0;
+
+	TMLat = 0.0;
+	TMLng = 0.0;
+	TMAzi = 0.0;
+	TMDistance = 0.0;
+	TMStepSize = 0.0;
+	TMAlt = 0.0;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
@@ -727,6 +789,54 @@ void ARCore::MapUpdate()
 	}
 }
 
+void ARCore::LandingSiteUpdate()
+{
+	double lat, lng, rad;
+	svtarget->GetEquPos(lng, lat, rad);
+
+	LSLat = lat;
+	LSLng = lng;
+	LSAlt = rad - oapiGetSize(svtarget->GetGravityRef());
+}
+
+void ARCore::LandingSiteUplink()
+{
+	VECTOR3 R_P, R;
+	double r_0;
+
+	R_P = unit(_V(cos(LSLng)*cos(LSLat), sin(LSLng)*cos(LSLat), sin(LSLat)));
+	r_0 = oapiGetSize(svtarget->GetGravityRef());
+
+	R = R_P*(r_0 + LSAlt);
+
+	g_Data.emem[0] = 10;
+
+	if (vesseltype < 2)
+	{
+		g_Data.emem[1] = 2025;
+	}
+	else
+	{
+		if (mission < 15)
+		{
+			g_Data.emem[1] = 2022;
+		}
+		else
+		{
+			g_Data.emem[1] = 2020;
+		}
+	}
+
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
+	g_Data.emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
+	g_Data.emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
+	g_Data.emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
+	g_Data.emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
+	g_Data.emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
+
+	UplinkData(); // Go for uplink
+}
+
 void ARCore::StateVectorCalc()
 {
 	VECTOR3 R, V,R0B,V0B,R1B,V1B;
@@ -1033,8 +1143,8 @@ void ARCore::TLANDUplink(void)
 			g_Data.emem[1] = 2026;
 			g_Data.emem[3] = 2027;
 		}
-		g_Data.emem[2] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 1);
-		g_Data.emem[4] = OrbMech::DoubleToBuffer(DOI_t_L*100.0, 28, 0);
+		g_Data.emem[2] = OrbMech::DoubleToBuffer(t_Land*100.0, 28, 1);
+		g_Data.emem[4] = OrbMech::DoubleToBuffer(t_Land*100.0, 28, 0);
 
 		UplinkData2(); // Go for uplink
 	}
@@ -1215,6 +1325,56 @@ void ARCore::VecPointCalc()
 	VECangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
 }
 
+void ARCore::TerrainModelCalc()
+{
+	MATRIX3 Rot3, Rot4;
+	VECTOR3 R_P, UX10, UY10, UZ10, axis, R_loc;
+	double ang, r_0, anginc, dist, lat, lng, alt;
+	OBJHANDLE hMoon;
+
+	hMoon = oapiGetObjectByName("Moon");
+	ang = 0.0;
+	dist = 0.0;
+
+	R_P = unit(_V(cos(TMLng)*cos(TMLat), sin(TMLng)*cos(TMLat), sin(TMLat)));
+
+	TMAlt = oapiSurfaceElevation(hMoon, TMLng, TMLat);
+	r_0 = TMAlt + oapiGetSize(hMoon);
+	anginc = TMStepSize / r_0;
+
+	UX10 = R_P;
+	UY10 = unit(crossp(_V(0.0, 0.0, 1.0), UX10));
+	UZ10 = crossp(UX10, UY10);
+
+	Rot3 = _M(UX10.x, UX10.y, UX10.z, UY10.x, UY10.y, UY10.z, UZ10.x, UZ10.y, UZ10.z);
+	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(TMAzi), -sin(TMAzi), 0.0, sin(TMAzi), cos(TMAzi));
+
+	axis = mul(OrbMech::transpose_matrix(Rot3), mul(Rot4, _V(0.0, 1.0, 0.0)));
+
+
+	FILE *file = fopen("TerrainModel.txt", "w");
+
+	fprintf(file, "%f;%f\n", -dist, 0.0);
+
+	while (dist < TMDistance)
+	{
+		ang += anginc;
+		dist += TMStepSize;
+
+		R_loc = OrbMech::RotateVector(axis, -ang, R_P);
+		R_loc = unit(R_loc);
+
+		lat = atan2(R_loc.z, sqrt(R_loc.x*R_loc.x + R_loc.y*R_loc.y));
+		lng = atan2(R_loc.y, R_loc.x);
+
+		alt = oapiSurfaceElevation(hMoon, lng, lat);
+
+		fprintf(file, "%f;%f\n", -dist, alt - TMAlt);
+	}
+
+	if (file) fclose(file);
+}
+
 int ARCore::startSubthread(int fcn) {
 	if (subThreadStatus < 1) {
 		// Punt thread
@@ -1380,7 +1540,7 @@ int ARCore::subThread()
 				REFSMMAToct[1] = 1733;
 			}
 
-			if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+			if (mission >= 15)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
 			{
 				REFSMMAToct[1] -= 2;
 			}
@@ -1413,53 +1573,96 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
-		LOIMan opt;
-		double MJDcut;
-
-		opt.GETbase = GETbase;
-		opt.h_apo = LOIapo;
-		opt.h_peri = LOIperi;
-		opt.inc = LOIinc;
-		opt.lat = LOILat;
-		opt.lng = LOILng;
-		opt.man = LOImaneuver;
-		opt.MCCGET = LOIGET;
-		opt.PeriGET = LOIPeriGET;
-		opt.vessel = vessel;
-		opt.useSV = false;
-
-		if (vesseltype == 0 || vesseltype == 2)
+		if (LOImaneuver == 1 || LOImaneuver == 2)
 		{
-			opt.csmlmdocked = false;
-		}
-		else
-		{
-			opt.csmlmdocked = true;
-		}
+			LOIMan loiopt;
 
-		if (LOImaneuver == 0 || LOImaneuver == 4)
-		{
-			rtcc->LOITargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-		}
-		else if (LOImaneuver == 1)
-		{
-			SV RV1, RV2;
+			loiopt.GETbase = GETbase;
+			loiopt.h_apo = LOIapo;
+			loiopt.h_peri = LOIperi;
+			loiopt.lat = LSLat;
+			loiopt.lng = LSLng;
+			loiopt.alt = LSAlt;
+			loiopt.t_land = t_Land;
+			loiopt.azi = LOIazi;
+			loiopt.vessel = vessel;
 
-			RV1 = rtcc->StateVectorCalc(vessel);
-			RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				loiopt.csmlmdocked = false;
+			}
+			else
+			{
+				loiopt.csmlmdocked = true;
+			}
 
-			opt.useSV = true;
-			opt.RV_MCC = RV2;
+			if (LOImaneuver == 1)
+			{
+				SV RV1, RV2;
 
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
-		}
-		else
-		{
-			rtcc->LOITargeting(&opt, LOI_dV_LVLH, LOI_TIG, R_TLI, V_TLI, MJDcut);
+				RV1 = rtcc->StateVectorCalc(vessel);
+				RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
+
+				loiopt.useSV = true;
+				loiopt.RV_MCC = RV2;
+			}
+
+			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
+
+		}
+		else if (LOImaneuver == 3)
+		{
+			LOI2Man opt;
+
+			opt.alt = LSAlt;
+			opt.GETbase = GETbase;
+			opt.h_circ = LOIperi;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			rtcc->LOI2Targeting(&opt, LOI_dV_LVLH, LOI_TIG);
+			P30TIG = LOI_TIG;
+			dV_LVLH = LOI_dV_LVLH;
+		}
+		else
+		{
+			MCCMan opt;
+			double MJDcut;
+
+			opt.GETbase = GETbase;
+			opt.h_apo = LOIapo;
+			opt.h_peri = LOIperi;
+			opt.lat = LOILat;
+			opt.lng = LOILng;
+			opt.man = LOImaneuver;
+			opt.MCCGET = LOIGET;
+			opt.PeriGET = LOIPeriGET;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
 		}
 
 		Result = 0;
@@ -1578,6 +1781,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11ManeuverPAD(&opt, manpad);
 		}
@@ -1593,6 +1797,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
+			opt.alt = LSAlt;
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
@@ -1620,7 +1825,7 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.N = DOI_N;
 
-		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, DOI_t_L, DOI_CR);
+		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;
