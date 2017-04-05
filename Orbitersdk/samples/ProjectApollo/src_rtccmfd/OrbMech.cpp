@@ -2314,6 +2314,16 @@ void latlong_from_r(VECTOR3 R, double &lat, double &lng)
 	lng = atan2(u.y, u.x);
 }
 
+VECTOR3 r_from_latlong(double lat, double lng)
+{
+	return unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
+}
+
+VECTOR3 r_from_latlong(double lat, double lng, double r)
+{
+	return r_from_latlong(lat, lng)*r;
+}
+
 bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt)
 {
 	double v1, dt_old,h, e, theta0,a,T,n, E_0, t_0, E_1, t_f, R_E, dt_max, rev, T_p, mu;
@@ -4198,6 +4208,28 @@ VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM nou
 	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
 	expmat = mul(summat, csmmat);
 	return OrbMech::CALCGTA(mul(OrbMech::transpose_matrix(expmat), lmmat));
+}
+
+MATRIX3 EMPMatrix(double MJD)
+{
+	VECTOR3 R_EM, V_EM, X, Y, Z;
+	double *MoonPos;
+	MoonPos = new double[12];
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	CELBODY *cMoon;
+
+	cMoon = oapiGetCelbodyInterface(hMoon);
+
+	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
+
+	R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+	V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+
+	X = unit(-R_EM);
+	Z = unit(crossp(unit(R_EM), unit(V_EM)));
+	Y = unit(crossp(Z, X));
+
+	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
 }
 
 }

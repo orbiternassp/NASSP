@@ -4938,6 +4938,15 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		dt2 = opt->PeriGET - opt->MCCGET;
 		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt1, RA1, VA1, gravref, outplanet);
 
+		SV sv_MCC;
+
+		sv_MCC.R = RA1;
+		sv_MCC.V = VA1;
+		sv_MCC.gravref = outplanet;
+		sv_MCC.MJD = SVMJD + dt1 / 24.0 / 3600.0;
+
+		TLMC(sv_MCC, 5.67822*RAD, oapiGetSize(hMoon) + 60.0*1852.0, PeriMJD);
+
 		V_peri = OrbMech::Vinti(R_peri, _V(0.0,0.0,0.0), RA1, SVMJD + (dt1 + dt2) / 24.0 / 3600.0, -dt2, 0, false, hMoon, hMoon, outplanet, _V(0.0, 0.0, 0.0));
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, outplanet);
@@ -6953,4 +6962,48 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	res->dV_LVLH = mul(Q_Xx, Llambda);
 
 	return true;
+}
+
+void RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P)
+{
+	MATRIX3 M_EMP;
+	VECTOR3 R_EMP, R_peri, V_peri;
+	double lng_EMP, dt, mu, MJD_N, ddt;
+	OBJHANDLE hMoon;
+	OELEMENTS coe;
+
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	V_peri = _V(0, 0, 0);
+	ddt = 1.0;
+	MJD_N = MJD_P;
+
+	//EMP longitude of 180°
+	lng_EMP = PI;
+
+	dt = (MJD_P - sv_mcc.MJD)*24.0*3600.0;
+
+	while (abs(ddt) > 0.1)
+	{
+		//Position vector in EMP Coordinates
+		R_EMP = OrbMech::r_from_latlong(lat_EMP, lng_EMP, r_peri);
+
+		//EMP Matrix
+		M_EMP = OrbMech::EMPMatrix(MJD_N);
+
+		//Convert EMP position to ecliptic
+		R_peri = tmul(M_EMP, -R_EMP);
+
+		//Calculate pericynthion velocity
+		V_peri = OrbMech::Vinti(R_peri, _V(0.0, 0.0, 0.0), sv_mcc.R, MJD_N, -dt, 0, false, hMoon, hMoon, sv_mcc.gravref, V_peri);
+
+		coe = OrbMech::coe_from_sv(R_peri, V_peri, mu);
+		ddt = OrbMech::timetoperi(R_peri, V_peri, mu);
+
+		//modify dt
+		dt += ddt;
+		MJD_N += ddt / 24.0 / 3600.0;
+		//lng_EMP += coe.TA;
+	}
 }
