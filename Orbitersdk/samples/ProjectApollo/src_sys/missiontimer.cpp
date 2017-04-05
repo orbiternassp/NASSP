@@ -26,8 +26,10 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #include "soundlib.h"
 #include "nasspsound.h"
@@ -39,10 +41,12 @@ MissionTimer::MissionTimer()
 
 {
 	Reset();
+	srand(time(NULL));
 
 	Running = false;
 	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
+	TrippedTrashCan = false;
 }
 
 MissionTimer::~MissionTimer()
@@ -58,6 +62,15 @@ void MissionTimer::Reset()
 	minutes = 0;
 	seconds = 0;
 	extra = 0.0;
+}
+
+void MissionTimer::Garbage()
+
+{
+	hours = rand() % 1000;
+	minutes = rand() % 60;
+	seconds = rand() % 60;
+	TrippedTrashCan = true;
 }
 
 void MissionTimer::UpdateHours(int n)
@@ -131,8 +144,15 @@ void MissionTimer::UpdateSeconds(int n)
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
-	if (!IsPowered())
+	sprintf(oapiDebugString(), "MissionTimer status. Running: %d Garbage: %d Enabled: %d Powered: %d", Running, TrippedTrashCan, Enabled, IsPowered());
+	if (!IsPowered()) {
+		if (!TrippedTrashCan) {
+			Garbage();
+		}
 		return;
+	}
+
+	TrippedTrashCan = false;
 
 	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();

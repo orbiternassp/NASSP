@@ -33,6 +33,7 @@ public:
 	virtual ~MissionTimer();
 
 	void Timestep(double simt, double deltat);
+	void SystemTimestep(double simt, double deltat);
 
 	void SetTime(double t);
 	double GetTime();
@@ -41,6 +42,7 @@ public:
 	void UpdateHours(int n);
 	void UpdateSeconds(int n);
 	void Reset();
+	void Garbage();
 	void SetRunning(bool run) { Running = run; };
 	bool IsRunning() { return Running; };
 	void SetEnabled(bool run) { Enabled = run; };
@@ -66,6 +68,7 @@ protected:
 
 	bool Running;
 	bool Enabled;
+	bool TrippedTrashCan;
 	int CountUp;
 
 	//
