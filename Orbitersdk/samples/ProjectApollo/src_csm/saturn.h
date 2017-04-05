@@ -3797,7 +3797,6 @@ protected:
 	bool ASTPMission;
 
 	double DockAngle;
-	double SeparationSpeed;
 
 	double AtempP;
 	double AtempY;

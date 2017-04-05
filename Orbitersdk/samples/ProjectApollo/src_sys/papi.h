@@ -181,16 +181,6 @@ static inline double papiCameraAperture() {
 	return *pfov;
 }
 
-static inline double papiGetAltitude(VESSEL *vessel) {
-
-	char buffer[255];
-	double lon, lat, rad;
-
-	oapiGetObjectName(vessel->GetGravityRef(), buffer, 255);
-	vessel->GetEquPos(lon, lat, rad);
-	return vessel->GetAltitude() - VSGetAbsMaxElvLoc(buffer, lat, lon);
-}
-
 static inline void papiWriteScenario_intarr(FILEHANDLE scn, char *item, int *v, int len) {
 
 	char buffer[256], buffer2[256];
