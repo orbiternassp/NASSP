@@ -258,8 +258,6 @@ LEM::~LEM()
 void LEM::Init()
 
 {
-	RCS_Full=true;
-	Eds=true;	
 	toggleRCS =false;
 
 	DebugLineClearTimer = 0;
@@ -1081,11 +1079,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf (line+8, "%d", &SwitchState);
 			SetLPSwitchState(SwitchState);
 		} 
-		else if (!strnicmp (line, "RPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetRPSwitchState(SwitchState);
-		} 
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
@@ -1461,7 +1454,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
-	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
