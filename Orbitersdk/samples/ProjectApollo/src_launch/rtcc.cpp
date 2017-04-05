@@ -720,10 +720,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
 	{
-		MCCMan opt;
+		LOI2Man opt;
 		AP11ManPADOpt manopt;
-		double GETbase, P30TIG, tcut;
-		VECTOR3 dV_LVLH, Rcut, Vcut;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
 		SV sv;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -732,13 +732,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
+		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
-		opt.h_peri = 60.0*1852.0;
-		opt.man = 3;
+		opt.h_circ = 60.0*1852.0;
 		opt.vessel = calcParams.src;
 
-		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, Rcut, Vcut, tcut);
+		LOI2Targeting(&opt, dV_LVLH, P30TIG);
 
 		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
