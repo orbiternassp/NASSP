@@ -34,6 +34,7 @@
 
 #include "powersource.h"
 #include "missiontimer.h"
+#include "papi.h"
 
 MissionTimer::MissionTimer()
 
@@ -221,6 +222,27 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+}
+
+void MissionTimer::SaveState(FILEHANDLE scn) {
+	papiWriteScenario_double(scn, "MTD", GetTime());
+	oapiWriteLine(scn, MISSIONTIMER_END_STRING);
+}
+
+void MissionTimer::LoadState(FILEHANDLE scn) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	float ftcp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, MISSIONTIMER_END_STRING, sizeof(MISSIONTIMER_END_STRING))) {
+			break;
+		}
+		if (!strnicmp(line, "MTD", 3)) {
+			sscanf(line + 3, "%f", &ftcp);
+			SetTime(ftcp);
+		}
+	}
 }
 
 void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)

@@ -26,6 +26,10 @@
 #if !defined(_PA_MISSIONTIMER_H)
 #define _PA_MISSIONTIMER_H
 
+#define MISSIONTIMER_2_START_STRING "MISSIONTIMER2_START"
+#define MISSIONTIMER_306_START_STRING "MISSIONTIMER306_START"
+#define MISSIONTIMER_END_STRING "MISSIONTIMER_END"
+
 class MissionTimer : public e_object {
 
 public:
@@ -33,6 +37,8 @@ public:
 	virtual ~MissionTimer();
 
 	void Timestep(double simt, double deltat);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
 	void SetTime(double t);
 	double GetTime();

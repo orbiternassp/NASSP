@@ -1280,7 +1280,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
 	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
-	papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
+	//papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
 	papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
@@ -1502,6 +1502,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ascp.SaveState(scn);
 	ems.SaveState(scn);
 	ordeal.SaveState(scn);
+
+	oapiWriteLine(scn, MISSIONTIMER_2_START_STRING);
+	MissionTimerDisplay.SaveState(scn);
+
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
@@ -2505,6 +2509,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			rjec.LoadState(scn);
 		} else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
+		} else if (!strnicmp(line, MISSIONTIMER_2_START_STRING, sizeof(MISSIONTIMER_2_START_STRING))) {
+			MissionTimerDisplay.LoadState(scn);
 		} else {
 			found = false;
 		}
