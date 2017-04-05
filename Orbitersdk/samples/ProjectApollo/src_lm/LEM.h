@@ -712,7 +712,6 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	void AttitudeLaunch1();
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
@@ -757,16 +756,7 @@ protected:
 
 	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
 
-	double actualVEL;
-	double actualALT;
 	double actualFUEL;
-	double aVAcc;
-	double aVSpeed;
-	double aHAcc;
-	double ALTN1;
-	double SPEEDN1;
-	double VSPEEDN1;
-	double aTime;
 	double AtempP ;
 	double AtempY ;
 	double AtempR ;
