@@ -6993,7 +6993,7 @@ void RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P)
 		M_EMP = OrbMech::EMPMatrix(MJD_N);
 
 		//Convert EMP position to ecliptic
-		R_peri = tmul(M_EMP, -R_EMP);
+		R_peri = tmul(M_EMP, R_EMP);
 
 		//Calculate pericynthion velocity
 		V_peri = OrbMech::Vinti(R_peri, _V(0.0, 0.0, 0.0), sv_mcc.R, MJD_N, -dt, 0, false, hMoon, hMoon, sv_mcc.gravref, V_peri);
@@ -7002,8 +7002,15 @@ void RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P)
 		ddt = OrbMech::timetoperi(R_peri, V_peri, mu);
 
 		//modify dt
-		dt += ddt;
-		MJD_N += ddt / 24.0 / 3600.0;
-		//lng_EMP += coe.TA;
+		//dt += ddt;
+		//MJD_N += ddt / 24.0 / 3600.0;
+		if (coe.TA > PI)
+		{
+			lng_EMP += coe.TA - PI2;
+		}
+		else
+		{
+			lng_EMP += coe.TA;
+		}
 	}
 }
