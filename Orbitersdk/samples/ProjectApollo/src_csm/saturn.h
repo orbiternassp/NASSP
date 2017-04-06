@@ -503,6 +503,8 @@ public:
 		SRF_CWS_GNLIGHTS,
 		SRF_BORDER_45x49,
 		SRF_BORDER_28x32,
+		SRF_EVENT_TIMER_DIGITS90,
+		SRF_DIGITAL90,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1442,11 +1444,24 @@ protected:
 	MissionTimer MissionTimerDisplay;
 
 	///
+	/// Mission Timer display on panel 306.
+	/// \brief Panel 306 Mission Timer display.
+	///
+	MissionTimer MissionTimer306Display;
+
+	///
 	/// Event Timer display on control panel.
 	/// \brief Event Timer display.
 	///
 	EventTimer EventTimerDisplay;
 	SaturnEventTimer SaturnEventTimerDisplay;	//Dummy for checklist controller
+
+	///
+	/// Event Timer display on panel 306.
+	/// \brief Panel 306 Event Timer display.
+	///
+	EventTimer EventTimer306Display;
+	SaturnEventTimer SaturnEventTimer306Display;	//Dummy for checklist controller
 	
 	//
 	// Center engine shutdown times for first and
@@ -3098,6 +3113,11 @@ protected:
 	SwitchRow Panel306Row;
 	EventTimerResetSwitch EventTimerUpDown306Switch;
 	EventTimerControlSwitch EventTimerControl306Switch;
+	TimerUpdateSwitch EventTimer306MinutesSwitch;
+	TimerUpdateSwitch EventTimer306SecondsSwitch;
+	TimerUpdateSwitch MissionTimer306HoursSwitch;
+	TimerUpdateSwitch MissionTimer306MinutesSwitch;
+	TimerUpdateSwitch MissionTimer306SecondsSwitch;
 
 	SwitchRow MissionTimer306SwitchRow;
 	TimerControlSwitch MissionTimer306Switch;

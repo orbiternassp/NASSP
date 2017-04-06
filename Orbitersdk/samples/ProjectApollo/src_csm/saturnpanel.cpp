@@ -404,6 +404,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_TELESCOPECOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_TELESCOPECOVER));	
 	srf[SRF_CSM_SEXTANTCOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_SEXTANTCOVER));
 	srf[SRF_CWS_GNLIGHTS]      						= oapiCreateSurface (LOADBMP (IDB_CWS_GNLIGHTS));
+	srf[SRF_EVENT_TIMER_DIGITS90]					= oapiCreateSurface (LOADBMP (IDB_EVENT_TIMER90));
+	srf[SRF_DIGITAL90]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL90));
 
 	//
 	// Flashing borders.
@@ -1198,7 +1200,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_FOOD_PREPARATION_WATER,				_R(1164, 1044, 1419, 1162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_306,						_R(1093, 1410, 1123, 1720), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_306_MISSIONTIMERSWITCH,	_R(1211, 1619, 1240, 1650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_EVENT_TIMER306,						_R(1185, 1431, 1203, 1502), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK306,					_R(1302, 1411, 1325, 1554), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -3110,13 +3115,19 @@ void Saturn::SetSwitches(int panel) {
 	FoodPreparationWaterColdLever.Init(137, 0, 118, 118, srf[SRF_CSM_FOOT_PREP_WATER_LEVER], srf[SRF_BORDER_118x118], FoodPreparationWaterLeversRow);
 
 	Panel306Row.Init(AID_CSM_PANEL_306, MainPanel);
-	/// \todo set event timer parameter when available
-	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL); 
-	EventTimerControl306Switch.Init(0, 46, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL);
+	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, &EventTimer306Display);
+	EventTimerUpDown306Switch.SetDelayTime(1);
+	EventTimerControl306Switch.Init(0, 46, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, &EventTimer306Display);
+	EventTimerControl306Switch.SetDelayTime(1);
+	EventTimer306MinutesSwitch.Init(0, 92, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_MINUTES, &EventTimer306Display);
+	EventTimer306SecondsSwitch.Init(0, 138, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_SECONDS, &EventTimer306Display);
+	SaturnEventTimer306Display.Init(Panel306Row, this); 	// dummy switch/display for checklist controller
+	MissionTimer306HoursSwitch.Init(0, 184, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_HOURS, &MissionTimer306Display);
+	MissionTimer306MinutesSwitch.Init(0, 230, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_MINUTES, &MissionTimer306Display);
+	MissionTimer306SecondsSwitch.Init(0, 276, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_SECONDS, &MissionTimer306Display);
 
 	MissionTimer306SwitchRow.Init(AID_CSM_PANEL_306_MISSIONTIMERSWITCH, MainPanel);
-	/// \todo set mission timer parameter when available
-	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, NULL); 
+	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, &MissionTimer306Display);
 
 
 	/////////////////
@@ -4628,8 +4639,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL2], true);
 		return true;
 
+	case AID_MISSION_CLOCK306:
+		MissionTimer306Display.Render90(surf, srf[SRF_DIGITAL90], true);
+		return true;
+
 	case AID_EVENT_TIMER:
 		EventTimerDisplay.Render(surf, srf[SRF_EVENT_TIMER_DIGITS]);
+		return true;
+
+	case AID_EVENT_TIMER306:
+		EventTimer306Display.Render90(surf, srf[SRF_EVENT_TIMER_DIGITS90]);
 		return true;
 
 	case AID_ALTIMETER:
@@ -5933,6 +5952,18 @@ void Saturn::InitSwitches() {
 	EventTimerUpDown306Switch.SetSideways(true);
 	EventTimerControl306Switch.Register(PSH, "EventTimerControl306Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerControl306Switch.SetSideways(true);
+	EventTimer306MinutesSwitch.Register(PSH, "EventTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	EventTimer306MinutesSwitch.SetSideways(true);
+	EventTimer306SecondsSwitch.Register(PSH, "EventTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	EventTimer306SecondsSwitch.SetSideways(true);
+	SaturnEventTimer306Display.Register(PSH, "SaturnEventTimer306Display", 0, 0, 0);	// dummy switch/display for checklist controller
+	MissionTimer306HoursSwitch.Register(PSH, "MissionTimer306HoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306HoursSwitch.SetSideways(true);
+	MissionTimer306MinutesSwitch.Register(PSH, "MissionTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306MinutesSwitch.SetSideways(true);
+	MissionTimer306SecondsSwitch.Register(PSH, "MissionTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306SecondsSwitch.SetSideways(true);
+	
 	MissionTimer306Switch.Register(PSH, "MissionTimer306Switch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN); // Default state UP is correct!
 	MissionTimer306Switch.SetSideways(true);
 
