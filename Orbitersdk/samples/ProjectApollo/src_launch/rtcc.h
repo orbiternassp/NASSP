@@ -486,7 +486,7 @@ public:
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
-	void TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P);
+	void TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P, VECTOR3 &R_peri, VECTOR3 &V_peri);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

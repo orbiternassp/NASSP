@@ -4945,9 +4945,9 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		sv_MCC.gravref = outplanet;
 		sv_MCC.MJD = SVMJD + dt1 / 24.0 / 3600.0;
 
-		TLMC(sv_MCC, 5.67822*RAD, oapiGetSize(hMoon) + 60.0*1852.0, PeriMJD);
+		TLMC(sv_MCC, -5.67822*RAD, oapiGetSize(hMoon) + 60.0*1852.0, PeriMJD, R_peri, V_peri);
 
-		V_peri = OrbMech::Vinti(R_peri, _V(0.0,0.0,0.0), RA1, SVMJD + (dt1 + dt2) / 24.0 / 3600.0, -dt2, 0, false, hMoon, hMoon, outplanet, _V(0.0, 0.0, 0.0));
+		//V_peri = OrbMech::Vinti(R_peri, _V(0.0,0.0,0.0), RA1, SVMJD + (dt1 + dt2) / 24.0 / 3600.0, -dt2, 0, false, hMoon, hMoon, outplanet, _V(0.0, 0.0, 0.0));
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, outplanet);
 
@@ -6964,10 +6964,10 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	return true;
 }
 
-void RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P)
+void RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P, VECTOR3 &R_peri, VECTOR3 &V_peri)
 {
 	MATRIX3 M_EMP;
-	VECTOR3 R_EMP, R_peri, V_peri;
+	VECTOR3 R_EMP;//, R_peri, V_peri;
 	double lng_EMP, dt, mu, MJD_N, ddt;
 	OBJHANDLE hMoon;
 	OELEMENTS coe;
