@@ -752,6 +752,9 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->EventTimerDisplay.Reset();
 					owner->EventTimerDisplay.SetEnabled(true);
 					owner->EventTimerDisplay.SetRunning(true);
+					owner->EventTimer306Display.Reset();
+					owner->EventTimer306Display.SetEnabled(true);
+					owner->EventTimer306Display.SetRunning(true);
 					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;
