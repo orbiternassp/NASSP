@@ -214,7 +214,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.InputChannel[033] &= 017777;				
 				OutputChannel[033] &= 017777;				
 				vagc.Ch33Switches &= 017777;
-				// Also, simulate the operation of the VOLTAGE ALARM, turn off STABY and RESTART light while power is off.
+				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 				// The RESTART light will come on as soon as the AGC receives power again.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;

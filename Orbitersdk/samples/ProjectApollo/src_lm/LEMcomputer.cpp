@@ -189,13 +189,13 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.Standby = 0;
 			// Reset fake DSKYChannel163
 			vagc.DskyChannel163 = 0;
-			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.
+			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
 			InputChannel[033] &= 017777;
 			vagc.InputChannel[033] &= 017777;
 			OutputChannel[033] &= 017777;
 			vagc.Ch33Switches &= 017777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STABY and RESTART light while power is off.
+			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.VoltageAlarm = 1;
