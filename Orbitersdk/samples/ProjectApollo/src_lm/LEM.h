@@ -712,7 +712,6 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	void AttitudeLaunch1();
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
@@ -752,21 +751,10 @@ protected:
 	void SetSSwitchState(int s);
 	int GetLPSwitchState();
 	void SetLPSwitchState(int s);
-	int GetRPSwitchState();
-	void SetRPSwitchState(int s);
 
 	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
 
-	double actualVEL;
-	double actualALT;
 	double actualFUEL;
-	double aVAcc;
-	double aVSpeed;
-	double aHAcc;
-	double ALTN1;
-	double SPEEDN1;
-	double VSPEEDN1;
-	double aTime;
 	double AtempP ;
 	double AtempY ;
 	double AtempR ;
@@ -1232,9 +1220,6 @@ protected:
 	ThreePosSwitch CDRCOASSwitch;
 
 
-	bool RCS_Full;
-	bool Eds;
-
 	bool toggleRCS;
 
 	bool Cswitch1;
@@ -1256,23 +1241,6 @@ protected:
 	bool Sswitch7;
 	bool Sswitch8;
 	bool Sswitch9;
-
-	bool RPswitch1;
-	bool RPswitch2;
-	bool RPswitch3;
-	bool RPswitch4;
-	bool RPswitch5;
-	bool RPswitch6;
-	bool RPswitch7;
-	bool RPswitch8;
-	bool RPswitch9;
-	bool RPswitch10;
-	bool RPswitch11;
-	bool RPswitch12;
-	bool RPswitch13;
-	bool RPswitch14;
-	bool RPswitch15;
-	bool RPswitch16;
 
 	bool LPswitch1;
 	bool LPswitch2;
@@ -1305,16 +1273,6 @@ protected:
 	bool AFEED4switch;
 
 	bool LDGswitch;
-
-	bool ED1switch;
-	bool ED2switch;
-	bool ED4switch;
-	bool ED5switch;
-	bool ED6switch;
-
-	bool ED7switch;
-	bool ED8switch;
-	bool ED9switch;
 
 	bool GMBLswitch;
 

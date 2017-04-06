@@ -258,8 +258,6 @@ LEM::~LEM()
 void LEM::Init()
 
 {
-	RCS_Full=true;
-	Eds=true;	
 	toggleRCS =false;
 
 	DebugLineClearTimer = 0;
@@ -453,87 +451,6 @@ void LEM::LoadDefaultSounds()
     sevent.InitDirectSound(soundlib);
 #endif
 	SoundsLoaded = true;
-}
-
-void LEM::AttitudeLaunch1()
-{
-	//Original code function by Richard Craig From MErcury Sample by Rob CONLEY
-	// Modification for NASSP specific needs by JL Rocca-Serra
-	VECTOR3 ang_vel;
-	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
-// variables to store each component deflection vector	
-	VECTOR3 rollvectorl={0.0,0.0,0.0};
-	VECTOR3 rollvectorr={0.0,0.0,0.0};
-	VECTOR3 pitchvector={0.0,0.0,0.0};
-	VECTOR3 yawvector={0.0,0.0,0.0};
-	VECTOR3 yawvectorm={0.0,0.0,0.0};
-	VECTOR3 pitchvectorm={0.0,0.0,0.0};
-//************************************************************
-// variables to store Manual control levels for each axis
-	double tempP = 0.0;
-	double tempY = 0.0;
-	double tempR = 0.0; 
-//************************************************************
-// Variables to store correction factors for rate control
-	double rollcorrect = 0.0;
-	double yawcorrect= 0.0;
-	double pitchcorrect = 0.0;
-//************************************************************
-// gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas	
-	if (GMBLswitch){
-		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-	}
-	if (GMBLswitch){
-		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-	}
-	
-	
-	//sprintf (oapiDebugString(), "roll input: %f, roll vel: %f,pitch input: %f, pitch vel: %f", tempR, ang_vel.z,tempP, ang_vel.x);
-	
-//*************************************************************
-//Creates correction factors for rate control in each axis as a function of input level
-// and current angular velocity. Varies from 1 to 0 as angular velocity approaches command level
-// multiplied by maximum rate desired
-	if(tempR != 0.0)	{
-		rollcorrect = (1/(fabs(tempR)*0.175))*((fabs(tempR)*0.175)-fabs(ang_vel.z));
-			if((tempR > 0 && ang_vel.z > 0) || (tempR < 0 && ang_vel.z < 0))	{
-						rollcorrect = 1;
-					}
-	}
-	if(tempP != 0.0)	{
-		pitchcorrect = (1/(fabs(tempP)*0.275))*((fabs(tempP)*0.275)-fabs(ang_vel.x));
-		if((tempP > 0 && ang_vel.x > 0) || (tempP < 0 && ang_vel.x < 0))	{
-						pitchcorrect = 1;
-					}
-	}
-	
-//*************************************************************	
-// Create deflection vectors in each axis
-	pitchvector = _V(0.0,0.0,0.05*tempP*pitchcorrect);
-	pitchvectorm = _V(0.0,0.0,-0.2*tempP*pitchcorrect);
-	yawvector = _V(0.05*tempY*yawcorrect,0.0,0.0);
-	yawvectorm = _V(0.05*tempY*yawcorrect,0.0,0.0);
-	rollvectorl = _V(0.0,0.60*tempR*rollcorrect,0.0);
-	rollvectorr = _V(0.60*tempR*rollcorrect,0.0,0.0);
-
-//*************************************************************
-// create opposite vectors for "gyro stabilization" if command levels are 0
-	if(tempP==0.0 && GMBLswitch) {
-		pitchvectorm=_V(0.0,0.0,-0.8*ang_vel.x*3);
-	}
-	if(tempR==0.0 && GMBLswitch) {
-		
-		rollvectorr=_V(0.8*ang_vel.z*3,0.0,0.0);
-	}
-	
-//**************************************************************	
-// Sets thrust vectors by simply adding up all the axis deflection vectors and the 
-// "neutral" default vector
-	SetThrusterDir(th_hover[0],pitchvectorm+rollvectorr+_V( 0,1,0));//4
-	SetThrusterDir(th_hover[1],pitchvectorm+rollvectorr+_V( 0,1,0));
-
-//	sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempP, ang_vel.z);
-
 }
 
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
@@ -878,37 +795,11 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
-	actualALT = GetAltitude() ;
-	if (actualALT < 1470){
-		actualVEL = actualVEL-1470+actualALT;
-	}
-	if (GroundContact()){
-	actualVEL =0;
-	}
 	if (status !=0 && Sswitch2){
 				bManualSeparate = true;
 	}
-	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;	
-	double dTime,aSpeed,DV,aALT,DVV,DVA;//aVAcc;aHAcc;ALTN1;SPEEDN1;aTime aVSpeed;
-		aSpeed = actualVEL/3600*1000;
-		aALT=actualALT;
-		dTime=simt-aTime;
-		if(dTime > 0.1){
-			DV= aSpeed - SPEEDN1;
-			aHAcc= (DV / dTime);
-			DVV = aALT - ALTN1;
-			aVSpeed = DVV / dTime;
-			DVA = aVSpeed- VSPEEDN1;
-			
+	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
 
-			aVAcc=(DVA/ dTime);
-			aTime = simt;
-			VSPEEDN1 = aVSpeed;
-			ALTN1 = aALT;
-			SPEEDN1= aSpeed;
-		}
-	//AttitudeLaunch1();
 	if( toggleRCS){
 			if(P44switch){
 			SetAttitudeMode(2);
@@ -984,7 +875,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			bToggleHatch=false;
 		}
 
-		double vsAlt = papiGetAltitude(this);
+		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED
@@ -1006,7 +897,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		// This does an abort stage if the descent stage runs out of fuel,
 		// probably should start P71
 		//
-		if (GetPropellantMass(ph_Dsc)<=50 && actualALT > 10){
+		if (GetPropellantMass(ph_Dsc)<=50){
 			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
@@ -1187,11 +1078,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             SwitchState = 0;
 			sscanf (line+8, "%d", &SwitchState);
 			SetLPSwitchState(SwitchState);
-		} 
-		else if (!strnicmp (line, "RPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetRPSwitchState(SwitchState);
 		} 
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
@@ -1568,7 +1454,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
-	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());

@@ -26,6 +26,13 @@
 #if !defined(_PA_MISSIONTIMER_H)
 #define _PA_MISSIONTIMER_H
 
+#define MISSIONTIMER_2_START_STRING "MISSIONTIMER2_START"
+#define MISSIONTIMER_306_START_STRING "MISSIONTIMER306_START"
+#define MISSIONTIMER_END_STRING "MISSIONTIMER_END"
+#define EVENTTIMER_2_START_STRING "EVENTTIMER2_START"
+#define EVENTTIMER_306_START_STRING "EVENTTIMER306_START"
+#define EVENTTIMER_END_STRING "EVENTTIMER_END"
+
 class MissionTimer : public e_object {
 
 public:
@@ -33,6 +40,8 @@ public:
 	virtual ~MissionTimer();
 
 	void Timestep(double simt, double deltat);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetTime(double t);
 	double GetTime();
@@ -53,6 +62,7 @@ public:
 	bool IsPowered() { return Voltage() > 25.0; };
 
 	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
+	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
 
 protected:
 	//
@@ -81,6 +91,7 @@ class EventTimer: public MissionTimer {
 public:
 	EventTimer();
 	void Render(SURFHANDLE surf, SURFHANDLE digits);
+	void Render90(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 };

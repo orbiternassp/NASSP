@@ -365,7 +365,6 @@ void Saturn::initSaturn()
 	J2IsActive = true;
 
 	DockAngle = 0;
-	SeparationSpeed = 0;
 
 	AtempP  = 0;
 	AtempY  = 0;
@@ -521,7 +520,9 @@ void Saturn::initSaturn()
 	//
 
 	MissionTimerDisplay.WireTo(&GaugePower);
+	MissionTimer306Display.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
+	EventTimer306Display.WireTo(&GaugePower);
 
 	//
 	// Configure connectors.
@@ -1216,18 +1217,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// dV because of staging
-	//
-
-	if (SeparationSpeed > 0) {
-		// For unknown reasons we need twice the force. 
-		// This may be related to the staging event.
-		double F = 2. * GetMass() * SeparationSpeed / simdt;
-		AddForce(_V(0, 0, F), _V(0,0,0));
-		SeparationSpeed = 0;
-	}
-
-	//
 	// Subclass specific handling
 	//
 
@@ -1293,8 +1282,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
 	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
-	papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
-	papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
+	//papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
+	//papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
 	papiWriteScenario_double (scn, "SIVBCUTOFFTIME", SIVBCutoffTime);
@@ -1515,6 +1504,12 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ascp.SaveState(scn);
 	ems.SaveState(scn);
 	ordeal.SaveState(scn);
+
+	MissionTimerDisplay.SaveState(scn, MISSIONTIMER_2_START_STRING, MISSIONTIMER_END_STRING);
+	MissionTimer306Display.SaveState(scn, MISSIONTIMER_306_START_STRING, MISSIONTIMER_END_STRING);
+	EventTimerDisplay.SaveState(scn, EVENTTIMER_2_START_STRING, EVENTTIMER_END_STRING);
+	EventTimer306Display.SaveState(scn, EVENTTIMER_306_START_STRING, EVENTTIMER_END_STRING);
+
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
@@ -1612,11 +1607,11 @@ int Saturn::GetMainState()
 {
 	MainState state;
 
-	state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
-	state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
-	state.EventTimerRunning = EventTimerDisplay.IsRunning();
-	state.EventTimerEnabled = EventTimerDisplay.IsEnabled();
-	state.EventTimerCountUp = EventTimerDisplay.GetCountUp();
+	//state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	//state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+	//state.EventTimerRunning = EventTimerDisplay.IsRunning();
+	//state.EventTimerEnabled = EventTimerDisplay.IsEnabled();
+	//state.EventTimerCountUp = EventTimerDisplay.GetCountUp();
 	state.SIISepState = SIISepState;
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
@@ -1654,6 +1649,8 @@ void Saturn::SetMainState(int s)
 	MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
 	EventTimerDisplay.SetRunning(state.EventTimerRunning != 0);
 	EventTimerDisplay.SetEnabled(state.EventTimerEnabled != 0);
+	//Hack to make EventTimer306Display work in old scenarios. Remove at some point.
+	EventTimer306Display.SetEnabled(state.EventTimerEnabled != 0);
 	EventTimerDisplay.SetCountUp(state.EventTimerCountUp);
 	SkylabSM = (state.SkylabSM != 0);
 	SkylabCM = (state.SkylabCM != 0);
@@ -2518,6 +2515,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			rjec.LoadState(scn);
 		} else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
+		} else if (!strnicmp(line, MISSIONTIMER_2_START_STRING, sizeof(MISSIONTIMER_2_START_STRING))) {
+			MissionTimerDisplay.LoadState(scn, MISSIONTIMER_END_STRING);
+		} else if (!strnicmp(line, MISSIONTIMER_306_START_STRING, sizeof(MISSIONTIMER_306_START_STRING))) {
+			MissionTimer306Display.LoadState(scn, MISSIONTIMER_END_STRING);
+		} else if (!strnicmp(line, EVENTTIMER_2_START_STRING, sizeof(EVENTTIMER_2_START_STRING))) {
+			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
+		} else if (!strnicmp(line, EVENTTIMER_306_START_STRING, sizeof(EVENTTIMER_306_START_STRING))) {
+			EventTimer306Display.LoadState(scn, EVENTTIMER_END_STRING);
 		} else {
 			found = false;
 		}
@@ -2867,9 +2872,14 @@ void Saturn::DoLaunch(double simt)
 
 	MissionTimerDisplay.Reset();
 	MissionTimerDisplay.SetEnabled(true);
+	MissionTimer306Display.Reset();
+	MissionTimer306Display.SetEnabled(true);
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetEnabled(true);
 	EventTimerDisplay.SetRunning(true);
+	EventTimer306Display.Reset();
+	EventTimer306Display.SetEnabled(true);
+	EventTimer306Display.SetRunning(true);
 
 	//
 	// Tell the AGC that we've lifted off.
@@ -2930,7 +2940,9 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	MissionTime += simdt;
 	MissionTimerDisplay.Timestep(simt, simdt);
+	MissionTimer306Display.Timestep(simt, simdt);
 	EventTimerDisplay.Timestep(simt, simdt);
+	EventTimer306Display.Timestep(simt, simdt);
 
 	//
 	// Panel flash counter.
@@ -5323,6 +5335,10 @@ void Saturn::StartAbort()
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetRunning(true);
 	EventTimerDisplay.SetEnabled(true);
+
+	EventTimer306Display.Reset();
+	EventTimer306Display.SetRunning(true);
+	EventTimer306Display.SetEnabled(true);
 
 	//
 	// Fire the LET.

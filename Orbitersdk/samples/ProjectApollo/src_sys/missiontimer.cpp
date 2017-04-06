@@ -34,6 +34,7 @@
 
 #include "powersource.h"
 #include "missiontimer.h"
+#include "papi.h"
 
 MissionTimer::MissionTimer()
 
@@ -223,6 +224,75 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
 }
 
+void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
+
+{
+	if (!IsPowered())
+		return;
+
+	int Curdigit, Curdigit2;
+
+	// Hour display on three digit
+	Curdigit = hours / 100;
+	Curdigit2 = hours / 1000;
+	oapiBlt(surf, digits, 0, 0, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	Curdigit = hours / 10;
+	Curdigit2 = hours / 100;
+	oapiBlt(surf, digits, 0, 0 + 20, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	Curdigit = hours;
+	Curdigit2 = hours / 10;
+	oapiBlt(surf, digits, 0, 0 + 39, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	// Minute display on two digit
+	Curdigit = minutes / 10;
+	Curdigit2 = minutes / 100;
+	oapiBlt(surf, digits, 0, 0 + 62, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	Curdigit = minutes;
+	Curdigit2 = minutes / 10;
+	oapiBlt(surf, digits, 0, 0 + 81, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	// second display on two digit
+	Curdigit = seconds / 10;
+	Curdigit2 = seconds / 100;
+	oapiBlt(surf, digits, 0, 0 + 104, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+
+	Curdigit = seconds;
+	Curdigit2 = seconds / 10;
+	oapiBlt(surf, digits, 0, 0 + 123, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+}
+
+void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "ENABLED", Enabled);
+	papiWriteScenario_bool(scn, "RUNNING", Running);
+	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
+	papiWriteScenario_double(scn, "MTD", GetTime());
+	oapiWriteLine(scn, end_str);
+}
+
+void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+	float ftcp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		if (!strnicmp(line, "MTD", 3)) {
+			sscanf(line + 3, "%f", &ftcp);
+			SetTime(ftcp);
+		}
+		papiReadScenario_bool(line, "ENABLED", Enabled);
+		papiReadScenario_bool(line, "RUNNING", Running);
+		papiReadScenario_int(line, "COUNTUP", CountUp);
+	}
+}
+
 void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
@@ -291,4 +361,32 @@ void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits, 58, 0, 13 * (Curdigit-(Curdigit2*10)), 0, 13, 18);
+}
+
+void EventTimer::Render90(SURFHANDLE surf, SURFHANDLE digits)
+
+{
+	//
+	// Digits are 13x18.
+	//
+
+	int Curdigit, Curdigit2;
+
+	// Minute display on two digit
+	Curdigit = minutes / 10;
+	Curdigit2 = minutes / 100;
+	oapiBlt(surf, digits, 0, 0, 19 * (Curdigit - (Curdigit2 * 10)), 0, 18, 13);
+
+	Curdigit = minutes;
+	Curdigit2 = minutes / 10;
+	oapiBlt(surf, digits, 0, 13, 19 * (Curdigit - (Curdigit2 * 10)), 0, 18, 13);
+
+	// second display on two digit
+	Curdigit = seconds / 10;
+	Curdigit2 = seconds / 100;
+	oapiBlt(surf, digits, 0, 45, 19 * (Curdigit - (Curdigit2 * 10)), 0, 18, 13);
+
+	Curdigit = seconds;
+	Curdigit2 = seconds / 10;
+	oapiBlt(surf, digits, 0, 58, 19 * (Curdigit - (Curdigit2 * 10)), 0, 18, 13);
 }
