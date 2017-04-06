@@ -71,7 +71,7 @@ void MissionTimer::Garbage()
 	hours = rand() % 1000;
 	minutes = rand() % 60;
 	seconds = rand() % 60;
-	TrippedTrashCan = true;
+	TimerTrash = true;
 }
 
 void MissionTimer::UpdateHours(int n)
@@ -147,13 +147,13 @@ void MissionTimer::Timestep(double simt, double deltat)
 {
 	sprintf(oapiDebugString(), "MissionTimer status. Running: %d Garbage: %d Enabled: %d Powered: %d", Running, TrippedTrashCan, Enabled, IsPowered());
 	if (!IsPowered()) {
-		if (!TrippedTrashCan) {
+		if (!TimerTrash) {
 			Garbage();
 		}
 		return;
 	}
 
-	TrippedTrashCan = false;
+	TimerTrash = false;
 
 	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();

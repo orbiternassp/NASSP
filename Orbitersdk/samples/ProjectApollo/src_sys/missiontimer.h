@@ -74,7 +74,7 @@ protected:
 
 	bool Running;
 	bool Enabled;
-	bool TrippedTrashCan;
+	bool TimerTrash;
 	int CountUp;
 
 	//
