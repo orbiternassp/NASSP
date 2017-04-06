@@ -47,7 +47,7 @@ MissionTimer::MissionTimer()
 	Running = false;
 	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
-	TrippedTrashCan = false;
+	TimerTrash = false;
 }
 
 MissionTimer::~MissionTimer()
@@ -145,7 +145,7 @@ void MissionTimer::UpdateSeconds(int n)
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
-	sprintf(oapiDebugString(), "MissionTimer status. Running: %d Garbage: %d Enabled: %d Powered: %d", Running, TrippedTrashCan, Enabled, IsPowered());
+	sprintf(oapiDebugString(), "MissionTimer status. Running: %d Garbage: %d Enabled: %d Powered: %d", Running, TimerTrash, Enabled, IsPowered());
 	if (!IsPowered()) {
 		if (!TimerTrash) {
 			Garbage();
@@ -164,9 +164,6 @@ void MissionTimer::Timestep(double simt, double deltat)
 		else {
 			t -= deltat;
 		}
-
-		if (t < 0.0)
-			t = 0.0;
 
 		SetTime(t);
 	}
@@ -289,6 +286,7 @@ void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "ENABLED", Enabled);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
+	papiWriteScenario_bool(scn, "TIMERTRASH", TimerTrash);
 	papiWriteScenario_double(scn, "MTD", GetTime());
 	oapiWriteLine(scn, end_str);
 }
@@ -310,6 +308,7 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "ENABLED", Enabled);
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_int(line, "COUNTUP", CountUp);
+		papiReadScenario_bool(line, "TIMERTRASH", TimerTrash);
 	}
 }
 
