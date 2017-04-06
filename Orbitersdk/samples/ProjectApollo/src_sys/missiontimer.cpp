@@ -225,6 +225,8 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 }
 
 void MissionTimer::SaveState(FILEHANDLE scn) {
+	papiWriteScenario_bool(scn, "ENABLED", Enabled);
+	papiWriteScenario_bool(scn, "RUNNING", Running);
 	papiWriteScenario_double(scn, "MTD", GetTime());
 	oapiWriteLine(scn, MISSIONTIMER_END_STRING);
 }
@@ -242,6 +244,8 @@ void MissionTimer::LoadState(FILEHANDLE scn) {
 			sscanf(line + 3, "%f", &ftcp);
 			SetTime(ftcp);
 		}
+		papiReadScenario_bool(line, "ENABLED", Enabled);
+		papiReadScenario_bool(line, "RUNNING", Running);
 	}
 }
 

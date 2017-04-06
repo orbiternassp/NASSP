@@ -520,6 +520,7 @@ void Saturn::initSaturn()
 	//
 
 	MissionTimerDisplay.WireTo(&GaugePower);
+	MissionTimer306Display.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
 
 	//
@@ -1505,6 +1506,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, MISSIONTIMER_2_START_STRING);
 	MissionTimerDisplay.SaveState(scn);
+	oapiWriteLine(scn, MISSIONTIMER_306_START_STRING);
+	MissionTimer306Display.SaveState(scn);
 
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
@@ -1603,8 +1606,8 @@ int Saturn::GetMainState()
 {
 	MainState state;
 
-	state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
-	state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+	//state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	//state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
 	state.EventTimerRunning = EventTimerDisplay.IsRunning();
 	state.EventTimerEnabled = EventTimerDisplay.IsEnabled();
 	state.EventTimerCountUp = EventTimerDisplay.GetCountUp();
@@ -1641,8 +1644,8 @@ void Saturn::SetMainState(int s)
 	SplashdownPlayed = (state.SplashdownPlayed != 0);
 	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.IGMEnabled != 0);
-	MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
-	MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
+	//MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
+	//MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
 	EventTimerDisplay.SetRunning(state.EventTimerRunning != 0);
 	EventTimerDisplay.SetEnabled(state.EventTimerEnabled != 0);
 	EventTimerDisplay.SetCountUp(state.EventTimerCountUp);
@@ -2511,6 +2514,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			ordeal.LoadState(scn);
 		} else if (!strnicmp(line, MISSIONTIMER_2_START_STRING, sizeof(MISSIONTIMER_2_START_STRING))) {
 			MissionTimerDisplay.LoadState(scn);
+		}
+		else if (!strnicmp(line, MISSIONTIMER_306_START_STRING, sizeof(MISSIONTIMER_306_START_STRING))) {
+			MissionTimer306Display.LoadState(scn);
 		} else {
 			found = false;
 		}
@@ -2860,6 +2866,8 @@ void Saturn::DoLaunch(double simt)
 
 	MissionTimerDisplay.Reset();
 	MissionTimerDisplay.SetEnabled(true);
+	MissionTimer306Display.Reset();
+	MissionTimer306Display.SetEnabled(true);
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetEnabled(true);
 	EventTimerDisplay.SetRunning(true);
@@ -2923,6 +2931,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	MissionTime += simdt;
 	MissionTimerDisplay.Timestep(simt, simdt);
+	MissionTimer306Display.Timestep(simt, simdt);
 	EventTimerDisplay.Timestep(simt, simdt);
 
 	//

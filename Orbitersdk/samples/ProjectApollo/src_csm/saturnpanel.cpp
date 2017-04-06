@@ -3113,10 +3113,12 @@ void Saturn::SetSwitches(int panel) {
 	/// \todo set event timer parameter when available
 	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL); 
 	EventTimerControl306Switch.Init(0, 46, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL);
+	MissionTimer306HoursSwitch.Init(0, 184, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_HOURS, &MissionTimer306Display);
+	MissionTimer306MinutesSwitch.Init(0, 230, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_MINUTES, &MissionTimer306Display);
+	MissionTimer306SecondsSwitch.Init(0, 276, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_SECONDS, &MissionTimer306Display);
 
 	MissionTimer306SwitchRow.Init(AID_CSM_PANEL_306_MISSIONTIMERSWITCH, MainPanel);
-	/// \todo set mission timer parameter when available
-	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, NULL); 
+	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, &MissionTimer306Display);
 
 
 	/////////////////
@@ -5935,6 +5937,13 @@ void Saturn::InitSwitches() {
 	EventTimerControl306Switch.SetSideways(true);
 	MissionTimer306Switch.Register(PSH, "MissionTimer306Switch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN); // Default state UP is correct!
 	MissionTimer306Switch.SetSideways(true);
+
+	MissionTimer306HoursSwitch.Register(PSH, "MissionTimer306HoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306HoursSwitch.SetSideways(true);
+	MissionTimer306MinutesSwitch.Register(PSH, "MissionTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306MinutesSwitch.SetSideways(true);
+	MissionTimer306SecondsSwitch.Register(PSH, "MissionTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306SecondsSwitch.SetSideways(true);
 
 	LMTunnelVentValve.AddPosition(0, 300);
 	LMTunnelVentValve.AddPosition(1, 330);

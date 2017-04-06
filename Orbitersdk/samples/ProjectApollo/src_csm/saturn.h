@@ -1442,6 +1442,12 @@ protected:
 	MissionTimer MissionTimerDisplay;
 
 	///
+	/// Mission Timer display on panel 306.
+	/// \brief Panel 306 Mission Timer display.
+	///
+	MissionTimer MissionTimer306Display;
+
+	///
 	/// Event Timer display on control panel.
 	/// \brief Event Timer display.
 	///
@@ -3098,6 +3104,9 @@ protected:
 	SwitchRow Panel306Row;
 	EventTimerResetSwitch EventTimerUpDown306Switch;
 	EventTimerControlSwitch EventTimerControl306Switch;
+	TimerUpdateSwitch MissionTimer306HoursSwitch;
+	TimerUpdateSwitch MissionTimer306MinutesSwitch;
+	TimerUpdateSwitch MissionTimer306SecondsSwitch;
 
 	SwitchRow MissionTimer306SwitchRow;
 	TimerControlSwitch MissionTimer306Switch;

@@ -747,6 +747,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Start mission and event timers
 					owner->MissionTimerDisplay.Reset();
 					owner->MissionTimerDisplay.SetEnabled(true);
+					owner->MissionTimer306Display.Reset();
+					owner->MissionTimer306Display.SetEnabled(true);
 					owner->EventTimerDisplay.Reset();
 					owner->EventTimerDisplay.SetEnabled(true);
 					owner->EventTimerDisplay.SetRunning(true);
