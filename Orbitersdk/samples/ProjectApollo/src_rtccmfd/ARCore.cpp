@@ -1571,9 +1571,36 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 5: //LOI Targeting
+	case 5: //TLI/MCC/LOI Targeting
 	{
-		if (LOImaneuver == 1 || LOImaneuver == 2)
+		if (LOImaneuver == 0)
+		{
+			MCCMan opt;
+
+			opt.GETbase = GETbase;
+			opt.h_peri = LOIperi;
+			opt.lat = LOILat;
+			opt.lng = LOILng;
+			opt.man = 0;//LOImaneuver;
+			opt.MCCGET = LOIGET;
+			opt.PeriGET = LOIPeriGET;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, LOIPeriGETcor);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
+		}
+		else if (LOImaneuver == 1 || LOImaneuver == 2)
 		{
 			LOIMan loiopt;
 
@@ -1637,30 +1664,19 @@ int ARCore::subThread()
 		}
 		else
 		{
-			MCCMan opt;
+			TLIMan opt;
 			double MJDcut;
 
 			opt.GETbase = GETbase;
-			opt.h_apo = LOIapo;
 			opt.h_peri = LOIperi;
 			opt.lat = LOILat;
 			opt.lng = LOILng;
-			opt.man = LOImaneuver;
 			opt.MCCGET = LOIGET;
 			opt.PeriGET = LOIPeriGET;
 			opt.vessel = vessel;
 			opt.useSV = false;
 
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
-
-			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+			rtcc->TranslunarInjectionProcessor(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}

@@ -249,18 +249,29 @@ struct LunarEntryPADOpt
 	double lng; //splashdown longitude
 };
 
-struct MCCMan
+struct TLIMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	int man; //0 = last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
 	double MCCGET; //GET for the last MCC
 	double lat; //target for MCC
 	double lng; //target for MCC
 	double PeriGET; //time of periapsis (for MCC)
-	double h_apo;	//for LOI-1
-	double h_peri;	//for MCC and LOI-1, circular orbit for LOI-2
-	double inc;
+	double h_peri;
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+};
+
+struct MCCMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	int man; //0 = XYZ and T Target Update, 6 = Circumlunar free-return flyby to nominal pericynthion altitude and latitude
+	double MCCGET; //GET for the last MCC
+	double lat; //target for MCC, selenographic latitude (option 1) or Earth-Moon-Plane latitude (other options)
+	double lng; //selenographic longitude
+	double PeriGET; //initial guess for the GET at pericynthion
+	double h_peri;	//pericynthion altitude
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
@@ -465,7 +476,8 @@ public:
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
-	void TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarInjectionProcessor(TLIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
@@ -486,7 +498,7 @@ public:
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
-	void TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P, VECTOR3 &R_peri, VECTOR3 &V_peri);
+	bool TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

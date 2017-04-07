@@ -1820,6 +1820,27 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 	return dt;
 }
 
+double ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth)
+{
+	//INPUT:
+	//R and V in Moon relative coordinates, e>1
+
+
+	VECTOR3 R_patch, V_patch, R_peri, V_peri;
+	double mu, r_SPH, dt, MJD_patch;
+
+	r_SPH = 64373760.0;
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	dt = time_radius(R, V, r_SPH, 1.0, mu);
+	oneclickcoast(R, V, mjd0, dt, R_patch, V_patch, hMoon, hEarth);
+	MJD_patch = mjd0 + dt / 24.0 / 3600.0;
+
+	timetoperi_integ(R_patch, V_patch, MJD_patch, hEarth, hEarth, R_peri, V_peri);
+
+	return length(R_peri);
+}
+
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
 	double dt1, sing, cosg, x2PRE, dt21,beta12,beta4,RF,phi4,dt21apo,beta13,dt2,beta14,mu;
@@ -3676,17 +3697,23 @@ bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, doub
 	return true;
 }
 
+MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
+{
+	VECTOR3 i, j, k;
+	j = unit(crossp(V, R));
+	k = unit(-R);
+	i = crossp(j, k);
+	return _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+}
+
 void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
 {
-	VECTOR3 RPP1, RPP2, VAP1, i, j, k, dVLV1, dVLV2;
+	VECTOR3 RPP1, RPP2, VAP1, dVLV1, dVLV2;
 	double f1, f2, r1, r2, y;
 	MATRIX3 Q_Xx;
 	int nmax, n;
 
-	j = unit(crossp(VA1, RA1));
-	k = unit(-RA1);
-	i = crossp(j, k);
-	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+	Q_Xx = OrbMech::LVLH_Matrix(RA1, VA1);
 
 	f2 = 1;
 	n = 0;

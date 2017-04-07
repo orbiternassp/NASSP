@@ -346,23 +346,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	Title (skp, "Apollo RTCC MFD");
 	skp->SetFont(font);
 
-	//VECTOR3 R_D, V_D,R_LSA, DV_DOI;
-	//double t_D,SVMJD,t_E,h_DP,theta_F,t_F,mu,t_DOI, t_PDI, t_L,CR,lat,lng;
+	/*OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	double lat = -9.1*RAD;
+	double lng = -174.8*RAD;
+	double MJD = G->GETbase + OrbMech::HHMMSSToSS(69.0, 9.0, 29.4) / 24.0 / 3600.0;
+	VECTOR3 R_selen = OrbMech::r_from_latlong(lat, lng);
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(hMoon, MJD);
+	VECTOR3 R = rhmul(Rot, R_selen);
+	MATRIX3 M_EMP = OrbMech::EMPMatrix(MJD);
+	VECTOR3 R_EMP = mul(M_EMP, R);
+	double lat_EMP, lng_EMP;
+	OrbMech::latlong_from_r(R_EMP, lat_EMP, lng_EMP);
 
-	/*G->vessel->GetRelativePos(G->gravref, R_D);
-	G->vessel->GetRelativeVel(G->gravref, V_D);
-	SVMJD = oapiGetSimMJD();
-	t_D = (SVMJD - G->GETbase)*24.0*3600.0;
-	t_E = 101.0*3600.0;
-	lat = 0.713888889*RAD;
-	lng = 23.707777778*RAD;
-	R_LSA = _V(cos(lng)*cos(lat),sin(lat),sin(lng)*cos(lat))*oapiGetSize(G->gravref);
-	h_DP = 50000.0*0.3048;
-	theta_F = 15.0*RAD;
-	t_F = 718.0;
-	mu = GGRAV*oapiGetMass(G->gravref);
-	G->mech->LunarLandingPrediction(R_D, V_D, t_D, t_E, R_LSA, h_DP, theta_F, t_F, G->gravref, G->GETbase, mu, t_DOI, t_PDI, t_L, DV_DOI, CR);
-	*/
+	sprintf(oapiDebugString(), "%f %f", lat_EMP*DEG, lng_EMP*DEG);*/
+
 	// Draws the MFD title
 
 	// Add MFD display routines here.

@@ -187,7 +187,7 @@ public:
 
 	//LOI PAGE
 	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
-	double LOIGET, LOIPeriGET, LOILat, LOILng;
+	double LOIGET, LOIPeriGET, LOILat, LOILng, LOIPeriGETcor;
 	double LOIapo, LOIperi, LOIazi;
 	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
 	double TLCC_TIG, LOI_TIG;
