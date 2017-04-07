@@ -188,7 +188,9 @@ public:
 	void menuSetLmkLng();
 	void set_LmkLng(double lng);
 	void menuLmkPADCalc();
-	void menuSet2ndMenu();
+	void menuSetTargetingMenu();
+	void menuSetPADMenu();
+	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();

@@ -379,19 +379,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Lambert", 7);
-		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
-		skp->Text(1 * W / 8, 6 * H / 14, "Orbit Adjustment", 16);
-		skp->Text(1 * W / 8, 8 * H / 14, "REFSMMAT", 8);
-		skp->Text(1 * W / 8, 10 * H / 14, "Entry", 5);
-		skp->Text(1 * W / 8, 12 * H / 14, "Lunar Insertion", 15);
-
-		skp->Text(5 * W / 8, 2 * H / 14, "State Vector", 12);
-		skp->Text(5 * W / 8, 4 * H / 14, "Landmark Tracking", 17);
-		skp->Text(5 * W / 8, 6 * H / 14, "Map Update", 10);
-		skp->Text(5 * W / 8, 8 * H / 14, "Maneuver PAD", 12);
-		skp->Text(5 * W / 8, 10 * H / 14, "Entry PAD", 9);
-		skp->Text(5 * W / 8, 12 * H / 14, "Next Page", 9);
+		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver Targeting", 18);
+		skp->Text(1 * W / 8, 4 * H / 14, "Pre-Advisory Data", 17);
+		skp->Text(1 * W / 8, 6 * H / 14, "Utility", 7);
+		skp->Text(1 * W / 8, 8 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 1)
 	{
@@ -2014,13 +2005,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
 
-		skp->Text(1 * W / 8, 12 * H / 14, "Previous Page", 13);
-		skp->Text(1 * W / 8, 2 * H / 14, "VECPOINT", 8);
-		skp->Text(1 * W / 8, 4 * H / 14, "DOI", 3);
-		skp->Text(1 * W / 8, 6 * H / 14, "Plane Change", 12);
-		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
-		skp->Text(5 * W / 8, 8 * H / 14, "Terrain Model", 13);
-		skp->Text(5 * W / 8, 10 * H / 14, "Configuration", 13);
+		skp->Text(1 * W / 8, 2 * H / 14, "Lambert", 7);
+		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
+		skp->Text(1 * W / 8, 6 * H / 14, "Orbit Adjustment", 16);
+		skp->Text(1 * W / 8, 8 * H / 14, "Translunar", 10);
+		skp->Text(1 * W / 8, 10 * H / 14, "Lunar Insertion", 15);
+		skp->Text(1 * W / 8, 12 * H / 14, "Entry", 5);
+
+		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
+		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
+		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
 	{
@@ -2364,6 +2358,24 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", G->TMAlt / 1852.0);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 20)
+	{
+		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver PAD", 12);
+		skp->Text(1 * W / 8, 4 * H / 14, "Entry PAD", 9);
+		skp->Text(1 * W / 8, 6 * H / 14, "Landmark Tracking", 17);
+		skp->Text(1 * W / 8, 8 * H / 14, "Map Update", 10);
+		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
+	}
+	else if (screen == 21)
+	{
+		skp->Text(1 * W / 8, 2 * H / 14, "State Vector", 12);
+		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
+		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
+
+		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
+		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
+		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
+	}
 	return true;
 }
 
@@ -2558,7 +2570,7 @@ void ApolloRTCCMFD::menuSetLandmarkTrkPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSet2ndMenu()
+void ApolloRTCCMFD::menuSetTargetingMenu()
 {
 	screen = 14;
 	coreButtons.SelectPage(this, screen);
@@ -2591,6 +2603,18 @@ void ApolloRTCCMFD::menuSetPCPage()
 void ApolloRTCCMFD::menuSetTerrainModelPage()
 {
 	screen = 19;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetPADMenu()
+{
+	screen = 20;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetUtilityMenu()
+{
+	screen = 21;
 	coreButtons.SelectPage(this, screen);
 }
 
