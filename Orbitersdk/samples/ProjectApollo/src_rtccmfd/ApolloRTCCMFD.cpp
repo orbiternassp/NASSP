@@ -2357,7 +2357,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			if (G->TLCCmaneuver == 1)
 			{
-				skp->Text(1 * W / 8, 2 * H / 14, "MCC Option 1: Nodal Targeting", 29);
+				skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 1: Nodal Targeting", 31);
 
 				sprintf(Buffer, "%.3f°", G->TLCCLat*DEG);
 				skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -2367,7 +2367,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 			else if (G->TLCCmaneuver == 2)
 			{
-				skp->Text(1 * W / 8, 2 * H / 14, "MCC Option 6/7: Free Return Flyby", 33);
+				skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 6/7: Circumlunar free-return flyby", 47);
 
 				sprintf(Buffer, "%.3f°", G->TLCCEMPLat*DEG);
 				skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));

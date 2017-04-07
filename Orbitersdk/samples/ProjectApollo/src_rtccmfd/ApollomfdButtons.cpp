@@ -768,7 +768,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Back to menu", 0, 'B' },
 	};
 
-	RegisterPage(mnu12, sizeof(mnu12) / sizeof(MFDBUTTONMENU));
+	RegisterPage(mnu22, sizeof(mnu22) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("MAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSwitchTLCCManeuver);
 	RegisterFunction("TIG", OAPI_KEY_G, &ApolloRTCCMFD::menuSetTLCCGET);
