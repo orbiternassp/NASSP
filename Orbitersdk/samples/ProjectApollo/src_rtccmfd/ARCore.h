@@ -42,6 +42,7 @@ public:
 	void LmkCalc();
 	void TEICalc();
 	void EntryCalc();
+	void TLCCCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
 	void LandingSiteUpdate();
@@ -185,13 +186,18 @@ public:
 	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
 
-	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
-	double LOIGET, LOIPeriGET, LOILat, LOILng, LOIPeriGETcor;
-	double LOIapo, LOIperi, LOIazi;
-	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
-	double TLCC_TIG, LOI_TIG;
+	//TLCC PAGE
+	int TLCCmaneuver;	//0 = TLI, 1 = XYZ and T (Nodal) Targeting, 2 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	VECTOR3 TLCC_dV_LVLH;
+	double TLCCPeriGET, TLCCPeriGETcor, TLCCPeri, TLCC_TIG;
+	double TLCCEMPLat, TLCCLat, TLCCLng, TLCC_GET, TLCCReentryGET;
 	VECTOR3 R_TLI, V_TLI;
+
+	//LOI PAGE
+	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
+	double LOIapo, LOIperi, LOIazi;
+	VECTOR3 LOI_dV_LVLH;
+	double LOI_TIG;
 
 	//LANDMARK TRACKING PAGE
 	double LmkLat, LmkLng;

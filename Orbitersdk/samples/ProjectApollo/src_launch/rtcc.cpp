@@ -318,7 +318,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	{
 		MCCMan opt;
 		AP11ManPADOpt manopt;
-		double GETbase, P30TIG, PeriGETcor;
+		double GETbase, P30TIG, PeriGETcor, ReentryGET;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		int engopt;
@@ -374,7 +374,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.PeriGET = calcParams.LOI;
 		opt.vessel = calcParams.src;
 
-		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, PeriGETcor);
+		TranslunarMidcourseCorrectionTargeting(&opt, dV_LVLH, P30TIG, PeriGETcor, ReentryGET);
 
 		if (fcn != 23)
 		{
@@ -4980,7 +4980,7 @@ void RTCC::TranslunarInjectionProcessor(TLIMan *opt, VECTOR3 &dV_LVLH, double &P
 	dV_LVLH = dVLVLH;
 }
 
-void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET)
+void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET)
 {
 	SV sv0, sv1;
 	double mass, LMmass, dt1, dt2, PeriMJD;
@@ -5044,14 +5044,14 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		P30TIG = opt->MCCGET + t_slip;
 		PeriGET = opt->PeriGET;
 	}
-	else if (opt->man == 6 || opt->man == 7)
+	else if (opt->man == 1)
 	{
 		VECTOR3 R_peri, V_peri, VA1_apo, RA2;
-		double PeriMJD_cor;
+		double PeriMJD_cor, MJD_reentry;
 		MATRIX3 Q_Xx;
 
 		//-5.67822*RAD
-		TLMC(sv1, opt->lat, oapiGetSize(hMoon) + opt->h_peri, PeriMJD, R_peri, V_peri, PeriMJD_cor);
+		TLMC(sv1, opt->lat, oapiGetSize(hMoon) + opt->h_peri, PeriMJD, R_peri, V_peri, PeriMJD_cor, MJD_reentry);
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, sv1.gravref);
 
@@ -5067,6 +5067,7 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		dV_LVLH = mul(Q_Xx, Llambda);
 		P30TIG = opt->MCCGET + t_slip;
 		PeriGET = (PeriMJD_cor - opt->GETbase)*24.0*3600.0;
+		ReentryGET = (MJD_reentry - opt->GETbase)*24.0*3600.0;
 	}
 }
 
@@ -6854,7 +6855,7 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	return true;
 }
 
-bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri)
+bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry)
 {
 	MATRIX3 M_EMP;
 	VECTOR3 R_EMP;
@@ -6910,7 +6911,7 @@ bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VE
 			}
 		} while (abs(ddt) > 0.1);
 
-		VacPeri = OrbMech::ReturnPerigee(R_peri, V_peri, MJD_N, hMoon, hEarth);
+		OrbMech::ReturnPerigee(R_peri, V_peri, MJD_N, hMoon, hEarth, MJD_reentry, VacPeri);
 
 		e_H = VacPeri - R_E - 16.0*1852.0;
 

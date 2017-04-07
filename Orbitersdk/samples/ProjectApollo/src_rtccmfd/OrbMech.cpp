@@ -1820,14 +1820,14 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 	return dt;
 }
 
-double ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth)
+void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, double &r_peri)
 {
 	//INPUT:
 	//R and V in Moon relative coordinates, e>1
 
 
 	VECTOR3 R_patch, V_patch, R_peri, V_peri;
-	double mu, r_SPH, dt, MJD_patch;
+	double mu, r_SPH, dt, MJD_patch, dt2;
 
 	r_SPH = 64373760.0;
 	mu = GGRAV*oapiGetMass(hMoon);
@@ -1836,9 +1836,10 @@ double ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHAND
 	oneclickcoast(R, V, mjd0, dt, R_patch, V_patch, hMoon, hEarth);
 	MJD_patch = mjd0 + dt / 24.0 / 3600.0;
 
-	timetoperi_integ(R_patch, V_patch, MJD_patch, hEarth, hEarth, R_peri, V_peri);
+	dt2 = timetoperi_integ(R_patch, V_patch, MJD_patch, hEarth, hEarth, R_peri, V_peri);
 
-	return length(R_peri);
+	r_peri = length(R_peri);
+	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
 
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
