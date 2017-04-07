@@ -2321,10 +2321,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.3f°", G->TLCCLat*DEG);
+			sprintf(Buffer, "%.5f°", G->TLCCLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.3f°", G->TLCCLng*DEG);
+			sprintf(Buffer, "%.5f°", G->TLCCLng*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%.2f NM", G->TLCCPeri / 1852.0);
@@ -2359,17 +2359,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 1: Nodal Targeting", 31);
 
-				sprintf(Buffer, "%.3f°", G->TLCCLat*DEG);
+				sprintf(Buffer, "%.5f°", G->TLCCLat*DEG);
 				skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-				sprintf(Buffer, "%.3f°", G->TLCCLng*DEG);
+				sprintf(Buffer, "%.5f°", G->TLCCLng*DEG);
 				skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 			}
 			else if (G->TLCCmaneuver == 2)
 			{
 				skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 6/7: Circumlunar free-return flyby", 47);
 
-				sprintf(Buffer, "%.3f°", G->TLCCEMPLat*DEG);
+				sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
 				skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 				skp->Text(1 * W / 8, 8 * H / 14, "Pericynthion:", 13);

@@ -5053,7 +5053,7 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		//-5.67822*RAD
 		TLMC(sv1, opt->lat, oapiGetSize(hMoon) + opt->h_peri, PeriMJD, R_peri, V_peri, PeriMJD_cor, MJD_reentry);
 
-		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, sv1.gravref);
+		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD_cor, (sv1.MJD - PeriMJD_cor)*24.0*3600.0, RA2, VA1_apo, hMoon, sv1.gravref);
 
 		VECTOR3 Llambda;
 		double t_slip;
@@ -6864,8 +6864,8 @@ bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VE
 	OBJHANDLE hMoon, hEarth;
 	OELEMENTS coe;
 
-	c_I = p_H = 0.0;
-	eps2 = 1000.0;
+	c_I = p_H = dto = 0.0;
+	eps2 = 0.1;
 	s_F = 0;
 
 	hEarth = oapiGetObjectByName("Earth");
@@ -6909,13 +6909,14 @@ bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VE
 			{
 				lng_EMP += coe.TA;
 			}
-		} while (abs(ddt) > 0.1);
+		} while (abs(ddt) > 0.01);
 
 		OrbMech::ReturnPerigee(R_peri, V_peri, MJD_N, hMoon, hEarth, MJD_reentry, VacPeri);
 
-		e_H = VacPeri - R_E - 16.0*1852.0;
+		//20NM vacuum perigee
+		e_H = VacPeri - R_E - 20.0*1852.0;
 
-		if (p_H == 0 || abs(e_H) >= eps2)
+		if (p_H == 0 || abs(dt - dto) >= eps2)
 		{
 			OrbMech::ITER(c_I, s_F, e_H, p_H, dt, e_Ho, dto);
 			if (s_F == 1)
@@ -6923,7 +6924,7 @@ bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VE
 				return false;
 			}
 		}
-	} while (abs(e_H) >= eps2);
+	} while (abs(dt - dto) >= eps2);
 
 	MJD_peri = MJD_N;
 
