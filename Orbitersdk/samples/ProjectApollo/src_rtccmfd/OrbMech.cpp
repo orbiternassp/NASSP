@@ -862,17 +862,15 @@ void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	stop = false;
 }
 
-VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot)
+VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot, double tol)
 {
 	VECTOR3 R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I;
-	double t_S, tol, dt_S;
+	double t_S, dt_S;
 	OBJHANDLE hMoon, hEarth;
 	//R_I_star, delta_I_star, delta_I_star_dot, 
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");
-
-	tol = 1000.0;
 
 	//R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
 
@@ -1820,13 +1818,13 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 	return dt;
 }
 
-void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, double &r_peri)
+void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri)
 {
 	//INPUT:
 	//R and V in Moon relative coordinates, e>1
 
 
-	VECTOR3 R_patch, V_patch, R_peri, V_peri;
+	VECTOR3 R_patch, V_patch;
 	double mu, r_SPH, dt, MJD_patch, dt2;
 
 	r_SPH = 64373760.0;
@@ -1838,7 +1836,6 @@ void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE
 
 	dt2 = timetoperi_integ(R_patch, V_patch, MJD_patch, hEarth, hEarth, R_peri, V_peri);
 
-	r_peri = length(R_peri);
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
 

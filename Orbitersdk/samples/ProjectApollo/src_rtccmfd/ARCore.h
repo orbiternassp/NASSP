@@ -192,6 +192,7 @@ public:
 	double TLCCPeriGET, TLCCPeriGETcor, TLCCPeri, TLCC_TIG;
 	double TLCCEMPLat, TLCCLat, TLCCLng, TLCC_GET, TLCCReentryGET;
 	VECTOR3 R_TLI, V_TLI;
+	bool TLCCSolGood;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2

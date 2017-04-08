@@ -2310,6 +2310,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, 1 * H / 14, "Calculating...", 14);
 		}
+
+		if (!G->TLCCSolGood)
+		{
+			skp->Text(5 * W / 8, 1 * H / 14, "Calculation Failed!", 19);
+		}
 		
 		if (G->TLCCmaneuver == 0)
 		{

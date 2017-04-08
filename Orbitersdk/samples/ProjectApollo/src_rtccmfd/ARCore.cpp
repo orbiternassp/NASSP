@@ -352,9 +352,11 @@ ARCore::ARCore(VESSEL* v)
 	TLCCLng = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
 	TLCCPeri = 0.0;
+	TLCCPeriGET = 0.0;
 	TLCCPeriGETcor = 0.0;
 	TLCC_TIG = 0.0;
 	TLCCReentryGET = 0.0;
+	TLCCSolGood = true;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2057,9 +2059,13 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 
-			rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET);
+
+			if (TLCCSolGood)
+			{
+				P30TIG = TLCC_TIG;
+				dV_LVLH = TLCC_dV_LVLH;
+			}
 		}
 	}
 	break;

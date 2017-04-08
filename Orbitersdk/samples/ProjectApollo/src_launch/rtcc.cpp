@@ -4834,9 +4834,9 @@ void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 	VECTOR3 Llambda;
 	double t_slip;
-	SV sv_tig, sv_out;
+	SV sv_tig;
 
-	FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, DVX, Llambda, t_slip, sv_out); //Calculate the impulsive equivalent of the maneuver
+	FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, DVX, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 	sv_tig = coast(sv1, t_slip);
 
 	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
@@ -4980,10 +4980,11 @@ void RTCC::TranslunarInjectionProcessor(TLIMan *opt, VECTOR3 &dV_LVLH, double &P
 	dV_LVLH = dVLVLH;
 }
 
-void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET)
+bool RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET)
 {
 	SV sv0, sv1;
 	double mass, LMmass, dt1, dt2, PeriMJD;
+	bool solgood = true;
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -5033,9 +5034,9 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 
 		VECTOR3 Llambda;
 		double t_slip;
-		SV sv_tig, sv_cut;
+		SV sv_tig;
 
-		FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, VA1_apo - sv1.V, Llambda, t_slip, sv_cut); //Calculate the impulsive equivalent of the maneuver
+		FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, VA1_apo - sv1.V, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 		sv_tig = coast(sv1, t_slip);
 
 		Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
@@ -5046,20 +5047,25 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 	}
 	else if (opt->man == 1)
 	{
-		VECTOR3 R_peri, V_peri, VA1_apo, RA2;
+		VECTOR3 R_peri, V_peri, VA1_apo, RA2, DV;
 		double PeriMJD_cor, MJD_reentry;
 		MATRIX3 Q_Xx;
 
 		//-5.67822*RAD
-		TLMC(sv1, opt->lat, oapiGetSize(hMoon) + opt->h_peri, PeriMJD, R_peri, V_peri, PeriMJD_cor, MJD_reentry);
+		solgood = TLMC(sv1, opt->lat, oapiGetSize(hMoon) + opt->h_peri, PeriMJD, R_peri, V_peri, PeriMJD_cor, MJD_reentry);
+
+		if (!solgood)
+		{
+			return solgood;
+		}
 
 		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD_cor, (sv1.MJD - PeriMJD_cor)*24.0*3600.0, RA2, VA1_apo, hMoon, sv1.gravref);
 
 		VECTOR3 Llambda;
 		double t_slip;
-		SV sv_tig, sv_cut;
+		SV sv_tig;
 
-		FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, VA1_apo - sv1.V, Llambda, t_slip, sv_cut); //Calculate the impulsive equivalent of the maneuver
+		FiniteBurntimeCompensation(opt->vessel, sv1, LMmass, VA1_apo - sv1.V, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 		sv_tig = coast(sv1, t_slip);
 
 		Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
@@ -5069,6 +5075,8 @@ void RTCC::TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH,
 		PeriGET = (PeriMJD_cor - opt->GETbase)*24.0*3600.0;
 		ReentryGET = (MJD_reentry - opt->GETbase)*24.0*3600.0;
 	}
+
+	return solgood;
 }
 
 void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
@@ -6259,7 +6267,7 @@ void RTCC::FiniteBurntimeCompensation(VESSEL *vessel, SV sv, double attachedMass
 	//t_slip: time in seconds the maneuver has slipped to compensate for finite burntime; should always be negative
 	//sv_out: complete state vector at actual cutoff
 
-	double f_T, isp, F_average, mass;
+	double f_T, isp, F_average;
 
 	sv_out.gravref = sv.gravref;
 
@@ -6279,7 +6287,7 @@ void RTCC::FiniteBurntimeCompensation(VESSEL *vessel, SV sv, double attachedMass
 		LMThrottleProgram(f_T, isp, sv.mass + attachedMass, length(DV), F_average, bt, bt_var, step);
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, mass);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
 
 	sv_out.mass -= attachedMass;
 }
@@ -6858,7 +6866,7 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry)
 {
 	MATRIX3 M_EMP;
-	VECTOR3 R_EMP;
+	VECTOR3 R_EMP, R_reentry, V_reentry;
 	double lng_EMP, dt, mu, MJD_N, ddt, VacPeri, R_E, e_H, e_Ho, c_I, p_H, eps2, dto;
 	int s_F;
 	OBJHANDLE hMoon, hEarth;
@@ -6911,7 +6919,8 @@ bool RTCC::TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VE
 			}
 		} while (abs(ddt) > 0.01);
 
-		OrbMech::ReturnPerigee(R_peri, V_peri, MJD_N, hMoon, hEarth, MJD_reentry, VacPeri);
+		OrbMech::ReturnPerigee(R_peri, V_peri, MJD_N, hMoon, hEarth, MJD_reentry, R_reentry, V_reentry);
+		VacPeri = length(R_reentry);
 
 		//20NM vacuum perigee
 		e_H = VacPeri - R_E - 20.0*1852.0;
