@@ -33,16 +33,25 @@
 #define EVENTTIMER_306_START_STRING "EVENTTIMER306_START"
 #define EVENTTIMER_END_STRING "EVENTTIMER_END"
 
+#define MISSIONTIMER	false
+#define EVENTTIMER		true
+
+class Saturn;
+
 class MissionTimer : public e_object {
 
 public:
-	MissionTimer();
+	MissionTimer(PanelSDK &p);
 	virtual ~MissionTimer();
 
-	void Timestep(double simt, double deltat);
-	void SystemTimestep(double simt, double deltat);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void Init(e_object *mna, e_object *mnb, RotationalSwitch *dimmer);
+	void Timestep(double simt, double deltat, bool eventimer);
+	void SystemTimestep(double simdt, bool timer);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool eventimer);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+
+	Saturn *sat;
 
 	void SetTime(double t);
 	double GetTime();
@@ -52,6 +61,7 @@ public:
 	void UpdateSeconds(int n);
 	void Reset();
 	void Garbage();
+	bool IsPowered(bool timer);
 	void SetRunning(bool run) { Running = run; };
 	bool IsRunning() { return Running; };
 	void SetEnabled(bool run) { Enabled = run; };
@@ -61,7 +71,6 @@ public:
 	int GetHours(){ return hours; }
 	int GetMinutes(){ return minutes; }
 	int GetSeconds(){ return seconds; }
-	bool IsPowered() { return Voltage() > 25.0; };
 
 	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
 	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
@@ -84,6 +93,9 @@ protected:
 	//
 	// Don't need to be saved.
 	//
+
+	RotationalSwitch *DimmerRotationalSwitch;
+	PowerMerge DCPower;
 };
 
 //
@@ -92,7 +104,8 @@ protected:
 
 class EventTimer: public MissionTimer {
 public:
-	EventTimer();
+	EventTimer(PanelSDK &p);
+	virtual ~EventTimer();
 	void Render(SURFHANDLE surf, SURFHANDLE digits);
 	void Render90(SURFHANDLE surf, SURFHANDLE digits);
 
@@ -105,6 +118,8 @@ protected:
 
 class LEMEventTimer: public EventTimer {
 public:
+	LEMEventTimer(PanelSDK &p);
+	virtual ~LEMEventTimer();
 	void Render(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:

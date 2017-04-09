@@ -213,7 +213,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	//imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk),
 	deda(this,soundlib, aea, 015),
-	DPS(th_hover)
+	DPS(th_hover),
+	MissionTimerDisplay(Panelsdk),
+	EventTimerDisplay(Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;

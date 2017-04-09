@@ -1189,6 +1189,10 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
+		MissionTimerDisplay.SystemTimestep(tFactor, false);
+		MissionTimer306Display.SystemTimestep(tFactor, false);
+		EventTimerDisplay.SystemTimestep(tFactor, true);
+		EventTimer306Display.SystemTimestep(tFactor, true);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);

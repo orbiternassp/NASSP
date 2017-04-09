@@ -498,7 +498,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.WireTo(&LMP_EVT_TMR_FDAI_DC_CB);
+	EventTimerDisplay.WireTo(&LMP_EVT_TMR_FDAI_DC_CB, NULL);
 
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
@@ -618,7 +618,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.WireTo(&MISSION_TIMER_CB);
+	MissionTimerDisplay.WireTo(&MISSION_TIMER_CB, NULL);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -1214,14 +1214,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	fdaiRight.SystemTimestep(simdt);
-	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
-	EventTimerDisplay.Timestep(MissionTime, simdt);
+	MissionTimerDisplay.Timestep(MissionTime, simdt, true);	// These just do work
+	EventTimerDisplay.Timestep(MissionTime, simdt, true);
 	JoystickTimestep(simdt);
 	eds.TimeStep();                                         // Do Work
 	optics.TimeStep(simdt);									// Do Work
 	LR.TimeStep(simdt);										// I don't wanna work
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
-	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
+	RadarTape.TimeStep(MissionTime);						// I just wanna bang on me drum all day
 	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
 	crossPointerLeft.SystemTimeStep(simdt);
