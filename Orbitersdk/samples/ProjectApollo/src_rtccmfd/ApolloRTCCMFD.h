@@ -92,8 +92,6 @@ public:
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
-	void gravrefdialogue();
-	void set_gravref(OBJHANDLE body);
 	double timetoperi();
 	double timetoapo();
 	void CycleREFSMMATopt();

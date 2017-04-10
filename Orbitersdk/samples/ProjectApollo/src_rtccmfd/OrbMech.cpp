@@ -631,7 +631,7 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 	}
 	if (e > eps)
 	{
-		TA = acos(dotp(unit(E), unit(R)));
+		TA = acos2(dotp(unit(E), unit(R)));
 		if (vr < 0.0)
 		{
 			TA = PI2 - TA;
@@ -642,11 +642,11 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 		cp = crossp(N, R);
 		if (cp.z >= 0)
 		{
-			TA = acos(dotp(unit(N), unit(R)));
+			TA = acos2(dotp(unit(N), unit(R)));
 		}
 		else
 		{
-			TA = PI2 - acos(dotp(unit(N), unit(R)));
+			TA = PI2 - acos2(dotp(unit(N), unit(R)));
 		}
 	}
 	//a = OrbMech::power(h,2) / mu / (1 - OrbMech::power(e,2));
@@ -1682,7 +1682,7 @@ double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 	else
 	{
 		double E_0;
-		E_0 = 2 * atan(sqrt((1.0 - coe.e) / (1.0 + coe.e))*tan(coe.TA / 2.0));
+		E_0 = 2.0 * atan(sqrt((1.0 - coe.e) / (1.0 + coe.e))*tan(coe.TA / 2.0));
 		chi = -sqrt(a)*E_0;
 	}
 
@@ -4255,6 +4255,46 @@ MATRIX3 EMPMatrix(double MJD)
 	Y = unit(crossp(Z, X));
 
 	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+}
+
+double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep)
+{
+	double dvar;
+
+	if (c < 2)
+	{
+		var[c + 1] = varguess;//(TIGMJD - SVMJD)*24.0*3600.0;
+		obj[c + 1] = obj0;//length(DVX);
+
+		dvar = initstep;
+	}
+	else
+	{
+		obj[0] = obj[1];
+		obj[1] = obj[2];
+		obj[2] = obj0;//length(DVX);
+		var[0] = var[1];
+		var[1] = var[2];
+		var[2] = varguess;//(TIGMJD - SVMJD)*24.0*3600.0;
+
+		dvar = OrbMech::quadratic(var, obj) - varguess;// +(SVMJD - TIGMJD)*24.0*3600.0;
+
+		if (abs(dvar)>maxstep)
+		{
+			dvar = OrbMech::sign(dvar)*maxstep;
+		}
+	}
+
+	varguess += dvar;
+	c++;
+
+	if (c > 10)
+	{
+		s = 1;
+	}
+
+
+	return dvar;
 }
 
 }

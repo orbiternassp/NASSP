@@ -278,7 +278,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Mission (GET base)", 0, 'G' },
 		{ "Vessel type", 0, 'V' },
-		{ "Reference body", 0, 'R' },
+		{ "", 0, ' ' },
 		{ "Sextant Star Time", 0, 'S' },
 		{ "Uplinks in LOS", 0, 'U' },
 		{ "", 0, ' ' },
@@ -295,7 +295,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("MIS", OAPI_KEY_G, &ApolloRTCCMFD::set_getbase);
 	RegisterFunction("TYP", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselType);
-	RegisterFunction("REF", OAPI_KEY_N, &ApolloRTCCMFD::gravrefdialogue);
+	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SXT", OAPI_KEY_S, &ApolloRTCCMFD::menusextantstartime);
 	RegisterFunction("UPL", OAPI_KEY_A, &ApolloRTCCMFD::menuSwitchUplinkInhibit);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);

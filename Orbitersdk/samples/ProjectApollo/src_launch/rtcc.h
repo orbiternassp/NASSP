@@ -262,19 +262,41 @@ struct TLIMan
 	SV RV_MCC;		//State vector as input
 };
 
-struct MCCMan
+struct MCCNodeMan
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	int man; //0 = XYZ and T Target Update, 6 = Circumlunar free-return flyby to nominal pericynthion altitude and latitude
-	double MCCGET; //GET for the last MCC
-	double lat; //target for MCC, selenographic latitude (option 1) or Earth-Moon-Plane latitude (other options)
+	double MCCGET; //TIG for the MCC
+	double lat; //target for MCC, selenographic latitude
 	double lng; //selenographic longitude
+	double NodeGET; //GET at node
+	double h_node;	//node altitude
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+};
+
+struct MCCFRMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	int man; //0 = FR BAP Fixed LPO, 1 = Circumlunar free-return flyby to nominal pericynthion altitude and latitude
+	double MCCGET; //GET for the MCC
+	double lat; //Earth-Moon-Plane latitude
 	double PeriGET; //initial guess for the GET at pericynthion
 	double h_peri;	//pericynthion altitude
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+
+	//LOI targets for BAP
+	double LSlat;			//landing site latitude
+	double LSlng;			//landing site longitude
+	double alt;			//landing site height
+	double azi;			//landing site approach azimuth
+	double t_land;		//time of landing
+	double LOIh_apo;		//apolune altitude
+	double LOIh_peri;		//perilune altitude
 };
 
 struct LOIMan
@@ -291,6 +313,7 @@ struct LOIMan
 	bool useSV = false;	//true if state vector is to be used
 	SV RV_MCC;			//State vector as input
 	bool csmlmdocked;	//0 = CSM alone, 1 = CSM/LM
+	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
 };
 
 struct LOI2Man
@@ -420,6 +443,10 @@ struct calculationParameters {
 	double LOI;		// Time of LOI/Pericynthion
 	VECTOR3 R_TLI;	//TLI cutoff position vector
 	VECTOR3 V_TLI;	//TLI cutoff velocity vector
+	double lat_node;
+	double lng_node;
+	double alt_node;
+	double GET_node;
 };
 
 //For LVDC
@@ -477,8 +504,10 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void TranslunarInjectionProcessor(TLIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	bool TranslunarMidcourseCorrectionTargeting(MCCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET);
+	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET, double &lat_node, double &lng_node, double &alt_node, double &GET_node);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_node, double &GET_node);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -498,7 +527,8 @@ public:
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
-	bool TLMC(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry);
+	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry);
+	bool TLMC_BAP_FR_FixedLPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double r_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

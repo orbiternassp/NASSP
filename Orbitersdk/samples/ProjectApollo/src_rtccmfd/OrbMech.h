@@ -215,6 +215,7 @@ namespace OrbMech {
 	void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C);
 	void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo);
 	bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
+	double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep);
 	//private:
 		//VESSEL* vessel;
 		//double mu;

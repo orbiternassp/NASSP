@@ -53,14 +53,7 @@ ARCore::ARCore(VESSEL* v)
 	LSAlt = 0.0;
 	manpadopt = 0;
 	vesseltype = 0;
-	gravref = oapiGetObjectByName("Earth");
-	VECTOR3 rsph;
-	vessel->GetRelativePos(oapiGetObjectByName("Moon"), rsph);
-	if (length(rsph) < 64373760.0)
-	{
-		gravref = oapiGetObjectByName("Moon");
-	}
-	//mech = new OrbMech(v, gravref);
+
 	for (int i = 0; i < 20; i++)
 	{
 		REFSMMAToct[i] = 0;
@@ -339,19 +332,21 @@ ARCore::ARCore(VESSEL* v)
 	rtcc = new RTCC();
 
 	LOImaneuver = 0;
-	LOIapo = 0.0;
-	LOIperi = 0.0;
+	LOIapo = 170.0*1852.0;
+	LOIperi = 60.0*1852.0;
 	LOIazi = 0.0;
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_TIG = 0.0;
 
 	TLCCmaneuver = 0;
 	TLCC_GET = 0.0;
-	TLCCLat = 0.0;
+	TLCCNodeLat = 0.0;
 	TLCCEMPLat = 0.0;
-	TLCCLng = 0.0;
+	TLCCNodeLng = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
-	TLCCPeri = 0.0;
+	TLCCPeri = 60.0*1852.0;
+	TLCCNodeAlt = 0.0;
+	TLCCNodeGET = 0.0;
 	TLCCPeriGET = 0.0;
 	TLCCPeriGETcor = 0.0;
 	TLCC_TIG = 0.0;
@@ -396,12 +391,28 @@ ARCore::ARCore(VESSEL* v)
 		LSLat = 2.6317*RAD;
 		LSLng = 34.0253*RAD;
 		LSAlt = -0.82*1852.0;
+		LOIazi = -78.0*RAD;
+		TLCCEMPLat = -5.67822*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
+		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
+	}
+	else if (mission == 10)
+	{
+		LSLat = 0.732*RAD;
+		LSLng = 23.647*RAD;
+		LSAlt = -1.66*1852.0;
+		LOIazi = -91.0*RAD;
+		TLCCEMPLat = -4.933294*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
+		t_Land = OrbMech::HHMMSSToSS(100.0, 38.0, 30.9);
 	}
 	else if (mission == 11)
 	{
 		LSLat = 0.71388888*RAD;
 		LSLng = 23.7077777*RAD;
 		LSAlt = -3073.263;
+		LOIazi = -91.0*RAD;
+		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 	}
 
 	Skylabmaneuver = 0;
@@ -511,8 +522,9 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 			EarthPos = new double[12];
 			VECTOR3 EarthVec, EarthVecVel;
 			CELBODY *cEarth;
+			OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 
-			cEarth = oapiGetCelbodyInterface(gravref);
+			cEarth = oapiGetCelbodyInterface(hEarth);
 			cEarth->clbkEphemeris(g_Data.burnData.IgnMJD + g_Data.burnData.BT / 24.0 / 3600.0, EPHEM_BARYPOS | EPHEM_BARYVEL, EarthPos);
 
 			EarthVec = _V(EarthPos[0], EarthPos[1], EarthPos[2]);
@@ -533,10 +545,11 @@ void ARCore::LmkCalc()
 {
 	VECTOR3 RA0_orb, VA0_orb, RA0, VA0, R_P, RA1, VA1, u;
 	double SVMJD, dt1, dt2, get, MJDguess, sinl, gamma, r_0;
-	OBJHANDLE hEarth, hMoon;
+	OBJHANDLE hEarth, hMoon, gravref;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
+	gravref = rtcc->AGCGravityRef(vessel);
 
 	vessel->GetRelativePos(gravref, RA0_orb);
 	vessel->GetRelativeVel(gravref, VA0_orb);
@@ -604,6 +617,7 @@ void ARCore::EntryUpdateCalc()
 	
 	double SVMJD;
 	VECTOR3 R, V, R0B, V0B;
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 
 	vessel->GetRelativePos(gravref, R);
 	vessel->GetRelativeVel(gravref, V);
@@ -693,6 +707,7 @@ void ARCore::EntryPAD()
 
 		VECTOR3 R, V;
 		double apo, peri;
+		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 		vessel->GetRelativePos(gravref, R);
 		vessel->GetRelativeVel(gravref, V);
 		OrbMech::periapo(R, V, mu, apo, peri);
@@ -752,7 +767,7 @@ void ARCore::MapUpdate()
 {
 	VECTOR3 R, V;
 	double MJD;
-	
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 	vessel->GetRelativePos(gravref, R);
 	vessel->GetRelativeVel(gravref, V);
 	MJD = oapiGetSimMJD();
@@ -855,7 +870,7 @@ void ARCore::StateVectorCalc()
 	VECTOR3 R, V,R0B,V0B,R1B,V1B;
 	//MATRIX3 Rot;
 	double SVMJD,dt;
-
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 	svtarget->GetRelativePos(gravref, R);
 	svtarget->GetRelativeVel(gravref, V);
 	SVMJD = oapiGetSimMJD();
@@ -888,7 +903,7 @@ void ARCore::StateVectorUplink()
 
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
-
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 	VECTOR3 vel,pos;
 	double get;
 	MATRIX3 Rot;
@@ -1277,7 +1292,7 @@ bool ARCore::vesselinLOS()
 {
 	VECTOR3 R, V;
 	double MJD;
-
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 	vessel->GetRelativePos(gravref, R);
 	vessel->GetRelativeVel(gravref, V);
 	MJD = oapiGetSimMJD();
@@ -1290,6 +1305,7 @@ void ARCore::VecPointCalc()
 	VECTOR3 vPos, pPos, relvec, UX, UY, UZ, loc;
 	MATRIX3 M, M_R;
 	double p_T, y_T;
+	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 
 	p_T = 0;
 	y_T = 0;
@@ -1394,10 +1410,14 @@ int ARCore::startSubthread(int fcn) {
 		subThreadMode = fcn;
 		subThreadStatus = 1; // Busy
 		DWORD id = 0;
-		HANDLE h = CreateThread(NULL, 0, RTCCMFD_Trampoline, this, 0, &id);
-		if (h != NULL) { CloseHandle(h); }
+		hThread = CreateThread(NULL, 0, RTCCMFD_Trampoline, this, 0, &id);
+		if (hThread != NULL) { CloseHandle(hThread); }
 	}
 	else {
+		//Kill thread
+		DWORD exitcode = 0;
+		if (TerminateThread(hThread, exitcode))
+			subThreadStatus = 0;
 		return(-1);
 	}
 	return(0);
@@ -1469,6 +1489,7 @@ int ARCore::subThread()
 	case 3:	//Orbital Adjustment Targeting
 	{
 		OrbAdjOpt opt;
+		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 
 		opt.GETbase = GETbase;
 		opt.gravref = gravref;
@@ -2015,10 +2036,10 @@ int ARCore::subThread()
 
 			opt.GETbase = GETbase;
 			opt.h_peri = LOIperi;
-			opt.lat = TLCCLat;
-			opt.lng = TLCCLng;
+			opt.lat = TLCCNodeLat;
+			opt.lng = TLCCNodeLng;
 			opt.MCCGET = TLCC_GET;
-			opt.PeriGET = TLCCPeriGET;
+			opt.PeriGET = TLCCNodeGET;
 			opt.vessel = vessel;
 			opt.useSV = false;
 
@@ -2026,29 +2047,9 @@ int ARCore::subThread()
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}
-		else if (TLCCmaneuver == 1 || TLCCmaneuver == 2)
+		else if (TLCCmaneuver == 1)
 		{
-			MCCMan opt;
-
-			opt.GETbase = GETbase;
-			opt.h_peri = TLCCPeri;
-			opt.lng = TLCCLng;
-
-			if (TLCCmaneuver == 1)
-			{
-				opt.man = 0;
-				opt.lat = TLCCLat;
-			}
-			else
-			{
-				opt.man = 1;
-				opt.lat = TLCCEMPLat;
-			}
-
-			opt.MCCGET = TLCC_GET;
-			opt.PeriGET = TLCCPeriGET;
-			opt.vessel = vessel;
-			opt.useSV = false;
+			MCCNodeMan opt;
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2059,7 +2060,50 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargeting(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET);
+			opt.GETbase = GETbase;
+			opt.h_node = TLCCNodeAlt;
+			opt.lat = TLCCNodeLat;
+			opt.lng = TLCCNodeLng;
+			opt.MCCGET = TLCC_GET;
+			opt.NodeGET = TLCCNodeGET;
+			opt.vessel = vessel;
+
+			rtcc->TranslunarMidcourseCorrectionTargetingNodal(&opt, TLCC_dV_LVLH, TLCC_TIG);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
+		}
+		else
+		{
+			MCCFRMan opt;
+
+			//yes, yes, I know
+			opt.man = TLCCmaneuver - 2;
+
+			opt.GETbase = GETbase;
+			opt.h_peri = TLCCPeri;
+			opt.lat = TLCCEMPLat;
+			opt.PeriGET = TLCCPeriGET;
+			opt.MCCGET = TLCC_GET;
+			opt.vessel = vessel;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			opt.LOIh_apo = LOIapo;
+			opt.LOIh_peri = LOIperi;
+			opt.LSlat = LSLat;
+			opt.LSlng = LSLng;
+			opt.alt = LSAlt;
+			opt.t_land = t_Land;
+			opt.azi = LOIazi;
+
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET);
 
 			if (TLCCSolGood)
 			{
@@ -2071,7 +2115,6 @@ int ARCore::subThread()
 	break;
 	}
 	subThreadStatus = Result;
-	// Printing messages from the subthread is not safe, but this is just for testing.
 	return(0);
 }
 

@@ -75,6 +75,7 @@ public:
 	void StopIMFDRequest();
 
 	// SUBTHREAD MANAGEMENT
+	HANDLE hThread;
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
@@ -90,7 +91,6 @@ public:
 	double GETbase;			//Launch MJD
 	double AGCEpoch;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
-	OBJHANDLE gravref;			//Earth or Moon
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
 	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
@@ -187,10 +187,17 @@ public:
 	int mappage, mapgs;
 
 	//TLCC PAGE
-	int TLCCmaneuver;	//0 = TLI, 1 = XYZ and T (Nodal) Targeting, 2 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	int TLCCmaneuver;	//0 = TLI, 1 = XYZ and T (Nodal) Targeting, 2 = FR BAP Fixed LPO, 3 = Circumlunar free-return flyby, specified H_PC and phi_PC
 	VECTOR3 TLCC_dV_LVLH;
-	double TLCCPeriGET, TLCCPeriGETcor, TLCCPeri, TLCC_TIG;
-	double TLCCEMPLat, TLCCLat, TLCCLng, TLCC_GET, TLCCReentryGET;
+	//Initial guess of pericynthion GET
+	double TLCCPeriGET;
+	//Corrected time of pericynthion
+	double TLCCPeriGETcor;
+	//Initial guess and corrected TIG
+	double TLCC_GET, TLCC_TIG;
+	double TLCCPeri;
+	double TLCCEMPLat, TLCCReentryGET;
+	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
 
