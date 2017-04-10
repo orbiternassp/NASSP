@@ -523,9 +523,9 @@ void Saturn::initSaturn()
 	// Wire up timers.
 	//
 	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
-	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
+	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch);
 	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
-	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
+	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch);
 
 	//
 	// Configure connectors.

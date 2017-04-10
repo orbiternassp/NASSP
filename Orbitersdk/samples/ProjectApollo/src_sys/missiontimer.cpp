@@ -42,13 +42,14 @@
 MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 
 {
-	Reset();
-	srand((unsigned int)time(NULL)); // time gives 64bit 'time_t', srand wants int. We specify unsigned int because data loss doesn't matter.
-
 	Running = false;
 	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
 	TimerTrash = false;
+	DimmerRotationalSwitch = NULL;
+	srand((unsigned int)time(NULL)); // time gives 64bit 'time_t', srand wants int. We specify unsigned int because data loss doesn't matter.
+
+	Reset();
 }
 
 MissionTimer::~MissionTimer()
@@ -83,7 +84,7 @@ void MissionTimer::Garbage()
 void MissionTimer::UpdateHours(int n)
 
 {
-	if (!IsPowered(MISSIONTIMER))
+	if (!IsPowered())
 		return;
 
 	if (CountUp == TIMER_COUNT_UP) {
@@ -104,7 +105,7 @@ void MissionTimer::UpdateHours(int n)
 void MissionTimer::UpdateMinutes(int n)
 
 {
-	if (!IsPowered(MISSIONTIMER))
+	if (!IsPowered())
 		return;
 
 	if (CountUp == TIMER_COUNT_UP) {
@@ -125,7 +126,7 @@ void MissionTimer::UpdateMinutes(int n)
 void MissionTimer::UpdateSeconds(int n)
 
 {
-	if (!IsPowered(MISSIONTIMER))
+	if (!IsPowered())
 		return;
 
 	if (CountUp == TIMER_COUNT_UP) {
@@ -143,28 +144,39 @@ void MissionTimer::UpdateSeconds(int n)
 	}
 }
 
-bool MissionTimer::IsPowered(bool timer)
+bool MissionTimer::IsPowered()
 
 {
-	if (timer == MISSIONTIMER) {
-		if (DCPower.Voltage() < 25.0) { return false; }
-	}
-	else if (timer == EVENTTIMER) {
-		if (DCPower.Voltage() < 25.0) { return false; }
-	}
-
+	if (DCPower.Voltage() < 25.0) { return false; }
 	return true;
 }
 
-void MissionTimer::SystemTimestep(double simdt, bool timer)
+bool MissionTimer::IsDisplayPowered()
 
 {
-	if (timer == MISSIONTIMER) {
-		DCPower.DrawPower(12.0);
-	}
-	else if (timer == EVENTTIMER) {
-		DCPower.DrawPower(17.0);
-	}
+	if (DimmerRotationalSwitch->GetState() == 0)
+		return false;
+	
+	return true;
+}
+
+void MissionTimer::SystemTimestep(double simdt)
+
+{
+	DCPower.DrawPower(12.0);
+}
+
+void EventTimer::SystemTimestep(double simdt)
+
+{
+	DCPower.DrawPower(17.0);
+}
+
+
+void LEMEventTimer::SystemTimestep(double simdt)
+
+{
+	DCPower.DrawPower(17.0);
 }
 
 //
@@ -176,7 +188,7 @@ void MissionTimer::Timestep(double simt, double deltat, bool eventimer)
 
 {
 	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d", TimerTrash, IsPowered());
-	if (!IsPowered(eventimer)) {
+	if (!IsPowered()) {
 		if (!TimerTrash && !eventimer) {
 			Garbage();
 		}
@@ -234,7 +246,7 @@ void MissionTimer::SetTime(double t)
 void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 {
-	if (!IsPowered(MISSIONTIMER))
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	int Curdigit, Curdigit2;
@@ -274,7 +286,7 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 {
-	if (!IsPowered(MISSIONTIMER))
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	int Curdigit, Curdigit2;
@@ -363,7 +375,7 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
 	// Don't do this if not powered.
-	if (!IsPowered(MISSIONTIMER)) // LEM Event Timer is digital.
+	if (!IsPowered())
 		return;
 
 	//

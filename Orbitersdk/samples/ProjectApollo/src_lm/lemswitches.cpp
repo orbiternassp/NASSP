@@ -118,7 +118,7 @@ bool LEMMissionTimerSwitch::SwitchTo(int newState, bool dontspring)
 {
 	bool rv;
 	// Is the event timer powered?
-	if (lem->MissionTimerDisplay.IsPowered(MISSIONTIMER)) {
+	if (lem->MissionTimerDisplay.IsPowered()) {
 		// Yes, print the time
 		sprintf(oapiDebugString(), "LM MT: %.2d:%.2d:%.2d",
 			lem->MissionTimerDisplay.GetHours(),
