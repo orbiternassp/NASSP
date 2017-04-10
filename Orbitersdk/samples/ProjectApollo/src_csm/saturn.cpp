@@ -525,6 +525,7 @@ void Saturn::initSaturn()
 	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
 	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
 	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
+	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch);
 
 	//
 	// Configure connectors.

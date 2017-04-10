@@ -61,7 +61,7 @@ public:
 	void UpdateSeconds(int n);
 	void Reset();
 	void Garbage();
-	bool IsPowered(bool timer);
+	virtual bool IsPowered(bool timer);
 	void SetRunning(bool run) { Running = run; };
 	bool IsRunning() { return Running; };
 	void SetEnabled(bool run) { Enabled = run; };
