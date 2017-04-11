@@ -377,7 +377,7 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
 	// Don't do this if not powered.
-	if (!IsPowered())
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	//
