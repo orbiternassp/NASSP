@@ -58,8 +58,9 @@ MissionTimer::~MissionTimer()
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer) {
-	WireTo(a, b);
+void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
 	DimmerRotationalSwitch = dimmer;
 }
 
@@ -147,14 +148,14 @@ void MissionTimer::UpdateSeconds(int n)
 bool MissionTimer::IsPowered()
 
 {
-	if (DCPower.Voltage() < 25.0) { return false; }
+	if (DCPower.Voltage() < 25.0) { return false; } // DC
 	return true;
 }
 
 bool MissionTimer::IsDisplayPowered()
 
 {
-	if (DimmerRotationalSwitch->GetState() == 0)
+	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
 		return false;
 	
 	return true;
@@ -164,6 +165,7 @@ void MissionTimer::SystemTimestep(double simdt)
 
 {
 	DCPower.DrawPower(12.0);
+	DrawPower(4.0);
 }
 
 void EventTimer::SystemTimestep(double simdt)
@@ -187,7 +189,7 @@ void LEMEventTimer::SystemTimestep(double simdt)
 void MissionTimer::Timestep(double simt, double deltat, bool eventimer)
 
 {
-	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d", TimerTrash, IsPowered());
+	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d DC: %f AC: %f", TimerTrash, IsPowered(), DCPower.Voltage() ,Voltage());
 	if (!IsPowered()) {
 		if (!TimerTrash && !eventimer) {
 			Garbage();

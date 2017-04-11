@@ -41,12 +41,12 @@ public:
 	MissionTimer(PanelSDK &p);
 	virtual ~MissionTimer();
 
-	void Init(e_object *mna, e_object *mnb, RotationalSwitch *dimmer);
+	void Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
 	void Timestep(double simt, double deltat, bool eventimer);
 	virtual void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool eventimer);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+	void DCWireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 
 	Saturn *sat;
 
