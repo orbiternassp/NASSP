@@ -42,9 +42,9 @@ public:
 	virtual ~MissionTimer();
 
 	void Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
-	void Timestep(double simt, double deltat, bool eventimer);
+	void Timestep(double simt, double deltat, bool persistent);
 	virtual void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool eventimer);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void DCWireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 

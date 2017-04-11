@@ -186,12 +186,12 @@ void LEMEventTimer::SystemTimestep(double simdt)
 // design didn't allow counting down. We might want to rewrite this at some point.
 //
 
-void MissionTimer::Timestep(double simt, double deltat, bool eventimer)
+void MissionTimer::Timestep(double simt, double deltat, bool persistent)
 
 {
 	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d DC: %f AC: %f", TimerTrash, IsPowered(), DCPower.Voltage() ,Voltage());
 	if (!IsPowered()) {
-		if (!TimerTrash && !eventimer) {
+		if (!TimerTrash && !persistent) {
 			Garbage();
 		}
 		return;
@@ -325,12 +325,12 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	oapiBlt(surf, digits, 0, 0 + 123, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
 }
 
-void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool eventimer) {
+void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent) {
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_bool(scn, "ENABLED", Enabled);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
-	if (!eventimer) {
+	if (!persistent) {
 		papiWriteScenario_bool(scn, "TIMERTRASH", TimerTrash);
 	}
 	papiWriteScenario_double(scn, "MTD", GetTime());

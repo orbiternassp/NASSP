@@ -1214,8 +1214,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	fdaiRight.SystemTimestep(simdt);
-	MissionTimerDisplay.Timestep(MissionTime, simdt, true);	// These just do work
-	EventTimerDisplay.Timestep(MissionTime, simdt, true);
+	MissionTimerDisplay.Timestep(MissionTime, simdt, false);	// These just do work
+	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
 	eds.TimeStep();                                         // Do Work
 	optics.TimeStep(simdt);									// Do Work
