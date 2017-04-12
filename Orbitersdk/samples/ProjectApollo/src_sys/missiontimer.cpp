@@ -164,21 +164,25 @@ bool MissionTimer::IsDisplayPowered()
 void MissionTimer::SystemTimestep(double simdt)
 
 {
-	DCPower.DrawPower(12.0);
-	DrawPower(4.0);
+	DCPower.DrawPower(11.2);
+	DrawPower(7 * 7 * 0.022);
 }
 
 void EventTimer::SystemTimestep(double simdt)
 
 {
-	DCPower.DrawPower(17.0);
+	if (Running)
+		DCPower.DrawPower(5.0);
+	else
+		DCPower.DrawPower(1.0);
 }
 
 
 void LEMEventTimer::SystemTimestep(double simdt)
 
 {
-	DCPower.DrawPower(17.0);
+	DCPower.DrawPower(12.0);
+	DrawPower(4 * 7 * 0.022);
 }
 
 //
