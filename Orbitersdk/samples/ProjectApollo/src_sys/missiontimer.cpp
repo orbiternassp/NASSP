@@ -181,7 +181,7 @@ void EventTimer::SystemTimestep(double simdt)
 void LEMEventTimer::SystemTimestep(double simdt)
 
 {
-	DCPower.DrawPower(12.0);
+	DCPower.DrawPower(11.2);
 	DrawPower(4 * 7 * 0.022);
 }
 
