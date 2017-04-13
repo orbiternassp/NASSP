@@ -1288,7 +1288,7 @@ protected:
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
-	// LEM testing.
+	/// LEM testing.
 	/// \brief Do we have a CSM?
 	/// \return True if CSM, false if not.
 	///

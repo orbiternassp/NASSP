@@ -138,6 +138,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	imu(agc, Panelsdk),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
+	MissionTimerDisplay(Panelsdk),
+	MissionTimer306Display(Panelsdk),
+	EventTimerDisplay(Panelsdk),
+	EventTimer306Display(Panelsdk),
 	NonEssBus1("Non-Essential-Bus1", &NonessBusSwitch),
 	NonEssBus2("Non-Essential-Bus2", &NonessBusSwitch),
 	ACBus1PhaseA("AC-Bus1-PhaseA", 115, NULL),
@@ -518,11 +522,10 @@ void Saturn::initSaturn()
 	//
 	// Wire up timers.
 	//
-
-	MissionTimerDisplay.WireTo(&GaugePower);
-	MissionTimer306Display.WireTo(&GaugePower);
-	EventTimerDisplay.WireTo(&GaugePower);
-	EventTimer306Display.WireTo(&GaugePower);
+	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
+	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB);
+	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLEBCB);
+	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB);
 
 	//
 	// Configure connectors.
@@ -1505,10 +1508,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ems.SaveState(scn);
 	ordeal.SaveState(scn);
 
-	MissionTimerDisplay.SaveState(scn, MISSIONTIMER_2_START_STRING, MISSIONTIMER_END_STRING);
-	MissionTimer306Display.SaveState(scn, MISSIONTIMER_306_START_STRING, MISSIONTIMER_END_STRING);
-	EventTimerDisplay.SaveState(scn, EVENTTIMER_2_START_STRING, EVENTTIMER_END_STRING);
-	EventTimer306Display.SaveState(scn, EVENTTIMER_306_START_STRING, EVENTTIMER_END_STRING);
+	MissionTimerDisplay.SaveState(scn, MISSIONTIMER_2_START_STRING, MISSIONTIMER_END_STRING, false);
+	MissionTimer306Display.SaveState(scn, MISSIONTIMER_306_START_STRING, MISSIONTIMER_END_STRING, false);
+	EventTimerDisplay.SaveState(scn, EVENTTIMER_2_START_STRING, EVENTTIMER_END_STRING, true);
+	EventTimer306Display.SaveState(scn, EVENTTIMER_306_START_STRING, EVENTTIMER_END_STRING, true);
 
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
@@ -2939,10 +2942,10 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	MissionTime += simdt;
-	MissionTimerDisplay.Timestep(simt, simdt);
-	MissionTimer306Display.Timestep(simt, simdt);
-	EventTimerDisplay.Timestep(simt, simdt);
-	EventTimer306Display.Timestep(simt, simdt);
+	MissionTimerDisplay.Timestep(simt, simdt, false);
+	MissionTimer306Display.Timestep(simt, simdt, false);
+	EventTimerDisplay.Timestep(simt, simdt, true);
+	EventTimer306Display.Timestep(simt, simdt, true);
 
 	//
 	// Panel flash counter.

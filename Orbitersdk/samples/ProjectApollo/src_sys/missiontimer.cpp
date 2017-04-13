@@ -26,30 +26,42 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #include "soundlib.h"
 #include "nasspsound.h"
 
+#include "toggleswitch.h"
 #include "powersource.h"
 #include "missiontimer.h"
 #include "papi.h"
 
-MissionTimer::MissionTimer()
+MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 
 {
-	Reset();
-
 	Running = false;
 	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
+	TimerTrash = false;
+	DimmerRotationalSwitch = NULL;
+	srand((unsigned int)time(NULL)); // time gives 64bit 'time_t', srand wants int. We specify unsigned int because data loss doesn't matter.
+
+	Reset();
 }
 
 MissionTimer::~MissionTimer()
 
 {
 	// Nothing for now.
+}
+
+void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
+	DimmerRotationalSwitch = dimmer;
 }
 
 void MissionTimer::Reset()
@@ -59,6 +71,15 @@ void MissionTimer::Reset()
 	minutes = 0;
 	seconds = 0;
 	extra = 0.0;
+}
+
+void MissionTimer::Garbage()
+
+{
+	hours = rand() % 1000;
+	minutes = rand() % 60;
+	seconds = rand() % 60;
+	TimerTrash = true;
 }
 
 void MissionTimer::UpdateHours(int n)
@@ -124,16 +145,63 @@ void MissionTimer::UpdateSeconds(int n)
 	}
 }
 
+bool MissionTimer::IsPowered()
+
+{
+	if (DCPower.Voltage() < 25.0) { return false; } // DC
+	return true;
+}
+
+bool MissionTimer::IsDisplayPowered()
+
+{
+	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+		return false;
+	
+	return true;
+}
+
+void MissionTimer::SystemTimestep(double simdt)
+
+{
+	DCPower.DrawPower(11.2);
+	DrawPower(7 * 7 * 0.022);
+}
+
+void EventTimer::SystemTimestep(double simdt)
+
+{
+	if (Running)
+		DCPower.DrawPower(5.0);
+	else
+		DCPower.DrawPower(1.0);
+}
+
+
+void LEMEventTimer::SystemTimestep(double simdt)
+
+{
+	DCPower.DrawPower(12.0);
+	DrawPower(4 * 7 * 0.022);
+}
+
 //
 // This isn't really the most efficient way to update the clock, but the original
 // design didn't allow counting down. We might want to rewrite this at some point.
 //
 
-void MissionTimer::Timestep(double simt, double deltat)
+void MissionTimer::Timestep(double simt, double deltat, bool persistent)
 
 {
-	if (!IsPowered())
+	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d DC: %f AC: %f", TimerTrash, IsPowered(), DCPower.Voltage() ,Voltage());
+	if (!IsPowered()) {
+		if (!TimerTrash && !persistent) {
+			Garbage();
+		}
 		return;
+	}
+
+	TimerTrash = false;
 
 	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();
@@ -144,9 +212,6 @@ void MissionTimer::Timestep(double simt, double deltat)
 		else {
 			t -= deltat;
 		}
-
-		if (t < 0.0)
-			t = 0.0;
 
 		SetTime(t);
 	}
@@ -187,7 +252,7 @@ void MissionTimer::SetTime(double t)
 void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	int Curdigit, Curdigit2;
@@ -227,7 +292,7 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	int Curdigit, Curdigit2;
@@ -264,11 +329,14 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	oapiBlt(surf, digits, 0, 0 + 123, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
 }
 
-void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent) {
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_bool(scn, "ENABLED", Enabled);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
+	if (!persistent) {
+		papiWriteScenario_bool(scn, "TIMERTRASH", TimerTrash);
+	}
 	papiWriteScenario_double(scn, "MTD", GetTime());
 	oapiWriteLine(scn, end_str);
 }
@@ -290,14 +358,30 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "ENABLED", Enabled);
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_int(line, "COUNTUP", CountUp);
+		papiReadScenario_bool(line, "TIMERTRASH", TimerTrash);
 	}
+}
+
+LEMEventTimer::LEMEventTimer(PanelSDK &p) : EventTimer(p)
+
+{
+	//
+	// Nothing for now
+	//
+}
+
+LEMEventTimer::~LEMEventTimer()
+{
+	//
+	// Nothing for now
+	//
 }
 
 void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
 	// Don't do this if not powered.
-	if (!IsPowered())
+	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
 	//
@@ -327,12 +411,19 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	oapiBlt(surf, digits, 62, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 }
 
-EventTimer::EventTimer()
+EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
 
 {
-	MissionTimer();
-	// See http://history.nasa.gov/ap16fj/aoh_op_procs.htm, Backup Crew Prelaunch Checks, Pdf page 19
+	// See http://history.nasa.gov/afj/ap16fj/aoh_op_procs.html, Backup Crew Prelaunch Checks, Pdf page 19
 	Enabled = false;
+}
+
+EventTimer::~EventTimer()
+
+{
+	//
+	// Nothing for now
+	//
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
