@@ -347,11 +347,6 @@ protected:
 	bool MasterAlarmLit;
 
 	///
-	/// \brief MET of next master alarm light cycle.
-	///
-	double MasterAlarmCycleTime;
-
-	///
 	/// \brief Sound to use for master alarm.
 	///
 	/// Note that we use a reference here, which must be set in the constructor and

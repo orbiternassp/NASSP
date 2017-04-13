@@ -53,7 +53,6 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	LightsFailedRight = 0;
 
 	MasterAlarmLightEnabled = true;
-	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
 	MasterAlarmPressed = false;
@@ -159,13 +158,13 @@ void CautionWarningSystem::TimeStep(double simt)
 	// Play sound if appropriate.
 	//
 
-		if (MasterAlarm && IsPowered() && PlaySounds) {
-			if (!MasterAlarmSound.isPlaying()) {
-				MasterAlarmSound.play(LOOP, 255);
-			}
-		} else {
-			MasterAlarmSound.stop();
+	if (MasterAlarm && IsPowered() && PlaySounds) {
+		if (!MasterAlarmSound.isPlaying()) {
+			MasterAlarmSound.play(LOOP, 255);
 		}
+	} else {
+		MasterAlarmSound.stop();
+	}
 }
 
 void CautionWarningSystem::SystemTimestep(double simdt) 
