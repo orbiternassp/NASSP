@@ -2646,6 +2646,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
+	DimmerRotationalSwitch = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -2693,9 +2694,11 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScrollScaling = 0.03; // pixels per ft/sec
 }
 
-void EMS::Init(Saturn *vessel) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
 	sat = vessel;
-	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
+	DimmerRotationalSwitch = dimmer;
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -2951,6 +2954,10 @@ void EMS::SystemTimestep(double simdt) {
 
 	if (IsPowered() && !IsOff()) {
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
+	}
+
+	if (IsDisplayPowered() && !IsOff()) {
+		DrawPower(0.022);
 	}
 }
 
@@ -3214,6 +3221,14 @@ bool EMS::IsdVMode() {
 bool EMS::IsPowered() {
 
 	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
+}
+
+bool EMS::IsDisplayPowered() {
+
+	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+		return false;
+
+	return true;
 }
 
 void EMS::SaveState(FILEHANDLE scn) {

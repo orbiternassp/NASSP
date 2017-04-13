@@ -364,7 +364,7 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
-	ems.Init(this);
+	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
 	ordeal.Init(this);
 
 	// Telecom initialization
