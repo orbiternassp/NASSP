@@ -233,8 +233,10 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 void CautionWarningSystem::PushMasterAlarm()
 
 {
-	MasterAlarmSound.stop();
-	SetMasterAlarm(false); 
+	if (IsPowered()) {
+		MasterAlarmSound.stop();
+		SetMasterAlarm(false);
+	}
 	ButtonSound.play(NOLOOP, 255);
 }
 
