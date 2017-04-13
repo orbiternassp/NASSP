@@ -53,7 +53,6 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	LightsFailedRight = 0;
 
 	MasterAlarmLightEnabled = true;
-	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
 	MasterAlarmPressed = false;
@@ -156,23 +155,15 @@ void CautionWarningSystem::TimeStep(double simt)
 
 {
 	//
-	// Cycle master alarm light if required, and play sound if appropriate.
+	// Play sound if appropriate.
 	//
 
-	if (simt > MasterAlarmCycleTime){
-		if (MasterAlarm) {
-			MasterAlarmLit = !MasterAlarmLit;
+	if (MasterAlarm && IsPowered() && PlaySounds) {
+		if (!MasterAlarmSound.isPlaying()) {
+			MasterAlarmSound.play(LOOP, 255);
 		}
-		if (MasterAlarm) { // || (UplinkTestState&010) != 0){ -- Incorrect?
-			MasterAlarmCycleTime = simt + 0.25;
-		}
-		if (MasterAlarm && IsPowered() && PlaySounds) {
-			if (!MasterAlarmSound.isPlaying()) {
-				MasterAlarmSound.play(LOOP, 255);
-			}
-		} else {
-			MasterAlarmSound.stop();
-		}
+	} else {
+		MasterAlarmSound.stop();
 	}
 }
 
@@ -184,10 +175,10 @@ void CautionWarningSystem::SystemTimestep(double simdt)
 	if (IsPowered()) {
 		consumption += 11.4;
 		if (MasterAlarmLit)
-			consumption += 2.0;			// This number is just made up for now.
+			consumption += 0.6;			// This number is just made up for now.
 	}
 	if (MasterAlarmLit && LightsPowered())
-		consumption += 1.0;				// This number is just made up for now.
+		consumption += 0.6;				// This number is just made up for now.
 
 	DCPower.DrawPower(consumption);
 }
@@ -195,18 +186,8 @@ void CautionWarningSystem::SystemTimestep(double simdt)
 void CautionWarningSystem::SetMasterAlarm(bool alarm)
 
 {
-	if (MasterAlarm != alarm)
-	{
-		MasterAlarm = alarm;
-
-		//
-		// Always set light state to false. If the alarm is enabled, the next timestep will
-		// take care of lighting it.
-		//
-
-		MasterAlarmLit = false;
-		MasterAlarmCycleTime = MINUS_INFINITY;
-	}
+	MasterAlarm = alarm;
+	MasterAlarmLit = alarm;
 }
 
 //
@@ -252,8 +233,10 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 void CautionWarningSystem::PushMasterAlarm()
 
 {
-	MasterAlarmSound.stop();
-	SetMasterAlarm(false); 
+	if (IsPowered()) {
+		MasterAlarmSound.stop();
+		SetMasterAlarm(false);
+	}
 	ButtonSound.play(NOLOOP, 255);
 }
 
