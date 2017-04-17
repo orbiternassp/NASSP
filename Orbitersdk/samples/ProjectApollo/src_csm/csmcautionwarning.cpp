@@ -259,7 +259,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// Drawing 8.1, square L4 and others.
 	//
 
-	if (aws.CMCWarning || aws.TestAlarms) { // TestAlarms must be removed after yaAGC implements control over CMC light!
+	if (aws.DSKYWarn) {
 		SetLight(CSM_CWS_CMC_LIGHT, true);
 	}
 	else
