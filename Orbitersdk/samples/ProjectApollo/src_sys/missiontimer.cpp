@@ -148,7 +148,7 @@ void MissionTimer::UpdateSeconds(int n)
 bool MissionTimer::IsPowered()
 
 {
-	if (DCPower.Voltage() < 25.0) { return false; } // DC
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; } // DC
 	return true;
 }
 
