@@ -244,9 +244,8 @@ typedef struct {
 /// \ingroup InternalInterface
 ///
 typedef struct {
-	bool CMCWarning;
+	bool DSKYWarn;
 	bool ISSWarning;
-	bool TestAlarms;
 	bool PGNSWarning;
 } AGCWarningStatus;
 

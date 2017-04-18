@@ -239,7 +239,7 @@ enum ChannelValue32_Bits {
 // Channel 33, Optics
 enum ChannelValue33_Bits {
 	//Spare
-	RRPowerOnAuto = 1,      // RR power on and RR mode = LGC
+	RRPowerOnAuto = 1,		// RR power on and RR mode = LGC
 	RRRangeLowScale,
 	RRDataGood,
 	LRDataGood,
@@ -251,8 +251,20 @@ enum ChannelValue33_Bits {
 	UplinkTooFast,
 	DownlinkTooFast,
 	PIPAFailed,
-	LGC,                // LGC Internal Malfunction
+	AGCWarning,				// AGC Internal use only.
 	OscillatorAlarm
+};
+
+enum ChannelValue163_Bits {
+
+	Ch163DSKYWarn = 0,				///< Turn on the CMC/LGC light.
+	Ch163LightKbRel = 4,			///< Turn on the Keyboard Release light.
+	Ch163FlashVerbNoun,				///< Flash the Verb and Noun displays.			
+	Ch163LightOprErr,				///< Light the Operator Error light
+	Ch163LightRestart,				///< Light the Restart light
+	Ch163LightStandby,				///< Light the Standby light
+	Ch163ELOff,						///< Switch off EL panel power
+
 };
 
 // Channel 34, Downlink 1

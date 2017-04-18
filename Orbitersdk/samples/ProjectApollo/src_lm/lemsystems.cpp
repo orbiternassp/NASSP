@@ -1209,25 +1209,25 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simt);								    // Do Work
-	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
+	atca.Timestep(simt);
+	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	fdaiRight.SystemTimestep(simdt);
-	MissionTimerDisplay.Timestep(MissionTime, simdt, false);	// These just do work
+	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep();                                         // Do Work
-	optics.TimeStep(simdt);									// Do Work
-	LR.TimeStep(simdt);										// I don't wanna work
-	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
-	RadarTape.TimeStep(MissionTime);						// I just wanna bang on me drum all day
+	eds.TimeStep();
+	optics.TimeStep(simdt);
+	LR.TimeStep(simdt);
+	RR.TimeStep(simdt);
+	RadarTape.TimeStep(MissionTime);
 	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
 	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
 	crossPointerRight.SystemTimeStep(simdt);
-	SBandSteerable.TimeStep(simdt);							// Back to work...
+	SBandSteerable.TimeStep(simdt);
 	VHF.SystemTimestep(simdt);
 	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
@@ -3336,13 +3336,15 @@ void LEM_CWEA::TimeStep(double simdt){
 	ChannelValue val11;
 	ChannelValue val13;
 	ChannelValue val30;
-	ChannelValue val33;		
+	ChannelValue val33;	
+	ChannelValue val163;
 
 	if(lem == NULL){ return; }
 	val11 = lem->agc.GetOutputChannel(011);
 	val13 = lem->agc.GetOutputChannel(013);
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
+	val163 = lem->agc.GetOutputChannel(0163);
 
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
@@ -3402,7 +3404,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 	// Disabled by Guidance Control switch in AGS position.
-	if((val13[TestAlarms] || val33[LGC] || val33[OscillatorAlarm]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+	if((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
 		LightStatus[3][1] = 1;
 	}else{
 		LightStatus[3][1] = 0;

@@ -364,7 +364,7 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
-	ems.Init(this);
+	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
 	ordeal.Init(this);
 
 	// Telecom initialization
@@ -3216,6 +3216,7 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	ChannelValue val11;
 	ChannelValue val13;
 	ChannelValue val33;
+	ChannelValue val163;
 
 	val11 = agc.GetOutputChannel(011);
 	if (val11[ISSWarning]) 
@@ -3223,17 +3224,11 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	else
 		aws.ISSWarning = false;
 
-	val13 = agc.GetOutputChannel(013);
-	if (val13[TestAlarms])  
-		aws.TestAlarms = true;
+	val163 = agc.GetOutputChannel(0163);
+	if (val163[Ch163DSKYWarn])
+		aws.DSKYWarn = true;
 	else
-		aws.TestAlarms = false;
-
-	val33 = agc.GetInputChannel(033);
-	if (val33[AGCWarning])
-		aws.CMCWarning = true;
-	else
-		aws.CMCWarning = false;
+		aws.DSKYWarn = false;
 		
 	aws.PGNSWarning = false;
 	// Restart alarm
