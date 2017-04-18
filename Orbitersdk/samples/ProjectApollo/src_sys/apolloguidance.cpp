@@ -400,6 +400,7 @@ typedef union
 		unsigned ParityFail:1;
 		unsigned CheckParity:1;
 		unsigned NightWatchmanTripped:1;
+		unsigned GeneratedWarning:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -449,6 +450,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.ParityFail = vagc.ParityFail;
 	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
+	state.u.GeneratedWarning = vagc.GeneratedWarning;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -502,6 +504,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
 	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
 	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
+	oapiWriteScenario_int(scn, "WARNINGFILTER", vagc.WarningFilter);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
 	oapiWriteLine(scn, buffer);
@@ -605,6 +608,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
 			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
 		}
+		else if (!strnicmp(line, "WARNINGFILTER", 13)) {
+			sscanf(line + 13, "%" SCNd32, &vagc.WarningFilter);
+		}
 		/*
 		TODO Do NOT load CycleCounter until CduFifos are saved/loaded, too
 		else if (!strnicmp (line, "CYCLECOUNTER", 12)) {
@@ -644,6 +650,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.ParityFail = state.u.ParityFail;
 			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
+			vagc.GeneratedWarning = state.u.GeneratedWarning;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
