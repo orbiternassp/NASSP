@@ -1894,8 +1894,7 @@ void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE) return;
-	if (Sat->ems.IsOff()) return; 
+	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
 
 	if (v < 0) {
 		oapiBlt(drawSurface, Digits, 0, 0, 161, 0, 10, 19);

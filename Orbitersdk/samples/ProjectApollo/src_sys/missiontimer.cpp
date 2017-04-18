@@ -148,7 +148,7 @@ void MissionTimer::UpdateSeconds(int n)
 bool MissionTimer::IsPowered()
 
 {
-	if (DCPower.Voltage() < 25.0) { return false; } // DC
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; } // DC
 	return true;
 }
 
@@ -181,7 +181,7 @@ void EventTimer::SystemTimestep(double simdt)
 void LEMEventTimer::SystemTimestep(double simdt)
 
 {
-	DCPower.DrawPower(12.0);
+	DCPower.DrawPower(11.2);
 	DrawPower(4 * 7 * 0.022);
 }
 

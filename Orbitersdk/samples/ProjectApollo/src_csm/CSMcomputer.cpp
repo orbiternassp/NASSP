@@ -207,18 +207,20 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
 				// Reset standby flip-flop
 				vagc.Standby = 0;
-				// Reset fake DSKYChannel163
-				vagc.DskyChannel163 = 0;
-				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it.
-				InputChannel[033] &= 017777;
-				vagc.InputChannel[033] &= 017777;				
-				OutputChannel[033] &= 017777;				
-				vagc.Ch33Switches &= 017777;
+				// Turn on EL display and CMC Light (DSKYWarn).
+				SetOutputChannel(0163, 1);
+				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+				InputChannel[033] &= 037777;
+				vagc.InputChannel[033] &= 037777;				
+				OutputChannel[033] &= 037777;				
+				vagc.Ch33Switches &= 037777;
 				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 				// The RESTART light will come on as soon as the AGC receives power again.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;
 				vagc.RestartLight = 1;
+				sat->dsky.ClearRestart();
+				sat->dsky2.ClearRestart();
 				sat->dsky.ClearStby();
 				sat->dsky2.ClearStby();
 				// Reset last cycling time
