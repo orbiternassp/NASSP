@@ -610,8 +610,8 @@ IsUPRUPTActive (agc_t * State)
 void
 SetCh33Bits (agc_t * State, int16_t Value)
 {
-	State->Ch33Switches = (Value&001032);            // Save here
-    Value = (State->InputChannel[033] & 076745);     // Clear protected bits
+	State->Ch33Switches = (Value&076776);            // Save here
+    Value = (State->InputChannel[033] & 077001);     // Clear protected bits
 	Value |= State->Ch33Switches;                    // and write their values back	
 	State->InputChannel[033] = Value;                // Commit
 }
