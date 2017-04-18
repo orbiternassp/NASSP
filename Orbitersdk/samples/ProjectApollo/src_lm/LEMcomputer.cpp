@@ -393,11 +393,11 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_ena = 1;
 			}
 		}else{
-			if (sat->gdc.fdai_err_ena == 1) {
-				// sprintf(oapiDebugString(),"FDAI: RESET");
-				sat->gdc.fdai_err_x = 0;
-				sat->gdc.fdai_err_y = 0;
-				sat->gdc.fdai_err_z = 0;
+			if (lem->atca.lgc_err_ena == 1) {
+				// sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
+				lem->atca.lgc_err_x = 0;
+				lem->atca.lgc_err_y = 0;
+				lem->atca.lgc_err_z = 0;
 			}
 			lem->atca.lgc_err_ena = 0;
 		}
