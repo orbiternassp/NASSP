@@ -66,6 +66,7 @@
 		                 from agc_engine.c that are now in agc_t.
 		03/27/17 MAS    Fixed a parity-related program loading bug and
                          added initialization of a new night watchman bit.
+		04/16/17 MAS    Added initialization of warning filter variables.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -258,6 +259,9 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->TCTrap = 0;
   State->NoTC = 0;
   State->ParityFail = 0;
+
+  State->WarningFilter = 0;
+  State->GeneratedWarning = 0;
 
   State->RestartLight = 0;
   State->Standby = 0;
