@@ -61,6 +61,11 @@ RTCC::RTCC()
 	calcParams.TLI = 0.0;
 	calcParams.R_TLI = _V(0,0,0);
 	calcParams.V_TLI = _V(0,0,0);
+	calcParams.alt_node = 0.0;
+	calcParams.GET_node = 0.0;
+	calcParams.lat_node = 0.0;
+	calcParams.lng_node = 0.0;
+	calcParams.LOI = 0.0;
 }
 
 void RTCC::Init(MCC *ptr)
