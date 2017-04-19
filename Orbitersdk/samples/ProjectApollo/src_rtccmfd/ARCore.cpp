@@ -338,7 +338,7 @@ ARCore::ARCore(VESSEL* v)
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_TIG = 0.0;
 
-	TLCCmaneuver = 0;
+	TLCCmaneuver = 2;
 	TLCC_GET = 0.0;
 	TLCCNodeLat = 0.0;
 	TLCCEMPLat = 0.0;
@@ -352,6 +352,7 @@ ARCore::ARCore(VESSEL* v)
 	TLCC_TIG = 0.0;
 	TLCCReentryGET = 0.0;
 	TLCCSolGood = true;
+	TLCCFRIncl = 0.0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2031,23 +2032,40 @@ int ARCore::subThread()
 	{
 		if (TLCCmaneuver == 0)
 		{
-			TLIMan opt;
+			TLIManNode opt;
 			double MJDcut;
 
 			opt.GETbase = GETbase;
-			opt.h_peri = LOIperi;
+			opt.h_peri = TLCCNodeAlt;
 			opt.lat = TLCCNodeLat;
 			opt.lng = TLCCNodeLng;
-			opt.MCCGET = TLCC_GET;
+			opt.TLI_TIG = TLCC_GET;
 			opt.PeriGET = TLCCNodeGET;
 			opt.vessel = vessel;
 			opt.useSV = false;
 
-			rtcc->TranslunarInjectionProcessor(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+			rtcc->TranslunarInjectionProcessorNodal(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}
 		else if (TLCCmaneuver == 1)
+		{
+			TLIManFR opt;
+			double MJDcut;
+
+			opt.GETbase = GETbase;
+			opt.h_peri = TLCCPeri;
+			opt.lat = TLCCEMPLat;
+			opt.TLI_TIG = TLCC_GET;
+			opt.PeriGET = TLCCPeriGET;
+			opt.vessel = vessel;
+			opt.useSV = false;
+
+			rtcc->TranslunarInjectionProcessorFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut, TLCCPeriGETcor, TLCCReentryGET, TLCCFRIncl);
+			P30TIG = TLCC_TIG;
+			dV_LVLH = TLCC_dV_LVLH;
+		}
+		else if (TLCCmaneuver == 2)
 		{
 			MCCNodeMan opt;
 
@@ -2077,7 +2095,7 @@ int ARCore::subThread()
 			MCCFRMan opt;
 
 			//yes, yes, I know
-			opt.man = TLCCmaneuver - 2;
+			opt.man = TLCCmaneuver - 3;
 
 			opt.GETbase = GETbase;
 			opt.h_peri = TLCCPeri;
@@ -2103,7 +2121,7 @@ int ARCore::subThread()
 			opt.t_land = t_Land;
 			opt.azi = LOIazi;
 
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET);
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET, TLCCFRIncl);
 
 			if (TLCCSolGood)
 			{

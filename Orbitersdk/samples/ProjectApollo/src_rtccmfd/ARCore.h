@@ -187,7 +187,7 @@ public:
 	int mappage, mapgs;
 
 	//TLCC PAGE
-	int TLCCmaneuver;	//0 = TLI, 1 = XYZ and T (Nodal) Targeting, 2 = FR BAP Fixed LPO, 3 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	int TLCCmaneuver;	//0 = TLI (nodal), 1 = TLI (free return), 2 = XYZ and T (Nodal) Targeting, 3 = FR BAP Fixed LPO, 4 = Circumlunar free-return flyby, specified H_PC and phi_PC
 	VECTOR3 TLCC_dV_LVLH;
 	//Initial guess of pericynthion GET
 	double TLCCPeriGET;
@@ -196,7 +196,7 @@ public:
 	//Initial guess and corrected TIG
 	double TLCC_GET, TLCC_TIG;
 	double TLCCPeri;
-	double TLCCEMPLat, TLCCReentryGET;
+	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
