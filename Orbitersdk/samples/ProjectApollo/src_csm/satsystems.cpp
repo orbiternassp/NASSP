@@ -267,6 +267,11 @@ void Saturn::SystemsInit() {
 	GaugePower.WireToBuses(MainBusA, MainBusB);
 
 	//
+	//	Instrument bus
+	//
+	InstrumentBus.WireToBuses(&InstrumentLightingESSMnACircuitBraker, &InstrumentLightingESSMnBCircuitBraker);
+
+	//
 	// ECS devices
 	//
 
@@ -835,6 +840,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 /*	sprintf(oapiDebugString(), "PyroBus A %3.1fA/%3.1fV, PyroBus B %3.1fA/%3.1fV",
 		PyroBusA.Current(), PyroBusA.Voltage(), PyroBusB.Current(), PyroBusB.Voltage());
 */
+	sprintf(oapiDebugString(), "InstrumentBus: %3.1fV/%3.1fA", InstrumentBus.Voltage(), InstrumentBus.Current());
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");

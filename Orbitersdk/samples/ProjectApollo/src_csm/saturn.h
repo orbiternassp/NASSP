@@ -3650,6 +3650,8 @@ protected:
 	PowerMerge SwitchPower;
 	PowerMerge GaugePower;
 
+	PowerMerge InstrumentBus;
+
 	// ECS
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *PrimSuitHeatExchanger;
