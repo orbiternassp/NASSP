@@ -3540,8 +3540,18 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			if (RateErrorMonSwitch.GetState() == 1)
 			{
 				if (RR.IsPowered()) {
-					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
-					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+					if (ShiftTruSwitch.IsUp())
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+						errors.x = 0.0;
+					}
+					else
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+						errors.x = 0.0;
+					}
 				}
 				else
 				{
@@ -3584,8 +3594,18 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			if (RightRateErrorMonSwitch.GetState() == 1)
 			{
 				if (RR.IsPowered()) {
-					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
-					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+					if (ShiftTruSwitch.IsUp())
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+						errors.x = 0.0;
+					}
+					else
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+						errors.x = 0.0;
+					}
 				}
 				else
 				{

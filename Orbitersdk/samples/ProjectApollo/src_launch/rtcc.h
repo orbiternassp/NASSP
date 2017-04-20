@@ -542,6 +542,7 @@ public:
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
 	void TLMCFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, double &v_peri, double &azi_peri, double &lng_peri);
 	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
+	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, double &v_peri, double &azi_peri, double &lng_EMP, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMC_BAP_FR_FixedLPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
 
