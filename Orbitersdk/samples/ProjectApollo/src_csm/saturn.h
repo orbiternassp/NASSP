@@ -52,6 +52,7 @@
 #include "mcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
+#include "ORDEAL.h"
 #include "checklistController.h"
 #include "payload.h"
 
@@ -243,9 +244,8 @@ typedef struct {
 /// \ingroup InternalInterface
 ///
 typedef struct {
-	bool CMCWarning;
+	bool DSKYWarn;
 	bool ISSWarning;
-	bool TestAlarms;
 	bool PGNSWarning;
 } AGCWarningStatus;
 
@@ -502,6 +502,8 @@ public:
 		SRF_CWS_GNLIGHTS,
 		SRF_BORDER_45x49,
 		SRF_BORDER_28x32,
+		SRF_EVENT_TIMER_DIGITS90,
+		SRF_DIGITAL90,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1285,7 +1287,7 @@ protected:
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
-	// LEM testing.
+	/// LEM testing.
 	/// \brief Do we have a CSM?
 	/// \return True if CSM, false if not.
 	///
@@ -1441,11 +1443,24 @@ protected:
 	MissionTimer MissionTimerDisplay;
 
 	///
+	/// Mission Timer display on panel 306.
+	/// \brief Panel 306 Mission Timer display.
+	///
+	MissionTimer MissionTimer306Display;
+
+	///
 	/// Event Timer display on control panel.
 	/// \brief Event Timer display.
 	///
 	EventTimer EventTimerDisplay;
 	SaturnEventTimer SaturnEventTimerDisplay;	//Dummy for checklist controller
+
+	///
+	/// Event Timer display on panel 306.
+	/// \brief Panel 306 Event Timer display.
+	///
+	EventTimer EventTimer306Display;
+	SaturnEventTimer SaturnEventTimer306Display;	//Dummy for checklist controller
 	
 	//
 	// Center engine shutdown times for first and
@@ -3097,6 +3112,11 @@ protected:
 	SwitchRow Panel306Row;
 	EventTimerResetSwitch EventTimerUpDown306Switch;
 	EventTimerControlSwitch EventTimerControl306Switch;
+	TimerUpdateSwitch EventTimer306MinutesSwitch;
+	TimerUpdateSwitch EventTimer306SecondsSwitch;
+	TimerUpdateSwitch MissionTimer306HoursSwitch;
+	TimerUpdateSwitch MissionTimer306MinutesSwitch;
+	TimerUpdateSwitch MissionTimer306SecondsSwitch;
 
 	SwitchRow MissionTimer306SwitchRow;
 	TimerControlSwitch MissionTimer306Switch;
@@ -3796,7 +3816,6 @@ protected:
 	bool ASTPMission;
 
 	double DockAngle;
-	double SeparationSpeed;
 
 	double AtempP;
 	double AtempY;
@@ -4417,7 +4436,6 @@ protected:
 	friend class HGA;
 	friend class DSE;
 	friend class EMS;
-	friend class ORDEAL;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class SPSGimbalActuator;

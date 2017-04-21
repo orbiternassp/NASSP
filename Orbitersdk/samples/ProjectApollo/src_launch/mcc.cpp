@@ -589,11 +589,11 @@ void MCC::Init(Saturn *vs){
 	// CAPCOM INTERFACE INITIALIZATION
 	// Get handles to annotations.
 	// The menu lives in the top left, the message box to the right of that
-	NHmenu = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	NHmenu = oapiCreateAnnotation(false,0.65,_V(1,1,0));
 	oapiAnnotationSetPos(NHmenu,0,0,0.15,0.2);
-	NHmessages = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	NHmessages = oapiCreateAnnotation(false,0.65,_V(1,1,0));
 	oapiAnnotationSetPos(NHmessages,0.18,0,0.87,0.2);
-	NHpad = oapiCreateAnnotation(false,0.75,_V(1,1,0));
+	NHpad = oapiCreateAnnotation(false,0.65,_V(1,1,0));
 	oapiAnnotationSetPos(NHpad,0,0.2,0.33,1);
 	// Clobber message output buffer
 	msgOutputBuf[0] = 0;

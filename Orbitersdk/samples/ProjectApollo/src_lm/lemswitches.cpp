@@ -1347,3 +1347,19 @@ bool EngineStopButton::Push()
 
 	return false;
 }
+
+void LEMPanelOrdeal::Init(SwitchRow &row, LEM *l) {
+	MeterSwitch::Init(row);
+	lem = l;
+}
+
+int LEMPanelOrdeal::GetState() {
+	return lem->ordealEnabled;
+}
+
+void LEMPanelOrdeal::SetState(int value) {
+
+	if (value == 0) value = -1;
+
+	lem->ordealEnabled = value;
+}

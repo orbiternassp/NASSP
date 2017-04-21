@@ -1686,9 +1686,14 @@ void SaturnV::SwitchSelector(int item){
 		// Start mission and event timers
 		MissionTimerDisplay.Reset();
 		MissionTimerDisplay.SetEnabled(true);
+		MissionTimer306Display.Reset();
+		MissionTimer306Display.SetEnabled(true);
 		EventTimerDisplay.Reset();
 		EventTimerDisplay.SetEnabled(true);
 		EventTimerDisplay.SetRunning(true);
+		EventTimer306Display.Reset();
+		EventTimer306Display.SetEnabled(true);
+		EventTimer306Display.SetRunning(true);
 		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;

@@ -753,6 +753,7 @@
 #define IDB_RADAR_TAPE                  1026
 #define AID_RANGE_TAPE                  1027
 #define AID_RATE_TAPE                   1028
+#define IDB_ORDEAL_PANEL				1029
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

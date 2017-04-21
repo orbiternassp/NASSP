@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\ORDEAL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -277,6 +280,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src_lm\yaAGS\yaAEA.h">
       <Filter>yaAGS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\ORDEAL.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

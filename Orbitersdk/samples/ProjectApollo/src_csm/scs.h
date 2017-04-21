@@ -301,13 +301,16 @@ public:
 #define EMS_RSI_CENTER_X        42     //Pixel center on bitmap
 #define EMS_RSI_CENTER_Y        41     //Pixel center on bitmap
 
-class EMS {
+class EMS : public e_object {
 
 public:
 	EMS(PanelSDK &p);
-	void Init(Saturn *vessel);										// Initialization
+	void Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
 	void TimeStep(double MissionTime, double simdt);
 	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
@@ -323,11 +326,10 @@ public:
 	bool IsOff();
 	bool IsdVMode();
 	bool WriteScrollToFile();
-	void SaveState(FILEHANDLE scn);                                // SaveState callback
-	void LoadState(FILEHANDLE scn);                                // LoadState callback
 	
 protected:
 	bool IsPowered();
+	bool IsDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
@@ -376,36 +378,10 @@ protected:
 
 	PowerMerge DCPower;
 	Saturn *sat;
+	RotationalSwitch *DimmerRotationalSwitch;
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
-};
-
-
-// ORDEAL
-
-#define ORDEAL_START_STRING		"ORDEAL_BEGIN"
-#define ORDEAL_END_STRING		"ORDEAL_END"
-
-class ORDEAL {
-	
-public:
-	ORDEAL();
-	void Init(Saturn *vessel);										// Initialization
-	void Timestep(double simdt);                                    // Timestep
-	void SystemTimestep(double simdt);
-
-	double GetFDAI1PitchAngle();
-	double GetFDAI2PitchAngle();
-
-	void SaveState(FILEHANDLE scn);                                // SaveState callback
-	void LoadState(FILEHANDLE scn);                                // LoadState callback
-
-private:
-	bool IsPowered();
-
-	double pitchOffset;
-	Saturn *sat;
 };
 
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);
