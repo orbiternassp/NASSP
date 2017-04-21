@@ -893,19 +893,3 @@ public:
 protected:
 	Saturn *sat;
 };
-
-class OrdealRotationalSwitch: public RotationalSwitch {
-
-public:
-	OrdealRotationalSwitch() { value = 100; lastX = 0; mouseDown = false; };
-	virtual void DrawSwitch(SURFHANDLE drawSurface);
-	virtual bool CheckMouseClick(int event, int mx, int my);
-	virtual void SaveState(FILEHANDLE scn);
-	virtual void LoadState(char *line);
-	int GetValue() { return value; }
-
-protected:
-	int value;
-	int lastX;
-	bool mouseDown;
-};

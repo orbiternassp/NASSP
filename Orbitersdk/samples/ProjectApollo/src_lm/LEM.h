@@ -26,6 +26,7 @@
 #define _PA_LEM_H
 
 #include "FDAI.h"
+#include "ORDEAL.h"
 
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
@@ -1564,6 +1565,23 @@ protected:
 	int LEMCoas1Enabled;
 	int LEMCoas2Enabled;
 
+	///////////////////////////
+	// ORDEAL Panel switches //
+	///////////////////////////
+
+	SwitchRow ORDEALSwitchesRow;
+	ToggleSwitch ORDEALFDAI1Switch;
+	ToggleSwitch ORDEALFDAI2Switch;
+	ThreePosSwitch ORDEALEarthSwitch;
+	ThreePosSwitch ORDEALLightingSwitch;
+	ToggleSwitch ORDEALModeSwitch;
+	ThreePosSwitch ORDEALSlewSwitch;
+	OrdealRotationalSwitch ORDEALAltSetRotary;
+
+	LEMPanelOrdeal PanelOrdeal;		// Dummy switch/display for checklist controller
+
+	int ordealEnabled;
+
 	bool FirstTimestep;
 
 	bool LAUNCHIND[8];
@@ -1773,6 +1791,7 @@ protected:
 	LEM_LR LR;
 	LEM_RR RR;
 	GASTA gasta;
+	ORDEAL ordeal;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1839,6 +1858,7 @@ protected:
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
 	friend class CrossPointer;
+	friend class LEMPanelOrdeal;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

@@ -1118,6 +1118,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
+		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
+			sscanf(line + 13, "%i", &ordealEnabled);
+		}
 		else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
 			int i;
 			sscanf(line + 24, "%d", &i);
@@ -1203,6 +1206,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
 			crossPointerRight.LoadState(scn);
+		}
+		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
+			ordeal.LoadState(scn);
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1465,6 +1471,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
 	oapiWriteScenario_int(scn, "VAGCCHECKLISTAUTOENABLED", VAGCChecklistAutoEnabled);
 
@@ -1537,6 +1544,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	crossPointerLeft.SaveState(scn);
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
 	crossPointerRight.SaveState(scn);
+	ordeal.SaveState(scn);
 	checkControl.save(scn);
 }
 

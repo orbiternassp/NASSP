@@ -53,6 +53,7 @@
 #include "rtcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
+#include "ORDEAL.h"
 #include "checklistController.h"
 #include "payload.h"
 
@@ -4436,7 +4437,6 @@ protected:
 	friend class HGA;
 	friend class DSE;
 	friend class EMS;
-	friend class ORDEAL;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class SPSGimbalActuator;

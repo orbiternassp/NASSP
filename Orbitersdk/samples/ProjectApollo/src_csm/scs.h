@@ -384,32 +384,5 @@ protected:
 	friend class SaturnEMSScrollDisplay;
 };
 
-
-// ORDEAL
-
-#define ORDEAL_START_STRING		"ORDEAL_BEGIN"
-#define ORDEAL_END_STRING		"ORDEAL_END"
-
-class ORDEAL {
-	
-public:
-	ORDEAL();
-	void Init(Saturn *vessel);										// Initialization
-	void Timestep(double simdt);                                    // Timestep
-	void SystemTimestep(double simdt);
-
-	double GetFDAI1PitchAngle();
-	double GetFDAI2PitchAngle();
-
-	void SaveState(FILEHANDLE scn);                                // SaveState callback
-	void LoadState(FILEHANDLE scn);                                // LoadState callback
-
-private:
-	bool IsPowered();
-
-	double pitchOffset;
-	Saturn *sat;
-};
-
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);
 bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC);

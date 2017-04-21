@@ -678,6 +678,9 @@ void LEM::SystemsInit()
 	//GASTA
 	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, &imu);
 
+	//ORDEAL
+	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -1210,6 +1213,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
 	atca.Timestep(simt);
+	ordeal.Timestep(simdt);
+	ordeal.SystemTimestep(simdt);
 	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
