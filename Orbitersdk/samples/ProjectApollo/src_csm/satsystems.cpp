@@ -359,7 +359,7 @@ void Saturn::SystemsInit() {
 	agc.SetDSKY2(&dsky2);
 	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNPowerIMUSwitch);
 	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
-	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
+	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);
 
 	// SCS initialization
 	bmag1.Init(1, this, &SystemMnACircuitBraker, &StabContSystemAc1CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
@@ -841,6 +841,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		PyroBusA.Current(), PyroBusA.Voltage(), PyroBusB.Current(), PyroBusB.Voltage());
 */
 	sprintf(oapiDebugString(), "InstrumentBus: %3.1fV/%3.1fA", InstrumentBus.Voltage(), InstrumentBus.Current());
+
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");

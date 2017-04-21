@@ -386,6 +386,7 @@ class SaturnAccelGMeter : public SaturnRoundMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	double AdjustForPower(double val) { return val; };
 };
 
 class DirectO2RotationalSwitch: public RotationalSwitch {

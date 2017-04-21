@@ -1649,7 +1649,7 @@ void Saturn::SetSwitches(int panel) {
 	MasterAlarmSwitch.Init(&cws);
 	MasterAlarmSwitchRow.AddSwitch(&MasterAlarmSwitch);
 
-	AccelGMeterRow.Init(AID_GMETER, MainPanel, &GaugePower);
+	AccelGMeterRow.Init(AID_GMETER, MainPanel);
 	AccelGMeter.Init(g_Param.pen[4], g_Param.pen[4], AccelGMeterRow, this);
 
 	THCRotaryRow.Init(AID_THC, MainPanel);
@@ -2184,7 +2184,7 @@ void Saturn::SetSwitches(int panel) {
 	DCAmpMeter.Init(g_Param.pen[4], g_Param.pen[4], DCAmpMeterRow, this, &DCIndicatorsRotary);
 	DCAmpMeter.SetSurface(srf[SRF_DCAMPS], 99, 98);
 
-	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &GaugePower);
+	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &InstrumentBus);
 	H2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	H2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	O2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
@@ -2800,11 +2800,11 @@ void Saturn::SetSwitches(int panel) {
 	// Panel 276
 	//
 	
-	Panel276CBRow.Init(AID_PANEL276, MainPanel, &InstrumentBus);
-	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB4.Init(62, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
+	Panel276CBRow.Init(AID_PANEL276, MainPanel);
+	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentBus, 5.0);
+	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentBus, 5.0);
+	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentBus, 5.0);
+	Panel276CB4.Init(62, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentBus, 5.0);
 
 	//
 	// Panel 278
