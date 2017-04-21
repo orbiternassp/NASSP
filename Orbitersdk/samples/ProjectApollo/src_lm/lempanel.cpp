@@ -788,6 +788,23 @@ void LEM::InitSwitches() {
 
 	DskySwitchProg.SetDelayTime(1.5);
 
+	ORDEALAltSetRotary.AddPosition(0, 240);
+	ORDEALAltSetRotary.AddPosition(1, 270);
+	ORDEALAltSetRotary.AddPosition(2, 330);
+	ORDEALAltSetRotary.AddPosition(3, 0);
+	ORDEALAltSetRotary.AddPosition(4, 60);
+	ORDEALAltSetRotary.AddPosition(5, 90);
+	ORDEALAltSetRotary.AddPosition(6, 150);
+	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 2);
+
+	ORDEALFDAI1Switch.Register(PSH, "ORDEALFDAI1Switch", false);
+	ORDEALFDAI2Switch.Register(PSH, "ORDEALFDAI2Switch", false);
+	ORDEALEarthSwitch.Register(PSH, "ORDEALEarthSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALLightingSwitch.Register(PSH, "ORDEALLightingSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALModeSwitch.Register(PSH, "ORDEALModeSwitch", false);
+	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	PanelOrdeal.Register(PSH, "PanelOrdeal", 0, 0, 0, 0);	// dummy switch/display for checklist controller
+
 	//
 	// Old stuff.
 	//
@@ -1236,7 +1253,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
 		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
-
+		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
+		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
 
 
 		//
@@ -1272,6 +1290,8 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_FIVE_POS_SWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_RR_NOTRACK],	     	g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_RADAR_TAPE],	     	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_ROTARY],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],			g_Param.col[4]);
 		//oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
 
 		//		break;
@@ -1462,6 +1482,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RANGE_TAPE,    					_R( 542,  660,  586,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RATE_TAPE,    					_R( 593,  660,  628,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
+		// ORDEAL
+		oapiRegisterPanelArea(AID_ORDEALSWITCHES,					_R(689, 10, 1166, 212),		PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		break;	
@@ -1541,13 +1564,15 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 264,  85,  1513,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 264,  258, 1513,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW3,					_R( 264,  431, 1513,  461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 264,  604, 1637,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 264,  85,  1513,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 264,  258, 1513,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW3,					_R( 264,  431, 1513,  461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 264,  604, 1637,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		//oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R(  48, 1001, 525, 1203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -2278,6 +2303,17 @@ void LEM::SetSwitches(int panel) {
 			CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
+
+			ORDEALSwitchesRow.Init(AID_ORDEALSWITCHES, MainPanel);
+			ORDEALFDAI1Switch.Init(55, 43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALFDAI2Switch.Init(168, 43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALEarthSwitch.Init(264, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALLightingSwitch.Init(55, 132, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALModeSwitch.Init(215, 132, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALSlewSwitch.Init(264, 132, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALAltSetRotary.Init(346, 63, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALSwitchesRow);
+
+			PanelOrdeal.Init(ORDEALSwitchesRow, this); 	// dummy switch/display for checklist controller
 	//		break;
 
 	//	case LMPANEL_AOTVIEW:			
@@ -2412,6 +2448,27 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
 	static int ctrl = 0;
+
+	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == LMPANEL_MAIN) {
+		if (event & PANEL_MOUSE_LBDOWN) {
+			if (ordealEnabled == 0) {
+				ordealEnabled = 1;
+				SwitchClick();
+				return true;
+			}
+			else if (mx <= 50) {
+				ordealEnabled = -1;
+				SwitchClick();
+				return true;
+			}
+		}
+		if (ordealEnabled == 0)
+			return false;
+	}
 
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
@@ -3380,6 +3437,32 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	}
 
 	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == LMPANEL_MAIN) {
+		if (ordealEnabled == -1) {
+			ordealEnabled = 0;
+			return true;
+		}
+		if (ordealEnabled == 0) {
+			if (PanelOrdeal.IsFlashing()) {
+				if (PanelFlashOn) {
+					oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+				}
+				return true;
+			}
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_ORDEAL_PANEL], 0, 0, 0, 0, 477, 202, SURF_PREDEF_CK);
+		if (PanelOrdeal.IsFlashing()) {
+			if (PanelFlashOn) {
+				oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+			}
+		}
+	}
+
+	//
 	// Process all the generic switches.
 	//
 
@@ -3563,6 +3646,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI1PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if (errors.x > 41) { errors.x = 41; }
 			else { if (errors.x < -41) { errors.x = -41; } }
@@ -3617,6 +3707,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI2PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if (errors.x > 41) { errors.x = 41; }
 			else { if (errors.x < -41) { errors.x = -41; } }
