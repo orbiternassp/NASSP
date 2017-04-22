@@ -3403,7 +3403,8 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		case OAPI_KEY_8:
 		case OAPI_KEY_9:
 		case OAPI_KEY_0:
-			hMCC->keyDown(key);
+			if (hMCC)
+				hMCC->keyDown(key);
 			break;
 		}
 	}
