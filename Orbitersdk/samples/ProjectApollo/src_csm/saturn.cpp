@@ -959,15 +959,15 @@ void Saturn::clbkPostCreation() {
 	checkControl.linktoVessel(this);
 
 	//Find MCC, if it exists
-	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	hMCC = oapiGetVesselByName("MCC");
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "MCCVessel", 7)) hMCC = static_cast<MCCVessel*>(pVessel);
+			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17)
+				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
 		}
-		else hMCC = NULL;
+		else pMCC = NULL;
 	}
-
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -3403,8 +3403,8 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		case OAPI_KEY_8:
 		case OAPI_KEY_9:
 		case OAPI_KEY_0:
-			if (hMCC)
-				hMCC->keyDown(key);
+			if (pMCC != NULL)
+				pMCC->keyDown(key);
 			break;
 		}
 	}

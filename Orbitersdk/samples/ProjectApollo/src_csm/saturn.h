@@ -1597,7 +1597,9 @@ protected:
 	//
 	// Ground Systems
 	//
-	MCCVessel *hMCC;
+	MCC *pMCC;
+	OBJHANDLE hMCC;
+	char MCCstring[64];
 
 	//
 	// ChecklistController

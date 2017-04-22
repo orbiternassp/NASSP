@@ -24,22 +24,13 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "soundlib.h"
-#include "resource.h"
-#include "nasspdefs.h"
-#include "nasspsound.h"
-#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
-#include "ioChannels.h"
-#include "tracer.h"
 #include "saturnv.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
@@ -67,21 +58,15 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 
 #define ORBITER_MODULE
 
-MCCVessel::MCCVessel(OBJHANDLE hVessel, int flightmodel)
-	: VESSEL4(hVessel, flightmodel)
-{
-
-}
-
-void MCCVessel::clbkSaveState(FILEHANDLE scn)
+void MCC::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
 
-	mcc.SaveState(scn);
-	mcc.rtcc->SaveState(scn);
+	SaveState(scn);
+	rtcc->SaveState(scn);
 }
 
-void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
+void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 {
 	char *line;
 
@@ -90,56 +75,88 @@ void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
 			int i;
 			sscanf(line + 15, "%d", &i);
 			if (i)
-				mcc.enableMissionTracking();
+				enableMissionTracking();
 		}
+		else if (!strnicmp(line, "CSMNAME", 7))
+		{
+			char CSMName[64];
+			VESSEL *v;
+			OBJHANDLE hCSM;
+			strncpy(CSMName, line + 8, 64);
+			hCSM = oapiGetObjectByName(CSMName);
+			if (hCSM != NULL)
+			{
+				v = oapiGetVesselInterface(hCSM);
+
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
+					!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
+					!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
+					!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
+					cm = (Saturn *)vessel;
+				}
+			}
+		}
+		/*else if (!strnicmp(line, "LEMNAME", 7))
+		{
+			char LEMName[64];
+			VESSEL *v;
+			OBJHANDLE hLEM;
+			strncpy(LEMName, line + 8, 64);
+			hLEM = oapiGetObjectByName(LEMName);
+			if (hLEM != NULL)
+			{
+				v = oapiGetVesselInterface(hLEM);
+
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+					!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
+					lem = (LEM *)v;
+				}
+			}
+		}*/
 		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
-			mcc.LoadState(scn);
+			LoadState(scn);
 		}
 		else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
-			mcc.rtcc->LoadState(scn);
+			rtcc->LoadState(scn);
 		}
 		else ParseScenarioLineEx(line, status);
 	}
 
 	// Ground Systems Init
-	mcc.Init(cm);
+	Init();
 }
 
-int MCCVessel::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
-	// MCC CAPCOM interface key handling                                                                                                
-	if (down && !KEYMOD_SHIFT(kstate)) {
-		switch (key) {
-		case OAPI_KEY_TAB:
-		case OAPI_KEY_1:
-		case OAPI_KEY_2:
-		case OAPI_KEY_3:
-		case OAPI_KEY_4:
-		case OAPI_KEY_5:
-		case OAPI_KEY_6:
-		case OAPI_KEY_7:
-		case OAPI_KEY_8:
-		case OAPI_KEY_9:
-		case OAPI_KEY_0:
-			mcc.keyDown(key);
-			break;
-		}
-	}
-	return 0;
-}
-
-void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
+void MCC::clbkPreStep(double simt, double simdt, double mjd)
 {
+
+	sprintf(oapiDebugString(), "%d", cm->ApolloNo);
+
 	// Update Ground Data
-	mcc.TimeStep(simdt);
+	TimeStep(simdt);
 }
 
-void MCCVessel::keyDown(DWORD key)
+DLLCLBK void InitModule(HINSTANCE hDLL)
 {
-	mcc.keyDown(key);
+}
+
+DLLCLBK void ExitModule(HINSTANCE hDLL)
+{
+}
+
+DLLCLBK VESSEL* ovcInit(OBJHANDLE hVessel, int iFlightModel)
+{
+	return new MCC(hVessel, iFlightModel);
+}
+
+DLLCLBK void ovcExit(VESSEL* pVessel)
+{
+	delete static_cast<MCC*>(pVessel);
 }
 
 // CONS
-MCC::MCC(){
+MCC::MCC(OBJHANDLE hVessel, int flightmodel)
+	: VESSEL4(hVessel, flightmodel)
+{
 	// Reset data
 	rtcc = NULL;
 	cm = NULL;
@@ -192,9 +209,8 @@ MCC::MCC(){
 	upDescr[0] = 0;
 }
 
-void MCC::Init(Saturn *vs){
-	// Set CM pointer
-	cm = vs;
+void MCC::Init(){
+	
 	// Make a new RTCC if we don't have one already
 	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
 
@@ -2786,6 +2802,7 @@ void MCC::freePad(){
 void MCC::keyDown(DWORD key){
 	char buf[MAX_MSGSIZE];
 	char menubuf[300];
+	
 	switch(key){
 		case OAPI_KEY_TAB:
 			if(menuState == 0){

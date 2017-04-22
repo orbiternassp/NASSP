@@ -593,12 +593,13 @@ struct AP11PDIPAD {
 
 
 // Mission Control Center class
-class MCC {	
+class MCC : public VESSEL4 {
 public:
-	MCC();													// Cons
-	void Init(Saturn *vs);									// Initialization
+	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
+	void Init();											// Initialization
+	void clbkPreStep(double simt, double simdt, double mjd);
 	void TimeStep(double simdt);					        // Timestep
-	void keyDown(DWORD key);								// Notification of keypress	
+	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
 	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
@@ -619,7 +620,9 @@ public:
 	void initiateAbort();
 	void SlowIfDesired();
 	void SaveState(FILEHANDLE scn);							// Save state
-	void LoadState(FILEHANDLE scn);							// Load state	
+	void LoadState(FILEHANDLE scn);							// Load state
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
@@ -682,25 +685,6 @@ public:
 
 	// FRIEND CLASSES
 	friend class RTCC;										// RTCC can handle our data
-};
-
-class MCCVessel: public VESSEL4
-{
-public:
-	MCCVessel(OBJHANDLE hVessel, int flightmodel);
-	//~MCCVessel();
-
-	//void clbkPostCreation();
-	void clbkPreStep(double simt, double simdt, double mjd);
-	void clbkSaveState(FILEHANDLE scn);
-	void clbkLoadStateEx(FILEHANDLE scn, void *status);
-	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
-
-	virtual void keyDown(DWORD key);								// Notification of keypress	
-private:
-	MCC mcc;
-
-	Saturn *cm;												// Pointer to CM
 };
 
 #endif // _PA_MCC_H
