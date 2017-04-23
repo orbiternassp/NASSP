@@ -596,6 +596,10 @@ struct AP11PDIPAD {
 class MCC : public VESSEL4 {
 public:
 	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
+	
+	char CSMName[64];
+	char LVName[64];
+	
 	void Init();											// Initialization
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void TimeStep(double simdt);					        // Timestep

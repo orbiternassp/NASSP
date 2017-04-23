@@ -62,6 +62,12 @@ void MCC::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
 
+	if (CSMName[0])
+		oapiWriteScenario_string(scn, "CSMNAME", CSMName);
+
+	if (LVName[0])
+		oapiWriteScenario_string(scn, "LVNAME", LVName);
+
 	SaveState(scn);
 	rtcc->SaveState(scn);
 }
@@ -79,7 +85,6 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else if (!strnicmp(line, "CSMNAME", 7))
 		{
-			char CSMName[64];
 			VESSEL *v;
 			OBJHANDLE hCSM;
 			strncpy(CSMName, line + 8, 64);
@@ -92,7 +97,7 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 					!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
 					!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
 					!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-					cm = (Saturn *)vessel;
+					cm = (Saturn *)v;
 				}
 			}
 		}
@@ -113,6 +118,10 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 				}
 			}
 		}*/
+		else if (!strnicmp(line, "LVNAME", 6))
+		{
+			strncpy(LVName, line + 7, 64);
+		}
 		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
 			LoadState(scn);
 		}
@@ -128,9 +137,6 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 
 void MCC::clbkPreStep(double simt, double simdt, double mjd)
 {
-
-	sprintf(oapiDebugString(), "%d", cm->ApolloNo);
-
 	// Update Ground Data
 	TimeStep(simdt);
 }
@@ -157,6 +163,10 @@ DLLCLBK void ovcExit(VESSEL* pVessel)
 MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	: VESSEL4(hVessel, flightmodel)
 {
+	//Vessel data
+	CSMName[0] = 0;
+	LVName[0] = 0;
+	
 	// Reset data
 	rtcc = NULL;
 	cm = NULL;
@@ -1977,7 +1987,7 @@ int MCC::subThread(){
 	}
 	else if (MissionType == MTP_C)
 	{
-		OBJHANDLE ves = oapiGetVesselByName("AS-205-S4BSTG");
+		OBJHANDLE ves = oapiGetVesselByName(LVName);
 		if (ves != NULL)
 		{
 			rtcc->calcParams.tgt = oapiGetVesselInterface(ves); // Should be user-programmable later

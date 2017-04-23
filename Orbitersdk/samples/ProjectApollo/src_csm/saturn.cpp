@@ -878,6 +878,8 @@ void Saturn::initSaturn()
 
 	hEVA = 0;
 
+	pMCC = NULL;
+
 	//
 	// Timestep tracking for debugging.
 	//
