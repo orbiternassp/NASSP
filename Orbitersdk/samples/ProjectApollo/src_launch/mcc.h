@@ -598,6 +598,7 @@ public:
 	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
 	
 	char CSMName[64];
+	char LEMName[64];
 	char LVName[64];
 	
 	void Init();											// Initialization

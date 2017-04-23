@@ -68,6 +68,9 @@ void MCC::clbkSaveState(FILEHANDLE scn)
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 
+	if (LEMName[0])
+		oapiWriteScenario_string(scn, "LEMNAME", LEMName);
+
 	SaveState(scn);
 	rtcc->SaveState(scn);
 }
@@ -102,9 +105,12 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 				}
 			}
 		}
-		/*else if (!strnicmp(line, "LEMNAME", 7))
+		else if (!strnicmp(line, "LVNAME", 6))
 		{
-			char LEMName[64];
+			strncpy(LVName, line + 7, 64);
+		}
+		else if (!strnicmp(line, "LEMNAME", 7))
+		{
 			VESSEL *v;
 			OBJHANDLE hLEM;
 			strncpy(LEMName, line + 8, 64);
@@ -115,13 +121,9 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 
 				if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
 					!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-					lem = (LEM *)v;
+					//lem = (LEM *)v;
 				}
 			}
-		}*/
-		else if (!strnicmp(line, "LVNAME", 6))
-		{
-			strncpy(LVName, line + 7, 64);
 		}
 		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
 			LoadState(scn);
@@ -163,6 +165,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 {
 	//Vessel data
 	CSMName[0] = 0;
+	LEMName[0] = 0;
 	LVName[0] = 0;
 	
 	// Reset data
