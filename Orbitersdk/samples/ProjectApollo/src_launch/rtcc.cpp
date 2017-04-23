@@ -72,7 +72,6 @@ RTCC::RTCC()
 void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
-	calcParams.src = mcc->cm;
 }
 bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
 {

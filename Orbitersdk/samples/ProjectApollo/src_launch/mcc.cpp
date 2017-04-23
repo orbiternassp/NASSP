@@ -98,6 +98,7 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 					!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
 					!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
 					cm = (Saturn *)v;
+					rtcc->calcParams.src = cm;
 				}
 			}
 		}
@@ -130,9 +131,6 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else ParseScenarioLineEx(line, status);
 	}
-
-	// Ground Systems Init
-	Init();
 }
 
 void MCC::clbkPreStep(double simt, double simdt, double mjd)
@@ -217,6 +215,10 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	scrubbed = false;
 	upString[0] = 0;
 	upDescr[0] = 0;
+	subThreadStatus = 0;
+
+	// Ground Systems Init
+	Init();
 }
 
 void MCC::Init(){
