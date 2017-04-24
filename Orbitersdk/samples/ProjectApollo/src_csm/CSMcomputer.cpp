@@ -92,7 +92,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Colossus237.bin";
 	}
-	else if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
+	else if (ApolloNo < 10)	// Colossus 249
 	{
 		binfile = "Config/ProjectApollo/Colossus249.bin";
 	}
@@ -100,7 +100,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	{
 		binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
 	}
-	else if (ApolloNo < 14)	// Comanche 055
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 	{
 		binfile = "Config/ProjectApollo/Comanche055.bin";
 	}
@@ -173,7 +173,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if (!IsPowered()){
 			// HARDWARE MUST RESTART
-			if(vagc.Erasable[0][05] != 04000){				
 				// Clear flip-flop based registers
 				vagc.Erasable[0][00] = 0;     // A
 				vagc.Erasable[0][01] = 0;     // L
@@ -206,19 +205,26 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
-				InputChannel[033] &= 017777;
-				vagc.InputChannel[033] &= 017777;				
-				OutputChannel[033] &= 017777;				
-				vagc.Ch33Switches &= 017777;
-				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+				// Reset standby flip-flop
+				vagc.Standby = 0;
+				// Turn on EL display and CMC Light (DSKYWarn).
+				SetOutputChannel(0163, 1);
+				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+				InputChannel[033] &= 037777;
+				vagc.InputChannel[033] &= 037777;				
+				OutputChannel[033] &= 037777;				
+				vagc.Ch33Switches &= 037777;
+				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+				// The RESTART light will come on as soon as the AGC receives power again.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;
-				sat->dsky.LightRestart();
-				sat->dsky2.LightRestart();
+				vagc.RestartLight = 1;
+				sat->dsky.ClearRestart();
+				sat->dsky2.ClearRestart();
+				sat->dsky.ClearStby();
+				sat->dsky2.ClearStby();
 				// Reset last cycling time
 				LastCycled = 0;
-			}
 			// We should issue telemetry though.
 			sat->pcm.TimeStep(simt);
 			return;
@@ -243,7 +249,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// otherwise the P11 roll error needle isn't working properly			
 			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
 
-			if (ApolloNo < 10 || ApolloNo == 1301)	//Colossus 249 and criterium in SetMissionInfo
+			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -273,7 +279,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
-			else if (ApolloNo < 15)	// Comanche 055
+			else if (ApolloNo < 15 || ApolloNo == 1301)	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }

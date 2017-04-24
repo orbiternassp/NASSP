@@ -431,3 +431,16 @@ public:
 protected:
 	ToggleSwitch* startbutton;
 };
+
+class LEMPanelOrdeal : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, LEM *l);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	LEM *lem;
+};

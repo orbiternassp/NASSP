@@ -1181,7 +1181,6 @@ void SaturnV::SeparateStage (int new_stage)
 		SetCSMStage();
 
 		ShiftCentreOfMass(_V(0, 0, 13.15));
-		SeparationSpeed = 0.15;
 	}
 
 	if (stage == CSM_LEM_STAGE)

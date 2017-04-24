@@ -498,7 +498,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.WireTo(&LMP_EVT_TMR_FDAI_DC_CB);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
@@ -618,7 +618,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.WireTo(&MISSION_TIMER_CB);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -677,6 +677,9 @@ void LEM::SystemsInit()
 
 	//GASTA
 	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, &imu);
+
+	//ORDEAL
+	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
 
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
@@ -1209,25 +1212,27 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simt);								    // Do Work
-	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
+	atca.Timestep(simt);
+	ordeal.Timestep(simdt);
+	ordeal.SystemTimestep(simdt);
+	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	fdaiRight.SystemTimestep(simdt);
-	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
-	EventTimerDisplay.Timestep(MissionTime, simdt);
+	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
+	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep();                                         // Do Work
-	optics.TimeStep(simdt);									// Do Work
-	LR.TimeStep(simdt);										// I don't wanna work
-	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
-	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
+	eds.TimeStep();
+	optics.TimeStep(simdt);
+	LR.TimeStep(simdt);
+	RR.TimeStep(simdt);
+	RadarTape.TimeStep(MissionTime);
 	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
 	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
 	crossPointerRight.SystemTimeStep(simdt);
-	SBandSteerable.TimeStep(simdt);							// Back to work...
+	SBandSteerable.TimeStep(simdt);
 	VHF.SystemTimestep(simdt);
 	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
@@ -3336,13 +3341,15 @@ void LEM_CWEA::TimeStep(double simdt){
 	ChannelValue val11;
 	ChannelValue val13;
 	ChannelValue val30;
-	ChannelValue val33;		
+	ChannelValue val33;	
+	ChannelValue val163;
 
 	if(lem == NULL){ return; }
 	val11 = lem->agc.GetOutputChannel(011);
 	val13 = lem->agc.GetOutputChannel(013);
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
+	val163 = lem->agc.GetOutputChannel(0163);
 
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
@@ -3402,7 +3409,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 	// Disabled by Guidance Control switch in AGS position.
-	if((val13[TestAlarms] || val33[LGC] || val33[OscillatorAlarm]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+	if((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
 		LightStatus[3][1] = 1;
 	}else{
 		LightStatus[3][1] = 0;
