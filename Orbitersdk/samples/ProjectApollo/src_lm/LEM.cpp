@@ -877,7 +877,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			bToggleHatch=false;
 		}
 
-		double vsAlt = GetAltitude(ALTMODE_GROUND);
+		double vsAlt = GetAltitude();
 		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED

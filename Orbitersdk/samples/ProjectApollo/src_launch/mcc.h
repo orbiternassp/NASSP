@@ -593,7 +593,7 @@ struct AP11PDIPAD {
 
 
 // Mission Control Center class
-class MCC : public VESSEL4 {
+class MCC : public VESSEL3 {
 public:
 	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
 	

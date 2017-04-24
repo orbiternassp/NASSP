@@ -60,7 +60,7 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 
 void MCC::clbkSaveState(FILEHANDLE scn)
 {
-	VESSEL4::clbkSaveState(scn);
+	VESSEL3::clbkSaveState(scn);
 
 	if (CSMName[0])
 		oapiWriteScenario_string(scn, "CSMNAME", CSMName);
@@ -161,7 +161,7 @@ DLLCLBK void ovcExit(VESSEL* pVessel)
 
 // CONS
 MCC::MCC(OBJHANDLE hVessel, int flightmodel)
-	: VESSEL4(hVessel, flightmodel)
+	: VESSEL3(hVessel, flightmodel)
 {
 	//Vessel data
 	CSMName[0] = 0;
