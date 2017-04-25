@@ -92,8 +92,6 @@ public:
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
-	void gravrefdialogue();
-	void set_gravref(OBJHANDLE body);
 	double timetoperi();
 	double timetoapo();
 	void CycleREFSMMATopt();
@@ -162,22 +160,24 @@ public:
 	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
-	void menuSetLOIGET();
-	void set_LOIGET(double time);
-	void menuSetLOIPeriGET();
-	void set_LOIPeriGET(double time);
-	void menuSetLOILat();
-	void set_LOILat(double lat);
-	void menuSetLOILng();
-	void set_LOILng(double lng);
-	void menuSetLOIAlt();
-	void set_LOIAlt(double alt);
+	void menuSwitchTLCCManeuver();
+	void menuSetTLCCGET();
+	void set_TLCCGET(double time);
+	void menuSetTLCCPeriGET();
+	void set_TLCCPeriGET(double time);
+	void menuSetTLCCLat();
+	void set_TLCCLat(double lat);
+	void menuSetTLCCLng();
+	void set_TLCCLng(double lng);
+	void menuSetTLCCAlt();
+	void set_TLCCAlt(double alt);
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
 	void set_LOIPeri(double alt);
 	void menuSetLOIAzi();
 	void set_LOIAzi(double inc);
+	void menuSetTLAND();
 	void menuLOICalc();
 	void menuRequestLTMFD();
 	void menuSetLandmarkTrkPage();
@@ -188,8 +188,11 @@ public:
 	void menuSetLmkLng();
 	void set_LmkLng(double lng);
 	void menuLmkPADCalc();
-	void menuSet2ndMenu();
+	void menuSetTargetingMenu();
+	void menuSetPADMenu();
+	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
+	void menuTranslunarPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -240,6 +243,7 @@ public:
 	void set_TMStepSize(double step);
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
+	void menuTLCCCalc();
 
 protected:
 	oapi::Font *font;

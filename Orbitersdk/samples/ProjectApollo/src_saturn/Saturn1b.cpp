@@ -626,7 +626,20 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	//
 
 	if(use_lvdc){
-			// Nothing for now, the LVDC is called in PostStep
+		if (stage < CSM_LEM_STAGE) {
+			if (lvdc != NULL) {
+				lvdc->TimeStep(simt, simdt);
+			}
+		}
+		else {
+			if (lvdc != NULL) {
+				// At this point we are done with the LVDC, we can delete it.
+				// This saves memory and declutters the scenario file.
+				delete lvdc;
+				lvdc = NULL;
+				use_lvdc = false;
+			}
+		}
 	}else{
 		if (bAbort && MissionTime > -300 && LESAttached) {
 			SetEngineLevel(ENGINE_MAIN, 0);
@@ -641,10 +654,24 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		switch (stage) {
 			case LAUNCH_STAGE_ONE:
 				StageOne(simt, simdt);
+
+				if (autopilot) {
+					AutoPilot(MissionTime);
+				}
+				else {
+					AttitudeLaunch1();
+				}
 				break;
 
 			case LAUNCH_STAGE_SIVB:
 				StageLaunchSIVB(simt);
+
+				if (autopilot) {
+					AutoPilot(MissionTime);
+				}
+				else {
+					AttitudeLaunchSIVB();
+				}
 				break;
 
 			case STAGE_ORBIT_SIVB:
@@ -663,40 +690,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
-	if(use_lvdc){
-		if(stage < CSM_LEM_STAGE){
-			if(lvdc != NULL){
-				lvdc->TimeStep(simt, simdt);
-			}
-		}else{
-			if(lvdc != NULL){
-				// At this point we are done with the LVDC, we can delete it.
-				// This saves memory and declutters the scenario file.
-				delete lvdc;
-				lvdc = NULL;
-				use_lvdc = false;
-			}
-		}
-	}else{
-		// Run the autopilot post step to have stable dynamic data
-		switch (stage) {
-		case LAUNCH_STAGE_ONE:
-			if (autopilot) {
-				AutoPilot(MissionTime);
-			} else {
-				AttitudeLaunch1();
-			}
-			break;
-
-		case LAUNCH_STAGE_SIVB:
-			if (autopilot) {
-				AutoPilot(MissionTime);
-			} else {
-				AttitudeLaunchSIVB();
-			}
-			break;
-		}
-	}
 }
 
 /// 

@@ -87,9 +87,6 @@
     <ClCompile Include="..\..\src_saturn\lvimu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_launch\mcc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,13 +180,10 @@
     <ClCompile Include="..\..\src_saturn\LVDC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\ORDEAL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_launch\rtcc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -320,13 +314,13 @@
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
       <Filter>IMFD</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_launch\rtcc.h">
+    <ClInclude Include="..\..\src_sys\ORDEAL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h">
+    <ClInclude Include="..\..\src_launch\mcc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

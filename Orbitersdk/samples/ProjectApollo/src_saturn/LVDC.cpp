@@ -747,9 +747,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Start mission and event timers
 					owner->MissionTimerDisplay.Reset();
 					owner->MissionTimerDisplay.SetEnabled(true);
+					owner->MissionTimer306Display.Reset();
+					owner->MissionTimer306Display.SetEnabled(true);
 					owner->EventTimerDisplay.Reset();
 					owner->EventTimerDisplay.SetEnabled(true);
 					owner->EventTimerDisplay.SetRunning(true);
+					owner->EventTimer306Display.Reset();
+					owner->EventTimer306Display.SetEnabled(true);
+					owner->EventTimer306Display.SetRunning(true);
 					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;
@@ -949,7 +954,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
 		/*
@@ -5251,7 +5256,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
 		AttRate = lvrg.GetRates();							// Get rates	
@@ -6961,7 +6966,7 @@ minorloop:
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-					eps_p, eps_ymr, eps_ypr,V,R/1000);				
+					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
 		}
 		/*
@@ -7102,30 +7107,4 @@ double LVDC::SVCompare()
 double LVDC::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
-}
-
-LVDCTLIparam LVDC::GetTLIParams()
-{
-	LVDCTLIparam tliparam;
-
-	tliparam.alpha_TS = alpha_TS;
-	tliparam.Azimuth = Azimuth;
-	tliparam.beta = beta;
-	tliparam.cos_sigma = cos_sigma;
-	tliparam.C_3 = C_3;
-	tliparam.e_N = e_N;
-	tliparam.f = f;
-	tliparam.mu = mu;
-	tliparam.MX_A = MX_A;
-	tliparam.omega_E = omega_E;
-	tliparam.R_N = R_N;
-	tliparam.TargetVector = TargetVector;
-	tliparam.TB5 = TB5;
-	tliparam.theta_EO = theta_EO;
-	tliparam.t_D = t_D;
-	tliparam.T_L = T_L;
-	tliparam.T_RG = T_RG;
-	tliparam.T_ST = T_ST;
-
-	return tliparam;
 }

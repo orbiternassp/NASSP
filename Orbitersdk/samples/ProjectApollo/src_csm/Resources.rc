@@ -239,6 +239,8 @@ IDB_SEXTANT_16_9                            BITMAP  "..\\Bitmaps\\csm_sextant_pa
 IDB_CSM_LEFT_RNDZ_WINDOW_16_9               BITMAP  "..\\Bitmaps\\csm_left_rndz_window_16_9.bmp"
 IDB_CSM_RIGHT_RNDZ_WINDOW_16_9              BITMAP  "..\\Bitmaps\\csm_right_rndz_window_16_9.bmp"
 IDB_CSM_HATCH_WINDOW_OPEN_16_9              BITMAP  "..\\Bitmaps\\csm_hatch_window_open_16_9.bmp"
+IDB_EVENT_TIMER90                           BITMAP  "..\\Bitmaps\\event_timer90.bmp"
+IDB_DIGITAL90                               BITMAP  "..\\Bitmaps\\digitaldisp90.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -2646,6 +2646,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
+	DimmerRotationalSwitch = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -2693,9 +2694,11 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScrollScaling = 0.03; // pixels per ft/sec
 }
 
-void EMS::Init(Saturn *vessel) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
 	sat = vessel;
-	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
+	DimmerRotationalSwitch = dimmer;
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -2951,6 +2954,10 @@ void EMS::SystemTimestep(double simdt) {
 
 	if (IsPowered() && !IsOff()) {
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
+	}
+
+	if (IsDisplayPowered() && !IsOff()) {
+		DrawPower(0.022);
 	}
 }
 
@@ -3216,6 +3223,14 @@ bool EMS::IsPowered() {
 	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
 }
 
+bool EMS::IsDisplayPowered() {
+
+	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+		return false;
+
+	return true;
+}
+
 void EMS::SaveState(FILEHANDLE scn) {
 	char buffer[100];
 	
@@ -3463,118 +3478,4 @@ bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC) {
 	// Free memory. 
 	GlobalFree((HGLOBAL)lpBits);
 	return true;
-}
-
-
-//
-// ORDEAL
-//
-
-ORDEAL::ORDEAL() {
-
-	pitchOffset = 0;
-	sat = NULL;
-}
-
-void ORDEAL::Init(Saturn *vessel) {
-	sat = vessel;
-}
-
-bool ORDEAL::IsPowered() {
-
-	// Do we have power?
-	if (sat->ORDEALEarthSwitch.IsCenter()) return false;  // Switched off
-
-	// Ensure AC/DC power
-	if (!sat->OrdealAc2CircuitBraker.IsPowered() || 
-	    !sat->OrdealMnBCircuitBraker.IsPowered()) return false;
-
-	return true;
-}
-
-void ORDEAL::SystemTimestep(double simdt) {
-
-	// Do we have power?
-	if (!IsPowered()) return;
-
-	sat->OrdealAc2CircuitBraker.DrawPower(4);	// see CSM Systems Handbook
-	sat->OrdealMnBCircuitBraker.DrawPower(3);	
-}
-
-void ORDEAL::Timestep(double simdt) {
-
-	// Do we have power?
-	if (!IsPowered()) return;
-
-	// Calculate rate, see "Guidance and control systems - Orbital rate drive electronics for the Apollo command module and lunar module", NTRS ID 19740026211
-	double rate = 0;
-	if (sat->ORDEALEarthSwitch.IsUp()) {
-		rate = 0.2 * RAD / (2.8182 + 0.001265 * sat->ORDEALAltSetRotary.GetValue());
-	} else {
-		rate = 0.2 * RAD / (3.5847 + 0.006342 * sat->ORDEALAltSetRotary.GetValue());
-	}
-	// sprintf(oapiDebugString(), "rate %f T %f", rate * DEG, 360. / (rate * DEG));
-	
-	if (sat->ORDEALModeSwitch.IsDown()) {
-		// Hold/Fast
-		if (sat->ORDEALSlewSwitch.IsUp()) {
-			pitchOffset += 256. * rate * simdt;
-			while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-		
-		} else if (sat->ORDEALSlewSwitch.IsDown()) {
-			pitchOffset -= 256. * rate * simdt;
-			while (pitchOffset < 0) pitchOffset += TWO_PI;
-		}
-	} else {
-		// Apply rate
-		pitchOffset += rate * simdt;
-		while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-
-		// Slow slew
-		if (sat->ORDEALSlewSwitch.IsUp()) {
-			pitchOffset += 16. * rate * simdt;
-			while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-		
-		} else if (sat->ORDEALSlewSwitch.IsDown()) {
-			pitchOffset -= 16. * rate * simdt;
-			while (pitchOffset < 0) pitchOffset += TWO_PI;
-		}
-	}
-}
-
-double ORDEAL::GetFDAI1PitchAngle() {
-	
-	if (IsPowered() && sat->ORDEALFDAI1Switch.IsUp()) {
-		return pitchOffset;
-	}
-	return 0;
-}
-
-double ORDEAL::GetFDAI2PitchAngle() {
-
-	if (IsPowered() && sat->ORDEALFDAI2Switch.IsUp()) {
-		return pitchOffset;
-	}
-	return 0;
-}
-
-void ORDEAL::SaveState(FILEHANDLE scn) {
-
-	oapiWriteLine(scn, ORDEAL_START_STRING);
-	
-	papiWriteScenario_double(scn, "PITCHOFFSET", pitchOffset); 
-
-	oapiWriteLine(scn, ORDEAL_END_STRING);
-}
-
-void ORDEAL::LoadState(FILEHANDLE scn){
-
-	char *line;
-
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, ORDEAL_END_STRING, sizeof(ORDEAL_END_STRING))) {
-			return;
-		}
-		papiReadScenario_double(line, "PITCHOFFSET", pitchOffset); 
-	}
 }

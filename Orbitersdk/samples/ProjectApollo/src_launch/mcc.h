@@ -593,12 +593,18 @@ struct AP11PDIPAD {
 
 
 // Mission Control Center class
-class MCC {	
+class MCC : public VESSEL4 {
 public:
-	MCC();													// Cons
-	void Init(Saturn *vs);									// Initialization
+	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
+	
+	char CSMName[64];
+	char LEMName[64];
+	char LVName[64];
+	
+	void Init();											// Initialization
+	void clbkPreStep(double simt, double simdt, double mjd);
 	void TimeStep(double simdt);					        // Timestep
-	void keyDown(DWORD key);								// Notification of keypress	
+	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
 	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
@@ -617,8 +623,11 @@ public:
 	void subThreadMacro(int type, int updatenumber);
 	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
 	void initiateAbort();
+	void SlowIfDesired();
 	void SaveState(FILEHANDLE scn);							// Save state
-	void LoadState(FILEHANDLE scn);							// Load state	
+	void LoadState(FILEHANDLE scn);							// Load state
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	Saturn *lm;												// Pointer to LM
