@@ -954,7 +954,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
 		/*
@@ -5256,7 +5256,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
 		AttRate = lvrg.GetRates();							// Get rates	
@@ -6966,7 +6966,7 @@ minorloop:
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-					eps_p, eps_ymr, eps_ypr,V,R/1000);				
+					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
 		}
 		/*

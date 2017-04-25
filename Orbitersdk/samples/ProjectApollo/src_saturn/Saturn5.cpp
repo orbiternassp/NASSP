@@ -1023,7 +1023,20 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 		// LVDC++
 		if (use_lvdc) {
-			// Nothing for now, the LVDC is called in PostStep
+			if (stage < CSM_LEM_STAGE) {
+				if (lvdc != NULL) {
+					lvdc->TimeStep(simt, simdt);
+				}
+			}
+			else {
+				if (lvdc != NULL) {
+					// At this point we are done with the LVDC, we can delete it.
+					// This saves memory and declutters the scenario file.
+					delete lvdc;
+					lvdc = NULL;
+					use_lvdc = false;
+				}
+			}
 		} else {
 
 			// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING IN THIS BLOCK
@@ -1132,22 +1145,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 void SaturnV::clbkPostStep (double simt, double simdt, double mjd) {
 
 	Saturn::clbkPostStep(simt, simdt, mjd);
-
-	if (stage < CSM_LEM_STAGE) {
-		// LVDC++
-		if (use_lvdc && lvdc != NULL) {
-			// lvdc_timestep(simt, simdt);
-			lvdc->TimeStep(simt,simdt);
-		}
-	}else{
-		if(use_lvdc && lvdc != NULL){
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
-			use_lvdc = false;			
-		}
-	}
 }
 
 void SaturnV::SetVehicleStats(){
