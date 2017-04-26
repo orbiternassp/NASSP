@@ -4449,6 +4449,8 @@ protected:
 	friend class SaturnEMSScrollDisplay;
 	friend class SaturnEventTimer;
 	friend class SECS;
+	friend class MESC;
+	friend class RCSC;
 	friend class ELS;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;

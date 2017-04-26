@@ -333,6 +333,11 @@ CMRCSPropellantSource::CMRCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p)
 	for (i = 0; i < 6; i++) {
 		purgeLevel[i] = 0;
 	}
+
+	autofueldump = false;
+	autopurge = false;
+	autooxidizerinterconnect = false;
+	autofuelinterconnect = false;
 }
 
 CMRCSPropellantSource::~CMRCSPropellantSource() {
@@ -371,13 +376,13 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 	// Fuel/oxidizer interconnect valves
 	if (!fuelInterconnectValvesOpen && our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
 		// Manual control
-		if (our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnACircuitBraker.IsPowered()) {
+		if ((AutoFuelInterconnect() || our_vessel->CMPropDumpSwitch.IsUp()) && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnACircuitBraker.IsPowered()) {
 			fuelInterconnectValvesOpen = true;
 		}
 	}
 	if (!oxidizerInterconnectValvesOpen && our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
 		// Manual control
-		if (our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnBCircuitBraker.IsPowered()) {
+		if ((AutoOxidizerInterconnect() || our_vessel->CMPropDumpSwitch.IsUp()) && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnBCircuitBraker.IsPowered()) {
 			oxidizerInterconnectValvesOpen = true;
 		}
 	}
@@ -387,7 +392,7 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 		if (our_vessel->CMPropPurgeSwitch.IsUp() && our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp()) {
 			OpenPurgeValves();
 		}
-		if (our_vessel->CmRcsHeDumpSwitch.IsUp()) {
+		if (our_vessel->CmRcsHeDumpSwitch.IsUp() || AutoPurge()) {
 			OpenPurgeValves();
 		}
 	}

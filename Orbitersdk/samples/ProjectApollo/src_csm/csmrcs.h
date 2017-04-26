@@ -144,6 +144,15 @@ public:
 	void PropellantSwitchToggled(PanelSwitchItem *s);
 	void OpenHeliumValves();
 
+	void SetAutoFuelDump() { autofueldump = true; };
+	bool AutoFuelDump() { return autofueldump; };
+	void SetAutoPurge() { autopurge = true; };
+	bool AutoPurge() { return autopurge; };
+	void SetAutoOxidizerInterconnect() { autooxidizerinterconnect = true; };
+	bool AutoOxidizerInterconnect() { return autooxidizerinterconnect; };
+	void SetAutoFuelInterconnect() { autofuelinterconnect = true; };
+	bool AutoFuelInterconnect() { return autofuelinterconnect; };
+
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void CheckPropellantMass();
@@ -162,6 +171,11 @@ protected:
 	bool oxidizerInterconnectValvesOpen;
 	bool purgeValvesOpen;
 	double purgeLevel[6]; 
+
+	bool autofueldump;
+	bool autopurge;
+	bool autooxidizerinterconnect;
+	bool autofuelinterconnect;
 
 	THRUSTER_HANDLE *thrusters;
 	h_Radiator *heliumTank;

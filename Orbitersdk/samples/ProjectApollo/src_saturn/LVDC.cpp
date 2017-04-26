@@ -745,16 +745,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->SetLiftoffLight();										// And light liftoff lamp
 					owner->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
 					// Start mission and event timers
-					owner->MissionTimerDisplay.Reset();
-					owner->MissionTimerDisplay.SetEnabled(true);
-					owner->MissionTimer306Display.Reset();
-					owner->MissionTimer306Display.SetEnabled(true);
-					owner->EventTimerDisplay.Reset();
-					owner->EventTimerDisplay.SetEnabled(true);
-					owner->EventTimerDisplay.SetRunning(true);
-					owner->EventTimer306Display.Reset();
-					owner->EventTimer306Display.SetEnabled(true);
-					owner->EventTimer306Display.SetRunning(true);
+					owner->secs.LiftoffA();
+					owner->secs.LiftoffB();
 					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;

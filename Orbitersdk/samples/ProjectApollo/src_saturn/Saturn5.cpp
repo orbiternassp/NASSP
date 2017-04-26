@@ -1681,16 +1681,8 @@ void SaturnV::SwitchSelector(int item){
 		SetLiftoffLight();										// And light liftoff lamp
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
 		// Start mission and event timers
-		MissionTimerDisplay.Reset();
-		MissionTimerDisplay.SetEnabled(true);
-		MissionTimer306Display.Reset();
-		MissionTimer306Display.SetEnabled(true);
-		EventTimerDisplay.Reset();
-		EventTimerDisplay.SetEnabled(true);
-		EventTimerDisplay.SetRunning(true);
-		EventTimer306Display.Reset();
-		EventTimer306Display.SetEnabled(true);
-		EventTimer306Display.SetRunning(true);
+		secs.LiftoffA();
+		secs.LiftoffB();
 		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;

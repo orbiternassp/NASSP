@@ -43,23 +43,501 @@
 #include "secs.h"
 #include "papi.h"
 
-
-SECS::SECS()
+SECSTimer::SECSTimer(double del)
 
 {
+	Running = false;
+
+	delay = del;
+	seconds = 0.0;
+}
+
+double SECSTimer::GetTime()
+
+{
+	return seconds;
+}
+
+void SECSTimer::SetTime(double t)
+
+{
+	if (t > delay) {
+		SetContact(true);
+		return;
+	}
+
+	seconds = t;
+}
+
+void SECSTimer::Timestep(double simdt)
+
+{
+
+	if (Running) {
+		double t = GetTime();
+
+		t += simdt;
+
+		SetTime(t);
+
+		Running = false;
+	}
+	else
+	{
+		Reset();
+	}
+}
+
+void SECSTimer::Reset()
+
+{
+	seconds = 0.0;
+	Running = false;
+	Contact = false;
+}
+
+void SECSTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "CONTACT", Contact);
+	papiWriteScenario_bool(scn, "RUNNING", Running);
+	papiWriteScenario_double(scn, "TIME", GetTime());
+	oapiWriteLine(scn, end_str);
+}
+
+void SECSTimer::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+	float ftcp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		if (!strnicmp(line, "TIME", 4)) {
+			sscanf(line + 4, "%f", &ftcp);
+			SetTime(ftcp);
+		}
+		papiReadScenario_bool(line, "CONTACT", Contact);
+		papiReadScenario_bool(line, "RUNNING", Running);
+	}
+}
+
+RestartableSECSTimer::RestartableSECSTimer(double del) :SECSTimer(del)
+{
+	Start = false;
+}
+
+void RestartableSECSTimer::Timestep(double simdt)
+
+{
+
+	if (Start && Running) {
+		double t = GetTime();
+
+		t += simdt;
+
+		SetTime(t);
+
+		Running = false;
+	}
+}
+
+void RestartableSECSTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "CONTACT", Contact);
+	papiWriteScenario_bool(scn, "RUNNING", Running);
+	papiWriteScenario_bool(scn, "START", Start);
+	papiWriteScenario_double(scn, "TIME", GetTime());
+	oapiWriteLine(scn, end_str);
+}
+
+void RestartableSECSTimer::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+	float ftcp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		if (!strnicmp(line, "TIME", 4)) {
+			sscanf(line + 4, "%f", &ftcp);
+			SetTime(ftcp);
+		}
+		papiReadScenario_bool(line, "CONTACT", Contact);
+		papiReadScenario_bool(line, "RUNNING", Running);
+		papiReadScenario_bool(line, "START", Start);
+	}
+}
+
+RCSC::RCSC():
+TD1(42.0),
+TD2(42.0),
+TD3(5.0),
+TD4(5.0),
+TD5(13.0),
+TD6(13.0)
+{
+	OxidizerDumpA = false;
+	OxidizerDumpB = false;
+	InterconnectAndPropellantBurnA = false;
+	InterconnectAndPropellantBurnB = false;
+	FuelAndOxidBypassPurgeA = false;
+	FuelAndOxidBypassPurgeB = false;
+	RSCSCMSMTransferA = false;
+	RSCSCMSMTransferB = false;
+
+	MESCDeadfaceA = false;
+	MESCDeadfaceB = false;
+}
+
+void RCSC::TimerTimestep(double simdt)
+{
+	TD1.Timestep(simdt);
+	TD2.Timestep(simdt);
+	TD3.Timestep(simdt);
+	TD4.Timestep(simdt);
+	TD5.Timestep(simdt);
+	TD6.Timestep(simdt);
+}
+
+void RCSC::Timestep(double simdt)
+{
+	TimerTimestep(simdt);
+
+	if (MESCDeadfaceA)
+	{
+		RSCSCMSMTransferA = true;
+		if (Sat->PropDumpAutoSwitch.GetState() && TD1.ContactClosed())
+		{
+			OxidizerDumpA = true;
+			TD3.SetStart(true);
+		}
+	}
+	if (MESCDeadfaceB)
+	{
+		RSCSCMSMTransferB = true;
+		if (Sat->PropDumpAutoSwitch.GetState() && TD2.ContactClosed())
+		{
+			OxidizerDumpB = true;
+			TD4.SetStart(true);
+		}
+	}
+	
+	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBraker.IsPowered()) {
+		//Activate Transfer Motor
+		if (Sat->CMSMPyros.Blown()) {
+			Sat->rjec.ActivateCMTransferMotor1();
+		}
+		if (!RSCSCMSMTransferA)
+		{
+			TD1.SetRunning(true);
+		}
+		TD3.SetRunning(true);
+
+		if (TD3.ContactClosed())
+		{
+			TD5.SetRunning(true);
+		}
+	}
+
+	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+		//Activate Transfer Motor
+		if (Sat->CMSMPyros.Blown()) {
+			Sat->rjec.ActivateCMTransferMotor2();
+			RSCSCMSMTransferB = true;
+		}
+		if (!RSCSCMSMTransferB)
+		{
+			TD2.SetRunning(true);
+		}
+		TD4.SetRunning(true);
+
+		if (TD4.ContactClosed())
+		{
+			TD6.SetRunning(true);
+		}
+	}
+
+	if (TD5.ContactClosed())
+	{
+		FuelAndOxidBypassPurgeA = true;
+	}
+	if (TD6.ContactClosed())
+	{
+		FuelAndOxidBypassPurgeB = true;
+	}
+
+	//Auto dumps and purges
+	if (TD3.ContactClosed() || TD4.ContactClosed())
+	{
+		//Fuel dump
+		Sat->CMRCS1.SetAutoFuelDump();
+		Sat->CMRCS2.SetAutoFuelDump();
+	}
+	if (OxidizerDumpA || OxidizerDumpB)
+	{
+		//Oxidizer Dump
+	}
+	if (InterconnectAndPropellantBurnA)
+	{
+		//Helium Interconnect
+		//Oxid Interconnect
+		Sat->CMRCS1.SetAutoOxidizerInterconnect();
+		Sat->CMRCS2.SetAutoOxidizerInterconnect();
+	}
+	if (InterconnectAndPropellantBurnB)
+	{
+		//Fuel Interconnect
+		Sat->CMRCS1.SetAutoFuelInterconnect();
+		Sat->CMRCS2.SetAutoFuelInterconnect();
+	}
+	if (FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB)
+	{
+		//Purge
+		Sat->CMRCS1.SetAutoPurge();
+		Sat->CMRCS2.SetAutoPurge();
+	}
+}
+
+void RCSC::ControlVessel(Saturn *v)
+
+{
+	Sat = v;
+}
+
+MESC::MESC():
+	TD1(0.03),
+	TD3(0.1),
+	TD5(11.0),
+	TD11(3.0)
+{
+	MESCLogicArm = false;
+	BoosterCutoffAbortStartRelay = false;
+	LETPhysicalSeperationMonitor = false;
+	LESAbortRelay = false;
+	AutoAbortEnableRelay = false;
+	CMSMDeadFace = false;
+	CMSMSeparateRelay = false;
+	PyroCutout = false;
+	CMRCSPress = false;
+	CanardDeploy = false;
+	UllageRelay = false;
+	CSMLVSeparateRelay = false;
+}
+
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, MissionTimer *MT, EventTimer *ET)
+{
+	SECSLogicBus = LogicBus;
+	SECSPyroBus = PyroBus;
+	SECSArmBreaker = SECSArm;
+	RCSLogicCircuitBraker = RCSLogicCB;
+	MissionTimerDisplay = MT;
+	EventTimerDisplay = ET;
+	Sat = v;
+}
+
+void MESC::TimerTimestep(double simdt)
+{
+	TD1.Timestep(simdt);
+	TD1.Timestep(simdt);
+	TD5.Timestep(simdt);
+	TD11.Timestep(simdt);
+}
+
+void MESC::Timestep(double simdt)
+{
+	if (SECSLogicBus->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		MESCLogicArm = true;
+	}
+	else
+	{
+		MESCLogicArm = false;
+	}
+
+	if (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()) {
+		if (SequentialArmBus()){
+
+			if (!PyroCutout)
+				PyroCutout = true;
+
+			if (!CMSMDeadFace)
+				TD3.SetRunning(true);
+
+			if (TD3.ContactClosed() && !CMSMSeperate)
+				CMSMSeparateRelay = true;
+
+			if (PyroCutout)
+				CMSMDeadFace = true;
+
+			if (CMSMDeadFace)
+				CMRCSPress = true;
+		}
+	}
+
+	// Pressurize CM RCS
+	if ((CMRCSPress && SECSPyroBus->Voltage() > SP_MIN_DCVOLTAGE)) {
+		Sat->CMRCS1.OpenHeliumValves();
+		Sat->CMRCS2.OpenHeliumValves();
+	}
+
+	//TBD: Put timers here
+	TimerTimestep(simdt);
+
+	// Monitor LET Status
+	if (MESCLogicBus())
+	{
+		if (Sat->LESAttached)
+		{
+			LETPhysicalSeperationMonitor = true;
+		}
+		else
+		{
+			LETPhysicalSeperationMonitor = false;
+		}
+	}
+
+	// Abort Handling
+	if (Sat->THCRotary.IsCounterClockwise())
+	{
+		if (MESCLogicBus())
+		{
+			BoosterCutoffAbortStartRelay = true;
+		}
+	}
+
+	//Abort Start
+
+	if (BoosterCutoffAbortStartRelay)
+	{
+		Sat->bAbort = true;
+
+		//
+		// Event timer resets to zero on abort.
+		//
+
+		Sat->EventTimerDisplay.Reset();
+		Sat->EventTimerDisplay.SetRunning(true);
+		Sat->EventTimerDisplay.SetEnabled(true);
+
+		if (MESCLogicBus())
+		{
+			if (LETPhysicalSeperationMonitor)
+			{
+				LESAbortRelay = true;
+			}
+		}
+	}
+
+	//LET Abort Start
+	if (MESCLogicBus())
+	{
+		if (LESAbortRelay)
+		{
+			TD5.SetRunning(true);
+		}
+	}
+
+	//Canard Deploy
+	if (MESCLogicBus())
+	{
+		if (TD5.ContactClosed() || Sat->CanardDeploySwitch.GetState())
+		{
+			CanardDeploy = true;
+		}
+	}
+
+	if (SECSPyroBus->Voltage() > SP_MIN_DCVOLTAGE && CanardDeploy)
+	{
+		//TBD: Actually deploy canard
+	}
+
+	//SPS Abort
+	if (SECSLogicBus->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		if (BoosterCutoffAbortStartRelay && !LETPhysicalSeperationMonitor && !LESAbortRelay)
+		{
+			UllageRelay = true;
+			TD11.SetRunning(true);
+		}
+	}
+
+	if (TD11.ContactClosed() || Sat->CsmLvSepSwitch.GetState())
+	{
+		CSMLVSeparateRelay = true;
+	}
+}
+
+bool MESC::SequentialLogicBus()
+{
+	return SECSLogicBus->Voltage() > SP_MIN_DCVOLTAGE;
+}
+
+bool MESC::SequentialArmBus()
+{
+	return SECSArmBreaker->IsPowered();
+}
+
+bool MESC::MESCLogicBus() {
+
+	if (SECSArmBreaker->IsPowered() && SECSLogicBus->Voltage() > SP_MIN_DCVOLTAGE)
+		return true;
+
+	return false;
+}
+
+void MESC::Liftoff()
+{
+	if (MESCLogicBus())
+	{
+		MissionTimerDisplay->Reset();
+		MissionTimerDisplay->SetEnabled(true);
+		EventTimerDisplay->Reset();
+		EventTimerDisplay->SetEnabled(true);
+		EventTimerDisplay->SetRunning(true);
+
+		if (Sat->EDSSwitch.GetState())
+			AutoAbortEnableRelay = true;
+	}
+}
+
+void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "BOOSTERCUTOFFABORTSTARTRELAY", BoosterCutoffAbortStartRelay);
+	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAY", AutoAbortEnableRelay);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void MESC::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	float flt = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		papiReadScenario_bool(line, "BOOSTERCUTOFFABORTSTARTRELAY", BoosterCutoffAbortStartRelay);
+		papiReadScenario_bool(line, "AUTOABORTENABLERELAY", AutoAbortEnableRelay);
+	}
+}
+
+SECS::SECS()
+{
+
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
 
 	PyroBusAMotor = false;
 	PyroBusBMotor = false;
-
-	BoosterCutoffAbortStartRelayA = false;
-	BoosterCutoffAbortStartRelayB = false;
-	LETPhysicalSeperationMonitorA = false;
-	LETPhysicalSeperationMonitorB = false;
-	LESAbortRelayA = false;
-	LESAbortRelayB = false;
 
 	Sat = 0;
 }
@@ -73,6 +551,9 @@ void SECS::ControlVessel(Saturn *v)
 
 {
 	Sat = v;
+	rcsc.ControlVessel(v);
+	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display);
+	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay);
 }
 
 void SECS::Timestep(double simt, double simdt)
@@ -122,13 +603,17 @@ void SECS::Timestep(double simt, double simdt)
 		}
 	}
 
+	MESCA.Timestep(simdt);
+	MESCB.Timestep(simdt);
+	rcsc.Timestep(simdt);
+
 	//
 	// CSM LV separation relays
 	//
 
 	bool pyroA = false, pyroB = false;
 
-	if (Sat->CsmLvSepSwitch.IsUp()) {
+	if (MESCA.GetCSMLVSeparateRelay() || MESCB.GetCSMLVSeparateRelay()) {
 		if (IsLogicPoweredAndArmedA()) {
 			// Blow Pyro A
 			pyroA = true;
@@ -193,52 +678,49 @@ void SECS::Timestep(double simt, double simdt)
 
 	pyroA = false, pyroB = false;
 
-	if (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()) {
-		if (IsLogicPoweredAndArmedA()) {
-			if (!Sat->rjec.GetCMTransferMotor1()) {
-				// Blow Pyro A
-				pyroA = true;
-			}
-
-			// Pressurize CM RCS
-			if (Sat->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
-				Sat->CMRCS1.OpenHeliumValves();
-				Sat->CMRCS2.OpenHeliumValves();
-
-				// Auto Tie Main Buses
-				Sat->MainBusAController.SetTieAuto(true);
-				Sat->MainBusBController.SetTieAuto(true);
-			}
-
-			// Transfer RCS to CM
-			if (Sat->CMSMPyros.Blown() && Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBraker.IsPowered()) {
-				Sat->rjec.ActivateCMTransferMotor1();
-			}
+	if (MESCA.GetCMSMSeparateRelay())
+	{
+		if (!Sat->rjec.GetCMTransferMotor1()) {
+			// Blow Pyro A
+			pyroA = true;
 		}
-		if (IsLogicPoweredAndArmedB()) {
-			if (!Sat->rjec.GetCMTransferMotor2()) {
-				// Blow Pyro B
-				pyroB = true;
-			}
 
-			// Pressurize CM RCS
-			if (Sat->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
-				Sat->CMRCS1.OpenHeliumValves();
-				Sat->CMRCS2.OpenHeliumValves();
+		// Auto Tie Main Buses
+		if (Sat->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
 
-				// Auto Tie Main Buses
-				Sat->MainBusAController.SetTieAuto(true);
-				Sat->MainBusBController.SetTieAuto(true);
-			}
+			Sat->MainBusAController.SetTieAuto(true);
+			Sat->MainBusBController.SetTieAuto(true);
+		}
 
-			// Transfer RCS to CM
-			if (Sat->CMSMPyros.Blown() && Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-				Sat->rjec.ActivateCMTransferMotor2();
-			}
+		// Transfer RCS to CM
+		if (Sat->CMSMPyros.Blown() && Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBraker.IsPowered()) {
+			Sat->rjec.ActivateCMTransferMotor1();
 		}
 	}
+
+	if (MESCB.GetCMSMSeparateRelay())
+	{
+		if (!Sat->rjec.GetCMTransferMotor2()) {
+			// Blow Pyro B
+			pyroB = true;
+		}
+
+		// Auto Tie Main Buses
+		if (Sat->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
+
+			Sat->MainBusAController.SetTieAuto(true);
+			Sat->MainBusBController.SetTieAuto(true);
+		}
+
+		// Transfer RCS to CM
+		if (Sat->CMSMPyros.Blown() && Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+			Sat->rjec.ActivateCMTransferMotor2();
+		}
+	}
+
 	Sat->CMSMPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
 									 (pyroB ? &Sat->PyroBusB : NULL));
+
 
 	//
 	// Pyros
@@ -262,78 +744,35 @@ void SECS::Timestep(double simt, double simdt)
 		Sat->SetDockingProbeMesh();
 	}
 
-	// Monitor LET Status
+	//RSCS deadface
 	if (IsLogicPoweredAndArmedA())
 	{
-		if (Sat->LESAttached)
-		{
-			LETPhysicalSeperationMonitorA = true;
-		}
-		else
-		{
-			LETPhysicalSeperationMonitorA = false;
-		}
+		rcsc.SetDeadFaceA(MESCA.GetCMSMDeadFace());
+	}
+	else
+	{
+		rcsc.SetDeadFaceA(false);
 	}
 	if (IsLogicPoweredAndArmedB())
 	{
-		if (Sat->LESAttached)
-		{
-			LETPhysicalSeperationMonitorB = true;
-		}
-		else
-		{
-			LETPhysicalSeperationMonitorB = false;
-		}
+		rcsc.SetDeadFaceB(MESCA.GetCMSMDeadFace());
+	}
+	else
+	{
+		rcsc.SetDeadFaceB(false);
 	}
 
-	// Abort Handling
-	if (Sat->THCRotary.IsCounterClockwise())
+	if (MESCA.FireUllage() && Sat->THCRotary.IsCounterClockwise())
 	{
-		if (IsLogicPoweredAndArmedA())
-		{
-			BoosterCutoffAbortStartRelayA = true;
-		}
-		if (IsLogicPoweredAndArmedB())
-		{
-			BoosterCutoffAbortStartRelayB = true;
-		}
+		Sat->SetRCSState(RCS_SM_QUAD_B, 4, true);
+		Sat->SetRCSState(RCS_SM_QUAD_D, 3, true);
+		//TBD: Inhibit Pitch and Yaw
 	}
-
-	//Abort Start
-
-	if (BoosterCutoffAbortStartRelayA || BoosterCutoffAbortStartRelayB)
+	if (MESCB.FireUllage() && Sat->THCRotary.IsCounterClockwise())
 	{
-		Sat->bAbort = true;
-
-		//
-		// Event timer resets to zero on abort.
-		//
-
-		Sat->EventTimerDisplay.Reset();
-		Sat->EventTimerDisplay.SetRunning(true);
-		Sat->EventTimerDisplay.SetEnabled(true);
-
-		if (IsLogicPoweredAndArmedA())
-		{
-			if (LETPhysicalSeperationMonitorA)
-			{
-				LESAbortRelayA = true;
-			}
-		}
-		if (IsLogicPoweredAndArmedB())
-		{
-			if (LETPhysicalSeperationMonitorB)
-			{
-				LESAbortRelayB = true;
-			}
-		}
-	}
-
-	//LET Abort Start
-
-	if (LESAbortRelayA || LESAbortRelayB)
-	{
-
+		Sat->SetRCSState(RCS_SM_QUAD_A, 4, true);
+		Sat->SetRCSState(RCS_SM_QUAD_C, 3, true);
+		//TBD: Inhibit Pitch and Yaw
 	}
 }
 
@@ -353,6 +792,29 @@ bool SECS::IsLogicPoweredAndArmedB() {
 	return false;
 }
 
+void SECS::LiftoffA()
+{
+	if (IsLogicPoweredAndArmedA())
+	{
+		MESCA.Liftoff();
+		rcsc.TD1.SetStart(true);
+	}
+}
+
+void SECS::LiftoffB()
+{
+	if (IsLogicPoweredAndArmedB())
+	{
+		MESCB.Liftoff();
+		rcsc.TD2.SetStart(true);
+	}
+}
+
+void SECS::TD1_GSEReset()
+{
+	rcsc.TD1.Reset();
+}
+
 void SECS::SaveState(FILEHANDLE scn)
 
 {
@@ -363,8 +825,6 @@ void SECS::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	papiWriteScenario_bool(scn, "PYROBUSAMOTOR", PyroBusAMotor);
 	papiWriteScenario_bool(scn, "PYROBUSBMOTOR", PyroBusBMotor);
-	papiWriteScenario_bool(scn, "BOOSTERCUTOFFABORTSTARTRELAYA", BoosterCutoffAbortStartRelayA);
-	papiWriteScenario_bool(scn, "BOOSTERCUTOFFABORTSTARTRELAYB", BoosterCutoffAbortStartRelayB);
 	
 	oapiWriteLine(scn, SECS_END_STRING);
 }
@@ -384,8 +844,6 @@ void SECS::LoadState(FILEHANDLE scn)
 		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 		papiReadScenario_bool(line, "PYROBUSAMOTOR", PyroBusAMotor);
 		papiReadScenario_bool(line, "PYROBUSBMOTOR", PyroBusBMotor);
-		papiReadScenario_bool(line, "BOOSTERCUTOFFABORTSTARTRELAYA", BoosterCutoffAbortStartRelayA);
-		papiReadScenario_bool(line, "BOOSTERCUTOFFABORTSTARTRELAYB", BoosterCutoffAbortStartRelayB);
 	}
 
 	// connect pyro buses

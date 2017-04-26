@@ -1901,7 +1901,7 @@ void Saturn::JoystickTimestep()
 	//
 	
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if ((CMPropDumpSwitch.IsUp() || CMRCS1.AutoFuelDump()) && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
 		SetCMRCSState(2, true);	
 		double d = GetThrusterLevel(th_att_cm[2]);
 		
@@ -1912,7 +1912,7 @@ void Saturn::JoystickTimestep()
 	}
 		
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if ((CMPropDumpSwitch.IsUp() || CMRCS2.AutoFuelDump()) && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
