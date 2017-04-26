@@ -74,7 +74,7 @@ ARCore::ARCore(VESSEL* v)
 		mission = 9;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
-	else if (strcmp(v->GetName(), "Gumdrop") == 0)
+	else if (strcmp(v->GetName(), "Spider") == 0)
 	{
 		mission = 9;
 		vesseltype = 2;
