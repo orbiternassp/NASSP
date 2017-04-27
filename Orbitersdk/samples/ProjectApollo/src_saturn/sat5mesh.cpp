@@ -299,7 +299,6 @@ void SaturnV::ChangeSatVBuildState (int bstate)
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	SetSurfaceFrictionCoeff(10e80,10e80);
 	ClearMeshes();
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
@@ -434,7 +433,6 @@ void SaturnV::SetFirstStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	SetSurfaceFrictionCoeff(10e90,10e90);
 
 	//
 	// ************************ visual parameters **********************************
@@ -443,15 +441,15 @@ void SaturnV::SetFirstStage ()
 	ClearMeshes();
 	UINT meshidx;
 	double TCP=-101.5+STG0O-TCPO;
-	/*static const DWORD ntdvtx = 4;
+	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -7, TCP), 1e5, 1e2, 0.5, 0.005 },
-		{ _V(-7, 7, TCP), 1e5, 1e2, 0.5, 0.005 },
-		{ _V(7, 7, TCP), 1e5, 1e2, 0.5, 0.005 },
-		{ _V(0, 0, TCP + 100), 1e5, 1e2, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
-	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
+		{ _V(0, -100.0, TCP), 3e7, 1e6, 3, 1 },
+		{ _V(-7, 7, TCP), 3e7, 1e6, 3, 1 },
+		{ _V(7, 7, TCP), 3e7, 1e6, 3, 1 },
+		{ _V(0, 0, TCP + 100), 3e7, 1e6, 1 }
+	 };
+	SetTouchdownPoints(tdvtx, ntdvtx);
+	//SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);
