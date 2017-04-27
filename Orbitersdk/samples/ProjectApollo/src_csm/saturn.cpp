@@ -296,6 +296,7 @@ void Saturn::initSaturn()
 
 	InterstageAttached = true;
 	LESAttached = true;
+	LESLegsCut = false;
 	ApexCoverAttached = true;
 	ChutesAttached = true;
 	CSMAttached = true;
@@ -1710,6 +1711,7 @@ int Saturn::GetAttachState()
 	state.HasProbe = HasProbe;
 	state.ApexCoverAttached = ApexCoverAttached;
 	state.ChutesAttached = ChutesAttached;
+	state.LESLegsCut = LESLegsCut;
 
 	return state.word;
 }
@@ -1728,6 +1730,7 @@ void Saturn::SetAttachState(int s)
 	HasProbe = (state.HasProbe != 0);
 	ApexCoverAttached = (state.ApexCoverAttached != 0);
 	ChutesAttached = (state.ChutesAttached != 0);
+	LESLegsCut = (state.LESLegsCut != 0);
 }
 
 int Saturn::GetA13State()

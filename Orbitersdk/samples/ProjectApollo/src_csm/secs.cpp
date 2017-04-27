@@ -541,7 +541,17 @@ void MESC::Timestep(double simdt)
 	{
 		if (Sat->thg_lem)
 		{
-			Sat->SetThrusterGroupLevel(Sat->thg_lem, 1.0);
+			if (Sat->GetThrusterGroupLevel(Sat->thg_lem) < 1.0)
+			{
+				Sat->SetThrusterGroupLevel(Sat->thg_lem, 1.0);
+			}
+		}
+
+		Sat->CutLESLegs();
+
+		if (!Sat->LaunchFail.LESJetMotorFail)
+		{
+			Sat->JettisonLET();
 		}
 	}
 
@@ -556,7 +566,10 @@ void MESC::Timestep(double simdt)
 	{
 		if (Sat->thg_tjm)
 		{
-			Sat->SetThrusterGroupLevel(Sat->thg_tjm, 1.0);
+			if (Sat->GetThrusterGroupLevel(Sat->thg_tjm) < 1.0)
+			{
+				Sat->SetThrusterGroupLevel(Sat->thg_tjm, 1.0);
+			}
 		}
 		Sat->JettisonLET();
 	}
@@ -582,7 +595,12 @@ void MESC::Timestep(double simdt)
 	if (PitchControlMotorFire && SequentialPyroBus())
 	{
 		if (Sat->th_pcm)
-			Sat->SetThrusterLevel(Sat->th_pcm, 1.0);
+		{
+			if (Sat->GetThrusterLevel(Sat->th_pcm) < 1.0)
+			{
+				Sat->SetThrusterLevel(Sat->th_pcm, 1.0);
+			}
+		}
 	}
 
 	//SPS Abort

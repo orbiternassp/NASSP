@@ -3265,6 +3265,12 @@ bool Saturn::LETAttached()
 	return LESAttached;
 }
 
+void Saturn::CutLESLegs()
+
+{
+	LESLegsCut = true;
+}
+
 //
 // Engine control functions for AGC.
 //

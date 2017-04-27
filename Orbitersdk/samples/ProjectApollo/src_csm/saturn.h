@@ -643,6 +643,7 @@ public:
 			unsigned ChutesAttached:1;		///< Are the chutes attached?
 			unsigned CSMAttached:1;			///< Is there a CSM?
 			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
+			unsigned LESLegsCut:1;			///< Are the LES legs attached?
 		};
 		unsigned long word;
 
@@ -763,7 +764,7 @@ public:
 	/// \param UseMain Specifies whether to use the main abort motor or the jettison motor.
 	/// \param AbortJettison If we're jettisoning during an abort, the BPC will take the docking probe with it.
 	///
-	void JettisonLET(bool UseMain = false, bool AbortJettison = false);
+	void JettisonLET(bool AbortJettison = false);
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
@@ -1175,6 +1176,8 @@ public:
 	///
 	bool LETAttached();
 
+	void CutLESLegs();
+
 	///
 	/// \brief Returns the IMFD communication client for ProjectApolloMFD
 	///
@@ -1334,6 +1337,12 @@ protected:
 	/// \brief LES flag.
 	///
 	bool LESAttached;
+
+	///
+	/// LESLegsCut flag. True if the LES legs have been cut.
+	/// \brief LES flag.
+	///
+	bool LESLegsCut;
 
 	///
 	/// True if the docking probe is attached.

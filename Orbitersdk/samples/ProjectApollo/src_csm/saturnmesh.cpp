@@ -1284,23 +1284,13 @@ bool Saturn::clbkLoadGenericCockpit ()
 // Generic function to jettison the escape tower.
 //
 
-void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
+void Saturn::JettisonLET(bool AbortJettison)
 
 {
 	//
 	// Don't do anything if the tower isn't attached!
 	//
-	if (!LESAttached)
-		return;
-
-	//
-	// If the jettison motor fails and we're trying to
-	// use it for the jettison, return.
-	//
-	// We'll always give them one way to jettison the LES as
-	// being unable to jettison it is fatal.
-	//
-	if (!UseMain && LaunchFail.LESJetMotorFail)
+	if (!LESAttached || !LESLegsCut)
 		return;
 
 	//
