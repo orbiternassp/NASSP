@@ -592,11 +592,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					if (owner->MissionTime < -1200){
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 						break;
 					}else{
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
 			
@@ -634,6 +634,9 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->CreateStageOne();						// Create hidden stage one, for later use in staging
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
+
+					//Apply force to trigger GetWeightVector() function
+					owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
 				}
 				break;
 			case 0: // MORE TB0
@@ -721,7 +724,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 						owner->contrailLevel = SumThrust / 8;
 						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
+						//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}
 				else {
@@ -730,7 +733,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
 					// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
-					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
+					//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
 				}
 
 				if (owner->MissionTime >= 0) {
@@ -1862,7 +1865,7 @@ minorloop: //minor loop;
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | eps %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1879,7 +1882,7 @@ minorloop: //minor loop;
 					AttRate.x * DEG, AttRate.y * DEG, AttRate.z * DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}
+		}*/
 	}
 
 	/*
@@ -4803,7 +4806,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 					break;
 				}
@@ -4816,13 +4819,15 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime < -17){
-					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
-						lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
+					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
+						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 					break;
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
+
+					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 					break;
 				}			
 
@@ -4909,13 +4914,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
 
 						owner->contrailLevel = SumThrust/5;
-						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+						//owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}else{
 					// Get 100% thrust on all engines.
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
-					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+					//owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				// LIFTOFF
@@ -5475,8 +5480,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
 				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n",lvimu.CDURegisters[LVRegPIPAX], lvimu.CDURegisters[LVRegPIPAY], lvimu.CDURegisters[LVRegPIPAZ]);
 				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
-				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
+				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
 				fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
 				fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
@@ -5582,19 +5587,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				DotS = DotS_8sec;
 				R = length(PosS);
 				V = length(DotS);
-
-				if (OrbNavCycle == 1) //State Vector update
-				{
-					VECTOR3 pos, vel;
-					MATRIX3 mat;
-					double day;
-					modf(oapiGetSimMJD(), &day);
-					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-					owner->GetRelativePos(owner->GetGravityRef(), pos);
-					owner->GetRelativeVel(owner->GetGravityRef(), vel);
-					PosS = mul(mat, pos);
-					DotS = mul(mat, vel);
-				}
 
 				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
 				R = pow(pow(PosS.x, 2) + pow(PosS.y, 2) + pow(PosS.z, 2), 0.5);
@@ -5917,7 +5909,7 @@ gtupdate:	// Target of jump from further down
 			if(Tt_T <= eps_1){
 				// RANGE ANGLE 2 (out-of orbit)
 				fprintf(lvlog,"RANGE ANGLE 2\r\n");
-				sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
+				//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 				// LVDC_GP_PC = 30; // STOP
 				V = length(DotS);
 				R = length(PosS);
@@ -5952,7 +5944,7 @@ gtupdate:	// Target of jump from further down
 			if(ROT){
 				// ROTATED TERMINAL CONDITIONS (out-of-orbit)
 				fprintf(lvlog,"ROTATED TERMINAL CONDITIONS\r\n");
-				sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
+				//sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
 				xi_T = R_T*cos(gamma_T);
 				dot_zeta_T = V_T;
 				dot_xi_T = 0.0;
@@ -6064,8 +6056,8 @@ gtupdate:	// Target of jump from further down
 			dot_dzeta = dot_dzetat - (DDotXEZ_G.z * dT_3);
 			fprintf(lvlog,"dot_dXEZ = %f %f %f\r\n",dot_dxi,dot_deta,dot_dzeta);
 
-							sprintf(oapiDebugString(),".dxi = %f | .deta %f | .dzeta %f | dT3 %f",
-								dot_dxi,dot_deta,dot_dzeta,dT_3);
+							//sprintf(oapiDebugString(),".dxi = %f | .deta %f | .dzeta %f | dT3 %f",
+							//	dot_dxi,dot_deta,dot_dzeta,dT_3);
 
 			L_Y = L_12 + L_3;
 			tchi_y_last = tchi_y;
@@ -6177,7 +6169,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					R_T = R + dotR*(T_3 - dt);
 					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
-					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
+					//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
 					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
 					// LVDC_GP_PC = 30; // STOP
 				}
@@ -6211,7 +6203,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// Done, go to navigation
-				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
+				//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 				goto minorloop;
 			}
 			// End of high-speed loop
@@ -6268,13 +6260,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		if(GATE){
 			// FREEZE CHI
 			fprintf(lvlog,"Thru GATE; CHI FREEZE\r\n");
-			sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
+			//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
 			goto minorloop;
 		}else{
 			// IGM STEERING ANGLES
 			fprintf(lvlog,"--- IGM STEERING ANGLES ---\r\n");
 
-			sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
+			//sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
 			Xtt_y = ((tchi_y) - K_3 + (K_4 * t));
 			Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 			fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
@@ -6940,7 +6932,7 @@ minorloop:
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -6960,7 +6952,7 @@ minorloop:
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}
+		}*/
 		/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
 			LVDC_Timebase,LVDC_TB_ETime,
