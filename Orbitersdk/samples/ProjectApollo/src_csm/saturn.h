@@ -675,11 +675,11 @@ public:
 			unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
 			unsigned Scorrec:1;						///< Have we played the course correction sound?
 			unsigned Burned:1;						///< Has the CM been burned by re-entry heating?
-			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
+			unsigned FireLEM:1;						///< Launch Escape Motor has been fired.
 			unsigned ABORT_IND:1;					///< State of the abort light.
-			unsigned unused_2:1;					///< Unused bit for backwards compatibility. Can be used for other things.
+			unsigned FireTJM:1;						///< Tower Jettison Motor has been fired.
 			unsigned SplashdownPlayed:1;			///< Have we played the splashdown sound?
-			unsigned unused_3:1;					///< Unused bit for backwards compatibility. Can be used for other things.
+			unsigned FirePCM:1;						///< Pitch Control Motor has been fired.
 			unsigned PayloadDataTransfer:1;			///< Have we transfered setup data to the SIVB for the payload?
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
 			unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
@@ -3892,6 +3892,10 @@ protected:
 	bool PostSplashdownPlayed;
 	bool SplashdownPlayed;
 
+	bool FireLEM;
+	bool FireTJM;
+	bool FirePCM;
+
 	OBJHANDLE hEVA;
 
 	SoundLib soundlib;
@@ -4014,6 +4018,9 @@ protected:
 	void JoystickTimestep();
 	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
+	void FireLaunchEscapeMotor();
+	void FireTowerJettisonMotor();
+	void FirePitchControlMotor();
 	void AttitudeLaunchSIVB();
 	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 	virtual void AutoPilot(double autoT) = 0;

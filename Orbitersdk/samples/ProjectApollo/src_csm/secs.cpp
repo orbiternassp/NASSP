@@ -539,20 +539,9 @@ void MESC::Timestep(double simdt)
 	//
 	if (LESMotorFire && SequentialPyroBus())
 	{
-		if (Sat->thg_lem)
-		{
-			if (Sat->GetThrusterGroupLevel(Sat->thg_lem) < 1.0)
-			{
-				Sat->SetThrusterGroupLevel(Sat->thg_lem, 1.0);
-			}
-		}
-
-		Sat->CutLESLegs();
-
-		if (!Sat->LaunchFail.LESJetMotorFail)
-		{
-			Sat->JettisonLET();
-		}
+		Sat->FireLaunchEscapeMotor();
+		
+		Sat->JettisonLET();
 	}
 
 	//Tower Jettison Relay
@@ -564,14 +553,13 @@ void MESC::Timestep(double simdt)
 	//Jettison Tower
 	if (SequentialPyroBus() && LETJettisonAndFrangibleNutsRelay)
 	{
-		if (Sat->thg_tjm)
+		Sat->CutLESLegs();
+
+		if (!Sat->LaunchFail.LESJetMotorFail)
 		{
-			if (Sat->GetThrusterGroupLevel(Sat->thg_tjm) < 1.0)
-			{
-				Sat->SetThrusterGroupLevel(Sat->thg_tjm, 1.0);
-			}
+			Sat->FireTowerJettisonMotor();
+			Sat->JettisonLET();
 		}
-		Sat->JettisonLET();
 	}
 
 	//Canard Deploy
@@ -594,13 +582,7 @@ void MESC::Timestep(double simdt)
 	//Fire Pitch Control Motor
 	if (PitchControlMotorFire && SequentialPyroBus())
 	{
-		if (Sat->th_pcm)
-		{
-			if (Sat->GetThrusterLevel(Sat->th_pcm) < 1.0)
-			{
-				Sat->SetThrusterLevel(Sat->th_pcm, 1.0);
-			}
-		}
+		Sat->FirePitchControlMotor();
 	}
 
 	//SPS Abort

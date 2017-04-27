@@ -1286,7 +1286,7 @@ bool Saturn::clbkLoadGenericCockpit ()
 
 void Saturn::JettisonLET(bool AbortJettison)
 
-{
+{		
 	//
 	// Don't do anything if the tower isn't attached!
 	//
@@ -1338,9 +1338,9 @@ void Saturn::JettisonLET(bool AbortJettison)
 	LESConfig.SettingsType.LES_SETTINGS_GENERAL = 1;
 	LESConfig.SettingsType.LES_SETTINGS_ENGINES = 1;
 
-	LESConfig.FireLEM = GetThrusterGroupLevel(thg_lem) > 0.0;
-	LESConfig.FireTJM = GetThrusterGroupLevel(thg_tjm) > 0.0;
-	LESConfig.FirePCM = GetThrusterLevel(th_pcm) > 0.0;
+	LESConfig.FireLEM = FireLEM;
+	LESConfig.FireTJM = FireTJM;
+	LESConfig.FirePCM = FirePCM;
 
 	LESConfig.VehicleNo = VehicleNo;
 	LESConfig.LowRes = LowRes;
@@ -1381,6 +1381,15 @@ void Saturn::JettisonLET(bool AbortJettison)
 		SwindowS.play();
 	}
 	SwindowS.done();
+
+
+	//Delete Thrusters
+	DelThrusterGroup(thg_lem, true);
+	DelThrusterGroup(thg_tjm, true);
+	DelThruster(th_pcm);
+	DelPropellantResource(ph_lem);
+	DelPropellantResource(ph_tjm);
+	DelPropellantResource(ph_pcm);
 
 	//
 	// Event management

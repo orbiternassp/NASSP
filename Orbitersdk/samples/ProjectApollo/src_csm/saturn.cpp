@@ -361,6 +361,10 @@ void Saturn::initSaturn()
 	PostSplashdownPlayed = false;
 	SplashdownPlayed = false;
 
+	FireLEM = false;
+	FireTJM = false;
+	FirePCM = false;
+
 	DeleteLaunchSite = true;
 
 	buildstatus = 6;
@@ -1634,10 +1638,13 @@ int Saturn::GetMainState()
 	state.SIISepState = SIISepState;
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
+	state.FireLEM = FireLEM;
 	state.ABORT_IND = ABORT_IND;
+	state.FireTJM = FireTJM;
 	state.viewpos = viewpos;
 	state.PayloadDataTransfer = PayloadDataTransfer;
 	state.SplashdownPlayed = SplashdownPlayed;
+	state.FirePCM = FirePCM;
 	state.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.IGMEnabled = IGMEnabled;
 	state.SkylabSM = SkylabSM;
@@ -1658,10 +1665,13 @@ void Saturn::SetMainState(int s)
 	SIISepState = state.SIISepState;
 	Scorrec = state.Scorrec;
 	Burned = state.Burned;
+	FireLEM = state.FireLEM;
 	ABORT_IND = state.ABORT_IND;
+	FireTJM = state.FireTJM;
 	viewpos = state.viewpos;
 	PayloadDataTransfer = (state.PayloadDataTransfer != 0);
 	SplashdownPlayed = (state.SplashdownPlayed != 0);
+	FirePCM = state.FirePCM;
 	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.IGMEnabled != 0);
 	MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
@@ -4643,6 +4653,45 @@ void Saturn::SetSIVBThrusters(bool active)
 		SetThrusterResource(th_att_rot[8], NULL);
 		SetThrusterResource(th_att_rot[9], NULL);
 	}
+}
+
+void Saturn::FireLaunchEscapeMotor()
+{
+	if (thg_lem)
+	{
+		if (GetThrusterGroupLevel(thg_lem) < 1.0)
+		{
+			SetThrusterGroupLevel(thg_lem, 1.0);
+		}
+	}
+
+	FireLEM = true;
+}
+
+void Saturn::FireTowerJettisonMotor()
+{
+	if (thg_tjm)
+	{
+		if (GetThrusterGroupLevel(thg_tjm) < 1.0)
+		{
+			SetThrusterGroupLevel(thg_tjm, 1.0);
+		}
+	}
+
+	FireTJM = true;
+}
+
+void Saturn::FirePitchControlMotor()
+{
+	if (th_pcm)
+	{
+		if (GetThrusterLevel(th_pcm) < 1.0)
+		{
+			SetThrusterLevel(th_pcm, 1.0);
+		}
+	}
+
+	FirePCM = true;
 }
 
 //
