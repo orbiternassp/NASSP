@@ -60,22 +60,6 @@ protected:
 	RCSValve *valve;
 };
 
-class SaturnGuardedPushSwitch : public GuardedPushSwitch
-{
-public:
-	SaturnGuardedPushSwitch() { sat = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *v, int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
-
-protected:
-	Saturn *sat;
-};
-
-class LESMotorFireSwitch : public SaturnGuardedPushSwitch
-{
-public:
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-};
-
 class XLunarSwitch : public SaturnToggleSwitch {
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);

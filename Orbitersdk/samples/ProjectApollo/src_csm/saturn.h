@@ -1471,11 +1471,10 @@ protected:
 	double SecondStageCentreShutdownTime;
 
 	//
-	// Interstage and LES jettison time.
+	// Interstage jettison time.
 	//
 
 	double InterstageSepTime;
-	double LESJettisonTime;
 
 	//
 	// Mixture-ratio shift time for second stage.
@@ -1663,7 +1662,7 @@ protected:
 	THCRotarySwitch THCRotary;
 
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
-	LESMotorFireSwitch LesMotorFireSwitch;
+	GuardedPushSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
 	GuardedPushSwitch CsmLvSepSwitch;
 	GuardedPushSwitch ApexCoverJettSwitch;
@@ -3939,13 +3938,19 @@ protected:
 	double ISP_SECOND_SL;//300*G;
 	double ISP_SECOND_VAC;//421*G;
 	double ISP_THIRD_VAC;//421*G;
-	double ISP_LET_VAC;
-	double ISP_LET_SL;
+	double ISP_LEM_VAC;
+	double ISP_LEM_SL;
+	double ISP_TJM_VAC;
+	double ISP_TJM_SL;
+	double ISP_PCM_VAC;
+	double ISP_PCM_SL;
 
 	double THRUST_FIRST_VAC;
 	double THRUST_SECOND_VAC;//115200*G;
 	double THRUST_THIRD_VAC;
-	double THRUST_VAC_LET;
+	double THRUST_VAC_LEM;
+	double THRUST_VAC_TJM;
+	double THRUST_VAC_PCM;
 
 	//
 	// Generic functions shared between SaturnV and Saturn1B
@@ -4204,7 +4209,7 @@ protected:
 	// SPS and LET.
 	//
 
-	PROPELLANT_HANDLE ph_sps, ph_let;
+	PROPELLANT_HANDLE ph_sps, ph_lem, ph_pcm, ph_tjm;
 
 	//
 	// Ullage rockets for stage 1, 2 and 3.
@@ -4221,11 +4226,11 @@ protected:
 	// Thruster group handles. We have a lot of these :).
 	//
 
-	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_let;
+	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_lem, thg_tjm;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3];                       // handles for orbiter main engines
-	THRUSTER_HANDLE th_let[4];
+	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8], th_sep2[8];

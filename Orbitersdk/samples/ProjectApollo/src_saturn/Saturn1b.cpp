@@ -378,15 +378,6 @@ void Saturn1b::StageOne(double simt, double simdt)
 			SeparateStage (LAUNCH_STAGE_SIVB);
 			SeparationS.play(NOLOOP, 245);
 			SetStage(LAUNCH_STAGE_SIVB);
-
-			// 
-			// Tower jettison at 26.6 seconds after SIB shutdown if not previously
-			// specified.
-			//
-
-			if (LESJettisonTime > 999.0) {
-				LESJettisonTime = MissionTime + 26.6;
-			}
 		} else {
 
 			//

@@ -761,15 +761,6 @@ void SaturnV::StageTwo(double simt)
 			SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
 			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 			SIISepState = false;
-
-			//
-			// Tower jettison at 36.2 seconds after SIC shutdown if not previously
-			// specified.
-			//
-
-			if (LESJettisonTime > 999.0) {
-				LESJettisonTime = MissionTime + 5.7;
-			}
 		}
 		break;
 	}

@@ -484,11 +484,10 @@ void Saturn::initSaturn()
 	SecondStageShutdownTime = 1000.0;
 
 	//
-	// Same for interstage and LES jettison.
+	// Same for interstage jettison.
 	//
 
 	InterstageSepTime = 1000.0;
-	LESJettisonTime = 1000.0;
 
 	//
 	// PU shift time. Default to 8:15
@@ -597,23 +596,20 @@ void Saturn::initSaturn()
 	ISP_THIRD_VAC = 0.0;
 
 	//
-	// LET setup.
+	// TJM, LEM and PCM setup.
 	//
 
-	//
-	// ISPs are estimates.
-	//
+	ISP_TJM_SL = 1745.5837;
+	ISP_TJM_VAC = 1765.197;
+	THRUST_VAC_TJM = (135745.3 / 2.0)*ISP_TJM_VAC / ISP_TJM_SL;
 
-	ISP_LET_SL   = 2200.0;
-	ISP_LET_VAC  = 2600.0;
+	ISP_LEM_SL = 1725.9704;
+	ISP_LEM_VAC = 1922.1034;
+	THRUST_VAC_LEM = (533786.6 / 4.0)*ISP_LEM_VAC / ISP_LEM_SL;
 
-	//
-	// I'm not sure whether the thrust values quoted are for sea level
-	// or vacuum. If they're sea-level then we should multiply them by
-	// (ISP_VAC / ISP_SL) to get vacuum thrust.
-	//
-
-	THRUST_VAC_LET  = (653888.6 / 4.0);
+	ISP_PCM_SL = 1931.91005;
+	ISP_PCM_VAC = 1971.13665;
+	THRUST_VAC_PCM = 6271.4;
 
 	//
 	// Propellant handles.
@@ -629,7 +625,9 @@ void Saturn::initSaturn()
 	ph_rcs_cm_1 = 0;
 	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
-	ph_let = 0;
+	ph_lem = 0;
+	ph_tjm = 0;
+	ph_pcm = 0;
 	ph_sep = 0;
 	ph_sep2 = 0;
 	ph_o2_vent = 0;
@@ -642,7 +640,8 @@ void Saturn::initSaturn()
 	//
 
 	thg_main = 0;
-	thg_let = 0;
+	thg_lem = 0;
+	thg_tjm = 0;
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
@@ -723,9 +722,14 @@ void Saturn::initSaturn()
 		th_main[i] = 0;
 	}
 
+	for (i = 0; i < 2; i++)
+	{
+		th_tjm[i] = 0;
+	}
+
 	for (i = 0; i < 4; i++)
 	{
-		th_let[i] = 0;
+		th_lem[i] = 0;
 	}
 
 	for (i = 0; i < 8; i++) {
@@ -1354,7 +1358,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		papiWriteScenario_double (scn, "T3V", THRUST_THIRD_VAC);
 		papiWriteScenario_double (scn, "I3V", ISP_THIRD_VAC);
 		papiWriteScenario_double (scn, "ISTGJT", InterstageSepTime);
-		papiWriteScenario_double (scn, "LESJT", LESJettisonTime);
 		oapiWriteScenario_int (scn, "SIIENG", SII_EngineNum);
 
 		//
@@ -1904,10 +1907,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "ISTGJT", 6)) {
 		sscanf (line + 6, "%f", &ftcp);
 		InterstageSepTime = ftcp;
-	}
-	else if (!strnicmp (line, "LESJT", 5)) {
-		sscanf (line + 5, "%f", &ftcp);
-		LESJettisonTime = ftcp;
 	}
 	else if (!strnicmp (line, "SIIPUT", 6)) {
 		sscanf (line + 6, "%f", &ftcp);
@@ -3047,18 +3046,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 
 	SystemsTimestep(simt, simdt, mjd);
-
-	//
-	// Check for LES jettison.
-	//
-
-	if (LESAttached)
-	{
-		if (TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
-		{
-			JettisonLET();
-		}
-	}
 
 	if(stage < LAUNCH_STAGE_SIVB) {
 		if (GetNavmodeState(NAVMODE_KILLROT)) {
@@ -4556,7 +4543,8 @@ void Saturn::ClearThrusters()
 	//
 
 	thg_main = 0;
-	thg_let = 0;
+	thg_lem = 0;
+	thg_tjm = 0;
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
@@ -4583,7 +4571,9 @@ void Saturn::ClearPropellants()
 	ph_2nd = 0;
 	ph_3rd = 0;
 	ph_sps = 0;
-	ph_let = 0;
+	ph_lem = 0;
+	ph_tjm = 0;
+	ph_pcm = 0;
 
 	ph_rcs0 = 0;
 	ph_rcs1 = 0;
@@ -5332,25 +5322,6 @@ void Saturn::StageSix(double simt)
 void Saturn::StartAbort()
 
 {
-	//
-	// Event timer resets to zero on abort.
-	//
-
-	EventTimerDisplay.Reset();
-	EventTimerDisplay.SetRunning(true);
-	EventTimerDisplay.SetEnabled(true);
-
-	EventTimer306Display.Reset();
-	EventTimer306Display.SetRunning(true);
-	EventTimer306Display.SetEnabled(true);
-
-	//
-	// Fire the LET.
-	//
-
-	if (thg_let)
-		SetThrusterGroupLevel (thg_let, 1.0);
-
 	ABORT_IND = true;
 
 	ClearEngineIndicators();

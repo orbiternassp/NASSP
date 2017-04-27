@@ -52,27 +52,6 @@ void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SUR
 	sat = s;
 }
 
-void SaturnGuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int xoffset, int yoffset, int lxoffset, int lyoffset)
-
-{
-	GuardedPushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset, lxoffset, lyoffset);
-	sat = s;
-}
-
-bool LESMotorFireSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (GuardedPushSwitch::SwitchTo(newState,dontspring) && Toggled())
-	{
-		ClearToggled();
-		sat->JettisonLET(true);
-
-		return true;
-	}
-
-	return false;
-}
-
 bool XLunarSwitch::SwitchTo(int newState, bool dontspring)
 
 

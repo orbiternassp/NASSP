@@ -73,6 +73,8 @@ class RCSC
 public:
 	RCSC();
 	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void ControlVessel(Saturn *v);
 
@@ -99,8 +101,8 @@ protected:
 	bool InterconnectAndPropellantBurnB;
 	bool FuelAndOxidBypassPurgeA;
 	bool FuelAndOxidBypassPurgeB;
-	bool RSCSCMSMTransferA;
-	bool RSCSCMSMTransferB;
+	bool RCSCCMSMTransferA;
+	bool RCSCCMSMTransferB;
 
 	bool MESCDeadfaceA;
 	bool MESCDeadfaceB;
@@ -133,10 +135,13 @@ protected:
 	bool MESCLogicBus();
 	//Source 15
 	bool SequentialArmBus();
+	//Source P4
+	bool SequentialPyroBus();
 
+	//MESC Relays
 	bool MESCLogicArm;
 	bool BoosterCutoffAbortStartRelay;
-	bool LETPhysicalSeperationMonitor;
+	bool LETPhysicalSeparationMonitor;
 	bool LESAbortRelay;
 	bool AutoAbortEnableRelay;
 	bool CMSMDeadFace;
@@ -146,6 +151,14 @@ protected:
 	bool CanardDeploy;
 	bool UllageRelay;
 	bool CSMLVSeparateRelay;
+	bool LESMotorFire;
+	bool PitchControlMotorFire;
+	bool RCSEnableArmRelay;
+	bool RCSEnableDisableRelay;
+	bool LETJettisonAndFrangibleNutsRelay;
+
+	//Miscellaneous
+	bool AbortStarted;
 
 	//Abort Start Delay
 	SECSTimer TD1;
@@ -155,6 +168,8 @@ protected:
 	SECSTimer TD5;
 	//CSM/LM Separation Delay
 	SECSTimer TD11;
+	//RCS Enable Arm Delay
+	SECSTimer TD13;
 
 	Saturn *Sat;
 

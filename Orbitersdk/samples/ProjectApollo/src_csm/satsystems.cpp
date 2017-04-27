@@ -1903,8 +1903,6 @@ void Saturn::JoystickTimestep()
 	// Manual control
 	if ((CMPropDumpSwitch.IsUp() || CMRCS1.AutoFuelDump()) && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
 		SetCMRCSState(2, true);	
-		double d = GetThrusterLevel(th_att_cm[2]);
-		
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
