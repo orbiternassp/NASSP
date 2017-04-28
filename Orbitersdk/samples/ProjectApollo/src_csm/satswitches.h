@@ -775,19 +775,6 @@ protected:
 	int Axis;
 };
 
-class SaturnAbortSwitch : public MeterSwitch {
-public:
-	void Init(SwitchRow &row, Saturn *s);
-	double QueryValue() { return 0; }
-	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
-
-	int GetState();
-	void SetState(int value);
-
-protected:
-	Saturn *Sat;
-};
-
 class SaturnEMSDvSetSwitch {
 
 public:

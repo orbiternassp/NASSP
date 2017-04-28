@@ -41,7 +41,6 @@ public:
 
 	void Reset();
 	void SetRunning(bool run) { Running = run; };
-	bool IsRunning() { return Running; };
 	void SetContact(bool cont) { Contact = cont; };
 	bool ContactClosed() { return Contact; };
 
@@ -77,9 +76,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void ControlVessel(Saturn *v);
-
-	void SetDeadFaceA(bool df) { MESCDeadfaceA = df; };
-	void SetDeadFaceB(bool df) { MESCDeadfaceB = df; };
+	bool GetMode1ASignal() { return Mode1ASignal; };
 
 	//Propellant Dump and Purge Disable Timer
 	RestartableSECSTimer TD1, TD2;
@@ -104,8 +101,7 @@ protected:
 	bool RCSCCMSMTransferA;
 	bool RCSCCMSMTransferB;
 
-	bool MESCDeadfaceA;
-	bool MESCDeadfaceB;
+	bool Mode1ASignal;
 
 	Saturn *Sat;
 };
@@ -114,14 +110,23 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, MissionTimer *MT, EventTimer *ET);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET);
 	void Timestep(double simdt);
 
 	void Liftoff();
 	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; };
 	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; };
 	bool GetCMSMDeadFace() { return CMSMDeadFace; };
-	bool FireUllage() { return MESCLogicBus() && RCSLogicCircuitBraker->IsPowered() && UllageRelay; };
+	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; };
+	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
+	bool FireUllage() { return MESCLogicBus() && RCSLogicCircuitBreaker->IsPowered() && UllageRelay; };
+
+	//Source 31
+	bool EDSMainPower();
+
+	bool EDSAbort1Relay;
+	bool EDSAbort2Relay;
+	bool EDSAbort3Relay;
 
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -129,12 +134,16 @@ protected:
 
 	void TimerTimestep(double simdt);
 
+	bool EDSVote();
+
 	//Source 11
 	bool SequentialLogicBus();
 	//Source 12
 	bool MESCLogicBus();
 	//Source 15
 	bool SequentialArmBus();
+	//Source 21
+	bool EDSLogicPower();
 	//Source P4
 	bool SequentialPyroBus();
 
@@ -156,6 +165,10 @@ protected:
 	bool RCSEnableArmRelay;
 	bool RCSEnableDisableRelay;
 	bool LETJettisonAndFrangibleNutsRelay;
+	bool ApexCoverJettison;
+	bool ApexCoverDragChuteDeploy;
+	bool ELSActivateRelay;
+	bool EDSBusChangeover;
 
 	//Miscellaneous
 	bool AbortStarted;
@@ -166,19 +179,29 @@ protected:
 	SECSTimer TD3;
 	//Canard Deploy Delay
 	SECSTimer TD5;
+	//ELS Activate Delay
+	SECSTimer TD7;
 	//CSM/LM Separation Delay
 	SECSTimer TD11;
 	//RCS Enable Arm Delay
 	SECSTimer TD13;
+	//RCS CMD Enable Delay
+	SECSTimer TD15;
+	//Apex Cover Jettison Delay
+	SECSTimer TD17;
 
 	Saturn *Sat;
 
 	DCbus *SECSLogicBus;
 	DCbus *SECSPyroBus;
 	CircuitBrakerSwitch *SECSArmBreaker;
-	CircuitBrakerSwitch *RCSLogicCircuitBraker;
+	CircuitBrakerSwitch *RCSLogicCircuitBreaker;
+	CircuitBrakerSwitch *ELSBatteryBreaker;
+	CircuitBrakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
+
+	CircuitBrakerSwitch *EDSLogicBreaker;
 };
 
 ///
@@ -199,9 +222,19 @@ public:
 	void LiftoffB();
 
 	void TD1_GSEReset();
+	bool AbortLightPowerA();
+	bool AbortLightPowerB();
+
+	void SetEDSAbort1(bool set) { MESCA.EDSAbort1Relay = set; MESCB.EDSAbort1Relay = set; };
+	void SetEDSAbort2(bool set) { MESCA.EDSAbort2Relay = set; MESCB.EDSAbort2Relay = set; };
+	void SetEDSAbort3(bool set) { MESCA.EDSAbort3Relay = set; MESCB.EDSAbort3Relay = set; };
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
+
+	MESC MESCA;
+	MESC MESCB;
+	RCSC rcsc;
 
 protected:
 	bool IsLogicPoweredAndArmedA();
@@ -213,10 +246,6 @@ protected:
 
 	bool PyroBusAMotor;
 	bool PyroBusBMotor;
-
-	MESC MESCA;
-	MESC MESCB;
-	RCSC rcsc;
 
 	Saturn *Sat;
 };
@@ -255,6 +284,13 @@ protected:
 
 	Saturn *Sat;
 	FloatBag *FloatBagVessel;
+
+	//Relays
+	//K1: 24,000 Feet Lock Up
+	bool LockUp24000FT;
+
+	//Timers
+	//TD1: 
 };
 
 //

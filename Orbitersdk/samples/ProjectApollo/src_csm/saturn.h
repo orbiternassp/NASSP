@@ -2839,8 +2839,8 @@ protected:
 
 	SwitchRow EDSCircuitBrakerRow;
 	CircuitBrakerSwitch EDS1BatACircuitBraker;
-	CircuitBrakerSwitch EDS2BatBCircuitBraker;
-	CircuitBrakerSwitch EDS3BatCCircuitBraker;
+	CircuitBrakerSwitch EDS2BatCCircuitBraker;
+	CircuitBrakerSwitch EDS3BatBCircuitBraker;
 
 	SwitchRow ELSCircuitBrakerRow;
 	CircuitBrakerSwitch ELSBatACircuitBraker;
@@ -3330,7 +3330,6 @@ protected:
 	SaturnASCPSwitch ASCPRollSwitch;		// Dummy switch/display for checklist controller
 	SaturnASCPSwitch ASCPPitchSwitch;
 	SaturnASCPSwitch ASCPYawSwitch;
-	SaturnAbortSwitch  AbortSwitch;
 
 
 	///
@@ -4109,7 +4108,6 @@ protected:
 	//
 
 	void DoLaunch(double simt);
-	void LaunchCountdown(double simt);
 	void StageSeven(double simt);
 	void StageEight(double simt);
 	void SetChuteStage1();
@@ -4484,7 +4482,6 @@ protected:
 	friend class SaturnPanel382Cover;
 	friend class SaturnPanel600;
 	friend class SaturnASCPSwitch;
-	friend class SaturnAbortSwitch;
 	friend class SaturnPanelOrdeal;
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;

@@ -394,165 +394,6 @@ void Saturn1b::StageOne(double simt, double simdt)
 	}
 }
 
-void Saturn1b::StageLaunchSIVB(double simt)
-
-{
-	switch (StageState)	{
-	case 0:
-		SepS.play(LOOP, 130);
-		SetThrusterGroupLevel(thg_ver,1.0);
-		NextMissionEventTime = MissionTime + 2.0;
-		SetSIVBMixtureRatio(5.0);
-		ActivateStagingVent();
-		StageState++;
-		break;
-
-	case 1:
-		if (MissionTime >= NextMissionEventTime - 1.0)
-			DeactivateStagingVent();
-
-		if (MissionTime >= NextMissionEventTime)
-		{
-			LastMissionEventTime = NextMissionEventTime;
-			NextMissionEventTime += 2.5;
-			SetEngineIndicator(1);
-			StageState++;
-		}
-		break;
-
-	//
-	// Start bringing engine up to power.
-	//
-
-	case 2:
-		if (MissionTime  < NextMissionEventTime) {
-			double deltat = MissionTime - LastMissionEventTime;
-			SetThrusterLevel(th_main[0], 0.9 * (deltat / 2.5));
-		} else {
-			SetThrusterLevel(th_main[0], 0.9);
-			SetThrusterGroupLevel(thg_ver, 0.0);
-			LastMissionEventTime = NextMissionEventTime;
-			NextMissionEventTime += 2.1;
-			StageState++;
-		}
-		if (GetThrusterLevel(th_main[0]) > 0.65) {
-			ClearEngineIndicator(1);
-		}
-		break;
-
-	//
-	// Bring engine to full power.
-	//
-
-	case 3:
-		if (MissionTime  < NextMissionEventTime) {
-			double deltat = MissionTime - LastMissionEventTime;
-			SetThrusterLevel(th_main[0], 0.9 + (deltat / 21.0));
-		} else {
-			SetThrusterLevel(th_main[0], 1.0);
-			SepS.stop();
-			if (th_att_rot[0] == 0) {
-				AddRCS_S4B();
-			}
-
-			NextMissionEventTime = MissionTime + 2.05;
-			StageState++;
-		}
-		break;
-
-	//
-	// First mixture ratio shift.
-	//
-
-	case 4:
-		if (MissionTime >= NextMissionEventTime) {
-			SetSIVBThrusters(true);
-			SetSIVBMixtureRatio(5.5);
-
-			StageState++;
-		}
-		break;
-
-	//
-	// Second mixture ratio shift.
-	//
-
-	case 5:
-		if (MissionTime >= SecondStagePUShiftTime) {
-			if (Crewed)	{
-				SPUShiftS.play();
-				SPUShiftS.done();
-			}
-			SetSIVBMixtureRatio(4.5);
-			StageState++;
-		}
-		break;
-
-	//
-	// Throttle down engine to achieve a more precise shutdown
-
-	case 6: {
-		double apDist, peDist;
-		GetApDist(apDist);
-		GetPeDist(peDist);
-		OBJHANDLE ref = GetGravityRef();
-		if (apDist - oapiGetSize(ref) >= agc.GetDesiredApogee() * 1000. - 30000. && peDist - oapiGetSize(ref) >= agc.GetDesiredPerigee() * 1000. - 1000.) {
-			LastMissionEventTime = MissionTime;
-			StageState++;
-		} }
-		break;
-
-	case 7:
-		if (GetThrusterLevel(th_main[0]) <= 0.05) {
-			StageState++;
-		} else {
-			double deltat = MissionTime - LastMissionEventTime;
-			SetThrusterLevel(th_main[0], max(0.05, 1. - (deltat / 0.4)));
-		}
-		break;
-
-	//
-	// Shutdown.
-	//
-
-	case 8:
-		if (GetThrusterLevel(th_main[0]) <= 0) {
-			NextMissionEventTime = MissionTime + 10.0;
-			SIVBCutoffTime = MissionTime;
-
-			ActivateNavmode(NAVMODE_KILLROT);
-
-			S4CutS.play();
-			S4CutS.done();
-
-			//
-			// Make sure we clear out any sounds that haven't been played.
-			//
-			S2ShutS.done();
-			SPUShiftS.done();
-
-			ThrustAdjust = 1.0;
-			SetStage(STAGE_ORBIT_SIVB);
-			SetSIVBThrusters(true);
-		}
-		break;
-	}
-
-	// Abort handling
-	if (CSMLVPyros.Blown() || (bAbort && !LESAttached))	{		
-		SeparateStage(CSM_LEM_STAGE);
-		SetStage(CSM_LEM_STAGE);
-		if (bAbort) {
-			/// \todo SPS abort handling			
-			StartAbort();
-			bAbort = false;
-			autopilot = false;
-		}
-	}
-	// sprintf(oapiDebugString(), "StageLaunchSIVB state %d thrust %f", StageState, GetThrusterLevel(th_main[0]));
-}
-
-
 //
 // Adjust the mixture ratio of the engine on the SIVB stage. This occured late in
 // the flight to ensure that the fuel was fully burnt before the stage was dropped.
@@ -610,8 +451,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	/// \todo LVDC++ as in Saturn V
-
 	//
 	// Abort handling
 	//
@@ -631,47 +470,11 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 				use_lvdc = false;
 			}
 		}
-	}else{
-		if (bAbort && MissionTime > -300 && LESAttached) {
-			SetEngineLevel(ENGINE_MAIN, 0);
+
+		if (CMSMPyros.Blown() && stage < CM_STAGE)
+		{
 			SeparateStage(CM_STAGE);
 			SetStage(CM_STAGE);
-			StartAbort();
-			agc.SetInputChannelBit(030, SIVBSeperateAbort, true); // Notify the AGC of the abort
-			agc.SetInputChannelBit(030, LiftOff, true); // and the liftoff, if it's not set already
-			bAbort = false;
-			return;
-		}
-		switch (stage) {
-			case LAUNCH_STAGE_ONE:
-				StageOne(simt, simdt);
-
-				if (autopilot) {
-					AutoPilot(MissionTime);
-				}
-				else {
-					AttitudeLaunch1();
-				}
-				break;
-
-			case LAUNCH_STAGE_SIVB:
-				StageLaunchSIVB(simt);
-
-				if (autopilot) {
-					AutoPilot(MissionTime);
-				}
-				else {
-					AttitudeLaunchSIVB();
-				}
-				break;
-
-			case STAGE_ORBIT_SIVB:
-				StageOrbitSIVB(simt, simdt);
-				break;
-
-			default:
-				GenericTimestepStage(simt, simdt);
-				break;
 		}
 	}
 

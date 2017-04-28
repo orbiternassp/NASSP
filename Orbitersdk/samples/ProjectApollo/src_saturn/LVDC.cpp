@@ -58,6 +58,8 @@ LVDC1B::LVDC1B(){
 	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	GATE = false;
 	GATE5 = false;
 	GRR_init = false;
@@ -73,6 +75,7 @@ LVDC1B::LVDC1B(){
 	MRS = false;
 	poweredflight = false;
 	S1B_Engine_Out = false;
+	S1B_TwoEngines_Out = false;
 	S4B_IGN = false;
 	theta_N_op = false;
 	TerminalConditions = false;
@@ -555,6 +558,8 @@ void LVDC1B::init(Saturn* own){
 	LVDC_EI_On = false;
 	S1B_Sep_Time = 0;
 	CountPIPA = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -768,13 +773,18 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
-				/*
+				
 				// ENGINE FAIL TEST:
-				if(MissionTime > 22.5 && S1C_Engine_Out == false){
-					SetThrusterResource(th_main[1], NULL); // Should stop the engine
-					S1C_Engine_Out = true;
+				if(owner->MissionTime > 22.5 && S1B_Engine_Out == false){
+					owner->SetThrusterResource(owner->th_main[1], NULL); // Should stop the engine
+					S1B_Engine_Out = true;
 				}
-				*/
+
+				if (owner->MissionTime > 32.5 && S1B_TwoEngines_Out == false) {
+					owner->SetThrusterResource(owner->th_main[2], NULL); // Should stop the engine
+					S1B_TwoEngines_Out = true;
+				}
+				
 
 				// S1B CECO TRIGGER:
 				if(owner->MissionTime > 140.86){ // Apollo 7
@@ -787,6 +797,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Clear liftoff light now - Apollo 15 checklist item
 					owner->ClearLiftoffLight();
 					S1B_Engine_Out = true;
+					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
@@ -1944,6 +1955,44 @@ minorloop: //minor loop;
 		}
 	}
 
+	//Auto Abort
+	//LV Rates light
+	if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+	{
+		owner->LVRateLight = true;
+	}
+	else
+	{
+		owner->LVRateLight = false;
+	}
+
+	AutoAbortInitiate = false;
+
+	if (owner->EDSSwitch.IsUp())
+	{
+		if (owner->LVRateAutoSwitch.IsUp())
+		{
+			if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+			{
+				AutoAbortInitiate = true;
+			}
+		}
+		if (owner->TwoEngineOutAutoSwitch.IsUp())
+		{
+			if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+			{
+				AutoAbortInitiate = true;
+			}
+		}
+	}
+
+	if (AutoAbortInitiate)
+	{
+		owner->secs.SetEDSAbort1(true);
+		owner->secs.SetEDSAbort2(true);
+		owner->secs.SetEDSAbort3(true);
+	}
+
 	/* **** ABORT HANDLING **** */
 	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
 	if(owner->bAbort && owner->MissionTime > -300){				
@@ -1997,6 +2046,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// Thank heaven for text processing.
 	// bool
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
+	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -2014,9 +2064,11 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
+	oapiWriteScenario_int(scn, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
+	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -2366,6 +2418,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_UP", UP);
 		// BOOL
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
+		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -2383,9 +2436,11 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
+		papiReadScenario_bool(line, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
+		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2710,6 +2765,8 @@ LVDC::LVDC(){
 	Direct_Ascent = false;
 	directstageint = false;
 	directstagereset = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -2733,6 +2790,7 @@ LVDC::LVDC(){
 	poweredflight = false;
 	ROT = false;
 	S1_Engine_Out = false;
+	S1_TwoEngines_Out = false;
 	S2_BURNOUT = false;
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
@@ -3139,6 +3197,8 @@ void LVDC::Init(Saturn* vs){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	directstagereset = true;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3338,7 +3398,8 @@ void LVDC::Init(Saturn* vs){
 	S2_ENGINE_OUT=false;					// S2 Engine Failure
 	S2_BURNOUT=false;						// SII Burn Out
 	LVDC_GRR = false;
-	S1_Engine_Out = false;		
+	S1_Engine_Out = false;
+	S1_TwoEngines_Out = false;
 	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
@@ -3444,6 +3505,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Here we go
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
+	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -3473,6 +3535,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
 	oapiWriteScenario_int(scn, "LVDC_ROTR", ROTR);
 	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
+	oapiWriteScenario_int(scn, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -3483,6 +3546,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
+	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -4107,6 +4171,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		// So we do it in single lines.
 		// booleans
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
+		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -4135,6 +4200,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
 		papiReadScenario_bool(line, "LVDC_ROTR", ROTR);
 		papiReadScenario_bool(line, "LVDC_S1_Engine_Out", S1_Engine_Out);
+		papiReadScenario_bool(line, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S2_BURNOUT", S2_BURNOUT);
 		papiReadScenario_bool(line, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -4145,6 +4211,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
+		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// integers
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
@@ -4953,6 +5020,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					// Apollo 11
 					owner->SwitchSelector(16);
 					S1_Engine_Out = true;
+					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					TB2 = TAS;//-simdt;
 					LVDC_Timebase = 2;
@@ -7025,6 +7093,44 @@ minorloop:
 			owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
 		else
 			owner->contrailLevel = 1;
+	}
+
+	//Auto Abort
+	//LV Rates light
+	if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+	{
+		owner->LVRateLight = true;
+	}
+	else
+	{
+		owner->LVRateLight = false;
+	}
+
+	AutoAbortInitiate = false;
+
+	if (owner->EDSSwitch.IsUp())
+	{
+		if (owner->LVRateAutoSwitch.IsUp())
+		{
+			if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+			{
+				AutoAbortInitiate = true;
+			}
+		}
+		if (owner->TwoEngineOutAutoSwitch.IsUp())
+		{
+			if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+			{
+				AutoAbortInitiate = true;
+			}
+		}
+	}
+
+	if (AutoAbortInitiate)
+	{
+		owner->secs.SetEDSAbort1(true);
+		owner->secs.SetEDSAbort2(true);
+		owner->secs.SetEDSAbort3(true);
 	}
 
 	/* **** SATURN 5 ABORT HANDLING **** */

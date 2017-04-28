@@ -1996,21 +1996,6 @@ void SaturnASCPSwitch::SetState(int value) {
 	Sat->ascp.output.data[Axis] = value / 10.;
 }
 
-
-void SaturnAbortSwitch::Init(SwitchRow &row, Saturn *s) {
-	MeterSwitch::Init(row);
-	Sat = s;
-}
-
-int SaturnAbortSwitch::GetState() {
-	return (Sat->bAbort ? TOGGLESWITCH_UP : TOGGLESWITCH_DOWN);
-}
-
-void SaturnAbortSwitch::SetState(int value) {
-	// Nothing for now
-}
-
-
 bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	int oldPos = position;

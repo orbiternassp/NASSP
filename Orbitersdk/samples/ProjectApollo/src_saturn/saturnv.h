@@ -129,7 +129,6 @@ protected:
 	void StageOne(double simt, double simdt);
 	void StageTwo(double simt);
 	void StageFour(double simt, double simdt);
-	void StageLaunchSIVB(double simt);
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);

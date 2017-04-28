@@ -3877,118 +3877,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	return TRUE;
 }
 
-void Saturn::LaunchCountdown(double simt)
-{
-	if (GetEngineLevel(ENGINE_MAIN) > 0 && MissionTime <= (-8.9)) {
-		SetThrusterGroupLevel(thg_main, 0);
-		contrailLevel = 0;
-	}
-
-	if (oapiGetTimeAcceleration() > 100)
-		oapiSetTimeAcceleration(100);
-
-	if (MissionTime >= 0) {
-		DoLaunch(simt);
-		return;
-	}
-
-	// Prelaunch tank venting between -3:00h and engine ignition
-	// No clue if the venting start time is correct
-	if (MissionTime < -10800 || MissionTime > -9) {
-		DeactivatePrelaunchVenting();
-	}
-	else {
-		ActivatePrelaunchVenting();
-	}
-
-	switch (StageState) {
-
-	case 0:
-		if (MissionTime >= -((4 * 60) + 10)) {
-			//
-			// Engine lights on.
-			//
-
-			SetEngineIndicators();
-			StageState++;
-		}
-		break;
-
-	case 1:
-
-		//
-		// Reset time acceleration to normal at
-		// 20 seconds, and reconnect the fuel to
-		// the main engines.
-		//
-
-		if (MissionTime >= -20.0) {
-			oapiSetTimeAcceleration (1);
-			for (int i = 0; i < 5; i++) {
-				SetThrusterResource(th_main[i], ph_1st);
-			}
-			CreateStageOne();
-			StageState++;
-		}
-		break;
-
-	case 2:
-
-		//
-		// Play the countdown sound at 10 seconds,
-		//
-
-		if (MissionTime >= -10.9) {
-			if (!UseATC && Scount.isValid()) {
-				Scount.play();
-				Scount.done();
-			}
-			StageState++;
-		}
-		break;
-
-	case 3:
-		if (MissionTime >= -4.9) {
-			StageState++;
-		}
-		break;
-
-	case 4:
-		//
-		// Build up engine thrust. Slower at first so we don't
-		// leave the ground before we should.
-		//
-
-		double thrst;
-
-		if (MissionTime > (-2.0)) {
-			thrst = 0.9 + (0.05 * (MissionTime + 2.0));
-
-			//
-			// Engine lights off. This should really be done per-engine,
-			// based on thrust level.
-			//
-			for (int i = 1; i <= SI_EngineNum; i++)
-			{
-				ClearEngineIndicator(i);
-			}
-		}
-		else
-		{
-			thrst = (0.9 / 2.9) * (MissionTime + 4.9);
-		}
-		SetThrusterGroupLevel(thg_main, thrst);
-		contrailLevel = thrst;
-
-		double amt = (thrst) * 0.1;
-		JostleViewpoint(amt);
-
-		// AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0));
-		AddForce(_V(0, 0, -(THRUST_FIRST_VAC*(thrst + .01))), _V(0, 0, 0));
-		break;
-	}
-}
-
 void Saturn::GenericTimestepStage(double simt, double simdt)
 
 {
@@ -3999,10 +3887,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	bool deploy = false;
 
 	switch (stage) {
-	case PRELAUNCH_STAGE:
-		LaunchCountdown(simt);
-		break;
-
 	case CSM_LEM_STAGE:
 		StageSix(simt);
 		break;
@@ -4010,8 +3894,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	case CM_STAGE:
 		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail) {
 			// Deactivate Auto RCS Enable Relays
-			rjec.SetAutoRCSEnableRelayA(false);
-			rjec.SetAutoRCSEnableRelayB(false);
+			secs.MESCA.SetAutoRCSEnableRelay(false);
+			secs.MESCB.SetAutoRCSEnableRelay(false);
 			
 			// Deploy apex cover
 			deploy = true;
@@ -4035,8 +3919,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	case CM_ENTRY_STAGE:
 		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail) {
 			// Deactivate Auto RCS Enable Relays
-			rjec.SetAutoRCSEnableRelayA(false);
-			rjec.SetAutoRCSEnableRelayB(false);
+			secs.MESCA.SetAutoRCSEnableRelay(false);
+			secs.MESCB.SetAutoRCSEnableRelay(false);
 			
 			// Deploy apex cover
 			deploy = true;
@@ -4794,26 +4678,8 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	// Attitude control
 	//
 
-	if (LVGuidanceSwitch.IsUp() && use_lvdc == false) {
-		if (ApolloNo == 7) {
-			if (MissionTime >= 10275) {
-				iu.HoldAttitude();
-				
-			} else if (MissionTime >= 9780) {
-				iu.SetLVLHAttitude(_V(cos(20. * RAD), -sin(20. * RAD), 0));
-
-			} else if (MissionTime >= SIVBCutoffTime + 20)	{
-				iu.SetLVLHAttitude(_V(1, 0, 0));
-			}
-		} else {
-			// In all other missions maintain LVLH attitude for now
-			// \todo Correct behaviour of the S-IVB 
-			
-		}
-	} else {
-		// Manual S-IVB control via CMC
-		SaturnTakeoverMode();
-	}
+	// Manual S-IVB control via CMC
+	SaturnTakeoverMode();
 
 	//
 	// Venting, see Apollo 7 Saturn IB Report, NTRS ID 19900067467

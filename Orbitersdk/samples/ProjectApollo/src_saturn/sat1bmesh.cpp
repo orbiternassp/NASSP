@@ -669,13 +669,13 @@ void Saturn1b::SeparateStage (int new_stage)
 	vs1.eng_main = vs1.eng_hovr = 0.0;
 	vs2.eng_main = vs2.eng_hovr = 0.0;
 
-	if (stage == LAUNCH_STAGE_ONE && !bAbort)
+	if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage > LAUNCH_STAGE_SIVB)
 	{
 		ofs1= _V(0, 0, 4.7);
 		vel1 = _V(0,0,-4.0);
@@ -726,7 +726,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetChuteStage1 ();
 	}
 
-    if (stage == LAUNCH_STAGE_ONE && !bAbort )
+    if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -854,7 +854,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;

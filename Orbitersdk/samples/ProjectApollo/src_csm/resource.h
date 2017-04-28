@@ -42,7 +42,7 @@
 #define AID_RCS_HELIUM2_TALKBACK                            48
 #define AID_RCS_PROP1_TALKBACK                              49
 #define AID_RCS_PROP2_TALKBACK                              50
-#define AID_ABORT_BUTTON                                    51
+#define AID_ABORT_LIGHT                                     51
 #define AID_FUEL_DIGIT                                      52
 #define AID_SM_RCS_MODE                                     54
 #define AID_SPS_GIMBAL_SWITCHES                             55

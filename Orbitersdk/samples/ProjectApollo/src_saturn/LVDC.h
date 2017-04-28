@@ -66,6 +66,7 @@ private:
 	bool CountPIPA;									// PIPA Counter Enable
 	bool S2_Startup;								// S2 Engine Start
 	bool directstagereset;							// Direct Stage Reset
+	bool AutoAbortInitiate;
 	
 	// These are variables that are not really part of the LVDC software.
 	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
@@ -110,6 +111,8 @@ private:
 	bool liftoff;									// lift-off flag
 	bool Direct_Ascent;                             // Direct Ascent Mode flag
 	bool S1_Engine_Out;								// S1B/C Engine Failure Flag
+	bool S1_TwoEngines_Out;
+	bool TwoEngOutAutoAbortDeactivate;
 	bool directstageint;							// Direct Stage Interrupt
 	bool HSL;										// High-Speed Loop flag
 	int  T_EO1,T_EO2;								// Pre-IGM Engine-Out Constant
@@ -446,6 +449,8 @@ private:
 	bool LVDC_EI_On;								// Engine Indicator lights on
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
+	bool AutoAbortInitiate;
+	bool TwoEngOutAutoAbortDeactivate;
 	
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttRate;                                // Attitude Change Rate
@@ -477,6 +482,7 @@ private:
 	bool poweredflight;								// Powered flight flag
 	bool liftoff;									// lift-off flag
 	bool S1B_Engine_Out;							// S1C Engine Failure Flag
+	bool S1B_TwoEngines_Out;
 	bool HSL;										// High-Speed Loop flag
 	int  T_EO1,T_EO2;								// Pre-IGM Engine-Out Constant
 	int  UP;										// IGM target parameters updated

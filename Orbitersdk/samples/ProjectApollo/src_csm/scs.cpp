@@ -1586,8 +1586,6 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 RJEC::RJEC() {
 	
 	sat = NULL;
-	AutoRCSEnableRelayA = false;
-	AutoRCSEnableRelayB = false;
 	CMTransferMotor1 = false;
 	CMTransferMotor2 = false;
 	SPSActive = false;
@@ -1630,8 +1628,8 @@ bool RJEC::IsThrusterPowered(ThreePosSwitch *s) {
 
 	// see AOH Figure 2.5-2
 	if (s->IsPowered() && 
-		((s->IsUp() && AutoRCSEnableRelayA && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
-		 (s->IsDown() && AutoRCSEnableRelayB && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
+		((s->IsUp() && sat->secs.MESCA.GetAutoRCSEnableRelay() && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
+		 (s->IsDown() && sat->secs.MESCB.GetAutoRCSEnableRelay() && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
 		return true;
 	}
 	return false;
@@ -1697,23 +1695,6 @@ void RJEC::TimeStep(double simdt){
 		}
 		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
 			CMTransferMotor2 = false;
-		}
-	}
-
-	// Auto RCS enable relays
-	if (sat->RCSCMDSwitch.IsUp()) {
-		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayA = true;
-		}
-		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayB = true;
-		}
-	} else if (sat->RCSCMDSwitch.IsDown()) {
-		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayA = false;
-		}
-		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayB = false;
 		}
 	}
 
@@ -1932,8 +1913,6 @@ void RJEC::SaveState(FILEHANDLE scn) {
 		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
 	} 
 	*/
-	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
-	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
 	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1); 
 	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 	papiWriteScenario_bool(scn, "SPSACTIVE", SPSActive); 
@@ -1962,8 +1941,6 @@ void RJEC::LoadState(FILEHANDLE scn){
 			ThrusterDemand[i] = (val != 0 ? true : false);
 		*/
 		}
-		papiReadScenario_bool(line, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
-		papiReadScenario_bool(line, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
 		papiReadScenario_bool(line, "CMTRANSFERMOTOR1", CMTransferMotor1); 
 		papiReadScenario_bool(line, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 		papiReadScenario_bool(line, "SPSACTIVE", SPSActive); 
