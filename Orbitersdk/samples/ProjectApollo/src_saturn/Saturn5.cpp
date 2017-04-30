@@ -768,153 +768,6 @@ void SaturnV::StageTwo(double simt)
 	/// \todo Manual separation and abort handling, see StageFour
 }
 
-void SaturnV::StageFour(double simt, double simdt)
-
-{
-	LAUNCHIND[2] = true;
-
-	int i;
-	double Level;
-
-	double MainLevel = GetEngineLevel(ENGINE_MAIN);
-
-	double amt = (MainLevel) * 0.2;
-	JostleViewpoint(amt);
-
-	switch (StageState) {
-
-	case 0:
-		if (VehicleNo < 505) {
-			StageState = 2;
-		}
-		else {
-			StageState = 1;
-		}
-		break;
-
-	case 1:
-
-		//
-		// Shut down center engine on Apollo 10 and later.
-		//
-
-		if ((actualFUEL < 15) || (MissionTime >= SecondStageCentreShutdownTime)) {
-			SetThrusterResource(th_main[4],NULL);
-			S2ShutS.play(NOLOOP,235);
-			S2ShutS.done();
-			SetEngineIndicator(5);
-			StageState++;
-		}
-		break;
-
-	case 2:
-
-		//
-		// Change mixture ratio to ensure full fuel burn.
-		//
-
-		if ((actualFUEL < 5) || (MissionTime >= SecondStagePUShiftTime)) {
-			SetSIICMixtureRatio (4.3);
-			if (Crewed) {
-				SPUShiftS.play();
-			}
-			SPUShiftS.done();
-			StageState++;
-		}
-		break;
-
-	case 3:
-		//
-		// Begin shutdown countdown at 1.7% fuel.
-		//
-
-		if ((actualFUEL < 1.7) || (MissionTime >= (SecondStageShutdownTime - 10.0))) {
-			Sctdw.play(NOLOOP,245);
-			StageState++;
-		}
-		break;
-
-	case 4:
-		if ((GetFuelMass() <= 0) || (MissionTime >= SecondStageShutdownTime)) {
-			SetEngineIndicators();
-			NextMissionEventTime = MissionTime + 2.0;
-			StageState++;
-		}
-		break;
-
-	case 5:
-		if (MissionTime >= NextMissionEventTime) {
-			S2ShutS.done();
-			SPUShiftS.done();
-			ClearEngineIndicators();
-			NextMissionEventTime = MissionTime;
-			StageState++;
-
-			if (!LaunchFail.SIIAutoSepFail) {
-				SeparateStage(LAUNCH_STAGE_SIVB);
-				SetStage(LAUNCH_STAGE_SIVB);
-			}
-		}
-		else {
-
-			//
-			// Engine thrust decay.
-			//
-
-			for (i = 0; i < 4; i++) {
-				Level = GetThrusterLevel(th_main[i]);
-				Level -= (simdt * 1.2);
-				Level = max(0, Level);
-				SetThrusterLevel(th_main[i], Level);
-			}
-		}
-		break;
-
-	case 6:
-
-		//
-		// Engine thrust decay.			
-		//
-
-		for (i = 0; i < 4; i++) {
-			Level = GetThrusterLevel(th_main[i]);
-			Level -= (simdt * 1.2);
-			Level = max(0, Level);
-			SetThrusterLevel(th_main[i], Level);
-		}
-
-		if (Level <= 0) {
-			StageState++;
-		}
-		break;
-	}
-
-    if (AutopilotActive()){
-		AutoPilot(MissionTime);
-	}
-	else {
-		AttitudeLaunch2();
-	}
-	
-	// Manual separation
-	if (SIISIVBSepSwitch.GetState()) { 		
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		ClearEngineIndicators();
-		NextMissionEventTime = MissionTime;
-	}
-
-	// Abort handling
-	if (bAbort && !LESAttached) {
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		StartAbort();
-		// Disable autopilot
-		autopilot = false;
-		bAbort = false;
-	}
-}
-
 void SaturnV::DoFirstTimestep(double simt)
 
 {
@@ -1029,13 +882,17 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 				}
 			}
 
+			// CSM/LV separation
+			if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+				SeparateStage(CSM_LEM_STAGE);
+				SetStage(CSM_LEM_STAGE);
+			}
+
 			if (CMSMPyros.Blown() && stage < CM_STAGE)
 			{
 				SeparateStage(CM_STAGE);
 				SetStage(CM_STAGE);
 			}
-
-
 		}
 	} else {
 		GenericTimestepStage(simt, simdt);

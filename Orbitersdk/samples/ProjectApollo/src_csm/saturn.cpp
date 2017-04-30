@@ -2626,7 +2626,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// Set random failures if appropriate.
 	//
 
-	if (!ApolloNo) {
+	if (GetDamageModel()) {
 		SetRandomFailures();
 	}
 

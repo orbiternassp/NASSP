@@ -905,13 +905,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					owner->NextMissionEventTime = owner->MissionTime+10.0;				
 				}
-				// CSM/LV separation
-				if(owner->CSMLVPyros.Blown()){
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_Stop = true;
-					return; // Stop here
-				}
 
 				if (owner->ApolloNo == 5)
 				{
@@ -1894,6 +1887,50 @@ minorloop: //minor loop;
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
 		}*/
+
+		//Auto Abort
+		//LV Rates light
+		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+		{
+			owner->LVRateLight = true;
+		}
+		else
+		{
+			owner->LVRateLight = false;
+		}
+
+		AutoAbortInitiate = false;
+
+		if (owner->EDSSwitch.IsUp())
+		{
+			if (owner->LVRateAutoSwitch.IsUp())
+			{
+				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+			if (owner->TwoEngineOutAutoSwitch.IsUp())
+			{
+				if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+		}
+
+		if (AutoAbortInitiate)
+		{
+			owner->secs.SetEDSAbort1(true);
+			owner->secs.SetEDSAbort2(true);
+			owner->secs.SetEDSAbort3(true);
+		}
+
+		if (owner->secs.BECO() && t_clock > 30.0)
+		{
+			owner->SetThrusterGroupLevel(owner->thg_main, 0);
+			LVDC_Stop = true;
+		}
 	}
 
 	/*
@@ -1953,44 +1990,6 @@ minorloop: //minor loop;
 				}
 			}
 		}
-	}
-
-	//Auto Abort
-	//LV Rates light
-	if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-	{
-		owner->LVRateLight = true;
-	}
-	else
-	{
-		owner->LVRateLight = false;
-	}
-
-	AutoAbortInitiate = false;
-
-	if (owner->EDSSwitch.IsUp())
-	{
-		if (owner->LVRateAutoSwitch.IsUp())
-		{
-			if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-			{
-				AutoAbortInitiate = true;
-			}
-		}
-		if (owner->TwoEngineOutAutoSwitch.IsUp())
-		{
-			if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-			{
-				AutoAbortInitiate = true;
-			}
-		}
-	}
-
-	if (AutoAbortInitiate)
-	{
-		owner->secs.SetEDSAbort1(true);
-		owner->secs.SetEDSAbort2(true);
-		owner->secs.SetEDSAbort3(true);
 	}
 
 	/* **** ABORT HANDLING **** */
@@ -5161,15 +5160,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 				}
-
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) {
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
-					//LVDC_Stop = true;
-					//return; // Stop here
-				}
 				break;
 			case 5:
 				// TB5 timed events
@@ -5211,14 +5201,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SIVBBoiloff();
 					}
 					owner->NextMissionEventTime = owner->MissionTime + 10.0;
-				}
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) {
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
-					//LVDC_Stop = true;
-					//return; // Stop here
 				}
 				break;
 			case 6:
@@ -5311,13 +5293,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if (LVDC_TB_ETime > 20 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
-				}
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) 
-				{
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
 				}
 				break;
 		}
@@ -7080,6 +7055,50 @@ minorloop:
 			owner->ENGIND[4] = false;
 		}
 
+		//Auto Abort
+		//LV Rates light
+		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+		{
+			owner->LVRateLight = true;
+		}
+		else
+		{
+			owner->LVRateLight = false;
+		}
+
+		AutoAbortInitiate = false;
+
+		if (owner->EDSSwitch.IsUp())
+		{
+			if (owner->LVRateAutoSwitch.IsUp())
+			{
+				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+			if (owner->TwoEngineOutAutoSwitch.IsUp())
+			{
+				if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+		}
+
+		if (AutoAbortInitiate)
+		{
+			owner->secs.SetEDSAbort1(true);
+			owner->secs.SetEDSAbort2(true);
+			owner->secs.SetEDSAbort3(true);
+		}
+
+		if (owner->secs.BECO() && t_clock > 30.0)
+		{
+			owner->SetThrusterGroupLevel(owner->thg_main, 0);
+			LVDC_Stop = true;
+		}
+
 		// End of test for LVDC_Stop
 	}
 
@@ -7093,44 +7112,6 @@ minorloop:
 			owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
 		else
 			owner->contrailLevel = 1;
-	}
-
-	//Auto Abort
-	//LV Rates light
-	if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-	{
-		owner->LVRateLight = true;
-	}
-	else
-	{
-		owner->LVRateLight = false;
-	}
-
-	AutoAbortInitiate = false;
-
-	if (owner->EDSSwitch.IsUp())
-	{
-		if (owner->LVRateAutoSwitch.IsUp())
-		{
-			if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-			{
-				AutoAbortInitiate = true;
-			}
-		}
-		if (owner->TwoEngineOutAutoSwitch.IsUp())
-		{
-			if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-			{
-				AutoAbortInitiate = true;
-			}
-		}
-	}
-
-	if (AutoAbortInitiate)
-	{
-		owner->secs.SetEDSAbort1(true);
-		owner->secs.SetEDSAbort2(true);
-		owner->secs.SetEDSAbort3(true);
 	}
 
 	/* **** SATURN 5 ABORT HANDLING **** */

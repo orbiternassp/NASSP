@@ -1586,8 +1586,6 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 RJEC::RJEC() {
 	
 	sat = NULL;
-	CMTransferMotor1 = false;
-	CMTransferMotor2 = false;
 	SPSActive = false;
 	DirectPitchActive = false;
 	DirectYawActive = false;
@@ -1680,23 +1678,6 @@ void RJEC::TimeStep(double simdt){
 	xx		C2		16			ROLL A/C			-ROLL
 
 	*/
-
-	// CM/SM transfer motors
-	if (sat->RCSTrnfrSwitch.IsUp()) {
-		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
-			CMTransferMotor1 = true;
-		}
-		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-			CMTransferMotor2 = true;
-		}
-	} else if (sat->RCSTrnfrSwitch.IsDown()) {
-		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
-			CMTransferMotor1 = false;
-		}
-		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-			CMTransferMotor2 = false;
-		}
-	}
 
 	// Reset thruster power demand
 	bool td[20];
@@ -1806,7 +1787,9 @@ void RJEC::TimeStep(double simdt){
 
 	// CM/SM transfer handling
 	bool sm_sep = false;
-	if (GetCMTransferMotor1() || GetCMTransferMotor2()) sm_sep = true;
+	bool CMTransferMotor1 = sat->secs.rcsc.GetCMTransferMotor1();
+	bool CMTransferMotor2 = sat->secs.rcsc.GetCMTransferMotor2();
+	if (CMTransferMotor1 || CMTransferMotor2) sm_sep = true;
 
 	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep) {
 		if (sat->eca.thc_x < 16384) { // PLUS X
@@ -1913,8 +1896,6 @@ void RJEC::SaveState(FILEHANDLE scn) {
 		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
 	} 
 	*/
-	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1); 
-	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 	papiWriteScenario_bool(scn, "SPSACTIVE", SPSActive); 
 	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive); 
 	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive); 
@@ -1941,8 +1922,6 @@ void RJEC::LoadState(FILEHANDLE scn){
 			ThrusterDemand[i] = (val != 0 ? true : false);
 		*/
 		}
-		papiReadScenario_bool(line, "CMTRANSFERMOTOR1", CMTransferMotor1); 
-		papiReadScenario_bool(line, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 		papiReadScenario_bool(line, "SPSACTIVE", SPSActive); 
 		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive); 
 		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive); 

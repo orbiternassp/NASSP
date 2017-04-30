@@ -128,13 +128,6 @@ void Sat5Abort2::init()
 // API interface
 // ==============================================================
 
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-
-{
-	Sat5Abort2 *sv = (Sat5Abort2 *) vessel;
-	sv->SaveDefaultState (scn);
-}
-
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
@@ -150,9 +143,13 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	return new Sat5Abort2 (hvessel, flightmodel);
 }
 
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
+DLLCLBK void ovcExit(VESSEL *vessel)
 {
-	Sat5Abort2 *sv = (Sat5Abort2 *) vessel;
-	sv->init();
+	if (vessel) delete (Sat5Abort2*)vessel;
+}
+
+void Sat5Abort2::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	init();
 }
 

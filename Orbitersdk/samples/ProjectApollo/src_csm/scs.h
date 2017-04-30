@@ -230,11 +230,6 @@ public: // Same stuff about speed and I'm lazy too.
 
 	bool GetThruster(int thruster);
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
-	
-	bool GetCMTransferMotor1() { return CMTransferMotor1; };
-	bool GetCMTransferMotor2() { return CMTransferMotor2; };
-	void ActivateCMTransferMotor1() { CMTransferMotor1 = true; }
-	void ActivateCMTransferMotor2() { CMTransferMotor2 = true; }
 
 	bool GetSPSActive() { return SPSActive; }
 	void SetSPSActive(bool active) { SPSActive = active; }
@@ -251,7 +246,6 @@ public: // Same stuff about speed and I'm lazy too.
 
 protected:
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
-	bool CMTransferMotor1, CMTransferMotor2;						// CM/SM transfer motor switches 
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
 

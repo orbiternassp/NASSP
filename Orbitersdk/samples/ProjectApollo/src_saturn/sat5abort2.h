@@ -30,6 +30,8 @@ public:
 	virtual ~Sat5Abort2();
 	void init();
 
+	void clbkSetClassCaps(FILEHANDLE cfg);
+
 protected:
 
 	//

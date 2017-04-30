@@ -1427,7 +1427,7 @@ void Saturn::JoystickTimestep()
 
 		// CM/SM transfer, either motor transfers all thruster, see AOH Figure 2.5-4
 		bool sm_sep = false;
-		if (rjec.GetCMTransferMotor1() || rjec.GetCMTransferMotor2()) sm_sep = true;
+		if (secs.rcsc.GetCMTransferMotor1() || secs.rcsc.GetCMTransferMotor2()) sm_sep = true;
 
 		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
 			if (rhc_x_pos < 2738) {

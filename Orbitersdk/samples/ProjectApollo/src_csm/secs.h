@@ -41,6 +41,7 @@ public:
 
 	void Reset();
 	void SetRunning(bool run) { Running = run; };
+	bool IsRunning() { return Running; };
 	void SetContact(bool cont) { Contact = cont; };
 	bool ContactClosed() { return Contact; };
 
@@ -61,6 +62,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetStart(bool st) { Start = st; };
+	bool GetStart() { return Start; };
 
 protected:
 	bool Start;
@@ -77,6 +79,8 @@ public:
 
 	void ControlVessel(Saturn *v);
 	bool GetMode1ASignal() { return Mode1ASignal; };
+	bool GetCMTransferMotor1() { return CMTransferMotor1; };
+	bool GetCMTransferMotor2() { return CMTransferMotor2; };
 
 	//Propellant Dump and Purge Disable Timer
 	RestartableSECSTimer TD1, TD2;
@@ -100,6 +104,8 @@ protected:
 	bool FuelAndOxidBypassPurgeB;
 	bool RCSCCMSMTransferA;
 	bool RCSCCMSMTransferB;
+	bool CMTransferMotor1;
+	bool CMTransferMotor2;
 
 	bool Mode1ASignal;
 
@@ -110,16 +116,17 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET);
 	void Timestep(double simdt);
 
 	void Liftoff();
 	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; };
 	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; };
-	bool GetCMSMDeadFace() { return CMSMDeadFace; };
+	bool GetCMSMDeadFace() { return CMSMDeadFace && MESCLogicBus(); };
 	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; };
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
-	bool FireUllage() { return MESCLogicBus() && RCSLogicCircuitBreaker->IsPowered() && UllageRelay; };
+	bool FireUllage() { return MESCLogicArm && RCSLogicCircuitBreaker->IsPowered() && UllageRelay; };
+	bool BECO() { return BoosterCutoffAbortStartRelay; };
 
 	//Source 31
 	bool EDSMainPower();
@@ -168,6 +175,7 @@ protected:
 	bool ApexCoverJettison;
 	bool ApexCoverDragChuteDeploy;
 	bool ELSActivateRelay;
+	bool ELSActivateSolidStateSwitch;
 	bool EDSBusChangeover;
 
 	//Miscellaneous
@@ -181,7 +189,7 @@ protected:
 	SECSTimer TD5;
 	//ELS Activate Delay
 	SECSTimer TD7;
-	//CSM/LM Separation Delay
+	//CSM/LV Separation Delay
 	SECSTimer TD11;
 	//RCS Enable Arm Delay
 	SECSTimer TD13;
@@ -194,6 +202,7 @@ protected:
 
 	DCbus *SECSLogicBus;
 	DCbus *SECSPyroBus;
+	CircuitBrakerSwitch *SECSLogicBreaker;
 	CircuitBrakerSwitch *SECSArmBreaker;
 	CircuitBrakerSwitch *RCSLogicCircuitBreaker;
 	CircuitBrakerSwitch *ELSBatteryBreaker;
@@ -224,6 +233,7 @@ public:
 	void TD1_GSEReset();
 	bool AbortLightPowerA();
 	bool AbortLightPowerB();
+	bool BECO();
 
 	void SetEDSAbort1(bool set) { MESCA.EDSAbort1Relay = set; MESCB.EDSAbort1Relay = set; };
 	void SetEDSAbort2(bool set) { MESCA.EDSAbort2Relay = set; MESCB.EDSAbort2Relay = set; };
