@@ -4033,7 +4033,6 @@ protected:
 	virtual void ConfigureStageEngines(int stage_state) = 0;
 	virtual void CreateStageOne() = 0;
 
-	void StageOrbitSIVB(double simt, double simdt);
 	void StageSix(double simt);
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();

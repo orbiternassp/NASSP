@@ -112,6 +112,7 @@ protected:
 	Saturn *Sat;
 };
 
+//Master Events Sequence Controller
 class MESC
 {
 public:
@@ -123,6 +124,7 @@ public:
 	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; };
 	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; };
 	bool GetCMSMDeadFace() { return CMSMDeadFace && MESCLogicBus(); };
+	bool GetCMRCSPressRelay() { return CMRCSPress; };
 	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; };
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
 	bool FireUllage() { return MESCLogicArm && RCSLogicCircuitBreaker->IsPowered() && UllageRelay; };
@@ -197,6 +199,8 @@ protected:
 	SECSTimer TD15;
 	//Apex Cover Jettison Delay
 	SECSTimer TD17;
+	//Pyro Cutout Delay
+	SECSTimer TD23;
 
 	Saturn *Sat;
 

@@ -360,14 +360,14 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 	// Helium squib valves
 	if (!heliumValvesOpen) {
 		if (our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
-			// Manual pressurization
-			if (our_vessel->SECSArmBatACircuitBraker.IsPowered() && our_vessel->CMRCSPressSwitch.IsUp()) {
+			// Manual or automatic pressurization
+			if (our_vessel->secs.MESCA.GetCMRCSPressRelay()) {
 				OpenHeliumValves();
 			}			
 		}
 		if (our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
-			// Manual pressurization
-			if (our_vessel->SECSArmBatBCircuitBraker.IsPowered() && our_vessel->CMRCSPressSwitch.IsUp()) {
+			// Manual or automatic pressurization
+			if (our_vessel->secs.MESCB.GetCMRCSPressRelay()) {
 				OpenHeliumValves();
 			}
 		}

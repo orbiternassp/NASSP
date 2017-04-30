@@ -606,11 +606,11 @@ void Saturn::initSaturn()
 
 	ISP_TJM_SL = 1745.5837;
 	ISP_TJM_VAC = 1765.197;
-	THRUST_VAC_TJM = (135745.3 / 2.0)*ISP_TJM_VAC / ISP_TJM_SL;
+	THRUST_VAC_TJM = (135745.3 / 2.0)*ISP_TJM_VAC / ISP_TJM_SL / cos(30.0*RAD);
 
 	ISP_LEM_SL = 1725.9704;
 	ISP_LEM_VAC = 1922.1034;
-	THRUST_VAC_LEM = (533786.6 / 4.0)*ISP_LEM_VAC / ISP_LEM_SL;
+	THRUST_VAC_LEM = (533786.6 / 4.0)*ISP_LEM_VAC / ISP_LEM_SL / cos(35.0*RAD);
 
 	ISP_PCM_SL = 1931.91005;
 	ISP_PCM_VAC = 1971.13665;
@@ -4666,136 +4666,6 @@ void Saturn::SIVBBoiloff()
 
 	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
 	SetPropellantMass(ph_3rd, FuelMass);
-}
-
-
-void Saturn::StageOrbitSIVB(double simt, double simdt)
-
-{
-	// We get here after orbit insertion util CSM/LV separation. The engine and ullage have both shut down.
-
-	//
-	// Attitude control
-	//
-
-	// Manual S-IVB control via CMC
-	SaturnTakeoverMode();
-
-	//
-	// Venting, see Apollo 7 Saturn IB Report, NTRS ID 19900067467
-	// \todo other missions?
-	//
-
-	if (ApolloNo == 7) {
-		if (MissionTime >= SIVBCutoffTime + 5773) {
-			if (GetThrusterLevel(th_main[0]) > 0) {
-				SetJ2ThrustLevel(0);
-				EnableDisableJ2(false);
-			}
-		} else if (MissionTime >= SIVBCutoffTime + 5052) {
-			if (GetThrusterLevel(th_main[0]) == 0) {
-				EnableDisableJ2(true);
-				SetJ2ThrustLevel(1);
-			}
-		}
-	}
-
-	//
-	// Enable random ATC chatter.
-	//
-
-	if (!UseATC)
-		soundlib.SoundOptionOnOff(PLAYRADIOATC, TRUE);
-
-	//
-	// Fuel boiloff every ten seconds.
-	//
-
-	if (MissionTime >= NextMissionEventTime) 
-	{
-		if (GetThrusterLevel(th_main[0]) < 0.5)
-			SIVBBoiloff();
-		NextMissionEventTime = MissionTime + 10.0;
-	}
-
-	//
-	// For unmanned launches, seperate the CSM on timer.
-	//
-
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 20.))
-	{
-		SlowIfDesired();
-	}
-
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime))
-	{
-		SlowIfDesired();
-		// Raise checklist event
-		eventControl.CSM_LV_SEPARATION = MissionTime;
-		CSMSepSet = false;
-	}
-
-	//
-	// For unmanned launches, seperate the payload on timer.
-	//
-
-	bool PayloadDeployed = false;
-
-	if (!Crewed && PayloadDeploySet && (MissionTime >= PayloadDeployTime - 20.))
-	{
-		SlowIfDesired();
-	}
-
-	if (!Crewed && PayloadDeploySet && (MissionTime >= PayloadDeployTime))
-	{
-		SlowIfDesired();
-		PayloadDeployed = true;
-		// Payload deploy
-		SeparateStage(CSM_LEM_STAGE);
-		SetStage(CSM_LEM_STAGE);
-	}
-
-	//
-	// CSM/LV separation
-	//
-
-	if (CSMLVPyros.Blown() || bAbort)
-	{
-		SeparateStage(CSM_LEM_STAGE);
-		SetStage(CSM_LEM_STAGE);
-
-		if (bAbort)
-		{
-			/// \todo SPS abort handling correct? Check also Saturn V & 1B SPS aborts
-			StartAbort();
-			bAbort = false;
-			autopilot = false;
-		}
-		else if (ApolloNo == 11)
-		{
-			//
-			// Apollo 11 seperation knocked out propellant valves for RCS Quad B.
-			//
-
-			SMQuadBRCS.GetPrimPropellantValve()->SetState(false);  
-			SMQuadBRCS.GetSecPropellantValve()->SetState(false);  
-		}
-	}
-
-	//
-	// If the payload was deployed, delete us. Note that this just means that the SLA panels have
-	// been blown off of the SIVB; the SIVB will have to do the actual payload deployment.
-	//
-	if (PayloadDeployed && hs4bM)
-	{
-		PayloadDeploySet = false;
-		oapiSetFocusObject(hs4bM);
-		oapiDeleteVessel(GetHandle(), hs4bM);
-	}
-
-	/* sprintf(oapiDebugString(), "StageOrbitSIVB SIVB thrust %.1f isp %.2f propellant %.1f", 
-		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
-	*/
 }
 
 void Saturn::SaturnTakeoverMode() {

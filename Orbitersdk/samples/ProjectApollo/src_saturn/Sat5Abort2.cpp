@@ -57,7 +57,7 @@ Sat5Abort2::Sat5Abort2 (OBJHANDLE hObj, int fmodel)
 : VESSEL (hObj, fmodel)
 
 {
-	init();
+	
 }
 
 Sat5Abort2::~Sat5Abort2 ()
@@ -66,7 +66,7 @@ Sat5Abort2::~Sat5Abort2 ()
 	// Nothing for now.
 }
 
-void Sat5Abort2::init()
+void Sat5Abort2::Setup(bool sm)
 
 {
 	SetSize (15);
@@ -107,8 +107,11 @@ void Sat5Abort2::init()
     AddMesh (hsat5stg33, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
     AddMesh (hsat5stg34, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG1O);
-	AddMesh (hSM, &mesh_dir);
+	if (sm)
+	{
+		mesh_dir = _V(0, SMVO, 19.1 - STG1O);
+		AddMesh(hSM, &mesh_dir);
+	}
 	VECTOR3 m_exhaust_ref = {0,0,-1};
 	VECTOR3 m_exhaust_pos1= {0,0,-28.25-STG1O};
 	VECTOR3 m_exhaust_pos2= {2,2,-28.25-STG1O};
@@ -122,6 +125,11 @@ void Sat5Abort2::init()
 	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos5, 25.0, 1.5, &m_exhaust_ref);
 	status = 3;
 	SetCameraOffset (_V(-1,1.0,32.4-STG1O));
+}
+
+void Sat5Abort2::SetState(bool sm)
+{
+	Setup(sm);
 }
 
 // ==============================================================
@@ -150,6 +158,6 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 void Sat5Abort2::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	init();
+
 }
 

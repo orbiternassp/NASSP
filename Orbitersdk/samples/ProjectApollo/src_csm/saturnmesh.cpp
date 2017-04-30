@@ -458,6 +458,11 @@ void Saturn::SetCSMStage ()
 		ph_ullage3 = 0;
 	}
 
+	if (ph_2nd) {
+		DelPropellantResource(ph_2nd);
+		ph_2nd = 0;
+	}
+
 	if(ph_3rd) {
 		DelPropellantResource(ph_3rd);
 		ph_3rd = 0;

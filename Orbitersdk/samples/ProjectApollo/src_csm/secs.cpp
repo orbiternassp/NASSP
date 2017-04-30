@@ -433,7 +433,8 @@ MESC::MESC():
 	TD11(3.0),
 	TD13(0.8),
 	TD15(1.0),
-	TD17(0.4)
+	TD17(0.4),
+	TD23(1.7)
 {
 	MESCLogicArm = false;
 	BoosterCutoffAbortStartRelay = false;
@@ -489,6 +490,7 @@ void MESC::TimerTimestep(double simdt)
 	TD13.Timestep(simdt);
 	TD15.Timestep(simdt);
 	TD17.Timestep(simdt);
+	TD23.Timestep(simdt);
 }
 
 void MESC::Timestep(double simdt)
@@ -542,25 +544,45 @@ void MESC::Timestep(double simdt)
 		}
 	}
 
+	//SM Jettison Controller Start
+	if (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()))
+	{
+		//TBD: Through RCSC switch, start SM Jett Controller
+	}
+
+	bool separatelogic = (MESCLogicBus() && LESAbortRelay) || (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp())) || (MESCLogicBus() && CMSMSeparateRelay);
+
 	//CM/SM Separation Logic
-	if (LESAbortRelay || Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()) {
-		if (SequentialArmBus()) {
 
-			if (!PyroCutout)
-				PyroCutout = true;
+	CMSMDeadFace = false;
 
-			if (PyroCutout)
-				CMSMDeadFace = true;
+	if (separatelogic)
+	{
+		if (!PyroCutout)
+		{
+			CMSMDeadFace = true;
 		}
 	}
 
-	//Resets? Maybe?
+	//Pyro Cutout Logic
+	if (MESCLogicBus() && CMSMSeparateRelay)
+	{
+		TD23.SetRunning(true);
+	}
+
+	if (TD23.ContactClosed())
+	{
+		PyroCutout = true;
+	}
+	else if (!separatelogic)
+	{
+		PyroCutout = false;
+	}
+
 	CMSMSeparateRelay = false;
 
 	if (MESCLogicBus() && CMSMDeadFace)
 	{
-		CMRCSPress = true;
-
 		TD3.SetRunning(true);
 
 		if (TD3.ContactClosed())
@@ -572,10 +594,14 @@ void MESC::Timestep(double simdt)
 		}
 	}
 
-	// Pressurize CM RCS
-	if ((CMRCSPress && SequentialPyroBus())) {
-		Sat->CMRCS1.OpenHeliumValves();
-		Sat->CMRCS2.OpenHeliumValves();
+	// CM RCS Press Relay Logic
+	if ((MESCLogicBus() && CMSMDeadFace) || (SequentialArmBus() && Sat->CMRCSPressSwitch.IsUp()))
+	{
+		CMRCSPress = true;
+	}
+	else
+	{
+		CMRCSPress = false;
 	}
 
 	// Monitor LET Status
@@ -605,6 +631,10 @@ void MESC::Timestep(double simdt)
 	if ((Sat->THCRotary.IsCounterClockwise() && SequentialLogicBus()) || TD1.ContactClosed())
 	{
 		BoosterCutoffAbortStartRelay = true;
+	}
+	else
+	{
+		BoosterCutoffAbortStartRelay = false;
 	}
 
 	if (MESCLogicBus())
@@ -637,9 +667,14 @@ void MESC::Timestep(double simdt)
 		}
 	}
 
+	//LES Motor Fire Logic
 	if ((Sat->LesMotorFireSwitch.GetState() && SequentialArmBus()) || (CMSMSeparateRelay && MESCLogicBus()))
 	{
 		LESMotorFire = true;
+	}
+	else
+	{
+		LESMotorFire = false;
 	}
 
 	//
@@ -653,9 +688,13 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Tower Jettison Relay
-	if (MESCLogicBus() && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp()))
+	if ((MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp()))
 	{
 		LETJettisonAndFrangibleNutsRelay = true;
+	}
+	else
+	{
+		LETJettisonAndFrangibleNutsRelay = false;
 	}
 
 	//Jettison Tower
@@ -692,6 +731,8 @@ void MESC::Timestep(double simdt)
 	{
 		Sat->FirePitchControlMotor();
 	}
+
+	UllageRelay = false;
 
 	//SPS Abort
 	if (SequentialLogicBus())
@@ -754,9 +795,15 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Separate Apex Cover
+
+	//Apex Cover Drag Chute Deploy Relay
 	if (MESCLogicBus() && ApexCoverJettison && !Sat->ApexCoverAttached)
 	{
 		ApexCoverDragChuteDeploy = true;
+	}
+	else
+	{
+		ApexCoverDragChuteDeploy = false;
 	}
 
 	//ELS Activate Delay
@@ -867,6 +914,7 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	TD13.SaveState(scn, "TD13_BEGIN", "TD_END");
 	TD15.SaveState(scn, "TD15_BEGIN", "TD_END");
 	TD17.SaveState(scn, "TD17_BEGIN", "TD_END");
+	TD23.SaveState(scn, "TD23_BEGIN", "TD_END");
 
 	oapiWriteLine(scn, end_str);
 }
@@ -931,6 +979,9 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		}
 		else if (!strnicmp(line, "TD17_BEGIN", sizeof("TD17_BEGIN"))) {
 			TD17.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "TD23_BEGIN", sizeof("TD23_BEGIN"))) {
+			TD23.LoadState(scn, "TD_END");
 		}
 	}
 }

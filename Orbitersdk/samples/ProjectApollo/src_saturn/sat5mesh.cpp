@@ -50,6 +50,7 @@
 #include "sii.h"
 #include "s1c.h"
 #include "sm.h"
+#include "Sat5Abort2.h"
 
 static PARTICLESTREAMSPEC srb_contrail = {
 	0, 
@@ -1157,7 +1158,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ConfigureStageMeshes (new_stage);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -1324,7 +1325,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
 	}
 
-	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage >= CSM_LEM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1335,9 +1336,23 @@ void SaturnV::SeparateStage (int new_stage)
 		char VName[256];
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
-		SetReentryStage();
+
+		Sat5Abort2 *stage2 = static_cast<Sat5Abort2 *> (oapiGetVesselInterface(habort));
+		stage2->SetState(new_stage == CM_STAGE);
+
+		if (new_stage == CSM_LEM_STAGE)
+		{
+			SetCSMStage();
+		}
+		else
+		{
+			SetReentryStage();
+		}
+
 		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
+
+	sprintf(oapiDebugString(), "%d %d", stage, new_stage);
 }
 
 void SaturnV::ActivatePrelaunchVenting()
