@@ -175,11 +175,13 @@ void RestartableSECSTimer::LoadState(FILEHANDLE scn, char *end_str) {
 
 RCSC::RCSC():
 TD1(42.0),
-TD2(42.0),
+TD2(5.0),
 TD3(5.0),
-TD4(5.0),
+TD4(13.0),
 TD5(13.0),
-TD6(13.0)
+TD6(13.0),
+TD7(13.0),
+TD8(42.0)
 {
 	OxidizerDumpA = false;
 	OxidizerDumpB = false;
@@ -203,6 +205,8 @@ void RCSC::TimerTimestep(double simdt)
 	TD4.Timestep(simdt);
 	TD5.Timestep(simdt);
 	TD6.Timestep(simdt);
+	TD7.Timestep(simdt);
+	TD8.Timestep(simdt);
 }
 
 void RCSC::Timestep(double simdt)
@@ -229,12 +233,12 @@ void RCSC::Timestep(double simdt)
 	if (Sat->secs.MESCB.GetCMSMDeadFace())
 	{
 		RCSCCMSMTransferB = true;
-		if (Sat->PropDumpAutoSwitch.IsUp() && !TD2.ContactClosed())
+		if (Sat->PropDumpAutoSwitch.IsUp() && !TD8.ContactClosed())
 		{
 			Mode1ASignal = true;
 			
 			OxidizerDumpB = true;
-			TD4.SetStart(true);
+			TD2.SetStart(true);
 		}
 	}
 	else
@@ -265,99 +269,124 @@ void RCSC::Timestep(double simdt)
 			CMTransferMotor2 = false;
 		}
 	}
-	
-	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBraker.IsPowered()) {
 
-		if (!CMTransferMotor1)
-		{
-			TD1.SetRunning(TD1.GetStart());
-		}
+	//TD1 logic
+	if (CMRCSLogicA() && !CMTransferMotor1) {
+		TD1.SetRunning(TD1.GetStart());
+	}
+	else
+	{
+		TD1.SetStart(false);
+	}
+	
+	if (CMRCSLogicA()) {
+
 		TD3.SetRunning(true);
 
 		if (TD3.ContactClosed())
 		{
 			TD5.SetRunning(true);
 		}
-
-		if (OxidizerDumpA)
-		{
-			InterconnectAndPropellantBurnA = true;
-		}
 	}
-	else if (TD1.GetStart())
+
+	if (CMPropellantDumpLogicA() || (CMRCSLogicA() && OxidizerDumpA))
 	{
-		TD1.SetStart(false);
+		InterconnectAndPropellantBurnA = true;
 	}
-
-	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-
-		if (!CMTransferMotor2)
-		{
-			TD2.SetRunning(TD2.GetStart());
-		}
-		TD4.SetRunning(true);
-
-		if (TD4.ContactClosed())
-		{
-			TD6.SetRunning(true);
-		}
-
-		if (OxidizerDumpB)
-		{
-			InterconnectAndPropellantBurnB = true;
-		}
-	}
-	else if (TD2.GetStart())
+	else
 	{
-		TD2.SetStart(false);
+		InterconnectAndPropellantBurnA = false;
 	}
 
-	if (TD5.ContactClosed())
+	//TD2 logic
+	if (CMRCSLogicB() && !CMTransferMotor2) {
+		TD8.SetRunning(TD8.GetStart());
+	}
+	else
+	{
+		TD8.SetStart(false);
+	}
+
+	if (CMRCSLogicB()) {
+
+		TD2.SetRunning(true);
+
+		if (TD2.ContactClosed())
+		{
+			TD4.SetRunning(true);
+		}
+	}
+
+	if (CMPropellantDumpLogicB() || (CMRCSLogicB() && OxidizerDumpB))
+	{
+		InterconnectAndPropellantBurnB = true;
+	}
+	else
+	{
+		InterconnectAndPropellantBurnB = false;
+	}
+
+	if (TD5.ContactClosed() || CMPropellantPurgeLogicA() || CMRCSHeDumpLogicA())
 	{
 		FuelAndOxidBypassPurgeA = true;
 	}
-	if (TD6.ContactClosed())
+	else
+	{
+		FuelAndOxidBypassPurgeA = false;
+	}
+
+	if (TD4.ContactClosed() || CMPropellantPurgeLogicB() || CMRCSHeDumpLogicB())
 	{
 		FuelAndOxidBypassPurgeB = true;
 	}
-
-	//Auto dumps and purges
-	if (TD3.ContactClosed() || TD4.ContactClosed())
+	else
 	{
-		//Fuel dump, TBD: No separate Fuel and Oxidizer yet
-		//Sat->CMRCS1.SetAutoFuelDump();
-		//Sat->CMRCS2.SetAutoFuelDump();
-	}
-	if (OxidizerDumpA || OxidizerDumpB)
-	{
-		//Oxidizer Dump
-		Sat->CMRCS1.SetAutoFuelDump();
-		Sat->CMRCS2.SetAutoFuelDump();
-	}
-	if (InterconnectAndPropellantBurnA)
-	{
-		//Helium Interconnect
-		//Oxid Interconnect
-		Sat->CMRCS1.SetAutoOxidizerInterconnect();
-		Sat->CMRCS2.SetAutoOxidizerInterconnect();
-	}
-	if (InterconnectAndPropellantBurnB)
-	{
-		//Fuel Interconnect
-		Sat->CMRCS1.SetAutoFuelInterconnect();
-		Sat->CMRCS2.SetAutoFuelInterconnect();
-	}
-	if (FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB)
-	{
-		//Purge
-		Sat->CMRCS1.SetAutoPurge();
-		Sat->CMRCS2.SetAutoPurge();
+		FuelAndOxidBypassPurgeB = false;
 	}
 }
 
 void RCSC::ControlVessel(Saturn *v)
 {
 	Sat = v;
+}
+
+bool RCSC::CMRCSLogicA() 
+{ 
+	return Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CMRCSLogicSwitch.IsUp(); 
+}
+bool RCSC::CMRCSLogicB() 
+{
+	return Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CMRCSLogicSwitch.IsUp(); 
+}
+
+bool RCSC::CMPropellantDumpLogicA() 
+{ 
+	return CMRCSLogicA() && Sat->CMPropDumpSwitch.IsUp(); 
+}
+
+bool RCSC::CMPropellantDumpLogicB() 
+{ 
+	return CMRCSLogicB() && Sat->CMPropDumpSwitch.IsUp(); 
+}
+
+bool RCSC::CMPropellantPurgeLogicA() 
+{ 
+	return CMPropellantDumpLogicA() && Sat->CMPropPurgeSwitch.IsUp(); 
+}
+
+bool RCSC::CMPropellantPurgeLogicB() 
+{ 
+	return CMPropellantDumpLogicB() && Sat->CMPropPurgeSwitch.IsUp(); 
+}
+
+bool RCSC::CMRCSHeDumpLogicA() 
+{ 
+	return Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CmRcsHeDumpSwitch.GetState(); 
+}
+
+bool RCSC::CMRCSHeDumpLogicB() 
+{ 
+	return Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
 void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -380,6 +409,8 @@ void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	TD4.SaveState(scn, "TD4_BEGIN", "TD_END");
 	TD5.SaveState(scn, "TD5_BEGIN", "TD_END");
 	TD6.SaveState(scn, "TD6_BEGIN", "TD_END");
+	TD7.SaveState(scn, "TD7_BEGIN", "TD_END");
+	TD8.SaveState(scn, "TD8_BEGIN", "TD_END");
 
 	oapiWriteLine(scn, end_str);
 }
@@ -421,6 +452,12 @@ void RCSC::LoadState(FILEHANDLE scn, char *end_str) {
 		}
 		else if (!strnicmp(line, "TD6_BEGIN", sizeof("TD6_BEGIN"))) {
 			TD6.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "TD7_BEGIN", sizeof("TD7_BEGIN"))) {
+			TD7.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "TD8_BEGIN", sizeof("TD8_BEGIN"))) {
+			TD8.LoadState(scn, "TD_END");
 		}
 	}
 }
@@ -544,66 +581,6 @@ void MESC::Timestep(double simdt)
 		}
 	}
 
-	//SM Jettison Controller Start
-	if (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()))
-	{
-		//TBD: Through RCSC switch, start SM Jett Controller
-	}
-
-	bool separatelogic = (MESCLogicBus() && LESAbortRelay) || (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp())) || (MESCLogicBus() && CMSMSeparateRelay);
-
-	//CM/SM Separation Logic
-
-	CMSMDeadFace = false;
-
-	if (separatelogic)
-	{
-		if (!PyroCutout)
-		{
-			CMSMDeadFace = true;
-		}
-	}
-
-	//Pyro Cutout Logic
-	if (MESCLogicBus() && CMSMSeparateRelay)
-	{
-		TD23.SetRunning(true);
-	}
-
-	if (TD23.ContactClosed())
-	{
-		PyroCutout = true;
-	}
-	else if (!separatelogic)
-	{
-		PyroCutout = false;
-	}
-
-	CMSMSeparateRelay = false;
-
-	if (MESCLogicBus() && CMSMDeadFace)
-	{
-		TD3.SetRunning(true);
-
-		if (TD3.ContactClosed())
-			CMSMSeparateRelay = true;
-
-		if (Sat->PropDumpAutoSwitch.IsDown())
-		{
-			TD15.SetRunning(true);
-		}
-	}
-
-	// CM RCS Press Relay Logic
-	if ((MESCLogicBus() && CMSMDeadFace) || (SequentialArmBus() && Sat->CMRCSPressSwitch.IsUp()))
-	{
-		CMRCSPress = true;
-	}
-	else
-	{
-		CMRCSPress = false;
-	}
-
 	// Monitor LET Status
 	if (MESCLogicBus())
 	{
@@ -637,34 +614,97 @@ void MESC::Timestep(double simdt)
 		BoosterCutoffAbortStartRelay = false;
 	}
 
-	if (MESCLogicBus())
+	//LES Abort Relay
+	if (SequentialLogicBus() && BoosterCutoffAbortStartRelay && LETPhysicalSeparationMonitor)
 	{
-		//Abort Start
+		LESAbortRelay = true;
+	}
+	else if (!MESCLogicBus())
+	{
+		LESAbortRelay = false;
+	}
 
-		if (BoosterCutoffAbortStartRelay)
+	//Start Event Timer
+	if (SequentialLogicBus() && BoosterCutoffAbortStartRelay)
+	{
+		if (!AbortStarted)
 		{
-			if (!AbortStarted)
-			{
-				if (LETPhysicalSeparationMonitor)
-				{
-					LESAbortRelay = true;
+			Sat->EventTimerDisplay.Reset();
+			Sat->EventTimerDisplay.SetRunning(true);
+			Sat->EventTimerDisplay.SetEnabled(true);
 
-					//Sat->bAbort = true;
-				}
-
-				Sat->EventTimerDisplay.Reset();
-				Sat->EventTimerDisplay.SetRunning(true);
-				Sat->EventTimerDisplay.SetEnabled(true);
-
-				AbortStarted = true;
-			}
+			AbortStarted = true;
 		}
+	}
 
-		//LET Abort Start
-		if (LESAbortRelay)
+	//Canard Deploy Timer
+	if (MESCLogicBus() && LESAbortRelay)
+	{
+		TD5.SetRunning(true);
+	}
+
+	//SM Jettison Controller Start
+	if (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()))
+	{
+		//TBD: Through RCSC switch, start SM Jett Controller
+	}
+
+	//CM/SM Separation Logic
+	CMSMSeparateLogic = (MESCLogicBus() && LESAbortRelay) || (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp())) || (MESCLogicBus() && CMSMSeparateRelay);
+
+	//CM/SM Deadface Relay
+	if (CMSMSeparateLogic && !PyroCutout)
+	{
+		CMSMDeadFace = true;
+	}
+	else
+	{
+		CMSMDeadFace = false;
+	}
+
+	//Pyro Cutout Logic
+	if (MESCLogicBus() && CMSMSeparateRelay)
+	{
+		TD23.SetRunning(true);
+	}
+
+	if (TD23.ContactClosed())
+	{
+		PyroCutout = true;
+	}
+	else if (!CMSMSeparateLogic)
+	{
+		PyroCutout = false;
+	}
+
+	if (MESCLogicBus() && CMSMDeadFace)
+	{
+		TD3.SetRunning(true);
+
+		if (Sat->PropDumpAutoSwitch.IsDown())
 		{
-			TD5.SetRunning(true);
+			TD15.SetRunning(true);
 		}
+	}
+
+	//CM/SM Separate Relay
+	if (TD3.ContactClosed())
+	{
+		CMSMSeparateRelay = true;
+	}
+	else
+	{
+		CMSMSeparateRelay = false;
+	}
+
+	// CM RCS Press Relay Logic
+	if ((MESCLogicBus() && CMSMDeadFace) || (SequentialArmBus() && Sat->CMRCSPressSwitch.IsUp()))
+	{
+		CMRCSPress = true;
+	}
+	else
+	{
+		CMRCSPress = false;
 	}
 
 	//LES Motor Fire Logic
@@ -713,6 +753,10 @@ void MESC::Timestep(double simdt)
 	if ((TD5.ContactClosed() && MESCLogicBus()) || (Sat->CanardDeploySwitch.GetState() && SequentialArmBus()))
 	{
 		CanardDeploy = true;
+	}
+	else
+	{
+		CanardDeploy = false;
 	}
 
 	if (SequentialPyroBus() && CanardDeploy)
@@ -1160,19 +1204,6 @@ void SECS::Timestep(double simt, double simdt)
 		Sat->HasProbe = false;
 		Sat->SetDockingProbeMesh();
 	}
-
-	if (MESCA.FireUllage() && Sat->THCRotary.IsCounterClockwise())
-	{
-		Sat->SetRCSState(RCS_SM_QUAD_B, 4, true);
-		Sat->SetRCSState(RCS_SM_QUAD_D, 3, true);
-		//TBD: Inhibit Pitch and Yaw
-	}
-	if (MESCB.FireUllage() && Sat->THCRotary.IsCounterClockwise())
-	{
-		Sat->SetRCSState(RCS_SM_QUAD_A, 4, true);
-		Sat->SetRCSState(RCS_SM_QUAD_C, 3, true);
-		//TBD: Inhibit Pitch and Yaw
-	}
 }
 
 bool SECS::IsLogicPoweredAndArmedA() {
@@ -1197,7 +1228,7 @@ void SECS::LiftoffA()
 	{
 		MESCA.Liftoff();
 		if (!rcsc.GetCMTransferMotor1())
-			rcsc.TD1.SetStart(true);
+			rcsc.StartPropellantDumpInhibitTimerA();
 	}
 }
 
@@ -1207,13 +1238,8 @@ void SECS::LiftoffB()
 	{
 		MESCB.Liftoff();
 		if (!rcsc.GetCMTransferMotor2())
-			rcsc.TD2.SetStart(true);
+			rcsc.StartPropellantDumpInhibitTimerB();
 	}
-}
-
-void SECS::TD1_GSEReset()
-{
-	rcsc.TD1.Reset();
 }
 
 bool SECS::AbortLightPowerA()

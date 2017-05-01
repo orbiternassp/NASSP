@@ -162,7 +162,7 @@ void LES::SetLES()
 	SetCrossSections (_V(8.5, 8.5, 12.5));
 
 	SetCOG_elev (2.0);
-	SetCW (5.5, 0.1, 3.4, 3.4);
+	SetCW (1.5, 1.5, 1.2, 1.2);
 	SetRotDrag (_V(0.07,0.07,0.003));
 
 	SetPitchMomentScale (0);

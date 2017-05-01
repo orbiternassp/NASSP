@@ -603,19 +603,8 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 		// LVDC++
 		if (use_lvdc) {
-			if (stage < CSM_LEM_STAGE) {
-				if (lvdc != NULL) {
-					lvdc->TimeStep(simt, simdt);
-				}
-			}
-			else {
-				if (lvdc != NULL) {
-					// At this point we are done with the LVDC, we can delete it.
-					// This saves memory and declutters the scenario file.
-					delete lvdc;
-					lvdc = NULL;
-					use_lvdc = false;
-				}
+			if (lvdc != NULL) {
+				lvdc->TimeStep(simt, simdt);
 			}
 
 			// CSM/LV separation
@@ -624,6 +613,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 				SetStage(CSM_LEM_STAGE);
 			}
 
+			// CM/SM separation
 			if (CMSMPyros.Blown() && stage < CM_STAGE)
 			{
 				SeparateStage(CM_STAGE);
@@ -631,6 +621,15 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 			}
 		}
 	} else {
+		
+		if (lvdc != NULL) {
+			// At this point we are done with the LVDC, we can delete it.
+			// This saves memory and declutters the scenario file.
+			delete lvdc;
+			lvdc = NULL;
+			use_lvdc = false;
+		}
+		
 		GenericTimestepStage(simt, simdt);
 	}
 	LastTimestep = simt;

@@ -444,8 +444,8 @@ void Saturn::SystemsInit() {
 	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA);    
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB);    
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
 	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
@@ -1896,12 +1896,22 @@ void Saturn::JoystickTimestep()
 		}
 	}
 
+	//SPS Abort Ullage
+	if ((secs.MESCA.FireUllage() && RCSLogicMnACircuitBraker.IsPowered()) || (secs.MESCB.FireUllage() && RCSLogicMnBCircuitBraker.IsPowered()))
+	{
+		SetRCSState(RCS_SM_QUAD_B, 4, true);
+		SetRCSState(RCS_SM_QUAD_D, 3, true);
+		SetRCSState(RCS_SM_QUAD_A, 4, true);
+		SetRCSState(RCS_SM_QUAD_C, 3, true);
+		//TBD: Inhibit Pitch and Yaw
+	}
+
 	//
 	// CM RCS propellant dump 
 	//
 	
 	// Manual control
-	if ((CMPropDumpSwitch.IsUp() || CMRCS1.AutoFuelDump()) && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayA() && secs.rcsc.GetPropellantDumpInhibitA() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
 		SetCMRCSState(2, true);	
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
@@ -1910,7 +1920,7 @@ void Saturn::JoystickTimestep()
 	}
 		
 	// Manual control
-	if ((CMPropDumpSwitch.IsUp() || CMRCS2.AutoFuelDump()) && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayB() && secs.rcsc.GetPropellantDumpInhibitB() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	

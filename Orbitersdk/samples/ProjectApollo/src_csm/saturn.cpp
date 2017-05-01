@@ -327,7 +327,6 @@ void Saturn::initSaturn()
 	// DS20070204 LVDC++ mode is off by default
 	use_lvdc = false;
 
-	bAbort = false;
 	ABORT_IND = false;
 	LEM_DISPLAY=false;
 	ASTPMission = false;
@@ -4477,8 +4476,8 @@ void Saturn::ClearPropellants()
 	ph_rcs2 = 0;
 	ph_rcs3 = 0;
 
-	ph_rcs_cm_1 = 0;
-	ph_rcs_cm_2 = 0;
+	//ph_rcs_cm_1 = 0;
+	//ph_rcs_cm_2 = 0;
 
 	ph_sep = 0;
 	ph_sep2 = 0;
@@ -5105,14 +5104,6 @@ void Saturn::StageSix(double simt)
 		SeparateStage(CM_STAGE);
 		SetStage(CM_STAGE);
 	}
-}
-
-void Saturn::StartAbort()
-
-{
-	ABORT_IND = true;
-
-	ClearEngineIndicators();
 }
 
 void Saturn::SlowIfDesired()

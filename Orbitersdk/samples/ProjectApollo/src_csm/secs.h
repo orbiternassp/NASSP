@@ -81,32 +81,72 @@ public:
 	bool GetMode1ASignal() { return Mode1ASignal; };
 	bool GetCMTransferMotor1() { return CMTransferMotor1; };
 	bool GetCMTransferMotor2() { return CMTransferMotor2; };
-
-	//Propellant Dump and Purge Disable Timer
-	RestartableSECSTimer TD1, TD2;
-
-	//CM RCS Propellant Dump Delay
-	RestartableSECSTimer TD3, TD4;
-
-	//Purge Delay
-	SECSTimer TD5, TD6;
+	bool GetInterconnectAndPropellantBurnRelayA() { return InterconnectAndPropellantBurnA; }
+	bool GetInterconnectAndPropellantBurnRelayB() { return InterconnectAndPropellantBurnB; }
+	bool GetOxidFuelPurgeRelay() { return FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB; }
+	bool GetFuelDumpRelay() { return TD3.ContactClosed() || TD2.ContactClosed(); }
+	bool GetOxidizerDumpRelay() { return OxidizerDumpA || OxidizerDumpB; }
+	void StartPropellantDumpInhibitTimerA() { TD1.SetStart(true); }
+	void StartPropellantDumpInhibitTimerB() { TD8.SetStart(true); }
+	bool GetPropellantDumpInhibitA() { return TD1.ContactClosed(); }
+	bool GetPropellantDumpInhibitB() { return TD8.ContactClosed(); }
 
 protected:
 
 	void TimerTimestep(double simdt);
 
-	//Relays
-	bool OxidizerDumpA;
-	bool OxidizerDumpB;
-	bool InterconnectAndPropellantBurnA;
-	bool InterconnectAndPropellantBurnB;
-	bool FuelAndOxidBypassPurgeA;
-	bool FuelAndOxidBypassPurgeB;
-	bool RCSCCMSMTransferA;
-	bool RCSCCMSMTransferB;
+	//Source 6
+	bool CMRCSLogicA();
+	bool CMRCSLogicB();
+	//Source 7
+	bool CMPropellantDumpLogicA();
+	bool CMPropellantDumpLogicB();
+	//Source 8
+	bool CMPropellantPurgeLogicA();
+	bool CMPropellantPurgeLogicB();
+	//Source 9
+	bool CMRCSHeDumpLogicA();
+	bool CMRCSHeDumpLogicB();
+
+	//Motor Switches
+
+	//S1
 	bool CMTransferMotor1;
+	//S2
 	bool CMTransferMotor2;
 
+	//Relays
+
+	//K1
+	bool OxidizerDumpA;
+	//K2
+	bool OxidizerDumpB;
+	//K3
+	bool InterconnectAndPropellantBurnA;
+	//K4
+	bool InterconnectAndPropellantBurnB;
+	//K5
+	bool FuelAndOxidBypassPurgeA;
+	//K6
+	bool FuelAndOxidBypassPurgeB;
+	//K13
+	bool RCSCCMSMTransferA;
+	//K14
+	bool RCSCCMSMTransferB;
+
+	//Propellant Dump and Purge Disable Timer
+	RestartableSECSTimer TD1, TD8;
+
+	//CM RCS Propellant Dump Delay
+	RestartableSECSTimer TD3, TD2;
+
+	//Purge Delay
+	SECSTimer TD5, TD4;
+
+	//Main DC Bus Delay
+	SECSTimer TD7, TD6;
+
+	//Misc
 	bool Mode1ASignal;
 
 	Saturn *Sat;
@@ -127,15 +167,14 @@ public:
 	bool GetCMRCSPressRelay() { return CMRCSPress; };
 	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; };
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
-	bool FireUllage() { return MESCLogicArm && RCSLogicCircuitBreaker->IsPowered() && UllageRelay; };
+	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
+	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
+	void SetEDSAbortRelay3(bool relay) { EDSAbort3Relay = relay; }
+	bool FireUllage() { return MESCLogicArm && UllageRelay; };
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 
 	//Source 31
 	bool EDSMainPower();
-
-	bool EDSAbort1Relay;
-	bool EDSAbort2Relay;
-	bool EDSAbort3Relay;
 
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -157,31 +196,60 @@ protected:
 	bool SequentialPyroBus();
 
 	//MESC Relays
-	bool MESCLogicArm;
-	bool BoosterCutoffAbortStartRelay;
-	bool LETPhysicalSeparationMonitor;
-	bool LESAbortRelay;
-	bool AutoAbortEnableRelay;
-	bool CMSMDeadFace;
-	bool CMSMSeparateRelay;
-	bool PyroCutout;
-	bool CMRCSPress;
-	bool CanardDeploy;
-	bool UllageRelay;
-	bool CSMLVSeparateRelay;
-	bool LESMotorFire;
-	bool PitchControlMotorFire;
-	bool RCSEnableArmRelay;
-	bool RCSEnableDisableRelay;
-	bool LETJettisonAndFrangibleNutsRelay;
-	bool ApexCoverJettison;
-	bool ApexCoverDragChuteDeploy;
-	bool ELSActivateRelay;
-	bool ELSActivateSolidStateSwitch;
+
+	//Z1K1
+	bool EDSAbort2Relay;
+	//Z1K2
+	bool EDSAbort1Relay;
+	//Z2K2
+	bool EDSAbort3Relay;
+	//Z2K2
 	bool EDSBusChangeover;
+	//Z3
+	bool LETPhysicalSeparationMonitor;
+	//Z4
+	bool AutoAbortEnableRelay;
+	//Z5
+	bool BoosterCutoffAbortStartRelay;
+	//Z6
+	bool LESAbortRelay;
+	//Z7
+	bool CMRCSPress;
+	//Z8
+	bool CMSMDeadFace;
+	//Z9
+	bool CMSMSeparateRelay;
+	//Z10
+	bool LESMotorFire;
+	//Z11
+	bool CanardDeploy;
+	//Z12
+	bool ELSActivateRelay;
+	//Z13
+	bool LETJettisonAndFrangibleNutsRelay;
+	//Z14
+	bool ApexCoverJettison;
+	//Z16
+	bool UllageRelay;
+	//Z17
+	bool CSMLVSeparateRelay;
+	//Z18
+	bool RCSEnableArmRelay;
+	//Z19 (latching)
+	bool RCSEnableDisableRelay;
+	//Z20
+	bool MESCLogicArm;
+	//Z23
+	bool PyroCutout;
+	//Z24
+	bool PitchControlMotorFire;
+	//Z25
+	bool ApexCoverDragChuteDeploy;
+	bool ELSActivateSolidStateSwitch;
 
 	//Miscellaneous
 	bool AbortStarted;
+	bool CMSMSeparateLogic;
 
 	//Abort Start Delay
 	SECSTimer TD1;
@@ -234,20 +302,22 @@ public:
 	void LiftoffA();
 	void LiftoffB();
 
-	void TD1_GSEReset();
 	bool AbortLightPowerA();
 	bool AbortLightPowerB();
 	bool BECO();
 
-	void SetEDSAbort1(bool set) { MESCA.EDSAbort1Relay = set; MESCB.EDSAbort1Relay = set; };
-	void SetEDSAbort2(bool set) { MESCA.EDSAbort2Relay = set; MESCB.EDSAbort2Relay = set; };
-	void SetEDSAbort3(bool set) { MESCA.EDSAbort3Relay = set; MESCB.EDSAbort3Relay = set; };
+	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
+	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
+	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+	//Master Events Sequence Controller A
 	MESC MESCA;
+	//Master Events Sequence Controller B
 	MESC MESCB;
+	//Reaction Control System Controller
 	RCSC rcsc;
 
 protected:

@@ -988,13 +988,13 @@ void SaturnV::SeparateStage (int new_stage)
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage >= CSM_LEM_STAGE)
 	{
 		ofs1= OFS_ABORT2;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	 	ofs1 = OFS_STAGE2;
 		vel1 = _V(0,0,-6.0);
@@ -1351,8 +1351,6 @@ void SaturnV::SeparateStage (int new_stage)
 
 		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
-
-	sprintf(oapiDebugString(), "%d %d", stage, new_stage);
 }
 
 void SaturnV::ActivatePrelaunchVenting()

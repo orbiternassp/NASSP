@@ -435,6 +435,7 @@ void Saturn::SetCSMStage ()
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
+	ClearEngineIndicators();
 
 	//
 	// Delete any dangling propellant resources.
@@ -773,6 +774,7 @@ void Saturn::SetReentryStage ()
     ClearThrusters();
 	ClearPropellants();
 	ClearAirfoilDefinitions();
+	ClearEngineIndicators();
 
 	//
 	// Tell AGC the CM has seperated from the SM.
@@ -802,7 +804,7 @@ void Saturn::SetReentryStage ()
 		SetRotDrag(_V(0.07, 0.07, 0.002));
 	}
 	SetCrossSections (_V(9.17,7.13,7.0));
-	SetCW (5.5, 0.1, 3.4, 3.4);
+	SetCW(1.5, 1.5, 1.2, 1.2);
 	SetSurfaceFrictionCoeff(1, 1);
 	if (GetFlightModel() >= 1 && !LESAttached) {
 		CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.12, 1.12), CoeffFunc, 3.5, 11.95, 1.0);

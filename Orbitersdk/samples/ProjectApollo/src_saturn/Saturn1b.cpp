@@ -355,38 +355,36 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	//
-	// Abort handling
-	//
-
-	if(use_lvdc){
-		if (stage < CSM_LEM_STAGE) {
+	if (stage < CSM_LEM_STAGE) {
+		if (use_lvdc) {
 			if (lvdc != NULL) {
 				lvdc->TimeStep(simt, simdt);
 			}
-		}
-		else {
-			if (lvdc != NULL) {
-				// At this point we are done with the LVDC, we can delete it.
-				// This saves memory and declutters the scenario file.
-				delete lvdc;
-				lvdc = NULL;
-				use_lvdc = false;
+
+			// CSM/LV separation
+			if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+				SeparateStage(CSM_LEM_STAGE);
+				SetStage(CSM_LEM_STAGE);
+			}
+
+			// CM/SM separation
+			if (CMSMPyros.Blown() && stage < CM_STAGE)
+			{
+				SeparateStage(CM_STAGE);
+				SetStage(CM_STAGE);
 			}
 		}
+	} else {
 
-		// CSM/LV separation
-		if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
-			SeparateStage(CSM_LEM_STAGE);
-			SetStage(CSM_LEM_STAGE);
+		if (lvdc != NULL) {
+			// At this point we are done with the LVDC, we can delete it.
+			// This saves memory and declutters the scenario file.
+			delete lvdc;
+			lvdc = NULL;
+			use_lvdc = false;
 		}
 
-		// CM/SM separation
-		if (CMSMPyros.Blown() && stage < CM_STAGE)
-		{
-			SeparateStage(CM_STAGE);
-			SetStage(CM_STAGE);
-		}
+		GenericTimestepStage(simt, simdt);
 	}
 
 	LastTimestep = simt;

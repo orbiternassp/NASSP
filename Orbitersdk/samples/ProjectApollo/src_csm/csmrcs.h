@@ -132,7 +132,7 @@ public:
 	CMRCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 	virtual ~CMRCSPropellantSource();
 
-	void Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp);
+	void Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
@@ -143,15 +143,6 @@ public:
 	double *GetPurgeLevelRef(int i) { return &purgeLevel[i]; }	
 	void PropellantSwitchToggled(PanelSwitchItem *s);
 	void OpenHeliumValves();
-
-	void SetAutoFuelDump() { autofueldump = true; };
-	bool AutoFuelDump() { return autofueldump; };
-	void SetAutoPurge() { autopurge = true; };
-	bool AutoPurge() { return autopurge; };
-	void SetAutoOxidizerInterconnect() { autooxidizerinterconnect = true; };
-	bool AutoOxidizerInterconnect() { return autooxidizerinterconnect; };
-	void SetAutoFuelInterconnect() { autofuelinterconnect = true; };
-	bool AutoFuelInterconnect() { return autofuelinterconnect; };
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -170,17 +161,14 @@ protected:
 	bool fuelInterconnectValvesOpen;
 	bool oxidizerInterconnectValvesOpen;
 	bool purgeValvesOpen;
-	double purgeLevel[6]; 
-
-	bool autofueldump;
-	bool autopurge;
-	bool autooxidizerinterconnect;
-	bool autofuelinterconnect;
+	bool oxidizerDumpValvesOpen;
+	bool fuelDumpValvesOpen;
+	double purgeLevel[6];
 
 	THRUSTER_HANDLE *thrusters;
 	h_Radiator *heliumTank;
 	CMRCSPropellantSource *interconnectedSystem;
-	e_object *purgePower, *purgePyroPower;
+	e_object *purgePower, *purgePyroPower, *isolPower;
 };
 
 //

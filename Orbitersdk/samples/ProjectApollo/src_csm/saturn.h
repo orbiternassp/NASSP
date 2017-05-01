@@ -3791,7 +3791,6 @@ protected:
 	bool NoHGA;
 	bool SkylabCM;
 	bool S1bPanel;
-	bool bAbort;
 	bool bRecovery;
 
 	#define SATVIEW_LEFTSEAT		0
@@ -4039,7 +4038,6 @@ protected:
 	void UpdatePayloadMass();
 	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
-	void StartAbort();
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);

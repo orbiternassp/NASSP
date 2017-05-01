@@ -1926,10 +1926,35 @@ minorloop: //minor loop;
 			owner->secs.SetEDSAbort3(true);
 		}
 
-		if (owner->secs.BECO() && t_clock > 30.0)
+		if (owner->secs.BECO())
 		{
-			owner->SetThrusterGroupLevel(owner->thg_main, 0);
+			if (t_clock > 40.0)
+			{
+				owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+			}
+			owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+			owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 			LVDC_Stop = true;
+		}
+
+		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+			// Control contrail
+			if (owner->MissionTime > 12) {
+				owner->contrailLevel = 0;
+			}
+			else {
+				if (owner->MissionTime > 7) {
+					owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
+				}
+				else {
+					if (owner->MissionTime > 2) {
+						owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+					}
+					else {
+						owner->contrailLevel = 1;
+					}
+				}
+			}
 		}
 	}
 
@@ -1974,69 +1999,6 @@ minorloop: //minor loop;
 		owner->ENGIND[5] = false;
 		owner->ENGIND[6] = false;
 		owner->ENGIND[7] = false;
-	}
-	if(owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5){
-		// Control contrail
-		if(owner->MissionTime > 12){
-			owner->contrailLevel = 0;
-		}else{
-			if (owner->MissionTime > 7){
-				owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
-			}else{
-				if(owner->MissionTime > 2){
-					owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
-				}else{
-					owner->contrailLevel = 1;
-				}
-			}
-		}
-	}
-
-	/* **** ABORT HANDLING **** */
-	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
-	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);						// Kill the engines
-		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, LiftOff, true);			// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");								// Clear the LVDC debug line
-		LVDC_Stop = true;											// Stop LVDC program
-		// ABORT MODE 1 - Use of LES to extract CM
-		// Allowed from T - 5 minutes until LES jettison.
-		if(owner->MissionTime > -300 && owner->LESAttached){			
-			owner->SetEngineLevel(ENGINE_MAIN, 0);
-			owner->SeparateStage(CM_STAGE);
-			owner->SetStage(CM_STAGE);
-			owner->StartAbort();			// Resets MT, fires LET if attached
-			owner->bAbort = false;			// No further processing required
-			return; 
-		}
-		// ABORT MODE 2/3/4 - Eject CSM from LV
-		if(owner->stage == LAUNCH_STAGE_ONE){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage(LAUNCH_STAGE_TWO);
-			owner->SetStage(LAUNCH_STAGE_TWO);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
-			owner->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
-			// This is the most likely entry point
-			owner->SeparateStage(LAUNCH_STAGE_SIVB);
-			owner->SetStage(LAUNCH_STAGE_SIVB);
-		}
-		if(owner->stage == LAUNCH_STAGE_SIVB || owner->stage == STAGE_ORBIT_SIVB){
-			// Eject CSM
-			owner->SeparateStage(CSM_LEM_STAGE);
-			owner->SetStage(CSM_LEM_STAGE);
-			// Staging finished.
-			owner->StartAbort();			// Resets MT, sets abort light, resets engine lights, etc.
-		}
-		// Done with the abort request.
-		owner->bAbort = false;
 	}
 }
 
@@ -7093,72 +7055,30 @@ minorloop:
 			owner->secs.SetEDSAbort3(true);
 		}
 
-		if (owner->secs.BECO() && t_clock > 30.0)
+		if (owner->secs.BECO())
 		{
-			owner->SetThrusterGroupLevel(owner->thg_main, 0);
+			if (t_clock > 30.0)
+			{
+				owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+			}
+			owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+			owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 			LVDC_Stop = true;
 		}
 
 		// End of test for LVDC_Stop
-	}
 
-	if(owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5){
-		// Control contrail
-		if (owner->MissionTime > 12)
-			owner->contrailLevel = 0;
-		else if (owner->MissionTime > 7)
-			owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
-		else if (owner->MissionTime > 2)
-			owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
-		else
-			owner->contrailLevel = 1;
-	}
-
-	/* **** SATURN 5 ABORT HANDLING **** */
-	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
-	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
-		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");					// Clear the LVDC debug line
-		LVDC_Stop = 1;									// Stop LVDC program
-		// ABORT MODE 1 - Use of LES to extract CM
-		// Allowed from T - 5 minutes until LES jettison.
-		if(owner->MissionTime > -300 && owner->LESAttached){			
-			owner->SetEngineLevel(ENGINE_MAIN, 0);
-			owner->SeparateStage(CM_STAGE);
-			owner->SetStage(CM_STAGE);
-			owner->StartAbort();			// Resets MT, fires LET if attached
-			owner->bAbort = false;			// No further processing required
-			return; 
+		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+			// Control contrail
+			if (owner->MissionTime > 12)
+				owner->contrailLevel = 0;
+			else if (owner->MissionTime > 7)
+				owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
+			else if (owner->MissionTime > 2)
+				owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+			else
+				owner->contrailLevel = 1;
 		}
-		// ABORT MODE 2/3/4 - Eject CSM from LV
-		if(owner->stage == LAUNCH_STAGE_ONE){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage(LAUNCH_STAGE_TWO);
-			owner->SetStage(LAUNCH_STAGE_TWO);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
-			owner->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
-			// This is the most likely entry point
-			owner->SeparateStage(LAUNCH_STAGE_SIVB);
-			owner->SetStage(LAUNCH_STAGE_SIVB);
-		}
-		if(owner->stage == LAUNCH_STAGE_SIVB || owner->stage == STAGE_ORBIT_SIVB){
-			// Eject CSM
-			owner->SeparateStage(CSM_LEM_STAGE);
-			owner->SetStage(CSM_LEM_STAGE);
-			// Staging finished.
-			owner->StartAbort();			// Resets MT, sets abort light, resets engine lights, etc.
-		}
-		// Done with the abort request.
-		owner->bAbort = false;
 	}
 }
 
