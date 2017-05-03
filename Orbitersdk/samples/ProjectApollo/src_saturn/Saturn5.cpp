@@ -589,7 +589,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	// engines in a wacky direction and then not be
 	// called again for several seconds.
 	//
-	
+
 	if (FirstTimestep) {
 		DoFirstTimestep(simt);
 		LastTimestep = simt;
@@ -606,19 +606,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 			if (lvdc != NULL) {
 				lvdc->TimeStep(simt, simdt);
 			}
-
-			// CSM/LV separation
-			if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
-				SeparateStage(CSM_LEM_STAGE);
-				SetStage(CSM_LEM_STAGE);
-			}
-
-			// CM/SM separation
-			if (CMSMPyros.Blown() && stage < CM_STAGE)
-			{
-				SeparateStage(CM_STAGE);
-				SetStage(CM_STAGE);
-			}
 		}
 	} else {
 		
@@ -632,6 +619,26 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 		
 		GenericTimestepStage(simt, simdt);
 	}
+
+	//
+	// CSM/LV separation
+	//
+
+	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+		SeparateStage(CSM_LEM_STAGE);
+		SetStage(CSM_LEM_STAGE);
+	}
+
+	//
+	// CM/SM separation pyros
+	//
+
+	if (CMSMPyros.Blown() && stage < CM_STAGE)
+	{
+		SeparateStage(CM_STAGE);
+		SetStage(CM_STAGE);
+	}
+
 	LastTimestep = simt;
 }
 
@@ -1073,7 +1080,7 @@ void SaturnV::SwitchSelector(int item){
 		SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 		break;
 	case 22:
-		JettisonLET();
+		//JettisonLET();
 		break;
 	case 23:
 		// MR Shift

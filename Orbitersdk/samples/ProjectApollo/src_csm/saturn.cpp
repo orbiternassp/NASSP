@@ -630,7 +630,7 @@ void Saturn::initSaturn()
 	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
 	ph_lem = 0;
-	ph_tjm = 0;
+	//ph_tjm = 0;
 	ph_pcm = 0;
 	ph_sep = 0;
 	ph_sep2 = 0;
@@ -645,7 +645,7 @@ void Saturn::initSaturn()
 
 	thg_main = 0;
 	thg_lem = 0;
-	thg_tjm = 0;
+	//thg_tjm = 0;
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
@@ -726,15 +726,17 @@ void Saturn::initSaturn()
 		th_main[i] = 0;
 	}
 
-	for (i = 0; i < 2; i++)
+	/*for (i = 0; i < 2; i++)
 	{
 		th_tjm[i] = 0;
-	}
+	}*/
 
 	for (i = 0; i < 4; i++)
 	{
 		th_lem[i] = 0;
 	}
+
+	th_pcm = 0;
 
 	for (i = 0; i < 8; i++) {
 		th_ull[i] = 0;
@@ -4440,7 +4442,7 @@ void Saturn::ClearThrusters()
 
 	thg_main = 0;
 	thg_lem = 0;
-	thg_tjm = 0;
+	//thg_tjm = 0;
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
@@ -4468,7 +4470,7 @@ void Saturn::ClearPropellants()
 	ph_3rd = 0;
 	ph_sps = 0;
 	ph_lem = 0;
-	ph_tjm = 0;
+	//ph_tjm = 0;
 	ph_pcm = 0;
 
 	ph_rcs0 = 0;
@@ -4553,13 +4555,13 @@ void Saturn::FireLaunchEscapeMotor()
 
 void Saturn::FireTowerJettisonMotor()
 {
-	if (thg_tjm)
+	/*if (thg_tjm)
 	{
 		if (GetThrusterGroupLevel(thg_tjm) < 1.0)
 		{
 			SetThrusterGroupLevel(thg_tjm, 1.0);
 		}
-	}
+	}*/
 
 	FireTJM = true;
 }
@@ -5093,16 +5095,6 @@ void Saturn::StageSix(double simt)
 			}
 			break;
 		}
-	}
-
-	//
-	// CM/SM separation pyros
-	//
-
-	if (CMSMPyros.Blown())
-	{
-		SeparateStage(CM_STAGE);
-		SetStage(CM_STAGE);
 	}
 }
 

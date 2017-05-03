@@ -360,19 +360,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 			if (lvdc != NULL) {
 				lvdc->TimeStep(simt, simdt);
 			}
-
-			// CSM/LV separation
-			if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
-				SeparateStage(CSM_LEM_STAGE);
-				SetStage(CSM_LEM_STAGE);
-			}
-
-			// CM/SM separation
-			if (CMSMPyros.Blown() && stage < CM_STAGE)
-			{
-				SeparateStage(CM_STAGE);
-				SetStage(CM_STAGE);
-			}
 		}
 	} else {
 
@@ -385,6 +372,25 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		}
 
 		GenericTimestepStage(simt, simdt);
+	}
+
+	//
+	// CSM/LV separation
+	//
+
+	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+		SeparateStage(CSM_LEM_STAGE);
+		SetStage(CSM_LEM_STAGE);
+	}
+
+	//
+	// CM/SM separation pyros
+	//
+
+	if (CMSMPyros.Blown() && stage < CM_STAGE)
+	{
+		SeparateStage(CM_STAGE);
+		SetStage(CM_STAGE);
 	}
 
 	LastTimestep = simt;

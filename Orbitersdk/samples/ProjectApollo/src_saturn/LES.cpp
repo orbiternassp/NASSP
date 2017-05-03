@@ -259,11 +259,6 @@ void LES::clbkSaveState (FILEHANDLE scn)
 	VESSEL2::clbkSaveState (scn);
 
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
-	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
-	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
-	oapiWriteScenario_float (scn, "FMASS", LaunchEscapeFuel);
-	oapiWriteScenario_float (scn, "JMASS", JettisonFuel);
-	oapiWriteScenario_float(scn, "PMASS", PitchControlFuel);
 }
 
 typedef union {
@@ -318,11 +313,8 @@ void LES::AddEngines()
 	if (!ph_pcm)
 		ph_pcm = CreatePropellantResource(PitchControlFuelMax, PitchControlFuel);
 
-	if (!th_tjm[0])
-	{
-		th_tjm[0] = CreateThruster (m_exhaust_pos1, m_exhaust_ref1, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
-		th_tjm[1] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
-	}
+	th_tjm[0] = CreateThruster (m_exhaust_pos1, m_exhaust_ref1, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+	th_tjm[1] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
 
 	//
 	// Add exhausts.
@@ -386,7 +378,6 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 
 {
 	char *line;
-	float flt;
 
 	while (oapiReadScenario_nextline (scn, line))
 	{
@@ -395,30 +386,6 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
-		}
-		else if (!strnicmp (line, "VECHNO", 6))
-		{
-			sscanf (line+6, "%d", &VehicleNo);
-		}
-		else if (!strnicmp (line, "EMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			EmptyMass = flt;
-		}
-		else if (!strnicmp (line, "FMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			LaunchEscapeFuel = flt;
-		}
-		else if (!strnicmp (line, "JMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			JettisonFuel = flt;
-		}
-		else if (!strnicmp(line, "PMASS", 5))
-		{
-			sscanf(line + 5, "%g", &flt);
-			PitchControlFuel = flt;
 		}
 		else
 		{
@@ -446,22 +413,16 @@ void LES::SetState(LESSettings &state)
 {
 	if (state.SettingsType.LES_SETTINGS_GENERAL)
 	{
-		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 		ProbeAttached = state.ProbeAttached;
 	}
 
-	if (state.SettingsType.LES_SETTINGS_MASS)
-	{
-		EmptyMass = state.EmptyMass;
-	}
-
-	if (state.SettingsType.LES_SETTINGS_FUEL)
-	{
+	if (state.SettingsType.LES_SETTINGS_MFUEL)
 		LaunchEscapeFuel = state.LaunchEscapeFuelKg;
+	if (state.SettingsType.LES_SETTINGS_JFUEL)
 		JettisonFuel = state.JettisonFuelKg;
+	if (state.SettingsType.LES_SETTINGS_PFUEL)
 		PitchControlFuel = state.PitchControlFuelKg;
-	}
 
 	if (state.SettingsType.LES_SETTINGS_ENGINES)
 	{

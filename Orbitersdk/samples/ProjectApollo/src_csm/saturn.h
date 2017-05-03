@@ -4220,7 +4220,7 @@ protected:
 	// SPS and LET.
 	//
 
-	PROPELLANT_HANDLE ph_sps, ph_lem, ph_pcm, ph_tjm;
+	PROPELLANT_HANDLE ph_sps, ph_lem, ph_pcm;//, ph_tjm;
 
 	//
 	// Ullage rockets for stage 1, 2 and 3.
@@ -4237,7 +4237,7 @@ protected:
 	// Thruster group handles. We have a lot of these :).
 	//
 
-	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_lem, thg_tjm;
+	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_lem;//, thg_tjm;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3];                       // handles for orbiter main engines

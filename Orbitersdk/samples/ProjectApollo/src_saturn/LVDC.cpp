@@ -641,7 +641,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					LVDC_TB_ETime = 0;
 
 					//Apply force to trigger GetWeightVector() function
-					owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
+					//owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
 				}
 				break;
 			case 0: // MORE TB0
@@ -772,19 +772,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
-
-				
-				// ENGINE FAIL TEST:
-				if(owner->MissionTime > 22.5 && S1B_Engine_Out == false){
-					owner->SetThrusterResource(owner->th_main[1], NULL); // Should stop the engine
-					S1B_Engine_Out = true;
-				}
-
-				if (owner->MissionTime > 32.5 && S1B_TwoEngines_Out == false) {
-					owner->SetThrusterResource(owner->th_main[2], NULL); // Should stop the engine
-					S1B_TwoEngines_Out = true;
-				}
-				
 
 				// S1B CECO TRIGGER:
 				if(owner->MissionTime > 140.86){ // Apollo 7
@@ -4942,13 +4929,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
 
 						owner->contrailLevel = SumThrust/5;
-						//owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}else{
 					// Get 100% thrust on all engines.
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
-					//owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+					owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				// LIFTOFF

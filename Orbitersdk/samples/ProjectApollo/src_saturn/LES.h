@@ -33,8 +33,9 @@
 typedef union
 {
 	struct {
-		unsigned LES_SETTINGS_MASS:1; 		///< Mass settings are valid.
-		unsigned LES_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned LES_SETTINGS_MFUEL:1;		///< Main Fuel mass settings are valid.
+		unsigned LES_SETTINGS_JFUEL:1;		///< Jettison Fuel mass settings are valid.
+		unsigned LES_SETTINGS_PFUEL:1;		///< Pitch Control Fuel mass settings are valid.
 		unsigned LES_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
 		unsigned LES_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
 	};
@@ -49,9 +50,6 @@ typedef union
 typedef struct 
 {
 	LESSettingFlags SettingsType;		///< Which of the settings are valid?
-	int VehicleNo;						///< Saturn vehicle number.
-
-	double EmptyMass;					///< Empty mass of LET without fuel.
 
 	double LaunchEscapeFuelKg;			///< Amount of fuel in kg available for the main abort engine.
 	double JettisonFuelKg;				///< Amount of fuel in kg available for the jettison engine.
@@ -158,11 +156,6 @@ protected:
 	/// \param s An integer holding an array of state flags.
 	///
 	void SetMainState(int s);
-
-	///
-	/// \brief Apollo vehicle number.
-	///
-	int VehicleNo;
 
 	///
 	/// \brief Flag use of low-res meshes if possible, to reduce graphics lag.

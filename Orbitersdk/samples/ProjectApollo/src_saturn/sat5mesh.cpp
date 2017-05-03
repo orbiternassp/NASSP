@@ -444,10 +444,10 @@ void SaturnV::SetFirstStage ()
 	double TCP=-101.5+STG0O-TCPO;
 	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -100.0, TCP), 3e7, 1e6, 3, 1 },
-		{ _V(-7, 7, TCP), 3e7, 1e6, 3, 1 },
-		{ _V(7, 7, TCP), 3e7, 1e6, 3, 1 },
-		{ _V(0, 0, TCP + 100), 3e7, 1e6, 1 }
+		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
 	 };
 	SetTouchdownPoints(tdvtx, ntdvtx);
 	//SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
@@ -485,6 +485,8 @@ void SaturnV::SetFirstStageEngines ()
 	int i;
 
 	ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	//
 	// ************************* propellant specs **********************************
@@ -547,53 +549,6 @@ void SaturnV::SetFirstStageEngines ()
 	contrail[4] = AddParticleStream(&srb_contrail, MAIN5a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
 
 	ThrustAdjust = 1.0;
-
-	//Launch Escape Tower
-	if (LETAttached())
-	{
-		if (!ph_tjm)
-			ph_tjm = CreatePropellantResource(93.318);
-		if (!ph_lem)
-			ph_lem = CreatePropellantResource(1425.138);
-		if (!ph_pcm)
-			ph_pcm = CreatePropellantResource(4.07247);
-
-		VECTOR3 m_exhaust_pos1 = _V(0.0, -0.5, TowerOffset - 2.2);
-		VECTOR3 m_exhaust_pos2 = _V(0.0, 0.5, TowerOffset - 2.2);
-		VECTOR3 m_exhaust_pos3 = _V(-0.5, 0.0, TowerOffset - 2.2);
-		VECTOR3 m_exhaust_pos4 = _V(0.5, 0.0, TowerOffset - 2.2);
-
-		th_lem[0] = CreateThruster(m_exhaust_pos1, _V(0.0, sin(35.0*RAD), cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
-		th_lem[1] = CreateThruster(m_exhaust_pos2, _V(0.0, -sin(35.0*RAD), cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
-		th_lem[2] = CreateThruster(m_exhaust_pos3, _V(sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
-		th_lem[3] = CreateThruster(m_exhaust_pos4, _V(-sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
-
-		th_tjm[0] = CreateThruster(_V(0.0, -0.5, TowerOffset), _V(0.030524, 0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
-		th_tjm[1] = CreateThruster(_V(0.0, 0.5, TowerOffset), _V(0.030524, -0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
-
-		th_pcm = CreateThruster(_V(0.0, 0.0, TowerOffset + 4.5), _V(0.0, 1.0, 0.0), THRUST_VAC_PCM, ph_pcm, ISP_PCM_VAC, ISP_PCM_SL);
-
-		//
-		// Add exhausts
-		//
-
-		int i;
-		for (i = 0; i < 4; i++)
-		{
-			AddExhaust(th_lem[i], 8.0, 0.5, SIVBRCSTex);
-			AddExhaustStream(th_lem[i], &solid_exhaust);
-		}
-		for (i = 0; i < 2; i++)
-		{
-			AddExhaust(th_tjm[i], 8.0, 0.5, SIVBRCSTex);
-			AddExhaustStream(th_tjm[i], &solid_exhaust);
-		}
-		AddExhaust(th_pcm, 8.0, 0.5, SIVBRCSTex);
-		AddExhaustStream(th_pcm, &solid_exhaust);
-
-		thg_lem = CreateThrusterGroup(th_lem, 4, THGROUP_USER);
-		thg_tjm = CreateThrusterGroup(th_tjm, 2, THGROUP_USER);
-	}
 }
 
 void SaturnV::SetSecondStage ()
@@ -644,6 +599,8 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 {
     ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	if(ph_1st) {
 		DelPropellantResource(ph_1st);
@@ -753,7 +710,6 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	SetSIICMixtureRatio(MixtureRatio);
 }
-
 
 void SaturnV::SetThirdStage ()
 
@@ -865,7 +821,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 void SaturnV::SetThirdStageEngines (double offset)
 {
 	DelThrusterGroup(THGROUP_MAIN, true);
-    ClearThrusterDefinitions();
+	ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	// ************************* propellant specs **********************************
 

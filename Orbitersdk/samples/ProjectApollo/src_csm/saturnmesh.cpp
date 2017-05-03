@@ -828,8 +828,8 @@ void Saturn::SetReentryStage ()
 	}
 
 	if (LESAttached) {
-		if (!ph_tjm)
-			ph_tjm  = CreatePropellantResource(93.318);
+		//if (!ph_tjm)
+		//	ph_tjm  = CreatePropellantResource(93.318);
 		if (!ph_lem)
 			ph_lem = CreatePropellantResource(1425.138);
 		if (!ph_pcm)
@@ -855,8 +855,8 @@ void Saturn::SetReentryStage ()
 		th_lem[2] = CreateThruster (m_exhaust_pos3, _V(sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
 		th_lem[3] = CreateThruster (m_exhaust_pos4, _V(-sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
 
-		th_tjm[0] = CreateThruster(_V(0.0, -0.5, TowerOffset), _V(0.030524, 0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
-		th_tjm[1] = CreateThruster(_V(0.0, 0.5, TowerOffset), _V(0.030524, -0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+		//th_tjm[0] = CreateThruster(_V(0.0, -0.5, TowerOffset), _V(0.030524, 0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+		//th_tjm[1] = CreateThruster(_V(0.0, 0.5, TowerOffset), _V(0.030524, -0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
 
 		th_pcm = CreateThruster(_V(0.0, 0.0, TowerOffset + 4.5), _V(0.0, 1.0, 0.0), THRUST_VAC_PCM, ph_pcm, ISP_PCM_VAC, ISP_PCM_SL);
 
@@ -870,16 +870,16 @@ void Saturn::SetReentryStage ()
 			AddExhaust (th_lem[i], 8.0, 0.5, SIVBRCSTex);
 			AddExhaustStream (th_lem[i], &lem_exhaust);
 		}
-		for (i = 0; i < 2; i++)
-		{
-			AddExhaust(th_tjm[i], 8.0, 0.5, SIVBRCSTex);
-			AddExhaustStream(th_tjm[i], &lem_exhaust);
-		}
+		//for (i = 0; i < 2; i++)
+		//{
+		//	AddExhaust(th_tjm[i], 8.0, 0.5, SIVBRCSTex);
+		//	AddExhaustStream(th_tjm[i], &lem_exhaust);
+		//}
 		AddExhaust(th_pcm, 8.0, 0.5, SIVBRCSTex);
 		AddExhaustStream(th_pcm, &lem_exhaust);
 
 		thg_lem = CreateThrusterGroup (th_lem, 4, THGROUP_USER);
-		thg_tjm = CreateThrusterGroup(th_tjm, 2, THGROUP_USER);
+		//thg_tjm = CreateThrusterGroup(th_tjm, 2, THGROUP_USER);
 	}
 
 	VECTOR3 dockpos = {0, 0, 1.5};
@@ -1349,16 +1349,23 @@ void Saturn::JettisonLET(bool AbortJettison)
 	LESConfig.FireTJM = FireTJM;
 	LESConfig.FirePCM = FirePCM;
 
-	LESConfig.VehicleNo = VehicleNo;
 	LESConfig.LowRes = LowRes;
 	LESConfig.ProbeAttached = AbortJettison && HasProbe;
 
 	if (ph_lem)
 	{
 		LESConfig.LaunchEscapeFuelKg = GetPropellantMass(ph_lem);
-		LESConfig.JettisonFuelKg = GetPropellantMass(ph_tjm);
+		LESConfig.SettingsType.LES_SETTINGS_MFUEL = 1;
+	}
+	//if (ph_tjm)
+	//{
+		//LESConfig.JettisonFuelKg = GetPropellantMass(ph_tjm);
+		//LESConfig.SettingsType.LES_SETTINGS_MFUEL = 1;
+	//}
+	if (ph_pcm)
+	{
 		LESConfig.PitchControlFuelKg = GetPropellantMass(ph_pcm);
-		LESConfig.SettingsType.LES_SETTINGS_FUEL = 1;
+		LESConfig.SettingsType.LES_SETTINGS_PFUEL = 1;
 	}
 
 	LES *les_vessel = (LES *) oapiGetVesselInterface(hesc1);
@@ -1388,15 +1395,6 @@ void Saturn::JettisonLET(bool AbortJettison)
 		SwindowS.play();
 	}
 	SwindowS.done();
-
-
-	//Delete Thrusters
-	DelThrusterGroup(thg_lem, true);
-	DelThrusterGroup(thg_tjm, true);
-	DelThruster(th_pcm);
-	DelPropellantResource(ph_lem);
-	DelPropellantResource(ph_tjm);
-	DelPropellantResource(ph_pcm);
 
 	//
 	// Event management

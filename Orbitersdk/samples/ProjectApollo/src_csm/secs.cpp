@@ -352,11 +352,11 @@ void RCSC::ControlVessel(Saturn *v)
 
 bool RCSC::CMRCSLogicA() 
 { 
-	return Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CMRCSLogicSwitch.IsUp(); 
+	return (Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
 }
 bool RCSC::CMRCSLogicB() 
 {
-	return Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CMRCSLogicSwitch.IsUp(); 
+	return (Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
 }
 
 bool RCSC::CMPropellantDumpLogicA() 
@@ -381,12 +381,12 @@ bool RCSC::CMPropellantPurgeLogicB()
 
 bool RCSC::CMRCSHeDumpLogicA() 
 { 
-	return Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CmRcsHeDumpSwitch.GetState(); 
+	return (Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
 bool RCSC::CMRCSHeDumpLogicB() 
 { 
-	return Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->CmRcsHeDumpSwitch.GetState(); 
+	return (Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
 void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -579,6 +579,10 @@ void MESC::Timestep(double simdt)
 				TD1.SetRunning(true);
 			}
 		}
+	}
+	else if (EDSLogicBreaker)
+	{
+		EDSLogicBreaker = NULL;
 	}
 
 	// Monitor LET Status
@@ -829,7 +833,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Apex Cover Relay
-	if ((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE && Sat->ApexCoverJettSwitch.GetState()) || (MESCLogicBus() && ApexCoverJettison))
+	if (((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && Sat->ApexCoverJettSwitch.GetState()) || (MESCLogicBus() && ApexCoverJettison))
 	{
 		ApexCoverJettison = true;
 	}
@@ -857,7 +861,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//ELS Activate Relay
-	if ((MESCLogicBus() && ELSActivateRelay) || (ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE && (Sat->MainDeploySwitch.GetState() || Sat->DrogueDeploySwitch.GetState())))
+	if ((MESCLogicBus() && ELSActivateRelay) || ((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && (Sat->MainDeploySwitch.GetState() || Sat->DrogueDeploySwitch.GetState())))
 	{
 		ELSActivateRelay = true;
 	}
@@ -869,7 +873,7 @@ void MESC::Timestep(double simdt)
 
 bool MESC::SequentialLogicBus()
 {
-	return SECSLogicBreaker->Voltage() > SP_MIN_DCVOLTAGE;
+	return (SECSLogicBreaker->Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool MESC::SequentialArmBus()
@@ -879,7 +883,7 @@ bool MESC::SequentialArmBus()
 
 bool MESC::SequentialPyroBus()
 {
-	return SECSPyroBus->Voltage() > SP_MIN_DCVOLTAGE;
+	return (SECSPyroBus->Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool MESC::MESCLogicBus() {
@@ -892,7 +896,10 @@ bool MESC::MESCLogicBus() {
 
 bool MESC::EDSLogicPower()
 {
-	return EDSLogicBreaker->Voltage() > SP_MIN_DCVOLTAGE && Sat->EDSPowerSwitch.IsUp();
+	if (EDSLogicBreaker)
+		return (EDSLogicBreaker->Voltage() > SP_MIN_DCVOLTAGE) && Sat->EDSPowerSwitch.IsUp();
+
+	return false;
 }
 
 bool MESC::EDSMainPower()
@@ -1208,7 +1215,7 @@ void SECS::Timestep(double simt, double simdt)
 
 bool SECS::IsLogicPoweredAndArmedA() {
 
-	if (Sat->SECSArmBatACircuitBraker.IsPowered() && Sat->SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE)
+	if (Sat->SECSArmBatACircuitBraker.IsPowered() && (Sat->SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE))
 		return true;
 
 	return false;
@@ -1216,7 +1223,7 @@ bool SECS::IsLogicPoweredAndArmedA() {
 
 bool SECS::IsLogicPoweredAndArmedB() {
 
-	if (Sat->SECSArmBatBCircuitBraker.IsPowered() && Sat->SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE)
+	if (Sat->SECSArmBatBCircuitBraker.IsPowered() && (Sat->SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE))
 		return true;
 
 	return false;
