@@ -1064,6 +1064,14 @@ void SECS::ControlVessel(Saturn *v)
 	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay);
 }
 
+void SECS::SetSaturnType(int sattype)
+{
+	if (sattype == SAT_SATURN1B)
+	{
+		rcsc.SetPropellantDumpInhibitTimers(61.0);
+	}
+}
+
 void SECS::Timestep(double simt, double simdt)
 
 {

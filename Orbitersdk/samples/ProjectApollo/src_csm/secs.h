@@ -45,6 +45,8 @@ public:
 	void SetContact(bool cont) { Contact = cont; };
 	bool ContactClosed() { return Contact; };
 
+	void SetDelay(double del) { delay = del; }
+
 protected:
 	double seconds;
 	double delay;
@@ -90,6 +92,8 @@ public:
 	void StartPropellantDumpInhibitTimerB() { TD8.SetStart(true); }
 	bool GetPropellantDumpInhibitA() { return TD1.ContactClosed(); }
 	bool GetPropellantDumpInhibitB() { return TD8.ContactClosed(); }
+
+	void SetPropellantDumpInhibitTimers(double del) { TD1.SetDelay(del); TD8.SetDelay(del); }
 
 protected:
 
@@ -309,6 +313,8 @@ public:
 	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
 	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
 	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
+
+	void SetSaturnType(int sattype);
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);

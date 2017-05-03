@@ -2623,6 +2623,8 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	agc.SetMissionInfo(ApolloNo, PayloadName);
 
+	secs.SetSaturnType(SaturnType);
+
 	//
 	// Set random failures if appropriate.
 	//
@@ -4478,8 +4480,8 @@ void Saturn::ClearPropellants()
 	ph_rcs2 = 0;
 	ph_rcs3 = 0;
 
-	//ph_rcs_cm_1 = 0;
-	//ph_rcs_cm_2 = 0;
+	ph_rcs_cm_1 = 0;
+	ph_rcs_cm_2 = 0;
 
 	ph_sep = 0;
 	ph_sep2 = 0;

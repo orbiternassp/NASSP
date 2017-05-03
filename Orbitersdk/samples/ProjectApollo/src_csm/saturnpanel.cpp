@@ -5291,7 +5291,9 @@ void Saturn::InitSwitches() {
 	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
 
 	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSCMDSwitch.SetDelayTime(1);
 	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSTrnfrSwitch.SetDelayTime(1);
 
 	CMRCSProp1Switch.Register(PSH, "CMRCSProp1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSProp1Switch.SetCallback(new PanelSwitchCallback<CMRCSPropellantSource>(&CMRCS1, &CMRCSPropellantSource::PropellantSwitchToggled));
