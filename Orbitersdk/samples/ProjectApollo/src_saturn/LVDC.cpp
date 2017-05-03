@@ -639,9 +639,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->CreateStageOne();						// Create hidden stage one, for later use in staging
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
-
-					//Apply force to trigger GetWeightVector() function
-					//owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
 				}
 				break;
 			case 0: // MORE TB0
@@ -728,8 +725,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						owner->SetThrusterLevel(owner->th_main[7], thrst[1]); // Engine 8
 
 						owner->contrailLevel = SumThrust / 8;
-						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}
 				else {
@@ -737,8 +733,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
-					// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
-					//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
+					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				if (owner->MissionTime >= 0) {
@@ -4841,8 +4836,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
-
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 					break;
 				}			
 
@@ -4929,13 +4922,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
 
 						owner->contrailLevel = SumThrust/5;
-						owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}else{
 					// Get 100% thrust on all engines.
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
-					owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				// LIFTOFF
