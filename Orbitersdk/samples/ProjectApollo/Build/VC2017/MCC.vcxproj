@@ -96,7 +96,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>../../../../../Modules/ProjectApollo/Saturn5.bsc</OutputFile>
+      <OutputFile>../../../../../Modules/ProjectApollo/MCC.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,7 +144,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>../../../../../Modules/ProjectApollo/Saturn5.bsc</OutputFile>
+      <OutputFile>../../../../../Modules/ProjectApollo/MCC.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>

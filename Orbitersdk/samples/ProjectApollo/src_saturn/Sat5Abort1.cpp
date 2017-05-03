@@ -55,7 +55,7 @@ const double STG1O= 10.25;
 const double STG2O= 20;
 
 Sat5Abort1::Sat5Abort1 (OBJHANDLE hObj, int fmodel)
-: VESSEL (hObj, fmodel)
+: VESSEL3 (hObj, fmodel)
 
 {
 	init();
@@ -142,13 +142,6 @@ void Sat5Abort1::Setup()
 // ==============================================================
 // API interface
 // ==============================================================
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-
-{
-	Sat5Abort1 *sv = (Sat5Abort1 *) vessel;
-	sv->SaveDefaultState (scn);
-}
-
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
@@ -166,10 +159,14 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	return new Sat5Abort1 (hvessel, flightmodel);
 }
 
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
+DLLCLBK void ovcExit(VESSEL *vessel)
 {
-	Sat5Abort1 *sv = (Sat5Abort1 *) vessel;
-	sv->init();
-	sv->Setup();
+	if (vessel) delete (Sat5Abort1*)vessel;
+}
+
+void Sat5Abort1::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	init();
+	Setup();
 }
 

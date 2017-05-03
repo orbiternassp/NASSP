@@ -888,63 +888,68 @@ void MCC::TimeStep(double simdt){
 			// (What criteria?)
 
 			// Abort?
-			if(cm->bAbort){
-				// What type?
-				if(cm->LESAttached){
-					// ABORT MODE 1
-					addMessage("ABORT MODE 1");
-					setState(MST_LAUNCH_ABORT);
-					AbortMode = 1;
-				}else{
-					// AP7 Abort Summary says:
-					// Mode 2: 2:46 - 9:30
-					// Mode 2 is selected if we are within the time range and must land immediately/no other options available.
-					// Mode 3: 9:30 - Insertion
-					// Mode 3 is selected if we are within the time range and must land immediately.
-					// Mode 4: 9:21 - Insertion
-					// Mode 4 is selected if we are within the time range and can land in the Pacific.
-					addMessage("ABORT MODE 2/3/4");
-					setState(MST_LAUNCH_ABORT);
-					AbortMode = 2;
-				}
-			}else{
+
+			if (cm->stage == CM_STAGE)
+			{
+				addMessage("ABORT MODE 1");
+				setState(MST_LAUNCH_ABORT);
+				AbortMode = 1;
+			}
+			else if (cm->stage == CSM_LEM_STAGE)
+			{
+				// AP7 Abort Summary says:
+				// Mode 2: 2:46 - 9:30
+				// Mode 2 is selected if we are within the time range and must land immediately/no other options available.
+				// Mode 3: 9:30 - Insertion
+				// Mode 3 is selected if we are within the time range and must land immediately.
+				// Mode 4: 9:21 - Insertion
+				// Mode 4 is selected if we are within the time range and can land in the Pacific.
+				addMessage("ABORT MODE 2/3/4");
+				setState(MST_LAUNCH_ABORT);
+				AbortMode = 2;
+			}
+			else
+			{
 				// Await insertion
-				if(cm->stage >= STAGE_ORBIT_SIVB){
-					switch(MissionType){
+				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					switch (MissionType) {
 					case MTP_C:
 						addMessage("INSERTION");
 						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_C_INSERTION);
 						break;
-					}				
+					}
 				}
 			}
 			break;
 		case MST_SV_LAUNCH:
 			// Abort?
-			if(cm->bAbort){
-				// What type?
-				if(cm->LESAttached){
-					// ABORT MODE 1
-					addMessage("ABORT MODE 1");
-					setState(MST_LAUNCH_ABORT);
-					AbortMode = 1;
-				}else{
-					// ABORT MODE 2/3/4
-					addMessage("ABORT MODE 2/3/4");
-					setState(MST_LAUNCH_ABORT);
-					AbortMode = 2;
-				}
-			}else{
+
+			if (cm->stage == CM_STAGE)
+			{
+				// ABORT MODE 1
+				addMessage("ABORT MODE 1");
+				setState(MST_LAUNCH_ABORT);
+				AbortMode = 1;
+			}
+			else if (cm->stage == CSM_LEM_STAGE)
+			{
+				// ABORT MODE 2/3/4
+				addMessage("ABORT MODE 2/3/4");
+				setState(MST_LAUNCH_ABORT);
+				AbortMode = 2;
+			}
+			else
+			{
 				// Await insertion
-				if(cm->stage >= STAGE_ORBIT_SIVB){
-					switch(MissionType){
+				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					switch (MissionType) {
 					case MTP_C_PRIME:
 						addMessage("INSERTION");
 						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
 						break;
-					}				
+					}
 				}
 			}
 			break;

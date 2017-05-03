@@ -95,7 +95,7 @@ void LVIMU::Init()
 	CDURegisters[LVRegPIPAZ]=0;
 
 	ZeroIMUCDUs();
-	LastSimDT = -1;
+	LastTime = -1;
 }
 
 bool LVIMU::IsCaged()
@@ -147,10 +147,10 @@ bool LVIMU::IsPowered()
 }
 
 
-void LVIMU::Timestep(double simdt) 
+void LVIMU::Timestep(double simt)
 
 {
-	double pulses;
+	double deltaTime, pulses;
 
 	if (!Operate) {
 		if (IsPowered())
@@ -196,10 +196,11 @@ void LVIMU::Timestep(double simdt)
 
 		OurVessel->GetGlobalVel(LastGlobalVel);
 
-		LastSimDT = simdt;
+		LastTime = simt;
 		Initialized = true;
 	} 
 	else {
+		deltaTime = (simt - LastTime);
 
 		// Calculate accelerations
 		VECTOR3 w, vel;
@@ -207,7 +208,7 @@ void LVIMU::Timestep(double simdt)
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(tinv, w) / OurVessel->GetMass();
 		OurVessel->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / simdt;
+		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
@@ -268,16 +269,16 @@ void LVIMU::Timestep(double simdt)
 			//PulsePIPA(LVRegPIPAZ, (int) pulses);
 			//RemainingPIPA.Z = pulses - (int) pulses;			
 
-			pulses = (accel.x * simdt);
+			pulses = (accel.x * deltaTime);
 			PulsePIPA(LVRegPIPAX, pulses);
 						
-			pulses = (accel.y * simdt);
+			pulses = (accel.y * deltaTime);
 			PulsePIPA(LVRegPIPAY, pulses);
 			
-			pulses = (accel.z * simdt);
+			pulses = (accel.z * deltaTime);
 			PulsePIPA(LVRegPIPAZ, pulses);
 		}
-		LastSimDT = simdt;
+		LastTime = simt;
 	}	
 }
 
@@ -549,9 +550,9 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m33 = flt;
 		}
-		else if (!strnicmp (line, "LSDT", 4)) {
-			sscanf(line + 4, "%lf", &flt);
-			LastSimDT = flt;
+		else if (!strnicmp(line, "LTM", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastTime = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			IMUState state;
@@ -597,7 +598,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
 	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
 	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	papiWriteScenario_double(scn, "LSDT", LastSimDT);
+	papiWriteScenario_double(scn, "LTM", LastTime);
 
 	//
 	// Copy internal state to the structure.

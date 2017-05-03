@@ -26,6 +26,7 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
+#include "Saturn1Abort2.h"
 
 static int refcount = 0;
 static MESHHANDLE hSat1stg1;
@@ -37,46 +38,64 @@ static MESHHANDLE hSat1stg24;
 static MESHHANDLE hSat1tower;
 static MESHHANDLE hSM;
 
-void SetSecondStage (VESSEL *vessel)
+Sat1Abort2::Sat1Abort2(OBJHANDLE hObj, int fmodel)
+	: VESSEL3(hObj, fmodel)
+
+{
+	init();
+}
+
+Sat1Abort2::~Sat1Abort2()
+
+{
+	// Nothing for now.
+}
+
+void Sat1Abort2::init()
+
+{
+}
+
+void Sat1Abort2::Setup()
 {
 
-	vessel->SetSize (15);
-	vessel->SetCOG_elev (15.225);
-	vessel->SetEmptyMass (21500);
-	vessel->SetMaxFuelMass (106000);
-	vessel->SetFuelMass(106000);
+	SetSize (15);
+	SetCOG_elev (15.225);
+	SetEmptyMass (21500);
+	SetMaxFuelMass (106000);
+	SetFuelMass(106000);
 	//vessel->SetISP (ISP_SECOND_VAC);
-	vessel->SetISP (4160);
+	SetISP (4160);
 	//slThrust = CalcSeaLevelThrust(THRUST_SECOND_VAC,ISP_SECOND_VAC,ISP_SECOND_SL, 106000);
 	//vacThrust = THRUST_SECOND_VAC;
 	//vessel->SetMaxThrust (ENGINE_MAIN, slThrust);
-	vessel->SetMaxThrust (ENGINE_MAIN, 0);
-	vessel->SetMaxThrust (ENGINE_RETRO, 0);
-	vessel->SetMaxThrust (ENGINE_HOVER, 0);
-	vessel->SetMaxThrust (ENGINE_ATTITUDE, 5e3);
-	vessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-	vessel->SetPMI (_V(94,94,20));
-	vessel->SetCrossSections (_V(267,267,97));
-	vessel->SetCW (0.1, 0.3, 1.4, 1.4);
-	vessel->SetRotDrag (_V(0.7,0.7,1.2));
-	vessel->SetPitchMomentScale (0);
-	vessel->SetBankMomentScale (0);
-	vessel->SetLiftCoeffFunc (0);
-    vessel->ClearMeshes();
-    vessel->ClearExhaustRefs();
-    vessel->ClearAttExhaustRefs();
+	SetMaxThrust (ENGINE_MAIN, 0);
+	SetMaxThrust (ENGINE_RETRO, 0);
+	SetMaxThrust (ENGINE_HOVER, 0);
+	SetMaxThrust (ENGINE_ATTITUDE, 5e3);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(94,94,20));
+	SetCrossSections (_V(267,267,97));
+	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	SetPitchMomentScale (0);
+	SetBankMomentScale (0);
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    vessel->AddMesh (hSat1stg2, &mesh_dir);
+    AddMesh (hSat1stg2, &mesh_dir);
 	mesh_dir=_V(1.85,1.85,19.8-12.25);
-    vessel->AddMesh (hSat1stg21, &mesh_dir);
+    AddMesh (hSat1stg21, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,19.8-12.25);
-    vessel->AddMesh (hSat1stg22, &mesh_dir);
+    AddMesh (hSat1stg22, &mesh_dir);
 	mesh_dir=_V(1.85,-1.85,19.8-12.25);
-    vessel->AddMesh (hSat1stg23, &mesh_dir);
+    AddMesh (hSat1stg23, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,19.8-12.25);
-    vessel->AddMesh (hSat1stg24, &mesh_dir);
+    AddMesh (hSat1stg24, &mesh_dir);
 	mesh_dir=_V(0,-0.14,26.6-12.25);
-	vessel->AddMesh (hSM, &mesh_dir);
+	AddMesh (hSM, &mesh_dir);
 }
 
 
@@ -97,11 +116,16 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
 		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM");
 	}
-	return new VESSEL (hvessel, flightmodel);
+	return new Sat1Abort2(hvessel, flightmodel);
 }
 
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
+DLLCLBK void ovcExit(VESSEL *vessel)
 {
-	SetSecondStage (vessel);
+	if (vessel) delete (Sat1Abort2*)vessel;
+}
+
+void Sat1Abort2::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	Setup();
 }
 

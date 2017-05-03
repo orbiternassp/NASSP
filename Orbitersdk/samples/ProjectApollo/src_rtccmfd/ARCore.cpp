@@ -74,7 +74,7 @@ ARCore::ARCore(VESSEL* v)
 		mission = 9;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
-	else if (strcmp(v->GetName(), "Gumdrop") == 0)
+	else if (strcmp(v->GetName(), "Spider") == 0)
 	{
 		mission = 9;
 		vesseltype = 2;
@@ -1104,7 +1104,14 @@ void ARCore::P30Uplink(void)
 	}
 	else
 	{
-		g_Data.emem[1] = 3433;
+		if (mission < 11)
+		{
+			g_Data.emem[1] = 3431;
+		}
+		else
+		{
+			g_Data.emem[1] = 3433;
+		}
 	}
 	g_Data.emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
 	g_Data.emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);

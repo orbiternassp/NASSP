@@ -101,8 +101,6 @@ protected:
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
-	void StageOne(double simt, double simdt);
-	void StageLaunchSIVB(double simt);
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void SetSIVBMixtureRatio(double ratio);

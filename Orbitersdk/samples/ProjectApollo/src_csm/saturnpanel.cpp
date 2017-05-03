@@ -1381,7 +1381,7 @@ bool Saturn::clbkLoadPanel (int id) {
 void Saturn::AddLeftMainPanelAreas() {
 
 	oapiRegisterPanelArea (AID_THC,											_R(   0, 1251,   72, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);	
-	oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_ABORT_LIGHT,									_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SEQUENCERSWITCHES,							_R( 802,  918,  990, 1100), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289, 1237,  325, 1306), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1658,7 +1658,7 @@ void Saturn::SetSwitches(int panel) {
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, this, 0, 119, 117, 231);
+	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 119, 117, 231);
 	LesMotorFireSwitch.InitGuard      (  0,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
 	CanardDeploySwitch.Init           ( 20,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 157, 99, 281);
 	CanardDeploySwitch.InitGuard      (  0,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
@@ -3033,9 +3033,9 @@ void Saturn::SetSwitches(int panel) {
 	SECSArmBatBCircuitBraker.Init( 114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], SeqEventsContSysCircuitBrakerRow, &EPSBatBusBCircuitBraker, 5.0); 
 	
 	EDSCircuitBrakerRow.Init(AID_EDSCIRCUITBREAKERS, MainPanel);
-	EDS1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
-	EDS2BatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
-	EDS3BatCCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
+	EDS1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
+	EDS2BatCCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &BatCCHRGCircuitBraker, 5.0);
+	EDS3BatBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
 
 	ELSCircuitBrakerRow.Init(AID_ELSCIRCUITBREAKERS, MainPanel);
 	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
@@ -3364,7 +3364,6 @@ void Saturn::SetSwitches(int panel) {
 	ASCPRollSwitch.Init(GDCAlignButtonRow, this, 0); 	// dummy switch/display for checklist controller, GDCAlignButtonRow is arbitrary
 	ASCPPitchSwitch.Init(GDCAlignButtonRow, this, 1);
 	ASCPYawSwitch.Init(GDCAlignButtonRow, this, 2);
-	AbortSwitch.Init(GDCAlignButtonRow, this);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3570,17 +3569,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		if (oapiGetMFDMode(MFD_RIGHT) == MFD_NONE) {	// MFD_USER1
 			ButtonClick();
 			oapiToggleMFD_on(MFD_RIGHT);	// MFD_USER1
-		}
-		return true;
-
-	case AID_ABORT_BUTTON:
-		if (mx > 1 && mx < 62 && my > 1 && my < 31) {
-			if (event == PANEL_MOUSE_LBDOWN) {
-				bAbort = true;
-				ButtonClick();
-			} else if (event == PANEL_MOUSE_LBUP) {
-				bAbort = false;
-			}
 		}
 		return true;
 
@@ -4502,16 +4490,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
-	case AID_ABORT_BUTTON:
-		if (ABORT_IND || (bAbort && EDSSwitch.IsUp())) {
+	case AID_ABORT_LIGHT:
+		if ((secs.AbortLightPowerA() && ((cws.UplinkTestState & 001) != 0)) || ((secs.AbortLightPowerB() && ((cws.UplinkTestState & 002) != 0)))) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		} else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
-		}
-		if (AbortSwitch.IsFlashing()) {
-			if (PanelFlashOn) {
-				oapiBlt(surf, srf[SRF_BORDER_62x31], 0, 0, 0, 0, 62, 31, SURF_PREDEF_CK);
-			}
 		}
 		return true;
 
@@ -5308,7 +5291,9 @@ void Saturn::InitSwitches() {
 	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
 
 	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSCMDSwitch.SetDelayTime(1);
 	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSTrnfrSwitch.SetDelayTime(1);
 
 	CMRCSProp1Switch.Register(PSH, "CMRCSProp1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSProp1Switch.SetCallback(new PanelSwitchCallback<CMRCSPropellantSource>(&CMRCS1, &CMRCSPropellantSource::PropellantSwitchToggled));
@@ -6160,8 +6145,8 @@ void Saturn::InitSwitches() {
 	SECSArmBatBCircuitBraker.Register(PSH, "SECSArmBatBCircuitBraker", 0);
 
 	EDS1BatACircuitBraker.Register(PSH, "EDS1BatACircuitBraker", 1);
-	EDS2BatBCircuitBraker.Register(PSH, "EDS2BatBCircuitBraker", 1);
-	EDS3BatCCircuitBraker.Register(PSH, "EDS3BatCCircuitBraker", 1);
+	EDS2BatCCircuitBraker.Register(PSH, "EDS2BatCCircuitBraker", 1);
+	EDS3BatBCircuitBraker.Register(PSH, "EDS3BatBCircuitBraker", 1);
 
 	ELSBatACircuitBraker.Register(PSH, "ELSBatACircuitBraker", 1);
 	ELSBatBCircuitBraker.Register(PSH, "ELSBatBCircuitBraker", 1);
@@ -6491,5 +6476,4 @@ void Saturn::InitSwitches() {
 	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch", 0, 0, 0, 0);
 	ASCPYawSwitch.Register(PSH, "ASCPYawSwitch", 0, 0, 0, 0);
-	AbortSwitch.Register(PSH, "AbortSwitch", 0, 0, 0, 0);
 }

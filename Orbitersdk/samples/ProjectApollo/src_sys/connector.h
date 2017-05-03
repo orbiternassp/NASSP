@@ -276,7 +276,6 @@ private:
 /// \ingroup Connectors
 ///
 
-// SCHNECI changed Vessel2 to Vessel3 for LUA api
 class ProjectApolloConnectorVessel : public VESSEL3
 {
 public:

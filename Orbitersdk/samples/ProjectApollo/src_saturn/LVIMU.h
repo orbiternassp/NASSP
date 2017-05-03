@@ -46,7 +46,7 @@ public:
 	~LVIMU();
 
 	void Init();
-	void Timestep(double simdt);
+	void Timestep(double simt);
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
@@ -139,7 +139,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	VECTOR3 LastWeightAcceleration;
 	VECTOR3 LastGlobalVel;
 
-	double LastSimDT;	// in seconds
+	double LastTime;	// in seconds
 };
 
 //

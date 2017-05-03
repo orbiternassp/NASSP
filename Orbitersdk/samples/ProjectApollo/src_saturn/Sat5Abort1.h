@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-class Sat5Abort1: public VESSEL {
+class Sat5Abort1: public VESSEL3 {
 
 public:
 
@@ -30,6 +30,8 @@ public:
 	virtual ~Sat5Abort1();
 	void init();
 	void Setup();
+
+	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 

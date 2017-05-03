@@ -58,6 +58,8 @@ LVDC1B::LVDC1B(){
 	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	GATE = false;
 	GATE5 = false;
 	GRR_init = false;
@@ -73,6 +75,7 @@ LVDC1B::LVDC1B(){
 	MRS = false;
 	poweredflight = false;
 	S1B_Engine_Out = false;
+	S1B_TwoEngines_Out = false;
 	S4B_IGN = false;
 	theta_N_op = false;
 	TerminalConditions = false;
@@ -555,6 +558,8 @@ void LVDC1B::init(Saturn* own){
 	LVDC_EI_On = false;
 	S1B_Sep_Time = 0;
 	CountPIPA = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -592,11 +597,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					if (owner->MissionTime < -1200){
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 						break;
 					}else{
-						sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
+						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 					}
 				}
 			
@@ -634,6 +639,9 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->CreateStageOne();						// Create hidden stage one, for later use in staging
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
+
+					//Apply force to trigger GetWeightVector() function
+					//owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
 				}
 				break;
 			case 0: // MORE TB0
@@ -721,7 +729,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 						owner->contrailLevel = SumThrust / 8;
 						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
+						//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}
 				else {
@@ -730,7 +738,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
 					// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
-					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
+					//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
 				}
 
 				if (owner->MissionTime >= 0) {
@@ -745,16 +753,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					owner->SetLiftoffLight();										// And light liftoff lamp
 					owner->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
 					// Start mission and event timers
-					owner->MissionTimerDisplay.Reset();
-					owner->MissionTimerDisplay.SetEnabled(true);
-					owner->MissionTimer306Display.Reset();
-					owner->MissionTimer306Display.SetEnabled(true);
-					owner->EventTimerDisplay.Reset();
-					owner->EventTimerDisplay.SetEnabled(true);
-					owner->EventTimerDisplay.SetRunning(true);
-					owner->EventTimer306Display.Reset();
-					owner->EventTimer306Display.SetEnabled(true);
-					owner->EventTimer306Display.SetRunning(true);
+					owner->secs.LiftoffA();
+					owner->secs.LiftoffB();
 					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
 					owner->contrailLevel = 1.0;
@@ -773,14 +773,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
-				/*
-				// ENGINE FAIL TEST:
-				if(MissionTime > 22.5 && S1C_Engine_Out == false){
-					SetThrusterResource(th_main[1], NULL); // Should stop the engine
-					S1C_Engine_Out = true;
-				}
-				*/
-
 				// S1B CECO TRIGGER:
 				if(owner->MissionTime > 140.86){ // Apollo 7
 					owner->SetThrusterResource(owner->th_main[4], NULL);
@@ -792,6 +784,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Clear liftoff light now - Apollo 15 checklist item
 					owner->ClearLiftoffLight();
 					S1B_Engine_Out = true;
+					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
@@ -899,13 +892,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					owner->NextMissionEventTime = owner->MissionTime+10.0;				
 				}
-				// CSM/LV separation
-				if(owner->CSMLVPyros.Blown()){
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_Stop = true;
-					return; // Stop here
-				}
 
 				if (owner->ApolloNo == 5)
 				{
@@ -954,7 +940,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
 		/*
@@ -1870,7 +1856,7 @@ minorloop: //minor loop;
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | eps %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1886,6 +1872,75 @@ minorloop: //minor loop;
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 					AttRate.x * DEG, AttRate.y * DEG, AttRate.z * DEG,
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
+			}
+		}*/
+
+		//Auto Abort
+		//LV Rates light
+		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+		{
+			owner->LVRateLight = true;
+		}
+		else
+		{
+			owner->LVRateLight = false;
+		}
+
+		AutoAbortInitiate = false;
+
+		if (owner->EDSSwitch.IsUp())
+		{
+			if (owner->LVRateAutoSwitch.IsUp())
+			{
+				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+			if (owner->TwoEngineOutAutoSwitch.IsUp())
+			{
+				if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+		}
+
+		if (AutoAbortInitiate)
+		{
+			owner->secs.SetEDSAbort1(true);
+			owner->secs.SetEDSAbort2(true);
+			owner->secs.SetEDSAbort3(true);
+		}
+
+		if (owner->secs.BECO())
+		{
+			if (t_clock > 40.0)
+			{
+				owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+			}
+			owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+			owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
+			LVDC_Stop = true;
+		}
+
+		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+			// Control contrail
+			if (owner->MissionTime > 12) {
+				owner->contrailLevel = 0;
+			}
+			else {
+				if (owner->MissionTime > 7) {
+					owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
+				}
+				else {
+					if (owner->MissionTime > 2) {
+						owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+					}
+					else {
+						owner->contrailLevel = 1;
+					}
+				}
 			}
 		}
 	}
@@ -1932,69 +1987,6 @@ minorloop: //minor loop;
 		owner->ENGIND[6] = false;
 		owner->ENGIND[7] = false;
 	}
-	if(owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5){
-		// Control contrail
-		if(owner->MissionTime > 12){
-			owner->contrailLevel = 0;
-		}else{
-			if (owner->MissionTime > 7){
-				owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
-			}else{
-				if(owner->MissionTime > 2){
-					owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
-				}else{
-					owner->contrailLevel = 1;
-				}
-			}
-		}
-	}
-
-	/* **** ABORT HANDLING **** */
-	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
-	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);						// Kill the engines
-		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, LiftOff, true);			// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");								// Clear the LVDC debug line
-		LVDC_Stop = true;											// Stop LVDC program
-		// ABORT MODE 1 - Use of LES to extract CM
-		// Allowed from T - 5 minutes until LES jettison.
-		if(owner->MissionTime > -300 && owner->LESAttached){			
-			owner->SetEngineLevel(ENGINE_MAIN, 0);
-			owner->SeparateStage(CM_STAGE);
-			owner->SetStage(CM_STAGE);
-			owner->StartAbort();			// Resets MT, fires LET if attached
-			owner->bAbort = false;			// No further processing required
-			return; 
-		}
-		// ABORT MODE 2/3/4 - Eject CSM from LV
-		if(owner->stage == LAUNCH_STAGE_ONE){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage(LAUNCH_STAGE_TWO);
-			owner->SetStage(LAUNCH_STAGE_TWO);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
-			owner->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			return;
-		}
-		if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
-			// This is the most likely entry point
-			owner->SeparateStage(LAUNCH_STAGE_SIVB);
-			owner->SetStage(LAUNCH_STAGE_SIVB);
-		}
-		if(owner->stage == LAUNCH_STAGE_SIVB || owner->stage == STAGE_ORBIT_SIVB){
-			// Eject CSM
-			owner->SeparateStage(CSM_LEM_STAGE);
-			owner->SetStage(CSM_LEM_STAGE);
-			// Staging finished.
-			owner->StartAbort();			// Resets MT, sets abort light, resets engine lights, etc.
-		}
-		// Done with the abort request.
-		owner->bAbort = false;
-	}
 }
 
 void LVDC1B::SaveState(FILEHANDLE scn) {
@@ -2002,6 +1994,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// Thank heaven for text processing.
 	// bool
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
+	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -2019,9 +2012,11 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
+	oapiWriteScenario_int(scn, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
+	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -2371,6 +2366,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_UP", UP);
 		// BOOL
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
+		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -2388,9 +2384,11 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
+		papiReadScenario_bool(line, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
+		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2715,6 +2713,8 @@ LVDC::LVDC(){
 	Direct_Ascent = false;
 	directstageint = false;
 	directstagereset = false;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -2738,6 +2738,7 @@ LVDC::LVDC(){
 	poweredflight = false;
 	ROT = false;
 	S1_Engine_Out = false;
+	S1_TwoEngines_Out = false;
 	S2_BURNOUT = false;
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
@@ -3144,6 +3145,8 @@ void LVDC::Init(Saturn* vs){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	directstagereset = true;
+	AutoAbortInitiate = false;
+	TwoEngOutAutoAbortDeactivate = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3343,7 +3346,8 @@ void LVDC::Init(Saturn* vs){
 	S2_ENGINE_OUT=false;					// S2 Engine Failure
 	S2_BURNOUT=false;						// SII Burn Out
 	LVDC_GRR = false;
-	S1_Engine_Out = false;		
+	S1_Engine_Out = false;
+	S1_TwoEngines_Out = false;
 	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
@@ -3449,6 +3453,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Here we go
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
+	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -3478,6 +3483,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
 	oapiWriteScenario_int(scn, "LVDC_ROTR", ROTR);
 	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
+	oapiWriteScenario_int(scn, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -3488,6 +3494,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
+	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -4112,6 +4119,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		// So we do it in single lines.
 		// booleans
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
+		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -4140,6 +4148,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
 		papiReadScenario_bool(line, "LVDC_ROTR", ROTR);
 		papiReadScenario_bool(line, "LVDC_S1_Engine_Out", S1_Engine_Out);
+		papiReadScenario_bool(line, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S2_BURNOUT", S2_BURNOUT);
 		papiReadScenario_bool(line, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -4150,6 +4159,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
+		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// integers
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
@@ -4811,7 +4821,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 					break;
 				}
@@ -4824,13 +4834,15 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (owner->MissionTime < -17){
-					sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
-						lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-						lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
+					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
+						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 					break;
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
+
+					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 					break;
 				}			
 
@@ -4917,13 +4929,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
 
 						owner->contrailLevel = SumThrust/5;
-						owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+						owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}else{
 					// Get 100% thrust on all engines.
 					owner->SetThrusterGroupLevel(owner->thg_main,1);
 					owner->contrailLevel = 1;				
-					owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+					owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
 				}
 
 				// LIFTOFF
@@ -4956,6 +4968,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 					// Apollo 11
 					owner->SwitchSelector(16);
 					S1_Engine_Out = true;
+					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					TB2 = TAS;//-simdt;
 					LVDC_Timebase = 2;
@@ -5096,15 +5109,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 				}
-
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) {
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
-					//LVDC_Stop = true;
-					//return; // Stop here
-				}
 				break;
 			case 5:
 				// TB5 timed events
@@ -5146,14 +5150,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 						owner->SIVBBoiloff();
 					}
 					owner->NextMissionEventTime = owner->MissionTime + 10.0;
-				}
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) {
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
-					//LVDC_Stop = true;
-					//return; // Stop here
 				}
 				break;
 			case 6:
@@ -5247,16 +5243,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 					//powered flight nav off
 					poweredflight = false;
 				}
-				// CSM/LV separation
-				if (owner->CSMLVPyros.Blown()) 
-				{
-					owner->SeparateStage(CSM_LEM_STAGE);
-					owner->SetStage(CSM_LEM_STAGE);
-					LVDC_EI_On = false;
-				}
 				break;
 		}
-		lvimu.Timestep(simdt);								// Give a timestep to the LV IMU
+		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
 		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
 		AttRate = lvrg.GetRates();							// Get rates	
@@ -5483,8 +5472,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
 				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n",lvimu.CDURegisters[LVRegPIPAX], lvimu.CDURegisters[LVRegPIPAY], lvimu.CDURegisters[LVRegPIPAZ]);
 				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
-				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
+				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
 				fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
 				fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
 				fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
@@ -5590,19 +5579,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				DotS = DotS_8sec;
 				R = length(PosS);
 				V = length(DotS);
-
-				if (OrbNavCycle == 1) //State Vector update
-				{
-					VECTOR3 pos, vel;
-					MATRIX3 mat;
-					double day;
-					modf(oapiGetSimMJD(), &day);
-					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-					owner->GetRelativePos(owner->GetGravityRef(), pos);
-					owner->GetRelativeVel(owner->GetGravityRef(), vel);
-					PosS = mul(mat, pos);
-					DotS = mul(mat, vel);
-				}
 
 				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
 				R = pow(pow(PosS.x, 2) + pow(PosS.y, 2) + pow(PosS.z, 2), 0.5);
@@ -5925,7 +5901,7 @@ gtupdate:	// Target of jump from further down
 			if(Tt_T <= eps_1){
 				// RANGE ANGLE 2 (out-of orbit)
 				fprintf(lvlog,"RANGE ANGLE 2\r\n");
-				sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
+				//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 				// LVDC_GP_PC = 30; // STOP
 				V = length(DotS);
 				R = length(PosS);
@@ -5960,7 +5936,7 @@ gtupdate:	// Target of jump from further down
 			if(ROT){
 				// ROTATED TERMINAL CONDITIONS (out-of-orbit)
 				fprintf(lvlog,"ROTATED TERMINAL CONDITIONS\r\n");
-				sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
+				//sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
 				xi_T = R_T*cos(gamma_T);
 				dot_zeta_T = V_T;
 				dot_xi_T = 0.0;
@@ -6072,8 +6048,8 @@ gtupdate:	// Target of jump from further down
 			dot_dzeta = dot_dzetat - (DDotXEZ_G.z * dT_3);
 			fprintf(lvlog,"dot_dXEZ = %f %f %f\r\n",dot_dxi,dot_deta,dot_dzeta);
 
-							sprintf(oapiDebugString(),".dxi = %f | .deta %f | .dzeta %f | dT3 %f",
-								dot_dxi,dot_deta,dot_dzeta,dT_3);
+							//sprintf(oapiDebugString(),".dxi = %f | .deta %f | .dzeta %f | dT3 %f",
+							//	dot_dxi,dot_deta,dot_dzeta,dT_3);
 
 			L_Y = L_12 + L_3;
 			tchi_y_last = tchi_y;
@@ -6185,7 +6161,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					R_T = R + dotR*(T_3 - dt);
 					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
-					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
+					//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
 					fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
 					// LVDC_GP_PC = 30; // STOP
 				}
@@ -6219,7 +6195,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					goto minorloop;
 				}
 				// Done, go to navigation
-				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
+				//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 				goto minorloop;
 			}
 			// End of high-speed loop
@@ -6276,13 +6252,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		if(GATE){
 			// FREEZE CHI
 			fprintf(lvlog,"Thru GATE; CHI FREEZE\r\n");
-			sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
+			//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
 			goto minorloop;
 		}else{
 			// IGM STEERING ANGLES
 			fprintf(lvlog,"--- IGM STEERING ANGLES ---\r\n");
 
-			sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
+			//sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
 			Xtt_y = ((tchi_y) - K_3 + (K_4 * t));
 			Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 			fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
@@ -6948,7 +6924,7 @@ minorloop:
 			}
 		}
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | T3 = %f | Tt_T = %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -6966,9 +6942,9 @@ minorloop:
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-					eps_p, eps_ymr, eps_ypr,V,R/1000);				
+					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
-		}
+		}*/
 		/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
 			LVDC_Timebase,LVDC_TB_ETime,
@@ -7028,66 +7004,68 @@ minorloop:
 			owner->ENGIND[4] = false;
 		}
 
-		// End of test for LVDC_Stop
-	}
-
-	if(owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5){
-		// Control contrail
-		if (owner->MissionTime > 12)
-			owner->contrailLevel = 0;
-		else if (owner->MissionTime > 7)
-			owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
-		else if (owner->MissionTime > 2)
-			owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+		//Auto Abort
+		//LV Rates light
+		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
+		{
+			owner->LVRateLight = true;
+		}
 		else
-			owner->contrailLevel = 1;
-	}
+		{
+			owner->LVRateLight = false;
+		}
 
-	/* **** SATURN 5 ABORT HANDLING **** */
-	// The abort PB will be pressed during prelaunch testing, but shouldn't actually trigger an abort before Mode 1 enabled.
-	if(owner->bAbort && owner->MissionTime > -300){				
-		owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
-		owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
-		owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
-		sprintf(oapiDebugString(),"");					// Clear the LVDC debug line
-		LVDC_Stop = 1;									// Stop LVDC program
-		// ABORT MODE 1 - Use of LES to extract CM
-		// Allowed from T - 5 minutes until LES jettison.
-		if(owner->MissionTime > -300 && owner->LESAttached){			
-			owner->SetEngineLevel(ENGINE_MAIN, 0);
-			owner->SeparateStage(CM_STAGE);
-			owner->SetStage(CM_STAGE);
-			owner->StartAbort();			// Resets MT, fires LET if attached
-			owner->bAbort = false;			// No further processing required
-			return; 
+		AutoAbortInitiate = false;
+
+		if (owner->EDSSwitch.IsUp())
+		{
+			if (owner->LVRateAutoSwitch.IsUp())
+			{
+				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
+			if (owner->TwoEngineOutAutoSwitch.IsUp())
+			{
+				if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
+				{
+					AutoAbortInitiate = true;
+				}
+			}
 		}
-		// ABORT MODE 2/3/4 - Eject CSM from LV
-		if(owner->stage == LAUNCH_STAGE_ONE){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage(LAUNCH_STAGE_TWO);
-			owner->SetStage(LAUNCH_STAGE_TWO);
-			return;
+
+		if (AutoAbortInitiate)
+		{
+			owner->secs.SetEDSAbort1(true);
+			owner->secs.SetEDSAbort2(true);
+			owner->secs.SetEDSAbort3(true);
 		}
-		if(owner->stage == LAUNCH_STAGE_TWO){
-			// The only way we will get here is if the LET was jettisoned early for some reason.
-			owner->SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
-			owner->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			return;
+
+		if (owner->secs.BECO())
+		{
+			if (t_clock > 30.0)
+			{
+				owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+			}
+			owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+			owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
+			LVDC_Stop = true;
 		}
-		if(owner->stage == LAUNCH_STAGE_TWO_ISTG_JET){
-			// This is the most likely entry point
-			owner->SeparateStage(LAUNCH_STAGE_SIVB);
-			owner->SetStage(LAUNCH_STAGE_SIVB);
+
+		// End of test for LVDC_Stop
+
+		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+			// Control contrail
+			if (owner->MissionTime > 12)
+				owner->contrailLevel = 0;
+			else if (owner->MissionTime > 7)
+				owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
+			else if (owner->MissionTime > 2)
+				owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+			else
+				owner->contrailLevel = 1;
 		}
-		if(owner->stage == LAUNCH_STAGE_SIVB || owner->stage == STAGE_ORBIT_SIVB){
-			// Eject CSM
-			owner->SeparateStage(CSM_LEM_STAGE);
-			owner->SetStage(CSM_LEM_STAGE);
-			// Staging finished.
-			owner->StartAbort();			// Resets MT, sets abort light, resets engine lights, etc.
-		}
-		// Done with the abort request.
-		owner->bAbort = false;
 	}
 }
 

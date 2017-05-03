@@ -217,8 +217,8 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 {
 	double TCP=-54.485-TCPO;//STG0O;
 
-	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
+
 	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
@@ -320,7 +320,6 @@ void Saturn1b::SetFirstStageEngines()
 	contrail[6] = AddParticleStream(&srb_contrail, m_exhaust_pos7+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
 	contrail[7] = AddParticleStream(&srb_contrail, m_exhaust_pos8+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
 	*/
-
 }
 
 void Saturn1b::SetSecondStage ()
@@ -591,13 +590,13 @@ void Saturn1b::SeparateStage (int new_stage)
 	vs1.eng_main = vs1.eng_hovr = 0.0;
 	vs2.eng_main = vs2.eng_hovr = 0.0;
 
-	if (stage == LAUNCH_STAGE_ONE && !bAbort)
+	if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage > LAUNCH_STAGE_SIVB)
 	{
 		ofs1= _V(0, 0, 4.7);
 		vel1 = _V(0,0,-4.0);
@@ -648,7 +647,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetChuteStage1 ();
 	}
 
-    if (stage == LAUNCH_STAGE_ONE && !bAbort )
+    if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -776,7 +775,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
