@@ -442,15 +442,7 @@ void SaturnV::SetFirstStage ()
 	ClearMeshes();
 	UINT meshidx;
 	double TCP=-101.5+STG0O-TCPO;
-	static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
-	 };
-	SetTouchdownPoints(tdvtx, ntdvtx);
-	//SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
+	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);

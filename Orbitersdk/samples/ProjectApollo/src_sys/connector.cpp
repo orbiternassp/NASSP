@@ -247,7 +247,7 @@ void MultiConnector::Disconnect()
 	Connector::Disconnect();
 }
 
-ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL4(hObj, fmodel)
+ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL3(hObj, fmodel)
 
 {
 	int i;
