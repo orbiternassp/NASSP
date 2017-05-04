@@ -99,10 +99,6 @@ private:
 	void SetThirdStageMesh (double offset);
 	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
-	void AttitudeLaunch1();
-	void AttitudeLaunch2();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();

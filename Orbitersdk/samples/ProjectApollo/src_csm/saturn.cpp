@@ -1014,33 +1014,6 @@ void Saturn::UpdateLaunchTime(double t)
 	}
 }
 
-//
-// Pitch program.
-//
-
-double Saturn::GetCPitch(double t)
-{
-	int i = 1;
-
-	//
-	// Make sure we don't run off the end.
-	//
-
-	if (t>met[PITCH_TABLE_SIZE - 1]) return cpitch[PITCH_TABLE_SIZE - 1];
-
-	//
-	// Find the first MET that's greater than our current time.
-	//
-
-	while (met[i]<t) i++;
-
-	//
-	// And calculate pitch as appropriate between those two times.
-	//
-
-	return cpitch[i-1]+(cpitch[i]-cpitch[i-1])/(met[i]-met[i-1])*(t-met[i-1]);
-}
-
 double Saturn::SetPitchApo()
 
 {
@@ -1354,7 +1327,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
-		char fname[64];
 
 		papiWriteScenario_double (scn, "SIICSHUT", SecondStageCentreShutdownTime);
 		papiWriteScenario_double (scn, "SIIPUT", SecondStagePUShiftTime);
@@ -1366,20 +1338,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		papiWriteScenario_double (scn, "I3V", ISP_THIRD_VAC);
 		papiWriteScenario_double (scn, "ISTGJT", InterstageSepTime);
 		oapiWriteScenario_int (scn, "SIIENG", SII_EngineNum);
-
-		//
-		// Save pitch program.
-		//
-
-		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
-			sprintf(fname, "PMET%03d", i);
-			papiWriteScenario_double (scn, fname, met[i]);
-		}
-
-		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
-			sprintf(fname, "CPITCH%03d", i);
-			papiWriteScenario_double (scn, fname, cpitch[i]);
-		}
 
 		//
 		// IGM start time.
@@ -1849,7 +1807,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	double autopTime, d;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
-	int n, DummyLoad, i;
+	int DummyLoad, i;
 	bool found;
 
 	found = true;
@@ -2098,20 +2056,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int i;
 		sscanf (line + 12, "%d", &i);
 		UseATC = (i != 0);
-	}
-	else if (!strnicmp (line, "PMET", 4)) {
-		sscanf(line+4, "%d", &n);
-		sscanf(line+8, "%f", &ftcp);
-		if (n >= 0 && n < PITCH_TABLE_SIZE) {
-			met[n] = ftcp;
-		}
-	}
-	else if (!strnicmp (line, "CPITCH", 6)) {
-		sscanf(line+6, "%d", &n);
-		sscanf(line+10, "%f", &ftcp);
-		if (n >= 0 && n < PITCH_TABLE_SIZE) {
-			cpitch[n] = ftcp;
-		}
 	}
 	else if (!strnicmp(line, "MOONLAT", 7)) {
 		sscanf(line + 7, "%f", &ftcp);

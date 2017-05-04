@@ -67,12 +67,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	LandingAltitude = 0.0;
 
 	//
-	// Expected dV from thrust decay of engine.
-	//
-
-	ThrustDecayDV = 0.0;
-
-	//
 	// Flight number.
 	//
 

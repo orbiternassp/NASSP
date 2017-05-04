@@ -102,9 +102,6 @@
     <ClCompile Include="..\..\src_sys\pyro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_saturn\sat1ap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_saturn\sat1bmesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

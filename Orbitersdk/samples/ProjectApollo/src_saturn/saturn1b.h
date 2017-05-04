@@ -82,9 +82,6 @@ protected:
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
-	void AttitudeLaunch1();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetFirstStage ();
 	void SetFirstStageMeshes(double offset);
 	void SetFirstStageEngines ();

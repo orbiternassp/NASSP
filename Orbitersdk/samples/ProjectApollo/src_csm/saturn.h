@@ -1579,25 +1579,6 @@ protected:
 	SwitchFailures SwitchFail;
 
 	//
-	// Pitch table.
-	//
-
-	#define PITCH_TABLE_SIZE	16
-
-	///
-	/// Table of Mission Times for pitch changes.
-	/// \brief Pitch change times.
-	///
-	double met[PITCH_TABLE_SIZE];
-
-	///
-	/// Table of pitch values at the specified mission times. The correct pitch will be
-	/// interpolated between these values.
-	/// \brief Pitch table values.
-	///
-	double cpitch[PITCH_TABLE_SIZE];
-
-	//
 	// *** LVDC++ ITEMS ***
 	//
 	bool use_lvdc; // LVDC use flag
@@ -4021,7 +4002,6 @@ protected:
 	void FirePitchControlMotor();
 	void AttitudeLaunchSIVB();
 	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
-	virtual void AutoPilot(double autoT) = 0;
 
 	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs);
 
@@ -4036,7 +4016,6 @@ protected:
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();
 	void UpdatePayloadMass();
-	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);

@@ -464,10 +464,6 @@ protected:
 	///
 	double LandingAltitude;
 
-	///
-	/// \brief Estimated delta-V for SIVb engine shutdown thrust.
-	///
-	double ThrustDecayDV;
 
 #define MAX_INPUT_CHANNELS	0200
 #define MAX_OUTPUT_CHANNELS	0200

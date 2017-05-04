@@ -75,18 +75,6 @@ const double BASE_SII_MASS = 42400 + 3490;		// Stage + SII/SIVB interstage
 
 GDIParams g_Param;
 
-//
-// Default pitch program.
-//
-/*
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   75, 60, 50,   40,  35,  30,  30,  30,  25,  20,  10 ,  5,  -2,   0};	// Commanded pitch in °
-
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110,   130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   81.5, 56, 50,   35.5,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
-*/
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110,   130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   81.6, 56, 50,   35.5,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
 // 3 was 80.5
 //
 // SaturnV constructor, derived from basic Saturn class.
@@ -190,15 +178,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(DockS, "docking.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
-
-	//
-	// Pitch program.
-	//
-
-	for (int i = 0; i < PITCH_TABLE_SIZE; i++) {
-		met[i] = default_met[i];
-		cpitch[i] = default_cpitch[i];
-	}
 
 	// Moved to instantiation time
 	// lvdc_init();

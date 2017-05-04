@@ -78,13 +78,6 @@ Saturn1b::~Saturn1b()
 	ReleaseSurfaces();
 }
 
-//
-// Default pitch program (according to the Apollo 7 Saturn IB Report, NTRS ID 19900067467)
-//
-
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 10, 20, 30, 40, 60, 80, 100, 120, 130,  135,  145,  200,  300,  400,  500};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 89, 88, 85, 80, 70, 58,  47,  38,  33, 30.7, 30.7, 30.7, 30.7, 30.7, 30.7};   // Commanded pitch in °
-
 
 void Saturn1b::initSaturn1b()
 
@@ -109,16 +102,6 @@ void Saturn1b::initSaturn1b()
 	if (strcmp(GetName(), "AS-211")==0)
 	{
 		ASTPMission = true;
-	}
-
-	//
-	// Pitch program.
-	//
-
-	for (int i = 0; i < PITCH_TABLE_SIZE; i++)
-	{
-		met[i] = default_met[i];
-		cpitch[i] = default_cpitch[i];
 	}
 
 	//

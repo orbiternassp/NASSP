@@ -52,12 +52,6 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 	VesselStatusDisplay = 0;
 
 	//
-	// Generic thrust decay value. This still needs tweaking.
-	//
-
-	ThrustDecayDV = 6.1;
-
-	//
 	// Last RCS settings.
 	//
 
