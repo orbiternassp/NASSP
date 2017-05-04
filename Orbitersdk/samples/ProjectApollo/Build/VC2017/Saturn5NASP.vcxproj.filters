@@ -117,9 +117,6 @@
     <ClCompile Include="..\..\src_saturn\Saturn5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_saturn\saturnap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_csm\saturnmesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

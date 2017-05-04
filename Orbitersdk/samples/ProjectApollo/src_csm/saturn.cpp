@@ -218,7 +218,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 {	
 	//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
-	autopilot = false;
 	LastTimestep = 0;
 
 	//
@@ -1315,7 +1314,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (stage < CSM_LEM_STAGE) {
 		oapiWriteScenario_int (scn, "SIIIENG", SIII_EngineNum);
-		oapiWriteScenario_int (scn, "LAUNCHSTATE", GetLaunchState());
 		oapiWriteScenario_int (scn, "SLASTATE", GetSLAState());
 	}
 
@@ -1685,25 +1683,6 @@ void Saturn::SetA13State(int s)
 	KranzPlayed = (state.KranzPlayed != 0);
 }
 
-int Saturn::GetLaunchState()
-
-{
-	LaunchState state;
-
-	state.autopilot = autopilot;
-
-	return state.word;
-}
-
-void Saturn::SetLaunchState(int s)
-
-{
-	LaunchState state;
-
-	state.word = s;
-	autopilot = (state.autopilot != 0);
-}
-
 int Saturn::GetLightState()
 
 {
@@ -1858,11 +1837,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         SwitchState = 0;
 		sscanf (line+8, "%d", &SwitchState);
 		SetSLAState(SwitchState);
-	}
-	else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
-        SwitchState = 0;
-		sscanf (line+11, "%d", &SwitchState);
-		SetLaunchState(SwitchState);
 	}
 	else if (!strnicmp (line, "LIGHTSTATE", 10)) {
         SwitchState = 0;
@@ -4150,50 +4124,6 @@ void Saturn::GenericLoadStateSetup()
 	}
 }
 
-bool Saturn::CheckForLaunchShutdown()
-
-{
-	//
-	// Shut down the engine when we're close to the desired apogee and perigee.
-	//
-
-	double apogee, perigee;
-
-	OBJHANDLE ref = GetGravityRef();
-	GetElements(elemSaturn1B, refSaturn1B);
-	GetApDist(apogee);
-	GetPeDist(perigee);
-	apogee = (apogee - oapiGetSize(ref)) / 1000.;
-	perigee = (perigee - oapiGetSize(ref)) / 1000.;
-
-	if ((refSaturn1B - refPREV) >= 0 &&
-		(stage == LAUNCH_STAGE_SIVB) &&
-		((elemSaturn1B.e > elemPREV.e && elemSaturn1B.e < 0.03) ||
-		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.8)))
-	{
-		if (GetEngineLevel(ENGINE_MAIN) > 0){
-			SetEngineLevel(ENGINE_MAIN, 0);
-			if (oapiGetTimeAcceleration() > 1.0)
-				oapiSetTimeAcceleration(1.0);
-
-			S4CutS.play(NOLOOP, 255);
-			S4CutS.done();
-
-			ActivateNavmode(NAVMODE_KILLROT);
-
-			// Reset autopilot commands
-			AtempP  = 0;
-			AtempY  = 0;
-			AtempR  = 0;			
-		}
-		return true;
-	}
-	elemPREV = elemSaturn1B;
-	refPREV = refSaturn1B;
-
-	return false;
-}
-
 void Saturn::SetGenericStageState()
 
 {
@@ -4477,81 +4407,6 @@ void Saturn::SIVBBoiloff()
 
 	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
 	SetPropellantMass(ph_3rd, FuelMass);
-}
-
-void Saturn::SaturnTakeoverMode() {
-
-	// see GSOP 3.5
-
-	const double RATE_FINE = RAD*(0.001);
-	const double GAIN_FACTOR = 10.;
-
-	VECTOR3 PMI;
-	double Mass, Size, MaxThrust, Thrust;
-
-	VESSELSTATUS status;
-	GetStatus(status);
-	GetPMI(PMI); 
-	Mass = GetMass();
-	Size = GetSize();
-	MaxThrust = GetSaturnMaxThrust(ENGINE_ATTITUDE);
-
-	VECTOR3 lvl = _V(0, 0, 0);
-	VECTOR3 target = _V(0, 0, 0);
-
-	// Is S-IVB Takeover enabled (DAP setting)?
-	ChannelValue val12;
-	val12 = agc.GetInputChannel(012); 
-	if (val12[EnableSIVBTakeover]) { 
-		// roll
-		if (gdc.fdai_err_x > 40)
-			target.z = 0.5 * RAD;
-		if (gdc.fdai_err_x < -40)
-			target.z = -0.5 * RAD;
-		// pitch
-		if (gdc.fdai_err_y > 40)
-			target.x = -0.3 * RAD;
-		if (gdc.fdai_err_y < -40)
-			target.x = 0.3 * RAD;
-		// yaw
-		if (gdc.fdai_err_z > 40)
-			target.y = -0.3 * RAD;
-		if (gdc.fdai_err_z < -40)
-			target.y = 0.3 * RAD;
-	}
-	target = target - status.vrot;
-
-	// x axis
-	Thrust = GAIN_FACTOR * (Mass * PMI.x * target.x) / Size;
-	if (target.x > RATE_FINE) {
-		lvl.x = min((Thrust / MaxThrust), 1);
-	} else if (target.x < -RATE_FINE) {
-		lvl.x = max((Thrust / MaxThrust), -1);
-	} else {
-		lvl.x = 0;
-	}
-	// y axis
-	Thrust = GAIN_FACTOR * (Mass * PMI.y * target.y) / Size;
-	if (target.y > RATE_FINE) {
-		lvl.y = min((Thrust / MaxThrust), 1);
-	} else if (target.y < -RATE_FINE) {
-		lvl.y = max((Thrust / MaxThrust), -1);
-	} else {
-		lvl.y = 0;
-	}
-	// z axis
-	Thrust = GAIN_FACTOR * (Mass * PMI.z * target.z) / Size;
-	if (target.z > RATE_FINE) {
-		lvl.z = min((Thrust/MaxThrust), 1);
-	} else if (target.z < -RATE_FINE) {
-		lvl.z = max((Thrust/MaxThrust), -1);
-	} else {
-		lvl.z = 0;
-	}
-
-	SetSaturnAttitudeRotLevel(lvl);
-
-	// sprintf(oapiDebugString(), "Z rate %f target %f level %f", status.vrot.z * DEG, target.z * DEG, lvl.z);
 }
 
 void Saturn::StageSix(double simt)

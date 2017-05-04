@@ -600,20 +600,6 @@ public:
 
 	///
 	/// \ingroup ScenarioState
-	/// \brief State which is only required through the launch process.
-	///
-	union LaunchState {
-		struct {
-			unsigned autopilot:1;
-			unsigned TLIEnabled:1;
-		};
-		unsigned long word;
-
-		LaunchState() { word = 0; };
-	};
-
-	///
-	/// \ingroup ScenarioState
 	/// \brief State which is only required for Apollo 13
 	///
 	/// This structure holds the flags which are used for the Apollo 13 simulation. 
@@ -715,20 +701,6 @@ public:
 	/// \brief Destructor.
 	///
 	virtual ~Saturn();
-
-	///
-	/// Turn the autopilot on or off.
-	/// \brief Set the autopilot state.
-	/// \param ap Autopilot on or off?
-	///
-	void SetAutopilot(bool ap) { autopilot = ap; };
-
-	///
-	/// Check whether the autopilot is enabled.
-	/// \brief Get the autopilot state.
-	/// \return Is the autopilot enabled?
-	///
-	bool GetAutopilot() { return autopilot; };
 
 	///
 	/// Turn on the SII Seperation light on the control panel.
@@ -1306,12 +1278,6 @@ protected:
 	//
 
 	char StagesString[256];
-
-	///
-	/// Autopilot flag. True if autopilot enabled.
-	/// \brief Autopilot flag.
-	///
-	bool autopilot;
 
 	///
 	/// SII Sep light. True if light should be lit.
@@ -3922,7 +3888,6 @@ protected:
 
 	void AddRCSJets(double TRANZ,double MaxThrust);
 	void AddRCS_S4B();
-	void SaturnTakeoverMode();
 	void SetRecovery();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
@@ -3997,7 +3962,6 @@ protected:
 	// Systems functions.
 	//
 
-	bool AutopilotActive();
 	bool CabinFansActive();
 	bool CabinFan1Active();
 	bool CabinFan2Active();
@@ -4068,7 +4032,6 @@ protected:
 	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0, bool createThrusterGroups = true);
 	void GenericTimestepStage(double simt, double simdt);
-	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
 	void DestroyStages(double simt);
 	void SIVBBoiloff();

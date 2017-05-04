@@ -398,7 +398,6 @@ void CSMcomputer::Liftoff(double simt)
 
 	SetOutputChannelBit(012, 9, false);
 	Saturn *Sat = (Saturn *)OurVessel;
-	Sat->SetAutopilot(true);
 }
 
 void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val){

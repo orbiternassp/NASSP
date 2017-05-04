@@ -278,29 +278,6 @@ double AbsOfVector(const VECTOR3 &Vec)
 	return Result;
 }
 
-void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos)
-{
-		VECTOR3 a;
-		double obliq, theta, rot;
-		OBJHANDLE hbody=OurVessel->GetGravityRef();
-		a.x=cos(vlat)*cos(vlon)*vrad;
-		a.z=cos(vlat)*sin(vlon)*vrad;
-		a.y=sin(vlat)*vrad;
-		obliq=oapiGetPlanetObliquity(hbody);
-		theta=oapiGetPlanetTheta(hbody);
-		rot=oapiGetPlanetCurrentRotation(hbody);
-		pos.x=a.x*(cos(theta)*cos(rot)-sin(theta)*cos(obliq)*sin(rot))-
-			a.y*sin(theta)*sin(obliq)-
-			a.z*(cos(theta)*sin(rot)+sin(theta)*cos(obliq)*cos(rot));
-		pos.y=a.x*(-sin(obliq)*sin(rot))+
-			a.y*cos(obliq)-
-			a.z*sin(obliq)*cos(rot);
-		pos.z=a.x*(sin(theta)*cos(rot)+cos(theta)*cos(obliq)*sin(rot))+
-			a.y*cos(theta)*sin(obliq)+
-			a.z*(-sin(theta)*sin(rot)+cos(theta)*cos(obliq)*cos(rot));
-
-}
-
 //
 // Virtual AGC Erasable memory functions.
 //
@@ -1074,16 +1051,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		val ^= 077777;
 
 	return val;
-}
-
-void ApolloGuidance::KillAllThrusters()
-{
-	OurVessel->SetAttitudeLinLevel(0, 0);
-	OurVessel->SetAttitudeLinLevel(1, 0);
-	OurVessel->SetAttitudeLinLevel(2, 0);
-	OurVessel->SetAttitudeRotLevel(0, 0);
-	OurVessel->SetAttitudeRotLevel(1, 0);
-	OurVessel->SetAttitudeRotLevel(2, 0);
 }
 
 void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double altitude)

@@ -2070,15 +2070,6 @@ void Saturn::CheckSMSystemsState()
 	}
 }
 
-bool Saturn::AutopilotActive()
-
-{
-	ChannelValue val12;
-	val12 = agc.GetOutputChannel(012);
-
-	return autopilot && !val12[EnableSIVBTakeover];
-}
-
 bool Saturn::CabinFansActive()
 
 {
