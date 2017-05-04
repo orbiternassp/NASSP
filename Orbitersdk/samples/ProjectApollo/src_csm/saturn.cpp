@@ -380,7 +380,6 @@ void Saturn::initSaturn()
 	AtempR  = 0;
 
 	StopRot = false;
-	IGMEnabled = false;
 	HasProbe = false;
 
 	LowRes = false;
@@ -471,8 +470,6 @@ void Saturn::initSaturn()
 	agc.SetDesiredPerigee(215);
 	agc.SetDesiredAzimuth(45);
 
-	IGMStartTime = 204.1 ;
-
 	//
 	// Typical center engine shutdown times.
 	//
@@ -482,26 +479,6 @@ void Saturn::initSaturn()
 		EarlySICutoff[i] = 0;
 		FirstStageFailureTime[i] = 0.0;
 	}
-	SecondStageCentreShutdownTime = 460.0;
-
-	//
-	// Stage shutdown times greater than stage burn times, to guarantee we burn all fuel.
-	//
-
-	FirstStageShutdownTime = 250.0;
-	SecondStageShutdownTime = 1000.0;
-
-	//
-	// Same for interstage jettison.
-	//
-
-	InterstageSepTime = 1000.0;
-
-	//
-	// PU shift time. Default to 8:15
-	//
-
-	SecondStagePUShiftTime = 495.0;
 
 	//
 	// Failure modes.
@@ -1319,7 +1296,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
 
 	if (stage < LAUNCH_STAGE_TWO) {
-		papiWriteScenario_double (scn, "SISHUT", FirstStageShutdownTime);
 		papiWriteScenario_double (scn, "T1V", THRUST_FIRST_VAC);
 		papiWriteScenario_double (scn, "I1S", ISP_FIRST_SL);
 		papiWriteScenario_double (scn, "I1V", ISP_FIRST_VAC);
@@ -1328,22 +1304,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (stage < STAGE_ORBIT_SIVB) {
 
-		papiWriteScenario_double (scn, "SIICSHUT", SecondStageCentreShutdownTime);
-		papiWriteScenario_double (scn, "SIIPUT", SecondStagePUShiftTime);
-		papiWriteScenario_double (scn, "SIISHUT", SecondStageShutdownTime);
 		papiWriteScenario_double (scn, "T2V", THRUST_SECOND_VAC);
 		papiWriteScenario_double (scn, "I2S", ISP_SECOND_SL);
 		papiWriteScenario_double (scn, "I2V", ISP_SECOND_VAC);
 		papiWriteScenario_double (scn, "T3V", THRUST_THIRD_VAC);
 		papiWriteScenario_double (scn, "I3V", ISP_THIRD_VAC);
-		papiWriteScenario_double (scn, "ISTGJT", InterstageSepTime);
 		oapiWriteScenario_int (scn, "SIIENG", SII_EngineNum);
 
-		//
-		// IGM start time.
-		//
-
-		papiWriteScenario_double (scn, "IGMST", IGMStartTime);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -1545,7 +1512,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		papiWriteScenario_double (scn, "TOAPO", agc.GetDesiredApogee());
 		papiWriteScenario_double (scn, "TOPER", agc.GetDesiredPerigee());
 		papiWriteScenario_double (scn, "TOHDG", agc.GetDesiredAzimuth());
-		papiWriteScenario_double (scn, "TOINCLINATION", agc.GetDesiredInclination());
 	}
 
 	// save the internal systems 
@@ -1590,11 +1556,6 @@ int Saturn::GetMainState()
 {
 	MainState state;
 
-	//state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
-	//state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
-	//state.EventTimerRunning = EventTimerDisplay.IsRunning();
-	//state.EventTimerEnabled = EventTimerDisplay.IsEnabled();
-	//state.EventTimerCountUp = EventTimerDisplay.GetCountUp();
 	state.SIISepState = SIISepState;
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
@@ -1606,7 +1567,6 @@ int Saturn::GetMainState()
 	state.SplashdownPlayed = SplashdownPlayed;
 	state.FirePCM = FirePCM;
 	state.PostSplashdownPlayed = PostSplashdownPlayed;
-	state.IGMEnabled = IGMEnabled;
 	state.SkylabSM = SkylabSM;
 	state.SkylabCM = SkylabCM;
 	state.S1bPanel = S1bPanel;
@@ -1633,7 +1593,6 @@ void Saturn::SetMainState(int s)
 	SplashdownPlayed = (state.SplashdownPlayed != 0);
 	FirePCM = state.FirePCM;
 	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
-	IGMEnabled = (state.IGMEnabled != 0);
 	MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
 	MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
 	EventTimerDisplay.SetRunning(state.EventTimerRunning != 0);
@@ -1861,9 +1820,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line+6, "%d", &DummyLoad);
 		LowRes = (DummyLoad != 0);
 	}
-	else if (papiReadScenario_double(line, "SIICSHUT", SecondStageCentreShutdownTime)); 
-	else if (papiReadScenario_double(line, "SISHUT", FirstStageShutdownTime)); 
-	else if (papiReadScenario_double(line, "SIISHUT", SecondStageShutdownTime)); 
 	else if (!strnicmp (line, "SIENG", 5)) {
 		sscanf (line + 5, "%d", &SI_EngineNum);
 	}
@@ -1875,18 +1831,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "SIIENG", 6)) {
 		sscanf (line + 6, "%d", &SII_EngineNum);
-	}
-	else if (!strnicmp (line, "ISTGJT", 6)) {
-		sscanf (line + 6, "%f", &ftcp);
-		InterstageSepTime = ftcp;
-	}
-	else if (!strnicmp (line, "SIIPUT", 6)) {
-		sscanf (line + 6, "%f", &ftcp);
-		SecondStagePUShiftTime = ftcp;
-	}
-	else if (!strnicmp (line, "IGMST", 5)) {
-		sscanf (line + 5, "%f", &ftcp);
-		IGMStartTime = ftcp;
 	}
 	else if (!strnicmp (line, "THRUSTA", 7)) {
 		sscanf (line + 7, "%f", &ftcp);
@@ -2386,9 +2330,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
-		}
-		else if (papiReadScenario_double(line, "TOINCLINATION", d)) { 
-			agc.SetDesiredInclination(d);
 		}
 		else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
 			sscanf (line + 12, "%i", &rhc_id);
@@ -5168,7 +5109,7 @@ void Saturn::SetRandomFailures()
 		if (!(random() & 15))
 		{
 			LaunchFail.EarlySIICenterCutoff = 1;
-			SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
+			//SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
 		}
 		if (!(random() & 127))
 		{

@@ -445,11 +445,6 @@ protected:
 	double DesiredAzimuth;
 
 	///
-	/// \brief Desired Inclination for launch.
-	///
-	double DesiredInclination;
-
-	///
 	/// \brief Desired latitude for landing (Earth for CSM or Moon for LEM).
 	///
 	double LandingLatitude;

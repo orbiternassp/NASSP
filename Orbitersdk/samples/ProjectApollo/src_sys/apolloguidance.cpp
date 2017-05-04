@@ -60,7 +60,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	DesiredApogee = 0.0;
 	DesiredPerigee = 0.0;
 	DesiredAzimuth = 0.0;
-	DesiredInclination = 0.0;
 
 	LandingLongitude = 0.0;
 	LandingLatitude = 0.0;

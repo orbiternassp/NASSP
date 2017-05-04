@@ -681,7 +681,7 @@ public:
 			unsigned FirePCM:1;						///< Pitch Control Motor has been fired.
 			unsigned PayloadDataTransfer:1;			///< Have we transfered setup data to the SIVB for the payload?
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
-			unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
+			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned MissionTimerEnabled:1;			///< Is the Mission Timer enabled?
 			unsigned EventTimerEnabled:1;			///< Is the Event Timer enabled?
@@ -1477,34 +1477,6 @@ protected:
 
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
-	double SecondStageCentreShutdownTime;
-
-	//
-	// Interstage jettison time.
-	//
-
-	double InterstageSepTime;
-
-	//
-	// Mixture-ratio shift time for second stage.
-	//
-
-	double SecondStagePUShiftTime;
-
-	//
-	// Stage shutdown times.
-	//
-
-	double FirstStageShutdownTime;
-	double SecondStageShutdownTime;
-
-	//
-	// Iterative Guidance Mode start time, when we stop following the pitch program and start aiming for
-	// the correct orbit.
-	//
-
-	double IGMStartTime;
-	bool IGMEnabled;
 
 	///
 	/// Flag for use of low-res meshes to reduce graphics lag.

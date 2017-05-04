@@ -105,18 +105,6 @@ void Saturn1b::initSaturn1b()
 	}
 
 	//
-	// PU shift time.
-	//
-
-	SecondStagePUShiftTime = 450.0;
-
-	//
-	// IGM Start time.
-	//
-
-	IGMStartTime = 170;
-
-	//
 	// Apollo 7 ISP and thrust values.
 	// Note: thrust values are _per engine_, not per stage.
 	/// \todo other Saturn 1b missions

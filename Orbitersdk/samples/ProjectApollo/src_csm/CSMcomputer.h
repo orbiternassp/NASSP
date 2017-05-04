@@ -149,11 +149,6 @@ public:
 	double GetDesiredAzimuth() { return DesiredAzimuth; };
 
 	///
-	/// \brief Get the desired launch inclination for the autopilot.
-	///
-	double GetDesiredInclination() { return DesiredInclination; };
-
-	///
 	/// \brief Set the desired apogee for the autopilot.
 	///
 	void SetDesiredApogee(double val) { DesiredApogee = val; };
@@ -167,11 +162,6 @@ public:
 	/// \brief Set the desired launch azimuth for the autopilot.
 	///
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
-
-	///
-	/// \brief Set the desired inclination for the autopilot.
-	///
-	void SetDesiredInclination(double val) { DesiredInclination = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannelBit(int channel, int bit, bool val);
