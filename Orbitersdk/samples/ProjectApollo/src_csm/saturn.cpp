@@ -323,9 +323,6 @@ void Saturn::initSaturn()
 	//
 	S1bPanel = false;
 
-	// DS20070204 LVDC++ mode is off by default
-	use_lvdc = false;
-
 	ABORT_IND = false;
 	LEM_DISPLAY=false;
 	ASTPMission = false;
@@ -1409,7 +1406,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (SIVBPayload != PAYLOAD_LEM) {
 		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
 	}
-	if (use_lvdc){oapiWriteScenario_string(scn,"USE_LVDC","PLEASE");};
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	
 	if (PayloadName[0])
@@ -1497,7 +1493,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
-	SaveLVDC(scn);
+	if (stage < CSM_LEM_STAGE)
+	{
+		SaveLVDC(scn);
+	}
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -2234,10 +2233,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, CMRCSPROPELLANT_2_START_STRING, sizeof(CMRCSPROPELLANT_2_START_STRING))) {
 			CMRCS2.LoadState(scn);
 		}
-		// DS20070204 LVDC++ MODE
-	    else if (!strnicmp (line, "USE_LVDC", 8)) {
-		    use_lvdc = true;
-	    }
 	    else if (!strnicmp (line, "CABINPRESSUREREGULATOR", 22)) {
 		    CabinPressureRegulator.LoadState(line);
 	    }

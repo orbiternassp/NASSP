@@ -2422,28 +2422,24 @@ void ApolloRTCCMFD::menuP30Upload()
 {
 	if (screen == 22 && G->TLCCmaneuver < 2)
 	{
-		if (G->g_Data.progVessel->use_lvdc)
-		{
-			SevenParameterUpdate coe;
-			SaturnV* testves;
+		SevenParameterUpdate coe;
+		SaturnV* testves;
 
-			testves = (SaturnV*)G->g_Data.progVessel;
+		testves = (SaturnV*)G->g_Data.progVessel;
 
-			coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
+		coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
 
-			testves->lvdc->TU = true;
-			testves->lvdc->TU10 = false;
-			testves->lvdc->GATE3 = false;
+		testves->lvdc->TU = true;
+		testves->lvdc->TU10 = false;
+		testves->lvdc->GATE3 = false;
 
-			testves->lvdc->T_RP = coe.T_RP;
-			testves->lvdc->C_3 = coe.C3;
-			testves->lvdc->Inclination = coe.Inclination;
-			testves->lvdc->e = coe.e;
-			testves->lvdc->alpha_D = coe.alpha_D;
-			testves->lvdc->f = coe.f;
-			testves->lvdc->theta_N = coe.theta_N;
-
-		}
+		testves->lvdc->T_RP = coe.T_RP;
+		testves->lvdc->C_3 = coe.C3;
+		testves->lvdc->Inclination = coe.Inclination;
+		testves->lvdc->e = coe.e;
+		testves->lvdc->alpha_D = coe.alpha_D;
+		testves->lvdc->f = coe.f;
+		testves->lvdc->theta_N = coe.theta_N;
 	}
 	else if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
@@ -3634,59 +3630,52 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	}
 	else
 	{
-		if (G->g_Data.progVessel->use_lvdc)
+		TLIPADOpt opt;
+		double T_TLI;
+
+		SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
+
+		if (SatV->lvdc->TU)
 		{
-			TLIPADOpt opt;
-			double T_TLI;
-
-			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
-
-			if (SatV->lvdc->TU)
-			{
-				G->TLI_PAD();
-			}
-			else
-			{
-				LVDCTLIparam tliparam;
-
-				tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-				tliparam.Azimuth = SatV->lvdc->Azimuth;
-				tliparam.beta = SatV->lvdc->beta;
-				tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-				tliparam.C_3 = SatV->lvdc->C_3;
-				tliparam.e_N = SatV->lvdc->e_N;
-				tliparam.f = SatV->lvdc->f;
-				tliparam.mu = SatV->lvdc->mu;
-				tliparam.MX_A = SatV->lvdc->MX_A;
-				tliparam.omega_E = SatV->lvdc->omega_E;
-				tliparam.R_N = SatV->lvdc->R_N;
-				tliparam.TargetVector = SatV->lvdc->TargetVector;
-				tliparam.TB5 = SatV->lvdc->TB5;
-				tliparam.theta_EO = SatV->lvdc->theta_EO;
-				tliparam.t_D = SatV->lvdc->t_D;
-				tliparam.T_L = SatV->lvdc->T_L;
-				tliparam.T_RG = SatV->lvdc->T_RG;
-				tliparam.T_ST = SatV->lvdc->T_ST;
-
-				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
-
-				opt.dV_LVLH = G->dV_LVLH;
-				opt.GETbase = G->GETbase;
-				opt.REFSMMAT = G->REFSMMAT;
-				opt.TIG = G->P30TIG;
-				opt.vessel = G->vessel;
-				opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
-				opt.TLI = T_TLI;
-				opt.R_TLI = G->R_TLI;
-				opt.V_TLI = G->V_TLI;
-				opt.uselvdc = true;
-
-				G->rtcc->TLI_PAD(&opt, G->tlipad);
-			}
+			G->TLI_PAD();
 		}
 		else
 		{
-			G->TLI_PAD();
+			LVDCTLIparam tliparam;
+
+			tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+			tliparam.Azimuth = SatV->lvdc->Azimuth;
+			tliparam.beta = SatV->lvdc->beta;
+			tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+			tliparam.C_3 = SatV->lvdc->C_3;
+			tliparam.e_N = SatV->lvdc->e_N;
+			tliparam.f = SatV->lvdc->f;
+			tliparam.mu = SatV->lvdc->mu;
+			tliparam.MX_A = SatV->lvdc->MX_A;
+			tliparam.omega_E = SatV->lvdc->omega_E;
+			tliparam.R_N = SatV->lvdc->R_N;
+			tliparam.TargetVector = SatV->lvdc->TargetVector;
+			tliparam.TB5 = SatV->lvdc->TB5;
+			tliparam.theta_EO = SatV->lvdc->theta_EO;
+			tliparam.t_D = SatV->lvdc->t_D;
+			tliparam.T_L = SatV->lvdc->T_L;
+			tliparam.T_RG = SatV->lvdc->T_RG;
+			tliparam.T_ST = SatV->lvdc->T_ST;
+			
+			G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
+
+			opt.dV_LVLH = G->dV_LVLH;
+			opt.GETbase = G->GETbase;
+			opt.REFSMMAT = G->REFSMMAT;
+			opt.TIG = G->P30TIG;
+			opt.vessel = G->vessel;
+			opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
+			opt.TLI = T_TLI;
+			opt.R_TLI = G->R_TLI;
+			opt.V_TLI = G->V_TLI;
+			opt.uselvdc = true;
+
+			G->rtcc->TLI_PAD(&opt, G->tlipad);
 		}
 	}
 }

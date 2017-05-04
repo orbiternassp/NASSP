@@ -1517,11 +1517,6 @@ protected:
 	SwitchFailures SwitchFail;
 
 	//
-	// *** LVDC++ ITEMS ***
-	//
-	bool use_lvdc; // LVDC use flag
-
-	//
 	// Ground Systems
 	//
 	MCC *pMCC;
@@ -3984,8 +3979,6 @@ protected:
 	void SetMainState(int s);
 	int GetAttachState();
 	void SetAttachState(int s);
-	int GetLaunchState();
-	void SetLaunchState(int s);
 	int GetSLAState();
 	void SetSLAState(int s);
 

@@ -235,7 +235,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.TLI = calcParams.TLI;
 		opt.vessel = calcParams.src;
 		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
-		opt.uselvdc = mcc->cm->use_lvdc;
+		opt.uselvdc = true;
 
 		TLI_PAD(&opt, *form);
 

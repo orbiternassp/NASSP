@@ -1279,37 +1279,30 @@ void MCC::TimeStep(double simdt){
 					if (cm->GetMissionTime() > 3600.0 + 35.0*60.0)
 					{
 						SlowIfDesired();
-						if (cm->use_lvdc)
-						{
-							SaturnV *SatV = (SaturnV*)cm;
+						SaturnV *SatV = (SaturnV*)cm;
 
-							LVDCTLIparam tliparam;
+						LVDCTLIparam tliparam;
 
-							tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-							tliparam.Azimuth = SatV->lvdc->Azimuth;
-							tliparam.beta = SatV->lvdc->beta;
-							tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-							tliparam.C_3 = SatV->lvdc->C_3;
-							tliparam.e_N = SatV->lvdc->e_N;
-							tliparam.f = SatV->lvdc->f;
-							tliparam.mu = SatV->lvdc->mu;
-							tliparam.MX_A = SatV->lvdc->MX_A;
-							tliparam.omega_E = SatV->lvdc->omega_E;
-							tliparam.R_N = SatV->lvdc->R_N;
-							tliparam.TargetVector = SatV->lvdc->TargetVector;
-							tliparam.TB5 = SatV->lvdc->TB5;
-							tliparam.theta_EO = SatV->lvdc->theta_EO;
-							tliparam.t_D = SatV->lvdc->t_D;
-							tliparam.T_L = SatV->lvdc->T_L;
-							tliparam.T_RG = SatV->lvdc->T_RG;
-							tliparam.T_ST = SatV->lvdc->T_ST;
+						tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+						tliparam.Azimuth = SatV->lvdc->Azimuth;
+						tliparam.beta = SatV->lvdc->beta;
+						tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+						tliparam.C_3 = SatV->lvdc->C_3;
+						tliparam.e_N = SatV->lvdc->e_N;
+						tliparam.f = SatV->lvdc->f;
+						tliparam.mu = SatV->lvdc->mu;
+						tliparam.MX_A = SatV->lvdc->MX_A;
+						tliparam.omega_E = SatV->lvdc->omega_E;
+						tliparam.R_N = SatV->lvdc->R_N;
+						tliparam.TargetVector = SatV->lvdc->TargetVector;
+						tliparam.TB5 = SatV->lvdc->TB5;
+						tliparam.theta_EO = SatV->lvdc->theta_EO;
+						tliparam.t_D = SatV->lvdc->t_D;
+						tliparam.T_L = SatV->lvdc->T_L;
+						tliparam.T_RG = SatV->lvdc->T_RG;
+						tliparam.T_ST = SatV->lvdc->T_ST;
 
-							rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
-						}
-						else
-						{
-							startSubthread(1, UTP_NONE);
-						}
+						rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
 						//rtcc->SetManeuverData(burnData.IgnMJD, burnData._dV_LVLH);
 						//if (rtcc->TimeofIgnition > 0)
@@ -1321,35 +1314,7 @@ void MCC::TimeStep(double simdt){
 				case 1:
 					if (subThreadStatus == 0)
 					{
-						if (cm->use_lvdc)
-						{
-							/*SaturnV *SatV = (SaturnV*)cm;
-
-							SevenParameterUpdate param = rtcc->TLICutoffToLVDCParameters(rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->TimeofIgnition, SatV->lvdc->TB5, SatV->lvdc->mu, SatV->lvdc->T_RG);
-
-							SatV->lvdc->TU = true;
-							SatV->lvdc->TU10 = false;
-
-							SatV->lvdc->T_RP = param.T_RP;
-							SatV->lvdc->C_3 = param.C3;
-							SatV->lvdc->Inclination = param.Inclination;
-							SatV->lvdc->e = param.e;
-							SatV->lvdc->alpha_D = param.alpha_D;
-							SatV->lvdc->f = param.f;
-							SatV->lvdc->theta_N = param.theta_N;*/
-
-							setSubState(2);
-						}
-						else
-						{
-
-							VECTOR3 _RIgn, _VIgn, _dV_LVLH;
-							double IgnMJD;
-
-							rtcc->GetTLIParameters(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
-							cm->GetIU()->StartTLIBurn(_RIgn, _VIgn, _dV_LVLH, IgnMJD);
-							setSubState(2);
-						}
+						setSubState(2);
 					}
 					break;
 				case 2:

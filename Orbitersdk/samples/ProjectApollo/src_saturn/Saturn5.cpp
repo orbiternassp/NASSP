@@ -581,10 +581,8 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	if (stage < CSM_LEM_STAGE) {
 
 		// LVDC++
-		if (use_lvdc) {
-			if (lvdc != NULL) {
-				lvdc->TimeStep(simt, simdt);
-			}
+		if (lvdc != NULL) {
+			lvdc->TimeStep(simt, simdt);
 		}
 	} else {
 		
@@ -593,7 +591,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 			// This saves memory and declutters the scenario file.
 			delete lvdc;
 			lvdc = NULL;
-			use_lvdc = false;
 		}
 		
 		GenericTimestepStage(simt, simdt);
@@ -723,18 +720,16 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 }
 
 void SaturnV::SaveLVDC(FILEHANDLE scn){
-	if (use_lvdc && lvdc != NULL){ lvdc->SaveState(scn); }
+	if (lvdc != NULL){ lvdc->SaveState(scn); }
 }
 
 void SaturnV::LoadLVDC(FILEHANDLE scn){
-	if (use_lvdc){
-		// If the LVDC does not yet exist, create it.
-		if(lvdc == NULL){
-			lvdc = new LVDC;
-			lvdc->Init(this);
-		}
-		lvdc->LoadState(scn);
+	// If the LVDC does not yet exist, create it.
+	if(lvdc == NULL){
+		lvdc = new LVDC;
+		lvdc->Init(this);
 	}
+	lvdc->LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -750,7 +745,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	// DS20150720 LVDC++ ON WHEELS
 	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
 	// This happens if the USE_LVDC flag is set but no LVDC section is present.
-	if(use_lvdc && lvdc == NULL){
+	if(lvdc == NULL){
 		lvdc = new LVDC;
 		lvdc->Init(this);
 	}
