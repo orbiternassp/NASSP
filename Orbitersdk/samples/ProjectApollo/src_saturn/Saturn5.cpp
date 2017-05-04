@@ -1033,9 +1033,6 @@ void SaturnV::SwitchSelector(int item){
 		}
 		break;
 	case 16:
-		SetThrusterResource(th_main[4], NULL); // Should stop the engine
-		SShutS.play(NOLOOP,235);
-		SShutS.done();
 		// Clear liftoff light now - Apollo 15 checklist item
 		ClearLiftoffLight();
 		break;

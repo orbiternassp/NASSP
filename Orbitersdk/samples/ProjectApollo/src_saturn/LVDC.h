@@ -483,6 +483,7 @@ private:
 	bool liftoff;									// lift-off flag
 	bool S1B_Engine_Out;							// S1C Engine Failure Flag
 	bool S1B_TwoEngines_Out;
+	bool S1B_CECO_Commanded;
 	bool HSL;										// High-Speed Loop flag
 	int  T_EO1,T_EO2;								// Pre-IGM Engine-Out Constant
 	int  UP;										// IGM target parameters updated

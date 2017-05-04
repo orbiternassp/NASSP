@@ -538,7 +538,6 @@ public:
 	union LaunchFailures {
 		struct {
 			unsigned Init:1;					///< Flags have been initialised.
-			unsigned EarlySICenterCutoff:1;		///< The first stage center engine will shut down early.
 			unsigned EarlySIICenterCutoff:1;	///< The second stage center engine will shut down early.
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
@@ -1476,7 +1475,8 @@ protected:
 	// second stage.
 	//
 
-	double FirstStageCentreShutdownTime;
+	bool EarlySICutoff[8];
+	double FirstStageFailureTime[8];
 	double SecondStageCentreShutdownTime;
 
 	//
@@ -4104,7 +4104,6 @@ protected:
 	// Mission stage functions.
 	//
 
-	void DoLaunch(double simt);
 	void StageSeven(double simt);
 	void StageEight(double simt);
 	void SetChuteStage1();

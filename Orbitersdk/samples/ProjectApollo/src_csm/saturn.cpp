@@ -477,7 +477,11 @@ void Saturn::initSaturn()
 	// Typical center engine shutdown times.
 	//
 
-	FirstStageCentreShutdownTime = 135.0;
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = 0;
+		FirstStageFailureTime[i] = 0.0;
+	}
 	SecondStageCentreShutdownTime = 460.0;
 
 	//
@@ -1309,8 +1313,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
 	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
-	//papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
-	//papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
 	papiWriteScenario_double (scn, "SIVBCUTOFFTIME", SIVBCutoffTime);
@@ -1344,7 +1346,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
 
 	if (stage < LAUNCH_STAGE_TWO) {
-		papiWriteScenario_double (scn, "SICSHUT", FirstStageCentreShutdownTime);
 		papiWriteScenario_double (scn, "SISHUT", FirstStageShutdownTime);
 		papiWriteScenario_double (scn, "T1V", THRUST_FIRST_VAC);
 		papiWriteScenario_double (scn, "I1S", ISP_FIRST_SL);
@@ -1902,7 +1903,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line+6, "%d", &DummyLoad);
 		LowRes = (DummyLoad != 0);
 	}
-	else if (papiReadScenario_double(line, "SICSHUT", FirstStageCentreShutdownTime)); 
 	else if (papiReadScenario_double(line, "SIICSHUT", SecondStageCentreShutdownTime)); 
 	else if (papiReadScenario_double(line, "SISHUT", FirstStageShutdownTime)); 
 	else if (papiReadScenario_double(line, "SIISHUT", SecondStageShutdownTime)); 
@@ -2850,83 +2850,6 @@ void Saturn::SetStage(int s)
 		CSMToSIVBConnector.AddTo(&iuCommandConnector);
 		CSMToSIVBConnector.AddTo(&sivbControlConnector);
 	}
-}
-
-void Saturn::DoLaunch(double simt)
-
-{
-	//
-	// Uncage IMU
-	//
-	IMUGuardedCageSwitch.SwitchTo(TOGGLESWITCH_DOWN); 
-
-	//
-	// Light the liftoff indicator for the crew.
-	//
-
-	SetLiftoffLight();
-
-	//
-	// Switch to the first launch stage.
-	//
-
-	SetStage(LAUNCH_STAGE_ONE);
-
-	//
-	// For now, we'll reset the mission timer to zero and enable it.
-	//
-	// The people on the ProjectApollo mailing list believe that this is the correct
-	// behaviour for the Mission Timer, and it shouldn't run at all until liftoff.
-	//
-	// However, others believe it should free run. We haven't found a definitive
-	// answer yet.
-	//
-	// Meanwhile we have a definite answer, the prelaunch procedures in the AOH clearly 
-	// state that it runs free. Additionally do NOT call MissionTimerDisplay.SetRunning(true) here,
-	// either it's already running (which it should) or it's not, but when you let it run here, you have
-	// a running mission timer and the mission timer start switch is at stop or reset, which is not 
-	// possible electrically.
-	//
-
-	MissionTimerDisplay.Reset();
-	MissionTimerDisplay.SetEnabled(true);
-	MissionTimer306Display.Reset();
-	MissionTimer306Display.SetEnabled(true);
-	EventTimerDisplay.Reset();
-	EventTimerDisplay.SetEnabled(true);
-	EventTimerDisplay.SetRunning(true);
-	EventTimer306Display.Reset();
-	EventTimer306Display.SetEnabled(true);
-	EventTimer306Display.SetRunning(true);
-
-	//
-	// Tell the AGC that we've lifted off.
-	//
-
-	agc.SetInputChannelBit(030, LiftOff, true);
-
-	//
-	// Set full thrust, just in case.
-	//
-
-	SetThrusterGroupLevel(thg_main, 1.0);
-	contrailLevel = 1.0;
-
-	//
-	// And play the launch sound.
-	//
-
-	if (LaunchS.isValid() && !LaunchS.isPlaying())
-	{
-		LaunchS.play(NOLOOP,255);
-		LaunchS.done();
-	}
-
-	//
-	// Ensure autopilot is on at launch.
-	//
-
-	autopilot = true;
 }
 
 void Saturn::GenericTimestep(double simt, double simdt, double mjd)
@@ -5288,11 +5211,16 @@ void Saturn::SetRandomFailures()
 	if (!LaunchFail.Init)
 	{
 		LaunchFail.Init = 1;
-		if (!(random() & 15))
+
+		for (int i = 0;i < 8;i++)
 		{
-			LaunchFail.EarlySICenterCutoff = 1;
-			FirstStageCentreShutdownTime = 20.0 + ((double) (random() & 1023) / 10.0);
+			if (!(random() & 63))
+			{
+				EarlySICutoff[i] = 1;
+				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+			}
 		}
+
 		if (!(random() & 15))
 		{
 			LaunchFail.EarlySIICenterCutoff = 1;

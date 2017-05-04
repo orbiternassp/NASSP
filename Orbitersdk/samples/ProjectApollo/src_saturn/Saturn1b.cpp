@@ -122,12 +122,6 @@ void Saturn1b::initSaturn1b()
 	}
 
 	//
-	// Typical center engine shutdown time.
-	//
-
-	FirstStageCentreShutdownTime = 140.0;
-
-	//
 	// PU shift time.
 	//
 
