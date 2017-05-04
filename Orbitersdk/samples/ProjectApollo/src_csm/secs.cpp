@@ -37,7 +37,6 @@
 #include "connector.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "FloatBag.h"
 #include "secs.h"

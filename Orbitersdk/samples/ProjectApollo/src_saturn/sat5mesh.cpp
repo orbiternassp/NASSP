@@ -39,7 +39,6 @@
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"

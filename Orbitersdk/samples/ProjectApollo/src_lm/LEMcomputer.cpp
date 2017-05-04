@@ -34,7 +34,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"

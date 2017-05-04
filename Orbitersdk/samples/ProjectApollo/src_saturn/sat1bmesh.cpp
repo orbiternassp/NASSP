@@ -40,7 +40,6 @@
 #include "csmcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 
