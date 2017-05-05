@@ -466,13 +466,19 @@ void Saturn::initSaturn()
 	agc.SetDesiredAzimuth(45);
 
 	//
-	// Typical center engine shutdown times.
+	// Engine failure times
 	//
 
 	for (int i = 0;i < 8;i++)
 	{
 		EarlySICutoff[i] = 0;
 		FirstStageFailureTime[i] = 0.0;
+	}
+
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySIICutoff[i] = 0;
+		SecondStageFailureTime[i] = 0.0;
 	}
 
 	//
@@ -4928,11 +4934,15 @@ void Saturn::SetRandomFailures()
 			}
 		}
 
-		if (!(random() & 15))
+		for (int i = 0;i < 5;i++)
 		{
-			LaunchFail.EarlySIICenterCutoff = 1;
-			//SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
+			if (!(random() & 3))
+			{
+				EarlySIICutoff[i] = 1;
+				SecondStageFailureTime[i] = 20.0 + ((double)(random() & 3071) / 10.0);
+			}
 		}
+
 		if (!(random() & 127))
 		{
 			LaunchFail.LETAutoJetFail = 1;

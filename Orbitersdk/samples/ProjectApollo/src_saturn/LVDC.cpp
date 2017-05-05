@@ -7124,6 +7124,18 @@ minorloop:
 			}
 		}
 
+		if (LVDC_Timebase == 3)
+		{
+			for (int i = 0;i < 5;i++)
+			{
+				if (owner->EarlySIICutoff[i] && (LVDC_TB_ETime > owner->SecondStageFailureTime[i]) && (owner->GetThrusterResource(owner->th_main[i]) != NULL))
+				{
+					owner->SetThrusterResource(owner->th_main[i], NULL); // Should stop the engine
+					S2_ENGINE_OUT = true;
+				}
+			}
+		}
+
 		//EDS
 
 		if (LVDC_Timebase == 1)

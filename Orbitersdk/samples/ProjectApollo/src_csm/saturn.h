@@ -539,7 +539,6 @@ public:
 	union LaunchFailures {
 		struct {
 			unsigned Init:1;					///< Flags have been initialised.
-			unsigned EarlySIICenterCutoff:1;	///< The second stage center engine will shut down early.
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
@@ -1438,12 +1437,18 @@ protected:
 	SaturnEventTimer SaturnEventTimer306Display;	//Dummy for checklist controller
 	
 	//
-	// Center engine shutdown times for first and
-	// second stage.
+	// Engine failure times for first stage.
 	//
 
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
+
+	//
+	// Engine failure times for first stage.
+	//
+
+	bool EarlySIICutoff[5];
+	double SecondStageFailureTime[5];
 
 	///
 	/// Flag for use of low-res meshes to reduce graphics lag.
