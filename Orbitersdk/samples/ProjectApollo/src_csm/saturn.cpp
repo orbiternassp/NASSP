@@ -786,10 +786,6 @@ void Saturn::initSaturn()
 	actualVEL = 0;
 	actualALT = 0;
 	actualFUEL = 0;
-	aVAcc = 0;
-	aVSpeed = 0;
-	aHAcc = 0;
-	aZAcc = 0;
 
 	for (i = 0; i < LASTVELOCITYCOUNT; i++) {
 		LastVelocity[i] = _V(0, 0, 0);
@@ -984,32 +980,6 @@ void Saturn::UpdateLaunchTime(double t)
 	if (MissionTime < 0) {
 		MissionTime = (-t);
 	}
-}
-
-double Saturn::SetPitchApo()
-
-{
-	double cpitch;
-	double SatApo1;
-	double DiffApo;
-
-	OBJHANDLE hbody = GetGravityRef();
-	double bradius = oapiGetSize(hbody);
-
-	GetApDist(SatApo1);
-	DiffApo = SatApo1 - (agc.GetDesiredApogee() * 1000. + bradius);
-	cpitch = (GetPitch() * DEG) - aVAcc - (aVSpeed / 50.) + ((agc.GetDesiredApogee() * 1000. - GetAltitude()) / 8000.);
-
-
-	if (cpitch > 35){
-		cpitch=35;
-	}
-	else if(cpitch < -35){
-		cpitch = -35;
-	}
-
-	//sprintf(oapiDebugString(), "diff %f", cpitch );
-	return cpitch;
 }
 
 //
@@ -1449,6 +1419,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ascp.SaveState(scn);
 	ems.SaveState(scn);
 	ordeal.SaveState(scn);
+	mechanicalAccelerometer.SaveState(scn);
 
 	MissionTimerDisplay.SaveState(scn, MISSIONTIMER_2_START_STRING, MISSIONTIMER_END_STRING, false);
 	MissionTimer306Display.SaveState(scn, MISSIONTIMER_306_START_STRING, MISSIONTIMER_END_STRING, false);
@@ -2384,6 +2355,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			rjec.LoadState(scn);
 		} else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
+		} else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
+			mechanicalAccelerometer.LoadState(scn);
 		} else if (!strnicmp(line, MISSIONTIMER_2_START_STRING, sizeof(MISSIONTIMER_2_START_STRING))) {
 			MissionTimerDisplay.LoadState(scn, MISSIONTIMER_END_STRING);
 		} else if (!strnicmp(line, MISSIONTIMER_306_START_STRING, sizeof(MISSIONTIMER_306_START_STRING))) {

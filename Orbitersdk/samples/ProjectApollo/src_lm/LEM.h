@@ -1795,6 +1795,7 @@ protected:
 	LEM_RR RR;
 	GASTA gasta;
 	ORDEAL ordeal;
+	MechanicalAccelerometer mechanicalAccelerometer;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;

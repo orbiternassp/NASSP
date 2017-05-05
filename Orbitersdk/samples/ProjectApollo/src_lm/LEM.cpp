@@ -39,6 +39,7 @@
 #include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "MechanicalAccelerometer.h"
 
 #include "LEM.h"
 #include "tracer.h"
@@ -1210,6 +1211,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		}
+		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
+			mechanicalAccelerometer.LoadState(scn);
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1545,6 +1549,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
 	crossPointerRight.SaveState(scn);
 	ordeal.SaveState(scn);
+	mechanicalAccelerometer.SaveState(scn);
 	checkControl.save(scn);
 }
 

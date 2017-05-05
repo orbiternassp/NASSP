@@ -53,6 +53,7 @@
 #include "ecs.h"
 #include "csmrcs.h"
 #include "ORDEAL.h"
+#include "MechanicalAccelerometer.h"
 #include "checklistController.h"
 #include "payload.h"
 
@@ -972,7 +973,7 @@ public:
 	void EPSTimestep();
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	void GetRCSStatus(int index, RCSStatus &rs);
-	double GetAccelG() { return aZAcc / G; };
+	double GetAccelG() { return mechanicalAccelerometer.GetXAccel() / G; };
 	virtual void GetECSStatus(ECSStatus &ecs);
 	virtual void SetCrewNumber(int number);
 	virtual void SetPrimECSTestHeaterPowerW(double power);
@@ -1580,6 +1581,7 @@ protected:
 
 	SwitchRow AccelGMeterRow;
 	SaturnAccelGMeter AccelGMeter;
+	MechanicalAccelerometer mechanicalAccelerometer;
 
 	SwitchRow THCRotaryRow;
 	THCRotarySwitch THCRotary;
@@ -3905,7 +3907,6 @@ protected:
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
-	double SetPitchApo();
 	void SetStage(int s);
 	void initSaturn();
 	void SwitchClick();

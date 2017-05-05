@@ -365,6 +365,7 @@ void Saturn::SystemsInit() {
 	eca.Init(this);
 	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	mechanicalAccelerometer.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
@@ -542,6 +543,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
+		mechanicalAccelerometer.TimeStep(simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
