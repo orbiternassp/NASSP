@@ -246,6 +246,7 @@ void LEM::InitSwitches() {
 	TempMonitorInd.Register(PSH,"TempMonitorInd",-100.0,200,2);
 	EngineThrustInd.Register(PSH,"EngineThrustInd",0,100,2);
 	CommandedThrustInd.Register(PSH,"CommandedThrustInd",0,100,2);
+	ThrustWeightInd.Register(PSH, "ThrustWeightInd", 0, 6, 2);
 	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
 	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
@@ -1255,7 +1256,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
 		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
 		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
-
+		srf[SRF_TW_NEEDLE]			= oapiCreateSurface (LOADBMP (IDB_TW_NEEDLE));
 
 		//
 		// Set color keys where appropriate.
@@ -1292,6 +1293,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_RADAR_TAPE],	     	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_ROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_TW_NEEDLE],			g_Param.col[4]);
 		//oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
 
 		//		break;
@@ -1412,6 +1414,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1202,  245, 1478,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(1199,  439, 1357,  564), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_PROP_AND_ENGINE_IND,	    _R( 535,  428,  784,  553), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_THRUST_WEIGHT_INDICATOR,			_R( 689,  632,  720,  812), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_LEFT,					    _R( 349,   54,  670,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_RIGHT,				    _R(1184,   54, 1484,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
@@ -1671,6 +1674,9 @@ void LEM::SetSwitches(int panel) {
 			MainFuelPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 			MainOxidizerTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 			MainOxidizerPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+
+			ThrustWeightIndRow.Init(AID_THRUST_WEIGHT_INDICATOR, MainPanel);
+			ThrustWeightInd.Init(srf[SRF_TW_NEEDLE], ThrustWeightIndRow, this);
 
 			RCSIndicatorRow.Init(AID_LM_RCSIND, MainPanel);
 			LMRCSATempInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);

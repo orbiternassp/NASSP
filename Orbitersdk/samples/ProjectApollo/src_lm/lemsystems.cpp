@@ -1218,7 +1218,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	atca.Timestep(simt);
 	ordeal.Timestep(simdt);
 	ordeal.SystemTimestep(simdt);
-	mechanicalAccelerometer.Timestep(simdt);
+	mechanicalAccelerometer.TimeStep(simdt);
 	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power

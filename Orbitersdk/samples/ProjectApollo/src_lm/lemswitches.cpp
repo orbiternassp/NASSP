@@ -736,6 +736,38 @@ void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
+// Thrust/Weight Indicator
+ThrustWeightInd::ThrustWeightInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void ThrustWeightInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double ThrustWeightInd::QueryValue()
+
+{
+	return lem->mechanicalAccelerometer.GetYAccel() / 1.594104;
+}
+
+void ThrustWeightInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, 20, (int)(161.5 - 25.0*v), 0, 0, 8, 7, SURF_PREDEF_CK);
+}
+
+double ThrustWeightInd::AdjustForPower(double val)
+{
+	return val;
+}
+
 // Main Fuel Temperature Indicator
 MainFuelTempInd::MainFuelTempInd()
 

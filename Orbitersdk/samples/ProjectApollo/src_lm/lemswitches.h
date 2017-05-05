@@ -364,6 +364,19 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
+class ThrustWeightInd : public MeterSwitch {
+public:
+	ThrustWeightInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	double AdjustForPower(double val);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
 class MainFuelTempInd : public MeterSwitch {
 public:
 	MainFuelTempInd();

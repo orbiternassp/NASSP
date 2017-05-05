@@ -54,7 +54,7 @@
 
 #include "lemswitches.h"
 #include "missiontimer.h"
-
+#include "MechanicalAccelerometer.h"
 #include "connector.h"
 #include "checklistController.h"
 #include "payload.h"
@@ -578,6 +578,7 @@ public:
 		SRF_RADAR_TAPE,
 		SRF_ORDEAL_PANEL,
 		SRF_ORDEAL_ROTARY,
+		SRF_TW_NEEDLE,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -800,6 +801,9 @@ protected:
 	MainFuelPressInd MainFuelPressInd;
 	MainOxidizerTempInd MainOxidizerTempInd;
 	MainOxidizerPressInd MainOxidizerPressInd;
+
+	SwitchRow ThrustWeightIndRow;
+	ThrustWeightInd ThrustWeightInd;
 
 	SwitchRow GuidContSwitchRow;
 	ToggleSwitch GuidContSwitch;
@@ -1861,6 +1865,7 @@ protected:
 	friend class DECA;
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
+	friend class ThrustWeightInd;
 	friend class CrossPointer;
 	friend class LEMPanelOrdeal;
 

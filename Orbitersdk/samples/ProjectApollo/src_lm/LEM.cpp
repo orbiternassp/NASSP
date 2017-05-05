@@ -39,7 +39,6 @@
 #include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "MechanicalAccelerometer.h"
 
 #include "LEM.h"
 #include "tracer.h"
