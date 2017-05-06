@@ -5304,7 +5304,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) || owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO()))
+				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) 
+					|| owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO() 
+					|| (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBCutoff))))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;//-simdt;
@@ -6695,6 +6697,11 @@ restartprep:
 
 			Sbardot = DotS / Mag(PosS)*cos(beta) + DotP*sin(beta);
 
+			if (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+			{
+				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
+				goto INHcheck;
+			}
 			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
 			{
 				goto INHcheck;
