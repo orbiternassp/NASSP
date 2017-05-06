@@ -2705,20 +2705,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Docking radar sound only for CSM_LEM_STAGE when nothing docked
-	//
-
-	if (stage == CSM_LEM_STAGE) {
-		if (!dockingprobe.IsDocked())
-			soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
-		else
-			soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	}
-	else {
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	}
-
-	//
 	// Destroy obsolete stages
 	//
 
