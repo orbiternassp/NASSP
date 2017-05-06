@@ -789,13 +789,10 @@ void Saturn::initSaturn()
 	KEY8=false;
 	KEY9=false;
 
-	actualVEL = 0;
-	actualALT = 0;
 	actualFUEL = 0;
 
 	for (i = 0; i < LASTVELOCITYCOUNT; i++) {
 		LastVelocity[i] = _V(0, 0, 0);
-		LastVerticalVelocity[i] = 0;
 		LastSimt[i] = 0;
 	}
 	LastVelocityFilled = -1;
@@ -2765,55 +2762,22 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	GetStatus(status);
 	
 	double aSpeed = length(status.rvel);
-	actualVEL = (aSpeed / 1000.0 * 3600.0);
-	actualALT = GetAltitude();
 	actualFUEL = ((GetFuelMass() * 100.0) / GetMaxFuelMass());
-		
-	VECTOR3 hvel;
-	GetHorizonAirspeedVector(hvel);
-	aVSpeed = hvel.y;
 
 	// Manage velocity cache
 	for (i = LASTVELOCITYCOUNT - 1; i > 0; i--) {
 		LastVelocity[i] = LastVelocity[i - 1];
-		LastVerticalVelocity[i] = LastVerticalVelocity[i -1];
 		LastSimt[i] = LastSimt[i - 1];
 	}
 	if (LastVelocityFilled < LASTVELOCITYCOUNT - 1)	LastVelocityFilled++;
 
 	// Store current velocities
 	LastVelocity[0] = status.rvel;
-	LastVerticalVelocity[0] = aVSpeed;
 	LastSimt[0] = simt;
 
 	// Calculate accelerations
 	if (LastVelocityFilled > 0) {
 		aHAcc = (aSpeed - length(LastVelocity[LastVelocityFilled])) / (simt - LastSimt[LastVelocityFilled]);
-		aVAcc = (aVSpeed - LastVerticalVelocity[LastVelocityFilled]) / (simt - LastSimt[LastVelocityFilled]);
-
-		//  This stuff is to compute the component of the total acceleration
-		//	along the z axis. This supports the "ACCEL G meter" on the panel.
-		double agrav, radius, mass, calpha, salpha, cbeta, sbeta, radius2, DVX, DVY, DVZ;
-		OBJHANDLE hPlanet;
-
-		calpha = cos(status.arot.x);
-		cbeta = cos(status.arot.y);
-		salpha = sin(status.arot.x);
-		sbeta = sin(status.arot.y);
-
-		DVX = status.rvel.x - LastVelocity[LastVelocityFilled].x;
-		DVY = status.rvel.y - LastVelocity[LastVelocityFilled].y;
-		DVZ = status.rvel.z - LastVelocity[LastVelocityFilled].z;
-		DVZ = cbeta * (DVY * salpha + DVZ * calpha) - DVX * sbeta;
-		aZAcc = DVZ / (simt - LastSimt[LastVelocityFilled]);
-
-		hPlanet = GetSurfaceRef();
-		mass = oapiGetMass(hPlanet);
-		radius2 = status.rpos.x * status.rpos.x + status.rpos.y * status.rpos.y + status.rpos.z * status.rpos.z;
-		radius = sqrt(radius2);
-		agrav = cbeta * (status.rpos.y * salpha + status.rpos.z * calpha) - status.rpos.x * sbeta;
-		agrav *= GKSI * mass / (radius * radius2);
-		aZAcc += agrav;
 	}
 
 	SystemsTimestep(simt, simdt, mjd);
@@ -2832,14 +2796,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		if (GetAttitudeMode() == ATTMODE_LIN){
 			SetAttitudeMode(ATTMODE_ROT);
 		}
-	}
-
-	if (GetAltitude() < 1470) {
-		actualVEL = actualVEL-1470+GetAltitude();
-	}
-
-	if (GroundContact()) {
-		actualVEL = 0;
 	}
 
 	if (habort) {

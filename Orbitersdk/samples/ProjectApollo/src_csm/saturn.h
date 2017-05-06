@@ -3395,10 +3395,7 @@ protected:
 	// And state that doesn't need to be saved.
 	//
 
-	double aVAcc;
-	double aVSpeed;
 	double aHAcc;
-	double aZAcc;
 
 	///
 	/// Mesh offset for BPC and LET.
@@ -3412,13 +3409,10 @@ protected:
 	///
 	double S4Offset;
 
-	double actualVEL;
-	double actualALT;
 	double actualFUEL;
 
 	#define LASTVELOCITYCOUNT 50
 	VECTOR3 LastVelocity[LASTVELOCITYCOUNT];
-	double LastVerticalVelocity[LASTVELOCITYCOUNT];
 	double LastSimt[LASTVELOCITYCOUNT];
 	int LastVelocityFilled;
 
