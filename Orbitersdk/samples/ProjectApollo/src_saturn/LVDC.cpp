@@ -2791,6 +2791,7 @@ LVDC::LVDC(){
 	directstagereset = false;
 	AutoAbortInitiate = false;
 	TwoEngOutAutoAbortDeactivate = false;
+	IGM_Failed = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -3223,6 +3224,7 @@ void LVDC::Init(Saturn* vs){
 	directstagereset = true;
 	AutoAbortInitiate = false;
 	TwoEngOutAutoAbortDeactivate = false;
+	IGM_Failed = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3545,6 +3547,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
 	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
+	oapiWriteScenario_int(scn, "LVDC_IGM_Failed", IGM_Failed);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
@@ -4211,6 +4214,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
 		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
+		papiReadScenario_bool(line, "LVDC_IGM_Failed", IGM_Failed);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
@@ -5726,7 +5730,21 @@ GuidanceLoop:
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
 			if(TAS - TB7<0){
 				if(TAS - TB5 < TI5F2){ goto minorloop; }
-				if(TAS - TB6 - T_IGM<0){goto restartprep;}else{goto IGM;};
+				if(TAS - TB6 - T_IGM<0)
+				{
+					goto restartprep;
+				}
+				else
+				{
+					if (!IGM_Failed)
+					{
+						goto IGM;
+					}
+					else
+					{
+						goto minorloop;
+					}
+				};
 			}else{
 				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
 			}
@@ -5997,6 +6015,14 @@ chitilde:	Pos4 = mul(MX_G,PosS);
 
 			Lt_3 = V_ex3 * log(tau3 / (tau3-Tt_3));
 			fprintf(lvlog,"Lt_3 = %f, tau3 = %f, Tt_3 = %f\r\n",Lt_3,tau3,Tt_3);
+
+			if (isnan(Lt_3))
+			{
+				IGM_Failed = true;
+				owner->SetLVGuidLight();
+				fprintf(lvlog, "IGM Error Detected! \r\n");
+				goto minorloop;
+			}
 
 			Jt_3 = (Lt_3 * tau3) - (V_ex3 * Tt_3);
 			fprintf(lvlog,"Jt_3 = %f",Jt_3);
@@ -6545,7 +6571,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 
 restartprep:
 		{
-			// TLI restart & targeting logic; TBD;
+			// TLI restart & targeting logic;
+
+			//Manual TB6 Initiation
+			if (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+			{
+				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
+				goto INHcheck;
+			}
 
 			//Determine if XLUNAR-INHIBIT
 			if (GATE0)	//Restart prep enabled?
@@ -6697,11 +6730,6 @@ restartprep:
 
 			Sbardot = DotS / Mag(PosS)*cos(beta) + DotP*sin(beta);
 
-			if (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
-			{
-				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
-				goto INHcheck;
-			}
 			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
 			{
 				goto INHcheck;

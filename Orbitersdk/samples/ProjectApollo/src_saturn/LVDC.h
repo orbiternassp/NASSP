@@ -67,6 +67,7 @@ private:
 	bool S2_Startup;								// S2 Engine Start
 	bool directstagereset;							// Direct Stage Reset
 	bool AutoAbortInitiate;
+	bool IGM_Failed;
 	
 	// These are variables that are not really part of the LVDC software.
 	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
