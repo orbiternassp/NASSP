@@ -37,7 +37,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -364,8 +363,9 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
-	ems.Init(this);
-	ordeal.Init(this);
+	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
+	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	mechanicalAccelerometer.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
@@ -444,8 +444,8 @@ void Saturn::SystemsInit() {
 	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA);    
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB);    
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
 	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
@@ -463,9 +463,6 @@ void Saturn::SystemsInit() {
 						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
 	
 	GlycolCoolingController.Init(this);
-
-	// Ground Systems Init
-	mcc.Init(this);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -506,7 +503,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	if (stage == ONPAD_STAGE && MissionTime >= -10800) {	// 3h 00min before launch
 		// Slow down time acceleration
-		if (Realism && oapiGetTimeAcceleration() > 1.0)
+		if (oapiGetTimeAcceleration() > 1.0)
 			oapiSetTimeAcceleration(1.0);
 
 		stage = PRELAUNCH_STAGE;
@@ -546,6 +543,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
+		mechanicalAccelerometer.TimeStep(simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
@@ -564,9 +562,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		usb.TimeStep(MissionTime);
 		hga.TimeStep(MissionTime, simdt);
 		dataRecorder.TimeStep( MissionTime, simdt );
-
-		// Update Ground Data
-		mcc.TimeStep(simdt);
 
 		//
 		// Systems state handling
@@ -1189,6 +1184,10 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
+		MissionTimerDisplay.SystemTimestep(tFactor);
+		MissionTimer306Display.SystemTimestep(tFactor);
+		EventTimerDisplay.SystemTimestep(tFactor);
+		EventTimer306Display.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -1201,7 +1200,7 @@ void Saturn::JoystickTimestep()
 {
 	// Read joysticks and feed data to the computer
 	// Do not do this if we aren't the active vessel.
-	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
+	if (oapiGetFocusInterface() == this) {
 
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
@@ -1351,7 +1350,7 @@ void Saturn::JoystickTimestep()
 				}
 			}
 		// Use Orbiter's attitude control as RHC
-		} else if (OrbiterAttitudeDisabled) {
+		} else {
 			// Roll
 			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
 				rhc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
@@ -1429,7 +1428,7 @@ void Saturn::JoystickTimestep()
 
 		// CM/SM transfer, either motor transfers all thruster, see AOH Figure 2.5-4
 		bool sm_sep = false;
-		if (rjec.GetCMTransferMotor1() || rjec.GetCMTransferMotor2()) sm_sep = true;
+		if (secs.rcsc.GetCMTransferMotor1() || secs.rcsc.GetCMTransferMotor2()) sm_sep = true;
 
 		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
 			if (rhc_x_pos < 2738) {
@@ -1818,7 +1817,7 @@ void Saturn::JoystickTimestep()
 			}
 
 		// Use Orbiter's attitude control as THC
-		} else if (OrbiterAttitudeDisabled) {
+		} else {
 			// Up/down
 			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
 				thc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
@@ -1898,15 +1897,23 @@ void Saturn::JoystickTimestep()
 		}
 	}
 
+	//SPS Abort Ullage
+	if ((secs.MESCA.FireUllage() && RCSLogicMnACircuitBraker.IsPowered()) || (secs.MESCB.FireUllage() && RCSLogicMnBCircuitBraker.IsPowered()))
+	{
+		SetRCSState(RCS_SM_QUAD_B, 4, true);
+		SetRCSState(RCS_SM_QUAD_D, 3, true);
+		SetRCSState(RCS_SM_QUAD_A, 4, true);
+		SetRCSState(RCS_SM_QUAD_C, 3, true);
+		//TBD: Inhibit Pitch and Yaw
+	}
+
 	//
 	// CM RCS propellant dump 
 	//
 	
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayA() && secs.rcsc.GetPropellantDumpInhibitA() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
 		SetCMRCSState(2, true);	
-		double d = GetThrusterLevel(th_att_cm[2]);
-		
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
@@ -1914,7 +1921,7 @@ void Saturn::JoystickTimestep()
 	}
 		
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayB() && secs.rcsc.GetPropellantDumpInhibitB() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
@@ -2064,15 +2071,6 @@ void Saturn::CheckSMSystemsState()
 	}
 }
 
-bool Saturn::AutopilotActive()
-
-{
-	ChannelValue val12;
-	val12 = agc.GetOutputChannel(012);
-
-	return autopilot && !val12[EnableSIVBTakeover];
-}
-
 bool Saturn::CabinFansActive()
 
 {
@@ -2183,74 +2181,6 @@ void Saturn::ClearLiftoffLight()
 
 {
 	LAUNCHIND[0] = false;
-}
-
-//
-// These switches weren't lit for real, but can be useful in low-realism
-// scenarios.
-//
-
-void Saturn::SetLESMotorLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	LesMotorFireSwitch.SetLit(lit);
-}
-
-void Saturn::SetCanardDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CanardDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetDrogueDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	DrogueDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetCSMLVSepLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CsmLvSepSwitch.SetLit(lit);
-}
-
-void Saturn::SetApexCoverLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	ApexCoverJettSwitch.SetLit(lit);
-}
-
-void Saturn::SetMainDeployLight(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	MainDeploySwitch.SetLit(lit);
-}
-
-void Saturn::SetCmRcsHeDumpSwitch(bool lit)
-
-{
-	if (lit && SequencerSwitchLightingDisabled)
-		lit = false;
-
-	CmRcsHeDumpSwitch.SetLit(lit);
 }
 
 void Saturn::SetLVGuidLight()
@@ -3280,6 +3210,7 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	ChannelValue val11;
 	ChannelValue val13;
 	ChannelValue val33;
+	ChannelValue val163;
 
 	val11 = agc.GetOutputChannel(011);
 	if (val11[ISSWarning]) 
@@ -3287,17 +3218,11 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	else
 		aws.ISSWarning = false;
 
-	val13 = agc.GetOutputChannel(013);
-	if (val13[TestAlarms])  
-		aws.TestAlarms = true;
+	val163 = agc.GetOutputChannel(0163);
+	if (val163[Ch163DSKYWarn])
+		aws.DSKYWarn = true;
 	else
-		aws.TestAlarms = false;
-
-	val33 = agc.GetInputChannel(033);
-	if (val33[AGCWarning])
-		aws.CMCWarning = true;
-	else
-		aws.CMCWarning = false;
+		aws.DSKYWarn = false;
 		
 	aws.PGNSWarning = false;
 	// Restart alarm
@@ -3340,6 +3265,12 @@ bool Saturn::LETAttached()
 
 {
 	return LESAttached;
+}
+
+void Saturn::CutLESLegs()
+
+{
+	LESLegsCut = true;
 }
 
 //
@@ -3409,41 +3340,39 @@ void Saturn::RCSSoundTimestep() {
 
 	int i;
 	bool on = false;
-	if (OrbiterAttitudeDisabled) {
-		// CSM RCS
-		if (stage == CSM_LEM_STAGE) {
-			for (i = 1; i < 5; i++) {
-				if (th_rcs_a[i]) {
-					if (GetThrusterLevel(th_rcs_a[i])) on = true;
-				}
-				if (th_rcs_b[i]) {
-					if (GetThrusterLevel(th_rcs_b[i])) on = true;
-				}
-				if (th_rcs_c[i]) {
-					if (GetThrusterLevel(th_rcs_c[i])) on = true;
-				}
-				if (th_rcs_d[i]) {
-					if (GetThrusterLevel(th_rcs_d[i])) on = true;
-				}
+	// CSM RCS
+	if (stage == CSM_LEM_STAGE) {
+		for (i = 1; i < 5; i++) {
+			if (th_rcs_a[i]) {
+				if (GetThrusterLevel(th_rcs_a[i])) on = true;
+			}
+			if (th_rcs_b[i]) {
+				if (GetThrusterLevel(th_rcs_b[i])) on = true;
+			}
+			if (th_rcs_c[i]) {
+				if (GetThrusterLevel(th_rcs_c[i])) on = true;
+			}
+			if (th_rcs_d[i]) {
+				if (GetThrusterLevel(th_rcs_d[i])) on = true;
 			}
 		}
-		// CM RCS
-		if (stage >= CSM_LEM_STAGE) {
-			for (i = 0; i < 12; i++) {
-				if (th_att_cm[i]) {
-					if (GetThrusterLevel(th_att_cm[i])) on = true;
-				}
-			}		
-		}
-		// Play/stop sounds
-		if (on) {
-			if (RCSFireSound.isPlaying()) {
-				RCSSustainSound.play(LOOP);
-			} else if (!RCSSustainSound.isPlaying()) {
-				RCSFireSound.play();
-			}				
-		} else {
-			RCSSustainSound.stop();
-		}
+	}
+	// CM RCS
+	if (stage >= CSM_LEM_STAGE) {
+		for (i = 0; i < 12; i++) {
+			if (th_att_cm[i]) {
+				if (GetThrusterLevel(th_att_cm[i])) on = true;
+			}
+		}		
+	}
+	// Play/stop sounds
+	if (on) {
+		if (RCSFireSound.isPlaying()) {
+			RCSSustainSound.play(LOOP);
+		} else if (!RCSSustainSound.isPlaying()) {
+			RCSFireSound.play();
+		}				
+	} else {
+		RCSSustainSound.stop();
 	}
 }

@@ -39,7 +39,6 @@
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"
@@ -50,6 +49,7 @@
 #include "sii.h"
 #include "s1c.h"
 #include "sm.h"
+#include "Sat5Abort2.h"
 
 static PARTICLESTREAMSPEC srb_contrail = {
 	0, 
@@ -299,7 +299,6 @@ void SaturnV::ChangeSatVBuildState (int bstate)
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	SetSurfaceFrictionCoeff(10e80,10e80);
 	ClearMeshes();
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
@@ -434,7 +433,6 @@ void SaturnV::SetFirstStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	SetSurfaceFrictionCoeff(10e90,10e90);
 
 	//
 	// ************************ visual parameters **********************************
@@ -443,7 +441,15 @@ void SaturnV::SetFirstStage ()
 	ClearMeshes();
 	UINT meshidx;
 	double TCP=-101.5+STG0O-TCPO;
-	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
+	static const DWORD ntdvtx = 4;
+	static TOUCHDOWNVTX tdvtx[4] = {
+		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
+	 };
+	SetTouchdownPoints(tdvtx, ntdvtx);
+	//SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);
@@ -478,6 +484,8 @@ void SaturnV::SetFirstStageEngines ()
 	int i;
 
 	ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	//
 	// ************************* propellant specs **********************************
@@ -590,6 +598,8 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 {
     ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	if(ph_1st) {
 		DelPropellantResource(ph_1st);
@@ -699,7 +709,6 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	SetSIICMixtureRatio(MixtureRatio);
 }
-
 
 void SaturnV::SetThirdStage ()
 
@@ -811,7 +820,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 void SaturnV::SetThirdStageEngines (double offset)
 {
 	DelThrusterGroup(THGROUP_MAIN, true);
-    ClearThrusterDefinitions();
+	ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
 
 	// ************************* propellant specs **********************************
 
@@ -916,31 +927,31 @@ void SaturnV::SeparateStage (int new_stage)
 	vs1.eng_main = vs1.eng_hovr = 0.0;
 	vs2.eng_main = vs2.eng_hovr = 0.0;
 
-	if (stage == LAUNCH_STAGE_ONE && !bAbort)
+	if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_TWO)
 	{
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0, 0, -4.0);
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage > LAUNCH_STAGE_TWO)
 	{
 		ofs1= OFS_ABORT;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO && !bAbort)
+	if (stage == LAUNCH_STAGE_TWO && new_stage == LAUNCH_STAGE_TWO_ISTG_JET)
 	{
 		ofs1 = OFS_STAGE12;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage >= CSM_LEM_STAGE)
 	{
 		ofs1= OFS_ABORT2;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	 	ofs1 = OFS_STAGE2;
 		vel1 = _V(0,0,-6.0);
@@ -985,7 +996,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SetChuteStage1 ();
 	}
 
-    if (stage == LAUNCH_STAGE_ONE && !bAbort )
+    if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_TWO)
 	{
 	    vs1.vrot.x = 0.0025;
 		vs1.vrot.y = 0.0025;
@@ -1015,7 +1026,6 @@ void SaturnV::SeparateStage (int new_stage)
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
 			S1Config.MissionTime = MissionTime;
-			S1Config.Realism = Realism;
 			S1Config.VehicleNo = VehicleNo;
 			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
@@ -1060,7 +1070,7 @@ void SaturnV::SeparateStage (int new_stage)
 		}
 	}
 
-	if (stage == LAUNCH_STAGE_TWO && !bAbort )
+	if (stage == LAUNCH_STAGE_TWO && new_stage == LAUNCH_STAGE_TWO_ISTG_JET)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -1105,7 +1115,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ConfigureStageMeshes (new_stage);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -1137,7 +1147,6 @@ void SaturnV::SeparateStage (int new_stage)
 		S2Config.EmptyMass = SII_EmptyMass;
 		S2Config.MainFuelKg = GetPropellantMass(ph_2nd);
 		S2Config.MissionTime = MissionTime;
-		S2Config.Realism = Realism;
 		S2Config.VehicleNo = VehicleNo;
 		S2Config.ISP_SECOND_SL = ISP_SECOND_SL;
 		S2Config.ISP_SECOND_VAC = ISP_SECOND_VAC;
@@ -1175,7 +1184,6 @@ void SaturnV::SeparateStage (int new_stage)
 		SetCSMStage();
 
 		ShiftCentreOfMass(_V(0, 0, 13.15));
-		SeparationSpeed = 0.15;
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1216,7 +1224,6 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.RCSCFuelKg = GetPropellantMass(ph_rcs2);
 		SMConfig.RCSDFuelKg = GetPropellantMass(ph_rcs3);
 		SMConfig.MissionTime = MissionTime;
-		SMConfig.Realism = Realism;
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = !NoHGA;
@@ -1260,7 +1267,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1275,7 +1282,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
 	}
 
-	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage >= CSM_LEM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1286,7 +1293,19 @@ void SaturnV::SeparateStage (int new_stage)
 		char VName[256];
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
-		SetReentryStage();
+
+		Sat5Abort2 *stage2 = static_cast<Sat5Abort2 *> (oapiGetVesselInterface(habort));
+		stage2->SetState(new_stage == CM_STAGE);
+
+		if (new_stage == CSM_LEM_STAGE)
+		{
+			SetCSMStage();
+		}
+		else
+		{
+			SetReentryStage();
+		}
+
 		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
 }

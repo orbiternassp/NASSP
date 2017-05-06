@@ -30,7 +30,6 @@ typedef struct
 {
 
 	int MissionNo;			///< Apollo mission number.
-	int Realism;			///< Realism level.
 
 } LRVSettings;
 
@@ -117,7 +116,6 @@ protected:
 
 	int ApolloNo;
 	int StepCount;
-	int Realism;
 	int LRVMeshIndex;
 
 	//Animation Related

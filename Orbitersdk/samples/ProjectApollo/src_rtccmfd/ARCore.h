@@ -42,9 +42,13 @@ public:
 	void LmkCalc();
 	void TEICalc();
 	void EntryCalc();
+	void TLCCCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void LandingSiteUpdate();
+	void LandingSiteUplink();
 	void VecPointCalc();
+	void TerrainModelCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -71,6 +75,7 @@ public:
 	void StopIMFDRequest();
 
 	// SUBTHREAD MANAGEMENT
+	HANDLE hThread;
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
@@ -85,12 +90,12 @@ public:
 	//GENERAL PARAMETERS
 	double GETbase;			//Launch MJD
 	double AGCEpoch;
-	int mission;			//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
-	OBJHANDLE gravref;		//Earth or Moon
-	double P30TIG;			//Maneuver GET
-	VECTOR3 dV_LVLH;		//LVLH maneuver vector
-	int vesseltype; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
+	double P30TIG;				//Maneuver GET
+	VECTOR3 dV_LVLH;			//LVLH maneuver vector
+	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
+	double t_Land;				//Time of landing
 	bool inhibUplLOS;
 
 	//LAMBERT PAGE
@@ -156,6 +161,7 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
+	int svmode;		//0 = state vector, 1 = landing site update
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
@@ -180,13 +186,26 @@ public:
 	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
 
-	//LOI PAGE
-	int LOImaneuver; //0 = Last MCC, 1 = LOI-1 (w/ MCC), 2 = LOI-1 (w/o MCC), 3 = LOI-2, 4 = TLI
-	double LOIGET, LOIPeriGET, LOILat, LOILng;
-	double LOIapo, LOIperi, LOIinc;
-	VECTOR3 TLCC_dV_LVLH, LOI_dV_LVLH;
-	double TLCC_TIG, LOI_TIG;
+	//TLCC PAGE
+	int TLCCmaneuver;	//0 = TLI (nodal), 1 = TLI (free return), 2 = XYZ and T (Nodal) Targeting, 3 = FR BAP Fixed LPO, 4 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	VECTOR3 TLCC_dV_LVLH;
+	//Initial guess of pericynthion GET
+	double TLCCPeriGET;
+	//Corrected time of pericynthion
+	double TLCCPeriGETcor;
+	//Initial guess and corrected TIG
+	double TLCC_GET, TLCC_TIG;
+	double TLCCPeri;
+	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl;
+	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	VECTOR3 R_TLI, V_TLI;
+	bool TLCCSolGood;
+
+	//LOI PAGE
+	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
+	double LOIapo, LOIperi, LOIazi;
+	VECTOR3 LOI_dV_LVLH;
+	double LOI_TIG;
 
 	//LANDMARK TRACKING PAGE
 	double LmkLat, LmkLng;
@@ -206,7 +225,7 @@ public:
 	double DOIGET;						//Initial guess for the DOI TIG
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
-	double DOI_t_PDI, DOI_t_L, DOI_CR;	//Time of PDI, time of landing, cross range at PDI
+	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -228,6 +247,10 @@ public:
 	VECTOR3 PC_dV_LVLH;
 	double PCEarliestGET;	//Initial guess for the PC TIG
 	double PC_TIG;			//Corrected PC TIG
+
+
+	//Terrain Model
+	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

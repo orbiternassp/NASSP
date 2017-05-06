@@ -364,6 +364,19 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
+class ThrustWeightInd : public MeterSwitch {
+public:
+	ThrustWeightInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	double AdjustForPower(double val);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
 class MainFuelTempInd : public MeterSwitch {
 public:
 	MainFuelTempInd();
@@ -430,4 +443,17 @@ public:
 	bool Push();
 protected:
 	ToggleSwitch* startbutton;
+};
+
+class LEMPanelOrdeal : public MeterSwitch {
+public:
+	void Init(SwitchRow &row, LEM *l);
+	double QueryValue() { return 0; }
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface) {};
+
+	int GetState();
+	void SetState(int value);
+
+protected:
+	LEM *lem;
 };

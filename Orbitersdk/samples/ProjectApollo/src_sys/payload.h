@@ -38,7 +38,6 @@ struct PayloadSettings {
 	char CSMName[64];
 	bool Crewed;
 	bool AutoSlow;
-	int Realism;
 	char checklistFile[100];
 	bool checkAutoExecute;
 

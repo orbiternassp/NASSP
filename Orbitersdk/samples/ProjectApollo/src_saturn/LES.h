@@ -33,12 +33,11 @@
 typedef union
 {
 	struct {
-		unsigned LES_SETTINGS_MASS:1; 		///< Mass settings are valid.
-		unsigned LES_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned LES_SETTINGS_MFUEL:1;		///< Main Fuel mass settings are valid.
+		unsigned LES_SETTINGS_JFUEL:1;		///< Jettison Fuel mass settings are valid.
+		unsigned LES_SETTINGS_PFUEL:1;		///< Pitch Control Fuel mass settings are valid.
 		unsigned LES_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
 		unsigned LES_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
-		unsigned LES_SETTINGS_THRUST:1;		///< Thrust setting is valid.
-		unsigned LES_SETTINGS_MAIN_FUEL:1;	///< Main fuel setting is valid, jettison fuel setting is not valid.
 	};
 	unsigned int word;						///< Set to zero to clear all flags.
 } LESSettingFlags;
@@ -51,36 +50,17 @@ typedef union
 typedef struct 
 {
 	LESSettingFlags SettingsType;		///< Which of the settings are valid?
-	int VehicleNo;						///< Saturn vehicle number.
-	int Realism;						///< Realism value.
 
-	double ISP_LET_VAC;					///< LET ISP in a vacuum
-	double ISP_LET_SL;					///< LET ISP at sea level.
-
-	double THRUST_VAC_LET;				///< LET thrust in vacuum.
-
-	double MissionTime;					///< Current Mission Elapsed Time.
-	double EmptyMass;					///< Empty mass of LET without fuel.
-
-	double MainFuelKg;					///< Amount of fuel in kg available for the main abort engine.
+	double LaunchEscapeFuelKg;			///< Amount of fuel in kg available for the main abort engine.
 	double JettisonFuelKg;				///< Amount of fuel in kg available for the jettison engine.
+	double PitchControlFuelKg;
 
 	bool ProbeAttached;					///< The docking probe is attached to the LES (i.e. this is an abort jettison).
-	bool FireMain;						///< Fire the main abort motors rather than jettison motor?
+	bool FireLEM;
+	bool FireTJM;
+	bool FirePCM;
 	bool LowRes;						///< Use low-res mesh if available?
 } LESSettings;
-
-///
-/// Specifies the main state of the LES.
-/// \brief LES state.
-/// \ingroup SepStageSettings
-///
-enum LESState
-{
-	LES_STATE_SETUP,			///< LES is waiting for setup call.
-	LES_STATE_JETTISON,			///< LES is firing motors to jettison.
-	LES_STATE_WAITING			///< LES is idle after motor burnout.
-};
 
 //
 // LES stage class.
@@ -178,21 +158,6 @@ protected:
 	void SetMainState(int s);
 
 	///
-	/// \brief Apollo vehicle number.
-	///
-	int VehicleNo;
-
-	///
-	/// \brief Current state for automated operations.
-	///
-	LESState State;
-
-	///
-	/// \brief Realism value.
-	///
-	int Realism;
-
-	///
 	/// \brief Flag use of low-res meshes if possible, to reduce graphics lag.
 	///
 	bool LowRes;
@@ -209,7 +174,9 @@ protected:
 	/// gives it an acceleration of over 10g!
 	/// \brief Fire main abort motor rather than jettison motor?
 	///
-	bool FireMain;
+	bool FireLEM;
+	bool FireTJM;
+	bool FirePCM;
 
 	///
 	/// \brief Empty mass of the LES, in kilograms.
@@ -219,79 +186,69 @@ protected:
 	///
 	/// \brief Total fuel mass of the main abort motor in kilograms.
 	///
-	double MainFuel;
+	double LaunchEscapeFuel;
+	double LaunchEscapeFuelMax;
 
 	///
 	/// \brief Total fuel mass of the jettison motor in kilograms.
 	///
 	double JettisonFuel;
-
-	///
-	/// The current Mission Elapsed Time. This is the main variable used for timing
-	/// automated events during the mission, giving the time in seconds from launch
-	/// (negative for the pre-launch countdown).
-	/// \brief Mission Elapsed Time.
-	///
-	double MissionTime;
-
-	///
-	/// The time in seconds of the next automated event to occur in the mission. This 
-	/// is a generic value used by the autopilot and staging code.
-	/// \brief Time of next event.
-	///
-	double NextMissionEventTime;
-
-	///
-	/// The time in seconds of the previous automated event that occur in the mission. This 
-	/// is a generic value used by the autopilot and staging code.
-	/// \brief Time of last event.
-	///
-	double LastMissionEventTime;
+	double JettisonFuelMax;
+	double PitchControlFuel;
+	double PitchControlFuelMax;
 
 	///
 	/// \brief Thrust of the main abort motor in a vacuum, in Newtons.
 	///
-	double THRUST_VAC_MAIN;
+	double THRUST_VAC_LEM;
 
 	///
 	/// \brief Thrust of the jettison motor in a vacuum, in Newtons.
 	///
-	double THRUST_VAC_JETTISON;
+	double THRUST_VAC_TJM;
+	double THRUST_VAC_PCM;
 
 	///
 	/// \brief ISP of the motor we're using, in a vacuum.
 	///
-	double ISP_VAC;
+	double ISP_LEM_VAC;
+	double ISP_TJM_VAC;
+	double ISP_PCM_VAC;
 
 	///
 	/// \brief ISP of the motor we're using, at sea level.
 	///
-	double ISP_SL;
+	double ISP_LEM_SL;
+	double ISP_TJM_SL;
+	double ISP_PCM_SL;
 
 	///
 	/// \brief Jettison motor thrusters.
 	///
-	THRUSTER_HANDLE th_jettison[2];
+	THRUSTER_HANDLE th_tjm[2];
 
 	///
 	/// \brief Main abort motor thrusters.
 	///
-	THRUSTER_HANDLE th_main[4];
+	THRUSTER_HANDLE th_lem[4];
+	THRUSTER_HANDLE th_pcm;
 
 	///
 	/// \brief Thruster group for the motor we're using.
 	///
-	THGROUP_HANDLE thg_main;
+	THGROUP_HANDLE thg_lem;
+	THGROUP_HANDLE thg_tjm;
 
 	///
 	/// \brief Jettison thruster propellant.
 	///
-	PROPELLANT_HANDLE ph_jettison;
+	PROPELLANT_HANDLE ph_tjm;
 
 	///
 	/// \brief Main abort motor propellant.
 	///
-	PROPELLANT_HANDLE ph_main;
+	PROPELLANT_HANDLE ph_lem;
+	PROPELLANT_HANDLE ph_pcm;
 };
 
 #endif // LES_H

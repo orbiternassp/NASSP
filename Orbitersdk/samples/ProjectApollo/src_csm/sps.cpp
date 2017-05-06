@@ -36,7 +36,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "ioChannels.h"
 #include "saturn.h"
 #include "papi.h"
@@ -456,7 +455,6 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	injectorValves12Open = false;
 	injectorValves34Open = false;
 	saturn = 0;
-	enforceBurn = false;
 	engineOnCommanded = false;
 	nitrogenPressureAPSI = 2500.0;
 	nitrogenPressureBPSI = 2500.0;
@@ -572,7 +570,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	//
 	
 	if (saturn->GetStage() == CSM_LEM_STAGE && saturn->GetSPSPropellant()->Handle() && spsThruster) {
-		if (injectorValves12Open || injectorValves34Open || enforceBurn) {
+		if (injectorValves12Open || injectorValves34Open) {
 			// Burn engine
 			saturn->SetThrusterResource(spsThruster, saturn->GetSPSPropellant()->Handle());
 			// Thrust decay if propellant pressure below 170 psi 
@@ -582,30 +580,11 @@ void SPSEngine::Timestep(double simt, double simdt) {
 			engineOnCommanded = true;
 
 		} else {
-			if (saturn->Realism) {
-				// Stop engine
-				saturn->SetThrusterResource(spsThruster, NULL);
-				saturn->SetThrusterLevel(spsThruster, 0);
-				saturn->rjec.SetSPSActive(false);
-				engineOnCommanded = false;
-			} else {
-				// Manual engine if REALISM 0
-				saturn->SetThrusterResource(spsThruster, saturn->GetSPSPropellant()->Handle());
-
-				// Reset automatically commanded thrust
-				if (engineOnCommanded) {
-					saturn->SetThrusterLevel(spsThruster, 0);
-					engineOnCommanded = false;
-				}
-				if (saturn->GetThrusterLevel(spsThruster) > 0) {
-					saturn->rjec.SetSPSActive(true);
-					// Show all injector valves open
-					injectorValves12Open = true;
-					injectorValves34Open = true;
-				} else {
-					saturn->rjec.SetSPSActive(false);
-				}
-			}
+			// Stop engine
+			saturn->SetThrusterResource(spsThruster, NULL);
+			saturn->SetThrusterLevel(spsThruster, 0);
+			saturn->rjec.SetSPSActive(false);
+			engineOnCommanded = false;
 		}
 	} else {
 		saturn->rjec.SetSPSActive(false);
@@ -665,14 +644,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
 		VECTOR3 spsvector;
-		// Main engine offset only in Virtual AGC mode
-		if (saturn->Realism) {
-			spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
-			spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
-		} else {
-			spsvector.x = yawGimbalActuator.GetPosition() * RAD; // Convert deg to rad
-			spsvector.y = pitchGimbalActuator.GetPosition() * RAD;
-		}
+		spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
+		spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
 		spsvector.z = 1;
 		saturn->SetThrusterDir(spsThruster, spsvector);
 	}
@@ -712,7 +685,6 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES12OPEN", (injectorValves12Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
-	oapiWriteScenario_int(scn, "ENFORCEBURN", (enforceBurn ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
 	papiWriteScenario_double(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
 	papiWriteScenario_double(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
@@ -744,10 +716,6 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "ENGINEONCOMMANDED", 17)) {
 			sscanf (line+17, "%d", &i);
 			engineOnCommanded = (i != 0);
-		}
-		else if (!strnicmp (line, "ENFORCEBURN", 11)) {
-			sscanf (line+11, "%d", &i);
-			enforceBurn = (i != 0);
 		}
 		else if (!strnicmp (line, "NITROGENPRESSUREAPSI", 20)) {
 			sscanf (line+20, "%lf", &nitrogenPressureAPSI);

@@ -77,7 +77,6 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
-	void SetRealism(int r) { Realism = r; };
 
 protected:
 	void DoFirstTimeStep();
@@ -87,7 +86,6 @@ protected:
 	double CollisionDetection(VECTOR3 prbP, VECTOR3 prbD, VECTOR3 drgV, VECTOR3 drgA);
 	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 
-	int Realism;
 	bool Enabled;
 	double Status;
 	int ExtendingRetracting;

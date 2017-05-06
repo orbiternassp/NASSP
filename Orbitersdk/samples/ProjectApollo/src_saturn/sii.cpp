@@ -76,7 +76,6 @@ void SII::InitSII()
 
 	EmptyMass = 47500.0;
 	MainFuel = 5000.0;
-	Realism = REALISM_DEFAULT;
 
 	RetrosFired = false;
 	LowRes = false;
@@ -186,7 +185,6 @@ void SII::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "STATE", State);
-	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
@@ -360,10 +358,6 @@ void SII::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (SIIState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7))
-		{
-			sscanf (line+7, "%d", &Realism);
-		}
 		else
 		{
 			ParseScenarioLineEx (line, vstatus);
@@ -392,7 +386,6 @@ void SII::SetState(SIISettings &state)
 	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
-		Realism = state.Realism;
 		RetroNum = state.RetroNum;
 		LowRes = state.LowRes;
 	}

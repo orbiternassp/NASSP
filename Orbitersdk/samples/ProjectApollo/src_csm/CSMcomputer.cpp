@@ -36,7 +36,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "toggleswitch.h"
 #include "saturn.h"
 #include "ioChannels.h"
@@ -48,15 +47,8 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 
 {
 	isLGC = false;
-	lastOrbitalElementsTime = 0;
 
 	VesselStatusDisplay = 0;
-
-	//
-	// Generic thrust decay value. This still needs tweaking.
-	//
-
-	ThrustDecayDV = 6.1;
 
 	//
 	// Last RCS settings.
@@ -77,10 +69,10 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
 
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
@@ -93,13 +85,21 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	{
 		binfile = "Config/ProjectApollo/Colossus237.bin";
 	}
-	else if (ApolloNo < 10 || ApolloNo == 1301)	// Colossus 249
+	else if (ApolloNo < 10)	// Colossus 249
 	{
 		binfile = "Config/ProjectApollo/Colossus249.bin";
 	}
-	else if (ApolloNo < 15)	// Comanche 055
+	else if (ApolloNo < 11)	// Comanche 055, modified for Apollo 10
+	{
+		binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
+	}
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 	{
 		binfile = "Config/ProjectApollo/Comanche055.bin";
+	}
+	else if (ApolloNo < 15)	// Artemis 72, modified for Apollo 14
+	{
+		binfile = "Config/ProjectApollo/Artemis072NBY71.bin";
 	}
 	else	//Artemis 072
 	{
@@ -166,7 +166,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if (!IsPowered()){
 			// HARDWARE MUST RESTART
-			if(vagc.Erasable[0][05] != 04000){				
 				// Clear flip-flop based registers
 				vagc.Erasable[0][00] = 0;     // A
 				vagc.Erasable[0][01] = 0;     // L
@@ -199,19 +198,26 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
-				InputChannel[033] &= 017777;
-				vagc.InputChannel[033] &= 017777;				
-				OutputChannel[033] &= 017777;				
-				vagc.Ch33Switches &= 017777;
-				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+				// Reset standby flip-flop
+				vagc.Standby = 0;
+				// Turn on EL display and CMC Light (DSKYWarn).
+				SetOutputChannel(0163, 1);
+				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+				InputChannel[033] &= 037777;
+				vagc.InputChannel[033] &= 037777;				
+				OutputChannel[033] &= 037777;				
+				vagc.Ch33Switches &= 037777;
+				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+				// The RESTART light will come on as soon as the AGC receives power again.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;
-				sat->dsky.LightRestart();
-				sat->dsky2.LightRestart();
+				vagc.RestartLight = 1;
+				sat->dsky.ClearRestart();
+				sat->dsky2.ClearRestart();
+				sat->dsky.ClearStby();
+				sat->dsky2.ClearStby();
 				// Reset last cycling time
 				LastCycled = 0;
-			}
 			// We should issue telemetry though.
 			sat->pcm.TimeStep(simt);
 			return;
@@ -236,7 +242,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// otherwise the P11 roll error needle isn't working properly			
 			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
 
-			if (ApolloNo < 10 || ApolloNo == 1301)	//Colossus 249 and criterium in SetMissionInfo
+			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -266,7 +272,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
-			else if (ApolloNo < 15)	// Comanche 055
+			else if (ApolloNo < 15 || ApolloNo == 1301)	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -287,18 +293,9 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
-				double tephem;
-
-				if (ApolloNo == 10)
-				{
-					tephem = -374106000.;
-				}
-				else
-				{
-					tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
 						vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
 						vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-				}
 				tephem = (tephem / 8640000.) + 40403.;
 				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
@@ -325,16 +322,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
 
-				// Synchronize clock with launch time (TEPHEM), only Apollo 15 has a proper scenario
-				if (ApolloNo == 15) {
-					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-						vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-						vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-					tephem = (tephem / 8640000.) + 41133.;
-					double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
-					vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-					vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
-				}
+				// Synchronize clock with launch time (TEPHEM)
+				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+				tephem = (tephem / 8640000.) + 41133.;
+				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
+				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
+				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
 			PadLoaded = true;
 		}
@@ -361,7 +356,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
 		}
 		// Done!
-		//sprintf(oapiDebugString(), "Standby: %d %d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed);
+		//sprintf(oapiDebugString(), "Standby: %d %d %I64d", sat->agc.vagc.Standby, sat->agc.vagc.SbyPressed, sat->agc.vagc.CycleCounter);
 
 		return;
 }
@@ -402,7 +397,6 @@ void CSMcomputer::Liftoff(double simt)
 
 	SetOutputChannelBit(012, 9, false);
 	Saturn *Sat = (Saturn *)OurVessel;
-	Sat->SetAutopilot(true);
 }
 
 void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val){
@@ -795,25 +789,6 @@ void CSMcomputer::ProcessChannel14(ChannelValue val){
 	if(val12.Bits.TVCEnable){
 		return; // Ignore
 	} */
-}
-
-/// \todo Dirty Hack for the AGC++ attitude control, 
-/// remove this and use I/O channels and pulsed thrusters 
-/// identical to the VAGC instead
-
-void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
-	
-	Saturn *sat = (Saturn *) OurVessel;
-	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
-		// Ensure RJ/EC power, Auto RCS is not checked currently
-		if (sat->SIGCondDriverBiasPower1Switch.Voltage() >= SP_MIN_ACVOLTAGE && 
-			sat->SIGCondDriverBiasPower2Switch.Voltage() >= SP_MIN_ACVOLTAGE) {
-
-			sat->SetAttitudeRotLevel(level);
-			// Disable RJ/EC for the AGC++ control loop
-			sat->rjec.SetAGCActiveTimer(2.0); //ApolloGuidance DELTAT
-		}
-	}
 }
 
 void CSMcomputer::LVGuidanceSwitchToggled(PanelSwitchItem *s) {

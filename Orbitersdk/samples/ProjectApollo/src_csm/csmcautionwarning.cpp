@@ -41,7 +41,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "papi.h"
@@ -247,15 +246,10 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// ISS warning
 	//
 
-	if (aws.ISSWarning) {
+	if (aws.ISSWarning)
 		SetLight(CSM_CWS_ISS_LIGHT, true);
-		// No Master Alarm during lamp test
-		if (aws.TestAlarms) 
-			SetMasterAlarm(false);
-	} 
-	else {
+	else
 		SetLight(CSM_CWS_ISS_LIGHT, false);
-	}
 
 	//
 	// CMC warning
@@ -264,17 +258,11 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// Drawing 8.1, square L4 and others.
 	//
 
-	if (aws.TestAlarms) {
+	if (aws.DSKYWarn) {
 		SetLight(CSM_CWS_CMC_LIGHT, true);
-		// No Master Alarm during lamp test
-		SetMasterAlarm(false);
-	} else {
-		if (aws.CMCWarning) {
-			SetLight(CSM_CWS_CMC_LIGHT, true); // The real thing
-		} else {
-			SetLight(CSM_CWS_CMC_LIGHT, false);
-		}
 	}
+	else
+		SetLight(CSM_CWS_CMC_LIGHT, false);
 
 	//
 	// PGNS warning, does NOT trigger master alarm 

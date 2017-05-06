@@ -67,7 +67,6 @@ struct SIVBSettings
 
 	int Payload;					///< Payload type.
 	int VehicleNo;					///< Saturn vehicle number.
-	int Realism;					///< Realism level.
 
 	double THRUST_VAC;				///< Vacuum thrust.
 	double ISP_VAC;					///< Vacuum ISP.
@@ -413,7 +412,6 @@ protected:
 	int MissionNo;					///< Apollo mission number.
 	int VehicleNo;					///< Saturn vehicle number.
 	SIVbState State;				///< Main stage state.
-	int Realism;					///< Realism level.
 
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.

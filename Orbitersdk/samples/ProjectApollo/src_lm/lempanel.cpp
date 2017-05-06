@@ -83,9 +83,9 @@ void FreeGParam()
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
 }
 
-#define RETICLE_X_CENTER 268
-#define RETICLE_Y_CENTER 268
-#define RETICLE_RADIUS   268
+#define RETICLE_X_CENTER 525
+#define RETICLE_Y_CENTER 525
+#define RETICLE_RADIUS   525
 #define RETICLE_SPLIT_ANGLE 0.05 // about 2.25 degrees
 #define RETICLE_SCREW_NPTS 360
 
@@ -246,6 +246,7 @@ void LEM::InitSwitches() {
 	TempMonitorInd.Register(PSH,"TempMonitorInd",-100.0,200,2);
 	EngineThrustInd.Register(PSH,"EngineThrustInd",0,100,2);
 	CommandedThrustInd.Register(PSH,"CommandedThrustInd",0,100,2);
+	ThrustWeightInd.Register(PSH, "ThrustWeightInd", 0, 6, 2);
 	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
 	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
@@ -742,6 +743,7 @@ void LEM::InitSwitches() {
 
 	LEMCoas1Enabled = false;
 	LEMCoas2Enabled = true;
+	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
 
@@ -787,6 +789,23 @@ void LEM::InitSwitches() {
 
 	DskySwitchProg.SetDelayTime(1.5);
 
+	ORDEALAltSetRotary.AddPosition(0, 240);
+	ORDEALAltSetRotary.AddPosition(1, 270);
+	ORDEALAltSetRotary.AddPosition(2, 330);
+	ORDEALAltSetRotary.AddPosition(3, 0);
+	ORDEALAltSetRotary.AddPosition(4, 60);
+	ORDEALAltSetRotary.AddPosition(5, 90);
+	ORDEALAltSetRotary.AddPosition(6, 150);
+	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 2);
+
+	ORDEALFDAI1Switch.Register(PSH, "ORDEALFDAI1Switch", false);
+	ORDEALFDAI2Switch.Register(PSH, "ORDEALFDAI2Switch", false);
+	ORDEALEarthSwitch.Register(PSH, "ORDEALEarthSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALLightingSwitch.Register(PSH, "ORDEALLightingSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALModeSwitch.Register(PSH, "ORDEALModeSwitch", false);
+	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	PanelOrdeal.Register(PSH, "PanelOrdeal", 0, 0, 0, 0);	// dummy switch/display for checklist controller
+
 	//
 	// Old stuff.
 	//
@@ -807,22 +826,6 @@ void LEM::InitSwitches() {
 	Sswitch7=false;
 	Sswitch8=false;
 	Sswitch9=false;
-	RPswitch1=false;
-	RPswitch2=false;
-	RPswitch3=false;
-	RPswitch4=false;
-	RPswitch5=false;
-	RPswitch6=false;
-	RPswitch7=false;
-	RPswitch8=false;
-	RPswitch9=false;
-	RPswitch10=false;
-	RPswitch11=false;
-	RPswitch12=false;
-	RPswitch13=false;
-	RPswitch14=false;
-	RPswitch15=false;
-	RPswitch16=false;
 
 	ATT2switch=false;
 	ATT3switch=false;
@@ -851,16 +854,6 @@ void LEM::InitSwitches() {
 	AFEED2switch=true;
 	AFEED3switch=true;
 	AFEED4switch=true;
-
-	ED1switch=false;
-	ED2switch=false;
-	ED4switch=false;
-	ED5switch=false;
-	ED6switch=false;
-
-	ED7switch=false;
-	ED8switch=false;
-	ED9switch=false;
 
 	GMBLswitch=false;
 
@@ -1261,8 +1254,9 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
 		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
-
-
+		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
+		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
+		srf[SRF_TW_NEEDLE]			= oapiCreateSurface (LOADBMP (IDB_TW_NEEDLE));
 
 		//
 		// Set color keys where appropriate.
@@ -1297,6 +1291,9 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_FIVE_POS_SWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_RR_NOTRACK],	     	g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_RADAR_TAPE],	     	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_ROTARY],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_TW_NEEDLE],			g_Param.col[4]);
 		//oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
 
 		//		break;
@@ -1417,6 +1414,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1202,  245, 1478,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(1199,  439, 1357,  564), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_PROP_AND_ENGINE_IND,	    _R( 535,  428,  784,  553), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_THRUST_WEIGHT_INDICATOR,			_R( 689,  632,  720,  812), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_LEFT,					    _R( 349,   54,  670,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_RIGHT,				    _R(1184,   54, 1484,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
@@ -1486,6 +1484,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RR_NOTRACK,    					_R( 490,  1300, 524, 1334), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RANGE_TAPE,    					_R( 542,  660,  586,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RATE_TAPE,    					_R( 593,  660,  628,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
+		// ORDEAL
+		oapiRegisterPanelArea(AID_ORDEALSWITCHES,					_R(689, 10, 1166, 212),		PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -1566,13 +1567,15 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 264,  85,  1513,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 264,  258, 1513,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW3,					_R( 264,  431, 1513,  461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 264,  604, 1637,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 264,  85,  1513,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 264,  258, 1513,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW3,					_R( 264,  431, 1513,  461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 264,  604, 1637,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		//oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R(  48, 1001, 525, 1203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -1620,12 +1623,12 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 665,  257, 1199,  792), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,					_R(1427,  694, 1502, 1021), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,					_R(196,  720, 271, 1047), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1607,    0, 1670,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 26,   66,  61,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI/3.0)), optics.OpticsShaft*PI / 3.0);
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
@@ -1671,6 +1674,9 @@ void LEM::SetSwitches(int panel) {
 			MainFuelPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 			MainOxidizerTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 			MainOxidizerPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+
+			ThrustWeightIndRow.Init(AID_THRUST_WEIGHT_INDICATOR, MainPanel);
+			ThrustWeightInd.Init(srf[SRF_TW_NEEDLE], ThrustWeightIndRow, this);
 
 			RCSIndicatorRow.Init(AID_LM_RCSIND, MainPanel);
 			LMRCSATempInd.Init(srf[SRF_NEEDLE], RCSIndicatorRow, this);
@@ -2303,6 +2309,17 @@ void LEM::SetSwitches(int panel) {
 			CDRAudMasterVol.Init(963, 258, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRAudVOXSens.Init(963, 158, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel8SwitchRow);
 			CDRCOASSwitch.Init(1063, 266, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x29], Panel8SwitchRow);
+
+			ORDEALSwitchesRow.Init(AID_ORDEALSWITCHES, MainPanel);
+			ORDEALFDAI1Switch.Init(55, 43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALFDAI2Switch.Init(168, 43, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALEarthSwitch.Init(264, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALLightingSwitch.Init(55, 132, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALModeSwitch.Init(215, 132, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALSlewSwitch.Init(264, 132, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+			ORDEALAltSetRotary.Init(346, 63, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALSwitchesRow);
+
+			PanelOrdeal.Init(ORDEALSwitchesRow, this); 	// dummy switch/display for checklist controller
 	//		break;
 
 	//	case LMPANEL_AOTVIEW:			
@@ -2437,6 +2454,27 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
 	static int ctrl = 0;
+
+	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == LMPANEL_MAIN) {
+		if (event & PANEL_MOUSE_LBDOWN) {
+			if (ordealEnabled == 0) {
+				ordealEnabled = 1;
+				SwitchClick();
+				return true;
+			}
+			else if (mx <= 50) {
+				ordealEnabled = -1;
+				SwitchClick();
+				return true;
+			}
+		}
+		if (ordealEnabled == 0)
+			return false;
+	}
 
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
@@ -2636,7 +2674,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 	*/
 
-	case AID_EXPLOSIVE_DEVICES1:
+	/*case AID_EXPLOSIVE_DEVICES1:
 		if (my >=0 && my <=16 ){
 			if (mx > 0 && mx < 24 && !ED1switch){
 				SwitchClick();
@@ -2678,6 +2716,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 
 		return true;
+	*/
 
 	case AID_ATTITUDE_CONTROL_SWITCHES:
 		if (my >=0 && my <=11 ){
@@ -3245,6 +3284,11 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
 		ButtonClick();
+		//Load panel to trigger change of the default camera direction
+		if (PanelId == LMPANEL_AOTVIEW)
+		{
+			oapiSetPanel(LMPANEL_AOTVIEW);
+		}
 		return true;
 
 
@@ -3316,7 +3360,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-		case AID_EXPLOSIVE_DEVICES2:
+		/*case AID_EXPLOSIVE_DEVICES2:
 		if (my >=0 && my <=15 ){
 			if (mx > 0 && mx < 24 && !ED7switch){
 				SwitchClick();
@@ -3342,6 +3386,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 
 		return true;
+		*/
 
 		case AID_LANDING_GEAR_SWITCH:
 			if (my > 51 && LDGswitch){
@@ -3395,6 +3440,32 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		AbortStageSwitch.SetOffset(150, 0);
 	} else {
 		AbortStageSwitch.SetOffset(0, 0);
+	}
+
+	//
+	// Special handling ORDEAL
+	//
+
+	if (id == AID_ORDEALSWITCHES && PanelId == LMPANEL_MAIN) {
+		if (ordealEnabled == -1) {
+			ordealEnabled = 0;
+			return true;
+		}
+		if (ordealEnabled == 0) {
+			if (PanelOrdeal.IsFlashing()) {
+				if (PanelFlashOn) {
+					oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+				}
+				return true;
+			}
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_ORDEAL_PANEL], 0, 0, 0, 0, 477, 202, SURF_PREDEF_CK);
+		if (PanelOrdeal.IsFlashing()) {
+			if (PanelFlashOn) {
+				oapiBlt(surf, srf[SRF_BORDER_50x158], 0, 22, 0, 0, 50, 158, SURF_PREDEF_CK);
+			}
+		}
 	}
 
 	//
@@ -3559,8 +3630,18 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			if (RateErrorMonSwitch.GetState() == 1)
 			{
 				if (RR.IsPowered()) {
-					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
-					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+					if (ShiftTruSwitch.IsUp())
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+						errors.x = 0.0;
+					}
+					else
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+						errors.x = 0.0;
+					}
 				}
 				else
 				{
@@ -3571,6 +3652,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI1PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if (errors.x > 41) { errors.x = 41; }
 			else { if (errors.x < -41) { errors.x = -41; } }
@@ -3603,8 +3691,18 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			if (RightRateErrorMonSwitch.GetState() == 1)
 			{
 				if (RR.IsPowered()) {
-					errors.z = RR.GetRadarTrunnionPos() * 41 / (180 * RAD);
-					errors.y = RR.GetRadarShaftPos() * 41 / (180 * RAD);
+					if (ShiftTruSwitch.IsUp())
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+						errors.x = 0.0;
+					}
+					else
+					{
+						errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+						errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+						errors.x = 0.0;
+					}
 				}
 				else
 				{
@@ -3615,6 +3713,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			{
 				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI2PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if (errors.x > 41) { errors.x = 41; }
 			else { if (errors.x < -41) { errors.x = -41; } }
@@ -3813,7 +3918,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 	*/
 
-	case AID_EXPLOSIVE_DEVICES1:
+	/*case AID_EXPLOSIVE_DEVICES1:
 		if(ED1switch){
 			// UNINITIALIZED USE OF srf[19]
 			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -3850,6 +3955,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			// oapiBlt(surf,srf[19],94,68,23,0,23,30);
 		}
 		return true;
+	*/
 
 	case AID_ATTITUDE_CONTROL_SWITCHES:
 		if(ATT1switch){
@@ -3896,7 +4002,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_EXPLOSIVE_DEVICES2:
+	/*case AID_EXPLOSIVE_DEVICES2:
 		if(ED7switch){
 			// UNINITIALIZED USE OF srf[19]
 			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -3919,7 +4025,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			// oapiBlt(surf,srf[19],94,0,23,0,23,30);
 		}
 		return true;
-
+		*/
 	case AID_ENG_THRUST:
 		RedrawPanel_Thrust(surf);
 		return true;
@@ -4347,8 +4453,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	
 	case AID_AOT_SHAFT_KNOB:
 		oapiBlt(surf,srf[SRF_AOTSHAFTKNOB],0,0,optics.OpticsShaft*62,0,62,155);
-		
-		oapiCameraSetCockpitDir (optics.OpticsShaft*PI/3+PI/2,PI/4,true);
 		return true;
 
 	case AID_COAS:
@@ -4639,14 +4743,6 @@ typedef union {
 		unsigned AFEED4switch:1;
 		unsigned MSOV1switch:1;
 		unsigned MSOV2switch:1;
-		unsigned ED1switch:1;
-		unsigned ED2switch:1;
-		unsigned ED4switch:1;
-		unsigned ED5switch:1;
-		unsigned ED6switch:1;
-		unsigned ED7switch:1;
-		unsigned ED8switch:1;
-		unsigned ED9switch:1;
 	} u;
 	unsigned long word;
 } LPSwitchState;
@@ -4677,14 +4773,6 @@ int LEM::GetLPSwitchState()
 	state.u.AFEED2switch = AFEED2switch;
 	state.u.AFEED3switch = AFEED3switch;
 	state.u.AFEED4switch = AFEED4switch;
-	state.u.ED1switch = ED1switch;
-	state.u.ED2switch = ED2switch;
-	state.u.ED4switch = ED4switch;
-	state.u.ED5switch = ED5switch;
-	state.u.ED6switch = ED6switch;
-	state.u.ED7switch = ED7switch;
-	state.u.ED8switch = ED8switch;
-	state.u.ED9switch = ED9switch;
 
 	return state.word;
 }
@@ -4715,86 +4803,5 @@ void LEM::SetLPSwitchState(int s)
 	AFEED2switch = state.u.AFEED2switch;
 	AFEED3switch = state.u.AFEED3switch;
 	AFEED4switch = state.u.AFEED4switch;
-	ED1switch = state.u.ED1switch;
-	ED2switch = state.u.ED2switch;
-	ED4switch = state.u.ED4switch;
-	ED5switch = state.u.ED5switch;
-	ED6switch = state.u.ED6switch;
-	ED7switch = state.u.ED7switch;
-	ED8switch = state.u.ED8switch;
-	ED9switch = state.u.ED9switch;
 
-}
-
-typedef union {
-	struct {
-		unsigned RPswitch1:1;
-		unsigned RPswitch2:1;
-		unsigned RPswitch3:1;
-		unsigned RPswitch4:1;
-		unsigned RPswitch5:1;
-		unsigned RPswitch6:1;
-		unsigned RPswitch7:1;
-		unsigned RPswitch8:1;
-		unsigned RPswitch9:1;
-		unsigned RPswitch10:1;
-		unsigned RPswitch11:1;
-		unsigned RPswitch12:1;
-		unsigned RPswitch13:1;
-		unsigned RPswitch14:1;
-		unsigned RPswitch15:1;
-		unsigned RPswitch16:1;
-		unsigned RPswitch17:1;
-	} u;
-	unsigned long word;
-} RPSwitchState;
-
-int LEM::GetRPSwitchState()
-
-{
-	RPSwitchState state;
-
-	state.word = 0;
-	state.u.RPswitch1 = RPswitch1;
-	state.u.RPswitch2 = RPswitch2;
-	state.u.RPswitch3 = RPswitch3;
-	state.u.RPswitch4 = RPswitch4;
-	state.u.RPswitch5 = RPswitch5;
-	state.u.RPswitch6 = RPswitch6;
-	state.u.RPswitch7 = RPswitch7;
-	state.u.RPswitch8 = RPswitch8;
-	state.u.RPswitch9 = RPswitch9;
-	state.u.RPswitch10 = RPswitch10;
-	state.u.RPswitch11 = RPswitch11;
-	state.u.RPswitch12 = RPswitch12;
-	state.u.RPswitch13 = RPswitch13;
-	state.u.RPswitch14 = RPswitch14;
-	state.u.RPswitch15 = RPswitch15;
-	state.u.RPswitch16 = RPswitch16;
-
-	return state.word;
-}
-
-void LEM::SetRPSwitchState(int s)
-
-{
-	RPSwitchState state;
-
-	state.word = s;
-	RPswitch1 = state.u.RPswitch1;
-	RPswitch2 = state.u.RPswitch2;
-	RPswitch3 = state.u.RPswitch3;
-	RPswitch4 = state.u.RPswitch4;
-	RPswitch5 = state.u.RPswitch5;
-	RPswitch6 = state.u.RPswitch6;
-	RPswitch7 = state.u.RPswitch7;
-	RPswitch8 = state.u.RPswitch8;
-	RPswitch9 = state.u.RPswitch9;
-	RPswitch10 = state.u.RPswitch10;
-	RPswitch11 = state.u.RPswitch11;
-	RPswitch12 = state.u.RPswitch12;
-	RPswitch13 = state.u.RPswitch13;
-	RPswitch14 = state.u.RPswitch14;
-	RPswitch15 = state.u.RPswitch15;
-	RPswitch16 = state.u.RPswitch16;
 }

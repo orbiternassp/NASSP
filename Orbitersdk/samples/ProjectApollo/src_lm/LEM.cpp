@@ -214,7 +214,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	imu(agc, Panelsdk),
 	aea(Panelsdk),
 	deda(this,soundlib, aea, 015),
-	DPS(th_hover)
+	DPS(th_hover),
+	MissionTimerDisplay(Panelsdk),
+	EventTimerDisplay(Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -259,8 +261,6 @@ LEM::~LEM()
 void LEM::Init()
 
 {
-	RCS_Full=true;
-	Eds=true;	
 	toggleRCS =false;
 
 	DebugLineClearTimer = 0;
@@ -308,17 +308,8 @@ void LEM::Init()
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
 
-	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
 	Landed = false;
-
-	//
-	// Quickstart Mode settings
-	//
-
-	ChecklistAutoSlow = false;
-	ChecklistAutoDisabled = false;
-	OrbiterAttitudeDisabled = false;
 
 	//
 	// VAGC Mode settings
@@ -465,87 +456,6 @@ void LEM::LoadDefaultSounds()
 	SoundsLoaded = true;
 }
 
-void LEM::AttitudeLaunch1()
-{
-	//Original code function by Richard Craig From MErcury Sample by Rob CONLEY
-	// Modification for NASSP specific needs by JL Rocca-Serra
-	VECTOR3 ang_vel;
-	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
-// variables to store each component deflection vector	
-	VECTOR3 rollvectorl={0.0,0.0,0.0};
-	VECTOR3 rollvectorr={0.0,0.0,0.0};
-	VECTOR3 pitchvector={0.0,0.0,0.0};
-	VECTOR3 yawvector={0.0,0.0,0.0};
-	VECTOR3 yawvectorm={0.0,0.0,0.0};
-	VECTOR3 pitchvectorm={0.0,0.0,0.0};
-//************************************************************
-// variables to store Manual control levels for each axis
-	double tempP = 0.0;
-	double tempY = 0.0;
-	double tempR = 0.0; 
-//************************************************************
-// Variables to store correction factors for rate control
-	double rollcorrect = 0.0;
-	double yawcorrect= 0.0;
-	double pitchcorrect = 0.0;
-//************************************************************
-// gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas	
-	if (GMBLswitch){
-		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-	}
-	if (GMBLswitch){
-		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-	}
-	
-	
-	//sprintf (oapiDebugString(), "roll input: %f, roll vel: %f,pitch input: %f, pitch vel: %f", tempR, ang_vel.z,tempP, ang_vel.x);
-	
-//*************************************************************
-//Creates correction factors for rate control in each axis as a function of input level
-// and current angular velocity. Varies from 1 to 0 as angular velocity approaches command level
-// multiplied by maximum rate desired
-	if(tempR != 0.0)	{
-		rollcorrect = (1/(fabs(tempR)*0.175))*((fabs(tempR)*0.175)-fabs(ang_vel.z));
-			if((tempR > 0 && ang_vel.z > 0) || (tempR < 0 && ang_vel.z < 0))	{
-						rollcorrect = 1;
-					}
-	}
-	if(tempP != 0.0)	{
-		pitchcorrect = (1/(fabs(tempP)*0.275))*((fabs(tempP)*0.275)-fabs(ang_vel.x));
-		if((tempP > 0 && ang_vel.x > 0) || (tempP < 0 && ang_vel.x < 0))	{
-						pitchcorrect = 1;
-					}
-	}
-	
-//*************************************************************	
-// Create deflection vectors in each axis
-	pitchvector = _V(0.0,0.0,0.05*tempP*pitchcorrect);
-	pitchvectorm = _V(0.0,0.0,-0.2*tempP*pitchcorrect);
-	yawvector = _V(0.05*tempY*yawcorrect,0.0,0.0);
-	yawvectorm = _V(0.05*tempY*yawcorrect,0.0,0.0);
-	rollvectorl = _V(0.0,0.60*tempR*rollcorrect,0.0);
-	rollvectorr = _V(0.60*tempR*rollcorrect,0.0,0.0);
-
-//*************************************************************
-// create opposite vectors for "gyro stabilization" if command levels are 0
-	if(tempP==0.0 && GMBLswitch) {
-		pitchvectorm=_V(0.0,0.0,-0.8*ang_vel.x*3);
-	}
-	if(tempR==0.0 && GMBLswitch) {
-		
-		rollvectorr=_V(0.8*ang_vel.z*3,0.0,0.0);
-	}
-	
-//**************************************************************	
-// Sets thrust vectors by simply adding up all the axis deflection vectors and the 
-// "neutral" default vector
-	SetThrusterDir(th_hover[0],pitchvectorm+rollvectorr+_V( 0,1,0));//4
-	SetThrusterDir(th_hover[1],pitchvectorm+rollvectorr+_V( 0,1,0));
-
-//	sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempP, ang_vel.z);
-
-}
-
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
@@ -634,16 +544,26 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			// 286.48 300 (L)
 
 			case OAPI_KEY_A:
-				optics.OpticsShaft++;
-				if(optics.OpticsShaft > 5){
-					optics.OpticsShaft = 0; // Clobber
+				optics.OpticsShaft--;
+				if (optics.OpticsShaft < 0) {
+					optics.OpticsShaft = 5; // Clobber
+				}
+				//Load panel to trigger change of the default camera direction
+				if (PanelId == LMPANEL_AOTVIEW)
+				{
+					oapiSetPanel(LMPANEL_AOTVIEW);
 				}
 				break;
 
 			case OAPI_KEY_D:
-				optics.OpticsShaft--;
-				if (optics.OpticsShaft < 0){
-					optics.OpticsShaft = 5; // Clobber
+				optics.OpticsShaft++;
+				if (optics.OpticsShaft > 5) {
+					optics.OpticsShaft = 0; // Clobber
+				}
+				//Load panel to trigger change of the default camera direction
+				if (PanelId == LMPANEL_AOTVIEW)
+				{
+					oapiSetPanel(LMPANEL_AOTVIEW);
 				}
 				break;
 
@@ -735,13 +655,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		return 1;
 
 	case OAPI_KEY_E:
-		if (!Realism) {
-			ToggleEva = true;
-			return 1;
-		}
-		else {
-			return 0;
-		}
+		return 0;
 
 	case OAPI_KEY_6:
 		viewpos = LMVIEW_CDR;
@@ -884,37 +798,11 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
-	actualALT = GetAltitude() ;
-	if (actualALT < 1470){
-		actualVEL = actualVEL-1470+actualALT;
-	}
-	if (GroundContact()){
-	actualVEL =0;
-	}
 	if (status !=0 && Sswitch2){
 				bManualSeparate = true;
 	}
-	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;	
-	double dTime,aSpeed,DV,aALT,DVV,DVA;//aVAcc;aHAcc;ALTN1;SPEEDN1;aTime aVSpeed;
-		aSpeed = actualVEL/3600*1000;
-		aALT=actualALT;
-		dTime=simt-aTime;
-		if(dTime > 0.1){
-			DV= aSpeed - SPEEDN1;
-			aHAcc= (DV / dTime);
-			DVV = aALT - ALTN1;
-			aVSpeed = DVV / dTime;
-			DVA = aVSpeed- VSPEEDN1;
-			
+	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
 
-			aVAcc=(DVA/ dTime);
-			aTime = simt;
-			VSPEEDN1 = aVSpeed;
-			ALTN1 = aALT;
-			SPEEDN1= aSpeed;
-		}
-	//AttitudeLaunch1();
 	if( toggleRCS){
 			if(P44switch){
 			SetAttitudeMode(2);
@@ -990,7 +878,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			bToggleHatch=false;
 		}
 
-		double vsAlt = papiGetAltitude(this);
+		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED
@@ -1012,7 +900,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		// This does an abort stage if the descent stage runs out of fuel,
 		// probably should start P71
 		//
-		if (GetPropellantMass(ph_Dsc)<=50 && actualALT > 10){
+		if (GetPropellantMass(ph_Dsc)<=50){
 			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
@@ -1194,11 +1082,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf (line+8, "%d", &SwitchState);
 			SetLPSwitchState(SwitchState);
 		} 
-		else if (!strnicmp (line, "RPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetRPSwitchState(SwitchState);
-		} 
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
@@ -1219,9 +1102,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
-			sscanf (line+7, "%d", &Realism);
-		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
 			sscanf (line+8, "%d", &ApolloNo);
 		}
@@ -1239,10 +1119,8 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
-		else if (!strnicmp(line, "CHECKLISTAUTODISABLED", 21)) {
-			int i;
-			sscanf(line + 21, "%d", &i);
-			ChecklistAutoDisabled = (i != 0);
+		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
+			sscanf(line + 13, "%i", &ordealEnabled);
 		}
 		else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
 			int i;
@@ -1309,6 +1187,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
 		}
+		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
+			fdaiRight.LoadState(scn, FDAI2_END_STRING);
+		}
 		else if (!strnicmp(line, "DPS_BEGIN", sizeof("DPS_BEGIN"))) {
 			DPS.LoadState(scn, "DPS_END");
 		}
@@ -1326,6 +1207,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
 			crossPointerRight.LoadState(scn);
+		}
+		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
+			ordeal.LoadState(scn);
+		}
+		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
+			mechanicalAccelerometer.LoadState(scn);
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1384,11 +1271,8 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// Pass on the mission number and realism setting to the AGC.
 	//
 
-	agc.SetMissionInfo(ApolloNo, Realism);
+	agc.SetMissionInfo(ApolloNo);
 	aea.SetMissionInfo(ApolloNo);
-
-	MainPanel.SetRealism(Realism);
-
 
 	///
 	// Realism Mode Settings
@@ -1398,8 +1282,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// as long as they rely on Orbiter's navmodes (killrot etc.)
 
 	if (!Crewed) {
-		OrbiterAttitudeDisabled = false;
-
 		checkControl.autoExecute(true);
 		checkControl.autoExecuteSlow(false);
 		checkControl.autoExecuteAllItemsAutomatic(true);
@@ -1408,20 +1290,11 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	// Disable it and do some other settings when not in
 	// Quickstart mode
 
-	else if (Realism) {
-		OrbiterAttitudeDisabled = true;
-
+	else {
 		checkControl.autoExecute(VAGCChecklistAutoEnabled);
 		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
 		checkControl.autoExecuteAllItemsAutomatic(false);
 
-		// Quickstart mode
-
-	}
-	else {
-		checkControl.autoExecute(!ChecklistAutoDisabled);
-		checkControl.autoExecuteSlow(ChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(true);
 	}
 
 	//
@@ -1567,17 +1440,9 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 		rhc_thctoggle = true;
 	}
-	else if (!strnicmp(line, "CHECKLISTAUTOSLOW", 17)) {
-		sscanf(line + 17, "%i", &i);
-		ChecklistAutoSlow = (i != 0);
-	}
 	else if (!strnicmp(line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 		sscanf(line + 21, "%i", &i);
 		VAGCChecklistAutoSlow = (i != 0);
-	}
-	else if (!strnicmp(line, "ORBITERATTITUDEDISABLED", 23)) {
-		sscanf(line + 23, "%i", &i);
-		OrbiterAttitudeDisabled = (i != 0);
 	}
 	return true;
 }
@@ -1602,22 +1467,17 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
-	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
 
-	if (Realism != REALISM_DEFAULT) {
-		oapiWriteScenario_int (scn, "REALISM", Realism);
-	}
-
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
-	oapiWriteScenario_int(scn, "CHECKLISTAUTODISABLED", ChecklistAutoDisabled);
 	oapiWriteScenario_int(scn, "VAGCCHECKLISTAUTOENABLED", VAGCChecklistAutoEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
@@ -1672,7 +1532,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
 
+	// Save FDAIs
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
+	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	//Save DPS
 	DPS.SaveState(scn, "DPS_BEGIN", "DPS_END");
@@ -1687,6 +1549,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	crossPointerLeft.SaveState(scn);
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
 	crossPointerRight.SaveState(scn);
+	ordeal.SaveState(scn);
+	mechanicalAccelerometer.SaveState(scn);
 	checkControl.save(scn);
 }
 
@@ -1723,26 +1587,20 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
-	Realism = ls.Realism;
 	ApolloNo = ls.MissionNo;
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
 
-	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
+	agc.SetMissionInfo(ApolloNo, CSMName);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
 	checkControl.autoExecute(ls.checkAutoExecute);
 
 	//Set the transfered payload setting for the checklist controller
-	if (!Crewed) {
-		ChecklistAutoDisabled = !ls.checkAutoExecute;
-	} else if (Realism) {
-		VAGCChecklistAutoEnabled = ls.checkAutoExecute;
-	} else {
-		ChecklistAutoDisabled = !ls.checkAutoExecute;
-	}
+	VAGCChecklistAutoEnabled = ls.checkAutoExecute;
+
 	// Sounds are initialized during the first timestep
 
 	return true;
@@ -1892,24 +1750,22 @@ void LEM::RCSSoundTimestep() {
 
 	int i;
 	bool on = false;
-	if (OrbiterAttitudeDisabled) {
-		// LM RCS
-		for (i = 0; i < 16; i++) {
-			if (th_rcs[i]) {
-				if (GetThrusterLevel(th_rcs[i])) on = true;
-			}
+	// LM RCS
+	for (i = 0; i < 16; i++) {
+		if (th_rcs[i]) {
+			if (GetThrusterLevel(th_rcs[i])) on = true;
 		}
-		// Play/stop sounds
-		if (on) {
-			if (RCSFireSound.isPlaying()) {
-				RCSSustainSound.play(LOOP);
-			}
-			else if (!RCSSustainSound.isPlaying()) {
-				RCSFireSound.play();
-			}
+	}
+	// Play/stop sounds
+	if (on) {
+		if (RCSFireSound.isPlaying()) {
+			RCSSustainSound.play(LOOP);
 		}
-		else {
-			RCSSustainSound.stop();
+		else if (!RCSSustainSound.isPlaying()) {
+			RCSFireSound.play();
 		}
+	}
+	else {
+		RCSSustainSound.stop();
 	}
 }

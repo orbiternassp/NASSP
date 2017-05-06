@@ -230,14 +230,6 @@ public: // Same stuff about speed and I'm lazy too.
 
 	bool GetThruster(int thruster);
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
-	
-	bool GetCMTransferMotor1() { return CMTransferMotor1; };
-	bool GetCMTransferMotor2() { return CMTransferMotor2; };
-	void ActivateCMTransferMotor1() { CMTransferMotor1 = true; }
-	void ActivateCMTransferMotor2() { CMTransferMotor2 = true; }
-	
-	void SetAutoRCSEnableRelayA(bool active) { AutoRCSEnableRelayA = active; }
-	void SetAutoRCSEnableRelayB(bool active) { AutoRCSEnableRelayB = active; }
 
 	bool GetSPSActive() { return SPSActive; }
 	void SetSPSActive(bool active) { SPSActive = active; }
@@ -248,19 +240,14 @@ public: // Same stuff about speed and I'm lazy too.
 	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
 	void SetDirectYawActive(bool active)   { DirectYawActive = active; }
 	void SetDirectRollActive(bool active)  { DirectRollActive = active; }
-	
-	void SetAGCActiveTimer(double timer) { AGCActiveTimer = timer; }
 
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
 protected:
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
-	bool AutoRCSEnableRelayA, AutoRCSEnableRelayB;					// Enable relays
-	bool CMTransferMotor1, CMTransferMotor2;						// CM/SM transfer motor switches 
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
-	double AGCActiveTimer;											/// \todo Dirty Hack for the AGC++ attitude control
 
 	Saturn *sat;
 	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
@@ -290,9 +277,6 @@ public:
 	int mnimp_pitch_trigger;                                        // Joystick triggered pitch thrust in MIN IMP mode
 	int accel_yaw_trigger;                                          // Joystick triggered yaw thrust in RATE CMD mode
 	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
-	int trans_x_trigger;                                            // Translation triggers
-	int trans_y_trigger;
-	int trans_z_trigger;
 	Saturn *sat;
 	VECTOR3 pseudorate;
 };
@@ -307,13 +291,16 @@ public:
 #define EMS_RSI_CENTER_X        42     //Pixel center on bitmap
 #define EMS_RSI_CENTER_Y        41     //Pixel center on bitmap
 
-class EMS {
+class EMS : public e_object {
 
 public:
 	EMS(PanelSDK &p);
-	void Init(Saturn *vessel);										// Initialization
+	void Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
 	void TimeStep(double MissionTime, double simdt);
 	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
@@ -329,11 +316,10 @@ public:
 	bool IsOff();
 	bool IsdVMode();
 	bool WriteScrollToFile();
-	void SaveState(FILEHANDLE scn);                                // SaveState callback
-	void LoadState(FILEHANDLE scn);                                // LoadState callback
 	
 protected:
 	bool IsPowered();
+	bool IsDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
@@ -382,36 +368,10 @@ protected:
 
 	PowerMerge DCPower;
 	Saturn *sat;
+	RotationalSwitch *DimmerRotationalSwitch;
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
-};
-
-
-// ORDEAL
-
-#define ORDEAL_START_STRING		"ORDEAL_BEGIN"
-#define ORDEAL_END_STRING		"ORDEAL_END"
-
-class ORDEAL {
-	
-public:
-	ORDEAL();
-	void Init(Saturn *vessel);										// Initialization
-	void Timestep(double simdt);                                    // Timestep
-	void SystemTimestep(double simdt);
-
-	double GetFDAI1PitchAngle();
-	double GetFDAI2PitchAngle();
-
-	void SaveState(FILEHANDLE scn);                                // SaveState callback
-	void LoadState(FILEHANDLE scn);                                // LoadState callback
-
-private:
-	bool IsPowered();
-
-	double pitchOffset;
-	Saturn *sat;
 };
 
 PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);

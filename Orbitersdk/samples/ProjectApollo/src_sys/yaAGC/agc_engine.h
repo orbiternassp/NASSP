@@ -92,6 +92,15 @@
                         added a new channel 163 bit, DSKY_EL_OFF, that
                         signifies when the power supply for the EL lights
                         should go off. yaDSKY2 support to follow.
+		03/26/17 RSB	A couple of additional integer types faked up for
+						Win10+Msys specifically, but probably for some other
+						Windows configurations as well.  Thanks to Romain Lamour.
+		03/26/17 MAS	Added previously-static items from agc_engine.c to agc_t.
+		03/27/17 MAS	Added a bit for Night Watchman's 1.28s-long assertion of
+						its channel 77 bit.
+		04/16/17 MAS    Added a voltage counter and input flag for the AGC
+						warning filter, as well as a channel 163 flag for
+						the AGC (CMC/LGC) warning light.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -114,9 +123,10 @@ extern "C" {
 #ifdef WIN32
 // Win32
 typedef short int16_t;
-typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
 typedef signed char int8_t;
-typedef unsigned int uint32_t;
+typedef unsigned char uint8_t; // 20170326
+typedef unsigned int uint32_t; // 20170326
 typedef int int32_t;
 typedef unsigned __int64 uint64_t;
 typedef __int64 int64_t;
@@ -237,6 +247,7 @@ extern long random (void);
 #define CH77_RUPT_LOCK      000010
 #define CH77_NIGHT_WATCHMAN 000020
 
+#define DSKY_AGC_WARN 000001
 #define DSKY_KEY_REL  000020
 #define DSKY_VN_FLASH 000040
 #define DSKY_OPER_ERR 000100
@@ -339,6 +350,7 @@ typedef struct
   //unsigned RegQ16:1;		// Bit "16" of register Q.
   unsigned DownruptTimeValid:1;	// Set if the DownruptTime field is valid.
   unsigned NightWatchman:1;     // Set when Night Watchman is watching. Cleared by accessing address 67.
+  unsigned NightWatchmanTripped:1; // Set when Night Watchman has been tripped and its CH77 bit is being asserted.
   unsigned RuptLock:1;          // Set when rupts are being watched. Cleared by executing any non-ISR instruction
   unsigned NoRupt:1;            // Set when rupts are being watched. Cleared by executing any ISR instruction
   unsigned TCTrap:1;            // Set when TC is being watched. Cleared by executing any non-TC/TCF instruction
@@ -348,8 +360,17 @@ typedef struct
   unsigned SbyStillPressed:1;   // Set upon entry to standby, until PRO is released
   unsigned ParityFail:1;        // Set when a parity failure is encountered accessing memory (in yaAGC, just hitting banks 44+)
   unsigned CheckParity:1;       // Enable parity checking for fixed memory.
+  unsigned RestartLight:1;      // The present state of the RESTART light
+  unsigned GeneratedWarning : 1;  // Whether there is a pending input to the warning filter
+  uint32_t WarningFilter;       // Current voltage of the AGC warning filter
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
+  int NextZ;                    // Next value for the Z register
+  int ScalerCounter;            // Counter to keep track of scaler increment timing
+  int ChannelRoutineCount;      // Counter to keep track of channel interface routine timing
+  unsigned DskyTimer;           // Timer for DSKY-related timing
+  unsigned DskyFlash;           // DSKY flash counter (0 = flash occurring)
+  unsigned DskyChannel163;      // Copy of the fake DSKY channel 163
   // The following pointer is present for whatever use the Orbiter
   // integration squad wants.  The Virtual AGC code proper doesn't use it
   // in any way.

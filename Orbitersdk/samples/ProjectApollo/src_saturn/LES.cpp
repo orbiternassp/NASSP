@@ -113,47 +113,42 @@ void LES::InitLES()
 {
 	int i;
 
-	State = LES_STATE_SETUP;
+	ph_tjm = 0;
+	ph_lem = 0;
+	ph_pcm = 0;
 
-	ph_jettison = 0;
-	ph_main = 0;
-
-	thg_main = 0;
+	thg_lem = 0;
+	thg_tjm = 0;
 
 	EmptyMass = 2023.0;
-	MainFuel = 1405.0;
-	JettisonFuel = 159.0;
-	Realism = REALISM_DEFAULT;
+	LaunchEscapeFuel = LaunchEscapeFuelMax = 1425.138;
+	JettisonFuel = JettisonFuelMax = 93.318;
+	PitchControlFuel = PitchControlFuelMax = 4.07247;
 
-	FireMain = false;
+	FireLEM = false;
+	FireTJM = false;
+	FirePCM = false;
 	LowRes = false;
 	ProbeAttached = false;
 
-	MissionTime = MINUS_INFINITY;
-	NextMissionEventTime = MINUS_INFINITY;
-	LastMissionEventTime = MINUS_INFINITY;
+	ISP_TJM_SL = 1745.5837;
+	ISP_TJM_VAC = 1765.197;
+	THRUST_VAC_TJM = (135745.3 / 2.0)*ISP_TJM_VAC / ISP_TJM_SL / cos(30.0*RAD);
 
-	//
-	// ISPs are estimates.
-	//
+	ISP_LEM_SL = 1725.9704;
+	ISP_LEM_VAC = 1922.1034;
+	THRUST_VAC_LEM = (533786.6 / 4.0)*ISP_LEM_VAC / ISP_LEM_SL / cos(35.0*RAD);
 
-	ISP_SL   = 2200.0;
-	ISP_VAC  = 2600.0;
-
-	//
-	// I'm not sure whether the thrust values quoted are for sea level
-	// or vacuum. If they're sea-level then we should multiply them by
-	// (ISP_VAC / ISP_SL) to get vacuum thrust.
-	//
-
-	THRUST_VAC_MAIN  = (653888.6 / 4.0);
-	THRUST_VAC_JETTISON = (140119.0 / 2.0);
+	ISP_PCM_SL = 1931.91005;
+	ISP_PCM_VAC = 1971.13665;
+	THRUST_VAC_PCM = 6271.4;
 
 	for (i = 0; i < 2; i++)
-		th_jettison[i] = 0;
+		th_tjm[i] = 0;
 
 	for (i = 0; i < 4; i++)
-		th_main[0] = 0;
+		th_lem[0] = 0;
+	th_pcm = 0;
 }
 
 void LES::SetLES()
@@ -167,7 +162,7 @@ void LES::SetLES()
 	SetCrossSections (_V(8.5, 8.5, 12.5));
 
 	SetCOG_elev (2.0);
-	SetCW (5.5, 0.1, 3.4, 3.4);
+	SetCW (1.5, 1.5, 1.2, 1.2);
 	SetRotDrag (_V(0.07,0.07,0.003));
 
 	SetPitchMomentScale (0);
@@ -194,45 +189,67 @@ void LES::SetLES()
 	// Set up correctly for engine burn and 'cockpit' displays.
 	//
 
-	if (FireMain)
-	{
-		thg_main = CreateThrusterGroup (th_main, 4, THGROUP_MAIN);
-		SetDefaultPropellantResource (ph_main);
-	}
-	else
-	{
-		thg_main = CreateThrusterGroup (th_jettison, 2, THGROUP_MAIN);
-		SetDefaultPropellantResource (ph_jettison);
-	}
+	thg_lem = CreateThrusterGroup (th_lem, 4, THGROUP_MAIN);
+	SetDefaultPropellantResource (ph_lem);
+	
+	thg_tjm = CreateThrusterGroup (th_tjm, 2, THGROUP_USER);
 }
 
 void LES::clbkPreStep(double simt, double simdt, double mjd)
 
 {
-	MissionTime += simdt;
+	if (thg_lem)
+	{
+		if (FireLEM)
+		{
+			if (GetThrusterGroupLevel(thg_lem) < 1.0)
+			{
+				SetThrusterGroupLevel(thg_lem, 1.0);
+			}
+		}
+		else
+		{
+			if (GetThrusterGroupLevel(thg_lem) > 0.0)
+			{
+				SetThrusterGroupLevel(thg_lem, 0.0);
+			}
+		}
+	}
 
-	//
-	// Currently this just fires the main engines.
-	//
+	if (thg_tjm)
+	{
+		if (FireTJM)
+		{
+			if (GetThrusterGroupLevel(thg_tjm) < 1.0)
+			{
+				SetThrusterGroupLevel(thg_tjm, 1.0);
+			}
+		}
+		else
+		{
+			if (GetThrusterGroupLevel(thg_tjm) > 0.0)
+			{
+				SetThrusterGroupLevel(thg_tjm, 0.0);
+			}
+		}
+	}
 
-	switch (State) {
-
-	case LES_STATE_JETTISON:
-		//
-		// Fire thrusters, then wait.
-		//
-		SetThrusterGroupLevel(thg_main, 1.0);
-		State = LES_STATE_WAITING;
-		break;
-
-	case LES_STATE_WAITING:
-		//
-		// Nothing for now.
-		//
-		break;
-
-	default:
-		break;
+	if (th_pcm)
+	{
+		if (FirePCM)
+		{
+			if (GetThrusterLevel(th_pcm) < 1.0)
+			{
+				SetThrusterLevel(th_pcm, 1.0);
+			}
+		}
+		else
+		{
+			if (GetThrusterLevel(th_pcm) > 0.0)
+			{
+				SetThrusterLevel(th_pcm, 0.0);
+			}
+		}
 	}
 }
 
@@ -242,26 +259,15 @@ void LES::clbkSaveState (FILEHANDLE scn)
 	VESSEL2::clbkSaveState (scn);
 
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
-	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
-	oapiWriteScenario_int (scn, "STATE", State);
-	oapiWriteScenario_int (scn, "REALISM", Realism);
-	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
-	oapiWriteScenario_float (scn, "FMASS", MainFuel);
-	oapiWriteScenario_float (scn, "JMASS", JettisonFuel);
-	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
-	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
-	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-	oapiWriteScenario_float (scn, "T2V", THRUST_VAC_MAIN);
-	oapiWriteScenario_float (scn, "T2J", THRUST_VAC_JETTISON);
-	oapiWriteScenario_float (scn, "I2S", ISP_SL);
-	oapiWriteScenario_float (scn, "I2V", ISP_VAC);
 }
 
 typedef union {
 	struct {
-		unsigned int FireMain:1;
+		unsigned int FireLEM:1;
 		unsigned int LowRes:1;
 		unsigned int ProbeAttached:1;
+		unsigned int FireTJM:1;
+		unsigned int FirePCM:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -272,9 +278,11 @@ int LES::GetMainState()
 	MainState state;
 
 	state.word = 0;
-	state.u.FireMain = FireMain;
+	state.u.FireLEM = FireLEM;
 	state.u.LowRes = LowRes;
 	state.u.ProbeAttached = ProbeAttached;
+	state.u.FireTJM = FireTJM;
+	state.u.FirePCM = FirePCM;
 
 	return state.word;
 }
@@ -296,17 +304,17 @@ void LES::AddEngines()
 	VECTOR3 m_exhaust_ref1 = {0.3, 0.0, 1.0};
 	VECTOR3 m_exhaust_ref2 = {-0.25, 0.0, 1.0};
 
-	if (!ph_jettison)
-		ph_jettison = CreatePropellantResource(JettisonFuel);
+	if (!ph_tjm)
+		ph_tjm = CreatePropellantResource(JettisonFuelMax, JettisonFuel);
 
-	if (!ph_main && (MainFuel > 0.0))
-		ph_main = CreatePropellantResource(MainFuel);
+	if (!ph_lem)
+		ph_lem = CreatePropellantResource(LaunchEscapeFuelMax, LaunchEscapeFuel);
 
-	if (!th_jettison[0])
-	{
-		th_jettison[0] = CreateThruster (m_exhaust_pos1, m_exhaust_ref1, THRUST_VAC_JETTISON, ph_jettison, ISP_VAC, ISP_SL);
-		th_jettison[1] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, THRUST_VAC_JETTISON, ph_jettison, ISP_VAC, ISP_SL);
-	}
+	if (!ph_pcm)
+		ph_pcm = CreatePropellantResource(PitchControlFuelMax, PitchControlFuel);
+
+	th_tjm[0] = CreateThruster (m_exhaust_pos1, m_exhaust_ref1, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+	th_tjm[1] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
 
 	//
 	// Add exhausts.
@@ -315,9 +323,9 @@ void LES::AddEngines()
 	int i;
 	for (i = 0; i < 2; i++)
 	{
-		AddExhaust (th_jettison[i], 5.0, 0.5, exhaust_tex);
-		AddExhaustStream (th_jettison[i], &solid_exhaust);
-		AddExhaustStream (th_jettison[i], &srb_exhaust);
+		AddExhaust (th_tjm[i], 5.0, 0.5, exhaust_tex);
+		AddExhaustStream (th_tjm[i], &solid_exhaust);
+		AddExhaustStream (th_tjm[i], &srb_exhaust);
 	}
 
 	m_exhaust_pos1= _V(0.0, -0.5, -2.2);
@@ -326,14 +334,13 @@ void LES::AddEngines()
 	VECTOR3 m_exhaust_pos4 = _V(0.5, 0.0, -2.2);
 
 	//
-	// Main thrusters. These are only used if the jettison engines
-	// don't work.
+	// LEM thrusters.
 	//
 
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V(0.0, 0.4, 0.7), THRUST_VAC_MAIN, ph_main, ISP_VAC, ISP_SL);
-	th_main[1] = CreateThruster (m_exhaust_pos2, _V(0.0, -0.4, 0.7),  THRUST_VAC_MAIN, ph_main, ISP_VAC, ISP_SL);
-	th_main[2] = CreateThruster (m_exhaust_pos3, _V(0.4, 0.0, 0.7), THRUST_VAC_MAIN, ph_main, ISP_VAC, ISP_SL);
-	th_main[3] = CreateThruster (m_exhaust_pos4, _V(-0.4, 0.0, 0.7), THRUST_VAC_MAIN, ph_main, ISP_VAC, ISP_SL);
+	th_lem[0] = CreateThruster (m_exhaust_pos1, _V(0.0, 0.4, 0.7), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+	th_lem[1] = CreateThruster (m_exhaust_pos2, _V(0.0, -0.4, 0.7), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+	th_lem[2] = CreateThruster (m_exhaust_pos3, _V(0.4, 0.0, 0.7), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+	th_lem[3] = CreateThruster (m_exhaust_pos4, _V(-0.4, 0.0, 0.7), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
 
 	//
 	// Add exhausts
@@ -341,9 +348,16 @@ void LES::AddEngines()
 
 	for (i = 0; i < 4; i++)
 	{
-		AddExhaust(th_main[i], 8.0, 0.5, exhaust_tex);
-		AddExhaustStream(th_main[i], &solid_exhaust);
+		AddExhaust(th_lem[i], 8.0, 0.5, exhaust_tex);
+		AddExhaustStream(th_lem[i], &solid_exhaust);
 	}
+
+	m_exhaust_pos1 = _V(0.0, 0.0, 4.5);
+
+	//Pitch Control Motor
+	th_pcm = CreateThruster(m_exhaust_pos1, _V(0.0, 1.0, 0.0), THRUST_VAC_PCM, ph_pcm, ISP_PCM_VAC, ISP_PCM_SL);
+	AddExhaust(th_pcm, 8.0, 0.5, exhaust_tex);
+	AddExhaustStream(th_pcm, &solid_exhaust);
 }
 
 void LES::SetMainState(int s)
@@ -353,17 +367,17 @@ void LES::SetMainState(int s)
 
 	state.word = s;
 
-	FireMain = (state.u.FireMain != 0);
+	FireLEM = (state.u.FireLEM != 0);
 	LowRes = (state.u.LowRes != 0);
 	ProbeAttached = (state.u.ProbeAttached != 0);
+	FireTJM = (state.u.FireTJM != 0);
+	FirePCM = (state.u.FirePCM != 0);
 }
 
 void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 
 {
 	char *line;
-	float flt;
-	int i;
 
 	while (oapiReadScenario_nextline (scn, line))
 	{
@@ -372,69 +386,6 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
-		}
-		else if (!strnicmp (line, "VECHNO", 6))
-		{
-			sscanf (line+6, "%d", &VehicleNo);
-		}
-		else if (!strnicmp (line, "EMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			EmptyMass = flt;
-		}
-		else if (!strnicmp (line, "FMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			MainFuel = flt;
-		}
-		else if (!strnicmp (line, "JMASS", 5))
-		{
-			sscanf (line+5, "%g", &flt);
-			JettisonFuel = flt;
-		}
-		else if (!strnicmp(line, "MISSNTIME", 9))
-		{
-            sscanf (line+9, "%f", &flt);
-			MissionTime = flt;
-		}
-		else if (!strnicmp(line, "NMISSNTIME", 10))
-		{
-            sscanf (line + 10, "%f", &flt);
-			NextMissionEventTime = flt;
-		}
-		else if (!strnicmp(line, "LMISSNTIME", 10))
-		{
-            sscanf (line + 10, "%f", &flt);
-			LastMissionEventTime = flt;
-		}
-		else if (!strnicmp(line, "T2V", 3))
-		{
-            sscanf (line + 3, "%f", &flt);
-			THRUST_VAC_MAIN = flt;
-		}
-		else if (!strnicmp(line, "T2J", 3))
-		{
-            sscanf (line + 3, "%f", &flt);
-			THRUST_VAC_JETTISON = flt;
-		}
-		else if (!strnicmp(line, "I2S", 3))
-		{
-            sscanf (line + 3, "%f", &flt);
-			ISP_SL = flt;
-		}
-		else if (!strnicmp(line, "I2V", 3))
-		{
-            sscanf (line + 3, "%f", &flt);
-			ISP_VAC = flt;
-		}
-		else if (!strnicmp (line, "STATE", 5))
-		{
-			sscanf (line+5, "%d", &i);
-			State = (LESState) i;
-		}
-		else if (!strnicmp (line, "REALISM", 7))
-		{
-			sscanf (line+7, "%d", &Realism);
 		}
 		else
 		{
@@ -462,42 +413,23 @@ void LES::SetState(LESSettings &state)
 {
 	if (state.SettingsType.LES_SETTINGS_GENERAL)
 	{
-		MissionTime = state.MissionTime;
-		VehicleNo = state.VehicleNo;
-		Realism = state.Realism;
 		LowRes = state.LowRes;
 		ProbeAttached = state.ProbeAttached;
 	}
 
-	if (state.SettingsType.LES_SETTINGS_MASS)
-	{
-		EmptyMass = state.EmptyMass;
-	}
-
-	if (state.SettingsType.LES_SETTINGS_FUEL)
-	{
-		MainFuel = state.MainFuelKg;
+	if (state.SettingsType.LES_SETTINGS_MFUEL)
+		LaunchEscapeFuel = state.LaunchEscapeFuelKg;
+	if (state.SettingsType.LES_SETTINGS_JFUEL)
 		JettisonFuel = state.JettisonFuelKg;
-	}
-
-	if (state.SettingsType.LES_SETTINGS_MAIN_FUEL)
-	{
-		MainFuel = state.MainFuelKg;
-	}
+	if (state.SettingsType.LES_SETTINGS_PFUEL)
+		PitchControlFuel = state.PitchControlFuelKg;
 
 	if (state.SettingsType.LES_SETTINGS_ENGINES)
 	{
-		FireMain = state.FireMain;
+		FireLEM = state.FireLEM;
+		FireTJM = state.FireTJM;
+		FirePCM = state.FirePCM;
 	}
-
-	if (state.SettingsType.LES_SETTINGS_THRUST)
-	{
-		ISP_VAC = state.ISP_LET_VAC;
-		ISP_SL = state.ISP_LET_SL;
-		THRUST_VAC_MAIN = state.THRUST_VAC_LET;
-	}
-
-	State = LES_STATE_JETTISON;
 
 	SetLES();
 }

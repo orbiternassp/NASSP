@@ -35,7 +35,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -1586,15 +1585,10 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 RJEC::RJEC() {
 	
 	sat = NULL;
-	AutoRCSEnableRelayA = false;
-	AutoRCSEnableRelayB = false;
-	CMTransferMotor1 = false;
-	CMTransferMotor2 = false;
 	SPSActive = false;
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
-	AGCActiveTimer = 0;
 
 	int i = 0;
 	while (i < 20) {
@@ -1631,8 +1625,8 @@ bool RJEC::IsThrusterPowered(ThreePosSwitch *s) {
 
 	// see AOH Figure 2.5-2
 	if (s->IsPowered() && 
-		((s->IsUp() && AutoRCSEnableRelayA && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
-		 (s->IsDown() && AutoRCSEnableRelayB && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
+		((s->IsUp() && sat->secs.MESCA.GetAutoRCSEnableRelay() && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
+		 (s->IsDown() && sat->secs.MESCB.GetAutoRCSEnableRelay() && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
 		return true;
 	}
 	return false;
@@ -1684,47 +1678,6 @@ void RJEC::TimeStep(double simdt){
 
 	*/
 
-	// CM/SM transfer motors
-	if (sat->RCSTrnfrSwitch.IsUp()) {
-		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
-			CMTransferMotor1 = true;
-		}
-		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-			CMTransferMotor2 = true;
-		}
-	} else if (sat->RCSTrnfrSwitch.IsDown()) {
-		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
-			CMTransferMotor1 = false;
-		}
-		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
-			CMTransferMotor2 = false;
-		}
-	}
-
-	// Auto RCS enable relays
-	if (sat->RCSCMDSwitch.IsUp()) {
-		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayA = true;
-		}
-		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayB = true;
-		}
-	} else if (sat->RCSCMDSwitch.IsDown()) {
-		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayA = false;
-		}
-		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
-			AutoRCSEnableRelayB = false;
-		}
-	}
-
-	/// \todo Dirty Hack for the AGC++ attitude control
-	// see CSMcomputer::SetAttitudeRotLevel(VECTOR3 level)
-	if (AGCActiveTimer > 0) {
-		AGCActiveTimer = max(0, AGCActiveTimer - simdt);
-		return;
-	}
-
 	// Reset thruster power demand
 	bool td[20];
 	int i;
@@ -1733,21 +1686,11 @@ void RJEC::TimeStep(double simdt){
 		PoweredSwitch[i] = NULL;
 	}
 
-
 	//
 	// ACCEL CMD: ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
 	//
 
 	// Roll
-	
-	td[9] = ThrusterDemand[9];
-	td[10] = ThrusterDemand[10];
-	td[11] = ThrusterDemand[11];
-	td[12] = ThrusterDemand[12];
-	td[13] = ThrusterDemand[13];
-	td[14] = ThrusterDemand[14];
-	td[15] = ThrusterDemand[15];
-	td[16] = ThrusterDemand[16];
 
 	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_x < 28673) {  // MINUS
@@ -1763,13 +1706,19 @@ void RJEC::TimeStep(double simdt){
 			td[15] = true;
 		}
 	}
+	else
+	{
+		td[9] = ThrusterDemand[9];
+		td[10] = ThrusterDemand[10];
+		td[11] = ThrusterDemand[11];
+		td[12] = ThrusterDemand[12];
+		td[13] = ThrusterDemand[13];
+		td[14] = ThrusterDemand[14];
+		td[15] = ThrusterDemand[15];
+		td[16] = ThrusterDemand[16];
+	}
 
 	// Pitch
-	
-	td[1] = ThrusterDemand[1];
-	td[2] = ThrusterDemand[2];
-	td[3] = ThrusterDemand[3];
-	td[4] = ThrusterDemand[4];
 
 	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_y < 28673) {  // MINUS
@@ -1781,13 +1730,15 @@ void RJEC::TimeStep(double simdt){
 			td[3] = true;
 		}
 	}
+	else
+	{
+		td[1] = ThrusterDemand[1];
+		td[2] = ThrusterDemand[2];
+		td[3] = ThrusterDemand[3];
+		td[4] = ThrusterDemand[4];
+	}
 
 	// Yaw
-	
-	td[5] = ThrusterDemand[5];
-	td[6] = ThrusterDemand[6];
-	td[7] = ThrusterDemand[7];
-	td[8] = ThrusterDemand[8];
 	
 	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
 		if (sat->eca.rhc_z < 28673) {  // MINUS
@@ -1798,6 +1749,13 @@ void RJEC::TimeStep(double simdt){
 			td[5] = true;
 			td[7] = true;
 		}
+	}
+	else
+	{
+		td[5] = ThrusterDemand[5];
+		td[6] = ThrusterDemand[6];
+		td[7] = ThrusterDemand[7];
+		td[8] = ThrusterDemand[8];
 	}
 
 	// Ensure AC logic power, see Systems Handbook 8.2 
@@ -1820,6 +1778,47 @@ void RJEC::TimeStep(double simdt){
 		td[13] = false;
 		td[15] = false;
 		td[16] = false;
+	}
+
+	//
+	// TRANSLATION HANDLING
+	//
+
+	// CM/SM transfer handling
+	bool sm_sep = false;
+	bool CMTransferMotor1 = sat->secs.rcsc.GetCMTransferMotor1();
+	bool CMTransferMotor2 = sat->secs.rcsc.GetCMTransferMotor2();
+	if (CMTransferMotor1 || CMTransferMotor2) sm_sep = true;
+
+	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep) {
+		if (sat->eca.thc_x < 16384) { // PLUS X
+			td[14] = true;
+			td[15] = true;
+		}
+		if (sat->eca.thc_x > 49152) { // MINUS X
+			td[16] = true;
+			td[13] = true;
+		}
+		if (sat->eca.thc_y > 49152) { // MINUS Y (FORWARD)
+			td[1] = true;
+			td[2] = true;
+			td[5] = true;
+			td[6] = true;
+		}
+		if (sat->eca.thc_y < 16384) { // PLUS Y (BACKWARD)
+			td[3] = true;
+			td[4] = true;
+			td[7] = true;
+			td[8] = true;
+		}
+		if (sat->eca.thc_z > 49152) { // MINUS Z (UP)
+			td[11] = true;
+			td[12] = true;
+		}
+		if (sat->eca.thc_z < 16384) { // PLUS Z (DOWN)
+			td[9] = true;
+			td[10] = true;
+		}
 	}
 
 	int thruster = 1;
@@ -1896,15 +1895,10 @@ void RJEC::SaveState(FILEHANDLE scn) {
 		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
 	} 
 	*/
-	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
-	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
-	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1); 
-	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 	papiWriteScenario_bool(scn, "SPSACTIVE", SPSActive); 
 	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive); 
 	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive); 
 	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive); 
-	papiWriteScenario_double(scn, "AGCACTIVETIMER", AGCActiveTimer); 
 
 	oapiWriteLine(scn, RJEC_END_STRING);
 }
@@ -1927,15 +1921,10 @@ void RJEC::LoadState(FILEHANDLE scn){
 			ThrusterDemand[i] = (val != 0 ? true : false);
 		*/
 		}
-		papiReadScenario_bool(line, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
-		papiReadScenario_bool(line, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
-		papiReadScenario_bool(line, "CMTRANSFERMOTOR1", CMTransferMotor1); 
-		papiReadScenario_bool(line, "CMTRANSFERMOTOR2", CMTransferMotor2); 
 		papiReadScenario_bool(line, "SPSACTIVE", SPSActive); 
 		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive); 
 		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive); 
 		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive); 
-		papiReadScenario_double(line, "AGCACTIVETIMER", AGCActiveTimer); 
 	}
 }
 
@@ -1962,9 +1951,6 @@ ECA::ECA() {
 	mnimp_pitch_trigger = 0;
 	accel_yaw_trigger = 0;
 	mnimp_yaw_trigger = 0;
-	trans_x_trigger = 0;
-	trans_y_trigger = 0;
-	trans_z_trigger = 0;
 	pseudorate = _V(0,0,0);
 
 	sat = NULL;
@@ -2575,77 +2561,6 @@ void ECA::TimeStep(double simdt) {
 		mnimp_yaw_trigger=0;
 	}
 	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
-
-	//
-	// TRANSLATION HANDLING
-	//
-
-	int trans_x_flag=0,trans_y_flag=0,trans_z_flag=0;
-	// CM/SM transfer handling
-	bool sm_sep = false;
-	if (sat->rjec.GetCMTransferMotor1() || sat->rjec.GetCMTransferMotor2()) sm_sep = true;
-
-	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep){
-		if(thc_x < 16384){ // PLUS X
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(14,1); }else{ sat->rjec.SetThruster(14,0); }
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(15,1); }else{ sat->rjec.SetThruster(15,0); }
-			trans_x_trigger=1; trans_x_flag=1;
-		}
-		if(thc_x > 49152){ // MINUS X
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(16,1); }else{ sat->rjec.SetThruster(16,0); }
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(13,1); }else{ sat->rjec.SetThruster(13,0); }
-			trans_x_trigger=1; trans_x_flag=1;
-		}
-		if(thc_y > 49152){ // MINUS Y (FORWARD)
-			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(1,1); }else{ sat->rjec.SetThruster(1,0); }
-			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(2,1); }else{ sat->rjec.SetThruster(2,0); }
-			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(5,1); }else{ sat->rjec.SetThruster(5,0); }
-			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(6,1); }else{ sat->rjec.SetThruster(6,0); }
-			trans_y_trigger=1; trans_y_flag=1;
-		}
-		if(thc_y < 16384){ // PLUS Y (BACKWARD)
-			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(3,1); }else{ sat->rjec.SetThruster(3,0); }
-			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(4,1); }else{ sat->rjec.SetThruster(4,0); }
-			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(7,1); }else{ sat->rjec.SetThruster(7,0); }
-			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(8,1); }else{ sat->rjec.SetThruster(8,0); }
-			trans_y_trigger=1; trans_y_flag=1;
-		}
-		if(thc_z > 49152){ // MINUS Z (UP)
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(11,1); }else{ sat->rjec.SetThruster(11,0); }
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(12,1); }else{ sat->rjec.SetThruster(12,0); }
-			trans_z_trigger=1; trans_z_flag=1;
-		}
-		if(thc_z < 16384){ // PLUS Z (DOWN)
-			if(accel_roll_flag > -1){ sat->rjec.SetThruster(9,1);  }else{ sat->rjec.SetThruster(9,0);  }
-			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(10,1); }else{ sat->rjec.SetThruster(10,0); }
-			trans_z_trigger=1; trans_z_flag=1;
-		}
-	}
-	if(!trans_x_flag && trans_x_trigger){
-		sat->rjec.SetThruster(13,0);
-		sat->rjec.SetThruster(14,0);
-		sat->rjec.SetThruster(15,0);
-		sat->rjec.SetThruster(16,0);
-		trans_x_trigger=0;
-	}
-	if(!trans_y_flag && trans_y_trigger){
-		sat->rjec.SetThruster(3,0); 
-		sat->rjec.SetThruster(7,0); 
-		sat->rjec.SetThruster(4,0); 
-		sat->rjec.SetThruster(8,0); 
-		sat->rjec.SetThruster(2,0);
-		sat->rjec.SetThruster(6,0);
-		sat->rjec.SetThruster(1,0); 
-		sat->rjec.SetThruster(5,0); 
-		trans_y_trigger=0;
-	}
-	if(!trans_z_flag && trans_z_trigger){
-		sat->rjec.SetThruster(9,0);
-		sat->rjec.SetThruster(10,0);
-		sat->rjec.SetThruster(11,0);
-		sat->rjec.SetThruster(12,0);
-		trans_z_trigger=0;
-	}
 }
 
 
@@ -2686,6 +2601,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
+	DimmerRotationalSwitch = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -2733,9 +2649,11 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScrollScaling = 0.03; // pixels per ft/sec
 }
 
-void EMS::Init(Saturn *vessel) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
 	sat = vessel;
-	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
+	DimmerRotationalSwitch = dimmer;
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -2991,6 +2909,10 @@ void EMS::SystemTimestep(double simdt) {
 
 	if (IsPowered() && !IsOff()) {
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
+	}
+
+	if (IsDisplayPowered() && !IsOff()) {
+		DrawPower(0.022);
 	}
 }
 
@@ -3256,6 +3178,14 @@ bool EMS::IsPowered() {
 	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
 }
 
+bool EMS::IsDisplayPowered() {
+
+	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+		return false;
+
+	return true;
+}
+
 void EMS::SaveState(FILEHANDLE scn) {
 	char buffer[100];
 	
@@ -3503,118 +3433,4 @@ bool CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC) {
 	// Free memory. 
 	GlobalFree((HGLOBAL)lpBits);
 	return true;
-}
-
-
-//
-// ORDEAL
-//
-
-ORDEAL::ORDEAL() {
-
-	pitchOffset = 0;
-	sat = NULL;
-}
-
-void ORDEAL::Init(Saturn *vessel) {
-	sat = vessel;
-}
-
-bool ORDEAL::IsPowered() {
-
-	// Do we have power?
-	if (sat->ORDEALEarthSwitch.IsCenter()) return false;  // Switched off
-
-	// Ensure AC/DC power
-	if (!sat->OrdealAc2CircuitBraker.IsPowered() || 
-	    !sat->OrdealMnBCircuitBraker.IsPowered()) return false;
-
-	return true;
-}
-
-void ORDEAL::SystemTimestep(double simdt) {
-
-	// Do we have power?
-	if (!IsPowered()) return;
-
-	sat->OrdealAc2CircuitBraker.DrawPower(4);	// see CSM Systems Handbook
-	sat->OrdealMnBCircuitBraker.DrawPower(3);	
-}
-
-void ORDEAL::Timestep(double simdt) {
-
-	// Do we have power?
-	if (!IsPowered()) return;
-
-	// Calculate rate, see "Guidance and control systems - Orbital rate drive electronics for the Apollo command module and lunar module", NTRS ID 19740026211
-	double rate = 0;
-	if (sat->ORDEALEarthSwitch.IsUp()) {
-		rate = 0.2 * RAD / (2.8182 + 0.001265 * sat->ORDEALAltSetRotary.GetValue());
-	} else {
-		rate = 0.2 * RAD / (3.5847 + 0.006342 * sat->ORDEALAltSetRotary.GetValue());
-	}
-	// sprintf(oapiDebugString(), "rate %f T %f", rate * DEG, 360. / (rate * DEG));
-	
-	if (sat->ORDEALModeSwitch.IsDown()) {
-		// Hold/Fast
-		if (sat->ORDEALSlewSwitch.IsUp()) {
-			pitchOffset += 256. * rate * simdt;
-			while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-		
-		} else if (sat->ORDEALSlewSwitch.IsDown()) {
-			pitchOffset -= 256. * rate * simdt;
-			while (pitchOffset < 0) pitchOffset += TWO_PI;
-		}
-	} else {
-		// Apply rate
-		pitchOffset += rate * simdt;
-		while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-
-		// Slow slew
-		if (sat->ORDEALSlewSwitch.IsUp()) {
-			pitchOffset += 16. * rate * simdt;
-			while (pitchOffset >= TWO_PI) pitchOffset -= TWO_PI;
-		
-		} else if (sat->ORDEALSlewSwitch.IsDown()) {
-			pitchOffset -= 16. * rate * simdt;
-			while (pitchOffset < 0) pitchOffset += TWO_PI;
-		}
-	}
-}
-
-double ORDEAL::GetFDAI1PitchAngle() {
-	
-	if (IsPowered() && sat->ORDEALFDAI1Switch.IsUp()) {
-		return pitchOffset;
-	}
-	return 0;
-}
-
-double ORDEAL::GetFDAI2PitchAngle() {
-
-	if (IsPowered() && sat->ORDEALFDAI2Switch.IsUp()) {
-		return pitchOffset;
-	}
-	return 0;
-}
-
-void ORDEAL::SaveState(FILEHANDLE scn) {
-
-	oapiWriteLine(scn, ORDEAL_START_STRING);
-	
-	papiWriteScenario_double(scn, "PITCHOFFSET", pitchOffset); 
-
-	oapiWriteLine(scn, ORDEAL_END_STRING);
-}
-
-void ORDEAL::LoadState(FILEHANDLE scn){
-
-	char *line;
-
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, ORDEAL_END_STRING, sizeof(ORDEAL_END_STRING))) {
-			return;
-		}
-		papiReadScenario_double(line, "PITCHOFFSET", pitchOffset); 
-	}
 }

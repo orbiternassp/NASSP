@@ -36,7 +36,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "ioChannels.h"
 #include "saturn.h"
 #include "papi.h"
@@ -330,6 +329,8 @@ CMRCSPropellantSource::CMRCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p)
 	fuelInterconnectValvesOpen = false;
 	oxidizerInterconnectValvesOpen = false;
 	purgeValvesOpen = false;
+	oxidizerDumpValvesOpen = false;
+	fuelDumpValvesOpen = false;
 	for (i = 0; i < 6; i++) {
 		purgeLevel[i] = 0;
 	}
@@ -339,13 +340,14 @@ CMRCSPropellantSource::~CMRCSPropellantSource() {
 	// Nothing for now.
 }
 
-void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp) {
+void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol) {
 
 	thrusters = th;
 	heliumTank = t;
 	interconnectedSystem = ic;
 	purgePower = pp;
 	purgePyroPower = ppp;
+	isolPower = isol;
 }
 
 void CMRCSPropellantSource::Timestep(double simt, double simdt) {
@@ -355,14 +357,14 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 	// Helium squib valves
 	if (!heliumValvesOpen) {
 		if (our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
-			// Manual pressurization
-			if (our_vessel->SECSArmBatACircuitBraker.IsPowered() && our_vessel->CMRCSPressSwitch.IsUp()) {
+			// Manual or automatic pressurization
+			if (our_vessel->secs.MESCA.GetCMRCSPressRelay()) {
 				OpenHeliumValves();
 			}			
 		}
 		if (our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
-			// Manual pressurization
-			if (our_vessel->SECSArmBatBCircuitBraker.IsPowered() && our_vessel->CMRCSPressSwitch.IsUp()) {
+			// Manual or automatic pressurization
+			if (our_vessel->secs.MESCB.GetCMRCSPressRelay()) {
 				OpenHeliumValves();
 			}
 		}
@@ -371,23 +373,20 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 	// Fuel/oxidizer interconnect valves
 	if (!fuelInterconnectValvesOpen && our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
 		// Manual control
-		if (our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnACircuitBraker.IsPowered()) {
+		if (our_vessel->secs.rcsc.GetInterconnectAndPropellantBurnRelayB()) {
 			fuelInterconnectValvesOpen = true;
 		}
 	}
 	if (!oxidizerInterconnectValvesOpen && our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
 		// Manual control
-		if (our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp() && our_vessel->RCSLogicMnBCircuitBraker.IsPowered()) {
+		if (our_vessel->secs.rcsc.GetInterconnectAndPropellantBurnRelayA()) {
 			oxidizerInterconnectValvesOpen = true;
 		}
 	}
 
 	// Purge valves
 	if (!purgeValvesOpen && purgePyroPower->Voltage() > SP_MIN_DCVOLTAGE && purgePower->Voltage() > SP_MIN_DCVOLTAGE) {
-		if (our_vessel->CMPropPurgeSwitch.IsUp() && our_vessel->CMPropDumpSwitch.IsUp() && our_vessel->CMRCSLogicSwitch.IsUp()) {
-			OpenPurgeValves();
-		}
-		if (our_vessel->CmRcsHeDumpSwitch.IsUp()) {
+		if (our_vessel->secs.rcsc.GetOxidFuelPurgeRelay()) {
 			OpenPurgeValves();
 		}
 	}
@@ -418,6 +417,43 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 		}
 	}
 
+	//Automatic closing of propellant valves
+	if (propellantValve.IsOpen() && isolPower->Voltage() > SP_MIN_DCVOLTAGE && our_vessel->secs.rcsc.GetOxidizerDumpRelay())
+	{
+		propellantValve.SetState(false);
+	}
+
+	//Propellant dump valves
+	if (!fuelDumpValvesOpen) {
+		if (our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
+			// Open fuel dump valves
+			if (our_vessel->secs.rcsc.GetFuelDumpRelay()) {
+				fuelDumpValvesOpen = true;
+			}
+		}
+		if (our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
+			// Open fuel dump valves
+			if (our_vessel->secs.rcsc.GetFuelDumpRelay()) {
+				fuelDumpValvesOpen = true;
+			}
+		}
+	}
+
+	if (!oxidizerDumpValvesOpen) {
+		if (our_vessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) {
+			// Open oxidizer dump valves
+			if (our_vessel->secs.rcsc.GetOxidizerDumpRelay()) {
+				oxidizerDumpValvesOpen = true;
+			}
+		}
+		if (our_vessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) {
+			// Open oxidizer dump valves
+			if (our_vessel->secs.rcsc.GetOxidizerDumpRelay()) {
+				oxidizerDumpValvesOpen = true;
+			}
+		}
+	}
+
 	if (source_prop) {
 
 		// Adiabatic helium cooling because of expansion, see Apollo 9 Mission Report Supplement - CSM RCS Performance [NTRS 19740079928]
@@ -444,6 +480,30 @@ void CMRCSPropellantSource::Timestep(double simt, double simdt) {
 			SetThrusters(NULL);
 			SetPurgeLevel(false, simdt);
 		}
+
+		//Dump propellant. We don't differentiate between oxidizer and fuel yet.
+		if (oxidizerDumpValvesOpen || fuelDumpValvesOpen)
+		{
+			double PropMass = our_vessel->GetPropellantMass(source_prop);
+
+			//2.2 kg/s, just an estimate
+			if (oxidizerDumpValvesOpen)
+			{
+				PropMass -= 2.2*simdt;
+			}
+			if (fuelDumpValvesOpen)
+			{
+				PropMass -= 2.2*simdt;
+			}
+
+			PropMass = max(0.0, PropMass);
+
+			our_vessel->SetPropellantMass(source_prop, PropMass);
+
+			if (heliumValvesOpen && purgeValvesOpen && heliumQuantity > 0) {
+				heliumQuantity = max(0, heliumQuantity - (simdt / 15.));
+			}
+		}
 	}
 	// sprintf(oapiDebugString(), "heliumQuantity %f heliumTemp %f", heliumQuantity, heliumTank->GetTemp());
 }
@@ -463,7 +523,6 @@ void CMRCSPropellantSource::OpenHeliumValves() {
 
 void CMRCSPropellantSource::OpenPurgeValves() {
 
-	our_vessel->SetCmRcsHeDumpSwitch(true);
 	purgeValvesOpen = true;
 }
 
@@ -561,7 +620,9 @@ void CMRCSPropellantSource::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "HELIUMVALVESOPEN", heliumValvesOpen); 
 	papiWriteScenario_bool(scn, "FUELINTERCONNECTVALVESOPEN", fuelInterconnectValvesOpen); 
 	papiWriteScenario_bool(scn, "OXIDIZERINTERCONNECTVALVESOPEN", oxidizerInterconnectValvesOpen); 
-	papiWriteScenario_bool(scn, "PURGEVALVESOPEN", purgeValvesOpen); 
+	papiWriteScenario_bool(scn, "PURGEVALVESOPEN", purgeValvesOpen);
+	papiWriteScenario_bool(scn, "FUELDUMPVALVESOPEN", fuelDumpValvesOpen);
+	papiWriteScenario_bool(scn, "OXIDIZERDUMPVALVESOPEN", oxidizerDumpValvesOpen);
 
 	oapiWriteLine(scn, CMRCSPROPELLANT_END_STRING);
 }
@@ -590,6 +651,8 @@ void CMRCSPropellantSource::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "FUELINTERCONNECTVALVESOPEN", fuelInterconnectValvesOpen); 
 		papiReadScenario_bool(line, "OXIDIZERINTERCONNECTVALVESOPEN", oxidizerInterconnectValvesOpen); 
 		papiReadScenario_bool(line, "PURGEVALVESOPEN", purgeValvesOpen); 
+		papiReadScenario_bool(line, "FUELDUMPVALVESOPEN", fuelDumpValvesOpen);
+		papiReadScenario_bool(line, "OXIDIZERDUMPVALVESOPEN", oxidizerDumpValvesOpen);
 	}
 }
 

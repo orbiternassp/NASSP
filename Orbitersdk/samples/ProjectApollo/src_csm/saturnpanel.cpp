@@ -43,7 +43,6 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -404,6 +403,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_TELESCOPECOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_TELESCOPECOVER));	
 	srf[SRF_CSM_SEXTANTCOVER]						= oapiCreateSurface (LOADBMP (IDB_CSM_SEXTANTCOVER));
 	srf[SRF_CWS_GNLIGHTS]      						= oapiCreateSurface (LOADBMP (IDB_CWS_GNLIGHTS));
+	srf[SRF_EVENT_TIMER_DIGITS90]					= oapiCreateSurface (LOADBMP (IDB_EVENT_TIMER90));
+	srf[SRF_DIGITAL90]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL90));
 
 	//
 	// Flashing borders.
@@ -1198,7 +1199,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_FOOD_PREPARATION_WATER,				_R(1164, 1044, 1419, 1162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_306,						_R(1093, 1410, 1123, 1720), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_306_MISSIONTIMERSWITCH,	_R(1211, 1619, 1240, 1650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_EVENT_TIMER306,						_R(1185, 1431, 1203, 1502), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK306,					_R(1302, 1411, 1325, 1554), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1376,7 +1380,7 @@ bool Saturn::clbkLoadPanel (int id) {
 void Saturn::AddLeftMainPanelAreas() {
 
 	oapiRegisterPanelArea (AID_THC,											_R(   0, 1251,   72, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);	
-	oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_ABORT_LIGHT,									_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SEQUENCERSWITCHES,							_R( 802,  918,  990, 1100), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289, 1237,  325, 1306), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1653,7 +1657,7 @@ void Saturn::SetSwitches(int panel) {
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, this, 0, 119, 117, 231);
+	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 119, 117, 231);
 	LesMotorFireSwitch.InitGuard      (  0,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
 	CanardDeploySwitch.Init           ( 20,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 157, 99, 281);
 	CanardDeploySwitch.InitGuard      (  0,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
@@ -2722,24 +2726,24 @@ void Saturn::SetSwitches(int panel) {
 		EPSBatBusACircuitBraker.Init(121, 99, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusA, 20.0);
 		EPSBatBusBCircuitBraker.Init(139, 65, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusB, 20.0);
 	} else {
-		TimersMnBCircuitBraker.Init       (  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		TimersMnACircuitBraker.Init       (  0,  41, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnBGroup1CircuitBraker.Init    (  0,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnAGroup1CircuitBraker.Init    (  0, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		TimersMnACircuitBraker.Init       (  0,  41, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA, 5.0);
+		TimersMnBCircuitBraker.Init       (  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB, 5.0);
+		EPSMnBGroup1CircuitBraker.Init    (  0,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
+		EPSMnAGroup1CircuitBraker.Init    (  0, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		SPSLineHtrsMnBCircuitBraker.Init  ( 71,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		SPSLineHtrsMnACircuitBraker.Init  ( 71,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnBGroup2CircuitBraker.Init    ( 71,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnAGroup2CircuitBraker.Init    ( 71, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		EPSMnBGroup2CircuitBraker.Init    ( 71,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
+		EPSMnAGroup2CircuitBraker.Init    ( 71, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		O2VacIonPumpsMnBCircuitBraker.Init(140,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		O2VacIonPumpsMnACircuitBraker.Init(140,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnBGroup3CircuitBraker.Init    (140,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnAGroup3CircuitBraker.Init    (140, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		EPSMnBGroup3CircuitBraker.Init    (140,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
+		EPSMnAGroup3CircuitBraker.Init    (140, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		MainReleasePyroBCircuitBraker.Init(210,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &PyroBusB, 5.0);
 		MainReleasePyroACircuitBraker.Init(210,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &PyroBusA, 5.0);
-		EPSMnBGroup4CircuitBraker.Init    (210,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnAGroup4CircuitBraker.Init    (210, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnBGroup5CircuitBraker.Init    (281,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		EPSMnAGroup5CircuitBraker.Init    (281, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		EPSMnBGroup4CircuitBraker.Init    (210,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
+		EPSMnAGroup4CircuitBraker.Init    (210, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
+		EPSMnBGroup5CircuitBraker.Init    (281,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
+		EPSMnAGroup5CircuitBraker.Init    (281, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		UtilityCB2.Init                   (352,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		UtilityCB1.Init                   (352, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
 		EPSBatBusBCircuitBraker.Init      (489,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusB, 20.0);
@@ -2904,32 +2908,32 @@ void Saturn::SetSwitches(int panel) {
 
 	StabilizationControlSystemCircuitBrakerRow.Init(AID_STABILIZATIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
 	ECATVCAc2CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &ACBus2PhaseA);
-	DirectUllMnACircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA);
-	DirectUllMnBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB);
-	ContrDirectMnA1CircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA);
-	ContrDirectMnB1CircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB);
-	ContrDirectMnA2CircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA);
-	ContrDirectMnB2CircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB);
-	ACRollMnACircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA, 15);
-	ACRollMnBCircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB, 15);
-	BDRollMnACircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA, 15);
-	BDRollMnBCircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB, 15);
-	PitchMnACircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA, 15);
-	PitchMnBCircuitBraker.Init(456,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB, 15);
-	YawMnACircuitBraker.Init(494,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusA, 15);
-	YawMnBCircuitBraker.Init(532,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, MainBusB, 15);
+	DirectUllMnACircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	DirectUllMnBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	ContrDirectMnA1CircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	ContrDirectMnB1CircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	ContrDirectMnA2CircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	ContrDirectMnB2CircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	ACRollMnACircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup2CircuitBraker, 15);
+	ACRollMnBCircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup2CircuitBraker, 15);
+	BDRollMnACircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup4CircuitBraker, 15);
+	BDRollMnBCircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup4CircuitBraker, 15);
+	PitchMnACircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup1CircuitBraker, 15);
+	PitchMnBCircuitBraker.Init(456,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup1CircuitBraker, 15);
+	YawMnACircuitBraker.Init(494,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnAGroup3CircuitBraker, 15);
+	YawMnBCircuitBraker.Init(532,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystemCircuitBrakerRow, &EPSMnBGroup3CircuitBraker, 15);
 
 	StabilizationControlSystem2CircuitBrakerRow.Init(AID_STABILIZATIONCONTROLSYSTEMCIRCUITBREAKERS2, MainPanel);
 	OrdealAc2CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &ACBus2);
-	OrdealMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
-	ContrAutoMnACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA);
-	ContrAutoMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
-	LogicBus12MnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA);
-	LogicBus34MnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA);
-	LogicBus14MnBCircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
-	LogicBus23MnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB);
-	SystemMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusA, 15.0);
-	SystemMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, MainBusB, 15.0);
+	OrdealMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup3CircuitBraker);
+	ContrAutoMnACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup1CircuitBraker);
+	ContrAutoMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup1CircuitBraker);
+	LogicBus12MnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup3CircuitBraker);
+	LogicBus34MnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup1CircuitBraker);
+	LogicBus14MnBCircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup3CircuitBraker);
+	LogicBus23MnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup1CircuitBraker);
+	SystemMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup2CircuitBraker, 15.0);
+	SystemMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup2CircuitBraker, 15.0);
 
 	FloodDimSwitchRow.Init(AID_FLOODDIMSWITCH, MainPanel);
 	FloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FloodDimSwitchRow);
@@ -2938,20 +2942,20 @@ void Saturn::SetSwitches(int panel) {
 	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow);
 
 	ReactionControlSystemCircuitBrakerRow.Init(AID_REACTIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
-	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	CMHeater2MnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	SMHeatersAMnBCircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB, 7.5);
-	SMHeatersCMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB, 7.5);
-	SMHeatersBMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA, 7.5);
-	SMHeatersDMnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA, 7.5);
-	PrplntIsolMnACircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA, 10.0);
-	PrplntIsolMnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB, 10.0);
-	RCSLogicMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	RCSLogicMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	EMSMnACircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	EMSMnBCircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	DockProbeMnACircuitBraker.Init(456,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	DockProbeMnBCircuitBraker.Init(494,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, MainBusB);
+	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	CMHeater2MnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	SMHeatersAMnBCircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup3CircuitBraker, 7.5);
+	SMHeatersCMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup1CircuitBraker, 7.5);
+	SMHeatersBMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup3CircuitBraker, 7.5);
+	SMHeatersDMnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup1CircuitBraker, 7.5);
+	PrplntIsolMnACircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup1CircuitBraker, 10.0);
+	PrplntIsolMnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup1CircuitBraker, 10.0);
+	RCSLogicMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	RCSLogicMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
+	EMSMnACircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup4CircuitBraker);
+	EMSMnBCircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup4CircuitBraker);
+	DockProbeMnACircuitBraker.Init(456,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup4CircuitBraker);
+	DockProbeMnBCircuitBraker.Init(494,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnBGroup4CircuitBraker);
 
 	FloatBagSwitchRow.Init(AID_FLOATBAGSWITCHES, MainPanel);
 	FloatBagSwitch1.Init(  0, 0, 38, 52, srf[SRF_SWLEVERTHREEPOS], srf[SRF_BORDER_38x52], FloatBagSwitchRow);
@@ -3003,18 +3007,18 @@ void Saturn::SetSwitches(int panel) {
 	DirectO2RotarySwitch.Init(0,  0, 70, 70, srf[SRF_DIRECTO2ROTARY], srf[SRF_BORDER_70x70], DirectO2RotaryRow, (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE"));
 
 	ServicePropulsionSysCircuitBrakerRow.Init(AID_SERVICEPROPULSIONSYSCIRCUITBREAKERS, MainPanel);
-	GaugingMnACircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusA);
-	GaugingMnBCircuitBraker.Init( 38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusB);
+	GaugingMnACircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnAGroup4CircuitBraker);
+	GaugingMnBCircuitBraker.Init( 38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnBGroup4CircuitBraker);
 	GaugingAc1CircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &ACBus1);
 	GaugingAc2CircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &ACBus2);
-	HeValveMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusA);
-	HeValveMnBCircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusB);
+	HeValveMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnAGroup4CircuitBraker);
+	HeValveMnBCircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnBGroup4CircuitBraker);
 	PitchBatACircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &BatteryBusA);
 	PitchBatBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &BatteryBusB);
 	YawBatACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &BatteryBusA);
 	YawBatBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &BatteryBusB);
-	PilotValveMnACircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusA);
-	PilotValveMnBCircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, MainBusB);
+	PilotValveMnACircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnAGroup5CircuitBraker);
+	PilotValveMnBCircuitBraker.Init(418,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ServicePropulsionSysCircuitBrakerRow, &EPSMnBGroup5CircuitBraker);
 
 	FloatBagCircuitBrakerRow.Init(AID_FLOATBAGCIRCUITBREAKERS, MainPanel);
 	FloatBag1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], FloatBagCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
@@ -3028,9 +3032,9 @@ void Saturn::SetSwitches(int panel) {
 	SECSArmBatBCircuitBraker.Init( 114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], SeqEventsContSysCircuitBrakerRow, &EPSBatBusBCircuitBraker, 5.0); 
 	
 	EDSCircuitBrakerRow.Init(AID_EDSCIRCUITBREAKERS, MainPanel);
-	EDS1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
-	EDS2BatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
-	EDS3BatCCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow);
+	EDS1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
+	EDS2BatCCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &BatCCHRGCircuitBraker, 5.0);
+	EDS3BatBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
 
 	ELSCircuitBrakerRow.Init(AID_ELSCIRCUITBREAKERS, MainPanel);
 	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
@@ -3110,13 +3114,19 @@ void Saturn::SetSwitches(int panel) {
 	FoodPreparationWaterColdLever.Init(137, 0, 118, 118, srf[SRF_CSM_FOOT_PREP_WATER_LEVER], srf[SRF_BORDER_118x118], FoodPreparationWaterLeversRow);
 
 	Panel306Row.Init(AID_CSM_PANEL_306, MainPanel);
-	/// \todo set event timer parameter when available
-	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL); 
-	EventTimerControl306Switch.Init(0, 46, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, NULL);
+	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, &EventTimer306Display);
+	EventTimerUpDown306Switch.SetDelayTime(1);
+	EventTimerControl306Switch.Init(0, 46, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, &EventTimer306Display);
+	EventTimerControl306Switch.SetDelayTime(1);
+	EventTimer306MinutesSwitch.Init(0, 92, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_MINUTES, &EventTimer306Display);
+	EventTimer306SecondsSwitch.Init(0, 138, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_SECONDS, &EventTimer306Display);
+	SaturnEventTimer306Display.Init(Panel306Row, this); 	// dummy switch/display for checklist controller
+	MissionTimer306HoursSwitch.Init(0, 184, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_HOURS, &MissionTimer306Display);
+	MissionTimer306MinutesSwitch.Init(0, 230, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_MINUTES, &MissionTimer306Display);
+	MissionTimer306SecondsSwitch.Init(0, 276, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel306Row, TIME_UPDATE_SECONDS, &MissionTimer306Display);
 
 	MissionTimer306SwitchRow.Init(AID_CSM_PANEL_306_MISSIONTIMERSWITCH, MainPanel);
-	/// \todo set mission timer parameter when available
-	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, NULL); 
+	MissionTimer306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], MissionTimer306SwitchRow, &MissionTimer306Display);
 
 
 	/////////////////
@@ -3353,7 +3363,6 @@ void Saturn::SetSwitches(int panel) {
 	ASCPRollSwitch.Init(GDCAlignButtonRow, this, 0); 	// dummy switch/display for checklist controller, GDCAlignButtonRow is arbitrary
 	ASCPPitchSwitch.Init(GDCAlignButtonRow, this, 1);
 	ASCPYawSwitch.Init(GDCAlignButtonRow, this, 2);
-	AbortSwitch.Init(GDCAlignButtonRow, this);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3559,17 +3568,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		if (oapiGetMFDMode(MFD_RIGHT) == MFD_NONE) {	// MFD_USER1
 			ButtonClick();
 			oapiToggleMFD_on(MFD_RIGHT);	// MFD_USER1
-		}
-		return true;
-
-	case AID_ABORT_BUTTON:
-		if (mx > 1 && mx < 62 && my > 1 && my < 31) {
-			if (event == PANEL_MOUSE_LBDOWN) {
-				bAbort = true;
-				ButtonClick();
-			} else if (event == PANEL_MOUSE_LBUP) {
-				bAbort = false;
-			}
 		}
 		return true;
 
@@ -4491,16 +4489,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
-	case AID_ABORT_BUTTON:
-		if (ABORT_IND || (bAbort && EDSSwitch.IsUp())) {
+	case AID_ABORT_LIGHT:
+		if ((secs.AbortLightPowerA() && ((cws.UplinkTestState & 001) != 0)) || ((secs.AbortLightPowerB() && ((cws.UplinkTestState & 002) != 0)))) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		} else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
-		}
-		if (AbortSwitch.IsFlashing()) {
-			if (PanelFlashOn) {
-				oapiBlt(surf, srf[SRF_BORDER_62x31], 0, 0, 0, 0, 62, 31, SURF_PREDEF_CK);
-			}
 		}
 		return true;
 
@@ -4628,8 +4621,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL2], true);
 		return true;
 
+	case AID_MISSION_CLOCK306:
+		MissionTimer306Display.Render90(surf, srf[SRF_DIGITAL90], true);
+		return true;
+
 	case AID_EVENT_TIMER:
 		EventTimerDisplay.Render(surf, srf[SRF_EVENT_TIMER_DIGITS]);
+		return true;
+
+	case AID_EVENT_TIMER306:
+		EventTimer306Display.Render90(surf, srf[SRF_EVENT_TIMER_DIGITS90]);
 		return true;
 
 	case AID_ALTIMETER:
@@ -5289,7 +5290,9 @@ void Saturn::InitSwitches() {
 	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
 
 	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSCMDSwitch.SetDelayTime(1);
 	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSTrnfrSwitch.SetDelayTime(1);
 
 	CMRCSProp1Switch.Register(PSH, "CMRCSProp1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSProp1Switch.SetCallback(new PanelSwitchCallback<CMRCSPropellantSource>(&CMRCS1, &CMRCSPropellantSource::PropellantSwitchToggled));
@@ -5933,6 +5936,18 @@ void Saturn::InitSwitches() {
 	EventTimerUpDown306Switch.SetSideways(true);
 	EventTimerControl306Switch.Register(PSH, "EventTimerControl306Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerControl306Switch.SetSideways(true);
+	EventTimer306MinutesSwitch.Register(PSH, "EventTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	EventTimer306MinutesSwitch.SetSideways(true);
+	EventTimer306SecondsSwitch.Register(PSH, "EventTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	EventTimer306SecondsSwitch.SetSideways(true);
+	SaturnEventTimer306Display.Register(PSH, "SaturnEventTimer306Display", 0, 0, 0);	// dummy switch/display for checklist controller
+	MissionTimer306HoursSwitch.Register(PSH, "MissionTimer306HoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306HoursSwitch.SetSideways(true);
+	MissionTimer306MinutesSwitch.Register(PSH, "MissionTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306MinutesSwitch.SetSideways(true);
+	MissionTimer306SecondsSwitch.Register(PSH, "MissionTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	MissionTimer306SecondsSwitch.SetSideways(true);
+	
 	MissionTimer306Switch.Register(PSH, "MissionTimer306Switch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN); // Default state UP is correct!
 	MissionTimer306Switch.SetSideways(true);
 
@@ -6129,8 +6144,8 @@ void Saturn::InitSwitches() {
 	SECSArmBatBCircuitBraker.Register(PSH, "SECSArmBatBCircuitBraker", 0);
 
 	EDS1BatACircuitBraker.Register(PSH, "EDS1BatACircuitBraker", 1);
-	EDS2BatBCircuitBraker.Register(PSH, "EDS2BatBCircuitBraker", 1);
-	EDS3BatCCircuitBraker.Register(PSH, "EDS3BatCCircuitBraker", 1);
+	EDS2BatCCircuitBraker.Register(PSH, "EDS2BatCCircuitBraker", 1);
+	EDS3BatBCircuitBraker.Register(PSH, "EDS3BatBCircuitBraker", 1);
 
 	ELSBatACircuitBraker.Register(PSH, "ELSBatACircuitBraker", 1);
 	ELSBatBCircuitBraker.Register(PSH, "ELSBatBCircuitBraker", 1);
@@ -6460,5 +6475,4 @@ void Saturn::InitSwitches() {
 	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch", 0, 0, 0, 0);
 	ASCPYawSwitch.Register(PSH, "ASCPYawSwitch", 0, 0, 0, 0);
-	AbortSwitch.Register(PSH, "AbortSwitch", 0, 0, 0, 0);
 }

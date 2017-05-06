@@ -135,76 +135,6 @@ void LEM::AddRCS_LMH(double TRANZ)
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
-	/*
-	// Setup Orbiter thruster groups
-	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-	
-	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
-	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-	
-	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
-	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-	
-	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
-	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-	
-	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
-	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
-	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
-	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-	
-	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
-	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
-	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
-	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-	
-
-	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
-	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
-	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-	
-	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
-	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
-	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-	
-	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
-	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-	
-	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
-	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-	
-	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
-	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-	
-	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
-	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-
-	if (!OrbiterAttitudeDisabled) {
-		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
-	}*/
-
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
 		1	A1F		9	A3R
@@ -289,75 +219,6 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	// A4D
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
-
-	// Setup Orbiter thruster groups
-	/*th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
-
-	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
-	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
-
-	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
-	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
-	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
-	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
-
-	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
-	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
-	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
-	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
-
-	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
-	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
-	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
-	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
-
-	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
-	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
-	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
-	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
-
-
-	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
-	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
-	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
-	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
-
-	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
-	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
-	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
-	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
-
-	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
-	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
-
-	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
-	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
-
-	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
-	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
-
-	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
-	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
-
-	if (!OrbiterAttitudeDisabled) {
-		CreateThrusterGroup(th_rcs_orbiter_rot + 0, 4, THGROUP_ATT_PITCHDOWN);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 4, 4, THGROUP_ATT_PITCHUP);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 8, 4, THGROUP_ATT_BANKLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 12, 4, THGROUP_ATT_BANKRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 16, 4, THGROUP_ATT_YAWLEFT);
-		CreateThrusterGroup(th_rcs_orbiter_rot + 20, 4, THGROUP_ATT_YAWRIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
-		CreateThrusterGroup(th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
-	}*/
 }
 
 bool LEM::CabinFansActive()
@@ -638,7 +499,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.WireTo(&LMP_EVT_TMR_FDAI_DC_CB);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
@@ -758,7 +619,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.WireTo(&MISSION_TIMER_CB);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -818,6 +679,12 @@ void LEM::SystemsInit()
 	//GASTA
 	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, &imu);
 
+	//ORDEAL
+	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+
+	//Mechanical Accelerometer
+	mechanicalAccelerometer.Init(this);
+
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -858,7 +725,7 @@ void LEM::JoystickTimestep(double simdt)
 	rhc_pos[2] = 0;
 
 					 // Joystick read
-	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
+	if (oapiGetFocusInterface() == this) {
 		if (thc_id != -1 && !(thc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}
@@ -1349,25 +1216,28 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simt);								    // Do Work
-	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
+	atca.Timestep(simt);
+	ordeal.Timestep(simdt);
+	ordeal.SystemTimestep(simdt);
+	mechanicalAccelerometer.TimeStep(simdt);
+	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	fdaiRight.SystemTimestep(simdt);
-	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
-	EventTimerDisplay.Timestep(MissionTime, simdt);
+	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
+	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep();                                         // Do Work
-	optics.TimeStep(simdt);									// Do Work
-	LR.TimeStep(simdt);										// I don't wanna work
-	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
-	RadarTape.TimeStep(MissionTime);										// I just wanna bang on me drum all day
+	eds.TimeStep();
+	optics.TimeStep(simdt);
+	LR.TimeStep(simdt);
+	RR.TimeStep(simdt);
+	RadarTape.TimeStep(MissionTime);
 	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
 	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
 	crossPointerRight.SystemTimeStep(simdt);
-	SBandSteerable.TimeStep(simdt);							// Back to work...
+	SBandSteerable.TimeStep(simdt);
 	VHF.SystemTimestep(simdt);
 	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
@@ -3476,13 +3346,15 @@ void LEM_CWEA::TimeStep(double simdt){
 	ChannelValue val11;
 	ChannelValue val13;
 	ChannelValue val30;
-	ChannelValue val33;		
+	ChannelValue val33;	
+	ChannelValue val163;
 
 	if(lem == NULL){ return; }
 	val11 = lem->agc.GetOutputChannel(011);
 	val13 = lem->agc.GetOutputChannel(013);
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
+	val163 = lem->agc.GetOutputChannel(0163);
 
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
@@ -3542,7 +3414,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS9 LGC FAILURE
 	// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 	// Disabled by Guidance Control switch in AGS position.
-	if((val13[TestAlarms] || val33[LGC] || val33[OscillatorAlarm]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
+	if((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP){
 		LightStatus[3][1] = 1;
 	}else{
 		LightStatus[3][1] = 0;

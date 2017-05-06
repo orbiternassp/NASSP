@@ -34,7 +34,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
@@ -86,10 +85,10 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
@@ -112,9 +111,13 @@ void LEMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	{
 		binfile = "Config/ProjectApollo/Luminary116.bin";
 	}
-	else if (ApolloNo < 14)	// Luminary 131
+	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
 	{
 		binfile = "Config/ProjectApollo/Luminary131.bin";
+	}
+	else if (ApolloNo < 15)	// Luminary 210, modified for Apollo 14
+	{
+		binfile = "Config/ProjectApollo/Luminary210NBY71.bin";
 	}
 	else	//Luminary 210
 	{
@@ -149,7 +152,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
-		if (vagc.Erasable[0][05] != 04000) {
 			// Clear flip-flop based registers
 			vagc.Erasable[0][00] = 0;     // A
 			vagc.Erasable[0][01] = 0;     // L
@@ -182,17 +184,24 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.PendDelay = 0;
 			// Don't disturb erasable core
 			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it
+			// Reset standby flip-flop
+			vagc.Standby = 0;
+			// Turn on EL display and LGC Light (DSKYWarn).
+			SetOutputChannel(0163, 1);
+			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
-			InputChannel[033] &= 017777;
-			vagc.InputChannel[033] &= 017777;
-			OutputChannel[033] &= 017777;
-			vagc.Ch33Switches &= 017777;
-			// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+			InputChannel[033] &= 037777;
+			vagc.InputChannel[033] &= 037777;
+			OutputChannel[033] &= 037777;
+			vagc.Ch33Switches &= 037777;
+			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.VoltageAlarm = 1;
-			dsky.LightRestart();
-		}
+			vagc.RestartLight = 1;
+			dsky.ClearRestart();
+			dsky.ClearStby();
+
 		// and do nothing more.
 		return;
 	}
@@ -383,11 +392,11 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_ena = 1;
 			}
 		}else{
-			if (sat->gdc.fdai_err_ena == 1) {
-				// sprintf(oapiDebugString(),"FDAI: RESET");
-				sat->gdc.fdai_err_x = 0;
-				sat->gdc.fdai_err_y = 0;
-				sat->gdc.fdai_err_z = 0;
+			if (lem->atca.lgc_err_ena == 1) {
+				// sprintf(oapiDebugString(),"LEM: LGC-ERR: RESET");
+				lem->atca.lgc_err_x = 0;
+				lem->atca.lgc_err_y = 0;
+				lem->atca.lgc_err_z = 0;
 			}
 			lem->atca.lgc_err_ena = 0;
 		}
@@ -624,7 +633,6 @@ LMOptics::LMOptics() {
 	ReticleMoved = 0;
 	RetDimmer = 255;
 	KnobTurning = 0;
-	
 }
 
 void LMOptics::Init(LEM *vessel) {
@@ -643,7 +651,12 @@ void LMOptics::SystemTimestep(double simdt) {
 
 void LMOptics::TimeStep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
+
+	if (ReticleMoved)
+	{
+		sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
+	}
+
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
 }

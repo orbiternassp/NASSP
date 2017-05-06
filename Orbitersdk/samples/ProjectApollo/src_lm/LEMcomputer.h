@@ -72,7 +72,7 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 
-	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
 
 	VESSEL *GetCSM();
 protected:

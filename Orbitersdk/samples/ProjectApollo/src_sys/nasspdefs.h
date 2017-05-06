@@ -211,15 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 70000		///< Current NASSP version.
-
-//
-// Realism values.
-//
-
-#define REALISM_MIN		0		///< Lower REALISM limit.
-#define REALISM_MAX		10		///< Highest REALISM limit.
-#define REALISM_DEFAULT 5		///< Default REALISM value.
+#define NASSP_VERSION 80000		///< Current NASSP version.
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,

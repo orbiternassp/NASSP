@@ -41,7 +41,6 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -105,7 +104,7 @@ PARTICLESTREAMSPEC o2_venting_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
-static PARTICLESTREAMSPEC let_exhaust = {
+static PARTICLESTREAMSPEC lem_exhaust = {
 	0,		// flag
 	0.5,	// size
 	100.0, 	// rate
@@ -202,7 +201,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
-	let_exhaust.tex = contrail_tex;
+	lem_exhaust.tex = contrail_tex;
 }
 
 void Saturn::AddSM(double offset, bool showSPS)
@@ -435,6 +434,7 @@ void Saturn::SetCSMStage ()
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
+	ClearEngineIndicators();
 
 	//
 	// Delete any dangling propellant resources.
@@ -456,6 +456,11 @@ void Saturn::SetCSMStage ()
 	{
 		DelPropellantResource(ph_ullage3);
 		ph_ullage3 = 0;
+	}
+
+	if (ph_2nd) {
+		DelPropellantResource(ph_2nd);
+		ph_2nd = 0;
 	}
 
 	if(ph_3rd) {
@@ -498,12 +503,7 @@ void Saturn::SetCSMStage ()
 
 	// *********************** thruster definitions ********************************
 
-	// Main engine offset only in Virtual AGC mode
-	if (Realism) {
-		th_main[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
-	} else {
-		th_main[0] = CreateThruster(_V(0, 0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
-	}
+	th_main[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
 
 	DelThrusterGroup(THGROUP_MAIN, true);
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
@@ -649,7 +649,6 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
 	S4Config.MissionTime = MissionTime;
-	S4Config.Realism = Realism;
 	S4Config.LowRes = LowRes;
 	S4Config.ISP_VAC = ISP_THIRD_VAC;
 	S4Config.THRUST_VAC = THRUST_THIRD_VAC;
@@ -774,6 +773,7 @@ void Saturn::SetReentryStage ()
     ClearThrusters();
 	ClearPropellants();
 	ClearAirfoilDefinitions();
+	ClearEngineIndicators();
 
 	//
 	// Tell AGC the CM has seperated from the SM.
@@ -792,12 +792,18 @@ void Saturn::SetReentryStage ()
 		SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	}
 	SetEmptyMass (EmptyMass);
-	SetPMI(_V(1.25411, 1.11318, 1.41524)); //Calculated from CSM-109 Mass Properties at CM/SM Separation
-	//SetPMI (_V(12, 12, 7));
-	//SetPMI (_V(1.5,1.35,1.35));
+	if (LESAttached)
+	{
+		SetPMI(_V(15.0, 15.0, 1.5));
+		SetRotDrag(_V(1.5, 1.5, 0.003));
+	}
+	else
+	{
+		SetPMI(_V(1.25411, 1.11318, 1.41524)); //Calculated from CSM-109 Mass Properties at CM/SM Separation
+		SetRotDrag(_V(0.07, 0.07, 0.002));
+	}
 	SetCrossSections (_V(9.17,7.13,7.0));
-	SetCW (5.5, 0.1, 3.4, 3.4);
-	SetRotDrag (_V(0.07,0.07,0.003));
+	SetCW(1.5, 1.5, 1.2, 1.2);
 	SetSurfaceFrictionCoeff(1, 1);
 	if (GetFlightModel() >= 1 && !LESAttached) {
 		CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.12, 1.12), CoeffFunc, 3.5, 11.95, 1.0);
@@ -821,10 +827,14 @@ void Saturn::SetReentryStage ()
 	}
 
 	if (LESAttached) {
-		if (!ph_let)
-			ph_let  = CreatePropellantResource(1405.0);
+		//if (!ph_tjm)
+		//	ph_tjm  = CreatePropellantResource(93.318);
+		if (!ph_lem)
+			ph_lem = CreatePropellantResource(1425.138);
+		if (!ph_pcm)
+			ph_pcm = CreatePropellantResource(4.07247);
 
-		SetDefaultPropellantResource (ph_let); // display LET propellant level in generic HUD
+		SetDefaultPropellantResource (ph_lem); // display LEM propellant level in generic HUD
 
 		//
 		// *********************** thruster definitions ********************************
@@ -839,10 +849,15 @@ void Saturn::SetReentryStage ()
 		// Main thrusters.
 		//
 
-		th_let[0] = CreateThruster (m_exhaust_pos1, _V(0.0, 0.4, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
-		th_let[1] = CreateThruster (m_exhaust_pos2, _V(0.0, -0.4, 0.7),  THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
-		th_let[2] = CreateThruster (m_exhaust_pos3, _V(0.4, 0.0, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
-		th_let[3] = CreateThruster (m_exhaust_pos4, _V(-0.4, 0.0, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
+		th_lem[0] = CreateThruster (m_exhaust_pos1, _V(0.0, sin(35.0*RAD), cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+		th_lem[1] = CreateThruster (m_exhaust_pos2, _V(0.0, -sin(35.0*RAD), cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+		th_lem[2] = CreateThruster (m_exhaust_pos3, _V(sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+		th_lem[3] = CreateThruster (m_exhaust_pos4, _V(-sin(35.0*RAD), 0.0, cos(35.0*RAD)), THRUST_VAC_LEM, ph_lem, ISP_LEM_VAC, ISP_LEM_SL);
+
+		//th_tjm[0] = CreateThruster(_V(0.0, -0.5, TowerOffset), _V(0.030524, 0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+		//th_tjm[1] = CreateThruster(_V(0.0, 0.5, TowerOffset), _V(0.030524, -0.49907, 0.8660254), THRUST_VAC_TJM, ph_tjm, ISP_TJM_VAC, ISP_TJM_SL);
+
+		th_pcm = CreateThruster(_V(0.0, 0.0, TowerOffset + 4.5), _V(0.0, 1.0, 0.0), THRUST_VAC_PCM, ph_pcm, ISP_PCM_VAC, ISP_PCM_SL);
 
 		//
 		// Add exhausts
@@ -851,11 +866,19 @@ void Saturn::SetReentryStage ()
 		int i;
 		for (i = 0; i < 4; i++)
 		{
-			AddExhaust (th_let[i], 8.0, 0.5, SIVBRCSTex);
-			AddExhaustStream (th_let[i], &let_exhaust);
+			AddExhaust (th_lem[i], 8.0, 0.5, SIVBRCSTex);
+			AddExhaustStream (th_lem[i], &lem_exhaust);
 		}
+		//for (i = 0; i < 2; i++)
+		//{
+		//	AddExhaust(th_tjm[i], 8.0, 0.5, SIVBRCSTex);
+		//	AddExhaustStream(th_tjm[i], &lem_exhaust);
+		//}
+		AddExhaust(th_pcm, 8.0, 0.5, SIVBRCSTex);
+		AddExhaustStream(th_pcm, &lem_exhaust);
 
-		thg_let = CreateThrusterGroup (th_let, 4, THGROUP_MAIN);
+		thg_lem = CreateThrusterGroup (th_lem, 4, THGROUP_USER);
+		//thg_tjm = CreateThrusterGroup(th_tjm, 2, THGROUP_USER);
 	}
 
 	VECTOR3 dockpos = {0, 0, 1.5};
@@ -1009,8 +1032,6 @@ void Saturn::StageEight(double simt)
 		}
 	}
 
-	SetApexCoverLight(true);
-
 	//
 	// Create the apex cover vessel
 	//
@@ -1065,8 +1086,6 @@ void Saturn::SetChuteStage1()
 	SetView(-1.35);
 
 	DeactivateNavmode(NAVMODE_KILLROT);
-
-	SetDrogueDeployLight(true);
 }
 
 void Saturn::SetChuteStage2()
@@ -1148,8 +1167,6 @@ void Saturn::SetChuteStage4()
 	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
-
-	SetMainDeployLight(true);
 }
 
 void Saturn::SetSplashStage()
@@ -1273,23 +1290,13 @@ bool Saturn::clbkLoadGenericCockpit ()
 // Generic function to jettison the escape tower.
 //
 
-void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
+void Saturn::JettisonLET(bool AbortJettison)
 
-{
+{		
 	//
 	// Don't do anything if the tower isn't attached!
 	//
-	if (!LESAttached)
-		return;
-
-	//
-	// If the jettison motor fails and we're trying to
-	// use it for the jettison, return.
-	//
-	// We'll always give them one way to jettison the LES as
-	// being unable to jettison it is fatal.
-	//
-	if (!UseMain && LaunchFail.LESJetMotorFail)
+	if (!LESAttached || !LESLegsCut)
 		return;
 
 	//
@@ -1336,44 +1343,28 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	LESConfig.SettingsType.word = 0;
 	LESConfig.SettingsType.LES_SETTINGS_GENERAL = 1;
 	LESConfig.SettingsType.LES_SETTINGS_ENGINES = 1;
-	LESConfig.SettingsType.LES_SETTINGS_THRUST = 1;
 
-	//
-	// Pressing the LES jettison button fires the main LET engine. The TWR JETT
-	// switches jettison the LES and fire the jettison engines.
-	//
-	/// \todo If the LES jettison button is pressed before using the TWR JETT switches,
-	/// the explosive bolts won't fire, so the main LET motor will fire while
-	/// still attached to the CM!
-	///
-	/// See: AOH 2.9.4.8.4
-	///
+	LESConfig.FireLEM = FireLEM;
+	LESConfig.FireTJM = FireTJM;
+	LESConfig.FirePCM = FirePCM;
 
-	LESConfig.FireMain = UseMain;
-
-	LESConfig.MissionTime = MissionTime;
-	LESConfig.Realism = Realism;
-	LESConfig.VehicleNo = VehicleNo;
 	LESConfig.LowRes = LowRes;
 	LESConfig.ProbeAttached = AbortJettison && HasProbe;
-	LESConfig.ISP_LET_SL = ISP_LET_SL;
-	LESConfig.ISP_LET_VAC = ISP_LET_VAC;
-	LESConfig.THRUST_VAC_LET = THRUST_VAC_LET;
 
-	//
-	// If this is the CSM abort stage, we need to transfer fuel information from
-	// the CSM LET.
-	//
-	// Usually this will be zero, so you'd better use the right jettison button!
-	//
-	/// \todo At  some point we should expand this so that we can jettison the LES
-	/// while the main abort motor is running.
-	///
-
-	if (ph_let)
+	if (ph_lem)
 	{
-		LESConfig.MainFuelKg = GetPropellantMass(ph_let);
-		LESConfig.SettingsType.LES_SETTINGS_MAIN_FUEL = 1;
+		LESConfig.LaunchEscapeFuelKg = GetPropellantMass(ph_lem);
+		LESConfig.SettingsType.LES_SETTINGS_MFUEL = 1;
+	}
+	//if (ph_tjm)
+	//{
+		//LESConfig.JettisonFuelKg = GetPropellantMass(ph_tjm);
+		//LESConfig.SettingsType.LES_SETTINGS_MFUEL = 1;
+	//}
+	if (ph_pcm)
+	{
+		LESConfig.PitchControlFuelKg = GetPropellantMass(ph_pcm);
+		LESConfig.SettingsType.LES_SETTINGS_PFUEL = 1;
 	}
 
 	LES *les_vessel = (LES *) oapiGetVesselInterface(hesc1);
@@ -1403,8 +1394,6 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 		SwindowS.play();
 	}
 	SwindowS.done();
-
-	SetLESMotorLight(true);
 
 	//
 	// Event management

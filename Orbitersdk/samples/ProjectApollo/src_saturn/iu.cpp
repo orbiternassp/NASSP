@@ -40,7 +40,6 @@
 #include "connector.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "sivb.h"
@@ -59,14 +58,9 @@ IU::IU()
 	TLIBurnDone = false;
 	FirstTimeStepDone = false;
 
-	Realism = REALISM_DEFAULT;
 	Crewed = true;
 	VesselISP = 0;
 	VesselThrust = 0;
-
-	SIVBBurn = false;
-	SIVBBurnStart = 0;
-	SIVBApogee = 0;
 
 	commandConnector.SetIU(this);
 	GNC.Configure(&lvCommandConnector, 0);
@@ -98,19 +92,10 @@ void IU::GetVesselStats(double &ISP, double &Thrust)
 	Thrust = VesselThrust;
 }
 
-void IU::SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee)
+void IU::SetMissionInfo(bool tlicapable, bool crewed)
 {
 	TLICapable = tlicapable;
 	Crewed = crewed;
-	Realism = realism;
-
-	SIVBBurnStart = sivbburnstart;
-	SIVBApogee = sivbapogee;
-
-	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (lvCommandConnector.GetStage() < CSM_LEM_STAGE))
-	{
-		SIVBBurn = true;
-	}
 }
 
 void IU::Timestep(double simt, double simdt, double mjd)
@@ -133,7 +118,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		// Disable the engines if we're waiting for
 		// the user to start the TLI burn or if it's been done.
 		//
-		if (Realism && (State <= 107 || State >= 202))	{
+		if (State <= 107 || State >= 202)	{
 			lvCommandConnector.EnableDisableJ2(false);
 		} else {
 			lvCommandConnector.EnableDisableJ2(true);
@@ -200,34 +185,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		switch (State) {
 
 		case 0:
-			if (Crewed || !SIVBBurn) {
-				State = 100;
-			}
-			else {
-				NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 - 10.0;
-				State++;
-			}
-			break;
-
-		case 1:
-			if (MissionTime >= NextMissionEventTime) {
-				commandConnector.SlowIfDesired();
-				lvCommandConnector.ActivateS4RCS();
-				State++;
-			}
-			break;
-
-		case 2:
-			NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 ;
-			State++;
-			break;
-
-		case 3:
-			if (MissionTime >= NextMissionEventTime) {
-				ExternalGNC = true;
-				SIVBStart();
-				State = 100;
-			}
+			State = 100;
 			break;
 
 		case 100:
@@ -404,8 +362,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 		case 108:
 			if (MissionTime >= NextMissionEventTime) {
-				if (Realism)
-					lvCommandConnector.EnableDisableJ2(true);
+				lvCommandConnector.EnableDisableJ2(true);
 
 				commandConnector.SetEngineIndicator(1);
 
@@ -498,14 +455,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 				commandConnector.PlayTLIStartSound(true);
 
-				if (!SIVBBurn || Crewed)
-				{
-					State = 200;
-				}
-				else
-				{
-					State = 150;
-				}
+				State = 200;
 			}
 
 			// TLI inhibit
@@ -514,33 +464,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 				TLIInhibit();
 			}				
-			break;
-
-		//
-		// Wait for the right apogee.
-		//
-
-		case 150:
-			if (MissionTime >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = lvCommandConnector.GetGravityRef();
-				double prad = oapiGetSize(hPlanet);
-				double ap;
-				lvCommandConnector.GetApDist(ap);
-
-				//
-				// Burn until the orbit is about right or we're out of fuel.
-				//
-
-				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((lvCommandConnector.GetPropellantMass() * 100.0) / lvCommandConnector.GetMaxFuelMass()) <= 0.1)) {
-					State = 201;
-					SIVBBurn = false;
-					TLIBurnDone = true;			
-					ExternalGNC = false;
-					lvCommandConnector.DeactivateS4RCS();
-				}
-
-				NextMissionEventTime = MissionTime + 0.25;
-			}
 			break;
 
 		case 200:
@@ -594,10 +517,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			if (MissionTime >= NextMissionEventTime) {
 				commandConnector.ClearEngineIndicator(1);
 
-				if (Realism < 2)
-					State = 100;
-				else
-					State++;
+				State++;
 			}
 			break;
 
@@ -616,7 +536,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			lvCommandConnector.SetJ2ThrustLevel(0.0);
 			lvCommandConnector.SetVentingThruster();
 		
-			if (Realism) lvCommandConnector.EnableDisableJ2(false);
+			lvCommandConnector.EnableDisableJ2(false);
 
 			//
 			// Engine is now dead.
@@ -671,7 +591,7 @@ void IU::TLIInhibit()
 {
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
 	lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-	if (Realism) lvCommandConnector.EnableDisableJ2(false);
+	lvCommandConnector.EnableDisableJ2(false);
 
 	TLIBurnStart = false;
 	State = 100;
@@ -728,7 +648,7 @@ void IU::SIVBStop()
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
 	lvCommandConnector.SetVentingThruster();
 
-	if (Realism) lvCommandConnector.EnableDisableJ2(false);
+	lvCommandConnector.EnableDisableJ2(false);
 
 	commandConnector.PlaySecoSound(true);
 	commandConnector.ClearTLISounds();

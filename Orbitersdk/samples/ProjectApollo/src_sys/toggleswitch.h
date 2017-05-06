@@ -1076,6 +1076,22 @@ protected:
 	e_object *sources[16];
 };
 
+class OrdealRotationalSwitch : public RotationalSwitch {
+
+public:
+	OrdealRotationalSwitch() { value = 100; lastX = 0; mouseDown = false; };
+	virtual void DrawSwitch(SURFHANDLE drawSurface);
+	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual void SaveState(FILEHANDLE scn);
+	virtual void LoadState(char *line);
+	int GetValue() { return value; }
+
+protected:
+	int value;
+	int lastX;
+	bool mouseDown;
+};
+
 class IndicatorSwitch: public PanelSwitchItem {
 
 public:
@@ -1274,12 +1290,11 @@ public:
 class PanelSwitches {
 
 public:
-	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; lastexecutedtime=MINUS_INFINITY;};
+	PanelSwitches() { PanelID = 0; RowList = 0; lastexecutedtime=MINUS_INFINITY;};
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
-	void SetRealism(int r) { Realism = r; };
 	void timestep(double missionTime);
 
 	///
@@ -1302,7 +1317,6 @@ protected:
 	PanelSwitchListener *listener;
 	int	PanelID;
 	SwitchRow *RowList;
-	int Realism;
 	double lastexecutedtime;
 
 	friend class ToggleSwitch;

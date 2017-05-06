@@ -231,7 +231,7 @@ enum ChannelValue33_Bits {
         // Spare 1					///< Unused.
 		RangeUnitDataGood = 1,
 		// Spare 1					///< Unused.
-		ZeroOptics_33 = 3,				    ///< Optics ZERO switch
+		ZeroOptics_33 = 3,			///< Optics ZERO switch
 		CMCControl,				    ///< Optics under CMC control
 		// NotUsed 2				///< Unused.
 		// Spare 2					///< Unused.
@@ -239,12 +239,13 @@ enum ChannelValue33_Bits {
 		UplinkTooFast,
 		DownlinkTooFast,
 		PIPAFail,
-		AGCWarning,
+		AGCWarning,					///< AGC Internal use only.
 		AGCOscillatorAlarm,
 } ;
 
 enum ChannelValue163_Bits {
 
+	Ch163DSKYWarn = 0,				///< Turn on the CMC/LGC light.
 	Ch163LightKbRel = 4,			///< Turn on the Keyboard Release light.
 	Ch163FlashVerbNoun,				///< Flash the Verb and Noun displays.			
 	Ch163LightOprErr,				///< Light the Operator Error light

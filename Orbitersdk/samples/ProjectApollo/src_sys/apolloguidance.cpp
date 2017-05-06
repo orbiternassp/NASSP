@@ -60,25 +60,16 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	DesiredApogee = 0.0;
 	DesiredPerigee = 0.0;
 	DesiredAzimuth = 0.0;
-	DesiredInclination = 0.0;
 
 	LandingLongitude = 0.0;
 	LandingLatitude = 0.0;
 	LandingAltitude = 0.0;
 
 	//
-	// Expected dV from thrust decay of engine.
-	//
-
-	ThrustDecayDV = 0.0;
-
-	//
 	// Flight number.
 	//
 
 	ApolloNo = 0;
-
-	Realism = REALISM_DEFAULT;
 
 	OtherVesselName[0] = 0;
 
@@ -259,11 +250,9 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue, char *OtherName) 
+void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName) 
 
 {
-	Realism = RealismValue;
-
 	//
 	// Older scenarios saved the mission number in the AGC. For backwards
 	// compatibility we'll only let the new number overwrite the saved value
@@ -287,29 +276,6 @@ double AbsOfVector(const VECTOR3 &Vec)
 	double Result;
 	Result = sqrt(Vec.x*Vec.x + Vec.y*Vec.y + Vec.z*Vec.z);
 	return Result;
-}
-
-void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos)
-{
-		VECTOR3 a;
-		double obliq, theta, rot;
-		OBJHANDLE hbody=OurVessel->GetGravityRef();
-		a.x=cos(vlat)*cos(vlon)*vrad;
-		a.z=cos(vlat)*sin(vlon)*vrad;
-		a.y=sin(vlat)*vrad;
-		obliq=oapiGetPlanetObliquity(hbody);
-		theta=oapiGetPlanetTheta(hbody);
-		rot=oapiGetPlanetCurrentRotation(hbody);
-		pos.x=a.x*(cos(theta)*cos(rot)-sin(theta)*cos(obliq)*sin(rot))-
-			a.y*sin(theta)*sin(obliq)-
-			a.z*(cos(theta)*sin(rot)+sin(theta)*cos(obliq)*cos(rot));
-		pos.y=a.x*(-sin(obliq)*sin(rot))+
-			a.y*cos(obliq)-
-			a.z*sin(obliq)*cos(rot);
-		pos.z=a.x*(sin(theta)*cos(rot)+cos(theta)*cos(obliq)*sin(rot))+
-			a.y*cos(theta)*sin(obliq)+
-			a.z*(-sin(theta)*sin(rot)+cos(theta)*cos(obliq)*cos(rot));
-
 }
 
 //
@@ -403,19 +369,11 @@ typedef union
 		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
 		unsigned CheckParity:1;
+		unsigned NightWatchmanTripped:1;
+		unsigned GeneratedWarning:1;
 	} u;
 	unsigned long word;
 } AGCState;
-
-//
-// Global variables in agc_engine.c which probably have to be saved, too
-//
-
-extern "C" {
-	extern int NextZ;
-	extern int ScalerCounter;
-	extern int ChannelRoutineCount;
-}
 
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
@@ -461,6 +419,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
 	state.u.CheckParity = vagc.CheckParity;
+	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
+	state.u.GeneratedWarning = vagc.GeneratedWarning;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -509,10 +469,12 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "VOC7", vagc.OutputChannel7);
 	oapiWriteScenario_int (scn, "IDXV", vagc.IndexValue);
-	oapiWriteScenario_int (scn, "NEXTZ", NextZ);
-	oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
-	oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
+	oapiWriteScenario_int (scn, "NEXTZ", vagc.NextZ);
+	oapiWriteScenario_int (scn, "SCALERCOUNTER", vagc.ScalerCounter);
+	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
+	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
 	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
+	oapiWriteScenario_int(scn, "WARNINGFILTER", vagc.WarningFilter);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
 	oapiWriteLine(scn, buffer);
@@ -602,16 +564,22 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf (line+4, "%" SCNd16, &vagc.IndexValue);
 		}
 		else if (!strnicmp (line, "NEXTZ", 5)) {
-			sscanf (line+5, "%d", &NextZ);
+			sscanf (line+5, "%d", &vagc.NextZ);
 		}
 		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
-			sscanf (line+13, "%d", &ScalerCounter);
+			sscanf (line+13, "%d", &vagc.ScalerCounter);
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
-			sscanf (line+7, "%d", &ChannelRoutineCount);
+			sscanf (line+7, "%d", &vagc.ChannelRoutineCount);
+		}
+		else if (!strnicmp(line, "DSKYCHANNEL163", 14)) {
+			sscanf(line + 14, "%d", &vagc.DskyChannel163);
 		}
 		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
 			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
+		}
+		else if (!strnicmp(line, "WARNINGFILTER", 13)) {
+			sscanf(line + 13, "%" SCNd32, &vagc.WarningFilter);
 		}
 		/*
 		TODO Do NOT load CycleCounter until CduFifos are saved/loaded, too
@@ -651,6 +619,8 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
 			vagc.CheckParity = state.u.CheckParity;
+			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
+			vagc.GeneratedWarning = state.u.GeneratedWarning;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
@@ -836,19 +806,17 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	OutputChannel[channel] = val.to_ulong();
 
 #ifdef _DEBUG
-	if (Yaagc) {
-		switch (channel) {
-		case 010:
-		case 034:
-		case 035:
-		case 01:
-		case 02:
-			break;
+	switch (channel) {
+	case 010:
+	case 034:
+	case 035:
+	case 01:
+	case 02:
+		break;
 
-		default:
-			fprintf(out_file, "AGC write %05o to %04o\n", val, channel);
-			break;
-		}
+	default:
+		fprintf(out_file, "AGC write %05o to %04o\n", val, channel);
+		break;
 	}
 #endif
 
@@ -1083,16 +1051,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		val ^= 077777;
 
 	return val;
-}
-
-void ApolloGuidance::KillAllThrusters()
-{
-	OurVessel->SetAttitudeLinLevel(0, 0);
-	OurVessel->SetAttitudeLinLevel(1, 0);
-	OurVessel->SetAttitudeLinLevel(2, 0);
-	OurVessel->SetAttitudeRotLevel(0, 0);
-	OurVessel->SetAttitudeRotLevel(1, 0);
-	OurVessel->SetAttitudeRotLevel(2, 0);
 }
 
 void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double altitude)
