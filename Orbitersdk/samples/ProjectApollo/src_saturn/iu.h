@@ -299,7 +299,7 @@ public:
 	
 	void SetVesselStats(double ISP, double Thrust);
 	void GetVesselStats(double &ISP, double &Thrust);
-	void SetMissionInfo(bool tlicapable, bool crewed, double sivbburnstart, double sivbapogee);
+	void SetMissionInfo(bool tlicapable, bool crewed);
 
 	///
 	/// \brief Move to or hold attitude v in LVLH coordinates (by setting attitude thrusters, call each timestep)
@@ -375,14 +375,6 @@ protected:
 	bool TLICapable;
 	double VesselISP;
 	double VesselThrust;
-
-	//
-	// SIVB burn info for unmanned flights.
-	//
-
-	bool SIVBBurn;
-	double SIVBBurnStart;
-	double SIVBApogee;
 
 	///
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.

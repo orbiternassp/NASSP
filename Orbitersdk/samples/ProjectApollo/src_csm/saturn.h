@@ -3649,47 +3649,6 @@ protected:
 	int SIVBPayload;
 
 	//
-	// CSM seperation info for unmanned flights.
-	//
-
-	bool CSMSepSet;
-	double CSMSepTime;
-	bool CMSepSet;
-	double CMSepTime;
-
-	//
-	// Payload deploy time for unmanned flights with no CSM.
-	//
-
-	bool PayloadDeploySet;
-	double PayloadDeployTime;
-
-	//
-	// SIVB burn info for unmanned flights.
-	//
-
-	double SIVBBurnStart;
-	double SIVBApogee;
-
-	//
-	// CSM burn information in unmanned flights.
-	//
-
-	bool CSMBurn;
-	double CSMBurnStart;
-	double CSMApogee;
-	double CSMPerigee;
-
-	//
-	// Pre-entry CSM acceleration and end time for unmanned flights.
-	//
-
-	bool CSMAccelSet;
-	double CSMAccelTime;
-	double CSMAccelEnd;
-	double CSMAccelPitch;
-
-	//
 	// VAGC Mode settings
 	//
 

@@ -62,10 +62,6 @@ IU::IU()
 	VesselISP = 0;
 	VesselThrust = 0;
 
-	SIVBBurn = false;
-	SIVBBurnStart = 0;
-	SIVBApogee = 0;
-
 	commandConnector.SetIU(this);
 	GNC.Configure(&lvCommandConnector, 0);
 	ExternalGNC = false;
@@ -96,18 +92,10 @@ void IU::GetVesselStats(double &ISP, double &Thrust)
 	Thrust = VesselThrust;
 }
 
-void IU::SetMissionInfo(bool tlicapable, bool crewed, double sivbburnstart, double sivbapogee)
+void IU::SetMissionInfo(bool tlicapable, bool crewed)
 {
 	TLICapable = tlicapable;
 	Crewed = crewed;
-
-	SIVBBurnStart = sivbburnstart;
-	SIVBApogee = sivbapogee;
-
-	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (lvCommandConnector.GetStage() < CSM_LEM_STAGE))
-	{
-		SIVBBurn = true;
-	}
 }
 
 void IU::Timestep(double simt, double simdt, double mjd)
@@ -197,34 +185,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		switch (State) {
 
 		case 0:
-			if (Crewed || !SIVBBurn) {
-				State = 100;
-			}
-			else {
-				NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 - 10.0;
-				State++;
-			}
-			break;
-
-		case 1:
-			if (MissionTime >= NextMissionEventTime) {
-				commandConnector.SlowIfDesired();
-				lvCommandConnector.ActivateS4RCS();
-				State++;
-			}
-			break;
-
-		case 2:
-			NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 ;
-			State++;
-			break;
-
-		case 3:
-			if (MissionTime >= NextMissionEventTime) {
-				ExternalGNC = true;
-				SIVBStart();
-				State = 100;
-			}
+			State = 100;
 			break;
 
 		case 100:
@@ -494,14 +455,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 				commandConnector.PlayTLIStartSound(true);
 
-				if (!SIVBBurn || Crewed)
-				{
-					State = 200;
-				}
-				else
-				{
-					State = 150;
-				}
+				State = 200;
 			}
 
 			// TLI inhibit
@@ -510,33 +464,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 				TLIInhibit();
 			}				
-			break;
-
-		//
-		// Wait for the right apogee.
-		//
-
-		case 150:
-			if (MissionTime >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = lvCommandConnector.GetGravityRef();
-				double prad = oapiGetSize(hPlanet);
-				double ap;
-				lvCommandConnector.GetApDist(ap);
-
-				//
-				// Burn until the orbit is about right or we're out of fuel.
-				//
-
-				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((lvCommandConnector.GetPropellantMass() * 100.0) / lvCommandConnector.GetMaxFuelMass()) <= 0.1)) {
-					State = 201;
-					SIVBBurn = false;
-					TLIBurnDone = true;			
-					ExternalGNC = false;
-					lvCommandConnector.DeactivateS4RCS();
-				}
-
-				NextMissionEventTime = MissionTime + 0.25;
-			}
 			break;
 
 		case 200:

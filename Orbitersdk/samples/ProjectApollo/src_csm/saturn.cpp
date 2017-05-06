@@ -329,27 +329,6 @@ void Saturn::initSaturn()
 	AutoSlow = false;
 	Crewed = true;
 	SIVBPayload = PAYLOAD_LEM;
-	CSMSepSet = false;
-	CSMSepTime = 0.0;
-
-	CMSepSet = false;
-	CMSepTime = 0.0;
-
-	CSMAccelSet = false;
-	CSMAccelTime = 0.0;
-	CSMAccelEnd = 0.0;
-	CSMAccelPitch = 0.0;
-
-	PayloadDeploySet = false;
-	PayloadDeployTime = 0.0;
-
-	SIVBBurnStart = 0.0;
-	SIVBApogee = 0.0;
-
-	CSMBurn = false;
-	CSMBurnStart = 0.0;
-	CSMApogee = 0.0;
-	CSMPerigee = 0.0;
 
 	PayloadDataTransfer = false;
 	PostSplashdownPlayed = false;
@@ -1325,39 +1304,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
-
-		if (CSMSepSet && (CSMSepTime >= MissionTime))
-		{
-			papiWriteScenario_double (scn, "CSMSEP", CSMSepTime);
-		}
-
-		if (CMSepSet && (CMSepTime >= MissionTime))
-		{
-			papiWriteScenario_double (scn, "CMSEP", CMSepTime);
-		}
-
-		if (PayloadDeploySet && (PayloadDeployTime >= MissionTime))
-		{
-			papiWriteScenario_double (scn, "PLSEP", PayloadDeployTime);
-		}
-
-		if (stage <= CSM_LEM_STAGE) {
-			papiWriteScenario_double (scn, "S4APO", SIVBApogee);
-			papiWriteScenario_double (scn, "S4BURN", SIVBBurnStart);
-		}
-
-		if (CSMBurn && (stage <= CM_STAGE)) {
-			papiWriteScenario_double (scn, "CSMAPO", CSMApogee);
-			papiWriteScenario_double (scn, "CSMPER", CSMPerigee);
-			papiWriteScenario_double (scn, "CSMBURN", CSMBurnStart);
-		}
-
-		if (CSMAccelSet && (stage <= CM_STAGE))
-		{
-			papiWriteScenario_double (scn, "CSMACCEL", CSMAccelTime);
-			papiWriteScenario_double (scn, "CSMACCEND", CSMAccelEnd);
-			papiWriteScenario_double (scn, "CSMACCPITCH", CSMAccelPitch);
-		}
 	}
 
 	if (AutoSlow) {
@@ -1981,54 +1927,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "S4PL", 4)) {
 		sscanf(line + 4, "%d", &SIVBPayload);
 	}
-	else if (!strnicmp(line, "CSMSEP", 6)) {
-		sscanf(line + 6, "%f", &ftcp);
-		CSMSepTime = ftcp;
-		CSMSepSet = true;
-	}
-	else if (!strnicmp(line, "CMSEP", 5)) {
-		sscanf(line + 5, "%f", &ftcp);
-		CMSepTime = ftcp;
-		CMSepSet = true;
-	}
-	else if (!strnicmp(line, "PLSEP", 5)) {
-		sscanf(line + 5, "%f", &ftcp);
-		PayloadDeployTime = ftcp;
-		PayloadDeploySet = true;
-	}
-	else if (!strnicmp(line, "S4APO", 5)) {
-		sscanf(line + 5, "%f", &ftcp);
-		SIVBApogee = ftcp;
-	}
-	else if (!strnicmp(line, "S4BURN", 6)) {
-		sscanf(line + 6, "%f", &ftcp);
-		SIVBBurnStart = ftcp;
-	}
-	else if (!strnicmp(line, "CSMAPO", 6)) {
-		sscanf(line + 6, "%f", &ftcp);
-		CSMApogee = ftcp;
-	}
-	else if (!strnicmp(line, "CSMPER", 6)) {
-		sscanf(line + 6, "%f", &ftcp);
-		CSMPerigee = ftcp;
-	}
-	else if (!strnicmp(line, "CSMBURN", 7)) {
-		sscanf(line + 7, "%f", &ftcp);
-		CSMBurnStart = ftcp;
-	}
-	else if (!strnicmp(line, "CSMACCEL", 8)) {
-		sscanf(line + 8, "%f", &ftcp);
-		CSMAccelSet = true;
-		CSMAccelTime = ftcp;
-	}
-	else if (!strnicmp(line, "CSMACCEND", 9)) {
-		sscanf(line + 9, "%f", &ftcp);
-		CSMAccelEnd = ftcp;
-	}
-	else if (!strnicmp(line, "CSMACCPITCH", 11)) {
-		sscanf(line + 11, "%f", &ftcp);
-		CSMAccelPitch = ftcp;
-	}
 	else if (!strnicmp(line, "SMFUELLOAD", 10)) {
 		sscanf(line + 10, "%f", &ftcp);
 		SM_FuelMass = ftcp;
@@ -2431,10 +2329,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			ParseScenarioLineEx (line, vstatus);
         }
     }
-
-	if (!Crewed && (CSMApogee > 0.0) && (CSMBurnStart > 0) && (stage < CM_STAGE)) {
-		CSMBurn = true;
-	}
 
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
@@ -3995,7 +3889,7 @@ void Saturn::GenericLoadStateSetup()
 	// Initialize the IU
 	//
 
-	iu.SetMissionInfo(TLICapableBooster, Crewed, SIVBBurnStart, SIVBApogee); 
+	iu.SetMissionInfo(TLICapableBooster, Crewed); 
 
 	//
 	// Disable master alarm sound on unmanned flights.
@@ -4464,230 +4358,6 @@ void Saturn::StageSix(double simt)
 
 			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
 			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
-		}
-	}
-
-	//
-	// Handle automation of unmanned launches.
-	//
-
-	if (!Crewed) {
-		switch (StageState)
-		{
-		case 0:
-			if (CSMBurn) {
-				NextMissionEventTime = CSMBurnStart - 300.0;
-				StageState++;
-			} else {
-				StageState = 10;
-			}
-			break;
-
-		case 1:
-			if (MissionTime >= NextMissionEventTime) {
-				ActivateCSMRCS();
-				StageState++;
-			}
-			break;
-
-		case 2:
-			SlowIfDesired();
-			ActivateNavmode(NAVMODE_PROGRADE);
-			NextMissionEventTime = CSMBurnStart;
-			StageState++;
-			break;
-
-		case 3:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				SPSEngine.EnforceBurn(true);
-				NextMissionEventTime = MissionTime + 0.25;
-				StageState++;
-			}
-			break;
-
-		case 4:
-			if (MissionTime >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = GetGravityRef();
-				double prad = oapiGetSize(hPlanet);
-				double ap;
-				GetApDist(ap);
-
-				ActivateNavmode(NAVMODE_PROGRADE);
-				SPSEngine.EnforceBurn(true);
-
-				NextMissionEventTime = MissionTime + 0.25;
-
-				//
-				// Burn until the orbit is about right or we're out of fuel.
-				//
-
-				if ((ap >= (prad + (CSMApogee * 1000.0))) || (actualFUEL <= 0.1)) {
-					StageState++;
-					DeactivateNavmode(NAVMODE_PROGRADE);
-					DeactivateCSMRCS();
-					SPSEngine.EnforceBurn(false);
-					NextMissionEventTime = MissionTime + CalculateApogeeTime() - 800;
-					StageState++;
-				}
-			}
-			break;
-
-		//
-		// Get a more accurate apogee time.
-		//
-
-		case 5:
-			if (MissionTime >= NextMissionEventTime) {
-				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 100;
-				StageState++;
-			}
-			break;
-
-		case 6:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				ActivateCSMRCS();
-				ActivateNavmode(NAVMODE_RETROGRADE);
-				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 15;
-				StageState++;
-			}
-			break;
-
-		case 7:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-
-				OBJHANDLE hPlanet = GetGravityRef();
-				double prad = oapiGetSize(hPlanet);
-				double pe;
-				GetPeDist(pe);
-
-				SPSEngine.EnforceBurn(true);
-				ActivateNavmode(NAVMODE_RETROGRADE);
-
-				NextMissionEventTime = MissionTime + 0.25;
-
-				if ((pe <= (prad + (CSMPerigee * 1000.0))) || (actualFUEL <= 0.1)) {
-					StageState++;
-					ActivateNavmode(NAVMODE_PROGRADE);
-					SPSEngine.EnforceBurn(false);
-					CSMBurn = false;
-					NextMissionEventTime = MissionTime + 500.0;
-					StageState++;
-				}
-			}
-			break;
-
-		case 8:
-			if (MissionTime >= NextMissionEventTime) {
-				DeactivateNavmode(NAVMODE_PROGRADE);
-				ActivateNavmode(NAVMODE_KILLROT);
-				NextMissionEventTime = MissionTime + 100.0;
-				StageState++;
-			}
-			break;
-
-		case 9:
-			if (MissionTime >= NextMissionEventTime) {
-				DeactivateNavmode(NAVMODE_PROGRADE);
-				DeactivateNavmode(NAVMODE_KILLROT);
-				DeactivateCSMRCS();
-				StageState++;
-			}
-			break;
-
-		//
-		// Final acceleration burn prior to entry.
-		//
-
-		case 10:
-			if (CSMAccelSet) {
-				NextMissionEventTime = CSMAccelTime - 180;
-				StageState++;
-			} else {
-				StageState = 16;
-			}
-			break;
-
-		case 11:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				ActivateCSMRCS();
-				ActivateNavmode(NAVMODE_PROGRADE);
-				NextMissionEventTime = CSMAccelTime;
-				StageState++;
-			}
-			break;
-
-		/// \todo What we really need to do here is ensure that we stay pitched down at the appropriate
-		/// level relative to the local horizon. Currently this code will leave us with a perigee
-		/// that's way too high, so disable it for now.
-
-		case 12:
-			if (MissionTime >= NextMissionEventTime) {
-				// SlowIfDesired();
-				// SPSEngine.EnforceBurn(true);
-				ActivateNavmode(NAVMODE_PROGRADE);
-				NextMissionEventTime = CSMAccelEnd;
-				StageState++;
-			}
-			break;
-
-		case 13:
-			if (MissionTime >= NextMissionEventTime) {
-				ActivateNavmode(NAVMODE_PROGRADE);
-				SPSEngine.EnforceBurn(false);
-				CSMAccelSet = false;
-				NextMissionEventTime = MissionTime + 10.0;
-				StageState++;
-			}
-			break;
-
-		case 14:
-			if (MissionTime >= NextMissionEventTime) {
-				ActivateNavmode(NAVMODE_KILLROT);
-				NextMissionEventTime = MissionTime + 10.0;
-				StageState++;
-			}
-			break;
-
-		case 15:
-			if (MissionTime >= NextMissionEventTime) {
-				DeactivateNavmode(NAVMODE_PROGRADE);
-				DeactivateNavmode(NAVMODE_KILLROT);
-				DeactivateCSMRCS();
-				StageState++;
-			}
-			break;
-
-		//
-		// CM/SM separation
-		//
-
-		case 16:
-			if (CMSepSet) {
-				NextMissionEventTime = CMSepTime - 10;
-				StageState++;
-			}
-			break;
-
-		case 17:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				NextMissionEventTime = CMSepTime;
-				StageState++;
-			}
-			break;
-
-		case 18:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				// Raise checklist event
-				eventControl.CM_SM_SEPARATION = MissionTime;
-				StageState++;
-			}
-			break;
 		}
 	}
 }
