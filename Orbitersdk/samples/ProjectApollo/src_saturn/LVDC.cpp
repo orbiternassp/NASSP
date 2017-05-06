@@ -4884,7 +4884,12 @@ void LVDC::TimeStep(double simt, double simdt) {
 		switch(LVDC_Timebase){//this is the sequential event control logic
 			case -1: // LOOP WAITING FOR PTL
 				// Limit time accel to 100x
-				if(oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
+				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
+				// Orbiter 2016 fix
+				// Force GetWeightVector() to the correct value at LVDC initiation
+				if (simt > 1 && simt < 2) {
+					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+				}
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
@@ -4921,8 +4926,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
-
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 					break;
 				}			
 
@@ -5692,6 +5695,19 @@ void LVDC::TimeStep(double simt, double simdt) {
 				DotS = DotS_8sec;
 				R = length(PosS);
 				V = length(DotS);
+
+				if (OrbNavCycle == 1) //State Vector update
+				{
+					VECTOR3 pos, vel;
+					MATRIX3 mat;
+					double day;
+					modf(oapiGetSimMJD(), &day);
+					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
+					owner->GetRelativePos(owner->GetGravityRef(), pos);
+					owner->GetRelativeVel(owner->GetGravityRef(), vel);
+					PosS = mul(mat, pos);
+					DotS = mul(mat, vel);
+				}
 
 				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
 				R = pow(pow(PosS.x, 2) + pow(PosS.y, 2) + pow(PosS.z, 2), 0.5);
