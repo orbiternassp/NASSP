@@ -2961,6 +2961,12 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			case OAPI_KEY_V: // Change Sextant View Mode to DualView
 				optics.SextDualView = !optics.SextDualView;
 				return 1;
+			case OAPI_KEY_MINUS:
+				MoveTHC(true);
+				return 1;
+			case OAPI_KEY_EQUALS:
+				MoveTHC(false);
+				return 1;
 		}
 	}else{
 		switch(key){
@@ -4126,6 +4132,40 @@ void Saturn::FirePitchControlMotor()
 	}
 
 	FirePCM = true;
+}
+
+void Saturn::MoveTHC(bool dir)
+{
+	if (dir)
+	{
+		if (THCRotary.IsCounterClockwise())
+		{
+			//Do Nothing
+		}
+		else if (THCRotary.IsClockwise())
+		{
+			THCRotary.SwitchTo(1);
+		}
+		else
+		{
+			THCRotary.SwitchTo(3);
+		}
+	}
+	else
+	{
+		if (THCRotary.IsCounterClockwise())
+		{
+			THCRotary.SwitchTo(1);
+		}
+		else if (THCRotary.IsClockwise())
+		{
+			//Do Nothing
+		}
+		else
+		{
+			THCRotary.SwitchTo(2);
+		}
+	}
 }
 
 //

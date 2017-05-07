@@ -3891,6 +3891,7 @@ protected:
 	void FireLaunchEscapeMotor();
 	void FireTowerJettisonMotor();
 	void FirePitchControlMotor();
+	void MoveTHC(bool dir);
 	void AttitudeLaunchSIVB();
 	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 
