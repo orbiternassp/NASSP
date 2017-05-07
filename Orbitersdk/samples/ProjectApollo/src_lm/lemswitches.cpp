@@ -1402,12 +1402,12 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 			//SetThrusterResource(th_hover[1], ph_Asc);
 			//stage = 2;
 			startimer = false;*/
-			agc->SetInputChannelBit(030, AbortWithDescentStage, true);
+			agc->SetInputChannelBit(030, AbortWithDescentStage, false);
 		}
 		else if (state == 1) {
 			SwitchTo(0, true);
 			Sclick.play();
-			agc->SetInputChannelBit(030, AbortWithDescentStage, false);
+			agc->SetInputChannelBit(030, AbortWithDescentStage, true);
 		}
 	}
 	return true;
