@@ -39,6 +39,7 @@
 #include "dsky.h"
 #include "LEMcomputer.h"
 #include "IMU.h"
+#include "lm_channels.h"
 
 #include "LEM.h"
 
@@ -1378,6 +1379,45 @@ bool EngineStopButton::Push()
 	}
 
 	return false;
+}
+
+bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		if (state == 0) {
+			SwitchTo(1, true);
+			Sclick.play();
+
+			// This is the "ABORT" button
+			/*AbortFire();
+			SetEngineLevel(ENGINE_HOVER, 1);
+			//SetThrusterResource(th_hover[0], ph_Asc);
+			//SetThrusterResource(th_hover[1], ph_Asc);
+			//stage = 2;
+			startimer = false;*/
+			agc->SetInputChannelBit(030, AbortWithDescentStage, true);
+		}
+		else if (state == 1) {
+			SwitchTo(0, true);
+			Sclick.play();
+			agc->SetInputChannelBit(030, AbortWithDescentStage, false);
+		}
+	}
+	return true;
+}
+
+void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ApolloGuidance *c)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	agc = c;
 }
 
 void LEMPanelOrdeal::Init(SwitchRow &row, LEM *l) {

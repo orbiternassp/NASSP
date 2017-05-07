@@ -445,6 +445,13 @@ protected:
 	ToggleSwitch* startbutton;
 };
 
+class LMAbortButton : public AGCSwitch {
+public:
+	LMAbortButton() {};
+	bool CheckMouseClick(int event, int mx, int my);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ApolloGuidance *c);
+};
+
 class LEMPanelOrdeal : public MeterSwitch {
 public:
 	void Init(SwitchRow &row, LEM *l);

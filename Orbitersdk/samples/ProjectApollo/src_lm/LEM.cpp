@@ -900,7 +900,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		// probably should start P71
 		//
 		if (GetPropellantMass(ph_Dsc)<=50){
-			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
 			stage = 2;
@@ -1014,13 +1013,11 @@ void LEM::AbortStage()
 {
 	ButtonClick();
 	AbortFire();
-	AbortStageSwitchLight = true;
 	SeparateStage(stage);
 	SetThrusterResource(th_hover[0], ph_Asc);
 	SetThrusterResource(th_hover[1], ph_Asc);
 	stage = 2;
 	startimer = false;
-	AbortStageSwitchLight = true;
 }
 
 //

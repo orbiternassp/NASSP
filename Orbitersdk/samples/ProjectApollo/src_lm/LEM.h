@@ -771,9 +771,8 @@ protected:
 
 	SwitchRow AbortSwitchesRow;
 
-	PushSwitch AbortSwitch;
+	LMAbortButton AbortSwitch;
 	PushSwitch AbortStageSwitch;
-	bool AbortStageSwitchLight;
 
 	
 	SwitchRow RRGyroSelSwitchRow;

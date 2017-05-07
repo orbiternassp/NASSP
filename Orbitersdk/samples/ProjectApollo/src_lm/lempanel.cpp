@@ -158,9 +158,8 @@ void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
 
 void LEM::InitSwitches() {
 
-	AbortSwitch.Register     (PSH, "AbortSwitch", false);
+	AbortSwitch.Register     (PSH, "AbortSwitch", true);
 	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);
-	AbortStageSwitchLight = false;
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
@@ -1418,7 +1417,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_CWS_LEFT,					    _R( 349,   54,  670,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_CWS_RIGHT,				    _R(1184,   54, 1484,  180), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
-		//oapiRegisterPanelArea (AID_ABORT,							_R( 652,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT,							_R( 651,  855,  820,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
 	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 263,  1078, 297, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// 2 pos Descent Engine Command Override Lever
@@ -1700,8 +1699,8 @@ void LEM::SetSwitches(int panel) {
 			LMWaterQtyMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
 
 			AbortSwitchesRow.Init(AID_ABORT, MainPanel);
-			AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 64);
-			AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], AbortSwitchesRow);
+			AbortSwitch.Init(0, 26, 55, 55, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 119, &agc);
+			//AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], AbortSwitchesRow);
 
 			EngineArmSwitchesRow.Init(AID_ENG_ARM, MainPanel);
 			EngineArmSwitch.Init (0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], EngineArmSwitchesRow);
@@ -2336,29 +2335,15 @@ void LEM::SetSwitches(int panel) {
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 
 
-	if (s == &AbortSwitch) {
-		if (s->IsDown()) {
-			// This is the "ABORT" button
-			AbortFire();
-			SetEngineLevel(ENGINE_HOVER, 1);
-			//SetThrusterResource(th_hover[0], ph_Asc);
-			//SetThrusterResource(th_hover[1], ph_Asc);
-			//stage = 2;
-			startimer = false;
-			agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-		}
-	
-	} else if (s == &AbortStageSwitch) {
+	if (s == &AbortStageSwitch) {
 		// This is the "ABORT STAGE" button
 		if (s->IsDown()) {
 			AbortFire();
-			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
 			stage = 2;
 			startimer = false;
-			AbortStageSwitchLight = true;
 		}
 
 	} 
@@ -3431,16 +3416,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 {
 	int Curdigit;
 	int Curdigit2;
-
-	//
-	// Special handling illuminated abort stage switch
-	//
-
-	if (AbortStageSwitchLight) {
-		AbortStageSwitch.SetOffset(150, 0);
-	} else {
-		AbortStageSwitch.SetOffset(0, 0);
-	}
 
 	//
 	// Special handling ORDEAL
@@ -4525,7 +4500,6 @@ typedef union {
 		unsigned HATCHswitch:1;
 		unsigned EVAswitch:1;
 		unsigned COASswitch:1;
-		unsigned Abortswitch:1;
 
 	} u;
 	unsigned long word;
@@ -4565,7 +4539,6 @@ int LEM::GetCSwitchState()
 	state.u.HATCHswitch = HATCHswitch;
 	state.u.EVAswitch = EVAswitch;
 	state.u.COASswitch = COASswitch;
-	state.u.Abortswitch = AbortStageSwitchLight;
 
 	return state.word;
 }
@@ -4605,7 +4578,6 @@ void LEM::SetCSwitchState(int s)
 	HATCHswitch = state.u.HATCHswitch;
 	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
-	AbortStageSwitchLight = state.u.Abortswitch;
 }
 
 typedef union {
