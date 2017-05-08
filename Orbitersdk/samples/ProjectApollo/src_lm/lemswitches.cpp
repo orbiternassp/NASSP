@@ -1394,30 +1394,92 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 		if (state == 0) {
 			SwitchTo(1, true);
 			Sclick.play();
-
-			// This is the "ABORT" button
-			/*AbortFire();
-			SetEngineLevel(ENGINE_HOVER, 1);
-			//SetThrusterResource(th_hover[0], ph_Asc);
-			//SetThrusterResource(th_hover[1], ph_Asc);
-			//stage = 2;
-			startimer = false;*/
-			agc->SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
 		}
 		else if (state == 1) {
 			SwitchTo(0, true);
 			Sclick.play();
-			agc->SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
 		}
 	}
 	return true;
 }
 
-void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ApolloGuidance *c)
+void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
 
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
-	agc = c;
+	lem = l;
+}
+
+LMAbortStageButton::LMAbortStageButton() 
+{ 
+	lem = 0; 
+};
+
+void LMAbortStageButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if (guardState) {
+		DoDrawSwitch(DrawSurface);
+	}
+	else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+	}
+}
+
+bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardWidth &&
+			my >= guardY && my <= guardY + guardHeight) {
+			if (guardState) {
+				Guard();
+			}
+			else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN)) {
+		if (guardState) {
+
+
+			if (!visible) return false;
+			if (mx < x || my < y) return false;
+			if (mx >(x + width) || my >(y + height)) return false;
+
+			if (state == 0) {
+				SwitchTo(1);
+				Sclick.play();
+				lem->agc.SetInputChannelBit(030, AbortWithAscentStage, false);
+			}
+			else if (state == 1) {
+				SwitchTo(0);
+				Sclick.play();
+				lem->AbortFire();
+				lem->SeparateStage(lem->stage);
+				lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
+				lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
+				lem->stage = 2;
+				lem->agc.SetInputChannelBit(030, AbortWithAscentStage, true);
+			}
+			return true;
+		}
+	}
+	return false;
 }
 
 void LEMPanelOrdeal::Init(SwitchRow &row, LEM *l) {

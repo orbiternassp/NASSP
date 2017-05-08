@@ -772,7 +772,7 @@ protected:
 	SwitchRow AbortSwitchesRow;
 
 	LMAbortButton AbortSwitch;
-	PushSwitch AbortStageSwitch;
+	LMAbortStageButton AbortStageSwitch;
 
 	
 	SwitchRow RRGyroSelSwitchRow;
@@ -1867,6 +1867,8 @@ protected:
 	friend class ThrustWeightInd;
 	friend class CrossPointer;
 	friend class LEMPanelOrdeal;
+	friend class LMAbortButton;
+	friend class LMAbortStageButton;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
