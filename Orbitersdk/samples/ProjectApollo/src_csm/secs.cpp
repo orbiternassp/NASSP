@@ -496,13 +496,17 @@ MESC::MESC():
 	EDSAbort1Relay = false;
 	EDSAbort2Relay = false;
 	EDSAbort3Relay = false;
+	ELSActivateSolidStateSwitch = false;
 
 	AbortStarted = false;
+	AutoTowerJettison = false;
+	SSSInput1 = false;
+	SSSInput2 = false;
 
 	EDSLogicBreaker = NULL;
 }
 
-void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET)
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem)
 {
 	SECSLogicBus = LogicBus;
 	SECSPyroBus = PyroBus;
@@ -514,6 +518,7 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch 
 	MissionTimerDisplay = MT;
 	EventTimerDisplay = ET;
 	Sat = v;
+	OtherMESC = OtherMESCSystem;
 }
 
 void MESC::TimerTimestep(double simdt)
@@ -731,7 +736,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Tower Jettison Relay
-	if ((MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp()))
+	if (AutoTowerJettison || (MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp()))
 	{
 		LETJettisonAndFrangibleNutsRelay = true;
 	}
@@ -831,8 +836,68 @@ void MESC::Timestep(double simdt)
 		RCSEnableDisableRelay = false;
 	}
 
+	//ELS Activate Delay
+	if (MESCLogicBus() && CanardDeploy)
+	{
+		TD7.SetRunning(true);
+	}
+
+	//Solid State Switch
+
+	SSSInput1 = false;
+	SSSInput2 = false;
+
+	SSSInput1 = MESCLogicBus() && (TD7.ContactClosed() || Sat->ELSLogicSwitch.IsUp());
+	
+	if (MESCLogicBus() && (CanardDeploy || Sat->ELSLogicSwitch.IsUp()) && Sat->els.BaroSwitch24k.IsClosed() && Sat->ELSAutoSwitch.IsUp())
+	{
+		SSSInput2 = true;
+	}
+	else if (MESCLogicBus() && ELSActivateRelay)
+	{
+		SSSInput2 = true;
+	}
+
+	if (SSSInput1 && SSSInput2)
+	{
+		ELSActivateSolidStateSwitch = true;
+	}
+	else
+	{
+		ELSActivateSolidStateSwitch = false;
+	}
+
+	//ELS Activate Relay
+	if (ELSActivateSolidStateSwitch || (MESCLogicBus() && OtherMESC->ELSActivateRelay) || ((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && (Sat->MainDeploySwitch.GetState() || Sat->DrogueDeploySwitch.GetState())))
+	{
+		ELSActivateRelay = true;
+	}
+	else
+	{
+		ELSActivateRelay = false;
+	}
+
+	AutoTowerJettison = false;
+
+	if (MESCLogicBus())
+	{
+		if (CanardDeploy || Sat->ELSAutoSwitch.IsUp())
+		{
+			if (ELSActivateRelay && Sat->els.BaroSwitch24k.IsClosed())
+			{
+				TD17.SetRunning(true);
+				AutoTowerJettison = true;
+				RCSEnableDisableRelay = false;
+			}
+		}
+	}
+
 	//Apex Cover Relay
-	if (((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && Sat->ApexCoverJettSwitch.GetState()) || (MESCLogicBus() && ApexCoverJettison))
+	if (((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && Sat->ApexCoverJettSwitch.GetState()))
+	{
+		ApexCoverJettison = true;
+	}
+	else if (((MESCLogicBus() && OtherMESC->ApexCoverJettison) || TD17.ContactClosed()) && !Sat->LandFail.CoverFail)
 	{
 		ApexCoverJettison = true;
 	}
@@ -851,22 +916,6 @@ void MESC::Timestep(double simdt)
 	else
 	{
 		ApexCoverDragChuteDeploy = false;
-	}
-
-	//ELS Activate Delay
-	if (MESCLogicBus() && CanardDeploy)
-	{
-		TD7.SetRunning(true);
-	}
-
-	//ELS Activate Relay
-	if ((MESCLogicBus() && ELSActivateRelay) || ((ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE) && (Sat->MainDeploySwitch.GetState() || Sat->DrogueDeploySwitch.GetState())))
-	{
-		ELSActivateRelay = true;
-	}
-	else
-	{
-		ELSActivateRelay = false;
 	}
 }
 
@@ -926,6 +975,11 @@ bool MESC::EDSVote()
 	return (EDSAbort1Relay && EDSAbort2Relay) || (EDSAbort1Relay && EDSAbort3Relay) || (EDSAbort2Relay && EDSAbort3Relay);
 }
 
+bool MESC::ELSActivateLogic()
+{ 
+	return MESCLogicBus() && ELSActivateRelay && Sat->ELSAutoSwitch.IsUp();
+}
+
 void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);
@@ -955,6 +1009,7 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "EDSABORT1RELAY", EDSAbort1Relay);
 	papiWriteScenario_bool(scn, "EDSABORT2RELAY", EDSAbort2Relay);
 	papiWriteScenario_bool(scn, "EDSABORT3RELAY", EDSAbort3Relay);
+	papiWriteScenario_bool(scn, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
 
 	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
 	TD3.SaveState(scn, "TD3_BEGIN", "TD_END");
@@ -1005,6 +1060,7 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "EDSABORT1RELAY", EDSAbort1Relay);
 		papiReadScenario_bool(line, "EDSABORT2RELAY", EDSAbort2Relay);
 		papiReadScenario_bool(line, "EDSABORT3RELAY", EDSAbort3Relay);
+		papiReadScenario_bool(line, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
 
 		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
 			TD1.LoadState(scn, "TD_END");
@@ -1059,8 +1115,8 @@ void SECS::ControlVessel(Saturn *v)
 {
 	Sat = v;
 	rcsc.ControlVessel(v);
-	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display);
-	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay);
+	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &MESCB);
+	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &MESCA);
 }
 
 void SECS::SetSaturnType(int sattype)
@@ -1196,6 +1252,22 @@ void SECS::Timestep(double simt, double simdt)
 	Sat->CMSMPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
 									 (pyroB ? &Sat->PyroBusB : NULL));
 
+	//
+	// Apex Cover Jettison relays
+	//
+
+	pyroA = false, pyroB = false;
+
+	if (MESCA.GetApexCoverJettisonRelay()) {
+		// Blow Pyro A
+		pyroA = true;
+	}
+	if (MESCB.GetApexCoverJettisonRelay()) {
+		// Blow Pyro B
+		pyroB = true;
+	}
+	Sat->ApexCoverPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
+		(pyroB ? &Sat->PyroBusB : NULL));
 
 	//
 	// Pyros
@@ -1327,9 +1399,273 @@ void SECS::LoadState(FILEHANDLE scn)
 		Sat->PyroBusB.Disconnect();
 }
 
+BaroSwitch::BaroSwitch(double open, double close)
+{
+	status = true;
+	OpenPa = open;
+	ClosePa = close;
+}
 
-ELS::ELS()
+void BaroSwitch::ControlVessel(Saturn *v)
+{
+	Sat = v;
+}
 
+void BaroSwitch::Timestep()
+{
+	if (Sat->GetAtmPressure() > ClosePa && !status)
+	{
+		status = true;
+	}
+	else if (Sat->GetAtmPressure() < OpenPa && status)
+	{
+		status = false;
+	}
+}
+
+PCVB::PCVB()
+{
+	DrogueChuteDeployA = false;
+	DrogueChuteReleasePilotChuteDeployA = false;
+	MainChuteReleaseA = false;
+	DrogueChuteDeployB = false;
+	DrogueChuteReleasePilotChuteDeployB = false;
+	MainChuteReleaseB = false;
+}
+
+void PCVB::Init(Saturn *v)
+{
+	Sat = v;
+}
+
+void PCVB::Timestep(double simdt)
+{
+	if (Sat->els.ELSCA.TD1.ContactClosed() || (Sat->DrogueDeploySwitch.GetState() && Sat->els.ELSCA.ELSBatteryPower()))
+	{
+		DrogueChuteDeployA = true;
+	}
+	else if (Sat->els.ELSCA.ELSBatteryPower() && DrogueChuteDeployB)
+	{
+		DrogueChuteDeployA = true;
+	}
+	else
+	{
+		DrogueChuteDeployA = false;
+	}
+
+	if (Sat->els.ELSCB.TD1.ContactClosed() || (Sat->DrogueDeploySwitch.GetState() && Sat->els.ELSCB.ELSBatteryPower()))
+	{
+		DrogueChuteDeployB = true;
+	}
+	else if (Sat->els.ELSCB.ELSBatteryPower() && DrogueChuteDeployA)
+	{
+		DrogueChuteDeployB = true;
+	}
+	else
+	{
+		DrogueChuteDeployB = false;
+	}
+
+	if ((Sat->els.ELSCA.TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed()) || (Sat->els.ELSCA.ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
+	{
+		DrogueChuteReleasePilotChuteDeployA = true;
+	}
+	else if (Sat->els.ELSCA.ELSBatteryPower() &&(DrogueChuteReleasePilotChuteDeployA || DrogueChuteReleasePilotChuteDeployB))
+	{
+		DrogueChuteReleasePilotChuteDeployA = true;
+	}
+	else
+	{
+		DrogueChuteReleasePilotChuteDeployA = false;
+	}
+
+	if ((Sat->els.ELSCB.TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed()) || (Sat->els.ELSCB.ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
+	{
+		DrogueChuteReleasePilotChuteDeployB = true;
+	}
+	else if (Sat->els.ELSCB.ELSBatteryPower() && (DrogueChuteReleasePilotChuteDeployA || DrogueChuteReleasePilotChuteDeployB))
+	{
+		DrogueChuteReleasePilotChuteDeployB = true;
+	}
+	else
+	{
+		DrogueChuteReleasePilotChuteDeployB = false;
+	}
+
+	if (Sat->els.ELSCA.TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed() && Sat->MainReleaseSwitch.IsUp())
+	{
+		MainChuteReleaseA = true;
+	}
+	else
+	{
+		MainChuteReleaseA = false;
+	}
+
+	if (Sat->els.ELSCB.TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed() && Sat->MainReleaseSwitch.IsUp())
+	{
+		MainChuteReleaseB = true;
+	}
+	else
+	{
+		MainChuteReleaseB = false;
+	}
+}
+
+void PCVB::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_bool(scn, "DROGUECHUTEDEPLOYA", DrogueChuteDeployA);
+	papiWriteScenario_bool(scn, "DROGUECHUTERELEASEPILOTCHUTEDEPLOYA", DrogueChuteReleasePilotChuteDeployA);
+	papiWriteScenario_bool(scn, "MAINCHUTERELEASEA", MainChuteReleaseA);
+	papiWriteScenario_bool(scn, "DROGUECHUTEDEPLOYB", DrogueChuteDeployB);
+	papiWriteScenario_bool(scn, "DROGUECHUTERELEASEPILOTCHUTEDEPLOYB", DrogueChuteReleasePilotChuteDeployB);
+	papiWriteScenario_bool(scn, "MAINCHUTERELEASEB", MainChuteReleaseB);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void PCVB::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	float flt = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		papiReadScenario_bool(line, "DROGUECHUTEDEPLOYA", DrogueChuteDeployA);
+		papiReadScenario_bool(line, "DROGUECHUTERELEASEPILOTCHUTEDEPLOYA", DrogueChuteReleasePilotChuteDeployA);
+		papiReadScenario_bool(line, "MAINCHUTERELEASEA", MainChuteReleaseA);
+		papiReadScenario_bool(line, "DROGUECHUTEDEPLOYB", DrogueChuteDeployB);
+		papiReadScenario_bool(line, "DROGUECHUTERELEASEPILOTCHUTEDEPLOYB", DrogueChuteReleasePilotChuteDeployB);
+		papiReadScenario_bool(line, "MAINCHUTERELEASEB", MainChuteReleaseB);
+	}
+}
+
+ELSC::ELSC():
+	TD1(2.0),
+	TD3(14.0)
+{
+	BaroswitchLockIn = false;
+	DrogueParachuteDeploy = false;
+	PilotParachuteDeploy = false;
+
+	ELSBatteryBreaker = NULL;
+
+	OtherELSC = NULL;
+	mesc = NULL;
+
+	Sat = NULL;
+}
+
+void ELSC::Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem)
+{
+	ELSBatteryBreaker = ELSBatteryCB;
+	mesc = ConnectedMESC;
+	OtherELSC = OtherELSCSystem;
+	Sat = v;
+}
+
+void ELSC::TimerTimestep(double simdt)
+{
+	TD1.Timestep(simdt);
+	TD3.Timestep(simdt);
+}
+
+void ELSC::Timestep(double simdt)
+{
+	TimerTimestep(simdt);
+
+	//24,000 feet Lock Up
+	if (mesc->ELSActivateLogic() && (Sat->els.BaroSwitch24k.IsClosed() || BaroswitchLockIn || OtherELSC->BaroswitchLockIn))
+	{
+		BaroswitchLockIn = true;
+	}
+	else
+	{
+		BaroswitchLockIn = false;
+	}
+
+	if (BaroswitchLockIn)
+	{
+		TD1.SetRunning(true);
+	}
+
+	//Drogue Deploy Logic
+	if (TD1.ContactClosed() || (Sat->DrogueDeploySwitch.GetState() && ELSBatteryPower()))
+	{
+		DrogueParachuteDeploy = true;
+	}
+	else
+	{
+		DrogueParachuteDeploy = false;
+	}
+
+	if (mesc->ELSActivateLogic())
+	{
+		TD3.SetRunning(true);
+	}
+
+	if ((TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed()) || (ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
+	{
+		PilotParachuteDeploy = true;
+	}
+	else
+	{
+		PilotParachuteDeploy = false;
+	}
+}
+
+bool ELSC::ELSBatteryPower()
+{
+	return (ELSBatteryBreaker->Voltage() > SP_MIN_DCVOLTAGE);
+}
+
+void ELSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_bool(scn, "BAROSWITCHLOCKIN", BaroswitchLockIn);
+	papiWriteScenario_bool(scn, "DROGUEPARACHUTEDEPLOY", DrogueParachuteDeploy);
+	papiWriteScenario_bool(scn, "PILOTPARACHUTEDEPLOY", PilotParachuteDeploy);
+	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
+	TD3.SaveState(scn, "TD3_BEGIN", "TD_END");
+
+	oapiWriteLine(scn, end_str);
+}
+
+void ELSC::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	float flt = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		papiReadScenario_bool(line, "BAROSWITCHLOCKIN", BaroswitchLockIn);
+		papiReadScenario_bool(line, "DROGUEPARACHUTEDEPLOY", DrogueParachuteDeploy);
+		papiReadScenario_bool(line, "PILOTPARACHUTEDEPLOY", PilotParachuteDeploy);
+
+		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
+			TD1.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "TD3_BEGIN", sizeof("TD3_BEGIN"))) {
+			TD3.LoadState(scn, "TD_END");
+		}
+
+	}
+}
+
+ELS::ELS() :
+	BaroSwitch10k(50634.2, 69697.4),
+	BaroSwitch24k(18823.7, 39319.4)
 {
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -1355,12 +1691,76 @@ void ELS::ControlVessel(Saturn *v)
 
 {
 	Sat = v;
+	BaroSwitch10k.ControlVessel(Sat);
+	BaroSwitch24k.ControlVessel(Sat);
+	ELSCA.Init(Sat, &Sat->ELSBatACircuitBraker, &Sat->secs.MESCA, &ELSCB);
+	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCA, &ELSCA);
+	pcvb.Init(Sat);
 }
 
 void ELS::Timestep(double simt, double simdt)
 
 {
 	if (!Sat)	return;
+
+	BaroSwitch10k.Timestep();
+	BaroSwitch24k.Timestep();
+	ELSCA.Timestep(simdt);
+	ELSCB.Timestep(simdt);
+	pcvb.Timestep(simdt);
+
+	//
+	// Drogue Chute Deploy relays
+	//
+
+	bool pyroA = false, pyroB = false;
+
+	if (ELSCA.GetDrogueParachuteDeployRelay() && (pcvb.GetDrogueChuteDeployA() || pcvb.GetDrogueChuteDeployB())) {
+		// Blow Pyro A
+		pyroA = true;
+	}
+	if (ELSCB.GetDrogueParachuteDeployRelay() && (pcvb.GetDrogueChuteDeployA() || pcvb.GetDrogueChuteDeployB())) {
+		// Blow Pyro B
+		pyroB = true;
+	}
+	Sat->DrogueChutesDeployPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
+		(pyroB ? &Sat->PyroBusB : NULL));
+
+	//
+	// Main Chute Deploy relays
+	//
+
+	pyroA = false, pyroB = false;
+
+	if (ELSCA.GetMainParachuteDeployRelay() && (pcvb.GetMainChuteDeployA() || pcvb.GetMainChuteDeployB())) {
+		// Blow Pyro A
+		pyroA = true;
+	}
+	if (ELSCB.GetMainParachuteDeployRelay() && (pcvb.GetMainChuteDeployA() || pcvb.GetMainChuteDeployB())) {
+		// Blow Pyro B
+		pyroB = true;
+	}
+	Sat->MainChutesDeployPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
+		(pyroB ? &Sat->PyroBusB : NULL));
+
+
+	//
+	// Main Chute Release relays
+	//
+
+	pyroA = false, pyroB = false;
+
+	if (pcvb.GetMainChuteReleaseA() && Sat->MainReleasePyroACircuitBraker.IsPowered()) {
+		// Blow Pyro A
+		pyroA = true;
+	}
+	if (pcvb.GetMainChuteReleaseB() && Sat->MainReleasePyroBCircuitBraker.IsPowered()) {
+		// Blow Pyro B
+		pyroB = true;
+	}
+	Sat->MainChutesReleasePyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
+		(pyroB ? &Sat->PyroBusB : NULL));
+
 
 	//
 	// Float Bags
@@ -1487,6 +1887,8 @@ void ELS::SaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, ELS_START_STRING);
 
 	oapiWriteScenario_int(scn, "STATE", State);
+	oapiWriteScenario_int(scn, "BAROSWITCH10K", BaroSwitch10k.GetStatus());
+	oapiWriteScenario_int(scn, "BAROSWITCH24K", BaroSwitch24k.GetStatus());
 	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	oapiWriteScenario_float(scn, "FLOATBAG1SIZE", FloatBag1Size);
@@ -1494,6 +1896,9 @@ void ELS::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "FLOATBAG3SIZE", FloatBag3Size);
 	oapiWriteScenario_float(scn, "DYEMARKERLEVEL", DyeMarkerLevel);
 	oapiWriteScenario_float(scn, "DYEMARKERTIME", DyeMarkerTime);
+	ELSCA.SaveState(scn, "ELSCA_BEGIN", "ELSC_END");
+	ELSCB.SaveState(scn, "ELSCB_BEGIN", "ELSC_END");
+	pcvb.SaveState(scn, "PCVB_BEGIN", "PCVB_END");
 
 	oapiWriteLine(scn, ELS_END_STRING);
 }
@@ -1503,6 +1908,7 @@ void ELS::LoadState(FILEHANDLE scn)
 {
 	char *line;
 	float flt = 0;
+	int it = 0;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, ELS_END_STRING, sizeof(ELS_END_STRING)))
@@ -1510,6 +1916,14 @@ void ELS::LoadState(FILEHANDLE scn)
 
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%d", &State);
+		}
+		else if (!strnicmp(line, "BAROSWITCH10K", 13)) {
+			sscanf(line + 13, "%d", &it);
+			BaroSwitch10k.SetStatus(it);
+		}
+		else if (!strnicmp(line, "BAROSWITCH24K", 13)) {
+			sscanf(line + 13, "%d", &it);
+			BaroSwitch24k.SetStatus(it);
 		}
 		else if (!strnicmp (line, "NEXTMISSIONEVENTTIME", 20)) {
 			sscanf(line + 20, "%f", &flt);
@@ -1533,6 +1947,15 @@ void ELS::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp (line, "DYEMARKERTIME", 13)) {
 			sscanf (line+13, "%lf", &DyeMarkerTime);
+		}
+		else if (!strnicmp(line, "ELSCA_BEGIN", sizeof("ELSCA_BEGIN"))) {
+			ELSCA.LoadState(scn, "ELSC_END");
+		}
+		else if (!strnicmp(line, "ELSCB_BEGIN", sizeof("ELSCB_BEGIN"))) {
+			ELSCB.LoadState(scn, "ELSC_END");
+		}
+		else if (!strnicmp(line, "PCVB_BEGIN", sizeof("PCVB_BEGIN"))) {
+			pcvb.LoadState(scn, "PCVB_END");
 		}
 	}
 }

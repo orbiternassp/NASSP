@@ -186,7 +186,11 @@ void Saturn::SystemsInit() {
 	// Pyros
 	CMSMPyros.WireTo(&CMSMPyrosFeeder);  
 	CMDockingRingPyros.WireTo(&CMDockingRingPyrosFeeder);
-	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);	 
+	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);
+	ApexCoverPyros.WireTo(&ApexCoverPyrosFeeder);
+	DrogueChutesDeployPyros.WireTo(&DrogueChutesDeployPyrosFeeder);
+	MainChutesDeployPyros.WireTo(&MainChutesDeployPyrosFeeder);
+	MainChutesReleasePyros.WireTo(&MainChutesReleasePyrosFeeder);
 
 	//
 	// SECS Logic buses
@@ -3237,28 +3241,6 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	// Temp alarm
 	if (val11[LightTempCaution])
 		aws.PGNSWarning = true;
-}
-
-//
-// Check whether the ELS is active and whether it's in auto mode.
-//
-
-bool Saturn::ELSActive()
-
-{
-	return (ELSLogicSwitch.IsUp() && (SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE || SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE));
-}
-
-bool Saturn::ELSAuto()
-
-{
-	return (ELSActive() && ELSAutoSwitch.IsUp());
-}
-
-bool Saturn::PyrosArmed()
-
-{
-	return (PyroBusA.Voltage() > SP_MIN_DCVOLTAGE || PyroBusB.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::LETAttached()

@@ -992,13 +992,6 @@ public:
 	void CheckSMSystemsState();
 
 	///
-	/// Check whether the pyros are armed.
-	/// \brief Are pyros armed?
-	/// \return True if armed, false if not.
-	///
-	bool PyrosArmed();
-
-	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
 	/// down to 1.0.
 	/// \brief Disable time acceleration if desired.
@@ -1244,20 +1237,6 @@ protected:
 	/// \brief Set the LV Rate light.
 	///
 	void ClearLVRateLight();
-
-	///
-	/// Check whether the Earth Landing System is active.
-	/// \brief Is ELS Active?
-	/// \return True if active, false if not.
-	///
-	bool ELSActive();
-
-	///
-	/// Check whether the Earth Landing System is in AUTO mode.
-	/// \brief Is ELS in AUTO?
-	/// \return True if AUTO, false if not.
-	///
-	bool ELSAuto();
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
@@ -3622,9 +3601,17 @@ protected:
 	Pyro CMSMPyros;
 	Pyro CMDockingRingPyros;
 	Pyro CSMLVPyros;
+	Pyro ApexCoverPyros;
+	Pyro DrogueChutesDeployPyros;
+	Pyro MainChutesDeployPyros;
+	Pyro MainChutesReleasePyros;
 	PowerMerge CMSMPyrosFeeder;
 	PowerMerge CMDockingRingPyrosFeeder;
 	PowerMerge CSMLVPyrosFeeder;
+	PowerMerge ApexCoverPyrosFeeder;
+	PowerMerge DrogueChutesDeployPyrosFeeder;
+	PowerMerge MainChutesDeployPyrosFeeder;
+	PowerMerge MainChutesReleasePyrosFeeder;
 
 
 	//
@@ -4334,6 +4321,8 @@ protected:
 	friend class MESC;
 	friend class RCSC;
 	friend class ELS;
+	friend class ELSC;
+	friend class PCVB;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;
 	friend class MinImpulseHandcontrollerSwitch;

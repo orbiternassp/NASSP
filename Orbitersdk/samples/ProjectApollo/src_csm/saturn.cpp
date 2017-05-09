@@ -186,6 +186,14 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CMDockingRingPyrosFeeder("CM-DockingRing-Pyros-Feeder", Panelsdk),
 	CSMLVPyros("CSM-LV-Pyros", Panelsdk),
 	CSMLVPyrosFeeder("CSM-LV-Pyros-Feeder", Panelsdk),
+	ApexCoverPyros("Apex-Cover-Pyros", Panelsdk),
+	ApexCoverPyrosFeeder("Apex-Cover-Pyros-Feeder", Panelsdk),
+	DrogueChutesDeployPyros("Drogue-Chutes-Deploy-Pyros", Panelsdk),
+	DrogueChutesDeployPyrosFeeder("Drogue-Chutes-Deploy-Pyros-Feeder", Panelsdk),
+	MainChutesDeployPyros("Main-Chutes-Deploy-Pyros", Panelsdk),
+	MainChutesDeployPyrosFeeder("Main-Chutes-Deploy-Pyros-Feeder", Panelsdk),
+	MainChutesReleasePyros("Main-Chutes-Release-Pyros", Panelsdk),
+	MainChutesReleasePyrosFeeder("Main-Chutes-Release-Pyros-Feeder", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
@@ -3492,19 +3500,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail) {
-			// Deactivate Auto RCS Enable Relays
-			secs.MESCA.SetAutoRCSEnableRelay(false);
-			secs.MESCB.SetAutoRCSEnableRelay(false);
-			
-			// Deploy apex cover
-			deploy = true;
-		}
-
-		if (ELSActive() && ApexCoverJettSwitch.GetState())
-			deploy = true;
-
-		if (deploy && PyrosArmed()) {
+		if (ApexCoverPyros.Blown()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 
@@ -3517,19 +3513,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail) {
-			// Deactivate Auto RCS Enable Relays
-			secs.MESCA.SetAutoRCSEnableRelay(false);
-			secs.MESCB.SetAutoRCSEnableRelay(false);
-			
-			// Deploy apex cover
-			deploy = true;
-		}
-
-		if (ELSActive() && ApexCoverJettSwitch.GetState())
-			deploy = true;
-
-		if (deploy && PyrosArmed())	{
+		if (ApexCoverPyros.Blown()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
@@ -3537,13 +3521,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.DrogueFail && ChutesAttached)
-			deploy = true;
-
-		if (ELSActive() && DrogueDeploySwitch.GetState()) 
-			deploy = true;
-
-		if (deploy && PyrosArmed()) {
+		if (DrogueChutesDeployPyros.Blown()) {
 			DrogueS.play();
 			DrogueS.done();
 
@@ -3570,7 +3548,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:	// Drogue chute is attached
-		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
+		if (MainChutesDeployPyros.Blown() && ChutesAttached) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			DetachChild(ah, 1);
@@ -3633,7 +3611,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			//
 			eventControl.SPLASHDOWN = MissionTime;
 		}
-		if ((MainReleasePyroACircuitBraker.IsPowered() || MainReleasePyroBCircuitBraker.IsPowered()) && ChutesAttached && ELSActive() && MainReleaseSwitch.IsUp()) {
+		if (MainChutesReleasePyros.Blown() && ChutesAttached) {
 			// Detach Main 
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			if (GetAttachmentStatus(ah) != NULL) {

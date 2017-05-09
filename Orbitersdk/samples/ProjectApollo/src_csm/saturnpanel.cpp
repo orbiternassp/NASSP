@@ -89,14 +89,14 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 	double range;
 
 	alpha = GetAltitude();
-	alpha = alpha / 0.305;
+	alpha = alpha / 0.3048;
 
 #define ALTIMETER_X_CENTER	68
 #define ALTIMETER_Y_CENTER	69
 #define ALTIMETER_RADIUS	55.0
 
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 50000) alpha = 50000;
+	if (alpha > 55000) alpha = 55000;
 
 	if (alpha < 4001){
 		range = 120 * RAD;
@@ -123,19 +123,19 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 8001 && alpha < 10001){
-		range = 20 * RAD;
+		range = 30 * RAD;
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+180*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 10001 && alpha < 20001){
-		range = 55 * RAD;
+		range = 45 * RAD;
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+60*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 20001 && alpha < 40001){

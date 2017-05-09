@@ -161,10 +161,11 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem);
 	void Timestep(double simdt);
 
 	void Liftoff();
+	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; };
 	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; };
 	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; };
 	bool GetCMSMDeadFace() { return CMSMDeadFace && MESCLogicBus(); };
@@ -176,6 +177,7 @@ public:
 	void SetEDSAbortRelay3(bool relay) { EDSAbort3Relay = relay; }
 	bool FireUllage() { return MESCLogicArm && UllageRelay; };
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
+	bool ELSActivateLogic();
 
 	//Source 31
 	bool EDSMainPower();
@@ -254,6 +256,10 @@ protected:
 	//Miscellaneous
 	bool AbortStarted;
 	bool CMSMSeparateLogic;
+	bool AutoTowerJettison;
+	bool SSSInput1;
+	bool SSSInput2;
+	MESC* OtherMESC;
 
 	//Abort Start Delay
 	SECSTimer TD1;
@@ -340,6 +346,104 @@ protected:
 	Saturn *Sat;
 };
 
+class BaroSwitch
+{
+public:
+	BaroSwitch(double open, double close);
+
+	void ControlVessel(Saturn *v);
+	void Timestep();
+	bool GetStatus() { return status; }
+	void SetStatus(bool stat) { status = stat; }
+	bool IsClosed() { return status == 1; }
+	bool IsOpen() { return status == 0; }
+protected:
+	bool status;
+	double OpenPa, ClosePa;
+
+	Saturn *Sat;
+};
+
+
+//Pyro Continuity Verification Box
+class PCVB
+{
+public:
+	PCVB();
+	void Init(Saturn *v);
+	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetMainChuteReleaseA() { return MainChuteReleaseA; }
+	bool GetMainChuteReleaseB() { return MainChuteReleaseB; }
+	bool GetDrogueChuteDeployA() { return DrogueChuteDeployA; }
+	bool GetDrogueChuteDeployB() { return DrogueChuteDeployB; }
+	bool GetMainChuteDeployA() { return DrogueChuteReleasePilotChuteDeployA; }
+	bool GetMainChuteDeployB() { return DrogueChuteReleasePilotChuteDeployB; }
+protected:
+	//Relays
+
+	//Z2K1
+	bool DrogueChuteDeployA;
+	//Z2K4
+	bool DrogueChuteReleasePilotChuteDeployA;
+	//Z2K5
+	bool MainChuteReleaseA;
+
+	//Z1K1
+	bool DrogueChuteDeployB;
+	//Z1K4
+	bool DrogueChuteReleasePilotChuteDeployB;
+	//Z1K5
+	bool MainChuteReleaseB;
+
+	Saturn *Sat;
+};
+
+//Earth Landing Sequence Controller
+class ELSC
+{
+public:
+	ELSC();
+	void Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem);
+	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetDrogueParachuteDeployRelay() { return DrogueParachuteDeploy; }
+	bool GetMainParachuteDeployRelay() { return PilotParachuteDeploy; }
+protected:
+
+	void TimerTimestep(double simdt);
+	bool ELSBatteryPower();
+
+	//Relays
+
+	//K1
+	bool BaroswitchLockIn;
+	//K2
+	bool DrogueParachuteDeploy;
+	//K3
+	bool PilotParachuteDeploy;
+
+	//Delay Timers:
+	
+	//Drogue Parachute Deploy
+	SECSTimer TD1;
+	//Pilot parachute Deploy
+	SECSTimer TD3;
+
+	CircuitBrakerSwitch *ELSBatteryBreaker;
+
+	ELSC* OtherELSC;
+	MESC* mesc;
+
+	Saturn *Sat;
+
+	friend class PCVB;
+};
+
 ///
 /// This class simulates the Earth Landing System in the CM.
 /// \ingroup InternalSystems
@@ -358,6 +462,16 @@ public:
 	void SaveState(FILEHANDLE scn);
 	double *GetDyeMarkerLevelRef() { return &DyeMarkerLevel; }
 
+	//Baroswitches
+	BaroSwitch BaroSwitch24k;
+	BaroSwitch BaroSwitch10k;
+
+	//Earth Landing Sequence Controller A
+	ELSC ELSCA;
+	//Earth Landing Sequence Controller B
+	ELSC ELSCB;
+	//Pyro Continuity Verification Box
+	PCVB pcvb;
 
 protected:
 	double NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt);
@@ -374,13 +488,6 @@ protected:
 
 	Saturn *Sat;
 	FloatBag *FloatBagVessel;
-
-	//Relays
-	//K1: 24,000 Feet Lock Up
-	bool LockUp24000FT;
-
-	//Timers
-	//TD1: 
 };
 
 //
