@@ -590,22 +590,19 @@ void MESC::Timestep(double simdt)
 	}
 
 	// Monitor LET Status
-	if (MESCLogicBus())
+	if ((MESCLogicBus() || EDSLogicPower()) && Sat->LESAttached && (Sat->TowerJett1Switch.IsDown() || Sat->TowerJett2Switch.IsDown()))
 	{
-		if (Sat->LESAttached)
-		{
-			LETPhysicalSeparationMonitor = true;
-		}
-		else
-		{
-			LETPhysicalSeparationMonitor = false;
-		}
+		LETPhysicalSeparationMonitor = true;
+	}
+	else
+	{
+		LETPhysicalSeparationMonitor = false;
 	}
 
 	//Auto Abort Logic
 	if ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus() && Sat->EDSSwitch.GetState())
 	{
-		//TBD: keep liftoff discrete
+		AutoAbortEnableRelay = true;
 	}
 	else
 	{
@@ -736,7 +733,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Tower Jettison Relay
-	if (AutoTowerJettison || (MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp()))
+	if ((AutoTowerJettison && !Sat->LaunchFail.LETAutoJetFail) || ((MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp())))
 	{
 		LETJettisonAndFrangibleNutsRelay = true;
 	}
@@ -905,8 +902,6 @@ void MESC::Timestep(double simdt)
 	{
 		ApexCoverJettison = false;
 	}
-
-	//Separate Apex Cover
 
 	//Apex Cover Drag Chute Deploy Relay
 	if (MESCLogicBus() && ApexCoverJettison && !Sat->ApexCoverAttached)
@@ -1595,7 +1590,7 @@ void ELSC::Timestep(double simdt)
 	}
 
 	//Drogue Deploy Logic
-	if (TD1.ContactClosed() || (Sat->DrogueDeploySwitch.GetState() && ELSBatteryPower()))
+	if ((TD1.ContactClosed() && !Sat->LandFail.DrogueFail) || (Sat->DrogueDeploySwitch.GetState() && ELSBatteryPower()))
 	{
 		DrogueParachuteDeploy = true;
 	}
@@ -1609,7 +1604,7 @@ void ELSC::Timestep(double simdt)
 		TD3.SetRunning(true);
 	}
 
-	if ((TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed()) || (ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
+	if ((TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed() && !Sat->LandFail.MainFail) || (ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
 	{
 		PilotParachuteDeploy = true;
 	}

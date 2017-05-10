@@ -3492,8 +3492,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	// Do stage-specific processing.
 	//
 
-	bool deploy = false;
-
 	switch (stage) {
 	case CSM_LEM_STAGE:
 		StageSix(simt);
