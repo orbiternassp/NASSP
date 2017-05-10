@@ -7472,3 +7472,8 @@ bool RTCC::TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P
 
 	return true;
 }
+
+void RTCC::LMLaunchTimePrediction()
+{
+
+}
