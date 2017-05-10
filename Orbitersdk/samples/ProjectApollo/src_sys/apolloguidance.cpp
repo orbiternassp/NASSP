@@ -732,9 +732,8 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	unsigned int mask = (1 << (bit));
-	int	data = InputChannel[channel];
+	int	data = vagc.InputChannel[channel];
 
-	data = vagc.InputChannel[channel];
 	//
 	// Channels 030-034 are inverted!
 	//
@@ -949,51 +948,6 @@ int ApolloGuidance::DoMCDU(int16_t *Counter){
 
 int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
 	return(CounterDINC(&vagc,CounterNum,Counter));
-}
-
-
-void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
-
-{
-	unsigned int mask = (1 << (bit));
-
-	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
-		return;
-
-	if (val) {
-		OutputChannel[channel] |= mask;
-	}
-	else {
-		OutputChannel[channel] &= ~mask;
-	}
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 05:
-		ProcessChannel5(OutputChannel[05]);
-		break;
-
-	case 06:
-		ProcessChannel6(OutputChannel[06]);
-		break;
-
-	case 010:
-		ProcessChannel10(OutputChannel[010]);
-		break;
-
-	case 011:
-		ProcessChannel11Bit(bit, val);
-		break;
-
-	case 012:
-	case 014:
-		imu.ChannelOutput(channel, OutputChannel[channel]);
-		break;
-	}
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)

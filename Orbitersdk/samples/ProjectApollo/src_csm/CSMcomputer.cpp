@@ -376,76 +376,12 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 	GenericWriteMemory(loc, val);
 }
 
-//
-// Exernal event handling.
-//
-
-void CSMcomputer::Liftoff(double simt)
-
-{
-
-	//
-	// Do nothing if we have no power.
-	//
-	if (!IsPowered())
-		return;
-
-	//
-	// Ensure autopilot is enabled.
-	//
-
-	SetOutputChannelBit(012, 9, false);
-	Saturn *Sat = (Saturn *)OurVessel;
-}
-
 void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val){
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
-
-	//
-	// Do nothing if we have no power.
-	//
-	if (!IsPowered())
-		return;
-
-	switch (channel)
-	{
-	case 030:
-		if (bit == 5 && val) {
-			Liftoff(CurrentTimestep);	// Liftoff signal
-			break;
-		}
-		break;
-	}
-}
-
-void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val){
-	ApolloGuidance::SetOutputChannelBit(channel, bit, val);
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 012:
-		iu.ChannelOutput(channel, OutputChannel[channel]);
-		break;
-	}
 }
 
 void CSMcomputer::SetOutputChannel(int channel, ChannelValue val){
 	ApolloGuidance::SetOutputChannel(channel, val);
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 012:
-		iu.ChannelOutput(channel, val.to_ulong());
-		break;
-	}
 }
 
 //
