@@ -760,6 +760,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		NextFlashUpdate = MissionTime + 0.25;
 	}
 
+	// Orbiter 2016 fix
+	// Force GetWeightVector() to the correct value
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	if (vs.status == 1) {
+		if (simt > 3 && simt < 4) {
+			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
+		}
+	}
+	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
