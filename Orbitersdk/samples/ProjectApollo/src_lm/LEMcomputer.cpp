@@ -193,7 +193,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			InputChannel[033] &= 037777;
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			vagc.Ch33Switches &= 037777;
 			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399

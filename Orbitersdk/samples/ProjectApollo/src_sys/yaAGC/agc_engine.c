@@ -319,7 +319,9 @@
 				 triggering.
 		04/16/17 MAS	Added a simple linear model of the AGC warning
 				 filter, and added the AGC (CMC/LGC) warning
-				 light status to DSKY channel 163.
+				 light status to DSKY channel 163. Also added
+				 proper handling of the channel 33 inbit that
+				 indicates such a warning occurred.
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
   or more particularly for the Apollo Guidance Computer (AGC) may be found at 
@@ -498,17 +500,15 @@ WriteIO (agc_t * State, int Address, int Value)
   // the CPU writes to it from time to time, to "reset" bits 11-15 to 1.
   // Apparently, these are latched inputs, and this resets the latches.
 
-  // TSCH: Changed "| 076000" to "& 077777" to prevent writing to 
-  // channel 033 at all.
+  if (Address == 033)
+    {
+	  Value = (State->InputChannel[Address] | 076000);
 
-  // SGM: But I need to write switch values here! Whine, whine...
-
-  if (Address == 033){	
-    Value = (State->InputChannel[Address] & 076777); // Clear protected bits (Was 076745, needed to be less permissive for LM)
-	Value |= State->Ch33Switches;                    // and write their true values back
-	// Any write pulse here resets 11-15, but it does so on a delay.
-	State->Ch33Switches |= 076000;
-  }
+	  // Don't allow the AGC warning input to be reset if the light
+	  // is still on
+	  if (State->WarningFilter > WARNING_FILTER_THRESHOLD)
+	    State->InputChannel[033] &= 057777;
+    }
 
   // Similarly, the CH77 Restart Monitor Alarm Box has latches for
   // alarm codes that are reset when CH77 is written to.
@@ -604,25 +604,6 @@ IsUPRUPTActive (agc_t * State)
 		return 1; 
 	}
 	return 0;
-}
-
-// DS20060827 Allow twiddling of bits in ch33
-void
-SetCh33Bits (agc_t * State, int16_t Value)
-{
-	State->Ch33Switches = (Value&001032);            // Save here
-    Value = (State->InputChannel[033] & 076745);     // Clear protected bits
-	Value |= State->Ch33Switches;                    // and write their values back	
-	State->InputChannel[033] = Value;                // Commit
-}
-
-void
-SetLMCh33Bits (agc_t * State, int16_t Value)
-{
-	State->Ch33Switches = (Value&010776);            // Save here
-    Value = (State->InputChannel[033] & 027001);     // Clear protected bits
-	Value |= State->Ch33Switches;                    // and write their values back	
-	State->InputChannel[033] = Value;                // Commit
 }
 
 //-----------------------------------------------------------------------------
@@ -1662,7 +1643,12 @@ UpdateDSKY(agc_t *State)
 
   // Turn on the AGC warning light if the warning filter is above its threshold
 	if (State->WarningFilter > WARNING_FILTER_THRESHOLD)
-	  State->DskyChannel163 |= DSKY_AGC_WARN;
+	  {
+	    State->DskyChannel163 |= DSKY_AGC_WARN;
+
+		// Set the AGC Warning input bit in channel 33
+		State->InputChannel[033] &= 057777;
+	  }
 
 	// Update the DSKY flash counter based on the DSKY timer
 	while (State->DskyTimer >= DSKY_OVERFLOW)

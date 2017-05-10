@@ -473,7 +473,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SCALERCOUNTER", vagc.ScalerCounter);
 	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
 	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
-	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
 	oapiWriteScenario_int(scn, "WARNINGFILTER", vagc.WarningFilter);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
@@ -574,9 +573,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "DSKYCHANNEL163", 14)) {
 			sscanf(line + 14, "%d", &vagc.DskyChannel163);
-		}
-		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
-			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
 		}
 		else if (!strnicmp(line, "WARNINGFILTER", 13)) {
 			sscanf(line + 13, "%" SCNd32, &vagc.WarningFilter);
@@ -775,18 +771,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	if ((channel >= 030) && (channel <= 034))
 		data ^= 077777;
 
-	// Channel 33 special hack
-	if(channel == 033){
-		if(bit == 10){
-			// Update channel 33 switch bits
-			int ch33bits = GetCh33Switches();
-			if(val != 0){ ch33bits |= 001000; }else{ ch33bits &= 076777; }
-				SetCh33Switches(ch33bits);
-			// We're done here. SetCh33Switches rewrites the IO channel.
-			return;
-		}
-	}
-
 	// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 	if (channel == 015 && val != 0){
 		vagc.InterruptRequests[5] = 1;
@@ -949,19 +933,6 @@ void ApolloGuidance::GenerateRadarupt(){
 bool ApolloGuidance::IsUpruptActive() {
 	return (IsUPRUPTActive(&vagc) == 1);
 }
-
-// DS200608xx CH33 SWITCHES
-void ApolloGuidance::SetCh33Switches(unsigned int val){
-	if( isLGC)
-		SetLMCh33Bits(&vagc,val);
-	else 
-		SetCh33Bits(&vagc,val);
-}
-
-unsigned int ApolloGuidance::GetCh33Switches(){
-	return vagc.Ch33Switches; 
-}
-
 
 // DS20060903 PINC, DINC, ETC
 int ApolloGuidance::DoPINC(int16_t *Counter){

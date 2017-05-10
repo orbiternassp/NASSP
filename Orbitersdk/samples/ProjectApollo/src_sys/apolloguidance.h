@@ -369,8 +369,6 @@ protected:
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
-	public: virtual void SetCh33Switches(unsigned int val);
-	public: unsigned int GetCh33Switches();
 	public: virtual int DoPINC(int16_t *Counter);
 	public: virtual int DoPCDU(int16_t *Counter);
 	public: virtual int DoMCDU(int16_t *Counter);
