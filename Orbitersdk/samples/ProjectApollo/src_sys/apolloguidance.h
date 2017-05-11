@@ -440,11 +440,6 @@ protected:
 #define MAX_OUTPUT_CHANNELS	0200
 
 	///
-	/// \brief AGC input channel values.
-	///
-	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
-
-	///
 	/// \brief AGC output channel values.
 	///
 	unsigned int OutputChannel[MAX_OUTPUT_CHANNELS + 1];

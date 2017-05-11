@@ -81,8 +81,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 
 	for (i = 0; i <= MAX_OUTPUT_CHANNELS; i++)
 		OutputChannel[i] = 0;
-	for (i = 0; i <= MAX_INPUT_CHANNELS; i++)
-		InputChannel[i] = 0;
 
 	//
 	// Dsky interface.
@@ -149,19 +147,16 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		val30.set(IMUOperate);
 
 		vagc.InputChannel[030] = (int16_t)val30.to_ulong();
-		InputChannel[030] = (val30.to_ulong() ^ 077777);
 
 		val31 = 077777;
 		// Default position of the CMC MODE switch is FREE
 		val31[FreeFunction] = 0;
 
 		vagc.InputChannel[031] = (int16_t)val31.to_ulong();
-		InputChannel[031] = (val31.to_ulong() ^ 077777);
 
 
 		val32 = 077777;
 		vagc.InputChannel[032] = (int16_t)val32.to_ulong();
-		InputChannel[032] = (val32.to_ulong() ^ 077777);
 
 		val33 = 077777;
 	//	val33.Bits.RangeUnitDataGood = 0;
@@ -179,7 +174,6 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		val33[AGCWarning] = 0;
 		
 		vagc.InputChannel[033] = (int16_t)val33.to_ulong();
-		InputChannel[033] = (val33.to_ulong() ^ 077777);
 	}
 }
 
@@ -528,13 +522,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf(line+9, "%o", &val);
 			WriteMemory(num, val);
 		}
-		else if (!strnicmp (line, "ICHAN", 5)) {
-			int num;
-			unsigned int val;
-			sscanf(line+5, "%d", &num);
-			sscanf(line+9, "%d", &val);
-			InputChannel[num] = val;
-		}
 		else if (!strnicmp (line, "VICHAN", 6)) {
 			int num;
 			unsigned int val;
@@ -686,9 +673,6 @@ unsigned int ApolloGuidance::GetOutputChannel(int channel)
 
 void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val) 
 {
-	if (channel >= 0 && channel <= MAX_INPUT_CHANNELS)
-		InputChannel[channel] = val.to_ulong();
-
 	//
 	// Do nothing if we have no power.
 	//
@@ -754,8 +738,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	else {
 		data &= ~mask;
 	}
-
-	InputChannel[channel] = data;
 
 	//
 	// Do nothing if we have no power.

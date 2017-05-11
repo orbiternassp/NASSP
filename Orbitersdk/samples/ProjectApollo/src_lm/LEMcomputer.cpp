@@ -190,7 +190,6 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			SetOutputChannel(0163, 1);
 			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
-			InputChannel[033] &= 037777;
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
 			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.

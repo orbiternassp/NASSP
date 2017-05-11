@@ -203,7 +203,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// Turn on EL display and CMC Light (DSKYWarn).
 				SetOutputChannel(0163, 1);
 				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
-				InputChannel[033] &= 037777;
 				vagc.InputChannel[033] &= 037777;				
 				OutputChannel[033] &= 037777;				
 				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
