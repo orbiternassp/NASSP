@@ -360,6 +360,38 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	Title (skp, "Apollo RTCC MFD");
 	skp->SetFont(font);
 
+	/*VECTOR3 R_LS, R_P, V_P;
+	double lat, lng, r, MJD_P, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F;
+	VESSEL *target;
+	OBJHANDLE hMoon;
+
+	t_L = OrbMech::HHMMSSToSS(120.0, 0.0, 0.0);
+	t_TPI = OrbMech::HHMMSSToSS(122.0, 30.0, 0.0);
+	dt_F = 2600.0;
+	dt_1 = 7.0*60.0 + 15.0;
+	h_1 = 60000.0*0.3048;
+	theta_1 = 10.0*RAD;
+	dt_2 = 55.0*60.0;
+	v_LV = 0.0;
+	v_LH = 1650.0;
+	DH = 15.0*1852.0;
+	E = 26.6*RAD;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	target = oapiGetVesselInterface(oapiGetObjectByName("Endeavour"));
+	target->GetRelativePos(hMoon, R_P);
+	target->GetRelativeVel(hMoon, V_P);
+	R_P = _V(R_P.x, R_P.z, R_P.y);
+	V_P = _V(V_P.x, V_P.z, V_P.y);
+	MJD_P = oapiGetSimMJD();
+
+	G->vessel->GetEquPos(lng, lat, r);
+
+	R_LS = OrbMech::r_from_latlong(lat, lng, r);
+
+	OrbMech::LunarLiftoffTimePrediction(R_LS, R_P, V_P, MJD_P, G->GETbase, hMoon, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F);*/
+
 	/*OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	double lat = 0.17*RAD;
 	double lng = 173.57*RAD;
