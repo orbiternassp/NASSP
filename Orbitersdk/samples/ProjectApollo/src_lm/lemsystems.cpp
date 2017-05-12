@@ -2072,7 +2072,7 @@ void LEM_LR::TimeStep(double simdt){
 	val33 = lem->agc.GetInputChannel(033);
 
 	if (!IsPowered() ) { 
-		// Clobber data. Values inverted.
+		// Clobber data.
 		bool clobber = FALSE;
 		if(val33[LRDataGood]){ clobber = TRUE; val33[LRDataGood] = 0; }
 		if(val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 0; }
@@ -2612,8 +2612,8 @@ void LEM_RR::TimeStep(double simdt){
 	*/
 
 	if (!IsPowered() ) { 
-		val33[RRPowerOnAuto] = 0; // Inverted
-		val33[RRDataGood] = 0;    // Also inverted
+		val33[RRPowerOnAuto] = 0;
+		val33[RRDataGood] = 0;
 		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
 		lastShaftAngle = shaftAngle;
 		lem->agc.SetInputChannel(033, val33);
@@ -2959,11 +2959,11 @@ void LEM_RR::TimeStep(double simdt){
 		val33[RRDataGood] = radarDataGood;
 		if (val13[RadarActivity] && val13[RadarA]) { // Request Range R-567-sec4-rev7-R10-R56.pdf R22.
 			if ( range > 93681.639 ) { // Ref R-568-sec6.prf p 6-59
-				val33[RRRangeLowScale] = 1; // Inverted bits
+				val33[RRRangeLowScale] = 1;
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) (range * 0.043721214);
 			}
 			else {
-				val33[RRRangeLowScale] = 0; // Inverted bits
+				val33[RRRangeLowScale] = 0;
 				lem->agc.vagc.Erasable[0][RegRNRAD]=(int16_t) (range * 0.34976971);
 			}	
 			lem->agc.GenerateRadarupt();
