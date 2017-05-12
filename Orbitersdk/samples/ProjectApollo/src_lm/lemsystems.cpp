@@ -863,11 +863,11 @@ void LEM::JoystickTimestep(double simdt)
 			agc.GenerateHandrupt();
 		}
 
-		//
-		// DIRECT
-		//
-
 		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
+
+		//
+		// HARDOVER
+		//
 
 		if (LeftACA4JetSwitch.IsUp() && SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		{
@@ -968,6 +968,98 @@ void LEM::JoystickTimestep(double simdt)
 				yflag = 1;
 			}
 		}
+
+		//
+		// DIRECT
+		//
+
+		if (SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+		{
+			if (RollSwitch.IsDown() && rflag == 0)
+			{
+				if (rhc_pos[0] < -5040) {
+					// MINUS ROLL
+					SetRCSJet(3, 0);
+					SetRCSJet(12, 0);
+					SetRCSJet(4, 1);
+					SetRCSJet(11, 1);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectRollActive(true);
+					rflag = 1;
+				}
+				if (rhc_pos[0] > 5040) {
+					// PLUS ROLL
+					SetRCSJet(3, 1);
+					SetRCSJet(12, 1);
+					SetRCSJet(4, 0);
+					SetRCSJet(11, 0);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectRollActive(true);
+					rflag = 1;
+				}
+			}
+
+			if (PitchSwitch.IsDown() && pflag == 0)
+			{
+				if (rhc_pos[1] < -5040) {
+					// MINUS PITCH
+					SetRCSJet(11, 1);
+					SetRCSJet(12, 1);
+					SetRCSJet(3, 0);
+					SetRCSJet(4, 0);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectPitchActive(true);
+					pflag = 1;
+				}
+				if (rhc_pos[1] > 5040) {
+					// PLUS PITCH
+					SetRCSJet(11, 0);
+					SetRCSJet(12, 0);
+					SetRCSJet(3, 1);
+					SetRCSJet(4, 1);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectPitchActive(true);
+					pflag = 1;
+				}
+			}
+
+			if (YawSwitch.IsDown() && yflag == 0)
+			{
+				if (rhc_pos[2] < -5040) {
+					// MINUS YAW
+					SetRCSJet(1, 0);
+					SetRCSJet(10, 0);
+					SetRCSJet(2, 1);
+					SetRCSJet(9, 1);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectYawActive(true);
+					yflag = 1;
+				}
+				if (rhc_pos[2] > 5040) {
+					// PLUS YAW
+					SetRCSJet(1, 1);
+					SetRCSJet(10, 1);
+					SetRCSJet(2, 0);
+					SetRCSJet(9, 0);
+
+					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+
+					atca.SetDirectYawActive(true);
+					yflag = 1;
+				}
+			}
+		}
+
 		if (atca.GetDirectRollActive() == true && rflag == 0) { // Turn off direct roll
 			SetRCSJet(3, 0);
 			SetRCSJet(7, 0);

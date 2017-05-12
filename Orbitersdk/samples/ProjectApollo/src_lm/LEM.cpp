@@ -760,6 +760,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		NextFlashUpdate = MissionTime + 0.25;
 	}
 
+	// Orbiter 2016 fix
+	// Force GetWeightVector() to the correct value
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	if (vs.status == 1) {
+		if (simt > 3 && simt < 4) {
+			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
+		}
+	}
+	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
@@ -1210,6 +1220,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
 			mechanicalAccelerometer.LoadState(scn);
 		}
+		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
+			atca.LoadState(scn);
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1546,6 +1559,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	crossPointerRight.SaveState(scn);
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
+	atca.SaveState(scn);
 	checkControl.save(scn);
 }
 

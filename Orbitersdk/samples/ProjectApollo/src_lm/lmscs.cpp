@@ -185,6 +185,31 @@ void ATCA::ProcessLGC(int ch, int val){
 	}
 }
 
+void ATCA::SaveState(FILEHANDLE scn) {
+
+	oapiWriteLine(scn, ATCA_START_STRING);
+
+	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive);
+	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive);
+	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive);
+
+	oapiWriteLine(scn, ATCA_END_STRING);
+}
+
+void ATCA::LoadState(FILEHANDLE scn) {
+
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, ATCA_END_STRING, sizeof(ATCA_END_STRING))) {
+			return;
+		}
+		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive);
+		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive);
+		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive);
+	}
+}
+
 // DESCENT ENGINE CONTROL ASSEMBLY
 DECA::DECA() {
 	lem = NULL;

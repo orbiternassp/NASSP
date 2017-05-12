@@ -24,6 +24,9 @@
 
 class LEM;
 
+#define ATCA_START_STRING	"ATCA_BEGIN"
+#define ATCA_END_STRING		"ATCA_END"
+
 class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
@@ -31,6 +34,9 @@ public:
 	void Init(LEM *vessel);				// Init
 	void Timestep(double simt);			// Timestep
 	void ProcessLGC(int ch, int val);   // To process LGC commands
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
 	bool GetDirectPitchActive() { return DirectPitchActive; }
 	bool GetDirectYawActive() { return DirectYawActive; }
