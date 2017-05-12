@@ -671,7 +671,7 @@ unsigned int ApolloGuidance::GetOutputChannel(int channel)
 	return OutputChannel[channel];
 }
 
-void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val) 
+void ApolloGuidance::SetInputChannel(int channel, ChannelValue val)
 {
 	//
 	// Do nothing if we have no power.

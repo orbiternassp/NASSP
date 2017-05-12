@@ -2069,17 +2069,17 @@ void LEM_LR::TimeStep(double simdt){
 	ChannelValue val33;
 	val12 = lem->agc.GetInputChannel(012);
 	val13 = lem->agc.GetInputChannel(013);
-	val33 = lem->agc.GetOutputChannel(033);
+	val33 = lem->agc.GetInputChannel(033);
 
 	if (!IsPowered() ) { 
 		// Clobber data. Values inverted.
 		bool clobber = FALSE;
-		if(!val33[LRDataGood]){ clobber = TRUE; val33[LRDataGood] = 1; } 
-		if(!val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 1; }
-		if(!val33[LRPos1]){ clobber = TRUE; val33[LRPos1] = 1; }
-		if(!val33[LRPos2]){ clobber = TRUE; val33[LRPos2] = 1; }
-		if(!val33[LRRangeLowScale]){ clobber = TRUE; val33[LRRangeLowScale] = 1; }
-		if(clobber == TRUE){ lem->agc.SetOutputChannel(033, val33); }
+		if(val33[LRDataGood]){ clobber = TRUE; val33[LRDataGood] = 0; }
+		if(val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 0; }
+		if(val33[LRPos1]){ clobber = TRUE; val33[LRPos1] = 0; }
+		if(val33[LRPos2]){ clobber = TRUE; val33[LRPos2] = 0; }
+		if(val33[LRRangeLowScale]){ clobber = TRUE; val33[LRRangeLowScale] = 0; }
+		if(clobber == TRUE){ lem->agc.SetInputChannel(033, val33); }
 		return;
 	}	
 
@@ -2119,29 +2119,29 @@ void LEM_LR::TimeStep(double simdt){
 	// If at Pos 1
 	if(antennaAngle == 24){
 		// Light Pos 1
-		if(val33[LRPos1] == 1){
-			val33[LRPos1] = 0;
-			lem->agc.SetOutputChannel(033, val33);
+		if(val33[LRPos1] == 0){
+			val33[LRPos1] = 1;
+			lem->agc.SetInputChannel(033, val33);
 		}
 	}else{
 		// Otherwise
 		// Clobber Pos 1 flag
-		if(val33[LRPos1] == 0){
-			val33[LRPos1] = 1;
-			lem->agc.SetOutputChannel(033, val33);
+		if(val33[LRPos1] == 1){
+			val33[LRPos1] = 0;
+			lem->agc.SetInputChannel(033, val33);
 		}
 		// If at Pos 2
 		if(antennaAngle == 0){
 			// Light Pos 2
-			if(val33[LRPos2] == 1){
-				val33[LRPos2] = 0;
-				lem->agc.SetOutputChannel(033, val33);
+			if(val33[LRPos2] == 0){
+				val33[LRPos2] = 1;
+				lem->agc.SetInputChannel(033, val33);
 			}
 		}else{
 			// Otherwise clobber Pos 2 flag
-			if(val33[LRPos2] == 0){
-				val33[LRPos2] = 1;
-				lem->agc.SetOutputChannel(033, val33);
+			if(val33[LRPos2] == 1){
+				val33[LRPos2] = 0;
+				lem->agc.SetInputChannel(033, val33);
 			}
 		}
 	}
@@ -2258,18 +2258,18 @@ void LEM_LR::TimeStep(double simdt){
 
 	// Maintain discretes
 	// Range data good
-	if(rangeGood == 1 && val33[LRDataGood] == 1){ val33[LRDataGood] = 0; lem->agc.SetOutputChannel(033, val33);	}
-	if(rangeGood == 0 && val33[LRDataGood] == 0){ val33[LRDataGood] = 1; lem->agc.SetOutputChannel(033, val33);	}
+	if(rangeGood == 1 && val33[LRDataGood] == 0){ val33[LRDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
+	if(rangeGood == 0 && val33[LRDataGood] == 1){ val33[LRDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
 	// RANGE SCALE:
 	// C++ VALUE OF 1 = HIGH RANGE
 	// C++ VALUE OF 0 = LOW RANGE
 	// We switch from high range to low range at 2500 feet
 	// Range scale affects only the altimeter, velocity is not affected.
-	if((rangeGood == 1 && range < 2500) && val33[LRRangeLowScale] == 1){ val33[LRRangeLowScale] = 0; lem->agc.SetOutputChannel(033, val33);	}
-	if((rangeGood == 0 || range > 2500) && val33[LRRangeLowScale] == 0){ val33[LRRangeLowScale] = 1; lem->agc.SetOutputChannel(033, val33);	}
+	if((rangeGood == 1 && range < 2500) && val33[LRRangeLowScale] == 0){ val33[LRRangeLowScale] = 1; lem->agc.SetInputChannel(033, val33);	}
+	if((rangeGood == 0 || range > 2500) && val33[LRRangeLowScale] == 1){ val33[LRRangeLowScale] = 0; lem->agc.SetInputChannel(033, val33);	}
 	// Velocity data good
-	if(velocityGood == 1 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetOutputChannel(033, val33);	}
-	if(velocityGood == 0 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetOutputChannel(033, val33);	}
+	if(velocityGood == 1 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
+	if(velocityGood == 0 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
 
 	// The computer wants something from the radar.
 	if(val13[RadarActivity] == 1){
@@ -2321,7 +2321,7 @@ void LEM_LR::TimeStep(double simdt){
 			// LR (LR RANGE)
 			// High range is 5.395 feet per count
 			// Low range is 1.079 feet per count
-			if (val33[LRRangeLowScale] == 1) {
+			if (val33[LRRangeLowScale] == 0) {
 				// Hi Range
 				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 5.395);
 			}
@@ -2612,11 +2612,11 @@ void LEM_RR::TimeStep(double simdt){
 	*/
 
 	if (!IsPowered() ) { 
-		val33[RRPowerOnAuto] = 1; // Inverted
-		val33[RRDataGood] = 1;    // Also inverted
+		val33[RRPowerOnAuto] = 0; // Inverted
+		val33[RRDataGood] = 0;    // Also inverted
 		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
 		lastShaftAngle = shaftAngle;
-		lem->agc.SetOutputChannel(033, val33);
+		lem->agc.SetInputChannel(033, val33);
 		return;
 	}
 	// Max power used based on LM GNCStudyGuide. Is this good?
@@ -2758,15 +2758,15 @@ void LEM_RR::TimeStep(double simdt){
 	// Let's test.
 	// First, manage the status bit.
 	if(lem->RendezvousRadarRotary.GetState() == 2){
-		if(val33[RRPowerOnAuto] != 0){
-			val33[RRPowerOnAuto] = 0;
-			lem->agc.SetOutputChannel(033, val33);
+		if(val33[RRPowerOnAuto] != 1){
+			val33[RRPowerOnAuto] = 1;
+			lem->agc.SetInputChannel(033, val33);
 			sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
 		}
 	}else{
-		if(val33[RRPowerOnAuto] != 1){
-			val33[RRPowerOnAuto] = 1;
-			lem->agc.SetOutputChannel(033, val33);
+		if(val33[RRPowerOnAuto] != 0){
+			val33[RRPowerOnAuto] = 0;
+			lem->agc.SetInputChannel(033, val33);
 			sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
 		}
 	}
@@ -2837,17 +2837,17 @@ void LEM_RR::TimeStep(double simdt){
 			sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 			// Maintain RADAR GOOD state
-			if(radarDataGood == 1 && val33[RRDataGood] == 1){ val33[RRDataGood] = 0; lem->agc.SetOutputChannel(033, val33);	}
-			if(radarDataGood == 0 && val33[RRDataGood] == 0){ val33[RRDataGood] = 1; lem->agc.SetOutputChannel(033, val33);	}
+			if(radarDataGood == 1 && val33[RRDataGood] == 0){ val33[RRDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
+			if(radarDataGood == 0 && val33[RRDataGood] == 1){ val33[RRDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
 			// Maintain radar scale indicator
 			// We use high scale above 50.6nm, and low scale below that.
-			if(range > 93700 && val33[RRRangeLowScale] == 0){ 
+			if(range > 93700 && val33[RRRangeLowScale] == 1){
 				// HI SCALE
-				val33[RRRangeLowScale] = 1; lem->agc.SetOutputChannel(033, val33);
+				val33[RRRangeLowScale] = 0; lem->agc.SetInputChannel(033, val33);
 			}
-			if(range < 93701 && val33[RRRangeLowScale] == 1){
+			if(range < 93701 && val33[RRRangeLowScale] == 0){
 				// LO SCALE
-				val33[RRRangeLowScale] = 0; lem->agc.SetOutputChannel(033, val33);
+				val33[RRRangeLowScale] = 1; lem->agc.SetInputChannel(033, val33);
 			}
 
 			// Print status
@@ -3019,7 +3019,7 @@ void LEM_RR::TimeStep(double simdt){
 		val33[RRPowerOnAuto] = 0; // Inverted ON
 	} else
 		val33[RRPowerOnAuto] = 1; // Inverted OFF
-	lem->agc.SetOutputChannel(033, val33);
+	lem->agc.SetInputChannel(033, val33);
 
 	// AutoTrack  the CSM using the RR
     if( ((val12[RRAutoTrackOrEnable] == 1) || (lem->RendezvousRadarRotary.GetState()== 0  ) ) && radarDataGood == 1 ) {
