@@ -3693,20 +3693,20 @@ bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 		if (agc) {
 			if (IsUp()) {
 				// CMC MODE, ZERO OFF				
-				agc->SetInputChannelBit(033, CMCControl, 1);
-				agc->SetInputChannelBit(033, ZeroOptics_33, 0);
+				agc->SetInputChannelBit(033, CMCControl, true);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsCenter()) {
 				// MANUAL MODE, ZERO OFF
-				agc->SetInputChannelBit(033, CMCControl, 0);
-				agc->SetInputChannelBit(033, ZeroOptics_33, 0);
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsDown()) {
 				// MANUAL MODE, ZERO ON
-				agc->SetInputChannelBit(033, CMCControl, 0);
-				agc->SetInputChannelBit(033, ZeroOptics_33, 1);
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, true);
 				return true;
 			}
 		}
