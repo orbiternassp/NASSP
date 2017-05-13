@@ -34,6 +34,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	bool GetLandingGearDeployRelay() { return LandingGearDeployRelay; }
+	bool GetStagingRelay() { return StagingRelay; }
 	bool GetMasterArmRelay() { return MasterArmRelay; }
 protected:
 

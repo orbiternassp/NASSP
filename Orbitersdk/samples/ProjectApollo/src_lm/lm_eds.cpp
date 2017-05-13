@@ -224,6 +224,7 @@ void LEM_EDS::TimeStep() {
 
 	bool pyroA = false, pyroB = false;
 
+	//Landing Gear Deployment
 	if (lem->stage < 2)
 	{
 		if (RelayBoxA.GetLandingGearDeployRelay() && RelayBoxA.GetMasterArmRelay())
@@ -239,6 +240,28 @@ void LEM_EDS::TimeStep() {
 	}
 
 	lem->LandingGearPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+
+	//Staging
+
+	pyroA = false, pyroB = false;
+
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetStagingRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetStagingRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	lem->StagingPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
 	
 	// Set TBs
