@@ -366,12 +366,15 @@ void LEM::InitSwitches() {
 		EPSMonitorSelectRotary.SetSource(2, Battery2);
 		EPSMonitorSelectRotary.SetSource(3, Battery3);
 		EPSMonitorSelectRotary.SetSource(4, Battery4);
+		EPSEDVoltSelect.SetSource(0, EDBatteryA);
 	}else{
 		EPSMonitorSelectRotary.SetSource(1, NULL);
 		EPSMonitorSelectRotary.SetSource(2, NULL);
 		EPSMonitorSelectRotary.SetSource(3, NULL);
 		EPSMonitorSelectRotary.SetSource(4, NULL);
+		EPSEDVoltSelect.SetSource(0, NULL);
 	}
+	EPSEDVoltSelect.SetSource(2, EDBatteryB);
 	EPSMonitorSelectRotary.SetSource(5, Battery5);
 	EPSMonitorSelectRotary.SetSource(6, Battery6);
 	EPSMonitorSelectRotary.SetSource(7, &CDRDCBusVoltCB);

@@ -250,6 +250,9 @@ void LEM::SystemsInit()
 	Battery5 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A");
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
+	EDBatteryA = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A");
+	EDBatteryB = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B");
+
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP DC bus)
@@ -619,6 +622,13 @@ void LEM::SystemsInit()
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
 	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
+
+	// Pyro Buses
+	Panelsdk.AddElectrical(&ED28VBusA, false);
+	Panelsdk.AddElectrical(&ED28VBusB, false);
+
+	// Pyros
+	LandingGearPyros.WireTo(&LandingGearPyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -1921,92 +1931,6 @@ void LEM_INV::UpdateFlow(double dt){
 	*/
 	// Reset for next pass
 	e_object::UpdateFlow(dt);
-}
-
-// EXPLOSIVE DEVICES SYSTEM
-LEM_EDS::LEM_EDS(){
-	lem = NULL;
-	LG_Deployed = FALSE;
-}
-
-void LEM_EDS::Init(LEM *s){
-	lem = s;
-}
-
-void LEM_EDS::TimeStep(){
-	// Set TBs
-	// BP when descent stage detached
-	if(LG_Deployed == TRUE && lem->status < 2){ lem->EDLGTB.SetState(1); }else{	lem->EDLGTB.SetState(0); }
-	// Do we have power?
-	if(lem->EDS_CB_LOGIC_A.Voltage() < 20 && lem->EDS_CB_LOGIC_B.Voltage() < 20){ return; }
-	// Are we enabled?
-	if(lem->EDMasterArm.GetState() != TOGGLESWITCH_UP){ return; }
-	// PROCESS THESE IN THIS ORDER:
-	// Landing Gear Deployment
-	if(LG_Deployed == FALSE && lem->status == 0){
-		// Check?
-		if(lem->EDLGDeploy.GetState() == TOGGLESWITCH_UP){
-			// Deploy landing gear
-			lem->SetLmVesselHoverStage();
-			LG_Deployed = TRUE;
-		}
-	}
-	// RCS propellant pressurization
-	// Descent Propellant Tank Prepressurization (ambient helium)
-	// Descent Propellant Tank Prepressurization (supercritical helium)
-	// Descent Propellant Tank Venting
-	// Ascent Propellant Tank Pressurization
-	// Interstage nut-and-bolt separation and ascent stage deadfacing
-	if(lem->status < 2){
-		if(lem->EDStage.GetState() == TOGGLESWITCH_UP){
-			// Disconnect EPS stuff
-			lem->DES_LMPs28VBusA.Disconnect();
-			lem->DES_LMPs28VBusB.Disconnect();
-			lem->DES_CDRs28VBusA.Disconnect();
-			lem->DES_CDRs28VBusB.Disconnect();
-			// Disconnect monitor select rotaries
-			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-			// Change descent TB
-			lem->DSCBattFeedTB.SetState(0);
-			// Stage
-			lem->SeparateStage(1);
-		}
-	}
-	// Interstage umbilical severance
-}
-
-void LEM_EDS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
-	oapiWriteScenario_int(scn, "SOV_A", lem->GetValveState(LEM_RCS_MAIN_SOV_A));
-	oapiWriteScenario_int(scn, "SOV_B", lem->GetValveState(LEM_RCS_MAIN_SOV_B));
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_EDS::LoadState(FILEHANDLE scn,char *end_str){
-	char *line;
-	int dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-		if (!strnicmp (line, "LG_DEP", 6)) {
-			sscanf(line + 6, "%d", &dec);
-			LG_Deployed = (bool)(dec != 0);
-		}
-		if (!strnicmp (line, "SOV_A", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_A,(bool)(dec != 0));			
-		}
-		if (!strnicmp (line, "SOV_B", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_B,(bool)(dec != 0));			
-		}
-	}
 }
 
 // Landing Radar

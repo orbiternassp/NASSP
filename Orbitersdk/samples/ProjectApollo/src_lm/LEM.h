@@ -36,6 +36,8 @@
 // DS20090905 Include LM AGS and telecom
 #include "lm_ags.h"
 #include "lm_telecom.h"
+#include "pyro.h"
+#include "lm_eds.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -196,19 +198,6 @@ public:
 	int Suit_Circuit_Relief;
 	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
-
-// EXPLOSIVE DEVICES SYSTEM
-class LEM_EDS{
-public:
-	LEM_EDS();							// Cons
-	void Init(LEM *s); // Init
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep();
-	LEM *lem;					// Pointer at LEM
-	bool LG_Deployed;           // Landing Gear Deployed Flag	
-};
-
 
 // Landing Radar
 class LEM_LR : public e_object{
@@ -1371,7 +1360,7 @@ protected:
 	SwitchRow EPSLeftControlArea;
 	PowerStateRotationalSwitch EPSMonitorSelectRotary;
 	LEMInverterSwitch EPSInverterSwitch;
-	ThreePosSwitch EPSEDVoltSelect;
+	ThreeSourceSwitch EPSEDVoltSelect;
 
 	SwitchRow DSCHiVoltageSwitchRow;
 	LEMBatterySwitch DSCSEBat1HVSwitch;
@@ -1650,6 +1639,11 @@ protected:
 	IMU imu;	
 	LMOptics optics;
 
+	//Pyros
+
+	Pyro LandingGearPyros;
+	PowerMerge LandingGearPyrosFeeder;
+
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
 	int SystemsInitialized;
@@ -1740,6 +1734,10 @@ protected:
 	// Lunar Stay Battery
 	Battery *LunarBattery;
 
+	// ED Batteries
+	Battery *EDBatteryA;
+	Battery *EDBatteryB;
+
 	// Bus Tie Blocks (Not real objects)
 	LEM_BusFeed BTB_CDR_A;
 	LEM_BusFeed BTB_CDR_B;
@@ -1777,6 +1775,10 @@ protected:
 	// CDR and LMP 28V DC busses
 	DCbus CDRs28VBus;
 	DCbus LMPs28VBus;
+
+	// ED 28V DC busses
+	DCbus ED28VBusA;
+	DCbus ED28VBusB;
 
 	// AC Bus A and B
 	// This is a cheat. the ACbus class actually simulates an inverter, which is bad for the LM.
@@ -1828,6 +1830,7 @@ protected:
 	// Friend classes
 	friend class ATCA;
 	friend class LEM_EDS;
+	friend class LEM_EDRelayBox;
 	friend class LEMcomputer;
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
