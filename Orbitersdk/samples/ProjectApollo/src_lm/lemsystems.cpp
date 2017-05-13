@@ -629,6 +629,7 @@ void LEM::SystemsInit()
 
 	// Pyros
 	LandingGearPyros.WireTo(&LandingGearPyrosFeeder);
+	StagingPyros.WireTo(&StagingPyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);

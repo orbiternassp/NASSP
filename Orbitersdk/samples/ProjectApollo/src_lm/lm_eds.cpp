@@ -263,7 +263,7 @@ void LEM_EDS::TimeStep() {
 	// Ascent Propellant Tank Pressurization
 	// Interstage nut-and-bolt separation and ascent stage deadfacing
 	if (lem->status < 2) {
-		if (lem->EDStage.GetState() == TOGGLESWITCH_UP) {
+		if (lem->StagingPyros.Blown()) {
 			// Disconnect EPS stuff
 			lem->DES_LMPs28VBusA.Disconnect();
 			lem->DES_LMPs28VBusB.Disconnect();

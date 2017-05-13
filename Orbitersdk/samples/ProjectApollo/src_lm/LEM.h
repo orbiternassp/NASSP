@@ -1192,7 +1192,7 @@ protected:
 	ToggleSwitch EDHePressRCS;
 	ToggleSwitch EDHePressDesStart;
 	ToggleSwitch EDHePressASC;
-	ToggleSwitch EDStage;
+	GuardedToggleSwitch EDStage;
 	ToggleSwitch EDStageRelay;
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
@@ -1642,7 +1642,9 @@ protected:
 	//Pyros
 
 	Pyro LandingGearPyros;
+	Pyro StagingPyros;
 	PowerMerge LandingGearPyrosFeeder;
+	PowerMerge StagingPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
