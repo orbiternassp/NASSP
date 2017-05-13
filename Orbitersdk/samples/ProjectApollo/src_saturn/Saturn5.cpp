@@ -86,6 +86,7 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	TRACESETUP("SaturnV");
 	
 	hMaster = hObj;
+	lvdc = NULL;
 	initSaturnV();
 }
 
