@@ -38,6 +38,7 @@ public:
 	void SkylabCalc();
 	void DOICalc();
 	void PCCalc();
+	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
 	void TEICalc();
@@ -251,6 +252,10 @@ public:
 
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
+
+	//Lunar Liftoff Time Prediction
+	LunarLiftoffResults LunarLiftoffTimes;
+	double t_TPIguess;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

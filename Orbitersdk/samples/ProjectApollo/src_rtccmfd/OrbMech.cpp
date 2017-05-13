@@ -3775,7 +3775,7 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
-void LunarLiftoffTimePrediction(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double t_L, double dt_1, double h_1, double theta_1, double dt_2, double v_LV, double v_LH, double DH, double E, double t_TPI, double dt_F)
+void LunarLiftoffTimePrediction(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double t_L, double dt_1, double h_1, double theta_1, double dt_2, double v_LV, double v_LH, double DH, double E, double t_TPI, double dt_F, double &t_IG, double &t_CSI, double &t_CDH, double &t_TPF)
 {
 	MATRIX3 Rot;
 	VECTOR3 U_N, R_1, V_1, R_2, V_2, R_6, V_6, R_5, V_2F, R_3, V_3, R_S, R_L, U_L, R_3P, V_3P, V_5, R_3F, V_3F;
@@ -3842,7 +3842,7 @@ void LunarLiftoffTimePrediction(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double M
 		}
 	}
 
-	double t_IG, t_CSI, t_CDH, t_TPF, v_V3, dV_CSI, dV_CDH;
+	double v_V3, dV_CSI, dV_CDH;
 
 	t_IG = t_L;
 	t_CSI = t_L + dt_1 + dt_2;

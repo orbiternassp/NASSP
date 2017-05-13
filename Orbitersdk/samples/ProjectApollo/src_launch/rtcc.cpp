@@ -7472,3 +7472,56 @@ bool RTCC::TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P
 
 	return true;
 }
+
+void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
+{
+	VECTOR3 R_LS;
+	double lat, lng, r, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, dt_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF;
+	SV sv_P, sv_TPI;
+	OBJHANDLE hMoon;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	if (opt->useSV)
+	{
+		sv_P = opt->RV_MCC;
+	}
+	else
+	{
+		sv_P = StateVectorCalc(opt->target);
+	}
+
+	dt_F = 2600.0;
+	dt_1 = 7.0*60.0 + 15.0;
+	h_1 = 60000.0*0.3048;
+	theta_1 = 10.0*RAD;
+	dt_2 = 3498.0;
+	v_LV = 32.2*0.3048;
+	v_LH = 5534.9*0.3048;
+	DH = 15.0*1852.0;
+	E = 26.6*RAD;
+
+	opt->vessel->GetEquPos(lng, lat, r);
+
+	R_LS = OrbMech::r_from_latlong(lat, lng, r);
+
+	double ttoMidnight;
+	OBJHANDLE hSun;
+
+	hSun = oapiGetObjectByName("Sun");
+
+	sv_TPI = coast(sv_P, (opt->GETbase - sv_P.MJD)*24.0*3600.0 + opt->t_TPIguess);
+
+	ttoMidnight = OrbMech::sunrise(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, hMoon, hSun, 1, 1, false);
+	t_TPI = opt->t_TPIguess + ttoMidnight;
+	t_L = opt->t_TPIguess - 2.5*3600.0;
+
+	OrbMech::LunarLiftoffTimePrediction(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F, t_IG, t_CSI, t_CDH, t_TPF);
+
+	res->t_L = t_IG;
+	res->t_Ins = t_IG + dt_1;
+	res->t_CSI = t_CSI;
+	res->t_CDH = t_CDH;
+	res->t_TPI = t_TPI;
+	res->t_TPF = t_TPF;
+}

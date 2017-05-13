@@ -360,38 +360,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	Title (skp, "Apollo RTCC MFD");
 	skp->SetFont(font);
 
-	/*VECTOR3 R_LS, R_P, V_P;
-	double lat, lng, r, MJD_P, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F;
-	VESSEL *target;
-	OBJHANDLE hMoon;
-
-	t_L = OrbMech::HHMMSSToSS(120.0, 0.0, 0.0);
-	t_TPI = OrbMech::HHMMSSToSS(122.0, 30.0, 0.0);
-	dt_F = 2600.0;
-	dt_1 = 7.0*60.0 + 15.0;
-	h_1 = 60000.0*0.3048;
-	theta_1 = 10.0*RAD;
-	dt_2 = 55.0*60.0;
-	v_LV = 0.0;
-	v_LH = 1650.0;
-	DH = 15.0*1852.0;
-	E = 26.6*RAD;
-
-	hMoon = oapiGetObjectByName("Moon");
-
-	target = oapiGetVesselInterface(oapiGetObjectByName("Endeavour"));
-	target->GetRelativePos(hMoon, R_P);
-	target->GetRelativeVel(hMoon, V_P);
-	R_P = _V(R_P.x, R_P.z, R_P.y);
-	V_P = _V(V_P.x, V_P.z, V_P.y);
-	MJD_P = oapiGetSimMJD();
-
-	G->vessel->GetEquPos(lng, lat, r);
-
-	R_LS = OrbMech::r_from_latlong(lat, lng, r);
-
-	OrbMech::LunarLiftoffTimePrediction(R_LS, R_P, V_P, MJD_P, G->GETbase, hMoon, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F);*/
-
 	/*OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	double lat = 0.17*RAD;
 	double lng = 173.57*RAD;
@@ -1953,6 +1921,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
+		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -2425,6 +2394,45 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 23)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
+
+		GET_Display(Buffer, G->t_TPIguess);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
+
+		skp->Text(1 * W / 8, 7 * H / 21, "Launch Time:", 12);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
+		skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 9 * H / 21, "Insertion:", 10);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
+		skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 11 * H / 21, "CSI:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
+		skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 13 * H / 21, "CDH:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
+		skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 15 * H / 21, "TPI:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
+		skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 17 * H / 21, "TPF:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
+		skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -2666,6 +2674,12 @@ void ApolloRTCCMFD::menuSetUtilityMenu()
 void ApolloRTCCMFD::menuTranslunarPage()
 {
 	screen = 22;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarLiftoffPage()
+{
+	screen = 23;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4901,6 +4915,29 @@ void ApolloRTCCMFD::menuSetPCLanded()
 	G->PClanded = !G->PClanded;
 }
 
+void ApolloRTCCMFD::menuSetTPIguess()
+{
+	bool TPIGuessInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", TPIGuessInput, 0, 20, (void*)this);
+}
+
+bool TPIGuessInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_TPIguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TPIguess(double time)
+{
+	G->t_TPIguess = time;
+}
+
 void ApolloRTCCMFD::menuTMLat()
 {
 	bool TMLatInput(void* id, char *str, void *data);
@@ -5015,6 +5052,11 @@ void ApolloRTCCMFD::menuTLCCCalc()
 {
 	G->TLCCSolGood = true;
 	G->TLCCCalc();
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffCalc()
+{
+	G->LunarLiftoffCalc();
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

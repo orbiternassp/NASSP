@@ -440,6 +440,14 @@ ARCore::ARCore(VESSEL* v)
 	TMStepSize = 0.0;
 	TMAlt = 0.0;
 
+	t_TPIguess = 0.0;
+	LunarLiftoffTimes.t_CDH = 0.0;
+	LunarLiftoffTimes.t_CSI = 0.0;
+	LunarLiftoffTimes.t_Ins = 0.0;
+	LunarLiftoffTimes.t_L = 0.0;
+	LunarLiftoffTimes.t_TPI = 0.0;
+	LunarLiftoffTimes.t_TPF = 0.0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -610,6 +618,11 @@ void ARCore::SkylabCalc()
 void ARCore::PCCalc()
 {
 	startSubthread(13);
+}
+
+void ARCore::LunarLiftoffCalc()
+{
+	startSubthread(15);
 }
 
 void ARCore::EntryUpdateCalc()
@@ -2136,6 +2149,21 @@ int ARCore::subThread()
 				dV_LVLH = TLCC_dV_LVLH;
 			}
 		}
+		Result = 0;
+	}
+	break;
+	case 15:	//Lunar Liftoff Time Prediction
+	{
+		LunarLiftoffTimeOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.target = target;
+		opt.t_TPIguess = t_TPIguess;
+		opt.vessel = vessel;
+
+		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
+
+		Result = 0;
 	}
 	break;
 	}
