@@ -274,7 +274,7 @@ void LEM_EDS::TimeStep() {
 			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
 			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
 			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-			lem->EPSEDVoltSelect.SetSource(2, NULL);
+			lem->EPSEDVoltSelect.SetSource(0, NULL);
 			// Change descent TB
 			lem->DSCBattFeedTB.SetState(0);
 			// Stage
