@@ -266,7 +266,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
-			else if (ApolloNo < 15 || ApolloNo == 1301)	// Comanche 055
+			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
