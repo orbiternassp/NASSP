@@ -236,10 +236,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			// set launch pad azimuth, the VAGC wants to have the negative angle here
-			// otherwise the P11 roll error needle isn't working properly			
-			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
-
 			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
 				// set launch pad longitude
