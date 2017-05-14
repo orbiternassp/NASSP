@@ -3828,6 +3828,10 @@ void LunarLiftoffTimePrediction(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double M
 		COE(R_3P, V_3P, DH, mu, R_3F, V_3F);
 
 		dt_5 = time_theta(R_3, V_3F, theta_5, mu);
+		if (dt_5 < 0.0)
+		{
+			dt_5 += period(R_3, V_3F, mu);
+		}
 		rv_from_r0v0(R_3, V_3F, dt_5, R_5, V_5, mu);
 		a_1 = length(R_3) / (2.0 - length(V_3F)*length(V_3F)*length(R_3) / mu);
 		r_A = length(R_3P) - DH;
