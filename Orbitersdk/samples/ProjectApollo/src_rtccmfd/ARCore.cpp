@@ -447,6 +447,8 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimes.t_L = 0.0;
 	LunarLiftoffTimes.t_TPI = 0.0;
 	LunarLiftoffTimes.t_TPF = 0.0;
+	LunarLiftoffTimes.v_LH = 0.0;
+	LunarLiftoffTimes.v_LV = 0.0;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;

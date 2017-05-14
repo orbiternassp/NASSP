@@ -463,6 +463,8 @@ struct LunarLiftoffResults
 	double t_CDH;
 	double t_TPI;
 	double t_TPF;
+	double v_LH;
+	double v_LV;
 };
 
 // Parameter block for Calculation(). Expand as needed.

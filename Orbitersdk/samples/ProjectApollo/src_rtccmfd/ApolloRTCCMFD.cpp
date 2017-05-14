@@ -2403,35 +2403,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
 
-		skp->Text(1 * W / 8, 7 * H / 21, "Launch Time:", 12);
+		skp->Text(1 * W / 8, 8 * H / 21, "Launch Time:", 12);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
-		skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 9 * H / 21, "Insertion:", 10);
+		skp->Text(1 * W / 8, 10 * H / 21, "Insertion:", 10);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
-		skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 11 * H / 21, "CSI:", 4);
+		skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
-		skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 13 * H / 21, "CDH:", 4);
+		skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
-		skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 15 * H / 21, "TPI:", 4);
+		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
-		skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 17 * H / 21, "TPF:", 4);
+		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
-		skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
+
+		skp->Text(5 * W / 8, 7 * H / 14, "Horizontal Velocity:", 20);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
+		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 9 * H / 14, "Vertical Velocity:", 18);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -5056,7 +5064,10 @@ void ApolloRTCCMFD::menuTLCCCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffCalc()
 {
-	G->LunarLiftoffCalc();
+	if (G->target != NULL)
+	{
+		G->LunarLiftoffCalc();
+	}
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

@@ -7476,7 +7476,7 @@ bool RTCC::TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P
 void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
 {
 	VECTOR3 R_LS;
-	double lat, lng, r, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, dt_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF;
+	double lat, lng, r, t_L, dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF;
 	SV sv_P, sv_TPI;
 	OBJHANDLE hMoon;
 
@@ -7491,13 +7491,11 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 		sv_P = StateVectorCalc(opt->target);
 	}
 
-	dt_F = 2600.0;
+	theta_F = 130.0*RAD;
 	dt_1 = 7.0*60.0 + 15.0;
 	h_1 = 60000.0*0.3048;
 	theta_1 = 10.0*RAD;
-	dt_2 = 3498.0;
-	v_LV = 32.2*0.3048;
-	v_LH = 5534.9*0.3048;
+	theta_Ins = 17.0*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 
@@ -7516,7 +7514,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	t_TPI = opt->t_TPIguess + ttoMidnight;
 	t_L = opt->t_TPIguess - 2.5*3600.0;
 
-	OrbMech::LunarLiftoffTimePrediction(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, t_L, dt_1, h_1, theta_1, dt_2, v_LV, v_LH, DH, E, t_TPI, dt_F, t_IG, t_CSI, t_CDH, t_TPF);
+	OrbMech::LunarLiftoffTimePrediction(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, t_L, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
 
 	res->t_L = t_IG;
 	res->t_Ins = t_IG + dt_1;
@@ -7524,4 +7522,6 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	res->t_CDH = t_CDH;
 	res->t_TPI = t_TPI;
 	res->t_TPF = t_TPF;
+	res->v_LH = v_LH;
+	res->v_LV = v_LV;
 }
