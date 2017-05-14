@@ -3691,23 +3691,22 @@ bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
-			unsigned int SwitchBits;
-			SwitchBits = agc->GetCh33Switches();
-			SwitchBits &= 077707;  // Clear bits
 			if (IsUp()) {
-				SwitchBits |= 010; // CMC MODE, ZERO OFF				
-				agc->SetCh33Switches(SwitchBits);
+				// CMC MODE, ZERO OFF				
+				agc->SetInputChannelBit(033, CMCControl, true);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsCenter()) {
-				SwitchBits |= 030; // MANUAL MODE, ZERO OFF
-				
-				agc->SetCh33Switches(SwitchBits);
+				// MANUAL MODE, ZERO OFF
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsDown()) {
-				SwitchBits |= 020; // MANUAL MODE, ZERO ON
-				agc->SetCh33Switches(SwitchBits);
+				// MANUAL MODE, ZERO ON
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, true);
 				return true;
 			}
 		}

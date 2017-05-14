@@ -1220,6 +1220,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
 			mechanicalAccelerometer.LoadState(scn);
 		}
+		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
+			atca.LoadState(scn);
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1556,6 +1559,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	crossPointerRight.SaveState(scn);
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
+	atca.SaveState(scn);
 	checkControl.save(scn);
 }
 

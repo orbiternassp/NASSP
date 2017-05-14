@@ -118,18 +118,6 @@ public:
 	void agcTimestep(double simt, double simdt);
 
 	//
-	// External event handling.
-	//
-
-	///
-	/// Called to tell the AGC that liftoff has occured, and it should switch into the liftoff
-	/// program.
-	///
-	/// \brief Liftoff trigger.
-	///
-	void Liftoff(double simt);
-
-	//
 	// Data access.
 	//
 
@@ -164,7 +152,6 @@ public:
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);
-	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
 	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);

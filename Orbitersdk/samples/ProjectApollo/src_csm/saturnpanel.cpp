@@ -1778,7 +1778,7 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2DSwitch.Init (303, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
 
 	CMUplinkSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row, &agc);
-	CMUplinkSwitch.SetChannelData(033, 10, true);	// Down is 'Block Uplink Input'
+	CMUplinkSwitch.SetChannelData(033, 10, false);	// Down is 'Block Uplink Input'
 
 	if (!SkylabCM)
 		IUUplinkSwitch.Init(43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row);

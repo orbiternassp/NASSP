@@ -203,10 +203,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// Turn on EL display and CMC Light (DSKYWarn).
 				SetOutputChannel(0163, 1);
 				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
-				InputChannel[033] &= 037777;
 				vagc.InputChannel[033] &= 037777;				
 				OutputChannel[033] &= 037777;				
-				vagc.Ch33Switches &= 037777;
 				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 				// The RESTART light will come on as soon as the AGC receives power again.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
@@ -238,10 +236,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			// set launch pad azimuth, the VAGC wants to have the negative angle here
-			// otherwise the P11 roll error needle isn't working properly			
-			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true);
-
 			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
 				// set launch pad longitude
@@ -272,7 +266,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
 				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
 			}
-			else if (ApolloNo < 15 || ApolloNo == 1301)	// Comanche 055
+			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -377,76 +371,12 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 	GenericWriteMemory(loc, val);
 }
 
-//
-// Exernal event handling.
-//
-
-void CSMcomputer::Liftoff(double simt)
-
-{
-
-	//
-	// Do nothing if we have no power.
-	//
-	if (!IsPowered())
-		return;
-
-	//
-	// Ensure autopilot is enabled.
-	//
-
-	SetOutputChannelBit(012, 9, false);
-	Saturn *Sat = (Saturn *)OurVessel;
-}
-
 void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val){
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
-
-	//
-	// Do nothing if we have no power.
-	//
-	if (!IsPowered())
-		return;
-
-	switch (channel)
-	{
-	case 030:
-		if (bit == 5 && val) {
-			Liftoff(CurrentTimestep);	// Liftoff signal
-			break;
-		}
-		break;
-	}
-}
-
-void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val){
-	ApolloGuidance::SetOutputChannelBit(channel, bit, val);
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 012:
-		iu.ChannelOutput(channel, OutputChannel[channel]);
-		break;
-	}
 }
 
 void CSMcomputer::SetOutputChannel(int channel, ChannelValue val){
 	ApolloGuidance::SetOutputChannel(channel, val);
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 012:
-		iu.ChannelOutput(channel, val.to_ulong());
-		break;
-	}
 }
 
 //
