@@ -226,7 +226,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(!PadLoaded) {
 
-			double latitude, longitude, radius, heading;
+			double latitude, longitude, radius, heading, TEPHEM0;
 
 			// init pad load
 			OurVessel->GetEquPos(longitude, latitude, radius);
@@ -235,6 +235,10 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// set launch pad latitude
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
+
+			// set DAP data to LV mode
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
 			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
 			{
@@ -253,18 +257,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0317] = 037777;
 				vagc.Erasable[3][0320] = 037777;
 
-				// set DAP data to LV mode
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
-
-				// Synchronize clock with launch time (TEPHEM)
-				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-				tephem = (tephem / 8640000.) + 40038.;
-				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
-				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+				TEPHEM0 = 40038.;
 			}
 			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
 			{
@@ -283,17 +276,26 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0317] = 037777;
 				vagc.Erasable[3][0320] = 037777;
 
-				// set DAP data to LV mode
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 031102;
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+				TEPHEM0 = 40403.;
+			}
+			else if (ApolloNo < 15)	//Artemis 072 for Apollo 14
+			{
+				// set launch pad longitude
+				if (longitude < 0) longitude += TWO_PI;
+				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
 
-				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-						vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-						vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-				tephem = (tephem / 8640000.) + 40403.;
-				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
-				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+				// set launch pad altitude
+				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
+				vagc.Erasable[2][0133] = 0;
+				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
+
+				// z-component of the normalized earth's rotational vector in basic reference coord.
+				// x and y are 0313 and 0315 and are zero
+				vagc.Erasable[3][0315] = 037777;
+				vagc.Erasable[3][0316] = 037777;
+
+				TEPHEM0 = 40768.;
 			}
 			else	//Artemis 072
 			{
@@ -312,19 +314,18 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[3][0315] = 037777;
 				vagc.Erasable[3][0316] = 037777;
 
-				// set DAP data to LV mode
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 031102;
-				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
-
-				// Synchronize clock with launch time (TEPHEM)
-				double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
-				tephem = (tephem / 8640000.) + 41133.;
-				double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
-				vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
-				vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+				TEPHEM0 = 41133.;
 			}
+
+			// Synchronize clock with launch time (TEPHEM)
+			double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+				vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+				vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+			tephem = (tephem / 8640000.) + TEPHEM0;
+			double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
+			vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
+			vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+
 			PadLoaded = true;
 		}
 
