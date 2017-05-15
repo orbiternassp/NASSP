@@ -193,7 +193,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.ExtraCode = 0;
 				vagc.ExtraDelay = 0;
 				// No idea about the interrupts/pending/etc so we reset those
-				vagc.AllowInterrupt = 0;				  
+				vagc.AllowInterrupt = 1;
 				vagc.PendFlag = 0;
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
