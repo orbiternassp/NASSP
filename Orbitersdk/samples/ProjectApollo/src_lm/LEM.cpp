@@ -760,6 +760,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		NextFlashUpdate = MissionTime + 0.25;
 	}
 
+	// Orbiter 2016 fix
+	// Force GetWeightVector() to the correct value
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	if (vs.status == 1) {
+		if (simt > 3 && simt < 4) {
+			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
+		}
+	}
+	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
@@ -900,7 +910,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		// probably should start P71
 		//
 		if (GetPropellantMass(ph_Dsc)<=50){
-			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
 			stage = 2;
@@ -1014,13 +1023,11 @@ void LEM::AbortStage()
 {
 	ButtonClick();
 	AbortFire();
-	AbortStageSwitchLight = true;
 	SeparateStage(stage);
 	SetThrusterResource(th_hover[0], ph_Asc);
 	SetThrusterResource(th_hover[1], ph_Asc);
 	stage = 2;
 	startimer = false;
-	AbortStageSwitchLight = true;
 }
 
 //
@@ -1118,6 +1125,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
+		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
+			sscanf(line + 13, "%i", &ordealEnabled);
+		}
 		else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
 			int i;
 			sscanf(line + 24, "%d", &i);
@@ -1203,6 +1213,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
 			crossPointerRight.LoadState(scn);
+		}
+		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
+			ordeal.LoadState(scn);
+		}
+		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
+			mechanicalAccelerometer.LoadState(scn);
+		}
+		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
+			atca.LoadState(scn);
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1465,6 +1484,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
 	oapiWriteScenario_int(scn, "VAGCCHECKLISTAUTOENABLED", VAGCChecklistAutoEnabled);
 
@@ -1537,6 +1557,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	crossPointerLeft.SaveState(scn);
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
 	crossPointerRight.SaveState(scn);
+	ordeal.SaveState(scn);
+	mechanicalAccelerometer.SaveState(scn);
+	atca.SaveState(scn);
 	checkControl.save(scn);
 }
 

@@ -193,6 +193,7 @@ public:
 	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
 	void menuTranslunarPage();
+	void menuSetLunarLiftoffPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -230,6 +231,9 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuSetTPIguess();
+	void menuLunarLiftoffCalc();
+	void set_TPIguess(double time);
 	void menuTMLat();
 	void set_TMLat(double lat);
 	void menuTMLng();

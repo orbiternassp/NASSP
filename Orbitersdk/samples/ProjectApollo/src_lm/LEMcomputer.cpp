@@ -34,7 +34,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
@@ -191,10 +190,8 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			SetOutputChannel(0163, 1);
 			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
-			InputChannel[033] &= 037777;
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			vagc.Ch33Switches &= 037777;
 			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399

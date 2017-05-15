@@ -218,9 +218,9 @@ void LEM::SetLmVesselHoverStage()
 
 	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -3.86, 5), 1e6, 1.8e5, 3.0, 3.0 },
-		{ _V(-5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
-		{ _V(5, -3.86, -5), 1e6, 1.8e5, 3.0, 3.0 },
+		{ _V(0, -3.86, 5), 1e6, 1e5, 3.0, 3.0 },
+		{ _V(-5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
+		{ _V(5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
 		{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
 	};
 	SetTouchdownPoints(tdvtx, ntdvtx);
@@ -298,7 +298,7 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);
-	SetEmptyMass (1920.0);
+	SetEmptyMass (2150.0);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -311,7 +311,16 @@ void LEM::SetLmAscentHoverStage()
 	ClearAttExhaustRefs();
 
 	double tdph = -5.8;
-	SetTouchdownPoints (_V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
+	static const DWORD ntdvtx = 4;
+	static TOUCHDOWNVTX tdvtx[4] = {
+		{ _V(0, tdph, 5), 1e6, 1e5, 3.0, 3.0 },
+		{ _V(-5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
+		{ _V(5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
+		{ _V(0, tdph + 5, 0), 2e4, 3e5, 0.5 }
+	};
+	SetTouchdownPoints(tdvtx, ntdvtx);
+
+	//SetTouchdownPoints (_V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
 	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	

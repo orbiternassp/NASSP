@@ -57,7 +57,7 @@ Sat5Abort2::Sat5Abort2 (OBJHANDLE hObj, int fmodel)
 : VESSEL (hObj, fmodel)
 
 {
-	init();
+	
 }
 
 Sat5Abort2::~Sat5Abort2 ()
@@ -66,7 +66,7 @@ Sat5Abort2::~Sat5Abort2 ()
 	// Nothing for now.
 }
 
-void Sat5Abort2::init()
+void Sat5Abort2::Setup(bool sm)
 
 {
 	SetSize (15);
@@ -107,8 +107,11 @@ void Sat5Abort2::init()
     AddMesh (hsat5stg33, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
     AddMesh (hsat5stg34, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG1O);
-	AddMesh (hSM, &mesh_dir);
+	if (sm)
+	{
+		mesh_dir = _V(0, SMVO, 19.1 - STG1O);
+		AddMesh(hSM, &mesh_dir);
+	}
 	VECTOR3 m_exhaust_ref = {0,0,-1};
 	VECTOR3 m_exhaust_pos1= {0,0,-28.25-STG1O};
 	VECTOR3 m_exhaust_pos2= {2,2,-28.25-STG1O};
@@ -124,16 +127,14 @@ void Sat5Abort2::init()
 	SetCameraOffset (_V(-1,1.0,32.4-STG1O));
 }
 
+void Sat5Abort2::SetState(bool sm)
+{
+	Setup(sm);
+}
+
 // ==============================================================
 // API interface
 // ==============================================================
-
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-
-{
-	Sat5Abort2 *sv = (Sat5Abort2 *) vessel;
-	sv->SaveDefaultState (scn);
-}
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
@@ -150,9 +151,13 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	return new Sat5Abort2 (hvessel, flightmodel);
 }
 
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
+DLLCLBK void ovcExit(VESSEL *vessel)
 {
-	Sat5Abort2 *sv = (Sat5Abort2 *) vessel;
-	sv->init();
+	if (vessel) delete (Sat5Abort2*)vessel;
+}
+
+void Sat5Abort2::clbkSetClassCaps(FILEHANDLE cfg)
+{
+
 }
 

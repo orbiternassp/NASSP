@@ -51,7 +51,7 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40418.563889,
 	40539.68194,
 	40687.80069,
-	40982.877106,
+	40982.849306,
 	41158.5652869,
 	41423.74583,
 	41658.23125
@@ -445,6 +445,28 @@ struct SkylabRendezvousResults
 	VECTOR3 dV_NSR;
 };
 
+struct LunarLiftoffTimeOpt
+{
+	VESSEL* vessel;		//vessel
+	VESSEL* target;		//Target vessel
+	double GETbase;		//usually MJD at launch
+	double t_TPIguess;		//GET of TPI maneuver
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+};
+
+struct LunarLiftoffResults
+{
+	double t_L;
+	double t_Ins;
+	double t_CSI;
+	double t_CDH;
+	double t_TPI;
+	double t_TPF;
+	double v_LH;
+	double v_LV;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;	// Our ship
@@ -542,8 +564,10 @@ public:
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
 	void TLMCFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, double &v_peri, double &azi_peri, double &lng_peri);
 	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
+	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, double &v_peri, double &azi_peri, double &lng_EMP, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMC_BAP_FR_FixedLPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
+	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

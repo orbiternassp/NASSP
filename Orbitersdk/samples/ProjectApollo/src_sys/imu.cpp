@@ -37,7 +37,6 @@
 
 #include "ioChannels.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "yaAGC/agc_engine.h"
 
 #include "toggleswitch.h"

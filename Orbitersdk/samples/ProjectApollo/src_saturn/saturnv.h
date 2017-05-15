@@ -99,10 +99,6 @@ private:
 	void SetThirdStageMesh (double offset);
 	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
-	void AttitudeLaunch1();
-	void AttitudeLaunch2();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();
@@ -125,11 +121,6 @@ protected:
 	//
 	// Mission stage functions.
 	//
-
-	void StageOne(double simt, double simdt);
-	void StageTwo(double simt);
-	void StageFour(double simt, double simdt);
-	void StageLaunchSIVB(double simt);
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);

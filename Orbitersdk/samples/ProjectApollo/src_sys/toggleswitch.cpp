@@ -2039,6 +2039,125 @@ void PowerStateRotationalSwitch::LoadState(char *line)
 	CheckPowerState();
 }
 
+void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
+
+	RotationalSwitch::DrawSwitch(drawSurface);
+
+	if (mouseDown) {
+		RECT rt;
+		char label[100];
+		sprintf(label, "%d", value);
+
+		HDC hDC = oapiGetDC(drawSurface);
+		HFONT font = CreateFont(22, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
+		SelectObject(hDC, font);
+		SetTextColor(hDC, RGB(255, 255, 255));
+		SetTextAlign(hDC, TA_CENTER);
+		SetBkMode(hDC, OPAQUE);
+		SetBkColor(hDC, RGB(146, 146, 146));
+
+		if (GetState() == 0) {
+			rt.left = 29 + x;
+			rt.top = 24 + y;
+			rt.right = 60 + x;
+			rt.bottom = 55 + y;
+			ExtTextOut(hDC, 44 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+
+		}
+		else if (GetState() == 1) {
+			rt.left = 35 + x;
+			rt.top = 30 + y;
+			rt.right = 59 + x;
+			rt.bottom = 52 + y;
+			ExtTextOut(hDC, 49 + x, 31 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+
+		}
+		else if (GetState() == 2) {
+			rt.left = 29 + x;
+			rt.top = 29 + y;
+			rt.right = 60 + x;
+			rt.bottom = 59 + y;
+			ExtTextOut(hDC, 44 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+
+		}
+		else if (GetState() == 3) {
+			TextOut(hDC, 42 + x, 36 + y, label, strlen(label));
+
+		}
+		else if (GetState() == 4) {
+			rt.left = 28 + x;
+			rt.top = 30 + y;
+			rt.right = 54 + x;
+			rt.bottom = 60 + y;
+			ExtTextOut(hDC, 37 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+
+		}
+		else if (GetState() == 5) {
+			TextOut(hDC, 32 + x, 31 + y, label, strlen(label));
+
+		}
+		else if (GetState() == 6) {
+			rt.left = 25 + x;
+			rt.top = 24 + y;
+			rt.right = 55 + x;
+			rt.bottom = 54 + y;
+			ExtTextOut(hDC, 39 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+		}
+
+		DeleteObject(font);
+		oapiReleaseDC(drawSurface, hDC);
+	}
+}
+
+bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	if (event & PANEL_MOUSE_LBDOWN) {
+		// Check whether it's actually in our switch region.
+		if (mx < x || my < y)
+			return false;
+
+		if (mx >(x + width) || my >(y + height))
+			return false;
+
+		lastX = mx;
+		mouseDown = true;
+
+	}
+	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown) {
+		if (abs(mx - lastX) >= 2) {
+			value += (int)((mx - lastX) / 2.);
+			value = min(max(value, 10), 310);
+			lastX = mx;
+		}
+
+	}
+	else if (event & PANEL_MOUSE_LBUP) {
+		mouseDown = false;
+		return false;
+	}
+	SetValue((int)((value / 50.) + 0.5));
+	return true;
+}
+
+void OrdealRotationalSwitch::SaveState(FILEHANDLE scn) {
+
+	if (position) {
+		oapiWriteScenario_int(scn, name, value);
+	}
+}
+
+void OrdealRotationalSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	int val;
+
+	sscanf(line, "%s %i", buffer, &val);
+	if (!strnicmp(buffer, name, strlen(name))) {
+		value = val;
+		SetValue((int)((value / 50.) + 0.5));
+	}
+}
+
 //
 // Thumbwheel Switch
 //
@@ -3572,23 +3691,22 @@ bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
-			unsigned int SwitchBits;
-			SwitchBits = agc->GetCh33Switches();
-			SwitchBits &= 077707;  // Clear bits
 			if (IsUp()) {
-				SwitchBits |= 010; // CMC MODE, ZERO OFF				
-				agc->SetCh33Switches(SwitchBits);
+				// CMC MODE, ZERO OFF				
+				agc->SetInputChannelBit(033, CMCControl, true);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsCenter()) {
-				SwitchBits |= 030; // MANUAL MODE, ZERO OFF
-				
-				agc->SetCh33Switches(SwitchBits);
+				// MANUAL MODE, ZERO OFF
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 			if (IsDown()) {
-				SwitchBits |= 020; // MANUAL MODE, ZERO ON
-				agc->SetCh33Switches(SwitchBits);
+				// MANUAL MODE, ZERO ON
+				agc->SetInputChannelBit(033, CMCControl, false);
+				agc->SetInputChannelBit(033, ZeroOptics_33, true);
 				return true;
 			}
 		}

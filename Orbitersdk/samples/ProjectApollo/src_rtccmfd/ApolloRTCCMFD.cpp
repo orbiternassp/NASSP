@@ -1921,6 +1921,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
+		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -2393,6 +2394,53 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 23)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
+
+		GET_Display(Buffer, G->t_TPIguess);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
+
+		skp->Text(1 * W / 8, 8 * H / 21, "Launch Time:", 12);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
+		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 10 * H / 21, "Insertion:", 10);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
+		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
+		skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
+		skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
+		skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
+		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(5 * W / 8, 7 * H / 14, "Horizontal Velocity:", 20);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
+		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 9 * H / 14, "Vertical Velocity:", 18);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -2422,28 +2470,24 @@ void ApolloRTCCMFD::menuP30Upload()
 {
 	if (screen == 22 && G->TLCCmaneuver < 2)
 	{
-		if (G->g_Data.progVessel->use_lvdc)
-		{
-			SevenParameterUpdate coe;
-			SaturnV* testves;
+		SevenParameterUpdate coe;
+		SaturnV* testves;
 
-			testves = (SaturnV*)G->g_Data.progVessel;
+		testves = (SaturnV*)G->g_Data.progVessel;
 
-			coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
+		coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
 
-			testves->lvdc->TU = true;
-			testves->lvdc->TU10 = false;
-			testves->lvdc->GATE3 = false;
+		testves->lvdc->TU = true;
+		testves->lvdc->TU10 = false;
+		testves->lvdc->GATE3 = false;
 
-			testves->lvdc->T_RP = coe.T_RP;
-			testves->lvdc->C_3 = coe.C3;
-			testves->lvdc->Inclination = coe.Inclination;
-			testves->lvdc->e = coe.e;
-			testves->lvdc->alpha_D = coe.alpha_D;
-			testves->lvdc->f = coe.f;
-			testves->lvdc->theta_N = coe.theta_N;
-
-		}
+		testves->lvdc->T_RP = coe.T_RP;
+		testves->lvdc->C_3 = coe.C3;
+		testves->lvdc->Inclination = coe.Inclination;
+		testves->lvdc->e = coe.e;
+		testves->lvdc->alpha_D = coe.alpha_D;
+		testves->lvdc->f = coe.f;
+		testves->lvdc->theta_N = coe.theta_N;
 	}
 	else if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
@@ -2638,6 +2682,12 @@ void ApolloRTCCMFD::menuSetUtilityMenu()
 void ApolloRTCCMFD::menuTranslunarPage()
 {
 	screen = 22;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarLiftoffPage()
+{
+	screen = 23;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3634,59 +3684,52 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	}
 	else
 	{
-		if (G->g_Data.progVessel->use_lvdc)
+		TLIPADOpt opt;
+		double T_TLI;
+
+		SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
+
+		if (SatV->lvdc->TU)
 		{
-			TLIPADOpt opt;
-			double T_TLI;
-
-			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
-
-			if (SatV->lvdc->TU)
-			{
-				G->TLI_PAD();
-			}
-			else
-			{
-				LVDCTLIparam tliparam;
-
-				tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-				tliparam.Azimuth = SatV->lvdc->Azimuth;
-				tliparam.beta = SatV->lvdc->beta;
-				tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-				tliparam.C_3 = SatV->lvdc->C_3;
-				tliparam.e_N = SatV->lvdc->e_N;
-				tliparam.f = SatV->lvdc->f;
-				tliparam.mu = SatV->lvdc->mu;
-				tliparam.MX_A = SatV->lvdc->MX_A;
-				tliparam.omega_E = SatV->lvdc->omega_E;
-				tliparam.R_N = SatV->lvdc->R_N;
-				tliparam.TargetVector = SatV->lvdc->TargetVector;
-				tliparam.TB5 = SatV->lvdc->TB5;
-				tliparam.theta_EO = SatV->lvdc->theta_EO;
-				tliparam.t_D = SatV->lvdc->t_D;
-				tliparam.T_L = SatV->lvdc->T_L;
-				tliparam.T_RG = SatV->lvdc->T_RG;
-				tliparam.T_ST = SatV->lvdc->T_ST;
-
-				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
-
-				opt.dV_LVLH = G->dV_LVLH;
-				opt.GETbase = G->GETbase;
-				opt.REFSMMAT = G->REFSMMAT;
-				opt.TIG = G->P30TIG;
-				opt.vessel = G->vessel;
-				opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
-				opt.TLI = T_TLI;
-				opt.R_TLI = G->R_TLI;
-				opt.V_TLI = G->V_TLI;
-				opt.uselvdc = true;
-
-				G->rtcc->TLI_PAD(&opt, G->tlipad);
-			}
+			G->TLI_PAD();
 		}
 		else
 		{
-			G->TLI_PAD();
+			LVDCTLIparam tliparam;
+
+			tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+			tliparam.Azimuth = SatV->lvdc->Azimuth;
+			tliparam.beta = SatV->lvdc->beta;
+			tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+			tliparam.C_3 = SatV->lvdc->C_3;
+			tliparam.e_N = SatV->lvdc->e_N;
+			tliparam.f = SatV->lvdc->f;
+			tliparam.mu = SatV->lvdc->mu;
+			tliparam.MX_A = SatV->lvdc->MX_A;
+			tliparam.omega_E = SatV->lvdc->omega_E;
+			tliparam.R_N = SatV->lvdc->R_N;
+			tliparam.TargetVector = SatV->lvdc->TargetVector;
+			tliparam.TB5 = SatV->lvdc->TB5;
+			tliparam.theta_EO = SatV->lvdc->theta_EO;
+			tliparam.t_D = SatV->lvdc->t_D;
+			tliparam.T_L = SatV->lvdc->T_L;
+			tliparam.T_RG = SatV->lvdc->T_RG;
+			tliparam.T_ST = SatV->lvdc->T_ST;
+			
+			G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
+
+			opt.dV_LVLH = G->dV_LVLH;
+			opt.GETbase = G->GETbase;
+			opt.REFSMMAT = G->REFSMMAT;
+			opt.TIG = G->P30TIG;
+			opt.vessel = G->vessel;
+			opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
+			opt.TLI = T_TLI;
+			opt.R_TLI = G->R_TLI;
+			opt.V_TLI = G->V_TLI;
+			opt.uselvdc = true;
+
+			G->rtcc->TLI_PAD(&opt, G->tlipad);
 		}
 	}
 }
@@ -4880,6 +4923,29 @@ void ApolloRTCCMFD::menuSetPCLanded()
 	G->PClanded = !G->PClanded;
 }
 
+void ApolloRTCCMFD::menuSetTPIguess()
+{
+	bool TPIGuessInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", TPIGuessInput, 0, 20, (void*)this);
+}
+
+bool TPIGuessInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_TPIguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TPIguess(double time)
+{
+	G->t_TPIguess = time;
+}
+
 void ApolloRTCCMFD::menuTMLat()
 {
 	bool TMLatInput(void* id, char *str, void *data);
@@ -4994,6 +5060,14 @@ void ApolloRTCCMFD::menuTLCCCalc()
 {
 	G->TLCCSolGood = true;
 	G->TLCCCalc();
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffCalc()
+{
+	if (G->target != NULL)
+	{
+		G->LunarLiftoffCalc();
+	}
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

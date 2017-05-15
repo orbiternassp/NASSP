@@ -39,6 +39,7 @@
 #include "dsky.h"
 #include "LEMcomputer.h"
 #include "IMU.h"
+#include "lm_channels.h"
 
 #include "LEM.h"
 
@@ -736,6 +737,38 @@ void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
+// Thrust/Weight Indicator
+ThrustWeightInd::ThrustWeightInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void ThrustWeightInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double ThrustWeightInd::QueryValue()
+
+{
+	return lem->mechanicalAccelerometer.GetYAccel() / 1.594104;
+}
+
+void ThrustWeightInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, 20, (int)(161.5 - 25.0*v), 0, 0, 8, 7, SURF_PREDEF_CK);
+}
+
+double ThrustWeightInd::AdjustForPower(double val)
+{
+	return val;
+}
+
 // Main Fuel Temperature Indicator
 MainFuelTempInd::MainFuelTempInd()
 
@@ -1346,4 +1379,121 @@ bool EngineStopButton::Push()
 	}
 
 	return false;
+}
+
+bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		if (state == 0) {
+			SwitchTo(1, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+		}
+		else if (state == 1) {
+			SwitchTo(0, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+		}
+	}
+	return true;
+}
+
+void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+LMAbortStageButton::LMAbortStageButton() 
+{ 
+	lem = 0; 
+};
+
+void LMAbortStageButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if (guardState) {
+		DoDrawSwitch(DrawSurface);
+	}
+	else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+	}
+}
+
+bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardWidth &&
+			my >= guardY && my <= guardY + guardHeight) {
+			if (guardState) {
+				Guard();
+			}
+			else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN)) {
+		if (guardState) {
+
+
+			if (!visible) return false;
+			if (mx < x || my < y) return false;
+			if (mx >(x + width) || my >(y + height)) return false;
+
+			if (state == 0) {
+				SwitchTo(1);
+				Sclick.play();
+				lem->agc.SetInputChannelBit(030, AbortWithAscentStage, false);
+			}
+			else if (state == 1) {
+				SwitchTo(0);
+				Sclick.play();
+				lem->AbortFire();
+				lem->SeparateStage(lem->stage);
+				lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
+				lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
+				lem->stage = 2;
+				lem->agc.SetInputChannelBit(030, AbortWithAscentStage, true);
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+void LEMPanelOrdeal::Init(SwitchRow &row, LEM *l) {
+	MeterSwitch::Init(row);
+	lem = l;
+}
+
+int LEMPanelOrdeal::GetState() {
+	return lem->ordealEnabled;
+}
+
+void LEMPanelOrdeal::SetState(int value) {
+
+	if (value == 0) value = -1;
+
+	lem->ordealEnabled = value;
 }

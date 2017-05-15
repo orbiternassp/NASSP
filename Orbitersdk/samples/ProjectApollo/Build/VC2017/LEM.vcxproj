@@ -249,12 +249,14 @@
     <ClCompile Include="..\..\src_lm\lm_telecom.cpp" />
     <ClCompile Include="..\..\src_lm\lmscs.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
+    <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\ORDEAL.cpp" />
     <ClCompile Include="..\..\src_sys\payload.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -365,10 +367,12 @@
     <ClInclude Include="..\..\src_lm\lm_telecom.h" />
     <ClInclude Include="..\..\src_lm\lmscs.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
+    <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h" />
     <ClInclude Include="..\..\src_sys\missiontimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\nasspsound.h" />
     <ClInclude Include="..\..\src_aux\OrbiterMath.h" />
+    <ClInclude Include="..\..\src_sys\ORDEAL.h" />
     <ClInclude Include="..\..\src_sys\payload.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />
     <ClInclude Include="..\..\src_sys\pyro.h" />
