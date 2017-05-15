@@ -3812,7 +3812,7 @@ void LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, doubl
 	theta_6 = sign(DH)*(PI05 - x) - E;
 	R_5 = (unit(R_6)*cos(theta_6) - unit(crossp(crossp(R_6, V_6), R_6))*sin(theta_6))*(length(R_6) - DH);
 	
-	while (n < 10 && abs(dt)>10.0)
+	while (n < 10 && abs(dt)>1.0)
 	{
 		//v_H2 = 1.0;//sqrt((2.0*(1.0 - length(R_2) / r_A) - v_V2*v_V2) / (1.0 - length(R_2)*length(R_2) / r_A / r_A));
 		theta_3 = PI;// -acos(1.0 / sqrt(pow(v_V2*v_H2 / (v_H2*v_H2 - 1.0), 2.0) + 1.0));
@@ -3850,7 +3850,7 @@ void LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, doubl
 		t_AT = t_3 + dt_5 + p*floor((t_TPI - t_3) / p);
 		dt = t_TPI - t_AT;
 
-		if (abs(dt) > 10.0)
+		if (abs(dt) > 1.0)
 		{
 			n++;
 			t_L = t_L + dt;
