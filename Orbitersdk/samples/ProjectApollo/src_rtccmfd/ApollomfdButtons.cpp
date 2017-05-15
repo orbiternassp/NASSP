@@ -806,7 +806,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TPI", OAPI_KEY_T, &ApolloRTCCMFD::menuSetTPIguess);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
@@ -816,7 +816,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
