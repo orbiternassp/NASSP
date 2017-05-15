@@ -227,8 +227,6 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->InputChannel[031] = 077777;
   State->InputChannel[032] = 077777;
   State->InputChannel[033] = 077777;
-  // Reset CH33 switches
-  State->Ch33Switches      = 001032;
 
   // Clear erasable memory.
   for (Bank = 0; Bank < 8; Bank++)

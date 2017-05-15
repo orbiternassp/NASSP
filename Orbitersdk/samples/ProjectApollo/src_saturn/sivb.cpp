@@ -452,7 +452,7 @@ void SIVB::SetS4b()
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
 		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true, 0.0, 0.0);
+		iu.SetMissionInfo(true, true);
 
 		//
 		// Set up the IU connections.

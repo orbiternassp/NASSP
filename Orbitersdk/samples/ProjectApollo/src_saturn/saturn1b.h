@@ -82,9 +82,6 @@ protected:
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
-	void AttitudeLaunch1();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetFirstStage ();
 	void SetFirstStageMeshes(double offset);
 	void SetFirstStageEngines ();
@@ -101,8 +98,6 @@ protected:
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
-	void StageOne(double simt, double simdt);
-	void StageLaunchSIVB(double simt);
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void SetSIVBMixtureRatio(double ratio);

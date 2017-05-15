@@ -142,8 +142,6 @@ public:
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
-	// Forcibly activate the SPS engine for unmanned control.
-	void EnforceBurn(bool burn) { enforceBurn = burn; }
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -155,7 +153,6 @@ protected:
 	bool thrustOn;
 	bool injectorValves12Open;
 	bool injectorValves34Open;
-	bool enforceBurn;
 	bool engineOnCommanded;
 	double nitrogenPressureAPSI;
 	double nitrogenPressureBPSI;

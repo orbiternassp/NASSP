@@ -334,7 +334,6 @@ typedef struct
   int16_t InputChannel[NUM_CHANNELS];
   int16_t OutputChannel7;
   int16_t OutputChannel10[16];
-  int16_t Ch33Switches; // Special values for switches on ch 33
   // The indexing value.
   int16_t IndexValue;
   int8_t InterruptRequests[1 + NUM_INTERRUPT_TYPES];	// 0-index not used.
@@ -744,9 +743,6 @@ void GenerateUPRUPT(agc_t * State);
 void GenerateRADARUPT(agc_t * State);
 void GenerateHANDRUPT(agc_t * State);
 int IsUPRUPTActive (agc_t * State);
-// DS20060827 Change bits in channel 33
-void SetCh33Bits(agc_t * State, int16_t Value);
-void SetLMCh33Bits(agc_t * State, int16_t Value);
 // DS20060903 Make these available externally
 int CounterPINC (int16_t * Counter);
 int CounterPCDU (int16_t * Counter);

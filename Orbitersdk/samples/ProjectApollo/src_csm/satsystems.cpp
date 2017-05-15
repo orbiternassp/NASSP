@@ -37,7 +37,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -187,7 +186,11 @@ void Saturn::SystemsInit() {
 	// Pyros
 	CMSMPyros.WireTo(&CMSMPyrosFeeder);  
 	CMDockingRingPyros.WireTo(&CMDockingRingPyrosFeeder);
-	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);	 
+	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);
+	ApexCoverPyros.WireTo(&ApexCoverPyrosFeeder);
+	DrogueChutesDeployPyros.WireTo(&DrogueChutesDeployPyrosFeeder);
+	MainChutesDeployPyros.WireTo(&MainChutesDeployPyrosFeeder);
+	MainChutesReleasePyros.WireTo(&MainChutesReleasePyrosFeeder);
 
 	//
 	// SECS Logic buses
@@ -370,7 +373,8 @@ void Saturn::SystemsInit() {
 	rjec.Init(this);
 	eca.Init(this);
 	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
-	ordeal.Init(this);
+	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	mechanicalAccelerometer.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
@@ -449,8 +453,8 @@ void Saturn::SystemsInit() {
 	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA);    
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB);    
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
 	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
@@ -468,9 +472,6 @@ void Saturn::SystemsInit() {
 						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
 	
 	GlycolCoolingController.Init(this);
-
-	// Ground Systems Init
-	mcc.Init(this);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -551,6 +552,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
+		mechanicalAccelerometer.TimeStep(simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
@@ -569,9 +571,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		usb.TimeStep(MissionTime);
 		hga.TimeStep(MissionTime, simdt);
 		dataRecorder.TimeStep( MissionTime, simdt );
-
-		// Update Ground Data
-		mcc.TimeStep(simdt);
 
 		//
 		// Systems state handling
@@ -1440,7 +1439,7 @@ void Saturn::JoystickTimestep()
 
 		// CM/SM transfer, either motor transfers all thruster, see AOH Figure 2.5-4
 		bool sm_sep = false;
-		if (rjec.GetCMTransferMotor1() || rjec.GetCMTransferMotor2()) sm_sep = true;
+		if (secs.rcsc.GetCMTransferMotor1() || secs.rcsc.GetCMTransferMotor2()) sm_sep = true;
 
 		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
 			if (rhc_x_pos < 2738) {
@@ -1909,15 +1908,23 @@ void Saturn::JoystickTimestep()
 		}
 	}
 
+	//SPS Abort Ullage
+	if ((secs.MESCA.FireUllage() && RCSLogicMnACircuitBraker.IsPowered()) || (secs.MESCB.FireUllage() && RCSLogicMnBCircuitBraker.IsPowered()))
+	{
+		SetRCSState(RCS_SM_QUAD_B, 4, true);
+		SetRCSState(RCS_SM_QUAD_D, 3, true);
+		SetRCSState(RCS_SM_QUAD_A, 4, true);
+		SetRCSState(RCS_SM_QUAD_C, 3, true);
+		//TBD: Inhibit Pitch and Yaw
+	}
+
 	//
 	// CM RCS propellant dump 
 	//
 	
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayA() && secs.rcsc.GetPropellantDumpInhibitA() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
 		SetCMRCSState(2, true);	
-		double d = GetThrusterLevel(th_att_cm[2]);
-		
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
@@ -1925,7 +1932,7 @@ void Saturn::JoystickTimestep()
 	}
 		
 	// Manual control
-	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayB() && secs.rcsc.GetPropellantDumpInhibitB() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
@@ -2073,15 +2080,6 @@ void Saturn::CheckSMSystemsState()
 		// Close O2 SM supply
 		O2SMSupply.Close();
 	}
-}
-
-bool Saturn::AutopilotActive()
-
-{
-	ChannelValue val12;
-	val12 = agc.GetOutputChannel(012);
-
-	return autopilot && !val12[EnableSIVBTakeover];
 }
 
 bool Saturn::CabinFansActive()
@@ -3252,32 +3250,16 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 		aws.PGNSWarning = true;
 }
 
-//
-// Check whether the ELS is active and whether it's in auto mode.
-//
-
-bool Saturn::ELSActive()
-
-{
-	return (ELSLogicSwitch.IsUp() && (SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE || SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE));
-}
-
-bool Saturn::ELSAuto()
-
-{
-	return (ELSActive() && ELSAutoSwitch.IsUp());
-}
-
-bool Saturn::PyrosArmed()
-
-{
-	return (PyroBusA.Voltage() > SP_MIN_DCVOLTAGE || PyroBusB.Voltage() > SP_MIN_DCVOLTAGE);
-}
-
 bool Saturn::LETAttached()
 
 {
 	return LESAttached;
+}
+
+void Saturn::CutLESLegs()
+
+{
+	LESLegsCut = true;
 }
 
 //

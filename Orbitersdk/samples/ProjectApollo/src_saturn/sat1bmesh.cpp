@@ -40,7 +40,6 @@
 #include "csmcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 
@@ -216,41 +215,18 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 
 {
 	double TCP=-54.485-TCPO;//STG0O;
-	TOUCHDOWNVTX tdpoints[4];
 
-	tdpoints[0].pos = _V(0,-1.0,TCP);
-	tdpoints[0].damping = 1;
-	tdpoints[0].mu = 1;
-	tdpoints[0].mu_lng = 1;
-	tdpoints[0].stiffness = 1;
-	tdpoints[1].pos = _V(-.5,.5,TCP);
-	tdpoints[1].damping = 1;
-	tdpoints[1].mu = 1;
-	tdpoints[1].mu_lng = 1;
-	tdpoints[1].stiffness = 1;
-	tdpoints[2].pos = _V(.5,.5,TCP);
-	tdpoints[2].damping = 1;
-	tdpoints[2].mu = 1;
-	tdpoints[2].mu_lng = 1;
-	tdpoints[2].stiffness = 1;
-
-	static const DWORD ntdvtx = 8;
-	static TOUCHDOWNVTX tdvtx[8] = {
-		{ _V(0, -9.899495, TCP), 2e4, 1e2, 0.5 },
-		{ _V(-7, 7, TCP), 2e4, 1e2, 0.5 },
-		{ _V(7, 7, TCP), 2e4, 1e2, 0.5 },
-		{ _V(-7, -7, 40), 2e4, 1e2, 0.5 },
-		{ _V(7, -7, 40), 2e4, 1e2, 0.5 },
-		{ _V(-7, 7, 40), 2e4, 1e2, 0.5 },
-		{ _V(7, 7, 40), 2e4, 1e2, 0.5 },
-		{ _V(0, 0, 60), 2e4, 1e2, 0.5 }
+	static const DWORD ntdvtx = 4;
+	static TOUCHDOWNVTX tdvtx[4] = {
+		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
+		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
 	};
-
 	//SetTouchdownPoints(tdvtx, ntdvtx);
 
-	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
-	// SetTouchdownPoints(tdpoints,3);
+	
 	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
@@ -352,7 +328,6 @@ void Saturn1b::SetFirstStageEngines()
 	contrail[6] = AddParticleStream(&srb_contrail, m_exhaust_pos7+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
 	contrail[7] = AddParticleStream(&srb_contrail, m_exhaust_pos8+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
 	*/
-
 }
 
 void Saturn1b::SetSecondStage ()
@@ -623,13 +598,13 @@ void Saturn1b::SeparateStage (int new_stage)
 	vs1.eng_main = vs1.eng_hovr = 0.0;
 	vs2.eng_main = vs2.eng_hovr = 0.0;
 
-	if (stage == LAUNCH_STAGE_ONE && !bAbort)
+	if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage > LAUNCH_STAGE_SIVB)
 	{
 		ofs1= _V(0, 0, 4.7);
 		vel1 = _V(0,0,-4.0);
@@ -680,7 +655,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetChuteStage1 ();
 	}
 
-    if (stage == LAUNCH_STAGE_ONE && !bAbort )
+    if (stage == LAUNCH_STAGE_ONE && new_stage == LAUNCH_STAGE_SIVB)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -808,7 +783,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;

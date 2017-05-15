@@ -28,7 +28,10 @@ public:
 
 	Sat5Abort2 (OBJHANDLE hObj, int fmodel);
 	virtual ~Sat5Abort2();
-	void init();
+	void Setup(bool sm);
+	virtual void SetState(bool sm);
+
+	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2017\ASTP.vcxproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
@@ -63,6 +63,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CMChute", "Build\VC2017\CMChute.vcxproj", "{68F2AA4E-3774-4A03-947D-9890DF0E73C5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ApolloRTCCMFD", "Build\VC2017\ApolloRTCCMFD.vcxproj", "{3F97A697-44DB-4A22-A5F3-7168A990B3C0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MCC", "Build\VC2017\MCC.vcxproj", "{E38D5A31-C96D-437E-A495-4314EF198CEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -246,6 +248,12 @@ Global
 		{3F97A697-44DB-4A22-A5F3-7168A990B3C0}.Release|Win32.ActiveCfg = Release|Win32
 		{3F97A697-44DB-4A22-A5F3-7168A990B3C0}.Release|Win32.Build.0 = Release|Win32
 		{3F97A697-44DB-4A22-A5F3-7168A990B3C0}.Release|x64.ActiveCfg = Release|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Debug|Win32.Build.0 = Debug|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Debug|x64.ActiveCfg = Debug|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Release|Win32.ActiveCfg = Release|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Release|Win32.Build.0 = Release|Win32
+		{E38D5A31-C96D-437E-A495-4314EF198CEB}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

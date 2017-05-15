@@ -74,7 +74,7 @@ ARCore::ARCore(VESSEL* v)
 		mission = 9;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 	}
-	else if (strcmp(v->GetName(), "Gumdrop") == 0)
+	else if (strcmp(v->GetName(), "Spider") == 0)
 	{
 		mission = 9;
 		vesseltype = 2;
@@ -440,6 +440,16 @@ ARCore::ARCore(VESSEL* v)
 	TMStepSize = 0.0;
 	TMAlt = 0.0;
 
+	t_TPIguess = 0.0;
+	LunarLiftoffTimes.t_CDH = 0.0;
+	LunarLiftoffTimes.t_CSI = 0.0;
+	LunarLiftoffTimes.t_Ins = 0.0;
+	LunarLiftoffTimes.t_L = 0.0;
+	LunarLiftoffTimes.t_TPI = 0.0;
+	LunarLiftoffTimes.t_TPF = 0.0;
+	LunarLiftoffTimes.v_LH = 0.0;
+	LunarLiftoffTimes.v_LV = 0.0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -610,6 +620,11 @@ void ARCore::SkylabCalc()
 void ARCore::PCCalc()
 {
 	startSubthread(13);
+}
+
+void ARCore::LunarLiftoffCalc()
+{
+	startSubthread(15);
 }
 
 void ARCore::EntryUpdateCalc()
@@ -1104,7 +1119,14 @@ void ARCore::P30Uplink(void)
 	}
 	else
 	{
-		g_Data.emem[1] = 3433;
+		if (mission < 11)
+		{
+			g_Data.emem[1] = 3431;
+		}
+		else
+		{
+			g_Data.emem[1] = 3433;
+		}
 	}
 	g_Data.emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
 	g_Data.emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
@@ -2129,6 +2151,21 @@ int ARCore::subThread()
 				dV_LVLH = TLCC_dV_LVLH;
 			}
 		}
+		Result = 0;
+	}
+	break;
+	case 15:	//Lunar Liftoff Time Prediction
+	{
+		LunarLiftoffTimeOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.target = target;
+		opt.t_TPIguess = t_TPIguess;
+		opt.vessel = vessel;
+
+		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
+
+		Result = 0;
 	}
 	break;
 	}

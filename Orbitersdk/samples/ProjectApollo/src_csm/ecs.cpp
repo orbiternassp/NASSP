@@ -37,7 +37,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-#include "lvimu.h"
 #include "ioChannels.h"
 
 #include "saturn.h"
