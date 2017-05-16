@@ -415,6 +415,16 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 	}
+	else if (mission == 14)
+	{
+		LSLat = -3.672*RAD;
+		LSLng = -17.463*RAD;
+		LSAlt = -0.76*1852.0;
+		LOIazi = -76.31*RAD;
+		TLCCEMPLat = -0.048722*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(82.0, 39.0, 52.2);
+		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
+	}
 
 	Skylabmaneuver = 0;
 	SkylabTPIGuess = 0.0;
