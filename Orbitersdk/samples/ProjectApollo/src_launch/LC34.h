@@ -42,6 +42,7 @@ public:
 
 protected:
 	bool firstTimestepDone;
+	bool abort;
 	int meshindexLUT;
 	int meshindexMSS;
 	double touchdownPointHeight;
