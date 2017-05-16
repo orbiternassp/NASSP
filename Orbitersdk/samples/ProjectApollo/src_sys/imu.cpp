@@ -95,7 +95,7 @@ void IMU::Init()
 	IMUHeater = 0;
 	PowerSwitch = 0;
 
-	DoZeroIMUCDUs();
+	DoZeroIMUGimbals();
 	LastSimDT = -1;
 	
 	LogInit();
@@ -129,7 +129,7 @@ void IMU::SetCaged(bool val)
 		agc.SetInputChannelBit(030, IMUCage, val);
 
 		if (val) {
-			DoZeroIMUCDUs();
+			DoZeroIMUGimbals();
 		}
 	}
 }
@@ -565,6 +565,14 @@ void IMU::SetOrbiterAttitudeReference()
 }
 
 void IMU::DoZeroIMUCDUs() 
+
+{
+	Gimbal.X = 0;
+	Gimbal.Y = 0;
+	Gimbal.Z = 0;
+}
+
+void IMU::DoZeroIMUGimbals()
 
 {
 	Gimbal.X = 0;

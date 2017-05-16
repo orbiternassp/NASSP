@@ -71,6 +71,7 @@ protected:
 	void PulsePIPA(int RegPIPA, int pulses);
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
+	void DoZeroIMUGimbals();
 
 	//
 	// Logging.
