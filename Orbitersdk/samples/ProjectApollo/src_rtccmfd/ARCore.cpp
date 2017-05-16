@@ -871,7 +871,7 @@ void ARCore::LandingSiteUplink()
 	}
 	else
 	{
-		if (mission < 15)
+		if (mission < 14)
 		{
 			g_Data.emem[1] = 2022;
 		}
@@ -1194,7 +1194,7 @@ void ARCore::TLANDUplink(void)
 	{
 		g_Data.emem[0] = 5;
 
-		if (mission < 15)
+		if (mission < 14)
 		{
 			g_Data.emem[1] = 2400;
 			g_Data.emem[3] = 2401;
@@ -1607,7 +1607,7 @@ int ARCore::subThread()
 				REFSMMAToct[1] = 1733;
 			}
 
-			if (mission >= 15)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+			if (mission >= 14)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
 			{
 				REFSMMAToct[1] -= 2;
 			}
