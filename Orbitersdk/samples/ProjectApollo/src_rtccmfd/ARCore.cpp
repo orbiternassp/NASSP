@@ -450,6 +450,7 @@ ARCore::ARCore(VESSEL* v)
 	TMStepSize = 0.0;
 	TMAlt = 0.0;
 
+	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
 	LunarLiftoffTimes.t_CDH = 0.0;
 	LunarLiftoffTimes.t_CSI = 0.0;
@@ -459,6 +460,9 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimes.t_TPF = 0.0;
 	LunarLiftoffTimes.v_LH = 0.0;
 	LunarLiftoffTimes.v_LV = 0.0;
+
+	EMPUplinkType = 0;
+	EMPUplinkNumber = 0;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
@@ -1208,6 +1212,91 @@ void ARCore::TLANDUplink(void)
 		g_Data.emem[4] = OrbMech::DoubleToBuffer(t_Land*100.0, 28, 0);
 
 		UplinkData2(); // Go for uplink
+	}
+}
+
+void ARCore::EMPP99Uplink(int i)
+{
+	if (vesseltype > 1)
+	{
+		if (i == 0)
+		{
+			g_Data.emem[0] = 24;
+			g_Data.emem[1] = 3404;
+			g_Data.emem[2] = 1450;
+			g_Data.emem[3] = 12324;
+			g_Data.emem[4] = 5520;
+			g_Data.emem[5] = 161;
+			g_Data.emem[6] = 1400;
+			g_Data.emem[7] = 12150;
+			g_Data.emem[8] = 5656;
+			g_Data.emem[9] = 3667;
+			g_Data.emem[10] = 74066;
+			g_Data.emem[11] = 12404;
+			g_Data.emem[12] = 12433;
+			g_Data.emem[13] = 1406;
+			g_Data.emem[14] = 5313;
+			g_Data.emem[15] = 143;
+			g_Data.emem[16] = 36266;
+			g_Data.emem[17] = 54333;
+			g_Data.emem[18] = 6060;
+			g_Data.emem[19] = 77634;
+
+			UplinkData(); // Go for uplink
+		}
+		else if(i == 1)
+		{
+			g_Data.emem[0] = 12;
+			g_Data.emem[1] = 3734;
+			g_Data.emem[2] = 26;
+			g_Data.emem[3] = 30605;
+			g_Data.emem[4] = 151;
+			g_Data.emem[5] = 5214;
+			g_Data.emem[6] = 0;
+			g_Data.emem[7] = 0;
+			g_Data.emem[8] = 15400;
+			g_Data.emem[9] = 0;
+
+			UplinkData(); // Go for uplink
+		}
+		else if (i == 2)
+		{
+			g_Data.emem[0] = 17;
+			g_Data.emem[1] = 3400;
+			g_Data.emem[2] = 5520;
+			g_Data.emem[3] = 3401;
+			g_Data.emem[4] = 312;
+			g_Data.emem[5] = 3402;
+			g_Data.emem[6] = 5263;
+			g_Data.emem[7] = 3426;
+			g_Data.emem[8] = 10636;
+			g_Data.emem[9] = 3427;
+			g_Data.emem[10] = 56246;
+			g_Data.emem[11] = 3430;
+			g_Data.emem[12] = 77650;
+			g_Data.emem[13] = 3431;
+			g_Data.emem[14] = 75202;
+
+			UplinkData2(); // Go for uplink
+		}
+		else if (i == 3)
+		{
+			g_Data.emem[0] = 15;
+			g_Data.emem[1] = 3455;
+			g_Data.emem[2] = 1404;
+			g_Data.emem[3] = 1250;
+			g_Data.emem[4] = 0;
+			g_Data.emem[5] = 3515;
+			g_Data.emem[6] = 4;
+			g_Data.emem[7] = 2371;
+			g_Data.emem[8] = 13001;
+			g_Data.emem[9] = 2372;
+			g_Data.emem[10] = 1420;
+			g_Data.emem[11] = 2373;
+			g_Data.emem[12] = 12067;
+
+			UplinkData2(); // Go for uplink
+		}
 	}
 }
 
@@ -2169,6 +2258,7 @@ int ARCore::subThread()
 		LunarLiftoffTimeOpt opt;
 
 		opt.GETbase = GETbase;
+		opt.opt = LunarLiftoffTimeOption;
 		opt.target = target;
 		opt.t_TPIguess = t_TPIguess;
 		opt.vessel = vessel;

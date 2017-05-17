@@ -96,6 +96,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	touchdownPointHeight = -0.01; // pad height
 	hLV = 0;
 	state = STATE_PRELAUNCH;
+	abort = false;
 
 	mssProc = 0;
 	cmarmProc = 0;
@@ -153,8 +154,15 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 
 	if (!firstTimestepDone) DoFirstTimestep();
 
+	if (hLV && !abort) {
+		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		abort = sat->GetAbort();
+	}
+
 	switch (state) {
 	case STATE_PRELAUNCH:
+		if (abort) break; // Don't do anything if we have aborted.
+
 		// Move MSS, no clue if 20min are OK?
 		if (mssProc < 1) {
 			mssProc = min(1.0, mssProc + simdt / (60.0 * 20.0));
@@ -172,6 +180,8 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 
 	case STATE_CMARM1:
+		if (abort) break; // Don't do anything if we have aborted.
+
 		// Move CM arm 12 deg, no clue if 60s are OK?
 		if (cmarmProc < 12.0 / 180.0 * 0.7) {
 			cmarmProc = min(12.0 / 180.0 * 0.7, cmarmProc + simdt / 60.0);
@@ -189,6 +199,8 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 
 	case STATE_CMARM2:
+		if (abort) break; // Don't do anything if we have aborted.
+
 		// Move CM arm to retracted position, no clue if 60s are OK?
 		if (cmarmProc < 1) {
 			cmarmProc = min(1.0, cmarmProc + simdt / 60.0);
@@ -208,20 +220,30 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 
 	case STATE_LIFTOFFSTREAM:
 		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		// T-1s or later?
+		if (sat->GetMissionTime() > -1) {
+			state = STATE_LIFTOFF;
+		}
+
+		if (abort) break; // Don't do anything if we have aborted.
 
 		if (sat->GetMissionTime() < -2.0)
 			liftoffStreamLevel = (sat->GetMissionTime() + 4.9) / 2.9;
 		else
 			liftoffStreamLevel = 1;
-
-		// T-1s or later?
-		if (sat->GetMissionTime() > -1) {
-			state = STATE_LIFTOFF;
-		}
 		break;
 	
 	case STATE_LIFTOFF:
+		if (!hLV) break;
+		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		// T+4s or later?
+		if (sat->GetMissionTime() > 4) {
+			state = STATE_POSTLIFTOFF;
+		}
+
+		if (abort) break; // Don't do anything if we have aborted.
+
 		// Move swingarms
 		if (swingarmProc < 1) {
 			swingarmProc = min(1.0, swingarmProc + simdt / 4.0);
@@ -229,20 +251,13 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		liftoffStreamLevel = 1;
-
-		// T+4s or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > 4) {
-			state = STATE_POSTLIFTOFF;
-		}		
-		break;
+	break;
 
 	case STATE_POSTLIFTOFF:
 
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() < 10.0)
+		if (sat->GetMissionTime() < 10.0 && !abort)
 			liftoffStreamLevel = (sat->GetMissionTime() - 10.0) / -6.0;
 		else {
 			liftoffStreamLevel = 0;

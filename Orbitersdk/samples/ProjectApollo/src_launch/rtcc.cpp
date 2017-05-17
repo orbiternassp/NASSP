@@ -7499,22 +7499,33 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 
+	t_CSI = 0;
+	t_CDH = 0;
+
 	opt->vessel->GetEquPos(lng, lat, r);
 
 	R_LS = OrbMech::r_from_latlong(lat, lng, r);
 
-	double ttoMidnight;
-	OBJHANDLE hSun;
+	if (opt->opt == 0)
+	{
+		double ttoMidnight;
+		OBJHANDLE hSun;
 
-	hSun = oapiGetObjectByName("Sun");
+		hSun = oapiGetObjectByName("Sun");
 
-	sv_TPI = coast(sv_P, (opt->GETbase - sv_P.MJD)*24.0*3600.0 + opt->t_TPIguess);
+		sv_TPI = coast(sv_P, (opt->GETbase - sv_P.MJD)*24.0*3600.0 + opt->t_TPIguess);
 
-	ttoMidnight = OrbMech::sunrise(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, hMoon, hSun, 1, 1, false);
-	t_TPI = opt->t_TPIguess + ttoMidnight;
+		ttoMidnight = OrbMech::sunrise(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, hMoon, hSun, 1, 1, false);
+		t_TPI = opt->t_TPIguess + ttoMidnight;
 
-	OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
+		OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
+	}
+	else
+	{
+		t_TPI = opt->t_TPIguess;
 
+		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+	}
 	res->t_L = t_IG;
 	res->t_Ins = t_IG + dt_1;
 	res->t_CSI = t_CSI;
