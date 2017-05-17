@@ -2411,13 +2411,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
 		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
-		skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		if (G->LunarLiftoffTimeOption == 0)
+		{
+			skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
+			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
-		skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
+			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+		}
 
 		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
@@ -2427,10 +2430,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
 		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
+		if (G->LunarLiftoffTimeOption == 0)
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Direct Profile", 14);
+		}
+
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
-			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		skp->Text(5 * W / 8, 7 * H / 14, "Horizontal Velocity:", 20);
@@ -2688,6 +2700,12 @@ void ApolloRTCCMFD::menuTranslunarPage()
 void ApolloRTCCMFD::menuSetLunarLiftoffPage()
 {
 	screen = 23;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetEMPPage()
+{
+	screen = 24;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -5067,6 +5085,18 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 	if (G->target != NULL)
 	{
 		G->LunarLiftoffCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
+{
+	if (G->LunarLiftoffTimeOption < 1)
+	{
+		G->LunarLiftoffTimeOption++;
+	}
+	else
+	{
+		G->LunarLiftoffTimeOption = 0;
 	}
 }
 
