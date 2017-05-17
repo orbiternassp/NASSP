@@ -236,6 +236,9 @@ public:
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();
 	void set_TPIguess(double time);
+	void menuSetEMPUplinkP99();
+	void menuEMPUplink();
+	void menuSetEMPUplinkNumber();
 	void menuTMLat();
 	void set_TMLat(double lat);
 	void menuTMLng();

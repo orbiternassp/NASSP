@@ -2297,6 +2297,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "State Vector", 12);
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
+		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
@@ -2452,6 +2453,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 9 * H / 14, "Vertical Velocity:", 18);
 		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 24)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Erasable Memory Programs", 24);
+
+		skp->Text(1 * W / 8, 2 * H / 14, "Program 99", 10);
+
+		sprintf(Buffer, "Uplink No. %d", G->EMPUplinkNumber);
+		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
 	}
 	return true;
 }
@@ -5097,6 +5108,35 @@ void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
 	else
 	{
 		G->LunarLiftoffTimeOption = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetEMPUplinkP99()
+{
+	G->EMPUplinkNumber = 0;
+	G->EMPUplinkType = 0;
+}
+
+void ApolloRTCCMFD::menuEMPUplink()
+{
+	if (G->EMPUplinkType == 0)
+	{
+		G->EMPP99Uplink(G->EMPUplinkNumber);
+	}
+}
+
+void ApolloRTCCMFD::menuSetEMPUplinkNumber()
+{
+	if (G->EMPUplinkType == 0)
+	{
+		if (G->EMPUplinkNumber < 3)
+		{
+			G->EMPUplinkNumber++;
+		}
+		else
+		{
+			G->EMPUplinkNumber = 0;
+		}
 	}
 }
 

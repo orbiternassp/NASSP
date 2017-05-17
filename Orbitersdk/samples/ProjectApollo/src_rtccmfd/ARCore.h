@@ -259,6 +259,10 @@ public:
 	double t_TPIguess;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile
 
+	//Erasable Memory Programs
+	int EMPUplinkType;	// 0 = P99
+	int EMPUplinkNumber;
+
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
 };

@@ -461,6 +461,9 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimes.v_LH = 0.0;
 	LunarLiftoffTimes.v_LV = 0.0;
 
+	EMPUplinkType = 0;
+	EMPUplinkNumber = 0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -1232,7 +1235,7 @@ void ARCore::EMPP99Uplink(int i)
 			g_Data.emem[11] = 12404;
 			g_Data.emem[12] = 12433;
 			g_Data.emem[13] = 1406;
-			g_Data.emem[14] = 5513;
+			g_Data.emem[14] = 5313;
 			g_Data.emem[15] = 143;
 			g_Data.emem[16] = 36266;
 			g_Data.emem[17] = 54333;
