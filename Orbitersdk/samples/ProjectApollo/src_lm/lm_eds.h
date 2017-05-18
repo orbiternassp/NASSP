@@ -36,6 +36,8 @@ public:
 	bool GetLandingGearDeployRelay() { return LandingGearDeployRelay; }
 	bool GetStagingRelay() { return StagingRelay; }
 	bool GetMasterArmRelay() { return MasterArmRelay; }
+
+	bool StageSeqLight();
 protected:
 
 	bool HasDCPower();
@@ -87,7 +89,7 @@ public:
 	void TimeStep();
 	LEM *lem;					// Pointer at LEM
 	bool LG_Deployed;           // Landing Gear Deployed Flag	
-protected:
+
 	LEM_EDRelayBox RelayBoxA;
 	LEM_EDRelayBox RelayBoxB;
 };

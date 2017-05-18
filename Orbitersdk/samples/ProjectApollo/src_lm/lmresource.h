@@ -756,6 +756,9 @@
 #define IDB_ORDEAL_PANEL				1029
 #define IDB_TW_NEEDLE					1030
 #define AID_THRUST_WEIGHT_INDICATOR		1031
+#define IDB_SEQ_LIGHT					1032
+#define AID_SEQ_LIGHT1					1033
+#define AID_SEQ_LIGHT2					1034
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

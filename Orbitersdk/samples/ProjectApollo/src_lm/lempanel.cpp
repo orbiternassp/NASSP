@@ -1224,7 +1224,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_RR_NOTRACK]         = oapiCreateSurface (LOADBMP (IDB_RR_NOTRACK));
 		srf[SRF_LEM_STAGESWITCH]	= oapiCreateSurface (LOADBMP (IDB_LEM_STAGESWITCH));
 		srf[SRF_DIGITALDISP2]		= oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
-		srf[SRF_RADAR_TAPE]        = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
+		srf[SRF_RADAR_TAPE]         = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
+		srf[SRF_SEQ_LIGHT]			= oapiCreateSurface (LOADBMP (IDB_SEQ_LIGHT));
 
 		//
 		// Flashing borders.
@@ -1297,6 +1298,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_TW_NEEDLE],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SEQ_LIGHT],			g_Param.col[4]);
 
 		//		break;
 		//
@@ -1597,6 +1599,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_SEQ_LIGHT1,						_R( 941, 1187,  974, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEQ_LIGHT2,						_R(1015, 1187, 1048, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+
 		//oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R(  48, 1001, 525, 1203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
 
@@ -3578,6 +3583,24 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		if (GroundContact()&& stage ==1){
 			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,48,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
+
+	case AID_SEQ_LIGHT1:
+		if (eds.RelayBoxA.StageSeqLight()) {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 33, 0, 33, 30);
+		}
+		return true;
+
+	case AID_SEQ_LIGHT2:
+		if (eds.RelayBoxB.StageSeqLight()) {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 33, 0, 33, 30);
+		}
+		return true;
 
 	case AID_SWITCH_SEP:
 		if(Cswitch1){

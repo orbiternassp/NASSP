@@ -157,7 +157,18 @@ void LEM_EDRelayBox::Timestep()
 
 bool LEM_EDRelayBox::HasDCPower()
 {
-	return EDLogicPower->Voltage() > SP_MIN_DCVOLTAGE;
+	if (EDLogicPower)
+		return EDLogicPower->Voltage() > SP_MIN_DCVOLTAGE;
+
+	return false;
+}
+
+bool LEM_EDRelayBox::StageSeqLight()
+{
+	if (!HasDCPower()) return false;
+	if (MasterArmRelay && lem->EDMasterArm.IsUp()) return true;
+
+	return false;
 }
 
 void LEM_EDRelayBox::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
