@@ -298,7 +298,7 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);
-	SetEmptyMass (1920.0);
+	SetEmptyMass (2150.0);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);

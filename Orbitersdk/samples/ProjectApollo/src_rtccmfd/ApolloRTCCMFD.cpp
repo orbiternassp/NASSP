@@ -1921,6 +1921,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
+		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -2296,6 +2297,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "State Vector", 12);
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
+		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
@@ -2392,6 +2394,75 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f NM", G->TLCCPeri / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
+	}
+	else if (screen == 23)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
+
+		GET_Display(Buffer, G->t_TPIguess);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
+
+		skp->Text(1 * W / 8, 8 * H / 21, "Launch Time:", 12);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
+		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 10 * H / 21, "Insertion:", 10);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
+		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+
+		if (G->LunarLiftoffTimeOption == 0)
+		{
+			skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
+			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
+			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
+		skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
+		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
+		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+		if (G->LunarLiftoffTimeOption == 0)
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Direct Profile", 14);
+		}
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(5 * W / 8, 7 * H / 14, "Horizontal Velocity:", 20);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
+		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 9 * H / 14, "Vertical Velocity:", 18);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 24)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Erasable Memory Programs", 24);
+
+		skp->Text(1 * W / 8, 2 * H / 14, "Program 99", 10);
+
+		sprintf(Buffer, "Uplink No. %d", G->EMPUplinkNumber);
+		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
 	}
 	return true;
 }
@@ -2634,6 +2705,18 @@ void ApolloRTCCMFD::menuSetUtilityMenu()
 void ApolloRTCCMFD::menuTranslunarPage()
 {
 	screen = 22;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarLiftoffPage()
+{
+	screen = 23;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetEMPPage()
+{
+	screen = 24;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4869,6 +4952,29 @@ void ApolloRTCCMFD::menuSetPCLanded()
 	G->PClanded = !G->PClanded;
 }
 
+void ApolloRTCCMFD::menuSetTPIguess()
+{
+	bool TPIGuessInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", TPIGuessInput, 0, 20, (void*)this);
+}
+
+bool TPIGuessInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_TPIguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TPIguess(double time)
+{
+	G->t_TPIguess = time;
+}
+
 void ApolloRTCCMFD::menuTMLat()
 {
 	bool TMLatInput(void* id, char *str, void *data);
@@ -4983,6 +5089,55 @@ void ApolloRTCCMFD::menuTLCCCalc()
 {
 	G->TLCCSolGood = true;
 	G->TLCCCalc();
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffCalc()
+{
+	if (G->target != NULL)
+	{
+		G->LunarLiftoffCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
+{
+	if (G->LunarLiftoffTimeOption < 1)
+	{
+		G->LunarLiftoffTimeOption++;
+	}
+	else
+	{
+		G->LunarLiftoffTimeOption = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetEMPUplinkP99()
+{
+	G->EMPUplinkNumber = 0;
+	G->EMPUplinkType = 0;
+}
+
+void ApolloRTCCMFD::menuEMPUplink()
+{
+	if (G->EMPUplinkType == 0)
+	{
+		G->EMPP99Uplink(G->EMPUplinkNumber);
+	}
+}
+
+void ApolloRTCCMFD::menuSetEMPUplinkNumber()
+{
+	if (G->EMPUplinkType == 0)
+	{
+		if (G->EMPUplinkNumber < 3)
+		{
+			G->EMPUplinkNumber++;
+		}
+		else
+		{
+			G->EMPUplinkNumber = 0;
+		}
+	}
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

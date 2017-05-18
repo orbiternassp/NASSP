@@ -936,6 +936,11 @@ public:
 	/// 
 	virtual void SwitchSelector(int item) = 0;
 
+	///
+	/// \brief Has an abort been initiated?
+	///
+	bool GetAbort() { return secs.BECO(); };
+
 	//
 	// CWS functions.
 	//
@@ -3594,6 +3599,7 @@ protected:
 	IMU imu;
 	IU iu;
 	CSMCautionWarningSystem cws;
+
 	DockingProbe dockingprobe;
 	SECS secs;
 	ELS els;
