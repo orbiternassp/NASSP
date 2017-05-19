@@ -1329,7 +1329,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep();
+	eds.TimeStep(simdt);
 	optics.TimeStep(simdt);
 	LR.TimeStep(simdt);
 	RR.TimeStep(simdt);
@@ -3950,76 +3950,6 @@ void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
 			thrustOn = (i != 0);
 		}
 	}
-}
-
-// Ascent Propulsion System
-LEM_APS::LEM_APS(){
-	lem = NULL;	
-	thrustOn = 0;
-	HePress[0] = 0; HePress[1] = 0;
-}
-
-void LEM_APS::Init(LEM *s){
-	lem = s;
-}
-
-void LEM_APS::TimeStep(double simdt){
-	if(lem == NULL){ return; }
-
-	if (lem->stage > 1) {
-
-		if (lem->GuidContSwitch.IsUp()) {
-			//PGNS
-			// Check i/o channel
-			ChannelValue val11;
-			val11 = lem->agc.GetOutputChannel(011);
-			if (val11[EngineOn] && !val11[EngineOff])
-			{
-				thrustOn = true;
-			}
-			if (!val11[EngineOn] && val11[EngineOff])
-			{
-				thrustOn = false;
-			}
-		}
-		else
-		{
-			//TBD: Thrust signal from AGS
-			thrustOn = false;
-		}
-
-		//Manual start
-		if (lem->ManualEngineStart.GetState() == 1)
-		{
-			thrustOn = true;
-		}
-
-		//Abort Stage switch pressed in disables function of engine stop button
-		if (lem->ManualEngineStop.GetState() == 1 && lem->AbortStageSwitch.GetState() == 0)
-		{
-			thrustOn = false;
-		}
-
-		if (thrustOn && lem->EngineArmSwitch.IsUp())
-		{
-			lem->SetThrusterLevel(lem->th_hover[0], 1.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 1.0);
-		}
-		else
-		{
-			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 0.0);
-		}
-		//sprintf(oapiDebugString(), "APS %d", thrustOn);
-	}
-}
-
-void LEM_APS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
-}
-
-void LEM_APS::LoadState(FILEHANDLE scn,char *end_str){
-
 }
 
 DPSGimbalActuator::DPSGimbalActuator() {

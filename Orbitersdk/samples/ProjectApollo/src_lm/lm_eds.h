@@ -24,11 +24,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "DelayTimer.h"
+
 class LEM_EDRelayBox
 {
 public:
 	LEM_EDRelayBox();
-	void Timestep();
+	void Timestep(double simdt);
 	void Init(LEM *l, CircuitBrakerSwitch *LogicPower, DCbus *edbus, Battery *edbatt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -36,6 +38,7 @@ public:
 	bool GetLandingGearDeployRelay() { return LandingGearDeployRelay; }
 	bool GetStagingRelay() { return StagingRelay; }
 	bool GetMasterArmRelay() { return MasterArmRelay; }
+	void SetStagingRelay() { StagingRelay = true; }
 
 	bool StageSeqLight();
 protected:
@@ -51,9 +54,16 @@ protected:
 	//K2
 	bool StagingRelay;
 
-
 	//Non-latching Relays:
 
+	//K3
+	bool InitiateStagingRelay;
+	//K4
+	bool CableCuttingRelay;
+	//K5
+	bool StagingBoltsNutsRelay;
+	//K6
+	bool DeadFacingRelay;
 	//K7
 	bool RCSPropPressRelay;
 	//K8
@@ -65,13 +75,18 @@ protected:
 	//K11
 	bool AscentPropPressTank2Relay;
 	//K12
-	//
+	bool AscentPropCompValvesRelay;
 	//K13
 	bool DescentPropVentRelay;
 	//K14
 	bool DescentPropPressRelay;
 	//K15
 	bool DescentTankIsolValvesRelay;
+
+	//Delay Timers
+
+	DelayTimer StagingBoltsNutsDelay;
+	DelayTimer CableCuttingDelay;
 
 	LEM *lem;
 	CircuitBrakerSwitch *EDLogicPower;
@@ -86,7 +101,7 @@ public:
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep();
+	void TimeStep(double simdt);
 	LEM *lem;					// Pointer at LEM
 	bool LG_Deployed;           // Landing Gear Deployed Flag	
 

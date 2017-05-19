@@ -38,6 +38,7 @@
 #include "lm_telecom.h"
 #include "pyro.h"
 #include "lm_eds.h"
+#include "lm_aps.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -417,20 +418,6 @@ protected:
 
 	THRUSTER_HANDLE *dpsThruster;
 	
-};
-
-// Ascent Engine
-class LEM_APS{
-public:
-	LEM_APS();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	
-	LEM *lem;					// Pointer at LEM
-	double HePress[2];			// Helium pressure above and below the regulator
-	bool thrustOn;				// Engine "On" Command
 };
 
 ///

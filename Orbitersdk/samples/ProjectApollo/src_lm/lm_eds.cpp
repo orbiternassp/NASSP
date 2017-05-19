@@ -33,7 +33,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "lm_eds.h"
 
-LEM_EDRelayBox::LEM_EDRelayBox()
+LEM_EDRelayBox::LEM_EDRelayBox():
+	StagingBoltsNutsDelay(0.05),
+	CableCuttingDelay(0.05)
 {
 	MasterArmRelay = false;
 	StagingRelay = false;
@@ -55,8 +57,11 @@ void LEM_EDRelayBox::Init(LEM *l, CircuitBrakerSwitch *LogicPower, DCbus *edbus,
 	EDBattery = edbatt;
 }
 
-void LEM_EDRelayBox::Timestep()
+void LEM_EDRelayBox::Timestep(double simdt)
 {
+	StagingBoltsNutsDelay.Timestep(simdt);
+	CableCuttingDelay.Timestep(simdt);
+
 	if (HasDCPower())
 	{
 		//Master Arm Relay
@@ -80,6 +85,56 @@ void LEM_EDRelayBox::Timestep()
 		{
 			StagingRelay = false;
 		}
+	}
+
+	if (HasDCPower() && StagingRelay)
+	{
+		StagingBoltsNutsDelay.SetRunning(true);
+	}
+
+	if (HasDCPower() && StagingRelay && StagingBoltsNutsDelay.ContactClosed())
+	{
+		InitiateStagingRelay = true;
+	}
+	else
+	{
+		InitiateStagingRelay = false;
+	}
+
+	if (HasDCPower() && StagingRelay && InitiateStagingRelay)
+	{
+		CableCuttingDelay.SetRunning(true);
+	}
+
+	if (HasDCPower() && StagingRelay && CableCuttingDelay.ContactClosed())
+	{
+		CableCuttingRelay = true;
+	}
+	else
+	{
+		CableCuttingRelay = false;
+	}
+
+	if (HasDCPower() && StagingRelay)
+	{
+		StagingBoltsNutsRelay = true;
+	}
+	else if (HasDCPower() && InitiateStagingRelay)
+	{
+		StagingBoltsNutsRelay = true;
+	}
+	else
+	{
+		StagingBoltsNutsRelay = false;
+	}
+
+	if (HasDCPower() && StagingRelay)
+	{
+		DeadFacingRelay = true;
+	}
+	else
+	{
+		DeadFacingRelay = false;
 	}
 
 	if (HasDCPower() && lem->EDHePressRCS.IsUp())
@@ -176,6 +231,10 @@ void LEM_EDRelayBox::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 
 	papiWriteScenario_bool(scn, "MASTERARMRELAY", MasterArmRelay);
 	papiWriteScenario_bool(scn, "STAGINGRELAY", StagingRelay);
+	papiWriteScenario_bool(scn, "INITIATESTAGINGRELAY", InitiateStagingRelay);
+	papiWriteScenario_bool(scn, "CABLECUTTINGRELAY", CableCuttingRelay);
+	papiWriteScenario_bool(scn, "STAGINGBOLTSNUTSRELAY", StagingBoltsNutsRelay);
+	papiWriteScenario_bool(scn, "DEADFACINGRELAY", DeadFacingRelay);
 	papiWriteScenario_bool(scn, "RCSPROPPRESSRELAY", RCSPropPressRelay);
 	papiWriteScenario_bool(scn, "LANDINGGEARDEPLOYRELAY", LandingGearDeployRelay);
 	papiWriteScenario_bool(scn, "DESCENTENGINEONRELAY", DescentEngineOnRelay);
@@ -199,6 +258,10 @@ void LEM_EDRelayBox::LoadState(FILEHANDLE scn, char *end_str) {
 		}
 		papiReadScenario_bool(line, "MASTERARMRELAY", MasterArmRelay);
 		papiReadScenario_bool(line, "STAGINGRELAY", StagingRelay);
+		papiReadScenario_bool(line, "INITIATESTAGINGRELAY", InitiateStagingRelay);
+		papiReadScenario_bool(line, "CABLECUTTINGRELAY", CableCuttingRelay);
+		papiReadScenario_bool(line, "STAGINGBOLTSNUTSRELAY", StagingBoltsNutsRelay);
+		papiReadScenario_bool(line, "DEADFACINGRELAY", DeadFacingRelay);
 		papiReadScenario_bool(line, "RCSPROPPRESSRELAY", RCSPropPressRelay);
 		papiReadScenario_bool(line, "LANDINGGEARDEPLOYRELAY", LandingGearDeployRelay);
 		papiReadScenario_bool(line, "DESCENTENGINEONRELAY", DescentEngineOnRelay);
@@ -225,13 +288,13 @@ void LEM_EDS::Init(LEM *s) {
 	RelayBoxB.Init(lem, &lem->EDS_CB_LOGIC_B, &lem->ED28VBusB, lem->EDBatteryB);
 }
 
-void LEM_EDS::TimeStep() {
+void LEM_EDS::TimeStep(double simdt) {
 	
 	if (lem->stage < 2)
 	{
-		RelayBoxA.Timestep();
+		RelayBoxA.Timestep(simdt);
 	}
-	RelayBoxB.Timestep();
+	RelayBoxB.Timestep(simdt);
 
 	bool pyroA = false, pyroB = false;
 

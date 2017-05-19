@@ -25,50 +25,10 @@
 #if !defined(_PA_SECS_H)
 #define _PA_SECS_H
 
+#include "DelayTimer.h"
+
 class Saturn;
 class FloatBag;
-
-class SECSTimer{
-
-public:
-	SECSTimer(double delay);
-
-	virtual void Timestep(double simdt);
-	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	virtual void LoadState(FILEHANDLE scn, char *end_str);
-	void SetTime(double t);
-	double GetTime();
-
-	void Reset();
-	void SetRunning(bool run) { Running = run; };
-	bool IsRunning() { return Running; };
-	void SetContact(bool cont) { Contact = cont; };
-	bool ContactClosed() { return Contact; };
-
-	void SetDelay(double del) { delay = del; }
-
-protected:
-	double seconds;
-	double delay;
-
-	bool Running;
-	bool Contact;
-};
-
-class RestartableSECSTimer : public SECSTimer
-{
-public:
-	RestartableSECSTimer(double delay);
-	void Timestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	void SetStart(bool st) { Start = st; };
-	bool GetStart() { return Start; };
-
-protected:
-	bool Start;
-};
 
 //Reaction Control System Controller
 class RCSC
@@ -139,16 +99,16 @@ protected:
 	bool RCSCCMSMTransferB;
 
 	//Propellant Dump and Purge Disable Timer
-	RestartableSECSTimer TD1, TD8;
+	RestartableDelayTimer TD1, TD8;
 
 	//CM RCS Propellant Dump Delay
-	RestartableSECSTimer TD3, TD2;
+	RestartableDelayTimer TD3, TD2;
 
 	//Purge Delay
-	SECSTimer TD5, TD4;
+	DelayTimer TD5, TD4;
 
 	//Main DC Bus Delay
-	SECSTimer TD7, TD6;
+	DelayTimer TD7, TD6;
 
 	//Misc
 	bool Mode1ASignal;
@@ -262,23 +222,23 @@ protected:
 	MESC* OtherMESC;
 
 	//Abort Start Delay
-	SECSTimer TD1;
+	DelayTimer TD1;
 	//CM/SM Seperate Delay
-	SECSTimer TD3;
+	DelayTimer TD3;
 	//Canard Deploy Delay
-	SECSTimer TD5;
+	DelayTimer TD5;
 	//ELS Activate Delay
-	SECSTimer TD7;
+	DelayTimer TD7;
 	//CSM/LV Separation Delay
-	SECSTimer TD11;
+	DelayTimer TD11;
 	//RCS Enable Arm Delay
-	SECSTimer TD13;
+	DelayTimer TD13;
 	//RCS CMD Enable Delay
-	SECSTimer TD15;
+	DelayTimer TD15;
 	//Apex Cover Jettison Delay
-	SECSTimer TD17;
+	DelayTimer TD17;
 	//Pyro Cutout Delay
-	SECSTimer TD23;
+	DelayTimer TD23;
 
 	Saturn *Sat;
 
@@ -430,9 +390,9 @@ protected:
 	//Delay Timers:
 	
 	//Drogue Parachute Deploy
-	SECSTimer TD1;
+	DelayTimer TD1;
 	//Pilot parachute Deploy
-	SECSTimer TD3;
+	DelayTimer TD3;
 
 	CircuitBrakerSwitch *ELSBatteryBreaker;
 

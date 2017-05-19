@@ -153,6 +153,7 @@
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -173,6 +174,7 @@
     <ClCompile Include="..\..\src_sys\checklistController.cpp" />
     <ClCompile Include="..\..\src_sys\checklistControllerHelpers.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\dsky.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -348,6 +350,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_lm\lm_aps.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
@@ -357,6 +360,7 @@
     <ClInclude Include="..\..\src_csm\csmcautionwarning.h" />
     <ClInclude Include="..\..\src_csm\CSMcomputer.h" />
     <ClInclude Include="..\..\src_csm\dockingprobe.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\dsky.h" />
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
