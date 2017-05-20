@@ -3597,7 +3597,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_SIX:	// Main chute is attached		
-		if (!SplashdownPlayed && GetAltitude() < 2.5) {
+		if (!SplashdownPlayed && GetAltitude(ALTMODE_GROUND) < 2.5) {
 			SplashS.play(NOLOOP, 180);
 			SplashS.done();
 
