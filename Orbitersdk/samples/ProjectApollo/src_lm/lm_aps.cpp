@@ -31,6 +31,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "dsky.h"
 #include "IMU.h"
 #include "LEM.h"
+#include "papi.h"
 #include "lm_aps.h"
 
 // Ascent Propulsion System
@@ -264,11 +265,27 @@ void LEM_APS::TimeStep(double simdt) {
 	}
 	//sprintf(oapiDebugString(), "Manual: K19 %d K22 %d K11 %d K12 %d K13 %d K14 %d", K19, K22, K11, K12, K13, K14);
 	//sprintf(oapiDebugString(), "Auto: K13 %d K207 %d K206 %d K14 %d K24 %d K25 %d AutoOn %d", K13, K207, K206, K14, K24, K25, AutoOn);
-	//sprintf(oapiDebugString(), "Abort: K21 %d K23 %d K13 %d K14 %d AutoOn %d armedOn %d thrustOn %d", K21, K23, K13, K14, AutoOn, armedOn, thrustOn);
+	sprintf(oapiDebugString(), "Abort: K21 %d K23 %d K13 %d K14 %d AutoOn %d armedOn %d thrustOn %d", K21, K23, K13, K14, AutoOn, armedOn, thrustOn);
 }
 
 void LEM_APS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_bool(scn, "AUTOON", AutoOn);
+	papiWriteScenario_bool(scn, "ARMEDON", armedOn);
+	papiWriteScenario_bool(scn, "THRUSTON", thrustOn);
+	papiWriteScenario_bool(scn, "K11", K11);
+	papiWriteScenario_bool(scn, "K12", K12);
+	papiWriteScenario_bool(scn, "K13", K13);
+	papiWriteScenario_bool(scn, "K14", K14);
+	papiWriteScenario_bool(scn, "K19", K19);
+	papiWriteScenario_bool(scn, "K21", K21);
+	papiWriteScenario_bool(scn, "K22", K12);
+	papiWriteScenario_bool(scn, "K23", K23);
+	papiWriteScenario_bool(scn, "K24", K24);
+	papiWriteScenario_bool(scn, "K25", K25);
+	papiWriteScenario_bool(scn, "K206", K206);
+	papiWriteScenario_bool(scn, "K207", K207);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -282,7 +299,21 @@ void LEM_APS::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-
+		papiReadScenario_bool(line, "AUTOON", AutoOn);
+		papiReadScenario_bool(line, "ARMEDON", armedOn);
+		papiReadScenario_bool(line, "THRUSTON", thrustOn);
+		papiReadScenario_bool(line, "K11", K11);
+		papiReadScenario_bool(line, "K12", K12);
+		papiReadScenario_bool(line, "K13", K13);
+		papiReadScenario_bool(line, "K14", K14);
+		papiReadScenario_bool(line, "K19", K19);
+		papiReadScenario_bool(line, "K21", K21);
+		papiReadScenario_bool(line, "K22", K12);
+		papiReadScenario_bool(line, "K23", K23);
+		papiReadScenario_bool(line, "K24", K24);
+		papiReadScenario_bool(line, "K25", K25);
+		papiReadScenario_bool(line, "K206", K206);
+		papiReadScenario_bool(line, "K207", K207);
 
 	}
 }

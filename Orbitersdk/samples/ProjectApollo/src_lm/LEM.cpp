@@ -1145,6 +1145,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
 			deca.LoadState(scn);
 		}
+		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
+			APS.LoadState(scn, "APS_END");
+		}
 		else if (!strnicmp(line, CROSSPOINTER_LEFT_START_STRING, sizeof(CROSSPOINTER_LEFT_START_STRING))) {
 			crossPointerLeft.LoadState(scn);
 		}
@@ -1490,6 +1493,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	DPS.rollGimbalActuator.SaveState(scn);
 	oapiWriteLine(scn, "DECA_BEGIN");
 	deca.SaveState(scn);
+	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	oapiWriteLine(scn, CROSSPOINTER_LEFT_START_STRING);
 	crossPointerLeft.SaveState(scn);
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
