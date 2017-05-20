@@ -240,6 +240,7 @@ void LEM_EDRelayBox::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "DESCENTENGINEONRELAY", DescentEngineOnRelay);
 	papiWriteScenario_bool(scn, "ASCENTPROPPRESSTANK1RELAY", AscentPropPressTank1Relay);
 	papiWriteScenario_bool(scn, "ASCENTPROPPRESSTANK2RELAY", AscentPropPressTank2Relay);
+	papiWriteScenario_bool(scn, "ASCENTPROPCOMPVALVESRELAY", AscentPropCompValvesRelay);
 	papiWriteScenario_bool(scn, "DESCENTPROPVENTRELAY", DescentPropVentRelay);
 	papiWriteScenario_bool(scn, "DESCENTPROPPRESSRELAY", DescentPropPressRelay);
 	papiWriteScenario_bool(scn, "DESCENTTANKISOLVALVESRELAY", DescentTankIsolValvesRelay);
@@ -267,6 +268,7 @@ void LEM_EDRelayBox::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "DESCENTENGINEONRELAY", DescentEngineOnRelay);
 		papiReadScenario_bool(line, "ASCENTPROPPRESSTANK1RELAY", AscentPropPressTank1Relay);
 		papiReadScenario_bool(line, "ASCENTPROPPRESSTANK2RELAY", AscentPropPressTank2Relay);
+		papiReadScenario_bool(line, "ASCENTPROPCOMPVALVESRELAY", AscentPropCompValvesRelay);
 		papiReadScenario_bool(line, "DESCENTPROPVENTRELAY", DescentPropVentRelay);
 		papiReadScenario_bool(line, "DESCENTPROPPRESSRELAY", DescentPropPressRelay);
 		papiReadScenario_bool(line, "DESCENTTANKISOLVALVESRELAY", DescentTankIsolValvesRelay);
@@ -277,6 +279,7 @@ void LEM_EDRelayBox::LoadState(FILEHANDLE scn, char *end_str) {
 LEM_EDS::LEM_EDS() {
 	lem = NULL;
 	LG_Deployed = FALSE;
+	Deadface = false;
 }
 
 void LEM_EDS::Init(LEM *s) {
@@ -316,11 +319,44 @@ void LEM_EDS::TimeStep(double simdt) {
 	lem->LandingGearPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
 
-
-	//Staging
+	//Ascent stage deadfacing
 
 	pyroA = false, pyroB = false;
 
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetDeadFacingRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetDeadFacingRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	if ((pyroA || pyroB) && !Deadface)
+	{
+		// Disconnect EPS stuff
+		lem->DES_LMPs28VBusA.Disconnect();
+		lem->DES_LMPs28VBusB.Disconnect();
+		lem->DES_CDRs28VBusA.Disconnect();
+		lem->DES_CDRs28VBusB.Disconnect();
+		// Disconnect monitor select rotaries
+		lem->EPSMonitorSelectRotary.SetSource(1, NULL);
+		lem->EPSMonitorSelectRotary.SetSource(2, NULL);
+		lem->EPSMonitorSelectRotary.SetSource(3, NULL);
+		lem->EPSMonitorSelectRotary.SetSource(4, NULL);
+		lem->EPSEDVoltSelect.SetSource(0, NULL);
+		// Change descent TB
+		lem->DSCBattFeedTB.SetState(0);
+		Deadface = true;
+	}
+
+	//Staging Bolts
+	pyroA = false;
 	if (lem->stage < 2)
 	{
 		if (RelayBoxA.GetStagingRelay() && RelayBoxA.GetMasterArmRelay())
@@ -329,13 +365,33 @@ void LEM_EDS::TimeStep(double simdt) {
 			pyroA = true;
 		}
 	}
+	lem->StagingBoltsPyros.WireTo((pyroA ? &lem->ED28VBusA : NULL));
+
+	//Staging Nuts
+	pyroB = false;
 	if (RelayBoxB.GetStagingRelay() && RelayBoxB.GetMasterArmRelay())
 	{
 		// Blow Pyro B
 		pyroB = true;
 	}
+	lem->StagingNutsPyros.WireTo(pyroB ? &lem->ED28VBusB : NULL);
 
-	lem->StagingPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+	// Interstage umbilical severance
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetCableCuttingRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetCableCuttingRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->CableCuttingPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
 	
 	// Set TBs
@@ -353,37 +409,14 @@ void LEM_EDS::TimeStep(double simdt) {
 			LG_Deployed = TRUE;
 		}
 	}
-	// RCS propellant pressurization
-	// Descent Propellant Tank Prepressurization (ambient helium)
-	// Descent Propellant Tank Prepressurization (supercritical helium)
-	// Descent Propellant Tank Venting
-	// Ascent Propellant Tank Pressurization
-	// Interstage nut-and-bolt separation and ascent stage deadfacing
-	if (lem->status < 2) {
-		if (lem->StagingPyros.Blown()) {
-			// Disconnect EPS stuff
-			lem->DES_LMPs28VBusA.Disconnect();
-			lem->DES_LMPs28VBusB.Disconnect();
-			lem->DES_CDRs28VBusA.Disconnect();
-			lem->DES_CDRs28VBusB.Disconnect();
-			// Disconnect monitor select rotaries
-			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-			lem->EPSEDVoltSelect.SetSource(0, NULL);
-			// Change descent TB
-			lem->DSCBattFeedTB.SetState(0);
-			// Stage
-			lem->SeparateStage(1);
-		}
-	}
-	// Interstage umbilical severance
+
+	//sprintf(oapiDebugString(), "Bolts %d Nuts %d Cables %d", lem->StagingBoltsPyros.Blown(), lem->StagingNutsPyros.Blown(), lem->CableCuttingPyros.Blown());
 }
 
 void LEM_EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
+	oapiWriteScenario_int(scn, "DEADFACE", Deadface);
 	oapiWriteScenario_int(scn, "SOV_A", lem->GetValveState(LEM_RCS_MAIN_SOV_A));
 	oapiWriteScenario_int(scn, "SOV_B", lem->GetValveState(LEM_RCS_MAIN_SOV_B));
 	if (lem->stage < 2)
@@ -403,6 +436,10 @@ void LEM_EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, "LG_DEP", 6)) {
 			sscanf(line + 6, "%d", &dec);
 			LG_Deployed = (bool)(dec != 0);
+		}
+		if (!strnicmp(line, "DEADFACE", 8)) {
+			sscanf(line + 8, "%d", &dec);
+			Deadface = (bool)(dec != 0);
 		}
 		if (!strnicmp(line, "SOV_A", 5)) {
 			sscanf(line + 6, "%d", &dec);

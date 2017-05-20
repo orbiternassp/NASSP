@@ -574,8 +574,6 @@ public:
 	void SetLmLandedMesh();
 	void SetGimbal(bool setting);
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
-	void AbortStage();
-	void StartAscent();
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
@@ -1216,16 +1214,6 @@ protected:
 	bool Cswitch8;
 	bool Cswitch9;
 
-	bool Sswitch1;
-	bool Sswitch2;
-	bool Sswitch3;
-	bool Sswitch4;
-	bool Sswitch5;
-	bool Sswitch6;
-	bool Sswitch7;
-	bool Sswitch8;
-	bool Sswitch9;
-
 	bool LPswitch1;
 	bool LPswitch2;
 	bool LPswitch3;
@@ -1571,13 +1559,10 @@ protected:
 	bool ABORT_IND;
 	bool ENGIND[7];
 
-	double countdown;
-
 	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;
 	bool HatchOpen;
-	bool bManualSeparate;
 	bool ToggleEva;
 	bool CDREVA_IP;
 
@@ -1586,7 +1571,6 @@ protected:
 
 	int	viewpos;
 	
-	bool startimer;
 	bool ContactOK;
 	bool SoundsLoaded;
 
@@ -1630,9 +1614,11 @@ protected:
 	//Pyros
 
 	Pyro LandingGearPyros;
-	Pyro StagingPyros;
+	Pyro StagingBoltsPyros;
+	Pyro StagingNutsPyros;
+	Pyro CableCuttingPyros;
 	PowerMerge LandingGearPyrosFeeder;
-	PowerMerge StagingPyrosFeeder;
+	PowerMerge CableCuttingPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;

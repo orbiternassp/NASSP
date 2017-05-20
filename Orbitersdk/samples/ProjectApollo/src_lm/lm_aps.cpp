@@ -172,6 +172,10 @@ void LEM_APS::TimeStep(double simdt) {
 	{
 		K13 = true;
 	}
+	else if (!K206 && K22 && K23 && lem->AbortStageSwitch.GetState() == 0 && (lem->CDR_SCS_ABORT_STAGE_CB.IsPowered() || lem->SCS_ABORT_STAGE_CB.IsPowered()))
+	{
+		K13 = true;
+	}
 	else
 	{
 		K13 = false;
@@ -235,6 +239,18 @@ void LEM_APS::TimeStep(double simdt) {
 
 	if (lem->stage > 1)
 	{
+		if (armedOn)
+		{
+			lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
+			lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
+		}
+		else
+		{
+			lem->SetThrusterResource(lem->th_hover[0], NULL);
+			lem->SetThrusterResource(lem->th_hover[1], NULL);
+		}
+
+
 		if (thrustOn && armedOn)
 		{
 			lem->SetThrusterLevel(lem->th_hover[0], 1.0);
@@ -248,12 +264,25 @@ void LEM_APS::TimeStep(double simdt) {
 	}
 	//sprintf(oapiDebugString(), "Manual: K19 %d K22 %d K11 %d K12 %d K13 %d K14 %d", K19, K22, K11, K12, K13, K14);
 	//sprintf(oapiDebugString(), "Auto: K13 %d K207 %d K206 %d K14 %d K24 %d K25 %d AutoOn %d", K13, K207, K206, K14, K24, K25, AutoOn);
+	//sprintf(oapiDebugString(), "Abort: K21 %d K23 %d K13 %d K14 %d AutoOn %d armedOn %d thrustOn %d", K21, K23, K13, K14, AutoOn, armedOn, thrustOn);
 }
 
 void LEM_APS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
 
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_APS::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+
+	}
 }

@@ -221,7 +221,6 @@
 #define AID_LGC_THRUSTER_QUADS          432
 #define AID_RCS_SYSTEMA_SYSTEMB         433
 #define AID_MAIN_SOV_SWITCHES           434
-#define AID_LANDING_GEAR_SWITCH         435
 #define AID_ENGINE_GIMBAL_SWITCH        436
 #define AID_ASCENT_HE                   437
 #define AID_EXPLOSIVE_DEVICES2          438

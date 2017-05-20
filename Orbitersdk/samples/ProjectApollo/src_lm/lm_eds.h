@@ -36,8 +36,10 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	bool GetLandingGearDeployRelay() { return LandingGearDeployRelay; }
-	bool GetStagingRelay() { return StagingRelay; }
+	bool GetStagingRelay() { return StagingBoltsNutsRelay; }
 	bool GetMasterArmRelay() { return MasterArmRelay; }
+	bool GetDeadFacingRelay() { return DeadFacingRelay; }
+	bool GetCableCuttingRelay() { return CableCuttingRelay; }
 	void SetStagingRelay() { StagingRelay = true; }
 
 	bool StageSeqLight();
@@ -103,7 +105,8 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
 	LEM *lem;					// Pointer at LEM
-	bool LG_Deployed;           // Landing Gear Deployed Flag	
+	bool LG_Deployed;           // Landing Gear Deployed Flag
+	bool Deadface;				// Deadface Flag
 
 	LEM_EDRelayBox RelayBoxA;
 	LEM_EDRelayBox RelayBoxB;

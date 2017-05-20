@@ -202,8 +202,10 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	dsky(soundlib, agc, 015),
 	LandingGearPyros("Landing-Gear-Pyros", Panelsdk),
 	LandingGearPyrosFeeder("Landing-Gear-Pyros-Feeder", Panelsdk),
-	StagingPyros("Staging-Pyros", Panelsdk),
-	StagingPyrosFeeder("Staging-Pyros-Feeder", Panelsdk),
+	StagingBoltsPyros("Staging-Bolts-Pyros", Panelsdk),
+	StagingNutsPyros("Staging-Nuts-Pyros", Panelsdk),
+	CableCuttingPyros("Cable-Cutting-Pyros", Panelsdk),
+	CableCuttingPyrosFeeder("Cable-Cutting-Pyros-Feeder", Panelsdk),
 	agc(soundlib, dsky, imu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
@@ -276,12 +278,10 @@ void LEM::Init()
 	bModeDocked=false;
 	bModeHover=false;
 	HatchOpen=false;
-	bManualSeparate=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
-	startimer=false;
 	ContactOK = false;
 	stage = 0;
 	status = 0;
@@ -744,6 +744,19 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
 	}
+
+	// RCS propellant pressurization
+	// Descent Propellant Tank Prepressurization (ambient helium)
+	// Descent Propellant Tank Prepressurization (supercritical helium)
+	// Descent Propellant Tank Venting
+	// Ascent Propellant Tank Pressurization
+	if (status < 2) {
+		if (StagingBoltsPyros.Blown() && StagingNutsPyros.Blown() && CableCuttingPyros.Blown()) {
+			AbortFire();
+			// Stage
+			SeparateStage(stage);
+		}
+	}
 }
 
 
@@ -813,9 +826,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	if (status !=0 && Sswitch2){
-				bManualSeparate = true;
-	}
 	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
 
 	if( toggleRCS){
@@ -833,10 +843,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 		else if (GetAttitudeMode()==2 ){
 		P44switch=true;
-		}
-	if(Sswitch1){
-		Sswitch1=false;
-		Undock(0);
 		}
 
 	//
@@ -911,62 +917,17 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			ToggleEva = true;
 			EVAswitch = false;
 		}
-		//
-		// This does an abort stage if the descent stage runs out of fuel,
-		// probably should start P71
-		//
-		if (GetPropellantMass(ph_Dsc)<=50){
-			SeparateStage(stage);
-			SetEngineLevel(ENGINE_HOVER,1);
-			stage = 2;
-			AbortFire();
-			agc.SetInputChannelBit(030, AbortWithAscentStage, true); // Abort with ascent stage.
-		}
-		if (bManualSeparate && !startimer){
-			VESSELSTATUS vs;
-			GetStatus(vs);
 
-			if (vs.status == 1){
-				countdown=simt;
-				LunarAscent.play(NOLOOP,200);
-				startimer=true;
-				//vessel->SetTouchdownPoints (_V(0,-0,10), _V(-1,-0,-10), _V(1,-0,-10));
-			}
-			else{
-				SeparateStage(stage);
-				stage = 2;
-			}
-		}
-		if ((simt-(10+countdown))>=0 && startimer ){
-			StartAscent();
-		}
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
 	}
 	else if (stage == 2) {
 		if (AscentEngineArmed()) {
-			SetThrusterResource(th_hover[0], ph_Asc);
-			SetThrusterResource(th_hover[1], ph_Asc);
 			agc.SetInputChannelBit(030, EngineArmed, true);
 		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
 			agc.SetInputChannelBit(030, EngineArmed, false);
 		}
 	}
-	else if (stage == 3){
-		if (AscentEngineArmed()) {
-			SetThrusterResource(th_hover[0], ph_Asc);
-			SetThrusterResource(th_hover[1], ph_Asc);
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
-	}
-	else if (stage == 4)
-	{	
-	}
+
 	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime, DummyEvents);
 
@@ -1019,36 +980,6 @@ void LEM::SetGimbal(bool setting)
 {
 	agc.SetInputChannelBit(032, DescentEngineGimbalsDisabled, setting);
 	GMBLswitch = setting;
-}
-
-//
-// Perform the stage separation as done when P12 is running and Abort Stage is pressed
-//
-
-void LEM::AbortStage()
-{
-	ButtonClick();
-	AbortFire();
-	SeparateStage(stage);
-	SetThrusterResource(th_hover[0], ph_Asc);
-	SetThrusterResource(th_hover[1], ph_Asc);
-	stage = 2;
-	startimer = false;
-}
-
-//
-// Initiate ascent.
-//
-
-void LEM::StartAscent()
-
-{
-	SeparateStage(stage);
-	stage = 2;
-	SetEngineLevel(ENGINE_HOVER,1);
-	startimer = false;
-
-	LunarAscent.done();
 }
 
 typedef union {

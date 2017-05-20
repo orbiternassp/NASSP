@@ -1469,11 +1469,6 @@ bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
 			else if (state == 1) {
 				SwitchTo(0);
 				Sclick.play();
-				lem->AbortFire();
-				lem->SeparateStage(lem->stage);
-				lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
-				lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
-				lem->stage = 2;
 				lem->agc.SetInputChannelBit(030, AbortWithAscentStage, true);
 			}
 			return true;
