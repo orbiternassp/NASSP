@@ -167,7 +167,7 @@ void CMChute::clbkPreStep(double simt,double simdt,double mjd)
     SetAnimation(anim[state],proc[state]);
    }else state++;
   }else if(state==STATE_DEPLOYED){
-   if(GetAltitude()<2.3){
+   if(GetAltitude(ALTMODE_GROUND)<2.3){
     if(procLanding<1){
      procLanding=min(procLanding+simdt/20,1);
      SetAnimation(animLanding,procLanding);
