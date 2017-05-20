@@ -2237,7 +2237,7 @@ void LEM_LR::TimeStep(double simdt){
 		rate[1] = vel_LR.y / 0.3048;
 		rate[2] = vel_LR.z / 0.3048;
 
-		if (range < 50000.0)
+		if (range > 10.0 && range < 50000.0)
 		{
 			velocityGood = 1;
 		}

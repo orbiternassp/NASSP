@@ -63,6 +63,7 @@ public:
 	void REFSMMATUplink(void);
 	void StateVectorUplink();
 	void TLANDUplink(void);
+	void EMPP99Uplink(int i);
 	void ManeuverPAD();
 	void EntryPAD();
 	void TPIPAD();
@@ -256,6 +257,11 @@ public:
 	//Lunar Liftoff Time Prediction
 	LunarLiftoffResults LunarLiftoffTimes;
 	double t_TPIguess;
+	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile
+
+	//Erasable Memory Programs
+	int EMPUplinkType;	// 0 = P99
+	int EMPUplinkNumber;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

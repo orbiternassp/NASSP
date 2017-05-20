@@ -314,7 +314,7 @@ public:
 
 	bool AbortLightPowerA();
 	bool AbortLightPowerB();
-	bool BECO();
+	virtual bool BECO();
 
 	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
 	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
