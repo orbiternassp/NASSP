@@ -4418,11 +4418,13 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	}
 	else
 	{
+		int n = 0;
+
 		dt = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
 
 		dt2 = dt + 10.0;							//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
 
-		while (abs(dt2 - dt) > 0.1)					//0.1 seconds accuracy should be enough
+		while (abs(dt2 - dt) > 0.1 && n <= 20)					//0.1 seconds accuracy should be enough
 		{
 			c1 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt, opt->DH, gravref);		//c is the difference between desired and actual DH
 			c2 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt2, opt->DH, gravref);
@@ -4430,6 +4432,7 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 			dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
 			dt = dt2;
 			dt2 = dt2_apo;
+			n++;
 		}
 
 		CDHtime_cor = dt2 + (SVMJD - opt->GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
