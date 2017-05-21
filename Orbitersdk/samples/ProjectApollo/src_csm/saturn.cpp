@@ -3568,7 +3568,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			NextMissionEventTime = MissionTime + 1.;
 		}
 		// Landing
-		if (GetAltitude() < 2.5) {
+		if (GetAltitude(ALTMODE_GROUND) < 2.5) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			DetachChild(ah);
