@@ -403,12 +403,14 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
+
+	void ThrottleActuator(double dpos);
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
 	bool thrustOn;				// Engine "On" Command
-	bool thrustOff;				// Engine "Off" Command
 	bool engArm;				// Engine Arm Command
+	bool engPreValvesArm;		// Engine Prevalves Arm Command
 	double thrustcommand;		// DPS Thrust Command
 
 	DPSGimbalActuator pitchGimbalActuator;
@@ -806,7 +808,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	AGCIOSwitch THRContSwitch;
+	ToggleSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;
@@ -1777,6 +1779,9 @@ protected:
 	GASTA gasta;
 	ORDEAL ordeal;
 	MechanicalAccelerometer mechanicalAccelerometer;
+	SCCA1 scca1;
+	SCCA2 scca2;
+	SCCA3 scca3;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1841,6 +1846,9 @@ protected:
 	friend class LEM_DPS;
 	friend class LEM_APS;
 	friend class DECA;
+	friend class SCCA1;
+	friend class SCCA2;
+	friend class SCCA3;
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
 	friend class ThrustWeightInd;

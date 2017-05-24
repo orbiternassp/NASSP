@@ -677,6 +677,11 @@ void LEM::SystemsInit()
 	// EDS initialization
 	eds.Init(this);
 
+	// S&C Control Assemblies
+	scca1.Init(this);
+	scca2.Init(this);
+	scca3.Init(this);
+
 	// DPS and APS
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
@@ -1345,6 +1350,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);
+	scca1.Timestep(simdt);
+	scca2.Timestep(simdt);
+	scca3.Timestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
@@ -3853,7 +3861,7 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsThruster(dps) {
 	lem = NULL;	
 	thrustOn = 0;
-	thrustOff = 0;
+	engPreValvesArm = 0;
 	engArm = 0;
 	HePress[0] = 0; HePress[1] = 0;
 	thrustcommand = 0;
@@ -3865,31 +3873,75 @@ void LEM_DPS::Init(LEM *s){
 	HePress[1] = 240;
 }
 
+void LEM_DPS::ThrottleActuator(double dpos)
+{
+	if (engArm)
+	{
+		thrustcommand += dpos;
+
+		if (thrustcommand > 1.0)
+		{
+			thrustcommand = 1.0;
+		}
+		else if(thrustcommand < 0.0)
+		{
+			thrustcommand = 0.0;
+		}
+	}
+}
+
 void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
+	if (lem->stage > 1) { return; }
 
-	//Descent Engine Command Override. If DECA power goes off, DPS stays running. No signal to throttle and GDAs though. So get power back quickly or abort.
-	if (lem->EngineDescentCommandOverrideSwitch.IsUp())
+	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
+	{
+		engPreValvesArm = true;
+	}
+	else
+	{
+		engPreValvesArm = false;
+	}
+
+	if (lem->SCS_DECA_PWR_CB.IsPowered() && (lem->deca.GetK1() || lem->deca.GetK23()))
+	{
+		engArm = true;
+	}
+	else
+	{
+		engArm = false;
+	}
+
+	if (lem->deca.GetThrustOn() || lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5())
 	{
 		thrustOn = true;
 	}
+	else
+	{
+		thrustOn = false;
+	}
 
-	if (lem->stage < 2 && dpsThruster[0]) {
-		//Only start/throttle engine with armed signal, thrustOn signal, thrustOff signal off. If DECA goes off, then no engine arm signal comes through from the DECA. But it's armed anyway.
-		if (engArm)
+	if (dpsThruster[0]) {
+		
+		//Set Thruster Resource
+		if (engPreValvesArm && lem->GetThrusterResource(dpsThruster[0]) == NULL)
 		{
-			if (thrustOn == true && thrustOff == false)
-			{
-				lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
-				lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
-			}
+			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
+			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
 		}
-
-		//Shut down engine when:
-		//DECA says shutdown (thrustOff signal)
-		//Lack of any signal (can be overriden by the override switch)
-		//And engine actually running
-		if (!(thrustOff == false && thrustOn == true))
+		else if (lem->GetThrusterResource(dpsThruster[0]) != NULL)
+		{
+			lem->SetThrusterResource(dpsThruster[0], NULL);
+			lem->SetThrusterResource(dpsThruster[1], NULL);
+		}
+		
+		//Engine Fire Command
+		if (engPreValvesArm && thrustOn)
+		{
+			lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
+			lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
+		}
+		else
 		{
 			lem->SetThrusterLevel(dpsThruster[0], 0.0);
 			lem->SetThrusterLevel(dpsThruster[1], 0.0);
@@ -3923,7 +3975,7 @@ void LEM_DPS::SystemTimestep(double simdt) {
 void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
-	oapiWriteScenario_int(scn, "THRUSTOFF", (thrustOff ? 1 : 0));
+	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
 	oapiWriteLine(scn, end_str);
 }
@@ -3941,13 +3993,13 @@ void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
 			sscanf(line + 8, "%d", &i);
 			thrustOn = (i != 0);
 		}
-		else if (!strnicmp(line, "THRUSTOFF", 9)) {
-			sscanf(line + 9, "%d", &i);
-			thrustOn = (i != 0);
+		else if (!strnicmp(line, "ENGPREVALVESARM", 15)) {
+			sscanf(line + 15, "%d", &i);
+			engPreValvesArm = (i != 0);
 		}
 		else if (!strnicmp(line, "ENGARM", 6)) {
 			sscanf(line + 6, "%d", &i);
-			thrustOn = (i != 0);
+			engArm = (i != 0);
 		}
 	}
 }

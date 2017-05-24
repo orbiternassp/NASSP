@@ -37,42 +37,4 @@ public:
 	bool thrustOn;
 	bool armedOn;
 	double HePress[2];			// Helium pressure above and below the regulator
-
-protected:
-
-	DelayTimer AbortStageDelay;
-
-	//Relays
-
-	//Latching Relays
-
-	//Manual Ascent Engine Control Latch (K19-1)
-	bool K19;
-	//Manual Ascent Engine Arm Latch (K22-1)
-	bool K22;
-
-	//Non-latching Relays
-
-	//Manual Ascent Engine Arm (K11-1)
-	bool K11;
-	//Manual Ascent Engine On (K12-1)
-	bool K12;
-	//Ascent Engine Arm (K13-1)
-	bool K13;
-	//Ascent Engine On (K14-1)
-	bool K14;
-	//Abort Stage Relay (K21-1)
-	bool K21;
-	//Abort Stage Relay (K23-1)
-	bool K23;
-	//Auto Engine On Command (K24)
-	bool K24;
-	//Auto Engine Off Command (K25)
-	bool K25;
-	//Ascent Engine Arm Relay (K206-1)
-	bool K206;
-	//Auto Ascent Engine On Relay (K207-1)
-	bool K207;
-
-	bool AutoOn;
 };
