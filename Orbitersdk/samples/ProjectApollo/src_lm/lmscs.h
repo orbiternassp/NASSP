@@ -356,6 +356,8 @@ protected:
 	//Descent Engine Thrusting
 	bool K7_3;
 
+	bool EngStopPower;
+
 	LEM *lem;
 
 };
