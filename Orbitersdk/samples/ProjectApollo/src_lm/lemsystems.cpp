@@ -227,12 +227,6 @@ bool LEM::CabinFansActive()
 	return CABFswitch;
 }
 
-bool LEM::AscentEngineArmed()
-
-{
-	return (EngineArmSwitch.IsUp()); //&& !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
-}
-
 
 void LEM::SystemsInit()
 
@@ -3873,20 +3867,25 @@ void LEM_DPS::Init(LEM *s){
 	HePress[1] = 240;
 }
 
-void LEM_DPS::ThrottleActuator(double dpos)
+void LEM_DPS::ThrottleActuator(double pos)
 {
 	if (engArm)
 	{
-		thrustcommand += dpos;
+		thrustcommand = pos;
 
-		if (thrustcommand > 1.0)
+		if (thrustcommand > 0.925)
 		{
-			thrustcommand = 1.0;
+			thrustcommand = 0.925;
 		}
-		else if(thrustcommand < 0.0)
+		else if(thrustcommand < 0.1)
 		{
-			thrustcommand = 0.0;
+			thrustcommand = 0.1;
 		}
+	}
+	else
+	{
+		//Without power, the throttle will be fully open
+		thrustcommand = 0.925;
 	}
 }
 
@@ -3924,12 +3923,12 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 	if (dpsThruster[0]) {
 		
 		//Set Thruster Resource
-		if (engPreValvesArm && lem->GetThrusterResource(dpsThruster[0]) == NULL)
+		if (engPreValvesArm)
 		{
 			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
 			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
 		}
-		else if (lem->GetThrusterResource(dpsThruster[0]) != NULL)
+		else
 		{
 			lem->SetThrusterResource(dpsThruster[0], NULL);
 			lem->SetThrusterResource(dpsThruster[1], NULL);

@@ -852,32 +852,9 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	RCSSoundTimestep();
 
 	if (stage == 0)	{
-		if (EngineArmSwitch.IsDown()) { //  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0], ph_Dsc);
-			SetThrusterResource(th_hover[1], ph_Dsc);
-//TODOX15 is it useful to do it on every step ? surely no
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-//TODOX15
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
 		
 
 	}else if (stage == 1 || stage == 5)	{
-
-		if (EngineArmSwitch.IsDown()) { // && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0], ph_Dsc);
-			SetThrusterResource(th_hover[1], ph_Dsc);
-// TODOX15
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-//TODOX15	
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
 
 		if (CDREVA_IP) {
 			if(!hLEVA) {
@@ -919,13 +896,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
-	}
-	else if (stage == 2) {
-		if (AscentEngineArmed()) {
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
 	}
 
 	MainPanel.timestep(MissionTime);

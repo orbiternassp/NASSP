@@ -52,12 +52,12 @@ void LEM_APS::TimeStep(double simdt) {
 
 	if (lem->stage > 1)
 	{
-		if (armedOn && lem->GetThrusterResource(lem->th_hover[0]) == NULL)
+		if (armedOn)
 		{
 			lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
 			lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
 		}
-		else if (lem->GetThrusterResource(lem->th_hover[0]) != NULL)
+		else
 		{
 			lem->SetThrusterResource(lem->th_hover[0], NULL);
 			lem->SetThrusterResource(lem->th_hover[1], NULL);

@@ -450,27 +450,29 @@ void DECA::Timestep(double simdt) {
 		lem->agc.SetInputChannelBit(032, ApparentDecscentEngineGimbalsFailed, 1);
 	}
 
+	double newdpsthrustcommand = 0;
+
 	//Process Throttle Commands
 	if (!K15)
 	{
 		//Auto Thrust commands are generated in ProcessLGCThrustCommands()
 
-		dpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
-		if (dpsthrustcommand > 0.925)
+		newdpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
+		if (newdpsthrustcommand > 0.925)
 		{
-			dpsthrustcommand = 0.925;
+			newdpsthrustcommand = 0.925;
 		}
 	}
 	else
 	{
-		dpsthrustcommand = lem->ttca_thrustcmd;
+		newdpsthrustcommand = lem->ttca_thrustcmd;
 		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
 	}
 
 	//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
 	//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
-	dposcmd = dpsthrustcommand - lem->DPS.thrustcommand;
-	poscmdsign = abs(dpsthrustcommand - lem->DPS.thrustcommand) / (dpsthrustcommand - lem->DPS.thrustcommand);
+	dposcmd = newdpsthrustcommand - dpsthrustcommand;
+	poscmdsign = abs(newdpsthrustcommand - dpsthrustcommand) / (newdpsthrustcommand - dpsthrustcommand);
 	if (abs(dposcmd)>LMR*simdt)
 	{
 		dpos = poscmdsign*LMR*simdt;
@@ -480,11 +482,13 @@ void DECA::Timestep(double simdt) {
 		dpos = dposcmd;
 	}
 
-	lem->DPS.ThrottleActuator(dpos);
+	dpsthrustcommand += dpos;
+
+	lem->DPS.ThrottleActuator(dpsthrustcommand);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
-	sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
+	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
@@ -1076,6 +1080,15 @@ void SCCA2::Timestep(double simdt)
 		K22 = false;
 	}
 
+	if (lem->SCS_ENG_ARM_CB.IsPowered() && !lem->EngineArmSwitch.IsCenter())
+	{
+		K14 = true;
+	}
+	else
+	{
+		K14 = false;
+	}
+
 	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->deca.GetK16())
 	{
 		K16 = true;
@@ -1101,6 +1114,15 @@ void SCCA2::Timestep(double simdt)
 	else
 	{
 		lem->agc.SetInputChannelBit(030, AutoThrottle, true);
+	}
+
+	if (K14)
+	{
+		lem->agc.SetInputChannelBit(030, EngineArmed, true);
+	}
+	else
+	{
+		lem->agc.SetInputChannelBit(030, EngineArmed, false);
 	}
 
 	ChannelValue val11;

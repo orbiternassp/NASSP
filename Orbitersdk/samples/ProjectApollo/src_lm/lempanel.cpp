@@ -2354,12 +2354,6 @@ void LEM::SetSwitches(int panel) {
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
-
-
-	if (s == &EngineArmSwitch) {
-		if (!s->IsCenter())
- 		    agc.SetInputChannelBit(030, EngineArmed, true);
-    }
 }
 
 void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {

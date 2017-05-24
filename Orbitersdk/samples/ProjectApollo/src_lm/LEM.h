@@ -404,7 +404,7 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
-	void ThrottleActuator(double dpos);
+	void ThrottleActuator(double pos);
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
@@ -717,7 +717,6 @@ protected:
 	// void GetDockStatus();
 
 	bool CabinFansActive();
-	bool AscentEngineArmed();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
