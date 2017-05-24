@@ -1159,6 +1159,8 @@ void SCCA2::Timestep(double simdt)
 void SCCA2::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_bool(scn, "AUTOENGON", AutoEngOn);
+	papiWriteScenario_bool(scn, "AUTOENGOFF", AutoEngOff);
 	papiWriteScenario_bool(scn, "K1", K1);
 	papiWriteScenario_bool(scn, "K2", K2);
 	papiWriteScenario_bool(scn, "K3", K3);
@@ -1192,6 +1194,9 @@ void SCCA2::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
+
+		papiReadScenario_bool(line, "AUTOENGON", AutoEngOn);
+		papiReadScenario_bool(line, "AUTOENGOFF", AutoEngOff);
 		papiReadScenario_bool(line, "K1", K1);
 		papiReadScenario_bool(line, "K2", K2);
 		papiReadScenario_bool(line, "K3", K3);
@@ -1218,7 +1223,20 @@ void SCCA2::LoadState(FILEHANDLE scn, char *end_str) {
 
 SCCA3::SCCA3()
 {
-	if (lem == NULL) { return; }
+	EngStopPower = false;
+	K1_1 = false;
+	K2_1 = false;
+	K3_1 = false;
+	K4_1 = false;
+	K5_1 = false;
+	K6_1 = false;
+	K1_2 = false;
+	K2_2 = false;
+	K3_2 = false;
+	K4_2 = false;
+	K5_2 = false;
+	K6_2 = false;
+	K7_3 = false;
 }
 
 void SCCA3::Init(LEM *s)
@@ -1228,7 +1246,7 @@ void SCCA3::Init(LEM *s)
 
 void SCCA3::Timestep(double simdt)
 {
-	bool EngStopPower;
+	if (lem == NULL) { return; }
 
 	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->AbortSwitch.GetState() == 1 && lem->EngineArmSwitch.IsDown())
 	{
@@ -1300,6 +1318,20 @@ void SCCA3::Timestep(double simdt)
 void SCCA3::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_bool(scn, "K1_1", K1_1);
+	papiWriteScenario_bool(scn, "K2_1", K2_1);
+	papiWriteScenario_bool(scn, "K3_1", K3_1);
+	papiWriteScenario_bool(scn, "K4_1", K4_1);
+	papiWriteScenario_bool(scn, "K5_1", K5_1);
+	papiWriteScenario_bool(scn, "K6_1", K6_1);
+	papiWriteScenario_bool(scn, "K1_2", K1_2);
+	papiWriteScenario_bool(scn, "K2_2", K2_2);
+	papiWriteScenario_bool(scn, "K3_2", K3_2);
+	papiWriteScenario_bool(scn, "K4_2", K4_2);
+	papiWriteScenario_bool(scn, "K5_2", K5_2);
+	papiWriteScenario_bool(scn, "K6_2", K6_2);
+	papiWriteScenario_bool(scn, "K7_3", K7_3);
+
 	oapiWriteLine(scn, end_str);
 }
 
@@ -1313,6 +1345,18 @@ void SCCA3::LoadState(FILEHANDLE scn, char *end_str) {
 			break;
 		}
 
-
+		papiReadScenario_bool(line, "K1_1", K1_1);
+		papiReadScenario_bool(line, "K2_1", K2_1);
+		papiReadScenario_bool(line, "K3_1", K3_1);
+		papiReadScenario_bool(line, "K4_1", K4_1);
+		papiReadScenario_bool(line, "K5_1", K5_1);
+		papiReadScenario_bool(line, "K6_1", K6_1);
+		papiReadScenario_bool(line, "K1_2", K1_2);
+		papiReadScenario_bool(line, "K2_2", K2_2);
+		papiReadScenario_bool(line, "K3_2", K3_2);
+		papiReadScenario_bool(line, "K4_2", K4_2);
+		papiReadScenario_bool(line, "K5_2", K5_2);
+		papiReadScenario_bool(line, "K6_2", K6_2);
+		papiReadScenario_bool(line, "K7_3", K7_3);
 	}
 }
