@@ -217,7 +217,7 @@ void LEM::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 
 	double Mass = (DescentFuelMassKg * 0.05) + AscentFuelMassKg + 4374.0;
-	double ro = 5;
+	double ro = 7;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
@@ -228,12 +228,12 @@ void LEM::SetLmVesselHoverStage()
 		td[i].mu_lng = 3;
 		td[i].stiffness = stiffness;
 	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.x = 0;
 	td[0].pos.y = -3.86;
-	td[0].pos.z = -sin(30 * RAD)*ro;
-	td[1].pos.x = 0;
+	td[0].pos.z = 1 * ro;
+	td[1].pos.x = -cos(30 * RAD)*ro;
 	td[1].pos.y = -3.86;
-	td[1].pos.z = 1 * ro;
+	td[1].pos.z = -sin(30 * RAD)*ro;
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = -3.86;
 	td[2].pos.z = -sin(30 * RAD)*ro;
@@ -349,17 +349,17 @@ void LEM::SetLmAscentHoverStage()
 		td[i].mu_lng = 3;
 		td[i].stiffness = stiffness;
 	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.x = 0;
 	td[0].pos.y = tdph;
-	td[0].pos.z = -sin(30 * RAD)*ro;
-	td[1].pos.x = 0;
+	td[0].pos.z = 1 * ro;
+	td[1].pos.x = -cos(30 * RAD)*ro;
 	td[1].pos.y = tdph;
-	td[1].pos.z = 1 * ro;
+	td[1].pos.z = -sin(30 * RAD)*ro;
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = tdph;
 	td[2].pos.z = -sin(30 * RAD)*ro;
 	td[3].pos.x = 0;
-	td[3].pos.y = 2.0;
+	td[3].pos.y = 2.8;
 	td[3].pos.z = 0;
 
 	SetTouchdownPoints(td, 4);
