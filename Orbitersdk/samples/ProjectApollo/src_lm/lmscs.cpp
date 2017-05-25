@@ -791,7 +791,7 @@ void SCCA1::Timestep(double simdt)
 
 	//Manual
 
-	if (lem->EngineArmSwitch.IsUp() && (lem->SCS_ENG_START_OVRD_CB.IsPowered() || lem->PROP_DISP_ENG_OVRD_LOGIC_CB.IsPowered()))
+	if (lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered())
 	{
 		K22 = true;
 		K206 = true;
