@@ -2772,13 +2772,19 @@ void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SUR
 // of the switch.
 //
 
+void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+}
+
 void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3)
 
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
-	source1 = s1;
-	source2 = s2;
-	source3 = s3;
+	source[0] = s1;
+	source[1] = s2;
+	source[2] = s3;
 
 	UpdateSourceState();
 }
@@ -2808,13 +2814,13 @@ void ThreeSourceSwitch::UpdateSourceState()
 
 {
 	if (IsUp()) {
-		WireTo(source1);
+		WireTo(source[0]);
 	}
 	else if (IsCenter()) {
-		WireTo(source2);
+		WireTo(source[1]);
 	}
 	else if (IsDown()) {
-		WireTo(source3);
+		WireTo(source[2]);
 	}
 }
 
@@ -2822,6 +2828,13 @@ void ThreeSourceSwitch::LoadState(char *line)
 
 {
 	ThreePosSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+void ThreeSourceSwitch::SetSource(int i, e_object *s)
+{
+	source[i] = s;
+
 	UpdateSourceState();
 }
 
@@ -3153,9 +3166,9 @@ void ThreeSourceTwoDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE sur
 
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
-	source1 = s1;
-	source2 = s2;
-	source3 = s3;
+	source[0] = s1;
+	source[1] = s2;
+	source[2] = s3;
 	dest1 = d1;
 	dest2 = d2;
 

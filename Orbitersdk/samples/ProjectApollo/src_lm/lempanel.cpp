@@ -366,12 +366,15 @@ void LEM::InitSwitches() {
 		EPSMonitorSelectRotary.SetSource(2, Battery2);
 		EPSMonitorSelectRotary.SetSource(3, Battery3);
 		EPSMonitorSelectRotary.SetSource(4, Battery4);
+		EPSEDVoltSelect.SetSource(0, EDBatteryA);
 	}else{
 		EPSMonitorSelectRotary.SetSource(1, NULL);
 		EPSMonitorSelectRotary.SetSource(2, NULL);
 		EPSMonitorSelectRotary.SetSource(3, NULL);
 		EPSMonitorSelectRotary.SetSource(4, NULL);
+		EPSEDVoltSelect.SetSource(0, NULL);
 	}
+	EPSEDVoltSelect.SetSource(2, EDBatteryB);
 	EPSMonitorSelectRotary.SetSource(5, Battery5);
 	EPSMonitorSelectRotary.SetSource(6, Battery6);
 	EPSMonitorSelectRotary.SetSource(7, &CDRDCBusVoltCB);
@@ -453,15 +456,14 @@ void LEM::InitSwitches() {
 	ManualEngineStop.Register(PSH, "ManualEngineStop", 0);
 
 	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
-	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN);
+	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDASCHeSel.Register(PSH,"EDASCHeSel",THREEPOSSWITCH_CENTER);
-	EDDesPrpIsol.Register(PSH,"EDDesPrpIsol",TOGGLESWITCH_DOWN);
-	EDLGDeploy.Register(PSH,"EDLGDeploy",TOGGLESWITCH_DOWN);
-	EDHePressRCS.Register(PSH,"EDHePressRCS",TOGGLESWITCH_DOWN);
-	EDHePressDesStart.Register(PSH,"EDHePressDesStart",TOGGLESWITCH_DOWN);
-	EDHePressASC.Register(PSH,"EDHePressASC",TOGGLESWITCH_DOWN);
-	EDStage.Register(PSH,"EDStage", TOGGLESWITCH_DOWN);
-	//EDStage.SetGuardResetsState(false);
+	EDDesPrpIsol.Register(PSH,"EDDesPrpIsol",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
+	EDLGDeploy.Register(PSH,"EDLGDeploy",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
+	EDHePressRCS.Register(PSH,"EDHePressRCS",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
+	EDHePressDesStart.Register(PSH,"EDHePressDesStart",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
+	EDHePressASC.Register(PSH,"EDHePressASC",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
+	EDStage.Register(PSH,"EDStage", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN);
 	EDDesFuelVent.Register(PSH,"EDDesFuelVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	EDDesOxidVent.Register(PSH,"EDDesOxidVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
@@ -818,14 +820,6 @@ void LEM::InitSwitches() {
 	Cswitch7=false;
 	Cswitch8=false;
 	Cswitch9=false;
-	Sswitch1=false;
-	Sswitch2=false;
-	Sswitch4=false;
-	Sswitch5=false;
-	Sswitch6=false;
-	Sswitch7=false;
-	Sswitch8=false;
-	Sswitch9=false;
 
 	ATT2switch=false;
 	ATT3switch=false;
@@ -1220,9 +1214,10 @@ void LEM::InitPanel (int panel)
 		srf[SRF_THUMBWHEEL_LARGEFONTS] = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTS));
 		srf[SRF_FIVE_POS_SWITCH]	= oapiCreateSurface (LOADBMP (IDB_FIVE_POS_SWITCH));
 		srf[SRF_RR_NOTRACK]         = oapiCreateSurface (LOADBMP (IDB_RR_NOTRACK));
-		//srf[SRF_LEM_STAGESWITCH]	= oapiCreateSurface (LOADBMP (IDB_LEM_STAGESWITCH));
+		srf[SRF_LEM_STAGESWITCH]	= oapiCreateSurface (LOADBMP (IDB_LEM_STAGESWITCH));
 		srf[SRF_DIGITALDISP2]		= oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
-		srf[SRF_RADAR_TAPE]        = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
+		srf[SRF_RADAR_TAPE]         = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
+		srf[SRF_SEQ_LIGHT]			= oapiCreateSurface (LOADBMP (IDB_SEQ_LIGHT));
 
 		//
 		// Flashing borders.
@@ -1294,7 +1289,8 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_ROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_TW_NEEDLE],			g_Param.col[4]);
-		//oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SEQ_LIGHT],			g_Param.col[4]);
 
 		//		break;
 		//
@@ -1595,6 +1591,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LEM_PANEL_5,					    _R( 1080,1300, 1640, 1620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_SEQ_LIGHT1,						_R( 941, 1187,  974, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEQ_LIGHT2,						_R(1015, 1187, 1048, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+
 		//oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R(  48, 1001, 525, 1203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
 
@@ -1763,8 +1762,7 @@ void LEM::SetSwitches(int panel) {
 			ACAPropSwitch.Init  (142,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], FDAILowerSwitchRow);
 
 			EngineThrustContSwitchRow.Init(AID_ENGINETHRUSTCONTSWITCHES, MainPanel);
-			THRContSwitch.Init  (  0,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], EngineThrustContSwitchRow, &agc);
-			THRContSwitch.SetChannelData(030, AutoThrottle, true);
+			THRContSwitch.Init  (  0,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], EngineThrustContSwitchRow);
 			MANThrotSwitch.Init ( 69,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], EngineThrustContSwitchRow);
 			ATTTranslSwitch.Init( 20, 77, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EngineThrustContSwitchRow);
 			BALCPLSwitch.Init   ( 75, 72, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], EngineThrustContSwitchRow);
@@ -2309,7 +2307,7 @@ void LEM::SetSwitches(int panel) {
 			EDHePressDesStart.Init(935-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 			EDHePressASC.Init(1002-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 			EDStage.Init(783-431, 1175-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
-			//EDStage.InitGuard(304, 252, 102, 59, srf[SRF_LEM_STAGESWITCH], Panel8SwitchRow);
+			EDStage.InitGuard(304, 252, 102, 59, srf[SRF_LEM_STAGESWITCH], srf[SRF_BORDER_34x39]);
 			EDStageRelay.Init(1002-431, 1182-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 			EDDesFuelVent.Init(36, 100, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 			EDDesOxidVent.Init(109, 100, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
@@ -2356,12 +2354,6 @@ void LEM::SetSwitches(int panel) {
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
-
-
-	if (s == &EngineArmSwitch) {
-		if (!s->IsCenter())
- 		    agc.SetInputChannelBit(030, EngineArmed, true);
-    }
 }
 
 void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
@@ -3287,38 +3279,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-
-	case AID_SWITCH_JET:
-		if(event & PANEL_MOUSE_RBDOWN){
-			Cswitch2 = !Cswitch2;
-			GuardClick();
-		}
-		else if(event & PANEL_MOUSE_LBDOWN){
-			if(my >15 && my <26 && !Sswitch2){
-				Sswitch2 = true;
-				SwitchClick();
-			}
-			else if(my >26 && my <38 && Sswitch2 && Cswitch2){
-				Sswitch2 = false;
-				SwitchClick();
-			}
-		}
-		return true;
-
-	/*case AID_ENGINE_GIMBAL_SWITCH:
-		if (my >=0 && my <=16 ){
-			if (mx > 0 && mx < 24 && !GMBLswitch){
-				SwitchClick();
-				SetGimbal(true);
-			}
-		}else if (my >=15 && my <=31 ){
-		if (mx > 0 && mx < 24 && GMBLswitch){
-				SwitchClick();
-				SetGimbal(false);
-			}
-		}
-		return true;*/
-
 	case AID_ASCENT_HE:
 		if (my >=31 && my <=43 ){
 			if (mx > 1 && mx < 27 && !ASCHE1switch){
@@ -3337,84 +3297,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 				ASCHE2switch=false;
 			}
 		}
-		return true;
-
-	case AID_SWITCH_SEP:
-		if(event & PANEL_MOUSE_RBDOWN){
-			Cswitch1 = !Cswitch1;
-			GuardClick();
-		}
-		else if(event & PANEL_MOUSE_LBDOWN){
-			if(my >15 && my <26 && !Sswitch1){
-				Sswitch1 = true;
-				SwitchClick();
-			}
-			else if(my >26 && my <38 && Sswitch1 && Cswitch1){
-				Sswitch1 = false;
-				SwitchClick();
-			}
-		}
-		return true;
-
-		/*case AID_EXPLOSIVE_DEVICES2:
-		if (my >=0 && my <=15 ){
-			if (mx > 0 && mx < 24 && !ED7switch){
-				SwitchClick();
-				ED7switch=true;
-			}else if (mx > 48 && mx < 72 && !ED8switch){
-				SwitchClick();
-				ED8switch=true;
-			}else if (mx > 94 && mx < 118 && !ED9switch){
-				SwitchClick();
-				ED9switch=true;
-			}
-		}else if (my >=16 && my <=30 ){
-		if (mx > 0 && mx < 24 && ED7switch){
-				SwitchClick();
-				ED7switch=false;
-			}else if (mx > 48 && mx < 72 && ED8switch){
-				SwitchClick();
-				ED8switch=false;
-			}else if (mx > 94 && mx < 118 && ED9switch){
-				SwitchClick();
-				ED9switch=false;
-			}
-		}
-
-		return true;
-		*/
-
-		case AID_LANDING_GEAR_SWITCH:
-			if (my > 51 && LDGswitch){
-				LDGswitch =false;
-				SwitchClick();
-
-			}else if(!LDGswitch && my < 51){
-				LDGswitch =true;
-				SwitchClick();
-
-			}
-			VESSELSTATUS vs;
-			GetStatus(vs);
-
-				if (GetEngineLevel(ENGINE_MAIN)==0 &&GetEngineLevel(ENGINE_HOVER)==0&& vs.status ==0){
-					if (!LDGswitch){
-						if (status==1){
-						SetLmVesselDockStage();
-						bModeDocked = true;
-						bModeHover=false;
-						//PlayVesselWave(SDMode,NOLOOP,255);
-						}
-					}else {
-						bModeDocked = false;
-						bModeHover=true;
-						//PlayVesselWave(SHMode,NOLOOP,255);
-						if (status==0){
-						SetLmVesselHoverStage();
-						}
-					}
-				}
-
 		return true;
 
 	// panel 1 events:
@@ -3573,21 +3455,25 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CONTACTLIGHT2:
-		if (GroundContact()&& stage ==1){
+		if (scca2.GetK17()){
 			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,48,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
 
-	case AID_SWITCH_SEP:
-		if(Cswitch1){
-			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,25,0,25,45);
-			if(Sswitch1){
-				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,0,0,25,45);
-			Sswitch1=false;
+	case AID_SEQ_LIGHT1:
+		if (eds.RelayBoxA.StageSeqLight() && stage < 2) {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 33, 0, 33, 30);
+		}
+		return true;
+
+	case AID_SEQ_LIGHT2:
+		if (eds.RelayBoxB.StageSeqLight()) {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 33, 0, 33, 30);
 		}
 		return true;
 
@@ -4100,18 +3986,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 	*/
 
-	case AID_LANDING_GEAR_SWITCH:
-		if(LDGswitch){
-			// UNINITIALIZED USE OF srf[19]
-			// oapiBlt(surf,srf[19],1,37,0,0,23,30);
-			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,0,0,19,20);
-		}else{
-			// UNINITIALIZED USE OF srf[19]
-			// oapiBlt(surf,srf[19],1,37,23,0,23,30);
-			oapiBlt(surf,srf[SRF_LIGHTS2],3,0,38,0,19,20);
-		}
-		return true;
-
 	case AID_CRSFD_SWITCH:
 		if(CRSFDswitch){
 			// UNINITIALIZED USE OF srf[19]
@@ -4450,19 +4324,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_SWITCH_JET:
-		if(Cswitch2){
-			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,75,0,25,45);
-			if(Sswitch2){
-				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[SRF_LEMSWTICH3],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[SRF_SECSWITCH],0,0,50,0,25,45);
-			Sswitch2=false;
-		}
-		return true;
 	case AID_RANGE_TAPE:
 		RadarTape.RenderRange(surf, srf[SRF_RADAR_TAPE]);
 		return true;
@@ -4632,14 +4493,6 @@ int LEM::GetSSwitchState()
 	SSwitchState state;
 
 	state.word = 0;
-	state.u.Sswitch1 = Sswitch1;
-	state.u.Sswitch2 = Sswitch2;
-	state.u.Sswitch4 = Sswitch4;
-	state.u.Sswitch5 = Sswitch5;
-	state.u.Sswitch6 = Sswitch6;
-	state.u.Sswitch7 = Sswitch7;
-	state.u.Sswitch8 = Sswitch8;
-	state.u.Sswitch9 = Sswitch9;
 	state.u.X1switch = X1switch;
 	state.u.RATE1switch = RATE1switch;
 	state.u.AT1switch = AT1switch;
@@ -4671,14 +4524,6 @@ void LEM::SetSSwitchState(int s)
 	SSwitchState state;
 
 	state.word = s;
-	Sswitch1 = state.u.Sswitch1;
-	Sswitch2 = state.u.Sswitch2;
-	Sswitch4 = state.u.Sswitch4;
-	Sswitch5 = state.u.Sswitch5;
-	Sswitch6 = state.u.Sswitch6;
-	Sswitch7 = state.u.Sswitch7;
-	Sswitch8 = state.u.Sswitch8;
-	Sswitch9 = state.u.Sswitch9;
 	X1switch = state.u.X1switch;
 	RATE1switch = state.u.RATE1switch;
 	AT1switch = state.u.AT1switch;

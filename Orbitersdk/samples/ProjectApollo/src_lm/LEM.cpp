@@ -195,9 +195,17 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DES_CDRs28VBusB("DES-CDR-28V-BusB",NULL),
 	DES_LMPs28VBusA("DES-LMP-28V-BusA",NULL),
 	DES_LMPs28VBusB("DES-LMP-28V-BusB",NULL),
+	ED28VBusA("ED-28V-BusA", NULL),
+	ED28VBusB("ED-28V-BusB", NULL),
 	ACBusA("AC-Bus-A",NULL),
 	ACBusB("AC-Bus-B",NULL),
 	dsky(soundlib, agc, 015),
+	LandingGearPyros("Landing-Gear-Pyros", Panelsdk),
+	LandingGearPyrosFeeder("Landing-Gear-Pyros-Feeder", Panelsdk),
+	StagingBoltsPyros("Staging-Bolts-Pyros", Panelsdk),
+	StagingNutsPyros("Staging-Nuts-Pyros", Panelsdk),
+	CableCuttingPyros("Cable-Cutting-Pyros", Panelsdk),
+	CableCuttingPyrosFeeder("Cable-Cutting-Pyros-Feeder", Panelsdk),
 	agc(soundlib, dsky, imu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
@@ -270,12 +278,10 @@ void LEM::Init()
 	bModeDocked=false;
 	bModeHover=false;
 	HatchOpen=false;
-	bManualSeparate=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
-	startimer=false;
 	ContactOK = false;
 	stage = 0;
 	status = 0;
@@ -738,6 +744,19 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
 	}
+
+	// RCS propellant pressurization
+	// Descent Propellant Tank Prepressurization (ambient helium)
+	// Descent Propellant Tank Prepressurization (supercritical helium)
+	// Descent Propellant Tank Venting
+	// Ascent Propellant Tank Pressurization
+	if (status < 2) {
+		if (StagingBoltsPyros.Blown() && StagingNutsPyros.Blown() && CableCuttingPyros.Blown()) {
+			AbortFire();
+			// Stage
+			SeparateStage(stage);
+		}
+	}
 }
 
 
@@ -807,9 +826,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	if (status !=0 && Sswitch2){
-				bManualSeparate = true;
-	}
 	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
 
 	if( toggleRCS){
@@ -828,10 +844,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		else if (GetAttitudeMode()==2 ){
 		P44switch=true;
 		}
-	if(Sswitch1){
-		Sswitch1=false;
-		Undock(0);
-		}
 
 	//
 	// Play RCS sound in case of Orbiter's attitude control is disabled
@@ -840,32 +852,9 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	RCSSoundTimestep();
 
 	if (stage == 0)	{
-		if (EngineArmSwitch.IsDown()) { //  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0], ph_Dsc);
-			SetThrusterResource(th_hover[1], ph_Dsc);
-//TODOX15 is it useful to do it on every step ? surely no
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-//TODOX15
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
 		
 
 	}else if (stage == 1 || stage == 5)	{
-
-		if (EngineArmSwitch.IsDown()) { // && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0], ph_Dsc);
-			SetThrusterResource(th_hover[1], ph_Dsc);
-// TODOX15
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-//TODOX15	
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
 
 		if (CDREVA_IP) {
 			if(!hLEVA) {
@@ -905,62 +894,10 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			ToggleEva = true;
 			EVAswitch = false;
 		}
-		//
-		// This does an abort stage if the descent stage runs out of fuel,
-		// probably should start P71
-		//
-		if (GetPropellantMass(ph_Dsc)<=50){
-			SeparateStage(stage);
-			SetEngineLevel(ENGINE_HOVER,1);
-			stage = 2;
-			AbortFire();
-			agc.SetInputChannelBit(030, AbortWithAscentStage, true); // Abort with ascent stage.
-		}
-		if (bManualSeparate && !startimer){
-			VESSELSTATUS vs;
-			GetStatus(vs);
 
-			if (vs.status == 1){
-				countdown=simt;
-				LunarAscent.play(NOLOOP,200);
-				startimer=true;
-				//vessel->SetTouchdownPoints (_V(0,-0,10), _V(-1,-0,-10), _V(1,-0,-10));
-			}
-			else{
-				SeparateStage(stage);
-				stage = 2;
-			}
-		}
-		if ((simt-(10+countdown))>=0 && startimer ){
-			StartAscent();
-		}
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
 	}
-	else if (stage == 2) {
-		if (AscentEngineArmed()) {
-			SetThrusterResource(th_hover[0], ph_Asc);
-			SetThrusterResource(th_hover[1], ph_Asc);
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
-	}
-	else if (stage == 3){
-		if (AscentEngineArmed()) {
-			SetThrusterResource(th_hover[0], ph_Asc);
-			SetThrusterResource(th_hover[1], ph_Asc);
-			agc.SetInputChannelBit(030, EngineArmed, true);
-		} else {
-			SetThrusterResource(th_hover[0], NULL);
-			SetThrusterResource(th_hover[1], NULL);
-			agc.SetInputChannelBit(030, EngineArmed, false);
-		}
-	}
-	else if (stage == 4)
-	{	
-	}
+
 	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime, DummyEvents);
 
@@ -1013,36 +950,6 @@ void LEM::SetGimbal(bool setting)
 {
 	agc.SetInputChannelBit(032, DescentEngineGimbalsDisabled, setting);
 	GMBLswitch = setting;
-}
-
-//
-// Perform the stage separation as done when P12 is running and Abort Stage is pressed
-//
-
-void LEM::AbortStage()
-{
-	ButtonClick();
-	AbortFire();
-	SeparateStage(stage);
-	SetThrusterResource(th_hover[0], ph_Asc);
-	SetThrusterResource(th_hover[1], ph_Asc);
-	stage = 2;
-	startimer = false;
-}
-
-//
-// Initiate ascent.
-//
-
-void LEM::StartAscent()
-
-{
-	SeparateStage(stage);
-	stage = 2;
-	SetEngineLevel(ENGINE_HOVER,1);
-	startimer = false;
-
-	LunarAscent.done();
 }
 
 typedef union {
@@ -1207,6 +1114,18 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
 			deca.LoadState(scn);
+		}
+		else if (!strnicmp(line, "SCCA1_BEGIN", sizeof("SCCA_BEGIN"))) {
+			scca1.LoadState(scn, "SCCA_END");
+		}
+		else if (!strnicmp(line, "SCCA2_BEGIN", sizeof("SCCA_BEGIN"))) {
+			scca2.LoadState(scn, "SCCA_END");
+		}
+		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA_BEGIN"))) {
+			scca3.LoadState(scn, "SCCA_END");
+		}
+		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
+			APS.LoadState(scn, "APS_END");
 		}
 		else if (!strnicmp(line, CROSSPOINTER_LEFT_START_STRING, sizeof(CROSSPOINTER_LEFT_START_STRING))) {
 			crossPointerLeft.LoadState(scn);
@@ -1553,6 +1472,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	DPS.rollGimbalActuator.SaveState(scn);
 	oapiWriteLine(scn, "DECA_BEGIN");
 	deca.SaveState(scn);
+	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
+	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
+	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	oapiWriteLine(scn, CROSSPOINTER_LEFT_START_STRING);
 	crossPointerLeft.SaveState(scn);
 	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);

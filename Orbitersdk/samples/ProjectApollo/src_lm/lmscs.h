@@ -22,6 +22,8 @@
 
   **************************************************************************/
 
+#include "DelayTimer.h"
+
 class LEM;
 
 #define ATCA_START_STRING	"ATCA_BEGIN"
@@ -61,10 +63,17 @@ class DECA {
 public:
 	DECA();										// Cons
 	void Init(LEM *vessel, e_object *dcbus);	// Init
+	void ResetRelays();
 	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
 	double GetCommandedThrust() { return dpsthrustcommand; }
 	void ProcessLGCThrustCommands(int val);
+
+	bool GetK1() { return K1; }
+	bool GetK10() { return K10; }
+	bool GetK16() { return K16; }
+	bool GetK23() { return K23; }
+	bool GetThrustOn() { return engOn; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -74,9 +83,56 @@ protected:
 	e_object *dc_source;			     // DC source to use when powered
 	bool powered;					 // Data valid flag.
 	int pitchactuatorcommand, rollactuatorcommand;
-	bool engOn, engOff;
+	bool engOn, DEArm;
 	double dpsthrustcommand;
 	double lgcAutoThrust;
+
+	//Relays
+
+	//Descent Engine Arm
+	bool K1;
+	//+43 +/-15V Power Supply Failure
+	bool K2;
+	//Descent Engine Manual Stop
+	bool K3;
+	//Pitch Gimbal Off
+	bool K4;
+	//Roll Gimbal Off
+	bool K5;
+	//Auto Descent Control Latch
+	bool K6;
+	//Descent Engine Manual Start
+	bool K7;
+	//Pitch Trim Shutdown
+	bool K8;
+	//Roll Trim Shutdown
+	bool K9;
+	//Arm Pre-Valves
+	bool K10;
+	//Pitch Trim Mode
+	bool K13;
+	//Roll Trim Mode
+	bool K14;
+	//Auto Thrust Disable
+	bool K15;
+	//Close On Descent Engine Start
+	bool K16;
+	//Pitch Trim Failure
+	bool K21;
+	//Roll Trim Failure
+	bool K22;
+	//Descent Engine Arm
+	bool K23;
+	//+15V Power Supply Failure
+	bool K24;
+	//400 Hz Power
+	bool K25;
+	//Power Supply Failure
+	bool K26;
+	//Trim Malfunction Reset
+	bool K27;
+	//Auto Descent Engine Control
+	bool K28;
 
 private:
 	double LMR, dposcmd, dpos, poscmdsign;
@@ -104,5 +160,204 @@ protected:
 	VECTOR3 gasta_att;
 };
 
+//STABILIZATION & CONTROL CONTROL ASSEMBLY NO. 1
+class SCCA1
+{
+public:
+	SCCA1();
+	void Init(LEM *s);
+	void Timestep(double simdt);
 
+	bool GetK9() { return K9; }
+	bool GetK17() { return K17; }
+	bool GetK18() { return K18; }
+	bool GetK20() { return K20; }
 
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+protected:
+
+	DelayTimer AbortStageDelay;
+
+	//Relays
+
+	//Yaw Pulse Direct Cont.
+	bool K1;
+	//Pitch Pulse Direct Cont.
+	bool K3;
+	//Roll Pulse Direct Cont.
+	bool K5;
+	//PGNS-AGS Sel Follow Up
+	bool K7;
+	//Controller Out Of Detent
+	bool K8;
+	//PGNS-AGS Sel. Abort Stage
+	bool K9;
+	//Abort Stage
+	bool K10;
+	//PGNS-AGS Sel.
+	bool K11;
+	//28VDC PGNS Preamp in ATCA
+	bool K12;
+	//Abort Stage Cmd
+	bool K13;
+	//Ascent Engine Arm
+	bool K14;
+	//Descent Engine Thrust
+	bool K15;
+	//Ascent Engine On
+	bool K16;
+	//Auto Engine Off Cmd
+	bool K17;
+	//Auto Engine On Cmd
+	bool K18;
+	//Abort Stage Cmd
+	bool K19;
+	//Power Switchover & Descent Engine Stop
+	bool K20;
+	//Abort Stage Cmd
+	bool K21;
+	//AELD Reset
+	bool K22;
+	//Abort Stage Cmd
+	bool K23;
+	//Auto Ascent Engine On Cmd
+	bool K24;
+	//Auto Ascent Engine Off Cmd
+	bool K25;
+	//Abort Stage Cmd
+	bool K201;
+	//Ascent Engine On Cmd
+	bool K203;
+	//Ascent Engine On Cmd
+	bool K204;
+	//Ascent Engine On Cmd
+	bool K205;
+	//Engine Arm
+	bool K206;
+	//Abort or Auto Start
+	bool K207;
+
+	bool AutoOn;
+	bool armedOn;
+	bool thrustOn;
+
+	LEM *lem;
+};
+
+//STABILIZATION & CONTROL CONTROL ASSEMBLY NO. 2
+class SCCA2
+{
+public:
+	SCCA2();
+	void Init(LEM *s);
+	void Timestep(double simdt);
+
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetAutoEngOn() { return AutoEngOn; }
+	bool GetAutoEngOff() { return AutoEngOff; }
+	bool GetK17() { return K17; }
+	bool GetK19() { return K19; }
+protected:
+	//Latching Relays
+
+	//PGNS-AGS Sel. Cont.
+	bool K1;
+	//PGNS-AGS Yaw Rate Cmd
+	bool K2;
+	//PGNS-AGS Pitch Rate Cmd
+	bool K3;
+	//PGNS-AGS Roll Rate Cmd
+	bool K4;
+	//800 Hz PGNS-AGS Sel.
+	bool K5;
+	//PGNS-AGS Sel. Cont.
+	bool K6;
+	//PGNS-AGS Sel.
+	bool K7;
+	//PGNS-AGS Sel. Follow Up
+	bool K8;
+	//PGNS-AGS Sel.
+	bool K9;
+	//PGNS-AGS Sel.
+	bool K11;
+	//28VDC PGNS Preamps in ATCA
+	bool K12;
+	//28VDC PGNS Preamps in ATCA
+	bool K13;
+	//Engine Fire Override (Set-Reset)
+	bool K15;
+	//Engine Fire Override (Set-Reset)
+	bool K19;
+	//Engine Fire Override (Set-Reset)
+	bool K22;
+
+	//Non-Latching Relays
+
+	//Engine Armed
+	bool K14;
+	//Descent Engine On
+	bool K16;
+	//Descent Engine On
+	bool K17;
+	//Stimulate Staging Cmd
+	bool K23;
+	//Stimulate Staging Cmd
+	bool K24;
+
+	bool AutoEngOn;
+	bool AutoEngOff;
+
+	LEM *lem;
+};
+
+//STABILIZATION & CONTROL CONTROL ASSEMBLY NO. 3
+class SCCA3
+{
+public:
+	SCCA3();
+	void Init(LEM *s);
+	void Timestep(double simdt);
+
+	bool GetK5() { return (K5_1 && K5_2); }
+	bool GetK6() { return (K6_1 || K6_2); }
+
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+protected:
+	//Relays
+
+	//Descent Engine Thrusting
+	bool K1_1;
+	//Descent Engine Thrusting
+	bool K2_1;
+	//Descent Engine Thrusting
+	bool K3_1;
+	//Manual Descent Engine Stop
+	bool K4_1;
+	//Descent Engine Override
+	bool K5_1;
+	//Descent Engine Start Enable
+	bool K6_1;
+	//Lunar Probe Y & Z
+	bool K1_2;
+	//Lunar Probe Y & Z
+	bool K2_2;
+	//Lunar Probe Y & Z
+	bool K3_2;
+	//Engine Stop
+	bool K4_2;
+	//Descent Engine Override
+	bool K5_2;
+	//Descent Engine Start Enable
+	bool K6_2;
+	//Descent Engine Thrusting
+	bool K7_3;
+
+	bool EngStopPower;
+
+	LEM *lem;
+
+};

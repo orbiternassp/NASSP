@@ -157,6 +157,7 @@ IDB_RADAR_TAPE          BITMAP                  "..\\Bitmaps\\lm_range_rate_indi
 IDB_ORDEAL_PANEL        BITMAP                  "..\\Bitmaps\\lem_ordeal.bmp"
 IDB_ORDEAL_ROTARY       BITMAP					"..\\Bitmaps\\ORDEAL_rotary.bmp"
 IDB_TW_NEEDLE           BITMAP					"..\\Bitmaps\\lm_tw_needle.bmp"
+IDB_SEQ_LIGHT           BITMAP                  "..\\Bitmaps\\lem_seq_light.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

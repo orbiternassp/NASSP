@@ -227,12 +227,6 @@ bool LEM::CabinFansActive()
 	return CABFswitch;
 }
 
-bool LEM::AscentEngineArmed()
-
-{
-	return (EngineArmSwitch.IsUp()); //&& !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
-}
-
 
 void LEM::SystemsInit()
 
@@ -250,6 +244,9 @@ void LEM::SystemsInit()
 	Battery5 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A");
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
+	EDBatteryA = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A");
+	EDBatteryB = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B");
+
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP DC bus)
@@ -620,6 +617,14 @@ void LEM::SystemsInit()
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
 	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
+	// Pyro Buses
+	Panelsdk.AddElectrical(&ED28VBusA, false);
+	Panelsdk.AddElectrical(&ED28VBusB, false);
+
+	// Pyros
+	LandingGearPyros.WireTo(&LandingGearPyrosFeeder);
+	CableCuttingPyros.WireTo(&CableCuttingPyrosFeeder);
+
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
 	Panelsdk.AddElectrical(&ACBusB, false);
@@ -665,6 +670,11 @@ void LEM::SystemsInit()
 
 	// EDS initialization
 	eds.Init(this);
+
+	// S&C Control Assemblies
+	scca1.Init(this);
+	scca2.Init(this);
+	scca3.Init(this);
 
 	// DPS and APS
 	DPS.Init(this);
@@ -1318,7 +1328,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep();
+	eds.TimeStep(simdt);
 	optics.TimeStep(simdt);
 	LR.TimeStep(simdt);
 	RR.TimeStep(simdt);
@@ -1334,6 +1344,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);
+	scca1.Timestep(simdt);
+	scca2.Timestep(simdt);
+	scca3.Timestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
@@ -1921,92 +1934,6 @@ void LEM_INV::UpdateFlow(double dt){
 	*/
 	// Reset for next pass
 	e_object::UpdateFlow(dt);
-}
-
-// EXPLOSIVE DEVICES SYSTEM
-LEM_EDS::LEM_EDS(){
-	lem = NULL;
-	LG_Deployed = FALSE;
-}
-
-void LEM_EDS::Init(LEM *s){
-	lem = s;
-}
-
-void LEM_EDS::TimeStep(){
-	// Set TBs
-	// BP when descent stage detached
-	if(LG_Deployed == TRUE && lem->status < 2){ lem->EDLGTB.SetState(1); }else{	lem->EDLGTB.SetState(0); }
-	// Do we have power?
-	if(lem->EDS_CB_LOGIC_A.Voltage() < 20 && lem->EDS_CB_LOGIC_B.Voltage() < 20){ return; }
-	// Are we enabled?
-	if(lem->EDMasterArm.GetState() != TOGGLESWITCH_UP){ return; }
-	// PROCESS THESE IN THIS ORDER:
-	// Landing Gear Deployment
-	if(LG_Deployed == FALSE && lem->status == 0){
-		// Check?
-		if(lem->EDLGDeploy.GetState() == TOGGLESWITCH_UP){
-			// Deploy landing gear
-			lem->SetLmVesselHoverStage();
-			LG_Deployed = TRUE;
-		}
-	}
-	// RCS propellant pressurization
-	// Descent Propellant Tank Prepressurization (ambient helium)
-	// Descent Propellant Tank Prepressurization (supercritical helium)
-	// Descent Propellant Tank Venting
-	// Ascent Propellant Tank Pressurization
-	// Interstage nut-and-bolt separation and ascent stage deadfacing
-	if(lem->status < 2){
-		if(lem->EDStage.GetState() == TOGGLESWITCH_UP){
-			// Disconnect EPS stuff
-			lem->DES_LMPs28VBusA.Disconnect();
-			lem->DES_LMPs28VBusB.Disconnect();
-			lem->DES_CDRs28VBusA.Disconnect();
-			lem->DES_CDRs28VBusB.Disconnect();
-			// Disconnect monitor select rotaries
-			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-			// Change descent TB
-			lem->DSCBattFeedTB.SetState(0);
-			// Stage
-			lem->SeparateStage(1);
-		}
-	}
-	// Interstage umbilical severance
-}
-
-void LEM_EDS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
-	oapiWriteScenario_int(scn, "SOV_A", lem->GetValveState(LEM_RCS_MAIN_SOV_A));
-	oapiWriteScenario_int(scn, "SOV_B", lem->GetValveState(LEM_RCS_MAIN_SOV_B));
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_EDS::LoadState(FILEHANDLE scn,char *end_str){
-	char *line;
-	int dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-		if (!strnicmp (line, "LG_DEP", 6)) {
-			sscanf(line + 6, "%d", &dec);
-			LG_Deployed = (bool)(dec != 0);
-		}
-		if (!strnicmp (line, "SOV_A", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_A,(bool)(dec != 0));			
-		}
-		if (!strnicmp (line, "SOV_B", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_B,(bool)(dec != 0));			
-		}
-	}
 }
 
 // Landing Radar
@@ -3579,7 +3506,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when less than 10 seconds of ascent propellant/oxidizer remains.
 	// Disabled when ascent engine is not firing.
 	// FIXME: This test probably used a fixed setpoint instead of division. Investigate.
-	if(lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc)/lem->GetPropellantFlowrate(lem->ph_Asc) < 10)){
+	if(lem->ph_Asc && lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc)/lem->GetPropellantFlowrate(lem->ph_Asc) < 10)){
 		LightStatus[1][4] = 1;
 	}else{
 		LightStatus[1][4] = 0;
@@ -3928,7 +3855,7 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsThruster(dps) {
 	lem = NULL;	
 	thrustOn = 0;
-	thrustOff = 0;
+	engPreValvesArm = 0;
 	engArm = 0;
 	HePress[0] = 0; HePress[1] = 0;
 	thrustcommand = 0;
@@ -3940,31 +3867,80 @@ void LEM_DPS::Init(LEM *s){
 	HePress[1] = 240;
 }
 
+void LEM_DPS::ThrottleActuator(double pos)
+{
+	if (engArm)
+	{
+		thrustcommand = pos;
+
+		if (thrustcommand > 0.925)
+		{
+			thrustcommand = 0.925;
+		}
+		else if(thrustcommand < 0.1)
+		{
+			thrustcommand = 0.1;
+		}
+	}
+	else
+	{
+		//Without power, the throttle will be fully open
+		thrustcommand = 0.925;
+	}
+}
+
 void LEM_DPS::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
+	if (lem->stage > 1) { return; }
 
-	//Descent Engine Command Override. If DECA power goes off, DPS stays running. No signal to throttle and GDAs though. So get power back quickly or abort.
-	if (lem->EngineDescentCommandOverrideSwitch.IsUp())
+	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
+	{
+		engPreValvesArm = true;
+	}
+	else
+	{
+		engPreValvesArm = false;
+	}
+
+	if (lem->SCS_DECA_PWR_CB.IsPowered() && (lem->deca.GetK1() || lem->deca.GetK23()))
+	{
+		engArm = true;
+	}
+	else
+	{
+		engArm = false;
+	}
+
+	if (lem->deca.GetThrustOn() || lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5())
 	{
 		thrustOn = true;
 	}
+	else
+	{
+		thrustOn = false;
+	}
 
-	if (lem->stage < 2 && dpsThruster[0]) {
-		//Only start/throttle engine with armed signal, thrustOn signal, thrustOff signal off. If DECA goes off, then no engine arm signal comes through from the DECA. But it's armed anyway.
-		if (engArm)
+	if (dpsThruster[0]) {
+		
+		//Set Thruster Resource
+		if (engPreValvesArm)
 		{
-			if (thrustOn == true && thrustOff == false)
-			{
-				lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
-				lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
-			}
+			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
+			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
 		}
-
-		//Shut down engine when:
-		//DECA says shutdown (thrustOff signal)
-		//Lack of any signal (can be overriden by the override switch)
-		//And engine actually running
-		if (!(thrustOff == false && thrustOn == true))
+		else
+		{
+			lem->SetThrusterResource(dpsThruster[0], NULL);
+			lem->SetThrusterResource(dpsThruster[1], NULL);
+		}
+		
+		//Engine Fire Command
+		if (engPreValvesArm && thrustOn)
+		{
+			lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
+			lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
+		}
+		else
 		{
 			lem->SetThrusterLevel(dpsThruster[0], 0.0);
 			lem->SetThrusterLevel(dpsThruster[1], 0.0);
@@ -3998,7 +3974,7 @@ void LEM_DPS::SystemTimestep(double simdt) {
 void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
-	oapiWriteScenario_int(scn, "THRUSTOFF", (thrustOff ? 1 : 0));
+	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
 	oapiWriteLine(scn, end_str);
 }
@@ -4016,85 +3992,15 @@ void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
 			sscanf(line + 8, "%d", &i);
 			thrustOn = (i != 0);
 		}
-		else if (!strnicmp(line, "THRUSTOFF", 9)) {
-			sscanf(line + 9, "%d", &i);
-			thrustOn = (i != 0);
+		else if (!strnicmp(line, "ENGPREVALVESARM", 15)) {
+			sscanf(line + 15, "%d", &i);
+			engPreValvesArm = (i != 0);
 		}
 		else if (!strnicmp(line, "ENGARM", 6)) {
 			sscanf(line + 6, "%d", &i);
-			thrustOn = (i != 0);
+			engArm = (i != 0);
 		}
 	}
-}
-
-// Ascent Propulsion System
-LEM_APS::LEM_APS(){
-	lem = NULL;	
-	thrustOn = 0;
-	HePress[0] = 0; HePress[1] = 0;
-}
-
-void LEM_APS::Init(LEM *s){
-	lem = s;
-}
-
-void LEM_APS::TimeStep(double simdt){
-	if(lem == NULL){ return; }
-
-	if (lem->stage > 1) {
-
-		if (lem->GuidContSwitch.IsUp()) {
-			//PGNS
-			// Check i/o channel
-			ChannelValue val11;
-			val11 = lem->agc.GetOutputChannel(011);
-			if (val11[EngineOn] && !val11[EngineOff])
-			{
-				thrustOn = true;
-			}
-			if (!val11[EngineOn] && val11[EngineOff])
-			{
-				thrustOn = false;
-			}
-		}
-		else
-		{
-			//TBD: Thrust signal from AGS
-			thrustOn = false;
-		}
-
-		//Manual start
-		if (lem->ManualEngineStart.GetState() == 1)
-		{
-			thrustOn = true;
-		}
-
-		//Abort Stage switch pressed in disables function of engine stop button
-		if (lem->ManualEngineStop.GetState() == 1 && lem->AbortStageSwitch.GetState() == 0)
-		{
-			thrustOn = false;
-		}
-
-		if (thrustOn && lem->EngineArmSwitch.IsUp())
-		{
-			lem->SetThrusterLevel(lem->th_hover[0], 1.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 1.0);
-		}
-		else
-		{
-			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 0.0);
-		}
-		//sprintf(oapiDebugString(), "APS %d", thrustOn);
-	}
-}
-
-void LEM_APS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
-}
-
-void LEM_APS::LoadState(FILEHANDLE scn,char *end_str){
-
 }
 
 DPSGimbalActuator::DPSGimbalActuator() {
