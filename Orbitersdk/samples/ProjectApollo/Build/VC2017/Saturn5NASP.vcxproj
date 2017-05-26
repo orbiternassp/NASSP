@@ -168,6 +168,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\cdu.cpp" />
     <ClCompile Include="..\..\src_sys\checklistController.cpp" />
     <ClCompile Include="..\..\src_sys\checklistControllerHelpers.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
@@ -394,6 +395,7 @@
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
+    <ClInclude Include="..\..\src_sys\cdu.h" />
     <ClInclude Include="..\..\src_sys\checklistController.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_csm\csm_telecom.h" />

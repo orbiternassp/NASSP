@@ -43,12 +43,6 @@
 
 #include "tracer.h"
 
-char TwoSpaceTwoFormat[7] = "XXX XX";
-char RegFormat[7] = "XXXXXX";
-
-// Moved DELTAT definition to avoid INTERNAL COMPILER ERROR
-#define DELTAT 2.0
-
 ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
 
 {

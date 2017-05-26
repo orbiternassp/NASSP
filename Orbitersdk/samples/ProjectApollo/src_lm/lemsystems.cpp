@@ -1301,6 +1301,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	deda.TimeStep(simdt);
 	imu.Timestep(simdt);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
+	tcdu.Timestep(simdt);
+	scdu.Timestep(simdt);
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
@@ -2372,10 +2374,10 @@ void LEM_RR::RRTrunionDrive(int val, ChannelValue val12) {
 	} else {
 		pulses = val&07777; 
 	}
-	if (val12[EnableRRCDUErrorCounter]){
+	/*if (val12[EnableRRCDUErrorCounter]){
 		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-	}
+	}*/
 	trunnionVel = (RR_TRUNNION_STEP*pulses);
 	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
 	lastTrunnionAngle = trunnionAngle;
@@ -2417,10 +2419,10 @@ void LEM_RR::RRShaftDrive(int val,ChannelValue ch12) {
 	shaftVel = (RR_SHAFT_STEP*pulses);
 	shaftAngle += (RR_SHAFT_STEP*pulses);
 	lastShaftAngle = shaftAngle;
-	if (val12[EnableRRCDUErrorCounter]){
+	/*if (val12[EnableRRCDUErrorCounter]){
 		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-	}
+	}*/
 	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
@@ -2688,13 +2690,13 @@ void LEM_RR::TimeStep(double simdt){
 		if(val33[RRPowerOnAuto] != 1){
 			val33[RRPowerOnAuto] = 1;
 			lem->agc.SetInputChannel(033, val33);
-			sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
+			//sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
 		}
 	}else{
 		if(val33[RRPowerOnAuto] != 0){
 			val33[RRPowerOnAuto] = 0;
 			lem->agc.SetInputChannel(033, val33);
-			sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
+			//sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
 		}
 	}
 
@@ -2732,14 +2734,14 @@ void LEM_RR::TimeStep(double simdt){
 			lastTrunnionAngle = trunnionAngle;										// Update
 			int trunnionSteps = (int)(trunnionMoved / RR_TRUNNION_STEP);					// How many (positive) steps is that?
 			while(trunnionSteps > 0){												// Is it more than one?
-				lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
-				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
+				//lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
+				//lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
 				trunnionMoved -= RR_TRUNNION_STEP;									// Take away a step
 				trunnionSteps--;													// Loop
 			}																		// Other direction
 			while(trunnionSteps < 0){												// Is it more than one?
-				lem->agc.vagc.Erasable[0][RegOPTY]--;								// DINC the LGC
-				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
+				//lem->agc.vagc.Erasable[0][RegOPTY]--;								// DINC the LGC
+				//lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
 				trunnionMoved += RR_TRUNNION_STEP;									// Take away a (negative) step
 				trunnionSteps++;													// Loop
 			}
@@ -2748,20 +2750,20 @@ void LEM_RR::TimeStep(double simdt){
 			lastShaftAngle = shaftAngle;
 			int shaftSteps = (int)(shaftMoved / RR_SHAFT_STEP);
 			while(shaftSteps < 0){
-				lem->agc.vagc.Erasable[0][RegOPTX]--;
-				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				//lem->agc.vagc.Erasable[0][RegOPTX]--;
+				//lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 				shaftMoved += RR_SHAFT_STEP;
 				shaftSteps++;
 			}
 			while(shaftSteps > 0){
-				lem->agc.vagc.Erasable[0][RegOPTX]++;
-				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				//lem->agc.vagc.Erasable[0][RegOPTX]++;
+				//lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 				shaftMoved -= RR_SHAFT_STEP;
 				shaftSteps--;
 			}
 			
 			if(lem->RendezvousRadarRotary.GetState() == 1){ break; } // Don't update the other stuff in slew mode.
-			sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
+			//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 			// Maintain RADAR GOOD state
 			if(radarDataGood == 1 && val33[RRDataGood] == 0){ val33[RRDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
@@ -2856,19 +2858,11 @@ void LEM_RR::TimeStep(double simdt){
 				ruptSent = 0; 
 			}
 
-			// Watch for CDU Zero
-			if(val12[ZeroRRCDUs] != 0){
-				// Clear shaft and trunnion read counters 
-				// Incrementing pulses are inhibited
-			}else{
-				// Look for RR Error Counter Enable
-				if(val12[EnableRRCDUErrorCounter] != 0){
-					// sprintf(oapiDebugString(),"RR CDU Error Counters Enabled");
-					// If this is enabled, the LGC wants to drive the positioner.
-				}
-			}
 			break;
 	}
+
+	lem->tcdu.SetReadCounter(trunnionAngle);
+	lem->scdu.SetReadCounter(shaftAngle);
 
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 

@@ -171,6 +171,9 @@
     <ClCompile Include="..\..\src_lm\lm_aps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\cdu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -309,6 +312,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\lm_aps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\cdu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

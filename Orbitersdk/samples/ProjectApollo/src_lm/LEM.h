@@ -31,6 +31,7 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+#include "cdu.h"
 // DS20060730 Include LM SCS
 #include "lmscs.h"
 // DS20090905 Include LM AGS and telecom
@@ -1609,7 +1610,9 @@ protected:
 	LEMcomputer agc;
 	Boiler *imuheater; // IMU Standby Heater
 	h_Radiator *imucase; // IMU Case
-	IMU imu;	
+	IMU imu;
+	CDU tcdu;
+	CDU scdu;
 	LMOptics optics;
 
 	//Pyros

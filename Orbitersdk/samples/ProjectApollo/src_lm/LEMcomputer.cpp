@@ -314,7 +314,7 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 
 void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -326,12 +326,12 @@ void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	else
 	{
 		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel141(ChannelValue val) {
 
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -343,7 +343,7 @@ void LEMcomputer::ProcessChannel141(ChannelValue val) {
 	else
 	{
 		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
