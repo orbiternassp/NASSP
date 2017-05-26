@@ -952,16 +952,6 @@ void LEM::SetGimbal(bool setting)
 	GMBLswitch = setting;
 }
 
-typedef union {
-	struct {
-		unsigned MissionTimerRunning:1;
-		unsigned MissionTimerEnabled:1;
-		unsigned EventTimerRunning:1;
-		unsigned EventTimerEnabled:1;
-	} u;
-	unsigned long word;
-} LEMMainState;
-
 //
 // Scenario state functions.
 //
@@ -1076,15 +1066,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			LEMMainState state;
-			sscanf (line+5, "%d", &state.word);
-
-			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
-			MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
-			EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
-			EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
-		} 
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
 		}
@@ -1141,6 +1122,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
 			atca.LoadState(scn);
+		}
+		else if (!strnicmp(line, "MISSIONTIMER_START", sizeof("MISSIONTIMER_START"))) {
+			MissionTimerDisplay.LoadState(scn, MISSIONTIMER_END_STRING);
+		}
+		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
+			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1395,8 +1382,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
-	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
-	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
 
@@ -1413,20 +1398,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
-
-	//
-	// Main state flags are packed into a 32-bit value.
-	//
-
-	LEMMainState state;
-	state.word = 0;
-
-	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
-	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
-	state.u.EventTimerEnabled = EventTimerDisplay.IsEnabled();
-	state.u.EventTimerRunning = EventTimerDisplay.IsRunning();
-
-	oapiWriteScenario_int (scn, "STATE", state.word);
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
@@ -1483,6 +1454,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
+	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
+	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
 	checkControl.save(scn);
 }
 
@@ -1511,7 +1484,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	char CSMName[64];
 
 	MissionTime = ls.MissionTime;
-	MissionTimerDisplay.SetTime(MissionTime);
 
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
