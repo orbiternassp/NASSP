@@ -38,9 +38,7 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "papi.h"
 

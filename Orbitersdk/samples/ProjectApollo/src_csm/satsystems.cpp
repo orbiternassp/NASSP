@@ -36,7 +36,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"

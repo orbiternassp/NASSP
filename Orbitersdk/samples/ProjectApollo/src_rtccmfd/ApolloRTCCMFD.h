@@ -20,7 +20,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"

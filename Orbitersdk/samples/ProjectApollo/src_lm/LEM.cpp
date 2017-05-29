@@ -37,8 +37,6 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
-#include "dsky.h"
-#include "IMU.h"
 
 #include "LEM.h"
 #include "tracer.h"

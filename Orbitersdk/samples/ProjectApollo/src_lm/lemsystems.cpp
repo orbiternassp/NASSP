@@ -40,7 +40,6 @@
 #include "LEMcomputer.h"
 #include "lm_channels.h"
 #include "dsky.h"
-#include "IMU.h"
 #include "PanelSDK/Internals/Esystems.h"
 
 #include "LEM.h"

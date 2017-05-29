@@ -28,8 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
-#include "dsky.h"
-#include "IMU.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_aps.h"

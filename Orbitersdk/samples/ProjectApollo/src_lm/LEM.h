@@ -31,10 +31,10 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+#include "dsky.h"
+#include "imu.h"
 #include "cdu.h"
-// DS20060730 Include LM SCS
 #include "lmscs.h"
-// DS20090905 Include LM AGS and telecom
 #include "lm_ags.h"
 #include "lm_telecom.h"
 #include "pyro.h"

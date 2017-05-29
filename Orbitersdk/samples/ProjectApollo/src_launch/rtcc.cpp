@@ -28,7 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"

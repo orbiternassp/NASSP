@@ -27,6 +27,8 @@
 
 #include "thread.h"
 
+class PanelSwitchItem;
+
 // OPTICS CONFIGURATION DEFINES
 // Step values in radians.
 #define OCDU_SHAFT_STEP 0.000191747598876953125 
