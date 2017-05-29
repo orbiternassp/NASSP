@@ -952,6 +952,16 @@ void LEM::SetGimbal(bool setting)
 	GMBLswitch = setting;
 }
 
+typedef union {
+	struct {
+		unsigned MissionTimerRunning : 1;
+		unsigned MissionTimerEnabled : 1;
+		unsigned EventTimerRunning : 1;
+		unsigned EventTimerEnabled : 1;
+	} u;
+	unsigned long word;
+} LEMMainState;
+
 //
 // Scenario state functions.
 //
@@ -1065,6 +1075,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
+		}
+		else if (!strnicmp(line, "STATE", 5)) {
+			LEMMainState state;
+			sscanf(line + 5, "%d", &state.word);
+
+			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
+			MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
+			EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
+			EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
 		}
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
