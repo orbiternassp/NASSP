@@ -41,7 +41,7 @@
 
 #include "lm_channels.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : ApolloGuidance(s, display, im, p)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : ApolloGuidance(s, display, im, sc, tc, p)
 
 {
 

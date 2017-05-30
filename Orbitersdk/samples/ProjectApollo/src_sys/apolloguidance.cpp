@@ -38,12 +38,13 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "cdu.h"
 #include "powersource.h"
 #include "papi.h"
 
 #include "tracer.h"
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
 
 {
 	Reset = false;
@@ -831,10 +832,12 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
 		ProcessChannel140(val);
+		scdu.ChannelOutput(channel, val);
 		break;
 
 	case 0141:
 		ProcessChannel141(val);
+		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
 		ProcessChannel142(val);

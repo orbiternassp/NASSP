@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "cdu.h"
+#include "papi.h"
 
 CDU::CDU(ApolloGuidance &comp, int l, int err, bool isicdu) : agc(comp)
 {
@@ -45,7 +46,7 @@ CDU::CDU(ApolloGuidance &comp, int l, int err, bool isicdu) : agc(comp)
 	}
 
 	ReadCounter = 0.0;
-	ErrorCounter = 0.0;
+	ErrorCounter = 0;
 	OldReadCounter = 0.0;
 	ZeroCDU = false;
 	ErrorCounterEnabled = false;
@@ -73,9 +74,15 @@ void CDU::Timestep(double simdt)
 		ZeroCDU = false;
 	}
 
-	int  pulses; //i, delta;
+	int  pulses;
 	double delta;
 
+	if (ReadCounter >= PI2) {
+		ReadCounter -= PI2;
+	}
+	if (ReadCounter < 0) {
+		ReadCounter += PI2;
+	}
 	delta = ReadCounter - OldReadCounter;
 	if (delta > PI)
 		delta -= PI2;
@@ -83,15 +90,31 @@ void CDU::Timestep(double simdt)
 		delta += PI2;
 
 	// Gyro pulses to CDU pulses
-	pulses = (int)(((double)radToGyroPulses(delta)) / 64.0);
+	pulses = (int)(((double)radToGyroPulses(ReadCounter)) / 64.0);
+	agc.SetErasable(0, loc, (pulses & 077777));
+
+
+	/*short  pulses; //i, delta;
+	//short delta;
+
+	pulses = ReadCounter - OldReadCounter;
+	//if (delta > PI)
+	//	delta -= PI2;
+	//if (delta < -PI)
+	//	delta += PI2;
+
+	// Gyro pulses to CDU pulses
+	//pulses = (int)(((double)radToGyroPulses(delta)) / 64.0) & 077777;
 
 	if (pulses && !ZeroCDU)
+	{
 		agc.vagc.Erasable[0][loc] += pulses;
+		OldReadCounter = ReadCounter;
+	}*/
+
+	//sprintf(oapiDebugString(), "ReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter, pulses, ZeroCDU, CDUZeroBit);
 
 	OldReadCounter = ReadCounter;
-
-	//sprintf(oapiDebugString(), "%f %f %o %d %d", ReadCounter, delta, pulses, ZeroCDU, CDUZeroBit);
-	sprintf(oapiDebugString(), "%o", ErrorCounter);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
@@ -107,31 +130,33 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 	if (val12[ErrorCounterBit]) {
 		if (ErrorCounterEnabled == false)
 		{
-			ErrorCounter = 0.0;
+			ErrorCounter = 0;
 			ErrorCounterEnabled = true;
 		}
 	}
 	else
 	{
 		if (ErrorCounterEnabled == true) {
-			ErrorCounter = 0.0;
+			ErrorCounter = 0;
 		}
 		ErrorCounterEnabled = false;
 	}
 
 	if (address == err_channel)
 	{
-		if (val12[ErrorCounterBit]) {
-			int delta = val.to_ulong() & 0777;
-			// NEGATIVE = RIGHT
-			if (val.to_ulong() & 040000) {
-				ErrorCounter -= delta;
+		if (ErrorCounterEnabled) {
+			int delta = val.to_ulong();
+
+			if (delta & 040000) { // Negative
+				ErrorCounter += -((~delta) & 077777);
 			}
 			else {
-				ErrorCounter += delta;
+				ErrorCounter += delta & 077777;
 			}
 		}
 	}
+
+	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %o Bit %d", ReadCounter*DEG, ErrorCounter, val12[ErrorCounterBit] == 1);
 }
 
 double CDU::gyroPulsesToRad(int pulses) {
@@ -144,8 +169,8 @@ int CDU::radToGyroPulses(double angle) {
 
 void CDU::DoZeroCDU()
 {
-	ReadCounter = 0.0;
-	OldReadCounter = 0.0;
+	ReadCounter = 0;
+	OldReadCounter = 0;
 	ZeroCDU = true;
 }
 
@@ -154,5 +179,44 @@ void CDU::SetReadCounter(double angle)
 	if (!ZeroCDU)
 	{
 		ReadCounter = angle;
+	}
+}
+
+int CDU::GetErrorCounter()
+{ 
+	if (ErrorCounterEnabled)
+	{
+		return ErrorCounter;
+	}
+	
+	return 0;
+}
+
+void CDU::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_double(scn, "READCOUNTER", ReadCounter);
+	papiWriteScenario_double(scn, "OLDREADCOUNTER", OldReadCounter);
+	oapiWriteScenario_int(scn, "ERRORCOUNTER", ErrorCounter);
+	papiWriteScenario_bool(scn, "ZEROCDU", ZeroCDU);
+	papiWriteScenario_bool(scn, "ERRORCOUNTERENABLED", ErrorCounterEnabled);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void CDU::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+		papiReadScenario_double(line, "READCOUNTER", ReadCounter);
+		papiReadScenario_double(line, "OLDREADCOUNTER", OldReadCounter);
+		papiReadScenario_int(line, "ERRORCOUNTER", ErrorCounter);
+		papiReadScenario_bool(line, "ZEROCDU", ZeroCDU);
+		papiReadScenario_bool(line, "ERRORCOUNTERENABLED", ErrorCounterEnabled);
 	}
 }

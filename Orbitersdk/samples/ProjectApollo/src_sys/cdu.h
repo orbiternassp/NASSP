@@ -35,29 +35,32 @@ public:
 	void Timestep(double simdt);
 	void ChannelOutput(int address, ChannelValue val);
 	void SetReadCounter(double angle);
+	int GetErrorCounter();
+
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 protected:
 	void DoZeroCDU();
 	double gyroPulsesToRad(int pulses);
 	int radToGyroPulses(double angle);
 
 	double ReadCounter;
-	double ErrorCounter;
-
+	int ErrorCounter;
 	double OldReadCounter;
 
-	ApolloGuidance &agc;
+	bool ZeroCDU;
+	bool ErrorCounterEnabled;
 
+	bool IsICDU;
 	//Address of AGC CDU counter
 	int loc;
 	//Channel for error counter commands
 	int err_channel;
 
-	bool IsICDU;
-	bool ZeroCDU;
-	bool ErrorCounterEnabled;
-
 	//Output channel bit for CDU Zeroing
 	int CDUZeroBit;
 	//Output channel bit for error counter enabled
 	int ErrorCounterBit;
+
+	ApolloGuidance &agc;
 };

@@ -269,11 +269,7 @@ private:
 	int    isTracking;
 	bool   radarDataGood;
 	double trunnionAngle;
-	double trunnionMoved;
 	double shaftAngle;
-	double shaftMoved;
-	double lastTrunnionAngle;
-	double lastShaftAngle;
 	double trunnionVel;
 	double shaftVel;
 	double range;

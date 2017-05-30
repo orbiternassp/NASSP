@@ -2345,10 +2345,8 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	//antenna.mass = 10000;
 	//antenna.SetTemp(255.1); 
-	trunnionAngle = 0 * RAD; lastTrunnionAngle = trunnionAngle; 
-	trunnionMoved = 0 * RAD;
-	shaftAngle = -180 * RAD; lastShaftAngle = shaftAngle; // Stow
-	shaftMoved = -180 * RAD;
+	trunnionAngle = 0 * RAD;
+	shaftAngle = -180 * RAD; // Stow
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_RR_STBY_CB);
 		//lem->Panelsdk.AddHydraulic(&antenna);
@@ -2379,7 +2377,6 @@ void LEM_RR::RRTrunionDrive(int val, ChannelValue val12) {
 	}*/
 	trunnionVel = (RR_TRUNNION_STEP*pulses);
 	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
-	lastTrunnionAngle = trunnionAngle;
 	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
 
@@ -2417,7 +2414,6 @@ void LEM_RR::RRShaftDrive(int val,ChannelValue ch12) {
 	}
 	shaftVel = (RR_SHAFT_STEP*pulses);
 	shaftAngle += (RR_SHAFT_STEP*pulses);
-	lastShaftAngle = shaftAngle;
 	/*if (val12[EnableRRCDUErrorCounter]){
 		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
 		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
@@ -2542,8 +2538,6 @@ void LEM_RR::TimeStep(double simdt){
 	if (!IsPowered() ) { 
 		val33[RRPowerOnAuto] = 0;
 		val33[RRDataGood] = 0;
-		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
-		lastShaftAngle = shaftAngle;
 		lem->agc.SetInputChannel(033, val33);
 		return;
 	}
@@ -2724,43 +2718,25 @@ void LEM_RR::TimeStep(double simdt){
 				shaftAngle += RR_SHAFT_STEP * ShaftRate;
 				shaftVel = -RR_SHAFT_STEP * ShaftRate;
 			}
+
+			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
+
 			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
 			// FALL INTO
 		case 2: // AGC
-			// Watch shaft/trunnion movement. The LGC gets told when we move.
-			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
-			trunnionMoved += (trunnionAngle-lastTrunnionAngle);						// Keep track of how far we moved it so far
-			lastTrunnionAngle = trunnionAngle;										// Update
-			int trunnionSteps = (int)(trunnionMoved / RR_TRUNNION_STEP);					// How many (positive) steps is that?
-			while(trunnionSteps > 0){												// Is it more than one?
-				//lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
-				//lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
-				trunnionMoved -= RR_TRUNNION_STEP;									// Take away a step
-				trunnionSteps--;													// Loop
-			}																		// Other direction
-			while(trunnionSteps < 0){												// Is it more than one?
-				//lem->agc.vagc.Erasable[0][RegOPTY]--;								// DINC the LGC
-				//lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
-				trunnionMoved += RR_TRUNNION_STEP;									// Take away a (negative) step
-				trunnionSteps++;													// Loop
-			}
-			// Now for the shaft			
-			shaftMoved += (shaftAngle-lastShaftAngle);
-			lastShaftAngle = shaftAngle;
-			int shaftSteps = (int)(shaftMoved / RR_SHAFT_STEP);
-			while(shaftSteps < 0){
-				//lem->agc.vagc.Erasable[0][RegOPTX]--;
-				//lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				shaftMoved += RR_SHAFT_STEP;
-				shaftSteps++;
-			}
-			while(shaftSteps > 0){
-				//lem->agc.vagc.Erasable[0][RegOPTX]++;
-				//lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				shaftMoved -= RR_SHAFT_STEP;
-				shaftSteps--;
-			}
 			
+			int pulses;
+
+			pulses = lem->scdu.GetErrorCounter();
+
+			shaftVel = (RR_SHAFT_STEP*pulses);
+			shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+
+			pulses = lem->tcdu.GetErrorCounter();
+
+			trunnionVel = (RR_SHAFT_STEP*pulses);
+			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+
 			if(lem->RendezvousRadarRotary.GetState() == 1){ break; } // Don't update the other stuff in slew mode.
 			//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
@@ -2869,7 +2845,7 @@ void LEM_RR::TimeStep(double simdt){
 	return;
 
 	// Old stuff here for reference
-	double range,rate,pitch,yaw;
+	/*double range,rate,pitch,yaw;
 
 	radarDataGood = 0;
 	CalculateRadarData(pitch,yaw);
@@ -2972,15 +2948,13 @@ void LEM_RR::TimeStep(double simdt){
 		}
 	}
 
-	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);*/
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_float(scn, "RR_TRUN", trunnionAngle);
-	trunnionMoved = trunnionAngle;
 	oapiWriteScenario_float(scn, "RR_SHAFT", shaftAngle);
-	shaftMoved = shaftAngle;
 	oapiWriteScenario_float(scn, "RR_ANTTEMP", GetAntennaTempF());
 	oapiWriteLine(scn, end_str);
 }
