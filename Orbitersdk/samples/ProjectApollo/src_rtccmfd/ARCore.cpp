@@ -1597,10 +1597,7 @@ int ARCore::subThread()
 
 		dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
 
-		if (CDHtimemode == 0)
-		{
-			DH = dH_CDH / 1852.0;
-		}
+		DH = dH_CDH / 1852.0;
 
 		P30TIG = CDHtime_cor;
 		dV_LVLH = CDHdeltaV;

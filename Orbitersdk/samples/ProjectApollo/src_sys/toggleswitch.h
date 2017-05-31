@@ -448,17 +448,17 @@ public:
 ///
 class ThreeSourceSwitch : public ThreePosSwitch {
 public:
-	ThreeSourceSwitch() { source1 = source2 = source3 = 0; };
+	ThreeSourceSwitch() { source[0] = source[1] = source[2] = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
+	void SetSource(int i, e_object *s);
 
 protected:
 	virtual void UpdateSourceState();
 
-	e_object *source1;
-	e_object *source2;
-	e_object *source3;
+	e_object *source[3];
 };
 
 ///
