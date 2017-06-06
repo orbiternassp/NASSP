@@ -187,6 +187,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Reset standby flip-flop
 			vagc.Standby = 0;
 			// Turn on EL display and LGC Light (DSKYWarn).
+			vagc.DskyChannel163 = 1;
 			SetOutputChannel(0163, 1);
 			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
