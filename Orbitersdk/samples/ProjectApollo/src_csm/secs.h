@@ -144,6 +144,21 @@ public:
 
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+
+	//Telemetry
+
+	//CM RCS Pressurization Event
+	bool CMRCSPressureSignal;
+	//CM-SM Separation Event
+	bool CMSMSepRelayClose;
+	//SLA Separation Event
+	bool SLASepRelay;
+	//RCS Activate Event
+	bool RCSActivateSignal;
+	//EDS Abort Logic Output
+	bool EDSAbortLogicOutput;
+	//Forward Heatshield Jettison Event
+	bool FwdHeatshieldJett;
 protected:
 
 	void TimerTimestep(double simdt);

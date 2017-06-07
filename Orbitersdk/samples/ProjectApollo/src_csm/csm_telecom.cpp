@@ -865,6 +865,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	SECSStatus secsStatus;
 	RCSStatus rcsStatus;
 
+	unsigned char data = 0;
+
 	switch(type){
 		case TLM_A:  // ANALOG
 			switch(channel){
@@ -1857,7 +1859,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   7 = CM RCS PRESS SIG A
 							   8 = TRANS CTL +Y CMD
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CMRCSPressureSignalA << 0);
+							data |= (secsStatus.SLASepRelayA << 4);
+							data |= (secsStatus.CMRCSPressureSignalA << 6);
+							return data;
 						case 23:
 							/* 1 = CM-SM SEP RELAY B
 							   3 = SCS CHANNEL ENABLE RCS B
@@ -1865,15 +1872,23 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   6 = TRANS CTL -Y CMD
 							   7 = SLA SEP RELAY B
 							   8 = TRANS CTL +Z CMD
-								*/
-							return(0);
+								*/;
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CMRCSPressureSignalB << 0);
+							data |= (secsStatus.SLASepRelayB << 4);
+							data |= (secsStatus.CMRCSPressureSignalB << 6);
+							return data;
 						case 24:
 							/* 1 = FWD HS JET A
 							   2 = TRANS CTL -Z CMD
 							   3 = DIRECT RCS #1
 							   4 = DIRECT RCS #2
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.FwdHeatshieldJettA << 0);
+							return data;
 						case 25:
 							/* 1 = LIMIT CYCLE
 							   3 = MANUAL ATT PITCH ACCEL CMD
@@ -1887,7 +1902,10 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 26:
 							/* 5 = FWD HS JET B
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.FwdHeatshieldJettB << 4);
+							return data;
 						case 27: // ZEROES
 							return(0);
 						case 28:

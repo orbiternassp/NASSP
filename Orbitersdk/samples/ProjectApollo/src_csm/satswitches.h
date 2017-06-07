@@ -802,6 +802,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState);
+	void Guard();
+	void SetState(int value);
 
 protected:
 	int guardState;

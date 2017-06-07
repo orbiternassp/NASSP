@@ -266,6 +266,18 @@ typedef struct {
 typedef struct {
 	double BusAVoltage;
 	double BusBVoltage;
+	bool CMRCSPressureSignalA;
+	bool CMSMSepRelayCloseA;
+	bool SLASepRelayA;
+	bool RCSActivateSignalA;
+	bool EDSAbortLogicOutputA;
+	bool FwdHeatshieldJettA;
+	bool CMRCSPressureSignalB;
+	bool CMSMSepRelayCloseB;
+	bool SLASepRelayB;
+	bool RCSActivateSignalB;
+	bool EDSAbortLogicOutputB;
+	bool FwdHeatshieldJettB;
 } SECSStatus;
 
 ///

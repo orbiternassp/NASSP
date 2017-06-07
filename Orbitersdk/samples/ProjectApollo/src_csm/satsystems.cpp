@@ -2546,6 +2546,18 @@ void Saturn::GetSECSStatus( SECSStatus &ss )
 {
 	ss.BusAVoltage = SECSLogicBusA.Voltage();
 	ss.BusBVoltage = SECSLogicBusB.Voltage();
+	ss.CMRCSPressureSignalA = secs.MESCA.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseA = secs.MESCA.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputA = secs.MESCA.EDSAbortLogicOutput;
+	ss.RCSActivateSignalA = secs.MESCA.RCSActivateSignal;
+	ss.SLASepRelayA = secs.MESCA.SLASepRelay;
+	ss.FwdHeatshieldJettA = secs.MESCA.FwdHeatshieldJett;
+	ss.CMRCSPressureSignalB = secs.MESCB.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseB = secs.MESCB.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputB = secs.MESCB.EDSAbortLogicOutput;
+	ss.RCSActivateSignalB = secs.MESCB.RCSActivateSignal;
+	ss.SLASepRelayB = secs.MESCB.SLASepRelay;
+	ss.FwdHeatshieldJettB = secs.MESCB.FwdHeatshieldJett;
 }
 
 void Saturn::GetPyroStatus( PyroStatus &ps )
