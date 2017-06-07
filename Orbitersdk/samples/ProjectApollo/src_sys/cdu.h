@@ -36,6 +36,7 @@ public:
 	void ChannelOutput(int address, ChannelValue val);
 	void SetReadCounter(double angle);
 	int GetErrorCounter();
+	int GetAltOutput();
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -47,6 +48,8 @@ protected:
 	double ReadCounter;
 	int ErrorCounter;
 	double OldReadCounter;
+
+	int AltOutput;
 
 	bool ZeroCDU;
 	bool ErrorCounterEnabled;
@@ -61,6 +64,8 @@ protected:
 	int CDUZeroBit;
 	//Output channel bit for error counter enabled
 	int ErrorCounterBit;
+
+	int AltOutBit;
 
 	ApolloGuidance &agc;
 };

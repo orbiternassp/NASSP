@@ -3158,7 +3158,6 @@ CrossPointer::CrossPointer()
 	vel_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
-	lgcErrorCountersEnabled = false;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -3224,6 +3223,9 @@ void CrossPointer::TimeStep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
+			lgc_forward = 0.5571*(double)lem->scdu.GetAltOutput();
+			lgc_lateral = 0.5571*(double)lem->tcdu.GetAltOutput();
+
 			vx = lgc_forward*0.3048;
 			vy = lgc_lateral*0.3048;
 		}
@@ -3252,46 +3254,8 @@ void CrossPointer::GetVelocities(double &vx, double &vy)
 	vy = vel_y;
 }
 
-void CrossPointer::SetForwardVelocity(int val, ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (!IsPowered()) { return; }
-
-	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
-	}
-	else {
-		pulses = val & 077777;
-	}
-	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_forward += (0.5571*pulses);
-	}
-}
-
-void CrossPointer::SetLateralVelocity(int val, ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (!IsPowered()) { return; }
-
-	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
-	}
-	else {
-		pulses = val & 077777;
-	}
-	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_lateral += (0.5571*pulses);
-	}
-}
-
 void CrossPointer::SaveState(FILEHANDLE scn) {
-	papiWriteScenario_bool(scn, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
+
 	oapiWriteLine(scn, CROSSPOINTER_END_STRING);
 }
 
@@ -3303,7 +3267,6 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 			return;
 		}
 
-		papiReadScenario_bool(line, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
 	}
 }
 

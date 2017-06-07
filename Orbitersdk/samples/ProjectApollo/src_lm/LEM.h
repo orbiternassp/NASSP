@@ -317,13 +317,8 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	void GetVelocities(double &vx, double &vy);
-	void SetForwardVelocity(int val, ChannelValue ch12);
-	void SetLateralVelocity(int val, ChannelValue ch12);
-	void ZeroLGCVelocity() {lgc_forward = 0.0;lgc_lateral = 0.0;}
 
 	bool IsPowered();
-
-	bool lgcErrorCountersEnabled;
 protected:
 	LEM *lem;
 	e_object *dc_source;

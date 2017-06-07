@@ -1133,12 +1133,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
 			APS.LoadState(scn, "APS_END");
 		}
-		else if (!strnicmp(line, CROSSPOINTER_LEFT_START_STRING, sizeof(CROSSPOINTER_LEFT_START_STRING))) {
-			crossPointerLeft.LoadState(scn);
-		}
-		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
-			crossPointerRight.LoadState(scn);
-		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		}
@@ -1474,10 +1468,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
-	oapiWriteLine(scn, CROSSPOINTER_LEFT_START_STRING);
-	crossPointerLeft.SaveState(scn);
-	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
-	crossPointerRight.SaveState(scn);
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);

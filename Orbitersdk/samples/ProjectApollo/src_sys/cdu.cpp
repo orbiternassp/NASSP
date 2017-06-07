@@ -50,6 +50,8 @@ CDU::CDU(ApolloGuidance &comp, int l, int err, bool isicdu) : agc(comp)
 	OldReadCounter = 0.0;
 	ZeroCDU = false;
 	ErrorCounterEnabled = false;
+	AltOutBit = 5;
+	AltOutput = 0;
 }
 
 void CDU::Timestep(double simdt)
@@ -115,6 +117,15 @@ void CDU::Timestep(double simdt)
 	//sprintf(oapiDebugString(), "ReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter, pulses, ZeroCDU, CDUZeroBit);
 
 	OldReadCounter = ReadCounter;
+
+	if (!IsICDU && val12[AltOutBit])
+	{
+		AltOutput = ErrorCounter;
+	}
+	else
+	{
+		AltOutput = 0;
+	}
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
@@ -190,6 +201,11 @@ int CDU::GetErrorCounter()
 	}
 	
 	return 0;
+}
+
+int CDU::GetAltOutput()
+{
+	return AltOutput;
 }
 
 void CDU::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
