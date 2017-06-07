@@ -438,10 +438,10 @@ void LEM::SystemsInit()
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
-	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
+	agc.WirePower(&LGC_DSKY_CB, NULL);
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
-	// The source of the isolated section may be from the LGC supply or AC bus. So this may not be correct. If the CB pops, investigate!
-	dsky.Init(&NUM_LTG_AC_CB, &LtgAnunNumKnob);
+	// The source of the isolated section is coming from the LGC supply.
+	dsky.Init(&LGC_DSKY_CB, &LtgAnunNumKnob);
 
 	// AGS stuff
 	asa.Init(this, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-Heater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));

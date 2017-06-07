@@ -218,7 +218,7 @@ void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
 }
 
 bool DSKY::IsPowered() {
-	if (Voltage() < SP_MIN_ACVOLTAGE){ return false; }
+	if (Voltage() < SP_MIN_DCVOLTAGE){ return false; }
 
 	if (DimmerRotationalSwitch != NULL) {
 		if (DimmerRotationalSwitch->GetState() == 0) {

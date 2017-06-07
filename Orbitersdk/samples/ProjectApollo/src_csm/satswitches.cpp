@@ -2077,6 +2077,29 @@ bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
 	return false;
 }
 
+void SaturnCabinPressureReliefLever::SetState(int value)
+{
+	if (ThumbwheelSwitch::SwitchTo(value))
+	{
+		if (state == 3 && guardState == 0)
+		{
+			guardState = 1;
+		}
+	}
+}
+
+void SaturnCabinPressureReliefLever::Guard()
+{
+	if (guardState) {
+		guardState = 0;
+
+		if (state == 3)
+		{
+			state = 2;
+		}
+	}
+}
+
 void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
