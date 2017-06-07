@@ -420,6 +420,8 @@ void MESC::Timestep(double simdt)
 		SECSLogicBus->Disconnect();
 	}
 
+	EDSAbortLogicOutput = false;
+
 	//EDS Logic
 	if (Sat->EDSPowerSwitch.IsUp())
 	{
@@ -446,9 +448,14 @@ void MESC::Timestep(double simdt)
 		//EDS Auto Abort
 		if (EDSLogicPower())
 		{
-			if (EDSVote() && AutoAbortEnableRelay)
+			if (EDSVote())
 			{
-				TD1.SetRunning(true);
+				EDSAbortLogicOutput = true;
+
+				if (AutoAbortEnableRelay)
+				{
+					TD1.SetRunning(true);
+				}
 			}
 		}
 	}
@@ -680,6 +687,11 @@ void MESC::Timestep(double simdt)
 	if (MESCLogicBus() && CSMLVSeparateRelay)
 	{
 		TD13.SetRunning(true);
+		SLASepRelay = true;
+	}
+	else
+	{
+		SLASepRelay = false;
 	}
 
 	if (MESCLogicBus() && TD13.ContactClosed())
@@ -779,6 +791,43 @@ void MESC::Timestep(double simdt)
 	else
 	{
 		ApexCoverDragChuteDeploy = false;
+	}
+
+	//Telemetry
+	if (MESCLogicBus() && CMRCSPress)
+	{
+		CMRCSPressureSignal = true;
+	}
+	else
+	{
+		CMRCSPressureSignal = false;
+	}
+
+	if (MESCLogicBus() && CMSMSeparateRelay)
+	{
+		CMSMSepRelayClose = true;
+	}
+	else
+	{
+		CMSMSepRelayClose = false;
+	}
+
+	if (MESCLogicBus() && RCSEnableDisableRelay)
+	{
+		RCSActivateSignal = true;
+	}
+	else
+	{
+		RCSActivateSignal = false;
+	}
+
+	if (MESCLogicBus() && ApexCoverJettison)
+	{
+		FwdHeatshieldJett = true;
+	}
+	else
+	{
+		FwdHeatshieldJett = false;
 	}
 }
 

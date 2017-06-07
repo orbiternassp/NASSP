@@ -357,10 +357,19 @@ void DECA::Timestep(double simdt) {
 		K7 = false;
 	}
 
+	if (lem->SCS_DECA_PWR_CB.IsPowered() && lem->scca3.GetK6() && !K6)
+	{
+		K28 = true;
+	}
+	else
+	{
+		K28 = false;
+	}
+
 	//Auto Engine On-Off
 	bool X = lem->scca1.GetK18();
 	bool Y = lem->scca1.GetK17();
-	bool Q = K28;
+	bool Q = !K28;
 
 	if ((X && !Y) || (Q && ((!X && !Y) || (X && Y))))
 	{
@@ -387,15 +396,6 @@ void DECA::Timestep(double simdt) {
 	{
 		engOn = false;
 		K16 = false;
-	}
-
-	if (lem->SCS_DECA_PWR_CB.IsPowered() && lem->scca3.GetK6() && !K6)
-	{
-		K28 = true;
-	}
-	else
-	{
-		K28 = false;
 	}
 
 	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->THRContSwitch.IsDown())
@@ -761,6 +761,17 @@ void SCCA1::Timestep(double simdt)
 		K201 = false;
 	}
 
+	if (lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered())
+	{
+		K22 = true;
+		K206 = true;
+	}
+	else
+	{
+		K22 = false;
+		K206 = false;
+	}
+
 	//Automatic
 
 	if (lem->SCS_ENG_ARM_CB.IsPowered())
@@ -779,7 +790,13 @@ void SCCA1::Timestep(double simdt)
 	}
 
 	//Ascent Engine Logic Circuit
-	if ((K24 && !K25) || ((K22 || K23) && (K24 && K25 || !K24 && !K25)))
+	//ON when:
+	//EngineOn = 1, EngineOff = 0
+	//EngineOn = 0, EngineOff = 0, AutoOn = 1, Engine Armed or Abort Stage
+	//OFF when:
+	//Any other case
+
+	if ((K24 && !K25) || ((AutoOn && (K22 || K23)) && (K24 && K25 || !K24 && !K25)))
 	{
 		AutoOn = true;
 	}
@@ -789,17 +806,6 @@ void SCCA1::Timestep(double simdt)
 	}
 
 	//Manual
-
-	if (lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered())
-	{
-		K22 = true;
-		K206 = true;
-	}
-	else
-	{
-		K22 = false;
-		K206 = false;
-	}
 
 	if (lem->SCS_ENG_START_OVRD_CB.IsPowered() && lem->EngineArmSwitch.IsUp() && lem->scca2.GetK19())
 	{
