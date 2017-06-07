@@ -201,6 +201,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// Reset standby flip-flop
 				vagc.Standby = 0;
 				// Turn on EL display and CMC Light (DSKYWarn).
+				vagc.DskyChannel163 = 1;
 				SetOutputChannel(0163, 1);
 				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
 				vagc.InputChannel[033] &= 037777;				
