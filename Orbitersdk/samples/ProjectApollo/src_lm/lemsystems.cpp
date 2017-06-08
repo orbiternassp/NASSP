@@ -2356,30 +2356,8 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	}
 	dc_source = dc_src;
 	ac_source = ac_src;
-
+	mode = false;
 }
-
-
-void LEM_RR::RRTrunionDrive(int val, ChannelValue val12) {
-
-	int pulses;
-
-	if (IsPowered() == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	/*if (val12[EnableRRCDUErrorCounter]){
-		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
-		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-	}*/
-	trunnionVel = (RR_TRUNNION_STEP*pulses);
-	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
-	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
-}
-
 
 bool LEM_RR::IsPowered()
 
@@ -2398,29 +2376,6 @@ bool LEM_RR::IsDCPowered()
 	}
 	return true;
 }
-
-void LEM_RR::RRShaftDrive(int val,ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-	
-	if (!IsPowered()) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	shaftVel = (RR_SHAFT_STEP*pulses);
-	shaftAngle += (RR_SHAFT_STEP*pulses);
-	/*if (val12[EnableRRCDUErrorCounter]){
-		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
-		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-	}*/
-	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
-}
-
 
 VECTOR3 LEM_RR::GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll)
 {	
@@ -2722,22 +2677,29 @@ void LEM_RR::TimeStep(double simdt){
 			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
 
 			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
-			// FALL INTO
+			break;
 		case 2: // AGC
 			
-			int pulses;
+			if (!val12[RRAutoTrackOrEnable])
+			{
+				int pulses;
 
-			pulses = lem->scdu.GetErrorCounter();
+				pulses = lem->scdu.GetErrorCounter();
 
-			shaftVel = (RR_SHAFT_STEP*pulses);
-			shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				shaftVel = (RR_SHAFT_STEP*pulses);
+				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
 
-			pulses = lem->tcdu.GetErrorCounter();
+				pulses = lem->tcdu.GetErrorCounter();
 
-			trunnionVel = (RR_SHAFT_STEP*pulses);
-			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				trunnionVel = (RR_SHAFT_STEP*pulses);
+				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+			}
+			else
+			{
+				shaftVel = 0.0;
+				trunnionVel = 0.0;
+			}
 
-			if(lem->RendezvousRadarRotary.GetState() == 1){ break; } // Don't update the other stuff in slew mode.
 			//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 			// Maintain RADAR GOOD state
@@ -2834,6 +2796,16 @@ void LEM_RR::TimeStep(double simdt){
 			}
 
 			break;
+	}
+
+	//Mode I or II determination
+	if (cos(trunnionAngle) > 0.0)
+	{
+		mode = false;
+	}
+	else
+	{
+		mode = true;
 	}
 
 	lem->tcdu.SetReadCounter(trunnionAngle);

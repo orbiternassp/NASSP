@@ -114,8 +114,6 @@ void CDU::Timestep(double simdt)
 		OldReadCounter = ReadCounter;
 	}*/
 
-	//sprintf(oapiDebugString(), "ReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter, pulses, ZeroCDU, CDUZeroBit);
-
 	OldReadCounter = ReadCounter;
 
 	if (!IsICDU && val12[AltOutBit])
@@ -126,6 +124,9 @@ void CDU::Timestep(double simdt)
 	{
 		AltOutput = 0;
 	}
+
+	//sprintf(oapiDebugString(), "ReadCounter %f OldReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter, OldReadCounter, pulses, ZeroCDU, CDUZeroBit);
+	sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter, ErrorCounter, ErrorCounterEnabled);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)

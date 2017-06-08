@@ -240,8 +240,6 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	double GetAntennaTempF();
-	void RRTrunionDrive(int val,ChannelValue ch12);
-	void RRShaftDrive(int val, ChannelValue ch12);
 	double GetRadarTrunnionVel() { return trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
 	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
@@ -276,6 +274,7 @@ private:
 	double rate;
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
+	bool mode;					//Mode I = false, Mode II = true
 
 };
 
