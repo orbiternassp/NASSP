@@ -2345,8 +2345,8 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	//antenna.mass = 10000;
 	//antenna.SetTemp(255.1); 
-	trunnionAngle = 0 * RAD;
-	shaftAngle = -180 * RAD; // Stow
+	trunnionAngle = 0.0 * RAD;
+	shaftAngle = 0.0 * RAD; // Stow
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_RR_STBY_CB);
 		//lem->Panelsdk.AddHydraulic(&antenna);
@@ -2356,7 +2356,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	}
 	dc_source = dc_src;
 	ac_source = ac_src;
-	mode = false;
+	mode = 1;
 }
 
 bool LEM_RR::IsPowered()
@@ -2503,12 +2503,12 @@ void LEM_RR::TimeStep(double simdt){
 	// Determine slew rate
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
-			ShaftRate = 1775. * simdt;
-			TrunRate  = 3640. * simdt;
+			ShaftRate = 7.0*RAD*simdt;
+			TrunRate = 7.0*RAD*simdt;
 			break;
 		case TOGGLESWITCH_DOWN:     // LOW
-			ShaftRate = 18. * simdt;
-			TrunRate  = 36. * simdt;
+			ShaftRate = 1.33*RAD*simdt;
+			TrunRate = 1.33*RAD*simdt;
 			break;
 	}
 
@@ -2651,27 +2651,29 @@ void LEM_RR::TimeStep(double simdt){
 	// Handle mode switch
 	switch(lem->RendezvousRadarRotary.GetState()){
 		case 0:	// AUTO TRACK
+			shaftVel = 0.0;
+			trunnionVel = 0.0;
 			break;
 
 		case 1: // SLEW
 			// Watch the SLEW switch. 
 			trunnionVel = 0;
 			shaftVel = 0;
-			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){	// Can we move up?
-				trunnionAngle += RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionVel = RR_TRUNNION_STEP * TrunRate;
+			if(lem->RadarSlewSwitch.GetState()==4){	// Can we move up?
+				trunnionAngle += TrunRate;						// Move the trunnion
+				trunnionVel = TrunRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){	// Can we move down?
-				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionVel = -RR_TRUNNION_STEP * TrunRate;
+			if(lem->RadarSlewSwitch.GetState()==3){	// Can we move down?
+				trunnionAngle -= TrunRate;						// Move the trunnion
+				trunnionVel = -TrunRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
-				shaftAngle -= RR_SHAFT_STEP * ShaftRate;
-				shaftVel = RR_SHAFT_STEP * ShaftRate;
+			if(lem->RadarSlewSwitch.GetState()==2){
+				shaftAngle -= ShaftRate;
+				shaftVel = ShaftRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
-				shaftAngle += RR_SHAFT_STEP * ShaftRate;
-				shaftVel = -RR_SHAFT_STEP * ShaftRate;
+			if(lem->RadarSlewSwitch.GetState()==0){
+				shaftAngle += ShaftRate;
+				shaftVel = -ShaftRate;
 			}
 
 			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
@@ -2686,13 +2688,21 @@ void LEM_RR::TimeStep(double simdt){
 
 				pulses = lem->scdu.GetErrorCounter();
 
-				shaftVel = (RR_SHAFT_STEP*pulses);
-				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				//if (mode == 1)
+				//{
+				//	shaftVel = (RR_SHAFT_STEP*pulses);
+				//	shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				//}
+				//else
+				//{
+					shaftVel = -(RR_SHAFT_STEP*pulses);
+					shaftAngle -= (RR_SHAFT_STEP*pulses)*simdt;
+				//}
 
 				pulses = lem->tcdu.GetErrorCounter();
 
-				trunnionVel = (RR_SHAFT_STEP*pulses);
-				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				trunnionVel = -(RR_SHAFT_STEP*pulses);
+				trunnionAngle -= (RR_SHAFT_STEP*pulses)*simdt;
 			}
 			else
 			{
@@ -2798,19 +2808,61 @@ void LEM_RR::TimeStep(double simdt){
 			break;
 	}
 
+	//Limits
+
+	if (trunnionAngle < -70.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = -70.0*RAD;
+	}
+	else if (trunnionAngle > 250.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = 250.0*RAD;
+	}
+
+	if (mode == 1)
+	{
+		if (shaftAngle > 68.0*RAD)
+		{
+			shaftAngle = 68.0*RAD;
+			shaftVel = 0.0;
+		}
+		else if (shaftAngle < -148.0*RAD)
+		{
+			shaftAngle = -148.0*RAD;
+			shaftVel = 0.0;
+		}
+	}
+	/*else
+	{
+		if (shaftAngle > 68.0*RAD)
+		{
+			shaftAngle = 68.0*RAD;
+			shaftVel = 0.0;
+		}
+		else if (shaftAngle < -122.0*RAD)
+		{
+			shaftAngle = -122.0*RAD;
+			shaftVel = 0.0;
+		}
+	}
 	//Mode I or II determination
-	if (cos(trunnionAngle) > 0.0)
+	if (cos(trunnionAngle) > 0.0 && mode == 2)
 	{
-		mode = false;
+		//shaftAngle -= PI;
+		mode = 1;
 	}
-	else
+	else if (cos(trunnionAngle) < 0.0 && mode == 1)
 	{
-		mode = true;
-	}
+		//shaftAngle += PI;
+		mode = 2;
+	}*/
 
 	lem->tcdu.SetReadCounter(trunnionAngle);
 	lem->scdu.SetReadCounter(shaftAngle);
 
+	sprintf(oapiDebugString(), "Shaft %f, Trunnion %f", shaftAngle*DEG, trunnionAngle*DEG);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 
@@ -2928,6 +2980,7 @@ void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteScenario_float(scn, "RR_TRUN", trunnionAngle);
 	oapiWriteScenario_float(scn, "RR_SHAFT", shaftAngle);
 	oapiWriteScenario_float(scn, "RR_ANTTEMP", GetAntennaTempF());
+	oapiWriteScenario_int(scn, "RR_MODE", mode);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -2947,6 +3000,7 @@ void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
 			sscanf(line + 7, "%lf", &dec);
 			shaftAngle = dec;
 		}
+		papiReadScenario_int(line, "RR_MODE", mode);
 	}
 }
 

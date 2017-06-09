@@ -47,7 +47,7 @@ CDU::CDU(ApolloGuidance &comp, int l, int err, bool isicdu) : agc(comp)
 
 	ReadCounter = 0.0;
 	ErrorCounter = 0;
-	OldReadCounter = 0.0;
+	NewReadCounter = 0.0;
 	ZeroCDU = false;
 	ErrorCounterEnabled = false;
 	AltOutBit = 5;
@@ -79,21 +79,34 @@ void CDU::Timestep(double simdt)
 	int  pulses;
 	double delta;
 
-	if (ReadCounter >= PI2) {
-		ReadCounter -= PI2;
-	}
-	if (ReadCounter < 0) {
-		ReadCounter += PI2;
-	}
-	delta = ReadCounter - OldReadCounter;
+	delta = NewReadCounter - ReadCounter;
 	if (delta > PI)
 		delta -= PI2;
 	if (delta < -PI)
 		delta += PI2;
 
 	// Gyro pulses to CDU pulses
-	pulses = (int)(((double)radToGyroPulses(ReadCounter)) / 64.0);
-	agc.SetErasable(0, loc, (pulses & 077777));
+	//pulses = (int)(((double)radToGyroPulses(ReadCounter)) / 64.0);
+	//agc.SetErasable(0, loc, (pulses & 077777));
+
+	pulses = 0;
+
+	if (delta < 0) {
+		while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
+			agc.vagc.Erasable[0][loc]--;
+			agc.vagc.Erasable[0][loc] &= 077777;
+			ReadCounter -= CDU_STEP;
+			pulses--;
+		}
+	}
+	if (delta > 0) {
+		while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
+			agc.vagc.Erasable[0][loc]++;
+			agc.vagc.Erasable[0][loc] &= 077777;
+			ReadCounter += CDU_STEP;
+			pulses++;
+		}
+	}
 
 
 	/*short  pulses; //i, delta;
@@ -114,8 +127,6 @@ void CDU::Timestep(double simdt)
 		OldReadCounter = ReadCounter;
 	}*/
 
-	OldReadCounter = ReadCounter;
-
 	if (!IsICDU && val12[AltOutBit])
 	{
 		AltOutput = ErrorCounter;
@@ -125,8 +136,8 @@ void CDU::Timestep(double simdt)
 		AltOutput = 0;
 	}
 
-	//sprintf(oapiDebugString(), "ReadCounter %f OldReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter, OldReadCounter, pulses, ZeroCDU, CDUZeroBit);
-	sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter, ErrorCounter, ErrorCounterEnabled);
+	//sprintf(oapiDebugString(), "ReadCounter %f NewReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter*DEG, NewReadCounter*DEG, pulses, ZeroCDU, CDUZeroBit);
+	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter, ErrorCounter, ErrorCounterEnabled);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
@@ -182,7 +193,7 @@ int CDU::radToGyroPulses(double angle) {
 void CDU::DoZeroCDU()
 {
 	ReadCounter = 0;
-	OldReadCounter = 0;
+	NewReadCounter = 0;
 	ZeroCDU = true;
 }
 
@@ -190,7 +201,14 @@ void CDU::SetReadCounter(double angle)
 {
 	if (!ZeroCDU)
 	{
-		ReadCounter = angle;
+		NewReadCounter = angle;
+
+		if (NewReadCounter >= PI2) {
+			NewReadCounter -= PI2;
+		}
+		if (NewReadCounter < 0) {
+			NewReadCounter += PI2;
+		}
 	}
 }
 
@@ -213,7 +231,7 @@ void CDU::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_double(scn, "READCOUNTER", ReadCounter);
-	papiWriteScenario_double(scn, "OLDREADCOUNTER", OldReadCounter);
+	papiWriteScenario_double(scn, "NEWREADCOUNTER", NewReadCounter);
 	oapiWriteScenario_int(scn, "ERRORCOUNTER", ErrorCounter);
 	papiWriteScenario_bool(scn, "ZEROCDU", ZeroCDU);
 	papiWriteScenario_bool(scn, "ERRORCOUNTERENABLED", ErrorCounterEnabled);
@@ -231,7 +249,7 @@ void CDU::LoadState(FILEHANDLE scn, char *end_str) {
 			break;
 		}
 		papiReadScenario_double(line, "READCOUNTER", ReadCounter);
-		papiReadScenario_double(line, "OLDREADCOUNTER", OldReadCounter);
+		papiReadScenario_double(line, "NEWREADCOUNTER", NewReadCounter);
 		papiReadScenario_int(line, "ERRORCOUNTER", ErrorCounter);
 		papiReadScenario_bool(line, "ZEROCDU", ZeroCDU);
 		papiReadScenario_bool(line, "ERRORCOUNTERENABLED", ErrorCounterEnabled);

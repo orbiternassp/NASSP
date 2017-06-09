@@ -28,6 +28,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "powersource.h"
 
+#define CDU_STEP 0.000191747598876953125 
+
 class CDU
 {
 public:
@@ -47,7 +49,7 @@ protected:
 
 	double ReadCounter;
 	int ErrorCounter;
-	double OldReadCounter;
+	double NewReadCounter;
 
 	int AltOutput;
 

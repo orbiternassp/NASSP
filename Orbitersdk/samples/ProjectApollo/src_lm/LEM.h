@@ -274,7 +274,7 @@ private:
 	double rate;
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
-	bool mode;					//Mode I = false, Mode II = true
+	int mode;					//Mode I = false, Mode II = true
 
 };
 
