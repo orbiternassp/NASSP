@@ -33,7 +33,7 @@
 // used.
 //
 
-class Saturn;
+class LEM;
 ///
 /// \ingroup AGC
 /// LEM AGC
@@ -112,7 +112,7 @@ protected:
 	double timetoapproach;
 	int    flags;
 
-	Saturn *sat;
+	LEM *lem;
 };
 class LEM;
 

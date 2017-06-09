@@ -129,7 +129,25 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
 {
-	GenericTimestep(simt, simdt);
+	// Do single timesteps to maintain sync with telemetry engine
+	SingleTimestepPrep(simt, simdt);        // Setup
+	if (LastCycled == 0) {					// Use simdt as difference if new run
+		LastCycled = (simt - simdt);
+		lem->VHF.last_update = LastCycled;
+	}
+	double ThisTime = LastCycled;			// Save here
+
+	long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
+	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
+	long x = 0;
+	while (x < cycles) {
+		SingleTimestep();
+		ThisTime += 0.00001171875;								// Add time
+		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
+			lem->VHF.TimeStep(ThisTime);						// do it
+		}
+		x++;
+	}
 }
 
 void LEMcomputer::Run ()
@@ -148,7 +166,7 @@ void LEMcomputer::Run ()
 void LEMcomputer::Timestep(double simt, double simdt)
 
 {
-	LEM *lem = (LEM *) OurVessel;
+	lem = (LEM *) OurVessel;
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
@@ -200,6 +218,10 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.RestartLight = 1;
 			dsky.ClearRestart();
 			dsky.ClearStby();
+			// Reset last cycling time
+			LastCycled = 0;
+			// We should issue telemetry though.
+			lem->VHF.TimeStep(simt);
 
 		// and do nothing more.
 		return;
