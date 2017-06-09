@@ -1341,7 +1341,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	crossPointerRight.SystemTimeStep(simdt);
 	SBandSteerable.TimeStep(simdt);
 	VHF.SystemTimestep(simdt);
-	VHF.TimeStep(simt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	ecs.TimeStep(simdt);

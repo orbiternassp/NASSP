@@ -33,8 +33,7 @@
 // used.
 //
 
-class Saturn;
-class CDU;
+class LEM;
 
 ///
 /// \ingroup AGC
@@ -114,9 +113,8 @@ protected:
 	double timetoapproach;
 	int    flags;
 
-	Saturn *sat;
+	LEM *lem;
 };
-class LEM;
 
 // *** LM OPTICS ***
 // I guess this can go here; it doesn't really warrant its own file, and it's part of GNC, so...
