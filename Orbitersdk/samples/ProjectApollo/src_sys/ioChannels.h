@@ -274,13 +274,6 @@ typedef union {
 // For now we'll also put AGC addresses in here.
 //
 
-//
-// For Artemis 072, these are 03065 and 03066.
-//
-
-#define AGC_DAPDTR1			03066
-#define AGC_DAPDTR2			03067
-
 ///
 /// \brief Get AGC bank number from AGC flat address.
 ///
