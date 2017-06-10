@@ -2700,8 +2700,8 @@ void LEM_RR::TimeStep(double simdt){
 
 				pulses = lem->tcdu.GetErrorCounter();
 
-				trunnionVel = -(RR_SHAFT_STEP*pulses);
-				trunnionAngle -= (RR_SHAFT_STEP*pulses)*simdt;
+				trunnionVel = (RR_SHAFT_STEP*pulses);
+				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
 			}
 			else
 			{
@@ -2809,15 +2809,15 @@ void LEM_RR::TimeStep(double simdt){
 
 	//Limits
 
-	if (trunnionAngle < -70.0*RAD)
+	if (trunnionAngle > 70.0*RAD)
 	{
 		trunnionVel = 0.0;
-		trunnionAngle = -70.0*RAD;
+		trunnionAngle = 70.0*RAD;
 	}
-	else if (trunnionAngle > 250.0*RAD)
+	else if (trunnionAngle < -250.0*RAD)
 	{
 		trunnionVel = 0.0;
-		trunnionAngle = 250.0*RAD;
+		trunnionAngle = -250.0*RAD;
 	}
 
 	if (mode == 1)

@@ -85,10 +85,6 @@ void CDU::Timestep(double simdt)
 	if (delta < -PI)
 		delta += PI2;
 
-	// Gyro pulses to CDU pulses
-	//pulses = (int)(((double)radToGyroPulses(ReadCounter)) / 64.0);
-	//agc.SetErasable(0, loc, (pulses & 077777));
-
 	pulses = 0;
 
 	if (delta < 0) {
