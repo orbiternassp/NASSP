@@ -54,7 +54,7 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40982.849306,
 	41158.5652869,
 	41423.74583,
-	41658.23125
+	41658.120139
 };
 
 struct SV
