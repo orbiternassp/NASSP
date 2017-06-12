@@ -1144,6 +1144,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
+		skp->Text(4 * W / 8, 6 * H / 14, "Update Liftoff MJD", 18);
+
 		if (G->vesseltype == 0)
 		{
 			skp->Text(1 * W / 8, 4 * H / 14, "CSM", 3);
@@ -3954,6 +3956,38 @@ void ApolloRTCCMFD::menuChangeVesselType()
 	else
 	{
 		G->g_Data.uplinkLEM = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuUpdateLiftoffTime()
+{
+	if (G->vesseltype < 2)
+	{
+		double TEPHEM0;
+
+		if (G->mission < 11)		//NBY 1968/1969
+		{
+			TEPHEM0 = 40038.;
+		}
+		else if (G->mission < 14)	//NBY 1969/1970
+		{
+			TEPHEM0 = 40403.;
+		}
+		else if (G->mission < 15)	//NBY 1970/1971
+		{
+			TEPHEM0 = 40768.;
+		}
+		else						//NBY 1971/1972
+		{
+			TEPHEM0 = 41133.;
+		}
+
+		saturn = (Saturn *)G->vessel;
+		// Synchronize clock with launch time (TEPHEM)
+		double tephem = saturn->agc.vagc.Erasable[0][01710] +
+			saturn->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
+			saturn->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
+		G->GETbase = (tephem / 8640000.) + TEPHEM0;
 	}
 }
 
