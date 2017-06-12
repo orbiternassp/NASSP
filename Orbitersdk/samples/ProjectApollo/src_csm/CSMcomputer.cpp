@@ -237,7 +237,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			if (ApolloNo < 10)	//Colossus 249 and criterium in SetMissionInfo
+			if (ApolloNo < 11)	//Colossus 237/249, Comanche 055 for Apollo 10
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
