@@ -218,10 +218,22 @@ bool LEM_EDRelayBox::HasDCPower()
 	return false;
 }
 
-bool LEM_EDRelayBox::StageSeqLight()
+bool LEM_EDRelayBox::GetStageRelayMonitor()
 {
 	if (!HasDCPower()) return false;
-	if (MasterArmRelay && lem->EDMasterArm.IsUp()) return true;
+
+	if (!MasterArmRelay && !StagingRelay && !InitiateStagingRelay && !CableCuttingRelay && !StagingBoltsNutsRelay && !DeadFacingRelay)
+	{
+		return false;
+	}
+	else if (MasterArmRelay && !StagingRelay && !InitiateStagingRelay && !CableCuttingRelay && !StagingBoltsNutsRelay && !DeadFacingRelay)
+	{
+		return true;
+	}
+	else if (!MasterArmRelay && (StagingRelay || InitiateStagingRelay || CableCuttingRelay || StagingBoltsNutsRelay || DeadFacingRelay))
+	{
+		return true;
+	}
 
 	return false;
 }

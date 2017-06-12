@@ -3568,7 +3568,14 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Failures of stage relays disabled when stage relay switch in RESET position.
 	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
 	// FIXME: We'll ignore this for now.
-	LightStatus[0][6] = 0;
+	if ((lem->eds.RelayBoxA.GetStageRelayMonitor() || lem->eds.RelayBoxA.GetStageRelayMonitor()) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0))
+	{
+		LightStatus[0][6] = 1;
+	}
+	else
+	{
+		LightStatus[0][6] = 0;
+	}
 
 	// 6DS32 RCS FAILURE CAUTION
 	// On when helium pressure in either RCS system below 1700 psia.
