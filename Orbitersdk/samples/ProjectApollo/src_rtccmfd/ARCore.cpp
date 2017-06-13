@@ -425,6 +425,15 @@ ARCore::ARCore(VESSEL* v)
 		TLCCPeriGET = OrbMech::HHMMSSToSS(82.0, 39.0, 52.2);
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 	}
+	else if (mission == 17)
+	{
+		LSLat = 20.164*RAD;
+		LSLng = 30.750*RAD;
+		LSAlt = -1.95*1852.0;
+		LOIazi = -90.0*RAD;
+		LOIapo = 170.8*1852.0;
+		LOIperi = 51.4*1852.0;
+	}
 
 	Skylabmaneuver = 0;
 	SkylabTPIGuess = 0.0;
@@ -510,6 +519,11 @@ ARCore::ARCore(VESSEL* v)
 	lunarentrypad.TRN[0] = 0;
 	lunarentrypad.V400K[0] = 0.0;
 	lunarentrypad.VIO[0] = 0.0;
+
+	navcheckpad.alt[0] = 0.0;
+	navcheckpad.lat[0] = 0.0;
+	navcheckpad.lng[0] = 0.0;
+	navcheckpad.NavChk[0] = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -845,6 +859,15 @@ void ARCore::MapUpdate()
 		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
 		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
 	}
+}
+
+void ARCore::NavCheckPAD()
+{
+	SV sv;
+
+	sv = rtcc->StateVectorCalc(vessel);
+
+	rtcc->NavCheckPAD(sv, navcheckpad, GETbase, navcheckpad.NavChk[0]);
 }
 
 void ARCore::LandingSiteUpdate()
