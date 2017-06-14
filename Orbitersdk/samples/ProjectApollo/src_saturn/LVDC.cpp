@@ -5058,7 +5058,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
 				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
-				if(owner->MissionTime > 135.2){ 
+				if(owner->MissionTime > 125.9){
+					//Apollo 11
 					owner->SwitchSelector(16);
 					if (!S1_Engine_Out)
 					{
@@ -5133,14 +5134,14 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				// IECO
-				if (LVDC_TB_ETime >= 299.0)
+				/*if (LVDC_TB_ETime >= 299.0)
 				{
 					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false && owner->GetApolloNo() >= 10)
 					{
 						S2_ENGINE_OUT = true;
 						owner->SwitchSelector(24);
 					}
-				}
+				}*/
 			
 				// MR Shift
 				if(LVDC_TB_ETime > 284.4 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
