@@ -50,9 +50,11 @@ public:
 protected:
 	bool firstTimestepDone;
 	int meshindexML;
-	bool moveToPad;
+	bool moveToPadA;
+	bool moveToPadB;
 	bool moveToVab;
-	bool moveLVToPad;
+	bool moveLVToPadA;
+	bool moveLVToPadB;
 	double touchdownPointHeight;
 	char LVName[256];
 	SoundLib soundlib;
