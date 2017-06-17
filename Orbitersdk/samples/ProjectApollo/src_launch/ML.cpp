@@ -63,11 +63,11 @@ char trace_file[] = "ProjectApollo ML.log";
 #define VAB_LON -80.6509353	///\todo fix for Orbiter 2010-P1
 #define VAB_LAT 28.5860469
 
-#define PAD_LON -80.6041122 
-#define PAD_LAT 28.6083723
+#define PAD_LON -80.6208972
+#define PAD_LAT 28.6272345
 
-#define PAD_LV_LON -80.6041140 
-#define PAD_LV_LAT 28.6082888
+#define PAD_LV_LON -80.620899
+#define PAD_LV_LAT 28.627151
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {
