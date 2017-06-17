@@ -63,11 +63,17 @@ char trace_file[] = "ProjectApollo ML.log";
 #define VAB_LON -80.6509353	///\todo fix for Orbiter 2010-P1
 #define VAB_LAT 28.5860469
 
-#define PAD_LON -80.6208972
-#define PAD_LAT 28.6272345
+#define PAD_LONA -80.6041122
+#define PAD_LATA 28.6083723
 
-#define PAD_LV_LON -80.620899
-#define PAD_LV_LAT 28.627151
+#define PAD_LONB -80.6208972
+#define PAD_LATB 28.6272345
+
+#define PAD_LV_LONA -80.6041140
+#define PAD_LV_LATA 28.6082888
+
+#define PAD_LV_LONB -80.620899
+#define PAD_LV_LATB 28.627151
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {
@@ -107,9 +113,11 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	firstTimestepDone = false;
 	LVName[0] = '\0';
-	moveToPad = false;
+	moveToPadA = false;
+	moveToPadB = false;
 	moveToVab = false;
-	moveLVToPad = false;
+	moveLVToPadA = false;
+	moveLVToPadB = false;
 	touchdownPointHeight = -86.677; // pad height
 	hLV = 0;
 	state = STATE_ROLLOUT;
@@ -236,7 +244,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (GetAttachmentStatus(ah) != NULL) break;
 			
 		// On pad?
-		if (GetDistanceTo(PAD_LON, PAD_LAT) > 10.0) break;
+		if ((GetDistanceTo(PAD_LONA, PAD_LATA) > 10.0) && (GetDistanceTo(PAD_LONB, PAD_LATB) > 10.0)) break;
 
 		// T-3h or later?
 		if (!hLV) break;
@@ -252,7 +260,14 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			if (GetAttachmentStatus(ah) != NULL) {
 				DetachChild(ah);
 				// and move to pad
-				moveLVToPad = true;
+				if (GetDistanceTo(PAD_LONB, PAD_LATB) < 10.0)
+				{
+					moveLVToPadB = true;
+				}
+				else
+				{
+					moveLVToPadA = true;
+				}
 				// and notify Saturn
 				sat->LaunchVehicleRolloutEnd();
 				
@@ -410,17 +425,29 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 
 	if (!firstTimestepDone) return;
 
-	// Move ML to pad, KSC Pad 39A is hardcoded!
-	if (moveToPad) {
+	// Move ML to pad!
+	if (moveToPadA) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
 		vs.status = 1;
-		vs.vdata[0].x = PAD_LON * RAD;
-		vs.vdata[0].y = PAD_LAT * RAD;
+		vs.vdata[0].x = PAD_LONA * RAD;
+		vs.vdata[0].y = PAD_LATA * RAD;
 		vs.vdata[0].z = 0.58 * RAD; 
 		DefSetState(&vs);
-		moveToPad = false;
+		moveToPadA = false;
+	}
+
+	if (moveToPadB) {
+		VESSELSTATUS vs;
+		GetStatus(vs);
+
+		vs.status = 1;
+		vs.vdata[0].x = PAD_LONB * RAD;
+		vs.vdata[0].y = PAD_LATB * RAD;
+		vs.vdata[0].z = 0.58 * RAD;
+		DefSetState(&vs);
+		moveToPadB = false;
 	}
 
 	// Move ML to VAB, position is hardcoded!
@@ -436,20 +463,34 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 		moveToVab = false;
 	}
 
-	// Move LV to pad, KSC Pad 39A is hardcoded!
-	if (moveLVToPad) {
+	// Move LV to pad!
+	if (moveLVToPadA) {
 		if (hLV) {
 			VESSELSTATUS vs;
 			Saturn *sat = (Saturn *) oapiGetVesselInterface(hLV);
 			sat->GetStatus(vs);
 
 			vs.status = 1;
-			vs.vdata[0].x = PAD_LV_LON * RAD;
-			vs.vdata[0].y = PAD_LV_LAT * RAD;
+			vs.vdata[0].x = PAD_LV_LONA * RAD;
+			vs.vdata[0].y = PAD_LV_LATA * RAD;
 			vs.vdata[0].z = 270.0 * RAD; 
 			sat->DefSetState(&vs);
 		}
-		moveLVToPad = false;
+		moveLVToPadA = false;
+	}
+	else if (moveLVToPadB) {
+		if (hLV) {
+			VESSELSTATUS vs;
+			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+			sat->GetStatus(vs);
+
+			vs.status = 1;
+			vs.vdata[0].x = PAD_LV_LONB * RAD;
+			vs.vdata[0].y = PAD_LV_LATB * RAD;
+			vs.vdata[0].z = 270.0 * RAD;
+			sat->DefSetState(&vs);
+		}
+		moveLVToPadB = false;
 	}
 }
 
@@ -482,10 +523,16 @@ bool ML::Detach() {
 	if (GetAttachmentStatus(ah) == NULL) return false;
 
 	// Is the pad near?
-	if (GetDistanceTo(PAD_LON, PAD_LAT) < 10.0) {
+	if (GetDistanceTo(PAD_LONA, PAD_LATA) < 10.0) {
 		
 		SetTouchdownPointHeight(-86.677);	// pad height
-		moveToPad = true;
+		moveToPadA = true;
+		return true;
+	}
+	else if (GetDistanceTo(PAD_LONB, PAD_LATB) < 10.0) {
+
+		SetTouchdownPointHeight(-86.677);	// pad height
+		moveToPadB = true;
 		return true;
 	}
 

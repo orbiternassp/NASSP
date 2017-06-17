@@ -2283,6 +2283,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "Entry PAD", 9);
 		skp->Text(1 * W / 8, 6 * H / 14, "Landmark Tracking", 17);
 		skp->Text(1 * W / 8, 8 * H / 14, "Map Update", 10);
+		skp->Text(1 * W / 8, 10 * H / 14, "Nav Check PAD", 13);
+
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 21)
@@ -2465,6 +2467,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "Uplink No. %d", G->EMPUplinkNumber);
 		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
+	}
+	else if (screen == 25)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Nav Check PAD", 13);
+
+		GET_Display(Buffer, G->navcheckpad.NavChk[0]);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.2f LAT", G->navcheckpad.lat[0]);
+		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.2f LNG", G->navcheckpad.lng[0]);
+		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f ALT", G->navcheckpad.alt[0]);
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -2719,6 +2737,12 @@ void ApolloRTCCMFD::menuSetLunarLiftoffPage()
 void ApolloRTCCMFD::menuSetEMPPage()
 {
 	screen = 24;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetNavCheckPADPage()
+{
+	screen = 25;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3961,32 +3985,41 @@ void ApolloRTCCMFD::menuChangeVesselType()
 
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
+	double TEPHEM0;
+
+	if (G->mission < 11)		//NBY 1968/1969
+	{
+		TEPHEM0 = 40038.;
+	}
+	else if (G->mission < 14)	//NBY 1969/1970
+	{
+		TEPHEM0 = 40403.;
+	}
+	else if (G->mission < 15)	//NBY 1970/1971
+	{
+		TEPHEM0 = 40768.;
+	}
+	else						//NBY 1971/1972
+	{
+		TEPHEM0 = 41133.;
+	}
+
 	if (G->vesseltype < 2)
 	{
-		double TEPHEM0;
-
-		if (G->mission < 11)		//NBY 1968/1969
-		{
-			TEPHEM0 = 40038.;
-		}
-		else if (G->mission < 14)	//NBY 1969/1970
-		{
-			TEPHEM0 = 40403.;
-		}
-		else if (G->mission < 15)	//NBY 1970/1971
-		{
-			TEPHEM0 = 40768.;
-		}
-		else						//NBY 1971/1972
-		{
-			TEPHEM0 = 41133.;
-		}
-
 		saturn = (Saturn *)G->vessel;
-		// Synchronize clock with launch time (TEPHEM)
+
 		double tephem = saturn->agc.vagc.Erasable[0][01710] +
 			saturn->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
 			saturn->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
+		G->GETbase = (tephem / 8640000.) + TEPHEM0;
+	}
+	else
+	{
+		lem = (LEM *)G->vessel;
+
+		double tephem = lem->agc.vagc.Erasable[0][01710] +
+			lem->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
+			lem->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
 		G->GETbase = (tephem / 8640000.) + TEPHEM0;
 	}
 }
@@ -5172,6 +5205,34 @@ void ApolloRTCCMFD::menuSetEMPUplinkNumber()
 			G->EMPUplinkNumber = 0;
 		}
 	}
+}
+
+void ApolloRTCCMFD::menuNavCheckPADCalc()
+{
+	G->NavCheckPAD();
+}
+
+void ApolloRTCCMFD::menuSetNavCheckGET()
+{
+	bool NavCheckGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the Nav Check (Format: hhh:mm:ss)", NavCheckGETInput, 0, 20, (void*)this);
+}
+
+bool NavCheckGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_NavCheckGET(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_NavCheckGET(double time)
+{
+	G->navcheckpad.NavChk[0] = time;
 }
 
 void ApolloRTCCMFD::menuRequestLTMFD()

@@ -464,7 +464,7 @@ void LEM::InitSwitches() {
 	EDHePressDesStart.Register(PSH,"EDHePressDesStart",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDHePressASC.Register(PSH,"EDHePressASC",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDStage.Register(PSH,"EDStage", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
-	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN);
+	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDDesFuelVent.Register(PSH,"EDDesFuelVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	EDDesOxidVent.Register(PSH,"EDDesOxidVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	EDLGTB.Register(PSH, "EDLGTB", true);
@@ -3460,7 +3460,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}return true;
 
 	case AID_SEQ_LIGHT1:
-		if (eds.RelayBoxA.StageSeqLight() && stage < 2) {
+		if (eds.RelayBoxA.GetStageRelayMonitor() && stage < 2) {
 			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
 		}
 		else {
@@ -3469,7 +3469,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_SEQ_LIGHT2:
-		if (eds.RelayBoxB.StageSeqLight()) {
+		if (eds.RelayBoxB.GetStageRelayMonitor()) {
 			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
 		}
 		else {

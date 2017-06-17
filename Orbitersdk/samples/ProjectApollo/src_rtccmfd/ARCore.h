@@ -69,6 +69,7 @@ public:
 	void TPIPAD();
 	void TLI_PAD();
 	void MapUpdate();
+	void NavCheckPAD();
 	int REFSMMAT_Address();
 
 	int startSubthread(int fcn);
@@ -262,6 +263,9 @@ public:
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99
 	int EMPUplinkNumber;
+
+	//NAV CHECK PAGE
+	AP7NAV navcheckpad;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

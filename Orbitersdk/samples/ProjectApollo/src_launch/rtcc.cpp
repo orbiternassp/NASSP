@@ -2634,10 +2634,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
+		double GETbase;
 
+		GETbase = getGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form);
+		NavCheckPAD(sv, *form, GETbase);
 
 		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
 		if (upString != NULL) {
@@ -2652,11 +2654,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv_A, sv_P;
+		double GETbase;
+
+		GETbase = getGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
-		NavCheckPAD(sv_A, *form);
+		NavCheckPAD(sv_A, *form, GETbase);
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv_A, true, AGCEpoch), CMCStateVectorUpdate(sv_P, false, AGCEpoch));
 		if (upString != NULL) {
@@ -5799,20 +5804,29 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 	return str;
 }
 
-void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
+void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
 {
 	double lat, lng, alt, navcheckdt;
 	VECTOR3 R1, V1;
+	OBJHANDLE outgrav = NULL;
 	
-	navcheckdt = 30 * 60;
+	if (GET == 0.0)
+	{
+		navcheckdt = 30 * 60;
+		pad.NavChk[0] = (sv.MJD - GETbase)*24.0*3600.0 + navcheckdt;
+	}
+	else
+	{
+		navcheckdt = GET - (sv.MJD - GETbase)*24.0*3600.0;
+		pad.NavChk[0] = GET;
+	}
 
-	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, sv.gravref);
-	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, sv.gravref, lat, lng, alt);
+	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, outgrav);
+	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, outgrav, lat, lng, alt);
 
 	pad.alt[0] = alt / 1852.0;
 	pad.lat[0] = lat*DEG;
 	pad.lng[0] = lng*DEG;
-	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0 + navcheckdt;
 }
 
 void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)

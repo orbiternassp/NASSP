@@ -196,6 +196,7 @@ public:
 	void menuTranslunarPage();
 	void menuSetLunarLiftoffPage();
 	void menuSetEMPPage();
+	void menuSetNavCheckPADPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -254,6 +255,9 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuNavCheckPADCalc();
+	void menuSetNavCheckGET();
+	void set_NavCheckGET(double time);
 
 protected:
 	oapi::Font *font;
