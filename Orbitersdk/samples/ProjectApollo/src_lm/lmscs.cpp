@@ -335,7 +335,7 @@ void DECA::Timestep(double simdt) {
 	}
 
 	//Descent Engine Stop
-	if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->EngineArmSwitch.IsUp() || lem->scca1.GetK20()))
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngineArmSwitch.IsUp() && lem->scca1.GetK20())
 	{
 		K3 = true;
 	}
@@ -724,6 +724,35 @@ void SCCA1::Timestep(double simdt)
 
 	AbortStageDelay.Timestep(simdt);
 
+	if (lem->SCS_ATT_DIR_CONT_CB.IsPowered() && !lem->YawSwitch.IsUp())
+	{
+		K1 = true;
+	}
+	else
+	{
+		K1 = false;
+	}
+
+	if (lem->SCS_ATT_DIR_CONT_CB.IsPowered() && !lem->PitchSwitch.IsUp())
+	{
+		K3 = true;
+	}
+	else
+	{
+		K3 = false;
+	}
+
+	if (lem->SCS_ATT_DIR_CONT_CB.IsPowered() && !lem->RollSwitch.IsUp())
+	{
+		K5 = true;
+	}
+	else
+	{
+		K5 = false;
+	}
+
+	//TBD: K7 and K8 are ACA Out of Detent related
+
 	//Abort Stage Handling
 
 	if (lem->SCS_ABORT_STAGE_CB.IsPowered() && lem->AbortStageSwitch.GetState() == 0)
@@ -808,7 +837,7 @@ void SCCA1::Timestep(double simdt)
 
 	//Manual
 
-	if (lem->SCS_ENG_START_OVRD_CB.IsPowered() && lem->EngineArmSwitch.IsUp() && lem->scca2.GetK19())
+	if ((lem->PROP_DISP_ENG_OVRD_LOGIC_CB.IsPowered() || lem->SCS_ENG_START_OVRD_CB.IsPowered()) && lem->EngineArmSwitch.IsUp() && lem->scca2.GetK19())
 	{
 		K11 = true;
 		K12 = true;
@@ -1229,6 +1258,11 @@ void SCCA2::LoadState(FILEHANDLE scn, char *end_str) {
 
 SCCA3::SCCA3()
 {
+	ResetRelays();
+}
+
+void SCCA3::ResetRelays()
+{
 	EngStopPower = false;
 	K1_1 = false;
 	K2_1 = false;
@@ -1254,6 +1288,21 @@ void SCCA3::Timestep(double simdt)
 {
 	if (lem == NULL) { return; }
 
+	if (lem->stage > 1)
+	{
+		ResetRelays();
+		return;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->deca.GetK16())
+	{
+		K7_3 = true;
+	}
+	else
+	{
+		K7_3 = false;
+	}
+
 	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->AbortSwitch.GetState() == 1 && lem->EngineArmSwitch.IsDown())
 	{
 		EngStopPower = true;
@@ -1271,7 +1320,11 @@ void SCCA3::Timestep(double simdt)
 		EngStopPower = false;
 	}
 
-	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngineArmSwitch.IsUp() && lem->scca1.GetK20())
+	{
+		K4_1 = true;
+	}
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
 	{
 		K4_1 = true;
 	}
@@ -1309,13 +1362,31 @@ void SCCA3::Timestep(double simdt)
 		K5_1 = false;
 	}
 
-	if (EngStopPower && lem->ManualEngineStop.GetState() == 0 && !lem->scca1.GetK9() && lem->EngineDescentCommandOverrideSwitch.IsUp() && !K4_1 && !K4_2)
+	if ((lem->PROP_DISP_ENG_OVRD_LOGIC_CB.IsPowered() || lem->SCS_ENG_START_OVRD_CB.IsPowered()) && lem->EngineArmSwitch.IsDown() && lem->EngineDescentCommandOverrideSwitch.IsUp() && !K4_1 && !K4_2)
 	{
 		K5_2 = true;
 	}
 	else
 	{
 		K5_2 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && K5_1)
+	{
+		K1_1 = true;
+	}
+	else
+	{
+		K1_1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && K5_2)
+	{
+		K1_2 = true;
+	}
+	else
+	{
+		K1_2 = false;
 	}
 
 	//sprintf(oapiDebugString(), "DE Command Override: K4 %d %d K5 %d %d K6 %d %d", K4_1, K4_2, K5_1, K5_2, K6_1, K6_2);
