@@ -433,7 +433,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);;
 		TLCCNodeLat = 6.5*RAD;
 		TLCCNodeLng = 177.4*RAD;
-		TLCCNodeAlt = 60.0*1852.0;
+		TLCCNodeAlt = 59.9*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 	}
 	else if (mission == 13)
@@ -450,7 +450,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 26.0, 05.3);;
 		TLCCNodeLat = 2.4*RAD;
 		TLCCNodeLng = -169.9*RAD;
-		TLCCNodeAlt = 60.0*1852.0;
+		TLCCNodeAlt = 58.0*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 	}
 	else if (mission == 14)
@@ -467,7 +467,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 38.0, 14.0);;
 		TLCCNodeLat = 2.2*RAD;
 		TLCCNodeLng = -178.2*RAD;
-		TLCCNodeAlt = 60.0*1852.0;
+		TLCCNodeAlt = 57.1*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 	}
 	else if (mission == 15)
@@ -510,7 +510,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);;
 		TLCCNodeLat = -10.4*RAD;
 		TLCCNodeLng = 174.1*RAD;
-		TLCCNodeAlt = 52.0*1852.0;
+		TLCCNodeAlt = 51.3*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 	}
 
