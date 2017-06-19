@@ -1968,12 +1968,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 16)
 	{
-		skp->Text(1 * W / 8, 2 * H / 14, "DOI", 3);
+		if (G->DOI_option == 0)
+		{
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DOI from LPO", 12);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DOI as LOI-2", 12);
+		}
 
 		GET_Display(Buffer, G->DOIGET);
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%d", G->DOI_N);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->DOI_PeriAng*DEG);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.3f°", G->LSLat*DEG);
@@ -1985,7 +1995,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 4 * H / 14, "Uplink TLAND", 12);
+		skp->Text(5 * W / 8, 6 * H / 14, "Uplink TLAND", 12);
 
 		skp->Text(4 * W / 8, 11 * H / 21, "DOI:", 4);
 		skp->Text(4 * W / 8, 12 * H / 21, "PDI:", 4);
@@ -4704,6 +4714,39 @@ bool DOIRevsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DOIRevs(int N)
 {
 	this->G->DOI_N = N;
+}
+
+void ApolloRTCCMFD::menuSetDOIPeriAng()
+{
+	bool DOIPeriAngInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the angle from perilune to landing site:", DOIPeriAngInput, 0, 20, (void*)this);
+}
+
+bool DOIPeriAngInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_DOIPeriAng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DOIPeriAng(double ang)
+{
+	this->G->DOI_PeriAng = ang*RAD;
+}
+
+void ApolloRTCCMFD::menuDOIOption()
+{
+	if (G->DOI_option < 1)
+	{
+		G->DOI_option++;
+	}
+	else
+	{
+		G->DOI_option = 0;
+	}
 }
 
 void ApolloRTCCMFD::menuDOICalc()

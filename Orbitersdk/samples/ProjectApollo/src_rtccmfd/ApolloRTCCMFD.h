@@ -207,8 +207,11 @@ public:
 	void set_LSAlt(double alt);
 	void menuSetDOIRevs();
 	void set_DOIRevs(int N);
+	void menuSetDOIPeriAng();
+	void set_DOIPeriAng(double ang);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuDOIOption();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();

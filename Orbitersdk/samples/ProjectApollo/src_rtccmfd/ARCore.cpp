@@ -386,6 +386,8 @@ ARCore::ARCore(VESSEL* v)
 	t_Land = 0.0;
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
+	DOI_PeriAng = 15.0*RAD;
+	DOI_option = 0;
 
 	if (mission == 8)
 	{
@@ -1973,6 +1975,8 @@ int ARCore::subThread()
 		opt.alt = LSAlt;
 		opt.vessel = vessel;
 		opt.N = DOI_N;
+		opt.PeriAng = DOI_PeriAng;
+		opt.opt = DOI_option;
 
 		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
 

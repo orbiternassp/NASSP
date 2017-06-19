@@ -341,6 +341,7 @@ struct LOI2Man
 
 struct DOIMan
 {
+	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the DOI maneuver
@@ -351,6 +352,7 @@ struct DOIMan
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 	int N = 0;	// Revolutions between DOI and PDI
+	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
 };
 
 struct PCMan

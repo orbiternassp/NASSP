@@ -3917,7 +3917,7 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 		engArm = false;
 	}
 
-	if (lem->deca.GetThrustOn() || lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5())
+	if (lem->deca.GetThrustOn() || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
 	{
 		thrustOn = true;
 	}
