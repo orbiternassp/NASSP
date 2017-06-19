@@ -3799,7 +3799,7 @@ void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, V
 				//return false;
 			}
 		}
-	} while (abs(err) >= eps2);
+	} while (abs(err) >= eps2 && s_F == 0);
 
 	double dt4;
 	dt4 = time_theta(R_PP, V_PP, theta_F - 15.0*RAD, mu);
