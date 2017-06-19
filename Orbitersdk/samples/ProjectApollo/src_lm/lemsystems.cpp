@@ -4083,7 +4083,7 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 	if (position > 6.0) { position = 6.0; }
 	if (position < -6.0) { position = -6.0; }
 
-	sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
+	//sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
 }
 
 void DPSGimbalActuator::GimbalTimestep(double simdt)
