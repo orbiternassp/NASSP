@@ -320,6 +320,7 @@ public:
 	SCCA3();
 	void Init(LEM *s);
 	void Timestep(double simdt);
+	void ResetRelays();
 
 	bool GetK5() { return (K5_1 && K5_2); }
 	bool GetK6() { return (K6_1 || K6_2); }

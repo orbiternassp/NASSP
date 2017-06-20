@@ -68,6 +68,7 @@ public:
 	void TPIPAD();
 	void TLI_PAD();
 	void MapUpdate();
+	void NavCheckPAD();
 	int REFSMMAT_Address();
 
 	int startSubthread(int fcn);
@@ -227,6 +228,8 @@ public:
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
 	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
+	double DOI_PeriAng;					//Angle from landing site to 
+	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -261,6 +264,9 @@ public:
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99
 	int EMPUplinkNumber;
+
+	//NAV CHECK PAGE
+	AP7NAV navcheckpad;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

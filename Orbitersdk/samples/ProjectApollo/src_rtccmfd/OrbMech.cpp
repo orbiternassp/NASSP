@@ -3727,9 +3727,93 @@ MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 	return _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
 }
 
+void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_P, double h_A, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
+{
+	MATRIX3 Q_Xx, Rot;
+	VECTOR3 R_D, V_D, R_DOI, V_DOI, U_N, V_DH, R_PP, V_PP, U_L, R_LS, U_LS, R_int, V_int;
+	double dt, dt2, err, r_P, r_DOI, theta_DOI, T_P, t_H, PDI_MJD, dt3, erro, e_DOI, h_DOI, v_LV, v_LH, t_peri;
+	int s_F;
+	double c_I, p_H, theta_DOIo, eps2;
+
+	c_I = p_H = 0.0;
+	s_F = 0;
+
+	eps2 = 0.2*RAD;
+	theta_DOI = 180.0;
+
+	r_P = length(R_LSA) + h_P;
+
+	dt = t_E - t_0;
+	oneclickcoast(R_0, V_0, GETbase + t_0 / 24.0 / 3600.0, dt, R_D, V_D, plan, plan);
+	dt2 = 0.0;//timetoperi_integ(R_D, V_D, GETbase + (t_0 + dt) / 24.0 / 3600.0, plan, plan, R_DOI, V_DOI);
+	R_DOI = R_D;
+	V_DOI = V_D;
+
+	r_DOI = length(R_DOI);
+	U_N = unit(crossp(R_DOI, V_DOI));
+
+	Q_Xx = LVLH_Matrix(R_DOI, V_DOI);
+
+	do
+	{
+		e_DOI = (r_DOI - r_P) / (r_P - r_DOI*cos(theta_DOI*RAD));
+		h_DOI = sqrt(r_P*mu*(1.0 + e_DOI));
+
+		v_LV = mu / h_DOI*e_DOI*sin(theta_DOI*RAD);
+		v_LH = mu / h_DOI*(1.0 + e_DOI*cos(theta_DOI*RAD));
+		V_DH = tmul(Q_Xx, _V(v_LH, 0.0, -v_LV));
+
+		T_P = period(R_DOI, V_DH, mu);
+		t_H = (double)N*T_P;
+
+		rv_from_r0v0(R_DOI, V_DH, t_H, R_int, V_int, mu);
+		//oneclickcoast(R_DOI, V_DH, GETbase + (t_0 + dt + dt2) / 24.0 / 3600.0, t_H, R_int, V_int, plan, plan);
+
+		//dt3 = timetoperi_integ(R_int, V_int, GETbase + (t_0 + dt + dt2 + t_H) / 24.0 / 3600.0, plan, plan, R_PP, V_PP);
+		dt3 = timetoperi(R_int, V_int, mu);
+		if (dt3 < 0.0)
+		{
+			dt3 += T_P;
+		}
+		rv_from_r0v0(R_int, V_int, dt3, R_PP, V_PP, mu);
+
+		t_peri = t_0 + dt + dt2 + t_H + dt3;
+		PDI_MJD = t_peri / 24.0 / 3600.0 + GETbase;
+		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
+		Rot = GetRotationMatrix(plan, PDI_MJD);
+		R_LS = rhmul(Rot, R_LSA);
+		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
+		err = sign(dotp(U_N, crossp(U_L, U_LS)))*acos(dotp(U_L, U_LS));
+
+		if (p_H == 0 || abs(err) >= eps2)
+		{
+			ITER(c_I, s_F, err, p_H, theta_DOI, erro, theta_DOIo);
+
+			if (abs(theta_DOI - theta_DOIo) > 10.0)
+			{
+				theta_DOI = theta_DOIo + sign(theta_DOI - theta_DOIo)*10.0;
+			}
+
+			if (s_F == 1)
+			{
+				//return false;
+			}
+		}
+	} while (abs(err) >= eps2 && s_F == 0);
+
+	double dt4;
+	dt4 = time_theta(R_PP, V_PP, theta_F - 15.0*RAD, mu);
+
+	t_DOI = t_0 + dt + dt2;
+	t_PDI = t_peri + dt4;
+	t_L = t_PDI + t_F;
+	DV_DOI = V_DH - V_DOI;
+	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
+}
+
 void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
 {
-	double er, nmax, t_U, r_DP, r_P, r_A, r_D, v_D, a_D, t_H, tLMJD, alpha, t_D;
+	double er, nmax, t_U, r_DP, r_P, r_A, r_D, v_D, a_D, t_H, tLMJD, alpha, t_D, t_PP;
 	VECTOR3 U_N, U_L, U_LS, V_DH, R_PP, V_PP, R_LS, R_D, V_D;
 	MATRIX3 Rot;
 	int n;
@@ -3758,8 +3842,8 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 		t_H = ((double)N*PI2 + PI)*sqrt(OrbMech::power(r_A + r_P, 3.0) / (8.0*mu));
 		V_DH = unit(crossp(U_N, R_D))*sqrt(2.0*mu*r_P / (r_A*(r_P + r_A)));
 		oneclickcoast(R_D, V_DH, GETbase + t_D / 24.0 / 3600.0, t_H, R_PP, V_PP, plan, plan);
-		t_L = t_D + t_H + t_F;
-		tLMJD = t_L / 24.0 / 3600.0 + GETbase;
+		t_PP = t_D + t_H;
+		tLMJD = t_PP / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
 		Rot = GetRotationMatrix(plan, tLMJD);
 		R_LS = rhmul(Rot, R_LSA);
@@ -3769,8 +3853,13 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 		t_U = alpha*sqrt(OrbMech::power(a_D, 3.0) / mu);
 		n++;
 	}
+
+	double dt4;
+	dt4 = time_theta(R_PP, V_PP, theta_F - 15.0*RAD, mu);
+
 	t_DOI = t_D;
-	t_PDI = t_DOI + t_H;
+	t_PDI = t_DOI + dt4 + t_H;
+	t_L = t_PDI + t_F;
 	DV_DOI = V_DH - V_D;
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
@@ -4065,7 +4154,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	MATRIX3 Q_Xx;
 	int nmax, n;
 
-	Q_Xx = OrbMech::LVLH_Matrix(RA1, VA1);
+	Q_Xx = LVLH_Matrix(RA1, VA1);
 
 	f2 = 1;
 	n = 0;
@@ -4074,8 +4163,8 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	RPP1 = RP2off;
 	RPP2 = RP2off*(length(RP2off) + 10.0) / length(RP2off);
 
-	VAP1 = OrbMech::elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
-	VAP2 = OrbMech::elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
+	VAP1 = elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
+	VAP2 = elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
 
 	r1 = length(RPP1);
 	r2 = length(RPP2);
@@ -4093,7 +4182,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 		r1 = r2;
 		r2 = y;
 
-		VAP2 = OrbMech::elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
+		VAP2 = elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
 
 		n++;
 	}

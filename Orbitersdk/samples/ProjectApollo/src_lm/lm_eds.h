@@ -42,7 +42,7 @@ public:
 	bool GetCableCuttingRelay() { return CableCuttingRelay; }
 	void SetStagingRelay() { StagingRelay = true; }
 
-	bool StageSeqLight();
+	bool GetStageRelayMonitor();
 protected:
 
 	bool HasDCPower();

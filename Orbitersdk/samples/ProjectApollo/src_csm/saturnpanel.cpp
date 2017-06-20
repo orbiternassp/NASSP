@@ -6203,7 +6203,7 @@ void Saturn::InitSwitches() {
 	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	PanelOrdeal.Register(PSH, "PanelOrdeal",0, 0, 0, 0);	// dummy switch/display for checklist controller
 
-	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", false);
+	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	CMRCSHTRSSwitch.Register(PSH, "CMRCSHTRSSwitch", false);
 	WasteH2ODumpSwitch.Register(PSH, "WasteH2ODumpSwitch", THREEPOSSWITCH_CENTER);

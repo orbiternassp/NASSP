@@ -54,7 +54,7 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40982.849306,
 	41158.5652869,
 	41423.74583,
-	41658.23125
+	41658.120139
 };
 
 struct SV
@@ -341,6 +341,7 @@ struct LOI2Man
 
 struct DOIMan
 {
+	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the DOI maneuver
@@ -351,6 +352,7 @@ struct DOIMan
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 	int N = 0;	// Revolutions between DOI and PDI
+	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
 };
 
 struct PCMan
@@ -549,7 +551,7 @@ public:
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
-	void NavCheckPAD(SV sv, AP7NAV &pad);
+	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &EntryAngcor);

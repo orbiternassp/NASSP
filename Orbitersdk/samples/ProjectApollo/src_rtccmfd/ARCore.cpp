@@ -386,6 +386,8 @@ ARCore::ARCore(VESSEL* v)
 	t_Land = 0.0;
 	DOI_CR = 0.0;
 	DOIGET = 0.0;
+	DOI_PeriAng = 15.0*RAD;
+	DOI_option = 0;
 
 	if (mission == 8)
 	{
@@ -405,7 +407,7 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		TLCCEMPLat = -4.933294*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
-		t_Land = OrbMech::HHMMSSToSS(100.0, 38.0, 30.9);
+		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 	}
 	else if (mission == 11)
 	{
@@ -413,7 +415,45 @@ ARCore::ARCore(VESSEL* v)
 		LSLng = 23.7077777*RAD;
 		LSAlt = -3073.263;
 		LOIazi = -91.0*RAD;
+		LOIapo = 169.8*1852.0;
+		LOIperi = 59.2*1852.0;
+		TLCCEMPLat = 0.279074*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 53.0, 35.0);
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
+	}
+	else if (mission == 12)
+	{
+		LSLat = -2.9425*RAD;
+		LSLng = -23.44333*RAD;
+		LSAlt = -1.19*1852.0;
+		LOIazi = -75.0*RAD;
+		LOIapo = 168.9*1852.0;
+		LOIperi = 58.7*1852.0;
+		TLCCEMPLat = -1.962929*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(83.0, 25.0, 50.8);
+		TLCCPeri = 1851.7*1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);;
+		TLCCNodeLat = 6.5*RAD;
+		TLCCNodeLng = 177.4*RAD;
+		TLCCNodeAlt = 59.9*1852.0;
+		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
+	}
+	else if (mission == 13)
+	{
+		LSLat = -3.6686*RAD;
+		LSLng = -17.4842*RAD;
+		LSAlt = -0.76*1852.0;
+		LOIazi = -93.9*RAD;
+		LOIapo = 168.3*1852.0;
+		LOIperi = 57.0*1852.0;
+		TLCCEMPLat = -2.219239*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(77.0, 56.0, 22.0);
+		TLCCPeri = 136.3*1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 26.0, 05.3);;
+		TLCCNodeLat = 2.4*RAD;
+		TLCCNodeLng = -169.9*RAD;
+		TLCCNodeAlt = 58.0*1852.0;
+		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 	}
 	else if (mission == 14)
 	{
@@ -421,9 +461,59 @@ ARCore::ARCore(VESSEL* v)
 		LSLng = -17.463*RAD;
 		LSAlt = -0.76*1852.0;
 		LOIazi = -76.31*RAD;
+		LOIapo = 170.0*1852.0;
+		LOIperi = 57.1*1852.0;
 		TLCCEMPLat = -0.048722*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(82.0, 39.0, 52.2);
+		TLCCPeri = 2030.9*1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 38.0, 14.0);;
+		TLCCNodeLat = 2.2*RAD;
+		TLCCNodeLng = -178.2*RAD;
+		TLCCNodeAlt = 57.1*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
+	}
+	else if (mission == 15)
+	{
+		LSLat = 26.0739*RAD;
+		LSLng = 3.6539*RAD;
+		LSAlt = -1.92*1852.0;
+		LOIazi = -91.0*RAD;
+		LOIapo = 170.0*1852.0;
+		LOIperi = 58.3*1852.0;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCNodeLat = -23.3*RAD;
+		TLCCNodeLng = 171.7*RAD;
+		TLCCNodeAlt = 68.1*1852.0;
+		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
+	}
+	else if (mission == 16)
+	{
+		LSLat = -9.00028*RAD;
+		LSLng = 15.51639*RAD;
+		LSAlt = -0.1405*1852.0;
+		LOIazi = -91.0*RAD;
+		LOIapo = 170.6*1852.0;
+		LOIperi = 58.5*1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);;
+		TLCCNodeLat = 7.8*RAD;
+		TLCCNodeLng = 176.8*RAD;
+		TLCCNodeAlt = 71.4*1852.0;
+		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
+	}
+	else if (mission == 17)
+	{
+		LSLat = 20.164*RAD;
+		LSLng = 30.750*RAD;
+		LSAlt = -1.95*1852.0;
+		LOIazi = -90.0*RAD;
+		LOIapo = 170.8*1852.0;
+		LOIperi = 51.4*1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);;
+		TLCCNodeLat = -10.4*RAD;
+		TLCCNodeLng = 174.1*RAD;
+		TLCCNodeAlt = 51.3*1852.0;
+		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 	}
 
 	Skylabmaneuver = 0;
@@ -510,6 +600,11 @@ ARCore::ARCore(VESSEL* v)
 	lunarentrypad.TRN[0] = 0;
 	lunarentrypad.V400K[0] = 0.0;
 	lunarentrypad.VIO[0] = 0.0;
+
+	navcheckpad.alt[0] = 0.0;
+	navcheckpad.lat[0] = 0.0;
+	navcheckpad.lng[0] = 0.0;
+	navcheckpad.NavChk[0] = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -845,6 +940,15 @@ void ARCore::MapUpdate()
 		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
 		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
 	}
+}
+
+void ARCore::NavCheckPAD()
+{
+	SV sv;
+
+	sv = rtcc->StateVectorCalc(vessel);
+
+	rtcc->NavCheckPAD(sv, navcheckpad, GETbase, navcheckpad.NavChk[0]);
 }
 
 void ARCore::LandingSiteUpdate()
@@ -1950,6 +2054,8 @@ int ARCore::subThread()
 		opt.alt = LSAlt;
 		opt.vessel = vessel;
 		opt.N = DOI_N;
+		opt.PeriAng = DOI_PeriAng;
+		opt.opt = DOI_option;
 
 		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
 

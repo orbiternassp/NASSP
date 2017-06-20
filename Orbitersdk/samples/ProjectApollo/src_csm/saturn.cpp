@@ -1861,6 +1861,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		SII_EmptyMass = ftcp;
 		SII_MassLoaded = true;
 	}
+	else if (!strnicmp(line, "INTERSTAGE", 10)) {
+		sscanf(line + 10, "%f", &ftcp);
+		Interstage_Mass = ftcp;
+	}
 	else if (!strnicmp(line, "T1V", 3)) {
         sscanf (line + 3, "%f", &ftcp);
 		THRUST_FIRST_VAC = ftcp;
