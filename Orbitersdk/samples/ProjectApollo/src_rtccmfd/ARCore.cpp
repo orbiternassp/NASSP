@@ -1754,7 +1754,16 @@ int ARCore::subThread()
 		opt.P30TIG2 = LOI_TIG;
 		opt.REFSMMATdirect = REFSMMATdirect;
 		opt.REFSMMATopt = REFSMMATopt;
-		opt.REFSMMATTime = REFSMMATTime;
+
+		if (REFSMMATopt == 5 || REFSMMATopt == 8)
+		{
+			opt.REFSMMATTime = t_Land;
+		}
+		else
+		{
+			opt.REFSMMATTime = REFSMMATTime;
+		}
+
 		opt.vessel = vessel;
 		opt.HeadsUp = REFSMMATHeadsUp;
 
