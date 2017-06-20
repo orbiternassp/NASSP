@@ -407,7 +407,7 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		TLCCEMPLat = -4.933294*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
-		t_Land = OrbMech::HHMMSSToSS(100.0, 38.0, 30.9);
+		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 	}
 	else if (mission == 11)
 	{
