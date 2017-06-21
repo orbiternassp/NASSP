@@ -240,7 +240,7 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	double GetAntennaTempF();
-	double GetRadarTrunnionVel() { return trunnionVel ; } ;
+	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
 	double GetRadarTrunnionPos();
 	double GetRadarShaftPos() { return shaftAngle ; } ;

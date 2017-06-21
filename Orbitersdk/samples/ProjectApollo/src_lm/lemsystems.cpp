@@ -2512,12 +2512,12 @@ void LEM_RR::TimeStep(double simdt){
 	// Determine slew rate
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
-			ShaftRate = 7.0*RAD*simdt;
-			TrunRate = 7.0*RAD*simdt;
+			ShaftRate = 7.0*RAD;
+			TrunRate = 7.0*RAD;
 			break;
 		case TOGGLESWITCH_DOWN:     // LOW
-			ShaftRate = 1.33*RAD*simdt;
-			TrunRate = 1.33*RAD*simdt;
+			ShaftRate = 1.33*RAD;
+			TrunRate = 1.33*RAD;
 			break;
 	}
 
@@ -2639,7 +2639,7 @@ void LEM_RR::TimeStep(double simdt){
 			rate = dotp(CSMVel - LMVel, U_R);
 		}
 
-		sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG);
+		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG);
 	}
 
 	// Let's test.
@@ -2670,19 +2670,19 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = 0;
 			shaftVel = 0;
 			if(lem->RadarSlewSwitch.GetState()==4){	// Can we move up?
-				trunnionAngle -= TrunRate;						// Move the trunnion
+				trunnionAngle -= TrunRate*simdt;						// Move the trunnion
 				trunnionVel = -TrunRate;
 			}
 			if(lem->RadarSlewSwitch.GetState()==3){	// Can we move down?
-				trunnionAngle += TrunRate;						// Move the trunnion
+				trunnionAngle += TrunRate*simdt;						// Move the trunnion
 				trunnionVel = TrunRate;
 			}
 			if(lem->RadarSlewSwitch.GetState()==2){
-				shaftAngle -= ShaftRate;
+				shaftAngle -= ShaftRate*simdt;
 				shaftVel = ShaftRate;
 			}
 			if(lem->RadarSlewSwitch.GetState()==0){
-				shaftAngle += ShaftRate;
+				shaftAngle += ShaftRate*simdt;
 				shaftVel = -ShaftRate;
 			}
 
@@ -3206,8 +3206,8 @@ void CrossPointer::TimeStep(double simdt)
 	{
 		if (lem->RR.IsPowered())
 		{
-			vel_x = lem->RR.GetRadarTrunnionVel()*1000.0;
-			vel_y = lem->RR.GetRadarShaftVel()*1000.0;
+			vel_x = lem->RR.GetRadarShaftVel()*1000.0;
+			vel_y = lem->RR.GetRadarTrunnionVel()*1000.0;
 		}
 		else
 		{
