@@ -2610,10 +2610,11 @@ void LEM_RR::TimeStep(double simdt){
 		//oapiGetGlobalPos(hMoon, &R_M);
 		lem->GetRotationMatrix(Rot);
 
-		//Unit vector of antenna in navigation base vessel's local frame
-		U_RRL = unit(_V(cos(shaftAngle)*sin(-trunnionAngle), sin(shaftAngle), cos(shaftAngle)*cos(-trunnionAngle)));
+		//Unit vector of antenna in navigation base vessel's local frame, right handed
+		U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
 
-		//U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
+		//In LM navigation base coordinates, left handed
+		U_RRL = _V(U_RRL.y, U_RRL.x, U_RRL.z);
 
 		//Calculate antenna pointing vector in global frame
 		U_RR = mul(Rot, U_RRL);
@@ -2638,7 +2639,7 @@ void LEM_RR::TimeStep(double simdt){
 			rate = dotp(CSMVel - LMVel, U_R);
 		}
 
-		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG);
+		sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG);
 	}
 
 	// Let's test.
@@ -2822,32 +2823,17 @@ void LEM_RR::TimeStep(double simdt){
 		trunnionAngle = -250.0*RAD;
 	}
 
-	if (mode == 1)
+	if (shaftAngle > 68.0*RAD)
 	{
-		if (shaftAngle > 68.0*RAD)
-		{
-			shaftAngle = 68.0*RAD;
-			shaftVel = 0.0;
-		}
-		else if (shaftAngle < -148.0*RAD)
-		{
-			shaftAngle = -148.0*RAD;
-			shaftVel = 0.0;
-		}
+		shaftAngle = 68.0*RAD;
+		shaftVel = 0.0;
 	}
-	else
+	else if (shaftAngle < -148.0*RAD)
 	{
-		if (shaftAngle > 68.0*RAD)
-		{
-			shaftAngle = 68.0*RAD;
-			shaftVel = 0.0;
-		}
-		else if (shaftAngle < -122.0*RAD)
-		{
-			shaftAngle = -122.0*RAD;
-			shaftVel = 0.0;
-		}
+		shaftAngle = -148.0*RAD;
+		shaftVel = 0.0;
 	}
+
 	//Mode I or II determination
 	if (cos(trunnionAngle) > 0.0 && mode == 2)
 	{
@@ -2861,7 +2847,7 @@ void LEM_RR::TimeStep(double simdt){
 	lem->tcdu.SetReadCounter(trunnionAngle);
 	lem->scdu.SetReadCounter(shaftAngle);
 
-	sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
+	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 

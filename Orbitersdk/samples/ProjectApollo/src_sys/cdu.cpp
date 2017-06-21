@@ -60,37 +60,25 @@ void CDU::Timestep(double simdt)
 
 	val12 = agc.GetOutputChannel(012);
 
-	if (val12[CDUZeroBit] == 1) {
-		DoZeroCDU();
-	}
-	else
+	if (ZeroCDU == false)
 	{
-		ZeroCDU = false;
-	}
+		double delta;
 
-	if (val12[CDUZeroBit] == 1) {
-		DoZeroCDU();
-	}
-	else
-	{
-		ZeroCDU = false;
-	}
-	double delta;
+		delta = NewReadCounter - ReadCounter;
 
-	delta = NewReadCounter - ReadCounter;
-
-	if (delta < 0) {
-		while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
-			agc.vagc.Erasable[0][loc]--;
-			agc.vagc.Erasable[0][loc] &= 077777;
-			ReadCounter -= CDU_STEP;
+		if (delta < 0) {
+			while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
+				agc.vagc.Erasable[0][loc]--;
+				agc.vagc.Erasable[0][loc] &= 077777;
+				ReadCounter -= CDU_STEP;
+			}
 		}
-	}
-	if (delta > 0) {
-		while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
-			agc.vagc.Erasable[0][loc]++;
-			agc.vagc.Erasable[0][loc] &= 077777;
-			ReadCounter += CDU_STEP;
+		if (delta > 0) {
+			while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
+				agc.vagc.Erasable[0][loc]++;
+				agc.vagc.Erasable[0][loc] &= 077777;
+				ReadCounter += CDU_STEP;
+			}
 		}
 	}
 
@@ -113,6 +101,10 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 	{
 		if (val[CDUZeroBit] == 1) {
 			DoZeroCDU();
+		}
+		else
+		{
+			ZeroCDU = false;
 		}
 
 		if (val[ErrorCounterBit] == 1) {
