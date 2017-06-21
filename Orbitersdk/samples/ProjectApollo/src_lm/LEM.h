@@ -242,7 +242,7 @@ public:
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
+	double GetRadarTrunnionPos();
 	double GetRadarShaftPos() { return shaftAngle ; } ;
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };

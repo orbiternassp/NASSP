@@ -60,7 +60,7 @@ void CDU::Timestep(double simdt)
 
 	val12 = agc.GetOutputChannel(012);
 
-	if (val12[CDUZeroBit]) {
+	if (val12[CDUZeroBit] == 1) {
 		DoZeroCDU();
 	}
 	else
@@ -68,7 +68,7 @@ void CDU::Timestep(double simdt)
 		ZeroCDU = false;
 	}
 
-	if (val12[CDUZeroBit]) {
+	if (val12[CDUZeroBit] == 1) {
 		DoZeroCDU();
 	}
 	else
@@ -80,10 +80,6 @@ void CDU::Timestep(double simdt)
 	double delta;
 
 	delta = NewReadCounter - ReadCounter;
-	if (delta > PI)
-		delta -= PI2;
-	if (delta < -PI)
-		delta += PI2;
 
 	pulses = 0;
 
@@ -104,26 +100,7 @@ void CDU::Timestep(double simdt)
 		}
 	}
 
-
-	/*short  pulses; //i, delta;
-	//short delta;
-
-	pulses = ReadCounter - OldReadCounter;
-	//if (delta > PI)
-	//	delta -= PI2;
-	//if (delta < -PI)
-	//	delta += PI2;
-
-	// Gyro pulses to CDU pulses
-	//pulses = (int)(((double)radToGyroPulses(delta)) / 64.0) & 077777;
-
-	if (pulses && !ZeroCDU)
-	{
-		agc.vagc.Erasable[0][loc] += pulses;
-		OldReadCounter = ReadCounter;
-	}*/
-
-	if (!IsICDU && val12[AltOutBit])
+	if (!IsICDU && val12[AltOutBit] == 1)
 	{
 		AltOutput = ErrorCounter;
 	}
@@ -133,7 +110,7 @@ void CDU::Timestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "ReadCounter %f NewReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter*DEG, NewReadCounter*DEG, pulses, ZeroCDU, CDUZeroBit);
-	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter, ErrorCounter, ErrorCounterEnabled);
+	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter*DEG, ErrorCounter, ErrorCounterEnabled);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
@@ -142,11 +119,11 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 
 	val12 = agc.GetOutputChannel(012);
 
-	if (val12[CDUZeroBit]) {
+	if (val12[CDUZeroBit] == 1) {
 		DoZeroCDU();
 	}
 
-	if (val12[ErrorCounterBit]) {
+	if (val12[ErrorCounterBit] == 1) {
 		if (ErrorCounterEnabled == false)
 		{
 			ErrorCounter = 0;
