@@ -2611,7 +2611,7 @@ void LEM_RR::TimeStep(double simdt){
 		lem->GetRotationMatrix(Rot);
 
 		//Unit vector of antenna in navigation base vessel's local frame
-		U_RRL = unit(_V(cos(shaftAngle)*sin(trunnionAngle), sin(shaftAngle), cos(shaftAngle)*cos(trunnionAngle)));
+		U_RRL = unit(_V(cos(shaftAngle)*sin(-trunnionAngle), sin(shaftAngle), cos(shaftAngle)*cos(-trunnionAngle)));
 
 		//U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
 
@@ -2697,16 +2697,8 @@ void LEM_RR::TimeStep(double simdt){
 
 				pulses = lem->scdu.GetErrorCounter();
 
-				//if (mode == 1)
-				//{
-				//	shaftVel = (RR_SHAFT_STEP*pulses);
-				//	shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
-				//}
-				//else
-				//{
-					shaftVel = (RR_SHAFT_STEP*pulses);
-					shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
-				//}
+				shaftVel = (RR_SHAFT_STEP*pulses);
+				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
 
 				pulses = lem->tcdu.GetErrorCounter();
 

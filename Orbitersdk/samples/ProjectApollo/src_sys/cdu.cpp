@@ -75,20 +75,15 @@ void CDU::Timestep(double simdt)
 	{
 		ZeroCDU = false;
 	}
-
-	int  pulses;
 	double delta;
 
 	delta = NewReadCounter - ReadCounter;
-
-	pulses = 0;
 
 	if (delta < 0) {
 		while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
 			agc.vagc.Erasable[0][loc]--;
 			agc.vagc.Erasable[0][loc] &= 077777;
 			ReadCounter -= CDU_STEP;
-			pulses--;
 		}
 	}
 	if (delta > 0) {
@@ -96,7 +91,6 @@ void CDU::Timestep(double simdt)
 			agc.vagc.Erasable[0][loc]++;
 			agc.vagc.Erasable[0][loc] &= 077777;
 			ReadCounter += CDU_STEP;
-			pulses++;
 		}
 	}
 
@@ -109,33 +103,32 @@ void CDU::Timestep(double simdt)
 		AltOutput = 0;
 	}
 
-	//sprintf(oapiDebugString(), "ReadCounter %f NewReadCounter %f pulses %o ZeroCDU %d CDUZeroBit %d", ReadCounter*DEG, NewReadCounter*DEG, pulses, ZeroCDU, CDUZeroBit);
+	//sprintf(oapiDebugString(), "ReadCounter %f NewReadCounter %f ZeroCDU %d CDUZeroBit %d", ReadCounter*DEG, NewReadCounter*DEG, ZeroCDU, CDUZeroBit);
 	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter*DEG, ErrorCounter, ErrorCounterEnabled);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
 {
-	ChannelValue val12;
-
-	val12 = agc.GetOutputChannel(012);
-
-	if (val12[CDUZeroBit] == 1) {
-		DoZeroCDU();
-	}
-
-	if (val12[ErrorCounterBit] == 1) {
-		if (ErrorCounterEnabled == false)
-		{
-			ErrorCounter = 0;
-			ErrorCounterEnabled = true;
-		}
-	}
-	else
+	if (address == 012)
 	{
-		if (ErrorCounterEnabled == true) {
-			ErrorCounter = 0;
+		if (val[CDUZeroBit] == 1) {
+			DoZeroCDU();
 		}
-		ErrorCounterEnabled = false;
+
+		if (val[ErrorCounterBit] == 1) {
+			if (ErrorCounterEnabled == false)
+			{
+				ErrorCounter = 0;
+				ErrorCounterEnabled = true;
+			}
+		}
+		else
+		{
+			if (ErrorCounterEnabled == true) {
+				ErrorCounter = 0;
+			}
+			ErrorCounterEnabled = false;
+		}
 	}
 
 	if (address == err_channel)
