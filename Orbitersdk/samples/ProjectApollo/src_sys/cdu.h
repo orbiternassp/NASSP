@@ -44,8 +44,6 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 protected:
 	void DoZeroCDU();
-	double gyroPulsesToRad(int pulses);
-	int radToGyroPulses(double angle);
 
 	double ReadCounter;
 	int ErrorCounter;

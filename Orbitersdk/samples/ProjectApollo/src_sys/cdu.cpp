@@ -140,14 +140,6 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %o Bit %d", ReadCounter*DEG, ErrorCounter, val12[ErrorCounterBit] == 1);
 }
 
-double CDU::gyroPulsesToRad(int pulses) {
-	return (((double)pulses) * PI2) / 2097152.0;
-}
-
-int CDU::radToGyroPulses(double angle) {
-	return (int)((angle * 2097152.0) / PI2);
-}
-
 void CDU::DoZeroCDU()
 {
 	ReadCounter = 0;
