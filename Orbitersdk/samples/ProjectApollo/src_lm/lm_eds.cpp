@@ -27,8 +27,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "dsky.h"
-#include "IMU.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_eds.h"

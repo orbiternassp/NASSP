@@ -38,18 +38,13 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "cdu.h"
 #include "powersource.h"
 #include "papi.h"
 
 #include "tracer.h"
 
-char TwoSpaceTwoFormat[7] = "XXX XX";
-char RegFormat[7] = "XXXXXX";
-
-// Moved DELTAT definition to avoid INTERNAL COMPILER ERROR
-#define DELTAT 2.0
-
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
 
 {
 	Reset = false;
@@ -825,6 +820,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// Various control bits
 	case 012:		
 	// 174-177 are ficticious channels with the IMU CDU angles.
+		scdu.ChannelOutput(channel, val);
+		tcdu.ChannelOutput(channel, val);
+		break;
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
 	case 0176:  // FDAI YAW CHANNEL
@@ -837,10 +835,12 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
 		ProcessChannel140(val);
+		scdu.ChannelOutput(channel, val);
 		break;
 
 	case 0141:
 		ProcessChannel141(val);
+		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
 		ProcessChannel142(val);

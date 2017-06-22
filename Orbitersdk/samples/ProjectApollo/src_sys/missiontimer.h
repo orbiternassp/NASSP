@@ -34,6 +34,7 @@
 #define EVENTTIMER_END_STRING "EVENTTIMER_END"
 
 class Saturn;
+class RotationalSwitch;
 
 class MissionTimer : public e_object {
 

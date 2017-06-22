@@ -35,15 +35,14 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "toggleswitch.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "papi.h"
 #include "thread.h"
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
-	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i), lv(sivb)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
+	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2), iu(i), lv(sivb)
 
 {
 	isLGC = false;

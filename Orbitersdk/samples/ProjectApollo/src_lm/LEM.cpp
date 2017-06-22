@@ -37,8 +37,6 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
-#include "dsky.h"
-#include "IMU.h"
 
 #include "LEM.h"
 #include "tracer.h"
@@ -206,7 +204,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	StagingNutsPyros("Staging-Nuts-Pyros", Panelsdk),
 	CableCuttingPyros("Cable-Cutting-Pyros", Panelsdk),
 	CableCuttingPyrosFeeder("Cable-Cutting-Pyros-Feeder", Panelsdk),
-	agc(soundlib, dsky, imu, Panelsdk),
+	agc(soundlib, dsky, imu, scdu, tcdu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
 	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
@@ -220,6 +218,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	//imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	//imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk),
+	scdu(agc, RegOPTX, 0140, 0),
+	tcdu(agc, RegOPTY, 0141, 0),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover),
 	MissionTimerDisplay(Panelsdk),
@@ -1049,6 +1049,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
 		}
+		else if (!strnicmp(line, "SCDU_START", sizeof("SCDU_START"))) {
+			scdu.LoadState(scn, "CDU_END");
+		}
+		else if (!strnicmp(line, "TCDU_START", sizeof("TCDU_START"))) {
+			tcdu.LoadState(scn, "CDU_END");
+		}
 		else if (!strnicmp (line, "ECA_1A_START",sizeof("ECA_1A_START"))) {
 			ECA_1a.LoadState(scn,"ECA_1A_END");
 		}
@@ -1126,12 +1132,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
 			APS.LoadState(scn, "APS_END");
-		}
-		else if (!strnicmp(line, CROSSPOINTER_LEFT_START_STRING, sizeof(CROSSPOINTER_LEFT_START_STRING))) {
-			crossPointerLeft.LoadState(scn);
-		}
-		else if (!strnicmp(line, CROSSPOINTER_RIGHT_START_STRING, sizeof(CROSSPOINTER_RIGHT_START_STRING))) {
-			crossPointerRight.LoadState(scn);
 		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
@@ -1421,6 +1421,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
+	scdu.SaveState(scn, "SCDU_START", "CDU_END");
+	scdu.SaveState(scn, "TCDU_START", "CDU_END");
 
 	//
 	// Save the Panel SDK state.
@@ -1466,10 +1468,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
-	oapiWriteLine(scn, CROSSPOINTER_LEFT_START_STRING);
-	crossPointerLeft.SaveState(scn);
-	oapiWriteLine(scn, CROSSPOINTER_RIGHT_START_STRING);
-	crossPointerRight.SaveState(scn);
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);

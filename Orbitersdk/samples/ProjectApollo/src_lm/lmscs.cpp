@@ -33,7 +33,6 @@
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "LEMcomputer.h"
 #include "IMU.h"
 #include "lm_channels.h"

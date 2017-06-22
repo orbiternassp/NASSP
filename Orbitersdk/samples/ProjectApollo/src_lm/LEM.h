@@ -31,9 +31,10 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-// DS20060730 Include LM SCS
+#include "dsky.h"
+#include "imu.h"
+#include "cdu.h"
 #include "lmscs.h"
-// DS20090905 Include LM AGS and telecom
 #include "lm_ags.h"
 #include "lm_telecom.h"
 #include "pyro.h"
@@ -239,11 +240,9 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	double GetAntennaTempF();
-	void RRTrunionDrive(int val,ChannelValue ch12);
-	void RRShaftDrive(int val, ChannelValue ch12);
-	double GetRadarTrunnionVel() { return trunnionVel ; } ;
+	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
+	double GetRadarTrunnionPos();
 	double GetRadarShaftPos() { return shaftAngle ; } ;
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
@@ -268,17 +267,14 @@ private:
 	int    isTracking;
 	bool   radarDataGood;
 	double trunnionAngle;
-	double trunnionMoved;
 	double shaftAngle;
-	double shaftMoved;
-	double lastTrunnionAngle;
-	double lastShaftAngle;
 	double trunnionVel;
 	double shaftVel;
 	double range;
 	double rate;
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
+	int mode;					//Mode I = false, Mode II = true
 
 };
 
@@ -320,13 +316,8 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	void GetVelocities(double &vx, double &vy);
-	void SetForwardVelocity(int val, ChannelValue ch12);
-	void SetLateralVelocity(int val, ChannelValue ch12);
-	void ZeroLGCVelocity() {lgc_forward = 0.0;lgc_lateral = 0.0;}
 
 	bool IsPowered();
-
-	bool lgcErrorCountersEnabled;
 protected:
 	LEM *lem;
 	e_object *dc_source;
@@ -1609,7 +1600,9 @@ protected:
 	LEMcomputer agc;
 	Boiler *imuheater; // IMU Standby Heater
 	h_Radiator *imucase; // IMU Case
-	IMU imu;	
+	IMU imu;
+	CDU tcdu;
+	CDU scdu;
 	LMOptics optics;
 
 	//Pyros

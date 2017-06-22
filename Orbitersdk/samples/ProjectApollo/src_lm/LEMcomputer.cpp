@@ -33,7 +33,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "IMU.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
@@ -42,7 +41,7 @@
 
 #include "lm_channels.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : ApolloGuidance(s, display, im, p)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : ApolloGuidance(s, display, im, sc, tc, p)
 
 {
 
@@ -337,7 +336,7 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 
 void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -349,12 +348,12 @@ void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	else
 	{
 		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel141(ChannelValue val) {
 
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -366,7 +365,7 @@ void LEMcomputer::ProcessChannel141(ChannelValue val) {
 	else
 	{
 		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
@@ -420,22 +419,6 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_z = 0;
 			}
 			lem->atca.lgc_err_ena = 0;
-		}
-
-		// Reset cross pointer needles
-		if (val12[DisplayInertialData]) {
-			if (val12[EnableRRCDUErrorCounter]) {
-				if (!lem->crossPointerLeft.lgcErrorCountersEnabled) {	//Dirty hack: voltage for cross pointers originates in RRCDU, the displays just get the voltages
-					lem->crossPointerLeft.ZeroLGCVelocity();
-					lem->crossPointerRight.ZeroLGCVelocity();
-					lem->crossPointerLeft.lgcErrorCountersEnabled = true;
-					lem->crossPointerRight.lgcErrorCountersEnabled = true;
-				}
-			}
-			else {
-				lem->crossPointerLeft.lgcErrorCountersEnabled = false;
-				lem->crossPointerRight.lgcErrorCountersEnabled = false;
-			}
 		}
 
 		break;

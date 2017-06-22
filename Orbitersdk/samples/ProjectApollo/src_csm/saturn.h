@@ -40,7 +40,10 @@
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
 #include "FDAI.h"
+#include "dsky.h"
 #include "iu.h"
+#include "cdu.h"
+#include "IMU.h"
 #include "satswitches.h"
 #include "powersource.h"
 #include "dockingprobe.h"
@@ -3609,6 +3612,8 @@ protected:
 	DSKY dsky2;
 	CSMcomputer agc;	
 	IMU imu;
+	CDU tcdu;
+	CDU scdu;
 	IU iu;
 	CSMCautionWarningSystem cws;
 

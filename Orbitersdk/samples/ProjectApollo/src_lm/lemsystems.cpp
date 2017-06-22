@@ -40,7 +40,6 @@
 #include "LEMcomputer.h"
 #include "lm_channels.h"
 #include "dsky.h"
-#include "IMU.h"
 #include "PanelSDK/Internals/Esystems.h"
 
 #include "LEM.h"
@@ -1301,6 +1300,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	deda.TimeStep(simdt);
 	imu.Timestep(simdt);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
+	tcdu.Timestep(simdt);
+	scdu.Timestep(simdt);
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
@@ -2343,10 +2344,8 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	//antenna.mass = 10000;
 	//antenna.SetTemp(255.1); 
-	trunnionAngle = 0 * RAD; lastTrunnionAngle = trunnionAngle; 
-	trunnionMoved = 0 * RAD;
-	shaftAngle = -180 * RAD; lastShaftAngle = shaftAngle; // Stow
-	shaftMoved = -180 * RAD;
+	trunnionAngle = -180.0 * RAD;
+	shaftAngle = 0.0 * RAD; // Stow
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_RR_STBY_CB);
 		//lem->Panelsdk.AddHydraulic(&antenna);
@@ -2356,31 +2355,8 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	}
 	dc_source = dc_src;
 	ac_source = ac_src;
-
+	mode = 2;
 }
-
-
-void LEM_RR::RRTrunionDrive(int val, ChannelValue val12) {
-
-	int pulses;
-
-	if (IsPowered() == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	if (val12[EnableRRCDUErrorCounter]){
-		lem->agc.vagc.Erasable[0][RegOPTY] += pulses;
-		lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-	}
-	trunnionVel = (RR_TRUNNION_STEP*pulses);
-	trunnionAngle += (RR_TRUNNION_STEP*pulses); 
-	lastTrunnionAngle = trunnionAngle;
-	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
-}
-
 
 bool LEM_RR::IsPowered()
 
@@ -2399,30 +2375,6 @@ bool LEM_RR::IsDCPowered()
 	}
 	return true;
 }
-
-void LEM_RR::RRShaftDrive(int val,ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-	
-	if (!IsPowered()) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	shaftVel = (RR_SHAFT_STEP*pulses);
-	shaftAngle += (RR_SHAFT_STEP*pulses);
-	lastShaftAngle = shaftAngle;
-	if (val12[EnableRRCDUErrorCounter]){
-		lem->agc.vagc.Erasable[0][RegOPTX] += pulses;
-		lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-	}
-	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
-}
-
 
 VECTOR3 LEM_RR::GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll)
 {	
@@ -2511,6 +2463,16 @@ void LEM_RR::CalculateRadarData(double &pitch, double &yaw)
 	yaw = PitchYawRoll.y ;
 }
 
+double LEM_RR::GetRadarTrunnionPos()
+{
+	if (mode == 1)
+	{
+		return -trunnionAngle;
+	}
+
+	return trunnionAngle + PI;
+}
+
 
 void LEM_RR::TimeStep(double simdt){
 
@@ -2540,8 +2502,6 @@ void LEM_RR::TimeStep(double simdt){
 	if (!IsPowered() ) { 
 		val33[RRPowerOnAuto] = 0;
 		val33[RRDataGood] = 0;
-		lastTrunnionAngle = trunnionAngle; // Keep these zeroed
-		lastShaftAngle = shaftAngle;
 		lem->agc.SetInputChannel(033, val33);
 		return;
 	}
@@ -2552,12 +2512,12 @@ void LEM_RR::TimeStep(double simdt){
 	// Determine slew rate
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
-			ShaftRate = 1775. * simdt;
-			TrunRate  = 3640. * simdt;
+			ShaftRate = 7.0*RAD;
+			TrunRate = 7.0*RAD;
 			break;
 		case TOGGLESWITCH_DOWN:     // LOW
-			ShaftRate = 18. * simdt;
-			TrunRate  = 36. * simdt;
+			ShaftRate = 1.33*RAD;
+			TrunRate = 1.33*RAD;
 			break;
 	}
 
@@ -2650,10 +2610,11 @@ void LEM_RR::TimeStep(double simdt){
 		//oapiGetGlobalPos(hMoon, &R_M);
 		lem->GetRotationMatrix(Rot);
 
-		//Unit vector of antenna in navigation base vessel's local frame
-		U_RRL = unit(_V(cos(shaftAngle)*sin(trunnionAngle), sin(shaftAngle), cos(shaftAngle)*cos(trunnionAngle)));
+		//Unit vector of antenna in navigation base vessel's local frame, right handed
+		U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
 
-		//U_RRL = unit(_V(sin(shaftAngle)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle)*cos(trunnionAngle)));
+		//In LM navigation base coordinates, left handed
+		U_RRL = _V(U_RRL.y, U_RRL.x, U_RRL.z);
 
 		//Calculate antenna pointing vector in global frame
 		U_RR = mul(Rot, U_RRL);
@@ -2687,80 +2648,71 @@ void LEM_RR::TimeStep(double simdt){
 		if(val33[RRPowerOnAuto] != 1){
 			val33[RRPowerOnAuto] = 1;
 			lem->agc.SetInputChannel(033, val33);
-			sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
+			//sprintf(oapiDebugString(),"RR Power On Discrete Enabled");
 		}
 	}else{
 		if(val33[RRPowerOnAuto] != 0){
 			val33[RRPowerOnAuto] = 0;
 			lem->agc.SetInputChannel(033, val33);
-			sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
+			//sprintf(oapiDebugString(),"RR Power On Discrete Disabled");
 		}
 	}
 
 	// Handle mode switch
 	switch(lem->RendezvousRadarRotary.GetState()){
 		case 0:	// AUTO TRACK
+			shaftVel = 0.0;
+			trunnionVel = 0.0;
 			break;
 
 		case 1: // SLEW
 			// Watch the SLEW switch. 
 			trunnionVel = 0;
 			shaftVel = 0;
-			if((lem->RadarSlewSwitch.GetState()==4) && trunnionAngle < (RAD*90)){	// Can we move up?
-				trunnionAngle += RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionVel = RR_TRUNNION_STEP * TrunRate;
+			if(lem->RadarSlewSwitch.GetState()==4){	// Can we move up?
+				trunnionAngle -= TrunRate*simdt;						// Move the trunnion
+				trunnionVel = -TrunRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==3) && trunnionAngle > RAD*-90){	// Can we move down?
-				trunnionAngle -= RR_TRUNNION_STEP * TrunRate;						// Move the trunnion
-				trunnionVel = -RR_TRUNNION_STEP * TrunRate;
+			if(lem->RadarSlewSwitch.GetState()==3){	// Can we move down?
+				trunnionAngle += TrunRate*simdt;						// Move the trunnion
+				trunnionVel = TrunRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==2) && shaftAngle > -(RAD*180)){
-				shaftAngle -= RR_SHAFT_STEP * ShaftRate;
-				shaftVel = RR_SHAFT_STEP * ShaftRate;
+			if(lem->RadarSlewSwitch.GetState()==2){
+				shaftAngle -= ShaftRate*simdt;
+				shaftVel = ShaftRate;
 			}
-			if((lem->RadarSlewSwitch.GetState()==0) && shaftAngle < (RAD*90)){
-				shaftAngle += RR_SHAFT_STEP * ShaftRate;
-				shaftVel = -RR_SHAFT_STEP * ShaftRate;
+			if(lem->RadarSlewSwitch.GetState()==0){
+				shaftAngle += ShaftRate*simdt;
+				shaftVel = -ShaftRate;
 			}
+
+			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
+
 			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
-			// FALL INTO
+			break;
 		case 2: // AGC
-			// Watch shaft/trunnion movement. The LGC gets told when we move.
-			// ABSOLUTELY DO NOT GENERATE RADAR RUPT!
-			trunnionMoved += (trunnionAngle-lastTrunnionAngle);						// Keep track of how far we moved it so far
-			lastTrunnionAngle = trunnionAngle;										// Update
-			int trunnionSteps = (int)(trunnionMoved / RR_TRUNNION_STEP);					// How many (positive) steps is that?
-			while(trunnionSteps > 0){												// Is it more than one?
-				lem->agc.vagc.Erasable[0][RegOPTY]++;								// MINC the LGC
-				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
-				trunnionMoved -= RR_TRUNNION_STEP;									// Take away a step
-				trunnionSteps--;													// Loop
-			}																		// Other direction
-			while(trunnionSteps < 0){												// Is it more than one?
-				lem->agc.vagc.Erasable[0][RegOPTY]--;								// DINC the LGC
-				lem->agc.vagc.Erasable[0][RegOPTY] &= 077777;						// Ensure it doesn't overflow
-				trunnionMoved += RR_TRUNNION_STEP;									// Take away a (negative) step
-				trunnionSteps++;													// Loop
-			}
-			// Now for the shaft			
-			shaftMoved += (shaftAngle-lastShaftAngle);
-			lastShaftAngle = shaftAngle;
-			int shaftSteps = (int)(shaftMoved / RR_SHAFT_STEP);
-			while(shaftSteps < 0){
-				lem->agc.vagc.Erasable[0][RegOPTX]--;
-				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				shaftMoved += RR_SHAFT_STEP;
-				shaftSteps++;
-			}
-			while(shaftSteps > 0){
-				lem->agc.vagc.Erasable[0][RegOPTX]++;
-				lem->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				shaftMoved -= RR_SHAFT_STEP;
-				shaftSteps--;
-			}
 			
-			if(lem->RendezvousRadarRotary.GetState() == 1){ break; } // Don't update the other stuff in slew mode.
-			sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
+			if (val12[RRAutoTrackOrEnable] == 0)
+			{
+				int pulses;
+
+				pulses = lem->scdu.GetErrorCounter();
+
+				shaftVel = (RR_SHAFT_STEP*pulses);
+				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+
+				pulses = lem->tcdu.GetErrorCounter();
+
+				trunnionVel = (RR_SHAFT_STEP*pulses);
+				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+			}
+			else
+			{
+				shaftVel = 0.0;
+				trunnionVel = 0.0;
+			}
+
+			//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 			// Maintain RADAR GOOD state
 			if(radarDataGood == 1 && val33[RRDataGood] == 0){ val33[RRDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
@@ -2855,27 +2807,54 @@ void LEM_RR::TimeStep(double simdt){
 				ruptSent = 0; 
 			}
 
-			// Watch for CDU Zero
-			if(val12[ZeroRRCDUs] != 0){
-				// Clear shaft and trunnion read counters 
-				// Incrementing pulses are inhibited
-			}else{
-				// Look for RR Error Counter Enable
-				if(val12[EnableRRCDUErrorCounter] != 0){
-					// sprintf(oapiDebugString(),"RR CDU Error Counters Enabled");
-					// If this is enabled, the LGC wants to drive the positioner.
-				}
-			}
 			break;
 	}
 
+	//Limits
+
+	if (trunnionAngle > 70.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = 70.0*RAD;
+	}
+	else if (trunnionAngle < -250.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = -250.0*RAD;
+	}
+
+	if (shaftAngle > 68.0*RAD)
+	{
+		shaftAngle = 68.0*RAD;
+		shaftVel = 0.0;
+	}
+	else if (shaftAngle < -148.0*RAD)
+	{
+		shaftAngle = -148.0*RAD;
+		shaftVel = 0.0;
+	}
+
+	//Mode I or II determination
+	if (cos(trunnionAngle) > 0.0 && mode == 2)
+	{
+		mode = 1;
+	}
+	else if (cos(trunnionAngle) < 0.0 && mode == 1)
+	{
+		mode = 2;
+	}
+
+	lem->tcdu.SetReadCounter(trunnionAngle);
+	lem->scdu.SetReadCounter(shaftAngle);
+
+	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 
 	return;
 
 	// Old stuff here for reference
-	double range,rate,pitch,yaw;
+	/*double range,rate,pitch,yaw;
 
 	radarDataGood = 0;
 	CalculateRadarData(pitch,yaw);
@@ -2978,16 +2957,15 @@ void LEM_RR::TimeStep(double simdt){
 		}
 	}
 
-	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);*/
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_float(scn, "RR_TRUN", trunnionAngle);
-	trunnionMoved = trunnionAngle;
 	oapiWriteScenario_float(scn, "RR_SHAFT", shaftAngle);
-	shaftMoved = shaftAngle;
 	oapiWriteScenario_float(scn, "RR_ANTTEMP", GetAntennaTempF());
+	oapiWriteScenario_int(scn, "RR_MODE", mode);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -3007,6 +2985,7 @@ void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
 			sscanf(line + 7, "%lf", &dec);
 			shaftAngle = dec;
 		}
+		papiReadScenario_int(line, "RR_MODE", mode);
 	}
 }
 
@@ -3190,7 +3169,6 @@ CrossPointer::CrossPointer()
 	vel_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
-	lgcErrorCountersEnabled = false;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -3228,8 +3206,8 @@ void CrossPointer::TimeStep(double simdt)
 	{
 		if (lem->RR.IsPowered())
 		{
-			vel_x = lem->RR.GetRadarTrunnionVel()*1000.0;
-			vel_y = lem->RR.GetRadarShaftVel()*1000.0;
+			vel_x = lem->RR.GetRadarShaftVel()*1000.0;
+			vel_y = lem->RR.GetRadarTrunnionVel()*1000.0;
 		}
 		else
 		{
@@ -3256,6 +3234,9 @@ void CrossPointer::TimeStep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
+			lgc_forward = 0.5571*(double)lem->scdu.GetAltOutput();
+			lgc_lateral = 0.5571*(double)lem->tcdu.GetAltOutput();
+
 			vx = lgc_forward*0.3048;
 			vy = lgc_lateral*0.3048;
 		}
@@ -3284,46 +3265,8 @@ void CrossPointer::GetVelocities(double &vx, double &vy)
 	vy = vel_y;
 }
 
-void CrossPointer::SetForwardVelocity(int val, ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (!IsPowered()) { return; }
-
-	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
-	}
-	else {
-		pulses = val & 077777;
-	}
-	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_forward += (0.5571*pulses);
-	}
-}
-
-void CrossPointer::SetLateralVelocity(int val, ChannelValue ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (!IsPowered()) { return; }
-
-	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
-	}
-	else {
-		pulses = val & 077777;
-	}
-	if (val12[EnableRRCDUErrorCounter]) {
-		lgc_lateral += (0.5571*pulses);
-	}
-}
-
 void CrossPointer::SaveState(FILEHANDLE scn) {
-	papiWriteScenario_bool(scn, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
+
 	oapiWriteLine(scn, CROSSPOINTER_END_STRING);
 }
 
@@ -3335,7 +3278,6 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 			return;
 		}
 
-		papiReadScenario_bool(line, "LGCERRORCOUNTERSENABLED", lgcErrorCountersEnabled);
 	}
 }
 
@@ -3917,7 +3859,7 @@ void LEM_DPS::TimeStep(double simt, double simdt){
 		engArm = false;
 	}
 
-	if (lem->deca.GetThrustOn() || lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5())
+	if (lem->deca.GetThrustOn() || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
 	{
 		thrustOn = true;
 	}
@@ -4083,7 +4025,7 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 	if (position > 6.0) { position = 6.0; }
 	if (position < -6.0) { position = -6.0; }
 
-	sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
+	//sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
 }
 
 void DPSGimbalActuator::GimbalTimestep(double simdt)

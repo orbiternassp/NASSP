@@ -128,6 +128,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
 	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
+	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
 	papiWriteScenario_mx(scn, "REFSMMAT", G->REFSMMAT);
 	papiWriteScenario_intarr(scn, "REFSMMAToct", G->REFSMMAToct, 20);
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
@@ -244,6 +245,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
+		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
 		papiReadScenario_mat(line, "REFSMMAT", G->REFSMMAT);
 		papiReadScenario_intarr(line, "REFSMMAToct", G->REFSMMAToct, 20);
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
@@ -572,6 +574,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 4 * H / 14, "REFSMMAT", 8);
 		}
 
+		if (G->REFSMMATopt != 7 && G->REFSMMATopt != 8 && G->REFSMMATdirect == false)
+		{
+			GET_Display(Buffer, G->LOI_TIG);
+			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f DVX", G->LOI_dV_LVLH.x / 0.3048);
+			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f DVY", G->LOI_dV_LVLH.y / 0.3048);
+			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
+			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+		}
+
 		if (G->REFSMMATopt == 0) //P30 Maneuver
 		{
 			if (G->REFSMMATHeadsUp)
@@ -657,7 +671,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "Landing Site", 12);
 
-			GET_Display(Buffer, G->REFSMMATTime);
+			GET_Display(Buffer, G->t_Land);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%f°", G->LSLat*DEG);
@@ -692,7 +706,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "LS during TLC", 13);
 
-				GET_Display(Buffer, G->REFSMMATTime);
+				GET_Display(Buffer, G->t_Land);
 				skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
 				sprintf(Buffer, "%f°", G->LSLat*DEG);
@@ -1224,6 +1238,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			else if (G->REFSMMATcur == 7)
 			{
 				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "LOI-2", 5);
+			}
+			else if (G->REFSMMATcur == 8)
+			{
+				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Landing Site", 12);
 			}
 
 			if (G->vesseltype < 2)
@@ -1968,12 +1986,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 16)
 	{
-		skp->Text(1 * W / 8, 2 * H / 14, "DOI", 3);
+		if (G->DOI_option == 0)
+		{
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DOI from LPO", 12);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DOI as LOI-2", 12);
+		}
 
 		GET_Display(Buffer, G->DOIGET);
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%d", G->DOI_N);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->DOI_PeriAng*DEG);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.3f°", G->LSLat*DEG);
@@ -1985,7 +2013,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 4 * H / 14, "Uplink TLAND", 12);
+		skp->Text(5 * W / 8, 6 * H / 14, "Uplink TLAND", 12);
 
 		skp->Text(4 * W / 8, 11 * H / 21, "DOI:", 4);
 		skp->Text(4 * W / 8, 12 * H / 21, "PDI:", 4);
@@ -3108,10 +3136,14 @@ void ApolloRTCCMFD::set_sextantstartime(double time)
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
-	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 5 || G->REFSMMATopt == 6 || G->REFSMMATopt == 8)
+	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 6)
 	{
 		bool REFSMMATGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
+	}
+	else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
+	{
+		menuSetTLAND();
 	}
 }
 
@@ -4704,6 +4736,39 @@ bool DOIRevsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DOIRevs(int N)
 {
 	this->G->DOI_N = N;
+}
+
+void ApolloRTCCMFD::menuSetDOIPeriAng()
+{
+	bool DOIPeriAngInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the angle from perilune to landing site:", DOIPeriAngInput, 0, 20, (void*)this);
+}
+
+bool DOIPeriAngInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_DOIPeriAng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DOIPeriAng(double ang)
+{
+	this->G->DOI_PeriAng = ang*RAD;
+}
+
+void ApolloRTCCMFD::menuDOIOption()
+{
+	if (G->DOI_option < 1)
+	{
+		G->DOI_option++;
+	}
+	else
+	{
+		G->DOI_option = 0;
+	}
 }
 
 void ApolloRTCCMFD::menuDOICalc()

@@ -20,7 +20,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
@@ -207,8 +206,11 @@ public:
 	void set_LSAlt(double alt);
 	void menuSetDOIRevs();
 	void set_DOIRevs(int N);
+	void menuSetDOIPeriAng();
+	void set_DOIPeriAng(double ang);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuDOIOption();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();

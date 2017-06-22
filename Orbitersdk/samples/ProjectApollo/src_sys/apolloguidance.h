@@ -31,6 +31,7 @@
 
 class DSKY;
 class IMU;
+class CDU;
 class PanelSDK;
 
 #include <bitset>
@@ -59,7 +60,7 @@ public:
 	/// \param im Spacecraft Inertial Measurement Unit.
 	/// \param p Panel SDK we're connected to.
 	///
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
 
 	///
 	/// \brief Destructor.
@@ -383,6 +384,9 @@ protected:
 	/// \brief The IMU attached to this AGC.
 	///
 	IMU &imu;
+
+	CDU &tcdu;
+	CDU &scdu;
 
 	//
 	// Program data.

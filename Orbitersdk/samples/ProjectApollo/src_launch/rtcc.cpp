@@ -28,7 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
@@ -4603,11 +4602,19 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t
 
 	R_LSA = _V(cos(opt->lng)*cos(opt->lat), sin(opt->lng)*cos(opt->lat), sin(opt->lat))*(oapiGetSize(hMoon) + opt->alt);
 	h_DP = 50000.0*0.3048;
-	theta_F = 15.0*RAD;
+	theta_F = opt->PeriAng;
 	t_F = 718.0;
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	if (opt->opt == 0)
+	{
+		OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+	else
+	{
+		OrbMech::LunarLandingPrediction2(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, 1.0, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+
 	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
 
 	SV sv_tig;
