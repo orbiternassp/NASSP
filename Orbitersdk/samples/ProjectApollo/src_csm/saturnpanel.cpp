@@ -42,7 +42,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -89,14 +88,14 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 	double range;
 
 	alpha = GetAltitude();
-	alpha = alpha / 0.305;
+	alpha = alpha / 0.3048;
 
 #define ALTIMETER_X_CENTER	68
 #define ALTIMETER_Y_CENTER	69
 #define ALTIMETER_RADIUS	55.0
 
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 50000) alpha = 50000;
+	if (alpha > 55000) alpha = 55000;
 
 	if (alpha < 4001){
 		range = 120 * RAD;
@@ -123,19 +122,19 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 8001 && alpha < 10001){
-		range = 20 * RAD;
+		range = 30 * RAD;
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+180*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 10001 && alpha < 20001){
-		range = 55 * RAD;
+		range = 45 * RAD;
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+60*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 20001 && alpha < 40001){
@@ -1778,7 +1777,7 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2DSwitch.Init (303, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
 
 	CMUplinkSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row, &agc);
-	CMUplinkSwitch.SetChannelData(033, 10, true);	// Down is 'Block Uplink Input'
+	CMUplinkSwitch.SetChannelData(033, 10, false);	// Down is 'Block Uplink Input'
 
 	if (!SkylabCM)
 		IUUplinkSwitch.Init(43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
@@ -3037,8 +3036,8 @@ void Saturn::SetSwitches(int panel) {
 	EDS3BatBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
 
 	ELSCircuitBrakerRow.Init(AID_ELSCIRCUITBREAKERS, MainPanel);
-	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
-	ELSBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
+	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
+	ELSBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow, &EPSBatBusBCircuitBraker, 5.0);
 
 	PLVentCircuitBrakerRow.Init(AID_PLVENTCIRCUITBREAKER, MainPanel);
 	FLTPLCircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], PLVentCircuitBrakerRow, &FlightPostLandingBus);
@@ -6204,7 +6203,7 @@ void Saturn::InitSwitches() {
 	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	PanelOrdeal.Register(PSH, "PanelOrdeal",0, 0, 0, 0);	// dummy switch/display for checklist controller
 
-	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", false);
+	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	CMRCSHTRSSwitch.Register(PSH, "CMRCSHTRSSwitch", false);
 	WasteH2ODumpSwitch.Register(PSH, "WasteH2ODumpSwitch", THREEPOSSWITCH_CENTER);

@@ -36,10 +36,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
 
 #include "saturn.h"
 
@@ -2077,6 +2075,29 @@ bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
 			return true;
 	}
 	return false;
+}
+
+void SaturnCabinPressureReliefLever::SetState(int value)
+{
+	if (ThumbwheelSwitch::SwitchTo(value))
+	{
+		if (state == 3 && guardState == 0)
+		{
+			guardState = 1;
+		}
+	}
+}
+
+void SaturnCabinPressureReliefLever::Guard()
+{
+	if (guardState) {
+		guardState = 0;
+
+		if (state == 3)
+		{
+			state = 2;
+		}
+	}
 }
 
 void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn) {

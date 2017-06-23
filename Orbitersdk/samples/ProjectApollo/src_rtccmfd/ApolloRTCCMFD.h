@@ -20,7 +20,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
@@ -147,6 +146,7 @@ public:
 	void menuSetAGCEpoch();
 	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
+	void menuUpdateLiftoffTime();
 	void cycleREFSMMATupl();
 	void set_svtarget();
 	void offvecdialogue();
@@ -193,6 +193,9 @@ public:
 	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
 	void menuTranslunarPage();
+	void menuSetLunarLiftoffPage();
+	void menuSetEMPPage();
+	void menuSetNavCheckPADPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -203,8 +206,11 @@ public:
 	void set_LSAlt(double alt);
 	void menuSetDOIRevs();
 	void set_DOIRevs(int N);
+	void menuSetDOIPeriAng();
+	void set_DOIPeriAng(double ang);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuDOIOption();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();
@@ -230,6 +236,13 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuSetTPIguess();
+	void menuLunarLiftoffCalc();
+	void menuLunarLiftoffTimeOption();
+	void set_TPIguess(double time);
+	void menuSetEMPUplinkP99();
+	void menuEMPUplink();
+	void menuSetEMPUplinkNumber();
 	void menuTMLat();
 	void set_TMLat(double lat);
 	void menuTMLng();
@@ -244,6 +257,9 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuNavCheckPADCalc();
+	void menuSetNavCheckGET();
+	void set_NavCheckGET(double time);
 
 protected:
 	oapi::Font *font;

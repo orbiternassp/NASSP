@@ -39,9 +39,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "lemcomputer.h"
-#include "imu.h"
 
 #include "payload.h"
 #include "sivb.h"

@@ -31,6 +31,7 @@
 
 class DSKY;
 class IMU;
+class CDU;
 class PanelSDK;
 
 #include <bitset>
@@ -59,7 +60,7 @@ public:
 	/// \param im Spacecraft Inertial Measurement Unit.
 	/// \param p Panel SDK we're connected to.
 	///
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
 
 	///
 	/// \brief Destructor.
@@ -165,24 +166,6 @@ public:
 	/// \param val The bit value. True to set, false to clear.
 	///
 	virtual void SetInputChannelBit(int channel, int bit,bool val);
-
-	///
-	/// Set or clear a bit in an AGC output channel. This is used to simulate the real hardware interface
-	/// to the AGC, and is required to properly connect the Virtual AGC software.
-	///
-	/// This is a virtual function so it can he hooked by derived classes to update their
-	/// state when the channel value changes. The default function here only supports the
-	/// channels which are common to the CSM and LEM.
-	///
-	/// Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so bit numbers
-	/// start at 1.
-	///
-	/// \brief Set output channel bit.
-	/// \param channel Output channel to set.
-	/// \param bit Bit number to update.
-	/// \param val The bit value. True to set, false to clear.
-	///
-	virtual void SetOutputChannelBit(int channel, int bit, bool val);
 
 	///
 	/// Set the value of an AGC input channel. This is used to simulate the real hardware interface
@@ -369,8 +352,6 @@ protected:
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
-	public: virtual void SetCh33Switches(unsigned int val);
-	public: unsigned int GetCh33Switches();
 	public: virtual int DoPINC(int16_t *Counter);
 	public: virtual int DoPCDU(int16_t *Counter);
 	public: virtual int DoMCDU(int16_t *Counter);
@@ -403,6 +384,9 @@ protected:
 	/// \brief The IMU attached to this AGC.
 	///
 	IMU &imu;
+
+	CDU &tcdu;
+	CDU &scdu;
 
 	//
 	// Program data.
@@ -458,11 +442,6 @@ protected:
 
 #define MAX_INPUT_CHANNELS	0200
 #define MAX_OUTPUT_CHANNELS	0200
-
-	///
-	/// \brief AGC input channel values.
-	///
-	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
 
 	///
 	/// \brief AGC output channel values.

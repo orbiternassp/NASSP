@@ -38,10 +38,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
 
 #include "saturn.h"
 #include "saturnv.h"
@@ -86,6 +84,7 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	TRACESETUP("SaturnV");
 	
 	hMaster = hObj;
+	lvdc = NULL;
 	initSaturnV();
 }
 
@@ -716,6 +715,7 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
+	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
 void SaturnV::SaveLVDC(FILEHANDLE scn){

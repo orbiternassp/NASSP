@@ -36,9 +36,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -132,10 +130,12 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector, sivbControlConnector), 
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
+	tcdu(agc, RegOPTY, 0140, 0),
+	scdu(agc, RegOPTX, 0141, 0),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -186,6 +186,14 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CMDockingRingPyrosFeeder("CM-DockingRing-Pyros-Feeder", Panelsdk),
 	CSMLVPyros("CSM-LV-Pyros", Panelsdk),
 	CSMLVPyrosFeeder("CSM-LV-Pyros-Feeder", Panelsdk),
+	ApexCoverPyros("Apex-Cover-Pyros", Panelsdk),
+	ApexCoverPyrosFeeder("Apex-Cover-Pyros-Feeder", Panelsdk),
+	DrogueChutesDeployPyros("Drogue-Chutes-Deploy-Pyros", Panelsdk),
+	DrogueChutesDeployPyrosFeeder("Drogue-Chutes-Deploy-Pyros-Feeder", Panelsdk),
+	MainChutesDeployPyros("Main-Chutes-Deploy-Pyros", Panelsdk),
+	MainChutesDeployPyrosFeeder("Main-Chutes-Deploy-Pyros-Feeder", Panelsdk),
+	MainChutesReleasePyros("Main-Chutes-Release-Pyros", Panelsdk),
+	MainChutesReleasePyrosFeeder("Main-Chutes-Release-Pyros-Feeder", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
@@ -1853,6 +1861,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		SII_EmptyMass = ftcp;
 		SII_MassLoaded = true;
 	}
+	else if (!strnicmp(line, "INTERSTAGE", 10)) {
+		sscanf(line + 10, "%f", &ftcp);
+		Interstage_Mass = ftcp;
+	}
 	else if (!strnicmp(line, "T1V", 3)) {
         sscanf (line + 3, "%f", &ftcp);
 		THRUST_FIRST_VAC = ftcp;
@@ -2705,20 +2717,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Docking radar sound only for CSM_LEM_STAGE when nothing docked
-	//
-
-	if (stage == CSM_LEM_STAGE) {
-		if (!dockingprobe.IsDocked())
-			soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
-		else
-			soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	}
-	else {
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	}
-
-	//
 	// Destroy obsolete stages
 	//
 
@@ -2974,6 +2972,12 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				return 1;
 			case OAPI_KEY_V: // Change Sextant View Mode to DualView
 				optics.SextDualView = !optics.SextDualView;
+				return 1;
+			case OAPI_KEY_MINUS:
+				MoveTHC(true);
+				return 1;
+			case OAPI_KEY_EQUALS:
+				MoveTHC(false);
 				return 1;
 		}
 	}else{
@@ -3492,27 +3496,13 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	// Do stage-specific processing.
 	//
 
-	bool deploy = false;
-
 	switch (stage) {
 	case CSM_LEM_STAGE:
 		StageSix(simt);
 		break;
 
 	case CM_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail) {
-			// Deactivate Auto RCS Enable Relays
-			secs.MESCA.SetAutoRCSEnableRelay(false);
-			secs.MESCB.SetAutoRCSEnableRelay(false);
-			
-			// Deploy apex cover
-			deploy = true;
-		}
-
-		if (ELSActive() && ApexCoverJettSwitch.GetState())
-			deploy = true;
-
-		if (deploy && PyrosArmed()) {
+		if (ApexCoverPyros.Blown()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 
@@ -3525,19 +3515,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail) {
-			// Deactivate Auto RCS Enable Relays
-			secs.MESCA.SetAutoRCSEnableRelay(false);
-			secs.MESCB.SetAutoRCSEnableRelay(false);
-			
-			// Deploy apex cover
-			deploy = true;
-		}
-
-		if (ELSActive() && ApexCoverJettSwitch.GetState())
-			deploy = true;
-
-		if (deploy && PyrosArmed())	{
+		if (ApexCoverPyros.Blown()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
@@ -3545,13 +3523,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.DrogueFail && ChutesAttached)
-			deploy = true;
-
-		if (ELSActive() && DrogueDeploySwitch.GetState()) 
-			deploy = true;
-
-		if (deploy && PyrosArmed()) {
+		if (DrogueChutesDeployPyros.Blown()) {
 			DrogueS.play();
 			DrogueS.done();
 
@@ -3578,7 +3550,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:	// Drogue chute is attached
-		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
+		if (MainChutesDeployPyros.Blown() && ChutesAttached) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			DetachChild(ah, 1);
@@ -3600,7 +3572,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			NextMissionEventTime = MissionTime + 1.;
 		}
 		// Landing
-		if (GetAltitude() < 2.5) {
+		if (GetAltitude(ALTMODE_GROUND) < 2.5) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			DetachChild(ah);
@@ -3629,7 +3601,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_SIX:	// Main chute is attached		
-		if (!SplashdownPlayed && GetAltitude() < 2.5) {
+		if (!SplashdownPlayed && GetAltitude(ALTMODE_GROUND) < 2.5) {
 			SplashS.play(NOLOOP, 180);
 			SplashS.done();
 
@@ -3641,7 +3613,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			//
 			eventControl.SPLASHDOWN = MissionTime;
 		}
-		if ((MainReleasePyroACircuitBraker.IsPowered() || MainReleasePyroBCircuitBraker.IsPowered()) && ChutesAttached && ELSActive() && MainReleaseSwitch.IsUp()) {
+		if (MainChutesReleasePyros.Blown() && ChutesAttached) {
 			// Detach Main 
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			if (GetAttachmentStatus(ah) != NULL) {
@@ -4140,6 +4112,40 @@ void Saturn::FirePitchControlMotor()
 	}
 
 	FirePCM = true;
+}
+
+void Saturn::MoveTHC(bool dir)
+{
+	if (dir)
+	{
+		if (THCRotary.IsCounterClockwise())
+		{
+			//Do Nothing
+		}
+		else if (THCRotary.IsClockwise())
+		{
+			THCRotary.SwitchTo(1);
+		}
+		else
+		{
+			THCRotary.SwitchTo(3);
+		}
+	}
+	else
+	{
+		if (THCRotary.IsCounterClockwise())
+		{
+			THCRotary.SwitchTo(1);
+		}
+		else if (THCRotary.IsClockwise())
+		{
+			//Do Nothing
+		}
+		else
+		{
+			THCRotary.SwitchTo(2);
+		}
+	}
 }
 
 //

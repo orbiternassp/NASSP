@@ -67,6 +67,7 @@ private:
 	bool S2_Startup;								// S2 Engine Start
 	bool directstagereset;							// Direct Stage Reset
 	bool AutoAbortInitiate;
+	bool IGM_Failed;
 	
 	// These are variables that are not really part of the LVDC software.
 	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
@@ -181,7 +182,7 @@ private:
 	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double ROVR;									// Constant for baising terminal-range-angle during out-of-orbit burn
 	double mu;										// Product of G and Earth's mass
-	double phi_L;									// Geodetic latitude of launch site: cos
+	double phi_L;									// Geodetic latitude of launch site
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double dotM_2R;									// Mass flow rate of S4B before presumed MRS during out-of-orbit burn

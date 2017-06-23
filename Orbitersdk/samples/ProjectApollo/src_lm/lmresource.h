@@ -221,7 +221,6 @@
 #define AID_LGC_THRUSTER_QUADS          432
 #define AID_RCS_SYSTEMA_SYSTEMB         433
 #define AID_MAIN_SOV_SWITCHES           434
-#define AID_LANDING_GEAR_SWITCH         435
 #define AID_ENGINE_GIMBAL_SWITCH        436
 #define AID_ASCENT_HE                   437
 #define AID_EXPLOSIVE_DEVICES2          438
@@ -756,6 +755,9 @@
 #define IDB_ORDEAL_PANEL				1029
 #define IDB_TW_NEEDLE					1030
 #define AID_THRUST_WEIGHT_INDICATOR		1031
+#define IDB_SEQ_LIGHT					1032
+#define AID_SEQ_LIGHT1					1033
+#define AID_SEQ_LIGHT2					1034
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

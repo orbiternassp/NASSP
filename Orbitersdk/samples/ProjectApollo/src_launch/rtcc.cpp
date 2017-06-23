@@ -28,7 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
@@ -2634,10 +2633,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
+		double GETbase;
 
+		GETbase = getGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form);
+		NavCheckPAD(sv, *form, GETbase);
 
 		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
 		if (upString != NULL) {
@@ -2652,11 +2653,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv_A, sv_P;
+		double GETbase;
+
+		GETbase = getGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
-		NavCheckPAD(sv_A, *form);
+		NavCheckPAD(sv_A, *form, GETbase);
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv_A, true, AGCEpoch), CMCStateVectorUpdate(sv_P, false, AGCEpoch));
 		if (upString != NULL) {
@@ -4418,11 +4422,13 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	}
 	else
 	{
+		int n = 0;
+
 		dt = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
 
 		dt2 = dt + 10.0;							//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
 
-		while (abs(dt2 - dt) > 0.1)					//0.1 seconds accuracy should be enough
+		while (abs(dt2 - dt) > 0.1 && n <= 20)					//0.1 seconds accuracy should be enough
 		{
 			c1 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt, opt->DH, gravref);		//c is the difference between desired and actual DH
 			c2 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt2, opt->DH, gravref);
@@ -4430,6 +4436,7 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 			dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
 			dt = dt2;
 			dt2 = dt2_apo;
+			n++;
 		}
 
 		CDHtime_cor = dt2 + (SVMJD - opt->GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
@@ -4595,11 +4602,19 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t
 
 	R_LSA = _V(cos(opt->lng)*cos(opt->lat), sin(opt->lng)*cos(opt->lat), sin(opt->lat))*(oapiGetSize(hMoon) + opt->alt);
 	h_DP = 50000.0*0.3048;
-	theta_F = 15.0*RAD;
+	theta_F = opt->PeriAng;
 	t_F = 718.0;
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	if (opt->opt == 0)
+	{
+		OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+	else
+	{
+		OrbMech::LunarLandingPrediction2(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, 1.0, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+
 	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
 
 	SV sv_tig;
@@ -5796,20 +5811,29 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 	return str;
 }
 
-void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
+void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
 {
 	double lat, lng, alt, navcheckdt;
 	VECTOR3 R1, V1;
+	OBJHANDLE outgrav = NULL;
 	
-	navcheckdt = 30 * 60;
+	if (GET == 0.0)
+	{
+		navcheckdt = 30 * 60;
+		pad.NavChk[0] = (sv.MJD - GETbase)*24.0*3600.0 + navcheckdt;
+	}
+	else
+	{
+		navcheckdt = GET - (sv.MJD - GETbase)*24.0*3600.0;
+		pad.NavChk[0] = GET;
+	}
 
-	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, sv.gravref);
-	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, sv.gravref, lat, lng, alt);
+	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, outgrav);
+	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, outgrav, lat, lng, alt);
 
 	pad.alt[0] = alt / 1852.0;
 	pad.lat[0] = lat*DEG;
 	pad.lng[0] = lng*DEG;
-	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0 + navcheckdt;
 }
 
 void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)
@@ -7471,4 +7495,67 @@ bool RTCC::TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P
 	FreeReturnInclination = acos(H_geo.z / length(H_geo));
 
 	return true;
+}
+
+void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
+{
+	VECTOR3 R_LS;
+	double lat, lng, r, dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF;
+	SV sv_P, sv_TPI;
+	OBJHANDLE hMoon;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	if (opt->useSV)
+	{
+		sv_P = opt->RV_MCC;
+	}
+	else
+	{
+		sv_P = StateVectorCalc(opt->target);
+	}
+
+	theta_F = 130.0*RAD;
+	dt_1 = 7.0*60.0 + 15.0;
+	h_1 = 60000.0*0.3048;
+	theta_1 = 10.0*RAD;
+	theta_Ins = 17.0*RAD;
+	DH = 15.0*1852.0;
+	E = 26.6*RAD;
+
+	t_CSI = 0;
+	t_CDH = 0;
+
+	opt->vessel->GetEquPos(lng, lat, r);
+
+	R_LS = OrbMech::r_from_latlong(lat, lng, r);
+
+	if (opt->opt == 0)
+	{
+		double ttoMidnight;
+		OBJHANDLE hSun;
+
+		hSun = oapiGetObjectByName("Sun");
+
+		sv_TPI = coast(sv_P, (opt->GETbase - sv_P.MJD)*24.0*3600.0 + opt->t_TPIguess);
+
+		ttoMidnight = OrbMech::sunrise(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, hMoon, hSun, 1, 1, false);
+		t_TPI = opt->t_TPIguess + ttoMidnight;
+
+		OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
+	}
+	else
+	{
+		t_TPI = opt->t_TPIguess;
+
+		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+	}
+	res->t_L = t_IG;
+	res->t_Ins = t_IG + dt_1;
+	res->t_CSI = t_CSI;
+	res->t_CDH = t_CDH;
+	res->t_TPI = t_TPI;
+	res->t_TPF = t_TPF;
+	res->v_LH = v_LH;
+	res->v_LV = v_LV;
 }

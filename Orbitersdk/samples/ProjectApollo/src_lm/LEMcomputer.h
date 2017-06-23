@@ -33,7 +33,8 @@
 // used.
 //
 
-class Saturn;
+class LEM;
+
 ///
 /// \ingroup AGC
 /// LEM AGC
@@ -44,7 +45,7 @@ class LEMcomputer: public ApolloGuidance
 {
 public:
 
-	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
+	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
 	virtual ~LEMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -112,9 +113,8 @@ protected:
 	double timetoapproach;
 	int    flags;
 
-	Saturn *sat;
+	LEM *lem;
 };
-class LEM;
 
 // *** LM OPTICS ***
 // I guess this can go here; it doesn't really warrant its own file, and it's part of GNC, so...

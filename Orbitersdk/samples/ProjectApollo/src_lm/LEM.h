@@ -31,11 +31,15 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-// DS20060730 Include LM SCS
+#include "dsky.h"
+#include "imu.h"
+#include "cdu.h"
 #include "lmscs.h"
-// DS20090905 Include LM AGS and telecom
 #include "lm_ags.h"
 #include "lm_telecom.h"
+#include "pyro.h"
+#include "lm_eds.h"
+#include "lm_aps.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -197,19 +201,6 @@ public:
 	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
 
-// EXPLOSIVE DEVICES SYSTEM
-class LEM_EDS{
-public:
-	LEM_EDS();							// Cons
-	void Init(LEM *s); // Init
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep();
-	LEM *lem;					// Pointer at LEM
-	bool LG_Deployed;           // Landing Gear Deployed Flag	
-};
-
-
 // Landing Radar
 class LEM_LR : public e_object{
 public:
@@ -249,23 +240,21 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	double GetAntennaTempF();
-	void RRTrunionDrive(int val,ChannelValue ch12);
-	void RRShaftDrive(int val, ChannelValue ch12);
-	double GetRadarTrunnionVel() { return trunnionVel ; } ;
+	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos() { return trunnionAngle ; } ;
+	double GetRadarTrunnionPos();
 	double GetRadarShaftPos() { return shaftAngle ; } ;
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
+	double GetSignalStrength() { return SignalStrength*4.0; }
+	double GetShaftErrorSignal();
+	double GetTrunnionErrorSignal();
 	
 	bool IsPowered(); 
 	bool IsDCPowered(); 
 	bool IsRadarDataGood() { return radarDataGood;};
 
 private:
-	void CalculateRadarData(double &pitch, double &yaw);
-	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
-	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
@@ -278,18 +267,21 @@ private:
 	int    isTracking;
 	bool   radarDataGood;
 	double trunnionAngle;
-	double trunnionMoved;
 	double shaftAngle;
-	double shaftMoved;
-	double lastTrunnionAngle;
-	double lastShaftAngle;
 	double trunnionVel;
 	double shaftVel;
 	double range;
 	double rate;
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
-
+	int mode;					//Mode I = false, Mode II = true
+	double hpbw_factor;			//Beamwidth factor
+	double SignalStrength;
+	double SignalStrengthQuadrant[4];
+	VECTOR3 U_RRL[4];
+	bool AutoTrackEnabled;
+	double ShaftErrorSignal;
+	double TrunnionErrorSignal;
 };
 
 
@@ -330,13 +322,8 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimeStep(double simdt);
 	void GetVelocities(double &vx, double &vy);
-	void SetForwardVelocity(int val, ChannelValue ch12);
-	void SetLateralVelocity(int val, ChannelValue ch12);
-	void ZeroLGCVelocity() {lgc_forward = 0.0;lgc_lateral = 0.0;}
 
 	bool IsPowered();
-
-	bool lgcErrorCountersEnabled;
 protected:
 	LEM *lem;
 	e_object *dc_source;
@@ -413,12 +400,14 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
+
+	void ThrottleActuator(double pos);
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
 	bool thrustOn;				// Engine "On" Command
-	bool thrustOff;				// Engine "Off" Command
 	bool engArm;				// Engine Arm Command
+	bool engPreValvesArm;		// Engine Prevalves Arm Command
 	double thrustcommand;		// DPS Thrust Command
 
 	DPSGimbalActuator pitchGimbalActuator;
@@ -428,20 +417,6 @@ protected:
 
 	THRUSTER_HANDLE *dpsThruster;
 	
-};
-
-// Ascent Engine
-class LEM_APS{
-public:
-	LEM_APS();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	
-	LEM *lem;					// Pointer at LEM
-	double HePress[2];			// Helium pressure above and below the regulator
-	bool thrustOn;				// Engine "On" Command
 };
 
 ///
@@ -579,6 +554,7 @@ public:
 		SRF_ORDEAL_PANEL,
 		SRF_ORDEAL_ROTARY,
 		SRF_TW_NEEDLE,
+		SRF_SEQ_LIGHT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -597,8 +573,6 @@ public:
 	void SetLmLandedMesh();
 	void SetGimbal(bool setting);
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
-	void AbortStage();
-	void StartAscent();
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
@@ -740,7 +714,6 @@ protected:
 	// void GetDockStatus();
 
 	bool CabinFansActive();
-	bool AscentEngineArmed();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -771,9 +744,8 @@ protected:
 
 	SwitchRow AbortSwitchesRow;
 
-	PushSwitch AbortSwitch;
-	PushSwitch AbortStageSwitch;
-	bool AbortStageSwitchLight;
+	LMAbortButton AbortSwitch;
+	LMAbortStageButton AbortStageSwitch;
 
 	
 	SwitchRow RRGyroSelSwitchRow;
@@ -832,7 +804,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	AGCIOSwitch THRContSwitch;
+	ToggleSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;
@@ -1026,6 +998,7 @@ protected:
 
 	SwitchRow RaderSignalStrengthMeterRow;
 	DCVoltMeter RadarSignalStrengthMeter;
+	RadarSignalStrengthAttenuator RadarSignalStrengthAttenuator;
 
 
 	/////////////////
@@ -1204,7 +1177,7 @@ protected:
 	ToggleSwitch EDHePressRCS;
 	ToggleSwitch EDHePressDesStart;
 	ToggleSwitch EDHePressASC;
-	ToggleSwitch EDStage;
+	GuardedToggleSwitch EDStage;
 	ToggleSwitch EDStageRelay;
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
@@ -1239,16 +1212,6 @@ protected:
 	bool Cswitch7;
 	bool Cswitch8;
 	bool Cswitch9;
-
-	bool Sswitch1;
-	bool Sswitch2;
-	bool Sswitch3;
-	bool Sswitch4;
-	bool Sswitch5;
-	bool Sswitch6;
-	bool Sswitch7;
-	bool Sswitch8;
-	bool Sswitch9;
 
 	bool LPswitch1;
 	bool LPswitch2;
@@ -1372,7 +1335,7 @@ protected:
 	SwitchRow EPSLeftControlArea;
 	PowerStateRotationalSwitch EPSMonitorSelectRotary;
 	LEMInverterSwitch EPSInverterSwitch;
-	ThreePosSwitch EPSEDVoltSelect;
+	ThreeSourceSwitch EPSEDVoltSelect;
 
 	SwitchRow DSCHiVoltageSwitchRow;
 	LEMBatterySwitch DSCSEBat1HVSwitch;
@@ -1595,13 +1558,10 @@ protected:
 	bool ABORT_IND;
 	bool ENGIND[7];
 
-	double countdown;
-
 	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;
 	bool HatchOpen;
-	bool bManualSeparate;
 	bool ToggleEva;
 	bool CDREVA_IP;
 
@@ -1610,7 +1570,6 @@ protected:
 
 	int	viewpos;
 	
-	bool startimer;
 	bool ContactOK;
 	bool SoundsLoaded;
 
@@ -1648,8 +1607,19 @@ protected:
 	LEMcomputer agc;
 	Boiler *imuheater; // IMU Standby Heater
 	h_Radiator *imucase; // IMU Case
-	IMU imu;	
+	IMU imu;
+	CDU tcdu;
+	CDU scdu;
 	LMOptics optics;
+
+	//Pyros
+
+	Pyro LandingGearPyros;
+	Pyro StagingBoltsPyros;
+	Pyro StagingNutsPyros;
+	Pyro CableCuttingPyros;
+	PowerMerge LandingGearPyrosFeeder;
+	PowerMerge CableCuttingPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1741,6 +1711,10 @@ protected:
 	// Lunar Stay Battery
 	Battery *LunarBattery;
 
+	// ED Batteries
+	Battery *EDBatteryA;
+	Battery *EDBatteryB;
+
 	// Bus Tie Blocks (Not real objects)
 	LEM_BusFeed BTB_CDR_A;
 	LEM_BusFeed BTB_CDR_B;
@@ -1779,6 +1753,10 @@ protected:
 	DCbus CDRs28VBus;
 	DCbus LMPs28VBus;
 
+	// ED 28V DC busses
+	DCbus ED28VBusA;
+	DCbus ED28VBusB;
+
 	// AC Bus A and B
 	// This is a cheat. the ACbus class actually simulates an inverter, which is bad for the LM.
 	// So we fake it out with a DC bus instead.
@@ -1800,6 +1778,9 @@ protected:
 	GASTA gasta;
 	ORDEAL ordeal;
 	MechanicalAccelerometer mechanicalAccelerometer;
+	SCCA1 scca1;
+	SCCA2 scca2;
+	SCCA3 scca3;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1829,6 +1810,7 @@ protected:
 	// Friend classes
 	friend class ATCA;
 	friend class LEM_EDS;
+	friend class LEM_EDRelayBox;
 	friend class LEMcomputer;
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
@@ -1863,11 +1845,17 @@ protected:
 	friend class LEM_DPS;
 	friend class LEM_APS;
 	friend class DECA;
+	friend class SCCA1;
+	friend class SCCA2;
+	friend class SCCA3;
 	friend class CommandedThrustInd;
 	friend class EngineThrustInd;
 	friend class ThrustWeightInd;
 	friend class CrossPointer;
 	friend class LEMPanelOrdeal;
+	friend class LMAbortButton;
+	friend class LMAbortStageButton;
+	friend class RadarSignalStrengthAttenuator;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

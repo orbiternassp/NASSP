@@ -40,7 +40,10 @@
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
 #include "FDAI.h"
+#include "dsky.h"
 #include "iu.h"
+#include "cdu.h"
+#include "IMU.h"
 #include "satswitches.h"
 #include "powersource.h"
 #include "dockingprobe.h"
@@ -266,6 +269,18 @@ typedef struct {
 typedef struct {
 	double BusAVoltage;
 	double BusBVoltage;
+	bool CMRCSPressureSignalA;
+	bool CMSMSepRelayCloseA;
+	bool SLASepRelayA;
+	bool RCSActivateSignalA;
+	bool EDSAbortLogicOutputA;
+	bool FwdHeatshieldJettA;
+	bool CMRCSPressureSignalB;
+	bool CMSMSepRelayCloseB;
+	bool SLASepRelayB;
+	bool RCSActivateSignalB;
+	bool EDSAbortLogicOutputB;
+	bool FwdHeatshieldJettB;
 } SECSStatus;
 
 ///
@@ -936,6 +951,11 @@ public:
 	/// 
 	virtual void SwitchSelector(int item) = 0;
 
+	///
+	/// \brief Has an abort been initiated?
+	///
+	bool GetAbort() { return secs.BECO(); };
+
 	//
 	// CWS functions.
 	//
@@ -990,13 +1010,6 @@ public:
 	/// \brief Check SM systems state.
 	///
 	void CheckSMSystemsState();
-
-	///
-	/// Check whether the pyros are armed.
-	/// \brief Are pyros armed?
-	/// \return True if armed, false if not.
-	///
-	bool PyrosArmed();
 
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
@@ -1244,20 +1257,6 @@ protected:
 	/// \brief Set the LV Rate light.
 	///
 	void ClearLVRateLight();
-
-	///
-	/// Check whether the Earth Landing System is active.
-	/// \brief Is ELS Active?
-	/// \return True if active, false if not.
-	///
-	bool ELSActive();
-
-	///
-	/// Check whether the Earth Landing System is in AUTO mode.
-	/// \brief Is ELS in AUTO?
-	/// \return True if AUTO, false if not.
-	///
-	bool ELSAuto();
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
@@ -3613,8 +3612,11 @@ protected:
 	DSKY dsky2;
 	CSMcomputer agc;	
 	IMU imu;
+	CDU tcdu;
+	CDU scdu;
 	IU iu;
 	CSMCautionWarningSystem cws;
+
 	DockingProbe dockingprobe;
 	SECS secs;
 	ELS els;
@@ -3622,9 +3624,17 @@ protected:
 	Pyro CMSMPyros;
 	Pyro CMDockingRingPyros;
 	Pyro CSMLVPyros;
+	Pyro ApexCoverPyros;
+	Pyro DrogueChutesDeployPyros;
+	Pyro MainChutesDeployPyros;
+	Pyro MainChutesReleasePyros;
 	PowerMerge CMSMPyrosFeeder;
 	PowerMerge CMDockingRingPyrosFeeder;
 	PowerMerge CSMLVPyrosFeeder;
+	PowerMerge ApexCoverPyrosFeeder;
+	PowerMerge DrogueChutesDeployPyrosFeeder;
+	PowerMerge MainChutesDeployPyrosFeeder;
+	PowerMerge MainChutesReleasePyrosFeeder;
 
 
 	//
@@ -3891,6 +3901,7 @@ protected:
 	void FireLaunchEscapeMotor();
 	void FireTowerJettisonMotor();
 	void FirePitchControlMotor();
+	void MoveTHC(bool dir);
 	void AttitudeLaunchSIVB();
 	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 
@@ -4333,6 +4344,8 @@ protected:
 	friend class MESC;
 	friend class RCSC;
 	friend class ELS;
+	friend class ELSC;
+	friend class PCVB;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;
 	friend class MinImpulseHandcontrollerSwitch;

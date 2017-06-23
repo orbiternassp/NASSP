@@ -445,6 +445,26 @@ protected:
 	ToggleSwitch* startbutton;
 };
 
+class LMAbortButton : public ToggleSwitch {
+public:
+	LMAbortButton() {};
+	bool CheckMouseClick(int event, int mx, int my);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
+protected:
+	LEM *lem;
+};
+
+class LMAbortStageButton : public GuardedToggleSwitch {
+public:
+	LMAbortStageButton();
+
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
+	bool CheckMouseClick(int event, int mx, int my);
+	void DrawSwitch(SURFHANDLE DrawSurface);
+protected:
+	LEM *lem;
+};
+
 class LEMPanelOrdeal : public MeterSwitch {
 public:
 	void Init(SwitchRow &row, LEM *l);
@@ -456,4 +476,14 @@ public:
 
 protected:
 	LEM *lem;
+};
+
+class RadarSignalStrengthAttenuator : public VoltageAttenuator {
+public:
+	RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	void Init(LEM* l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum);
+	double GetValue();
+protected:
+	LEM *lem;
+	RotationalSwitch *TestMonitorRotarySwitch;
 };

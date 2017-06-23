@@ -38,8 +38,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "dsky.h"
-#include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
 #include "saturn1b.h"
@@ -2791,6 +2789,7 @@ LVDC::LVDC(){
 	directstagereset = false;
 	AutoAbortInitiate = false;
 	TwoEngOutAutoAbortDeactivate = false;
+	IGM_Failed = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -3223,6 +3222,7 @@ void LVDC::Init(Saturn* vs){
 	directstagereset = true;
 	AutoAbortInitiate = false;
 	TwoEngOutAutoAbortDeactivate = false;
+	IGM_Failed = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3545,6 +3545,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
 	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
+	oapiWriteScenario_int(scn, "LVDC_IGM_Failed", IGM_Failed);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
@@ -4211,6 +4212,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
 		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
+		papiReadScenario_bool(line, "LVDC_IGM_Failed", IGM_Failed);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
@@ -4880,7 +4882,12 @@ void LVDC::TimeStep(double simt, double simdt) {
 		switch(LVDC_Timebase){//this is the sequential event control logic
 			case -1: // LOOP WAITING FOR PTL
 				// Limit time accel to 100x
-				if(oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
+				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
+				// Orbiter 2016 fix
+				// Force GetWeightVector() to the correct value at LVDC initiation
+				if (simt > 1 && simt < 2) {
+					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+				}
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
@@ -4917,8 +4924,6 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
-
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 					break;
 				}			
 
@@ -5051,8 +5056,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
 				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
-				if(owner->MissionTime > 125.9){ 
-					// Apollo 11
+				if(owner->MissionTime > 125.9){
+					//Apollo 11
 					owner->SwitchSelector(16);
 					if (!S1_Engine_Out)
 					{
@@ -5127,7 +5132,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				// IECO
-				/*if (LVDC_TB_ETime >= 30.7)
+				/*if (LVDC_TB_ETime >= 299.0)
 				{
 					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false && owner->GetApolloNo() >= 10)
 					{
@@ -5304,7 +5309,9 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) || owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO()))
+				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) 
+					|| owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO() 
+					|| (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBCutoff))))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;//-simdt;
@@ -5687,6 +5694,19 @@ void LVDC::TimeStep(double simt, double simdt) {
 				R = length(PosS);
 				V = length(DotS);
 
+				if (OrbNavCycle == 1) //State Vector update
+				{
+					VECTOR3 pos, vel;
+					MATRIX3 mat;
+					double day;
+					modf(oapiGetSimMJD(), &day);
+					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
+					owner->GetRelativePos(owner->GetGravityRef(), pos);
+					owner->GetRelativeVel(owner->GetGravityRef(), vel);
+					PosS = mul(mat, pos);
+					DotS = mul(mat, vel);
+				}
+
 				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
 				R = pow(pow(PosS.x, 2) + pow(PosS.y, 2) + pow(PosS.z, 2), 0.5);
 				V = pow(pow(DotS.x, 2) + pow(DotS.y, 2) + pow(DotS.z, 2), 0.5);
@@ -5724,7 +5744,21 @@ GuidanceLoop:
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
 			if(TAS - TB7<0){
 				if(TAS - TB5 < TI5F2){ goto minorloop; }
-				if(TAS - TB6 - T_IGM<0){goto restartprep;}else{goto IGM;};
+				if(TAS - TB6 - T_IGM<0)
+				{
+					goto restartprep;
+				}
+				else
+				{
+					if (!IGM_Failed)
+					{
+						goto IGM;
+					}
+					else
+					{
+						goto minorloop;
+					}
+				};
 			}else{
 				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
 			}
@@ -5995,6 +6029,14 @@ chitilde:	Pos4 = mul(MX_G,PosS);
 
 			Lt_3 = V_ex3 * log(tau3 / (tau3-Tt_3));
 			fprintf(lvlog,"Lt_3 = %f, tau3 = %f, Tt_3 = %f\r\n",Lt_3,tau3,Tt_3);
+
+			if (isnan(Lt_3))
+			{
+				IGM_Failed = true;
+				owner->SetLVGuidLight();
+				fprintf(lvlog, "IGM Error Detected! \r\n");
+				goto minorloop;
+			}
 
 			Jt_3 = (Lt_3 * tau3) - (V_ex3 * Tt_3);
 			fprintf(lvlog,"Jt_3 = %f",Jt_3);
@@ -6543,7 +6585,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 
 restartprep:
 		{
-			// TLI restart & targeting logic; TBD;
+			// TLI restart & targeting logic;
+
+			//Manual TB6 Initiation
+			if (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+			{
+				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
+				goto INHcheck;
+			}
 
 			//Determine if XLUNAR-INHIBIT
 			if (GATE0)	//Restart prep enabled?

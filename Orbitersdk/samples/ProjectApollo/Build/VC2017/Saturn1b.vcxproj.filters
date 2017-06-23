@@ -183,6 +183,12 @@
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\cdu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -317,10 +323,13 @@
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_launch\mcc.h">
+    <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h">
+    <ClInclude Include="..\..\src_sys\DelayTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\cdu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

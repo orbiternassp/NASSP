@@ -35,10 +35,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 
 #include "saturn.h"
 #include "saturnv.h"
@@ -440,16 +438,43 @@ void SaturnV::SetFirstStage ()
 
 	ClearMeshes();
 	UINT meshidx;
-	double TCP=-101.5+STG0O-TCPO;
-	static const DWORD ntdvtx = 4;
+	double TCP = -101.5 + STG0O - TCPO;
+	
+	double Mass = Stage1Mass + SI_FuelMass;
+	double ro = 30;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.5;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+	    td[i].damping = damping;
+	    td[i].mu = 3;
+	    td[i].mu_lng = 3;
+	    td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = TCP;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = TCP;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = TCP;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = 15 * ro;
+	
+	SetTouchdownPoints(td, 4);
+	
+    /*static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
 		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
 		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
 		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
 		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
 	 };
-	SetTouchdownPoints(tdvtx, ntdvtx);
-	//SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
+	SetTouchdownPoints(tdvtx, ntdvtx);*/
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);

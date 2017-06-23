@@ -33,7 +33,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "IMU.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
@@ -42,7 +41,7 @@
 
 #include "lm_channels.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : ApolloGuidance(s, display, im, p)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : ApolloGuidance(s, display, im, sc, tc, p)
 
 {
 
@@ -129,7 +128,25 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
 {
-	GenericTimestep(simt, simdt);
+	// Do single timesteps to maintain sync with telemetry engine
+	SingleTimestepPrep(simt, simdt);        // Setup
+	if (LastCycled == 0) {					// Use simdt as difference if new run
+		LastCycled = (simt - simdt);
+		lem->VHF.last_update = LastCycled;
+	}
+	double ThisTime = LastCycled;			// Save here
+
+	long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
+	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
+	long x = 0;
+	while (x < cycles) {
+		SingleTimestep();
+		ThisTime += 0.00001171875;								// Add time
+		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
+			lem->VHF.TimeStep(ThisTime);						// do it
+		}
+		x++;
+	}
 }
 
 void LEMcomputer::Run ()
@@ -148,7 +165,7 @@ void LEMcomputer::Run ()
 void LEMcomputer::Timestep(double simt, double simdt)
 
 {
-	LEM *lem = (LEM *) OurVessel;
+	lem = (LEM *) OurVessel;
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
@@ -179,7 +196,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.ExtraCode = 0;
 			vagc.ExtraDelay = 0;
 			// No idea about the interrupts/pending/etc so we reset those
-			vagc.AllowInterrupt = 0;
+			vagc.AllowInterrupt = 1;
 			vagc.PendFlag = 0;
 			vagc.PendDelay = 0;
 			// Don't disturb erasable core
@@ -187,13 +204,12 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Reset standby flip-flop
 			vagc.Standby = 0;
 			// Turn on EL display and LGC Light (DSKYWarn).
+			vagc.DskyChannel163 = 1;
 			SetOutputChannel(0163, 1);
 			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
 			// Those two bits are what causes the CWEA to notice.
-			InputChannel[033] &= 037777;
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			vagc.Ch33Switches &= 037777;
 			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
@@ -201,6 +217,10 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.RestartLight = 1;
 			dsky.ClearRestart();
 			dsky.ClearStby();
+			// Reset last cycling time
+			LastCycled = 0;
+			// We should issue telemetry though.
+			lem->VHF.TimeStep(simt);
 
 		// and do nothing more.
 		return;
@@ -316,7 +336,7 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 
 void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -328,12 +348,12 @@ void LEMcomputer::ProcessChannel140(ChannelValue val) {
 	else
 	{
 		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel141(ChannelValue val) {
 
-	ChannelValue val12;
+	/*ChannelValue val12;
 	val12 = GetOutputChannel(012);
 	LEM *lem = (LEM *) OurVessel;
 
@@ -345,7 +365,7 @@ void LEMcomputer::ProcessChannel141(ChannelValue val) {
 	else
 	{
 		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}
+	}*/
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
@@ -399,22 +419,6 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_z = 0;
 			}
 			lem->atca.lgc_err_ena = 0;
-		}
-
-		// Reset cross pointer needles
-		if (val12[DisplayInertialData]) {
-			if (val12[EnableRRCDUErrorCounter]) {
-				if (!lem->crossPointerLeft.lgcErrorCountersEnabled) {	//Dirty hack: voltage for cross pointers originates in RRCDU, the displays just get the voltages
-					lem->crossPointerLeft.ZeroLGCVelocity();
-					lem->crossPointerRight.ZeroLGCVelocity();
-					lem->crossPointerLeft.lgcErrorCountersEnabled = true;
-					lem->crossPointerRight.lgcErrorCountersEnabled = true;
-				}
-			}
-			else {
-				lem->crossPointerLeft.lgcErrorCountersEnabled = false;
-				lem->crossPointerRight.lgcErrorCountersEnabled = false;
-			}
 		}
 
 		break;

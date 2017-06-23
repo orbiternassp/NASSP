@@ -38,7 +38,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "LEMcomputer.h"
-#include "IMU.h"
+#include "lm_channels.h"
 
 #include "LEM.h"
 
@@ -1380,6 +1380,100 @@ bool EngineStopButton::Push()
 	return false;
 }
 
+bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		if (state == 0) {
+			SwitchTo(1, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+		}
+		else if (state == 1) {
+			SwitchTo(0, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+		}
+	}
+	return true;
+}
+
+void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+LMAbortStageButton::LMAbortStageButton() 
+{ 
+	lem = 0; 
+};
+
+void LMAbortStageButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if (guardState) {
+		DoDrawSwitch(DrawSurface);
+	}
+	else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+	}
+}
+
+bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardWidth &&
+			my >= guardY && my <= guardY + guardHeight) {
+			if (guardState) {
+				Guard();
+			}
+			else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN)) {
+		if (guardState) {
+
+
+			if (!visible) return false;
+			if (mx < x || my < y) return false;
+			if (mx >(x + width) || my >(y + height)) return false;
+
+			if (state == 0) {
+				SwitchTo(1);
+				Sclick.play();
+			}
+			else if (state == 1) {
+				SwitchTo(0);
+				Sclick.play();
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
 void LEMPanelOrdeal::Init(SwitchRow &row, LEM *l) {
 	MeterSwitch::Init(row);
 	lem = l;
@@ -1394,4 +1488,46 @@ void LEMPanelOrdeal::SetState(int value) {
 	if (value == 0) value = -1;
 
 	lem->ordealEnabled = value;
+}
+
+RadarSignalStrengthAttenuator::RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut) :
+	VoltageAttenuator(i_name, minIn, maxIn, minOut, maxOut)
+{
+}
+
+void RadarSignalStrengthAttenuator::Init(LEM *l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum)
+{
+	lem = l;
+	TestMonitorRotarySwitch = testmonitorselectorswitch;
+
+	WireTo(Instrum);
+}
+
+double RadarSignalStrengthAttenuator::GetValue()
+{
+	double val = 0.0;
+
+	switch (TestMonitorRotarySwitch->GetState())
+	{
+	case 0:	//ALT XMTR
+		val = 0.0;
+		break;
+	case 1:	//VEL XMTR
+		val = 0.0;
+		break;
+	case 2:	//AGC
+		val = lem->RR.GetSignalStrength();
+		break;
+	case 3:	//XMTR PWR
+		val = 0.0;
+		break;
+	case 4:	//SHAFT ERR
+		val = lem->RR.GetShaftErrorSignal();
+		break;
+	case 5:	//TRUN ERR
+		val = lem->RR.GetTrunnionErrorSignal();
+		break;
+	}
+
+	return val;
 }

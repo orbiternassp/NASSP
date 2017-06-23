@@ -34,7 +34,6 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "IMU.h"
@@ -561,8 +560,12 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 		}
 	}
 
-	if (g_Data.progVessel && g_Data.killrot) {
+	if (g_Data.progVessel && g_Data.killrot && g_Data.progVessel == g_Data.vessel) {
 		g_Data.progVessel->SetAngularVel(_V(0, 0, 0));
+	}
+
+	if (g_Data.gorpVessel && g_Data.killrot && g_Data.gorpVessel == g_Data.vessel) {
+		g_Data.gorpVessel->SetAngularVel(_V(0, 0, 0));
 	}
 
 }

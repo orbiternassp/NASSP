@@ -36,7 +36,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -186,7 +185,11 @@ void Saturn::SystemsInit() {
 	// Pyros
 	CMSMPyros.WireTo(&CMSMPyrosFeeder);  
 	CMDockingRingPyros.WireTo(&CMDockingRingPyrosFeeder);
-	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);	 
+	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);
+	ApexCoverPyros.WireTo(&ApexCoverPyrosFeeder);
+	DrogueChutesDeployPyros.WireTo(&DrogueChutesDeployPyrosFeeder);
+	MainChutesDeployPyros.WireTo(&MainChutesDeployPyrosFeeder);
+	MainChutesReleasePyros.WireTo(&MainChutesReleasePyrosFeeder);
 
 	//
 	// SECS Logic buses
@@ -2535,6 +2538,18 @@ void Saturn::GetSECSStatus( SECSStatus &ss )
 {
 	ss.BusAVoltage = SECSLogicBusA.Voltage();
 	ss.BusBVoltage = SECSLogicBusB.Voltage();
+	ss.CMRCSPressureSignalA = secs.MESCA.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseA = secs.MESCA.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputA = secs.MESCA.EDSAbortLogicOutput;
+	ss.RCSActivateSignalA = secs.MESCA.RCSActivateSignal;
+	ss.SLASepRelayA = secs.MESCA.SLASepRelay;
+	ss.FwdHeatshieldJettA = secs.MESCA.FwdHeatshieldJett;
+	ss.CMRCSPressureSignalB = secs.MESCB.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseB = secs.MESCB.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputB = secs.MESCB.EDSAbortLogicOutput;
+	ss.RCSActivateSignalB = secs.MESCB.RCSActivateSignal;
+	ss.SLASepRelayB = secs.MESCB.SLASepRelay;
+	ss.FwdHeatshieldJettB = secs.MESCB.FwdHeatshieldJett;
 }
 
 void Saturn::GetPyroStatus( PyroStatus &ps )
@@ -3237,28 +3252,6 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	// Temp alarm
 	if (val11[LightTempCaution])
 		aws.PGNSWarning = true;
-}
-
-//
-// Check whether the ELS is active and whether it's in auto mode.
-//
-
-bool Saturn::ELSActive()
-
-{
-	return (ELSLogicSwitch.IsUp() && (SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE || SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE));
-}
-
-bool Saturn::ELSAuto()
-
-{
-	return (ELSActive() && ELSAutoSwitch.IsUp());
-}
-
-bool Saturn::PyrosArmed()
-
-{
-	return (PyroBusA.Voltage() > SP_MIN_DCVOLTAGE || PyroBusB.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::LETAttached()

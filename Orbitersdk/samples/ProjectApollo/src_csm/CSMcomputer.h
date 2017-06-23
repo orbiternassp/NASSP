@@ -27,6 +27,8 @@
 
 #include "thread.h"
 
+class PanelSwitchItem;
+
 // OPTICS CONFIGURATION DEFINES
 // Step values in radians.
 #define OCDU_SHAFT_STEP 0.000191747598876953125 
@@ -78,6 +80,7 @@ class Saturn;
 class IU;
 class CSMToIUConnector;
 class CSMToSIVBControlConnector;
+class CDU;
 
 //
 // Class definition.
@@ -107,7 +110,7 @@ public:
 	/// \param i The launch vehicle Instrument Unit connector for the launch vehicle autopilot.
 	/// \param sivb The CSM to SIVb command connector (e.g. for fuel venting).
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
 	virtual ~CSMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -116,18 +119,6 @@ public:
 	void Timestep(double simt, double simdt);
 	void Run() ;
 	void agcTimestep(double simt, double simdt);
-
-	//
-	// External event handling.
-	//
-
-	///
-	/// Called to tell the AGC that liftoff has occured, and it should switch into the liftoff
-	/// program.
-	///
-	/// \brief Liftoff trigger.
-	///
-	void Liftoff(double simt);
 
 	//
 	// Data access.
@@ -164,7 +155,6 @@ public:
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);
-	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
 	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
