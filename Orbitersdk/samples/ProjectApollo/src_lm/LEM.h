@@ -661,6 +661,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int rhc_pos[3];                       // RHC x/y/z positions
 	int ttca_mode;                        // TTCA Throttle/Jets Mode
 #define TTCA_MODE_THROTTLE 0

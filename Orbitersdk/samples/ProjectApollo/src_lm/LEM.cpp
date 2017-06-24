@@ -1372,7 +1372,7 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		thc_auto = 1;
 	}
 	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-		rhc_thctoggle = true;
+		sscanf(line + 12, "%i", &rhc_thctoggle);
 	}
 	else if (!strnicmp(line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 		sscanf(line + 21, "%i", &i);

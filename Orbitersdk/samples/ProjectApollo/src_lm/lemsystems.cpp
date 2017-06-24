@@ -703,9 +703,12 @@ void LEM::SystemsInit()
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
-	thc_tjt_id = -1; // Disabled
+	thc_tjt_id = 0; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+	rhc_thctoggle = false;
+	rhc_thctoggle_id = -1;
+	rhc_thctoggle_pressed = false;
 
 	ttca_throttle_pos = 0;
 	ttca_throttle_vel = 0;
@@ -718,28 +721,57 @@ void LEM::SystemsInit()
 
 void LEM::JoystickTimestep(double simdt)
 {
-	// Zero ACA and TTCA bits in channel 31
-	ChannelValue val31;
-	val31 = agc.GetInputChannel(031);
-	val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
-
-	int thc_x_pos = 0;
-	int thc_y_pos = 0;
-	int thc_z_pos = 0;
-	int thc_rot_pos = 0;
-
-	rhc_pos[0] = 0; // Initialize
-	rhc_pos[1] = 0;
-	rhc_pos[2] = 0;
-
-					 // Joystick read
+	// Joystick read
 	if (oapiGetFocusInterface() == this) {
+
+		// Invert joystick configuration according to navmode in case of one joystick
+		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
+		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
+			(rhc_id == -1 && thc_id != -1 && GetAttitudeMode() == RCS_ROT))) {
+
+			tmp_id = rhc_id;
+			tmp_rot_id = rhc_rot_id;
+			tmp_sld_id = rhc_sld_id;
+			tmp_rzx_id = rhc_rzx_id;
+			tmp_pov_id = rhc_pov_id;
+			tmp_debug = rhc_debug;
+
+			rhc_id = thc_id;
+			rhc_rot_id = thc_rot_id;
+			rhc_sld_id = thc_sld_id;
+			rhc_rzx_id = thc_rzx_id;
+			rhc_pov_id = thc_pov_id;
+			rhc_debug = thc_debug;
+
+			thc_id = tmp_id;
+			thc_rot_id = tmp_rot_id;
+			thc_sld_id = tmp_sld_id;
+			thc_rzx_id = tmp_rzx_id;
+			thc_pov_id = tmp_pov_id;
+			thc_debug = tmp_debug;
+		}
+
 		if (thc_id != -1 && !(thc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}
 		if (rhc_id != -1 && !(rhc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as RHC does not exist.");
 		}
+
+		// Zero ACA and TTCA bits in channel 31
+		ChannelValue val31;
+		val31 = agc.GetInputChannel(031);
+		val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
+
+		int thc_x_pos = 0;
+		int thc_y_pos = 0;
+		int thc_z_pos = 0;
+		int thc_rot_pos = 0;
+
+		rhc_pos[0] = 0; // Initialize
+		rhc_pos[1] = 0;
+		rhc_pos[2] = 0;
+
 		/* ACA OPERATION:
 
 		The LM ACA is a lot different from the CM RHC.
@@ -758,7 +790,7 @@ void LEM::JoystickTimestep(double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if (rhc_id != -1 && dx8_joystick[rhc_id] != NULL) {
+		if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
@@ -814,6 +846,19 @@ void LEM::JoystickTimestep(double simdt)
 			//Let's cheat and give the ACA a throttle lever
 			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
 			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+
+			// RCS mode toggle
+			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_LIN);
+					}
+					rhc_thctoggle_pressed = true;
+				}
+				else {
+					rhc_thctoggle_pressed = false;
+				}
+			}
 		}
 		else {
 
@@ -1132,7 +1177,7 @@ void LEM::JoystickTimestep(double simdt)
 
 			if (thc_voltage > 0 && LeftTTCATranslSwitch.IsUp()) {
 				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
-					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[0]; // Read
+					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[thc_tjt_id]; // Read
 				}
 				if (thc_tjt_pos < 10000) {				 // Determine TTCA mode	
 					ttca_mode = TTCA_MODE_THROTTLE;      // THROTTLE MODE					
@@ -1188,6 +1233,19 @@ void LEM::JoystickTimestep(double simdt)
 						thc_z_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1], thc_rot_id, thc_rzx_id);
 				}
 			}
+
+			// RCS mode toggle
+			if (rhc_thctoggle && rhc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_ROT);
+					}
+					rhc_thctoggle_pressed = true;
+				}
+				else {
+					rhc_thctoggle_pressed = false;
+				}
+			}
 		}
 		else {
 			// No JS
@@ -1236,37 +1294,36 @@ void LEM::JoystickTimestep(double simdt)
 			val31[PlusZ] = 1;
 		}
 
+		if (ttca_throttle_vel == 1)
+		{
+			ttca_throttle_pos_dig += 0.25*simdt;
+		}
+		else if (ttca_throttle_vel == -1)
+		{
+			ttca_throttle_pos_dig -= 0.25*simdt;
+		}
+		if (ttca_throttle_pos_dig > 1)
+		{
+			ttca_throttle_pos_dig = 1;
+		}
+		else if (ttca_throttle_pos_dig < 0)
+		{
+			ttca_throttle_pos_dig = 0;
+		}
 
-	}
+		if (ttca_throttle_pos_dig > 0.51 / 0.66)
+		{
+			ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+		}
+		else
+		{
+			ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
+		}
 
-	if (ttca_throttle_vel == 1)
-	{
-		ttca_throttle_pos_dig += 0.25*simdt;
-	}
-	else if (ttca_throttle_vel == -1)
-	{
-		ttca_throttle_pos_dig -= 0.25*simdt;
-	}
-	if (ttca_throttle_pos_dig > 1)
-	{
-		ttca_throttle_pos_dig = 1;
-	}
-	else if (ttca_throttle_pos_dig < 0)
-	{
-		ttca_throttle_pos_dig = 0;
-	}
 
-	if (ttca_throttle_pos_dig > 0.51 / 0.66)
-	{
-		ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
+		// Write back channel data
+		agc.SetInputChannel(031, val31);
 	}
-	else
-	{
-		ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-	}
-
-	// Write back channel data
-	agc.SetInputChannel(031, val31);
 }
 
 void LEM::SystemsTimestep(double simt, double simdt) 
