@@ -2419,6 +2419,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	AutoTrackEnabled = false;
 	ShaftErrorSignal = 0.0;
 	TrunnionErrorSignal = 0.0;
+	GyroRates = _V(0.0, 0.0, 0.0);
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -2493,7 +2494,6 @@ void LEM_RR::TimeStep(double simdt){
 	double TrunRate = 0;
 	trunnionVel = 0;
 	shaftVel = 0;
-	AutoTrackEnabled = false;
 
 	/*
 	This is backwards?
@@ -2526,6 +2526,9 @@ void LEM_RR::TimeStep(double simdt){
 			TrunRate = 1.33*RAD;
 			break;
 	}
+
+	//Gyro rates
+	lem->GetAngularVel(GyroRates);
 
 	// If we are in test mode...
 	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP){
@@ -2648,13 +2651,16 @@ void LEM_RR::TimeStep(double simdt){
 
 		if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
 		{
-			radarDataGood = 1;
-			range = length(R);
+			if (AutoTrackEnabled)
+			{
+				radarDataGood = 1;
+				range = length(R);
 
-			lem->GetGlobalVel(LMVel);
-			csm->GetGlobalVel(CSMVel);
+				lem->GetGlobalVel(LMVel);
+				csm->GetGlobalVel(CSMVel);
 
-			rate = dotp(CSMVel - LMVel, U_R);
+				rate = dotp(CSMVel - LMVel, U_R);
+			}
 		}
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
@@ -2679,7 +2685,6 @@ void LEM_RR::TimeStep(double simdt){
 	// Handle mode switch
 	switch (lem->RendezvousRadarRotary.GetState()) {
 	case 0:	// AUTO TRACK
-		AutoTrackEnabled = true;
 		break;
 
 	case 1: // SLEW
@@ -2721,11 +2726,21 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = (RR_SHAFT_STEP*pulses);
 			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
 		}
-		else
-		{
-			AutoTrackEnabled = true;
-		}
 		break;
+	}
+
+	//Auto Tracking Logic
+	if (lem->RendezvousRadarRotary.GetState() == 0)
+	{
+		AutoTrackEnabled = true;
+	}
+	else if (lem->RendezvousRadarRotary.GetState() == 2 && val12[RRAutoTrackOrEnable] == 1)
+	{
+		AutoTrackEnabled = true;
+	}
+	else
+	{
+		AutoTrackEnabled = false;
 	}
 
 	//AUTO TRACKING
@@ -2734,10 +2749,10 @@ void LEM_RR::TimeStep(double simdt){
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += ShaftErrorSignal*simdt;
+		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += TrunnionErrorSignal*simdt;
+		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
