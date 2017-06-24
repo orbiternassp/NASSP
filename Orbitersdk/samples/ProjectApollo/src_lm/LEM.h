@@ -282,6 +282,7 @@ private:
 	bool AutoTrackEnabled;
 	double ShaftErrorSignal;
 	double TrunnionErrorSignal;
+	VECTOR3 GyroRates;
 };
 
 

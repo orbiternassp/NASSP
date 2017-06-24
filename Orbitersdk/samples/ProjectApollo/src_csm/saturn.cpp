@@ -2230,7 +2230,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			thc_auto = 1;
 		}
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			sscanf(line + 12, "%i", &rhc_thctoggle);
+			sscanf(line + 12, "%i", &i);
+			rhc_thctoggle = (i != 0);
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
