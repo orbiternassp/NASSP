@@ -49,9 +49,14 @@ void PMP::Init(Saturn *vessel){
 }
 
 void PMP::SystemTimestep(double simdt) {
-	if(sat->PMPSwitch.GetState() != THREEPOSSWITCH_CENTER){
-		if(sat->FlightBus.Voltage() > 18){
-			sat->FlightBus.DrawPower(8.5);
+	if (sat->PMPSwitch.GetState() == THREEPOSSWITCH_UP) {
+		if (sat->PMPPowerPrimCB.Voltage() > 18) {
+			sat->PMPPowerPrimCB.DrawPower(8.5);
+		}
+	}
+	else if (sat->PMPSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+		if (sat->PMPPowerAuxCB.Voltage() > 18) {
+			sat->PMPPowerAuxCB.DrawPower(8.5);
 		}
 	}
 }
@@ -133,8 +138,8 @@ void USB::SystemTimestep(double simdt) {
 		}
 	}else{
 		// FM disabled by telemetry
-		if(fm_opr == true && sat->FlightBus.Voltage() > 12){
-			sat->FlightBus.DrawPower(1.5); // Consume switching power
+		if(fm_opr == true && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+			sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 			fm_opr = false;
 		}
 	}
