@@ -340,6 +340,16 @@ public:
 	Saturn *sat;					   // Ship we're installed in
 };
 
+// Generic S-Band Antenna
+class SBandAntenna
+{
+public:
+	SBandAntenna() { SignalStrength = 0.0; }
+	double GetSignalStrength() { return SignalStrength; }
+protected:
+	double SignalStrength;						// Signal Strength (0-100)
+};
+
 // Unified S-Band system
 // Two transponders, an FM transmitter, and a power supply
 // The transponders are used for primary communications (data and voice), and only one works at a time.
@@ -360,11 +370,13 @@ public:
 	int pa_mode_1, pa_mode_2;          // Power amplifier mode
 	double pa_timer_1, pa_timer_2;	   // Tube heater timer
 	int pa_ovr_1, pa_ovr_2;			   // PA mode override for uptelemetry channel
+	double rcvr_agc_voltage;			//Receiver AGC Voltage
+	SBandAntenna *ant;
 };
 
 // High Gain Antenna system
 
-class HGA {
+class HGA:public SBandAntenna {
 public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
@@ -378,8 +390,22 @@ public:
 	Saturn *sat;								// Ship we're installed in
 	double Pitch;								// Antenna Pitch
 	double Yaw;									// Antenna Yaw
-	double SignalStrength;						// Signal Strength (0-100)
 	bool scanlimitwarn;
 private:
 	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
+};
+
+//S-Band Omnidirectional Antenna system
+
+class OMNI:public SBandAntenna {
+public:
+	OMNI(VECTOR3 dir);
+	void Init(Saturn *vessel);	// Initialization
+	void TimeStep();			// TimeStep
+protected:
+	Saturn *sat;				// Ship we're installed in
+	VECTOR3 direction;
+	double hpbw_factor;			//Beamwidth factor
+	OBJHANDLE hMoon;
+	OBJHANDLE hEarth;
 };

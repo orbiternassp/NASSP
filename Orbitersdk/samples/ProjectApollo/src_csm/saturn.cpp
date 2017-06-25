@@ -218,7 +218,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
-	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
+	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
+	omnia(_V(0.0, 0.707108, 0.707108)),
+	omnib(_V(0.0, -0.707108, 0.707108)),
+	omnic(_V(0.0, -0.707108, -0.707108)),
+	omnid(_V(0.0, 0.707108, -0.707108))
 
 #pragma warning ( pop ) // disable:4355
 
