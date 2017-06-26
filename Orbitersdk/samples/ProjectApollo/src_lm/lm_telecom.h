@@ -231,9 +231,25 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);			// System Timestep
+	bool IsPowered();
 	double GetAntennaTempF();
+	double GetPitch() { return pitch*DEG; }
+	double GetYaw() { return yaw*DEG; }
+	double GetSignalStrength() { return SignalStrength; }
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
 	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
+protected:
+	double pitch;
+	double yaw;
+
+	bool moving;
+	double hpbw_factor;
+	double SignalStrength;
+
+	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);
+	const OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	const OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 };

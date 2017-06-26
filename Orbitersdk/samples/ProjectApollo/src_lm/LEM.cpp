@@ -209,9 +209,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
 	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
 	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
-	ComPitchMeter(0.0, 5.0, 220.0, -50.0),
-	ComYawMeter(0.0, 5.0, 220.0, -50.0),
-	Panel12SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthAttenuator("RadarSignalStrengthAttenuator", 0.0, 5.0, 0.0, 5.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
@@ -1149,6 +1146,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
+		else if (!strnicmp(line, "STEERABLEANTENNA_START", sizeof("STEERABLEANTENNA_START"))) {
+			SBandSteerable.LoadState(scn, "STEERABLEANTENNA_END");
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1475,6 +1475,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
+	SBandSteerable.SaveState(scn, "STEERABLEANTENNA_START", "STEERABLEANTENNA_END");
 	checkControl.save(scn);
 }
 

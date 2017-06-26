@@ -1531,3 +1531,51 @@ double RadarSignalStrengthAttenuator::GetValue()
 
 	return val;
 }
+
+void LEMSteerableAntennaPitchMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaPitchMeter::QueryValue() {
+	return lem->SBandSteerable.GetPitch();
+}
+
+void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (210.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSteerableAntennaYawMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaYawMeter::QueryValue() {
+	return lem->SBandSteerable.GetYaw();
+}
+
+void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (120.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSteerableAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaStrengthMeter::QueryValue() {
+	return lem->SBandSteerable.GetSignalStrength();
+}
+
+void LEMSteerableAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = 220.0 - 2.7*v;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}

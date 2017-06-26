@@ -1418,7 +1418,7 @@ protected:
 	ThreePosSwitch Panel12AntTrackModeSwitch;
 
 	SwitchRow Panel12SignalStrengthMeterRow;
-	DCVoltMeter Panel12SignalStrengthMeter;
+	LEMSteerableAntennaStrengthMeter Panel12SignalStrengthMeter;
 
 	SwitchRow Panel12VHFAntSelSwitchRow;
 	RotationalSwitch Panel12VHFAntSelKnob;
@@ -1435,15 +1435,11 @@ protected:
 	SwitchRow AGSOperateSwitchRow;
 	ThreePosSwitch AGSOperateSwitch;
 
-	//
-	// Currently these are just 0-5V meters; at some point we may want
-	// to change them to a different class.
-	//
 	SwitchRow ComPitchMeterRow;
-	DCVoltMeter ComPitchMeter;
+	LEMSteerableAntennaPitchMeter ComPitchMeter;
 
 	SwitchRow ComYawMeterRow;
-	DCVoltMeter ComYawMeter;
+	LEMSteerableAntennaYawMeter ComYawMeter;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1858,6 +1854,9 @@ protected:
 	friend class LMAbortButton;
 	friend class LMAbortStageButton;
 	friend class RadarSignalStrengthAttenuator;
+	friend class LEMSteerableAntennaPitchMeter;
+	friend class LEMSteerableAntennaYawMeter;
+	friend class LEMSteerableAntennaStrengthMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

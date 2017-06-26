@@ -573,12 +573,7 @@ void HGA::TimeStep(double simt, double simdt) {
 	scanlimitwarn = false;
 
 	// Do we have power and a SM?
-	if (!IsPowered() || sat->GetStage() > CSM_LEM_STAGE)
-	{
-		Pitch = 90.0;
-		Yaw = 0.0;
-		return;
-	}
+	if (!IsPowered() || sat->GetStage() > CSM_LEM_STAGE) return;
 
 	double PitchCmd, YawCmd, gain;
 
