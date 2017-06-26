@@ -1418,7 +1418,7 @@ protected:
 	ThreePosSwitch Panel12AntTrackModeSwitch;
 
 	SwitchRow Panel12SignalStrengthMeterRow;
-	LEMSteerableAntennaStrengthMeter Panel12SignalStrengthMeter;
+	LEMSBandAntennaStrengthMeter Panel12SignalStrengthMeter;
 
 	SwitchRow Panel12VHFAntSelSwitchRow;
 	RotationalSwitch Panel12VHFAntSelKnob;
@@ -1785,6 +1785,8 @@ protected:
 
 	// COMM
 	LEM_SteerableAnt SBandSteerable;
+	LM_OMNI omni_fwd;
+	LM_OMNI omni_aft;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 
@@ -1856,7 +1858,7 @@ protected:
 	friend class RadarSignalStrengthAttenuator;
 	friend class LEMSteerableAntennaPitchMeter;
 	friend class LEMSteerableAntennaYawMeter;
-	friend class LEMSteerableAntennaStrengthMeter;
+	friend class LEMSBandAntennaStrengthMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

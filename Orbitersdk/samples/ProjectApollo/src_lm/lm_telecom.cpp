@@ -1941,15 +1941,18 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 // S-Band System
 LM_SBAND::LM_SBAND(){
 	lem = NULL;
+	ant = NULL;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	tc_mode_1 = 0; tc_timer_1 = 0;
 	tc_mode_2 = 0; tc_timer_2 = 0;
-
+	rcvr_agc_voltage = 0.0;
 }
 
 void LM_SBAND::Init(LEM *vessel){
 	lem = vessel;
+	ant = &lem->omni_aft;
+	rcvr_agc_voltage = 0.0;
 }
 
 void LM_SBAND::SystemTimestep(double simdt) {
@@ -1988,6 +1991,20 @@ void LM_SBAND::SystemTimestep(double simdt) {
 
 void LM_SBAND::TimeStep(double simt){
 	if(lem == NULL){ return; } // Do nothing if not initialized
+	
+	if (lem->Panel12SBandAntSelKnob.GetState() == 0)
+	{
+		ant = &lem->omni_fwd;
+	}
+	else if (lem->Panel12SBandAntSelKnob.GetState() == 1)
+	{
+		ant = &lem->omni_aft;
+	}
+	if (lem->Panel12SBandAntSelKnob.GetState() == 2)
+	{
+		ant = &lem->SBandSteerable;
+	}
+	
 	switch(tc_mode_1){
 		case 0: // OFF
 			break;
@@ -2161,6 +2178,41 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			break;
 	}
+
+	// Receiver AGC Voltage
+	if (lem->SBandPASelSwitch.IsUp()) {
+		if (ant && pa_mode_1 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+	else if (lem->SBandPASelSwitch.IsDown()){
+		if (ant && pa_mode_2 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+	else
+	{
+		rcvr_agc_voltage = 0.0;
+	}
+}
+
+void LM_SBAND::LoadState(char *line) {
+	sscanf(line + 12, "%i %i %lf %lf", &pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2);
+}
+
+
+void LM_SBAND::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%i %i %lf %lf", pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2);
+
+	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
 
 // S-Band Steerable Antenna
@@ -2340,31 +2392,77 @@ bool LEM_SteerableAnt::IsPowered()
 	return true;
 }
 
-void LEM_SteerableAnt::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-	oapiWriteLine(scn, start_str);
-
-	papiWriteScenario_double(scn, "PITCH", pitch);
-	papiWriteScenario_double(scn, "YAW", yaw);
-
-	oapiWriteLine(scn, end_str);
+// Load
+void LEM_SteerableAnt::LoadState(char *line) {
+	sscanf(line + 16, "%lf %lf", &pitch, &yaw);
 }
 
-void LEM_SteerableAnt::LoadState(FILEHANDLE scn,char *end_str){
-	char *line;
-	int tmp = 0; // Used in boolean type loader
-	int end_len = strlen(end_str);
+// Save
+void LEM_SteerableAnt::SaveState(FILEHANDLE scn) {
+	char buffer[256];
 
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len)) {
-			break;
-		}
-		papiReadScenario_double(line, "PITCH", pitch);
-		papiReadScenario_double(line, "YAW", yaw);
+	sprintf(buffer, "%lf %lf", pitch, yaw);
 
-	}
+	oapiWriteScenario_string(scn, "STEERABLEANTENNA", buffer);
 }
 
 double LEM_SteerableAnt::GetAntennaTempF(){
 
 	return(0);
+}
+
+LM_OMNI::LM_OMNI(VECTOR3 dir)
+{
+	direction = unit(dir);
+	hpbw_factor = 0.0;
+	hMoon = NULL;
+	hEarth = NULL;
+}
+
+void LM_OMNI::Init(LEM *vessel) {
+	lem = vessel;
+
+	double beamwidth = 70.0*RAD;
+	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+}
+
+void LM_OMNI::TimeStep()
+{
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	MATRIX3 Rot;
+	double relang, Moonrelang;
+
+	//Unit vector of antenna in vessel's local frame
+	U_RP = _V(direction.y, direction.x, direction.z);
+
+	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	lem->GetGlobalPos(pos);
+	oapiGetGlobalPos(hEarth, &R_E);
+	oapiGetGlobalPos(hMoon, &R_M);
+	lem->GetRotationMatrix(Rot);
+
+	//Calculate antenna pointing vector in global frame
+	U_R = mul(Rot, U_RP);
+	//relative angle between antenna pointing vector and direction of Earth
+	relang = acos(dotp(U_R, unit(R_E - pos)));
+
+	if (relang < PI05 / hpbw_factor)
+	{
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*40.0;
+	}
+	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//Moon in the way
+	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+
+	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
+	{
+		SignalStrength = 0.0;
+	}
 }

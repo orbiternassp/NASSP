@@ -506,7 +506,7 @@ protected:
 	SURFHANDLE FrameSurface;
 };
 
-class LEMSteerableAntennaStrengthMeter : public LEMRoundMeter {
+class LEMSBandAntennaStrengthMeter : public LEMRoundMeter {
 public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();

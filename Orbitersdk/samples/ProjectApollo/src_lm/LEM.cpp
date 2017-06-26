@@ -221,7 +221,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover),
 	MissionTimerDisplay(Panelsdk),
-	EventTimerDisplay(Panelsdk)
+	EventTimerDisplay(Panelsdk),
+	omni_fwd(_V(0.0, 0.0, 1.0)),
+	omni_aft(_V(0.0, 0.0, -1.0))
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -1077,6 +1079,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "ECA_4B_START",sizeof("ECA_4B_START"))) {
 			ECA_4b.LoadState(scn,"ECA_4B_END");
 		}
+		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
+			SBand.LoadState(line);
+		}
+		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
+			SBandSteerable.LoadState(line);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1145,9 +1153,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
-		}
-		else if (!strnicmp(line, "STEERABLEANTENNA_START", sizeof("STEERABLEANTENNA_START"))) {
-			SBandSteerable.LoadState(scn, "STEERABLEANTENNA_END");
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1448,6 +1453,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ECA_4a.SaveState(scn,"ECA_4A_START","ECA_4A_END");
 	ECA_4b.SaveState(scn,"ECA_4B_START","ECA_4B_END");
 
+	// Save COMM
+	SBand.SaveState(scn);
+	SBandSteerable.SaveState(scn);
+
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
@@ -1475,7 +1484,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
-	SBandSteerable.SaveState(scn, "STEERABLEANTENNA_START", "STEERABLEANTENNA_END");
 	checkControl.save(scn);
 }
 

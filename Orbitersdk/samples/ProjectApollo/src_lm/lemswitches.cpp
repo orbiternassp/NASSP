@@ -1564,17 +1564,17 @@ void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSBandAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
 }
 
-double LEMSteerableAntennaStrengthMeter::QueryValue() {
-	return lem->SBandSteerable.GetSignalStrength();
+double LEMSBandAntennaStrengthMeter::QueryValue() {
+	return lem->SBand.rcvr_agc_voltage;
 }
 
-void LEMSteerableAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
 	v = 220.0 - 2.7*v;
 	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
