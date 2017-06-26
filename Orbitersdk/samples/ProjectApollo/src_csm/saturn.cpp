@@ -218,7 +218,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
-	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
+	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
+	omnia(_V(0.0, 0.707108, 0.707108)),
+	omnib(_V(0.0, -0.707108, 0.707108)),
+	omnic(_V(0.0, -0.707108, -0.707108)),
+	omnid(_V(0.0, 0.707108, -0.707108))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -2230,7 +2234,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			thc_auto = 1;
 		}
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			rhc_thctoggle = true;
+			sscanf(line + 12, "%i", &i);
+			rhc_thctoggle = (i != 0);
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 

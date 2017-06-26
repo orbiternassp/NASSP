@@ -818,11 +818,10 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		break;
 
 	// Various control bits
-	case 012:		
-	// 174-177 are ficticious channels with the IMU CDU angles.
+	case 012:
 		scdu.ChannelOutput(channel, val);
 		tcdu.ChannelOutput(channel, val);
-		break;
+	// 174-177 are ficticious channels with the IMU CDU angles.
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
 	case 0176:  // FDAI YAW CHANNEL

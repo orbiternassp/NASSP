@@ -477,3 +477,13 @@ public:
 protected:
 	LEM *lem;
 };
+
+class RadarSignalStrengthAttenuator : public VoltageAttenuator {
+public:
+	RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	void Init(LEM* l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum);
+	double GetValue();
+protected:
+	LEM *lem;
+	RotationalSwitch *TestMonitorRotarySwitch;
+};

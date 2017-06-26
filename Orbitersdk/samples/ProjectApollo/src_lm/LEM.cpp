@@ -212,6 +212,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ComPitchMeter(0.0, 5.0, 220.0, -50.0),
 	ComYawMeter(0.0, 5.0, 220.0, -50.0),
 	Panel12SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
+	RadarSignalStrengthAttenuator("RadarSignalStrengthAttenuator", 0.0, 5.0, 0.0, 5.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -1371,7 +1372,8 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		thc_auto = 1;
 	}
 	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-		rhc_thctoggle = true;
+		sscanf(line + 12, "%i", &i);
+		rhc_thctoggle = (i != 0);
 	}
 	else if (!strnicmp(line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 		sscanf(line + 21, "%i", &i);

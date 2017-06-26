@@ -3487,6 +3487,10 @@ protected:
 	PMP	 pmp;
 	USB  usb;
 	HGA  hga;
+	OMNI omnia;
+	OMNI omnib;
+	OMNI omnic;
+	OMNI omnid;
 	EMS  ems;
 
 	// CM Optics

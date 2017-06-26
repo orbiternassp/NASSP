@@ -1489,3 +1489,45 @@ void LEMPanelOrdeal::SetState(int value) {
 
 	lem->ordealEnabled = value;
 }
+
+RadarSignalStrengthAttenuator::RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut) :
+	VoltageAttenuator(i_name, minIn, maxIn, minOut, maxOut)
+{
+}
+
+void RadarSignalStrengthAttenuator::Init(LEM *l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum)
+{
+	lem = l;
+	TestMonitorRotarySwitch = testmonitorselectorswitch;
+
+	WireTo(Instrum);
+}
+
+double RadarSignalStrengthAttenuator::GetValue()
+{
+	double val = 0.0;
+
+	switch (TestMonitorRotarySwitch->GetState())
+	{
+	case 0:	//ALT XMTR
+		val = 0.0;
+		break;
+	case 1:	//VEL XMTR
+		val = 0.0;
+		break;
+	case 2:	//AGC
+		val = lem->RR.GetSignalStrength();
+		break;
+	case 3:	//XMTR PWR
+		val = 0.0;
+		break;
+	case 4:	//SHAFT ERR
+		val = lem->RR.GetShaftErrorSignal();
+		break;
+	case 5:	//TRUN ERR
+		val = lem->RR.GetTrunnionErrorSignal();
+		break;
+	}
+
+	return val;
+}

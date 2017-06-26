@@ -225,6 +225,7 @@ void LEM::InitSwitches() {
 	LandingAntSwitch.Register(PSH, "LandingAntSwitch", THREEPOSSWITCH_UP);
 	EngGimbalEnableSwitch.Register(PSH, "EngGimbalEnableSwitch", TOGGLESWITCH_UP);
 	RadarTestSwitch.Register(PSH, "RadarTestSwitch",  THREEPOSSWITCH_CENTER);
+	RadarSignalStrengthMeter.Register(PSH, "RadarSignalStrengthMeter", 0.0, 5.0, 3);
 	SlewRateSwitch.Register(PSH, "SlewRateSwitch", true);
 	DeadBandSwitch.Register(PSH, "DeadBandSwitch", false);
 	LMSuitTempMeter.Register(PSH,"LMSuitTempMeter",40,100,2);
@@ -1929,8 +1930,10 @@ void LEM::SetSwitches(int panel) {
 			RightACA4JetSwitch.Init   (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
 			RightTTCATranslSwitch.Init(0, 141, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
 
+			RadarSignalStrengthAttenuator.Init(this, &TestMonitorRotary, &PGNS_SIG_STR_DISP_CB);
+
 			RaderSignalStrengthMeterRow.Init(AID_LMRADARSIGNALSTRENGTH, MainPanel);
-			RadarSignalStrengthMeter.Init(g_Param.pen[4], g_Param.pen[4], RaderSignalStrengthMeterRow, 0);
+			RadarSignalStrengthMeter.Init(g_Param.pen[4], g_Param.pen[4], RaderSignalStrengthMeterRow, &RadarSignalStrengthAttenuator);
 			RadarSignalStrengthMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 91, 90);
 
 			RadarSlewSwitchRow.Init(AID_LMRADARSLEWSWITCH, MainPanel);

@@ -246,15 +246,15 @@ public:
 	double GetRadarShaftPos() { return shaftAngle ; } ;
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
+	double GetSignalStrength() { return SignalStrength*4.0; }
+	double GetShaftErrorSignal();
+	double GetTrunnionErrorSignal();
 	
 	bool IsPowered(); 
 	bool IsDCPowered(); 
 	bool IsRadarDataGood() { return radarDataGood;};
 
 private:
-	void CalculateRadarData(double &pitch, double &yaw);
-	VECTOR3 GetPYR(VECTOR3 Pitch, VECTOR3 YawRoll);
-	VECTOR3 GetPYR2(VECTOR3 Pitch, VECTOR3 YawRoll);
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
@@ -275,7 +275,14 @@ private:
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
-
+	double hpbw_factor;			//Beamwidth factor
+	double SignalStrength;
+	double SignalStrengthQuadrant[4];
+	VECTOR3 U_RRL[4];
+	bool AutoTrackEnabled;
+	double ShaftErrorSignal;
+	double TrunnionErrorSignal;
+	VECTOR3 GyroRates;
 };
 
 
@@ -655,6 +662,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int rhc_pos[3];                       // RHC x/y/z positions
 	int ttca_mode;                        // TTCA Throttle/Jets Mode
 #define TTCA_MODE_THROTTLE 0
@@ -992,6 +1000,7 @@ protected:
 
 	SwitchRow RaderSignalStrengthMeterRow;
 	DCVoltMeter RadarSignalStrengthMeter;
+	RadarSignalStrengthAttenuator RadarSignalStrengthAttenuator;
 
 
 	/////////////////
@@ -1848,6 +1857,7 @@ protected:
 	friend class LEMPanelOrdeal;
 	friend class LMAbortButton;
 	friend class LMAbortStageButton;
+	friend class RadarSignalStrengthAttenuator;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
