@@ -4163,6 +4163,8 @@ protected:
 	double LMLandingMJD;		// MJD of lunar landing
 	double LMDescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;
+	double LMAscentEmptyMassKg;
 
 	//
 	// Earth landing data.

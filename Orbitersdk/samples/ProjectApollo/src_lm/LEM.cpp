@@ -209,9 +209,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
 	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
 	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
-	ComPitchMeter(0.0, 5.0, 220.0, -50.0),
-	ComYawMeter(0.0, 5.0, 220.0, -50.0),
-	Panel12SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthAttenuator("RadarSignalStrengthAttenuator", 0.0, 5.0, 0.0, 5.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
@@ -224,7 +221,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover),
 	MissionTimerDisplay(Panelsdk),
-	EventTimerDisplay(Panelsdk)
+	EventTimerDisplay(Panelsdk),
+	omni_fwd(_V(0.0, 0.0, 1.0)),
+	omni_aft(_V(0.0, 0.0, -1.0))
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -313,6 +312,8 @@ void LEM::Init()
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
+	AscentEmptyMassKg = 2150.0;
+	DescentEmptyMassKg = 2224.0;
 
 	ApolloNo = 0;
 	Landed = false;
@@ -1030,6 +1031,14 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf(line + 7, "%f", &ftcp);
 			AscentFuelMassKg = ftcp;
 		}
+		else if (!strnicmp(line, "DSCEMPTYMASS", 12)) {
+			sscanf(line + 12, "%f", &ftcp);
+			DescentEmptyMassKg = ftcp;
+		}
+		else if (!strnicmp(line, "ASCEMPTYMASS", 12)) {
+			sscanf(line + 12, "%f", &ftcp);
+			AscentEmptyMassKg = ftcp;
+		}
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
@@ -1079,6 +1088,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "ECA_4B_START",sizeof("ECA_4B_START"))) {
 			ECA_4b.LoadState(scn,"ECA_4B_END");
+		}
+		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
+			SBand.LoadState(line);
+		}
+		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
+			SBandSteerable.LoadState(line);
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
@@ -1415,6 +1430,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
+	oapiWriteScenario_float(scn, "DSCEMPTYMASS", DescentEmptyMassKg);
+	oapiWriteScenario_float(scn, "ASCEMPTYMASS", AscentEmptyMassKg);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
@@ -1447,6 +1464,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ECA_3b.SaveState(scn,"ECA_3B_START","ECA_3B_END");
 	ECA_4a.SaveState(scn,"ECA_4A_START","ECA_4A_END");
 	ECA_4b.SaveState(scn,"ECA_4B_START","ECA_4B_END");
+
+	// Save COMM
+	SBand.SaveState(scn);
+	SBandSteerable.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
@@ -1514,6 +1535,8 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
+	DescentEmptyMassKg = ls.DescentEmptyKg;
+	AscentEmptyMassKg = ls.AscentEmptyKg;
 
 	agc.SetMissionInfo(ApolloNo, CSMName);
 

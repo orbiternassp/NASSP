@@ -89,6 +89,8 @@ struct SIVBSettings
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
 
 	int LMPadCount;					///< Count of LM PAD data.
@@ -436,6 +438,8 @@ protected:
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 
 	//
 	// LM PAD

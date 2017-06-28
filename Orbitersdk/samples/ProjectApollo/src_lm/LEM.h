@@ -1418,7 +1418,7 @@ protected:
 	ThreePosSwitch Panel12AntTrackModeSwitch;
 
 	SwitchRow Panel12SignalStrengthMeterRow;
-	DCVoltMeter Panel12SignalStrengthMeter;
+	LEMSBandAntennaStrengthMeter Panel12SignalStrengthMeter;
 
 	SwitchRow Panel12VHFAntSelSwitchRow;
 	RotationalSwitch Panel12VHFAntSelKnob;
@@ -1435,15 +1435,11 @@ protected:
 	SwitchRow AGSOperateSwitchRow;
 	ThreePosSwitch AGSOperateSwitch;
 
-	//
-	// Currently these are just 0-5V meters; at some point we may want
-	// to change them to a different class.
-	//
 	SwitchRow ComPitchMeterRow;
-	DCVoltMeter ComPitchMeter;
+	LEMSteerableAntennaPitchMeter ComPitchMeter;
 
 	SwitchRow ComYawMeterRow;
-	DCVoltMeter ComYawMeter;
+	LEMSteerableAntennaYawMeter ComYawMeter;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1632,6 +1628,8 @@ protected:
 
 	double DescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double AscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
+	double DescentEmptyMassKg;
+	double AscentEmptyMassKg;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1789,6 +1787,8 @@ protected:
 
 	// COMM
 	LEM_SteerableAnt SBandSteerable;
+	LM_OMNI omni_fwd;
+	LM_OMNI omni_aft;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 
@@ -1858,6 +1858,9 @@ protected:
 	friend class LMAbortButton;
 	friend class LMAbortStageButton;
 	friend class RadarSignalStrengthAttenuator;
+	friend class LEMSteerableAntennaPitchMeter;
+	friend class LEMSteerableAntennaYawMeter;
+	friend class LEMSBandAntennaStrengthMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

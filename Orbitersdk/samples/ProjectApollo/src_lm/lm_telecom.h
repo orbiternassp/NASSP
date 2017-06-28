@@ -209,6 +209,16 @@ public:
 	bool registerSocket(SOCKET sock);
 };
 
+// Generic S-Band Antenna
+class LM_SBandAntenna
+{
+public:
+	LM_SBandAntenna() { SignalStrength = 0.0; }
+	double GetSignalStrength() { return SignalStrength; }
+protected:
+	double SignalStrength;						// Signal Strength (0-100)
+};
+
 // S-Band system
 class LM_SBAND {
 public:
@@ -216,24 +226,58 @@ public:
 	void Init(LEM *vessel);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
 	LEM *lem;					   // Ship we're installed in
 	int pa_mode_1,pa_mode_2;       // Power amplifier state
 	double pa_timer_1,pa_timer_2;  // Tube heater timer
 	int tc_mode_1,tc_mode_2;	   // Transciever state
 	double tc_timer_1,tc_timer_2;  // Tube heater timer
+	double rcvr_agc_voltage;		// Receiver AGC Voltage
+	LM_SBandAntenna *ant;
 };
 
 // S-Band Steerable Antenna
-class LEM_SteerableAnt{
+class LEM_SteerableAnt: public LM_SBandAntenna {
 public:
 	LEM_SteerableAnt();
 	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
 	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);			// System Timestep
+	bool IsPowered();
 	double GetAntennaTempF();
+	double GetPitch() { return pitch*DEG; }
+	double GetYaw() { return yaw*DEG; }
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
 	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
+protected:
+	double pitch;
+	double yaw;
+
+	bool moving;
+	double hpbw_factor;
+
+	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);
+	const OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	const OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+};
+
+//S-Band Omnidirectional Antenna system
+
+class LM_OMNI :public LM_SBandAntenna {
+public:
+	LM_OMNI(VECTOR3 dir);
+	void Init(LEM *vessel);	// Initialization
+	void TimeStep();			// TimeStep
+protected:
+	LEM *lem;					// Ship we're installed in
+	VECTOR3 direction;
+	double hpbw_factor;			//Beamwidth factor
+	OBJHANDLE hMoon;
+	OBJHANDLE hEarth;
 };

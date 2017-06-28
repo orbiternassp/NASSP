@@ -762,6 +762,8 @@ void Saturn::initSaturn()
 	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
+	LMAscentEmptyMassKg = 2150.0;
+	LMDescentEmptyMassKg = 2224.0;
 
 	UseATC = false;
 
@@ -1348,6 +1350,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "ORDEALENABLED", ordealEnabled);
@@ -2239,7 +2243,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
-		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
+		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
+		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
+		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
 		else if (!strnicmp(line, "MOONBASE", 8)) {
 			strncpy (LMLandingBase, line + 9, 256);
 		}
@@ -2300,6 +2306,8 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.LandingLongitude = LMLandingLongitude;
 	ls.AscentFuelKg = LMAscentFuelMassKg;
 	ls.DescentFuelKg = LMDescentFuelMassKg;
+	ls.AscentEmptyKg = LMAscentEmptyMassKg;
+	ls.DescentEmptyKg = LMDescentEmptyMassKg;
 	strncpy (ls.language, AudioLanguage, 63);
 	strncpy (ls.CSMName, GetName(), 63);
 	ls.MissionNo = ApolloNo;
@@ -2407,7 +2415,7 @@ void Saturn::UpdatePayloadMass()
 {
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
-		S4PL_Mass = 4374.0 + LMAscentFuelMassKg + LMDescentFuelMassKg;
+		S4PL_Mass = LMAscentEmptyMassKg + LMDescentEmptyMassKg + LMAscentFuelMassKg + LMDescentFuelMassKg;
 		break;
 
 	case PAYLOAD_ASTP:
