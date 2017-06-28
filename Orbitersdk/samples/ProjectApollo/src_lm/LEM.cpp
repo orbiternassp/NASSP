@@ -312,6 +312,8 @@ void LEM::Init()
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
+	AscentEmptyMassKg = 2150.0;
+	DescentEmptyMassKg = 2224.0;
 
 	ApolloNo = 0;
 	Landed = false;
@@ -1029,6 +1031,14 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf(line + 7, "%f", &ftcp);
 			AscentFuelMassKg = ftcp;
 		}
+		else if (!strnicmp(line, "DSCEMPTYMASS", 12)) {
+			sscanf(line + 12, "%f", &ftcp);
+			DescentEmptyMassKg = ftcp;
+		}
+		else if (!strnicmp(line, "ASCEMPTYMASS", 12)) {
+			sscanf(line + 12, "%f", &ftcp);
+			AscentEmptyMassKg = ftcp;
+		}
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
@@ -1420,6 +1430,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
+	oapiWriteScenario_float(scn, "DSCEMPTYMASS", DescentEmptyMassKg);
+	oapiWriteScenario_float(scn, "ASCEMPTYMASS", AscentEmptyMassKg);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
@@ -1523,6 +1535,8 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
+	DescentEmptyMassKg = ls.DescentEmptyKg;
+	AscentEmptyMassKg = ls.AscentEmptyKg;
 
 	agc.SetMissionInfo(ApolloNo, CSMName);
 

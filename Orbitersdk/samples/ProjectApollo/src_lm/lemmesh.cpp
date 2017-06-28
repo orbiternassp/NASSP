@@ -110,23 +110,9 @@ void LEM::StopEVA()
 
 void LEM::SetLmVesselDockStage()
 
-{	
-	double fuelmass;
-	int mnumber;
+{
 	ClearThrusterDefinitions();
-	//
-	// Changed to reflect mission-specific empty and fuel mass
-	//
-	// From "Apollo by the Numbers"
-	//
-	mnumber=agc.GetApolloNo();
-	if(mnumber < 15) {
-		SetEmptyMass(6565);		
-		fuelmass=8375.;
-	} else {
-		SetEmptyMass(7334);
-		fuelmass=8891.;
-	}
+	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 	SetSize (6);
 	// SetPMI (_V(2.8,2.29,2.37));
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
@@ -147,7 +133,7 @@ void LEM::SetLmVesselDockStage()
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     if (!ph_Dsc)  
-		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
+		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
@@ -198,7 +184,7 @@ void LEM::SetLmVesselHoverStage()
 {
 	ClearThrusterDefinitions();
 
-	SetEmptyMass(AscentFuelMassKg + 4374.0);
+	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 
 	SetSize (7);
 	SetPMI (_V(3.26,2.22,3.26)); 
@@ -214,7 +200,7 @@ void LEM::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double Mass = (DescentFuelMassKg * 0.05) + AscentFuelMassKg + 4374.0;
+	double Mass = 7137.75;
 	double ro = 7;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;
@@ -314,7 +300,6 @@ void LEM::SetLmVesselHoverStage()
 	CheckRCS();
 }
 
-
 void LEM::SetLmAscentHoverStage()
 
 {
@@ -322,7 +307,7 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);
-	SetEmptyMass (2150.0);
+	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -335,7 +320,7 @@ void LEM::SetLmAscentHoverStage()
 	ClearAttExhaustRefs();
 
 	double tdph = -5.8;
-    double Mass = AscentFuelMassKg + 2150.0;
+    double Mass = 4495.0;
 	double ro = 5;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;

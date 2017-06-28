@@ -1628,6 +1628,8 @@ protected:
 
 	double DescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double AscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
+	double DescentEmptyMassKg;
+	double AscentEmptyMassKg;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1

@@ -657,6 +657,8 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 
 	S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
+	S4Config.LMAscentEmptyMassKg = LMAscentEmptyMassKg;
+	S4Config.LMDescentEmptyMassKg = LMDescentEmptyMassKg;
 	S4Config.LMPad = LMPad;
 	S4Config.LMPadCount = LMPadCount;
 	sprintf(S4Config.LEMCheck, LEMCheck);
