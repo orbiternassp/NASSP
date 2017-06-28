@@ -40,6 +40,7 @@
 #include "pyro.h"
 #include "lm_eds.h"
 #include "lm_aps.h"
+#include "lm_dps.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -355,69 +356,6 @@ public:
 	int CabinLowPressLt;		// FF for this
 	int WaterWarningDisabled;   // FF for this
 	LEM *lem;					// Pointer at LEM
-};
-
-class DPSGimbalActuator {
-
-public:
-	DPSGimbalActuator();
-	virtual ~DPSGimbalActuator();
-
-	void Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source);
-	void Timestep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
-	double GetPosition() { return position; }
-	void ChangeLGCPosition(int pos);
-	void ZeroLGCPosition() { lgcPosition = 0; }
-	int GetLGCPosition() { return lgcPosition; }
-	bool GimbalFail() { return gimbalfail; }
-
-	void GimbalTimestep(double simdt);
-
-protected:
-	bool IsSystemPowered();
-	void DrawSystemPower();
-
-	double position;
-	int commandedPosition;
-	int lgcPosition;
-	int atcaPosition;
-	bool motorRunning;
-	bool gimbalfail;
-
-	LEM *lem;
-	AGCIOSwitch *gimbalMotorSwitch;
-	e_object *motorSource;
-};
-
-// Descent Engine
-class LEM_DPS{
-public:
-	LEM_DPS(THRUSTER_HANDLE *dps);
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-
-	void ThrottleActuator(double pos);
-	
-	LEM *lem;					// Pointer at LEM
-	double HePress[2];			// Helium pressure above and below the regulator
-	bool thrustOn;				// Engine "On" Command
-	bool engArm;				// Engine Arm Command
-	bool engPreValvesArm;		// Engine Prevalves Arm Command
-	double thrustcommand;		// DPS Thrust Command
-
-	DPSGimbalActuator pitchGimbalActuator;
-	DPSGimbalActuator rollGimbalActuator;
-
-protected:
-
-	THRUSTER_HANDLE *dpsThruster;
-	
 };
 
 ///
