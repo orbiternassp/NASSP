@@ -285,6 +285,8 @@ void LEM::Init()
 	ContactOK = false;
 	stage = 0;
 	status = 0;
+	HasProgramer = false;
+	InvertStageBit = false;
 
 	actualFUEL = 0.0;
 
@@ -1023,6 +1025,11 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LANDED", 6)) {
 			sscanf (line+6, "%d", &Landed);
 		}
+		else if (!strnicmp(line, "HASPROGRAMER", 12)) {
+			int i;
+			sscanf(line + 12, "%d", &i);
+			HasProgramer = (i == 1);
+		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			DescentFuelMassKg = ftcp;
@@ -1423,6 +1430,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
+	if (HasProgramer)
+	{
+		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
+	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
