@@ -2628,10 +2628,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	MissionTime += simdt;
-	MissionTimerDisplay.Timestep(simt, simdt, false);
-	MissionTimer306Display.Timestep(simt, simdt, false);
-	EventTimerDisplay.Timestep(simt, simdt, true);
-	EventTimer306Display.Timestep(simt, simdt, true);
 
 	//
 	// Panel flash counter.

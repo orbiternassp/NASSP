@@ -551,6 +551,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
 		mechanicalAccelerometer.TimeStep(simdt);
+		MissionTimerDisplay.Timestep(simt, simdt, false);
+		MissionTimer306Display.Timestep(simt, simdt, false);
+		EventTimerDisplay.Timestep(simt, simdt, true);
+		EventTimer306Display.Timestep(simt, simdt, true);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
