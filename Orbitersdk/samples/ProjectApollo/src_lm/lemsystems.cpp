@@ -2451,16 +2451,6 @@ bool LEM_RR::IsDCPowered()
 	return true;
 }
 
-double LEM_RR::GetRadarTrunnionPos()
-{
-	if (mode == 1)
-	{
-		return -trunnionAngle;
-	}
-
-	return trunnionAngle + PI;
-}
-
 double LEM_RR::GetShaftErrorSignal()
 {
 	if (!IsPowered() || !AutoTrackEnabled)
