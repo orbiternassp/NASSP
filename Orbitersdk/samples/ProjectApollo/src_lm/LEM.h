@@ -243,8 +243,8 @@ public:
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos();
-	double GetRadarShaftPos() { return shaftAngle ; } ;
+	double GetRadarTrunnionPos() { return -asin(sin(trunnionAngle)); }
+	double GetRadarShaftPos() { return -asin(sin(shaftAngle)) ; }
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
 	double GetSignalStrength() { return SignalStrength*4.0; }
