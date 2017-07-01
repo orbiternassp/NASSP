@@ -40,6 +40,7 @@
 #include "pyro.h"
 #include "lm_eds.h"
 #include "lm_aps.h"
+#include "lm_programer.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -402,7 +403,7 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
-	void ThrottleActuator(double pos);
+	void ThrottleActuator(double manthrust, double autothrust);
 	
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator
@@ -1562,6 +1563,8 @@ protected:
 	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
+	bool HasProgramer;
+	bool InvertStageBit;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1
@@ -1781,6 +1784,7 @@ protected:
 	SCCA1 scca1;
 	SCCA2 scca2;
 	SCCA3 scca3;
+	LEM_Programer lmp;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1861,6 +1865,7 @@ protected:
 	friend class LEMSteerableAntennaPitchMeter;
 	friend class LEMSteerableAntennaYawMeter;
 	friend class LEMSBandAntennaStrengthMeter;
+	friend class LEM_Programer;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
