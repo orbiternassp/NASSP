@@ -219,6 +219,8 @@ DECA::DECA() {
 	lgcAutoThrust = 0.0;
 	ManualThrust = 0.0;
 	LMR = 0.859;
+
+	ResetRelays();
 }
 
 void DECA::ResetRelays()
@@ -496,7 +498,7 @@ void DECA::Timestep(double simdt) {
 		ManualThrust = 0.0;
 	}
 
-	if (!(lem->SCS_ATCA_CB.IsPowered() && lem->DECA_GMBL_AC_CB.Voltage() > SP_MIN_ACVOLTAGE && K2 && K24 && K25))
+	if (!(lem->SCS_ATCA_CB.IsPowered() && (lem->DECA_GMBL_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) && K2 && K24 && K25))
 	{
 		ManualThrust = 0.0;
 	}
