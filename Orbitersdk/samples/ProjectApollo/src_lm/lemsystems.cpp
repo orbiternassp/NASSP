@@ -2702,11 +2702,11 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = TrunRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 2) {
-			shaftAngle -= ShaftRate*simdt;
+			shaftAngle += ShaftRate*simdt;
 			shaftVel = ShaftRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 0) {
-			shaftAngle += ShaftRate*simdt;
+			shaftAngle -= ShaftRate*simdt;
 			shaftVel = -ShaftRate;
 		}
 
