@@ -51,7 +51,23 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 
 	if (out_val.Bits.a == 15)
 	{
-		if (out_val.Bits.b == 22)	//22: Abort Stage Fire
+		if (out_val.Bits.b == 4)	//4: Pyro Master Arm On
+		{
+			lem->EDMasterArm.SetState(1);
+		}
+		else if (out_val.Bits.b == 5)	//5: Pyro Master Arm Off
+		{
+			lem->EDMasterArm.SetState(0);
+		}
+		else if (out_val.Bits.b == 6)	//6: RCS Press Fire
+		{
+			lem->EDHePressRCS.SetState(1);
+		}
+		else if (out_val.Bits.b == 7)	//7: RCS Press Fire Reset
+		{
+			lem->EDHePressRCS.SetState(0);
+		}
+		else if (out_val.Bits.b == 22)	//22: Abort Stage Fire
 		{
 			lem->AbortStageSwitch.SetState(0);
 		}

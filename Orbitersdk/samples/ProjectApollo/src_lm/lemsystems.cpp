@@ -3753,11 +3753,11 @@ void LEM_DPS::Init(LEM *s){
 	HePress[1] = 240;
 }
 
-void LEM_DPS::ThrottleActuator(double pos)
+void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 {
 	if (engArm)
 	{
-		thrustcommand = pos;
+		thrustcommand = manthrust + autothrust;
 
 		if (thrustcommand > 0.925)
 		{
