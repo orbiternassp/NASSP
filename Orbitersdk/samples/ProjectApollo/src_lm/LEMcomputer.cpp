@@ -97,6 +97,9 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
 	if (ApolloNo < 9)	// Sunburst 120
 	{
 		binfile = "Config/ProjectApollo/Sunburst120.bin";
+
+		LEM *lem = (LEM *)OurVessel;
+		lem->InvertStageBit = true;
 	}
 	else if (ApolloNo < 11)	// Luminary 069
 	{
@@ -295,6 +298,11 @@ int LEMcomputer::SetStatus(double simcomputert,
 	this->timeafterpdi = timeafterpdi;
 	this->timetoapproach = timetoapproach;
 	return true;
+}
+
+void LEMcomputer::ProcessChannel10(ChannelValue val) {
+	dsky.ProcessChannel10(val);
+	if (lem->HasProgramer) lem->lmp.ProcessChannel10(val);
 }
 
 // DS20060413
@@ -621,8 +629,13 @@ void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 VESSEL * LEMcomputer::GetCSM()
 {
 	OBJHANDLE hcsm = oapiGetVesselByName(OtherVesselName);
-	VESSEL *CSMVessel = oapiGetVesselInterface(hcsm);
-	return CSMVessel;
+	if (hcsm)
+	{
+		VESSEL *CSMVessel = oapiGetVesselInterface(hcsm);
+		return CSMVessel;
+	}
+
+	return NULL;
 }
 
 //

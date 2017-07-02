@@ -175,7 +175,14 @@ void LEM::SetLmVesselDockStage()
 	AFEED4switch=false;
 
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, DescendStageAttached, true);
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
 
 	CheckRCS();
 }
@@ -295,7 +302,14 @@ void LEM::SetLmVesselHoverStage()
 	AFEED4switch=false;
 
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, DescendStageAttached, true);
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
 
 	CheckRCS();
 }
@@ -398,8 +412,15 @@ void LEM::SetLmAscentHoverStage()
 	AFEED3switch=true;
 	AFEED4switch=true;
 
-	// Descent stage detached.
-	agc.SetInputChannelBit(030, DescendStageAttached, false);
+	// Descent stage attached.
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
 
 	CheckRCS();
 }

@@ -66,7 +66,7 @@ public:
 	void ResetRelays();
 	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
-	double GetCommandedThrust() { return dpsthrustcommand; }
+	double GetCommandedThrust();
 	void ProcessLGCThrustCommands(int val);
 
 	bool GetK1() { return K1; }
@@ -84,7 +84,7 @@ protected:
 	bool powered;					 // Data valid flag.
 	int pitchactuatorcommand, rollactuatorcommand;
 	bool engOn, DEArm;
-	double dpsthrustcommand;
+	double AutoThrust, ManualThrust;
 	double lgcAutoThrust;
 
 	//Relays
@@ -258,6 +258,7 @@ public:
 
 	bool GetAutoEngOn() { return AutoEngOn; }
 	bool GetAutoEngOff() { return AutoEngOff; }
+	bool GetK11() { return K11; }
 	bool GetK17() { return K17; }
 	bool GetK19() { return K19; }
 protected:

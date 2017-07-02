@@ -41,6 +41,7 @@
 #include "lm_eds.h"
 #include "lm_aps.h"
 #include "lm_dps.h"
+#include "lm_programer.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -243,8 +244,8 @@ public:
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos();
-	double GetRadarShaftPos() { return shaftAngle ; } ;
+	double GetRadarTrunnionPos() { return -asin(sin(trunnionAngle)); }
+	double GetRadarShaftPos() { return -asin(sin(shaftAngle)) ; }
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
 	double GetSignalStrength() { return SignalStrength*4.0; }
@@ -1500,6 +1501,8 @@ protected:
 	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
+	bool HasProgramer;
+	bool InvertStageBit;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1
@@ -1719,6 +1722,7 @@ protected:
 	SCCA1 scca1;
 	SCCA2 scca2;
 	SCCA3 scca3;
+	LEM_Programer lmp;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1799,6 +1803,7 @@ protected:
 	friend class LEMSteerableAntennaPitchMeter;
 	friend class LEMSteerableAntennaYawMeter;
 	friend class LEMSBandAntennaStrengthMeter;
+	friend class LEM_Programer;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

@@ -607,16 +607,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
 	}
-
-	//
-	// Quick hack to make the code work with old scenario files. Can be removed after NASSP 7
-	// release.
-	//
-
-	if (!OtherVesselName[0] && OurVessel) {
-		strncpy (OtherVesselName, OurVessel->GetName(), 63);
-		OtherVesselName[6] = 0;
-	}
 }
 
 //

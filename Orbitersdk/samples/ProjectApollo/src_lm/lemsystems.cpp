@@ -692,6 +692,9 @@ void LEM::SystemsInit()
 	//ORDEAL
 	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
 
+	//LM Mission Programer
+	lmp.Init(this);
+
 	//Mechanical Accelerometer
 	mechanicalAccelerometer.Init(this);
 
@@ -2451,16 +2454,6 @@ bool LEM_RR::IsDCPowered()
 	return true;
 }
 
-double LEM_RR::GetRadarTrunnionPos()
-{
-	if (mode == 1)
-	{
-		return -trunnionAngle;
-	}
-
-	return trunnionAngle + PI;
-}
-
 double LEM_RR::GetShaftErrorSignal()
 {
 	if (!IsPowered() || !AutoTrackEnabled)
@@ -2603,9 +2596,10 @@ void LEM_RR::TimeStep(double simdt){
 			range = 362066; // 195.5 nautical miles in meters
 		}
 		sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
-	}else{
+	}
+	else {
 		// Clobber test data if not already zero
-		if(tstime > 0){ tstime = 0; tstate[0] = 0; tstate[1] = 0; }
+		if (tstime > 0) { tstime = 0; tstate[0] = 0; tstate[1] = 0; }
 		// We must be in normal operation.
 		radarDataGood = 0;
 		range = 0;
@@ -2619,56 +2613,61 @@ void LEM_RR::TimeStep(double simdt){
 
 		VESSEL *csm = lem->agc.GetCSM();
 
-		//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
-		lem->GetGlobalPos(LMPos);
-		csm->GetGlobalPos(CSMPos);
-		//oapiGetGlobalPos(hEarth, &R_E);
-		//oapiGetGlobalPos(hMoon, &R_M);
-		lem->GetRotationMatrix(Rot);
-
-		//Vector pointing from LM to CSM
-		R = CSMPos - LMPos;
-
-		//Unit vector of it
-		U_R = unit(R);
-
-		//Unit vector of antenna in navigation base vessel's local frame, right handed
-		U_RRL[0] = unit(_V(sin(shaftAngle + anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle + anginc)*cos(trunnionAngle)));
-		U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
-		U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
-		U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
-
-		//In LM navigation base coordinates, left handed
-		for (int i = 0;i < 4;i++)
+		if (csm)
 		{
-			U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
-			//Calculate antenna pointing vector in global frame
-			U_RR = mul(Rot, U_RRL[i]);
+			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+			lem->GetGlobalPos(LMPos);
+			csm->GetGlobalPos(CSMPos);
+			//oapiGetGlobalPos(hEarth, &R_E);
+			//oapiGetGlobalPos(hMoon, &R_M);
+			lem->GetRotationMatrix(Rot);
 
-			//relative angle between antenna pointing vector and direction of CSM
-			relang = acos(dotp(U_RR, U_R));
+			//Vector pointing from LM to CSM
+			R = CSMPos - LMPos;
 
-			SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
-		}
+			//Unit vector of it
+			U_R = unit(R);
 
-		SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+			//Unit vector of antenna in navigation base vessel's local frame, right handed
+			U_RRL[0] = unit(_V(sin(shaftAngle + anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle + anginc)*cos(trunnionAngle)));
+			U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
+			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
+			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
 
-		if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
-		{
-			if (AutoTrackEnabled)
+			//In LM navigation base coordinates, left handed
+			for (int i = 0;i < 4;i++)
 			{
-				radarDataGood = 1;
-				range = length(R);
+				U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
-				lem->GetGlobalVel(LMVel);
-				csm->GetGlobalVel(CSMVel);
+				//Calculate antenna pointing vector in global frame
+				U_RR = mul(Rot, U_RRL[i]);
 
-				rate = dotp(CSMVel - LMVel, U_R);
+				//relative angle between antenna pointing vector and direction of CSM
+				relang = acos(dotp(U_RR, U_R));
+
+				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
 			}
-		}
 
-		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
+			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+
+			if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
+			{
+				if (AutoTrackEnabled)
+				{
+					radarDataGood = 1;
+					range = length(R);
+
+					lem->GetGlobalVel(LMVel);
+					csm->GetGlobalVel(CSMVel);
+
+					rate = dotp(CSMVel - LMVel, U_R);
+				}
+			}
+
+			//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
+
+		}
 	}
 
 	// Let's test.
@@ -2703,11 +2702,11 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = TrunRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 2) {
-			shaftAngle -= ShaftRate*simdt;
+			shaftAngle += ShaftRate*simdt;
 			shaftVel = ShaftRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 0) {
-			shaftAngle += ShaftRate*simdt;
+			shaftAngle -= ShaftRate*simdt;
 			shaftVel = -ShaftRate;
 		}
 

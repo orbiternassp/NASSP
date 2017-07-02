@@ -84,7 +84,7 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
-	void ThrottleActuator(double pos);
+	void ThrottleActuator(double manthrust, double autothrust);
 
 	LEM *lem;					// Pointer at LEM
 	double HePress[2];			// Helium pressure above and below the regulator

@@ -216,9 +216,11 @@ DECA::DECA() {
 	pitchactuatorcommand = 0;
 	rollactuatorcommand = 0;
 	engOn = false;
-	dpsthrustcommand = 0;
-	lgcAutoThrust = 0;
+	lgcAutoThrust = 0.0;
+	ManualThrust = 0.0;
 	LMR = 0.859;
+
+	ResetRelays();
 }
 
 void DECA::ResetRelays()
@@ -262,7 +264,9 @@ void DECA::Timestep(double simdt) {
 		//Set everything to false and then return
 		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
 		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
-		dpsthrustcommand = 0;
+		lgcAutoThrust = 0.0;
+		ManualThrust = 0.0;
+		AutoThrust = 0.0;
 
 		ResetRelays();
 
@@ -305,6 +309,16 @@ void DECA::Timestep(double simdt) {
 	else
 	{
 		DEArm = false;
+	}
+
+	//DECA Power Supply Failure
+	if (DEArm && !powered)
+	{
+		K26 = true;
+	}
+	else
+	{
+		K26 = false;
 	}
 
 	if (DEArm)
@@ -407,87 +421,165 @@ void DECA::Timestep(double simdt) {
 		K15 = false;
 	}
 
-	if (!powered) //If off, send out all zeros
+	//GIMBALING SIGNAL
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngGimbalEnableSwitch.IsDown())
 	{
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
-		return;
+		K8 = true;
+		K4 = true;
+		K9 = true;
+		K5 = true;
+	}
+	else
+	{
+		K8 = false;
+		K4 = false;
+		K9 = false;
+		K5 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->scca2.GetK11())
+	{
+		K14 = true;
+		K13 = true;
+	}
+	else
+	{
+		K14 = false;
+		K13 = false;
 	}
 
 	ChannelValue val11, val12;
 	val11 = lem->agc.GetOutputChannel(011);
 	val12 = lem->agc.GetOutputChannel(012);
 
-	if (lem->EngineArmSwitch.IsDown())
+	if (K13)
 	{
-		if (lem->GuidContSwitch.IsUp())
-		{
-			//Process Pitch Gimbal Actuator command
-			int valx = val12[PlusPitchVehicleMotion];
-			int valy = val12[MinusPitchVehicleMotion];
-			pitchactuatorcommand = valx - valy;
-
-			//Process Roll Gimbal Actuator command
-			valx = val12[PlusRollVehicleMotion];
-			valy = val12[MinusRollVehicleMotion];
-			rollactuatorcommand = valx - valy;
-		}
-		else
-		{
-			//TBD: AGS Trim Commands
-			pitchactuatorcommand = 0;
-			rollactuatorcommand = 0;
-		}
+		//TBD: AGS Trim Commands
+		pitchactuatorcommand = 0;
+	}
+	else
+	{
+		//Process Pitch Gimbal Actuator command
+		int valx = val12[PlusPitchVehicleMotion];
+		int valy = val12[MinusPitchVehicleMotion];
+		pitchactuatorcommand = valx - valy;
 	}
 
-	lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
-	lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
+	if (K14)
+	{
+		//TBD: AGS Trim Commands
+		rollactuatorcommand = 0;
+	}
+	else
+	{
+		//Process Roll Gimbal Actuator command
+		int valx = val12[PlusRollVehicleMotion];
+		int valy = val12[MinusRollVehicleMotion];
+		rollactuatorcommand = valx - valy;
+	}
+
+	if (powered && !K4 && !K5 && !K8 && !K9 && K25) //If off, send out all zeros
+	{
+		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
+		lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
+	}
+	else
+	{
+		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+	}
 
 	//Gimbal Failure Indication
-	if (lem->DPS.pitchGimbalActuator.GimbalFail() || lem->DPS.rollGimbalActuator.GimbalFail())
+	if (powered && (K1 || K23) && lem->DPS.pitchGimbalActuator.GimbalFail())
+	{
+		K21 = true;
+	}
+	else
+	{
+		K21 = false;
+	}
+
+	if (powered && (K1 || K23) && lem->DPS.rollGimbalActuator.GimbalFail())
+	{
+		K22 = true;
+	}
+	else
+	{
+		K22 = false;
+	}
+
+	if (K21 || K22)
 	{
 		lem->agc.SetInputChannelBit(032, ApparentDecscentEngineGimbalsFailed, 1);
 	}
 
-	double newdpsthrustcommand = 0;
+	// THROTTLING SIGNAL
 
-	//Process Throttle Commands
-	if (!K15)
+	//Reset auto throttle counter in manual mode
+	if (lem->SCS_ATCA_CB.IsPowered() && K2 && K15 && !K26)
+	{
+		lgcAutoThrust = 0.0;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && K24 && !K15 && !K26)
 	{
 		//Auto Thrust commands are generated in ProcessLGCThrustCommands()
-
-		newdpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
-		if (newdpsthrustcommand > 0.925)
+		//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
+		//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
+		dposcmd = lgcAutoThrust - AutoThrust;
+		poscmdsign = abs(lgcAutoThrust - AutoThrust) / (lgcAutoThrust - AutoThrust);
+		if (abs(dposcmd)>LMR*simdt)
 		{
-			newdpsthrustcommand = 0.925;
+			dpos = poscmdsign*LMR*simdt;
 		}
+		else
+		{
+			dpos = dposcmd;
+		}
+
+		AutoThrust += dpos;
 	}
 	else
 	{
-		newdpsthrustcommand = lem->ttca_thrustcmd;
-		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
+		AutoThrust = 0.0;
 	}
 
-	//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
-	//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
-	dposcmd = newdpsthrustcommand - dpsthrustcommand;
-	poscmdsign = abs(newdpsthrustcommand - dpsthrustcommand) / (newdpsthrustcommand - dpsthrustcommand);
-	if (abs(dposcmd)>LMR*simdt)
+	if (lem->IMU_OPR_CB.IsPowered() && lem->GuidContSwitch.IsUp())	//PGNS Control
 	{
-		dpos = poscmdsign*LMR*simdt;
+		ManualThrust = lem->ttca_thrustcmd;
+	}
+	else if (lem->SCS_ATCA_CB.IsPowered() && lem->GuidContSwitch.IsDown())	//AGS Control
+	{
+		ManualThrust = lem->ttca_thrustcmd;
 	}
 	else
 	{
-		dpos = dposcmd;
+		ManualThrust = 0.0;
 	}
 
-	dpsthrustcommand += dpos;
+	if (!(lem->SCS_ATCA_CB.IsPowered() && (lem->DECA_GMBL_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) && K2 && K24 && K25))
+	{
+		ManualThrust = 0.0;
+	}
 
-	lem->DPS.ThrottleActuator(dpsthrustcommand);
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
 	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
+}
+
+double DECA::GetCommandedThrust()
+{
+	if (lem->THRContSwitch.IsUp())
+	{
+		return AutoThrust + 0.1;
+	}
+	else
+	{
+		return ManualThrust;
+	}
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
@@ -523,7 +615,7 @@ void DECA::ProcessLGCThrustCommands(int val) {
 void DECA::SystemTimestep(double simdt) {
 
 	if (powered && dc_source)
-		dc_source->DrawPower(113.0);  // take DC power
+		dc_source->DrawPower(10.6);  // take DC power
 }
 
 void DECA::SaveState(FILEHANDLE scn) {
@@ -531,7 +623,7 @@ void DECA::SaveState(FILEHANDLE scn) {
 	// START_STRING is written in LEM
 	oapiWriteScenario_int(scn, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
 	oapiWriteScenario_int(scn, "ROLLACTUATORCOMMAND", rollactuatorcommand);
-	papiWriteScenario_double(scn, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+	papiWriteScenario_double(scn, "AUTOTHRUST", AutoThrust);
 	papiWriteScenario_double(scn, "LGCAUTOTHRUST", lgcAutoThrust);
 	papiWriteScenario_bool(scn, "K1", K1);
 	papiWriteScenario_bool(scn, "K2", K2);
@@ -570,7 +662,7 @@ void DECA::LoadState(FILEHANDLE scn) {
 
 		papiReadScenario_int(line, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
 		papiReadScenario_int(line, "ROLLACTUATORCOMMAND", rollactuatorcommand);
-		papiReadScenario_double(line, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+		papiReadScenario_double(line, "AUTOTHRUST", AutoThrust);
 		papiReadScenario_double(line, "LGCAUTOTHRUST", lgcAutoThrust);
 		papiReadScenario_bool(line, "K1", K1);
 		papiReadScenario_bool(line, "K2", K2);
