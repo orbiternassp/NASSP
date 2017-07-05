@@ -3364,7 +3364,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY], 0, 0, true, true);
 		}
-		else if (ApolloNo >= 10)
+		else if (ApolloNo >= 11)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY]);
 		}

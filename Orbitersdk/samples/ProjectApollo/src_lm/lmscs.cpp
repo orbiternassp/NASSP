@@ -311,6 +311,16 @@ void DECA::Timestep(double simdt) {
 		DEArm = false;
 	}
 
+	//DECA Power Supply Failure
+	if (DEArm && !powered)
+	{
+		K26 = true;
+	}
+	else
+	{
+		K26 = false;
+	}
+
 	if (DEArm)
 	{
 		K1 = true;
@@ -411,45 +421,95 @@ void DECA::Timestep(double simdt) {
 		K15 = false;
 	}
 
+	//GIMBALING SIGNAL
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngGimbalEnableSwitch.IsDown())
+	{
+		K8 = true;
+		K4 = true;
+		K9 = true;
+		K5 = true;
+	}
+	else
+	{
+		K8 = false;
+		K4 = false;
+		K9 = false;
+		K5 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->scca2.GetK11())
+	{
+		K14 = true;
+		K13 = true;
+	}
+	else
+	{
+		K14 = false;
+		K13 = false;
+	}
+
 	ChannelValue val11, val12;
 	val11 = lem->agc.GetOutputChannel(011);
 	val12 = lem->agc.GetOutputChannel(012);
 
-	if (lem->EngineArmSwitch.IsDown())
+	if (K13)
 	{
-		if (lem->GuidContSwitch.IsUp())
-		{
-			//Process Pitch Gimbal Actuator command
-			int valx = val12[PlusPitchVehicleMotion];
-			int valy = val12[MinusPitchVehicleMotion];
-			pitchactuatorcommand = valx - valy;
-
-			//Process Roll Gimbal Actuator command
-			valx = val12[PlusRollVehicleMotion];
-			valy = val12[MinusRollVehicleMotion];
-			rollactuatorcommand = valx - valy;
-		}
-		else
-		{
-			//TBD: AGS Trim Commands
-			pitchactuatorcommand = 0;
-			rollactuatorcommand = 0;
-		}
-	}
-
-	if (!powered) //If off, send out all zeros
-	{
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+		//TBD: AGS Trim Commands
+		pitchactuatorcommand = 0;
 	}
 	else
+	{
+		//Process Pitch Gimbal Actuator command
+		int valx = val12[PlusPitchVehicleMotion];
+		int valy = val12[MinusPitchVehicleMotion];
+		pitchactuatorcommand = valx - valy;
+	}
+
+	if (K14)
+	{
+		//TBD: AGS Trim Commands
+		rollactuatorcommand = 0;
+	}
+	else
+	{
+		//Process Roll Gimbal Actuator command
+		int valx = val12[PlusRollVehicleMotion];
+		int valy = val12[MinusRollVehicleMotion];
+		rollactuatorcommand = valx - valy;
+	}
+
+	if (powered && !K4 && !K5 && !K8 && !K9 && K25) //If off, send out all zeros
 	{
 		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
 		lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
 	}
+	else
+	{
+		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+	}
 
 	//Gimbal Failure Indication
-	if (lem->DPS.pitchGimbalActuator.GimbalFail() || lem->DPS.rollGimbalActuator.GimbalFail())
+	if (powered && (K1 || K23) && lem->DPS.pitchGimbalActuator.GimbalFail())
+	{
+		K21 = true;
+	}
+	else
+	{
+		K21 = false;
+	}
+
+	if (powered && (K1 || K23) && lem->DPS.rollGimbalActuator.GimbalFail())
+	{
+		K22 = true;
+	}
+	else
+	{
+		K22 = false;
+	}
+
+	if (K21 || K22)
 	{
 		lem->agc.SetInputChannelBit(032, ApparentDecscentEngineGimbalsFailed, 1);
 	}
@@ -458,6 +518,10 @@ void DECA::Timestep(double simdt) {
 
 	//Reset auto throttle counter in manual mode
 	if (lem->SCS_ATCA_CB.IsPowered() && K2 && K15 && !K26)
+	{
+		lgcAutoThrust = 0.0;
+	}
+	else if (!K2)	//And simply when the engine isn't armed... until we figure out how it works properly
 	{
 		lgcAutoThrust = 0.0;
 	}
@@ -555,7 +619,7 @@ void DECA::ProcessLGCThrustCommands(int val) {
 void DECA::SystemTimestep(double simdt) {
 
 	if (powered && dc_source)
-		dc_source->DrawPower(113.0);  // take DC power
+		dc_source->DrawPower(10.6);  // take DC power
 }
 
 void DECA::SaveState(FILEHANDLE scn) {
