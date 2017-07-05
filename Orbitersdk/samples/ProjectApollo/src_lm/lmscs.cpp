@@ -521,6 +521,10 @@ void DECA::Timestep(double simdt) {
 	{
 		lgcAutoThrust = 0.0;
 	}
+	else if (!K2)	//And simply when the engine isn't armed... until we figure out how it works properly
+	{
+		lgcAutoThrust = 0.0;
+	}
 
 	if (lem->SCS_ATCA_CB.IsPowered() && K24 && !K15 && !K26)
 	{
