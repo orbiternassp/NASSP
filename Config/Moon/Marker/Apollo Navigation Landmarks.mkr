@@ -23,6 +23,8 @@ BEGIN_DATA
 +23.678 +01.266         : LDMK 130 (Apollo 10)
 +170.146 +0.875         : CP-1 (Apollo 10)
 +127.400 +01.600        : CP-2 (Apollo 10)
-+86.88 +01.6 		: LDMK F-1 (Apollo 8 & 10)
++86.88 +1.6 		: LDMK F-1 (Apollo 8 & 10)
++35.036 +02.522         : LDMK B-1 (Apollo 10)
+-1.428 +0.283           : LDMK 150 (Apollo 10)
 
 
