@@ -1545,7 +1545,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			if (G->TPIPAD_dV_LOS.x > 0)
 			{
-				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x),G->TPIPAD_BT.x);
+				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x), G->TPIPAD_BT.x);
 			}
 			else
 			{
@@ -1581,40 +1581,145 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 			sprintf(Buffer, "X%06.2f AZ", G->TPIPAD_AZ);
 			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
+
 		}
 		else
 		{
-			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "TLI PAD", 7);
+			if (G->vesseltype < 2)
+			{
+				skp->Text(4 * W / 8, (int)(0.5 * H / 14), "TLI PAD", 7);
 
-			GET_Display(Buffer, G->tlipad.TB6P);
-			sprintf(Buffer, "%s TB6p", Buffer);
-			skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
+				GET_Display(Buffer, G->tlipad.TB6P);
+				sprintf(Buffer, "%s TB6p", Buffer);
+				skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "XXX%03.0f R", G->tlipad.IgnATT.x);
-			skp->Text(3 * W / 8, 4 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f P", G->tlipad.IgnATT.y);
-			skp->Text(3 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f Y", G->tlipad.IgnATT.z);
-			skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f R", G->tlipad.IgnATT.x);
+				skp->Text(3 * W / 8, 4 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P", G->tlipad.IgnATT.y);
+				skp->Text(3 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f Y", G->tlipad.IgnATT.z);
+				skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
 
-			double secs;
-			int mm, hh;
-			SStoHHMMSS(G->tlipad.BurnTime, hh, mm, secs);
+				double secs;
+				int mm, hh;
+				SStoHHMMSS(G->tlipad.BurnTime, hh, mm, secs);
 
-			sprintf(Buffer, "XXX%d:%02.0f BT", mm, secs);
-			skp->Text(3 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%d:%02.0f BT", mm, secs);
+				skp->Text(3 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f DVC", G->tlipad.dVC);
-			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+06.0f VI", G->tlipad.VI);
-			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%07.1f DVC", G->tlipad.dVC);
+				skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+06.0f VI", G->tlipad.VI);
+				skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "XXX%03.0f R SEP", G->tlipad.SepATT.x);
-			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f P SEP", G->tlipad.SepATT.y);
-			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "XXX%03.0f Y SEP", G->tlipad.SepATT.z);
-			skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f R SEP", G->tlipad.SepATT.x);
+				skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P SEP", G->tlipad.SepATT.y);
+				skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f Y SEP", G->tlipad.SepATT.z);
+				skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "PDI PAD", 7);
+
+				if (G->HeadsUp)
+				{
+					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Up", 8);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
+				}
+
+				if (G->REFSMMATcur != 5 && G->REFSMMATcur != 8)
+				{
+					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "No LS REFSMMAT!", 15);
+				}
+
+				if (!G->ManPADdirect)
+				{
+					skp->Text((int)(0.5 * W / 8), 14 * H / 20, "DOI:", 4);
+
+					GET_Display(Buffer, G->P30TIG);
+					skp->Text((int)(0.5 * W / 8), 15 * H / 20, Buffer, strlen(Buffer));
+
+					AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+					skp->Text((int)(0.5 * W / 8), 16 * H / 20, Buffer, strlen(Buffer));
+					AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+					skp->Text((int)(0.5 * W / 8), 17 * H / 20, Buffer, strlen(Buffer));
+					AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+					skp->Text((int)(0.5 * W / 8), 18 * H / 20, Buffer, strlen(Buffer));
+				}
+
+				skp->Text(4 * W / 8, 15 * H / 20, "T_L:", 4);
+				GET_Display(Buffer, G->t_Land);
+				skp->Text(5 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(4 * W / 8, 16 * H / 20, "Lat:", 4);
+				sprintf(Buffer, "%.3f°", G->LSLat*DEG);
+				skp->Text(5 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(4 * W / 8, 17 * H / 20, "Lng:", 4);
+				sprintf(Buffer, "%.3f°", G->LSLng*DEG);
+				skp->Text(5 * W / 8, 17 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(4 * W / 8, 18 * H / 20, "Alt:", 4);
+				sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
+				skp->Text(5 * W / 8, 18 * H / 20, Buffer, strlen(Buffer));
+
+				if (!G->PADSolGood)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Calculation failed!", 19);
+				}
+
+				int hh, mm; // ss;
+				double secs;
+
+				SStoHHMMSS(G->pdipad.GETI, hh, mm, secs);
+
+				skp->Text(3 * W / 8, 5 * H / 20, "HRS", 3);
+				skp->Text((int)(4.5 * W / 8), 5 * H / 20, "TIG", 3);
+				sprintf(Buffer, "%+06d", hh);
+				skp->Text(6 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 6 * H / 20, "MIN", 3);
+				skp->Text((int)(4.5 * W / 8), 6 * H / 20, "PDI", 3);
+				sprintf(Buffer, "%+06d", mm);
+				skp->Text(6 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 7 * H / 20, "SEC", 3);
+				sprintf(Buffer, "%+06.0f", secs * 100.0);
+				skp->Text(6 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
+
+				SStoHHMMSS(G->pdipad.t_go, hh, mm, secs);
+				skp->Text(3 * W / 8, 8 * H / 20, "TGO", 3);
+				skp->Text((int)(4.5 * W / 8), 8 * H / 20, "N61", 3);
+				sprintf(Buffer, "XX%02d:%02.0f", mm, secs);
+				skp->Text(6 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 9 * H / 20, "CROSSRANGE", 10);
+				sprintf(Buffer, "%07.1f", G->pdipad.CR);
+				skp->Text(6 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 10 * H / 20, "R", 1);
+				skp->Text((int)(4.5 * W / 8), 10 * H / 20, "FDAI", 4);
+				sprintf(Buffer, "XXX%03.0f", G->pdipad.Att.x);
+				skp->Text(6 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 11 * H / 20, "P", 1);
+				skp->Text((int)(4.5 * W / 8), 11 * H / 20, "AT TIG", 6);
+				sprintf(Buffer, "XXX%03.0f", G->pdipad.Att.y);
+				skp->Text(6 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 12 * H / 20, "Y", 1);
+				sprintf(Buffer, "XXX%03.0f", G->pdipad.Att.z);
+				skp->Text(6 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
+
+				skp->Text(3 * W / 8, 13 * H / 20, "DEDA 231 IF RQD", 15);
+				sprintf(Buffer, "%+06.0f", G->pdipad.DEDA231);
+				skp->Text(6 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
+			}
 		}
 	}
 	else if (screen == 10)
@@ -3754,6 +3859,18 @@ void ApolloRTCCMFD::menuSwitchHeadsUp()
 	{
 		G->HeadsUp = !G->HeadsUp;
 	}
+	else if (G->manpadopt == 2 && G->vesseltype > 1)
+	{
+		G->HeadsUp = !G->HeadsUp;
+	}
+}
+
+void ApolloRTCCMFD::menuSwitchManPADDirect()
+{
+	if (G->manpadopt == 2 && G->vesseltype > 1)
+	{
+		G->ManPADdirect = !G->ManPADdirect;
+	}
 }
 
 void ApolloRTCCMFD::menuCalcManPAD()
@@ -3771,52 +3888,59 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	}
 	else
 	{
-		TLIPADOpt opt;
-		double T_TLI;
-
-		SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
-
-		if (SatV->lvdc->TU)
+		if (G->vesseltype < 2)
 		{
-			G->TLI_PAD();
+			TLIPADOpt opt;
+			double T_TLI;
+
+			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
+
+			if (SatV->lvdc->TU)
+			{
+				G->TLI_PAD();
+			}
+			else
+			{
+				LVDCTLIparam tliparam;
+
+				tliparam.alpha_TS = SatV->lvdc->alpha_TS;
+				tliparam.Azimuth = SatV->lvdc->Azimuth;
+				tliparam.beta = SatV->lvdc->beta;
+				tliparam.cos_sigma = SatV->lvdc->cos_sigma;
+				tliparam.C_3 = SatV->lvdc->C_3;
+				tliparam.e_N = SatV->lvdc->e_N;
+				tliparam.f = SatV->lvdc->f;
+				tliparam.mu = SatV->lvdc->mu;
+				tliparam.MX_A = SatV->lvdc->MX_A;
+				tliparam.omega_E = SatV->lvdc->omega_E;
+				tliparam.R_N = SatV->lvdc->R_N;
+				tliparam.TargetVector = SatV->lvdc->TargetVector;
+				tliparam.TB5 = SatV->lvdc->TB5;
+				tliparam.theta_EO = SatV->lvdc->theta_EO;
+				tliparam.t_D = SatV->lvdc->t_D;
+				tliparam.T_L = SatV->lvdc->T_L;
+				tliparam.T_RG = SatV->lvdc->T_RG;
+				tliparam.T_ST = SatV->lvdc->T_ST;
+
+				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
+
+				opt.dV_LVLH = G->dV_LVLH;
+				opt.GETbase = G->GETbase;
+				opt.REFSMMAT = G->REFSMMAT;
+				opt.TIG = G->P30TIG;
+				opt.vessel = G->vessel;
+				opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
+				opt.TLI = T_TLI;
+				opt.R_TLI = G->R_TLI;
+				opt.V_TLI = G->V_TLI;
+				opt.uselvdc = true;
+
+				G->rtcc->TLI_PAD(&opt, G->tlipad);
+			}
 		}
 		else
 		{
-			LVDCTLIparam tliparam;
-
-			tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-			tliparam.Azimuth = SatV->lvdc->Azimuth;
-			tliparam.beta = SatV->lvdc->beta;
-			tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-			tliparam.C_3 = SatV->lvdc->C_3;
-			tliparam.e_N = SatV->lvdc->e_N;
-			tliparam.f = SatV->lvdc->f;
-			tliparam.mu = SatV->lvdc->mu;
-			tliparam.MX_A = SatV->lvdc->MX_A;
-			tliparam.omega_E = SatV->lvdc->omega_E;
-			tliparam.R_N = SatV->lvdc->R_N;
-			tliparam.TargetVector = SatV->lvdc->TargetVector;
-			tliparam.TB5 = SatV->lvdc->TB5;
-			tliparam.theta_EO = SatV->lvdc->theta_EO;
-			tliparam.t_D = SatV->lvdc->t_D;
-			tliparam.T_L = SatV->lvdc->T_L;
-			tliparam.T_RG = SatV->lvdc->T_RG;
-			tliparam.T_ST = SatV->lvdc->T_ST;
-			
-			G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
-
-			opt.dV_LVLH = G->dV_LVLH;
-			opt.GETbase = G->GETbase;
-			opt.REFSMMAT = G->REFSMMAT;
-			opt.TIG = G->P30TIG;
-			opt.vessel = G->vessel;
-			opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
-			opt.TLI = T_TLI;
-			opt.R_TLI = G->R_TLI;
-			opt.V_TLI = G->V_TLI;
-			opt.uselvdc = true;
-
-			G->rtcc->TLI_PAD(&opt, G->tlipad);
+			G->PDI_PAD();
 		}
 	}
 }

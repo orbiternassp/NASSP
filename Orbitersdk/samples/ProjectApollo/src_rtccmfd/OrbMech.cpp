@@ -4454,6 +4454,11 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+double GETfromMJD(double MJD, double GETBase)
+{
+	return (MJD - GETBase)*24.0*3600.0;
+}
+
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
 {
 	MATRIX3 Rot;
