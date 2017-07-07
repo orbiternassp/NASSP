@@ -2044,6 +2044,7 @@ int ARCore::subThread()
 			opt.dV_LVLH = dV_LVLH;
 			opt.engopt = ManPADSPS;
 			opt.GETbase = GETbase;
+			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
@@ -2407,6 +2408,8 @@ int ARCore::subThread()
 		opt.R_LS = OrbMech::r_from_latlong(LSLat, LSLng, LSAlt + rad);
 		opt.t_land = t_Land;
 		opt.vessel = vessel;
+		opt.P30TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
 
 		PADSolGood = rtcc->PDI_PAD(&opt, temppdipad);
 

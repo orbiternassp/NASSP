@@ -3029,7 +3029,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 {
 	MATRIX3 M_R, M, Q_Xx;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E;
+	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch;
 	int step, ManCOASstaroct;
 	SV sv, sv1, sv2;
 
@@ -3090,6 +3090,15 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
 
+	if (opt->HeadsUp)
+	{
+		headsswitch = -1.0;
+	}
+	else
+	{
+		headsswitch = 1.0;
+	}
+
 	X_B = unit(V_G);
 	if (opt->engopt == 2)
 	{
@@ -3099,8 +3108,15 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	{
 		UX = X_B;
 	}
-	UY = unit(crossp(UX, sv1.R));
-	UZ = unit(crossp(UX, crossp(UX, sv1.R)));
+	if (abs(dotp(UX, unit(sv1.R))) < cos(0.01*RAD))
+	{
+		UY = unit(crossp(UX, sv1.R*headsswitch));
+	}
+	else
+	{
+		UY = unit(crossp(UX, sv1.V));
+	}
+	UZ = unit(crossp(UX, UY));
 
 
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
@@ -5746,16 +5762,23 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 
 	if (opt->HeadsUp)
 	{
-		headsswitch = 1.0;
+		headsswitch = -1.0;
 	}
 	else
 	{
-		headsswitch = -1.0;
+		headsswitch = 1.0;
 	}
 
 	X_B = tmul(opt->REFSMMAT, unit(U_FDP));
 	UX = X_B;
-	UY = unit(crossp(UX, -R_I*headsswitch));
+	if (abs(dotp(UX, unit(R_I))) < cos(0.01*RAD))
+	{
+		UY = unit(crossp(UX, R_I*headsswitch));
+	}
+	else
+	{
+		UY = unit(crossp(UX, V_I));
+	}
 	UZ = unit(crossp(UX, UY));
 
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);

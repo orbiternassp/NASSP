@@ -1204,6 +1204,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->manpadopt == 0)
 		{
+			if (G->HeadsUp)
+			{
+				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Up", 8);
+			}
+			else
+			{
+				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
+			}
 
 			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "REFSMMAT:", 9);
 
@@ -1268,15 +1276,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				else
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
-				}
-
-				if (G->HeadsUp)
-				{
-					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Up", 8);
-				}
-				else
-				{
-					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
 				}
 
 				if (G->vesseltype == 1)
@@ -3855,7 +3854,7 @@ void ApolloRTCCMFD::set_spherical()
 
 void ApolloRTCCMFD::menuSwitchHeadsUp()
 {
-	if (G->manpadopt == 0 && G->vesseltype < 2)
+	if (G->manpadopt == 0)
 	{
 		G->HeadsUp = !G->HeadsUp;
 	}
