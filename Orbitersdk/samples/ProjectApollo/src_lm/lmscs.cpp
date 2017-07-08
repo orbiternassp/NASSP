@@ -1237,15 +1237,6 @@ void SCCA2::Timestep(double simdt)
 		K17 = false;
 	}
 
-	if (K7 && lem->THRContSwitch.IsDown())
-	{
-		lem->agc.SetInputChannelBit(030, AutoThrottle, false);
-	}
-	else
-	{
-		lem->agc.SetInputChannelBit(030, AutoThrottle, true);
-	}
-
 	if (K14)
 	{
 		lem->agc.SetInputChannelBit(030, EngineArmed, true);
