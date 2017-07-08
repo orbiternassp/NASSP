@@ -122,6 +122,7 @@ struct AP11LMManPADOpt
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int engopt; //0 = DPS, 1 = RCS+X, 2 = RCS-X
+	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	int vesseltype = 2; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
@@ -470,6 +471,19 @@ struct LunarLiftoffResults
 	double v_LV;
 };
 
+struct PDIPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double P30TIG; //Time of Ignition (MCC)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
+	MATRIX3 REFSMMAT;
+	bool direct; //0 = with MCC, 1 = without
+	VECTOR3 R_LS;	//Landing Site Vector
+	double t_land;
+	bool HeadsUp; //Orientation during the maneuver
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;	// Our ship
@@ -534,6 +548,7 @@ public:
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
+	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);

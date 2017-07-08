@@ -589,6 +589,7 @@ struct AP11PDIPAD {
 	double t_go;		// Time-to-go in P63
 	double CR;			// Crossrange
 	VECTOR3 Att;		// Attitude at TIG
+	double DEDA231;		// Landing site radius in 100 feet
 };
 
 

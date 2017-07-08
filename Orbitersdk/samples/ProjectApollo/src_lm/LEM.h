@@ -745,7 +745,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	ToggleSwitch THRContSwitch;
+	AGCIOSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;

@@ -546,7 +546,7 @@ void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V)	//computes the
 	incl = el.i;
 	TA = el.TA;
 	w = el.w;// el.omegab - el.theta;
-	rp_factor = h*h / (mu*(1 + e*cos(TA)));
+	rp_factor = h*h / (mu*(1.0 + e*cos(TA)));
 	rp.x = rp_factor*cos(TA);
 	rp.y = rp_factor*sin(TA);
 	rp.z = 0;
@@ -554,7 +554,7 @@ void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V)	//computes the
 	vp.x = -vp_factor*sin(TA);
 	vp.y = vp_factor*(e + cos(TA));
 	vp.z = 0;
-	R3_W = _M(cos(RA), sin(RA), 0, -sin(RA), cos(RA), 0, 0, 0, 1);
+	R3_W = _M(cos(RA), sin(RA), 0.0, -sin(RA), cos(RA), 0.0, 0.0, 0.0, 1.0);
 	R1_i = _M(1, 0, 0, 0, cos(incl), sin(incl), 0, -sin(incl), cos(incl));
 	R3_w = _M(cos(w), sin(w), 0, -sin(w), cos(w), 0, 0, 0, 1);
 	R2 = mul(R3_w, R1_i);
@@ -4452,6 +4452,11 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	V_cutoff = V_p;
 	m_cutoff = m_p;
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
+}
+
+double GETfromMJD(double MJD, double GETBase)
+{
+	return (MJD - GETBase)*24.0*3600.0;
 }
 
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)

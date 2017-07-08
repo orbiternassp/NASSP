@@ -309,6 +309,7 @@ ARCore::ARCore(VESSEL* v)
 	TPIPAD_ddH = 0.0;
 	TPIPAD_BT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
+	ManPADdirect = true;
 	P37GET400K = 0.0;
 	LOSGET = 0.0;
 	AOSGET = 0.0;
@@ -320,6 +321,7 @@ ARCore::ARCore(VESSEL* v)
 	GSAOSGET = 0.0;
 	GSLOSGET = 0.0;
 	inhibUplLOS = false;
+	PADSolGood = true;
 	svtarget = NULL;
 	svtargetnumber = -1;
 	svtimemode = 0;
@@ -362,6 +364,12 @@ ARCore::ARCore(VESSEL* v)
 	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
 	R_TLI = _V(0, 0, 0);
 	V_TLI = _V(0, 0, 0);
+
+	pdipad.Att = _V(0, 0, 0);
+	pdipad.CR = 0.0;
+	pdipad.DEDA231 = 0.0;
+	pdipad.GETI = 0.0;
+	pdipad.t_go = 0.0;
 
 	subThreadMode = 0;
 	subThreadStatus = 0;
@@ -799,6 +807,11 @@ void ARCore::TLI_PAD()
 void ARCore::TLCCCalc()
 {
 	startSubthread(14);
+}
+
+void ARCore::PDI_PAD()
+{
+	startSubthread(16);
 }
 
 void ARCore::EntryPAD()
@@ -2031,6 +2044,7 @@ int ARCore::subThread()
 			opt.dV_LVLH = dV_LVLH;
 			opt.engopt = ManPADSPS;
 			opt.GETbase = GETbase;
+			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
@@ -2376,6 +2390,33 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 
 		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
+
+		Result = 0;
+	}
+	break;
+	case 16: //PDI PAD
+	{
+		PDIPADOpt opt;
+		AP11PDIPAD temppdipad;
+
+		double rad = oapiGetSize(oapiGetObjectByName("Moon"));
+
+		opt.direct = ManPADdirect;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = HeadsUp;
+		opt.REFSMMAT = REFSMMAT;
+		opt.R_LS = OrbMech::r_from_latlong(LSLat, LSLng, LSAlt + rad);
+		opt.t_land = t_Land;
+		opt.vessel = vessel;
+		opt.P30TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+
+		PADSolGood = rtcc->PDI_PAD(&opt, temppdipad);
+
+		if (PADSolGood)
+		{
+			pdipad = temppdipad;
+		}
 
 		Result = 0;
 	}
