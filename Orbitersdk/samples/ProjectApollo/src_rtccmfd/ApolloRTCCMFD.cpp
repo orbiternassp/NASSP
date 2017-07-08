@@ -3830,10 +3830,7 @@ void ApolloRTCCMFD::menuSVUpload()
 		}
 		else
 		{
-			if (G->svtarget->GroundContact())
-			{
-				G->LandingSiteUplink();
-			}
+			G->LandingSiteUplink();
 		}
 	}
 }
