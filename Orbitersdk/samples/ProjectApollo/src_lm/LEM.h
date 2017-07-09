@@ -729,13 +729,13 @@ protected:
 
 	SwitchRow MPSRegControlLeftSwitchRow;
 	IndicatorSwitch ASCHeReg1TB;
-	IndicatorSwitch DESHeReg1TB;
+	LEMHeliumValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
 	IndicatorSwitch ASCHeReg2TB;
-	IndicatorSwitch DESHeReg2TB;
+	LEMHeliumValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
 
@@ -1741,6 +1741,7 @@ protected:
 	LEM_EDS eds;
 
 	// DPS and APS
+	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
 	LEM_APS APS;
 

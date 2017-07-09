@@ -514,3 +514,13 @@ public:
 protected:
 	SURFHANDLE FrameSurface;
 };
+
+class LEMHeliumValveTalkback : public IndicatorSwitch {
+public:
+	LEMHeliumValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSHeliumValve *v, bool failopen);
+	int GetState();
+
+protected:
+	DPSHeliumValve *valve;
+};

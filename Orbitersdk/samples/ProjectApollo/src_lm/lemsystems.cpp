@@ -681,6 +681,10 @@ void LEM::SystemsInit()
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
+	DESHeReg1Switch.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	DESHeReg2Switch.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
 
 	//DECA

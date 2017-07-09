@@ -220,6 +220,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	tcdu(agc, RegOPTY, 0141, 0),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover),
+	DPSPropellant(ph_Dsc, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
@@ -1132,6 +1133,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
 			fdaiRight.LoadState(scn, FDAI2_END_STRING);
 		}
+		else if (!strnicmp(line, DPSPROPELLANT_START_STRING, sizeof(DPSPROPELLANT_START_STRING))) {
+			DPSPropellant.LoadState(scn);
+		}
 		else if (!strnicmp(line, "DPS_BEGIN", sizeof("DPS_BEGIN"))) {
 			DPS.LoadState(scn, "DPS_END");
 		}
@@ -1490,6 +1494,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	//Save DPS
+	DPSPropellant.SaveState(scn);
 	DPS.SaveState(scn, "DPS_BEGIN", "DPS_END");
 	//Save pitch and roll gimbal actuators
 	oapiWriteLine(scn, "DPSGIMBALACTUATOR_PITCH_BEGIN");

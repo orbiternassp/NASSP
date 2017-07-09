@@ -27,15 +27,46 @@ See http://nassp.sourceforge.net/license/ for more details.
 class LEM;
 class AGCIOSwitch;
 class e_object;
+class DPSPropellantSource;
+
+class DPSValve {
+
+public:
+	virtual bool IsOpen() = 0;
+};
+
+class DPSHeliumValve : public DPSValve {
+
+public:
+	DPSHeliumValve();
+	void SetPropellantSource(DPSPropellantSource *p);
+	void SetState(bool open);
+	bool IsOpen() { return isOpen; };
+	void SwitchToggled(PanelSwitchItem *s);
+
+protected:
+	bool isOpen;
+	DPSPropellantSource *propellant;
+};
 
 class DPSPropellantSource {
 public:
 	DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
+
+	DPSHeliumValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
+	DPSHeliumValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 protected:
-	bool PrimaryHeRegulatorShutoffValveOpen;
-	bool SecondaryHeRegulatorShutoffValveOpen;
-	bool AmbientHeIsolValveOpen;
-	bool SupercritHeIsolValveOpen;
+	double propellantQuantityToDisplay;
+
+	DPSHeliumValve PrimaryHeRegulatorShutoffValve;
+	DPSHeliumValve SecondaryHeRegulatorShutoffValve;
+	DPSHeliumValve AmbientHeIsolValve;
+	DPSHeliumValve SupercritHeIsolValve;
+
+	PROPELLANT_HANDLE &source_prop;
 };
 
 
@@ -101,3 +132,6 @@ protected:
 	THRUSTER_HANDLE *dpsThruster;
 
 };
+
+#define DPSPROPELLANT_START_STRING     "DPSPROPELLANT_BEGIN"
+#define DPSPROPELLANT_END_STRING     "DPSPROPELLANT_END"

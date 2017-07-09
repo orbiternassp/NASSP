@@ -32,6 +32,76 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_dps.h"
 
+DPSHeliumValve::DPSHeliumValve() {
+	isOpen = false;
+}
+
+void DPSHeliumValve::SetPropellantSource(DPSPropellantSource *p) {
+	propellant = p;
+}
+
+void DPSHeliumValve::SetState(bool open) {
+	isOpen = open;
+	//if (!isSec)
+		//propellant->CheckHeliumValves();
+	//else
+		//propellant->CheckSecHeliumValve();
+}
+
+void DPSHeliumValve::SwitchToggled(PanelSwitchItem *s) {
+
+	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
+		if (((ThreePosSwitch *)s)->IsUp()) {
+			SetState(true);
+		}
+		else if (((ThreePosSwitch *)s)->IsDown()) {
+			SetState(false);
+		}
+	}
+}
+
+DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :source_prop(ph)
+{
+	propellantQuantityToDisplay = 0;
+
+	PrimaryHeRegulatorShutoffValve.SetPropellantSource(this);
+	SecondaryHeRegulatorShutoffValve.SetPropellantSource(this);
+	AmbientHeIsolValve.SetPropellantSource(this);
+	SupercritHeIsolValve.SetPropellantSource(this);
+
+	//Open by default
+	PrimaryHeRegulatorShutoffValve.SetState(true);
+}
+
+void DPSPropellantSource::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, DPSPROPELLANT_START_STRING);
+
+	papiWriteScenario_bool(scn, "PRIMREGHELIUMVALVE_ISOPEN", PrimaryHeRegulatorShutoffValve.IsOpen());
+	papiWriteScenario_bool(scn, "SECREGHELIUMVALVE_ISOPEN", SecondaryHeRegulatorShutoffValve.IsOpen());
+	papiWriteScenario_bool(scn, "AMBIENTHELIUMISOLVALVE_ISOPEN", AmbientHeIsolValve.IsOpen());
+	papiWriteScenario_bool(scn, "SUPERCRITHELIUMISOLVALVE_ISOPEN", SupercritHeIsolValve.IsOpen());
+
+	oapiWriteLine(scn, DPSPROPELLANT_END_STRING);
+}
+
+void DPSPropellantSource::LoadState(FILEHANDLE scn)
+{
+	char *line;
+	bool isOpen;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, DPSPROPELLANT_END_STRING, sizeof(DPSPROPELLANT_END_STRING))) {
+			return;
+		}
+
+		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))					PrimaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))					SecondaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "AMBIENTHELIUMISOLVALVE_ISOPEN", isOpen))					AmbientHeIsolValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "SUPERCRITHELIUMISOLVALVE_ISOPEN", isOpen))					SupercritHeIsolValve.SetState(isOpen);
+	}
+}
+
 // Descent Propulsion System
 LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsThruster(dps) {
