@@ -313,6 +313,8 @@ void LEM::Init()
 	ph_RCSA = 0;
 	ph_RCSB = 0;
 
+	DPSPropellant.SetVessel(this);
+
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
 	AscentEmptyMassKg = 2150.0;

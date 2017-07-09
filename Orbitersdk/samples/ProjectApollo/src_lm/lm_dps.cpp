@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
+#include "nasspdefs.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
@@ -60,9 +61,33 @@ void DPSHeliumValve::SwitchToggled(PanelSwitchItem *s) {
 	}
 }
 
-DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :source_prop(ph)
+LEMPropellantSource::LEMPropellantSource(PROPELLANT_HANDLE &h) : source_prop(h)
+
 {
-	propellantQuantityToDisplay = 0;
+	our_vessel = 0;
+}
+
+PROPELLANT_HANDLE LEMPropellantSource::Handle()
+
+{
+	return source_prop;
+}
+
+double LEMPropellantSource::Quantity()
+
+{
+	if (source_prop && our_vessel) {
+		return our_vessel->GetPropellantMass(source_prop) / our_vessel->GetPropellantMaxMass(source_prop);
+	}
+
+	return 0.0;
+}
+
+DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
+	LEMPropellantSource(ph)
+{
+	propellantMassToDisplay = SPS_DEFAULT_PROPELLANT;
+	propellantMaxMassToDisplay = DPS_DEFAULT_PROPELLANT;
 
 	PrimaryHeRegulatorShutoffValve.SetPropellantSource(this);
 	SecondaryHeRegulatorShutoffValve.SetPropellantSource(this);
@@ -71,6 +96,70 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :so
 
 	//Open by default
 	PrimaryHeRegulatorShutoffValve.SetState(true);
+}
+
+void DPSPropellantSource::Init(e_object *dc1)
+{
+	GaugingPower = dc1;
+}
+
+void DPSPropellantSource::Timestep(double simt, double simdt)
+{
+	if (!our_vessel) return;
+
+	double p, pmax;
+
+	if (!source_prop) {
+		p = 0;
+		pmax = 1;
+	}
+	else {
+		p = our_vessel->GetPropellantMass(source_prop);
+		pmax = SPS_DEFAULT_PROPELLANT;
+	}
+
+	// Propellant Quantity Gauging Control Unit
+	if (IsGaugingPowered()) {
+		
+		if (our_vessel->QTYMonSwitch.IsCenter())
+		{
+			propellantMassToDisplay = p;
+		}
+		else
+		{
+			propellantMassToDisplay = p;
+		}
+	}
+}
+
+void DPSPropellantSource::SystemTimestep(double simdt)
+{
+
+}
+
+double DPSPropellantSource::GetFuelPercent()
+{
+	if (propellantMassToDisplay / propellantMaxMassToDisplay < 0.95)
+		return propellantMassToDisplay / propellantMaxMassToDisplay;
+
+	return 0.95;
+}
+
+double DPSPropellantSource::GetOxidPercent()
+{
+	if (propellantMassToDisplay / propellantMaxMassToDisplay < 0.95)
+		return propellantMassToDisplay / propellantMaxMassToDisplay;
+
+	return 0.95;
+}
+
+bool DPSPropellantSource::IsGaugingPowered() {
+
+	if (GaugingPower->Voltage() < SP_MIN_DCVOLTAGE) return false;
+
+	if (our_vessel->QTYMonSwitch.IsDown()) return false;
+
+	return true;
 }
 
 void DPSPropellantSource::SaveState(FILEHANDLE scn)

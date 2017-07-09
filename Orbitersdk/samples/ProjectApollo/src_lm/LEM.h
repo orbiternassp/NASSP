@@ -1787,6 +1787,7 @@ protected:
 	friend class LMCabinTempMeter;
 	friend class LMSuitTempMeter;
 	friend class DPSGimbalActuator;
+	friend class DPSPropellantSource;
 	friend class LEM_DPS;
 	friend class LEM_APS;
 	friend class DECA;

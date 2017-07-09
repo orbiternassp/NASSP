@@ -49,9 +49,29 @@ protected:
 	DPSPropellantSource *propellant;
 };
 
-class DPSPropellantSource {
+class LEMPropellantSource {
+public:
+	LEMPropellantSource(PROPELLANT_HANDLE &h);
+	void SetVessel(LEM *v) { our_vessel = v; };
+	PROPELLANT_HANDLE Handle();
+	virtual double Quantity();
+	virtual double Temperature() { return 0.0; };
+	virtual double Pressure() { return 0.0; };
+
+protected:
+	PROPELLANT_HANDLE &source_prop;
+	LEM *our_vessel;
+};
+
+class DPSPropellantSource : public LEMPropellantSource {
 public:
 	DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
+
+	void Init(e_object *dc1);
+	void Timestep(double simt, double simdt);
+	void SystemTimestep(double simdt);
+	double GetFuelPercent();
+	double GetOxidPercent();
 
 	DPSHeliumValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	DPSHeliumValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
@@ -59,14 +79,17 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
-	double propellantQuantityToDisplay;
+	bool IsGaugingPowered();
+
+	double propellantMassToDisplay;
+	double propellantMaxMassToDisplay;
 
 	DPSHeliumValve PrimaryHeRegulatorShutoffValve;
 	DPSHeliumValve SecondaryHeRegulatorShutoffValve;
 	DPSHeliumValve AmbientHeIsolValve;
 	DPSHeliumValve SupercritHeIsolValve;
 
-	PROPELLANT_HANDLE &source_prop;
+	e_object *GaugingPower;
 };
 
 
