@@ -3801,9 +3801,9 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 {
 	VECTOR3 R_A, V_A, R0B, V0B, R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
 	MATRIX3 M_R, Rot2;
-	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO;
+	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO, mu_M;
 	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit, KTETA;
-	OBJHANDLE gravref, hEarth;
+	OBJHANDLE gravref, hEarth, hMoon;
 	SV sv0;		// "Now"
 	SV sv1;		// "Now" or just after the maneuver
 	SV svEI;	// EI/400K
@@ -3813,6 +3813,8 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 
 	gravref = AGCGravityRef(opt->vessel);
 	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	mu_M = GGRAV*oapiGetMass(hMoon);
 
 	EIAlt = 400000.0*0.3048;
 	Alt300K = 300000.0*0.3048;
@@ -3838,6 +3840,12 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	else
 	{
 		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
+	}
+
+	if (sv1.gravref == hMoon)
+	{
+		double dt_r = OrbMech::time_radius(sv1.R, sv1.V, 64373760.0, 1.0, mu_M);
+		sv1 = coast(sv1, dt_r);
 	}
 
 	dt = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv1.gravref, hEarth, svEI.R, svEI.V);

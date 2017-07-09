@@ -3181,7 +3181,7 @@ void ApolloRTCCMFD::set_entrylat(double lat)
 
 void ApolloRTCCMFD::EntryLngDialogue()
 {
-	if (G->entrycritical != 3)
+	if (G->entrycritical != 3 || G->entrycalcmode == 3)
 	{
 		if (G->entrylongmanual)
 		{
@@ -4423,7 +4423,7 @@ void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 {
 	if (G->entrycalcmode == 0 || G->entrycalcmode == 2 || G->entrycalcmode == 3)
 	{
-		if (G->entrycritical != 3)
+		if (G->entrycritical != 3 || G->entrycalcmode == 3)
 		{
 			G->entrylongmanual = !G->entrylongmanual;
 		}
