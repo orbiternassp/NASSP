@@ -524,3 +524,25 @@ public:
 protected:
 	DPSHeliumValve *valve;
 };
+
+class LEMDigitalMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	SURFHANDLE Digits;
+	LEM *lem;
+};
+
+class LEMDPSOxidPercentMeter : public LEMDigitalMeter {
+public:
+	double QueryValue();
+};
+
+class LEMDPSFuelPercentMeter : public LEMDigitalMeter {
+public:
+	double QueryValue();
+};

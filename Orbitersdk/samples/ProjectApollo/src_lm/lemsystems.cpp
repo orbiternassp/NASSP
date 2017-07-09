@@ -479,6 +479,8 @@ void LEM::SystemsInit()
 	MainOxidizerPressInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	EngineThrustInd.WireTo(&THRUST_DISP_CB);
 	CommandedThrustInd.WireTo(&THRUST_DISP_CB);
+	DPSOxidPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
+	DPSFuelPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
 
 	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
 	// CDR FDAI
@@ -678,6 +680,7 @@ void LEM::SystemsInit()
 	scca3.Init(this);
 
 	// DPS and APS
+	DPSPropellant.Init(&PROP_PQGS_CB);
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
@@ -1416,6 +1419,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
+	DPSPropellant.Timestep(simt, simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);

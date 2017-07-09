@@ -553,6 +553,7 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
+	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -706,6 +707,12 @@ protected:
 
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
+
+	SwitchRow MainPropOxidPercentRow;
+	LEMDPSOxidPercentMeter DPSOxidPercentMeter;
+
+	SwitchRow MainPropFuelPercentRow;
+	LEMDPSFuelPercentMeter DPSFuelPercentMeter;
 
 	SwitchRow MainPropAndEngineIndRow;
 	EngineThrustInd EngineThrustInd;
@@ -1806,6 +1813,7 @@ protected:
 	friend class LEMSteerableAntennaYawMeter;
 	friend class LEMSBandAntennaStrengthMeter;
 	friend class LEM_Programer;
+	friend class LEMDigitalMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

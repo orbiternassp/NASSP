@@ -1605,3 +1605,34 @@ int LEMHeliumValveTalkback::GetState()
 
 	return state;
 }
+
+void LEMDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
+{
+	MeterSwitch::Init(row);
+	Digits = surf;
+	lem = l;
+}
+
+void LEMDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown()) return;
+
+	double percent = v * 100.0;
+
+	int Curdigit2 = (int)percent;
+	int Curdigit = (int)percent / 10;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+}
+
+double LEMDPSOxidPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetOxidPercent();
+}
+
+
+double LEMDPSFuelPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetFuelPercent();
+}

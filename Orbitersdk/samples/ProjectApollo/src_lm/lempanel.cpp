@@ -252,7 +252,9 @@ void LEM::InitSwitches() {
 	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
 	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
-	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);	
+	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);
+	DPSOxidPercentMeter.Register(PSH, "DPSOxidPercentMeter", 0, 0.99, 1, 0.99);
+	DPSFuelPercentMeter.Register(PSH, "DPSFuelPercentMeter", 0, 0.99, 1, 0.99);
 
 	GyroTestLeftSwitch.Register(PSH, "GyroTestLeftSwitch",  THREEPOSSWITCH_UP);
 	GyroTestRightSwitch.Register(PSH, "GyroTestRightSwitch",  THREEPOSSWITCH_CENTER);
@@ -1433,7 +1435,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 698, 1756,  984, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R( 171,  286,  313,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER,						_R( 387,  286,  468,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUEL_DIGIT,						_R( 555,  245,  594,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MPS_OXID_QUANTITY_INDICATOR,		_R( 555,  245,  594,  266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MPS_FUEL_QUANTITY_INDICATOR,		_R( 555,  297,  594,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 420,  426,  468,  474), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1450, 1221, 1498, 1261), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1529,7 +1532,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_MPS_REG_CONTROLS_LEFT,			_R(1736,  738, 1772,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RANGE_TAPE,						_R(1826,  480, 1870,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RATE_TAPE,						_R(1877,  480, 1915,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_FUEL_DIGIT,						_R(1839,   65, 1878,  139), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_OXID_QUANTITY_INDICATOR,		_R(1839,   65, 1878,   86), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_FUEL_QUANTITY_INDICATOR,		_R(1839,  117, 1878,  139), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		// 3 pos Engine Arm Lever
 		oapiRegisterPanelArea(AID_ENG_ARM,							_R(1547,  898, 1581,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 
@@ -1550,7 +1554,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_CONTACTLIGHT1,					_R(1507,   44, 1556,   93), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			    PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RANGE_TAPE,						_R(1629,  278, 1673,  441), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			    PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RATE_TAPE,						_R(1680,  278, 1718,  441), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			    PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_FUEL_DIGIT,						_R(1434,  132, 1473,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			    PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_OXID_QUANTITY_INDICATOR,		_R(1434,  132, 1473,  153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_FUEL_QUANTITY_INDICATOR,		_R(1434,  184, 1473,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			    PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_ABORT,                            _R(1738, 473,  1907, 593),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		// 3 pos Engine Arm Lever
 		oapiRegisterPanelArea(AID_ENG_ARM,                          _R(1350, 696, 1384, 736),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
@@ -1692,6 +1697,12 @@ void LEM::SetSwitches(int panel) {
 	//	case LMPANEL_MAIN:
 	//	case LMPANEL_LEFTWINDOW:
 	//	case LMPANEL_RIGHTWINDOW:
+
+			MainPropOxidPercentRow.Init(AID_MPS_OXID_QUANTITY_INDICATOR, MainPanel);
+			DPSOxidPercentMeter.Init(srf[SRF_DIGITALDISP2], MainPropOxidPercentRow, this);
+
+			MainPropFuelPercentRow.Init(AID_MPS_FUEL_QUANTITY_INDICATOR, MainPanel);
+			DPSFuelPercentMeter.Init(srf[SRF_DIGITALDISP2], MainPropFuelPercentRow, this);
 
 			MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
 			EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
@@ -3618,7 +3629,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_FUEL_DIGIT:
-		double fuel;
+		/*double fuel;
 
 		// Don't display with no power
 		if(RCS_B_PQGS_DISP_CB.Voltage() < 24){ return true; }
@@ -3643,7 +3654,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		Curdigit2= (int) fuel;
 		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 0, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);
-		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 52, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);
+		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 52, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);*/
 
 		return true;
 

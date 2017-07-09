@@ -134,7 +134,7 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 
 void DPSPropellantSource::SystemTimestep(double simdt)
 {
-
+	if (our_vessel->stage > 1) return;
 }
 
 double DPSPropellantSource::GetFuelPercent()
