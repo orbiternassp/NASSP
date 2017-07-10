@@ -253,8 +253,9 @@ void LEM::InitSwitches() {
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
 	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
 	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);
-	DPSOxidPercentMeter.Register(PSH, "DPSOxidPercentMeter", 0, 0.99, 1, 0.99);
-	DPSFuelPercentMeter.Register(PSH, "DPSFuelPercentMeter", 0, 0.99, 1, 0.99);
+	DPSOxidPercentMeter.Register(PSH, "DPSOxidPercentMeter", 0, 0.99, 0, 0);
+	DPSFuelPercentMeter.Register(PSH, "DPSFuelPercentMeter", 0, 0.99, 0, 0);
+	MainHeliumPressureMeter.Register(PSH, "MainHeliumPressureMeter", 0, 9999, 0, 0);
 
 	GyroTestLeftSwitch.Register(PSH, "GyroTestLeftSwitch",  THREEPOSSWITCH_UP);
 	GyroTestRightSwitch.Register(PSH, "GyroTestRightSwitch",  THREEPOSSWITCH_CENTER);
@@ -1342,6 +1343,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_EVENT_TIMER,						_R( 387,  286,  468,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_OXID_QUANTITY_INDICATOR,		_R( 555,  245,  594,  266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_FUEL_QUANTITY_INDICATOR,		_R( 555,  297,  594,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MPS_HELIUM_PRESS_INDICATOR,		_R( 687,  286,  768,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 420,  426,  468,  474), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1450, 1221, 1498, 1261), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1608,6 +1610,9 @@ void LEM::SetSwitches(int panel) {
 
 			MainPropFuelPercentRow.Init(AID_MPS_FUEL_QUANTITY_INDICATOR, MainPanel);
 			DPSFuelPercentMeter.Init(srf[SRF_DIGITALDISP2], MainPropFuelPercentRow, this);
+
+			MainPropHeliumPressRow.Init(AID_MPS_HELIUM_PRESS_INDICATOR, MainPanel);
+			MainHeliumPressureMeter.Init(srf[SRF_DIGITALDISP2], MainPropHeliumPressRow, &HeliumMonRotary, this);
 
 			MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
 			EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);

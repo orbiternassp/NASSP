@@ -1662,3 +1662,55 @@ double LEMDPSFuelPercentMeter::QueryValue()
 {
 	return lem->GetDPSPropellant()->GetFuelPercent();
 }
+
+LEMDigitalHeliumPressureMeter::LEMDigitalHeliumPressureMeter()
+
+{
+	source = 0;
+	Digits = 0;
+}
+
+void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	Digits = surf;
+	lem = l;
+}
+
+double LEMDigitalHeliumPressureMeter::QueryValue()
+
+{
+	if (!source) return 0;
+
+	if (source->GetState() == 0)
+	{
+		return 0.0;
+	}
+	else if (source->GetState() == 1)
+	{
+		return lem->GetDPSPropellant()->GetAmbientHeliumPressPSI();
+	}
+	else if (source->GetState() == 2)
+	{
+		return lem->GetDPSPropellant()->GetSupercriticalHeliumPressPSI();
+	}
+
+	return 0;
+}
+
+void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0) return;
+
+	int Curdigit4 = (int)v;
+	int Curdigit3 = (int)v / 10;
+	int Curdigit2 = (int)v / 100;
+	int Curdigit = (int)v / 1000;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+}

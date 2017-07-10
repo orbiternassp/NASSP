@@ -556,3 +556,18 @@ class LEMDPSFuelPercentMeter : public LEMDigitalMeter {
 public:
 	double QueryValue();
 };
+
+class LEMDigitalHeliumPressureMeter : public MeterSwitch {
+public:
+	LEMDigitalHeliumPressureMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
+	double QueryValue();
+	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	RotationalSwitch *source;
+	SURFHANDLE Digits;
+	LEM *lem;
+};

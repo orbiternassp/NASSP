@@ -84,6 +84,8 @@ public:
 	void SystemTimestep(double simdt);
 	double GetFuelPercent();
 	double GetOxidPercent();
+	double GetAmbientHeliumPressPSI();
+	double GetSupercriticalHeliumPressPSI();
 
 	DPSHeliumValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	DPSHeliumValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
@@ -97,6 +99,8 @@ protected:
 
 	double propellantMassToDisplay;
 	double propellantMaxMassToDisplay;
+	double ambientHeliumPressurePSI;
+	double supercriticalHeliumPressurePSI;
 
 	DPSHeliumValve PrimaryHeRegulatorShutoffValve;
 	DPSHeliumValve SecondaryHeRegulatorShutoffValve;

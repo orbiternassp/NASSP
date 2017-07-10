@@ -480,6 +480,7 @@ void LEM::SystemsInit()
 	CommandedThrustInd.WireTo(&THRUST_DISP_CB);
 	DPSOxidPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
 	DPSFuelPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
+	MainHeliumPressureMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
 
 	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
 	// CDR FDAI

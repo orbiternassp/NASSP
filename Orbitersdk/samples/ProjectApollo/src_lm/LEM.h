@@ -705,6 +705,9 @@ protected:
 	SwitchRow MainPropFuelPercentRow;
 	LEMDPSFuelPercentMeter DPSFuelPercentMeter;
 
+	SwitchRow MainPropHeliumPressRow;
+	LEMDigitalHeliumPressureMeter MainHeliumPressureMeter;
+
 	SwitchRow MainPropAndEngineIndRow;
 	EngineThrustInd EngineThrustInd;
 	CommandedThrustInd CommandedThrustInd;

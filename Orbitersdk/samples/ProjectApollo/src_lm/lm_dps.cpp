@@ -108,6 +108,8 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 {
 	propellantMassToDisplay = SPS_DEFAULT_PROPELLANT;
 	propellantMaxMassToDisplay = DPS_DEFAULT_PROPELLANT;
+	ambientHeliumPressurePSI = 0.0;
+	supercriticalHeliumPressurePSI = 0.0;
 
 	PrimaryHeRegulatorShutoffValve.SetPropellantSource(this);
 	SecondaryHeRegulatorShutoffValve.SetPropellantSource(this);
@@ -138,6 +140,9 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 	else {
 		p = our_vessel->GetPropellantMass(source_prop);
 		pmax = DPS_DEFAULT_PROPELLANT;
+
+		ambientHeliumPressurePSI = 1600.0;
+		supercriticalHeliumPressurePSI = 400.0;
 	}
 
 	//Ambient Helium Isolation Valve
@@ -220,6 +225,22 @@ double DPSPropellantSource::GetOxidPercent()
 		return propellantMassToDisplay / propellantMaxMassToDisplay;
 
 	return 0.95;
+}
+
+double DPSPropellantSource::GetAmbientHeliumPressPSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return ambientHeliumPressurePSI;
+
+	return 0.0;
+}
+
+double DPSPropellantSource::GetSupercriticalHeliumPressPSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return supercriticalHeliumPressurePSI;
+
+	return 0.0;
 }
 
 bool DPSPropellantSource::IsGaugingPowered() {
