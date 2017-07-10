@@ -49,6 +49,18 @@ protected:
 	DPSPropellantSource *propellant;
 };
 
+class DPSPropellantValve : public DPSValve {
+
+public:
+	DPSPropellantValve();
+	void SetState(bool open);
+	bool IsOpen() { return isOpen; };
+	void SwitchToggled(PanelSwitchItem *s);
+
+protected:
+	bool isOpen;
+};
+
 class LEMPropellantSource {
 public:
 	LEMPropellantSource(PROPELLANT_HANDLE &h);
@@ -75,6 +87,8 @@ public:
 
 	DPSHeliumValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	DPSHeliumValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
+	DPSPropellantValve *GetOxidVentValve2() { return &OxidVentValve2; }
+	DPSPropellantValve *GetFuelVentValve2() { return &FuelVentValve2; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -88,6 +102,12 @@ protected:
 	DPSHeliumValve SecondaryHeRegulatorShutoffValve;
 	DPSHeliumValve AmbientHeIsolValve;
 	DPSHeliumValve SupercritHeIsolValve;
+	DPSHeliumValve OxidCompatibilityValve;
+	DPSHeliumValve FuelCompatibilityValve;
+	DPSPropellantValve OxidVentValve1;
+	DPSPropellantValve OxidVentValve2;
+	DPSPropellantValve FuelVentValve1;
+	DPSPropellantValve FuelVentValve2;
 
 	e_object *GaugingPower;
 };

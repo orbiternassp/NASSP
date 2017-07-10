@@ -1600,7 +1600,33 @@ int LEMHeliumValveTalkback::GetState()
 	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
 		state = valve->IsOpen() ? 1 : 0;
 	else
-		// SM RCS helium and prim. propellant talkbacks fail open
+		// Should this fail open?
+		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+LEMPropellantValveTalkback::LEMPropellantValveTalkback()
+
+{
+	valve = 0;
+}
+
+
+void LEMPropellantValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSPropellantValve *v, bool failopen)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	valve = v;
+}
+
+int LEMPropellantValveTalkback::GetState()
+
+{
+	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+		state = valve->IsOpen() ? 1 : 0;
+	else
+		// Should this fail open?
 		state = (failOpen ? 1 : 0);
 
 	return state;

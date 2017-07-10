@@ -61,6 +61,26 @@ void DPSHeliumValve::SwitchToggled(PanelSwitchItem *s) {
 	}
 }
 
+DPSPropellantValve::DPSPropellantValve() {
+	isOpen = false;
+}
+
+void DPSPropellantValve::SetState(bool open) {
+	isOpen = open;
+}
+
+void DPSPropellantValve::SwitchToggled(PanelSwitchItem *s) {
+
+	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
+		if (((ThreePosSwitch *)s)->IsUp()) {
+			SetState(true);
+		}
+		else if (((ThreePosSwitch *)s)->IsDown()) {
+			SetState(false);
+		}
+	}
+}
+
 LEMPropellantSource::LEMPropellantSource(PROPELLANT_HANDLE &h) : source_prop(h)
 
 {
@@ -93,6 +113,8 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	SecondaryHeRegulatorShutoffValve.SetPropellantSource(this);
 	AmbientHeIsolValve.SetPropellantSource(this);
 	SupercritHeIsolValve.SetPropellantSource(this);
+	OxidCompatibilityValve.SetPropellantSource(this);
+	FuelCompatibilityValve.SetPropellantSource(this);
 
 	//Open by default
 	PrimaryHeRegulatorShutoffValve.SetState(true);
@@ -115,7 +137,54 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 	}
 	else {
 		p = our_vessel->GetPropellantMass(source_prop);
-		pmax = SPS_DEFAULT_PROPELLANT;
+		pmax = DPS_DEFAULT_PROPELLANT;
+	}
+
+	//Ambient Helium Isolation Valve
+	if (!AmbientHeIsolValve.IsOpen() && our_vessel->DescentEngineStartPyros.Blown())
+	{
+		AmbientHeIsolValve.SetState(true);
+	}
+
+	//Supercritical Helium Isolation Valve
+	if (!SupercritHeIsolValve.IsOpen() && our_vessel->DescentEngineOnPyros.Blown())
+	{
+		SupercritHeIsolValve.SetState(true);
+	}
+
+	//Propellant Compatibility Valves
+	if (!OxidCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
+	{
+		OxidCompatibilityValve.SetState(true);
+	}
+
+	if (!FuelCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
+	{
+		FuelCompatibilityValve.SetState(true);
+	}
+
+	//Vent Valves
+	if (!OxidVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
+	{
+		OxidVentValve1.SetState(true);
+	}
+
+	if (!FuelVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
+	{
+		FuelVentValve1.SetState(true);
+	}
+
+	//Propellant Venting
+	if (source_prop) {
+
+		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
+		{
+			//TBD: Vent Helium and Oxidizer
+		}
+		if (FuelVentValve1.IsOpen() && FuelVentValve2.IsOpen())
+		{
+			// TBD: Vent Helium and Fuel
+		}
 	}
 
 	// Propellant Quantity Gauging Control Unit
@@ -170,6 +239,12 @@ void DPSPropellantSource::SaveState(FILEHANDLE scn)
 	papiWriteScenario_bool(scn, "SECREGHELIUMVALVE_ISOPEN", SecondaryHeRegulatorShutoffValve.IsOpen());
 	papiWriteScenario_bool(scn, "AMBIENTHELIUMISOLVALVE_ISOPEN", AmbientHeIsolValve.IsOpen());
 	papiWriteScenario_bool(scn, "SUPERCRITHELIUMISOLVALVE_ISOPEN", SupercritHeIsolValve.IsOpen());
+	papiWriteScenario_bool(scn, "FUELVENTVALVE1_ISOPEN", FuelVentValve1.IsOpen());
+	papiWriteScenario_bool(scn, "FUELVENTVALVE2_ISOPEN", FuelVentValve2.IsOpen());
+	papiWriteScenario_bool(scn, "OXIDVENTVALVE1_ISOPEN", OxidVentValve1.IsOpen());
+	papiWriteScenario_bool(scn, "OXIDVENTVALVE2_ISOPEN", OxidVentValve2.IsOpen());
+	papiWriteScenario_bool(scn, "FUELCOMPATIBILITYVALVE_ISOPEN", FuelCompatibilityValve.IsOpen());
+	papiWriteScenario_bool(scn, "OXIDCOMPATIBILITYVALVE_ISOPEN", OxidCompatibilityValve.IsOpen());
 
 	oapiWriteLine(scn, DPSPROPELLANT_END_STRING);
 }
@@ -184,10 +259,16 @@ void DPSPropellantSource::LoadState(FILEHANDLE scn)
 			return;
 		}
 
-		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))					PrimaryHeRegulatorShutoffValve.SetState(isOpen);
-		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))					SecondaryHeRegulatorShutoffValve.SetState(isOpen);
-		if (papiReadScenario_bool(line, "AMBIENTHELIUMISOLVALVE_ISOPEN", isOpen))					AmbientHeIsolValve.SetState(isOpen);
-		if (papiReadScenario_bool(line, "SUPERCRITHELIUMISOLVALVE_ISOPEN", isOpen))					SupercritHeIsolValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))			PrimaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))			SecondaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "AMBIENTHELIUMISOLVALVE_ISOPEN", isOpen))		AmbientHeIsolValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "SUPERCRITHELIUMISOLVALVE_ISOPEN", isOpen))		SupercritHeIsolValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "FUELVENTVALVE1_ISOPEN", isOpen))				FuelVentValve1.SetState(isOpen);
+		if (papiReadScenario_bool(line, "FUELVENTVALVE2_ISOPEN", isOpen))				FuelVentValve2.SetState(isOpen);
+		if (papiReadScenario_bool(line, "OXIDVENTVALVE1_ISOPEN", isOpen))				OxidVentValve1.SetState(isOpen);
+		if (papiReadScenario_bool(line, "OXIDVENTVALVE2_ISOPEN", isOpen))				OxidVentValve2.SetState(isOpen);
+		if (papiReadScenario_bool(line, "FUELCOMPATIBILITYVALVE_ISOPEN", isOpen))		FuelCompatibilityValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "OXIDCOMPATIBILITYVALVE_ISOPEN", isOpen))		OxidCompatibilityValve.SetState(isOpen);
 	}
 }
 

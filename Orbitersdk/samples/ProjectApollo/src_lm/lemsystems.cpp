@@ -627,6 +627,10 @@ void LEM::SystemsInit()
 	// Pyros
 	LandingGearPyros.WireTo(&LandingGearPyrosFeeder);
 	CableCuttingPyros.WireTo(&CableCuttingPyrosFeeder);
+	DescentPropVentPyros.WireTo(&DescentPropVentPyrosFeeder);
+	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
+	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
+	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -673,6 +677,10 @@ void LEM::SystemsInit()
 
 	// EDS initialization
 	eds.Init(this);
+	EDDesFuelVent.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	EDDesOxidVent.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	EDDesFuelVentTB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	EDDesOxidVentTB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	// S&C Control Assemblies
 	scca1.Init(this);

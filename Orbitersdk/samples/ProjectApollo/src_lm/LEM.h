@@ -1130,8 +1130,8 @@ protected:
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
 	IndicatorSwitch EDLGTB;
-	IndicatorSwitch EDDesFuelVentTB;
-	IndicatorSwitch EDDesOxidVentTB;
+	LEMPropellantValveTalkback EDDesFuelVentTB;
+	LEMPropellantValveTalkback EDDesOxidVentTB;
 	// Audio section
 	ThreePosSwitch CDRAudSBandSwitch;
 	ThreePosSwitch CDRAudICSSwitch;
@@ -1564,8 +1564,16 @@ protected:
 	Pyro StagingBoltsPyros;
 	Pyro StagingNutsPyros;
 	Pyro CableCuttingPyros;
+	Pyro DescentPropVentPyros;
+	Pyro DescentEngineStartPyros;
+	Pyro DescentEngineOnPyros;
+	Pyro DescentPropIsolPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
+	PowerMerge DescentPropVentPyrosFeeder;
+	PowerMerge DescentEngineStartPyrosFeeder;
+	PowerMerge DescentEngineOnPyrosFeeder;
+	PowerMerge DescentPropIsolPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;

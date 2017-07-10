@@ -525,6 +525,16 @@ protected:
 	DPSHeliumValve *valve;
 };
 
+class LEMPropellantValveTalkback : public IndicatorSwitch {
+public:
+	LEMPropellantValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSPropellantValve *v, bool failopen);
+	int GetState();
+
+protected:
+	DPSPropellantValve *valve;
+};
+
 class LEMDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);

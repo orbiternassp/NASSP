@@ -470,7 +470,9 @@ void LEM::InitSwitches() {
 	EDStage.Register(PSH,"EDStage", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDDesFuelVent.Register(PSH,"EDDesFuelVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
+	EDDesFuelVent.SetCallback(new PanelSwitchCallback<DPSPropellantValve>(DPSPropellant.GetFuelVentValve2(), &DPSPropellantValve::SwitchToggled));
 	EDDesOxidVent.Register(PSH,"EDDesOxidVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
+	EDDesOxidVent.SetCallback(new PanelSwitchCallback<DPSPropellantValve>(DPSPropellant.GetOxidVentValve2(), &DPSPropellantValve::SwitchToggled));
 	EDLGTB.Register(PSH, "EDLGTB", true);
 	EDDesFuelVentTB.Register(PSH, "EDDesFuelVentTB", true);
 	EDDesOxidVentTB.Register(PSH, "EDDesOxidVentTB", true);
@@ -2329,8 +2331,8 @@ void LEM::SetSwitches(int panel) {
 			EDDesFuelVent.Init(36, 100, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 			EDDesOxidVent.Init(109, 100, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 			EDLGTB.Init(790-431, 1033-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
-			EDDesFuelVentTB.Init(472-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
-			EDDesOxidVentTB.Init(545-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
+			EDDesFuelVentTB.Init(472-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetFuelVentValve2(), false);
+			EDDesOxidVentTB.Init(545-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetOxidVentValve2(), false);
 			// Audio stuff
 			CDRAudSBandSwitch.Init(1189-431, 949-916, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 			CDRAudICSSwitch.Init(1288-431, 949-916, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
@@ -3324,9 +3326,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf) 
 
 {
-	int Curdigit;
-	int Curdigit2;
-
 	//
 	// Special handling ORDEAL
 	//
