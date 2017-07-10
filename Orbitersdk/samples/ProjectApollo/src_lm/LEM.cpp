@@ -277,8 +277,6 @@ LEM::~LEM()
 void LEM::Init()
 
 {
-	toggleRCS =false;
-
 	DebugLineClearTimer = 0;
 
 	ABORT_IND=false;
@@ -296,8 +294,6 @@ void LEM::Init()
 	status = 0;
 	HasProgramer = false;
 	InvertStageBit = false;
-
-	actualFUEL = 0.0;
 
 	InVC = false;
 	InPanel = false;
@@ -841,25 +837,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
-
-	if( toggleRCS){
-			if(P44switch){
-			SetAttitudeMode(2);
-			toggleRCS =false;
-			}
-			else if (!P44switch){
-			SetAttitudeMode(1);
-			toggleRCS =false;
-			}
-		}
-		if (GetAttitudeMode()==1){
-		P44switch=false;
-		}
-		else if (GetAttitudeMode()==2 ){
-		P44switch=true;
-		}
-
 	//
 	// Play RCS sound in case of Orbiter's attitude control is disabled
 	//
@@ -899,7 +876,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 #endif
 				Scontact.play();
 
-			SetEngineLevel(ENGINE_HOVER,0);
 			ContactOK = true;
 
 			SetLmLandedMesh();
@@ -957,16 +933,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 #endif
 }
 
-//
-// Set GMBLswitch
-//
-
-void LEM::SetGimbal(bool setting)
-{
-	agc.SetInputChannelBit(032, DescentEngineGimbalsDisabled, setting);
-	GMBLswitch = setting;
-}
-
 typedef union {
 	struct {
 		unsigned MissionTimerRunning : 1;
@@ -999,16 +965,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             SwitchState = 0;
 			sscanf (line+7, "%d", &SwitchState);
 			SetCSwitchState(SwitchState);
-		} 
-		else if (!strnicmp (line, "SSWITCH", 7)) {
-            SwitchState = 0;
-			sscanf (line+7, "%d", &SwitchState);
-			SetSSwitchState(SwitchState);
-		} 
-		else if (!strnicmp (line, "LPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetLPSwitchState(SwitchState);
 		} 
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
@@ -1436,8 +1392,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	}
 
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
-	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
-	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	

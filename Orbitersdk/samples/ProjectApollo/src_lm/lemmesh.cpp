@@ -165,14 +165,6 @@ void LEM::SetLmVesselDockStage()
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
-    LDGswitch=false;
-	ATT2switch=true;
-	ATT3switch=true;
-	ATT1switch=true;
-	AFEED1switch=false;
-	AFEED2switch=false;
-	AFEED3switch=false;
-	AFEED4switch=false;
 
 	// Descent stage attached.
 	if (InvertStageBit)
@@ -292,15 +284,6 @@ void LEM::SetLmVesselHoverStage()
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
-	LDGswitch=true;
-	ATT2switch=true;
-	ATT3switch=true;
-	ATT1switch=true;
-	AFEED1switch=false;
-	AFEED2switch=false;
-	AFEED3switch=false;
-	AFEED4switch=false;
-
 	// Descent stage attached.
 	if (InvertStageBit)
 	{
@@ -406,11 +389,6 @@ void LEM::SetLmAscentHoverStage()
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
-	LDGswitch=false;
-	AFEED1switch=true;
-	AFEED2switch=true;
-	AFEED3switch=true;
-	AFEED4switch=true;
 
 	// Descent stage attached.
 	if (InvertStageBit)

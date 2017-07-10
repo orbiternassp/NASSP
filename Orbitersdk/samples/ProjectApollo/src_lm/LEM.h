@@ -511,7 +511,6 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
-	void SetGimbal(bool setting);
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -667,17 +666,9 @@ protected:
 
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
-	int GetSSwitchState();
-	void SetSSwitchState(int s);
-	int GetLPSwitchState();
-	void SetLPSwitchState(int s);
 
 	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
 
-	double actualFUEL;
-	double AtempP ;
-	double AtempY ;
-	double AtempR ;
 	double MissionTime;
 
 	// Panel components
@@ -1147,118 +1138,6 @@ protected:
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
 	ThreePosSwitch CDRCOASSwitch;
-
-
-	bool toggleRCS;
-
-	bool Cswitch1;
-	bool Cswitch2;
-	bool Cswitch3;
-	bool Cswitch4;
-	bool Cswitch5;
-	bool Cswitch6;
-	bool Cswitch7;
-	bool Cswitch8;
-	bool Cswitch9;
-
-	bool LPswitch1;
-	bool LPswitch2;
-	bool LPswitch3;
-	bool LPswitch4;
-	bool LPswitch5;
-	bool LPswitch6;
-	bool LPswitch7;
-	bool SPSswitch;
-	bool EDSswitch;
-
-	bool DESHE1switch;
-	bool DESHE2switch;
-
-//	int ENGARMswitch;
-	
-
-	bool QUAD1switch;
-	bool QUAD2switch;
-	bool QUAD3switch;
-	bool QUAD4switch;
-	bool QUAD5switch;
-	bool QUAD6switch;
-	bool QUAD7switch;
-	bool QUAD8switch;
-
-	bool AFEED1switch;
-	bool AFEED2switch;
-	bool AFEED3switch;
-	bool AFEED4switch;
-
-	bool LDGswitch;
-
-	bool GMBLswitch;
-
-	bool ASCHE1switch;
-	bool ASCHE2switch;
-
-	bool RCSQ1switch;
-	bool RCSQ2switch;
-	bool RCSQ3switch;
-	bool RCSQ4switch;
-
-	bool ATT1switch;
-	bool ATT2switch;
-	bool ATT3switch;
-
-	bool CRSFDswitch;
-
-	bool CABFswitch;
-
-	bool PTTswitch;
-
-	bool RCSS1switch;
-	bool RCSS2switch;
-	bool RCSS3switch;
-	bool RCSS4switch;
-
-	bool X1switch;
-
-	bool GUIDswitch;
-
-	bool ALTswitch;
-
-	bool RATE1switch;
-	bool AT1switch;
-
-	bool SHFTswitch;
-
-	bool ETC1switch;
-	bool ETC2switch;
-	bool ETC3switch;
-	bool ETC4switch;
-
-	bool PMON1switch;
-	bool PMON2switch;
-
-	bool ACAPswitch;
-
-	bool RATE2switch;
-	bool AT2switch;
-
-	bool SLWRswitch;
-
-	bool DBswitch;
-
-	bool IMUCswitch;
-
-	bool SPLswitch;
-
-	bool X2switch;
-
-	bool P41switch;
-	bool P42switch;
-	bool P43switch;
-	bool P44switch;
-
-	bool AUDswitch;
-	bool RELswitch;
 
 	bool CPswitch;
 

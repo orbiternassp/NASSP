@@ -221,9 +221,8 @@ void LEM::AddRCS_LMH2(double TRANZ)
 }
 
 bool LEM::CabinFansActive()
-
 {
-	return CABFswitch;
+	return false;
 }
 
 

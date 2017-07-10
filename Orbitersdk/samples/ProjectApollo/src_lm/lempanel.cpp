@@ -822,103 +822,6 @@ void LEM::InitSwitches() {
 	// Old stuff.
 	//
 
-	Cswitch1=false;
-	Cswitch2=false;
-	Cswitch4=false;
-	Cswitch5=false;
-	Cswitch6=false;
-	Cswitch7=false;
-	Cswitch8=false;
-	Cswitch9=false;
-
-	ATT2switch=false;
-	ATT3switch=false;
-	ATT1switch=false;
-	LPswitch4=false;
-	LPswitch5=false;
-//	ENGARMswitch=ENGINE_ARMED_NONE;
-	LDGswitch=true;
-
-	DESHE1switch=true;
-	DESHE2switch=true;
-
-	ASCHE1switch=true;
-	ASCHE1switch=true;
-
-	QUAD1switch=false;
-	QUAD2switch=false;
-	QUAD3switch=false;
-	QUAD4switch=false;
-	QUAD5switch=false;
-	QUAD6switch=false;
-	QUAD7switch=false;
-	QUAD8switch=false;
-
-	AFEED1switch=true;
-	AFEED2switch=true;
-	AFEED3switch=true;
-	AFEED4switch=true;
-
-	GMBLswitch=false;
-
-	ASCHE1switch=true;
-	ASCHE2switch=true;
-
-	CRSFDswitch=false;
-
-	CABFswitch=false;
-
-	PTTswitch=false;
-
-	RCSS1switch=false;
-	RCSS2switch=false;
-	RCSS3switch=false;
-	RCSS4switch=false;
-
-	X1switch=true;
-
-	RATE1switch=true;
-	AT1switch=true;
-
-	GUIDswitch=true;
-
-	ALTswitch=true;
-
-	SHFTswitch=true;
-
-	ETC1switch=true;
-	ETC2switch=true;
-	ETC3switch=true;
-	ETC4switch=true;
-
-	PMON1switch=true;
-	PMON2switch=true;
-
-	ACAPswitch=false;
-
-	RATE2switch=true;
-	AT2switch=true;
-
-//	DESEswitch=false;
-
-	SLWRswitch=true;
-
-	DBswitch=true;
-
-	IMUCswitch=false;
-
-	SPLswitch=false;
-
-	X2switch=true;
-
-	P41switch=false;
-	P42switch=false;
-	P43switch=false;
-	P44switch=false;
-
-	AUDswitch=true;
-	RELswitch=false;
-
 	CPswitch=false;
 
 	HATCHswitch=false;
@@ -2530,7 +2433,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		SwitchClick();
 		return true;
 
-	case AID_DESCENT_HE:
+/*	case AID_DESCENT_HE:
 		if (my >=30 && my <=42 ){
 			if (mx > 1 && mx < 26 && !DESHE1switch){
 				SwitchClick();
@@ -2549,7 +2452,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-/*
+
 	case AID_ENG_ARM:
 		if (my >=0 && my <=16 ){
 			if (mx > 0 && mx < 23 && !ENGARMswitch){
@@ -2563,7 +2466,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-*/
+
 	case AID_LGC_THRUSTER_QUADS:
 		if (my >=35 && my <=47 ){
 			if (mx > 1 && mx < 25 && !QUAD1switch){
@@ -2658,7 +2561,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 		return true;
 
-	/*
 	case AID_MAIN_SOV_SWITCHES:
 		if (my >=35 && my <=46 ){
 			if (mx > 0 && mx < 24 && !MSOV1switch){
@@ -2679,9 +2581,8 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 
 		return true;
-	*/
 
-	/*case AID_EXPLOSIVE_DEVICES1:
+	case AID_EXPLOSIVE_DEVICES1:
 		if (my >=0 && my <=16 ){
 			if (mx > 0 && mx < 24 && !ED1switch){
 				SwitchClick();
@@ -2723,7 +2624,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 
 		return true;
-	*/
 
 	case AID_ATTITUDE_CONTROL_SWITCHES:
 		if (my >=0 && my <=11 ){
@@ -3025,7 +2925,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 		}
 		return true;
-/*
+
 	case AID_DESCENT_ENGINE_SWITCH:
 		if (my >=0 && my <=17 ){
 			if (mx > 0 && mx < 23 && !DESEswitch){
@@ -3040,7 +2940,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 		}
 		return true;
-*/
+
 	case AID_SLEW_RATE_SWITCH:
 		if (my >=0 && my <=11 ){
 			if (mx > 0 && mx < 23 && !SLWRswitch){
@@ -3162,7 +3062,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_PANEL4_SWITCH4:
-		if (my >=0 && my <=17 ){
+		/*if (my >=0 && my <=17 ){
 			if (mx > 0 && mx < 23 && !P44switch){
 				SwitchClick();
 				P44switch=true;
@@ -3207,7 +3107,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 		}
 		return true;
-
+*/
 	case AID_CABIN_PRESS_SWITCH:
 		if (my >=0 && my <=11 ){
 			if (mx > 0 && mx < 23 && !CPswitch){
@@ -3298,7 +3198,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_ASCENT_HE:
+/*	case AID_ASCENT_HE:
 		if (my >=31 && my <=43 ){
 			if (mx > 1 && mx < 27 && !ASCHE1switch){
 				SwitchClick();
@@ -3317,7 +3217,7 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	// panel 1 events:
 	}
 	return false;
@@ -3653,7 +3553,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		Curdigit2= (int) fuel;
 		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 0, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);
-		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 52, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);*/
+		oapiBlt(surf, srf[SRF_DIGITALDISP2], 20, 52, 19 * (Curdigit2 - (Curdigit*10)), 0, 19, 21);
 
 		return true;
 
@@ -3675,7 +3575,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_LIGHTS2],46,0,38,0,19,20);
 		}
 		return true;
-/*
+
 	case AID_ENG_ARM:
 		if(ENGARMswitch){
 			oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -3688,7 +3588,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
-*/
+
 	case AID_LGC_THRUSTER_QUADS:
 		if(QUAD1switch){
 			oapiBlt(surf,srf[SRF_LEMSWITCH1],1,36,0,0,23,20);
@@ -3787,7 +3687,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	/*
 	case AID_MAIN_SOV_SWITCHES:
 		if(MSOV1switch){
 			oapiBlt(surf,srf[19],0,30,0,0,23,30);
@@ -3804,9 +3703,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_LIGHTS2],57,0,38,0,19,20);
 		}
 		return true;
-	*/
 
-	/*case AID_EXPLOSIVE_DEVICES1:
+	case AID_EXPLOSIVE_DEVICES1:
 		if(ED1switch){
 			// UNINITIALIZED USE OF srf[19]
 			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -3843,7 +3741,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			// oapiBlt(surf,srf[19],94,68,23,0,23,30);
 		}
 		return true;
-	*/
 
 	case AID_ATTITUDE_CONTROL_SWITCHES:
 		if(ATT1switch){
@@ -3890,7 +3787,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	/*case AID_EXPLOSIVE_DEVICES2:
+	case AID_EXPLOSIVE_DEVICES2:
 		if(ED7switch){
 			// UNINITIALIZED USE OF srf[19]
 			// oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -4000,7 +3897,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
-	*/
 
 	case AID_CRSFD_SWITCH:
 		if(CRSFDswitch){
@@ -4166,7 +4062,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_LEMSWITCH1],0,58,23,0,23,20);
 		}
 		return true;
-/*
+
 	case AID_DESCENT_ENGINE_SWITCH:
 		if(DESEswitch){
 			oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -4174,7 +4070,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
-*/
+
 
 	case AID_SLEW_RATE_SWITCH:
 		if(SLWRswitch){
@@ -4279,7 +4175,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			// oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
-
+*/
 	case AID_CABIN_PRESS_SWITCH:
 		if(CPswitch){
 			// UNINITIALIZED USE OF srf[19]
@@ -4399,30 +4295,6 @@ int LEM::GetCSwitchState()
 	CSwitchState state;
 
 	state.word = 0;
-	state.u.Cswitch1 = Cswitch1;
-	state.u.Cswitch2 = Cswitch2;
-	state.u.Cswitch4 = Cswitch4;
-	state.u.Cswitch5 = Cswitch5;
-	state.u.Cswitch6 = Cswitch6;
-	state.u.Cswitch7 = Cswitch7;
-	state.u.Cswitch8 = Cswitch8;
-	state.u.Cswitch9 = Cswitch9;
-	state.u.DESHE1switch = DESHE1switch;
-	state.u.DESHE2switch = DESHE2switch;
-	state.u.ASCHE1switch = ASCHE1switch;
-	state.u.ASCHE2switch = ASCHE2switch;
-	state.u.CRSFDswitch = CRSFDswitch;
-	state.u.CABFswitch = CABFswitch;
-	state.u.PTTswitch = PTTswitch;
-	state.u.RCSS1switch = RCSS1switch;
-	state.u.RCSS2switch = RCSS2switch;
-	state.u.RCSS3switch = RCSS3switch;
-	state.u.RCSS4switch = RCSS4switch;
-	state.u.P41switch = P41switch;
-	state.u.P42switch = P42switch;
-	state.u.P43switch = P43switch;
-	state.u.AUDswitch = AUDswitch;
-	state.u.RELswitch = RELswitch;
 	state.u.CPswitch = CPswitch;
 	state.u.HATCHswitch = HATCHswitch;
 	state.u.EVAswitch = EVAswitch;
@@ -4437,215 +4309,8 @@ void LEM::SetCSwitchState(int s)
 	CSwitchState state;
 
 	state.word = s;
-	Cswitch1 = state.u.Cswitch1;
-	Cswitch2 = state.u.Cswitch2;
-	Cswitch4 = state.u.Cswitch4;
-	Cswitch5 = state.u.Cswitch5;
-	Cswitch6 = state.u.Cswitch6;
-	Cswitch7 = state.u.Cswitch7;
-	Cswitch8 = state.u.Cswitch8;
-	Cswitch9 = state.u.Cswitch9;
-	DESHE1switch = state.u.DESHE1switch;
-	DESHE2switch = state.u.DESHE2switch;
-	ASCHE1switch = state.u.ASCHE1switch;
-	ASCHE2switch = state.u.ASCHE2switch;
-	CRSFDswitch = state.u.CRSFDswitch;
-	CABFswitch = state.u.CABFswitch;
-	PTTswitch = state.u.PTTswitch;
-	RCSS1switch = state.u.RCSS1switch;
-	RCSS2switch = state.u.RCSS2switch;
-	RCSS3switch = state.u.RCSS3switch;
-	RCSS4switch = state.u.RCSS4switch;
-	P41switch = state.u.P41switch;
-	P42switch = state.u.P42switch;
-	P43switch = state.u.P43switch;
-	P44switch = state.u.P44switch;
-	AUDswitch = state.u.AUDswitch;
-	RELswitch = state.u.RELswitch;
 	CPswitch = state.u.CPswitch;
 	HATCHswitch = state.u.HATCHswitch;
 	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
-}
-
-typedef union {
-	struct {
-		unsigned Sswitch1:1;
-		unsigned Sswitch2:1;
-		unsigned Sswitch4:1;
-		unsigned Sswitch5:1;
-		unsigned Sswitch6:1;
-		unsigned Sswitch7:1;
-		unsigned Sswitch8:1;
-		unsigned Sswitch9:1;
-		unsigned X1switch:1;
-		unsigned RATE1switch:1;
-		unsigned AT1switch:1;
-		unsigned GUIDswitch:1;
-		unsigned ALTswitch:1;
-		unsigned SHFTswitch:1;
-		unsigned ETC1switch:1;
-		unsigned ETC2switch:1;
-		unsigned ETC3switch:1;
-		unsigned ETC4switch:1;
-		unsigned PMON1switch:1;
-		unsigned PMON2switch:1;
-		unsigned ACAPswitch:1;
-		unsigned RATE2switch:1;
-		unsigned AT2switch:1;
-		unsigned dummy:1 ;  // formerly unsigned DESEswitch:1;
-		unsigned SLWRswitch:1;
-		unsigned DBswitch:1;
-		unsigned IMUCswitch:1;
-		unsigned SPLswitch:1;
-		unsigned X2switch:1;
-	} u;
-	unsigned long word;
-} SSwitchState;
-
-int LEM::GetSSwitchState()
-
-{
-	SSwitchState state;
-
-	state.word = 0;
-	state.u.X1switch = X1switch;
-	state.u.RATE1switch = RATE1switch;
-	state.u.AT1switch = AT1switch;
-	state.u.GUIDswitch = GUIDswitch;
-	state.u.ALTswitch = ALTswitch;
-	state.u.SHFTswitch = SHFTswitch;
-	state.u.ETC1switch = ETC1switch;
-	state.u.ETC2switch = ETC2switch;
-	state.u.ETC3switch = ETC3switch;
-	state.u.ETC4switch = ETC4switch;
-	state.u.PMON1switch = PMON1switch;
-	state.u.PMON2switch = PMON2switch;
-	state.u.ACAPswitch = ACAPswitch;
-	state.u.RATE2switch = RATE2switch;
-	state.u.AT2switch = AT2switch;
-//	state.u.DESEswitch = DESEswitch;
-	state.u.SLWRswitch = SLWRswitch;
-	state.u.DBswitch = DBswitch;
-	state.u.IMUCswitch = IMUCswitch;
-	state.u.SPLswitch = SPLswitch;
-	state.u.X2switch = X2switch;
-
-	return state.word;
-}
-
-void LEM::SetSSwitchState(int s)
-
-{
-	SSwitchState state;
-
-	state.word = s;
-	X1switch = state.u.X1switch;
-	RATE1switch = state.u.RATE1switch;
-	AT1switch = state.u.AT1switch;
-	GUIDswitch = state.u.GUIDswitch;
-	ALTswitch = state.u.ALTswitch;
-	SHFTswitch = state.u.SHFTswitch;
-	ETC1switch = state.u.ETC1switch;
-	ETC2switch = state.u.ETC2switch;
-	ETC3switch = state.u.ETC3switch;
-	ETC4switch = state.u.ETC4switch;
-	PMON1switch = state.u.PMON1switch;
-	PMON2switch = state.u.PMON2switch;
-	ACAPswitch = state.u.ACAPswitch;
-	RATE2switch = state.u.RATE2switch;
-	AT2switch = state.u.AT2switch;
-//	DESEswitch = state.u.DESEswitch;
-	SLWRswitch = state.u.SLWRswitch;
-	DBswitch = state.u.DBswitch;
-	IMUCswitch = state.u.IMUCswitch;
-	SPLswitch = state.u.SPLswitch;
-	X2switch = state.u.X2switch;
-}
-
-typedef union {
-	struct {
-		unsigned ATT2switch:1;
-		unsigned ATT3switch:1;
-		unsigned ATT1switch:1;
-		unsigned LPswitch4:1;
-		unsigned LPswitch5:1;
-		unsigned GMBLswitch:1;
-		unsigned dummy:1;
-		unsigned LDGswitch:1;
-		unsigned QUAD1switch:1;
-		unsigned QUAD2switch:1;
-		unsigned QUAD3switch:1;
-		unsigned QUAD4switch:1;
-		unsigned QUAD5switch:1;
-		unsigned QUAD6switch:1;
-		unsigned QUAD7switch:1;
-		unsigned QUAD8switch:1;
-		unsigned AFEED1switch:1;
-		unsigned AFEED2switch:1;
-		unsigned AFEED3switch:1;
-		unsigned AFEED4switch:1;
-		unsigned MSOV1switch:1;
-		unsigned MSOV2switch:1;
-	} u;
-	unsigned long word;
-} LPSwitchState;
-
-int LEM::GetLPSwitchState()
-
-{
-	LPSwitchState state;
-
-	state.word = 0;
-	state.u.ATT2switch = ATT2switch;
-	state.u.ATT3switch = ATT3switch;
-	state.u.ATT1switch = ATT1switch;
-	state.u.LPswitch4 = LPswitch4;
-	state.u.LPswitch5 = LPswitch5;
-	state.u.GMBLswitch = GMBLswitch;
-//	state.u.ENGARMswitch = ENGARMswitch;
-	state.u.LDGswitch = LDGswitch;
-	state.u.QUAD1switch = QUAD1switch;
-	state.u.QUAD2switch = QUAD2switch;
-	state.u.QUAD3switch = QUAD3switch;
-	state.u.QUAD4switch = QUAD4switch;
-	state.u.QUAD5switch = QUAD5switch;
-	state.u.QUAD6switch = QUAD6switch;
-	state.u.QUAD7switch = QUAD7switch;
-	state.u.QUAD8switch = QUAD8switch;
-	state.u.AFEED1switch = AFEED1switch;
-	state.u.AFEED2switch = AFEED2switch;
-	state.u.AFEED3switch = AFEED3switch;
-	state.u.AFEED4switch = AFEED4switch;
-
-	return state.word;
-}
-
-void LEM::SetLPSwitchState(int s)
-
-{
-	LPSwitchState state;
-
-	state.word = s;
-	ATT2switch = state.u.ATT2switch;
-	ATT3switch = state.u.ATT3switch;
-	ATT1switch = state.u.ATT1switch;
-	LPswitch4 = state.u.LPswitch4;
-	LPswitch5 = state.u.LPswitch5;
-	GMBLswitch = state.u.GMBLswitch;
-//	ENGARMswitch = state.u.ENGARMswitch;
-	LDGswitch = state.u.LDGswitch;
-	QUAD1switch = state.u.QUAD1switch;
-	QUAD2switch = state.u.QUAD2switch;
-	QUAD3switch = state.u.QUAD3switch;
-	QUAD4switch = state.u.QUAD4switch;
-	QUAD5switch = state.u.QUAD5switch;
-	QUAD6switch = state.u.QUAD6switch;
-	QUAD7switch = state.u.QUAD7switch;
-	QUAD8switch = state.u.QUAD8switch;
-	AFEED1switch = state.u.AFEED1switch;
-	AFEED2switch = state.u.AFEED2switch;
-	AFEED3switch = state.u.AFEED3switch;
-	AFEED4switch = state.u.AFEED4switch;
-
 }
