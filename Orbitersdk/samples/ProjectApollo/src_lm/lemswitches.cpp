@@ -1580,21 +1580,20 @@ void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-LEMHeliumValveTalkback::LEMHeliumValveTalkback()
-
+LEMDPSValveTalkback::LEMDPSValveTalkback()
 {
 	valve = 0;
 }
 
 
-void LEMHeliumValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSHeliumValve *v, bool failopen)
+void LEMDPSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen)
 
 {
 	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
 	valve = v;
 }
 
-int LEMHeliumValveTalkback::GetState()
+int LEMDPSValveTalkback::GetState()
 
 {
 	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
@@ -1606,41 +1605,16 @@ int LEMHeliumValveTalkback::GetState()
 	return state;
 }
 
-LEMPropellantValveTalkback::LEMPropellantValveTalkback()
-
-{
-	valve = 0;
-}
-
-
-void LEMPropellantValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSPropellantValve *v, bool failopen)
-
-{
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
-	valve = v;
-}
-
-int LEMPropellantValveTalkback::GetState()
-
-{
-	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
-		state = valve->IsOpen() ? 1 : 0;
-	else
-		// Should this fail open?
-		state = (failOpen ? 1 : 0);
-
-	return state;
-}
-
-void LEMDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
+void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
 {
 	MeterSwitch::Init(row);
 	Digits = surf;
 	lem = l;
 }
 
-void LEMDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
+	if (lem->stage > 1) return;
 	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown()) return;
 
 	double percent = v * 100.0;

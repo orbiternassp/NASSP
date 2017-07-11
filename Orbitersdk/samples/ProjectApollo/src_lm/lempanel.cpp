@@ -179,9 +179,9 @@ void LEM::InitSwitches() {
 	ASCHeReg1Switch.Register(PSH,"ASCHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	ASCHeReg2Switch.Register(PSH,"ASCHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DESHeReg1Switch.Register(PSH,"DESHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	DESHeReg1Switch.SetCallback(new PanelSwitchCallback<DPSHeliumValve>(DPSPropellant.GetHeliumValve1(), &DPSHeliumValve::SwitchToggled));
+	DESHeReg1Switch.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetHeliumValve1(), &DPSValve::SwitchToggled));
 	DESHeReg2Switch.Register(PSH,"DESHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	DESHeReg2Switch.SetCallback(new PanelSwitchCallback<DPSHeliumValve>(DPSPropellant.GetHeliumValve2(), &DPSHeliumValve::SwitchToggled));
+	DESHeReg2Switch.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetHeliumValve2(), &DPSValve::SwitchToggled));
 	ShiftTruSwitch.Register(PSH, "ShiftTruSwitch", true);
 	RateScaleSwitch.Register(PSH, "RateScaleSwitch", TOGGLESWITCH_UP);
 	ACAPropSwitch.Register(PSH, "ACAPropSwitch", true);
@@ -471,9 +471,9 @@ void LEM::InitSwitches() {
 	EDStage.Register(PSH,"EDStage", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 	EDDesFuelVent.Register(PSH,"EDDesFuelVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
-	EDDesFuelVent.SetCallback(new PanelSwitchCallback<DPSPropellantValve>(DPSPropellant.GetFuelVentValve2(), &DPSPropellantValve::SwitchToggled));
+	EDDesFuelVent.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetFuelVentValve2(), &DPSValve::SwitchToggled));
 	EDDesOxidVent.Register(PSH,"EDDesOxidVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
-	EDDesOxidVent.SetCallback(new PanelSwitchCallback<DPSPropellantValve>(DPSPropellant.GetOxidVentValve2(), &DPSPropellantValve::SwitchToggled));
+	EDDesOxidVent.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetOxidVentValve2(), &DPSValve::SwitchToggled));
 	EDLGTB.Register(PSH, "EDLGTB", true);
 	EDDesFuelVentTB.Register(PSH, "EDDesFuelVentTB", true);
 	EDDesOxidVentTB.Register(PSH, "EDDesOxidVentTB", true);

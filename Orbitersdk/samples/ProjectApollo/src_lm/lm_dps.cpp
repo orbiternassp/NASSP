@@ -33,43 +33,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_dps.h"
 
-DPSHeliumValve::DPSHeliumValve() {
+DPSValve::DPSValve() {
 	isOpen = false;
 }
 
-void DPSHeliumValve::SetPropellantSource(DPSPropellantSource *p) {
-	propellant = p;
-}
-
-void DPSHeliumValve::SetState(bool open) {
-	isOpen = open;
-	//if (!isSec)
-		//propellant->CheckHeliumValves();
-	//else
-		//propellant->CheckSecHeliumValve();
-}
-
-void DPSHeliumValve::SwitchToggled(PanelSwitchItem *s) {
-
-	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
-		if (((ThreePosSwitch *)s)->IsUp()) {
-			SetState(true);
-		}
-		else if (((ThreePosSwitch *)s)->IsDown()) {
-			SetState(false);
-		}
-	}
-}
-
-DPSPropellantValve::DPSPropellantValve() {
-	isOpen = false;
-}
-
-void DPSPropellantValve::SetState(bool open) {
+void DPSValve::SetState(bool open) {
 	isOpen = open;
 }
 
-void DPSPropellantValve::SwitchToggled(PanelSwitchItem *s) {
+void DPSValve::SwitchToggled(PanelSwitchItem *s) {
 
 	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
 		if (((ThreePosSwitch *)s)->IsUp()) {
@@ -82,19 +54,16 @@ void DPSPropellantValve::SwitchToggled(PanelSwitchItem *s) {
 }
 
 LEMPropellantSource::LEMPropellantSource(PROPELLANT_HANDLE &h) : source_prop(h)
-
 {
 	our_vessel = 0;
 }
 
 PROPELLANT_HANDLE LEMPropellantSource::Handle()
-
 {
 	return source_prop;
 }
 
 double LEMPropellantSource::Quantity()
-
 {
 	if (source_prop && our_vessel) {
 		return our_vessel->GetPropellantMass(source_prop) / our_vessel->GetPropellantMaxMass(source_prop);
@@ -111,13 +80,6 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	ambientHeliumPressurePSI = 0.0;
 	supercriticalHeliumPressurePSI = 0.0;
 
-	PrimaryHeRegulatorShutoffValve.SetPropellantSource(this);
-	SecondaryHeRegulatorShutoffValve.SetPropellantSource(this);
-	AmbientHeIsolValve.SetPropellantSource(this);
-	SupercritHeIsolValve.SetPropellantSource(this);
-	OxidCompatibilityValve.SetPropellantSource(this);
-	FuelCompatibilityValve.SetPropellantSource(this);
-
 	//Open by default
 	PrimaryHeRegulatorShutoffValve.SetState(true);
 }
@@ -133,7 +95,12 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 
 	double p, pmax;
 
-	if (!source_prop) {
+	if(our_vessel->stage > 1)
+	{
+		p = 0;
+		pmax = 1;
+	}
+	else if (!source_prop) {
 		p = 0;
 		pmax = 1;
 	}
@@ -143,44 +110,42 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 
 		ambientHeliumPressurePSI = 1600.0;
 		supercriticalHeliumPressurePSI = 400.0;
-	}
 
-	//Ambient Helium Isolation Valve
-	if (!AmbientHeIsolValve.IsOpen() && our_vessel->DescentEngineStartPyros.Blown())
-	{
-		AmbientHeIsolValve.SetState(true);
-	}
+		//Ambient Helium Isolation Valve
+		if (!AmbientHeIsolValve.IsOpen() && our_vessel->DescentEngineStartPyros.Blown())
+		{
+			AmbientHeIsolValve.SetState(true);
+		}
 
-	//Supercritical Helium Isolation Valve
-	if (!SupercritHeIsolValve.IsOpen() && our_vessel->DescentEngineOnPyros.Blown())
-	{
-		SupercritHeIsolValve.SetState(true);
-	}
+		//Supercritical Helium Isolation Valve
+		if (!SupercritHeIsolValve.IsOpen() && our_vessel->DescentEngineOnPyros.Blown())
+		{
+			SupercritHeIsolValve.SetState(true);
+		}
 
-	//Propellant Compatibility Valves
-	if (!OxidCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
-	{
-		OxidCompatibilityValve.SetState(true);
-	}
+		//Propellant Compatibility Valves
+		if (!OxidCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
+		{
+			OxidCompatibilityValve.SetState(true);
+		}
 
-	if (!FuelCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
-	{
-		FuelCompatibilityValve.SetState(true);
-	}
+		if (!FuelCompatibilityValve.IsOpen() && our_vessel->DescentPropIsolPyros.Blown())
+		{
+			FuelCompatibilityValve.SetState(true);
+		}
 
-	//Vent Valves
-	if (!OxidVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
-	{
-		OxidVentValve1.SetState(true);
-	}
+		//Vent Valves
+		if (!OxidVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
+		{
+			OxidVentValve1.SetState(true);
+		}
 
-	if (!FuelVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
-	{
-		FuelVentValve1.SetState(true);
-	}
+		if (!FuelVentValve1.IsOpen() && our_vessel->DescentPropVentPyros.Blown())
+		{
+			FuelVentValve1.SetState(true);
+		}
 
-	//Propellant Venting
-	if (source_prop) {
+		//Propellant Venting
 
 		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
 		{
@@ -209,6 +174,9 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 void DPSPropellantSource::SystemTimestep(double simdt)
 {
 	if (our_vessel->stage > 1) return;
+
+	if (GaugingPower && IsGaugingPowered())
+		GaugingPower->DrawPower(14.6);
 }
 
 double DPSPropellantSource::GetFuelPercent()

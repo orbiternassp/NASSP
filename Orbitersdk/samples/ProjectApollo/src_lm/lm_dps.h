@@ -27,32 +27,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 class LEM;
 class AGCIOSwitch;
 class e_object;
-class DPSPropellantSource;
 
 class DPSValve {
 
 public:
-	virtual bool IsOpen() = 0;
-};
-
-class DPSHeliumValve : public DPSValve {
-
-public:
-	DPSHeliumValve();
-	void SetPropellantSource(DPSPropellantSource *p);
-	void SetState(bool open);
-	bool IsOpen() { return isOpen; };
-	void SwitchToggled(PanelSwitchItem *s);
-
-protected:
-	bool isOpen;
-	DPSPropellantSource *propellant;
-};
-
-class DPSPropellantValve : public DPSValve {
-
-public:
-	DPSPropellantValve();
+	DPSValve();
 	void SetState(bool open);
 	bool IsOpen() { return isOpen; };
 	void SwitchToggled(PanelSwitchItem *s);
@@ -87,10 +66,10 @@ public:
 	double GetAmbientHeliumPressPSI();
 	double GetSupercriticalHeliumPressPSI();
 
-	DPSHeliumValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
-	DPSHeliumValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
-	DPSPropellantValve *GetOxidVentValve2() { return &OxidVentValve2; }
-	DPSPropellantValve *GetFuelVentValve2() { return &FuelVentValve2; }
+	DPSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
+	DPSValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
+	DPSValve *GetOxidVentValve2() { return &OxidVentValve2; }
+	DPSValve *GetFuelVentValve2() { return &FuelVentValve2; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -102,16 +81,16 @@ protected:
 	double ambientHeliumPressurePSI;
 	double supercriticalHeliumPressurePSI;
 
-	DPSHeliumValve PrimaryHeRegulatorShutoffValve;
-	DPSHeliumValve SecondaryHeRegulatorShutoffValve;
-	DPSHeliumValve AmbientHeIsolValve;
-	DPSHeliumValve SupercritHeIsolValve;
-	DPSHeliumValve OxidCompatibilityValve;
-	DPSHeliumValve FuelCompatibilityValve;
-	DPSPropellantValve OxidVentValve1;
-	DPSPropellantValve OxidVentValve2;
-	DPSPropellantValve FuelVentValve1;
-	DPSPropellantValve FuelVentValve2;
+	DPSValve PrimaryHeRegulatorShutoffValve;
+	DPSValve SecondaryHeRegulatorShutoffValve;
+	DPSValve AmbientHeIsolValve;
+	DPSValve SupercritHeIsolValve;
+	DPSValve OxidCompatibilityValve;
+	DPSValve FuelCompatibilityValve;
+	DPSValve OxidVentValve1;
+	DPSValve OxidVentValve2;
+	DPSValve FuelVentValve1;
+	DPSValve FuelVentValve2;
 
 	e_object *GaugingPower;
 };

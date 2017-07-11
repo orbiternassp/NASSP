@@ -515,27 +515,17 @@ protected:
 	SURFHANDLE FrameSurface;
 };
 
-class LEMHeliumValveTalkback : public IndicatorSwitch {
+class LEMDPSValveTalkback : public IndicatorSwitch {
 public:
-	LEMHeliumValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSHeliumValve *v, bool failopen);
+	LEMDPSValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen);
 	int GetState();
 
 protected:
-	DPSHeliumValve *valve;
+	DPSValve *valve;
 };
 
-class LEMPropellantValveTalkback : public IndicatorSwitch {
-public:
-	LEMPropellantValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSPropellantValve *v, bool failopen);
-	int GetState();
-
-protected:
-	DPSPropellantValve *valve;
-};
-
-class LEMDigitalMeter : public MeterSwitch {
+class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
@@ -547,12 +537,12 @@ protected:
 	LEM *lem;
 };
 
-class LEMDPSOxidPercentMeter : public LEMDigitalMeter {
+class LEMDPSOxidPercentMeter : public LEMDPSDigitalMeter {
 public:
 	double QueryValue();
 };
 
-class LEMDPSFuelPercentMeter : public LEMDigitalMeter {
+class LEMDPSFuelPercentMeter : public LEMDPSDigitalMeter {
 public:
 	double QueryValue();
 };

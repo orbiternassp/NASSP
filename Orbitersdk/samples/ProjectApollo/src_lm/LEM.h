@@ -730,13 +730,13 @@ protected:
 
 	SwitchRow MPSRegControlLeftSwitchRow;
 	IndicatorSwitch ASCHeReg1TB;
-	LEMHeliumValveTalkback DESHeReg1TB;
+	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
 	IndicatorSwitch ASCHeReg2TB;
-	LEMHeliumValveTalkback DESHeReg2TB;
+	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
 
@@ -1124,8 +1124,8 @@ protected:
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
 	IndicatorSwitch EDLGTB;
-	LEMPropellantValveTalkback EDDesFuelVentTB;
-	LEMPropellantValveTalkback EDDesOxidVentTB;
+	LEMDPSValveTalkback EDDesFuelVentTB;
+	LEMDPSValveTalkback EDDesOxidVentTB;
 	// Audio section
 	ThreePosSwitch CDRAudSBandSwitch;
 	ThreePosSwitch CDRAudICSSwitch;
@@ -1703,7 +1703,7 @@ protected:
 	friend class LEMSteerableAntennaYawMeter;
 	friend class LEMSBandAntennaStrengthMeter;
 	friend class LEM_Programer;
-	friend class LEMDigitalMeter;
+	friend class LEMDPSDigitalMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
