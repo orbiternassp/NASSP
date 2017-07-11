@@ -1428,6 +1428,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
 	DPSPropellant.Timestep(simt, simdt);
+	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);

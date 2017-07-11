@@ -95,14 +95,12 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 
 	double p, pmax;
 
-	if(our_vessel->stage > 1)
+	if(our_vessel->stage > 1 || !source_prop)
 	{
 		p = 0;
 		pmax = 1;
-	}
-	else if (!source_prop) {
-		p = 0;
-		pmax = 1;
+		ambientHeliumPressurePSI = 0.0;
+		supercriticalHeliumPressurePSI = 0.0;
 	}
 	else {
 		p = our_vessel->GetPropellantMass(source_prop);
