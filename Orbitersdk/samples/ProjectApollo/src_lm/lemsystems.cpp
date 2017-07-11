@@ -3279,8 +3279,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 	// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 	LightStatus[2][0] = 0; // Default
-	if(lem->DPS.thrustOn){ // This should be forced off at staging
-		if(lem->DPS.HePress[1] > 260 || lem->DPS.HePress[1] < 220){
+	if(lem->stage < 2 && lem->deca.GetK10() && lem->deca.GetK23()){
+		if(lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220){
 			LightStatus[2][0] = 1;
 		}
 	}
@@ -3289,7 +3289,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
 	// (This turns out to be 5.6%)
 	// Master Alarm and Tone are disabled if this is active.
-	if(lem->stage < 2 && lem->GetPropellantMass(lem->ph_Dsc) < 190.305586){
+	if(lem->stage < 2 && lem->DPS.thrustOn && lem->DPSPropellant.PropellantLevelLow()){
 		LightStatus[3][0] = 1;
 	}else{
 		LightStatus[3][0] = 0;
@@ -3464,7 +3464,6 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when any EDS relay fails.
 	// Failures of stage relays disabled when stage relay switch in RESET position.
 	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-	// FIXME: We'll ignore this for now.
 	if ((lem->eds.RelayBoxA.GetStageRelayMonitor() || lem->eds.RelayBoxA.GetStageRelayMonitor()) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0))
 	{
 		LightStatus[0][6] = 1;
