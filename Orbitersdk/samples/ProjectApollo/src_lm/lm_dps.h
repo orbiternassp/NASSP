@@ -66,6 +66,9 @@ public:
 	double GetAmbientHeliumPressPSI();
 	double GetSupercriticalHeliumPressPSI();
 	double GetHeliumRegulatorManifoldPressurePSI();
+	double GetFuelTankUllagePressurePSI();
+	double GetOxidizerTankUllagePressurePSI();
+	double GetFuelEngineInletPressurePSI() { return FuelEngineInletPressurePSI; }
 	bool PropellantLevelLow();
 
 	DPSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
@@ -83,6 +86,9 @@ protected:
 	double ambientHeliumPressurePSI;
 	double supercriticalHeliumPressurePSI;
 	double heliumRegulatorManifoldPressurePSI;
+	double FuelTankUllagePressurePSI;
+	double OxidTankUllagePressurePSI;
+	double FuelEngineInletPressurePSI;
 
 	bool fuel1LevelLow;
 	bool fuel2LevelLow;

@@ -802,18 +802,28 @@ MainFuelPressInd::MainFuelPressInd()
 	NeedleSurface = 0;
 }
 
-void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainFuelPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetFuelTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainFuelPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -856,18 +866,28 @@ MainOxidizerPressInd::MainOxidizerPressInd()
 	NeedleSurface = 0;
 }
 
-void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainOxidizerPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetOxidizerTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -1371,8 +1391,11 @@ bool EngineStopButton::Push()
 		
 		if (newstate = 1)
 		{
-			startbutton->SwitchTo(0);
-			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
+			if (startbutton)
+			{
+				startbutton->SwitchTo(0);
+				sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
+			}
 		}
 		return true;
 	}
