@@ -579,7 +579,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			case -1: // LOOP WAITING FOR PTL
 				// Lock time accel to 100x
 				if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
-
+				// Orbiter 2016 fix
+				// Force GetWeightVector() to the correct value at LVDC initiation
+				if (simt < 0.5) {
+					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+				}
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
 				if (owner->MissionTime < -10800){
@@ -4885,7 +4889,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
 				// Orbiter 2016 fix
 				// Force GetWeightVector() to the correct value at LVDC initiation
-				if (simt > 1 && simt < 2) {
+				if (simt < 0.5) {
 					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 				}
 

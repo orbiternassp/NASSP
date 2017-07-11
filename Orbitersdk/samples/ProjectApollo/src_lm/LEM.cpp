@@ -795,7 +795,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	VESSELSTATUS vs;
 	GetStatus(vs);
 	if (vs.status == 1) {
-		if (simt > 3 && simt < 4) {
+		if (simt < 0.5) {
 			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
 		}
 	}
