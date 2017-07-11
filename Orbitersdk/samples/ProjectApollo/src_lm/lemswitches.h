@@ -514,3 +514,50 @@ public:
 protected:
 	SURFHANDLE FrameSurface;
 };
+
+class LEMDPSValveTalkback : public IndicatorSwitch {
+public:
+	LEMDPSValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen);
+	int GetState();
+
+protected:
+	DPSValve *valve;
+};
+
+class LEMDPSDigitalMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	SURFHANDLE Digits;
+	LEM *lem;
+};
+
+class LEMDPSOxidPercentMeter : public LEMDPSDigitalMeter {
+public:
+	double QueryValue();
+};
+
+class LEMDPSFuelPercentMeter : public LEMDPSDigitalMeter {
+public:
+	double QueryValue();
+};
+
+class LEMDigitalHeliumPressureMeter : public MeterSwitch {
+public:
+	LEMDigitalHeliumPressureMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
+	double QueryValue();
+	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	RotationalSwitch *source;
+	SURFHANDLE Digits;
+	LEM *lem;
+};

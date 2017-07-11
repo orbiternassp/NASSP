@@ -40,6 +40,7 @@
 #include "pyro.h"
 #include "lm_eds.h"
 #include "lm_aps.h"
+#include "lm_dps.h"
 #include "lm_programer.h"
 
 // Cosmic background temperature in degrees F
@@ -358,69 +359,6 @@ public:
 	LEM *lem;					// Pointer at LEM
 };
 
-class DPSGimbalActuator {
-
-public:
-	DPSGimbalActuator();
-	virtual ~DPSGimbalActuator();
-
-	void Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source);
-	void Timestep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
-	double GetPosition() { return position; }
-	void ChangeLGCPosition(int pos);
-	void ZeroLGCPosition() { lgcPosition = 0; }
-	int GetLGCPosition() { return lgcPosition; }
-	bool GimbalFail() { return gimbalfail; }
-
-	void GimbalTimestep(double simdt);
-
-protected:
-	bool IsSystemPowered();
-	void DrawSystemPower();
-
-	double position;
-	int commandedPosition;
-	int lgcPosition;
-	int atcaPosition;
-	bool motorRunning;
-	bool gimbalfail;
-
-	LEM *lem;
-	AGCIOSwitch *gimbalMotorSwitch;
-	e_object *motorSource;
-};
-
-// Descent Engine
-class LEM_DPS{
-public:
-	LEM_DPS(THRUSTER_HANDLE *dps);
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-
-	void ThrottleActuator(double manthrust, double autothrust);
-	
-	LEM *lem;					// Pointer at LEM
-	double HePress[2];			// Helium pressure above and below the regulator
-	bool thrustOn;				// Engine "On" Command
-	bool engArm;				// Engine Arm Command
-	bool engPreValvesArm;		// Engine Prevalves Arm Command
-	double thrustcommand;		// DPS Thrust Command
-
-	DPSGimbalActuator pitchGimbalActuator;
-	DPSGimbalActuator rollGimbalActuator;
-
-protected:
-
-	THRUSTER_HANDLE *dpsThruster;
-	
-};
-
 ///
 /// \ingroup LEM
 ///
@@ -573,7 +511,6 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
-	void SetGimbal(bool setting);
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -615,6 +552,7 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
+	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -728,17 +666,9 @@ protected:
 
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
-	int GetSSwitchState();
-	void SetSSwitchState(int s);
-	int GetLPSwitchState();
-	void SetLPSwitchState(int s);
 
 	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
 
-	double actualFUEL;
-	double AtempP ;
-	double AtempY ;
-	double AtempR ;
 	double MissionTime;
 
 	// Panel components
@@ -769,6 +699,15 @@ protected:
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
 
+	SwitchRow MainPropOxidPercentRow;
+	LEMDPSOxidPercentMeter DPSOxidPercentMeter;
+
+	SwitchRow MainPropFuelPercentRow;
+	LEMDPSFuelPercentMeter DPSFuelPercentMeter;
+
+	SwitchRow MainPropHeliumPressRow;
+	LEMDigitalHeliumPressureMeter MainHeliumPressureMeter;
+
 	SwitchRow MainPropAndEngineIndRow;
 	EngineThrustInd EngineThrustInd;
 	CommandedThrustInd CommandedThrustInd;
@@ -791,13 +730,13 @@ protected:
 
 	SwitchRow MPSRegControlLeftSwitchRow;
 	IndicatorSwitch ASCHeReg1TB;
-	IndicatorSwitch DESHeReg1TB;
+	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
 	IndicatorSwitch ASCHeReg2TB;
-	IndicatorSwitch DESHeReg2TB;
+	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
 
@@ -1185,8 +1124,8 @@ protected:
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
 	IndicatorSwitch EDLGTB;
-	IndicatorSwitch EDDesFuelVentTB;
-	IndicatorSwitch EDDesOxidVentTB;
+	LEMDPSValveTalkback EDDesFuelVentTB;
+	LEMDPSValveTalkback EDDesOxidVentTB;
 	// Audio section
 	ThreePosSwitch CDRAudSBandSwitch;
 	ThreePosSwitch CDRAudICSSwitch;
@@ -1202,118 +1141,6 @@ protected:
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
 	ThreePosSwitch CDRCOASSwitch;
-
-
-	bool toggleRCS;
-
-	bool Cswitch1;
-	bool Cswitch2;
-	bool Cswitch3;
-	bool Cswitch4;
-	bool Cswitch5;
-	bool Cswitch6;
-	bool Cswitch7;
-	bool Cswitch8;
-	bool Cswitch9;
-
-	bool LPswitch1;
-	bool LPswitch2;
-	bool LPswitch3;
-	bool LPswitch4;
-	bool LPswitch5;
-	bool LPswitch6;
-	bool LPswitch7;
-	bool SPSswitch;
-	bool EDSswitch;
-
-	bool DESHE1switch;
-	bool DESHE2switch;
-
-//	int ENGARMswitch;
-	
-
-	bool QUAD1switch;
-	bool QUAD2switch;
-	bool QUAD3switch;
-	bool QUAD4switch;
-	bool QUAD5switch;
-	bool QUAD6switch;
-	bool QUAD7switch;
-	bool QUAD8switch;
-
-	bool AFEED1switch;
-	bool AFEED2switch;
-	bool AFEED3switch;
-	bool AFEED4switch;
-
-	bool LDGswitch;
-
-	bool GMBLswitch;
-
-	bool ASCHE1switch;
-	bool ASCHE2switch;
-
-	bool RCSQ1switch;
-	bool RCSQ2switch;
-	bool RCSQ3switch;
-	bool RCSQ4switch;
-
-	bool ATT1switch;
-	bool ATT2switch;
-	bool ATT3switch;
-
-	bool CRSFDswitch;
-
-	bool CABFswitch;
-
-	bool PTTswitch;
-
-	bool RCSS1switch;
-	bool RCSS2switch;
-	bool RCSS3switch;
-	bool RCSS4switch;
-
-	bool X1switch;
-
-	bool GUIDswitch;
-
-	bool ALTswitch;
-
-	bool RATE1switch;
-	bool AT1switch;
-
-	bool SHFTswitch;
-
-	bool ETC1switch;
-	bool ETC2switch;
-	bool ETC3switch;
-	bool ETC4switch;
-
-	bool PMON1switch;
-	bool PMON2switch;
-
-	bool ACAPswitch;
-
-	bool RATE2switch;
-	bool AT2switch;
-
-	bool SLWRswitch;
-
-	bool DBswitch;
-
-	bool IMUCswitch;
-
-	bool SPLswitch;
-
-	bool X2switch;
-
-	bool P41switch;
-	bool P42switch;
-	bool P43switch;
-	bool P44switch;
-
-	bool AUDswitch;
-	bool RELswitch;
 
 	bool CPswitch;
 
@@ -1619,8 +1446,16 @@ protected:
 	Pyro StagingBoltsPyros;
 	Pyro StagingNutsPyros;
 	Pyro CableCuttingPyros;
+	Pyro DescentPropVentPyros;
+	Pyro DescentEngineStartPyros;
+	Pyro DescentEngineOnPyros;
+	Pyro DescentPropIsolPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
+	PowerMerge DescentPropVentPyrosFeeder;
+	PowerMerge DescentEngineStartPyrosFeeder;
+	PowerMerge DescentEngineOnPyrosFeeder;
+	PowerMerge DescentPropIsolPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1803,6 +1638,7 @@ protected:
 	LEM_EDS eds;
 
 	// DPS and APS
+	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
 	LEM_APS APS;
 
@@ -1848,6 +1684,7 @@ protected:
 	friend class LMCabinTempMeter;
 	friend class LMSuitTempMeter;
 	friend class DPSGimbalActuator;
+	friend class DPSPropellantSource;
 	friend class LEM_DPS;
 	friend class LEM_APS;
 	friend class DECA;
@@ -1866,6 +1703,7 @@ protected:
 	friend class LEMSteerableAntennaYawMeter;
 	friend class LEMSBandAntennaStrengthMeter;
 	friend class LEM_Programer;
+	friend class LEMDPSDigitalMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

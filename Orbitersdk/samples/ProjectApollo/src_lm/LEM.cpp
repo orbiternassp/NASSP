@@ -204,6 +204,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	StagingNutsPyros("Staging-Nuts-Pyros", Panelsdk),
 	CableCuttingPyros("Cable-Cutting-Pyros", Panelsdk),
 	CableCuttingPyrosFeeder("Cable-Cutting-Pyros-Feeder", Panelsdk),
+	DescentPropVentPyros("Descent-Prop-Vent-Pyros", Panelsdk),
+	DescentPropVentPyrosFeeder("Descent-Prop-Vent-Pyros-Feeder", Panelsdk),
+	DescentEngineStartPyros("Descent-Engine-Start-Pyros", Panelsdk),
+	DescentEngineStartPyrosFeeder("Descent-Engine-Start-Pyros-Feeder", Panelsdk),
+	DescentEngineOnPyros("Descent-Engine-On-Pyros", Panelsdk),
+	DescentEngineOnPyrosFeeder("Descent-Engine-On-Pyros-Feeder", Panelsdk),
+	DescentPropIsolPyros("Descent-Prop-Isol-Pyros", Panelsdk),
+	DescentPropIsolPyrosFeeder("Descent-Prop-Isol-Pyros-Feeder", Panelsdk),
 	agc(soundlib, dsky, imu, scdu, tcdu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
@@ -220,6 +228,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	tcdu(agc, RegOPTY, 0141, 0),
 	deda(this,soundlib, aea, 015),
 	DPS(th_hover),
+	DPSPropellant(ph_Dsc, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
@@ -268,8 +277,6 @@ LEM::~LEM()
 void LEM::Init()
 
 {
-	toggleRCS =false;
-
 	DebugLineClearTimer = 0;
 
 	ABORT_IND=false;
@@ -287,8 +294,6 @@ void LEM::Init()
 	status = 0;
 	HasProgramer = false;
 	InvertStageBit = false;
-
-	actualFUEL = 0.0;
 
 	InVC = false;
 	InPanel = false;
@@ -311,6 +316,8 @@ void LEM::Init()
 	ph_Asc = 0;
 	ph_RCSA = 0;
 	ph_RCSB = 0;
+
+	DPSPropellant.SetVessel(this);
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
@@ -830,25 +837,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		LastFuelWeight = CurrentFuelWeight;
 	}
 
-	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
-
-	if( toggleRCS){
-			if(P44switch){
-			SetAttitudeMode(2);
-			toggleRCS =false;
-			}
-			else if (!P44switch){
-			SetAttitudeMode(1);
-			toggleRCS =false;
-			}
-		}
-		if (GetAttitudeMode()==1){
-		P44switch=false;
-		}
-		else if (GetAttitudeMode()==2 ){
-		P44switch=true;
-		}
-
 	//
 	// Play RCS sound in case of Orbiter's attitude control is disabled
 	//
@@ -888,7 +876,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 #endif
 				Scontact.play();
 
-			SetEngineLevel(ENGINE_HOVER,0);
 			ContactOK = true;
 
 			SetLmLandedMesh();
@@ -946,16 +933,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 #endif
 }
 
-//
-// Set GMBLswitch
-//
-
-void LEM::SetGimbal(bool setting)
-{
-	agc.SetInputChannelBit(032, DescentEngineGimbalsDisabled, setting);
-	GMBLswitch = setting;
-}
-
 typedef union {
 	struct {
 		unsigned MissionTimerRunning : 1;
@@ -988,16 +965,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             SwitchState = 0;
 			sscanf (line+7, "%d", &SwitchState);
 			SetCSwitchState(SwitchState);
-		} 
-		else if (!strnicmp (line, "SSWITCH", 7)) {
-            SwitchState = 0;
-			sscanf (line+7, "%d", &SwitchState);
-			SetSSwitchState(SwitchState);
-		} 
-		else if (!strnicmp (line, "LPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetLPSwitchState(SwitchState);
 		} 
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
@@ -1131,6 +1098,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
 			fdaiRight.LoadState(scn, FDAI2_END_STRING);
+		}
+		else if (!strnicmp(line, DPSPROPELLANT_START_STRING, sizeof(DPSPROPELLANT_START_STRING))) {
+			DPSPropellant.LoadState(scn);
 		}
 		else if (!strnicmp(line, "DPS_BEGIN", sizeof("DPS_BEGIN"))) {
 			DPS.LoadState(scn, "DPS_END");
@@ -1422,8 +1392,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	}
 
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
-	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
-	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
@@ -1490,6 +1458,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	//Save DPS
+	DPSPropellant.SaveState(scn);
 	DPS.SaveState(scn, "DPS_BEGIN", "DPS_END");
 	//Save pitch and roll gimbal actuators
 	oapiWriteLine(scn, "DPSGIMBALACTUATOR_PITCH_BEGIN");
