@@ -352,7 +352,7 @@ void DECA::Timestep(double simdt) {
 	{
 		K3 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K3 = true;
 	}
@@ -956,11 +956,11 @@ void SCCA1::Timestep(double simdt)
 		K13 = false;
 	}
 
-	if (AutoOn && lem->ManualEngineStop.GetState() == 0 && lem->EngineArmSwitch.IsUp())
+	if (AutoOn && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && lem->EngineArmSwitch.IsUp())
 	{
 		K14 = true;
 	}
-	else if (AutoOn && lem->ManualEngineStop.GetState() == 0 && K21)
+	else if (AutoOn && K21)
 	{
 		K14 = true;
 	}
@@ -1203,7 +1203,7 @@ void SCCA2::Timestep(double simdt)
 		K19 = true;
 		K22 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K15 = false;
 		K19 = false;
@@ -1410,7 +1410,7 @@ void SCCA3::Timestep(double simdt)
 	{
 		K4_1 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K4_1 = true;
 	}
@@ -1419,7 +1419,7 @@ void SCCA3::Timestep(double simdt)
 		K4_1 = false;
 	}
 
-	if (EngStopPower && lem->ManualEngineStop.GetState() == 1)
+	if (EngStopPower && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K4_2 = true;
 	}
@@ -1428,7 +1428,7 @@ void SCCA3::Timestep(double simdt)
 		K4_2 = false;
 	}
 
-	if (EngStopPower && lem->ManualEngineStop.GetState() == 0 && !lem->scca1.GetK9())
+	if (EngStopPower && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && !lem->scca1.GetK9())
 	{
 		K6_1 = true;
 		K6_2 = true;

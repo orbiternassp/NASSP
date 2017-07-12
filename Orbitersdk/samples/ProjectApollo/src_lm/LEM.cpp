@@ -737,7 +737,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		return 1;
 	case OAPI_KEY_SUBTRACT:
 		//Engine Stop Button
-		ManualEngineStop.Push();
+		CDRManualEngineStop.Push();
 		ButtonClick();
 		return 1;
 	}

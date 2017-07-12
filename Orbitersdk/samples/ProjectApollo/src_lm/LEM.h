@@ -495,6 +495,7 @@ public:
 		SRF_ORDEAL_ROTARY,
 		SRF_TW_NEEDLE,
 		SRF_SEQ_LIGHT,
+		SRF_LMENGINE_START_STOP_BUTTONS,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1104,7 +1105,7 @@ protected:
 	RotationalSwitch LtgIntegralKnob;
 	// There's a +X TRANSLATION button here too
 	EngineStartButton ManualEngineStart;
-	EngineStopButton ManualEngineStop;
+	EngineStopButton CDRManualEngineStop;
 
 	/////////////////
 	// LEM Panel 8 //
@@ -1259,6 +1260,9 @@ protected:
 
 	SwitchRow Panel12AntYawSwitchRow;
 	RotationalSwitch Panel12AntYawKnob;
+
+	SwitchRow LMPManualEngineStopSwitchRow;
+	EngineStopButton LMPManualEngineStop;
 
 	SwitchRow AGSOperateSwitchRow;
 	ThreePosSwitch AGSOperateSwitch;
