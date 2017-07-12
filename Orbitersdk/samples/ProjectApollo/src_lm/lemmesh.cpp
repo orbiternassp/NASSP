@@ -122,7 +122,7 @@ void LEM::SetLmVesselDockStage()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
@@ -193,7 +193,7 @@ void LEM::SetLmVesselHoverStage()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
@@ -310,7 +310,7 @@ void LEM::SetLmAscentHoverStage()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();

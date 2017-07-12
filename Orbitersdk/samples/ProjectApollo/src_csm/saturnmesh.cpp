@@ -513,7 +513,7 @@ void Saturn::SetCSMStage ()
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	SetRotDrag(_V(0.7,0.7,0.3));
 	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
+	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0);
 
 	const double CGOffset = 12.25+21.5-1.8+0.35;
@@ -1073,7 +1073,7 @@ void Saturn::SetChuteStage1()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale(-5e-3);
-		SetBankMomentScale(-5e-3);
+		SetYawMomentScale(-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1102,7 +1102,7 @@ void Saturn::SetChuteStage2()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1129,7 +1129,7 @@ void Saturn::SetChuteStage3()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale(-5e-3);
-		SetBankMomentScale(-5e-3);
+		SetYawMomentScale(-5e-3);
 	}
 	SetLiftCoeffFunc (0);
     ClearExhaustRefs();
@@ -1156,7 +1156,7 @@ void Saturn::SetChuteStage4()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1183,7 +1183,7 @@ void Saturn::SetSplashStage()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1216,7 +1216,7 @@ void Saturn::SetRecovery()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();

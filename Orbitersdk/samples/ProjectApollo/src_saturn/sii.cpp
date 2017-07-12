@@ -116,7 +116,7 @@ void SII::SetSII()
 	SetCW (0.5, 1.1, 2, 2.4);
 	SetRotDrag (_V(2,2,2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
     ClearMeshes();
     ClearExhaustRefs();

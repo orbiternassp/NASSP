@@ -85,7 +85,7 @@ void CMChute::clbkSetClassCaps(FILEHANDLE cfg)
  SetSurfaceFrictionCoeff(1,1);
  if(GetFlightModel()>=1){
   SetPitchMomentScale(-5e-3);
-  SetBankMomentScale(-5e-3);
+  SetYawMomentScale(-5e-3);
  }
  SetLiftCoeffFunc(0);
  
