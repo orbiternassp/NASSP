@@ -4831,25 +4831,25 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNLEFT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINLEFT);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNLEFT);
 		break;
 
 	case MFD_RIGHT:
-		if (!MainPanelSplit) oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_RIGHT, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNRIGHT);
+		if (!MainPanelSplit) TriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_RIGHT, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNRIGHT);
 		break;
 
 	case MFD_USER1:
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER1);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER1);
 		break;
 
 	case MFD_USER2:
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER2);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER2);
 		break;
 
 	}
