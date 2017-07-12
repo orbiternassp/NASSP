@@ -1049,10 +1049,10 @@ void LEM::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:		
-		oapiTriggerPanelRedrawArea (LMPANEL_MAIN, AID_MFDLEFT);
+		VESSEL::TriggerPanelRedrawArea(LMPANEL_MAIN, AID_MFDLEFT);
 		break;
 	case MFD_RIGHT:		
-		oapiTriggerPanelRedrawArea (LMPANEL_MAIN, AID_MFDRIGHT);
+		VESSEL::TriggerPanelRedrawArea(LMPANEL_MAIN, AID_MFDRIGHT);
 		break;
 	}
 }
