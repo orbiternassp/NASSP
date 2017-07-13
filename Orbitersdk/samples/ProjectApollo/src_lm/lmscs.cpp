@@ -48,6 +48,7 @@ ATCA::ATCA(){
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
+	DirectTranslationActive = false;
 }
 
 void ATCA::Init(LEM *vessel){

@@ -53,6 +53,7 @@ public:
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
+	bool DirectTranslationActive;
 
 protected:
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification

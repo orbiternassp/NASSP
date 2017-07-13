@@ -460,6 +460,7 @@ void LEM::InitSwitches() {
 	ManualEngineStart.Register(PSH, "ManualEngineStart", 0);
 	CDRManualEngineStop.Register(PSH, "CDRManualEngineStop", 0);
 	LMPManualEngineStop.Register(PSH, "LMPManualEngineStop", 0);
+	PlusXTranslationButton.Register(PSH, "PlusXTranslationButton", TOGGLESWITCH_DOWN);
 
 	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
 	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
@@ -1134,6 +1135,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_RADAR_TAPE]         = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
 		srf[SRF_SEQ_LIGHT]			= oapiCreateSurface (LOADBMP (IDB_SEQ_LIGHT));
 		srf[SRF_LMENGINE_START_STOP_BUTTONS] = oapiCreateSurface(LOADBMP(IDB_LMENGINESTARTSTOPBUTTONS));
+		srf[SRF_LMTRANSLBUTTON]		= oapiCreateSurface (LOADBMP(IDB_LMTRANSLBUTTON));
 
 		//
 		// Flashing borders.
@@ -1208,6 +1210,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_STAGESWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SEQ_LIGHT],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LMENGINE_START_STOP_BUTTONS], g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LMTRANSLBUTTON],		g_Param.col[4]);
 
 		//		break;
 		//
@@ -2229,6 +2232,7 @@ void LEM::SetSwitches(int panel) {
 			LtgFloodOhdFwdKnob.Init(173, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgAnunNumKnob.Init(333, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			LtgIntegralKnob.Init(457, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
+			PlusXTranslationButton.Init(46, 256, 79, 68, srf[SRF_LMTRANSLBUTTON], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 			ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_72x72], Panel5SwitchRow, 0, 69, &CDRManualEngineStop);
 			CDRManualEngineStop.Init(32, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_72x72], Panel5SwitchRow, 0, 0, &ManualEngineStart);
 

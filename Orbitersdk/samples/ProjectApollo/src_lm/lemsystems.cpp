@@ -1171,6 +1171,26 @@ void LEM::JoystickTimestep(double simdt)
 			atca.SetDirectYawActive(false);
 		}
 
+		//
+		// +X TRANSLATION
+		//
+
+		if (PlusXTranslationButton.GetState() == 1 && SCS_ATT_DIR_CONT_CB.IsPowered()) {
+			SetRCSJet(7, true);
+			SetRCSJet(15, true);
+			SetRCSJet(11, true);
+			SetRCSJet(3, true);
+			atca.DirectTranslationActive = true;
+		}
+		else if (atca.DirectTranslationActive == true)
+		{
+			SetRCSJet(7, false);
+			SetRCSJet(15, false);
+			SetRCSJet(11, false);
+			SetRCSJet(3, false);
+			atca.DirectTranslationActive = false;
+		}
+
 		if (rhc_debug != -1)
 		{
 			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d, %d, %d, %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id, atca.GetDirectRollActive(), atca.GetDirectPitchActive(), atca.GetDirectYawActive());

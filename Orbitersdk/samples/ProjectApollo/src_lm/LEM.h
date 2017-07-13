@@ -496,6 +496,7 @@ public:
 		SRF_TW_NEEDLE,
 		SRF_SEQ_LIGHT,
 		SRF_LMENGINE_START_STOP_BUTTONS,
+		SRF_LMTRANSLBUTTON,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1103,7 +1104,7 @@ protected:
 	RotationalSwitch LtgFloodOhdFwdKnob;
 	RotationalSwitch LtgAnunNumKnob;
 	RotationalSwitch LtgIntegralKnob;
-	// There's a +X TRANSLATION button here too
+	PushSwitch PlusXTranslationButton;
 	EngineStartButton ManualEngineStart;
 	EngineStopButton CDRManualEngineStop;
 

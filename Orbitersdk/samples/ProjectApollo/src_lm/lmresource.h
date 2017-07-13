@@ -763,6 +763,7 @@
 #define AID_MPS_HELIUM_PRESS_INDICATOR  1037
 #define IDB_LMENGINESTARTSTOPBUTTONS    1038
 #define AID_LMP_MANUAL_ENGINE_STOP_SWITCH 1039
+#define IDB_LMTRANSLBUTTON				1040
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

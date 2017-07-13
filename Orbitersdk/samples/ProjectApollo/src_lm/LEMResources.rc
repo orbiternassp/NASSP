@@ -159,6 +159,7 @@ IDB_ORDEAL_ROTARY       BITMAP					"..\\Bitmaps\\ORDEAL_rotary.bmp"
 IDB_TW_NEEDLE           BITMAP					"..\\Bitmaps\\lm_tw_needle.bmp"
 IDB_SEQ_LIGHT           BITMAP                  "..\\Bitmaps\\lem_seq_light.bmp"
 IDB_LMENGINESTARTSTOPBUTTONS BITMAP				"..\\Bitmaps\\LMEngStartStop.bmp"
+IDB_LMTRANSLBUTTON		BITMAP					"..\\Bitmaps\LMTranslButton.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
