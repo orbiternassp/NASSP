@@ -259,6 +259,7 @@ public:
 
 	bool GetAutoEngOn() { return AutoEngOn; }
 	bool GetAutoEngOff() { return AutoEngOff; }
+	bool GetK5() { return K5; }
 	bool GetK11() { return K11; }
 	bool GetK17() { return K17; }
 	bool GetK19() { return K19; }

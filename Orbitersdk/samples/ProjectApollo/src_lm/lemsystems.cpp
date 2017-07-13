@@ -698,6 +698,9 @@ void LEM::SystemsInit()
 	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
 
+	//ACA and TTCA
+	CDR_ACA.Init(this, &ACAPropSwitch);
+
 	//DECA
 	deca.Init(this, &SCS_DECA_PWR_CB);
 
@@ -788,9 +791,10 @@ void LEM::JoystickTimestep(double simdt)
 		int thc_z_pos = 0;
 		int thc_rot_pos = 0;
 
-		rhc_pos[0] = 0; // Initialize
-		rhc_pos[1] = 0;
-		rhc_pos[2] = 0;
+		int rhc_pos[3];     // RHC x/y/z positions
+		rhc_pos[0] = 32768; // Initialize
+		rhc_pos[1] = 32768;
+		rhc_pos[2] = 32768;
 
 		/* ACA OPERATION:
 
@@ -843,25 +847,9 @@ void LEM::JoystickTimestep(double simdt)
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
 
-			if (dx8_jstate[rhc_id].lX > 34028) { // Out of detent RIGHT
-				rhc_pos[0] = dx8_jstate[rhc_id].lX - 34028; // Results are 0 - 31507
-			}
-			if (dx8_jstate[rhc_id].lX < 31508) { // Out of detent LEFT
-				rhc_pos[0] = dx8_jstate[rhc_id].lX - 31508; // Results are 0 - -31508
-			}
-			if (dx8_jstate[rhc_id].lY > 34028) { // Out of detent UP
-				rhc_pos[1] = dx8_jstate[rhc_id].lY - 34028; // Results are 0 - 31507
-			}
-			if (dx8_jstate[rhc_id].lY < 31508) { // Out of detent DOWN
-				rhc_pos[1] = dx8_jstate[rhc_id].lY - 31508; // Results are 0 - -31508
-			}
-			// YAW IS REVERSED
-			if (rhc_rot_pos > 34028) { // Out of detent RIGHT
-				rhc_pos[2] = 34028 - rhc_rot_pos; // Results are 0 - 31507
-			}
-			if (rhc_rot_pos < 31508) { // Out of detent LEFT
-				rhc_pos[2] = 31508 - rhc_rot_pos; // Results are 0 - -31508
-			}
+			rhc_pos[0] = dx8_jstate[rhc_id].lX;
+			rhc_pos[1] = dx8_jstate[rhc_id].lY;
+			rhc_pos[2] = 65536 - rhc_rot_pos;
 
 			//Let's cheat and give the ACA a throttle lever
 			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
@@ -886,50 +874,57 @@ void LEM::JoystickTimestep(double simdt)
 
 			// Roll
 			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
-				rhc_pos[0] = (int)((-GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 31508.);
+				rhc_pos[0] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_BANKLEFT) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
-				rhc_pos[0] = (int)(GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 31507.);
+				rhc_pos[0] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768);
 			}
 			// Pitch
 			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
-				rhc_pos[1] = (int)((-GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 31508.);
+				rhc_pos[1] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_PITCHDOWN) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
-				rhc_pos[1] = (int)(GetManualControlLevel(THGROUP_ATT_PITCHUP) * 31507.);
+				rhc_pos[1] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768);
 			}
 			// Yaw
 			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
-				rhc_pos[2] = (int)((GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 31507.);
+				rhc_pos[2] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_YAWLEFT) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
-				rhc_pos[2] = (int)(-GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 31508.);
+				rhc_pos[2] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768);
 			}
 		}
 
-		if (rhc_pos[0] < 0) {
+		CDR_ACA.Timestep(rhc_pos);
+
+		if (CDR_ACA.GetOutOfDetent())
+		{
 			val31[ACAOutOfDetent] = 1;
-			val31[MinusAzimuth] = 1;
 		}
-		if (rhc_pos[1] < 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[MinusElevation] = 1;
-		}
-		if (rhc_pos[0] > 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[PlusAzimuth] = 1;
-		}
-		if (rhc_pos[1] > 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[PlusElevation] = 1;
-		}
-		if (rhc_pos[2] < 0) {
-			val31[ACAOutOfDetent] = 1;
+
+		if (CDR_ACA.GetMinusYawBreakout())
+		{
 			val31[MinusYaw] = 1;
 		}
-		if (rhc_pos[2] > 0) {
-			val31[ACAOutOfDetent] = 1;
+		if (CDR_ACA.GetPlusYawBreakout())
+		{
 			val31[PlusYaw] = 1;
+		}
+		if (CDR_ACA.GetMinusPitchBreakout())
+		{
+			val31[MinusElevation] = 1;
+		}
+		if (CDR_ACA.GetPlusPitchBreakout())
+		{
+			val31[PlusElevation] = 1;
+		}
+		if (CDR_ACA.GetMinusRollBreakout())
+		{
+			val31[MinusAzimuth] = 1;
+		}
+		if (CDR_ACA.GetPlusRollBreakout())
+		{
+			val31[PlusAzimuth] = 1;
 		}
 
 		if (agc.GetInputChannelBit(031, ACAOutOfDetent) == 0 && val31[ACAOutOfDetent] == 1)
@@ -945,7 +940,7 @@ void LEM::JoystickTimestep(double simdt)
 
 		if (LeftACA4JetSwitch.IsUp() && SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		{
-			if (rhc_pos[0] < -28770) {
+			if (CDR_ACA.GetMinusRollHardover()) {
 				// MINUS ROLL
 				SetRCSJet(3, 0);
 				SetRCSJet(7, 0);
@@ -961,7 +956,7 @@ void LEM::JoystickTimestep(double simdt)
 				atca.SetDirectRollActive(true);
 				rflag = 1;
 			}
-			if (rhc_pos[0] > 28770) {
+			if (CDR_ACA.GetPlusRollHardover()) {
 				// PLUS ROLL
 				SetRCSJet(3, 1);
 				SetRCSJet(7, 1);
@@ -977,7 +972,7 @@ void LEM::JoystickTimestep(double simdt)
 				atca.SetDirectRollActive(true);
 				rflag = 1;
 			}
-			if (rhc_pos[1] < -28770) {
+			if (CDR_ACA.GetMinusPitchHardover()) {
 				// MINUS PITCH
 				SetRCSJet(0, 1);
 				SetRCSJet(7, 1);
@@ -993,7 +988,7 @@ void LEM::JoystickTimestep(double simdt)
 				atca.SetDirectPitchActive(true);
 				pflag = 1;
 			}
-			if (rhc_pos[1] > 28770) {
+			if (CDR_ACA.GetPlusPitchHardover()) {
 				// PLUS PITCH
 				SetRCSJet(0, 0);
 				SetRCSJet(7, 0);
@@ -1009,7 +1004,7 @@ void LEM::JoystickTimestep(double simdt)
 				atca.SetDirectPitchActive(true);
 				pflag = 1;
 			}
-			if (rhc_pos[2] < -28770) {
+			if (CDR_ACA.GetMinusYawHardover()) {
 				// MINUS YAW
 				SetRCSJet(1, 0);
 				SetRCSJet(5, 0);
@@ -1025,7 +1020,7 @@ void LEM::JoystickTimestep(double simdt)
 				atca.SetDirectYawActive(true);
 				yflag = 1;
 			}
-			if (rhc_pos[2] > 28770) {
+			if (CDR_ACA.GetPlusYawHardover()) {
 				// PLUS YAW
 				SetRCSJet(1, 1);
 				SetRCSJet(5, 1);
@@ -1051,7 +1046,7 @@ void LEM::JoystickTimestep(double simdt)
 		{
 			if (RollSwitch.IsDown() && rflag == 0)
 			{
-				if (rhc_pos[0] < -5040) {
+				if (CDR_ACA.GetMinusRollBreakout()) {
 					// MINUS ROLL
 					SetRCSJet(3, 0);
 					SetRCSJet(12, 0);
@@ -1063,7 +1058,7 @@ void LEM::JoystickTimestep(double simdt)
 					atca.SetDirectRollActive(true);
 					rflag = 1;
 				}
-				if (rhc_pos[0] > 5040) {
+				if (CDR_ACA.GetPlusRollBreakout()) {
 					// PLUS ROLL
 					SetRCSJet(3, 1);
 					SetRCSJet(12, 1);
@@ -1079,7 +1074,7 @@ void LEM::JoystickTimestep(double simdt)
 
 			if (PitchSwitch.IsDown() && pflag == 0)
 			{
-				if (rhc_pos[1] < -5040) {
+				if (CDR_ACA.GetMinusPitchBreakout()) {
 					// MINUS PITCH
 					SetRCSJet(11, 1);
 					SetRCSJet(12, 1);
@@ -1091,7 +1086,7 @@ void LEM::JoystickTimestep(double simdt)
 					atca.SetDirectPitchActive(true);
 					pflag = 1;
 				}
-				if (rhc_pos[1] > 5040) {
+				if (CDR_ACA.GetPlusPitchBreakout()) {
 					// PLUS PITCH
 					SetRCSJet(11, 0);
 					SetRCSJet(12, 0);
@@ -1107,7 +1102,7 @@ void LEM::JoystickTimestep(double simdt)
 
 			if (YawSwitch.IsDown() && yflag == 0)
 			{
-				if (rhc_pos[2] < -5040) {
+				if (CDR_ACA.GetMinusYawBreakout()) {
 					// MINUS YAW
 					SetRCSJet(1, 0);
 					SetRCSJet(10, 0);
@@ -1119,7 +1114,7 @@ void LEM::JoystickTimestep(double simdt)
 					atca.SetDirectYawActive(true);
 					yflag = 1;
 				}
-				if (rhc_pos[2] > 5040) {
+				if (CDR_ACA.GetPlusYawBreakout()) {
 					// PLUS YAW
 					SetRCSJet(1, 1);
 					SetRCSJet(10, 1);

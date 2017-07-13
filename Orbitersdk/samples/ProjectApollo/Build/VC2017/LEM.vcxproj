@@ -153,6 +153,7 @@
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
@@ -353,6 +354,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
     <ClInclude Include="..\..\src_lm\lm_dps.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />

@@ -550,11 +550,11 @@ void DECA::Timestep(double simdt) {
 		AutoThrust = 0.0;
 	}
 
-	if (lem->IMU_OPR_CB.IsPowered() && lem->GuidContSwitch.IsUp())	//PGNS Control
+	if (lem->IMU_OPR_CB.IsPowered() && !lem->scca2.GetK5())	//PGNS Control
 	{
 		ManualThrust = lem->ttca_thrustcmd;
 	}
-	else if (lem->SCS_ATCA_CB.IsPowered() && lem->GuidContSwitch.IsDown())	//AGS Control
+	else if (lem->SCS_ATCA_CB.IsPowered() && lem->scca2.GetK5())	//AGS Control
 	{
 		ManualThrust = lem->ttca_thrustcmd;
 	}

@@ -313,9 +313,9 @@ void LEMcomputer::ProcessChannel13(ChannelValue val){
 	ch13 = val;
 	if(ch13[EnableRHCCounter] && ch13[RHCRead]){
 		int rhc_count[3];
-		rhc_count[0] = lem->rhc_pos[0]/550;
-		rhc_count[1] = lem->rhc_pos[1]/550;
-		rhc_count[2] = lem->rhc_pos[2]/550;
+		rhc_count[0] = (int)(lem->CDR_ACA.GetACAProp(0)*42.0);
+		rhc_count[1] = (int)(lem->CDR_ACA.GetACAProp(1)*42.0);
+		rhc_count[2] = (int)(lem->CDR_ACA.GetACAProp(2)*42.0);
 		
 		WriteMemory(042,rhc_count[1]); // PITCH 
 		WriteMemory(043,rhc_count[2]); // YAW   
