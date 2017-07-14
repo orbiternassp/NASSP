@@ -348,6 +348,8 @@ typedef union
 		unsigned CheckParity:1;
 		unsigned NightWatchmanTripped:1;
 		unsigned GeneratedWarning:1;
+		unsigned TookBZF:1;
+		unsigned TookBZMF:1;
 		unsigned Trap31A:1;
 		unsigned Trap31B:1;
 		unsigned Trap32:1;
@@ -401,6 +403,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 	state.u.GeneratedWarning = vagc.GeneratedWarning;
+	state.u.TookBZF = vagc.TookBZF;
+	state.u.TookBZMF = vagc.TookBZMF;
 	state.u.Trap31A = vagc.Trap31A;
 	state.u.Trap31B = vagc.Trap31B;
 	state.u.Trap32 = vagc.Trap32;
@@ -593,6 +597,8 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 			vagc.GeneratedWarning = state.u.GeneratedWarning;
+			vagc.TookBZF = state.u.TookBZF;
+			vagc.TookBZMF = state.u.TookBZMF;
 			vagc.Trap31A = state.u.Trap31A;
 			vagc.Trap31B = state.u.Trap31B;
 			vagc.Trap32 = state.u.Trap32;
