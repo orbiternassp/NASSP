@@ -132,9 +132,15 @@ void LEM::SetLmVesselDockStage()
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-    if (!ph_Dsc)  
-		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
+	if (!ph_Dsc)
+	{
+		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
+	}
+	else
+	{
+		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
+	}
+	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
 	if (!ph_RCSA) {
@@ -252,6 +258,10 @@ void LEM::SetLmVesselHoverStage()
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
+	else
+	{
+		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
+	}
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
@@ -359,8 +369,14 @@ void LEM::SetLmAscentHoverStage()
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-    if (!ph_Asc)  
-		ph_Asc  = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
+	if (!ph_Asc)
+	{
+		ph_Asc = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
+	}
+	else
+	{
+		SetPropellantMaxMass(ph_Asc, AscentFuelMassKg);
+	}
 	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
