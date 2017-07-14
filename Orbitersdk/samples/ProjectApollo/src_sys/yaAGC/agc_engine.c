@@ -320,7 +320,12 @@
 		04/02/17 MAS	Added simulation of a hardware bug in the
 				 design of the "No TCs" part of the TC Trap.
 				 Most causes of transients that can reset
-				 the alarm are now accounted for.
+				 the alarm are now accounted for. Also
+				 corrected the phasing of the standby circuit
+				 and TIME1-TIME5 relative the to the scaler.
+				 With the newly corrected timer phasings,
+				 Aurora/Sunburst's self-tests cannot pass
+				 without simulation of the TC Trap bug.
 		04/16/17 MAS	Added a simple linear model of the AGC warning
 				 filter, and added the AGC (CMC/LGC) warning
 				 light status to DSKY channel 163. Also added
@@ -1916,16 +1921,12 @@ agc_engine (agc_t * State)
       // Check alarms first, since there's a chance we might go to standby
 	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
 	  {
-		  // The Night Watchman begins looking once every 1.28s...
+		  // The Night Watchman begins looking once every 1.28s
 		  if (!State->Standby)
 			  State->NightWatchman = 1;
 
-		  // Same with Standby
-		  if (0 == (State->InputChannel[032] & 020000))
-			  State->SbyPressed = 1;
-	  }
-	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
-	  {
+		  // The standby circuit finishes checking to see if we're going to standby now
+		  // (it has the same period as but is 180 degrees out of phase with the Night Watchman)
 		  if (State->SbyPressed && State->InputChannel[013] & 002000)
 		  {
 			  if (!State->Standby)
@@ -1951,6 +1952,14 @@ agc_engine (agc_t * State)
 				  ChannelOutput(State, 0163, State->DskyChannel163);
 			  }
 		  }
+	  }
+	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
+	    {
+		  // The standby circuit checks the SBY/PRO button state every 1.28s
+		  if (0 == (State->InputChannel[032] & 020000))
+		    State->SbyPressed = 1;
+
+		  // The Night Watchman finishes looking now
 		  if (!State->Standby && State->NightWatchman)
 		  {
 			  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
@@ -2023,7 +2032,7 @@ agc_engine (agc_t * State)
 			  State->InputChannel[077] |= CH77_TC_TRAP;
 		  }
 		// Now that that's taken care of...
-		// If so, the 10 ms. timers TIME1 and TIME3 are updated.
+		// Update the 10 ms. timers TIME1 and TIME3.
 		// Recall that the registers are in AGC integer format,
 		// and therefore are actually shifted left one space.
 		// When taking a reset, the real AGC would skip unprogrammed
@@ -2031,7 +2040,7 @@ agc_engine (agc_t * State)
 		// would be saved and the counts would happen immediately
 		// after the first instruction at 4000, so doing them now
 		// is not too inaccurate.
-		if (0 == (037 & State->InputChannel[ChanSCALER1]))
+		if (020 == (037 & State->InputChannel[ChanSCALER1]))
 		  {
 			  State->ExtraDelay++;
 			  if (CounterPINC(&c(RegTIME1)))
@@ -2044,14 +2053,14 @@ agc_engine (agc_t * State)
 				  State->InterruptRequests[3] = 1;
 		  }
 		// TIME5 is the same as TIME3, but 5 ms. out of phase.
-		if (020 == (037 & State->InputChannel[ChanSCALER1]))
+		if (000 == (037 & State->InputChannel[ChanSCALER1]))
 		  {
 			  State->ExtraDelay++;
 			  if (CounterPINC(&c(RegTIME5)))
 				  State->InterruptRequests[2] = 1;
 		  }
 		// TIME4 is the same as TIME3, but 7.5ms out of phase
-		if (030 == (037 & State->InputChannel[ChanSCALER1]))
+		if (010 == (037 & State->InputChannel[ChanSCALER1]))
 		  {
 			  State->ExtraDelay++;
 			  if (CounterPINC(&c(RegTIME4)))
