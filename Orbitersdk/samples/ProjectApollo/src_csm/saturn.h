@@ -3906,8 +3906,6 @@ protected:
 	void FireTowerJettisonMotor();
 	void FirePitchControlMotor();
 	void MoveTHC(bool dir);
-	void AttitudeLaunchSIVB();
-	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 
 	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs);
 
@@ -3920,7 +3918,6 @@ protected:
 
 	void StageSix(double simt);
 	void JostleViewpoint(double amount);
-	double CalculateApogeeTime();
 	void UpdatePayloadMass();
 	double GetJ2ISP(double ratio);
 	void GetPayloadName(char *s);

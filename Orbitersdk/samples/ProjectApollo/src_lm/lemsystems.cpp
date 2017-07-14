@@ -927,11 +927,6 @@ void LEM::JoystickTimestep(double simdt)
 			val31[PlusAzimuth] = 1;
 		}
 
-		if (agc.GetInputChannelBit(031, ACAOutOfDetent) == 0 && val31[ACAOutOfDetent] == 1)
-		{
-			agc.GenerateHandrupt();
-		}
-
 		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
 
 		//

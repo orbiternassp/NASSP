@@ -68,6 +68,7 @@
                          added initialization of a new night watchman bit.
 		04/16/17 MAS    Added initialization of warning filter variables.
 		05/16/17 MAS    Enabled interrupts at startup.
+		07/13/17 MAS	Added initialization of the three HANDRUPT traps.
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
@@ -273,6 +274,10 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->DskyTimer = 0;
   State->DskyFlash = 0;
   State->DskyChannel163 = 0;
+
+  State->Trap31A = 0;
+  State->Trap31B = 0;
+  State->Trap32 = 0;
 
   if (CoreDump != NULL)
     {

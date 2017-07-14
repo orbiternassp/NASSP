@@ -101,6 +101,7 @@
 		04/16/17 MAS    Added a voltage counter and input flag for the AGC
 						warning filter, as well as a channel 163 flag for
 						the AGC (CMC/LGC) warning light.
+		07/13/17 MAS	Added flags for the three HANDRUPT traps.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -360,7 +361,10 @@ typedef struct
   unsigned ParityFail:1;        // Set when a parity failure is encountered accessing memory (in yaAGC, just hitting banks 44+)
   unsigned CheckParity:1;       // Enable parity checking for fixed memory.
   unsigned RestartLight:1;      // The present state of the RESTART light
-  unsigned GeneratedWarning : 1;  // Whether there is a pending input to the warning filter
+  unsigned GeneratedWarning:1;  // Whether there is a pending input to the warning filter
+  unsigned Trap31A:1;           // Enable flag for Trap 31A
+  unsigned Trap31B:1;           // Enable flag for Trap 31B
+  unsigned Trap32:1;            // Enable flag for Trap 32
   uint32_t WarningFilter;       // Current voltage of the AGC warning filter
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
