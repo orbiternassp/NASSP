@@ -49,6 +49,22 @@ ATCA::ATCA(){
 	DirectYawActive = false;
 	DirectRollActive = false;
 	DirectTranslationActive = false;
+
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K8 = false;
+	K9 = false;
+	K10 = false;
+	K11 = false;
+	K12 = false;
+	K13 = false;
+	K14 = false;
+	K15 = false;
+	K16 = false;
+	K19 = false;
+	K20 = false;
+	K21 = false;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -61,6 +77,84 @@ void ATCA::Timestep(double simt){
 	double now = oapiGetSimTime(); // Get time
 	int haspower = 0,hasdriver = 0,balcpl = 0;
 	if(lem == NULL){ return; }
+
+	if (lem->SCS_ATCA_CB.IsPowered())
+	{
+		if (lem->stage < 2 && (!lem->scca2.GetK23() || !lem->scca2.GetK24()))
+		{
+			K8 = true;
+			K9 = true;
+			K10 = true;
+			K11 = true;
+			K12 = true;
+			K13 = true;
+		}
+		else
+		{
+			K8 = false;
+			K9 = false;
+			K10 = false;
+			K11 = false;
+			K12 = false;
+			K13 = false;
+		}
+
+		if (lem->DeadBandSwitch.IsUp() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204())
+		{
+			K14 = true;
+			K15 = true;
+			K16 = true;
+		}
+		else
+		{
+			K14 = false;
+			K15 = false;
+			K16 = false;
+		}
+
+		if (lem->scca1.GetK1())
+		{
+			K19 = true;
+		}
+		else
+		{
+			K19 = false;
+		}
+
+		if (lem->scca1.GetK3())
+		{
+			K20 = true;
+		}
+		else
+		{
+			K20 = false;
+		}
+
+		if (lem->scca1.GetK5())
+		{
+			K21 = true;
+		}
+		else
+		{
+			K21 = false;
+		}
+	}
+	else
+	{
+		K8 = false;
+		K9 = false;
+		K10 = false;
+		K11 = false;
+		K12 = false;
+		K13 = false;
+		K14 = false;
+		K15 = false;
+		K16 = false;
+		K19 = false;
+		K20 = false;
+		K21 = false;
+	}
+
 	// Fetch mode switch setting.
 	int GC_Mode = lem->GuidContSwitch.GetState();
 	// Determine ATCA power situation.
@@ -192,6 +286,22 @@ void ATCA::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive);
 	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive);
 
+	papiWriteScenario_bool(scn, "K1", K1);
+	papiWriteScenario_bool(scn, "K2", K2);
+	papiWriteScenario_bool(scn, "K3", K3);
+	papiWriteScenario_bool(scn, "K8", K8);
+	papiWriteScenario_bool(scn, "K9", K9);
+	papiWriteScenario_bool(scn, "K10", K10);
+	papiWriteScenario_bool(scn, "K11", K11);
+	papiWriteScenario_bool(scn, "K12", K12);
+	papiWriteScenario_bool(scn, "K13", K13);
+	papiWriteScenario_bool(scn, "K14", K14);
+	papiWriteScenario_bool(scn, "K15", K15);
+	papiWriteScenario_bool(scn, "K16", K16);
+	papiWriteScenario_bool(scn, "K19", K19);
+	papiWriteScenario_bool(scn, "K20", K20);
+	papiWriteScenario_bool(scn, "K21", K21);
+
 	oapiWriteLine(scn, ATCA_END_STRING);
 }
 
@@ -206,6 +316,22 @@ void ATCA::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive);
 		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive);
 		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive);
+
+		papiReadScenario_bool(line, "K1", K1);
+		papiReadScenario_bool(line, "K2", K2);
+		papiReadScenario_bool(line, "K3", K3);
+		papiReadScenario_bool(line, "K8", K8);
+		papiReadScenario_bool(line, "K9", K9);
+		papiReadScenario_bool(line, "K10", K10);
+		papiReadScenario_bool(line, "K11", K11);
+		papiReadScenario_bool(line, "K12", K12);
+		papiReadScenario_bool(line, "K13", K13);
+		papiReadScenario_bool(line, "K14", K14);
+		papiReadScenario_bool(line, "K15", K15);
+		papiReadScenario_bool(line, "K16", K16);
+		papiReadScenario_bool(line, "K19", K19);
+		papiReadScenario_bool(line, "K20", K20);
+		papiReadScenario_bool(line, "K21", K21);
 	}
 }
 

@@ -57,6 +57,39 @@ public:
 
 protected:
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+
+	//Relays:
+
+	//Zero Cross Detector
+	bool K1;
+	//Zero Cross Detector
+	bool K2;
+	//Zero Cross Detector
+	bool K3;
+	//Miss Select Yaw (Cmd Rate)
+	bool K8;
+	//Miss Select Pitch (Cmd Rate)
+	bool K9;
+	//Miss Select Roll (Cmd Rate)
+	bool K10;
+	//Miss Select Yaw (Limiter)
+	bool K11;
+	//Miss Select Pitch (Limiter)
+	bool K12;
+	//Miss Select Roll (Limiter)
+	bool K13;
+	//Dead Band Select Yaw
+	bool K14;
+	//Dead Band Select Pitch
+	bool K15;
+	//Dead Band Select Roll
+	bool K16;
+	//Pulse Mode Yaw
+	bool K19;
+	//Pulse Mode Pitch
+	bool K20;
+	//Pulse Mode Roll
+	bool K21;
 };
 
 class DECA {
@@ -169,10 +202,17 @@ public:
 	void Init(LEM *s);
 	void Timestep(double simdt);
 
+	bool GetK1() { return K1; }
+	bool GetK3() { return K3; }
+	bool GetK5() { return K5; }
+	bool GetK8() { return K8; }
 	bool GetK9() { return K9; }
+	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }
 	bool GetK20() { return K20; }
+	bool GetK203() { return K203; }
+	bool GetK204() { return K204; }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -263,6 +303,8 @@ public:
 	bool GetK11() { return K11; }
 	bool GetK17() { return K17; }
 	bool GetK19() { return K19; }
+	bool GetK23() { return K23; }
+	bool GetK24() { return K24; }
 protected:
 	//Latching Relays
 

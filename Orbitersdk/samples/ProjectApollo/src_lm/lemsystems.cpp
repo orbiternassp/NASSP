@@ -902,29 +902,40 @@ void LEM::JoystickTimestep(double simdt)
 			val31[ACAOutOfDetent] = 1;
 		}
 
-		if (CDR_ACA.GetMinusYawBreakout())
+		if (YawSwitch.IsUp())
 		{
-			val31[MinusYaw] = 1;
+			if (CDR_ACA.GetMinusYawBreakout())
+			{
+				val31[MinusYaw] = 1;
+			}
+			if (CDR_ACA.GetPlusYawBreakout())
+			{
+				val31[PlusYaw] = 1;
+			}
 		}
-		if (CDR_ACA.GetPlusYawBreakout())
+
+		if (PitchSwitch.IsUp())
 		{
-			val31[PlusYaw] = 1;
+			if (CDR_ACA.GetMinusPitchBreakout())
+			{
+				val31[MinusElevation] = 1;
+			}
+			if (CDR_ACA.GetPlusPitchBreakout())
+			{
+				val31[PlusElevation] = 1;
+			}
 		}
-		if (CDR_ACA.GetMinusPitchBreakout())
+
+		if (RollSwitch.IsUp())
 		{
-			val31[MinusElevation] = 1;
-		}
-		if (CDR_ACA.GetPlusPitchBreakout())
-		{
-			val31[PlusElevation] = 1;
-		}
-		if (CDR_ACA.GetMinusRollBreakout())
-		{
-			val31[MinusAzimuth] = 1;
-		}
-		if (CDR_ACA.GetPlusRollBreakout())
-		{
-			val31[PlusAzimuth] = 1;
+			if (CDR_ACA.GetMinusRollBreakout())
+			{
+				val31[MinusAzimuth] = 1;
+			}
+			if (CDR_ACA.GetPlusRollBreakout())
+			{
+				val31[PlusAzimuth] = 1;
+			}
 		}
 
 		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
