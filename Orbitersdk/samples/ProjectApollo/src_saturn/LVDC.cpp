@@ -3102,6 +3102,7 @@ LVDC::LVDC(){
 	T_S1 = 0;
 	T_S2 = 0;
 	T_S3 = 0;
+	t_S1C_CECO = 0;
 	TS4BS = 0;
 	TSMC1 = 0;
 	TSMC2 = 0;
@@ -3276,6 +3277,7 @@ void LVDC::Init(Saturn* vs){
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
+	t_S1C_CECO = 125.9;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	Ct = 0;
@@ -4108,6 +4110,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
 	papiWriteScenario_double(scn, "LVDC_T_S3", T_S3);
+	papiWriteScenario_double(scn, "LVDC_t_S1C_CECO", t_S1C_CECO);
 	papiWriteScenario_double(scn, "LVDC_TS4BS", TS4BS);
 	papiWriteScenario_double(scn, "LVDC_t_SD1", t_SD1);
 	papiWriteScenario_double(scn, "LVDC_t_SD2", t_SD2);
@@ -4779,6 +4782,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
 		papiReadScenario_double(line, "LVDC_T_S3", T_S3);
+		papiReadScenario_double(line, "LVDC_t_S1C_CECO", t_S1C_CECO);
 		papiReadScenario_double(line, "LVDC_TS4BS", TS4BS);
 		papiReadScenario_double(line, "LVDC_t_SD1", t_SD1);
 		papiReadScenario_double(line, "LVDC_t_SD2", t_SD2);
@@ -5060,7 +5064,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
 				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
-				if(owner->MissionTime > 125.9){
+				if(owner->MissionTime > t_S1C_CECO){
 					//Apollo 11
 					owner->SwitchSelector(16);
 					if (!S1_Engine_Out)
