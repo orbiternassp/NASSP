@@ -478,7 +478,7 @@ void Saturn::SetCSMStage ()
 
 	SetSize(10);
 	SetCOG_elev(3.5);
-	SetEmptyMass(CM_Mass + SM_EmptyMass);
+	SetEmptyMass(CM_EmptyMass + SM_EmptyMass);
 
 	// ************************* propellant specs **********************************
 	if (!ph_sps) {
