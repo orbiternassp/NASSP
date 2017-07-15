@@ -3606,6 +3606,7 @@ void LEM_CWEA::TimeStep(double simdt){
 			case 6: // COMPNT
 				// Light component caution and Lunar Contact lights
 				// FIXME: IMPLEMENT THIS
+				// Lunar Contact lights are lit in clbkPanelRedrawEvent code
 				break;
 		}
 	}

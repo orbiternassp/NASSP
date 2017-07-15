@@ -1352,7 +1352,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MPS_HELIUM_PRESS_INDICATOR,		_R(1197,  286, 1278,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 930,  426,  978,  474), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1960, 1221, 2008, 1261), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1962, 1221, 2010, 1269), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 938,  515,  972,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GUIDCONTSWITCHROW,				_R(1269,  627, 1304,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,				_R( 659,  712,  693,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -2677,7 +2677,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CONTACTLIGHT1:
-		if (GroundContact()&& stage ==1){
+		if (SCS_ENG_CONT_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
 			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
 
@@ -2690,8 +2690,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CONTACTLIGHT2:
-		if (scca2.GetK17()){
-			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,48,0,0,48,48, SURF_PREDEF_CK);//
+		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
+			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
 		}return true;
 
 	case AID_SEQ_LIGHT1:

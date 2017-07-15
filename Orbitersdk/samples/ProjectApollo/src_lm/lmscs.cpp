@@ -847,7 +847,23 @@ void SCCA1::Timestep(double simdt)
 		K5 = false;
 	}
 
-	//TBD: K7 and K8 are ACA Out of Detent related
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->CDR_ACA.GetOutOfDetent())
+	{
+		K7 = true;
+	}
+	else
+	{
+		K7 = false;
+	}
+
+	if (lem->CDR_SCS_ATCA_CB.IsPowered() && lem->CDR_ACA.GetOutOfDetent())
+	{
+		K8 = true;
+	}
+	else
+	{
+		K8 = false;
+	}
 
 	//Abort Stage Handling
 
@@ -1276,6 +1292,8 @@ void SCCA2::Timestep(double simdt)
 			AutoEngOff = false;
 		}
 	}
+
+	//TBD: K23 and K24 are only used by GSE
 }
 
 void SCCA2::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -1474,6 +1492,42 @@ void SCCA3::Timestep(double simdt)
 	else
 	{
 		K1_2 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && (K7_3 || K1_1))
+	{
+		K2_1 = true;
+	}
+	else
+	{
+		K2_1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (K7_3 || K1_2))
+	{
+		K2_2 = true;
+	}
+	else
+	{
+		K2_2 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && (K7_3 || K1_1) && lem->GroundContact())
+	{
+		K3_1 = true;
+	}
+	else
+	{
+		K3_1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (K7_3 || K1_2) && lem->GroundContact())
+	{
+		K3_2 = true;
+	}
+	else
+	{
+		K3_2 = false;
 	}
 
 	//sprintf(oapiDebugString(), "DE Command Override: K4 %d %d K5 %d %d K6 %d %d", K4_1, K4_2, K5_1, K5_2, K6_1, K6_2);

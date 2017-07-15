@@ -327,6 +327,7 @@ public:
 
 	bool GetK5() { return (K5_1 && K5_2); }
 	bool GetK6() { return (K6_1 || K6_2); }
+	bool GetContactLightLogic() { return (K2_1 || K2_2) && (K3_1 || K3_2); }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
