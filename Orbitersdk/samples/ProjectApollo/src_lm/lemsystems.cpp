@@ -446,6 +446,7 @@ void LEM::SystemsInit()
 	asa.Init(this, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-Heater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));
 	aea.Init(this);
 	deda.Init(&SCS_AEA_CB);
+	rga.Init(this, &SCS_ATCA_CB);
 
 	// IMU OPERATE power (Logic DC power)
 	IMU_OPR_CB.MaxAmps = 20.0;
@@ -1417,6 +1418,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
 	atca.Timestep(simt);
+	rga.Timestep(simdt);
+	rga.SystemTimestep(simdt);
 	ordeal.Timestep(simdt);
 	ordeal.SystemTimestep(simdt);
 	mechanicalAccelerometer.TimeStep(simdt);

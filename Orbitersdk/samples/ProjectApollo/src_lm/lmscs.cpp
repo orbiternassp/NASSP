@@ -42,6 +42,72 @@
 
 #define DECA_AUTOTHRUST_STEP 0.00026828571
 
+// RATE GYRO ASSEMBLY
+
+LEM_RGA::LEM_RGA()
+{
+	powered = false;
+	dc_source = false;
+	rates = _V(0, 0, 0);
+}
+
+void LEM_RGA::Init(LEM *v, e_object *dcsource)
+{
+	dc_source = dcsource;
+	lem = v;
+}
+
+void LEM_RGA::Timestep(double simdt)
+{
+	if (lem == NULL) { return; }
+
+	powered = false;
+	rates = _V(0, 0, 0);
+	if (lem != NULL) {
+		if (dc_source != NULL && dc_source->Voltage() > SP_MIN_DCVOLTAGE) {
+			powered = true;
+			lem->GetAngularVel(rates);
+		}
+	}
+
+	if (powered)
+	{
+		//Test Signal
+		if (lem->SCS_ATCA_AGS_CB.IsPowered() && !lem->GyroTestRightSwitch.IsCenter())
+		{
+			double polar = 0.0;
+
+			if (lem->GyroTestRightSwitch.IsUp())
+			{
+				polar = 1.0;
+			}
+			else if (lem->GyroTestRightSwitch.IsDown())
+			{
+				polar = -1.0;
+			}
+
+			if (lem->GyroTestLeftSwitch.IsUp())
+			{
+				rates.z += polar*5.0*RAD;
+			}
+			else if (lem->GyroTestLeftSwitch.IsCenter())
+			{
+				rates.x += polar*5.0*RAD;
+			}
+			if (lem->GyroTestLeftSwitch.IsDown())
+			{
+				rates.y += polar*5.0*RAD;
+			}
+		}
+	}
+}
+
+void LEM_RGA::SystemTimestep(double simdt)
+{
+	if (powered && dc_source)
+		dc_source->DrawPower(8.7);	//TBD: Actual value
+}
+
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;

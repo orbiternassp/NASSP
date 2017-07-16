@@ -26,6 +26,23 @@
 
 class LEM;
 
+class LEM_RGA {
+	// RATE GYRO ASSEMBLY
+public:
+	LEM_RGA();
+	void Init(LEM *v, e_object *dcsource);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	VECTOR3 GetRates() { return rates; }
+protected:
+	bool powered;
+	VECTOR3 rates;
+
+	e_object *dc_source;
+	LEM *lem;
+};
+
 #define ATCA_START_STRING	"ATCA_BEGIN"
 #define ATCA_END_STRING		"ATCA_END"
 

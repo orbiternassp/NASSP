@@ -1626,6 +1626,7 @@ protected:
 	SCCA3 scca3;
 	LEM_Programer lmp;
 	LEM_ACA CDR_ACA;
+	LEM_RGA rga;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1711,6 +1712,7 @@ protected:
 	friend class LEM_Programer;
 	friend class LEMDPSDigitalMeter;
 	friend class LEM_ACA;
+	friend class LEM_RGA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
