@@ -576,13 +576,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->REFSMMATopt != 7 && G->REFSMMATopt != 8 && G->REFSMMATdirect == false)
 		{
-			GET_Display(Buffer, G->LOI_TIG);
+			GET_Display(Buffer, G->P30TIG);
 			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVX", G->LOI_dV_LVLH.x / 0.3048);
+			sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
 			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->LOI_dV_LVLH.y / 0.3048);
+			sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
 			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
+			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
 			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 		}
 
