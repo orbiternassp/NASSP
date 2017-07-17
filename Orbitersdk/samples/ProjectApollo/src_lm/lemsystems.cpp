@@ -3086,7 +3086,8 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 	if (!IsPowered()) { return; }
 
 	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
+		pulses = val & 077777;
+		pulses = 040000 - pulses;
 	}
 	else {
 		pulses = val & 077777;
