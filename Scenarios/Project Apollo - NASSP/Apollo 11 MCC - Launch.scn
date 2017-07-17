@@ -314,9 +314,8 @@ Columbia:ProjectApollo\Saturn5
   LMPAD 3431 20000
   LMPAD 3432 00000
   AUTOSLOW 1
-  ASCP_BEGIN
-    OPX 152.000
-  ASCP_END
+  LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 11 LM Checklists.xls
+  LEMCHECKAUTO 1
   LVDC_BEGIN
 	LVDC_ALFTSA 14.569704
 	LVDC_ALFTSB 15.7563036
@@ -805,7 +804,7 @@ Columbia:ProjectApollo\Saturn5
   CMPAD3402 76363
   CMPAD3403 60376
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 11 Checklists.xls
   </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
