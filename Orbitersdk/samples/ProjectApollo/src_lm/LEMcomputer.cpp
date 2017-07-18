@@ -47,13 +47,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 
 	isLGC = true;
 
-	int i;
-	for (i = 0; i < 16; i++) {
-		RCSCommand[i] = 0;
-	}
-	CommandedAttitudeRotLevel = _V(0, 0, 0);
-	CommandedAttitudeLinLevel = _V(0, 0, 0);
-
 	//
 	// Default ascent parameters.
 	//
@@ -317,9 +310,12 @@ void LEMcomputer::ProcessChannel13(ChannelValue val){
 		rhc_count[1] = (int)(lem->CDR_ACA.GetACAProp(1)*42.0);
 		rhc_count[2] = (int)(lem->CDR_ACA.GetACAProp(2)*42.0);
 		
-		WriteMemory(042,rhc_count[1]); // PITCH 
-		WriteMemory(043,rhc_count[2]); // YAW   
-		WriteMemory(044,rhc_count[0]); // ROLL
+		if (!lem->scca2.GetK3())
+			WriteMemory(042,rhc_count[1]); // PITCH
+		if (!lem->scca2.GetK2())
+			WriteMemory(043,rhc_count[2]); // YAW
+		if (!lem->scca2.GetK4())
+			WriteMemory(044,rhc_count[0]); // ROLL
 		/*
 		sprintf(oapiDebugString(),"LM CH13: %o RHC: SENT %d %d %d",val,
 			rhc_count[0],rhc_count[1],rhc_count[2]);
@@ -470,159 +466,6 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		// sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
 		break;
 	}
-
-}
-
-/// \todo Dirty Hack for the AGC++ RCS burn control, 
-/// remove this and use I/O channels and pulsed thrusters 
-/// identical to the VAGC instead
-///
-
-void LEMcomputer::ResetAttitudeLevel() {
-
-	int i;
-	for (i = 0; i < 16; i++) {
-		RCSCommand[i] = 0;
-	}
-}
-
-void LEMcomputer::AddAttitudeRotLevel(VECTOR3 level) {
-
-	int i;
-
-	// Pitch
-	if (level.x < 0) {
-		RCSCommand[0] -= level.x;
-		RCSCommand[7] -= level.x;
-		RCSCommand[11] -= level.x;
-		RCSCommand[12] -= level.x;
-	}
-	else {
-		RCSCommand[3] += level.x;
-		RCSCommand[4] += level.x;
-		RCSCommand[8] += level.x;
-		RCSCommand[15] += level.x;
-	}
-
-	// Roll
-	if (level.z < 0) {
-		RCSCommand[0] -= level.z;
-		RCSCommand[4] -= level.z;
-		RCSCommand[11] -= level.z;
-		RCSCommand[15] -= level.z;
-	}
-	else {
-		RCSCommand[3] += level.z;
-		RCSCommand[7] += level.z;
-		RCSCommand[8] += level.z;
-		RCSCommand[12] += level.z;
-	}
-
-	// Yaw
-	if (level.y > 0) {
-		RCSCommand[1] += level.y;
-		RCSCommand[5] += level.y;
-		RCSCommand[10] += level.y;
-		RCSCommand[14] += level.y;
-	}
-	else {
-		RCSCommand[2] -= level.y;
-		RCSCommand[6] -= level.y;
-		RCSCommand[9] -= level.y;
-		RCSCommand[13] -= level.y;
-	}
-
-	// Renormalize
-	for (i = 0; i < 16; i++) {
-		if (RCSCommand[i] > 1) {
-			RCSCommand[i] = 1;
-		}
-	}
-
-	for (i = 0; i < 16; i++) {
-		if (RCSCommand[i] < -1) {
-			RCSCommand[i] = -1;
-		}
-	}
-
-	// Set thrust
-	LEM *lem = (LEM *) OurVessel;
-	for (i = 0; i < 16; i++) {
-		lem->SetRCSJetLevelPrimary(i, RCSCommand[i]);
-	}
-}
-
-void LEMcomputer::AddAttitudeLinLevel(int axis, double level) {
-
-	VECTOR3 l = _V(0, 0, 0);
-	if (axis == 0) l.x = level;
-	if (axis == 1) l.y = level;
-	if (axis == 2) l.z = level;
-	AddAttitudeLinLevel(l);
-}
-
-void LEMcomputer::AddAttitudeLinLevel(VECTOR3 level) {
-
-	int i;
-
-	// Left/right
-	if (level.x < 0) {
-		RCSCommand[9] -= level.x;
-		RCSCommand[14] -= level.x;
-	}
-	else {
-		RCSCommand[2] += level.x;
-		RCSCommand[5] += level.x;
-	}
-
-	// Down/up
-	if (level.y < 0) {
-		RCSCommand[0] -= level.y;
-		RCSCommand[4] -= level.y;
-		RCSCommand[8] -= level.y;
-		RCSCommand[12] -= level.y;
-	}
-	else {
-		RCSCommand[3] += level.y;
-		RCSCommand[7] += level.y;
-		RCSCommand[11] += level.y;
-		RCSCommand[15] += level.y;
-	}
-
-	// Back/forward
-	if (level.z < 0) {
-		RCSCommand[1] -= level.z;
-		RCSCommand[13] -= level.z;
-	}
-	else {
-		RCSCommand[6] += level.z;
-		RCSCommand[10] += level.z;
-	}
-
-	// Renormalize
-	for (i = 0; i < 16; i++) {
-		if (RCSCommand[i] > 1) {
-			RCSCommand[i] = 1;
-		}
-	}
-
-	for (i = 0; i < 16; i++) {
-		if (RCSCommand[i] < -1) {
-			RCSCommand[i] = -1;
-		}
-	}
-
-	// Set thrust
-	LEM *lem = (LEM *) OurVessel;
-	for (i = 0; i < 16; i++) {
-		lem->SetRCSJetLevelPrimary(i, RCSCommand[i]);
-	}
-}
-
-void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
-
-	ResetAttitudeLevel();
-	AddAttitudeRotLevel(level);
 
 }
 

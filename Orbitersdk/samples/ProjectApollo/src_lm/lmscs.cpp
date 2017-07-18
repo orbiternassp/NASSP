@@ -111,10 +111,6 @@ void LEM_RGA::SystemTimestep(double simdt)
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
-	DirectPitchActive = false;
-	DirectYawActive = false;
-	DirectRollActive = false;
-	DirectTranslationActive = false;
 
 	K1 = false;
 	K2 = false;
@@ -131,6 +127,10 @@ ATCA::ATCA(){
 	K19 = false;
 	K20 = false;
 	K21 = false;
+
+	aea_attitude_error = _V(0, 0, 0);
+	att_rates = _V(0, 0, 0);
+	aca_rates = _V(0, 0, 0);
 }
 
 void ATCA::Init(LEM *vessel){
@@ -141,7 +141,7 @@ void ATCA::Init(LEM *vessel){
 
 void ATCA::Timestep(double simt){
 	double now = oapiGetSimTime(); // Get time
-	int haspower = 0,hasdriver = 0,balcpl = 0;
+	bool hasprimpower = false, hasabortpower = false, balcpl = false;
 	if(lem == NULL){ return; }
 
 	if (lem->SCS_ATCA_CB.IsPowered())
@@ -221,12 +221,31 @@ void ATCA::Timestep(double simt){
 		K21 = false;
 	}
 
-	// Fetch mode switch setting.
-	int GC_Mode = lem->GuidContSwitch.GetState();
+	att_rates = lem->rga.GetRates();
+
+	if (lem->scca2.GetK2())
+	{
+		aca_rates = _V(lem->CDR_ACA.GetACAProp(0), lem->CDR_ACA.GetACAProp(1), lem->CDR_ACA.GetACAProp(2));
+	}
+	{
+		aca_rates = _V(0, 0, 0);
+	}
+
+	//JET SELECT LOGIC
+	//SUMMING AMPLIFIERS
+	//PULSE RATIO (DE)MODULATOR
+
 	// Determine ATCA power situation.
-	if(lem->SCS_ATCA_CB.Voltage() > 24){
+	if (lem->CDR_SCS_ATCA_CB.Voltage() > 24 && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	{
 		// ATCA primary power is on.
-		haspower = 1;
+		hasprimpower = true;
+	}
+
+	if (lem->SCS_ATCA_AGS_CB.Voltage() > 24 && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	{
+		// ATCA abort power is on.
+		hasabortpower = true;
 	}
 
 	/* THRUSTER TABLE:
@@ -241,25 +260,8 @@ void ATCA::Timestep(double simt){
 		7	A2D		15	A4D
 	*/
 
-	// *** Determine jet request source path ***
-	switch(GC_Mode){
-		case TOGGLESWITCH_UP:    // PGNS MODE
-			// In this case, thruster demand is direct from the LGC. We have nothing to do.
-			lem->agc.SetInputChannelBit(030, GNControlOfSC,1); // Tell the LGC it has control.
-			if(haspower == 1 && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ haspower = 0; } // PNGS path requires this.
-			if(lem->ModeControlPGNSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
-			break;
-
-		case TOGGLESWITCH_DOWN:  // ABORT MODE
-			// In this case, we have to generate thruster demand ourselves, taking "suggestions" from the AGS.
-			// FIXME: Implement this.
-			lem->agc.SetInputChannelBit(030, GNControlOfSC,0); // Tell the LGC it doesn't have control
-			if(haspower == 1 && lem->SCS_ATCA_AGS_CB.Voltage() < 24){ haspower = 0; } // AGS path requires this.
-			if(lem->ModeControlAGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
-			break;
-	}
 	// *** Test "Balanced Couples" switch ***
-	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP){ balcpl = 1; }
+	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP && hasabortpower){ balcpl = 1; }
 
 	// *** THRUSTER MAINTENANCE ***
 	// LM RCS thrusters take 12.5ms to ramp up to full thrust and 17.5ms to ramp back down. There is a dead time of 10ms before thrust starts.
@@ -270,9 +272,9 @@ void ATCA::Timestep(double simt){
 	while(x < 16){
 		double power=0;
 		// If the ATCA is not powered or driver voltage is absent, it won't work.
-		if(haspower != 1 || hasdriver != 1){ jet_request[x] = 0; }
+		if(hasprimpower == false && hasabortpower == false){ jet_request[x] = 0; }
 		// If the "Balanced Couples" switch is off, the abort preamps for the four upward-firing thrusters are disabled.
-		if(GC_Mode == TOGGLESWITCH_DOWN && balcpl != 1 && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
+		if(balcpl == false && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
 		// Process jet request list to generate start and stop times.
 		if(jet_request[x] == 1 && jet_last_request[x] == 0){
 			// New fire request
@@ -283,7 +285,7 @@ void ATCA::Timestep(double simt){
 		}
 		jet_last_request[x] = jet_request[x]; // Keep track of changes
 
-		if(jet_start[x] == 0 && jet_stop[x] == 0){ x++; continue; } // Done
+		if (jet_start[x] == 0 && jet_stop[x] == 0) { lem->SetRCSJet(x, false); x++; continue; } // Done
 		// sprintf(oapiDebugString(),"Jet %d fire %f stop %f",x,jet_start[x],jet_stop[x]); 
 		if(simt > jet_start[x]+0.01 && simt < jet_start[x]+0.0125){
 			// Ramp up
@@ -348,10 +350,6 @@ void ATCA::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, ATCA_START_STRING);
 
-	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive);
-	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive);
-	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive);
-
 	papiWriteScenario_bool(scn, "K1", K1);
 	papiWriteScenario_bool(scn, "K2", K2);
 	papiWriteScenario_bool(scn, "K3", K3);
@@ -379,9 +377,6 @@ void ATCA::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, ATCA_END_STRING, sizeof(ATCA_END_STRING))) {
 			return;
 		}
-		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive);
-		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive);
-		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive);
 
 		papiReadScenario_bool(line, "K1", K1);
 		papiReadScenario_bool(line, "K2", K2);
@@ -1390,7 +1385,7 @@ void SCCA2::Timestep(double simdt)
 		K12 = false;
 		K13 = false;
 	}
-	if (lem->SCS_ATCA_CB.IsPowered() && lem->GuidContSwitch.IsDown())
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->GuidContSwitch.IsDown())
 	{
 		K1 = true;
 		K2 = true;
@@ -1444,6 +1439,15 @@ void SCCA2::Timestep(double simdt)
 	else
 	{
 		K17 = false;
+	}
+
+	if (K7)
+	{
+		lem->agc.SetInputChannelBit(030, GNControlOfSC, false);
+	}
+	else
+	{
+		lem->agc.SetInputChannelBit(030, GNControlOfSC, true);
 	}
 
 	if (K14)

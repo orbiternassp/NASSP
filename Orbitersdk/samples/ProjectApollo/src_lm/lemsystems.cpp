@@ -939,8 +939,6 @@ void LEM::JoystickTimestep(double simdt)
 			}
 		}
 
-		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
-
 		//
 		// HARDOVER
 		//
@@ -949,19 +947,12 @@ void LEM::JoystickTimestep(double simdt)
 		{
 			if (CDR_ACA.GetMinusRollHardover()) {
 				// MINUS ROLL
-				SetRCSJet(3, 0);
-				SetRCSJet(7, 0);
-				SetRCSJet(8, 0);
-				SetRCSJet(12, 0);
 				SetRCSJet(0, 1);
 				SetRCSJet(4, 1);
 				SetRCSJet(11, 1);
 				SetRCSJet(15, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(200); // Four thrusters worth
-
-				atca.SetDirectRollActive(true);
-				rflag = 1;
 			}
 			if (CDR_ACA.GetPlusRollHardover()) {
 				// PLUS ROLL
@@ -969,15 +960,8 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(7, 1);
 				SetRCSJet(8, 1);
 				SetRCSJet(12, 1);
-				SetRCSJet(0, 0);
-				SetRCSJet(4, 0);
-				SetRCSJet(11, 0);
-				SetRCSJet(15, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(200);
-
-				atca.SetDirectRollActive(true);
-				rflag = 1;
 			}
 			if (CDR_ACA.GetMinusPitchHardover()) {
 				// MINUS PITCH
@@ -985,47 +969,26 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(7, 1);
 				SetRCSJet(11, 1);
 				SetRCSJet(12, 1);
-				SetRCSJet(3, 0);
-				SetRCSJet(4, 0);
-				SetRCSJet(8, 0);
-				SetRCSJet(15, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectPitchActive(true);
-				pflag = 1;
 			}
 			if (CDR_ACA.GetPlusPitchHardover()) {
 				// PLUS PITCH
-				SetRCSJet(0, 0);
-				SetRCSJet(7, 0);
-				SetRCSJet(11, 0);
-				SetRCSJet(12, 0);
 				SetRCSJet(3, 1);
 				SetRCSJet(4, 1);
 				SetRCSJet(8, 1);
 				SetRCSJet(15, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectPitchActive(true);
-				pflag = 1;
 			}
 			if (CDR_ACA.GetMinusYawHardover()) {
 				// MINUS YAW
-				SetRCSJet(1, 0);
-				SetRCSJet(5, 0);
-				SetRCSJet(10, 0);
-				SetRCSJet(14, 0);
 				SetRCSJet(2, 1);
 				SetRCSJet(6, 1);
 				SetRCSJet(9, 1);
 				SetRCSJet(13, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectYawActive(true);
-				yflag = 1;
 			}
 			if (CDR_ACA.GetPlusYawHardover()) {
 				// PLUS YAW
@@ -1033,15 +996,8 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(5, 1);
 				SetRCSJet(10, 1);
 				SetRCSJet(14, 1);
-				SetRCSJet(2, 0);
-				SetRCSJet(6, 0);
-				SetRCSJet(9, 0);
-				SetRCSJet(13, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectYawActive(true);
-				yflag = 1;
 			}
 		}
 
@@ -1051,126 +1007,59 @@ void LEM::JoystickTimestep(double simdt)
 
 		if (SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		{
-			if (RollSwitch.IsDown() && rflag == 0)
+			if (RollSwitch.IsDown())
 			{
 				if (CDR_ACA.GetMinusRollBreakout()) {
 					// MINUS ROLL
-					SetRCSJet(3, 0);
-					SetRCSJet(12, 0);
 					SetRCSJet(4, 1);
 					SetRCSJet(11, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectRollActive(true);
-					rflag = 1;
 				}
 				if (CDR_ACA.GetPlusRollBreakout()) {
 					// PLUS ROLL
 					SetRCSJet(3, 1);
 					SetRCSJet(12, 1);
-					SetRCSJet(4, 0);
-					SetRCSJet(11, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectRollActive(true);
-					rflag = 1;
 				}
 			}
 
-			if (PitchSwitch.IsDown() && pflag == 0)
+			if (PitchSwitch.IsDown())
 			{
 				if (CDR_ACA.GetMinusPitchBreakout()) {
 					// MINUS PITCH
 					SetRCSJet(11, 1);
 					SetRCSJet(12, 1);
-					SetRCSJet(3, 0);
-					SetRCSJet(4, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectPitchActive(true);
-					pflag = 1;
 				}
 				if (CDR_ACA.GetPlusPitchBreakout()) {
 					// PLUS PITCH
-					SetRCSJet(11, 0);
-					SetRCSJet(12, 0);
 					SetRCSJet(3, 1);
 					SetRCSJet(4, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectPitchActive(true);
-					pflag = 1;
 				}
 			}
 
-			if (YawSwitch.IsDown() && yflag == 0)
+			if (YawSwitch.IsDown())
 			{
 				if (CDR_ACA.GetMinusYawBreakout()) {
 					// MINUS YAW
-					SetRCSJet(1, 0);
-					SetRCSJet(10, 0);
 					SetRCSJet(2, 1);
 					SetRCSJet(9, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectYawActive(true);
-					yflag = 1;
 				}
 				if (CDR_ACA.GetPlusYawBreakout()) {
 					// PLUS YAW
 					SetRCSJet(1, 1);
 					SetRCSJet(10, 1);
-					SetRCSJet(2, 0);
-					SetRCSJet(9, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectYawActive(true);
-					yflag = 1;
 				}
 			}
-		}
-
-		if (atca.GetDirectRollActive() == true && rflag == 0) { // Turn off direct roll
-			SetRCSJet(3, 0);
-			SetRCSJet(7, 0);
-			SetRCSJet(8, 0);
-			SetRCSJet(12, 0);
-			SetRCSJet(0, 0);
-			SetRCSJet(4, 0);
-			SetRCSJet(11, 0);
-			SetRCSJet(15, 0);
-
-			atca.SetDirectRollActive(false);
-		}
-		if (atca.GetDirectPitchActive() == true && pflag == 0) { // Turn off direct pitch
-			SetRCSJet(0, 0);
-			SetRCSJet(7, 0);
-			SetRCSJet(11, 0);
-			SetRCSJet(12, 0);
-			SetRCSJet(3, 0);
-			SetRCSJet(4, 0);
-			SetRCSJet(8, 0);
-			SetRCSJet(15, 0);
-
-			atca.SetDirectPitchActive(false);
-		}
-		if (atca.GetDirectYawActive() == true && yflag == 0) { // Turn off direct yaw
-			SetRCSJet(1, 0);
-			SetRCSJet(5, 0);
-			SetRCSJet(10, 0);
-			SetRCSJet(14, 0);
-			SetRCSJet(2, 0);
-			SetRCSJet(6, 0);
-			SetRCSJet(9, 0);
-			SetRCSJet(13, 0);
-
-			atca.SetDirectYawActive(false);
 		}
 
 		//
@@ -1182,20 +1071,11 @@ void LEM::JoystickTimestep(double simdt)
 			SetRCSJet(15, true);
 			SetRCSJet(11, true);
 			SetRCSJet(3, true);
-			atca.DirectTranslationActive = true;
-		}
-		else if (atca.DirectTranslationActive == true)
-		{
-			SetRCSJet(7, false);
-			SetRCSJet(15, false);
-			SetRCSJet(11, false);
-			SetRCSJet(3, false);
-			atca.DirectTranslationActive = false;
 		}
 
 		if (rhc_debug != -1)
 		{
-			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d, %d, %d, %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id, atca.GetDirectRollActive(), atca.GetDirectPitchActive(), atca.GetDirectYawActive());
+			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id);
 		}
 		// And now the THC...
 		if (thc_id != -1 && thc_id < js_enabled) {
