@@ -1297,7 +1297,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simt);
+	atca.Timestep(simt, simdt);
 	rga.Timestep(simdt);
 	rga.SystemTimestep(simdt);
 	ordeal.Timestep(simdt);

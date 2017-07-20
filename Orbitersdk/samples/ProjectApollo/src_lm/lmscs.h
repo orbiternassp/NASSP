@@ -51,7 +51,7 @@ class ATCA {
 public:
 	ATCA();								// Cons
 	void Init(LEM *vessel);				// Init
-	void Timestep(double simt);			// Timestep
+	void Timestep(double simt, double simdt);			// Timestep
 	void ProcessLGC(int ch, int val);   // To process LGC commands
 
 	void SaveState(FILEHANDLE scn);
@@ -66,8 +66,18 @@ public:
 	VECTOR3 aea_attitude_error;
 	VECTOR3 aca_rates;
 	VECTOR3 att_rates;
+	VECTOR3 thrustLogicInputError;	//Inputs to the summing amplifiers
+	double SummingAmplifierOutput[8];
+	bool PRMPulse[8];
+	double PRMCycleTime[8];
+	double PRMOffTime[8];
+	bool hasAbortPower;
+	bool hasPrimPower;
 
 protected:
+
+	double PRMDutyRatio(double volt);
+	bool PRMTimestep(int n, double simdt, double pp, double pw);
 
 	//Relays:
 

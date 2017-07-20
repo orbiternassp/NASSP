@@ -131,6 +131,18 @@ ATCA::ATCA(){
 	aea_attitude_error = _V(0, 0, 0);
 	att_rates = _V(0, 0, 0);
 	aca_rates = _V(0, 0, 0);
+	thrustLogicInputError = _V(0.0, 0.0, 0.0);
+
+	for (int i = 0;i < 8;i++)
+	{
+		SummingAmplifierOutput[i] = 0.0;
+		PRMPulse[i] = false;
+		PRMCycleTime[i] = 0.0;
+		PRMOffTime[i] = 0.0;
+	}
+
+	hasAbortPower = false;
+	hasPrimPower = false;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -139,9 +151,11 @@ void ATCA::Init(LEM *vessel){
 }
 // GuidContSwitch is the Guidance Control switch
 
-void ATCA::Timestep(double simt){
+void ATCA::Timestep(double simt, double simdt){
 	double now = oapiGetSimTime(); // Get time
-	bool hasprimpower = false, hasabortpower = false, balcpl = false;
+	hasPrimPower = false, hasAbortPower = false;
+	bool balcpl = false;
+	thrustLogicInputError = _V(0.0, 0.0, 0.0);
 	if(lem == NULL){ return; }
 
 	if (lem->SCS_ATCA_CB.IsPowered())
@@ -221,6 +235,19 @@ void ATCA::Timestep(double simt){
 		K21 = false;
 	}
 
+	// Determine ATCA power situation.
+	if (lem->CDR_SCS_ATCA_CB.Voltage() > 24 && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	{
+		// ATCA primary power is on.
+		hasPrimPower = true;
+	}
+
+	if (lem->SCS_ATCA_AGS_CB.Voltage() > 24 && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	{
+		// ATCA abort power is on.
+		hasAbortPower = true;
+	}
+
 	att_rates = lem->rga.GetRates();
 
 	if (lem->scca2.GetK2())
@@ -231,21 +258,320 @@ void ATCA::Timestep(double simt){
 		aca_rates = _V(0, 0, 0);
 	}
 
-	//JET SELECT LOGIC
-	//SUMMING AMPLIFIERS
-	//PULSE RATIO (DE)MODULATOR
+	//PULSE MODE LOGIC
 
-	// Determine ATCA power situation.
-	if (lem->CDR_SCS_ATCA_CB.Voltage() > 24 && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	//Yaw
+	if (lem->SCS_ATCA_CB.IsPowered() && K19)
 	{
-		// ATCA primary power is on.
-		hasprimpower = true;
+		if (lem->CDR_ACA.GetPlusYawBreakout())
+		{
+			thrustLogicInputError.z = 2.0;
+		}
+		else if (lem->CDR_ACA.GetMinusYawBreakout())
+		{
+			thrustLogicInputError.z = -2.0;
+		}
+	}
+	else
+	{
+		//TBD: AEA, ACA prop, att rate
+		thrustLogicInputError.z = 0.0;
 	}
 
-	if (lem->SCS_ATCA_AGS_CB.Voltage() > 24 && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	//Pitch
+	if (lem->SCS_ATCA_CB.IsPowered() && K20)
 	{
-		// ATCA abort power is on.
-		hasabortpower = true;
+		if (lem->CDR_ACA.GetPlusPitchBreakout())
+		{
+			thrustLogicInputError.y = 2.0;
+		}
+		else if (lem->CDR_ACA.GetMinusPitchBreakout())
+		{
+			thrustLogicInputError.y = -2.0;
+		}
+	}
+	else
+	{
+		//TBD: AEA, ACA prop, att rate
+		thrustLogicInputError.y = 0.0;
+	}
+
+	//Roll
+	if (lem->SCS_ATCA_CB.IsPowered() && K21)
+	{
+		if (lem->CDR_ACA.GetPlusRollBreakout())
+		{
+			thrustLogicInputError.x = 2.0;
+		}
+		else if (lem->CDR_ACA.GetMinusRollBreakout())
+		{
+			thrustLogicInputError.x = -2.0;
+		}
+	}
+	else
+	{
+		//TBD: AEA, ACA prop, att rate
+		thrustLogicInputError.x = 0.0;
+	}
+
+	//JET SELECT LOGIC
+
+	bool A, B, X1, X2, R1, Q1, R2, Q2, Y1, Y2, Z1, Z2;
+
+	X1 = false;
+	X2 = false;
+	R1 = thrustLogicInputError.x > 0.0;
+	R2 = thrustLogicInputError.x < 0.0;
+	Q1 = thrustLogicInputError.y > 0.0;
+	Q2 = thrustLogicInputError.y < 0.0;
+	Y1 = false;
+	Y2 = false;
+	Z1 = false;
+	Z2 = false;
+
+	//Yaw and Y/Z Translation selection logic
+	if (lem->SCS_ATCA_CB.IsPowered() && (!Y1 && !Y2 && !Z1 && !Z2))
+	{
+		K3 = true;
+	}
+	else
+	{
+		K3 = false;
+	}
+
+	//Pitch, Roll and X Translation selection logic
+	if (lem->SCS_ATCA_CB.IsPowered() && !(lem->ATTTranslSwitch.IsDown() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204()))
+	{
+		A = false;
+	}
+	else
+	{
+		A = true;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && lem->ATTTranslSwitch.IsUp())
+	{
+		B = false;
+	}
+	else
+	{
+		B = true;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (A && !X1 && !X2 && ((!R1 && !R2) || (!Q1 && !Q2))))
+	{
+		K1 = true;
+	}
+	else
+	{
+		K1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (B && !Q1 && !Q2 && !R1 && !R2))
+	{
+		K2 = true;
+	}
+	else
+	{
+		K2 = false;
+	}
+
+	//SUMMING AMPLIFIERS
+
+	//1
+	if (!K3)
+	{
+		SummingAmplifierOutput[0] = 2.25*(thrustLogicInputError.z);
+	}
+	else
+	{
+		SummingAmplifierOutput[0] = 0.0;
+	}
+
+	//2
+	if (!K3)
+	{
+		SummingAmplifierOutput[1] = 2.25*(0.0 - thrustLogicInputError.z);
+	}
+	else
+	{
+		SummingAmplifierOutput[1] = 0.0;
+	}
+
+	//3
+	SummingAmplifierOutput[2] = 2.25*(thrustLogicInputError.z);
+
+	//4
+	SummingAmplifierOutput[3] = 2.25*(0.0 - thrustLogicInputError.z);
+
+	//5
+	if (!K1)
+	{
+		SummingAmplifierOutput[4] = 2.25*(thrustLogicInputError.x - thrustLogicInputError.y);
+	}
+	else
+	{
+		SummingAmplifierOutput[4] = 0.0;
+	}
+
+	//6
+	if (!K1)
+	{
+		SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x + thrustLogicInputError.y);
+	}
+	else
+	{
+		SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x);
+	}
+
+	//7
+	if (!K2)
+	{
+		SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+	}
+	else
+	{
+		SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+	}
+
+	//8
+	if (!K1)
+	{
+		SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
+	}
+	else
+	{
+		SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y);
+	}
+
+	//PULSE RATIO (DE)MODULATOR
+
+	for (int i = 0;i < 8;i++)
+	{
+		//dr = PRMDutyRatio(SummingAmplifierOutput[i]);
+		if (abs(SummingAmplifierOutput[i]) > 0.5)
+		{
+			PRMPulse[i] = PRMTimestep(i, simdt, 0.232558, 0.016);
+		}
+		else
+		{
+			PRMPulse[i] = false;
+			PRMCycleTime[i] = 0.0;
+			PRMOffTime[i] = 0.0;
+		}
+	}
+
+	if (hasAbortPower)
+	{
+		for (int i = 0;i < 16;i++)
+		{
+			jet_request[i] = 0;
+		}
+
+		if (PRMPulse[0])
+		{
+			if (SummingAmplifierOutput[0] > 0.0)
+			{
+				jet_request[14] = 1;
+				jet_request[2] = 0;
+			}
+			else
+			{
+				jet_request[14] = 0;
+				jet_request[2] = 1;
+			}
+		}
+		if (PRMPulse[1])
+		{
+			if (SummingAmplifierOutput[1] > 0.0)
+			{
+				jet_request[9] = 1;
+				jet_request[5] = 0;
+			}
+			else
+			{
+				jet_request[9] = 0;
+				jet_request[5] = 1;
+			}
+		}
+		if (PRMPulse[2])
+		{
+			if (SummingAmplifierOutput[2] > 0.0)
+			{
+				jet_request[1] = 1;
+				jet_request[6] = 0;
+			}
+			else
+			{
+				jet_request[1] = 0;
+				jet_request[6] = 1;
+			}
+		}
+		if (PRMPulse[3])
+		{
+			if (SummingAmplifierOutput[3] > 0.0)
+			{
+				jet_request[13] = 1;
+				jet_request[10] = 0;
+			}
+			else
+			{
+				jet_request[13] = 0;
+				jet_request[10] = 1;
+			}
+		}
+		if (PRMPulse[4])
+		{
+			if (SummingAmplifierOutput[4] > 0.0)
+			{
+				jet_request[12] = 1;
+				jet_request[15] = 0;
+			}
+			else
+			{
+				jet_request[12] = 0;
+				jet_request[15] = 1;
+			}
+		}
+		if (PRMPulse[5])
+		{
+			if (SummingAmplifierOutput[5] > 0.0)
+			{
+				jet_request[8] = 1;
+				jet_request[11] = 0;
+			}
+			else
+			{
+				jet_request[8] = 0;
+				jet_request[11] = 1;
+			}
+		}
+		if (PRMPulse[6])
+		{
+			if (SummingAmplifierOutput[6] > 0.0)
+			{
+				jet_request[4] = 1;
+				jet_request[7] = 0;
+			}
+			else
+			{
+				jet_request[4] = 0;
+				jet_request[7] = 1;
+			}
+		}
+		if (PRMPulse[7])
+		{
+			if (SummingAmplifierOutput[7] > 0.0)
+			{
+				jet_request[0] = 1;
+				jet_request[3] = 0;
+			}
+			else
+			{
+				jet_request[0] = 0;
+				jet_request[3] = 1;
+			}
+		}
 	}
 
 	/* THRUSTER TABLE:
@@ -261,7 +587,7 @@ void ATCA::Timestep(double simt){
 	*/
 
 	// *** Test "Balanced Couples" switch ***
-	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP && hasabortpower){ balcpl = 1; }
+	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP){ balcpl = 1; }
 
 	// *** THRUSTER MAINTENANCE ***
 	// LM RCS thrusters take 12.5ms to ramp up to full thrust and 17.5ms to ramp back down. There is a dead time of 10ms before thrust starts.
@@ -272,9 +598,9 @@ void ATCA::Timestep(double simt){
 	while(x < 16){
 		double power=0;
 		// If the ATCA is not powered or driver voltage is absent, it won't work.
-		if(hasprimpower == false && hasabortpower == false){ jet_request[x] = 0; }
+		if(hasPrimPower == false && hasAbortPower == false){ jet_request[x] = 0; }
 		// If the "Balanced Couples" switch is off, the abort preamps for the four upward-firing thrusters are disabled.
-		if(balcpl == false && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
+		if((hasAbortPower == true && balcpl == false) && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
 		// Process jet request list to generate start and stop times.
 		if(jet_request[x] == 1 && jet_last_request[x] == 0){
 			// New fire request
@@ -314,7 +640,7 @@ void ATCA::Timestep(double simt){
 
 // Process thruster commands from LGC
 void ATCA::ProcessLGC(int ch, int val){		
-	if(lem->GuidContSwitch.GetState() != TOGGLESWITCH_UP){ val = 0; } // If not in primary mode, force jets off (so jets will switch off at programmed times)
+	if(!hasPrimPower){ val = 0; } // If not in primary mode, force jets off (so jets will switch off at programmed times)
 	// When in primary, thruster commands are passed from LGC to jets.
 	switch(ch){
 		case 05:
@@ -344,6 +670,34 @@ void ATCA::ProcessLGC(int ch, int val){
 		default:
 			sprintf(oapiDebugString(),"ATCA::ProcessLGC: Bad channel %o",ch);
 	}
+}
+
+double ATCA::PRMDutyRatio(double volt)
+{
+	if (volt > 0.5)
+	{
+		return exp(0.4514872731*(min(abs(volt), 10.1) - 10.1));
+	}
+	return 0.0;
+}
+
+bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
+{
+	PRMCycleTime[n] += simdt;
+	PRMOffTime[n] -= simdt;
+
+	if (PRMCycleTime[n] > pp)
+	{
+		PRMCycleTime[n] =  0.0;
+		PRMOffTime[n] = pw;
+	}
+
+	if (PRMOffTime[n] > 0.0)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void ATCA::SaveState(FILEHANDLE scn) {
