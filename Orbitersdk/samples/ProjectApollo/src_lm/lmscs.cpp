@@ -143,6 +143,11 @@ ATCA::ATCA(){
 
 	hasAbortPower = false;
 	hasPrimPower = false;
+
+	RateGain = _V(0.0, 0.0, 0.0);
+	DeadbandGain = _V(0.0, 0.0, 0.0);
+	pitchGimbalSignal = 0.0;
+	rollGimbalSignal = 0.0;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -157,6 +162,16 @@ void ATCA::Timestep(double simt, double simdt){
 	bool balcpl = false;
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
 	if(lem == NULL){ return; }
+
+	att_rates = lem->rga.GetRates();
+
+	if (lem->scca2.GetK2())
+	{
+		aca_rates = _V(lem->CDR_ACA.GetACAProp(0), lem->CDR_ACA.GetACAProp(1), lem->CDR_ACA.GetACAProp(2));
+	}
+	{
+		aca_rates = _V(0, 0, 0);
+	}
 
 	if (lem->SCS_ATCA_CB.IsPowered())
 	{
@@ -218,9 +233,315 @@ void ATCA::Timestep(double simt, double simdt){
 		{
 			K21 = false;
 		}
+
+		// Determine ATCA power situation.
+		if (!lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+		{
+			// ATCA primary power is on.
+			hasPrimPower = true;
+		}
+
+		if (lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+		{
+			// ATCA abort power is on.
+			hasAbortPower = true;
+		}
+
+		//THRUST LOGIC INPUT
+
+		//Gain Switching
+		if (K8)
+		{
+			RateGain.z = 22.5;
+		}
+		else
+		{
+			RateGain.z = 6.0;
+		}
+		if (K9)
+		{
+			RateGain.y = 22.5;
+		}
+		else
+		{
+			RateGain.y = 6.0;
+		}
+		if (K10)
+		{
+			RateGain.x = 22.5;
+		}
+		else
+		{
+			RateGain.x = 6.0;
+		}
+
+		if (K14)
+		{
+			DeadbandGain.z = 48.503;
+		}
+		else
+		{
+			DeadbandGain.z = 3.59;
+		}
+		if (K15)
+		{
+			DeadbandGain.y = 47.735;
+		}
+		else
+		{
+			DeadbandGain.y = 2.63;
+		}
+		if (K16)
+		{
+			DeadbandGain.x = 47.735;
+		}
+		else
+		{
+			DeadbandGain.x = 2.63;
+		}
+
+		//Yaw
+		if (K19)
+		{
+			if (lem->CDR_ACA.GetPlusYawBreakout())
+			{
+				thrustLogicInputError.z = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusYawBreakout())
+			{
+				thrustLogicInputError.z = -2.0;
+			}
+		}
+		else
+		{
+			//TBD: ACA prop
+			thrustLogicInputError.z = (aea_attitude_error.y*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
+			if (thrustLogicInputError.z > 0.0)
+			{
+				thrustLogicInputError.z = max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.z = -max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
+			}
+		}
+
+		//Pitch
+		if (K20)
+		{
+			if (lem->CDR_ACA.GetPlusPitchBreakout())
+			{
+				thrustLogicInputError.y = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusPitchBreakout())
+			{
+				thrustLogicInputError.y = -2.0;
+			}
+		}
+		else
+		{
+			//TBD: ACA prop
+			thrustLogicInputError.y = (aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
+			pitchGimbalSignal = thrustLogicInputError.y;
+			if (thrustLogicInputError.y > 0.0)
+			{
+				thrustLogicInputError.y = max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.y = -max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
+			}
+		}
+
+		//Roll
+		if (K21)
+		{
+			if (lem->CDR_ACA.GetPlusRollBreakout())
+			{
+				thrustLogicInputError.x = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusRollBreakout())
+			{
+				thrustLogicInputError.x = -2.0;
+			}
+		}
+		else
+		{
+			//TBD: ACA prop
+			thrustLogicInputError.x = (aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
+			rollGimbalSignal = thrustLogicInputError.x;
+			if (thrustLogicInputError.x > 0.0)
+			{
+				thrustLogicInputError.x = max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.x = -max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
+			}
+		}
+
+		//Gimbal signals to DECA
+		if (!K20)
+		{
+			//TBD: Send pitch gimbal signal to DECA
+		}
+		if (!K21)
+		{
+			//TBD: Send roll gimbal signal to DECA
+		}
+
+		//JET SELECT LOGIC
+
+		bool A, B, X1, X2, R1, Q1, R2, Q2, Y1, Y2, Z1, Z2;
+
+		X1 = false;
+		X2 = false;
+		R1 = thrustLogicInputError.x > 0.0;
+		R2 = thrustLogicInputError.x < 0.0;
+		Q1 = thrustLogicInputError.y > 0.0;
+		Q2 = thrustLogicInputError.y < 0.0;
+		Y1 = false;
+		Y2 = false;
+		Z1 = false;
+		Z2 = false;
+
+		//Yaw and Y/Z Translation selection logic
+		if (!Y1 && !Y2 && !Z1 && !Z2)
+		{
+			K3 = true;
+		}
+		else
+		{
+			K3 = false;
+		}
+
+		//Pitch, Roll and X Translation selection logic
+		if (!(lem->ATTTranslSwitch.IsDown() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204()))
+		{
+			A = false;
+		}
+		else
+		{
+			A = true;
+		}
+
+		if (lem->ATTTranslSwitch.IsUp())
+		{
+			B = false;
+		}
+		else
+		{
+			B = true;
+		}
+
+		if (A && !X1 && !X2 && ((!R1 && !R2) || (!Q1 && !Q2)))
+		{
+			K1 = true;
+		}
+		else
+		{
+			K1 = false;
+		}
+
+		if (B && !Q1 && !Q2 && !R1 && !R2)
+		{
+			K2 = true;
+		}
+		else
+		{
+			K2 = false;
+		}
+
+		//SUMMING AMPLIFIERS
+
+		//1
+		if (!K3)
+		{
+			SummingAmplifierOutput[0] = 2.25*(thrustLogicInputError.z);
+		}
+		else
+		{
+			SummingAmplifierOutput[0] = 0.0;
+		}
+
+		//2
+		if (!K3)
+		{
+			SummingAmplifierOutput[1] = 2.25*(0.0 - thrustLogicInputError.z);
+		}
+		else
+		{
+			SummingAmplifierOutput[1] = 0.0;
+		}
+
+		//3
+		SummingAmplifierOutput[2] = 2.25*(thrustLogicInputError.z);
+
+		//4
+		SummingAmplifierOutput[3] = 2.25*(0.0 - thrustLogicInputError.z);
+
+		//5
+		if (!K1)
+		{
+			SummingAmplifierOutput[4] = 2.25*(thrustLogicInputError.x - thrustLogicInputError.y);
+		}
+		else
+		{
+			SummingAmplifierOutput[4] = 0.0;
+		}
+
+		//6
+		if (!K1)
+		{
+			SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x + thrustLogicInputError.y);
+		}
+		else
+		{
+			SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x);
+		}
+
+		//7
+		if (!K2)
+		{
+			SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+		}
+		else
+		{
+			SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+		}
+
+		//8
+		if (!K1)
+		{
+			SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
+		}
+		else
+		{
+			SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y);
+		}
+
+		//PULSE RATIO (DE)MODULATOR
+
+		for (int i = 0;i < 8;i++)
+		{
+			//dr = PRMDutyRatio(SummingAmplifierOutput[i]);
+			if (abs(SummingAmplifierOutput[i]) > 0.5)
+			{
+				PRMPulse[i] = PRMTimestep(i, simdt, 0.232558, 0.016);
+			}
+			else
+			{
+				PRMPulse[i] = false;
+				PRMCycleTime[i] = 0.0;
+				PRMOffTime[i] = 0.0;
+			}
+		}
 	}
 	else
 	{
+		K1 = false;
+		K2 = false;
+		K3 = false;
 		K8 = false;
 		K9 = false;
 		K10 = false;
@@ -233,231 +554,13 @@ void ATCA::Timestep(double simt, double simdt){
 		K19 = false;
 		K20 = false;
 		K21 = false;
-	}
 
-	// Determine ATCA power situation.
-	if (lem->CDR_SCS_ATCA_CB.Voltage() > 24 && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
-	{
-		// ATCA primary power is on.
-		hasPrimPower = true;
-	}
+		pitchGimbalSignal = 0.0;
+		rollGimbalSignal = 0.0;
 
-	if (lem->SCS_ATCA_AGS_CB.Voltage() > 24 && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
-	{
-		// ATCA abort power is on.
-		hasAbortPower = true;
-	}
-
-	att_rates = lem->rga.GetRates();
-
-	if (lem->scca2.GetK2())
-	{
-		aca_rates = _V(lem->CDR_ACA.GetACAProp(0), lem->CDR_ACA.GetACAProp(1), lem->CDR_ACA.GetACAProp(2));
-	}
-	{
-		aca_rates = _V(0, 0, 0);
-	}
-
-	//PULSE MODE LOGIC
-
-	//Yaw
-	if (lem->SCS_ATCA_CB.IsPowered() && K19)
-	{
-		if (lem->CDR_ACA.GetPlusYawBreakout())
-		{
-			thrustLogicInputError.z = 2.0;
-		}
-		else if (lem->CDR_ACA.GetMinusYawBreakout())
-		{
-			thrustLogicInputError.z = -2.0;
-		}
-	}
-	else
-	{
-		//TBD: AEA, ACA prop, att rate
-		thrustLogicInputError.z = 0.0;
-	}
-
-	//Pitch
-	if (lem->SCS_ATCA_CB.IsPowered() && K20)
-	{
-		if (lem->CDR_ACA.GetPlusPitchBreakout())
-		{
-			thrustLogicInputError.y = 2.0;
-		}
-		else if (lem->CDR_ACA.GetMinusPitchBreakout())
-		{
-			thrustLogicInputError.y = -2.0;
-		}
-	}
-	else
-	{
-		//TBD: AEA, ACA prop, att rate
-		thrustLogicInputError.y = 0.0;
-	}
-
-	//Roll
-	if (lem->SCS_ATCA_CB.IsPowered() && K21)
-	{
-		if (lem->CDR_ACA.GetPlusRollBreakout())
-		{
-			thrustLogicInputError.x = 2.0;
-		}
-		else if (lem->CDR_ACA.GetMinusRollBreakout())
-		{
-			thrustLogicInputError.x = -2.0;
-		}
-	}
-	else
-	{
-		//TBD: AEA, ACA prop, att rate
-		thrustLogicInputError.x = 0.0;
-	}
-
-	//JET SELECT LOGIC
-
-	bool A, B, X1, X2, R1, Q1, R2, Q2, Y1, Y2, Z1, Z2;
-
-	X1 = false;
-	X2 = false;
-	R1 = thrustLogicInputError.x > 0.0;
-	R2 = thrustLogicInputError.x < 0.0;
-	Q1 = thrustLogicInputError.y > 0.0;
-	Q2 = thrustLogicInputError.y < 0.0;
-	Y1 = false;
-	Y2 = false;
-	Z1 = false;
-	Z2 = false;
-
-	//Yaw and Y/Z Translation selection logic
-	if (lem->SCS_ATCA_CB.IsPowered() && (!Y1 && !Y2 && !Z1 && !Z2))
-	{
-		K3 = true;
-	}
-	else
-	{
-		K3 = false;
-	}
-
-	//Pitch, Roll and X Translation selection logic
-	if (lem->SCS_ATCA_CB.IsPowered() && !(lem->ATTTranslSwitch.IsDown() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204()))
-	{
-		A = false;
-	}
-	else
-	{
-		A = true;
-	}
-
-	if (lem->SCS_ATCA_CB.IsPowered() && lem->ATTTranslSwitch.IsUp())
-	{
-		B = false;
-	}
-	else
-	{
-		B = true;
-	}
-
-	if (lem->SCS_ATCA_CB.IsPowered() && (A && !X1 && !X2 && ((!R1 && !R2) || (!Q1 && !Q2))))
-	{
-		K1 = true;
-	}
-	else
-	{
-		K1 = false;
-	}
-
-	if (lem->SCS_ATCA_CB.IsPowered() && (B && !Q1 && !Q2 && !R1 && !R2))
-	{
-		K2 = true;
-	}
-	else
-	{
-		K2 = false;
-	}
-
-	//SUMMING AMPLIFIERS
-
-	//1
-	if (!K3)
-	{
-		SummingAmplifierOutput[0] = 2.25*(thrustLogicInputError.z);
-	}
-	else
-	{
-		SummingAmplifierOutput[0] = 0.0;
-	}
-
-	//2
-	if (!K3)
-	{
-		SummingAmplifierOutput[1] = 2.25*(0.0 - thrustLogicInputError.z);
-	}
-	else
-	{
-		SummingAmplifierOutput[1] = 0.0;
-	}
-
-	//3
-	SummingAmplifierOutput[2] = 2.25*(thrustLogicInputError.z);
-
-	//4
-	SummingAmplifierOutput[3] = 2.25*(0.0 - thrustLogicInputError.z);
-
-	//5
-	if (!K1)
-	{
-		SummingAmplifierOutput[4] = 2.25*(thrustLogicInputError.x - thrustLogicInputError.y);
-	}
-	else
-	{
-		SummingAmplifierOutput[4] = 0.0;
-	}
-
-	//6
-	if (!K1)
-	{
-		SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x + thrustLogicInputError.y);
-	}
-	else
-	{
-		SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x);
-	}
-
-	//7
-	if (!K2)
-	{
-		SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
-	}
-	else
-	{
-		SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
-	}
-
-	//8
-	if (!K1)
-	{
-		SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
-	}
-	else
-	{
-		SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y);
-	}
-
-	//PULSE RATIO (DE)MODULATOR
-
-	for (int i = 0;i < 8;i++)
-	{
-		//dr = PRMDutyRatio(SummingAmplifierOutput[i]);
-		if (abs(SummingAmplifierOutput[i]) > 0.5)
-		{
-			PRMPulse[i] = PRMTimestep(i, simdt, 0.232558, 0.016);
-		}
-		else
+		for (int i = 0;i < 8;i++)
 		{
 			PRMPulse[i] = false;
-			PRMCycleTime[i] = 0.0;
-			PRMOffTime[i] = 0.0;
 		}
 	}
 

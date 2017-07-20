@@ -73,6 +73,10 @@ public:
 	double PRMOffTime[8];
 	bool hasAbortPower;
 	bool hasPrimPower;
+	VECTOR3 RateGain;
+	VECTOR3 DeadbandGain;
+	double pitchGimbalSignal;
+	double rollGimbalSignal;
 
 protected:
 
