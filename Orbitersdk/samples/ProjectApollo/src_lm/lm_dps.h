@@ -122,9 +122,9 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	double GetPosition() { return position; }
-	void ChangeLGCPosition(int pos);
-	void ZeroLGCPosition() { lgcPosition = 0; }
-	int GetLGCPosition() { return lgcPosition; }
+	void ChangeCmdPosition(int pos);
+	void ZeroCmdPosition() { commandedPosition = 0; }
+	int GetCmdPosition() { return commandedPosition; }
 	bool GimbalFail() { return gimbalfail; }
 
 	void GimbalTimestep(double simdt);
@@ -135,8 +135,6 @@ protected:
 
 	double position;
 	int commandedPosition;
-	int lgcPosition;
-	int atcaPosition;
 	bool motorRunning;
 	bool gimbalfail;
 

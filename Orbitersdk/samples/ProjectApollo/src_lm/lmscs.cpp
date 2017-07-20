@@ -146,8 +146,8 @@ ATCA::ATCA(){
 
 	RateGain = _V(0.0, 0.0, 0.0);
 	DeadbandGain = _V(0.0, 0.0, 0.0);
-	pitchGimbalSignal = 0.0;
-	rollGimbalSignal = 0.0;
+	pitchGimbalError = 0.0;
+	rollGimbalError = 0.0;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -342,7 +342,7 @@ void ATCA::Timestep(double simt, double simdt){
 		{
 			//TBD: ACA prop
 			thrustLogicInputError.y = (aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
-			pitchGimbalSignal = thrustLogicInputError.y;
+			pitchGimbalError = thrustLogicInputError.y;
 			if (thrustLogicInputError.y > 0.0)
 			{
 				thrustLogicInputError.y = max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
@@ -369,7 +369,7 @@ void ATCA::Timestep(double simt, double simdt){
 		{
 			//TBD: ACA prop
 			thrustLogicInputError.x = (aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
-			rollGimbalSignal = thrustLogicInputError.x;
+			rollGimbalError = thrustLogicInputError.x;
 			if (thrustLogicInputError.x > 0.0)
 			{
 				thrustLogicInputError.x = max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
@@ -378,16 +378,6 @@ void ATCA::Timestep(double simt, double simdt){
 			{
 				thrustLogicInputError.x = -max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
 			}
-		}
-
-		//Gimbal signals to DECA
-		if (!K20)
-		{
-			//TBD: Send pitch gimbal signal to DECA
-		}
-		if (!K21)
-		{
-			//TBD: Send roll gimbal signal to DECA
 		}
 
 		//JET SELECT LOGIC
@@ -555,8 +545,8 @@ void ATCA::Timestep(double simt, double simdt){
 		K20 = false;
 		K21 = false;
 
-		pitchGimbalSignal = 0.0;
-		rollGimbalSignal = 0.0;
+		pitchGimbalError = 0.0;
+		rollGimbalError = 0.0;
 
 		for (int i = 0;i < 8;i++)
 		{
@@ -803,6 +793,20 @@ bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
 	return false;
 }
 
+double ATCA::GetDPSPitchGimbalError()
+{
+	if (!K20)
+		return pitchGimbalError;
+	return 0.0;
+}
+
+double ATCA::GetDPSRollGimbalError()
+{
+	if (!K21)
+		return rollGimbalError;
+	return 0.0;
+}
+
 void ATCA::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, ATCA_START_STRING);
@@ -907,8 +911,8 @@ void DECA::Timestep(double simdt) {
 	if (lem->stage > 1)
 	{
 		//Set everything to false and then return
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(0);
 		lgcAutoThrust = 0.0;
 		ManualThrust = 0.0;
 		AutoThrust = 0.0;
@@ -1100,8 +1104,20 @@ void DECA::Timestep(double simdt) {
 
 	if (K13)
 	{
-		//TBD: AGS Trim Commands
-		pitchactuatorcommand = 0;
+		double atcaPitch = lem->atca.GetDPSPitchGimbalError();
+
+		if (atcaPitch > 0.5)
+		{
+			pitchactuatorcommand = 1;
+		}
+		else if (atcaPitch < -0.5)
+		{
+			pitchactuatorcommand = -1;
+		}
+		else
+		{
+			pitchactuatorcommand = 0;
+		}
 	}
 	else
 	{
@@ -1113,8 +1129,20 @@ void DECA::Timestep(double simdt) {
 
 	if (K14)
 	{
-		//TBD: AGS Trim Commands
-		rollactuatorcommand = 0;
+		double atcaRoll = lem->atca.GetDPSRollGimbalError();
+
+		if (atcaRoll > 0.5)
+		{
+			rollactuatorcommand = 1;
+		}
+		else if (atcaRoll < -0.5)
+		{
+			rollactuatorcommand = -1;
+		}
+		else
+		{
+			rollactuatorcommand = 0;
+		}
 	}
 	else
 	{
@@ -1126,13 +1154,13 @@ void DECA::Timestep(double simdt) {
 
 	if (powered && !K4 && !K5 && !K8 && !K9 && K25) //If off, send out all zeros
 	{
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(pitchactuatorcommand);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(rollactuatorcommand);
 	}
 	else
 	{
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(0);
 	}
 
 	//Gimbal Failure Indication

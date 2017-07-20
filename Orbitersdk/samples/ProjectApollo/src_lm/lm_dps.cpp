@@ -587,8 +587,6 @@ DPSGimbalActuator::DPSGimbalActuator() {
 
 	position = 0;
 	commandedPosition = 0;
-	lgcPosition = 0;
-	atcaPosition = 0;
 	motorRunning = false;
 	lem = 0;
 	gimbalMotorSwitch = 0;
@@ -639,14 +637,6 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 	//
 	// Process commanded position
 	//
-
-	if (lem->GuidContSwitch.IsUp())
-	{
-		commandedPosition = lgcPosition;
-	}
-	else {
-		commandedPosition = atcaPosition;
-	}
 
 	if (IsSystemPowered() && motorRunning) {
 		//position = commandedPosition; // Instant positioning
@@ -701,9 +691,9 @@ void DPSGimbalActuator::DrawSystemPower() {
 	}
 }
 
-void DPSGimbalActuator::ChangeLGCPosition(int pos) {
+void DPSGimbalActuator::ChangeCmdPosition(int pos) {
 
-	lgcPosition = pos;
+	commandedPosition = pos;
 }
 
 void DPSGimbalActuator::SaveState(FILEHANDLE scn) {
@@ -711,8 +701,6 @@ void DPSGimbalActuator::SaveState(FILEHANDLE scn) {
 	// START_STRING is written in LEM
 	papiWriteScenario_double(scn, "POSITION", position);
 	oapiWriteScenario_int(scn, "COMMANDEDPOSITION", commandedPosition);
-	oapiWriteScenario_int(scn, "LGCPOSITION", lgcPosition);
-	oapiWriteScenario_int(scn, "ATCAPOSITION", atcaPosition);
 	oapiWriteScenario_int(scn, "MOTORRUNNING", (motorRunning ? 1 : 0));
 
 	oapiWriteLine(scn, "DPSGIMBALACTUATOR_END");
@@ -733,12 +721,6 @@ void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
 		}
 		else if (!strnicmp(line, "COMMANDEDPOSITION", 17)) {
 			sscanf(line + 17, "%d", &commandedPosition);
-		}
-		else if (!strnicmp(line, "LGCPOSITION", 11)) {
-			sscanf(line + 11, "%d", &lgcPosition);
-		}
-		else if (!strnicmp(line, "ATCAPOSITION", 12)) {
-			sscanf(line + 12, "%d", &atcaPosition);
 		}
 		else if (!strnicmp(line, "MOTORRUNNING", 13)) {
 			sscanf(line + 13, "%d", &i);

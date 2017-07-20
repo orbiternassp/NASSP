@@ -57,12 +57,21 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	double GetDPSPitchGimbalError();
+	double GetDPSRollGimbalError();
+
 	LEM *lem;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
+
+protected:
+
+	double PRMDutyRatio(double volt);
+	bool PRMTimestep(int n, double simdt, double pp, double pw);
+
 	VECTOR3 aea_attitude_error;
 	VECTOR3 aca_rates;
 	VECTOR3 att_rates;
@@ -75,13 +84,8 @@ public:
 	bool hasPrimPower;
 	VECTOR3 RateGain;
 	VECTOR3 DeadbandGain;
-	double pitchGimbalSignal;
-	double rollGimbalSignal;
-
-protected:
-
-	double PRMDutyRatio(double volt);
-	bool PRMTimestep(int n, double simdt, double pp, double pw);
+	double pitchGimbalError;
+	double rollGimbalError;
 
 	//Relays:
 
