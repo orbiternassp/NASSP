@@ -132,6 +132,7 @@ ATCA::ATCA(){
 	att_rates = _V(0, 0, 0);
 	aca_rates = _V(0, 0, 0);
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
+	translationCommands = _V(0, 0, 0);
 
 	for (int i = 0;i < 8;i++)
 	{
@@ -162,6 +163,7 @@ void ATCA::Timestep(double simt, double simdt){
 	hasPrimPower = false, hasAbortPower = false;
 	bool balcpl = false;
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
+	translationCommands = _V(0, 0, 0);
 	if(lem == NULL){ return; }
 
 	// Determine ATCA power situation.
@@ -390,20 +392,54 @@ void ATCA::Timestep(double simt, double simdt){
 			}
 		}
 
+		//TRANSLATIONAL COMMANDS
+		if (lem->SCS_ATCA_AGS_CB.IsPowered())
+		{
+			if (lem->LeftTTCATranslSwitch.IsUp() && lem->SCS_ATCA_CB.IsPowered())
+			{
+				if (lem->CDR_TTCA.GetPlusXTrans())
+				{
+					translationCommands.x = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusXTrans())
+				{
+					translationCommands.x = -15.0;
+				}
+
+				if (lem->CDR_TTCA.GetPlusYTrans())
+				{
+					translationCommands.y = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusYTrans())
+				{
+					translationCommands.y = -15.0;
+				}
+
+				if (lem->CDR_TTCA.GetPlusZTrans())
+				{
+					translationCommands.z = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusZTrans())
+				{
+					translationCommands.z = -15.0;
+				}
+			}
+		}
+
 		//JET SELECT LOGIC
 
 		bool A, B, X1, X2, R1, Q1, R2, Q2, Y1, Y2, Z1, Z2;
 
-		X1 = false;
-		X2 = false;
+		X1 = translationCommands.x > 0.0;
+		X2 = translationCommands.x < 0.0;
 		R1 = thrustLogicInputError.x > 0.0;
 		R2 = thrustLogicInputError.x < 0.0;
 		Q1 = thrustLogicInputError.y > 0.0;
 		Q2 = thrustLogicInputError.y < 0.0;
-		Y1 = false;
-		Y2 = false;
-		Z1 = false;
-		Z2 = false;
+		Y1 = translationCommands.y > 0.0;
+		Y2 = translationCommands.y < 0.0;
+		Z1 = translationCommands.z > 0.0;
+		Z2 = translationCommands.z < 0.0;
 
 		//Yaw and Y/Z Translation selection logic
 		if (!Y1 && !Y2 && !Z1 && !Z2)
@@ -455,70 +491,28 @@ void ATCA::Timestep(double simt, double simdt){
 		//SUMMING AMPLIFIERS
 
 		//1
-		if (!K3)
-		{
-			SummingAmplifierOutput[0] = (thrustLogicInputError.z);
-		}
-		else
-		{
-			SummingAmplifierOutput[0] = 0.0;
-		}
+		SummingAmplifierOutput[0] = (K3 ? 0.0 : thrustLogicInputError.z) - translationCommands.y;
 
 		//2
-		if (!K3)
-		{
-			SummingAmplifierOutput[1] = (0.0 - thrustLogicInputError.z);
-		}
-		else
-		{
-			SummingAmplifierOutput[1] = 0.0;
-		}
+		SummingAmplifierOutput[1] = 0.0 - (K3 ? 0.0 : thrustLogicInputError.z) - translationCommands.y;
 
 		//3
-		SummingAmplifierOutput[2] = (thrustLogicInputError.z);
+		SummingAmplifierOutput[2] = (thrustLogicInputError.z - translationCommands.z);
 
 		//4
-		SummingAmplifierOutput[3] = (0.0 - thrustLogicInputError.z);
+		SummingAmplifierOutput[3] = (0.0 - thrustLogicInputError.z - translationCommands.z);
 
 		//5
-		if (!K1)
-		{
-			SummingAmplifierOutput[4] = (thrustLogicInputError.x - thrustLogicInputError.y);
-		}
-		else
-		{
-			SummingAmplifierOutput[4] = 0.0;
-		}
+		SummingAmplifierOutput[4] = (K1 ? 0.0 : thrustLogicInputError.x) - (K1 ? 0.0 : thrustLogicInputError.y) - (K2 ? 0.0 : translationCommands.x);
 
 		//6
-		if (!K1)
-		{
-			SummingAmplifierOutput[5] = (thrustLogicInputError.x + thrustLogicInputError.y);
-		}
-		else
-		{
-			SummingAmplifierOutput[5] = (thrustLogicInputError.x);
-		}
+		SummingAmplifierOutput[5] = thrustLogicInputError.x + (K1 ? 0.0 : thrustLogicInputError.y) - translationCommands.x;
 
 		//7
-		if (!K2)
-		{
-			SummingAmplifierOutput[6] = (thrustLogicInputError.y - thrustLogicInputError.x);
-		}
-		else
-		{
-			SummingAmplifierOutput[6] = (thrustLogicInputError.y - thrustLogicInputError.x);
-		}
+		SummingAmplifierOutput[6] = thrustLogicInputError.y - thrustLogicInputError.x - (K2 ? 0.0 : translationCommands.x);
 
 		//8
-		if (!K1)
-		{
-			SummingAmplifierOutput[7] = (0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
-		}
-		else
-		{
-			SummingAmplifierOutput[7] = (0.0 - thrustLogicInputError.y);
-		}
+		SummingAmplifierOutput[7] = 0.0 - thrustLogicInputError.y - (K1 ? 0.0 : thrustLogicInputError.x) - translationCommands.x;
 
 		//PULSE RATIO (DE)MODULATOR
 

@@ -77,6 +77,7 @@ protected:
 	VECTOR3 aca_rates;
 	VECTOR3 att_rates;
 	VECTOR3 thrustLogicInputError;	//Inputs to the summing amplifiers
+	VECTOR3 translationCommands;
 	double SummingAmplifierOutput[8];
 	bool PRMPulse[8];
 	double PRMCycleTime[8];
