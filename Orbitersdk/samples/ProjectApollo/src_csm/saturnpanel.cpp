@@ -1565,7 +1565,7 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 	// Panel 101
 	oapiRegisterPanelArea (AID_DCVOLTS_PANEL101,							_R(1121 + offset,  65, 1231 + offset,  175), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SYSTEMTESTROTARIES,							_R(1069 + offset,  213, 1280 + offset,  304), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(1093 + offset,  486, 1251 + offset,  515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 
 	oapiRegisterPanelArea (AID_GNMODESWITCH,								_R(1365 + offset,  951, 1399 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
