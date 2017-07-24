@@ -43,6 +43,7 @@
 #include "lm_dps.h"
 #include "lm_programer.h"
 #include "lm_aca.h"
+#include "lm_ttca.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -605,13 +606,9 @@ public:
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
-	int ttca_mode;                        // TTCA Throttle/Jets Mode
-#define TTCA_MODE_THROTTLE 0
-#define TTCA_MODE_JETS 1
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
 	int ttca_throttle_vel;
-	double ttca_thrustcmd;
 	int js_current;
 
 
@@ -1627,6 +1624,7 @@ protected:
 	LEM_Programer lmp;
 	LEM_ACA CDR_ACA;
 	LEM_RGA rga;
+	LEM_TTCA CDR_TTCA;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
@@ -1713,6 +1711,7 @@ protected:
 	friend class LEMDPSDigitalMeter;
 	friend class LEM_ACA;
 	friend class LEM_RGA;
+	friend class LEM_TTCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

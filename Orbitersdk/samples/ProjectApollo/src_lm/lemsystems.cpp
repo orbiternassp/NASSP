@@ -701,6 +701,7 @@ void LEM::SystemsInit()
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
+	CDR_TTCA.Init(this);
 
 	//DECA
 	deca.Init(this, &SCS_DECA_PWR_CB);
@@ -737,7 +738,6 @@ void LEM::SystemsInit()
 	ttca_throttle_pos = 0;
 	ttca_throttle_vel = 0;
 	ttca_throttle_pos_dig = 0;
-	ttca_thrustcmd = 0;
 	
 	// Initialize other systems
 	atca.Init(this);
@@ -787,15 +787,19 @@ void LEM::JoystickTimestep(double simdt)
 		val31 = agc.GetInputChannel(031);
 		val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
 
+		int ttca_pos[3];
 		int thc_x_pos = 0;
 		int thc_y_pos = 0;
 		int thc_z_pos = 0;
 		int thc_rot_pos = 0;
+		int thc_tjt_pos = 32768; // Initialize to centered
+		bool ttca_realistic_throttle = false;
 
 		int rhc_pos[3];     // RHC x/y/z positions
 		rhc_pos[0] = 32768; // Initialize
 		rhc_pos[1] = 32768;
 		rhc_pos[2] = 32768;
+
 
 		/* ACA OPERATION:
 
@@ -1079,8 +1083,6 @@ void LEM::JoystickTimestep(double simdt)
 		}
 		// And now the THC...
 		if (thc_id != -1 && thc_id < js_enabled) {
-			// CHECK FOR POWER HERE
-			double thc_voltage = SCS_ATCA_AGS_CB.Voltage(); // HAX
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 							  // Attempt to acquire the device
@@ -1092,35 +1094,21 @@ void LEM::JoystickTimestep(double simdt)
 					hr = dx8_joystick[thc_id]->Poll();
 				}
 			}
+
+			ttca_realistic_throttle = true;
+
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
-			// The LM TTCA is even wierder than the CM THC...			
-			int thc_tjt_pos = 32768; // Initialize to centered	
+			// The LM TTCA is even wierder than the CM THC...
 
-			if (thc_voltage > 0 && LeftTTCATranslSwitch.IsUp()) {
+			if (LeftTTCATranslSwitch.IsUp()) {
 				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
 					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[thc_tjt_id]; // Read
 				}
-				if (thc_tjt_pos < 10000) {				 // Determine TTCA mode	
-					ttca_mode = TTCA_MODE_THROTTLE;      // THROTTLE MODE					
-					ttca_throttle_pos = dx8_jstate[thc_id].lY; // Relay throttle position
-				}
-				else {
-					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
-					ttca_throttle_pos = 65536;//32768;           // Zero throttle position
-					if (dx8_jstate[thc_id].lY < 16384) {
-						thc_y_pos = dx8_jstate[thc_id].lY - 16384;
-					}
-					if (dx8_jstate[thc_id].lY > 49152) {
-						thc_y_pos = dx8_jstate[thc_id].lY - 49152;
-					}
-				}
-				if (dx8_jstate[thc_id].lX > 49152) {
-					thc_x_pos = dx8_jstate[thc_id].lX - 49152;
-				}
-				if (dx8_jstate[thc_id].lX < 16384) {
-					thc_x_pos = dx8_jstate[thc_id].lX - 16384;
-				}
+
+				thc_y_pos = dx8_jstate[thc_id].lY - 32768;
+				thc_x_pos = dx8_jstate[thc_id].lX - 32768;
+
 				// Z-axis read.
 				if (thc_rot_id != -1) { // If this is a rotator-type axis
 					switch (thc_rot_id) {
@@ -1139,16 +1127,7 @@ void LEM::JoystickTimestep(double simdt)
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
 
-				if (thc_rot_pos > 49152) {
-					thc_z_pos = thc_rot_pos - 49152;
-				}
-				if (thc_rot_pos < 16384) {
-					thc_z_pos = thc_rot_pos - 16384;
-				}
-
-				//Let's try a throttle lever
-				//ttca_lever_pos = (double)dx8_jstate[thc_id].rglSlider[0];
-				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+				thc_z_pos = thc_rot_pos - 32768;
 
 				if (thc_debug != -1) {
 					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d, thc_rot_id: %d, thc_rzx_id: %d", thc_x_pos, thc_y_pos,
@@ -1197,23 +1176,32 @@ void LEM::JoystickTimestep(double simdt)
 			//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
 		}
 
-		if (thc_y_pos < 0) {
-			val31[MinusX] = 1;
-		}
-		if (thc_x_pos < 0) {
-			val31[MinusY] = 1;
-		}
-		if (thc_y_pos > 0) {
-			val31[PlusX] = 1;
-		}
-		if (thc_x_pos > 0) {
-			val31[PlusY] = 1;
-		}
-		if (thc_z_pos < 0) {
-			val31[MinusZ] = 1;
-		}
-		if (thc_z_pos > 0) {
-			val31[PlusZ] = 1;
+		ttca_pos[0] = thc_y_pos;
+		ttca_pos[1] = thc_x_pos;
+		ttca_pos[2] = thc_z_pos;
+
+		CDR_TTCA.Timestep(ttca_pos, thc_tjt_pos, ttca_realistic_throttle, ttca_throttle_pos_dig);
+
+		if (LeftTTCATranslSwitch.IsUp())
+		{
+			if (CDR_TTCA.GetMinusXTrans()) {
+				val31[MinusX] = 1;
+			}
+			if (CDR_TTCA.GetMinusYTrans()) {
+				val31[MinusY] = 1;
+			}
+			if (CDR_TTCA.GetPlusXTrans()) {
+				val31[PlusX] = 1;
+			}
+			if (CDR_TTCA.GetPlusYTrans()) {
+				val31[PlusY] = 1;
+			}
+			if (CDR_TTCA.GetMinusZTrans()) {
+				val31[MinusZ] = 1;
+			}
+			if (CDR_TTCA.GetPlusZTrans()) {
+				val31[PlusZ] = 1;
+			}
 		}
 
 		if (ttca_throttle_vel == 1)
@@ -1232,16 +1220,6 @@ void LEM::JoystickTimestep(double simdt)
 		{
 			ttca_throttle_pos_dig = 0;
 		}
-
-		if (ttca_throttle_pos_dig > 0.51 / 0.66)
-		{
-			ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
-		}
-		else
-		{
-			ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-		}
-
 
 		// Write back channel data
 		agc.SetInputChannel(031, val31);

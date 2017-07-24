@@ -260,32 +260,32 @@ void ATCA::Timestep(double simt, double simdt){
 		if (K8)
 		{
 			RateGain.z = 22.5;
-			ACARateGain.z = 63.8403;//291.75;
+			ACARateGain.z = 63.8403;
 		}
 		else
 		{
 			RateGain.z = 6.0;
-			ACARateGain.z = 17.6403;//80.616;
+			ACARateGain.z = 17.6403;
 		}
 		if (K9)
 		{
 			RateGain.y = 22.5;
-			ACARateGain.y = 63.6302; //290.79;
+			ACARateGain.y = 63.6302;
 		}
 		else
 		{
 			RateGain.y = 6.0;
-			ACARateGain.y = 17.4302;//79.656;
+			ACARateGain.y = 17.4302;
 		}
 		if (K10)
 		{
 			RateGain.x = 22.5;
-			ACARateGain.x = 63.6302;//290.79;
+			ACARateGain.x = 63.6302;
 		}
 		else
 		{
 			RateGain.x = 6.0;
-			ACARateGain.x = 17.4302;//79.656;
+			ACARateGain.x = 17.4302;
 		}
 
 		if (K14)
@@ -1242,13 +1242,28 @@ void DECA::Timestep(double simdt) {
 		AutoThrust = 0.0;
 	}
 
-	if (lem->IMU_OPR_CB.IsPowered() && !lem->scca2.GetK5())	//PGNS Control
+	//PGNS or AGS Control
+	if ((lem->IMU_OPR_CB.IsPowered() && !lem->scca2.GetK5()) || (lem->SCS_ATCA_CB.IsPowered() && lem->scca2.GetK5()))
 	{
-		ManualThrust = lem->ttca_thrustcmd;
-	}
-	else if (lem->SCS_ATCA_CB.IsPowered() && lem->scca2.GetK5())	//AGS Control
-	{
-		ManualThrust = lem->ttca_thrustcmd;
+		double ttca_throttle_pos;
+
+		if (lem->MANThrotSwitch.IsUp())
+		{
+			ttca_throttle_pos = lem->CDR_TTCA.GetThrottlePosition();
+		}
+		else
+		{
+			ttca_throttle_pos = 0.0;
+		}
+
+		if (ttca_throttle_pos > 0.51 / 0.66)
+		{
+			ManualThrust = 1.8436*ttca_throttle_pos - 0.9186;
+		}
+		else
+		{
+			ManualThrust = 0.5254117647*ttca_throttle_pos + 0.1;
+		}
 	}
 	else
 	{
