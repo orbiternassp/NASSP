@@ -146,6 +146,7 @@ ATCA::ATCA(){
 
 	RateGain = _V(0.0, 0.0, 0.0);
 	DeadbandGain = _V(0.0, 0.0, 0.0);
+	ACARateGain = _V(0, 0, 0);
 	pitchGimbalError = 0.0;
 	rollGimbalError = 0.0;
 }
@@ -163,14 +164,33 @@ void ATCA::Timestep(double simt, double simdt){
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
 	if(lem == NULL){ return; }
 
+	// Determine ATCA power situation.
+	if (lem->CDR_SCS_ATCA_CB.IsPowered() && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	{
+		// ATCA primary power is on.
+		hasPrimPower = true;
+	}
+
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	{
+		// ATCA abort power is on.
+		hasAbortPower = true;
+	}
+
 	att_rates = lem->rga.GetRates();
 
+	aca_rates = _V(0, 0, 0);
 	if (lem->scca2.GetK2())
 	{
-		aca_rates = _V(lem->CDR_ACA.GetACAProp(0), lem->CDR_ACA.GetACAProp(1), lem->CDR_ACA.GetACAProp(2));
+		aca_rates.z = lem->CDR_ACA.GetACAProp(2);
 	}
+	if (lem->scca2.GetK3())
 	{
-		aca_rates = _V(0, 0, 0);
+		aca_rates.y = lem->CDR_ACA.GetACAProp(1);
+	}
+	if (lem->scca2.GetK4())
+	{
+		aca_rates.x = lem->CDR_ACA.GetACAProp(0);
 	}
 
 	if (lem->SCS_ATCA_CB.IsPowered())
@@ -234,45 +254,38 @@ void ATCA::Timestep(double simt, double simdt){
 			K21 = false;
 		}
 
-		// Determine ATCA power situation.
-		if (!lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
-		{
-			// ATCA primary power is on.
-			hasPrimPower = true;
-		}
-
-		if (lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
-		{
-			// ATCA abort power is on.
-			hasAbortPower = true;
-		}
-
 		//THRUST LOGIC INPUT
 
 		//Gain Switching
 		if (K8)
 		{
 			RateGain.z = 22.5;
+			ACARateGain.z = 63.8403;//291.75;
 		}
 		else
 		{
 			RateGain.z = 6.0;
+			ACARateGain.z = 17.6403;//80.616;
 		}
 		if (K9)
 		{
 			RateGain.y = 22.5;
+			ACARateGain.y = 63.6302; //290.79;
 		}
 		else
 		{
 			RateGain.y = 6.0;
+			ACARateGain.y = 17.4302;//79.656;
 		}
 		if (K10)
 		{
 			RateGain.x = 22.5;
+			ACARateGain.x = 63.6302;//290.79;
 		}
 		else
 		{
 			RateGain.x = 6.0;
+			ACARateGain.x = 17.4302;//79.656;
 		}
 
 		if (K14)
@@ -314,8 +327,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			//TBD: ACA prop
-			thrustLogicInputError.z = (aea_attitude_error.y*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
+			thrustLogicInputError.z = (aca_rates.z*ACARateGain.z + aea_attitude_error.y*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
 			if (thrustLogicInputError.z > 0.0)
 			{
 				thrustLogicInputError.z = max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
@@ -340,8 +352,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			//TBD: ACA prop
-			thrustLogicInputError.y = (aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
+			thrustLogicInputError.y = (aca_rates.y*ACARateGain.y + aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
 			pitchGimbalError = thrustLogicInputError.y;
 			if (thrustLogicInputError.y > 0.0)
 			{
@@ -367,8 +378,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			//TBD: ACA prop
-			thrustLogicInputError.x = (aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
+			thrustLogicInputError.x = (aca_rates.x*ACARateGain.x + aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
 			rollGimbalError = thrustLogicInputError.x;
 			if (thrustLogicInputError.x > 0.0)
 			{
@@ -447,7 +457,7 @@ void ATCA::Timestep(double simt, double simdt){
 		//1
 		if (!K3)
 		{
-			SummingAmplifierOutput[0] = 2.25*(thrustLogicInputError.z);
+			SummingAmplifierOutput[0] = (thrustLogicInputError.z);
 		}
 		else
 		{
@@ -457,7 +467,7 @@ void ATCA::Timestep(double simt, double simdt){
 		//2
 		if (!K3)
 		{
-			SummingAmplifierOutput[1] = 2.25*(0.0 - thrustLogicInputError.z);
+			SummingAmplifierOutput[1] = (0.0 - thrustLogicInputError.z);
 		}
 		else
 		{
@@ -465,15 +475,15 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 
 		//3
-		SummingAmplifierOutput[2] = 2.25*(thrustLogicInputError.z);
+		SummingAmplifierOutput[2] = (thrustLogicInputError.z);
 
 		//4
-		SummingAmplifierOutput[3] = 2.25*(0.0 - thrustLogicInputError.z);
+		SummingAmplifierOutput[3] = (0.0 - thrustLogicInputError.z);
 
 		//5
 		if (!K1)
 		{
-			SummingAmplifierOutput[4] = 2.25*(thrustLogicInputError.x - thrustLogicInputError.y);
+			SummingAmplifierOutput[4] = (thrustLogicInputError.x - thrustLogicInputError.y);
 		}
 		else
 		{
@@ -483,41 +493,42 @@ void ATCA::Timestep(double simt, double simdt){
 		//6
 		if (!K1)
 		{
-			SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x + thrustLogicInputError.y);
+			SummingAmplifierOutput[5] = (thrustLogicInputError.x + thrustLogicInputError.y);
 		}
 		else
 		{
-			SummingAmplifierOutput[5] = 2.25*(thrustLogicInputError.x);
+			SummingAmplifierOutput[5] = (thrustLogicInputError.x);
 		}
 
 		//7
 		if (!K2)
 		{
-			SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+			SummingAmplifierOutput[6] = (thrustLogicInputError.y - thrustLogicInputError.x);
 		}
 		else
 		{
-			SummingAmplifierOutput[6] = 2.25*(thrustLogicInputError.y - thrustLogicInputError.x);
+			SummingAmplifierOutput[6] = (thrustLogicInputError.y - thrustLogicInputError.x);
 		}
 
 		//8
 		if (!K1)
 		{
-			SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
+			SummingAmplifierOutput[7] = (0.0 - thrustLogicInputError.y - thrustLogicInputError.x);
 		}
 		else
 		{
-			SummingAmplifierOutput[7] = 2.25*(0.0 - thrustLogicInputError.y);
+			SummingAmplifierOutput[7] = (0.0 - thrustLogicInputError.y);
 		}
 
 		//PULSE RATIO (DE)MODULATOR
 
 		for (int i = 0;i < 8;i++)
 		{
-			//dr = PRMDutyRatio(SummingAmplifierOutput[i]);
 			if (abs(SummingAmplifierOutput[i]) > 0.5)
 			{
-				PRMPulse[i] = PRMTimestep(i, simdt, 0.232558, 0.016);
+				double dr = PRMDutyRatio(SummingAmplifierOutput[i]);
+				double pw = PRMPulseWidth(SummingAmplifierOutput[i]);
+				PRMPulse[i] = PRMTimestep(i, simdt, pw/dr, pw);
 			}
 			else
 			{
@@ -767,9 +778,18 @@ void ATCA::ProcessLGC(int ch, int val){
 
 double ATCA::PRMDutyRatio(double volt)
 {
-	if (volt > 0.5)
+	if (abs(volt) > 0.5)
 	{
-		return exp(0.4514872731*(min(abs(volt), 10.1) - 10.1));
+		return exp(0.3345588235*(min(abs(volt), 9.999) - 10.0));
+	}
+	return 0.0;
+}
+
+double ATCA::PRMPulseWidth(double volt)
+{
+	if (abs(volt) > 0.5)
+	{
+		return -1.0/(7.8125*(min(abs(volt), 9.999) - 10.0));
 	}
 	return 0.0;
 }
@@ -777,15 +797,15 @@ double ATCA::PRMDutyRatio(double volt)
 bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
 {
 	PRMCycleTime[n] += simdt;
-	PRMOffTime[n] -= simdt;
+	PRMOffTime[n] += simdt;
 
 	if (PRMCycleTime[n] > pp)
 	{
 		PRMCycleTime[n] =  0.0;
-		PRMOffTime[n] = pw;
+		PRMOffTime[n] = 0.0;
 	}
 
-	if (PRMOffTime[n] > 0.0)
+	if (PRMOffTime[n] < pw + simdt)
 	{
 		return true;
 	}

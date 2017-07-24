@@ -70,6 +70,7 @@ public:
 protected:
 
 	double PRMDutyRatio(double volt);
+	double PRMPulseWidth(double volt);
 	bool PRMTimestep(int n, double simdt, double pp, double pw);
 
 	VECTOR3 aea_attitude_error;
@@ -82,6 +83,7 @@ protected:
 	double PRMOffTime[8];
 	bool hasAbortPower;
 	bool hasPrimPower;
+	VECTOR3 ACARateGain;
 	VECTOR3 RateGain;
 	VECTOR3 DeadbandGain;
 	double pitchGimbalError;
