@@ -42,12 +42,114 @@
 
 #define DECA_AUTOTHRUST_STEP 0.00026828571
 
+// RATE GYRO ASSEMBLY
+
+LEM_RGA::LEM_RGA()
+{
+	powered = false;
+	dc_source = false;
+	rates = _V(0, 0, 0);
+}
+
+void LEM_RGA::Init(LEM *v, e_object *dcsource)
+{
+	dc_source = dcsource;
+	lem = v;
+}
+
+void LEM_RGA::Timestep(double simdt)
+{
+	if (lem == NULL) { return; }
+
+	powered = false;
+	rates = _V(0, 0, 0);
+	if (lem != NULL) {
+		if (dc_source != NULL && dc_source->Voltage() > SP_MIN_DCVOLTAGE) {
+			powered = true;
+			lem->GetAngularVel(rates);
+		}
+	}
+
+	if (powered)
+	{
+		//Test Signal
+		if (lem->SCS_ATCA_AGS_CB.IsPowered() && !lem->GyroTestRightSwitch.IsCenter())
+		{
+			double polar = 0.0;
+
+			if (lem->GyroTestRightSwitch.IsUp())
+			{
+				polar = 1.0;
+			}
+			else if (lem->GyroTestRightSwitch.IsDown())
+			{
+				polar = -1.0;
+			}
+
+			if (lem->GyroTestLeftSwitch.IsUp())
+			{
+				rates.z += polar*5.0*RAD;
+			}
+			else if (lem->GyroTestLeftSwitch.IsCenter())
+			{
+				rates.x += polar*5.0*RAD;
+			}
+			if (lem->GyroTestLeftSwitch.IsDown())
+			{
+				rates.y += polar*5.0*RAD;
+			}
+		}
+	}
+}
+
+void LEM_RGA::SystemTimestep(double simdt)
+{
+	if (powered && dc_source)
+		dc_source->DrawPower(8.7);	//TBD: Actual value
+}
+
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
-	DirectPitchActive = false;
-	DirectYawActive = false;
-	DirectRollActive = false;
+
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K8 = false;
+	K9 = false;
+	K10 = false;
+	K11 = false;
+	K12 = false;
+	K13 = false;
+	K14 = false;
+	K15 = false;
+	K16 = false;
+	K19 = false;
+	K20 = false;
+	K21 = false;
+
+	aea_attitude_error = _V(0, 0, 0);
+	att_rates = _V(0, 0, 0);
+	aca_rates = _V(0, 0, 0);
+	thrustLogicInputError = _V(0.0, 0.0, 0.0);
+	translationCommands = _V(0, 0, 0);
+
+	for (int i = 0;i < 8;i++)
+	{
+		SummingAmplifierOutput[i] = 0.0;
+		PRMPulse[i] = false;
+		PRMCycleTime[i] = 0.0;
+		PRMOffTime[i] = 0.0;
+	}
+
+	hasAbortPower = false;
+	hasPrimPower = false;
+
+	RateGain = _V(0.0, 0.0, 0.0);
+	DeadbandGain = _V(0.0, 0.0, 0.0);
+	ACARateGain = _V(0, 0, 0);
+	pitchGimbalError = 0.0;
+	rollGimbalError = 0.0;
 }
 
 void ATCA::Init(LEM *vessel){
@@ -56,16 +158,518 @@ void ATCA::Init(LEM *vessel){
 }
 // GuidContSwitch is the Guidance Control switch
 
-void ATCA::Timestep(double simt){
+void ATCA::Timestep(double simt, double simdt){
 	double now = oapiGetSimTime(); // Get time
-	int haspower = 0,hasdriver = 0,balcpl = 0;
+	hasPrimPower = false, hasAbortPower = false;
+	bool balcpl = false;
+	thrustLogicInputError = _V(0.0, 0.0, 0.0);
+	translationCommands = _V(0, 0, 0);
 	if(lem == NULL){ return; }
-	// Fetch mode switch setting.
-	int GC_Mode = lem->GuidContSwitch.GetState();
+
 	// Determine ATCA power situation.
-	if(lem->SCS_ATCA_CB.Voltage() > 24){
+	if (lem->CDR_SCS_ATCA_CB.IsPowered() && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	{
 		// ATCA primary power is on.
-		haspower = 1;
+		hasPrimPower = true;
+	}
+
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	{
+		// ATCA abort power is on.
+		hasAbortPower = true;
+	}
+
+	att_rates = lem->rga.GetRates();
+
+	aca_rates = _V(0, 0, 0);
+	if (lem->scca2.GetK2())
+	{
+		aca_rates.z = lem->CDR_ACA.GetACAProp(2);
+	}
+	if (lem->scca2.GetK3())
+	{
+		aca_rates.y = lem->CDR_ACA.GetACAProp(1);
+	}
+	if (lem->scca2.GetK4())
+	{
+		aca_rates.x = lem->CDR_ACA.GetACAProp(0);
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered())
+	{
+		if (lem->stage < 2 && (!lem->scca2.GetK23() || !lem->scca2.GetK24()))
+		{
+			K8 = true;
+			K9 = true;
+			K10 = true;
+			K11 = true;
+			K12 = true;
+			K13 = true;
+		}
+		else
+		{
+			K8 = false;
+			K9 = false;
+			K10 = false;
+			K11 = false;
+			K12 = false;
+			K13 = false;
+		}
+
+		if (lem->DeadBandSwitch.IsUp() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204())
+		{
+			K14 = true;
+			K15 = true;
+			K16 = true;
+		}
+		else
+		{
+			K14 = false;
+			K15 = false;
+			K16 = false;
+		}
+
+		if (lem->scca1.GetK1())
+		{
+			K19 = true;
+		}
+		else
+		{
+			K19 = false;
+		}
+
+		if (lem->scca1.GetK3())
+		{
+			K20 = true;
+		}
+		else
+		{
+			K20 = false;
+		}
+
+		if (lem->scca1.GetK5())
+		{
+			K21 = true;
+		}
+		else
+		{
+			K21 = false;
+		}
+
+		//THRUST LOGIC INPUT
+
+		//Gain Switching
+		if (K8)
+		{
+			RateGain.z = 22.5;
+			ACARateGain.z = 63.8403;
+		}
+		else
+		{
+			RateGain.z = 6.0;
+			ACARateGain.z = 17.6403;
+		}
+		if (K9)
+		{
+			RateGain.y = 22.5;
+			ACARateGain.y = 63.6302;
+		}
+		else
+		{
+			RateGain.y = 6.0;
+			ACARateGain.y = 17.4302;
+		}
+		if (K10)
+		{
+			RateGain.x = 22.5;
+			ACARateGain.x = 63.6302;
+		}
+		else
+		{
+			RateGain.x = 6.0;
+			ACARateGain.x = 17.4302;
+		}
+
+		if (K14)
+		{
+			DeadbandGain.z = 48.503;
+		}
+		else
+		{
+			DeadbandGain.z = 3.59;
+		}
+		if (K15)
+		{
+			DeadbandGain.y = 47.735;
+		}
+		else
+		{
+			DeadbandGain.y = 2.63;
+		}
+		if (K16)
+		{
+			DeadbandGain.x = 47.735;
+		}
+		else
+		{
+			DeadbandGain.x = 2.63;
+		}
+
+		//Yaw
+		if (K19)
+		{
+			if (lem->CDR_ACA.GetPlusYawBreakout())
+			{
+				thrustLogicInputError.z = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusYawBreakout())
+			{
+				thrustLogicInputError.z = -2.0;
+			}
+		}
+		else
+		{
+			thrustLogicInputError.z = (aca_rates.z*ACARateGain.z + aea_attitude_error.y*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
+			if (thrustLogicInputError.z > 0.0)
+			{
+				thrustLogicInputError.z = max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.z = -max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
+			}
+		}
+
+		//Pitch
+		if (K20)
+		{
+			if (lem->CDR_ACA.GetPlusPitchBreakout())
+			{
+				thrustLogicInputError.y = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusPitchBreakout())
+			{
+				thrustLogicInputError.y = -2.0;
+			}
+		}
+		else
+		{
+			thrustLogicInputError.y = (aca_rates.y*ACARateGain.y + aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
+			pitchGimbalError = thrustLogicInputError.y;
+			if (thrustLogicInputError.y > 0.0)
+			{
+				thrustLogicInputError.y = max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.y = -max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
+			}
+		}
+
+		//Roll
+		if (K21)
+		{
+			if (lem->CDR_ACA.GetPlusRollBreakout())
+			{
+				thrustLogicInputError.x = 2.0;
+			}
+			else if (lem->CDR_ACA.GetMinusRollBreakout())
+			{
+				thrustLogicInputError.x = -2.0;
+			}
+		}
+		else
+		{
+			thrustLogicInputError.x = (aca_rates.x*ACARateGain.x + aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
+			rollGimbalError = thrustLogicInputError.x;
+			if (thrustLogicInputError.x > 0.0)
+			{
+				thrustLogicInputError.x = max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
+			}
+			else
+			{
+				thrustLogicInputError.x = -max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
+			}
+		}
+
+		//TRANSLATIONAL COMMANDS
+		if (lem->SCS_ATCA_AGS_CB.IsPowered())
+		{
+			if (lem->LeftTTCATranslSwitch.IsUp() && lem->SCS_ATCA_CB.IsPowered())
+			{
+				if (lem->CDR_TTCA.GetPlusXTrans())
+				{
+					translationCommands.x = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusXTrans())
+				{
+					translationCommands.x = -15.0;
+				}
+
+				if (lem->CDR_TTCA.GetPlusYTrans())
+				{
+					translationCommands.y = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusYTrans())
+				{
+					translationCommands.y = -15.0;
+				}
+
+				if (lem->CDR_TTCA.GetPlusZTrans())
+				{
+					translationCommands.z = 15.0;
+				}
+				else if (lem->CDR_TTCA.GetMinusZTrans())
+				{
+					translationCommands.z = -15.0;
+				}
+			}
+		}
+
+		//JET SELECT LOGIC
+
+		bool A, B, X1, X2, R1, Q1, R2, Q2, Y1, Y2, Z1, Z2;
+
+		X1 = translationCommands.x > 0.0;
+		X2 = translationCommands.x < 0.0;
+		R1 = thrustLogicInputError.x > 0.0;
+		R2 = thrustLogicInputError.x < 0.0;
+		Q1 = thrustLogicInputError.y > 0.0;
+		Q2 = thrustLogicInputError.y < 0.0;
+		Y1 = translationCommands.y > 0.0;
+		Y2 = translationCommands.y < 0.0;
+		Z1 = translationCommands.z > 0.0;
+		Z2 = translationCommands.z < 0.0;
+
+		//Yaw and Y/Z Translation selection logic
+		if (!Y1 && !Y2 && !Z1 && !Z2)
+		{
+			K3 = true;
+		}
+		else
+		{
+			K3 = false;
+		}
+
+		//Pitch, Roll and X Translation selection logic
+		if (!(lem->ATTTranslSwitch.IsDown() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204()))
+		{
+			A = false;
+		}
+		else
+		{
+			A = true;
+		}
+
+		if (lem->ATTTranslSwitch.IsUp())
+		{
+			B = false;
+		}
+		else
+		{
+			B = true;
+		}
+
+		if (A && !X1 && !X2 && ((!R1 && !R2) || (!Q1 && !Q2)))
+		{
+			K1 = true;
+		}
+		else
+		{
+			K1 = false;
+		}
+
+		if (B && !Q1 && !Q2 && !R1 && !R2)
+		{
+			K2 = true;
+		}
+		else
+		{
+			K2 = false;
+		}
+
+		//SUMMING AMPLIFIERS
+
+		//1
+		SummingAmplifierOutput[0] = (K3 ? 0.0 : thrustLogicInputError.z) - translationCommands.y;
+
+		//2
+		SummingAmplifierOutput[1] = 0.0 - (K3 ? 0.0 : thrustLogicInputError.z) - translationCommands.y;
+
+		//3
+		SummingAmplifierOutput[2] = (thrustLogicInputError.z - translationCommands.z);
+
+		//4
+		SummingAmplifierOutput[3] = (0.0 - thrustLogicInputError.z - translationCommands.z);
+
+		//5
+		SummingAmplifierOutput[4] = (K1 ? 0.0 : thrustLogicInputError.x) - (K1 ? 0.0 : thrustLogicInputError.y) - (K2 ? 0.0 : translationCommands.x);
+
+		//6
+		SummingAmplifierOutput[5] = thrustLogicInputError.x + (K1 ? 0.0 : thrustLogicInputError.y) - translationCommands.x;
+
+		//7
+		SummingAmplifierOutput[6] = thrustLogicInputError.y - thrustLogicInputError.x - (K2 ? 0.0 : translationCommands.x);
+
+		//8
+		SummingAmplifierOutput[7] = 0.0 - thrustLogicInputError.y - (K1 ? 0.0 : thrustLogicInputError.x) - translationCommands.x;
+
+		//PULSE RATIO (DE)MODULATOR
+
+		for (int i = 0;i < 8;i++)
+		{
+			if (abs(SummingAmplifierOutput[i]) > 0.5)
+			{
+				double dr = PRMDutyRatio(SummingAmplifierOutput[i]);
+				double pw = PRMPulseWidth(SummingAmplifierOutput[i]);
+				PRMPulse[i] = PRMTimestep(i, simdt, pw/dr, pw);
+			}
+			else
+			{
+				PRMPulse[i] = false;
+				PRMCycleTime[i] = 0.0;
+				PRMOffTime[i] = 0.0;
+			}
+		}
+	}
+	else
+	{
+		K1 = false;
+		K2 = false;
+		K3 = false;
+		K8 = false;
+		K9 = false;
+		K10 = false;
+		K11 = false;
+		K12 = false;
+		K13 = false;
+		K14 = false;
+		K15 = false;
+		K16 = false;
+		K19 = false;
+		K20 = false;
+		K21 = false;
+
+		pitchGimbalError = 0.0;
+		rollGimbalError = 0.0;
+
+		for (int i = 0;i < 8;i++)
+		{
+			PRMPulse[i] = false;
+		}
+	}
+
+	if (hasAbortPower)
+	{
+		for (int i = 0;i < 16;i++)
+		{
+			jet_request[i] = 0;
+		}
+
+		if (PRMPulse[0])
+		{
+			if (SummingAmplifierOutput[0] > 0.0)
+			{
+				jet_request[14] = 1;
+				jet_request[2] = 0;
+			}
+			else
+			{
+				jet_request[14] = 0;
+				jet_request[2] = 1;
+			}
+		}
+		if (PRMPulse[1])
+		{
+			if (SummingAmplifierOutput[1] > 0.0)
+			{
+				jet_request[9] = 1;
+				jet_request[5] = 0;
+			}
+			else
+			{
+				jet_request[9] = 0;
+				jet_request[5] = 1;
+			}
+		}
+		if (PRMPulse[2])
+		{
+			if (SummingAmplifierOutput[2] > 0.0)
+			{
+				jet_request[1] = 1;
+				jet_request[6] = 0;
+			}
+			else
+			{
+				jet_request[1] = 0;
+				jet_request[6] = 1;
+			}
+		}
+		if (PRMPulse[3])
+		{
+			if (SummingAmplifierOutput[3] > 0.0)
+			{
+				jet_request[13] = 1;
+				jet_request[10] = 0;
+			}
+			else
+			{
+				jet_request[13] = 0;
+				jet_request[10] = 1;
+			}
+		}
+		if (PRMPulse[4])
+		{
+			if (SummingAmplifierOutput[4] > 0.0)
+			{
+				jet_request[12] = 1;
+				jet_request[15] = 0;
+			}
+			else
+			{
+				jet_request[12] = 0;
+				jet_request[15] = 1;
+			}
+		}
+		if (PRMPulse[5])
+		{
+			if (SummingAmplifierOutput[5] > 0.0)
+			{
+				jet_request[8] = 1;
+				jet_request[11] = 0;
+			}
+			else
+			{
+				jet_request[8] = 0;
+				jet_request[11] = 1;
+			}
+		}
+		if (PRMPulse[6])
+		{
+			if (SummingAmplifierOutput[6] > 0.0)
+			{
+				jet_request[4] = 1;
+				jet_request[7] = 0;
+			}
+			else
+			{
+				jet_request[4] = 0;
+				jet_request[7] = 1;
+			}
+		}
+		if (PRMPulse[7])
+		{
+			if (SummingAmplifierOutput[7] > 0.0)
+			{
+				jet_request[0] = 1;
+				jet_request[3] = 0;
+			}
+			else
+			{
+				jet_request[0] = 0;
+				jet_request[3] = 1;
+			}
+		}
 	}
 
 	/* THRUSTER TABLE:
@@ -80,23 +684,6 @@ void ATCA::Timestep(double simt){
 		7	A2D		15	A4D
 	*/
 
-	// *** Determine jet request source path ***
-	switch(GC_Mode){
-		case TOGGLESWITCH_UP:    // PGNS MODE
-			// In this case, thruster demand is direct from the LGC. We have nothing to do.
-			lem->agc.SetInputChannelBit(030, GNControlOfSC,1); // Tell the LGC it has control.
-			if(haspower == 1 && lem->CDR_SCS_ATCA_CB.Voltage() < 24){ haspower = 0; } // PNGS path requires this.
-			if(lem->ModeControlPGNSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
-			break;
-
-		case TOGGLESWITCH_DOWN:  // ABORT MODE
-			// In this case, we have to generate thruster demand ourselves, taking "suggestions" from the AGS.
-			// FIXME: Implement this.
-			lem->agc.SetInputChannelBit(030, GNControlOfSC,0); // Tell the LGC it doesn't have control
-			if(haspower == 1 && lem->SCS_ATCA_AGS_CB.Voltage() < 24){ haspower = 0; } // AGS path requires this.
-			if(lem->ModeControlAGSSwitch.GetState() != THREEPOSSWITCH_DOWN){ hasdriver = 1; } // Drivers disabled when mode control off
-			break;
-	}
 	// *** Test "Balanced Couples" switch ***
 	if(lem->BALCPLSwitch.GetState() == TOGGLESWITCH_UP){ balcpl = 1; }
 
@@ -109,9 +696,9 @@ void ATCA::Timestep(double simt){
 	while(x < 16){
 		double power=0;
 		// If the ATCA is not powered or driver voltage is absent, it won't work.
-		if(haspower != 1 || hasdriver != 1){ jet_request[x] = 0; }
+		if(hasPrimPower == false && hasAbortPower == false){ jet_request[x] = 0; }
 		// If the "Balanced Couples" switch is off, the abort preamps for the four upward-firing thrusters are disabled.
-		if(GC_Mode == TOGGLESWITCH_DOWN && balcpl != 1 && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
+		if((hasAbortPower == true && balcpl == false) && (x == 0 || x == 4 || x == 8 || x == 12)){ jet_request[x] = 0;	}
 		// Process jet request list to generate start and stop times.
 		if(jet_request[x] == 1 && jet_last_request[x] == 0){
 			// New fire request
@@ -122,7 +709,7 @@ void ATCA::Timestep(double simt){
 		}
 		jet_last_request[x] = jet_request[x]; // Keep track of changes
 
-		if(jet_start[x] == 0 && jet_stop[x] == 0){ x++; continue; } // Done
+		if (jet_start[x] == 0 && jet_stop[x] == 0) { lem->SetRCSJet(x, false); x++; continue; } // Done
 		// sprintf(oapiDebugString(),"Jet %d fire %f stop %f",x,jet_start[x],jet_stop[x]); 
 		if(simt > jet_start[x]+0.01 && simt < jet_start[x]+0.0125){
 			// Ramp up
@@ -151,7 +738,7 @@ void ATCA::Timestep(double simt){
 
 // Process thruster commands from LGC
 void ATCA::ProcessLGC(int ch, int val){		
-	if(lem->GuidContSwitch.GetState() != TOGGLESWITCH_UP){ val = 0; } // If not in primary mode, force jets off (so jets will switch off at programmed times)
+	if(!hasPrimPower){ val = 0; } // If not in primary mode, force jets off (so jets will switch off at programmed times)
 	// When in primary, thruster commands are passed from LGC to jets.
 	switch(ch){
 		case 05:
@@ -183,13 +770,76 @@ void ATCA::ProcessLGC(int ch, int val){
 	}
 }
 
+double ATCA::PRMDutyRatio(double volt)
+{
+	if (abs(volt) > 0.5)
+	{
+		return exp(0.3345588235*(min(abs(volt), 9.999) - 10.0));
+	}
+	return 0.0;
+}
+
+double ATCA::PRMPulseWidth(double volt)
+{
+	if (abs(volt) > 0.5)
+	{
+		return -1.0/(7.8125*(min(abs(volt), 9.999) - 10.0));
+	}
+	return 0.0;
+}
+
+bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
+{
+	PRMCycleTime[n] += simdt;
+	PRMOffTime[n] += simdt;
+
+	if (PRMCycleTime[n] > pp)
+	{
+		PRMCycleTime[n] =  0.0;
+		PRMOffTime[n] = 0.0;
+	}
+
+	if (PRMOffTime[n] < pw + simdt)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+double ATCA::GetDPSPitchGimbalError()
+{
+	if (!K20)
+		return pitchGimbalError;
+	return 0.0;
+}
+
+double ATCA::GetDPSRollGimbalError()
+{
+	if (!K21)
+		return rollGimbalError;
+	return 0.0;
+}
+
 void ATCA::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, ATCA_START_STRING);
 
-	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive);
-	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive);
-	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive);
+	papiWriteScenario_bool(scn, "K1", K1);
+	papiWriteScenario_bool(scn, "K2", K2);
+	papiWriteScenario_bool(scn, "K3", K3);
+	papiWriteScenario_bool(scn, "K8", K8);
+	papiWriteScenario_bool(scn, "K9", K9);
+	papiWriteScenario_bool(scn, "K10", K10);
+	papiWriteScenario_bool(scn, "K11", K11);
+	papiWriteScenario_bool(scn, "K12", K12);
+	papiWriteScenario_bool(scn, "K13", K13);
+	papiWriteScenario_bool(scn, "K14", K14);
+	papiWriteScenario_bool(scn, "K15", K15);
+	papiWriteScenario_bool(scn, "K16", K16);
+	papiWriteScenario_bool(scn, "K19", K19);
+	papiWriteScenario_bool(scn, "K20", K20);
+	papiWriteScenario_bool(scn, "K21", K21);
 
 	oapiWriteLine(scn, ATCA_END_STRING);
 }
@@ -202,9 +852,22 @@ void ATCA::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, ATCA_END_STRING, sizeof(ATCA_END_STRING))) {
 			return;
 		}
-		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive);
-		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive);
-		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive);
+
+		papiReadScenario_bool(line, "K1", K1);
+		papiReadScenario_bool(line, "K2", K2);
+		papiReadScenario_bool(line, "K3", K3);
+		papiReadScenario_bool(line, "K8", K8);
+		papiReadScenario_bool(line, "K9", K9);
+		papiReadScenario_bool(line, "K10", K10);
+		papiReadScenario_bool(line, "K11", K11);
+		papiReadScenario_bool(line, "K12", K12);
+		papiReadScenario_bool(line, "K13", K13);
+		papiReadScenario_bool(line, "K14", K14);
+		papiReadScenario_bool(line, "K15", K15);
+		papiReadScenario_bool(line, "K16", K16);
+		papiReadScenario_bool(line, "K19", K19);
+		papiReadScenario_bool(line, "K20", K20);
+		papiReadScenario_bool(line, "K21", K21);
 	}
 }
 
@@ -216,9 +879,11 @@ DECA::DECA() {
 	pitchactuatorcommand = 0;
 	rollactuatorcommand = 0;
 	engOn = false;
-	dpsthrustcommand = 0;
-	lgcAutoThrust = 0;
+	lgcAutoThrust = 0.0;
+	ManualThrust = 0.0;
 	LMR = 0.859;
+
+	ResetRelays();
 }
 
 void DECA::ResetRelays()
@@ -260,9 +925,11 @@ void DECA::Timestep(double simdt) {
 	if (lem->stage > 1)
 	{
 		//Set everything to false and then return
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
-		dpsthrustcommand = 0;
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(0);
+		lgcAutoThrust = 0.0;
+		ManualThrust = 0.0;
+		AutoThrust = 0.0;
 
 		ResetRelays();
 
@@ -307,6 +974,16 @@ void DECA::Timestep(double simdt) {
 		DEArm = false;
 	}
 
+	//DECA Power Supply Failure
+	if (DEArm && !powered)
+	{
+		K26 = true;
+	}
+	else
+	{
+		K26 = false;
+	}
+
 	if (DEArm)
 	{
 		K1 = true;
@@ -338,7 +1015,7 @@ void DECA::Timestep(double simdt) {
 	{
 		K3 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K3 = true;
 	}
@@ -407,87 +1084,208 @@ void DECA::Timestep(double simdt) {
 		K15 = false;
 	}
 
-	if (!powered) //If off, send out all zeros
+	//GIMBALING SIGNAL
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngGimbalEnableSwitch.IsDown())
 	{
-		lem->DPS.pitchGimbalActuator.ChangeLGCPosition(0);
-		lem->DPS.rollGimbalActuator.ChangeLGCPosition(0);
-		return;
+		K8 = true;
+		K4 = true;
+		K9 = true;
+		K5 = true;
+	}
+	else
+	{
+		K8 = false;
+		K4 = false;
+		K9 = false;
+		K5 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->scca2.GetK11())
+	{
+		K14 = true;
+		K13 = true;
+	}
+	else
+	{
+		K14 = false;
+		K13 = false;
 	}
 
 	ChannelValue val11, val12;
 	val11 = lem->agc.GetOutputChannel(011);
 	val12 = lem->agc.GetOutputChannel(012);
 
-	if (lem->EngineArmSwitch.IsDown())
+	if (K13)
 	{
-		if (lem->GuidContSwitch.IsUp())
-		{
-			//Process Pitch Gimbal Actuator command
-			int valx = val12[PlusPitchVehicleMotion];
-			int valy = val12[MinusPitchVehicleMotion];
-			pitchactuatorcommand = valx - valy;
+		double atcaPitch = lem->atca.GetDPSPitchGimbalError();
 
-			//Process Roll Gimbal Actuator command
-			valx = val12[PlusRollVehicleMotion];
-			valy = val12[MinusRollVehicleMotion];
-			rollactuatorcommand = valx - valy;
+		if (atcaPitch > 0.5)
+		{
+			pitchactuatorcommand = 1;
+		}
+		else if (atcaPitch < -0.5)
+		{
+			pitchactuatorcommand = -1;
 		}
 		else
 		{
-			//TBD: AGS Trim Commands
 			pitchactuatorcommand = 0;
+		}
+	}
+	else
+	{
+		//Process Pitch Gimbal Actuator command
+		int valx = val12[PlusPitchVehicleMotion];
+		int valy = val12[MinusPitchVehicleMotion];
+		pitchactuatorcommand = valx - valy;
+	}
+
+	if (K14)
+	{
+		double atcaRoll = lem->atca.GetDPSRollGimbalError();
+
+		if (atcaRoll > 0.5)
+		{
+			rollactuatorcommand = 1;
+		}
+		else if (atcaRoll < -0.5)
+		{
+			rollactuatorcommand = -1;
+		}
+		else
+		{
 			rollactuatorcommand = 0;
 		}
 	}
+	else
+	{
+		//Process Roll Gimbal Actuator command
+		int valx = val12[PlusRollVehicleMotion];
+		int valy = val12[MinusRollVehicleMotion];
+		rollactuatorcommand = valx - valy;
+	}
 
-	lem->DPS.pitchGimbalActuator.ChangeLGCPosition(pitchactuatorcommand);
-	lem->DPS.rollGimbalActuator.ChangeLGCPosition(rollactuatorcommand);
+	if (powered && !K4 && !K5 && !K8 && !K9 && K25) //If off, send out all zeros
+	{
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(pitchactuatorcommand);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(rollactuatorcommand);
+	}
+	else
+	{
+		lem->DPS.pitchGimbalActuator.ChangeCmdPosition(0);
+		lem->DPS.rollGimbalActuator.ChangeCmdPosition(0);
+	}
 
 	//Gimbal Failure Indication
-	if (lem->DPS.pitchGimbalActuator.GimbalFail() || lem->DPS.rollGimbalActuator.GimbalFail())
+	if (powered && (K1 || K23) && lem->DPS.pitchGimbalActuator.GimbalFail())
+	{
+		K21 = true;
+	}
+	else
+	{
+		K21 = false;
+	}
+
+	if (powered && (K1 || K23) && lem->DPS.rollGimbalActuator.GimbalFail())
+	{
+		K22 = true;
+	}
+	else
+	{
+		K22 = false;
+	}
+
+	if (K21 || K22)
 	{
 		lem->agc.SetInputChannelBit(032, ApparentDecscentEngineGimbalsFailed, 1);
 	}
 
-	double newdpsthrustcommand = 0;
+	// THROTTLING SIGNAL
 
-	//Process Throttle Commands
-	if (!K15)
+	//Reset auto throttle counter in manual mode
+	if (lem->SCS_ATCA_CB.IsPowered() && K2 && K15 && !K26)
+	{
+		lgcAutoThrust = 0.0;
+	}
+	else if (!K2)	//And simply when the engine isn't armed... until we figure out how it works properly
+	{
+		lgcAutoThrust = 0.0;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && K24 && !K15 && !K26)
 	{
 		//Auto Thrust commands are generated in ProcessLGCThrustCommands()
-
-		newdpsthrustcommand = lgcAutoThrust + lem->ttca_thrustcmd;
-		if (newdpsthrustcommand > 0.925)
+		//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
+		//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
+		dposcmd = lgcAutoThrust - AutoThrust;
+		poscmdsign = abs(lgcAutoThrust - AutoThrust) / (lgcAutoThrust - AutoThrust);
+		if (abs(dposcmd)>LMR*simdt)
 		{
-			newdpsthrustcommand = 0.925;
+			dpos = poscmdsign*LMR*simdt;
+		}
+		else
+		{
+			dpos = dposcmd;
+		}
+
+		AutoThrust += dpos;
+	}
+	else
+	{
+		AutoThrust = 0.0;
+	}
+
+	//PGNS or AGS Control
+	if ((lem->IMU_OPR_CB.IsPowered() && !lem->scca2.GetK5()) || (lem->SCS_ATCA_CB.IsPowered() && lem->scca2.GetK5()))
+	{
+		double ttca_throttle_pos;
+
+		if (lem->MANThrotSwitch.IsUp())
+		{
+			ttca_throttle_pos = lem->CDR_TTCA.GetThrottlePosition();
+		}
+		else
+		{
+			ttca_throttle_pos = 0.0;
+		}
+
+		if (ttca_throttle_pos > 0.51 / 0.66)
+		{
+			ManualThrust = 1.8436*ttca_throttle_pos - 0.9186;
+		}
+		else
+		{
+			ManualThrust = 0.5254117647*ttca_throttle_pos + 0.1;
 		}
 	}
 	else
 	{
-		newdpsthrustcommand = lem->ttca_thrustcmd;
-		lgcAutoThrust = 0.0;	//Reset auto throttle counter in manual mode
+		ManualThrust = 0.0;
 	}
 
-	//DECA creates a voltage for the throttle command, this voltage can only change the thrust at a rate of 40,102 Newtons/second according to the GSOP.
-	//Rounded this is 85.9% of the total throttle range, which should be a decent estimate for all missions.
-	dposcmd = newdpsthrustcommand - dpsthrustcommand;
-	poscmdsign = abs(newdpsthrustcommand - dpsthrustcommand) / (newdpsthrustcommand - dpsthrustcommand);
-	if (abs(dposcmd)>LMR*simdt)
+	if (!(lem->SCS_ATCA_CB.IsPowered() && (lem->DECA_GMBL_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) && K2 && K24 && K25))
 	{
-		dpos = poscmdsign*LMR*simdt;
-	}
-	else
-	{
-		dpos = dposcmd;
+		ManualThrust = 0.0;
 	}
 
-	dpsthrustcommand += dpos;
-
-	lem->DPS.ThrottleActuator(dpsthrustcommand);
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
 	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
+}
+
+double DECA::GetCommandedThrust()
+{
+	if (lem->THRContSwitch.IsUp())
+	{
+		return AutoThrust + 0.1;
+	}
+	else
+	{
+		return ManualThrust;
+	}
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
@@ -523,7 +1321,7 @@ void DECA::ProcessLGCThrustCommands(int val) {
 void DECA::SystemTimestep(double simdt) {
 
 	if (powered && dc_source)
-		dc_source->DrawPower(113.0);  // take DC power
+		dc_source->DrawPower(10.6);  // take DC power
 }
 
 void DECA::SaveState(FILEHANDLE scn) {
@@ -531,7 +1329,7 @@ void DECA::SaveState(FILEHANDLE scn) {
 	// START_STRING is written in LEM
 	oapiWriteScenario_int(scn, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
 	oapiWriteScenario_int(scn, "ROLLACTUATORCOMMAND", rollactuatorcommand);
-	papiWriteScenario_double(scn, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+	papiWriteScenario_double(scn, "AUTOTHRUST", AutoThrust);
 	papiWriteScenario_double(scn, "LGCAUTOTHRUST", lgcAutoThrust);
 	papiWriteScenario_bool(scn, "K1", K1);
 	papiWriteScenario_bool(scn, "K2", K2);
@@ -570,7 +1368,7 @@ void DECA::LoadState(FILEHANDLE scn) {
 
 		papiReadScenario_int(line, "PITCHACTUATORCOMMAND", pitchactuatorcommand);
 		papiReadScenario_int(line, "ROLLACTUATORCOMMAND", rollactuatorcommand);
-		papiReadScenario_double(line, "DPSTHRUSTCOMMAND", dpsthrustcommand);
+		papiReadScenario_double(line, "AUTOTHRUST", AutoThrust);
 		papiReadScenario_double(line, "LGCAUTOTHRUST", lgcAutoThrust);
 		papiReadScenario_bool(line, "K1", K1);
 		papiReadScenario_bool(line, "K2", K2);
@@ -750,7 +1548,23 @@ void SCCA1::Timestep(double simdt)
 		K5 = false;
 	}
 
-	//TBD: K7 and K8 are ACA Out of Detent related
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->CDR_ACA.GetOutOfDetent())
+	{
+		K7 = true;
+	}
+	else
+	{
+		K7 = false;
+	}
+
+	if (lem->CDR_SCS_ATCA_CB.IsPowered() && lem->CDR_ACA.GetOutOfDetent())
+	{
+		K8 = true;
+	}
+	else
+	{
+		K8 = false;
+	}
 
 	//Abort Stage Handling
 
@@ -860,11 +1674,11 @@ void SCCA1::Timestep(double simdt)
 		K13 = false;
 	}
 
-	if (AutoOn && lem->ManualEngineStop.GetState() == 0 && lem->EngineArmSwitch.IsUp())
+	if (AutoOn && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && lem->EngineArmSwitch.IsUp())
 	{
 		K14 = true;
 	}
-	else if (AutoOn && lem->ManualEngineStop.GetState() == 0 && K21)
+	else if (AutoOn && K21)
 	{
 		K14 = true;
 	}
@@ -1085,7 +1899,7 @@ void SCCA2::Timestep(double simdt)
 		K12 = false;
 		K13 = false;
 	}
-	if (lem->SCS_ATCA_CB.IsPowered() && lem->GuidContSwitch.IsDown())
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->GuidContSwitch.IsDown())
 	{
 		K1 = true;
 		K2 = true;
@@ -1107,7 +1921,7 @@ void SCCA2::Timestep(double simdt)
 		K19 = true;
 		K22 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K15 = false;
 		K19 = false;
@@ -1141,13 +1955,13 @@ void SCCA2::Timestep(double simdt)
 		K17 = false;
 	}
 
-	if (K7 && lem->THRContSwitch.IsDown())
+	if (K7)
 	{
-		lem->agc.SetInputChannelBit(030, AutoThrottle, false);
+		lem->agc.SetInputChannelBit(030, GNControlOfSC, false);
 	}
 	else
 	{
-		lem->agc.SetInputChannelBit(030, AutoThrottle, true);
+		lem->agc.SetInputChannelBit(030, GNControlOfSC, true);
 	}
 
 	if (K14)
@@ -1188,6 +2002,8 @@ void SCCA2::Timestep(double simdt)
 			AutoEngOff = false;
 		}
 	}
+
+	//TBD: K23 and K24 are only used by GSE
 }
 
 void SCCA2::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -1323,7 +2139,7 @@ void SCCA3::Timestep(double simdt)
 	{
 		K4_1 = true;
 	}
-	else if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->ManualEngineStop.GetState() == 1)
+	else if (lem->SCS_ENG_CONT_CB.IsPowered() && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K4_1 = true;
 	}
@@ -1332,7 +2148,7 @@ void SCCA3::Timestep(double simdt)
 		K4_1 = false;
 	}
 
-	if (EngStopPower && lem->ManualEngineStop.GetState() == 1)
+	if (EngStopPower && (lem->CDRManualEngineStop.GetState() == 1 || lem->LMPManualEngineStop.GetState() == 1))
 	{
 		K4_2 = true;
 	}
@@ -1341,7 +2157,7 @@ void SCCA3::Timestep(double simdt)
 		K4_2 = false;
 	}
 
-	if (EngStopPower && lem->ManualEngineStop.GetState() == 0 && !lem->scca1.GetK9())
+	if (EngStopPower && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && !lem->scca1.GetK9())
 	{
 		K6_1 = true;
 		K6_2 = true;
@@ -1386,6 +2202,42 @@ void SCCA3::Timestep(double simdt)
 	else
 	{
 		K1_2 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && (K7_3 || K1_1))
+	{
+		K2_1 = true;
+	}
+	else
+	{
+		K2_1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (K7_3 || K1_2))
+	{
+		K2_2 = true;
+	}
+	else
+	{
+		K2_2 = false;
+	}
+
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && (K7_3 || K1_1) && lem->GroundContact())
+	{
+		K3_1 = true;
+	}
+	else
+	{
+		K3_1 = false;
+	}
+
+	if (lem->SCS_ATCA_CB.IsPowered() && (K7_3 || K1_2) && lem->GroundContact())
+	{
+		K3_2 = true;
+	}
+	else
+	{
+		K3_2 = false;
 	}
 
 	//sprintf(oapiDebugString(), "DE Command Override: K4 %d %d K5 %d %d K6 %d %d", K4_1, K4_2, K5_1, K5_2, K6_1, K6_2);

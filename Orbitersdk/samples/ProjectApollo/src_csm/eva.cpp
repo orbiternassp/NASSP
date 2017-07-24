@@ -69,7 +69,7 @@ void EVA::init ()
 	SetPMI (_V(5,5,5));
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
     ClearMeshes();
     ClearExhaustRefs();

@@ -221,9 +221,8 @@ void LEM::AddRCS_LMH2(double TRANZ)
 }
 
 bool LEM::CabinFansActive()
-
 {
-	return CABFswitch;
+	return false;
 }
 
 
@@ -448,6 +447,7 @@ void LEM::SystemsInit()
 	aea.Init(this);
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
 	deda.Init(&SCS_AEA_CB);
+	rga.Init(this, &SCS_ATCA_CB);
 
 	// IMU OPERATE power (Logic DC power)
 	IMU_OPR_CB.MaxAmps = 20.0;
@@ -480,6 +480,9 @@ void LEM::SystemsInit()
 	MainOxidizerPressInd.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	EngineThrustInd.WireTo(&THRUST_DISP_CB);
 	CommandedThrustInd.WireTo(&THRUST_DISP_CB);
+	DPSOxidPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
+	DPSFuelPercentMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
+	MainHeliumPressureMeter.WireTo(&HE_PQGS_PROP_DISP_AC_CB);
 
 	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
 	// CDR FDAI
@@ -530,6 +533,8 @@ void LEM::SystemsInit()
 	CWEA.Init(this);
 
 	// COMM
+	omni_fwd.Init(this);
+	omni_aft.Init(this);
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"));
 	// SBand System
@@ -624,6 +629,10 @@ void LEM::SystemsInit()
 	// Pyros
 	LandingGearPyros.WireTo(&LandingGearPyrosFeeder);
 	CableCuttingPyros.WireTo(&CableCuttingPyrosFeeder);
+	DescentPropVentPyros.WireTo(&DescentPropVentPyrosFeeder);
+	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
+	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
+	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -670,6 +679,10 @@ void LEM::SystemsInit()
 
 	// EDS initialization
 	eds.Init(this);
+	EDDesFuelVent.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	EDDesOxidVent.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	EDDesFuelVentTB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	EDDesOxidVentTB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	// S&C Control Assemblies
 	scca1.Init(this);
@@ -677,10 +690,19 @@ void LEM::SystemsInit()
 	scca3.Init(this);
 
 	// DPS and APS
+	DPSPropellant.Init(&PROP_PQGS_CB);
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
+	DESHeReg1Switch.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	DESHeReg2Switch.WireTo(&PROP_DES_HE_REG_VENT_CB);
+	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
+
+	//ACA and TTCA
+	CDR_ACA.Init(this, &ACAPropSwitch);
+	CDR_TTCA.Init(this);
 
 	//DECA
 	deca.Init(this, &SCS_DECA_PWR_CB);
@@ -690,6 +712,9 @@ void LEM::SystemsInit()
 
 	//ORDEAL
 	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+
+	//LM Mission Programer
+	lmp.Init(this);
 
 	//Mechanical Accelerometer
 	mechanicalAccelerometer.Init(this);
@@ -704,14 +729,16 @@ void LEM::SystemsInit()
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
-	thc_tjt_id = -1; // Disabled
+	thc_tjt_id = 0; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+	rhc_thctoggle = false;
+	rhc_thctoggle_id = -1;
+	rhc_thctoggle_pressed = false;
 
 	ttca_throttle_pos = 0;
 	ttca_throttle_vel = 0;
 	ttca_throttle_pos_dig = 0;
-	ttca_thrustcmd = 0;
 	
 	// Initialize other systems
 	atca.Init(this);
@@ -719,28 +746,62 @@ void LEM::SystemsInit()
 
 void LEM::JoystickTimestep(double simdt)
 {
-	// Zero ACA and TTCA bits in channel 31
-	ChannelValue val31;
-	val31 = agc.GetInputChannel(031);
-	val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
-
-	int thc_x_pos = 0;
-	int thc_y_pos = 0;
-	int thc_z_pos = 0;
-	int thc_rot_pos = 0;
-
-	rhc_pos[0] = 0; // Initialize
-	rhc_pos[1] = 0;
-	rhc_pos[2] = 0;
-
-					 // Joystick read
+	// Joystick read
 	if (oapiGetFocusInterface() == this) {
+
+		// Invert joystick configuration according to navmode in case of one joystick
+		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
+		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
+			(rhc_id == -1 && thc_id != -1 && GetAttitudeMode() == RCS_ROT))) {
+
+			tmp_id = rhc_id;
+			tmp_rot_id = rhc_rot_id;
+			tmp_sld_id = rhc_sld_id;
+			tmp_rzx_id = rhc_rzx_id;
+			tmp_pov_id = rhc_pov_id;
+			tmp_debug = rhc_debug;
+
+			rhc_id = thc_id;
+			rhc_rot_id = thc_rot_id;
+			rhc_sld_id = thc_sld_id;
+			rhc_rzx_id = thc_rzx_id;
+			rhc_pov_id = thc_pov_id;
+			rhc_debug = thc_debug;
+
+			thc_id = tmp_id;
+			thc_rot_id = tmp_rot_id;
+			thc_sld_id = tmp_sld_id;
+			thc_rzx_id = tmp_rzx_id;
+			thc_pov_id = tmp_pov_id;
+			thc_debug = tmp_debug;
+		}
+
 		if (thc_id != -1 && !(thc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as THC does not exist.");
 		}
 		if (rhc_id != -1 && !(rhc_id < js_enabled)) {
 			sprintf(oapiDebugString(), "DX8JS: Joystick selected as RHC does not exist.");
 		}
+
+		// Zero ACA and TTCA bits in channel 31
+		ChannelValue val31;
+		val31 = agc.GetInputChannel(031);
+		val31 &= 030000; // Leaves AttitudeHold and AutomaticStab alone
+
+		int ttca_pos[3];
+		int thc_x_pos = 0;
+		int thc_y_pos = 0;
+		int thc_z_pos = 0;
+		int thc_rot_pos = 0;
+		int thc_tjt_pos = 32768; // Initialize to centered
+		bool ttca_realistic_throttle = false;
+
+		int rhc_pos[3];     // RHC x/y/z positions
+		rhc_pos[0] = 32768; // Initialize
+		rhc_pos[1] = 32768;
+		rhc_pos[2] = 32768;
+
+
 		/* ACA OPERATION:
 
 		The LM ACA is a lot different from the CM RHC.
@@ -759,7 +820,7 @@ void LEM::JoystickTimestep(double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if (rhc_id != -1 && dx8_joystick[rhc_id] != NULL) {
+		if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
@@ -792,29 +853,26 @@ void LEM::JoystickTimestep(double simdt)
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
 
-			if (dx8_jstate[rhc_id].lX > 34028) { // Out of detent RIGHT
-				rhc_pos[0] = dx8_jstate[rhc_id].lX - 34028; // Results are 0 - 31507
-			}
-			if (dx8_jstate[rhc_id].lX < 31508) { // Out of detent LEFT
-				rhc_pos[0] = dx8_jstate[rhc_id].lX - 31508; // Results are 0 - -31508
-			}
-			if (dx8_jstate[rhc_id].lY > 34028) { // Out of detent UP
-				rhc_pos[1] = dx8_jstate[rhc_id].lY - 34028; // Results are 0 - 31507
-			}
-			if (dx8_jstate[rhc_id].lY < 31508) { // Out of detent DOWN
-				rhc_pos[1] = dx8_jstate[rhc_id].lY - 31508; // Results are 0 - -31508
-			}
-			// YAW IS REVERSED
-			if (rhc_rot_pos > 34028) { // Out of detent RIGHT
-				rhc_pos[2] = 34028 - rhc_rot_pos; // Results are 0 - 31507
-			}
-			if (rhc_rot_pos < 31508) { // Out of detent LEFT
-				rhc_pos[2] = 31508 - rhc_rot_pos; // Results are 0 - -31508
-			}
+			rhc_pos[0] = dx8_jstate[rhc_id].lX;
+			rhc_pos[1] = dx8_jstate[rhc_id].lY;
+			rhc_pos[2] = 65536 - rhc_rot_pos;
 
 			//Let's cheat and give the ACA a throttle lever
 			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
 			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+
+			// RCS mode toggle
+			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_LIN);
+					}
+					rhc_thctoggle_pressed = true;
+				}
+				else {
+					rhc_thctoggle_pressed = false;
+				}
+			}
 		}
 		else {
 
@@ -822,58 +880,69 @@ void LEM::JoystickTimestep(double simdt)
 
 			// Roll
 			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
-				rhc_pos[0] = (int)((-GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 31508.);
+				rhc_pos[0] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_BANKLEFT) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
-				rhc_pos[0] = (int)(GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 31507.);
+				rhc_pos[0] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768);
 			}
 			// Pitch
 			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
-				rhc_pos[1] = (int)((-GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 31508.);
+				rhc_pos[1] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_PITCHDOWN) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
-				rhc_pos[1] = (int)(GetManualControlLevel(THGROUP_ATT_PITCHUP) * 31507.);
+				rhc_pos[1] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768);
 			}
 			// Yaw
 			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
-				rhc_pos[2] = (int)((GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 31507.);
+				rhc_pos[2] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_YAWLEFT) * 32768);
 			}
 			else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
-				rhc_pos[2] = (int)(-GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 31508.);
+				rhc_pos[2] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768);
 			}
 		}
 
-		if (rhc_pos[0] < 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[MinusAzimuth] = 1;
-		}
-		if (rhc_pos[1] < 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[MinusElevation] = 1;
-		}
-		if (rhc_pos[0] > 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[PlusAzimuth] = 1;
-		}
-		if (rhc_pos[1] > 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[PlusElevation] = 1;
-		}
-		if (rhc_pos[2] < 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[MinusYaw] = 1;
-		}
-		if (rhc_pos[2] > 0) {
-			val31[ACAOutOfDetent] = 1;
-			val31[PlusYaw] = 1;
-		}
+		CDR_ACA.Timestep(rhc_pos);
 
-		if (agc.GetInputChannelBit(031, ACAOutOfDetent) == 0 && val31[ACAOutOfDetent] == 1)
+		if (CDR_ACA.GetOutOfDetent())
 		{
-			agc.GenerateHandrupt();
+			val31[ACAOutOfDetent] = 1;
 		}
 
-		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
+		if (YawSwitch.IsUp())
+		{
+			if (CDR_ACA.GetMinusYawBreakout())
+			{
+				val31[MinusYaw] = 1;
+			}
+			if (CDR_ACA.GetPlusYawBreakout())
+			{
+				val31[PlusYaw] = 1;
+			}
+		}
+
+		if (PitchSwitch.IsUp())
+		{
+			if (CDR_ACA.GetMinusPitchBreakout())
+			{
+				val31[MinusElevation] = 1;
+			}
+			if (CDR_ACA.GetPlusPitchBreakout())
+			{
+				val31[PlusElevation] = 1;
+			}
+		}
+
+		if (RollSwitch.IsUp())
+		{
+			if (CDR_ACA.GetMinusRollBreakout())
+			{
+				val31[MinusAzimuth] = 1;
+			}
+			if (CDR_ACA.GetPlusRollBreakout())
+			{
+				val31[PlusAzimuth] = 1;
+			}
+		}
 
 		//
 		// HARDOVER
@@ -881,101 +950,59 @@ void LEM::JoystickTimestep(double simdt)
 
 		if (LeftACA4JetSwitch.IsUp() && SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		{
-			if (rhc_pos[0] < -28770) {
+			if (CDR_ACA.GetMinusRollHardover()) {
 				// MINUS ROLL
-				SetRCSJet(3, 0);
-				SetRCSJet(7, 0);
-				SetRCSJet(8, 0);
-				SetRCSJet(12, 0);
 				SetRCSJet(0, 1);
 				SetRCSJet(4, 1);
 				SetRCSJet(11, 1);
 				SetRCSJet(15, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(200); // Four thrusters worth
-
-				atca.SetDirectRollActive(true);
-				rflag = 1;
 			}
-			if (rhc_pos[0] > 28770) {
+			if (CDR_ACA.GetPlusRollHardover()) {
 				// PLUS ROLL
 				SetRCSJet(3, 1);
 				SetRCSJet(7, 1);
 				SetRCSJet(8, 1);
 				SetRCSJet(12, 1);
-				SetRCSJet(0, 0);
-				SetRCSJet(4, 0);
-				SetRCSJet(11, 0);
-				SetRCSJet(15, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(200);
-
-				atca.SetDirectRollActive(true);
-				rflag = 1;
 			}
-			if (rhc_pos[1] < -28770) {
+			if (CDR_ACA.GetMinusPitchHardover()) {
 				// MINUS PITCH
 				SetRCSJet(0, 1);
 				SetRCSJet(7, 1);
 				SetRCSJet(11, 1);
 				SetRCSJet(12, 1);
-				SetRCSJet(3, 0);
-				SetRCSJet(4, 0);
-				SetRCSJet(8, 0);
-				SetRCSJet(15, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectPitchActive(true);
-				pflag = 1;
 			}
-			if (rhc_pos[1] > 28770) {
+			if (CDR_ACA.GetPlusPitchHardover()) {
 				// PLUS PITCH
-				SetRCSJet(0, 0);
-				SetRCSJet(7, 0);
-				SetRCSJet(11, 0);
-				SetRCSJet(12, 0);
 				SetRCSJet(3, 1);
 				SetRCSJet(4, 1);
 				SetRCSJet(8, 1);
 				SetRCSJet(15, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectPitchActive(true);
-				pflag = 1;
 			}
-			if (rhc_pos[2] < -28770) {
+			if (CDR_ACA.GetMinusYawHardover()) {
 				// MINUS YAW
-				SetRCSJet(1, 0);
-				SetRCSJet(5, 0);
-				SetRCSJet(10, 0);
-				SetRCSJet(14, 0);
 				SetRCSJet(2, 1);
 				SetRCSJet(6, 1);
 				SetRCSJet(9, 1);
 				SetRCSJet(13, 1);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectYawActive(true);
-				yflag = 1;
 			}
-			if (rhc_pos[2] > 28770) {
+			if (CDR_ACA.GetPlusYawHardover()) {
 				// PLUS YAW
 				SetRCSJet(1, 1);
 				SetRCSJet(5, 1);
 				SetRCSJet(10, 1);
 				SetRCSJet(14, 1);
-				SetRCSJet(2, 0);
-				SetRCSJet(6, 0);
-				SetRCSJet(9, 0);
-				SetRCSJet(13, 0);
 
 				SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-				atca.SetDirectYawActive(true);
-				yflag = 1;
 			}
 		}
 
@@ -985,136 +1012,78 @@ void LEM::JoystickTimestep(double simdt)
 
 		if (SCS_ATT_DIR_CONT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		{
-			if (RollSwitch.IsDown() && rflag == 0)
+			if (RollSwitch.IsDown())
 			{
-				if (rhc_pos[0] < -5040) {
+				if (CDR_ACA.GetMinusRollBreakout()) {
 					// MINUS ROLL
-					SetRCSJet(3, 0);
-					SetRCSJet(12, 0);
 					SetRCSJet(4, 1);
 					SetRCSJet(11, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectRollActive(true);
-					rflag = 1;
 				}
-				if (rhc_pos[0] > 5040) {
+				if (CDR_ACA.GetPlusRollBreakout()) {
 					// PLUS ROLL
 					SetRCSJet(3, 1);
 					SetRCSJet(12, 1);
-					SetRCSJet(4, 0);
-					SetRCSJet(11, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectRollActive(true);
-					rflag = 1;
 				}
 			}
 
-			if (PitchSwitch.IsDown() && pflag == 0)
+			if (PitchSwitch.IsDown())
 			{
-				if (rhc_pos[1] < -5040) {
+				if (CDR_ACA.GetMinusPitchBreakout()) {
 					// MINUS PITCH
 					SetRCSJet(11, 1);
 					SetRCSJet(12, 1);
-					SetRCSJet(3, 0);
-					SetRCSJet(4, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectPitchActive(true);
-					pflag = 1;
 				}
-				if (rhc_pos[1] > 5040) {
+				if (CDR_ACA.GetPlusPitchBreakout()) {
 					// PLUS PITCH
-					SetRCSJet(11, 0);
-					SetRCSJet(12, 0);
 					SetRCSJet(3, 1);
 					SetRCSJet(4, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectPitchActive(true);
-					pflag = 1;
 				}
 			}
 
-			if (YawSwitch.IsDown() && yflag == 0)
+			if (YawSwitch.IsDown())
 			{
-				if (rhc_pos[2] < -5040) {
+				if (CDR_ACA.GetMinusYawBreakout()) {
 					// MINUS YAW
-					SetRCSJet(1, 0);
-					SetRCSJet(10, 0);
 					SetRCSJet(2, 1);
 					SetRCSJet(9, 1);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectYawActive(true);
-					yflag = 1;
 				}
-				if (rhc_pos[2] > 5040) {
+				if (CDR_ACA.GetPlusYawBreakout()) {
 					// PLUS YAW
 					SetRCSJet(1, 1);
 					SetRCSJet(10, 1);
-					SetRCSJet(2, 0);
-					SetRCSJet(9, 0);
 
 					SCS_ATT_DIR_CONT_CB.DrawPower(100);
-
-					atca.SetDirectYawActive(true);
-					yflag = 1;
 				}
 			}
 		}
 
-		if (atca.GetDirectRollActive() == true && rflag == 0) { // Turn off direct roll
-			SetRCSJet(3, 0);
-			SetRCSJet(7, 0);
-			SetRCSJet(8, 0);
-			SetRCSJet(12, 0);
-			SetRCSJet(0, 0);
-			SetRCSJet(4, 0);
-			SetRCSJet(11, 0);
-			SetRCSJet(15, 0);
+		//
+		// +X TRANSLATION
+		//
 
-			atca.SetDirectRollActive(false);
-		}
-		if (atca.GetDirectPitchActive() == true && pflag == 0) { // Turn off direct pitch
-			SetRCSJet(0, 0);
-			SetRCSJet(7, 0);
-			SetRCSJet(11, 0);
-			SetRCSJet(12, 0);
-			SetRCSJet(3, 0);
-			SetRCSJet(4, 0);
-			SetRCSJet(8, 0);
-			SetRCSJet(15, 0);
-
-			atca.SetDirectPitchActive(false);
-		}
-		if (atca.GetDirectYawActive() == true && yflag == 0) { // Turn off direct yaw
-			SetRCSJet(1, 0);
-			SetRCSJet(5, 0);
-			SetRCSJet(10, 0);
-			SetRCSJet(14, 0);
-			SetRCSJet(2, 0);
-			SetRCSJet(6, 0);
-			SetRCSJet(9, 0);
-			SetRCSJet(13, 0);
-
-			atca.SetDirectYawActive(false);
+		if (PlusXTranslationButton.GetState() == 1 && SCS_ATT_DIR_CONT_CB.IsPowered()) {
+			SetRCSJet(7, true);
+			SetRCSJet(15, true);
+			SetRCSJet(11, true);
+			SetRCSJet(3, true);
 		}
 
 		if (rhc_debug != -1)
 		{
-			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d, %d, %d, %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id, atca.GetDirectRollActive(), atca.GetDirectPitchActive(), atca.GetDirectYawActive());
+			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id);
 		}
 		// And now the THC...
 		if (thc_id != -1 && thc_id < js_enabled) {
-			// CHECK FOR POWER HERE
-			double thc_voltage = SCS_ATCA_AGS_CB.Voltage(); // HAX
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 							  // Attempt to acquire the device
@@ -1126,35 +1095,21 @@ void LEM::JoystickTimestep(double simdt)
 					hr = dx8_joystick[thc_id]->Poll();
 				}
 			}
+
+			ttca_realistic_throttle = true;
+
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
-			// The LM TTCA is even wierder than the CM THC...			
-			int thc_tjt_pos = 32768; // Initialize to centered	
+			// The LM TTCA is even wierder than the CM THC...
 
-			if (thc_voltage > 0 && LeftTTCATranslSwitch.IsUp()) {
+			if (LeftTTCATranslSwitch.IsUp()) {
 				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
-					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[0]; // Read
+					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[thc_tjt_id]; // Read
 				}
-				if (thc_tjt_pos < 10000) {				 // Determine TTCA mode	
-					ttca_mode = TTCA_MODE_THROTTLE;      // THROTTLE MODE					
-					ttca_throttle_pos = dx8_jstate[thc_id].lY; // Relay throttle position
-				}
-				else {
-					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
-					ttca_throttle_pos = 65536;//32768;           // Zero throttle position
-					if (dx8_jstate[thc_id].lY < 16384) {
-						thc_y_pos = dx8_jstate[thc_id].lY - 16384;
-					}
-					if (dx8_jstate[thc_id].lY > 49152) {
-						thc_y_pos = dx8_jstate[thc_id].lY - 49152;
-					}
-				}
-				if (dx8_jstate[thc_id].lX > 49152) {
-					thc_x_pos = dx8_jstate[thc_id].lX - 49152;
-				}
-				if (dx8_jstate[thc_id].lX < 16384) {
-					thc_x_pos = dx8_jstate[thc_id].lX - 16384;
-				}
+
+				thc_y_pos = dx8_jstate[thc_id].lY - 32768;
+				thc_x_pos = dx8_jstate[thc_id].lX - 32768;
+
 				// Z-axis read.
 				if (thc_rot_id != -1) { // If this is a rotator-type axis
 					switch (thc_rot_id) {
@@ -1173,20 +1128,24 @@ void LEM::JoystickTimestep(double simdt)
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
 
-				if (thc_rot_pos > 49152) {
-					thc_z_pos = thc_rot_pos - 49152;
-				}
-				if (thc_rot_pos < 16384) {
-					thc_z_pos = thc_rot_pos - 16384;
-				}
-
-				//Let's try a throttle lever
-				//ttca_lever_pos = (double)dx8_jstate[thc_id].rglSlider[0];
-				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+				thc_z_pos = thc_rot_pos - 32768;
 
 				if (thc_debug != -1) {
 					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d, thc_rot_id: %d, thc_rzx_id: %d", thc_x_pos, thc_y_pos,
 						thc_z_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1], thc_rot_id, thc_rzx_id);
+				}
+			}
+
+			// RCS mode toggle
+			if (rhc_thctoggle && rhc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_ROT);
+					}
+					rhc_thctoggle_pressed = true;
+				}
+				else {
+					rhc_thctoggle_pressed = false;
 				}
 			}
 		}
@@ -1218,56 +1177,54 @@ void LEM::JoystickTimestep(double simdt)
 			//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
 		}
 
-		if (thc_y_pos < 0) {
-			val31[MinusX] = 1;
-		}
-		if (thc_x_pos < 0) {
-			val31[MinusY] = 1;
-		}
-		if (thc_y_pos > 0) {
-			val31[PlusX] = 1;
-		}
-		if (thc_x_pos > 0) {
-			val31[PlusY] = 1;
-		}
-		if (thc_z_pos < 0) {
-			val31[MinusZ] = 1;
-		}
-		if (thc_z_pos > 0) {
-			val31[PlusZ] = 1;
+		ttca_pos[0] = thc_y_pos;
+		ttca_pos[1] = thc_x_pos;
+		ttca_pos[2] = thc_z_pos;
+
+		CDR_TTCA.Timestep(ttca_pos, thc_tjt_pos, ttca_realistic_throttle, ttca_throttle_pos_dig);
+
+		if (LeftTTCATranslSwitch.IsUp())
+		{
+			if (CDR_TTCA.GetMinusXTrans()) {
+				val31[MinusX] = 1;
+			}
+			if (CDR_TTCA.GetMinusYTrans()) {
+				val31[MinusY] = 1;
+			}
+			if (CDR_TTCA.GetPlusXTrans()) {
+				val31[PlusX] = 1;
+			}
+			if (CDR_TTCA.GetPlusYTrans()) {
+				val31[PlusY] = 1;
+			}
+			if (CDR_TTCA.GetMinusZTrans()) {
+				val31[MinusZ] = 1;
+			}
+			if (CDR_TTCA.GetPlusZTrans()) {
+				val31[PlusZ] = 1;
+			}
 		}
 
+		if (ttca_throttle_vel == 1)
+		{
+			ttca_throttle_pos_dig += 0.25*simdt;
+		}
+		else if (ttca_throttle_vel == -1)
+		{
+			ttca_throttle_pos_dig -= 0.25*simdt;
+		}
+		if (ttca_throttle_pos_dig > 1)
+		{
+			ttca_throttle_pos_dig = 1;
+		}
+		else if (ttca_throttle_pos_dig < 0)
+		{
+			ttca_throttle_pos_dig = 0;
+		}
 
+		// Write back channel data
+		agc.SetInputChannel(031, val31);
 	}
-
-	if (ttca_throttle_vel == 1)
-	{
-		ttca_throttle_pos_dig += 0.25*simdt;
-	}
-	else if (ttca_throttle_vel == -1)
-	{
-		ttca_throttle_pos_dig -= 0.25*simdt;
-	}
-	if (ttca_throttle_pos_dig > 1)
-	{
-		ttca_throttle_pos_dig = 1;
-	}
-	else if (ttca_throttle_pos_dig < 0)
-	{
-		ttca_throttle_pos_dig = 0;
-	}
-
-	if (ttca_throttle_pos_dig > 0.51 / 0.66)
-	{
-		ttca_thrustcmd = 1.8436*ttca_throttle_pos_dig - 0.9186;
-	}
-	else
-	{
-		ttca_thrustcmd = 0.5254117647*ttca_throttle_pos_dig + 0.1;
-	}
-
-	// Write back channel data
-	agc.SetInputChannel(031, val31);
 }
 
 void LEM::SystemsTimestep(double simt, double simdt) 
@@ -1319,7 +1276,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simt);
+	atca.Timestep(simt, simdt);
+	rga.Timestep(simdt);
+	rga.SystemTimestep(simdt);
 	ordeal.Timestep(simdt);
 	ordeal.SystemTimestep(simdt);
 	mechanicalAccelerometer.TimeStep(simdt);
@@ -1340,7 +1299,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
 	crossPointerRight.SystemTimeStep(simdt);
+	SBandSteerable.SystemTimestep(simdt);
 	SBandSteerable.TimeStep(simdt);
+	omni_fwd.TimeStep();
+	omni_aft.TimeStep();
 	VHF.SystemTimestep(simdt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
@@ -1348,6 +1310,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
+	DPSPropellant.Timestep(simt, simdt);
+	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
 	APS.TimeStep(simdt);
@@ -2363,6 +2327,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	AutoTrackEnabled = false;
 	ShaftErrorSignal = 0.0;
 	TrunnionErrorSignal = 0.0;
+	GyroRates = _V(0.0, 0.0, 0.0);
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -2387,16 +2352,6 @@ bool LEM_RR::IsDCPowered()
 		return false;
 	}
 	return true;
-}
-
-double LEM_RR::GetRadarTrunnionPos()
-{
-	if (mode == 1)
-	{
-		return -trunnionAngle;
-	}
-
-	return trunnionAngle + PI;
 }
 
 double LEM_RR::GetShaftErrorSignal()
@@ -2437,7 +2392,6 @@ void LEM_RR::TimeStep(double simdt){
 	double TrunRate = 0;
 	trunnionVel = 0;
 	shaftVel = 0;
-	AutoTrackEnabled = false;
 
 	/*
 	This is backwards?
@@ -2470,6 +2424,9 @@ void LEM_RR::TimeStep(double simdt){
 			TrunRate = 1.33*RAD;
 			break;
 	}
+
+	//Gyro rates
+	lem->GetAngularVel(GyroRates);
 
 	// If we are in test mode...
 	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP){
@@ -2539,9 +2496,10 @@ void LEM_RR::TimeStep(double simdt){
 			range = 362066; // 195.5 nautical miles in meters
 		}
 		sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
-	}else{
+	}
+	else {
 		// Clobber test data if not already zero
-		if(tstime > 0){ tstime = 0; tstate[0] = 0; tstate[1] = 0; }
+		if (tstime > 0) { tstime = 0; tstate[0] = 0; tstate[1] = 0; }
 		// We must be in normal operation.
 		radarDataGood = 0;
 		range = 0;
@@ -2555,53 +2513,61 @@ void LEM_RR::TimeStep(double simdt){
 
 		VESSEL *csm = lem->agc.GetCSM();
 
-		//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
-		lem->GetGlobalPos(LMPos);
-		csm->GetGlobalPos(CSMPos);
-		//oapiGetGlobalPos(hEarth, &R_E);
-		//oapiGetGlobalPos(hMoon, &R_M);
-		lem->GetRotationMatrix(Rot);
-
-		//Vector pointing from LM to CSM
-		R = CSMPos - LMPos;
-
-		//Unit vector of it
-		U_R = unit(R);
-
-		//Unit vector of antenna in navigation base vessel's local frame, right handed
-		U_RRL[0] = unit(_V(sin(shaftAngle + anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle + anginc)*cos(trunnionAngle)));
-		U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
-		U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
-		U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
-
-		//In LM navigation base coordinates, left handed
-		for (int i = 0;i < 4;i++)
+		if (csm)
 		{
-			U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
-			//Calculate antenna pointing vector in global frame
-			U_RR = mul(Rot, U_RRL[i]);
+			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+			lem->GetGlobalPos(LMPos);
+			csm->GetGlobalPos(CSMPos);
+			//oapiGetGlobalPos(hEarth, &R_E);
+			//oapiGetGlobalPos(hMoon, &R_M);
+			lem->GetRotationMatrix(Rot);
 
-			//relative angle between antenna pointing vector and direction of CSM
-			relang = acos(dotp(U_RR, U_R));
+			//Vector pointing from LM to CSM
+			R = CSMPos - LMPos;
 
-			SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
+			//Unit vector of it
+			U_R = unit(R);
+
+			//Unit vector of antenna in navigation base vessel's local frame, right handed
+			U_RRL[0] = unit(_V(sin(shaftAngle + anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle + anginc)*cos(trunnionAngle)));
+			U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
+			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
+			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
+
+			//In LM navigation base coordinates, left handed
+			for (int i = 0;i < 4;i++)
+			{
+				U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
+
+				//Calculate antenna pointing vector in global frame
+				U_RR = mul(Rot, U_RRL[i]);
+
+				//relative angle between antenna pointing vector and direction of CSM
+				relang = acos(dotp(U_RR, U_R));
+
+				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
+			}
+
+			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+
+			if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
+			{
+				if (AutoTrackEnabled)
+				{
+					radarDataGood = 1;
+					range = length(R);
+
+					lem->GetGlobalVel(LMVel);
+					csm->GetGlobalVel(CSMVel);
+
+					rate = dotp(CSMVel - LMVel, U_R);
+				}
+			}
+
+			//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
+
 		}
-
-		SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
-
-		if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
-		{
-			radarDataGood = 1;
-			range = length(R);
-
-			lem->GetGlobalVel(LMVel);
-			csm->GetGlobalVel(CSMVel);
-
-			rate = dotp(CSMVel - LMVel, U_R);
-		}
-
-		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
 	}
 
 	// Let's test.
@@ -2623,7 +2589,6 @@ void LEM_RR::TimeStep(double simdt){
 	// Handle mode switch
 	switch (lem->RendezvousRadarRotary.GetState()) {
 	case 0:	// AUTO TRACK
-		AutoTrackEnabled = true;
 		break;
 
 	case 1: // SLEW
@@ -2637,11 +2602,11 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = TrunRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 2) {
-			shaftAngle -= ShaftRate*simdt;
+			shaftAngle += ShaftRate*simdt;
 			shaftVel = ShaftRate;
 		}
 		if (lem->RadarSlewSwitch.GetState() == 0) {
-			shaftAngle += ShaftRate*simdt;
+			shaftAngle -= ShaftRate*simdt;
 			shaftVel = -ShaftRate;
 		}
 
@@ -2665,11 +2630,21 @@ void LEM_RR::TimeStep(double simdt){
 			trunnionVel = (RR_SHAFT_STEP*pulses);
 			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
 		}
-		else
-		{
-			AutoTrackEnabled = true;
-		}
 		break;
+	}
+
+	//Auto Tracking Logic
+	if (lem->RendezvousRadarRotary.GetState() == 0)
+	{
+		AutoTrackEnabled = true;
+	}
+	else if (lem->RendezvousRadarRotary.GetState() == 2 && val12[RRAutoTrackOrEnable] == 1)
+	{
+		AutoTrackEnabled = true;
+	}
+	else
+	{
+		AutoTrackEnabled = false;
 	}
 
 	//AUTO TRACKING
@@ -2678,10 +2653,10 @@ void LEM_RR::TimeStep(double simdt){
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += ShaftErrorSignal*simdt;
+		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += TrunnionErrorSignal*simdt;
+		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
@@ -2970,7 +2945,8 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 	if (!IsPowered()) { return; }
 
 	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
+		pulses = val & 077777;
+		pulses = 040000 - pulses;
 	}
 	else {
 		pulses = val & 077777;
@@ -3187,8 +3163,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 	// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 	LightStatus[2][0] = 0; // Default
-	if(lem->DPS.thrustOn){ // This should be forced off at staging
-		if(lem->DPS.HePress[1] > 260 || lem->DPS.HePress[1] < 220){
+	if(lem->stage < 2 && lem->deca.GetK10() && lem->deca.GetK23()){
+		if(lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220){
 			LightStatus[2][0] = 1;
 		}
 	}
@@ -3197,7 +3173,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
 	// (This turns out to be 5.6%)
 	// Master Alarm and Tone are disabled if this is active.
-	if(lem->stage < 2 && lem->GetPropellantMass(lem->ph_Dsc) < 190.305586){
+	if(lem->stage < 2 && lem->DPS.thrustOn && lem->DPSPropellant.PropellantLevelLow()){
 		LightStatus[3][0] = 1;
 	}else{
 		LightStatus[3][0] = 0;
@@ -3372,7 +3348,6 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when any EDS relay fails.
 	// Failures of stage relays disabled when stage relay switch in RESET position.
 	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-	// FIXME: We'll ignore this for now.
 	if ((lem->eds.RelayBoxA.GetStageRelayMonitor() || lem->eds.RelayBoxA.GetStageRelayMonitor()) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0))
 	{
 		LightStatus[0][6] = 1;
@@ -3505,6 +3480,7 @@ void LEM_CWEA::TimeStep(double simdt){
 			case 6: // COMPNT
 				// Light component caution and Lunar Contact lights
 				// FIXME: IMPLEMENT THIS
+				// Lunar Contact lights are lit in clbkPanelRedrawEvent code
 				break;
 		}
 	}
@@ -3659,321 +3635,4 @@ double LEM_ECS::DescentOxyTankPressure(int tank){
 	// So 2640 psia and 47.17 pounds of oxygen.
 	// That's 55.96777612889548 psia per pound
 	return(55.96777612889548*Des_Oxygen[tank]);
-}
-
-// Descent Propulsion System
-LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
-	dpsThruster(dps) {
-	lem = NULL;	
-	thrustOn = 0;
-	engPreValvesArm = 0;
-	engArm = 0;
-	HePress[0] = 0; HePress[1] = 0;
-	thrustcommand = 0;
-}
-
-void LEM_DPS::Init(LEM *s){
-	lem = s;
-	HePress[0] = 240; 
-	HePress[1] = 240;
-}
-
-void LEM_DPS::ThrottleActuator(double pos)
-{
-	if (engArm)
-	{
-		thrustcommand = pos;
-
-		if (thrustcommand > 0.925)
-		{
-			thrustcommand = 0.925;
-		}
-		else if(thrustcommand < 0.1)
-		{
-			thrustcommand = 0.1;
-		}
-	}
-	else
-	{
-		//Without power, the throttle will be fully open
-		thrustcommand = 0.925;
-	}
-}
-
-void LEM_DPS::TimeStep(double simt, double simdt){
-	if(lem == NULL){ return; }
-	if (lem->stage > 1) { return; }
-
-	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
-	{
-		engPreValvesArm = true;
-	}
-	else
-	{
-		engPreValvesArm = false;
-	}
-
-	if (lem->SCS_DECA_PWR_CB.IsPowered() && (lem->deca.GetK1() || lem->deca.GetK23()))
-	{
-		engArm = true;
-	}
-	else
-	{
-		engArm = false;
-	}
-
-	if (lem->deca.GetThrustOn() || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
-	{
-		thrustOn = true;
-	}
-	else
-	{
-		thrustOn = false;
-	}
-
-	if (dpsThruster[0]) {
-		
-		//Set Thruster Resource
-		if (engPreValvesArm)
-		{
-			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
-			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
-		}
-		else
-		{
-			lem->SetThrusterResource(dpsThruster[0], NULL);
-			lem->SetThrusterResource(dpsThruster[1], NULL);
-		}
-		
-		//Engine Fire Command
-		if (engPreValvesArm && thrustOn)
-		{
-			lem->SetThrusterLevel(dpsThruster[0], thrustcommand);
-			lem->SetThrusterLevel(dpsThruster[1], thrustcommand);
-		}
-		else
-		{
-			lem->SetThrusterLevel(dpsThruster[0], 0.0);
-			lem->SetThrusterLevel(dpsThruster[1], 0.0);
-		}
-	}
-
-	// Do GDA time steps
-	pitchGimbalActuator.Timestep(simt, simdt);
-	rollGimbalActuator.Timestep(simt, simdt);
-
-	VECTOR3 dpsvector;
-
-	if (lem->stage < 2 && dpsThruster[0]) {
-		// Directions X,Y,Z
-		dpsvector.x = -rollGimbalActuator.GetPosition() * RAD; // Convert deg to rad
-		dpsvector.z = pitchGimbalActuator.GetPosition() * RAD;
-		dpsvector.y = 1;
-		lem->SetThrusterDir(dpsThruster[0], dpsvector);
-		lem->SetThrusterDir(dpsThruster[1], dpsvector);
-
-		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f thrustOn: %d thrustOff: %d", lem->ManualEngineStart.GetState(), lem->ManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, thrustOn, thrustOff);
-		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
-	}
-}
-
-void LEM_DPS::SystemTimestep(double simdt) {
-	pitchGimbalActuator.SystemTimestep(simdt);
-	rollGimbalActuator.SystemTimestep(simdt);
-}
-
-void LEM_DPS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
-	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
-	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_DPS::LoadState(FILEHANDLE scn,char *end_str){
-	char *line;
-	int i;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-
-		if (!strnicmp(line, "THRUSTON", 8)) {
-			sscanf(line + 8, "%d", &i);
-			thrustOn = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGPREVALVESARM", 15)) {
-			sscanf(line + 15, "%d", &i);
-			engPreValvesArm = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGARM", 6)) {
-			sscanf(line + 6, "%d", &i);
-			engArm = (i != 0);
-		}
-	}
-}
-
-DPSGimbalActuator::DPSGimbalActuator() {
-
-	position = 0;
-	commandedPosition = 0;
-	lgcPosition = 0;
-	atcaPosition = 0;
-	motorRunning = false;
-	lem = 0;
-	gimbalMotorSwitch = 0;
-	motorSource = 0;
-	gimbalfail = false;
-}
-
-DPSGimbalActuator::~DPSGimbalActuator() {
-	// Nothing for now.
-}
-
-void DPSGimbalActuator::Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source) {
-
-	lem = s;
-	gimbalMotorSwitch = m1Switch;
-	motorSource = m1Source;
-}
-
-void DPSGimbalActuator::Timestep(double simt, double simdt) {
-
-	if (lem == NULL) { return; }
-
-	// After staging
-	if (lem->stage > 1) {
-		position = 0;
-		return;
-	}
-
-	//
-	// Motors
-	//
-
-	if (motorRunning) {
-		if (gimbalMotorSwitch->IsDown() || motorSource->Voltage() < SP_MIN_ACVOLTAGE) {
-			motorRunning = false;
-		}
-	}
-	else {
-		if (gimbalMotorSwitch->IsUp() && motorSource->Voltage() > SP_MIN_ACVOLTAGE) {
-			//if (motorStartSource->Voltage() > SP_MIN_ACVOLTAGE) {
-				motorRunning = true;
-			//	}
-		}
-	}
-
-	 //sprintf(oapiDebugString(), "Motor %d %f %d", gimbalMotorSwitch->IsUp(), motorSource->Voltage(), motorRunning);
-
-	//
-	// Process commanded position
-	//
-
-	if (lem->GuidContSwitch.IsUp())
-	{
-		commandedPosition = lgcPosition;
-	}
-	else {
-		commandedPosition = atcaPosition;
-	}
-
-	if (IsSystemPowered() && motorRunning) {
-		//position = commandedPosition; // Instant positioning
-		GimbalTimestep(simdt);
-	}
-
-	// Only 6.0 degrees of travel allowed.
-	if (position > 6.0) { position = 6.0; }
-	if (position < -6.0) { position = -6.0; }
-
-	//sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
-}
-
-void DPSGimbalActuator::GimbalTimestep(double simdt)
-{
-	double LMR, dpos;
-
-	LMR = 0.2;	//0.2°/s maximum gimbal speed
-
-	dpos = (double)commandedPosition*LMR*simdt;
-
-	position += dpos;
-}
-
-void DPSGimbalActuator::SystemTimestep(double simdt) {
-
-	if (lem->stage > 1) return;
-
-	if (IsSystemPowered() && motorRunning) {
-		DrawSystemPower();
-	}
-}
-
-bool DPSGimbalActuator::IsSystemPowered() {
-
-	if (gimbalMotorSwitch->IsUp())
-	{
-		if (motorSource->Voltage() > SP_MIN_ACVOLTAGE)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-
-void DPSGimbalActuator::DrawSystemPower() {
-
-	if (gimbalMotorSwitch->IsUp())
-	{
-		motorSource->DrawPower(17.5);	/// \todo apparently 35 Watts for both actuators
-	}
-}
-
-void DPSGimbalActuator::ChangeLGCPosition(int pos) {
-
-	lgcPosition = pos;
-}
-
-void DPSGimbalActuator::SaveState(FILEHANDLE scn) {
-
-	// START_STRING is written in LEM
-	papiWriteScenario_double(scn, "POSITION", position);
-	oapiWriteScenario_int(scn, "COMMANDEDPOSITION", commandedPosition);
-	oapiWriteScenario_int(scn, "LGCPOSITION", lgcPosition);
-	oapiWriteScenario_int(scn, "ATCAPOSITION", atcaPosition);
-	oapiWriteScenario_int(scn, "MOTORRUNNING", (motorRunning ? 1 : 0));
-
-	oapiWriteLine(scn, "DPSGIMBALACTUATOR_END");
-}
-
-void DPSGimbalActuator::LoadState(FILEHANDLE scn) {
-
-	char *line;
-	int i;
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, "DPSGIMBALACTUATOR_END", sizeof("DPSGIMBALACTUATOR_END"))) {
-			return;
-		}
-
-		if (!strnicmp(line, "POSITION", 8)) {
-			sscanf(line + 8, "%lf", &position);
-		}
-		else if (!strnicmp(line, "COMMANDEDPOSITION", 17)) {
-			sscanf(line + 17, "%d", &commandedPosition);
-		}
-		else if (!strnicmp(line, "LGCPOSITION", 11)) {
-			sscanf(line + 11, "%d", &lgcPosition);
-		}
-		else if (!strnicmp(line, "ATCAPOSITION", 12)) {
-			sscanf(line + 12, "%d", &atcaPosition);
-		}
-		else if (!strnicmp(line, "MOTORRUNNING", 13)) {
-			sscanf(line + 13, "%d", &i);
-			motorRunning = (i != 0);
-		}
-	}
 }

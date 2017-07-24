@@ -306,7 +306,7 @@ void LRV::SetRoverStage ()
 	SetRotDrag(_V(0, 0, 0));
 	SetCW(0, 0, 0, 0);
 	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
+	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0); 
 
     ClearMeshes();

@@ -40,6 +40,10 @@
 #include "pyro.h"
 #include "lm_eds.h"
 #include "lm_aps.h"
+#include "lm_dps.h"
+#include "lm_programer.h"
+#include "lm_aca.h"
+#include "lm_ttca.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -242,8 +246,8 @@ public:
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos();
-	double GetRadarShaftPos() { return shaftAngle ; } ;
+	double GetRadarTrunnionPos() { return -asin(sin(trunnionAngle)); }
+	double GetRadarShaftPos() { return -asin(sin(shaftAngle)) ; }
 	double GetRadarRange() { return range; } ;
 	double GetRadarRate() { return rate ; };
 	double GetSignalStrength() { return SignalStrength*4.0; }
@@ -282,6 +286,7 @@ private:
 	bool AutoTrackEnabled;
 	double ShaftErrorSignal;
 	double TrunnionErrorSignal;
+	VECTOR3 GyroRates;
 };
 
 
@@ -354,69 +359,6 @@ public:
 	int CabinLowPressLt;		// FF for this
 	int WaterWarningDisabled;   // FF for this
 	LEM *lem;					// Pointer at LEM
-};
-
-class DPSGimbalActuator {
-
-public:
-	DPSGimbalActuator();
-	virtual ~DPSGimbalActuator();
-
-	void Init(LEM *s, AGCIOSwitch *m1Switch, e_object *m1Source);
-	void Timestep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
-	double GetPosition() { return position; }
-	void ChangeLGCPosition(int pos);
-	void ZeroLGCPosition() { lgcPosition = 0; }
-	int GetLGCPosition() { return lgcPosition; }
-	bool GimbalFail() { return gimbalfail; }
-
-	void GimbalTimestep(double simdt);
-
-protected:
-	bool IsSystemPowered();
-	void DrawSystemPower();
-
-	double position;
-	int commandedPosition;
-	int lgcPosition;
-	int atcaPosition;
-	bool motorRunning;
-	bool gimbalfail;
-
-	LEM *lem;
-	AGCIOSwitch *gimbalMotorSwitch;
-	e_object *motorSource;
-};
-
-// Descent Engine
-class LEM_DPS{
-public:
-	LEM_DPS(THRUSTER_HANDLE *dps);
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simt, double simdt);
-	void SystemTimestep(double simdt);
-
-	void ThrottleActuator(double pos);
-	
-	LEM *lem;					// Pointer at LEM
-	double HePress[2];			// Helium pressure above and below the regulator
-	bool thrustOn;				// Engine "On" Command
-	bool engArm;				// Engine Arm Command
-	bool engPreValvesArm;		// Engine Prevalves Arm Command
-	double thrustcommand;		// DPS Thrust Command
-
-	DPSGimbalActuator pitchGimbalActuator;
-	DPSGimbalActuator rollGimbalActuator;
-
-protected:
-
-	THRUSTER_HANDLE *dpsThruster;
-	
 };
 
 ///
@@ -555,6 +497,8 @@ public:
 		SRF_ORDEAL_ROTARY,
 		SRF_TW_NEEDLE,
 		SRF_SEQ_LIGHT,
+		SRF_LMENGINE_START_STOP_BUTTONS,
+		SRF_LMTRANSLBUTTON,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -571,7 +515,6 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
-	void SetGimbal(bool setting);
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -613,6 +556,7 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
+	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -661,14 +605,10 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
-	int rhc_pos[3];                       // RHC x/y/z positions
-	int ttca_mode;                        // TTCA Throttle/Jets Mode
-#define TTCA_MODE_THROTTLE 0
-#define TTCA_MODE_JETS 1
+	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
 	int ttca_throttle_vel;
-	double ttca_thrustcmd;
 	int js_current;
 
 
@@ -725,17 +665,9 @@ protected:
 
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
-	int GetSSwitchState();
-	void SetSSwitchState(int s);
-	int GetLPSwitchState();
-	void SetLPSwitchState(int s);
 
 	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
 
-	double actualFUEL;
-	double AtempP ;
-	double AtempY ;
-	double AtempR ;
 	double MissionTime;
 
 	// Panel components
@@ -766,6 +698,15 @@ protected:
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
 
+	SwitchRow MainPropOxidPercentRow;
+	LEMDPSOxidPercentMeter DPSOxidPercentMeter;
+
+	SwitchRow MainPropFuelPercentRow;
+	LEMDPSFuelPercentMeter DPSFuelPercentMeter;
+
+	SwitchRow MainPropHeliumPressRow;
+	LEMDigitalHeliumPressureMeter MainHeliumPressureMeter;
+
 	SwitchRow MainPropAndEngineIndRow;
 	EngineThrustInd EngineThrustInd;
 	CommandedThrustInd CommandedThrustInd;
@@ -788,13 +729,13 @@ protected:
 
 	SwitchRow MPSRegControlLeftSwitchRow;
 	IndicatorSwitch ASCHeReg1TB;
-	IndicatorSwitch DESHeReg1TB;
+	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
 	IndicatorSwitch ASCHeReg2TB;
-	IndicatorSwitch DESHeReg2TB;
+	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
 
@@ -804,7 +745,7 @@ protected:
 	ToggleSwitch ACAPropSwitch;
 	
 	SwitchRow EngineThrustContSwitchRow;
-	ToggleSwitch THRContSwitch;
+	AGCIOSwitch THRContSwitch;
 	ToggleSwitch MANThrotSwitch;
 	ToggleSwitch ATTTranslSwitch;
 	ToggleSwitch BALCPLSwitch;
@@ -1160,9 +1101,9 @@ protected:
 	RotationalSwitch LtgFloodOhdFwdKnob;
 	RotationalSwitch LtgAnunNumKnob;
 	RotationalSwitch LtgIntegralKnob;
-	// There's a +X TRANSLATION button here too
+	PushSwitch PlusXTranslationButton;
 	EngineStartButton ManualEngineStart;
-	EngineStopButton ManualEngineStop;
+	EngineStopButton CDRManualEngineStop;
 
 	/////////////////
 	// LEM Panel 8 //
@@ -1182,8 +1123,8 @@ protected:
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
 	IndicatorSwitch EDLGTB;
-	IndicatorSwitch EDDesFuelVentTB;
-	IndicatorSwitch EDDesOxidVentTB;
+	LEMDPSValveTalkback EDDesFuelVentTB;
+	LEMDPSValveTalkback EDDesOxidVentTB;
 	// Audio section
 	ThreePosSwitch CDRAudSBandSwitch;
 	ThreePosSwitch CDRAudICSSwitch;
@@ -1199,118 +1140,6 @@ protected:
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
 	ThreePosSwitch CDRCOASSwitch;
-
-
-	bool toggleRCS;
-
-	bool Cswitch1;
-	bool Cswitch2;
-	bool Cswitch3;
-	bool Cswitch4;
-	bool Cswitch5;
-	bool Cswitch6;
-	bool Cswitch7;
-	bool Cswitch8;
-	bool Cswitch9;
-
-	bool LPswitch1;
-	bool LPswitch2;
-	bool LPswitch3;
-	bool LPswitch4;
-	bool LPswitch5;
-	bool LPswitch6;
-	bool LPswitch7;
-	bool SPSswitch;
-	bool EDSswitch;
-
-	bool DESHE1switch;
-	bool DESHE2switch;
-
-//	int ENGARMswitch;
-	
-
-	bool QUAD1switch;
-	bool QUAD2switch;
-	bool QUAD3switch;
-	bool QUAD4switch;
-	bool QUAD5switch;
-	bool QUAD6switch;
-	bool QUAD7switch;
-	bool QUAD8switch;
-
-	bool AFEED1switch;
-	bool AFEED2switch;
-	bool AFEED3switch;
-	bool AFEED4switch;
-
-	bool LDGswitch;
-
-	bool GMBLswitch;
-
-	bool ASCHE1switch;
-	bool ASCHE2switch;
-
-	bool RCSQ1switch;
-	bool RCSQ2switch;
-	bool RCSQ3switch;
-	bool RCSQ4switch;
-
-	bool ATT1switch;
-	bool ATT2switch;
-	bool ATT3switch;
-
-	bool CRSFDswitch;
-
-	bool CABFswitch;
-
-	bool PTTswitch;
-
-	bool RCSS1switch;
-	bool RCSS2switch;
-	bool RCSS3switch;
-	bool RCSS4switch;
-
-	bool X1switch;
-
-	bool GUIDswitch;
-
-	bool ALTswitch;
-
-	bool RATE1switch;
-	bool AT1switch;
-
-	bool SHFTswitch;
-
-	bool ETC1switch;
-	bool ETC2switch;
-	bool ETC3switch;
-	bool ETC4switch;
-
-	bool PMON1switch;
-	bool PMON2switch;
-
-	bool ACAPswitch;
-
-	bool RATE2switch;
-	bool AT2switch;
-
-	bool SLWRswitch;
-
-	bool DBswitch;
-
-	bool IMUCswitch;
-
-	bool SPLswitch;
-
-	bool X2switch;
-
-	bool P41switch;
-	bool P42switch;
-	bool P43switch;
-	bool P44switch;
-
-	bool AUDswitch;
-	bool RELswitch;
 
 	bool CPswitch;
 
@@ -1416,7 +1245,7 @@ protected:
 	ThreePosSwitch Panel12AntTrackModeSwitch;
 
 	SwitchRow Panel12SignalStrengthMeterRow;
-	DCVoltMeter Panel12SignalStrengthMeter;
+	LEMSBandAntennaStrengthMeter Panel12SignalStrengthMeter;
 
 	SwitchRow Panel12VHFAntSelSwitchRow;
 	RotationalSwitch Panel12VHFAntSelKnob;
@@ -1430,18 +1259,17 @@ protected:
 	SwitchRow Panel12AntYawSwitchRow;
 	RotationalSwitch Panel12AntYawKnob;
 
+	SwitchRow LMPManualEngineStopSwitchRow;
+	EngineStopButton LMPManualEngineStop;
+
 	SwitchRow AGSOperateSwitchRow;
 	ThreePosSwitch AGSOperateSwitch;
 
-	//
-	// Currently these are just 0-5V meters; at some point we may want
-	// to change them to a different class.
-	//
 	SwitchRow ComPitchMeterRow;
-	DCVoltMeter ComPitchMeter;
+	LEMSteerableAntennaPitchMeter ComPitchMeter;
 
 	SwitchRow ComYawMeterRow;
-	DCVoltMeter ComYawMeter;
+	LEMSteerableAntennaYawMeter ComYawMeter;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1564,6 +1392,8 @@ protected:
 	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
+	bool HasProgramer;
+	bool InvertStageBit;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1
@@ -1618,8 +1448,16 @@ protected:
 	Pyro StagingBoltsPyros;
 	Pyro StagingNutsPyros;
 	Pyro CableCuttingPyros;
+	Pyro DescentPropVentPyros;
+	Pyro DescentEngineStartPyros;
+	Pyro DescentEngineOnPyros;
+	Pyro DescentPropIsolPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
+	PowerMerge DescentPropVentPyrosFeeder;
+	PowerMerge DescentEngineStartPyrosFeeder;
+	PowerMerge DescentEngineOnPyrosFeeder;
+	PowerMerge DescentPropIsolPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1630,6 +1468,8 @@ protected:
 
 	double DescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double AscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
+	double DescentEmptyMassKg;
+	double AscentEmptyMassKg;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1781,12 +1621,18 @@ protected:
 	SCCA1 scca1;
 	SCCA2 scca2;
 	SCCA3 scca3;
+	LEM_Programer lmp;
+	LEM_ACA CDR_ACA;
+	LEM_RGA rga;
+	LEM_TTCA CDR_TTCA;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;
 
 	// COMM
 	LEM_SteerableAnt SBandSteerable;
+	LM_OMNI omni_fwd;
+	LM_OMNI omni_aft;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 
@@ -1797,6 +1643,7 @@ protected:
 	LEM_EDS eds;
 
 	// DPS and APS
+	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
 	LEM_APS APS;
 
@@ -1842,6 +1689,7 @@ protected:
 	friend class LMCabinTempMeter;
 	friend class LMSuitTempMeter;
 	friend class DPSGimbalActuator;
+	friend class DPSPropellantSource;
 	friend class LEM_DPS;
 	friend class LEM_APS;
 	friend class DECA;
@@ -1856,6 +1704,14 @@ protected:
 	friend class LMAbortButton;
 	friend class LMAbortStageButton;
 	friend class RadarSignalStrengthAttenuator;
+	friend class LEMSteerableAntennaPitchMeter;
+	friend class LEMSteerableAntennaYawMeter;
+	friend class LEMSBandAntennaStrengthMeter;
+	friend class LEM_Programer;
+	friend class LEMDPSDigitalMeter;
+	friend class LEM_ACA;
+	friend class LEM_RGA;
+	friend class LEM_TTCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

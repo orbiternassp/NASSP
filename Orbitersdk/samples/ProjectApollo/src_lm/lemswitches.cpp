@@ -802,18 +802,28 @@ MainFuelPressInd::MainFuelPressInd()
 	NeedleSurface = 0;
 }
 
-void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainFuelPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetFuelTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainFuelPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -856,18 +866,28 @@ MainOxidizerPressInd::MainOxidizerPressInd()
 	NeedleSurface = 0;
 }
 
-void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainOxidizerPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetOxidizerTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -1339,8 +1359,24 @@ double LEMVoltCB::Current()
 	return Amperes;
 }
 
-void EngineStartButton::Init(ToggleSwitch* stopbutton) {
+void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton) {
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	this->stopbutton = stopbutton;
+}
+
+bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
 }
 
 bool EngineStartButton::Push()
@@ -1351,7 +1387,6 @@ bool EngineStartButton::Push()
 	{
 		if (ToggleSwitch::SwitchTo(1)) {
 
-			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", GetState(), stopbutton->GetState());
 			return true;
 		}
 	}
@@ -1359,8 +1394,24 @@ bool EngineStartButton::Push()
 	return false;
 }
 
-void EngineStopButton::Init(ToggleSwitch* startbutton) {
+void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton) {
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	this->startbutton = startbutton;
+}
+
+bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
 }
 
 bool EngineStopButton::Push()
@@ -1371,8 +1422,10 @@ bool EngineStopButton::Push()
 		
 		if (newstate = 1)
 		{
-			startbutton->SwitchTo(0);
-			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
+			if (startbutton)
+			{
+				startbutton->SwitchTo(0);
+			}
 		}
 		return true;
 	}
@@ -1530,4 +1583,161 @@ double RadarSignalStrengthAttenuator::GetValue()
 	}
 
 	return val;
+}
+
+void LEMSteerableAntennaPitchMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaPitchMeter::QueryValue() {
+	return lem->SBandSteerable.GetPitch();
+}
+
+void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (210.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSteerableAntennaYawMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaYawMeter::QueryValue() {
+	return lem->SBandSteerable.GetYaw();
+}
+
+void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (120.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSBandAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSBandAntennaStrengthMeter::QueryValue() {
+	return lem->SBand.rcvr_agc_voltage;
+}
+
+void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = 220.0 - 2.7*v;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+LEMDPSValveTalkback::LEMDPSValveTalkback()
+{
+	valve = 0;
+}
+
+
+void LEMDPSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	valve = v;
+}
+
+int LEMDPSValveTalkback::GetState()
+
+{
+	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+		state = valve->IsOpen() ? 1 : 0;
+	else
+		// Should this fail open?
+		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
+{
+	MeterSwitch::Init(row);
+	Digits = surf;
+	lem = l;
+}
+
+void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (lem->stage > 1) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown()) return;
+
+	double percent = v * 100.0;
+
+	int Curdigit2 = (int)percent;
+	int Curdigit = (int)percent / 10;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+}
+
+double LEMDPSOxidPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetOxidPercent();
+}
+
+
+double LEMDPSFuelPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetFuelPercent();
+}
+
+LEMDigitalHeliumPressureMeter::LEMDigitalHeliumPressureMeter()
+
+{
+	source = 0;
+	Digits = 0;
+}
+
+void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	Digits = surf;
+	lem = l;
+}
+
+double LEMDigitalHeliumPressureMeter::QueryValue()
+
+{
+	if (!source) return 0;
+
+	if (source->GetState() == 0)
+	{
+		return 0.0;
+	}
+	else if (source->GetState() == 1)
+	{
+		return lem->GetDPSPropellant()->GetAmbientHeliumPressPSI();
+	}
+	else if (source->GetState() == 2)
+	{
+		return lem->GetDPSPropellant()->GetSupercriticalHeliumPressPSI();
+	}
+
+	return 0;
+}
+
+void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0) return;
+
+	int Curdigit4 = (int)v;
+	int Curdigit3 = (int)v / 10;
+	int Curdigit2 = (int)v / 100;
+	int Curdigit = (int)v / 1000;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
 }

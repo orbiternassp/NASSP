@@ -67,6 +67,7 @@ public:
 	void EntryPAD();
 	void TPIPAD();
 	void TLI_PAD();
+	void PDI_PAD();
 	void MapUpdate();
 	void NavCheckPAD();
 	int REFSMMAT_Address();
@@ -99,6 +100,7 @@ public:
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	bool inhibUplLOS;
+	bool PADSolGood;
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -176,6 +178,8 @@ public:
 	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
 	double sxtstardtime;
 	TLIPAD tlipad;
+	AP11PDIPAD pdipad;
+	bool ManPADdirect;
 
 	///ENTRY PAD PAGE
 	AP11ENT lunarentrypad;

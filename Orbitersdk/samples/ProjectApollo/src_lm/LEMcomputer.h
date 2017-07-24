@@ -81,22 +81,13 @@ protected:
 	void ProcessChannel13(ChannelValue val);
 	void ProcessChannel5(ChannelValue val);
 	void ProcessChannel6(ChannelValue val);
+	void ProcessChannel10(ChannelValue val);
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessChannel140(ChannelValue val);
 	void ProcessChannel141(ChannelValue val);
 	void ProcessChannel142(ChannelValue val);
 	void ProcessChannel143(ChannelValue val);
-
-	void ResetAttitudeLevel();
-	void AddAttitudeRotLevel(VECTOR3 level);
-	void AddAttitudeLinLevel(VECTOR3 level);
-	void AddAttitudeLinLevel(int axis, double level);
-	void SetAttitudeRotLevel(VECTOR3 level);
-
-	double RCSCommand[16];
-	VECTOR3 CommandedAttitudeRotLevel;	// store current thrust levels between the guidance loop steps
-	VECTOR3 CommandedAttitudeLinLevel;	
 
 	//
 	// log file for autoland debugging

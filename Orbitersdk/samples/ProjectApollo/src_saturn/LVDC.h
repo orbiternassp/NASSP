@@ -81,6 +81,7 @@ private:
 	double IGMInterval;								// IGM Interval
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	int OrbNavCycle;								// Orbital cycle counter (for debugging)
+	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time

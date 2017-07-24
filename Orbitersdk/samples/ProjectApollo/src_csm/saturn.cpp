@@ -218,7 +218,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
-	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
+	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
+	omnia(_V(0.0, 0.707108, 0.707108)),
+	omnib(_V(0.0, -0.707108, 0.707108)),
+	omnic(_V(0.0, -0.707108, -0.707108)),
+	omnid(_V(0.0, 0.707108, -0.707108))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -758,6 +762,8 @@ void Saturn::initSaturn()
 	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
+	LMAscentEmptyMassKg = 2150.0;
+	LMDescentEmptyMassKg = 2224.0;
 
 	UseATC = false;
 
@@ -1344,6 +1350,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "ORDEALENABLED", ordealEnabled);
@@ -2230,11 +2238,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			thc_auto = 1;
 		}
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			rhc_thctoggle = true;
+			sscanf(line + 12, "%i", &i);
+			rhc_thctoggle = (i != 0);
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
-		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
+		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
+		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
+		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
 		else if (!strnicmp(line, "MOONBASE", 8)) {
 			strncpy (LMLandingBase, line + 9, 256);
 		}
@@ -2295,6 +2306,8 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.LandingLongitude = LMLandingLongitude;
 	ls.AscentFuelKg = LMAscentFuelMassKg;
 	ls.DescentFuelKg = LMDescentFuelMassKg;
+	ls.AscentEmptyKg = LMAscentEmptyMassKg;
+	ls.DescentEmptyKg = LMDescentEmptyMassKg;
 	strncpy (ls.language, AudioLanguage, 63);
 	strncpy (ls.CSMName, GetName(), 63);
 	ls.MissionNo = ApolloNo;
@@ -2402,7 +2415,7 @@ void Saturn::UpdatePayloadMass()
 {
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
-		S4PL_Mass = 4374.0 + LMAscentFuelMassKg + LMDescentFuelMassKg;
+		S4PL_Mass = LMAscentEmptyMassKg + LMDescentEmptyMassKg + LMAscentFuelMassKg + LMDescentFuelMassKg;
 		break;
 
 	case PAYLOAD_ASTP:
@@ -2615,10 +2628,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	MissionTime += simdt;
-	MissionTimerDisplay.Timestep(simt, simdt, false);
-	MissionTimer306Display.Timestep(simt, simdt, false);
-	EventTimerDisplay.Timestep(simt, simdt, true);
-	EventTimer306Display.Timestep(simt, simdt, true);
 
 	//
 	// Panel flash counter.
@@ -4771,73 +4780,6 @@ void Saturn::PlayTLISound(bool StartStop)
 void Saturn::PlayTLIStartSound(bool StartStop)
 
 {
-}
-
-//
-// Most of this calculation code is lifted from the Soyuz guidance MFD.
-//
-
-extern double AbsOfVector(const VECTOR3 &Vec);
-
-double Saturn::CalculateApogeeTime()
-
-{
-	OBJHANDLE hSetGbody;
-	double GbodyMass, GbodySize;
-	double p, v, R, RDotV, Mu_Planet, J2000, E, Me, T, tsp;
-	double TtPeri, TtApo;
-	double OrbitApo;
-	VECTOR3 RelPosition, RelVelocity;
-	ELEMENTS Elements;
-
-	// Planet parameters
-	hSetGbody = GetApDist(OrbitApo);
-	GbodyMass = oapiGetMass(hSetGbody);
-	GbodySize = oapiGetSize(hSetGbody) / 1000.;
-	Mu_Planet = GK * GbodyMass;
-
-	// Get eccentricity and orbital radius
-	GetElements(Elements, J2000);
-	GetRelativePos(hSetGbody, RelPosition);
-	GetRelativeVel(hSetGbody, RelVelocity);
-
-	R = AbsOfVector(RelPosition) / 1000.;
-
-	// Calculate semi-latus rectum and true anomaly
-	p = Elements.a / 1000. * (1. - Elements.e * Elements.e);
-	v = acos((1. / Elements.e) * (p / R - 1.));
-
-	RDotV = dotp(RelVelocity, RelPosition);
-	if (RDotV < 0)
-	{
-		v = 2. * PI - v;
-	}
-
-	// Determine the time since periapsis
-	//   - Eccentric anomaly
-	E = 2. * atan(sqrt((1. - Elements.e) / (1. + Elements.e)) * tan(v / 2.));
-	//   - Mean anomaly
-	Me = E - Elements.e * sin(E);
-	//   - Period of orbit
-	T = 2. * PI * sqrt((Elements.a * Elements.a * Elements.a / 1e9) / Mu_Planet);
-
-	// Time since periapsis is
-	tsp = Me / (2.* PI) * T;
-
-	// Time to next periapsis & apoapsis
-	TtPeri = T - tsp;
-	if (RDotV < 0) {
-		TtPeri = -1. * tsp;
-	}
-
-	if (TtPeri > (T / 2.)) {
-		TtApo = fabs((T / 2.) - TtPeri);
-	}
-	else {
-		TtApo = fabs(TtPeri + (T / 2.));
-	}
-
-	return TtApo;
 }
 
 // Get checklist controller pointer

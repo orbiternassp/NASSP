@@ -166,7 +166,7 @@ void LES::SetLES()
 	SetRotDrag (_V(0.07,0.07,0.003));
 
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
 
     ClearMeshes();

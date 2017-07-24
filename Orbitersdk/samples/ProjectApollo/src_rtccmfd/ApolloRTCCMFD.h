@@ -114,6 +114,7 @@ public:
 	void CycleEntryOpt();
 	void set_spherical();
 	void menuSwitchHeadsUp();
+	void menuSwitchManPADDirect();
 	void menuCalcManPAD();
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();

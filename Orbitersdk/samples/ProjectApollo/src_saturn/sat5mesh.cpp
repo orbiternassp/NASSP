@@ -295,7 +295,7 @@ void SaturnV::ChangeSatVBuildState (int bstate)
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
 	ClearMeshes();
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
@@ -429,7 +429,7 @@ void SaturnV::SetFirstStage ()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
 
 	//
@@ -591,7 +591,7 @@ void SaturnV::SetSecondStage ()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
 
 	SetSecondStageMesh(-STG1O);
@@ -749,7 +749,7 @@ void SaturnV::SetThirdStage ()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
 
 	//

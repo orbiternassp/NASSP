@@ -197,7 +197,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
@@ -209,7 +209,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = 0;
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;

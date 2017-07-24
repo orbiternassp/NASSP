@@ -16,11 +16,18 @@ BEGIN_DATA
 +29.2203 +0.9671        : "Wash Basin"           ; Maskelyne W
 +27.2714 +1.4581        : "Diamondback Rille"
 +28.0769 +0.0503        : "Sidewinder Rille"
--162.700 -05.250        : CP1 504
-+155.100 -10.200        : CP2 526
-+95.9 -09.1             : CP3 334
-+35.025 +02.675         : LDMK B1
-+86.88 +01.6 			: LDMK F1
-
-
+-162.700 -5.250         : CP1 504 (Apollo 8)
++155.100 -10.200        : CP2 526 (Apollo 8)
++95.9 -9.1              : CP3 334 (Apollo 8)
++35.025 +02.675         : LDMK B1 (Apollo 8)
++23.678 +01.266         : LDMK 130 (Apollo 10)
++170.146 +0.875         : CP-1 (Apollo 10)
++127.400 +1.600         : CP-2 (Apollo 10)
++86.88 +1.6 		: LDMK F-1 (Apollo 8 & 10)
++35.036 +2.522          : LDMK B-1 (Apollo 10)
+-1.428 +0.283           : LDMK 150 (Apollo 10)
++57.702 +0.866          : LDMK 420 (Apollo 10)   ; Taruntius P
++45.482 -0.050          : LDMK 423 (Apollo 10)   ; Secchi K
++47.936 -0.950          : LDMK 422 (Apollo 10)   ; Messier B
++49.898 +0.350          : LDMK 421 (Apollo 10)   ; Taruntius H
 
