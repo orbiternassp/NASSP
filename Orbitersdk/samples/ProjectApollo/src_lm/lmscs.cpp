@@ -1974,12 +1974,14 @@ void SCCA2::Timestep(double simdt)
 	}
 
 	ChannelValue val11;
+	std::bitset<11> agsval40;
+
 	val11 = lem->agc.GetOutputChannel(011);
+	agsval40 = lem->aea.GetOutputChannel(040);
 
 	if (K8)
 	{
-		//TBD: AGS Auto On Signal
-		AutoEngOn = false;
+		AutoEngOn = ~agsval40[AGSEngineOn];
 	}
 	else
 	{
@@ -1988,8 +1990,14 @@ void SCCA2::Timestep(double simdt)
 
 	if (K9)
 	{
-		//TBD: AGS Auto Off Signal
-		AutoEngOff = false;
+		if (lem->ModeControlAGSSwitch.IsUp())
+		{
+			AutoEngOff = ~agsval40[AGSEngineOff];
+		}
+		else
+		{
+			AutoEngOff = false;
+		}
 	}
 	else
 	{

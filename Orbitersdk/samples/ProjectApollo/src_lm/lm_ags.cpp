@@ -105,10 +105,14 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 // Abort Electronics Assembly
-LEM_AEA::LEM_AEA(PanelSDK &p) : DCPower(0, p) {
+LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
 	lem = NULL;	
 
 	PowerSwitch = 0;
+
+	LastCycled = 0.0;
+	for (int i = 0; i <= MAX_OUTPUT_PORTS; i++)
+		OutputPorts[i] = 0;
 
 	//
 	// Virtual AGS.
@@ -121,18 +125,130 @@ void LEM_AEA::Init(LEM *s){
 	lem = s;
 }
 
-void LEM_AEA::TimeStep(double simdt){
+void LEM_AEA::TimeStep(double simt, double simdt){
 	if(lem == NULL){ return; }
 
 	if (!IsPowered()) return;
 
 	int i;
 
-	int cycles = (long)((simdt) * AEA_PER_SECOND);
+	if (LastCycled == 0) {					// Use simdt as difference if new run
+		LastCycled = (simt - simdt);
+	}
+
+	long cycles = (long)((simt - LastCycled) / 0.0000009765625);
+	LastCycled += (0.0000009765625 * cycles);						// Preserve the remainder
 
 	for (i = 0; i < cycles; i++) {
 		aea_engine(&vags);
 	}
+}
+
+void LEM_AEA::SetInputPort(int port, int val)
+{
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+}
+
+void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
+{
+	unsigned int mask = (1 << (bit));
+
+	int	data = vags.InputPorts[port];
+
+	if (port < 0 || port > MAX_OUTPUT_PORTS)
+		return;
+
+	if (val) {
+		data |= mask;
+	}
+	else {
+		data &= ~mask;
+	}
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+}
+
+void LEM_AEA::SetOutputChannel(int Type, int Data)
+{
+
+	if (Type < 0 || Type > MAX_OUTPUT_PORTS)
+		return;
+
+	OutputPorts[Type] = Data;
+
+	switch (Type)
+	{
+	case 020:
+		//sin theta
+		break;
+
+	case 021:
+		//cos theta
+		break;
+
+	case 022:
+		//sin phi
+		break;
+
+	case 023:
+		//cos phi
+		break;
+
+	case 024:
+		//sin psi
+		break;
+
+	case 025:
+		//cos psi
+		break;
+
+	case 027:
+		//DEDA
+		deda.ProcessChannel27(Data);
+		break;
+
+	case 030:
+		//E_X
+		break;
+
+	case 031:
+		//E_Y
+		break;
+
+	case 032:
+		//E_Z
+		break;
+
+	case 033:
+		//Altitude, Altitude Rate
+		break;
+
+	case 034:
+		//Lateral Velocity
+		break;
+
+	case 040:
+		//Output Discretes
+		deda.ProcessChannel40(Data);
+		break;
+	}
+}
+
+unsigned int LEM_AEA::GetOutputChannel(int channel)
+
+{
+	if (channel < 0 || channel > MAX_OUTPUT_PORTS)
+		return 0;
+
+	return OutputPorts[channel];
 }
 
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
@@ -216,6 +332,16 @@ void LEM_DEDA::TimeStep(double simdt){
 		FirstTimeStep = false;
 	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
+}
+
+void LEM_DEDA::ProcessChannel27(int val)
+{
+
+}
+
+void LEM_DEDA::ProcessChannel40(int val)
+{
+
 }
 
 void LEM_DEDA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
@@ -604,20 +730,35 @@ void LEM_DEDA::ProcessKeyRelease(int mx, int my)
 void LEM_DEDA::SendKeyCode(int val)
 
 {
-	//agc.SetInputChannel(KeyCodeIOChannel, val);
-}
-
-void LEM_DEDA::KeyRel()
-
-{
-	SendKeyCode(25);
+	//READOUT
+	if (val == 10)
+	{
+		ags.SetInputPortBit(IO_2040, 10, false);
+	}
+	//ENTR
+	else if (val == 11)
+	{
+		ags.SetInputPortBit(IO_2040, 11, false);
+	}
+	//HOLD
+	else if (val == 12)
+	{
+		ags.SetInputPortBit(IO_2040, 12, false);
+	}
+	//CLEAR
+	else if (val == 13)
+	{
+		ags.SetInputPortBit(IO_2040, 13, false);
+	}
 }
 
 void LEM_DEDA::EnterPressed()
 
 {
 	if (State == 9)
-		SendKeyCode(28);
+	{
+		SendKeyCode(11);
+	}
 	else
 		SetOprErr(true);
 
@@ -629,6 +770,7 @@ void LEM_DEDA::ClearPressed()
 {
 	Reset();
 	ResetKeyDown();
+	SendKeyCode(13);
 }
 
 void LEM_DEDA::PlusPressed()
@@ -655,7 +797,7 @@ void LEM_DEDA::ReadOutPressed()
 
 {
 	if (State == 3){
-		SendKeyCode(18);
+		SendKeyCode(10);
 	} else 
 		SetOprErr(true);
 
@@ -666,7 +808,7 @@ void LEM_DEDA::HoldPressed()
 
 {
 	if (State == 3 || State == 9){
-		SendKeyCode(18);
+		SendKeyCode(12);
 	} else 
 		SetOprErr(true);
 
@@ -676,7 +818,6 @@ void LEM_DEDA::HoldPressed()
 void LEM_DEDA::NumberPressed(int n)
 
 {
-
 	switch(State){
 		case 0:
 		case 1:
@@ -703,4 +844,17 @@ void LEM_DEDA::NumberPressed(int n)
 			SetOprErr(true);
 			return;
 	}
+}
+
+void
+ChannelOutputAGS(ags_t * State, int Type, int Data)
+{
+	//
+	// This will need to pass the data to the NASSP code.
+	//
+
+	LEM_AEA *ags;
+
+	ags = (LEM_AEA *)State->ags_clientdata;
+	ags->SetOutputChannel(Type, Data);
 }

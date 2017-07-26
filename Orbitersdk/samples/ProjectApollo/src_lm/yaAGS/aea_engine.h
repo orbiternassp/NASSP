@@ -126,7 +126,7 @@ extern clock_t RealTimeAGS, RealTimeOffsetAGS, LastRealTimeAGS, NextKeycheckAGS;
 int aea_engine (ags_t * State);
 int aea_engine_init (ags_t * State, const char *RomImage, const char *CoreDump);
 void MakeCoreDumpAGS (ags_t * State, const char *CoreDump);
-void ChannelOutputAGS (int Type, int Data);
+void ChannelOutputAGS (ags_t * State, int Type, int Data);
 int ChannelInputAGS (ags_t * State);
 void DebuggerHookAGS (ags_t *State);
 void UpdateAeaPeripheralConnect (void *AeaState, Client_t *Client);

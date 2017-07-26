@@ -24,6 +24,23 @@
 
 #include "yaAGS/aea_engine.h"
 
+class LEM_DEDA;
+
+  // AGS Channel 11, Output Discretes
+enum AGSChannelValue40_Bits {
+	RippleCarryInhibit = 0,
+	AGSAltitude,
+	AGSAltitudeRate,
+	DEDAShiftIn,
+	DEDAShiftOut,
+	GSEDiscrete4,
+	GSEDiscrete5,
+	GSEDiscrete6,
+	AGSTestModeFailure,
+	AGSEngineOff,
+	AGSEngineOn
+};
+
 // ABORT SENSOR ASSEMBLY (ASA)
 class LEM_ASA{
 public:
@@ -41,12 +58,16 @@ protected:
 // ABORT ELECTRONICS ASSEMBLY (AEA)
 class LEM_AEA{
 public:
-	LEM_AEA(PanelSDK &p);							// Cons
+	LEM_AEA(PanelSDK &p, LEM_DEDA &display);							// Cons
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void TimeStep(double simt, double simdt);
 	void InitVirtualAGS(char *binfile);
+	void SetInputPortBit(int port, int bit, bool val);
+	void SetInputPort(int port, int val);
+	void SetOutputChannel(int Type, int Data);
+	unsigned int GetOutputChannel(int channel);
 	void SetMissionInfo(int MissionNo);
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
@@ -56,6 +77,14 @@ protected:
 	ags_t vags;
 	PowerMerge DCPower;
 	ThreePosSwitch *PowerSwitch;
+
+	LEM_DEDA &deda;
+
+#define MAX_OUTPUT_PORTS	040
+
+	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
+
+	double LastCycled;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
@@ -87,11 +116,13 @@ public:
 	void TimeStep(double simt);
 	void SystemTimestep(double simdt);
 
+	void ProcessChannel27(int val);
+	void ProcessChannel40(int val);
+
 	//
 	// Keypad interface.
 	//
 
-	void KeyRel();
 	void EnterPressed();
 	void ClearPressed();
 	void HoldPressed();
@@ -196,7 +227,7 @@ protected:
 	int EnterVal;
 
 	//
-	// AGC we're connected to.
+	// AGS we're connected to.
 	//
 
 	LEM_AEA &ags;

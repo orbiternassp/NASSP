@@ -61,18 +61,6 @@ typedef unsigned short uint16_t;
 int DedaBuffer[9], DedaBufferCount = 0, DedaBufferWanted = 0,
   DedaBufferReadout = 0, DedaBufferDefault = 0;
 
-//-----------------------------------------------------------------------------
-// Function for broadcasting "output channel" data to all connected clients of
-// yaAGS.
-
-void
-ChannelOutputAGS (int Type, int Data)
-{
-	//
-	// This will need to pass the data to the NASSP code.
-	//
-}
-
 //----------------------------------------------------------------------------
 // Function for fetching yaAGS input-channel data into the State structure's
 // input-channel buffer.

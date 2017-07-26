@@ -1254,7 +1254,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	dsky.Timestep(MissionTime);								// Do work
 	dsky.SystemTimestep(simdt);								// This can draw power now.
 	asa.TimeStep(simdt);									// Do work
-	aea.TimeStep(simdt);
+	aea.TimeStep(MissionTime, simdt);
 	deda.TimeStep(simdt);
 	imu.Timestep(simdt);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
