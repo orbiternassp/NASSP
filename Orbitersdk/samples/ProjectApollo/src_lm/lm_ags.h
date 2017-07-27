@@ -68,7 +68,10 @@ public:
 	void SetInputPort(int port, int val);
 	void SetOutputChannel(int Type, int Data);
 	unsigned int GetOutputChannel(int channel);
+	unsigned int GetInputChannel(int channel);
 	void SetMissionInfo(int MissionNo);
+	void WriteMemory(unsigned int loc, int val);
+	bool ReadMemory(unsigned int loc, int &val);
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
 	LEM *lem;					// Pointer at LEM
@@ -80,7 +83,8 @@ protected:
 
 	LEM_DEDA &deda;
 
-#define MAX_OUTPUT_PORTS	040
+#define MAX_INPUT_PORTS		020
+#define MAX_OUTPUT_PORTS	020
 
 	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
 
@@ -269,5 +273,7 @@ protected:
 
 #define DEDA_START_STRING	"DEDA_BEGIN"
 #define DEDA_END_STRING		"DEDA_END"
+
+#define AEA_MEM_ENTRIES	(04000)			///< Number of memory values to simulate
 
 

@@ -159,7 +159,7 @@ void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
 
 	int	data = vags.InputPorts[port];
 
-	if (port < 0 || port > MAX_OUTPUT_PORTS)
+	if (port < 0 || port > MAX_INPUT_PORTS)
 		return;
 
 	if (val) {
@@ -178,11 +178,10 @@ void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
 
 void LEM_AEA::SetOutputChannel(int Type, int Data)
 {
-
-	if (Type < 0 || Type > MAX_OUTPUT_PORTS)
+	if (Type - MAX_INPUT_PORTS < 0 || Type - MAX_INPUT_PORTS > MAX_OUTPUT_PORTS)
 		return;
 
-	OutputPorts[Type] = Data;
+	OutputPorts[Type - MAX_INPUT_PORTS] = Data;
 
 	switch (Type)
 	{
@@ -251,6 +250,17 @@ unsigned int LEM_AEA::GetOutputChannel(int channel)
 	return OutputPorts[channel];
 }
 
+unsigned int LEM_AEA::GetInputChannel(int channel)
+
+{
+	if (channel < 0 || channel >= MAX_INPUT_PORTS)
+		return 0;
+
+	unsigned int val = vags.InputPorts[channel];
+
+	return val;
+}
+
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 
 {
@@ -291,12 +301,126 @@ void LEM_AEA::SetMissionInfo(int MissionNo)
 	InitVirtualAGS(binfile);
 }
 
-void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+void LEM_AEA::WriteMemory(unsigned int loc, int val)
+
+{
+	int bank;
+
+	bank = (loc / 04000);
+
+	if (bank == 0)
+		vags.Memory[loc] = val;
+	return;
+}
+
+bool LEM_AEA::ReadMemory(unsigned int loc, int &val)
+
+{
+	int bank;
+
+	bank = (loc / 04000);
+
+	if (bank == 0) {
+		val = vags.Memory[loc];
+		return true;
+	}
+
+	val = 0;
+	return true;
 
 }
 
-void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str){
+void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
+{
+	oapiWriteLine(scn, start_str);
 
+	char fname[32], str[32], buffer[256];
+	int i;
+	int val;
+
+	for (i = 0; i < AEA_MEM_ENTRIES; i++) {
+		if (ReadMemory(i, val) && (val != 0)) {
+			sprintf(fname, "MEM%04o", i);
+			sprintf(str, "%o", val);
+			oapiWriteScenario_string(scn, fname, str);
+		}
+	}
+
+	for (i = 0; i < MAX_INPUT_PORTS; i++) {
+		val = GetInputChannel(i);
+		if (val != 0) {
+			sprintf(fname, "ICHAN%02d", i);
+			oapiWriteScenario_int(scn, fname, val);
+		}
+	}
+
+	for (i = 0; i < MAX_OUTPUT_PORTS; i++) {
+		val = GetOutputChannel(i);
+		if (val != 0) {
+			sprintf(fname, "OCHAN%02d", i);
+			oapiWriteScenario_int(scn, fname, val);
+		}
+	}
+
+	oapiWriteScenario_int(scn, "PROGRAMCOUNTER", vags.ProgramCounter);
+	oapiWriteScenario_int(scn, "ACCUMULATOR", vags.Accumulator);
+	oapiWriteScenario_int(scn, "QUOTIENT", vags.Quotient);
+	oapiWriteScenario_int(scn, "INDEX", vags.Index);
+	oapiWriteScenario_int(scn, "OVERFLOW", vags.Overflow);
+	oapiWriteScenario_int(scn, "HALT", vags.Halt);
+
+	sprintf(buffer, "  CYCLECOUNTER %I64d", vags.CycleCounter);
+	oapiWriteLine(scn, buffer);
+
+	sprintf(buffer, "  NEXT20MSSIGNAL %I64d", vags.Next20msSignal);
+	oapiWriteLine(scn, buffer);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str)))
+			break;
+
+		if (!strnicmp(line, "MEM", 3)) {
+			int num, val;
+			sscanf(line + 3, "%o", &num);
+			sscanf(line + 8, "%o", &val);
+			WriteMemory(num, val);
+		}
+
+		papiReadScenario_int(line, "PROGRAMCOUNTER", vags.ProgramCounter);
+		papiReadScenario_int(line, "ACCUMULATOR", vags.Accumulator);
+		papiReadScenario_int(line, "QUOTIENT", vags.Quotient);
+		papiReadScenario_int(line, "INDEX", vags.Index);
+		papiReadScenario_int(line, "OVERFLOW", vags.Overflow);
+		papiReadScenario_int(line, "HALT", vags.Halt);
+
+		if (!strnicmp(line, "CYCLECOUNTER", 12)) {
+			sscanf(line + 12, "%I64d", &vags.CycleCounter);
+		}
+		else if (!strnicmp(line, "NEXT20MSSIGNAL", 14)) {
+			sscanf(line + 14, "%I64d", &vags.Next20msSignal);
+		}
+		else if (!strnicmp(line, "ICHAN", 5)) {
+			int num;
+			unsigned int val;
+			sscanf(line + 5, "%d", &num);
+			sscanf(line + 8, "%d", &val);
+			vags.InputPorts[num] = val;
+		}
+		else if (!strnicmp(line, "OCHAN", 5)) {
+			int num;
+			unsigned int val;
+			sscanf(line + 5, "%d", &num);
+			sscanf(line + 8, "%d", &val);
+			OutputPorts[num] = val;
+		}
+	}
 }
 
 // Data Entry and Display Assembly
