@@ -2729,7 +2729,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			}
 			else							//AGS
 			{
-				attitude = _V(0, 0, 0);
+				attitude = aea.GetTotalAttitude();
 			}
 
 			if (RateErrorMonSwitch.GetState() == 1)
@@ -2755,7 +2755,23 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			}
 			else
 			{
-				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+				if (AttitudeMonSwitch.IsUp())	//PGNS
+				{
+					errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+				}
+				else							//AGS
+				{
+					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+
+					if (DeadBandSwitch.IsUp())
+					{
+						errors *= 15.0 / 14.4;
+					}
+					else
+					{
+						errors *= 15.0 / 1.7;
+					}
+				}
 			}
 
 			// ORDEAL
@@ -2787,7 +2803,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			}
 			else							//AGS
 			{
-				attitude = _V(0, 0, 0);
+				attitude = aea.GetTotalAttitude();
 			}
 
 			if (RightRateErrorMonSwitch.GetState() == 1)
@@ -2813,7 +2829,23 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			}
 			else
 			{
-				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+				if (RightAttitudeMonSwitch.IsUp())	//PGNS
+				{
+					errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+				}
+				else							//AGS
+				{
+					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+
+					if (DeadBandSwitch.IsUp())
+					{
+						errors *= 15.0 / 14.4;
+					}
+					else
+					{
+						errors *= 15.0 / 1.7;
+					}
+				}
 			}
 
 			// ORDEAL

@@ -110,9 +110,18 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 
 	PowerSwitch = 0;
 
+	ASAcycle = 0;
 	LastCycled = 0.0;
 	for (int i = 0; i <= MAX_OUTPUT_PORTS; i++)
 		OutputPorts[i] = 0;
+
+	sin_theta = 0.0;
+	cos_theta = 0.0;
+	sin_phi = 0.0;
+	cos_phi = 0.0;
+	sin_psi = 0.0;
+	cos_psi = 0.0;
+	AGSAttitudeError = _V(0.0, 0.0, 0.0);
 
 	//
 	// Virtual AGS.
@@ -130,18 +139,38 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 
 	if (!IsPowered()) return;
 
-	int i;
+	int Delta, CycleCount = 0;
 
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 	}
 
-	long cycles = (long)((simt - LastCycled) / 0.0000009765625);
-	LastCycled += (0.0000009765625 * cycles);						// Preserve the remainder
+	long cycles = (long)((simt - LastCycled) / 0.0000009765625);						// Preserve the remainder
 
-	for (i = 0; i < cycles; i++) {
-		aea_engine(&vags);
+	while (CycleCount < cycles)
+	{
+		Delta = aea_engine(&vags);
+		CycleCount += Delta;
+		ASAcycle += Delta;
+
+		//ASA cycle at 1 kHz
+		if (ASAcycle >= 1024)
+		{
+			//TBD: This is just code for testing. Should be replaced by calling an AEA input channel function.
+			vags.InputPorts[IO_6002] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6002] &= 0377700;
+
+			vags.InputPorts[IO_6004] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6004] &= 0377700;
+
+			vags.InputPorts[IO_6010] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6010] &= 0377700;
+
+			ASAcycle -= 1024;
+		}
 	}
+
+	LastCycled += (0.0000009765625 * CycleCount);
 }
 
 void LEM_AEA::SetInputPort(int port, int val)
@@ -185,28 +214,19 @@ void LEM_AEA::SetOutputChannel(int Type, int Data)
 
 	switch (Type)
 	{
-	case 020:
 		//sin theta
-		break;
-
-	case 021:
 		//cos theta
-		break;
-
-	case 022:
 		//sin phi
-		break;
-
-	case 023:
 		//cos phi
-		break;
-
-	case 024:
 		//sin psi
-		break;
-
-	case 025:
 		//cos psi
+	case 020:
+	case 021:
+	case 022:
+	case 023:
+	case 024:
+	case 025:
+		SetAGSAttitude(Type, Data);
 		break;
 
 	case 027:
@@ -214,16 +234,13 @@ void LEM_AEA::SetOutputChannel(int Type, int Data)
 		deda.ProcessChannel27(Data);
 		break;
 
-	case 030:
 		//E_X
-		break;
-
-	case 031:
 		//E_Y
-		break;
-
-	case 032:
 		//E_Z
+	case 030:
+	case 031:
+	case 032:
+		SetAGSAttitudeError(Type, Data);
 		break;
 
 	case 033:
@@ -259,6 +276,105 @@ unsigned int LEM_AEA::GetInputChannel(int channel)
 	unsigned int val = vags.InputPorts[channel];
 
 	return val;
+}
+
+void LEM_AEA::SetAGSAttitudeError(int Type, int Data)
+{
+	int DataVal;
+
+	if (Data & 0400000) { // Negative
+		DataVal = -((~Data) & 0777777);
+	}
+	else {
+		DataVal = Data & 0777777;
+	}
+
+	double DataScaled = (double)DataVal*ATTITUDEERRORSCALEFACTOR;
+
+	switch (Type)
+	{
+	case 030:
+		//E_X
+		AGSAttitudeError.x = DataScaled;
+		break;
+
+	case 031:
+		//E_Y
+		AGSAttitudeError.y = DataScaled;
+		break;
+
+	case 032:
+		//E_Z
+		AGSAttitudeError.z = DataScaled;
+		break;
+	}
+}
+
+void LEM_AEA::SetAGSAttitude(int Type, int Data)
+{
+	int DataVal;
+
+	if (Data & 0400000) { // Negative
+		DataVal = -((~Data) & 0777777);
+	}
+	else {
+		DataVal = Data & 0777777;
+	}
+
+	double DataScaled = (double)DataVal*ATTITUDESCALEFACTOR;
+
+	switch (Type)
+	{
+	case 020:
+		//sin theta
+		sin_theta = DataScaled;
+		break;
+
+	case 021:
+		//cos theta
+		cos_theta = DataScaled;
+		break;
+
+	case 022:
+		//sin phi
+		sin_phi = DataScaled;
+		break;
+
+	case 023:
+		//cos phi
+		cos_phi = DataScaled;
+		break;
+
+	case 024:
+		//sin psi
+		sin_psi = DataScaled;
+		break;
+
+	case 025:
+		//cos psi
+		cos_psi = DataScaled;
+		break;
+	}
+}
+
+VECTOR3 LEM_AEA::GetTotalAttitude()
+{
+	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE)
+	{
+		return _V(0, 0, 0);
+	}
+
+	return _V(atan2(sin_theta, cos_theta), atan2(sin_phi, cos_phi), atan2(sin_psi, cos_psi));
+}
+
+VECTOR3 LEM_AEA::GetAttitudeError()
+{
+	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE)
+	{
+		return _V(0, 0, 0);
+	}
+
+	return AGSAttitudeError;
 }
 
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
@@ -375,6 +491,14 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	sprintf(buffer, "  NEXT20MSSIGNAL %I64d", vags.Next20msSignal);
 	oapiWriteLine(scn, buffer);
 
+	papiWriteScenario_double(scn, "SIN_THETA", sin_theta);
+	papiWriteScenario_double(scn, "COS_THETA", cos_theta);
+	papiWriteScenario_double(scn, "SIN_PHI", sin_phi);
+	papiWriteScenario_double(scn, "COS_PHI", cos_phi);
+	papiWriteScenario_double(scn, "SIN_PSI", sin_psi);
+	papiWriteScenario_double(scn, "COS_PSI", cos_psi);
+	papiWriteScenario_vec(scn, "ATTITUDEERROR", AGSAttitudeError);
+
 	oapiWriteLine(scn, end_str);
 }
 
@@ -392,20 +516,6 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 			sscanf(line + 8, "%o", &val);
 			WriteMemory(num, val);
 		}
-
-		papiReadScenario_int(line, "PROGRAMCOUNTER", vags.ProgramCounter);
-		papiReadScenario_int(line, "ACCUMULATOR", vags.Accumulator);
-		papiReadScenario_int(line, "QUOTIENT", vags.Quotient);
-		papiReadScenario_int(line, "INDEX", vags.Index);
-		papiReadScenario_int(line, "OVERFLOW", vags.Overflow);
-		papiReadScenario_int(line, "HALT", vags.Halt);
-
-		if (!strnicmp(line, "CYCLECOUNTER", 12)) {
-			sscanf(line + 12, "%I64d", &vags.CycleCounter);
-		}
-		else if (!strnicmp(line, "NEXT20MSSIGNAL", 14)) {
-			sscanf(line + 14, "%I64d", &vags.Next20msSignal);
-		}
 		else if (!strnicmp(line, "ICHAN", 5)) {
 			int num;
 			unsigned int val;
@@ -420,6 +530,28 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 			sscanf(line + 8, "%d", &val);
 			OutputPorts[num] = val;
 		}
+
+		papiReadScenario_int(line, "PROGRAMCOUNTER", vags.ProgramCounter);
+		papiReadScenario_int(line, "ACCUMULATOR", vags.Accumulator);
+		papiReadScenario_int(line, "QUOTIENT", vags.Quotient);
+		papiReadScenario_int(line, "INDEX", vags.Index);
+		papiReadScenario_int(line, "OVERFLOW", vags.Overflow);
+		papiReadScenario_int(line, "HALT", vags.Halt);
+
+		if (!strnicmp(line, "CYCLECOUNTER", 12)) {
+			sscanf(line + 12, "%I64d", &vags.CycleCounter);
+		}
+		else if (!strnicmp(line, "NEXT20MSSIGNAL", 14)) {
+			sscanf(line + 14, "%I64d", &vags.Next20msSignal);
+		}
+
+		papiReadScenario_double(line, "SIN_THETA", sin_theta);
+		papiReadScenario_double(line, "COS_THETA", cos_theta);
+		papiReadScenario_double(line, "SIN_PHI", sin_phi);
+		papiReadScenario_double(line, "COS_PHI", cos_phi);
+		papiReadScenario_double(line, "SIN_PSI", sin_psi);
+		papiReadScenario_double(line, "COS_PSI", cos_psi);
+		papiReadScenario_vec(line, "ATTITUDEERROR", AGSAttitudeError);
 	}
 }
 

@@ -72,6 +72,11 @@ public:
 	void SetMissionInfo(int MissionNo);
 	void WriteMemory(unsigned int loc, int val);
 	bool ReadMemory(unsigned int loc, int &val);
+	void SetAGSAttitude(int Type, int Data);
+	void SetAGSAttitudeError(int Type, int Data);
+	VECTOR3 GetTotalAttitude();
+	VECTOR3 GetAttitudeError();
+
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
 	LEM *lem;					// Pointer at LEM
@@ -89,6 +94,21 @@ protected:
 	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
 
 	double LastCycled;
+	int ASAcycle;
+
+	//AEA attitude display
+	double sin_theta;
+	double cos_theta;
+	double sin_phi;
+	double cos_phi;
+	double sin_psi;
+	double cos_psi;
+
+	//AEA attitude error
+	VECTOR3 AGSAttitudeError;
+
+	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
+	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
