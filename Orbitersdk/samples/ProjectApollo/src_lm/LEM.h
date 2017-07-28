@@ -979,6 +979,28 @@ protected:
 	DSKYPushSwitch DskySwitchEnter;
 	DSKYPushSwitch DskySwitchReset;
 
+	///////////////////////
+	// DEDAs             //
+	///////////////////////
+
+	SwitchRow DedaSwitchRow;
+	DEDAPushSwitch DedaSwitchPlus;
+	DEDAPushSwitch DedaSwitchMinus;
+	DEDAPushSwitch DedaSwitchZero;
+	DEDAPushSwitch DedaSwitchOne;
+	DEDAPushSwitch DedaSwitchTwo;
+	DEDAPushSwitch DedaSwitchThree;
+	DEDAPushSwitch DedaSwitchFour;
+	DEDAPushSwitch DedaSwitchFive;
+	DEDAPushSwitch DedaSwitchSix;
+	DEDAPushSwitch DedaSwitchSeven;
+	DEDAPushSwitch DedaSwitchEight;
+	DEDAPushSwitch DedaSwitchNine;
+	DEDAPushSwitch DedaSwitchClear;
+	DEDAPushSwitch DedaSwitchHold;
+	DEDAPushSwitch DedaSwitchReadOut;
+	DEDAPushSwitch DedaSwitchEnter;
+
 	//////////////////
 	// LEM panel 11 //
 	//////////////////

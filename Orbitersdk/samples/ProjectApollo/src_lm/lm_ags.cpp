@@ -1009,8 +1009,9 @@ void LEM_DEDA::SendKeyCode(int val)
 }
 
 void LEM_DEDA::EnterPressed()
-
 {
+	KeyClick();
+
 	if (State == 9)
 	{
 		SendKeyCode(11);
@@ -1022,16 +1023,18 @@ void LEM_DEDA::EnterPressed()
 }
 
 void LEM_DEDA::ClearPressed()
-
 {
+	KeyClick();
+
 	Reset();
 	ResetKeyDown();
 	SendKeyCode(13);
 }
 
 void LEM_DEDA::PlusPressed()
-
 {
+	KeyClick();
+
 	if (State == 3){
 			State++;
 			Data[0] = '+';
@@ -1040,8 +1043,9 @@ void LEM_DEDA::PlusPressed()
 }
 
 void LEM_DEDA::MinusPressed()
-
 {
+	KeyClick();
+
 	if (State == 3){
 			State++;
 			Data[0] = '-';
@@ -1050,8 +1054,9 @@ void LEM_DEDA::MinusPressed()
 }
 
 void LEM_DEDA::ReadOutPressed()
-
 {
+	KeyClick();
+
 	if (State == 3){
 		SendKeyCode(10);
 	} else 
@@ -1061,8 +1066,9 @@ void LEM_DEDA::ReadOutPressed()
 }
 
 void LEM_DEDA::HoldPressed()
-
 {
+	KeyClick();
+
 	if (State == 3 || State == 9){
 		SendKeyCode(12);
 	} else 
@@ -1072,8 +1078,9 @@ void LEM_DEDA::HoldPressed()
 }
 
 void LEM_DEDA::NumberPressed(int n)
-
 {
+	KeyClick();
+
 	switch(State){
 		case 0:
 		case 1:
@@ -1099,6 +1106,214 @@ void LEM_DEDA::NumberPressed(int n)
 		case 9:
 			SetOprErr(true);
 			return;
+	}
+}
+
+void LEM_DEDA::HoldCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Hold = true;
+		HoldPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::EnterCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Enter = true;
+		EnterPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::ClearCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Clear = true;
+		ClearPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::ReadOutCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_ReadOut = true;
+		ReadOutPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::PlusCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Plus = true;
+		PlusPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::MinusCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Minus = true;
+		MinusPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::zeroCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_0 = true;
+		NumberPressed(0);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::oneCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_1 = true;
+		NumberPressed(1);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::twoCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_2 = true;
+		NumberPressed(2);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::threeCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_3 = true;
+		NumberPressed(3);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::fourCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_4 = true;
+		NumberPressed(4);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::fiveCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_5 = true;
+		NumberPressed(5);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::sixCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_6 = true;
+		NumberPressed(6);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::sevenCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_7 = true;
+		NumberPressed(7);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::eightCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_8 = true;
+		NumberPressed(8);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+
+void LEM_DEDA::nineCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_9 = true;
+		NumberPressed(9);
+	}
+	else
+	{
+		ResetKeyDown();
 	}
 }
 

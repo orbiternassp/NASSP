@@ -155,6 +155,7 @@ public:
 	void MinusPressed();
 	void NumberPressed(int n);
 
+	void HoldCallback(PanelSwitchItem* s);
 	void EnterCallback(PanelSwitchItem* s);
 	void ClearCallback(PanelSwitchItem* s);
 	void ReadOutCallback(PanelSwitchItem* s);

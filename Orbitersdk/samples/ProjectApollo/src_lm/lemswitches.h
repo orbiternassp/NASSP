@@ -565,3 +565,8 @@ protected:
 	SURFHANDLE Digits;
 	LEM *lem;
 };
+
+class DEDAPushSwitch : public PushSwitch {
+protected:
+	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
+};
