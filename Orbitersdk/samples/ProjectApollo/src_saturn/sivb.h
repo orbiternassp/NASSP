@@ -100,9 +100,8 @@ struct SIVBSettings
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; LEMCheckAuto = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; };
 
 };
 
@@ -459,7 +458,6 @@ protected:
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

@@ -1196,7 +1196,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_72x72]		= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
 		srf[SRF_BORDER_34x39]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x39));
-		srf[SRF_BORDER_38x38]		= oapiCreateSurface (LOADBMP(IDB_BORDER_38x38));
+		srf[SRF_BORDER_38x38]		= oapiCreateSurface (LOADBMP (IDB_BORDER_38x38));
+		srf[SRF_BORDER_40x40]		= oapiCreateSurface (LOADBMP (IDB_BORDER_40x40));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
@@ -1274,6 +1275,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_75x64], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_38x38], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_40x40], g_Param.col[4]);
 
 
 //		break;	
@@ -1949,22 +1951,22 @@ void LEM::SetSwitches(int panel) {
 			//
 
 			DedaSwitchRow.Init(AID_LM_DEDA_KEYS, MainPanel);
-			DedaSwitchPlus.Init(1 + 44 * 0, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 0, 0);
-			DedaSwitchMinus.Init(1 + 44 * 0, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 0, 44);
-			DedaSwitchZero.Init(1 + 44 * 0, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 0, 88);
-			DedaSwitchSeven.Init(1 + 44 * 1, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 1, 0);
-			DedaSwitchFour.Init(1 + 44 * 1, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 1, 44);
-			DedaSwitchOne.Init(1 + 44 * 1, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 1, 88);
-			DedaSwitchEight.Init(1 + 44 * 2, 0, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 2, 0);
-			DedaSwitchFive.Init(1 + 44 * 2, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 2, 44);
-			DedaSwitchTwo.Init(1 + 44 * 2, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 2, 88);
-			DedaSwitchNine.Init(1 + 44 * 3, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 3, 0);
-			DedaSwitchSix.Init(1 + 44 * 3, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 3, 44);
-			DedaSwitchThree.Init(1 + 44 * 3, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 3, 88);
-			DedaSwitchClear.Init(1 + 44 * 4, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 4, 0);
-			DedaSwitchReadOut.Init(1 + 44 * 4, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 4, 44);
-			DedaSwitchEnter.Init(1 + 44 * 4, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 4, 88);
-			DedaSwitchHold.Init(1 + 44 * 2, 134, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_38x38], DedaSwitchRow, 44 * 2, 132);
+			DedaSwitchPlus.Init(1 + 44 * 0, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 0, 0);
+			DedaSwitchMinus.Init(1 + 44 * 0, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 0, 44);
+			DedaSwitchZero.Init(1 + 44 * 0, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 0, 88);
+			DedaSwitchSeven.Init(1 + 44 * 1, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 1, 0);
+			DedaSwitchFour.Init(1 + 44 * 1, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 1, 44);
+			DedaSwitchOne.Init(1 + 44 * 1, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 1, 88);
+			DedaSwitchEight.Init(1 + 44 * 2, 0, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 2, 0);
+			DedaSwitchFive.Init(1 + 44 * 2, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 2, 44);
+			DedaSwitchTwo.Init(1 + 44 * 2, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 2, 88);
+			DedaSwitchNine.Init(1 + 44 * 3, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 3, 0);
+			DedaSwitchSix.Init(1 + 44 * 3, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 3, 44);
+			DedaSwitchThree.Init(1 + 44 * 3, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 3, 88);
+			DedaSwitchClear.Init(1 + 44 * 4, 1, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 4, 0);
+			DedaSwitchReadOut.Init(1 + 44 * 4, 45, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 4, 44);
+			DedaSwitchEnter.Init(1 + 44 * 4, 90, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 4, 88);
+			DedaSwitchHold.Init(1 + 44 * 2, 134, 40, 40, srf[SRF_DEDA_KEY], srf[SRF_BORDER_40x40], DedaSwitchRow, 44 * 2, 132);
 
 	//		break;
 

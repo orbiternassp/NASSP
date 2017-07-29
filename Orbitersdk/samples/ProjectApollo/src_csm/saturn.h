@@ -4223,7 +4223,6 @@ protected:
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
 	//
 	// Connectors.

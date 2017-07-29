@@ -100,6 +100,8 @@ ChecklistItem::ChecklistItem()
 	dskyIndex = 0;
 	dskyNo = 0;
 	dskyPressed = false;
+	dedaIndex = 0;
+	dedaPressed = false;
 }
 
 // Todo: Verify
@@ -199,6 +201,25 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 			strcpy(item, "DSKY");
 		}
 	}
+
+	if (strnicmp(item, "DEDA", 4) == 0) {
+		char seps[] = " \t\n";
+		char *token;
+		DEDAChecklistItem temp;
+
+		token = strtok(item, seps);
+		if (token != NULL) {
+
+			token = strtok(NULL, seps);
+			while (token != NULL) {
+				temp.init(token);
+				dedaItemsSet.push_back(temp);
+				temp = DEDAChecklistItem();
+				token = strtok(NULL, seps);
+			}
+			strcpy(item, "DEDA");
+		}
+	}
 }
 
 void ChecklistItem::setFlashing(MFDConnector *conn, bool flashing) {
@@ -214,7 +235,16 @@ void ChecklistItem::setFlashing(MFDConnector *conn, bool flashing) {
 			if (dskyNo & 2)
 				conn->SetFlashing(dskyItemsSet[dskyIndex].item2, flashing);
 		}
-	} else {
+	} 
+	else if (!stricmp(item, "DEDA")) {
+		if (dedaItemsSet.size() > 0) {
+			for (int i = 0; i < dedaItemsSet.size(); i++) {
+				conn->SetFlashing(dedaItemsSet[i].item, false);
+			}
+			conn->SetFlashing(dedaItemsSet[dedaIndex].item, flashing);
+		}
+	}
+	else {
 		conn->SetFlashing(item, flashing);
 	}
 }
@@ -241,6 +271,24 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 				dskyIndex = 0;
 				return true;
 			}
+		} else if (!stricmp(item, "DEDA")) {
+			if (dedaItemsSet.size() > 0) {
+				if (!dedaPressed) {
+					if (conn->GetState(dedaItemsSet[dedaIndex].item) == position){
+						dedaPressed = true;
+					}
+				}
+				else {
+					if (conn->GetState(dedaItemsSet[dedaIndex].item) != position) {
+						dedaPressed = false;
+						dedaIndex++;
+					}
+				}
+			}
+			if (dedaIndex >= dedaItemsSet.size()) {
+				dedaIndex = 0;
+				return true;
+			}
 		} else {
 			if (conn->GetState(item) == position) {
 				return true;
@@ -263,6 +311,16 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 				dskyIndex = 0;
 				return true;
 			}
+		} else if (!stricmp(item, "DEDA")) {
+			if (dedaItemsSet.size() > 0) {
+				if (conn->SetState(dedaItemsSet[dedaIndex].item, position)) {
+						dedaIndex++;
+					}
+			}
+			if (dedaIndex >= dedaItemsSet.size()) {
+				dedaIndex = 0;
+				return true;
+			}
 		} else {
 			if (position == -1) {
 				return true;
@@ -277,6 +335,9 @@ bool ChecklistItem::iterate(MFDConnector *conn, bool autoexec) {
 double ChecklistItem::checkIterate(MFDConnector *conn) {
 
 	if (!stricmp(item, "DSKY")) {
+		return false;
+	}
+	if (!stricmp(item, "DEDA")) {
 		return false;
 	}
 	if (position == -1) {
@@ -295,6 +356,14 @@ double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
 		if (dskyIndex == 0) {
 			return 4;
 		} else {
+			return 1;
+		}
+	}
+	if (!stricmp(item, "DEDA")) {
+		if (dedaIndex == 0) {
+			return 4;
+		}
+		else {
 			return 1;
 		}
 	}
@@ -329,6 +398,11 @@ void ChecklistItem::load(FILEHANDLE scn)
 			sscanf(line+9,"%d",&dskyIndex);
 			found = true;
 		}
+		if (!found && !strnicmp(line, "DEDAINDEX", 9))
+		{
+			sscanf(line + 9, "%d", &dedaIndex);
+			found = true;
+		}
 		oapiReadScenario_nextline(scn, line);
 	}
 }
@@ -337,8 +411,12 @@ void ChecklistItem::save(FILEHANDLE scn)
 {
 	oapiWriteScenario_string(scn,ChecklistItemStartString,"");
 	oapiWriteScenario_int(scn,"INDEX",index);
-	oapiWriteScenario_int(scn,"STATUS",status);
-	oapiWriteScenario_int(scn,"DSKYINDEX",dskyIndex);
+	if (status)
+		oapiWriteScenario_int(scn,"STATUS",status);
+	if (dskyIndex)
+		oapiWriteScenario_int(scn,"DSKYINDEX",dskyIndex);
+	if (dedaIndex)
+		oapiWriteScenario_int(scn, "DEDAINDEX", dedaIndex);
 
 	oapiWriteScenario_string(scn,ChecklistItemEndString,"");
 }
@@ -527,6 +605,59 @@ void DSKYChecklistItem::init(char *k) {
 	} else if (!stricmp(key, "R")) {
 		strcpy(item, "DskySwitchReset");
 		strcpy(item2, "Dsky2SwitchReset");
+	}
+}
+
+void DEDAChecklistItem::init(char *k) {
+
+	strncpy(key, k, 10);
+	if (!stricmp(key, "+")) {
+		strcpy(item, "DedaSwitchPlus");
+	}
+	else if (!stricmp(key, "-")) {
+		strcpy(item, "DedaSwitchMinus");
+	}
+	else if (!stricmp(key, "0")) {
+		strcpy(item, "DedaSwitchZero");
+	}
+	else if (!stricmp(key, "1")) {
+		strcpy(item, "DedaSwitchOne");
+	}
+	else if (!stricmp(key, "2")) {
+		strcpy(item, "DedaSwitchTwo");
+	}
+	else if (!stricmp(key, "3")) {
+		strcpy(item, "DedaSwitchThree");
+	}
+	else if (!stricmp(key, "4")) {
+		strcpy(item, "DedaSwitchFour");
+	}
+	else if (!stricmp(key, "5")) {
+		strcpy(item, "DedaSwitchFive");
+	}
+	else if (!stricmp(key, "6")) {
+		strcpy(item, "DedaSwitchSix");
+	}
+	else if (!stricmp(key, "7")) {
+		strcpy(item, "DedaSwitchSeven");
+	}
+	else if (!stricmp(key, "8")) {
+		strcpy(item, "DedaSwitchEight");
+	}
+	else if (!stricmp(key, "9")) {
+		strcpy(item, "DedaSwitchNine");
+	}
+	else if (!stricmp(key, "C")) {
+		strcpy(item, "DedaSwitchClear");
+	}
+	else if (!stricmp(key, "H")) {
+		strcpy(item, "DedaSwitchHold");
+	}
+	else if (!stricmp(key, "E")) {
+		strcpy(item, "DedaSwitchEnter");
+	}
+	else if (!stricmp(key, "R")) {
+		strcpy(item, "DedaSwitchReadOut");
 	}
 }
 

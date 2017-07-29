@@ -759,7 +759,6 @@ void Saturn::initSaturn()
 
 	PayloadName[0] = 0;
 	LEMCheck[0] = 0;
-	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
 	LMAscentEmptyMassKg = 2150.0;
@@ -1346,7 +1345,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (!PayloadDataTransfer) {
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
-			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
@@ -2263,14 +2261,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
-		}
-		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
-			int temp = 0;
-			sscanf(line+12, "%i", &temp);
-			if (temp != 0)
-				LEMCheckAuto = true;
-			else
-				LEMCheckAuto = false;
 		} else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(LEMCheck, line + 9);
 		} else if (!strnicmp(line, SaturnEventStartString, strlen(SaturnEventStartString))) {
@@ -2313,7 +2303,6 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.MissionNo = ApolloNo;
 	ls.MissionTime = MissionTime;
 	strncpy (ls.checklistFile, LEMCheck, 100);
-	ls.checkAutoExecute = LEMCheckAuto;
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)

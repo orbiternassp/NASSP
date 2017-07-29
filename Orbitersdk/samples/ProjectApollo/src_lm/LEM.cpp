@@ -1020,11 +1020,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
-		else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
-			int i;
-			sscanf(line + 24, "%d", &i);
-			VAGCChecklistAutoEnabled = (i != 0);
-		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1376,6 +1371,11 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf(line + 21, "%i", &i);
 		VAGCChecklistAutoSlow = (i != 0);
 	}
+	else if (!strnicmp(line, "VAGCCHECKLISTAUTOENABLED", 24)) {
+		int i;
+		sscanf(line + 24, "%d", &i);
+		VAGCChecklistAutoEnabled = (i != 0);
+	}
 	return true;
 }
 
@@ -1409,8 +1409,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
-
-	oapiWriteScenario_int(scn, "VAGCCHECKLISTAUTOENABLED", VAGCChecklistAutoEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
@@ -1528,10 +1526,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
-	checkControl.autoExecute(ls.checkAutoExecute);
-
-	//Set the transfered payload setting for the checklist controller
-	VAGCChecklistAutoEnabled = ls.checkAutoExecute;
 
 	// Sounds are initialized during the first timestep
 

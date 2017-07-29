@@ -764,6 +764,7 @@
 #define IDB_LMENGINESTARTSTOPBUTTONS    1038
 #define AID_LMP_MANUAL_ENGINE_STOP_SWITCH 1039
 #define IDB_LMTRANSLBUTTON				1040
+#define IDB_BORDER_40x40                1041
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
