@@ -1974,7 +1974,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "LOI-2", 5);
 
-			sprintf(Buffer, "%.2f NM", G->LOIperi / 1852.0);
+			sprintf(Buffer, "%.2f NM", G->LOI2Alt / 1852.0);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, G->LOI_TIG);
@@ -4624,7 +4624,14 @@ bool LOIPeriInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIPeri(double alt)
 {
-	this->G->LOIperi = alt*1852.0;
+	if (G->LOImaneuver == 2)
+	{
+		G->LOI2Alt = alt*1852.0;
+	}
+	else
+	{
+		G->LOIperi = alt*1852.0;
+	}
 }
 
 void ApolloRTCCMFD::menuSetTLCCAlt()

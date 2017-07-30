@@ -339,6 +339,7 @@ ARCore::ARCore(VESSEL* v)
 	LOIazi = 0.0;
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_TIG = 0.0;
+	LOI2Alt = 60.0*1852.0;
 
 	TLCCmaneuver = 2;
 	TLCC_GET = 0.0;
@@ -1898,7 +1899,7 @@ int ARCore::subThread()
 
 			opt.alt = LSAlt;
 			opt.GETbase = GETbase;
-			opt.h_circ = LOIperi;
+			opt.h_circ = LOI2Alt;
 			opt.vessel = vessel;
 			opt.useSV = false;
 
