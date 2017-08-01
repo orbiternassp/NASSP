@@ -1423,7 +1423,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	scdu.SaveState(scn, "SCDU_START", "CDU_END");
-	scdu.SaveState(scn, "TCDU_START", "CDU_END");
+	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	aea.SaveState(scn, "AEA_START", "AEA_END");
 
 	//
