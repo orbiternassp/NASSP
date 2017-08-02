@@ -1355,7 +1355,7 @@ bool LEM::clbkLoadPanel (int id) {
 		
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 744, 625);
 		fdaiLeft.SetLMmode();
-		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1712, 625);
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1714, 625);
 		fdaiRight.SetLMmode();
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 

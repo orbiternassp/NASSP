@@ -1038,6 +1038,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "AEA_START", sizeof("AEA_START"))) {
 			aea.LoadState(scn, "AEA_END");
 		}
+		else if (!strnicmp(line, "ASA_START", sizeof("ASA_START"))) {
+			asa.LoadState(scn, "ASA_END");
+		}
 		else if (!strnicmp (line, "ECA_1A_START",sizeof("ECA_1A_START"))) {
 			ECA_1a.LoadState(scn,"ECA_1A_END");
 		}
@@ -1425,6 +1428,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scdu.SaveState(scn, "SCDU_START", "CDU_END");
 	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	aea.SaveState(scn, "AEA_START", "AEA_END");
+	asa.SaveState(scn, "ASA_START", "ASA_END");
 
 	//
 	// Save the Panel SDK state.

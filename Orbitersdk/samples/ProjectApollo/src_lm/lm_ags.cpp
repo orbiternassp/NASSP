@@ -54,11 +54,17 @@ static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	//heater("LEM-ASA-Heater",1,NULL,15,20,0,272,274,&hsink)
 {
-	lem = NULL;	
+	lem = NULL;
+
+	PowerSwitch = 0;
+
+	CurrentRotationMatrix = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	EulerAngles = _V(0., 0., 0.);
 }
 
-void LEM_ASA::Init(LEM *s, Boiler *hb, h_Radiator *hr) {
-	lem = s;
+void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
+	lem = l;
+	PowerSwitch = s;
 	heater = hb;
 	hsink = hr;
 	// Therm setup
@@ -93,26 +99,94 @@ void LEM_ASA::TimeStep(double simdt){
 	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
-	// FIXME: ASA goes here	
+	// FIXME: ASA goes here
+
+	if (!IsPowered()) { return; }
+
+	MATRIX3 Rotnew, dRot;
+
+	lem->GetRotationMatrix(Rotnew);
+
+	dRot = mul(transpose_matrix(CurrentRotationMatrix), Rotnew);
+	EulerAngles = MatrixToEuler(dRot);
+	EulerAngles = _V(EulerAngles.y, EulerAngles.x, EulerAngles.z);
+
+	CurrentRotationMatrix = Rotnew;
 }
 
-void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+void LEM_ASA::PulseTimestep(int* AttPulses)
+{
+	for (int i = 0;i < 3;i++)
+	{
+		AttPulses[i] = 32 + (int)(EulerAngles.data[i] * AttPulsesScal);
 
+		if (AttPulses[i] > 61)
+		{
+			AttPulses[i] = 61;
+		}
+		else if (AttPulses[i] < 3)
+		{
+			AttPulses[i] = 3;
+		}
+
+		EulerAngles.data[i] -= (1.0 / AttPulsesScal)*(AttPulses[i] - 32);
+	}
 }
 
-void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str){
+MATRIX3 LEM_ASA::transpose_matrix(MATRIX3 a)
+{
+	MATRIX3 b;
 
+	b = _M(a.m11, a.m21, a.m31, a.m12, a.m22, a.m32, a.m13, a.m23, a.m33);
+	return b;
+}
+
+VECTOR3 LEM_ASA::MatrixToEuler(MATRIX3 mat)
+{
+	return _V(atan2(mat.m23, mat.m33), -asin(mat.m13), atan2(mat.m12, mat.m11));
+}
+
+bool LEM_ASA::IsPowered()
+{
+	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	if (PowerSwitch) {
+		if (PowerSwitch->IsDown()) { return false; }
+	}
+
+	return true;
+}
+
+void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_mx(scn, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str)))
+			break;
+
+		papiReadScenario_mat(line, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+	}
 }
 
 // Abort Electronics Assembly
 LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
 	lem = NULL;	
-
+	AEAInitialized = false;
+	FlightProgram = 0;
 	PowerSwitch = 0;
 
-	ASAcycle = 0;
+	ASACycleCounter = 0;
 	LastCycled = 0.0;
-	for (int i = 0; i <= MAX_OUTPUT_PORTS; i++)
+	for (int i = 0; i < MAX_OUTPUT_PORTS; i++)
 		OutputPorts[i] = 0;
 
 	sin_theta = 0.0;
@@ -141,6 +215,8 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 
 	int Delta, CycleCount = 0;
 
+	int AsaPulses[3];
+
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 	}
@@ -151,22 +227,34 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	{
 		Delta = aea_engine(&vags);
 		CycleCount += Delta;
-		ASAcycle += Delta;
+		ASACycleCounter += Delta;
 
 		//ASA cycle at 1 kHz
-		if (ASAcycle >= 1024)
+		if (ASACycleCounter >= 1024)
 		{
 			//TBD: This is just code for testing. Should be replaced by calling an AEA input channel function.
-			vags.InputPorts[IO_6002] += SignExtendAGS(32) * 0100;
+
+			lem->asa.PulseTimestep(AsaPulses);
+
+			vags.InputPorts[IO_6002] += SignExtendAGS(AsaPulses[1]) * 0100;
 			vags.InputPorts[IO_6002] &= 0377700;
 
-			vags.InputPorts[IO_6004] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6004] += SignExtendAGS(AsaPulses[2]) * 0100;
 			vags.InputPorts[IO_6004] &= 0377700;
 
-			vags.InputPorts[IO_6010] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6010] += SignExtendAGS(AsaPulses[0]) * 0100;
 			vags.InputPorts[IO_6010] &= 0377700;
 
-			ASAcycle -= 1024;
+			vags.InputPorts[IO_6020] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6020] &= 0377700;
+
+			vags.InputPorts[IO_6040] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6040] &= 0377700;
+
+			vags.InputPorts[IO_6100] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6100] &= 0377700;
+
+			ASACycleCounter -= 1024;
 		}
 	}
 
@@ -207,7 +295,7 @@ void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
 
 void LEM_AEA::SetOutputChannel(int Type, int Data)
 {
-	if (Type - MAX_INPUT_PORTS < 0 || Type - MAX_INPUT_PORTS > MAX_OUTPUT_PORTS)
+	if (Type - MAX_INPUT_PORTS < 0 || Type - MAX_INPUT_PORTS >= MAX_OUTPUT_PORTS)
 		return;
 
 	OutputPorts[Type - MAX_INPUT_PORTS] = Data;
@@ -284,6 +372,7 @@ void LEM_AEA::SetAGSAttitudeError(int Type, int Data)
 
 	if (Data & 0400000) { // Negative
 		DataVal = -((~Data) & 0777777);
+		DataVal = -0400000 - DataVal;
 	}
 	else {
 		DataVal = Data & 0777777;
@@ -316,6 +405,7 @@ void LEM_AEA::SetAGSAttitude(int Type, int Data)
 
 	if (Data & 0400000) { // Negative
 		DataVal = -((~Data) & 0777777);
+		DataVal = -0400000 - DataVal;
 	}
 	else {
 		DataVal = Data & 0777777;
@@ -364,7 +454,7 @@ VECTOR3 LEM_AEA::GetTotalAttitude()
 		return _V(0, 0, 0);
 	}
 
-	return _V(atan2(sin_theta, cos_theta), atan2(sin_phi, cos_phi), atan2(sin_psi, cos_psi));
+	return _V(atan2(sin_theta, cos_theta), atan2(sin_psi, cos_psi), -atan2(sin_phi, cos_phi));
 }
 
 VECTOR3 LEM_AEA::GetAttitudeError()
@@ -374,7 +464,7 @@ VECTOR3 LEM_AEA::GetAttitudeError()
 		return _V(0, 0, 0);
 	}
 
-	return AGSAttitudeError;
+	return _V(AGSAttitudeError.z, AGSAttitudeError.y, AGSAttitudeError.x);
 }
 
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
@@ -401,20 +491,36 @@ void LEM_AEA::InitVirtualAGS(char *binfile)
 }
 
 void LEM_AEA::SetMissionInfo(int MissionNo)
+{
+	if (AEAInitialized) { return; }
 
+	if (MissionNo < 12)
+	{
+		FlightProgram = 6;
+	}
+	else
+	{
+		FlightProgram = 8;
+	}
+
+	SetFlightProgram(FlightProgram);
+}
+
+void LEM_AEA::SetFlightProgram(int FP)
 {
 	char *binfile;
 
-	if (MissionNo < 12)	// Flight Program 6
-	{
-		binfile = "Config/ProjectApollo/FP6.bin";
-	}
-	else				//Flight Program 8
+	// Flight Program 6
+	binfile = "Config/ProjectApollo/FP6.bin";
+
+	if (FP == 8)	//Flight Program 8
 	{
 		binfile = "Config/ProjectApollo/FP8.bin";
 	}
 
 	InitVirtualAGS(binfile);
+
+	AEAInitialized = true;
 }
 
 void LEM_AEA::WriteMemory(unsigned int loc, int val)
@@ -454,6 +560,9 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	int i;
 	int val;
 
+	//Has to be first!
+	oapiWriteScenario_int(scn, "FLIGHTPROGRAM", FlightProgram);
+
 	for (i = 0; i < AEA_MEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && (val != 0)) {
 			sprintf(fname, "MEM%04o", i);
@@ -491,6 +600,7 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	sprintf(buffer, "  NEXT20MSSIGNAL %I64d", vags.Next20msSignal);
 	oapiWriteLine(scn, buffer);
 
+	oapiWriteScenario_int(scn, "ASACYCLECOUNTER", ASACycleCounter);
 	papiWriteScenario_double(scn, "SIN_THETA", sin_theta);
 	papiWriteScenario_double(scn, "COS_THETA", cos_theta);
 	papiWriteScenario_double(scn, "SIN_PHI", sin_phi);
@@ -510,7 +620,12 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 		if (!strnicmp(line, end_str, sizeof(end_str)))
 			break;
 
-		if (!strnicmp(line, "MEM", 3)) {
+		//Has to be first!
+		if (!strnicmp(line, "FLIGHTPROGRAM", 13)) {
+			sscanf(line + 13, "%d", &FlightProgram);
+			SetFlightProgram(FlightProgram);
+		}
+		else if (!strnicmp(line, "MEM", 3)) {
 			int num, val;
 			sscanf(line + 3, "%o", &num);
 			sscanf(line + 8, "%o", &val);
@@ -545,6 +660,7 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 			sscanf(line + 14, "%I64d", &vags.Next20msSignal);
 		}
 
+		papiReadScenario_int(line, "ASACYCLECOUNTER", ASACycleCounter);
 		papiReadScenario_double(line, "SIN_THETA", sin_theta);
 		papiReadScenario_double(line, "COS_THETA", cos_theta);
 		papiReadScenario_double(line, "SIN_PHI", sin_phi);

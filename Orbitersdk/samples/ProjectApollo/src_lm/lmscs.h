@@ -72,6 +72,7 @@ protected:
 	double PRMDutyRatio(double volt);
 	double PRMPulseWidth(double volt);
 	bool PRMTimestep(int n, double simdt, double pp, double pw);
+	void Limiter(double &val, double lim);
 
 	VECTOR3 aea_attitude_error;
 	VECTOR3 aca_rates;
