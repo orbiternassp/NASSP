@@ -45,14 +45,26 @@ enum AGSChannelValue40_Bits {
 class LEM_ASA{
 public:
 	LEM_ASA();							// Cons
-	void Init(LEM *s, Boiler *hb, h_Radiator *hr); // Init
+	void Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	void PulseTimestep(int* AttPulses);
+	MATRIX3 transpose_matrix(MATRIX3 a);
+	VECTOR3 MatrixToEuler(MATRIX3 mat);
 	LEM *lem;					// Pointer at LEM
 protected:
+
+	bool IsPowered();
+
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *heater;				// Heater
+	ThreePosSwitch *PowerSwitch;
+
+	MATRIX3 CurrentRotationMatrix;
+	VECTOR3 EulerAngles;
+
+	const double AttPulsesScal = pow(2.0, 16.0);
 };
 
 // ABORT ELECTRONICS ASSEMBLY (AEA)
@@ -70,6 +82,7 @@ public:
 	unsigned int GetOutputChannel(int channel);
 	unsigned int GetInputChannel(int channel);
 	void SetMissionInfo(int MissionNo);
+	void SetFlightProgram(int FP);
 	void WriteMemory(unsigned int loc, int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void SetAGSAttitude(int Type, int Data);
@@ -89,12 +102,14 @@ protected:
 	LEM_DEDA &deda;
 
 #define MAX_INPUT_PORTS		020
-#define MAX_OUTPUT_PORTS	020
+#define MAX_OUTPUT_PORTS	021
 
 	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
 
+	int FlightProgram;
+	bool AEAInitialized;
 	double LastCycled;
-	int ASAcycle;
+	int ASACycleCounter;
 
 	//AEA attitude display
 	double sin_theta;

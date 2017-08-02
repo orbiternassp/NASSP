@@ -179,9 +179,13 @@ void ATCA::Timestep(double simt, double simdt){
 		hasAbortPower = true;
 	}
 
-	att_rates = lem->rga.GetRates();
 
+	//INPUTS: ACA, RGA and AEA
+
+	att_rates = lem->rga.GetRates();
+	aea_attitude_error = lem->aea.GetAttitudeError();
 	aca_rates = _V(0, 0, 0);
+
 	if (lem->scca2.GetK2())
 	{
 		aca_rates.z = lem->CDR_ACA.GetACAProp(2);
@@ -315,6 +319,46 @@ void ATCA::Timestep(double simt, double simdt){
 			DeadbandGain.x = 2.63;
 		}
 
+		//Attitude Error Limiter
+		if (!K14)
+		{
+			//Limits attitude rate to 5.0°/s
+			if (K11)
+			{
+				Limiter(aea_attitude_error.z, 7.9*RAD);
+			}
+			else
+			{
+				Limiter(aea_attitude_error.z, 2.4*RAD);
+			}
+		}
+
+		if (!K15)
+		{
+			//Limits attitude rate to 10.0°/s
+			if (K12)
+			{
+				Limiter(aea_attitude_error.y, 15.3*RAD);
+			}
+			else
+			{
+				Limiter(aea_attitude_error.y, 4.3*RAD);
+			}
+		}
+
+		if (!K16)
+		{
+			//Limits attitude rate to 5.0°/s
+			if (K13)
+			{
+				Limiter(aea_attitude_error.x, 7.8*RAD);
+			}
+			else
+			{
+				Limiter(aea_attitude_error.x, 2.3*RAD);
+			}
+		}
+
 		//Yaw
 		if (K19)
 		{
@@ -329,7 +373,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.z = (aca_rates.z*ACARateGain.z + aea_attitude_error.y*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
+			thrustLogicInputError.z = (aca_rates.z*ACARateGain.z + aea_attitude_error.z*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
 			if (thrustLogicInputError.z > 0.0)
 			{
 				thrustLogicInputError.z = max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
@@ -354,7 +398,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.y = (aca_rates.y*ACARateGain.y + aea_attitude_error.x*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
+			thrustLogicInputError.y = (aca_rates.y*ACARateGain.y + aea_attitude_error.y*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
 			pitchGimbalError = thrustLogicInputError.y;
 			if (thrustLogicInputError.y > 0.0)
 			{
@@ -380,7 +424,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.x = (aca_rates.x*ACARateGain.x + aea_attitude_error.z*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
+			thrustLogicInputError.x = (aca_rates.x*ACARateGain.x + aea_attitude_error.x*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
 			rollGimbalError = thrustLogicInputError.x;
 			if (thrustLogicInputError.x > 0.0)
 			{
@@ -805,6 +849,18 @@ bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
 	}
 
 	return false;
+}
+
+void ATCA::Limiter(double &val, double lim)
+{
+	if (val > lim)
+	{
+		val = lim;
+	}
+	else if (val < -lim)
+	{
+		val = -lim;
+	}
 }
 
 double ATCA::GetDPSPitchGimbalError()
