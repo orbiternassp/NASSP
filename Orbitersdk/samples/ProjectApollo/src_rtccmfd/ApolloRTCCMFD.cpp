@@ -3800,7 +3800,10 @@ void ApolloRTCCMFD::menuSVCalc()
 	{
 		if (G->svmode == 0)
 		{
-			G->StateVectorCalc();
+			if (!G->svtarget->GroundContact())
+			{
+				G->StateVectorCalc();
+			}
 		}
 		else
 		{
