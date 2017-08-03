@@ -291,6 +291,8 @@ void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
 	//
 	if (!IsPowered())
 		return;
+
+	vags.InputPorts[port] = data;
 }
 
 void LEM_AEA::SetOutputChannel(int Type, int Data)

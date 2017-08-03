@@ -26,7 +26,20 @@
 
 class LEM_DEDA;
 
-  // AGS Channel 11, Output Discretes
+	// AGS Channel 04, Input Discretes
+
+enum AGSChannelValue04_Bits {
+	AGSAbortStageDiscrete = 9,
+	AGSAbortDiscrete,
+	AGSAscentEngineOnDiscrete,
+	AGSDescentEngineOnDiscrete,
+	AGSAutomaticDiscrete,
+	AGSFollowUpDiscrete,
+	AGSOutputTelemetryStopDiscrete,
+	AGSDownlinkTelemetryStopDiscrete
+};
+
+  // AGS Channel 40, Output Discretes
 enum AGSChannelValue40_Bits {
 	RippleCarryInhibit = 0,
 	AGSAltitude,
