@@ -81,15 +81,26 @@ public:
 protected:
 
 	bool IsPowered();
+	void TurnOn();
+	void TurnOff();
 
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *heater;				// Heater
 	ThreePosSwitch *PowerSwitch;
 
+	bool PulsesSent;
+	bool Initialized;
+	bool Operate;
+
+	double LastSimDT;
 	MATRIX3 CurrentRotationMatrix;
 	VECTOR3 EulerAngles;
+	VECTOR3 RemainingDeltaVel;
+	VECTOR3 LastWeightAcceleration;
+	VECTOR3 LastGlobalVel;
 
 	const double AttPulsesScal = pow(2.0, 16.0);
+	const double AccPulsesScal = 1.0 / 0.003125 / 0.3048;
 };
 
 // ABORT ELECTRONICS ASSEMBLY (AEA)

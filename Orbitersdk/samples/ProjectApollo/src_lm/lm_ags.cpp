@@ -58,8 +58,13 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 
 	PowerSwitch = 0;
 
+	Initialized = false;
+	Operate = false;
+	PulsesSent = false;
 	CurrentRotationMatrix = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	EulerAngles = _V(0., 0., 0.);
+	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	LastSimDT = -1.0;
 }
 
 void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
@@ -81,6 +86,18 @@ void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
 	}
 }
 
+void LEM_ASA::TurnOn()
+{
+	Operate = true;
+}
+
+void LEM_ASA::TurnOff()
+{
+	Operate = false;
+	PulsesSent = false;
+	Initialized = false;
+}
+
 void LEM_ASA::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 	// AGS OFF  = ASA heaters active (OFF mode)
@@ -99,38 +116,119 @@ void LEM_ASA::TimeStep(double simdt){
 	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
-	// FIXME: ASA goes here
+	if (!Operate) {
+		if (IsPowered())
+			TurnOn();
+		else
+			return;
+	}
+	else if (!IsPowered()) {
+		TurnOff();
+		return;
+	}
 
-	if (!IsPowered()) { return; }
+	if (!PulsesSent)
+	{
+		EulerAngles = _V(0.0, 0.0, 0.0);
+		RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	}
 
+	PulsesSent = false;
+
+	//ATTITUDE
 	MATRIX3 Rotnew, dRot;
 
 	lem->GetRotationMatrix(Rotnew);
 
 	dRot = mul(transpose_matrix(CurrentRotationMatrix), Rotnew);
-	EulerAngles = MatrixToEuler(dRot);
+	EulerAngles += MatrixToEuler(dRot);
 	EulerAngles = _V(EulerAngles.y, EulerAngles.x, EulerAngles.z);
 
 	CurrentRotationMatrix = Rotnew;
+
+	if (!Initialized) 
+	{
+		// Get current weight vector in vessel coordinates
+		VECTOR3 w;
+		lem->GetWeightVector(w);
+		// Transform to Orbiter global and calculate weight acceleration
+		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+		LastWeightAcceleration = w;
+
+		lem->GetGlobalVel(LastGlobalVel);
+
+		LastSimDT = simdt;
+		Initialized = true;
+	}
+	else
+	{
+		//ACCELERATION
+
+		// Calculate accelerations
+		VECTOR3 w, vel;
+		lem->GetWeightVector(w);
+		// Transform to Orbiter global and calculate accelerations
+		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+		lem->GetGlobalVel(vel);
+		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
+
+		// Measurements with the 2006-P1 version showed that the average of the weight 
+		// vector of this and the last step match the force vector while in free fall
+		// The force vector matches the global velocity change of the last timestep exactly,
+		// but isn't used because GetForceVector isn't working while docked
+		VECTOR3 dw1 = w - dvel;
+		VECTOR3 dw2 = LastWeightAcceleration - dvel;
+		VECTOR3 accel = -(dw1 + dw2) / 2.0;
+		LastWeightAcceleration = w;
+		LastGlobalVel = vel;
+
+		accel = mul(transpose_matrix(CurrentRotationMatrix), accel);
+
+		RemainingDeltaVel.y += accel.x * LastSimDT;
+		RemainingDeltaVel.x += accel.y * LastSimDT;
+		RemainingDeltaVel.z += accel.z * LastSimDT;
+
+		LastSimDT = simdt;
+	}
 }
 
-void LEM_ASA::PulseTimestep(int* AttPulses)
+void LEM_ASA::PulseTimestep(int* ASAPulses)
 {
-	for (int i = 0;i < 3;i++)
+	int i;
+
+	for (i = 0;i < 3;i++)
 	{
-		AttPulses[i] = 32 + (int)(EulerAngles.data[i] * AttPulsesScal);
+		ASAPulses[i] = 32 + (int)(EulerAngles.data[i] * AttPulsesScal);
 
-		if (AttPulses[i] > 61)
+		if (ASAPulses[i] > 61)
 		{
-			AttPulses[i] = 61;
+			ASAPulses[i] = 61;
 		}
-		else if (AttPulses[i] < 3)
+		else if (ASAPulses[i] < 3)
 		{
-			AttPulses[i] = 3;
+			ASAPulses[i] = 3;
 		}
 
-		EulerAngles.data[i] -= (1.0 / AttPulsesScal)*(AttPulses[i] - 32);
+		EulerAngles.data[i] -= (1.0 / AttPulsesScal)*(ASAPulses[i] - 32);
 	}
+
+	for (i = 3;i < 6;i++)
+	{
+		ASAPulses[i] = 32 + (int)(RemainingDeltaVel.data[i - 3] * AccPulsesScal);
+
+		if (ASAPulses[i] > 61)
+		{
+			ASAPulses[i] = 61;
+		}
+		else if (ASAPulses[i] < 3)
+		{
+			ASAPulses[i] = 3;
+		}
+
+		RemainingDeltaVel.data[i - 3] -= (1.0 / AccPulsesScal)*(ASAPulses[i] - 32);
+	}
+
+	PulsesSent = true;
 }
 
 MATRIX3 LEM_ASA::transpose_matrix(MATRIX3 a)
@@ -161,6 +259,14 @@ void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_mx(scn, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+	papiWriteScenario_vec(scn, "EULERANGLES", EulerAngles);
+	papiWriteScenario_vec(scn, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
+	papiWriteScenario_vec(scn, "LASTGLOBALVEL", LastGlobalVel);
+	papiWriteScenario_vec(scn, "REMAININGDELTAVEL", RemainingDeltaVel);
+	papiWriteScenario_double(scn, "LASTSIMDT", LastSimDT);
+	papiWriteScenario_bool(scn, "INITIALIZED", Initialized);
+	papiWriteScenario_bool(scn, "OPERATE", Operate);
+	papiWriteScenario_bool(scn, "PULSESSENT", PulsesSent);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -174,6 +280,14 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
 			break;
 
 		papiReadScenario_mat(line, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+		papiReadScenario_vec(line, "EULERANGLES", EulerAngles);
+		papiReadScenario_vec(line, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
+		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
+		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
+		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
+		papiReadScenario_bool(line, "INITIALIZED", Initialized);
+		papiReadScenario_bool(line, "OPERATE", Operate);
+		papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 	}
 }
 
@@ -215,7 +329,7 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 
 	int Delta, CycleCount = 0;
 
-	int AsaPulses[3];
+	int AsaPulses[6];
 
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
@@ -245,13 +359,13 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 			vags.InputPorts[IO_6010] += SignExtendAGS(AsaPulses[0]) * 0100;
 			vags.InputPorts[IO_6010] &= 0377700;
 
-			vags.InputPorts[IO_6020] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6020] += SignExtendAGS(AsaPulses[3]) * 0100;
 			vags.InputPorts[IO_6020] &= 0377700;
 
-			vags.InputPorts[IO_6040] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6040] += SignExtendAGS(AsaPulses[4]) * 0100;
 			vags.InputPorts[IO_6040] &= 0377700;
 
-			vags.InputPorts[IO_6100] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6100] += SignExtendAGS(AsaPulses[5]) * 0100;
 			vags.InputPorts[IO_6100] &= 0377700;
 
 			ASACycleCounter -= 1024;
