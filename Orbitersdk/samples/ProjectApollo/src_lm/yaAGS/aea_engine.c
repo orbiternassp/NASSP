@@ -279,7 +279,7 @@ PutLongAccumulator (ags_t *State, int64_t lli)
 //----------------------------------------------------------------------------
 // This function is used to get buffered DEDA shift-register data.  
 
-extern int DedaBuffer[9], DedaBufferCount, DedaBufferWanted,
+/*extern int DedaBuffer[9], DedaBufferCount, DedaBufferWanted,
   DedaBufferReadout, DedaBufferDefault;
 
 static int
@@ -301,7 +301,7 @@ FetchDedaShift (ags_t *State)
     State->InputPorts[IO_2040] |= 04000;
     }
   return (DedaBufferDefault);
-}
+}*/
 
 //-----------------------------------------------------------------------------
 // Handles everything about the OUT instruction. 
@@ -350,8 +350,8 @@ Output (ags_t *State, int AddressField, int Value)
 	    NewDiscreteOutputs &= ~04;
 	    break;
 	  case 02500:		// DEDA shift in discrete set
-	    // NewDiscreteOutputs &= ~010;
-	    DedaBufferReadout++;
+	    NewDiscreteOutputs &= ~010;
+	    //DedaBufferReadout++;
 	    //printf ("CPU issued DEDA Shift In.\n");
 	    break;
 	  case 02600:		// DEDA shift out discrete set
@@ -464,12 +464,12 @@ Input (ags_t *State, int AddressField, int *Value)
   for (i = 0; (Mask = (1 << i)) != 0400; i++)
     if (0 != (AddressField & Mask))
       {
-        if (IO_2200 == BaseAddress + i)
-	  {
-	    *Value |= FetchDedaShift (State);
+        //if (IO_2200 == BaseAddress + i)
+	  //{
+	   // *Value |= FetchDedaShift (State);
 	    //printf ("INP 2200: %02o\n", (*Value >> 13) & 017);
-	  }
-	else
+	  //}
+	//else
           *Value |= State->InputPorts[BaseAddress + i];
 	// Certain input registers are reset when they are read.
 	if (BaseAddress == IO_6001)

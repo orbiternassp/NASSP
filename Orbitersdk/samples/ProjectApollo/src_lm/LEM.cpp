@@ -227,7 +227,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	scdu(agc, RegOPTX, 0140, 0),
 	tcdu(agc, RegOPTY, 0141, 0),
 	aea(Panelsdk, deda),
-	deda(this,soundlib, aea, 015),
+	deda(this,soundlib, aea),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -1035,6 +1035,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "TCDU_START", sizeof("TCDU_START"))) {
 			tcdu.LoadState(scn, "CDU_END");
 		}
+		else if (!strnicmp(line, "DEDA_START", sizeof("DEDA_START"))) {
+			deda.LoadState(scn, "DEDA_END");
+		}
 		else if (!strnicmp(line, "AEA_START", sizeof("AEA_START"))) {
 			aea.LoadState(scn, "AEA_END");
 		}
@@ -1427,6 +1430,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	imu.SaveState(scn);
 	scdu.SaveState(scn, "SCDU_START", "CDU_END");
 	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
+	deda.SaveState(scn, "DEDA_START", "DEDA_END");
 	aea.SaveState(scn, "AEA_START", "AEA_END");
 	asa.SaveState(scn, "ASA_START", "ASA_END");
 

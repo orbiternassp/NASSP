@@ -261,6 +261,40 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	LastCycled += (0.0000009765625 * CycleCount);
 }
 
+void LEM_AEA::ResetDEDAShiftIn()
+{
+	unsigned int mask = (1 << (DEDAShiftIn));
+
+	int	data = vags.OutputPorts[IO_ODISCRETES];
+
+	data |= mask;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
+	vags.OutputPorts[IO_ODISCRETES] = data;
+}
+
+void LEM_AEA::ResetDEDAShiftOut()
+{
+	unsigned int mask = (1 << (DEDAShiftOut));
+
+	int	data = vags.OutputPorts[IO_ODISCRETES];
+
+	data |= mask;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
+	vags.OutputPorts[IO_ODISCRETES] = data;
+}
+
 void LEM_AEA::SetInputPort(int port, int val)
 {
 	//
@@ -268,6 +302,8 @@ void LEM_AEA::SetInputPort(int port, int val)
 	//
 	if (!IsPowered())
 		return;
+
+	vags.InputPorts[port] = val;
 }
 
 void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
@@ -675,12 +711,10 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 
 // Data Entry and Display Assembly
 
-LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer, int IOChannel) :  lem(lm), soundlib(s), ags(computer)
-
+LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer) :  lem(lm), soundlib(s), ags(computer)
 {
 	Reset();
 	ResetKeyDown();
-	KeyCodeIOChannel = IOChannel;
 }
 
 LEM_DEDA::~LEM_DEDA()
@@ -706,24 +740,70 @@ void LEM_DEDA::TimeStep(double simdt){
 		FirstTimeStep = false;
 	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
+
+	if (!IsPowered()) { return; }
+
+	SetAddress();
+	SetData();
 }
 
 void LEM_DEDA::ProcessChannel27(int val)
 {
+	if (State == 9)
+	{
+		State = 0;
+	}
+	ShiftRegister[State] = (val >> 13) & 017;
+	State++;
 
+	lem->aea.ResetDEDAShiftOut();
 }
 
-void LEM_DEDA::ProcessChannel40(int val)
+void LEM_DEDA::ProcessChannel40(AGSChannelValue40 val)
 {
+	if (val[DEDAShiftIn] == 0)
+	{
+		if (OprErrLit())
+		{
+			lem->aea.SetInputPort(IO_2200, 017 << 13);
+		}
+		else
+		{
+			lem->aea.SetInputPort(IO_2200, (ShiftRegister[0] & 017) << 13);
 
+			for (int i = 0;i < 8;i++)
+			{
+				ShiftRegister[i] = ShiftRegister[i + 1];
+			}
+			ShiftRegister[8] = 017;
+			if (State > 0)
+			{
+				State--;
+			}
+		}
+		lem->aea.ResetDEDAShiftIn();
+	}
 }
 
 void LEM_DEDA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_intarr(scn, "SHIFTREGISTER", ShiftRegister, 9);
+	oapiWriteScenario_int(scn, "STATE", State);
+
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str)))
+			break;
+
+		papiReadScenario_intarr(line, "SHIFTREGISTER", ShiftRegister, 9);
+		papiReadScenario_int(line, "STATE", State);
+	}
 }
 
 void LEM_DEDA::KeyClick()
@@ -739,10 +819,14 @@ void LEM_DEDA::Reset()
 	LightsLit = 0;
 	SegmentsLit = 0;
 	State = 0;
-	Held = false;
 
 	strcpy (Adr, ThreeSpace);
 	strcpy (Data, SixSpace);
+
+	for (int i = 0;i < 9;i++)
+	{
+		ShiftRegister[i] = 017;
+	}
 }
 
 void LEM_DEDA::ResetKeyDown() 
@@ -765,6 +849,11 @@ void LEM_DEDA::ResetKeyDown()
 	KeyDown_ReadOut = false;
 	KeyDown_Enter = false;
 	KeyDown_Hold = false;
+
+	ags.SetInputPortBit(IO_2040, DEDAReadoutDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAEnterDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAHoldDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAClearDiscrete, true);
 }
 
 void LEM_DEDA::SystemTimestep(double simdt)
@@ -786,6 +875,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	// Check the lights.
 	//
 
+	SegmentsLit = 0;
 	LightsLit = 0;
 	if (OprErrLit()) LightsLit++;
 	//
@@ -1107,22 +1197,22 @@ void LEM_DEDA::SendKeyCode(int val)
 	//READOUT
 	if (val == 10)
 	{
-		ags.SetInputPortBit(IO_2040, 10, false);
+		ags.SetInputPortBit(IO_2040, DEDAReadoutDiscrete, false);
 	}
 	//ENTR
 	else if (val == 11)
 	{
-		ags.SetInputPortBit(IO_2040, 11, false);
+		ags.SetInputPortBit(IO_2040, DEDAEnterDiscrete, false);
 	}
 	//HOLD
 	else if (val == 12)
 	{
-		ags.SetInputPortBit(IO_2040, 12, false);
+		ags.SetInputPortBit(IO_2040, DEDAHoldDiscrete, false);
 	}
 	//CLEAR
 	else if (val == 13)
 	{
-		ags.SetInputPortBit(IO_2040, 13, false);
+		ags.SetInputPortBit(IO_2040, DEDAClearDiscrete, false);
 	}
 }
 
@@ -1136,8 +1226,6 @@ void LEM_DEDA::EnterPressed()
 	}
 	else
 		SetOprErr(true);
-
-	Held = false;
 }
 
 void LEM_DEDA::ClearPressed()
@@ -1154,8 +1242,8 @@ void LEM_DEDA::PlusPressed()
 	KeyClick();
 
 	if (State == 3){
-			State++;
-			Data[0] = '+';
+		ShiftRegister[State] = 0;
+		State++;
 	} else 
 		SetOprErr(true);
 }
@@ -1165,8 +1253,8 @@ void LEM_DEDA::MinusPressed()
 	KeyClick();
 
 	if (State == 3){
-			State++;
-			Data[0] = '-';
+		ShiftRegister[State] = 1;
+		State++;
 	} else 
 		SetOprErr(true);
 }
@@ -1179,8 +1267,6 @@ void LEM_DEDA::ReadOutPressed()
 		SendKeyCode(10);
 	} else 
 		SetOprErr(true);
-
-	Held = false;
 }
 
 void LEM_DEDA::HoldPressed()
@@ -1191,8 +1277,6 @@ void LEM_DEDA::HoldPressed()
 		SendKeyCode(12);
 	} else 
 		SetOprErr(true);
-
-	Held = true;
 }
 
 void LEM_DEDA::NumberPressed(int n)
@@ -1207,7 +1291,7 @@ void LEM_DEDA::NumberPressed(int n)
 				SetOprErr(true);
 				return;
 			}
-			Adr[State] = '0' + n;
+			ShiftRegister[State] = n;
 			State++;
 			return;
 		case 3:
@@ -1218,7 +1302,7 @@ void LEM_DEDA::NumberPressed(int n)
 		case 6:
 		case 7:
 		case 8:
-			Data[State-3] = '0' + n;
+			ShiftRegister[State] = n;
 			State++;
 			return;
 		case 9:
@@ -1433,6 +1517,73 @@ void LEM_DEDA::nineCallback(PanelSwitchItem* s)
 	{
 		ResetKeyDown();
 	}
+}
+
+void LEM_DEDA::SetAddress()
+{
+	for (int i = 0;i < 3;i++)
+	{
+		Adr[i] = ValueChar(ShiftRegister[i]);
+	}
+}
+
+void LEM_DEDA::SetData()
+{
+	Data[0] = ValueCharSign(ShiftRegister[3]);
+
+	for (int i = 0;i < 5;i++)
+	{
+		Data[i + 1] = ValueChar(ShiftRegister[i + 4]);
+	}
+}
+
+char LEM_DEDA::ValueCharSign(unsigned val)
+{
+	switch (val) {
+	case 0:
+		return '+';
+
+	case 1:
+		return '-';
+	}
+	return ' ';
+}
+
+char LEM_DEDA::ValueChar(unsigned val)
+
+{
+	switch (val) {
+	case 0:
+		return '0';
+
+	case 1:
+		return '1';
+
+	case 2:
+		return '2';
+
+	case 3:
+		return '3';
+
+	case 4:
+		return '4';
+
+	case 5:
+		return '5';
+
+	case 6:
+		return '6';
+
+	case 7:
+		return '7';
+
+	case 8:
+		return '8';
+
+	case 9:
+		return '9';
+	}
+	return ' ';
 }
 
 void
