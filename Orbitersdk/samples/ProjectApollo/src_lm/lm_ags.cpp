@@ -58,8 +58,13 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 
 	PowerSwitch = 0;
 
+	Initialized = false;
+	Operate = false;
+	PulsesSent = false;
 	CurrentRotationMatrix = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	EulerAngles = _V(0., 0., 0.);
+	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	LastSimDT = -1.0;
 }
 
 void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
@@ -81,6 +86,18 @@ void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
 	}
 }
 
+void LEM_ASA::TurnOn()
+{
+	Operate = true;
+}
+
+void LEM_ASA::TurnOff()
+{
+	Operate = false;
+	PulsesSent = false;
+	Initialized = false;
+}
+
 void LEM_ASA::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 	// AGS OFF  = ASA heaters active (OFF mode)
@@ -99,38 +116,120 @@ void LEM_ASA::TimeStep(double simdt){
 	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
-	// FIXME: ASA goes here
+	if (!Operate) {
+		if (IsPowered())
+			TurnOn();
+		else
+			return;
+	}
+	else if (!IsPowered()) {
+		TurnOff();
+		return;
+	}
 
-	if (!IsPowered()) { return; }
+	if (!PulsesSent)
+	{
+		EulerAngles = _V(0.0, 0.0, 0.0);
+		RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	}
 
+	PulsesSent = false;
+
+	//ATTITUDE
 	MATRIX3 Rotnew, dRot;
+	VECTOR3 dEulerAngles;
 
 	lem->GetRotationMatrix(Rotnew);
 
 	dRot = mul(transpose_matrix(CurrentRotationMatrix), Rotnew);
-	EulerAngles = MatrixToEuler(dRot);
-	EulerAngles = _V(EulerAngles.y, EulerAngles.x, EulerAngles.z);
+	dEulerAngles = MatrixToEuler(dRot);
+	EulerAngles += _V(dEulerAngles.y, dEulerAngles.x, dEulerAngles.z);
 
 	CurrentRotationMatrix = Rotnew;
+
+	if (!Initialized) 
+	{
+		// Get current weight vector in vessel coordinates
+		VECTOR3 w;
+		lem->GetWeightVector(w);
+		// Transform to Orbiter global and calculate weight acceleration
+		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+		LastWeightAcceleration = w;
+
+		lem->GetGlobalVel(LastGlobalVel);
+
+		LastSimDT = simdt;
+		Initialized = true;
+	}
+	else
+	{
+		//ACCELERATION
+
+		// Calculate accelerations
+		VECTOR3 w, vel;
+		lem->GetWeightVector(w);
+		// Transform to Orbiter global and calculate accelerations
+		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+		lem->GetGlobalVel(vel);
+		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
+
+		// Measurements with the 2006-P1 version showed that the average of the weight 
+		// vector of this and the last step match the force vector while in free fall
+		// The force vector matches the global velocity change of the last timestep exactly,
+		// but isn't used because GetForceVector isn't working while docked
+		VECTOR3 dw1 = w - dvel;
+		VECTOR3 dw2 = LastWeightAcceleration - dvel;
+		VECTOR3 accel = -(dw1 + dw2) / 2.0;
+		LastWeightAcceleration = w;
+		LastGlobalVel = vel;
+
+		accel = mul(transpose_matrix(CurrentRotationMatrix), accel);
+
+		RemainingDeltaVel.y += accel.x * LastSimDT;
+		RemainingDeltaVel.x += accel.y * LastSimDT;
+		RemainingDeltaVel.z += accel.z * LastSimDT;
+
+		LastSimDT = simdt;
+	}
 }
 
-void LEM_ASA::PulseTimestep(int* AttPulses)
+void LEM_ASA::PulseTimestep(int* ASAPulses)
 {
-	for (int i = 0;i < 3;i++)
+	int i;
+
+	for (i = 0;i < 3;i++)
 	{
-		AttPulses[i] = 32 + (int)(EulerAngles.data[i] * AttPulsesScal);
+		ASAPulses[i] = 32 + (int)(EulerAngles.data[i] * AttPulsesScal);
 
-		if (AttPulses[i] > 61)
+		if (ASAPulses[i] > 61)
 		{
-			AttPulses[i] = 61;
+			ASAPulses[i] = 61;
 		}
-		else if (AttPulses[i] < 3)
+		else if (ASAPulses[i] < 3)
 		{
-			AttPulses[i] = 3;
+			ASAPulses[i] = 3;
 		}
 
-		EulerAngles.data[i] -= (1.0 / AttPulsesScal)*(AttPulses[i] - 32);
+		EulerAngles.data[i] -= (1.0 / AttPulsesScal)*(ASAPulses[i] - 32);
 	}
+
+	for (i = 3;i < 6;i++)
+	{
+		ASAPulses[i] = 32 + (int)(RemainingDeltaVel.data[i - 3] * AccPulsesScal);
+
+		if (ASAPulses[i] > 61)
+		{
+			ASAPulses[i] = 61;
+		}
+		else if (ASAPulses[i] < 3)
+		{
+			ASAPulses[i] = 3;
+		}
+
+		RemainingDeltaVel.data[i - 3] -= (1.0 / AccPulsesScal)*(ASAPulses[i] - 32);
+	}
+
+	PulsesSent = true;
 }
 
 MATRIX3 LEM_ASA::transpose_matrix(MATRIX3 a)
@@ -161,6 +260,14 @@ void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_mx(scn, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+	papiWriteScenario_vec(scn, "EULERANGLES", EulerAngles);
+	papiWriteScenario_vec(scn, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
+	papiWriteScenario_vec(scn, "LASTGLOBALVEL", LastGlobalVel);
+	papiWriteScenario_vec(scn, "REMAININGDELTAVEL", RemainingDeltaVel);
+	papiWriteScenario_double(scn, "LASTSIMDT", LastSimDT);
+	papiWriteScenario_bool(scn, "INITIALIZED", Initialized);
+	papiWriteScenario_bool(scn, "OPERATE", Operate);
+	papiWriteScenario_bool(scn, "PULSESSENT", PulsesSent);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -174,6 +281,14 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
 			break;
 
 		papiReadScenario_mat(line, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
+		papiReadScenario_vec(line, "EULERANGLES", EulerAngles);
+		papiReadScenario_vec(line, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
+		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
+		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
+		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
+		papiReadScenario_bool(line, "INITIALIZED", Initialized);
+		papiReadScenario_bool(line, "OPERATE", Operate);
+		papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 	}
 }
 
@@ -215,7 +330,7 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 
 	int Delta, CycleCount = 0;
 
-	int AsaPulses[3];
+	int AsaPulses[6];
 
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
@@ -245,13 +360,13 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 			vags.InputPorts[IO_6010] += SignExtendAGS(AsaPulses[0]) * 0100;
 			vags.InputPorts[IO_6010] &= 0377700;
 
-			vags.InputPorts[IO_6020] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6020] += SignExtendAGS(AsaPulses[3]) * 0100;
 			vags.InputPorts[IO_6020] &= 0377700;
 
-			vags.InputPorts[IO_6040] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6040] += SignExtendAGS(AsaPulses[4]) * 0100;
 			vags.InputPorts[IO_6040] &= 0377700;
 
-			vags.InputPorts[IO_6100] += SignExtendAGS(32) * 0100;
+			vags.InputPorts[IO_6100] += SignExtendAGS(AsaPulses[5]) * 0100;
 			vags.InputPorts[IO_6100] &= 0377700;
 
 			ASACycleCounter -= 1024;
@@ -261,6 +376,40 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	LastCycled += (0.0000009765625 * CycleCount);
 }
 
+void LEM_AEA::ResetDEDAShiftIn()
+{
+	unsigned int mask = (1 << (DEDAShiftIn));
+
+	int	data = vags.OutputPorts[IO_ODISCRETES];
+
+	data |= mask;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
+	vags.OutputPorts[IO_ODISCRETES] = data;
+}
+
+void LEM_AEA::ResetDEDAShiftOut()
+{
+	unsigned int mask = (1 << (DEDAShiftOut));
+
+	int	data = vags.OutputPorts[IO_ODISCRETES];
+
+	data |= mask;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
+	vags.OutputPorts[IO_ODISCRETES] = data;
+}
+
 void LEM_AEA::SetInputPort(int port, int val)
 {
 	//
@@ -268,6 +417,8 @@ void LEM_AEA::SetInputPort(int port, int val)
 	//
 	if (!IsPowered())
 		return;
+
+	vags.InputPorts[port] = val;
 }
 
 void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
@@ -291,6 +442,8 @@ void LEM_AEA::SetInputPortBit(int port, int bit, bool val)
 	//
 	if (!IsPowered())
 		return;
+
+	vags.InputPorts[port] = data;
 }
 
 void LEM_AEA::SetOutputChannel(int Type, int Data)
@@ -673,12 +826,10 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 
 // Data Entry and Display Assembly
 
-LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer, int IOChannel) :  lem(lm), soundlib(s), ags(computer)
-
+LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer) :  lem(lm), soundlib(s), ags(computer)
 {
 	Reset();
 	ResetKeyDown();
-	KeyCodeIOChannel = IOChannel;
 }
 
 LEM_DEDA::~LEM_DEDA()
@@ -704,24 +855,70 @@ void LEM_DEDA::TimeStep(double simdt){
 		FirstTimeStep = false;
 	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
+
+	if (!IsPowered()) { return; }
+
+	SetAddress();
+	SetData();
 }
 
 void LEM_DEDA::ProcessChannel27(int val)
 {
+	if (State == 9)
+	{
+		State = 0;
+	}
+	ShiftRegister[State] = (val >> 13) & 017;
+	State++;
 
+	lem->aea.ResetDEDAShiftOut();
 }
 
-void LEM_DEDA::ProcessChannel40(int val)
+void LEM_DEDA::ProcessChannel40(AGSChannelValue40 val)
 {
+	if (val[DEDAShiftIn] == 0)
+	{
+		if (OprErrLit())
+		{
+			lem->aea.SetInputPort(IO_2200, 017 << 13);
+		}
+		else
+		{
+			lem->aea.SetInputPort(IO_2200, (ShiftRegister[0] & 017) << 13);
 
+			for (int i = 0;i < 8;i++)
+			{
+				ShiftRegister[i] = ShiftRegister[i + 1];
+			}
+			ShiftRegister[8] = 017;
+			if (State > 0)
+			{
+				State--;
+			}
+		}
+		lem->aea.ResetDEDAShiftIn();
+	}
 }
 
 void LEM_DEDA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_intarr(scn, "SHIFTREGISTER", ShiftRegister, 9);
+	oapiWriteScenario_int(scn, "STATE", State);
+
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str)))
+			break;
+
+		papiReadScenario_intarr(line, "SHIFTREGISTER", ShiftRegister, 9);
+		papiReadScenario_int(line, "STATE", State);
+	}
 }
 
 void LEM_DEDA::KeyClick()
@@ -737,10 +934,14 @@ void LEM_DEDA::Reset()
 	LightsLit = 0;
 	SegmentsLit = 0;
 	State = 0;
-	Held = false;
 
 	strcpy (Adr, ThreeSpace);
 	strcpy (Data, SixSpace);
+
+	for (int i = 0;i < 9;i++)
+	{
+		ShiftRegister[i] = 017;
+	}
 }
 
 void LEM_DEDA::ResetKeyDown() 
@@ -763,6 +964,11 @@ void LEM_DEDA::ResetKeyDown()
 	KeyDown_ReadOut = false;
 	KeyDown_Enter = false;
 	KeyDown_Hold = false;
+
+	ags.SetInputPortBit(IO_2040, DEDAReadoutDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAEnterDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAHoldDiscrete, true);
+	ags.SetInputPortBit(IO_2040, DEDAClearDiscrete, true);
 }
 
 void LEM_DEDA::SystemTimestep(double simdt)
@@ -784,6 +990,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	// Check the lights.
 	//
 
+	SegmentsLit = 0;
 	LightsLit = 0;
 	if (OprErrLit()) LightsLit++;
 	//
@@ -1105,22 +1312,22 @@ void LEM_DEDA::SendKeyCode(int val)
 	//READOUT
 	if (val == 10)
 	{
-		ags.SetInputPortBit(IO_2040, 10, false);
+		ags.SetInputPortBit(IO_2040, DEDAReadoutDiscrete, false);
 	}
 	//ENTR
 	else if (val == 11)
 	{
-		ags.SetInputPortBit(IO_2040, 11, false);
+		ags.SetInputPortBit(IO_2040, DEDAEnterDiscrete, false);
 	}
 	//HOLD
 	else if (val == 12)
 	{
-		ags.SetInputPortBit(IO_2040, 12, false);
+		ags.SetInputPortBit(IO_2040, DEDAHoldDiscrete, false);
 	}
 	//CLEAR
 	else if (val == 13)
 	{
-		ags.SetInputPortBit(IO_2040, 13, false);
+		ags.SetInputPortBit(IO_2040, DEDAClearDiscrete, false);
 	}
 }
 
@@ -1134,8 +1341,6 @@ void LEM_DEDA::EnterPressed()
 	}
 	else
 		SetOprErr(true);
-
-	Held = false;
 }
 
 void LEM_DEDA::ClearPressed()
@@ -1152,8 +1357,8 @@ void LEM_DEDA::PlusPressed()
 	KeyClick();
 
 	if (State == 3){
-			State++;
-			Data[0] = '+';
+		ShiftRegister[State] = 0;
+		State++;
 	} else 
 		SetOprErr(true);
 }
@@ -1163,8 +1368,8 @@ void LEM_DEDA::MinusPressed()
 	KeyClick();
 
 	if (State == 3){
-			State++;
-			Data[0] = '-';
+		ShiftRegister[State] = 1;
+		State++;
 	} else 
 		SetOprErr(true);
 }
@@ -1177,8 +1382,6 @@ void LEM_DEDA::ReadOutPressed()
 		SendKeyCode(10);
 	} else 
 		SetOprErr(true);
-
-	Held = false;
 }
 
 void LEM_DEDA::HoldPressed()
@@ -1189,8 +1392,6 @@ void LEM_DEDA::HoldPressed()
 		SendKeyCode(12);
 	} else 
 		SetOprErr(true);
-
-	Held = true;
 }
 
 void LEM_DEDA::NumberPressed(int n)
@@ -1205,7 +1406,7 @@ void LEM_DEDA::NumberPressed(int n)
 				SetOprErr(true);
 				return;
 			}
-			Adr[State] = '0' + n;
+			ShiftRegister[State] = n;
 			State++;
 			return;
 		case 3:
@@ -1216,7 +1417,7 @@ void LEM_DEDA::NumberPressed(int n)
 		case 6:
 		case 7:
 		case 8:
-			Data[State-3] = '0' + n;
+			ShiftRegister[State] = n;
 			State++;
 			return;
 		case 9:
@@ -1431,6 +1632,73 @@ void LEM_DEDA::nineCallback(PanelSwitchItem* s)
 	{
 		ResetKeyDown();
 	}
+}
+
+void LEM_DEDA::SetAddress()
+{
+	for (int i = 0;i < 3;i++)
+	{
+		Adr[i] = ValueChar(ShiftRegister[i]);
+	}
+}
+
+void LEM_DEDA::SetData()
+{
+	Data[0] = ValueCharSign(ShiftRegister[3]);
+
+	for (int i = 0;i < 5;i++)
+	{
+		Data[i + 1] = ValueChar(ShiftRegister[i + 4]);
+	}
+}
+
+char LEM_DEDA::ValueCharSign(unsigned val)
+{
+	switch (val) {
+	case 0:
+		return '+';
+
+	case 1:
+		return '-';
+	}
+	return ' ';
+}
+
+char LEM_DEDA::ValueChar(unsigned val)
+
+{
+	switch (val) {
+	case 0:
+		return '0';
+
+	case 1:
+		return '1';
+
+	case 2:
+		return '2';
+
+	case 3:
+		return '3';
+
+	case 4:
+		return '4';
+
+	case 5:
+		return '5';
+
+	case 6:
+		return '6';
+
+	case 7:
+		return '7';
+
+	case 8:
+		return '8';
+
+	case 9:
+		return '9';
+	}
+	return ' ';
 }
 
 void

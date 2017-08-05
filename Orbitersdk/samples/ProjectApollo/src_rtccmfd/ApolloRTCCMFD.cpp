@@ -233,6 +233,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "PCTIG", G->PC_TIG);
 	papiWriteScenario_vec(scn, "PC_DV_LVLH", G->PC_dV_LVLH);
 
+	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
+
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -351,6 +353,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "PCEARLIESTGET", G->PCEarliestGET);
 		papiReadScenario_double(line, "PCTIG", G->PC_TIG);
 		papiReadScenario_vec(line, "PC_DV_LVLH", G->PC_dV_LVLH);
+
+		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -1075,41 +1079,49 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "State Vector", 12);
 		}
-		else
+		else if (G->svmode == 1)
 		{
 			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Landing Site Update", 19);
+		}
+		else if (G->svmode == 2)
+		{
+			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGS State Vector Update", 23);
+		}
+
+		if (G->svmode == 0 || G->svmode == 2)
+		{
+			if (G->SVSlot)
+			{
+				skp->Text((int)(0.5 * W / 8), 10 * H / 14, "CSM", 3);
+			}
+			else
+			{
+				skp->Text((int)(0.5 * W / 8), 10 * H / 14, "LM", 2);
+			}
 		}
 
 		if (G->svmode == 0)
 		{
 			if (!G->svtimemode)
 			{
-				skp->Text(1 * W / 8, 2 * H / 14, "Now", 3);
+				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "Now", 3);
 			}
 			else
 			{
-				skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
+				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "GET", 3);
 				GET_Display(Buffer, G->J2000GET);
-				skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+				skp->Text((int)(0.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 			}
 		}
 
 		if (G->svtarget != NULL)
 		{
 			sprintf(Buffer, G->svtarget->GetName());
-			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		if (G->svmode == 0)
 		{
-			if (G->SVSlot)
-			{
-				skp->Text(1 * W / 8, 10 * H / 14, "CSM", 3);
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 10 * H / 14, "LM", 2);
-			}
 			sprintf(Buffer, "%f", G->J2000Pos.x);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f", G->J2000Pos.y);
@@ -1127,7 +1139,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%f", G->J2000GET);
 			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
-		else
+		else if (G->svmode == 1)
 		{
 			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
@@ -1137,6 +1149,63 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
 			skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (G->svmode == 2)
+		{
+			skp->Text((int)(0.5 * W / 8), 5 * H / 14, "REFSMMAT:", 9);
+			REFSMMATName(Buffer, G->REFSMMATcur);
+			skp->Text((int)(0.5 * W / 8), 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.1f h", G->AGSKFactor / 3600.0);
+			skp->Text((int)(0.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA240);
+			skp->Text(4 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 4 * H / 21, "240", 3);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA241);
+			skp->Text(4 * W / 8, 5 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 5 * H / 21, "241", 3);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA242);
+			skp->Text(4 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 6 * H / 21, "242", 3);
+
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA260);
+			skp->Text(4 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 7 * H / 21, "260", 3);
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA261);
+			skp->Text(4 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 8 * H / 21, "261", 3);
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA262);
+			skp->Text(4 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 9 * H / 21, "262", 3);
+
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA254);
+			skp->Text(4 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 10 * H / 21, "254", 3);
+
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA244);
+			skp->Text(4 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 11 * H / 21, "244", 3);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA245);
+			skp->Text(4 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 12 * H / 21, "245", 3);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA246);
+			skp->Text(4 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 13 * H / 21, "246", 3);
+
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA264);
+			skp->Text(4 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 14 * H / 21, "264", 3);
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA265);
+			skp->Text(4 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 15 * H / 21, "265", 3);
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA266);
+			skp->Text(4 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 16 * H / 21, "266", 3);
+
+			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA272);
+			skp->Text(4 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 17 * H / 21, "272", 3);
 		}
 	}
 	else if (screen == 8)
@@ -1215,42 +1284,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "REFSMMAT:", 9);
 
-			if (G->REFSMMATcur == 0)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Preferred", 9);
-			}
-			else if (G->REFSMMATcur == 1)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Retrofire", 9);
-			}
-			else if (G->REFSMMATcur == 2)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Nominal", 7);
-			}
-			else if (G->REFSMMATcur == 3)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Entry", 5);
-			}
-			else if (G->REFSMMATcur == 4)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Launch", 6);
-			}
-			else if (G->REFSMMATcur == 5)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Landing Site", 12);
-			}
-			else if (G->REFSMMATcur == 6)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "PTC", 3);
-			}
-			else if (G->REFSMMATcur == 7)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "LOI-2", 5);
-			}
-			else if (G->REFSMMATcur == 8)
-			{
-				skp->Text((int)(0.5 * W / 8), 9 * H / 14, "Landing Site", 12);
-			}
+			REFSMMATName(Buffer, G->REFSMMATcur);
+			skp->Text((int)(0.5 * W / 8), 9 * H / 14, Buffer, strlen(Buffer));
 
 			if (G->vesseltype < 2)
 			{
@@ -2698,6 +2733,51 @@ char* ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 	return Buff;
 }
 
+char* ApolloRTCCMFD::REFSMMATName(char* Buff, int n)
+{
+	if (n == 0)
+	{
+		sprintf(Buff, "Preferred");
+	}
+	else if (n == 1)
+	{
+		sprintf(Buff, "Retrofire");
+	}
+	else if (n == 2)
+	{
+		sprintf(Buff, "Nominal");
+	}
+	else if (n == 3)
+	{
+		sprintf(Buff, "Entry");
+	}
+	else if (n == 4)
+	{
+		sprintf(Buff, "Launch");
+	}
+	else if (n == 5)
+	{
+		sprintf(Buff, "Landing Site");
+	}
+	else if (n == 6)
+	{
+		sprintf(Buff, "PTC");
+	}
+	else if (n == 7)
+	{
+		sprintf(Buff, "LOI-2");
+	}
+	else if (n == 8)
+	{
+		sprintf(Buff, "Landing Site");
+	}
+	else
+	{
+		sprintf(Buff, "Unknown Type");
+	}
+	return Buff;
+}
+
 void ApolloRTCCMFD::CycleREFSMMATopt()
 {
 	if (G->REFSMMATopt < 8)
@@ -3619,6 +3699,30 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 	G->J2000GET = SVtime;
 }
 
+void ApolloRTCCMFD::menuSetAGSKFactor()
+{
+	if (G->svmode == 2)
+	{
+		bool AGSKFactorInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the AGS time bias", AGSKFactorInput, 0, 20, (void*)this);
+	}
+}
+
+bool AGSKFactorInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGSKFactor(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGSKFactor(double time)
+{
+	G->AGSKFactor = time*3600.0;
+}
+
 void ApolloRTCCMFD::t2dialogue()
 {
 	bool T2GETInput(void *id, char *str, void *data);
@@ -3800,13 +3904,23 @@ void ApolloRTCCMFD::menuSVCalc()
 	{
 		if (G->svmode == 0)
 		{
-			G->StateVectorCalc();
+			if (!G->svtarget->GroundContact())
+			{
+				G->StateVectorCalc();
+			}
 		}
-		else
+		else if (G->svmode == 1)
 		{
 			if (G->svtarget->GroundContact())
 			{
 				G->LandingSiteUpdate();
+			}
+		}
+		else if (G->svmode == 2)
+		{
+			if (!G->svtarget->GroundContact())
+			{
+				G->AGSStateVectorCalc();
 			}
 		}
 	}
@@ -3814,7 +3928,7 @@ void ApolloRTCCMFD::menuSVCalc()
 
 void ApolloRTCCMFD::menuSwitchSVSlot()
 {
-	if (G->svmode == 0)
+	if (G->svmode == 0 || G->svmode == 2)
 	{
 		G->SVSlot = !G->SVSlot;
 	}
@@ -3828,7 +3942,7 @@ void ApolloRTCCMFD::menuSVUpload()
 		{
 			G->StateVectorUplink();
 		}
-		else
+		else if (G->svmode == 1)
 		{
 			if (G->svtarget != NULL)
 			{
@@ -4290,7 +4404,7 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
 void ApolloRTCCMFD::menuCycleSVMode()
 {
-	if (G->svmode < 1)
+	if (G->svmode < 2)
 	{
 		G->svmode++;
 	}

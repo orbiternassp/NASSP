@@ -1447,11 +1447,13 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 			SwitchTo(1, true);
 			Sclick.play();
 			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
 		}
 		else if (state == 1) {
 			SwitchTo(0, true);
 			Sclick.play();
 			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
 		}
 	}
 	return true;

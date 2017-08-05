@@ -26,7 +26,30 @@
 
 class LEM_DEDA;
 
-  // AGS Channel 11, Output Discretes
+// AGS Channel 04, Input Discretes
+enum AGSChannelValue04_Bits {
+	AGSAbortStageDiscrete = 9,
+	AGSAbortDiscrete,
+	AGSAscentEngineOnDiscrete,
+	AGSDescentEngineOnDiscrete,
+	AGSAutomaticDiscrete,
+	AGSFollowUpDiscrete,
+	AGSOutputTelemetryStopDiscrete,
+	AGSDownlinkTelemetryStopDiscrete
+};
+
+// AGS Channel 05, Input Discretes
+enum AGSChannelValue05_Bits {
+	DEDAReadoutDiscrete = 10,
+	DEDAEnterDiscrete,
+	DEDAHoldDiscrete,
+	DEDAClearDiscrete,
+	GSEDiscrete1,
+	GSEDiscrete2,
+	GSEDiscrete3
+};
+
+// AGS Channel 40, Output Discretes
 enum AGSChannelValue40_Bits {
 	RippleCarryInhibit = 0,
 	AGSAltitude,
@@ -40,6 +63,8 @@ enum AGSChannelValue40_Bits {
 	AGSEngineOff,
 	AGSEngineOn
 };
+
+typedef std::bitset<11> AGSChannelValue40;
 
 // ABORT SENSOR ASSEMBLY (ASA)
 class LEM_ASA{
@@ -56,15 +81,26 @@ public:
 protected:
 
 	bool IsPowered();
+	void TurnOn();
+	void TurnOff();
 
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *heater;				// Heater
 	ThreePosSwitch *PowerSwitch;
 
+	bool PulsesSent;
+	bool Initialized;
+	bool Operate;
+
+	double LastSimDT;
 	MATRIX3 CurrentRotationMatrix;
 	VECTOR3 EulerAngles;
+	VECTOR3 RemainingDeltaVel;
+	VECTOR3 LastWeightAcceleration;
+	VECTOR3 LastGlobalVel;
 
 	const double AttPulsesScal = pow(2.0, 16.0);
+	const double AccPulsesScal = 1.0 / 0.003125 / 0.3048;
 };
 
 // ABORT ELECTRONICS ASSEMBLY (AEA)
@@ -89,6 +125,8 @@ public:
 	void SetAGSAttitudeError(int Type, int Data);
 	VECTOR3 GetTotalAttitude();
 	VECTOR3 GetAttitudeError();
+	void ResetDEDAShiftIn();
+	void ResetDEDAShiftOut();
 
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
@@ -131,7 +169,7 @@ protected:
 class LEM_DEDA : public e_object
 {
 public:
-	LEM_DEDA(LEM *lem, SoundLib &s, LEM_AEA &computer, int IOChannel = 015);
+	LEM_DEDA(LEM *lem, SoundLib &s, LEM_AEA &computer);
 	virtual ~LEM_DEDA();
 
 	void Init(e_object *powered);
@@ -156,7 +194,7 @@ public:
 	void SystemTimestep(double simdt);
 
 	void ProcessChannel27(int val);
-	void ProcessChannel40(int val);
+	void ProcessChannel40(AGSChannelValue40 val);
 
 	//
 	// Keypad interface.
@@ -201,8 +239,6 @@ public:
 	// Helper functions.
 	//
 
-	void LightsOff();
-
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
@@ -231,9 +267,6 @@ protected:
 	// Keyboard state.
 	//
 
-	bool KbInUse;
-	bool Held;
-
 	bool KeyDown_Plus;
 	bool KeyDown_Minus;
 	bool KeyDown_0;
@@ -260,23 +293,15 @@ protected:
 	// Internal variables.
 	//
 
-	char Adr[3];
-	char Data[6];
-
-	int	EnterPos;
-	int EnterVal;
+	int ShiftRegister[9];
+	char Adr[4];
+	char Data[7];
 
 	//
 	// AGS we're connected to.
 	//
 
 	LEM_AEA &ags;
-
-	//
-	// I/O channel to use for key-codes.
-	//
-
-	int KeyCodeIOChannel;
 
 	//
 	// Sound library.
@@ -291,7 +316,10 @@ protected:
 	// Local helper functions.
 	//
 
+	void SetAddress();
+	void SetData();
 	char ValueChar(unsigned val);
+	char ValueCharSign(unsigned val);
 	void ResetKeyDown();
 	void SendKeyCode(int val);
 

@@ -90,6 +90,7 @@ public:
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
+	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
 	double timetoapo();
@@ -138,6 +139,8 @@ public:
 	void menuREFSMMATdirect();
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
+	void menuSetAGSKFactor();
+	void set_AGSKFactor(double time);
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSwitchUplinkInhibit();

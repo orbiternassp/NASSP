@@ -179,6 +179,25 @@ void ATCA::Timestep(double simt, double simdt){
 		hasAbortPower = true;
 	}
 
+	//AEA input bits
+
+	if (!lem->scca2.GetK8() || (lem->ModeControlAGSSwitch.IsCenter() && lem->scca1.GetK7()))
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSFollowUpDiscrete, false);
+	}
+	else
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSFollowUpDiscrete, true);
+	}
+
+	if (lem->ModeControlAGSSwitch.IsUp())
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAutomaticDiscrete, false);
+	}
+	else
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAutomaticDiscrete, true);
+	}
 
 	//INPUTS: ACA, RGA and AEA
 
@@ -1140,6 +1159,15 @@ void DECA::Timestep(double simdt) {
 		K15 = false;
 	}
 
+	if (lem->SCS_ENG_CONT_CB.IsPowered() && K16)
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSDescentEngineOnDiscrete, false);
+	}
+	else
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSDescentEngineOnDiscrete, true);
+	}
+
 	//GIMBALING SIGNAL
 
 	if (lem->SCS_ENG_CONT_CB.IsPowered() && lem->EngGimbalEnableSwitch.IsDown())
@@ -1803,6 +1831,16 @@ void SCCA1::Timestep(double simdt)
 		K203 = false;
 	}
 
+	//AEA Ascent Engine On
+	if (K16 || K205)
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAscentEngineOnDiscrete, false);
+	}
+	else
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAscentEngineOnDiscrete, true);
+	}
+
 	//Start LGC Abort Stage
 	if (K10 || K21)
 	{
@@ -1811,6 +1849,16 @@ void SCCA1::Timestep(double simdt)
 	else
 	{
 		lem->agc.SetInputChannelBit(030, AbortWithAscentStage, false);
+	}
+
+	//Start AEA Abort Stage
+	if (K9 || K201)
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAbortStageDiscrete, false);
+	}
+	else
+	{
+		lem->aea.SetInputPortBit(IO_2020, AGSAbortStageDiscrete, true);
 	}
 
 	//Send engine fire commands to APS
@@ -2030,10 +2078,10 @@ void SCCA2::Timestep(double simdt)
 	}
 
 	ChannelValue val11;
-	std::bitset<11> agsval40;
+	AGSChannelValue40 agsval40;
 
 	val11 = lem->agc.GetOutputChannel(011);
-	agsval40 = lem->aea.GetOutputChannel(040);
+	agsval40 = lem->aea.GetOutputChannel(IO_ODISCRETES);
 
 	if (K8)
 	{
