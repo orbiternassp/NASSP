@@ -2078,10 +2078,10 @@ void SCCA2::Timestep(double simdt)
 	}
 
 	ChannelValue val11;
-	std::bitset<11> agsval40;
+	AGSChannelValue40 agsval40;
 
 	val11 = lem->agc.GetOutputChannel(011);
-	agsval40 = lem->aea.GetOutputChannel(040);
+	agsval40 = lem->aea.GetOutputChannel(IO_ODISCRETES);
 
 	if (K8)
 	{
