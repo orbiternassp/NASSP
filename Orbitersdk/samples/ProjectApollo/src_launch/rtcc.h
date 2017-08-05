@@ -409,6 +409,15 @@ struct P27Opt
 	double navcheckGET; //GET of the Nav Check
 };
 
+struct AGSSVOpt
+{
+	SV sv;
+	MATRIX3 REFSMMAT;
+	bool csm;
+	double GETbase;
+	double AGSbase;
+};
+
 struct SkyRendOpt
 {
 	VESSEL* vessel;		//vessel
@@ -567,6 +576,7 @@ public:
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
+	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &EntryAngcor);

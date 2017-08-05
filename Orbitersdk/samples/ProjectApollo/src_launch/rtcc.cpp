@@ -6046,6 +6046,46 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 	return str;
 }
 
+void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
+{
+	SV sv1;
+	VECTOR3 R, V;
+	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt;
+
+	AGSEpochTime = (opt->sv.MJD - opt->GETbase)*24.0*3600.0;
+	AGSEpochTime2 = ceil(AGSEpochTime / 6.0)*6.0;
+
+	dt = AGSEpochTime2 - AGSEpochTime;
+
+	sv1 = coast(opt->sv, dt);
+
+	R = mul(opt->REFSMMAT, sv1.R);
+	V = mul(opt->REFSMMAT, sv1.V);
+
+	AGSEpochTime3 = AGSEpochTime2 - opt->AGSbase;
+
+	if (opt->csm)
+	{
+		pad.DEDA244 = R.x / 0.3048 / 100.0;
+		pad.DEDA245 = R.y / 0.3048 / 100.0;
+		pad.DEDA246 = R.z / 0.3048 / 100.0;
+		pad.DEDA264 = V.x / 0.3048;
+		pad.DEDA265 = V.y / 0.3048;
+		pad.DEDA266 = V.z / 0.3048;
+		pad.DEDA272 = AGSEpochTime3 / 60.0;
+	}
+	else
+	{
+		pad.DEDA240 = R.x / 0.3048 / 100.0;
+		pad.DEDA241 = R.y / 0.3048 / 100.0;
+		pad.DEDA242 = R.z / 0.3048 / 100.0;
+		pad.DEDA260 = V.x / 0.3048;
+		pad.DEDA261 = V.y / 0.3048;
+		pad.DEDA262 = V.z / 0.3048;
+		pad.DEDA254 = AGSEpochTime3 / 60.0;
+	}
+}
+
 void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
 {
 	double lat, lng, alt, navcheckdt;

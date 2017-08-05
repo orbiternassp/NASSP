@@ -398,6 +398,8 @@ ARCore::ARCore(VESSEL* v)
 	DOI_PeriAng = 15.0*RAD;
 	DOI_option = 0;
 
+	AGSKFactor = 90.0*3600.0;
+
 	if (mission == 8)
 	{
 		LSLat = 2.6317*RAD;
@@ -407,6 +409,10 @@ ARCore::ARCore(VESSEL* v)
 		TLCCEMPLat = -5.67822*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
+	}
+	else if (mission == 9)
+	{
+		AGSKFactor = 40.0*3600.0;
 	}
 	else if (mission == 10)
 	{
@@ -446,6 +452,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLng = 177.4*RAD;
 		TLCCNodeAlt = 59.9*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
+		AGSKFactor = 100.0*3600.0;
 	}
 	else if (mission == 13)
 	{
@@ -480,6 +487,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLng = -178.2*RAD;
 		TLCCNodeAlt = 57.1*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
+		AGSKFactor = 100.0*3600.0;
 	}
 	else if (mission == 15)
 	{
@@ -495,6 +503,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLng = 171.7*RAD;
 		TLCCNodeAlt = 68.1*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
+		AGSKFactor = 100.0*3600.0;
 	}
 	else if (mission == 16)
 	{
@@ -523,6 +532,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLng = 174.1*RAD;
 		TLCCNodeAlt = 51.3*1852.0;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
+		AGSKFactor = 110.0*3600.0;
 	}
 
 	Skylabmaneuver = 0;
@@ -614,6 +624,21 @@ ARCore::ARCore(VESSEL* v)
 	navcheckpad.lat[0] = 0.0;
 	navcheckpad.lng[0] = 0.0;
 	navcheckpad.NavChk[0] = 0.0;
+
+	agssvpad.DEDA240 = 0.0;
+	agssvpad.DEDA241 = 0.0;
+	agssvpad.DEDA242 = 0.0;
+	agssvpad.DEDA244 = 0.0;
+	agssvpad.DEDA245 = 0.0;
+	agssvpad.DEDA246 = 0.0;
+	agssvpad.DEDA254 = 0.0;
+	agssvpad.DEDA260 = 0.0;
+	agssvpad.DEDA261 = 0.0;
+	agssvpad.DEDA262 = 0.0;
+	agssvpad.DEDA264 = 0.0;
+	agssvpad.DEDA265 = 0.0;
+	agssvpad.DEDA266 = 0.0;
+	agssvpad.DEDA272 = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -1044,6 +1069,22 @@ void ARCore::StateVectorCalc()
 
 	J2000Pos = R1B;
 	J2000Vel = V1B;
+}
+
+void ARCore::AGSStateVectorCalc()
+{
+	AGSSVOpt opt;
+	SV sv;
+
+	sv = rtcc->StateVectorCalc(svtarget);
+
+	opt.AGSbase = AGSKFactor;
+	opt.csm = SVSlot;
+	opt.GETbase = GETbase;
+	opt.REFSMMAT = REFSMMAT;
+	opt.sv = sv;
+
+	rtcc->AGSStateVectorPAD(&opt, agssvpad);
 }
 
 void ARCore::StateVectorUplink()

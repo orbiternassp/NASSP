@@ -248,7 +248,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Reference Body", 0, 'U' },
 		{ "Set Target", 0, 'T' },
 		{ "State Vector Slot", 0, 'D' },
-		{ "", 0, ' ' },
+		{ "AGS K Factor", 0, 'A' },
 
 		{ "Choose Calculation Mode", 0, 'M' },
 		{ "Calculate State Vector", 0, 'C' },
@@ -265,7 +265,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("SLT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchSVSlot);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("AGS", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAGSKFactor);
 
 	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleSVMode);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuSVCalc);
