@@ -137,12 +137,13 @@ void LEM_ASA::TimeStep(double simdt){
 
 	//ATTITUDE
 	MATRIX3 Rotnew, dRot;
+	VECTOR3 dEulerAngles;
 
 	lem->GetRotationMatrix(Rotnew);
 
 	dRot = mul(transpose_matrix(CurrentRotationMatrix), Rotnew);
-	EulerAngles += MatrixToEuler(dRot);
-	EulerAngles = _V(EulerAngles.y, EulerAngles.x, EulerAngles.z);
+	dEulerAngles = MatrixToEuler(dRot);
+	EulerAngles += _V(dEulerAngles.y, dEulerAngles.x, dEulerAngles.z);
 
 	CurrentRotationMatrix = Rotnew;
 
