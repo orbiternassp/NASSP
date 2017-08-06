@@ -2889,8 +2889,8 @@ void LEM_RadarTape::TimeStep(double simdt) {
 		}
 		else //AGS
 		{
-			setRange(0);
-			setRate(0);
+			setRange(lem->aea.GetAltitude());
+			setRate(lem->aea.GetAltitudeRate());
 		}
 
 	}
@@ -3083,7 +3083,7 @@ void CrossPointer::TimeStep(double simdt)
 		else //AGS
 		{
 			vx = 0;
-			vy = 0;
+			vy = lem->aea.GetLateralVelocity()*0.3048;
 		}
 		vel_x = vx / 0.3048 * 20.0 / 200.0;
 		vel_y = vy / 0.3048 * 20.0 / 200.0;

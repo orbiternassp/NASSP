@@ -123,8 +123,15 @@ public:
 	bool ReadMemory(unsigned int loc, int &val);
 	void SetAGSAttitude(int Type, int Data);
 	void SetAGSAttitudeError(int Type, int Data);
+	void SetLateralVelocity(int Data);
+	void SetAltitudeAltitudeRate(int Data);
+
+	double GetLateralVelocity();
+	double GetAltitude();
+	double GetAltitudeRate();
 	VECTOR3 GetTotalAttitude();
 	VECTOR3 GetAttitudeError();
+
 	void ResetDEDAShiftIn();
 	void ResetDEDAShiftOut();
 
@@ -160,8 +167,17 @@ protected:
 	//AEA attitude error
 	VECTOR3 AGSAttitudeError;
 
+	//AEA lateral velocity in feet
+	double AGSLateralVelocity;
+
+	double Altitude;
+	double AltitudeRate;
+
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
+	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
+	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
+	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
