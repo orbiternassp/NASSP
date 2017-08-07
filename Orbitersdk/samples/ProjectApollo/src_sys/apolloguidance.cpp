@@ -886,6 +886,9 @@ void ApolloGuidance::ProcessChannel143(ChannelValue val) {
 void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 }
 
+void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
+}
+
 void ApolloGuidance::GenerateHandrupt() {
 	GenerateHANDRUPT(&vagc);
 }

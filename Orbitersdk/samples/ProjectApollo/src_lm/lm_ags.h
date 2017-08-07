@@ -125,6 +125,7 @@ public:
 	void SetAGSAttitudeError(int Type, int Data);
 	void SetLateralVelocity(int Data);
 	void SetAltitudeAltitudeRate(int Data);
+	void SetPGNSIntegratorRegister(int channel, int val);
 
 	double GetLateralVelocity();
 	double GetAltitude();

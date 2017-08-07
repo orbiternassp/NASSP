@@ -521,6 +521,10 @@ void CSMcomputer::ProcessChannel6(ChannelValue val){
 	LastOut6 = val.to_ulong();
 }
 
+void CSMcomputer::ProcessIMUCDUReadCount(int channel, int val) {
+	SetErasable(0, channel, val);
+}
+
 // DS20060308 FDAI
 void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 	// These pulses work like the TVC pulses.
