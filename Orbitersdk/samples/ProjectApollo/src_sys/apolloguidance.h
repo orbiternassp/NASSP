@@ -275,6 +275,8 @@ public:
 	///
 	void PulsePIPA(int RegPIPA, int pulses);
 
+	virtual void ProcessIMUCDUReadCount(int channel, int val);
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///

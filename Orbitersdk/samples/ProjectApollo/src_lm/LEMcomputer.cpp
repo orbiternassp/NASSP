@@ -394,6 +394,11 @@ void LEMcomputer::ProcessChannel143(ChannelValue val) {
 	}
 }
 
+void LEMcomputer::ProcessIMUCDUReadCount(int channel, int val) {
+	SetErasable(0, channel, val);
+	lem->aea.SetPGNSIntegratorRegister(channel, val);
+}
+
 // Process IMU CDU error counters.
 void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 	// FULL NEEDLE DEFLECTION is 16.88 DEGREES

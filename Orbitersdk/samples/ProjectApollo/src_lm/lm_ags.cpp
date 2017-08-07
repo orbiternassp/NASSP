@@ -646,6 +646,30 @@ void LEM_AEA::SetAltitudeAltitudeRate(int Data)
 	}
 }
 
+void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
+{
+	int valx;
+
+	if (channel == 032)
+	{
+		valx = SignExtendAGS(val) * 4;
+		valx &= 0377774;
+		SetInputPort(IO_2002, valx);
+	}
+	else if (channel == 033)
+	{
+		valx = SignExtendAGS(val) * 4;
+		valx &= 0377774;
+		SetInputPort(IO_2001, valx);
+	}
+	else if (channel == 034)
+	{
+		valx = SignExtendAGS(val) * 4;
+		valx &= 0377774;
+		SetInputPort(IO_2004, valx);
+	}
+}
+
 VECTOR3 LEM_AEA::GetTotalAttitude()
 {
 	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE)

@@ -174,6 +174,7 @@ protected:
 	void ProcessChannel141(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+	void ProcessIMUCDUReadCount(int channel, int val);
 
 	FILE *Dfile;
 	int count;

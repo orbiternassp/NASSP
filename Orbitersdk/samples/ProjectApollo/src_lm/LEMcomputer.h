@@ -84,6 +84,7 @@ protected:
 	void ProcessChannel10(ChannelValue val);
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+	void ProcessIMUCDUReadCount(int channel, int val);
 	void ProcessChannel140(ChannelValue val);
 	void ProcessChannel141(ChannelValue val);
 	void ProcessChannel142(ChannelValue val);
