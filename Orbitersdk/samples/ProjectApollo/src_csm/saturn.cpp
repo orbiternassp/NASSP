@@ -272,6 +272,11 @@ Saturn::~Saturn()
 		LMPad = 0;
 	}
 
+	if (AEAPad) {
+		delete[] AEAPad;
+		AEAPad = 0;
+	}
+
 	// Release DirectX joystick stuff
 	if(js_enabled > 0){
 		// Release joysticks
@@ -425,6 +430,10 @@ void Saturn::initSaturn()
 	LMPad = 0;
 	LMPadLoadCount = 0;
 	LMPadValueCount = 0;
+	AEAPadCount = 0;
+	AEAPad = 0;
+	AEAPadLoadCount = 0;
+	AEAPadValueCount = 0;
 
 	//
 	// Default mission time to an hour prior to launch.
@@ -1303,6 +1312,16 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 	}
 
+	if (!PayloadDataTransfer) {
+		if (AEAPadCount > 0) {
+			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
+			for (i = 0; i < AEAPadCount; i++) {
+				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+				oapiWriteScenario_string(scn, "AEAPAD", str);
+			}
+		}
+	}
+
 	papiWriteScenario_double (scn, "SPLASHLAT", SplashdownLatitude);
 	papiWriteScenario_double (scn, "SPLASHLONG", SplashdownLongitude);
 	papiWriteScenario_double (scn, "EARTHEIMJD", EntryInterfaceMJD);
@@ -1790,6 +1809,23 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
 			LMPad[LMPadLoadCount++] = addr;
 			LMPad[LMPadLoadCount++] = val;
+		}
+	}
+	else if (!strnicmp(line, "AEAPADCNT", 9)) {
+		if (!AEAPad) {
+			sscanf(line + 9, "%d", &AEAPadCount);
+			if (AEAPadCount > 0) {
+				AEAPad = new unsigned int[AEAPadCount * 2];
+			}
+		}
+	}
+	else if (!strnicmp(line, "AEAPAD", 6)) {
+		unsigned int addr, val;
+		sscanf(line + 6, "%o %o", &addr, &val);
+		AEAPadValueCount++;
+		if (AEAPad && AEAPadLoadCount < (AEAPadCount * 2)) {
+			AEAPad[AEAPadLoadCount++] = addr;
+			AEAPad[AEAPadLoadCount++] = val;
 		}
 	}
 	else if (!strnicmp (line, "CMPAD", 5)) {
