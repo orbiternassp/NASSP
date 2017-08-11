@@ -1387,6 +1387,7 @@ bool EngineStartButton::Push()
 	{
 		if (ToggleSwitch::SwitchTo(1)) {
 
+			Sclick.play();
 			return true;
 		}
 	}
@@ -1427,6 +1428,7 @@ bool EngineStopButton::Push()
 				startbutton->SwitchTo(0);
 			}
 		}
+		Sclick.play();
 		return true;
 	}
 
