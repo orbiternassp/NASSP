@@ -26,6 +26,23 @@
 
 class LEM;
 
+class LEM_RGA {
+	// RATE GYRO ASSEMBLY
+public:
+	LEM_RGA();
+	void Init(LEM *v, e_object *dcsource);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	VECTOR3 GetRates() { return rates; }
+protected:
+	bool powered;
+	VECTOR3 rates;
+
+	e_object *dc_source;
+	LEM *lem;
+};
+
 #define ATCA_START_STRING	"ATCA_BEGIN"
 #define ATCA_END_STRING		"ATCA_END"
 
@@ -34,18 +51,14 @@ class ATCA {
 public:
 	ATCA();								// Cons
 	void Init(LEM *vessel);				// Init
-	void Timestep(double simt);			// Timestep
+	void Timestep(double simt, double simdt);			// Timestep
 	void ProcessLGC(int ch, int val);   // To process LGC commands
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	bool GetDirectPitchActive() { return DirectPitchActive; }
-	bool GetDirectYawActive() { return DirectYawActive; }
-	bool GetDirectRollActive() { return DirectRollActive; }
-	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
-	void SetDirectYawActive(bool active) { DirectYawActive = active; }
-	void SetDirectRollActive(bool active) { DirectRollActive = active; }
+	double GetDPSPitchGimbalError();
+	double GetDPSRollGimbalError();
 
 	LEM *lem;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
@@ -55,7 +68,61 @@ public:
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
 
 protected:
-	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+
+	double PRMDutyRatio(double volt);
+	double PRMPulseWidth(double volt);
+	bool PRMTimestep(int n, double simdt, double pp, double pw);
+	void Limiter(double &val, double lim);
+
+	VECTOR3 aea_attitude_error;
+	VECTOR3 aca_rates;
+	VECTOR3 att_rates;
+	VECTOR3 thrustLogicInputError;	//Inputs to the summing amplifiers
+	VECTOR3 translationCommands;
+	double SummingAmplifierOutput[8];
+	bool PRMPulse[8];
+	double PRMCycleTime[8];
+	double PRMOffTime[8];
+	bool hasAbortPower;
+	bool hasPrimPower;
+	VECTOR3 ACARateGain;
+	VECTOR3 RateGain;
+	VECTOR3 DeadbandGain;
+	double pitchGimbalError;
+	double rollGimbalError;
+
+	//Relays:
+
+	//Zero Cross Detector
+	bool K1;
+	//Zero Cross Detector
+	bool K2;
+	//Zero Cross Detector
+	bool K3;
+	//Miss Select Yaw (Cmd Rate)
+	bool K8;
+	//Miss Select Pitch (Cmd Rate)
+	bool K9;
+	//Miss Select Roll (Cmd Rate)
+	bool K10;
+	//Miss Select Yaw (Limiter)
+	bool K11;
+	//Miss Select Pitch (Limiter)
+	bool K12;
+	//Miss Select Roll (Limiter)
+	bool K13;
+	//Dead Band Select Yaw
+	bool K14;
+	//Dead Band Select Pitch
+	bool K15;
+	//Dead Band Select Roll
+	bool K16;
+	//Pulse Mode Yaw
+	bool K19;
+	//Pulse Mode Pitch
+	bool K20;
+	//Pulse Mode Roll
+	bool K21;
 };
 
 class DECA {
@@ -66,7 +133,7 @@ public:
 	void ResetRelays();
 	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
-	double GetCommandedThrust() { return dpsthrustcommand; }
+	double GetCommandedThrust();
 	void ProcessLGCThrustCommands(int val);
 
 	bool GetK1() { return K1; }
@@ -84,7 +151,7 @@ protected:
 	bool powered;					 // Data valid flag.
 	int pitchactuatorcommand, rollactuatorcommand;
 	bool engOn, DEArm;
-	double dpsthrustcommand;
+	double AutoThrust, ManualThrust;
 	double lgcAutoThrust;
 
 	//Relays
@@ -168,10 +235,18 @@ public:
 	void Init(LEM *s);
 	void Timestep(double simdt);
 
+	bool GetK1() { return K1; }
+	bool GetK3() { return K3; }
+	bool GetK5() { return K5; }
+	bool GetK7() { return K7; }
+	bool GetK8() { return K8; }
 	bool GetK9() { return K9; }
+	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }
 	bool GetK20() { return K20; }
+	bool GetK203() { return K203; }
+	bool GetK204() { return K204; }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -258,8 +333,18 @@ public:
 
 	bool GetAutoEngOn() { return AutoEngOn; }
 	bool GetAutoEngOff() { return AutoEngOff; }
+	bool GetK2() { return K2; }
+	bool GetK3() { return K3; }
+	bool GetK4() { return K4; }
+	bool GetK5() { return K5; }
+	bool GetK8() { return K8; }
+	bool GetK11() { return K11; }
+	bool GetK12() { return K12; }
+	bool GetK13() { return K13; }
 	bool GetK17() { return K17; }
 	bool GetK19() { return K19; }
+	bool GetK23() { return K23; }
+	bool GetK24() { return K24; }
 protected:
 	//Latching Relays
 
@@ -320,9 +405,11 @@ public:
 	SCCA3();
 	void Init(LEM *s);
 	void Timestep(double simdt);
+	void ResetRelays();
 
 	bool GetK5() { return (K5_1 && K5_2); }
 	bool GetK6() { return (K6_1 || K6_2); }
+	bool GetContactLightLogic() { return (K2_1 || K2_2) && (K3_1 || K3_2); }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

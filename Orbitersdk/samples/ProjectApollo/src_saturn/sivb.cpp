@@ -39,9 +39,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "lemcomputer.h"
-#include "imu.h"
 
 #include "payload.h"
 #include "sivb.h"
@@ -255,6 +253,8 @@ void SIVB::InitS4b()
 
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
+	LMAscentEmptyMassKg = 2150.0;
+	LMDescentEmptyMassKg = 2224.0;
 	Payloaddatatransfer = false;
 
 	//
@@ -262,7 +262,6 @@ void SIVB::InitS4b()
 	//
 
 	LEMCheck[0] = 0;
-	LEMCheckAuto = 0;
 
 	//
 	// LM PAD data.
@@ -330,7 +329,7 @@ void SIVB::SetS4b()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
     ClearExhaustRefs();
     ClearAttExhaustRefs();
@@ -787,10 +786,11 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	{
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
-			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 		if (LMPadCount > 0 && LMPad) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			char str[64];
@@ -1188,14 +1188,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (SIVbState) i;
 		}
-		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
-			int temp = 0;
-			sscanf(line + 12, "%i", &temp);
-			if (temp != 0)
-				LEMCheckAuto = true;
-			else
-				LEMCheckAuto = false;
-		}
 		else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(LEMCheck, line + 9);
 		}
@@ -1209,6 +1201,14 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "LMASCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
 			LMAscentFuelMassKg = flt;
+		}
+		else if (!strnicmp(line, "LMDSCEMPTY", 10)) {
+			sscanf(line + 10, "%f", &flt);
+			LMDescentEmptyMassKg = flt;
+		}
+		else if (!strnicmp(line, "LMASCEMPTY", 10)) {
+			sscanf(line + 10, "%f", &flt);
+			LMAscentEmptyMassKg = flt;
 		}
 		else if (!strnicmp (line, "LMPADCNT", 8)) {
 			if (!LMPad) {
@@ -1378,11 +1378,12 @@ void SIVB::SetState(SIVBSettings &state)
 
 		if (state.LEMCheck[0]) {
 			strcpy(LEMCheck, state.LEMCheck);
-			LEMCheckAuto = state.LEMCheckAuto;
 		}
 
 		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
 		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
+		LMDescentEmptyMassKg = state.LMDescentEmptyMassKg;
+		LMAscentEmptyMassKg = state.LMAscentEmptyMassKg;
 
 		//
 		// Copy LM PAD data across.
@@ -1643,8 +1644,9 @@ void SIVB::StartSeparationPyros()
 
 	ps.DescentFuelKg = LMDescentFuelMassKg;
 	ps.AscentFuelKg = LMAscentFuelMassKg;
+	ps.DescentEmptyKg = LMDescentEmptyMassKg;
+	ps.AscentEmptyKg = LMAscentEmptyMassKg;
 	sprintf(ps.checklistFile, LEMCheck);
-	ps.checkAutoExecute = LEMCheckAuto;
 
 	//
 	// Initialise the state of the LEM AGC information.

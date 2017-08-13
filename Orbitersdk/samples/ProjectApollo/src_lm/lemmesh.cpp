@@ -37,8 +37,6 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
-#include "dsky.h"
-#include "IMU.h"
 
 #include "LEM.h"
 #include "leva.h"
@@ -112,23 +110,9 @@ void LEM::StopEVA()
 
 void LEM::SetLmVesselDockStage()
 
-{	
-	double fuelmass;
-	int mnumber;
+{
 	ClearThrusterDefinitions();
-	//
-	// Changed to reflect mission-specific empty and fuel mass
-	//
-	// From "Apollo by the Numbers"
-	//
-	mnumber=agc.GetApolloNo();
-	if(mnumber < 15) {
-		SetEmptyMass(6565);		
-		fuelmass=8375.;
-	} else {
-		SetEmptyMass(7334);
-		fuelmass=8891.;
-	}
+	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 	SetSize (6);
 	// SetPMI (_V(2.8,2.29,2.37));
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
@@ -138,7 +122,7 @@ void LEM::SetLmVesselDockStage()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
@@ -148,9 +132,15 @@ void LEM::SetLmVesselDockStage()
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-    if (!ph_Dsc)  
-		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
+	if (!ph_Dsc)
+	{
+		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
+	}
+	else
+	{
+		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
+	}
+	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
 	if (!ph_RCSA) {
@@ -181,17 +171,16 @@ void LEM::SetLmVesselDockStage()
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
-    LDGswitch=false;
-	ATT2switch=true;
-	ATT3switch=true;
-	ATT1switch=true;
-	AFEED1switch=false;
-	AFEED2switch=false;
-	AFEED3switch=false;
-	AFEED4switch=false;
 
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, DescendStageAttached, true);
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
 
 	CheckRCS();
 }
@@ -200,7 +189,7 @@ void LEM::SetLmVesselHoverStage()
 {
 	ClearThrusterDefinitions();
 
-	SetEmptyMass(AscentFuelMassKg + 4374.0);
+	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 
 	SetSize (7);
 	SetPMI (_V(3.26,2.22,3.26)); 
@@ -210,13 +199,13 @@ void LEM::SetLmVesselHoverStage()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double Mass = (DescentFuelMassKg * 0.05) + AscentFuelMassKg + 4374.0;
+	double Mass = 7137.75;
 	double ro = 7;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;
@@ -269,6 +258,10 @@ void LEM::SetLmVesselHoverStage()
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
+	else
+	{
+		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
+	}
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
@@ -301,21 +294,18 @@ void LEM::SetLmVesselHoverStage()
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
-	LDGswitch=true;
-	ATT2switch=true;
-	ATT3switch=true;
-	ATT1switch=true;
-	AFEED1switch=false;
-	AFEED2switch=false;
-	AFEED3switch=false;
-	AFEED4switch=false;
-
 	// Descent stage attached.
-	agc.SetInputChannelBit(030, DescendStageAttached, true);
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
 
 	CheckRCS();
 }
-
 
 void LEM::SetLmAscentHoverStage()
 
@@ -324,20 +314,20 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);
-	SetEmptyMass (2150.0);
+	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
 	double tdph = -5.8;
-    double Mass = AscentFuelMassKg + 2150.0;
+    double Mass = 4495.0;
 	double ro = 5;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;
@@ -379,8 +369,14 @@ void LEM::SetLmAscentHoverStage()
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-    if (!ph_Asc)  
-		ph_Asc  = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
+	if (!ph_Asc)
+	{
+		ph_Asc = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
+	}
+	else
+	{
+		SetPropellantMaxMass(ph_Asc, AscentFuelMassKg);
+	}
 	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
@@ -409,14 +405,16 @@ void LEM::SetLmAscentHoverStage()
 	SetDockParams(dockpos, dockdir, dockrot);
 	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
-	LDGswitch=false;
-	AFEED1switch=true;
-	AFEED2switch=true;
-	AFEED3switch=true;
-	AFEED4switch=true;
 
-	// Descent stage detached.
-	agc.SetInputChannelBit(030, DescendStageAttached, false);
+	// Descent stage attached.
+	if (InvertStageBit)
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, true);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, DescendStageAttached, false);
+	}
 
 	CheckRCS();
 }

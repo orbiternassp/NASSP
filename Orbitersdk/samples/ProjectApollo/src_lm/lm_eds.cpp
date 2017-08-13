@@ -27,15 +27,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "dsky.h"
-#include "IMU.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_eds.h"
 
 LEM_EDRelayBox::LEM_EDRelayBox():
 	StagingBoltsNutsDelay(0.05),
-	CableCuttingDelay(0.05)
+	CableCuttingDelay(0.05),
+	DescentEngineOnDelay(1.3)
 {
 	MasterArmRelay = false;
 	StagingRelay = false;
@@ -61,6 +60,7 @@ void LEM_EDRelayBox::Timestep(double simdt)
 {
 	StagingBoltsNutsDelay.Timestep(simdt);
 	CableCuttingDelay.Timestep(simdt);
+	DescentEngineOnDelay.Timestep(simdt);
 
 	if (HasDCPower())
 	{
@@ -155,7 +155,19 @@ void LEM_EDRelayBox::Timestep(double simdt)
 		LandingGearDeployRelay = false;
 	}
 
-	//TBD: K9
+	if (lem->deca.GetThrustOn())
+	{
+		DescentEngineOnDelay.SetRunning(true);
+	}
+
+	if (DescentEngineOnDelay.ContactClosed())
+	{
+		DescentEngineOnRelay = true;
+	}
+	else
+	{
+		DescentEngineOnRelay = false;
+	}
 
 	if (HasDCPower() && (lem->EDHePressASC.IsUp() || lem->AbortStageSwitch.IsDown()))
 	{
@@ -218,10 +230,22 @@ bool LEM_EDRelayBox::HasDCPower()
 	return false;
 }
 
-bool LEM_EDRelayBox::StageSeqLight()
+bool LEM_EDRelayBox::GetStageRelayMonitor()
 {
 	if (!HasDCPower()) return false;
-	if (MasterArmRelay && lem->EDMasterArm.IsUp()) return true;
+
+	if (!MasterArmRelay && !StagingRelay && !InitiateStagingRelay && !CableCuttingRelay && !StagingBoltsNutsRelay && !DeadFacingRelay)
+	{
+		return false;
+	}
+	else if (MasterArmRelay && !StagingRelay && !InitiateStagingRelay && !CableCuttingRelay && !StagingBoltsNutsRelay && !DeadFacingRelay)
+	{
+		return true;
+	}
+	else if (!MasterArmRelay && (StagingRelay || InitiateStagingRelay || CableCuttingRelay || StagingBoltsNutsRelay || DeadFacingRelay))
+	{
+		return true;
+	}
 
 	return false;
 }
@@ -244,6 +268,10 @@ void LEM_EDRelayBox::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "DESCENTPROPVENTRELAY", DescentPropVentRelay);
 	papiWriteScenario_bool(scn, "DESCENTPROPPRESSRELAY", DescentPropPressRelay);
 	papiWriteScenario_bool(scn, "DESCENTTANKISOLVALVESRELAY", DescentTankIsolValvesRelay);
+
+	StagingBoltsNutsDelay.SaveState(scn, "STAGINGDELAY_BEGIN", "STAGINGDELAY_END");
+	CableCuttingDelay.SaveState(scn, "CABLECUTTINGDELAY_BEGIN", "CABLECUTTINGDELAY_END");
+	DescentEngineOnDelay.SaveState(scn, "ENGINEONDELAY_BEGIN", "ENGINEONDELAY_END");
 
 	oapiWriteLine(scn, end_str);
 }
@@ -272,6 +300,16 @@ void LEM_EDRelayBox::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "DESCENTPROPVENTRELAY", DescentPropVentRelay);
 		papiReadScenario_bool(line, "DESCENTPROPPRESSRELAY", DescentPropPressRelay);
 		papiReadScenario_bool(line, "DESCENTTANKISOLVALVESRELAY", DescentTankIsolValvesRelay);
+
+		if (!strnicmp(line, "STAGINGDELAY_BEGIN", sizeof("STAGINGDELAY_BEGIN"))) {
+			StagingBoltsNutsDelay.LoadState(scn, "STAGINGDELAY_END");
+		}
+		else if (!strnicmp(line, "CABLECUTTINGDELAY_BEGIN", sizeof("CABLECUTTINGDELAY_BEGIN"))) {
+			CableCuttingDelay.LoadState(scn, "CABLECUTTINGDELAY_END");
+		}
+		else if (!strnicmp(line, "ENGINEONDELAY_BEGIN", sizeof("ENGINEONDELAY_BEGIN"))) {
+			DescentEngineOnDelay.LoadState(scn, "ENGINEONDELAY_END");
+		}
 	}
 }
 
@@ -317,6 +355,86 @@ void LEM_EDS::TimeStep(double simdt) {
 	}
 
 	lem->LandingGearPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	pyroA = false, pyroB = false;
+
+	//Descent Propellant Isolation Valves
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetDescentTankIsolValvesRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetDescentTankIsolValvesRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	lem->DescentPropIsolPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	pyroA = false, pyroB = false;
+
+	//Descent Engine Start (Ambient Helium)
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetDescentPropPressRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetDescentPropPressRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	lem->DescentEngineStartPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	pyroA = false, pyroB = false;
+
+	//Descent Engine On (Supercritical Helium)
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetDescentEngineOnRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetDescentEngineOnRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	lem->DescentEngineOnPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	pyroA = false, pyroB = false;
+
+	//Descent Propellant Venting
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetDescentPropVentRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetDescentPropVentRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+
+	lem->DescentPropVentPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
 
 	//Ascent stage deadfacing

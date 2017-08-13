@@ -36,10 +36,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
 
 #include "saturn.h"
 
@@ -2310,14 +2308,7 @@ bool CSMLMPowerSwitch::SwitchTo(int newState)
 }
 
 double SaturnHighGainAntennaPitchMeter::QueryValue(){
-	if (Sat->hga.IsPowered())
-	{
-		return Sat->hga.Pitch;
-	}
-	else
-	{
-		return 90.0;
-	}
+	return Sat->hga.Pitch;
 }
 
 void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2327,7 +2318,7 @@ void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurf
 }
 
 double SaturnHighGainAntennaStrengthMeter::QueryValue(){
-	return Sat->hga.SignalStrength; 
+	return Sat->usb.rcvr_agc_voltage;
 }
 
 void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2337,14 +2328,7 @@ void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawS
 }
 
 double SaturnHighGainAntennaYawMeter::QueryValue(){
-	if (Sat->hga.IsPowered())
-	{
-		return Sat->hga.Yaw;
-	}
-	else
-	{
-		return 0.0;
-	}
+	return Sat->hga.Yaw;
 }
 
 void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){

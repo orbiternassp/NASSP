@@ -28,7 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "papi.h"
 #include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
@@ -2634,10 +2633,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
+		double GETbase;
 
+		GETbase = getGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form);
+		NavCheckPAD(sv, *form, GETbase);
 
 		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
 		if (upString != NULL) {
@@ -2652,11 +2653,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv_A, sv_P;
+		double GETbase;
+
+		GETbase = getGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
-		NavCheckPAD(sv_A, *form);
+		NavCheckPAD(sv_A, *form, GETbase);
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv_A, true, AGCEpoch), CMCStateVectorUpdate(sv_P, false, AGCEpoch));
 		if (upString != NULL) {
@@ -3025,7 +3029,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 {
 	MATRIX3 M_R, M, Q_Xx;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E;
+	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch;
 	int step, ManCOASstaroct;
 	SV sv, sv1, sv2;
 
@@ -3086,6 +3090,15 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
 
+	if (opt->HeadsUp)
+	{
+		headsswitch = -1.0;
+	}
+	else
+	{
+		headsswitch = 1.0;
+	}
+
 	X_B = unit(V_G);
 	if (opt->engopt == 2)
 	{
@@ -3095,8 +3108,15 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	{
 		UX = X_B;
 	}
-	UY = unit(crossp(UX, sv1.R));
-	UZ = unit(crossp(UX, crossp(UX, sv1.R)));
+	if (abs(dotp(UX, unit(sv1.R))) < cos(0.01*RAD))
+	{
+		UY = unit(crossp(UX, sv1.R*headsswitch));
+	}
+	else
+	{
+		UY = unit(crossp(UX, sv1.V));
+	}
+	UZ = unit(crossp(UX, UY));
 
 
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
@@ -3781,9 +3801,9 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 {
 	VECTOR3 R_A, V_A, R0B, V0B, R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
 	MATRIX3 M_R, Rot2;
-	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO;
+	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO, mu_M;
 	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit, KTETA;
-	OBJHANDLE gravref, hEarth;
+	OBJHANDLE gravref, hEarth, hMoon;
 	SV sv0;		// "Now"
 	SV sv1;		// "Now" or just after the maneuver
 	SV svEI;	// EI/400K
@@ -3793,6 +3813,8 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 
 	gravref = AGCGravityRef(opt->vessel);
 	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	mu_M = GGRAV*oapiGetMass(hMoon);
 
 	EIAlt = 400000.0*0.3048;
 	Alt300K = 300000.0*0.3048;
@@ -3818,6 +3840,12 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	else
 	{
 		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
+	}
+
+	if (sv1.gravref == hMoon)
+	{
+		double dt_r = OrbMech::time_radius(sv1.R, sv1.V, 64373760.0, 1.0, mu_M);
+		sv1 = coast(sv1, dt_r);
 	}
 
 	dt = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, oapiGetSize(hEarth) + EIAlt, -1, sv1.gravref, hEarth, svEI.R, svEI.V);
@@ -4598,11 +4626,19 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t
 
 	R_LSA = _V(cos(opt->lng)*cos(opt->lat), sin(opt->lng)*cos(opt->lat), sin(opt->lat))*(oapiGetSize(hMoon) + opt->alt);
 	h_DP = 50000.0*0.3048;
-	theta_F = 15.0*RAD;
+	theta_F = opt->PeriAng;
 	t_F = 718.0;
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	if (opt->opt == 0)
+	{
+		OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+	else
+	{
+		OrbMech::LunarLandingPrediction2(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, 1.0, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+	}
+
 	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
 
 	SV sv_tig;
@@ -5579,6 +5615,217 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	pad.VI = length(sv2.V) / 0.3048;
 }
 
+bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
+{
+	SV sv0, sv1, sv2, sv_I;
+	OBJHANDLE hMoon;
+	MATRIX3 C_GP, Rot;
+	VECTOR3 U_FDP, dV_TrP, R_LSI, R_LSP, W_I, W_P, R_I, V_I, R_P, V_P, R_G, V_SURFP, V_G, G_P, A_FDP, R_TG, A_G, V_TG, A_TG, C_XGP, C_YGP, C_ZGP;
+	double GUIDDURN, AF_TRIM, DELTTRIM, TTT, t_pip, t_2, t_I, t_pipold, PIPTIME, q, dt_I, mu, TTT_P, eps, LEADTIME, dTTT, J_TZG, A_TZG, V_TZG, R_TZG;
+	double v_IGG, r_IGXG, r_IGZG, K_X, K_Y, K_V, t_IG, C_R, w_M, FRAC, m, TEM;
+	int n1, n2, COUNT_TTT;
+
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	GUIDDURN = 664.4;
+	AF_TRIM = 0.350133;
+	DELTTRIM = 26.0;
+	n1 = 40;
+	n2 = 2;
+	COUNT_TTT = 0;
+	U_FDP = dV_TrP = _V(0, 0, 0);
+	C_GP = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	TTT = 0.0;
+	t_pip = opt->t_land;
+	dt_I = 1.0;
+	FRAC = 43455.0;
+	m = 16000.0;
+
+	v_IGG = 1690.256208;
+	r_IGXG = -39782.453328;
+	r_IGZG = -436655.657;
+	K_X = -0.617631;
+	K_Y = -2.4770341207e-6;
+	K_V = -410.0;
+	J_TZG = -0.01882677*0.3048;// / 8.0;
+	A_TZG = -54.6264*0.3048 / 6.0;
+	V_TZG = -18.72*0.3048 / 3.0;
+	R_TG = _V(52.375308, 0.0, -3254.836061);
+	R_TZG = R_TG.z;
+	V_TG = _V(-105.876, 0.0, -1.04)*0.3048;
+	A_TG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	LEADTIME = 2.2;
+	w_M = 2.66169948e-6;
+
+	sv0 = StateVectorCalc(opt->vessel);
+
+	if (opt->direct)
+	{
+		sv2 = sv0;
+	}
+	else
+	{
+		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0.0);
+	}
+
+	t_2 = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
+	Rot = OrbMech::GetRotationMatrix(hMoon, opt->GETbase + opt->t_land / 24.0 / 3600.0);
+	R_LSI = rhmul(Rot, opt->R_LS);
+	R_LSP = mul(opt->REFSMMAT, R_LSI);
+	t_I = opt->t_land - GUIDDURN;
+	W_I = rhmul(Rot, _V(0.0, 0.0, 1.0));
+	W_P = mul(opt->REFSMMAT, W_I)*w_M;
+	sv_I = coast(sv2, t_I - t_2);
+	R_I = sv_I.R;
+	V_I = sv_I.V;
+
+	while (abs(dt_I) > 0.08 && n1>0)
+	{
+		PIPTIME = t_I;
+		R_P = mul(opt->REFSMMAT, R_I);
+		G_P = -R_P / pow(length(R_P), 3.0)*mu;
+
+		n2 = 2;
+
+		t_pipold = t_pip;
+		t_pip = PIPTIME;
+		t_2 = PIPTIME;
+		R_LSP = unit(R_LSP + crossp(W_P, R_LSP)*(t_pip - t_pipold))*length(opt->R_LS);
+		TTT = TTT + t_pip - t_pipold;
+
+		while (n2 > 0)
+		{
+			V_P = mul(opt->REFSMMAT, V_I) + dV_TrP;
+
+			R_G = mul(C_GP, R_P - R_LSP);
+			V_SURFP = V_P - crossp(W_P, R_P);
+			V_G = mul(C_GP, V_SURFP);
+
+			COUNT_TTT = 0;
+			eps = abs(TTT / 128.0);
+			do
+			{
+				dTTT = -(J_TZG*pow(TTT, 3.0) + 6.0*A_TZG*TTT*TTT + (18.0*V_TZG + 6.0*V_G.z)*TTT + 24.0*(R_TZG - R_G.z)) / (3.0*J_TZG*TTT*TTT + 12.0*A_TZG*TTT + 18.0*V_TZG + 6.0*V_G.z);
+				TTT += dTTT;
+				COUNT_TTT++;
+			} while (abs(dTTT) > eps && COUNT_TTT < 8);
+
+			if (COUNT_TTT == 8)
+			{
+				return false;
+			}
+
+			TTT_P = TTT + LEADTIME;
+			A_G = (R_TG - R_G)*(-24.0*TTT_P / pow(TTT, 3.0) + 36.0*TTT_P*TTT_P / pow(TTT, 4.0));
+			A_G += V_TG*(-18.0*TTT_P / TTT / TTT + 24.0*TTT_P*TTT_P / pow(TTT, 3.0));
+			A_G += V_G*(-6.0*TTT_P / TTT / TTT + 12.0*TTT_P*TTT_P / pow(TTT, 3.0));
+			A_G += A_TG*(6.0*TTT_P*TTT_P / TTT / TTT - 6.0*TTT_P / TTT + 1.0);
+
+			A_FDP = tmul(C_GP, A_G) - G_P;
+			//s = length(A_FDP);
+			TEM = FRAC*FRAC / m / m - A_FDP.x*A_FDP.x - A_FDP.y*A_FDP.y;
+			if (TEM < 0.0)
+			{
+				TEM = 0.0;
+			}
+			if (sqrt(TEM) + A_FDP.z < 0.0)
+			{
+				A_FDP.z = -sqrt(TEM);
+			}
+			U_FDP = A_FDP;
+
+			C_XGP = unit(R_LSP);
+			C_YGP = unit(crossp(unit(V_SURFP*TTT / 4.0 + R_LSP - R_P), R_LSP));
+			C_ZGP = crossp(C_XGP, C_YGP);
+			C_GP = _M(C_XGP.x, C_YGP.x, C_ZGP.x, C_XGP.y, C_YGP.y, C_ZGP.y, C_XGP.z, C_YGP.z, C_ZGP.z);
+
+			dV_TrP = unit(U_FDP)*DELTTRIM*AF_TRIM;
+
+			n2--;
+		}
+
+		n1--;
+		q = K_X*(R_G.x - r_IGXG) + K_Y*R_G.y*R_G.y + R_G.z - r_IGZG + K_V*(length(V_G) - v_IGG);
+		dt_I = -q / (V_G.z + K_X*V_G.x);
+		t_I += dt_I;
+
+		if (abs(dt_I) > 0.08)
+		{
+			OrbMech::rv_from_r0v0(R_I, V_I, dt_I, R_I, V_I, mu);
+		}
+	}
+
+	if (n1 == 0)
+	{
+		return false;
+	}
+
+	t_IG = t_I - DELTTRIM;
+	C_R = dotp(unit(crossp(V_P, R_P)), R_LSP);
+
+	VECTOR3 X_B, UX, UY, UZ, IMUangles, FDAIangles;
+	MATRIX3 M, M_R;
+	double headsswitch;
+
+	if (opt->HeadsUp)
+	{
+		headsswitch = -1.0;
+	}
+	else
+	{
+		headsswitch = 1.0;
+	}
+
+	X_B = tmul(opt->REFSMMAT, unit(U_FDP));
+	UX = X_B;
+	if (abs(dotp(UX, unit(R_I))) < cos(0.01*RAD))
+	{
+		UY = unit(crossp(UX, R_I*headsswitch));
+	}
+	else
+	{
+		UY = unit(crossp(UX, V_I));
+	}
+	UZ = unit(crossp(UX, UY));
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+
+	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.y = atan2(((sin(IMUangles.y)*cos(IMUangles.x) + cos(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z)), (cos(IMUangles.y)*cos(IMUangles.x) - sin(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z));
+	}
+
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.x = atan2(sin(IMUangles.z), cos(IMUangles.z)*cos(IMUangles.x));
+	}
+
+	if (FDAIangles.x < 0)
+	{
+		FDAIangles.x += PI2;
+	}
+	if (FDAIangles.y < 0)
+	{
+		FDAIangles.y += PI2;
+	}
+	if (FDAIangles.z < 0)
+	{
+		FDAIangles.z += PI2;
+	}
+
+	pad.Att = _V(OrbMech::imulimit(FDAIangles.x*DEG), OrbMech::imulimit(FDAIangles.y*DEG), OrbMech::imulimit(FDAIangles.z*DEG));
+	pad.CR = C_R / 1852.0;
+	pad.DEDA231 = length(opt->R_LS) / 0.3048 / 100.0;
+	pad.GETI = t_IG;
+	pad.t_go = -TTT;
+
+	return true;
+}
+
 char* RTCC::CMCExternalDeltaVUpdate(double P30TIG, VECTOR3 dV_LVLH)
 {
 	char* str = new char[1000];
@@ -5799,20 +6046,69 @@ char* RTCC::CMCEntryUpdate(double LatSPL, double LngSPL)
 	return str;
 }
 
-void RTCC::NavCheckPAD(SV sv, AP7NAV &pad)
+void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
+{
+	SV sv1;
+	VECTOR3 R, V;
+	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt;
+
+	AGSEpochTime = (opt->sv.MJD - opt->GETbase)*24.0*3600.0;
+	AGSEpochTime2 = ceil(AGSEpochTime / 6.0)*6.0;
+
+	dt = AGSEpochTime2 - AGSEpochTime;
+
+	sv1 = coast(opt->sv, dt);
+
+	R = mul(opt->REFSMMAT, sv1.R);
+	V = mul(opt->REFSMMAT, sv1.V);
+
+	AGSEpochTime3 = AGSEpochTime2 - opt->AGSbase;
+
+	if (opt->csm)
+	{
+		pad.DEDA244 = R.x / 0.3048 / 100.0;
+		pad.DEDA245 = R.y / 0.3048 / 100.0;
+		pad.DEDA246 = R.z / 0.3048 / 100.0;
+		pad.DEDA264 = V.x / 0.3048;
+		pad.DEDA265 = V.y / 0.3048;
+		pad.DEDA266 = V.z / 0.3048;
+		pad.DEDA272 = AGSEpochTime3 / 60.0;
+	}
+	else
+	{
+		pad.DEDA240 = R.x / 0.3048 / 100.0;
+		pad.DEDA241 = R.y / 0.3048 / 100.0;
+		pad.DEDA242 = R.z / 0.3048 / 100.0;
+		pad.DEDA260 = V.x / 0.3048;
+		pad.DEDA261 = V.y / 0.3048;
+		pad.DEDA262 = V.z / 0.3048;
+		pad.DEDA254 = AGSEpochTime3 / 60.0;
+	}
+}
+
+void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
 {
 	double lat, lng, alt, navcheckdt;
 	VECTOR3 R1, V1;
+	OBJHANDLE outgrav = NULL;
 	
-	navcheckdt = 30 * 60;
+	if (GET == 0.0)
+	{
+		navcheckdt = 30 * 60;
+		pad.NavChk[0] = (sv.MJD - GETbase)*24.0*3600.0 + navcheckdt;
+	}
+	else
+	{
+		navcheckdt = GET - (sv.MJD - GETbase)*24.0*3600.0;
+		pad.NavChk[0] = GET;
+	}
 
-	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, sv.gravref);
-	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, sv.gravref, lat, lng, alt);
+	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, navcheckdt, R1, V1, sv.gravref, outgrav);
+	navcheck(R1, V1, sv.MJD + navcheckdt/24.0/3600.0, outgrav, lat, lng, alt);
 
 	pad.alt[0] = alt / 1852.0;
 	pad.lat[0] = lat*DEG;
 	pad.lng[0] = lng*DEG;
-	pad.NavChk[0] = (sv.MJD - getGETBase())*24.0*3600.0 + navcheckdt;
 }
 
 void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)

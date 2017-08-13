@@ -36,9 +36,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -132,10 +130,12 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector, sivbControlConnector), 
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
+	tcdu(agc, RegOPTY, 0140, 0),
+	scdu(agc, RegOPTX, 0141, 0),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -219,7 +219,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
-	SideHatch(HatchOpenSound, HatchCloseSound)	// SDockingCapture
+	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
+	omnia(_V(0.0, 0.707108, 0.707108)),
+	omnib(_V(0.0, -0.707108, 0.707108)),
+	omnic(_V(0.0, -0.707108, -0.707108)),
+	omnid(_V(0.0, 0.707108, -0.707108))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -756,9 +760,10 @@ void Saturn::initSaturn()
 
 	PayloadName[0] = 0;
 	LEMCheck[0] = 0;
-	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
+	LMAscentEmptyMassKg = 2150.0;
+	LMDescentEmptyMassKg = 2224.0;
 
 	UseATC = false;
 
@@ -1341,10 +1346,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (!PayloadDataTransfer) {
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
-			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "ORDEALENABLED", ordealEnabled);
@@ -1862,6 +1868,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		SII_EmptyMass = ftcp;
 		SII_MassLoaded = true;
 	}
+	else if (!strnicmp(line, "INTERSTAGE", 10)) {
+		sscanf(line + 10, "%f", &ftcp);
+		Interstage_Mass = ftcp;
+	}
 	else if (!strnicmp(line, "T1V", 3)) {
         sscanf (line + 3, "%f", &ftcp);
 		THRUST_FIRST_VAC = ftcp;
@@ -2227,11 +2237,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			thc_auto = 1;
 		}
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			rhc_thctoggle = true;
+			sscanf(line + 12, "%i", &i);
+			rhc_thctoggle = (i != 0);
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
-		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
+		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
+		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
+		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
 		else if (!strnicmp(line, "MOONBASE", 8)) {
 			strncpy (LMLandingBase, line + 9, 256);
 		}
@@ -2249,14 +2262,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
-		}
-		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
-			int temp = 0;
-			sscanf(line+12, "%i", &temp);
-			if (temp != 0)
-				LEMCheckAuto = true;
-			else
-				LEMCheckAuto = false;
 		} else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(LEMCheck, line + 9);
 		} else if (!strnicmp(line, SaturnEventStartString, strlen(SaturnEventStartString))) {
@@ -2292,12 +2297,13 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.LandingLongitude = LMLandingLongitude;
 	ls.AscentFuelKg = LMAscentFuelMassKg;
 	ls.DescentFuelKg = LMDescentFuelMassKg;
+	ls.AscentEmptyKg = LMAscentEmptyMassKg;
+	ls.DescentEmptyKg = LMDescentEmptyMassKg;
 	strncpy (ls.language, AudioLanguage, 63);
 	strncpy (ls.CSMName, GetName(), 63);
 	ls.MissionNo = ApolloNo;
 	ls.MissionTime = MissionTime;
 	strncpy (ls.checklistFile, LEMCheck, 100);
-	ls.checkAutoExecute = LEMCheckAuto;
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
@@ -2399,7 +2405,7 @@ void Saturn::UpdatePayloadMass()
 {
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
-		S4PL_Mass = 4374.0 + LMAscentFuelMassKg + LMDescentFuelMassKg;
+		S4PL_Mass = LMAscentEmptyMassKg + LMDescentEmptyMassKg + LMAscentFuelMassKg + LMDescentFuelMassKg;
 		break;
 
 	case PAYLOAD_ASTP:
@@ -2612,10 +2618,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	MissionTime += simdt;
-	MissionTimerDisplay.Timestep(simt, simdt, false);
-	MissionTimer306Display.Timestep(simt, simdt, false);
-	EventTimerDisplay.Timestep(simt, simdt, true);
-	EventTimer306Display.Timestep(simt, simdt, true);
 
 	//
 	// Panel flash counter.
@@ -4768,73 +4770,6 @@ void Saturn::PlayTLISound(bool StartStop)
 void Saturn::PlayTLIStartSound(bool StartStop)
 
 {
-}
-
-//
-// Most of this calculation code is lifted from the Soyuz guidance MFD.
-//
-
-extern double AbsOfVector(const VECTOR3 &Vec);
-
-double Saturn::CalculateApogeeTime()
-
-{
-	OBJHANDLE hSetGbody;
-	double GbodyMass, GbodySize;
-	double p, v, R, RDotV, Mu_Planet, J2000, E, Me, T, tsp;
-	double TtPeri, TtApo;
-	double OrbitApo;
-	VECTOR3 RelPosition, RelVelocity;
-	ELEMENTS Elements;
-
-	// Planet parameters
-	hSetGbody = GetApDist(OrbitApo);
-	GbodyMass = oapiGetMass(hSetGbody);
-	GbodySize = oapiGetSize(hSetGbody) / 1000.;
-	Mu_Planet = GK * GbodyMass;
-
-	// Get eccentricity and orbital radius
-	GetElements(Elements, J2000);
-	GetRelativePos(hSetGbody, RelPosition);
-	GetRelativeVel(hSetGbody, RelVelocity);
-
-	R = AbsOfVector(RelPosition) / 1000.;
-
-	// Calculate semi-latus rectum and true anomaly
-	p = Elements.a / 1000. * (1. - Elements.e * Elements.e);
-	v = acos((1. / Elements.e) * (p / R - 1.));
-
-	RDotV = dotp(RelVelocity, RelPosition);
-	if (RDotV < 0)
-	{
-		v = 2. * PI - v;
-	}
-
-	// Determine the time since periapsis
-	//   - Eccentric anomaly
-	E = 2. * atan(sqrt((1. - Elements.e) / (1. + Elements.e)) * tan(v / 2.));
-	//   - Mean anomaly
-	Me = E - Elements.e * sin(E);
-	//   - Period of orbit
-	T = 2. * PI * sqrt((Elements.a * Elements.a * Elements.a / 1e9) / Mu_Planet);
-
-	// Time since periapsis is
-	tsp = Me / (2.* PI) * T;
-
-	// Time to next periapsis & apoapsis
-	TtPeri = T - tsp;
-	if (RDotV < 0) {
-		TtPeri = -1. * tsp;
-	}
-
-	if (TtPeri > (T / 2.)) {
-		TtApo = fabs((T / 2.) - TtPeri);
-	}
-	else {
-		TtApo = fabs(TtPeri + (T / 2.));
-	}
-
-	return TtApo;
 }
 
 // Get checklist controller pointer

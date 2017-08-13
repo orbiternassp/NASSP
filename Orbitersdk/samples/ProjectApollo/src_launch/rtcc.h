@@ -54,7 +54,7 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40982.849306,
 	41158.5652869,
 	41423.74583,
-	41658.23125
+	41658.120139
 };
 
 struct SV
@@ -122,6 +122,7 @@ struct AP11LMManPADOpt
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int engopt; //0 = DPS, 1 = RCS+X, 2 = RCS-X
+	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	int vesseltype = 2; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
@@ -341,6 +342,7 @@ struct LOI2Man
 
 struct DOIMan
 {
+	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the DOI maneuver
@@ -351,6 +353,7 @@ struct DOIMan
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 	int N = 0;	// Revolutions between DOI and PDI
+	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
 };
 
 struct PCMan
@@ -404,6 +407,15 @@ struct P27Opt
 	double GETbase; //usually MJD at launch
 	double SVGET; //GET of the state vector
 	double navcheckGET; //GET of the Nav Check
+};
+
+struct AGSSVOpt
+{
+	SV sv;
+	MATRIX3 REFSMMAT;
+	bool csm;
+	double GETbase;
+	double AGSbase;
 };
 
 struct SkyRendOpt
@@ -466,6 +478,19 @@ struct LunarLiftoffResults
 	double t_TPF;
 	double v_LH;
 	double v_LV;
+};
+
+struct PDIPADOpt
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double P30TIG; //Time of Ignition (MCC)
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
+	MATRIX3 REFSMMAT;
+	bool direct; //0 = with MCC, 1 = without
+	VECTOR3 R_LS;	//Landing Site Vector
+	double t_land;
+	bool HeadsUp; //Orientation during the maneuver
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -532,6 +557,7 @@ public:
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
+	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -549,7 +575,8 @@ public:
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
-	void NavCheckPAD(SV sv, AP7NAV &pad);
+	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
+	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &EntryAngcor);

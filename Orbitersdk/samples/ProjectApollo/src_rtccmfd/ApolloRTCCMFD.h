@@ -20,7 +20,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
@@ -91,6 +90,7 @@ public:
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
+	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
 	double timetoapo();
@@ -115,6 +115,7 @@ public:
 	void CycleEntryOpt();
 	void set_spherical();
 	void menuSwitchHeadsUp();
+	void menuSwitchManPADDirect();
 	void menuCalcManPAD();
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();
@@ -138,6 +139,8 @@ public:
 	void menuREFSMMATdirect();
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
+	void menuSetAGSKFactor();
+	void set_AGSKFactor(double time);
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSwitchUplinkInhibit();
@@ -147,6 +150,7 @@ public:
 	void menuSetAGCEpoch();
 	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
+	void menuUpdateLiftoffTime();
 	void cycleREFSMMATupl();
 	void set_svtarget();
 	void offvecdialogue();
@@ -195,6 +199,7 @@ public:
 	void menuTranslunarPage();
 	void menuSetLunarLiftoffPage();
 	void menuSetEMPPage();
+	void menuSetNavCheckPADPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -205,8 +210,11 @@ public:
 	void set_LSAlt(double alt);
 	void menuSetDOIRevs();
 	void set_DOIRevs(int N);
+	void menuSetDOIPeriAng();
+	void set_DOIPeriAng(double ang);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuDOIOption();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();
@@ -253,6 +261,9 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuNavCheckPADCalc();
+	void menuSetNavCheckGET();
+	void set_NavCheckGET(double time);
 
 protected:
 	oapi::Font *font;

@@ -38,8 +38,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "dsky.h"
-#include "IMU.h"
 #include "LEM.h"
 
 #include "lrv.h"
@@ -308,7 +306,7 @@ void LRV::SetRoverStage ()
 	SetRotDrag(_V(0, 0, 0));
 	SetCW(0, 0, 0, 0);
 	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
+	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0); 
 
     ClearMeshes();

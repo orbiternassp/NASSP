@@ -40,9 +40,13 @@ public:
 	bool GetMasterArmRelay() { return MasterArmRelay; }
 	bool GetDeadFacingRelay() { return DeadFacingRelay; }
 	bool GetCableCuttingRelay() { return CableCuttingRelay; }
+	bool GetDescentPropVentRelay() { return DescentPropVentRelay; }
+	bool GetDescentEngineOnRelay() { return DescentEngineOnRelay; }
+	bool GetDescentPropPressRelay() { return DescentPropPressRelay; }
+	bool GetDescentTankIsolValvesRelay() { return DescentTankIsolValvesRelay; }
 	void SetStagingRelay() { StagingRelay = true; }
 
-	bool StageSeqLight();
+	bool GetStageRelayMonitor();
 protected:
 
 	bool HasDCPower();
@@ -89,6 +93,7 @@ protected:
 
 	DelayTimer StagingBoltsNutsDelay;
 	DelayTimer CableCuttingDelay;
+	DelayTimer DescentEngineOnDelay;
 
 	LEM *lem;
 	CircuitBrakerSwitch *EDLogicPower;

@@ -89,6 +89,8 @@ struct SIVBSettings
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
 
 	int LMPadCount;					///< Count of LM PAD data.
@@ -98,9 +100,8 @@ struct SIVBSettings
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; LEMCheckAuto = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; };
 
 };
 
@@ -436,6 +437,8 @@ protected:
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 
 	//
 	// LM PAD
@@ -455,7 +458,6 @@ protected:
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

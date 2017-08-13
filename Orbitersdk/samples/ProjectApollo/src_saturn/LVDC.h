@@ -81,6 +81,7 @@ private:
 	double IGMInterval;								// IGM Interval
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	int OrbNavCycle;								// Orbital cycle counter (for debugging)
+	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -182,7 +183,7 @@ private:
 	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double ROVR;									// Constant for baising terminal-range-angle during out-of-orbit burn
 	double mu;										// Product of G and Earth's mass
-	double phi_L;									// Geodetic latitude of launch site: cos
+	double phi_L;									// Geodetic latitude of launch site
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double dotM_2R;									// Mass flow rate of S4B before presumed MRS during out-of-orbit burn

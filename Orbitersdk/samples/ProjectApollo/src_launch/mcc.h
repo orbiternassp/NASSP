@@ -589,6 +589,26 @@ struct AP11PDIPAD {
 	double t_go;		// Time-to-go in P63
 	double CR;			// Crossrange
 	VECTOR3 Att;		// Attitude at TIG
+	double DEDA231;		// Landing site radius in 100 feet
+};
+
+// APOLLO 11 AGS STATE VECTOR UPDATE
+struct AP11AGSSVPAD
+{
+	double DEDA240; //LM Position X
+	double DEDA241; //LM Position Y
+	double DEDA242; //LM Position Z
+	double DEDA260; //LM Velocity X
+	double DEDA261; //LM Velocity Y
+	double DEDA262; //LM Velocity Z
+	double DEDA254; //LM Epoch Time
+	double DEDA244; //CSM Position X
+	double DEDA245; //CSM Position Y
+	double DEDA246; //CSM Position Z
+	double DEDA264; //CSM Velocity X
+	double DEDA265; //CSM Velocity Y
+	double DEDA266; //CSM Velocity Z
+	double DEDA272; //CSM Epoch Time
 };
 
 

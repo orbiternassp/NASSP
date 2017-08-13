@@ -95,7 +95,7 @@ void IMU::Init()
 	IMUHeater = 0;
 	PowerSwitch = 0;
 
-	DoZeroIMUCDUs();
+	DoZeroIMUGimbals();
 	LastSimDT = -1;
 	
 	LogInit();
@@ -129,7 +129,7 @@ void IMU::SetCaged(bool val)
 		agc.SetInputChannelBit(030, IMUCage, val);
 
 		if (val) {
-			DoZeroIMUCDUs();
+			DoZeroIMUGimbals();
 		}
 	}
 }
@@ -203,9 +203,9 @@ void IMU::ChannelOutput(int address, ChannelValue value)
     
     	if (val12[ZeroIMUCDUs]) {
 			DoZeroIMUCDUs();
-			agc.SetErasable(0, RegCDUX, 0);
-			agc.SetErasable(0, RegCDUY, 0);
-			agc.SetErasable(0, RegCDUZ, 0);
+			agc.ProcessIMUCDUReadCount(RegCDUX, 0);
+			agc.ProcessIMUCDUReadCount(RegCDUY, 0);
+			agc.ProcessIMUCDUReadCount(RegCDUZ, 0);
 		}
 	}
     	 
@@ -498,7 +498,7 @@ void IMU::DriveGimbal(int index, int RegCDU, double angle)
 	
 	// Gyro pulses to CDU pulses
 	pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);	
-	agc.SetErasable(0, RegCDU, (pulses & 077777));
+	agc.ProcessIMUCDUReadCount(RegCDU, (pulses & 077777));
 
 	char buffers[80];
 	sprintf(buffers,"DRIVE GIMBAL index %o REGCDU %o angle %f pulses %o",index,RegCDU,angle,pulses);
@@ -565,6 +565,14 @@ void IMU::SetOrbiterAttitudeReference()
 }
 
 void IMU::DoZeroIMUCDUs() 
+
+{
+	Gimbal.X = 0;
+	Gimbal.Y = 0;
+	Gimbal.Z = 0;
+}
+
+void IMU::DoZeroIMUGimbals()
 
 {
 	Gimbal.X = 0;

@@ -38,18 +38,13 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "cdu.h"
 #include "powersource.h"
 #include "papi.h"
 
 #include "tracer.h"
 
-char TwoSpaceTwoFormat[7] = "XXX XX";
-char RegFormat[7] = "XXXXXX";
-
-// Moved DELTAT definition to avoid INTERNAL COMPILER ERROR
-#define DELTAT 2.0
-
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
 
 {
 	Reset = false;
@@ -261,18 +256,6 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName)
 }
 
 //
-// Most of this burn calculation code is lifted from the Soyuz guidance MFD.
-//
-
-// Returns the absolute value of a vector
-double AbsOfVector(const VECTOR3 &Vec)
-{
-	double Result;
-	Result = sqrt(Vec.x*Vec.x + Vec.y*Vec.y + Vec.z*Vec.z);
-	return Result;
-}
-
-//
 // Virtual AGC Erasable memory functions.
 //
 // Currenty do nothing.
@@ -365,6 +348,11 @@ typedef union
 		unsigned CheckParity:1;
 		unsigned NightWatchmanTripped:1;
 		unsigned GeneratedWarning:1;
+		unsigned TookBZF:1;
+		unsigned TookBZMF:1;
+		unsigned Trap31A:1;
+		unsigned Trap31B:1;
+		unsigned Trap32:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -415,6 +403,11 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 	state.u.GeneratedWarning = vagc.GeneratedWarning;
+	state.u.TookBZF = vagc.TookBZF;
+	state.u.TookBZMF = vagc.TookBZMF;
+	state.u.Trap31A = vagc.Trap31A;
+	state.u.Trap31B = vagc.Trap31B;
+	state.u.Trap32 = vagc.Trap32;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -604,6 +597,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 			vagc.GeneratedWarning = state.u.GeneratedWarning;
+			vagc.TookBZF = state.u.TookBZF;
+			vagc.TookBZMF = state.u.TookBZMF;
+			vagc.Trap31A = state.u.Trap31A;
+			vagc.Trap31B = state.u.Trap31B;
+			vagc.Trap32 = state.u.Trap32;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
@@ -611,16 +609,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
-	}
-
-	//
-	// Quick hack to make the code work with old scenario files. Can be removed after NASSP 7
-	// release.
-	//
-
-	if (!OtherVesselName[0] && OurVessel) {
-		strncpy (OtherVesselName, OurVessel->GetName(), 63);
-		OtherVesselName[6] = 0;
 	}
 }
 
@@ -823,7 +811,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		break;
 
 	// Various control bits
-	case 012:		
+	case 012:
+		scdu.ChannelOutput(channel, val);
+		tcdu.ChannelOutput(channel, val);
 	// 174-177 are ficticious channels with the IMU CDU angles.
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
@@ -837,10 +827,12 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
 		ProcessChannel140(val);
+		scdu.ChannelOutput(channel, val);
 		break;
 
 	case 0141:
 		ProcessChannel141(val);
+		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
 		ProcessChannel142(val);
@@ -892,6 +884,9 @@ void ApolloGuidance::ProcessChannel143(ChannelValue val) {
 
 // DS20060308 Stub for FDAI
 void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
+}
+
+void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
 }
 
 void ApolloGuidance::GenerateHandrupt() {

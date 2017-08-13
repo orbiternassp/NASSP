@@ -137,6 +137,7 @@ IDB_BORDER_72x72        BITMAP                  "..\\Bitmaps\\border72x72.bmp"
 IDB_BORDER_75x64        BITMAP                  "..\\Bitmaps\\border75x64.bmp"
 IDB_BORDER_32x160       BITMAP                  "..\\Bitmaps\\border32x160.bmp"
 IDB_BORDER_38x38        BITMAP                  "..\\Bitmaps\\border38x38.bmp"
+IDB_BORDER_40x40        BITMAP                  "..\\Bitmaps\\border40x40.bmp"
 IDB_LEM_COAS1           BITMAP                  "..\\Bitmaps\\coas_lem1.bmp"
 IDB_LEM_COAS2           BITMAP                  "..\\Bitmaps\\coas_lem2.bmp"
 IDB_INDICATOR           BITMAP                  "..\\Bitmaps\\Indicator.bmp"
@@ -158,6 +159,8 @@ IDB_ORDEAL_PANEL        BITMAP                  "..\\Bitmaps\\lem_ordeal.bmp"
 IDB_ORDEAL_ROTARY       BITMAP					"..\\Bitmaps\\ORDEAL_rotary.bmp"
 IDB_TW_NEEDLE           BITMAP					"..\\Bitmaps\\lm_tw_needle.bmp"
 IDB_SEQ_LIGHT           BITMAP                  "..\\Bitmaps\\lem_seq_light.bmp"
+IDB_LMENGINESTARTSTOPBUTTONS BITMAP				"..\\Bitmaps\\LMEngStartStop.bmp"
+IDB_LMTRANSLBUTTON		BITMAP					"..\\Bitmaps\LMTranslButton.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

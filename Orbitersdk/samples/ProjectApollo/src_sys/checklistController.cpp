@@ -496,6 +496,16 @@ bool ChecklistController::isDSKYChecklistItem() {
 	return false;
 }
 
+bool ChecklistController::isDEDAChecklistItem() {
+
+	if (active.program.group != -1) {
+		if (!stricmp(active.sequence->item, "DEDA")) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void ChecklistController::timestep(double missiontime, SaturnEvents eventController)
 {
 	// Play Sound
@@ -529,6 +539,7 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			} else {
 				while (iterateChecklistItem(missiontime, eventController, true)) {
 					if (isDSKYChecklistItem()) break;
+					if (isDEDAChecklistItem()) break;
 				}
 			}
 		} else {

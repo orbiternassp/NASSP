@@ -36,7 +36,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -380,6 +379,10 @@ void Saturn::SystemsInit() {
 	pmp.Init(this);
 	usb.Init(this);
 	hga.Init(this);
+	omnia.Init(this);
+	omnib.Init(this);
+	omnic.Init(this);
+	omnid.Init(this);
 	dataRecorder.Init(this);
 	pcm.Init(this);
 
@@ -553,6 +556,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
 		mechanicalAccelerometer.TimeStep(simdt);
+		MissionTimerDisplay.Timestep(simt, simdt, false);
+		MissionTimer306Display.Timestep(simt, simdt, false);
+		EventTimerDisplay.Timestep(simt, simdt, true);
+		EventTimer306Display.Timestep(simt, simdt, true);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
@@ -570,6 +577,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
 		hga.TimeStep(MissionTime, simdt);
+		omnia.TimeStep();
+		omnib.TimeStep();
+		omnic.TimeStep();
+		omnid.TimeStep();
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		//

@@ -38,10 +38,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
 
 #include "saturn.h"
 #include "saturnv.h"
@@ -199,7 +197,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
@@ -211,7 +209,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = 0;
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
@@ -717,6 +715,7 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
+	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
 void SaturnV::SaveLVDC(FILEHANDLE scn){
