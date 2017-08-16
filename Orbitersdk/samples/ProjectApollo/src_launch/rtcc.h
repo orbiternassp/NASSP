@@ -312,6 +312,28 @@ struct MCCFRMan
 	double LOIh_peri;		//perilune altitude
 };
 
+struct MCCNFRMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double MCCGET; //GET for the MCC
+	double lat; //Earth-Moon-Plane latitude
+	double PeriGET; //initial guess for the GET at pericynthion
+	double h_peri;	//pericynthion altitude
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+
+					  //LOI targets for BAP
+	double LSlat;			//landing site latitude
+	double LSlng;			//landing site longitude
+	double alt;			//landing site height
+	double azi;			//landing site approach azimuth
+	double t_land;		//time of landing
+	double LOIh_apo;		//apolune altitude
+	double LOIh_peri;		//perilune altitude
+};
+
 struct LOIMan
 {
 	VESSEL* vessel;		//vessel
@@ -567,7 +589,8 @@ public:
 	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut, double &PeriGET, double &ReentryGET, double &FRInc);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET, double &lat_node, double &lng_node, double &alt_node, double &GET_node, double &FRInc);
+	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &PeriGET, double &ReentryGET, double &lat_node, double &lng_node, double &alt_node, double &GET_node, double &FRInc, double &TLCCEMPLatcor);
+	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &lat_node, double &lng_node, double &alt_node, double &GET_node, double &TLCCEMPLatcor);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_node, double &GET_node);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -595,6 +618,7 @@ public:
 	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, double &v_peri, double &azi_peri, double &lng_EMP, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination);
 	bool TLMC_BAP_FR_FixedLPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &R_peri, VECTOR3 &V_peri, double &MJD_peri, double &MJD_reentry, double &FreeReturnInclination, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
+	bool TLMC_BAP_NonFree_FixedLPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 
 	//Skylark

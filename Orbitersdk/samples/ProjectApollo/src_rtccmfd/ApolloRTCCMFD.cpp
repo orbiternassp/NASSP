@@ -199,7 +199,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "TLCCNodeLat", G->TLCCNodeLat);
 	papiWriteScenario_double(scn, "TLCCEMPLat", G->TLCCEMPLat);
 	papiWriteScenario_double(scn, "TLCCNodeLng", G->TLCCNodeLng);
-	papiWriteScenario_double(scn, "TLCCPeri", G->TLCCPeri);
+	papiWriteScenario_double(scn, "TLCCFRPeriAlt", G->TLCCFRPeriAlt);
+	papiWriteScenario_double(scn, "TLCCNonFreePeriAlt", G->TLCCNonFreePeriAlt);
 	papiWriteScenario_double(scn, "TLCCNodeAlt", G->TLCCNodeAlt);
 	papiWriteScenario_double(scn, "TLCCNodeGET", G->TLCCNodeGET);
 	papiWriteScenario_double(scn, "LOIapo", G->LOIapo);
@@ -320,7 +321,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "TLCCNodeLat", G->TLCCNodeLat);
 		papiReadScenario_double(line, "TLCCEMPLat", G->TLCCEMPLat);
 		papiReadScenario_double(line, "TLCCNodeLng", G->TLCCNodeLng);
-		papiReadScenario_double(line, "TLCCPeri", G->TLCCPeri);
+		papiReadScenario_double(line, "TLCCFRPeriAlt", G->TLCCFRPeriAlt);
+		papiReadScenario_double(line, "TLCCNonFreePeriAlt", G->TLCCNonFreePeriAlt);
 		papiReadScenario_double(line, "TLCCNodeAlt", G->TLCCNodeAlt);
 		papiReadScenario_double(line, "TLCCNodeGET", G->TLCCNodeGET);
 		papiReadScenario_double(line, "LOIapo", G->LOIapo);
@@ -2492,6 +2494,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 2: FR BAP Fixed LPO", 32);
 		}
+		else if (G->TLCCmaneuver == 4)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 4: Nonfree-return BAP Fixed LPO", 44);
+		}
 		else
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 6/7: Circumlunar free-return flyby", 47);
@@ -2542,6 +2548,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f NM", G->TLCCNodeAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
+		else if (G->TLCCmaneuver == 4)
+		{
+			GET_Display(Buffer, G->TLCCPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCNonFreePeriAlt / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
 		else //free return target display
 		{
 			GET_Display(Buffer, G->TLCCPeriGET);
@@ -2562,7 +2582,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.2f NM", G->TLCCPeri / 1852.0);
+			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCFRPeriAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
@@ -4561,7 +4584,7 @@ void ApolloRTCCMFD::menuSwitchLOIManeuver()
 
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
-	if (G->TLCCmaneuver < 4)
+	if (G->TLCCmaneuver < 5)
 	{
 		G->TLCCmaneuver++;
 	}
@@ -4773,9 +4796,13 @@ void ApolloRTCCMFD::set_TLCCAlt(double alt)
 	{
 		this->G->TLCCNodeAlt = alt*1852.0;
 	}
+	else if (G->TLCCmaneuver == 4)
+	{
+		this->G->TLCCNonFreePeriAlt = alt*1852.0;
+	}
 	else
 	{
-		this->G->TLCCPeri = alt*1852.0;
+		this->G->TLCCFRPeriAlt = alt*1852.0;
 	}
 }
 
