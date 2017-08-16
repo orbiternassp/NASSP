@@ -1694,13 +1694,15 @@ int ARCore::startSubthread(int fcn) {
 		subThreadStatus = 1; // Busy
 		DWORD id = 0;
 		hThread = CreateThread(NULL, 0, RTCCMFD_Trampoline, this, 0, &id);
-		if (hThread != NULL) { CloseHandle(hThread); }
 	}
 	else {
 		//Kill thread
 		DWORD exitcode = 0;
 		if (TerminateThread(hThread, exitcode))
+		{
 			subThreadStatus = 0;
+			if (hThread != NULL) { CloseHandle(hThread); }
+		}
 		return(-1);
 	}
 	return(0);
@@ -2508,7 +2510,10 @@ int ARCore::subThread()
 	}
 	break;
 	}
+
 	subThreadStatus = Result;
+	if (hThread != NULL) { CloseHandle(hThread); }
+
 	return(0);
 }
 
