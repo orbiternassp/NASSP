@@ -765,6 +765,17 @@
 #define AID_LMP_MANUAL_ENGINE_STOP_SWITCH 1039
 #define IDB_LMTRANSLBUTTON				1040
 #define IDB_BORDER_40x40                1041
+#define IDB_LEMVENT						1042
+#define IDB_LEM_ACT_OVRD				1043
+#define IDB_LEM_CAN_SEL					1044
+#define IDB_LEM_ECS_ROTARY				1045
+#define IDB_LEM_H20_SEL					1046
+#define IDB_LEM_H20_SEP					1047
+#define IDB_LEM_ISOL_ROTARY				1048
+#define IDB_LEM_PRIM_C02				1049
+#define IDB_LEM_SEC_C02					1050
+#define IDB_LEM_SGD_LEVER				1051
+#define IDB_LEM_ECS_PANEL				1052
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
