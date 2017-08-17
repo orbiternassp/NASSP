@@ -379,6 +379,7 @@ void LEM::InitSwitches() {
 		EPSMonitorSelectRotary.SetSource(4, NULL);
 		EPSEDVoltSelect.SetSource(0, NULL);
 	}
+	EPSEDVoltSelect.SetSource(1, NULL);
 	EPSEDVoltSelect.SetSource(2, EDBatteryB);
 	EPSMonitorSelectRotary.SetSource(5, Battery5);
 	EPSMonitorSelectRotary.SetSource(6, Battery6);
