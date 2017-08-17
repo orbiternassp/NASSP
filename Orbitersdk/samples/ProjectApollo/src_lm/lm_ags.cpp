@@ -761,6 +761,11 @@ void LEM_AEA::SetFlightProgram(int FP)
 	AEAInitialized = true;
 }
 
+void LEM_AEA::PadLoad(unsigned int address, unsigned int value)
+{
+	WriteMemory(address, value);
+}
+
 void LEM_AEA::WriteMemory(unsigned int loc, int val)
 
 {

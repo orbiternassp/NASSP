@@ -565,6 +565,7 @@ public:
 
 	virtual bool SetupPayload(PayloadSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
+	virtual void AEAPadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
