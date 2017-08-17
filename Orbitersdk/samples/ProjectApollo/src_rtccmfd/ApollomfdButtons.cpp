@@ -413,7 +413,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu12[] =
 	{
 		{ "Maneuver type", 0, 'T' },
-		{ "", 0, ' ' },
+		{ "LOI option", 0, 'D' },
 		{ "Time of landing", 0, 'P' },
 		{ "Apocynthion", 0, 'H' },
 		{ "Pericynthion", 0, 'N' },
@@ -430,7 +430,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu12, sizeof(mnu12) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("MAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSwitchLOIManeuver);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("OPT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchLOIOption);
 	RegisterFunction("GET", OAPI_KEY_P, &ApolloRTCCMFD::menuSetTLAND);
 	RegisterFunction("APA", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLOIApo);
 	RegisterFunction("PEA", OAPI_KEY_N, &ApolloRTCCMFD::menuSetLOIPeri);

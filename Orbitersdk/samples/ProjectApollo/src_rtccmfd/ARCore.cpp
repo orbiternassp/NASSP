@@ -334,6 +334,7 @@ ARCore::ARCore(VESSEL* v)
 	rtcc = new RTCC();
 
 	LOImaneuver = 0;
+	LOIOption = 0;
 	LOIapo = 170.0*1852.0;
 	LOIperi = 60.0*1852.0;
 	LOIazi = 0.0;
@@ -348,8 +349,8 @@ ARCore::ARCore(VESSEL* v)
 	TLCCEMPLatcor = 0.0;
 	TLCCNodeLng = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
-	TLCCNonFreePeriAlt = 60.0*1852.0;
-	TLCCFRPeriAlt = 60.0*1852.0;
+	TLCCLAHPeriAlt = 60.0*1852.0;
+	TLCCFlybyPeriAlt = 60.0*1852.0;
 	TLCCNodeAlt = 0.0;
 	TLCCNodeGET = 0.0;
 	TLCCPeriGET = 0.0;
@@ -448,11 +449,12 @@ ARCore::ARCore(VESSEL* v)
 		LOIperi = 58.7*1852.0;
 		TLCCEMPLat = -1.962929*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(83.0, 25.0, 50.8);
-		TLCCFRPeriAlt = 1851.7*1852.0;
+		TLCCFlybyPeriAlt = 1851.7*1852.0;
 		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);;
 		TLCCNodeLat = 6.5*RAD;
 		TLCCNodeLng = 177.4*RAD;
 		TLCCNodeAlt = 59.9*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		AGSKFactor = 100.0*3600.0;
 	}
@@ -466,11 +468,12 @@ ARCore::ARCore(VESSEL* v)
 		LOIperi = 57.0*1852.0;
 		TLCCEMPLat = -2.219239*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(77.0, 56.0, 22.0);
-		TLCCFRPeriAlt = 136.3*1852.0;
+		TLCCFlybyPeriAlt = 136.3*1852.0;
 		TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 26.0, 05.3);
 		TLCCNodeLat = 2.4*RAD;
 		TLCCNodeLng = -169.9*RAD;
 		TLCCNodeAlt = 58.0*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 	}
 	else if (mission == 14)
@@ -483,11 +486,12 @@ ARCore::ARCore(VESSEL* v)
 		LOIperi = 57.1*1852.0;
 		TLCCEMPLat = -0.048722*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(82.0, 39.0, 52.2);
-		TLCCFRPeriAlt = 2030.9*1852.0;
+		TLCCFlybyPeriAlt = 2030.9*1852.0;
 		TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 38.0, 14.0);
 		TLCCNodeLat = 2.2*RAD;
 		TLCCNodeLng = -178.2*RAD;
 		TLCCNodeAlt = 57.1*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		AGSKFactor = 100.0*3600.0;
 	}
@@ -504,6 +508,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLat = -23.3*RAD;
 		TLCCNodeLng = 171.7*RAD;
 		TLCCNodeAlt = 68.1*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		AGSKFactor = 100.0*3600.0;
 	}
@@ -519,6 +524,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLat = 7.8*RAD;
 		TLCCNodeLng = 176.8*RAD;
 		TLCCNodeAlt = 71.4*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 	}
 	else if (mission == 17)
@@ -533,6 +539,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeLat = -10.4*RAD;
 		TLCCNodeLng = 174.1*RAD;
 		TLCCNodeAlt = 51.3*1852.0;
+		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		AGSKFactor = 110.0*3600.0;
 	}
@@ -1912,6 +1919,7 @@ int ARCore::subThread()
 			loiopt.t_land = t_Land;
 			loiopt.azi = LOIazi;
 			loiopt.vessel = vessel;
+			loiopt.type = LOIOption;
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2347,7 +2355,7 @@ int ARCore::subThread()
 			double MJDcut;
 
 			opt.GETbase = GETbase;
-			opt.h_peri = TLCCFRPeriAlt;
+			opt.h_peri = TLCCFlybyPeriAlt;
 			opt.lat = TLCCEMPLat;
 			opt.TLI_TIG = TLCC_GET;
 			opt.PeriGET = TLCCPeriGET;
@@ -2383,17 +2391,17 @@ int ARCore::subThread()
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
 		}
-		else if (TLCCmaneuver == 3 || TLCCmaneuver == 5)
+		else if (TLCCmaneuver == 3 || TLCCmaneuver == 4)
 		{
 			MCCFRMan opt;
 
 			if (TLCCmaneuver == 3)
 			{
-				opt.man = 0;
+				opt.type = 0;
 			}
 			else
 			{
-				opt.man = 1;
+				opt.type = 1;
 			}
 
 			opt.GETbase = GETbase;
@@ -2418,7 +2426,7 @@ int ARCore::subThread()
 			opt.alt = LSAlt;
 			opt.t_land = t_Land;
 			opt.azi = LOIazi;
-			opt.h_peri = TLCCFRPeriAlt;
+			opt.h_peri = TLCCLAHPeriAlt;
 
 			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET, TLCCFRIncl, TLCCEMPLatcor);
 
@@ -2428,9 +2436,18 @@ int ARCore::subThread()
 				dV_LVLH = TLCC_dV_LVLH;
 			}
 		}
-		else if (TLCCmaneuver == 4)
+		else if (TLCCmaneuver == 5 || TLCCmaneuver == 6)
 		{
 			MCCNFRMan opt;
+
+			if (TLCCmaneuver == 5)
+			{
+				opt.type = 0;
+			}
+			else
+			{
+				opt.type = 1;
+			}
 
 			opt.GETbase = GETbase;
 			opt.lat = TLCCEMPLat;
@@ -2454,9 +2471,37 @@ int ARCore::subThread()
 			opt.alt = LSAlt;
 			opt.t_land = t_Land;
 			opt.azi = LOIazi;
-			opt.h_peri = TLCCNonFreePeriAlt;
+			opt.h_peri = TLCCLAHPeriAlt;
 
 			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET, TLCCEMPLatcor);
+
+			if (TLCCSolGood)
+			{
+				P30TIG = TLCC_TIG;
+				dV_LVLH = TLCC_dV_LVLH;
+			}
+		}
+		else
+		{
+			MCCFlybyMan opt;
+
+			opt.GETbase = GETbase;
+			opt.lat = TLCCEMPLat;
+			opt.PeriGET = TLCCPeriGET;
+			opt.MCCGET = TLCC_GET;
+			opt.vessel = vessel;
+			opt.h_peri = TLCCFlybyPeriAlt;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCFRIncl);
 
 			if (TLCCSolGood)
 			{

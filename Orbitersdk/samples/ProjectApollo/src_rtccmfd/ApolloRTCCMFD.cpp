@@ -199,8 +199,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "TLCCNodeLat", G->TLCCNodeLat);
 	papiWriteScenario_double(scn, "TLCCEMPLat", G->TLCCEMPLat);
 	papiWriteScenario_double(scn, "TLCCNodeLng", G->TLCCNodeLng);
-	papiWriteScenario_double(scn, "TLCCFRPeriAlt", G->TLCCFRPeriAlt);
-	papiWriteScenario_double(scn, "TLCCNonFreePeriAlt", G->TLCCNonFreePeriAlt);
+	papiWriteScenario_double(scn, "TLCCLAHPeriAlt", G->TLCCLAHPeriAlt);
+	papiWriteScenario_double(scn, "TLCCFlybyPeriAlt", G->TLCCFlybyPeriAlt);
 	papiWriteScenario_double(scn, "TLCCNodeAlt", G->TLCCNodeAlt);
 	papiWriteScenario_double(scn, "TLCCNodeGET", G->TLCCNodeGET);
 	papiWriteScenario_double(scn, "LOIapo", G->LOIapo);
@@ -321,8 +321,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "TLCCNodeLat", G->TLCCNodeLat);
 		papiReadScenario_double(line, "TLCCEMPLat", G->TLCCEMPLat);
 		papiReadScenario_double(line, "TLCCNodeLng", G->TLCCNodeLng);
-		papiReadScenario_double(line, "TLCCFRPeriAlt", G->TLCCFRPeriAlt);
-		papiReadScenario_double(line, "TLCCNonFreePeriAlt", G->TLCCNonFreePeriAlt);
+		papiReadScenario_double(line, "TLCCLAHPeriAlt", G->TLCCLAHPeriAlt);
+		papiReadScenario_double(line, "TLCCFlybyPeriAlt", G->TLCCFlybyPeriAlt);
 		papiReadScenario_double(line, "TLCCNodeAlt", G->TLCCNodeAlt);
 		papiReadScenario_double(line, "TLCCNodeGET", G->TLCCNodeGET);
 		papiReadScenario_double(line, "LOIapo", G->LOIapo);
@@ -1946,34 +1946,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Lunar Insertion", 15);
 
-		if (G->subThreadStatus > 0)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Calculating...", 14);
-		}
-
 		if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
 		{
 			if (G->LOImaneuver == 0)
 			{
 				skp->Text(1 * W / 8, 2 * H / 14, "LOI-1 (w/ MCC)", 14);
 
-				skp->Text(5 * W / 8, 2 * H / 21, "MCC", 3);
-				GET_Display(Buffer, G->TLCC_TIG);
-				skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
+				if (G->subThreadStatus > 0)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
+				}
+				else
+				{
+					skp->Text(5 * W / 8, 2 * H / 21, "MCC", 3);
+					GET_Display(Buffer, G->TLCC_TIG);
+					skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
 
-				sprintf(Buffer, "%+07.1f DVT", length(G->TLCC_dV_LVLH) / 0.3048);
-				skp->Text(5 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
-
-				/*sprintf(Buffer, "%+07.1f DVX", G->TLCC_dV_LVLH.x / 0.3048);
-				skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.1f DVY", G->TLCC_dV_LVLH.y / 0.3048);
-				skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%+07.1f DVZ", G->TLCC_dV_LVLH.z / 0.3048);
-				skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));*/
+					sprintf(Buffer, "%+07.1f DVT", length(G->TLCC_dV_LVLH) / 0.3048);
+					skp->Text(5 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
+				}
 			}
 			else
 			{
 				skp->Text(1 * W / 8, 2 * H / 14, "LOI-1 (w/o MCC)", 15);
+
+				if (G->subThreadStatus > 0)
+				{
+					skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
+				}
+			}
+
+			if (G->LOIOption == 0)
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "Fixed LPO", 9);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "LOI-1 at Pericynthion", 21);
 			}
 
 			GET_Display(Buffer, G->t_Land);
@@ -1985,8 +1994,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f NM", G->LOIperi / 1852.0);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.3f°", G->LOIazi*DEG);
-			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+			if (G->LOIOption == 0)
+			{
+				sprintf(Buffer, "%.3f°", G->LOIazi*DEG);
+				skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+			}
 
 			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -2010,6 +2022,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else if (G->LOImaneuver == 2)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "LOI-2", 5);
+
+			if (G->subThreadStatus > 0)
+			{
+				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
+			}
 
 			sprintf(Buffer, "%.2f NM", G->LOI2Alt / 1852.0);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
@@ -2492,11 +2509,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->TLCCmaneuver == 3)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 2: FR BAP Fixed LPO", 32);
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 2: FR BAP, Fixed LPO, LS", 37);
 		}
 		else if (G->TLCCmaneuver == 4)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 4: Nonfree-return BAP Fixed LPO", 44);
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 3: FR BAP, Free LPO, LS", 36);
+		}
+		else if (G->TLCCmaneuver == 5)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 4: Nonfree-return BAP, Fixed LPO, LS", 49);
+		}
+		else if (G->TLCCmaneuver == 6)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 5: Nonfree-return BAP, Free LPO, LS", 48);
 		}
 		else
 		{
@@ -2548,21 +2573,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f NM", G->TLCCNodeAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->TLCCmaneuver == 4)
-		{
-			GET_Display(Buffer, G->TLCCPeriGET);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
-			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.2f NM", G->TLCCNonFreePeriAlt / 1852.0);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else //free return target display
+		else if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 4)
 		{
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
@@ -2585,7 +2596,44 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.2f NM", G->TLCCFRPeriAlt / 1852.0);
+			sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
+		{
+			GET_Display(Buffer, G->TLCCPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else //free return target display
+		{
+			GET_Display(Buffer, G->TLCCPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 8 * H / 14, "Pericynthion:", 13);
+			GET_Display(Buffer, G->TLCCPeriGETcor);
+			skp->Text(1 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 10 * H / 14, "Reentry:", 8);
+			GET_Display(Buffer, G->TLCCReentryGET);
+			skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 12 * H / 14, "FR Inclination:", 15);
+			sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
+			skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCFlybyPeriAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
@@ -4582,9 +4630,21 @@ void ApolloRTCCMFD::menuSwitchLOIManeuver()
 	}
 }
 
+void ApolloRTCCMFD::menuSwitchLOIOption()
+{
+	if (G->LOIOption < 1)
+	{
+		G->LOIOption++;
+	}
+	else
+	{
+		G->LOIOption = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
-	if (G->TLCCmaneuver < 5)
+	if (G->TLCCmaneuver < 7)
 	{
 		G->TLCCmaneuver++;
 	}
@@ -4796,13 +4856,13 @@ void ApolloRTCCMFD::set_TLCCAlt(double alt)
 	{
 		this->G->TLCCNodeAlt = alt*1852.0;
 	}
-	else if (G->TLCCmaneuver == 4)
+	else if (G->TLCCmaneuver == 7)
 	{
-		this->G->TLCCNonFreePeriAlt = alt*1852.0;
+		this->G->TLCCFlybyPeriAlt = alt*1852.0;
 	}
 	else
 	{
-		this->G->TLCCFRPeriAlt = alt*1852.0;
+		this->G->TLCCLAHPeriAlt = alt*1852.0;
 	}
 }
 
@@ -4810,8 +4870,11 @@ void ApolloRTCCMFD::menuSetLOIAzi()
 {
 	if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
 	{
-		bool LOIAziInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the approach azimuth:", LOIAziInput, 0, 20, (void*)this);
+		if (G->LOIOption == 0)
+		{
+			bool LOIAziInput(void *id, char *str, void *data);
+			oapiOpenInputBox("Choose the approach azimuth:", LOIAziInput, 0, 20, (void*)this);
+		}
 	}
 }
 

@@ -164,6 +164,7 @@ public:
 	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
+	void menuSwitchLOIOption();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
