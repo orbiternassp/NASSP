@@ -345,7 +345,7 @@ typedef union
 		unsigned SbyPressed:1;
 		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
-		unsigned CheckParity:1;
+		unsigned Spare1:1;
 		unsigned NightWatchmanTripped:1;
 		unsigned GeneratedWarning:1;
 		unsigned TookBZF:1;
@@ -400,7 +400,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.SbyPressed = vagc.SbyPressed;
 	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
-	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 	state.u.GeneratedWarning = vagc.GeneratedWarning;
 	state.u.TookBZF = vagc.TookBZF;
@@ -594,7 +593,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.SbyPressed = state.u.SbyPressed;
 			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
-			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 			vagc.GeneratedWarning = state.u.GeneratedWarning;
 			vagc.TookBZF = state.u.TookBZF;

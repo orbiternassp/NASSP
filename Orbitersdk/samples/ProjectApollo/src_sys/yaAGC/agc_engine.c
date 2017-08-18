@@ -670,7 +670,7 @@ FindMemoryWord (agc_t * State, int Address12)
   int16_t *Addr;
 
   // Get rid of the parity bit.
-  Address12 = Address12;
+  //Address12 = Address12;
 
   // Make sure the darn thing really is 12 bits.
   Address12 &= 07777;
