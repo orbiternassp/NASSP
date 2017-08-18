@@ -364,6 +364,8 @@ void LEM::InitSwitches() {
 	EPSMonitorSelectRotary.AddPosition(7,60);
 	EPSMonitorSelectRotary.AddPosition(8,90);
 	EPSMonitorSelectRotary.AddPosition(9,120);
+	EPSMonitorSelectRotary.Register(PSH, "EPSMonitorSelectRotary", 0);
+	EPSEDVoltSelect.Register(PSH, "EPSEDVoltSelect", THREEPOSSWITCH_CENTER);
 
 	EPSMonitorSelectRotary.SetSource(0, &EPSEDVoltSelect);
 	if(stage < 2){
@@ -386,8 +388,6 @@ void LEM::InitSwitches() {
 	EPSMonitorSelectRotary.SetSource(8, &LMPDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(9, &ACVoltsAttenuator);
 	
-	EPSMonitorSelectRotary.Register(PSH,"EPSMonitorSelectRotary",0);
-	
 	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
 	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
 	DSCBattery1TB.Register(PSH, "DSCBattery1TB", 2);
@@ -400,7 +400,6 @@ void LEM::InitSwitches() {
 	ASCBattery6BTB.Register(PSH, "ASCBattery6BTB", 0);
 	DSCBattFeedTB.Register(PSH, "DSCBattFeedTB", 1);
 	EPSInverterSwitch.Register(PSH,"EPSInverterSwitch",THREEPOSSWITCH_DOWN);
-	EPSEDVoltSelect.Register(PSH,"EPSEDVoltSelect",THREEPOSSWITCH_CENTER);
 	DSCSEBat1HVSwitch.Register(PSH, "DSCSEBat1HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCSEBat2HVSwitch.Register(PSH, "DSCSEBat2HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCCDRBat3HVSwitch.Register(PSH, "DSCCDRBat3HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
