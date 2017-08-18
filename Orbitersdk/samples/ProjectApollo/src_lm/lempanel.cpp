@@ -1144,12 +1144,12 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
 		//srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));		//The LM FDAI texture doesn't need this
-		srf[SRF_FDAIROLL]			= oapiCreateSurface(LOADBMP(IDB_LEM_FDAI_ROLL));
-		srf[SRF_CWSLIGHTS]			= oapiCreateSurface(LOADBMP(IDB_CWS_LIGHTS));
-		srf[SRF_DSKYKEY]			= oapiCreateSurface(LOADBMP(IDB_DSKY_KEY));
-		srf[SRF_LEMROTARY]			= oapiCreateSurface(LOADBMP(IDB_LEMROTARY));
-		srf[SRF_FDAIOFFFLAG]		= oapiCreateSurface(LOADBMP(IDB_FDAIOFFFLAG));
-		srf[SRF_FDAINEEDLES]		= oapiCreateSurface(LOADBMP(IDB_LEM_FDAI_NEEDLES));
+		srf[SRF_FDAIROLL]			= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_ROLL));
+		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
+		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
+		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
+		srf[SRF_FDAIOFFFLAG]		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
+		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_NEEDLES));
 		srf[SRF_CIRCUITBRAKER]		= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
@@ -1169,8 +1169,19 @@ void LEM::InitPanel (int panel)
 		srf[SRF_DIGITALDISP2]		= oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
 		srf[SRF_RADAR_TAPE]         = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
 		srf[SRF_SEQ_LIGHT]			= oapiCreateSurface (LOADBMP (IDB_SEQ_LIGHT));
-		srf[SRF_LMENGINE_START_STOP_BUTTONS] = oapiCreateSurface(LOADBMP(IDB_LMENGINESTARTSTOPBUTTONS));
-		srf[SRF_LMTRANSLBUTTON]		= oapiCreateSurface (LOADBMP(IDB_LMTRANSLBUTTON));
+		srf[SRF_LMENGINE_START_STOP_BUTTONS] = oapiCreateSurface (LOADBMP (IDB_LMENGINESTARTSTOPBUTTONS));
+		srf[SRF_LMTRANSLBUTTON]		= oapiCreateSurface (LOADBMP (IDB_LMTRANSLBUTTON));
+		srf[SRF_LEMVENT]			= oapiCreateSurface (LOADBMP (AID_LEMVENT));
+		srf[SRF_LEM_ACT_OVRD]		= oapiCreateSurface (LOADBMP (AID_LEM_ACT_OVRD));
+		srf[SRF_LEM_CAN_SEL]		= oapiCreateSurface (LOADBMP (AID_LEM_CAN_SEL));
+		srf[SRF_LEM_ECS_ROTARY]		= oapiCreateSurface (LOADBMP (AID_LEM_ECS_ROTARY));
+		srf[SRF_LEM_H20_SEL]		= oapiCreateSurface (LOADBMP (AID_LEM_H20_SEL));
+		srf[SRF_LEM_H20_SEP]		= oapiCreateSurface (LOADBMP (AID_LEM_H20_SEP));
+		srf[SRF_LEM_ISOL_ROTARY]	= oapiCreateSurface (LOADBMP (AID_LEM_ISOL_ROTARY));
+		srf[SRF_LEM_PRIM_C02]		= oapiCreateSurface (LOADBMP (AID_LEM_PRIM_C02));
+		srf[SRF_LEM_SEC_C02]		= oapiCreateSurface (LOADBMP (AID_LEM_SEC_C02));
+		srf[SRF_LEM_SGD_LEVER]		= oapiCreateSurface (LOADBMP (AID_LEM_SGD_LEVER));
+
 
 		//
 		// Flashing borders.
@@ -1247,6 +1258,16 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SEQ_LIGHT],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LMENGINE_START_STOP_BUTTONS], g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LMTRANSLBUTTON],		g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEMVENT],				g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_ACT_OVRD],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_CAN_SEL],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_ECS_ROTARY],		g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_H20_SEL],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_H20_SEP],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_ISOL_ROTARY],		g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_PRIM_C02],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_SEC_C02],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_SGD_LEVER],			g_Param.col[4]);
 
 		//		break;
 		//
@@ -1340,7 +1361,12 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_RIGHTPANEL:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RIGHT_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_RIGHTWINDOW, -1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_RIGHTWINDOW, LMPANEL_ECSPANEL, -1, -1);
+		break;
+
+	case LMPANEL_ECSPANEL:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_ECS_PANEL));
+		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, -1, -1);
 		break;
 	}
 
@@ -1360,8 +1386,8 @@ bool LEM::clbkLoadPanel (int id) {
 		fdaiRight.SetLMmode();
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
-		oapiRegisterPanelArea(AID_MFDLEFT,                          _R(635, 1564, 1060, 1918),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_MFDRIGHT,                         _R(1640, 1564, 2065, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDLEFT,                          _R(635, 1564, 1060, 1918),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDRIGHT,                         _R(1640, 1564, 2065, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_LM_RCSIND,					    _R(1408,  245, 1657,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(1712,  245, 1988,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -1439,16 +1465,16 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RR_NOTRACK,    					_R(1000,  1300, 1034, 1334), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RANGE_TAPE,    					_R(1052,  660, 1096,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RATE_TAPE,    					_R(1103,  660, 1138,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_PANEL_5,                      _R(  33, 1548,  593, 1889), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_PANEL_5,                      _R(  33, 1548,  593, 1889), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
-		oapiRegisterPanelArea(AID_LMP_MANUAL_ENGINE_STOP_SWITCH,	_R(2160, 1609, 2228, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMP_MANUAL_ENGINE_STOP_SWITCH,	_R(2160, 1609, 2228, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
 		// DEDA
-		oapiRegisterPanelArea(AID_LM_AGS_OPERATE_SWITCH,            _R(2249, 1835, 2286, 1875), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_DEDA_DISP,                     _R(2434, 1672, 2568, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_DEDA_ADR,                      _R(2458, 1627, 2516, 1649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_DEDA_KEYS,                     _R(2363, 1710, 2587, 1887), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_DEDA_LIGHTS,                   _R(2371, 1670, 2418, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_AGS_OPERATE_SWITCH,            _R(2249, 1835, 2286, 1875), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_DISP,                     _R(2434, 1672, 2568, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_ADR,                      _R(2458, 1627, 2516, 1649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_KEYS,                     _R(2363, 1710, 2587, 1887), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DEDA_LIGHTS,                   _R(2371, 1670, 2418, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
 		// ORDEAL
 		oapiRegisterPanelArea(AID_ORDEALSWITCHES,					_R(1199, 10, 1676, 212),    PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1613,6 +1639,13 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 26,   66,  61,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI/3.0)), optics.OpticsShaft*PI / 3.0);
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_ECSPANEL: // LEM ECS Panel
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
