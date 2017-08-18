@@ -355,8 +355,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
+    <ClInclude Include="..\..\src_lm\lm_channels.h" />
     <ClInclude Include="..\..\src_lm\lm_dps.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
     <ClInclude Include="..\..\src_lm\lm_programer.h" />
