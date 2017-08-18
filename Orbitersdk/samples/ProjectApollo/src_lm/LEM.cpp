@@ -1545,6 +1545,11 @@ void LEM::PadLoad(unsigned int address, unsigned int value)
 	agc.PadLoad(address, value);
 }
 
+void LEM::AEAPadLoad(unsigned int address, unsigned int value)
+{
+	aea.PadLoad(address, value);
+}
+
 // *** REACTION CONTROL SYSTEM ***
 void LEM::CheckRCS(){
 	/* sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
