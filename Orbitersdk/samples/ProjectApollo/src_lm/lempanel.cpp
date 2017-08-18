@@ -838,6 +838,8 @@ void LEM::InitSwitches() {
 	DedaSwitchEnter.SetCallback(new PanelSwitchCallback<LEM_DEDA>(&deda, &LEM_DEDA::EnterCallback));
 	DedaSwitchHold.SetCallback(new PanelSwitchCallback<LEM_DEDA>(&deda, &LEM_DEDA::HoldCallback));
 
+	DedaSwitchClear.SetDelayTime(0.5);
+
 	ORDEALAltSetRotary.AddPosition(0, 240);
 	ORDEALAltSetRotary.AddPosition(1, 270);
 	ORDEALAltSetRotary.AddPosition(2, 330);
