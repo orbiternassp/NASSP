@@ -95,13 +95,15 @@ struct SIVBSettings
 
 	int LMPadCount;					///< Count of LM PAD data.
 	unsigned int *LMPad;			///< LM PAD data.
+	int AEAPadCount;				///< Count of AEA PAD data.
+	unsigned int *AEAPad;			///< AEA PAD data.
 
 	///
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0; };
 
 };
 
@@ -449,6 +451,12 @@ protected:
 
 	int LMPadLoadCount;
 	int LMPadValueCount;
+
+	int AEAPadCount;				///< Count of AEA PAD values.
+	unsigned int *AEAPad;			///< AEA PAD load data.
+
+	int AEAPadLoadCount;
+	int AEAPadValueCount;
 
 	char PayloadName[64];			///< Name of payload, if appropriate.
 

@@ -172,6 +172,10 @@ SIVB::~SIVB()
 		delete[] LMPad;
 		LMPad = 0;
 	}
+	if (AEAPad) {
+		delete[] AEAPad;
+		AEAPad = 0;
+	}
 }
 
 void SIVB::InitS4b()
@@ -271,6 +275,11 @@ void SIVB::InitS4b()
 	LMPad = 0;
 	LMPadLoadCount = 0;
 	LMPadValueCount = 0;
+
+	AEAPadCount = 0;
+	AEAPad = 0;
+	AEAPadLoadCount = 0;
+	AEAPadValueCount = 0;
 
 	//
 	// Set up the connections.
@@ -799,6 +808,14 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 				oapiWriteScenario_string (scn, "LMPAD", str);
 			}
 		}
+		if (AEAPadCount > 0 && AEAPad) {
+			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
+			char str[64];
+			for (int i = 0; i < AEAPadCount; i++) {
+				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+				oapiWriteScenario_string(scn, "AEAPAD", str);
+			}
+		}
 	}
 
 	iu.SaveState(scn);
@@ -1227,6 +1244,23 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				LMPad[LMPadLoadCount++] = val;
 			}
 		}
+		else if (!strnicmp(line, "AEAPADCNT", 9)) {
+			if (!AEAPad) {
+				sscanf(line + 9, "%d", &AEAPadCount);
+				if (AEAPadCount > 0) {
+					AEAPad = new unsigned int[AEAPadCount * 2];
+				}
+			}
+		}
+		else if (!strnicmp(line, "AEAPAD", 6)) {
+			unsigned int addr, val;
+			sscanf(line + 6, "%o %o", &addr, &val);
+			AEAPadValueCount++;
+			if (AEAPad && AEAPadLoadCount < (AEAPadCount * 2)) {
+				AEAPad[AEAPadLoadCount++] = addr;
+				AEAPad[AEAPadLoadCount++] = val;
+			}
+		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			iu.LoadState(scn);
 		}
@@ -1396,6 +1430,17 @@ void SIVB::SetState(SIVBSettings &state)
 			for (i = 0; i < (LMPadCount * 2); i++)
 			{
 				LMPad[i] = state.LMPad[i];
+			}
+		}
+
+		AEAPadCount = state.AEAPadCount;
+
+		if (AEAPadCount > 0) {
+			int i;
+			AEAPad = new unsigned int[AEAPadCount * 2];
+			for (i = 0; i < (AEAPadCount * 2); i++)
+			{
+				AEAPad[i] = state.AEAPad[i];
 			}
 		}
 	}
@@ -1688,6 +1733,14 @@ void SIVB::StartSeparationPyros()
 				int i;
 				for (i = 0; i < LMPadCount; i++) {
 					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+				}
+			}
+
+			if (AEAPad && AEAPadCount > 0)
+			{
+				int i;
+				for (i = 0; i < AEAPadCount; i++) {
+					lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
 				}
 			}
 

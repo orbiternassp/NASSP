@@ -3649,6 +3649,8 @@ protected:
 
 	int LMPadCount;
 	unsigned int *LMPad;
+	int AEAPadCount;
+	unsigned int *AEAPad;
 
 	//
 	// Do we have a crew, or is this an unmanned flight?
@@ -4307,6 +4309,8 @@ protected:
 
 	int LMPadLoadCount;
 	int LMPadValueCount;
+	int AEAPadLoadCount;
+	int AEAPadValueCount;
 
 	//
 	// IMFD5 communication support

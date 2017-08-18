@@ -119,6 +119,7 @@ public:
 	unsigned int GetInputChannel(int channel);
 	void SetMissionInfo(int MissionNo);
 	void SetFlightProgram(int FP);
+	void PadLoad(unsigned int address, unsigned int value);
 	void WriteMemory(unsigned int loc, int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void SetAGSAttitude(int Type, int Data);
