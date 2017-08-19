@@ -353,23 +353,6 @@ void LEM::Init()
 	PanelFlashOn = false;
 
 	//
-	// For now we'll turn on the mission timer. We don't yet have a switch to control
-	// it.
-	//
-	// Switch added -- DS20100501
-	//
-
-	// MissionTimerDisplay.SetRunning(true);
-	// MissionTimerDisplay.SetEnabled(true);
-
-	//
-	// And Event Timer.
-	//
-
-	EventTimerDisplay.SetRunning(true);
-	EventTimerDisplay.SetEnabled(true);
-
-	//
 	// Initial sound setup
 	//
 
