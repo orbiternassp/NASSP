@@ -41,7 +41,9 @@ public:
 	void LOICalc();
 	void LmkCalc();
 	void TEICalc();
+	void RTEFlybyCalc();
 	void EntryCalc();
+	void DeorbitCalc();
 	void TLCCCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
@@ -139,7 +141,7 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
+	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
 	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
 	double EntryLat;
@@ -149,15 +151,14 @@ public:
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
-	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
-	bool TEIfail;
+	int DeorbitEngineOpt; //0 = SPS, 1 = RCS
+	int FlybyType;	//1 = Flyby, 2 = PC+2
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
