@@ -359,6 +359,8 @@ ARCore::ARCore(VESSEL* v)
 	TLCCReentryGET = 0.0;
 	TLCCSolGood = true;
 	TLCCFRIncl = 0.0;
+	TLCCFRLat = 0.0;
+	TLCCFRLng = 0.0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2326,6 +2328,7 @@ int ARCore::subThread()
 		else if (TLCCmaneuver == 1)
 		{
 			TLIManFR opt;
+			TLMCCResults res;
 			double MJDcut;
 
 			opt.GETbase = GETbase;
@@ -2336,9 +2339,17 @@ int ARCore::subThread()
 			opt.vessel = vessel;
 			opt.useSV = false;
 
-			rtcc->TranslunarInjectionProcessorFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut, TLCCPeriGETcor, TLCCReentryGET, TLCCFRIncl);
+			rtcc->TranslunarInjectionProcessorFreeReturn(&opt, &res, R_TLI, V_TLI, MJDcut);
+
+			TLCC_dV_LVLH = res.dV_LVLH;
+			TLCC_TIG = res.P30TIG;
+			TLCCPeriGETcor = res.PericynthionGET;
+			TLCCReentryGET = res.EntryInterfaceGET;
+			TLCCFRIncl = res.FRInclination;
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
+			TLCCFRLat = res.SplashdownLat;
+			TLCCFRLng = res.SplashdownLng;
 		}
 		else if (TLCCmaneuver == 2)
 		{
@@ -2368,6 +2379,7 @@ int ARCore::subThread()
 		else if (TLCCmaneuver == 3 || TLCCmaneuver == 4)
 		{
 			MCCFRMan opt;
+			TLMCCResults res;
 
 			if (TLCCmaneuver == 3)
 			{
@@ -2402,10 +2414,23 @@ int ARCore::subThread()
 			opt.azi = LOIazi;
 			opt.h_peri = TLCCLAHPeriAlt;
 
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET, TLCCFRIncl, TLCCEMPLatcor);
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
 
 			if (TLCCSolGood)
 			{
+				TLCC_dV_LVLH = res.dV_LVLH;
+				TLCC_TIG = res.P30TIG;
+				TLCCPeriGETcor = res.PericynthionGET;
+				TLCCReentryGET = res.EntryInterfaceGET;
+				TLCCNodeLat = res.NodeLat;
+				TLCCNodeLng = res.NodeLng;
+				TLCCNodeAlt = res.NodeAlt;
+				TLCCNodeGET = res.NodeGET;
+				TLCCFRIncl = res.FRInclination;
+				TLCCEMPLatcor = res.EMPLatitude;
+				TLCCFRLat = res.SplashdownLat;
+				TLCCFRLng = res.SplashdownLng;
+
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
 			}
@@ -2413,6 +2438,7 @@ int ARCore::subThread()
 		else if (TLCCmaneuver == 5 || TLCCmaneuver == 6)
 		{
 			MCCNFRMan opt;
+			TLMCCResults res;
 
 			if (TLCCmaneuver == 5)
 			{
@@ -2447,10 +2473,18 @@ int ARCore::subThread()
 			opt.azi = LOIazi;
 			opt.h_peri = TLCCLAHPeriAlt;
 
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET, TLCCEMPLatcor);
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, &res);
 
 			if (TLCCSolGood)
 			{
+				TLCC_dV_LVLH = res.dV_LVLH;
+				TLCC_TIG = res.P30TIG;
+				TLCCNodeLat = res.NodeLat;
+				TLCCNodeLng = res.NodeLng;
+				TLCCNodeAlt = res.NodeAlt;
+				TLCCNodeGET = res.NodeGET;
+				TLCCEMPLatcor = res.EMPLatitude;
+
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
 			}
@@ -2458,6 +2492,7 @@ int ARCore::subThread()
 		else
 		{
 			MCCFlybyMan opt;
+			TLMCCResults res;
 
 			opt.GETbase = GETbase;
 			opt.lat = TLCCEMPLat;
@@ -2475,10 +2510,18 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, TLCC_dV_LVLH, TLCC_TIG, TLCCPeriGETcor, TLCCReentryGET, TLCCFRIncl);
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, &res);
 
 			if (TLCCSolGood)
 			{
+				TLCC_dV_LVLH = res.dV_LVLH;
+				TLCC_TIG = res.P30TIG;
+				TLCCPeriGETcor = res.PericynthionGET;
+				TLCCReentryGET = res.EntryInterfaceGET;
+				TLCCFRIncl = res.FRInclination;
+				TLCCFRLat = res.SplashdownLat;
+				TLCCFRLng = res.SplashdownLng;
+
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
 			}

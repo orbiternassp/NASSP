@@ -2320,17 +2320,25 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 8 * H / 14, "Pericynthion:", 13);
+			skp->Text(1 * W / 8, 11 * H / 21, "Pericynthion:", 13);
 			GET_Display(Buffer, G->TLCCPeriGETcor);
-			skp->Text(1 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 10 * H / 14, "Reentry:", 8);
+			skp->Text(1 * W / 8, 13 * H / 21, "Reentry:", 8);
 			GET_Display(Buffer, G->TLCCReentryGET);
-			skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 12 * H / 14, "FR Inclination:", 15);
+			skp->Text(1 * W / 8, 15 * H / 21, "FR Inclination:", 15);
 			sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
-			skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 17 * H / 21, "Splashdown Latitude:", 20);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLat*DEG);
+			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 19 * H / 21, "Splashdown Longitude:", 21);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLng*DEG);
+			skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -2360,17 +2368,25 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 8 * H / 14, "Pericynthion:", 13);
+			skp->Text(1 * W / 8, 11 * H / 21, "Pericynthion:", 13);
 			GET_Display(Buffer, G->TLCCPeriGETcor);
-			skp->Text(1 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 10 * H / 14, "Reentry:", 8);
+			skp->Text(1 * W / 8, 13 * H / 21, "Reentry:", 8);
 			GET_Display(Buffer, G->TLCCReentryGET);
-			skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 12 * H / 14, "FR Inclination:", 15);
+			skp->Text(1 * W / 8, 15 * H / 21, "FR Inclination:", 15);
 			sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
-			skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 17 * H / 21, "Splashdown Latitude:", 20);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLat*DEG);
+			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 19 * H / 21, "Splashdown Longitude:", 21);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLng*DEG);
+			skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -5001,7 +5017,7 @@ void ApolloRTCCMFD::set_TLCCAlt(double alt)
 	{
 		this->G->TLCCNodeAlt = alt*1852.0;
 	}
-	else if (G->TLCCmaneuver == 7)
+	else if (G->TLCCmaneuver == 1 || G->TLCCmaneuver == 7)
 	{
 		this->G->TLCCFlybyPeriAlt = alt*1852.0;
 	}
