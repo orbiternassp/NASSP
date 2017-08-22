@@ -7806,7 +7806,6 @@ bool RTCC::TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_pe
 
 				//Calculate pericynthion velocity
 				V_peri = OrbMech::Vinti(R_peri, _V(0.0, 0.0, 0.0), sv_mcc.R, MJD_N, -dt, 0, false, hMoon, hMoon, sv_mcc.gravref, V_peri);
-				//V_peri = OrbMech::ThirdBodyConic(R_peri, hMoon, sv_mcc.R, hEarth, MJD_N, -dt, V_peri, 0.1);
 				OrbMech::oneclickcoast(R_peri, V_peri, MJD_N, -dt, R_MCC, V_MCC_apo, hMoon, sv_mcc.gravref);
 
 				//save azi and vmag as new initial guess
@@ -8084,7 +8083,7 @@ bool RTCC::TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P
 			V_peri = tmul(M_EMP, V_EMP);
 
 			//Calculate pericynthion velocity
-			V_peri = OrbMech::ThirdBodyConic(R_peri, hMoon, sv_mcc.R, hEarth, MJD_N, -dt, V_peri);
+			V_peri = OrbMech::ThirdBodyConic(R_peri, hMoon, sv_mcc.R, sv_mcc.gravref, MJD_N, -dt, V_peri);
 
 			//save azi and vmag as new initial guess
 			V_EMP = mul(M_EMP, V_peri);

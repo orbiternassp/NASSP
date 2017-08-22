@@ -273,6 +273,27 @@ double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu)
 	return dt;
 }
 
+void ra_and_dec_from_r(VECTOR3 R, double &ra, double &dec)
+{
+	double r, l, m, n;
+
+	r = length(R);
+	l = R.x / r;
+	m = R.y / r;
+	n = R.z / r;
+
+	dec = asin(n);
+
+	if (m > 0)
+	{
+		ra = acos(l / cos(dec));
+	}
+	else
+	{
+		ra = PI2 - acos(l / cos(dec));
+	}
+}
+
 void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x)	//computes the state vector (R,V) from the initial state vector (R0,V0) and the elapsed time
 {
 	double r0, v0, vr0, alpha, f, g, fdot, gdot, r, xx, paratol, x0;
@@ -1299,7 +1320,7 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 	//R1: Pericynthion position vector
 	//R2: MCC/TLI position vector
 	//mjd0: MJD at pericynthion
-	//dt: time between two position vectors
+	//dt: time between two position vectors (R1 to R2)
 	//grav1: minor body, for position vector 1
 	//grav2: minor or major body, for position vector 2
 	//V_guess: initial guess for velocity vector at pericynthion
@@ -1319,7 +1340,7 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 		}
 		else
 		{
-			Vt1 = elegant_lambert(R1, V_guess, R2, -dt, 0, true, mu1);
+			Vt1 = elegant_lambert(R1, -V_guess, R2, -dt, 0, true, mu1);
 		}
 
 		return Vt1*sign(dt);
@@ -4703,6 +4724,25 @@ MATRIX3 EMPMatrix(double MJD)
 	Y = unit(crossp(Z, X));
 
 	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+}
+
+void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius)
+{
+	MATRIX3 Rot;
+	VECTOR3 R_EM, R_EM2;
+	double *MoonPos;
+	MoonPos = new double[12];
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	CELBODY *cMoon;
+
+	cMoon = oapiGetCelbodyInterface(hMoon);
+	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
+	Rot = GetObliquityMatrix(hEarth, MJD);
+	R_EM = tmul(Rot, _V(MoonPos[0], MoonPos[1], MoonPos[2]));
+	R_EM2 = _V(R_EM.x, R_EM.z, R_EM.y);
+	radius = length(R_EM);
+	ra_and_dec_from_r(R_EM2, ra, dec);
 }
 
 double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep)
