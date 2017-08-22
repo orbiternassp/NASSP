@@ -61,9 +61,11 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	Initialized = false;
 	Operate = false;
 	PulsesSent = false;
-	CurrentRotationMatrix = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
-	EulerAngles = _V(0., 0., 0.);
+	CurrentRotationMatrix = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	EulerAngles = _V(0.0, 0.0, 0.0);
 	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	LastWeightAcceleration = _V(0.0, 0.0, 0.0);
+	LastGlobalVel = _V(0.0, 0.0, 0.0);
 	LastSimDT = -1.0;
 }
 

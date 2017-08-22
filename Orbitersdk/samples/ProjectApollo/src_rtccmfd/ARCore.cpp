@@ -250,14 +250,14 @@ ARCore::ARCore(VESSEL* v)
 	EntryAng = 0.0;
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
-	entrycalcmode = 0;
 	entrycritical = 1;
 	returnspeed = 1;
-	TEItype = 0;
-	TEIfail = false;
+	FlybyType = 0;
 	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
+	DeorbitEngineOpt = 0;
+
 	SVSlot = true; //true = CSM; false = Other
 	J2000Pos = _V(0.0, 0.0, 0.0);
 	J2000Vel = _V(0.0, 0.0, 0.0);
@@ -781,27 +781,15 @@ void ARCore::LunarLiftoffCalc()
 
 void ARCore::EntryUpdateCalc()
 {
-	Entry* entry;
-	
-	double SVMJD;
-	VECTOR3 R, V, R0B, V0B;
-	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
+	SV sv0;
+	EntryResults res;
 
-	vessel->GetRelativePos(gravref, R);
-	vessel->GetRelativeVel(gravref, V);
-	SVMJD = oapiGetSimMJD();
+	sv0 = rtcc->StateVectorCalc(vessel);
+	rtcc->EntryUpdateCalc(sv0, GETbase, entryrange, true, &res);
 
-	R0B = _V(R.x, R.z, R.y);
-	V0B = _V(V.x, V.z, V.y);
-
-	//Time critical mode, minimum DV (doesn't matter anyway, is overwritten in entry targeting)
-	entry = new Entry(R0B, V0B, SVMJD, gravref, GETbase, EntryTIG, EntryAng, EntryLng, 1, entryrange, false, true);
-
-	entry->EntryUpdateCalc();
-	EntryLatcor = entry->EntryLatPred;
-	EntryLngcor = entry->EntryLngPred;
-	EntryRTGO = entry->EntryRTGO;
-	delete entry;
+	EntryLatcor = res.latitude;
+	EntryLngcor = res.longitude;
+	EntryRTGO = res.RTGO;
 }
 
 void ARCore::EntryCalc()
@@ -809,9 +797,19 @@ void ARCore::EntryCalc()
 	startSubthread(7);
 }
 
+void ARCore::DeorbitCalc()
+{
+	startSubthread(17);
+}
+
 void ARCore::TEICalc()
 {
 	startSubthread(11);
+}
+
+void ARCore::RTEFlybyCalc()
+{
+	startSubthread(18);
 }
 
 void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic burn
@@ -2001,8 +1999,8 @@ int ARCore::subThread()
 	break;
 	case 7:	//Entry Targeting
 	{
-		EntryOpt opt;
 		EntryResults res;
+		EntryOpt opt;
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2028,19 +2026,7 @@ int ARCore::subThread()
 		opt.ReA = EntryAng;
 		opt.TIGguess = EntryTIG;
 		opt.vessel = vessel;
-
-		if (entrycalcmode == 0)
-		{
-			opt.type = entrycritical;
-			opt.nominal = entrynominal;
-			opt.Range = 0;
-		}
-		else if (entrycalcmode == 2)
-		{
-			opt.type = 2;
-			opt.nominal = 0;
-			opt.Range = 0;
-		}
+		opt.type = entrycritical;
 
 		rtcc->EntryTargeting(&opt, &res);
 
@@ -2146,20 +2132,8 @@ int ARCore::subThread()
 	{
 		TEIOpt opt;
 		EntryResults res;
-		double SVMJD;
-
-		SVMJD = oapiGetSimMJD();
 
 		entryprecision = 1;
-
-		if (EntryTIG == 0.0 && TEItype == 0)
-		{
-			opt.TIGguess = 0;
-		}
-		else
-		{
-			opt.TIGguess = EntryTIG;
-		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2181,9 +2155,9 @@ int ARCore::subThread()
 		opt.GETbase = GETbase;
 		opt.returnspeed = returnspeed;
 		opt.RevsTillTEI = 0;
-		opt.TEItype = TEItype;
 		opt.vessel = vessel;
 		opt.entrylongmanual = entrylongmanual;
+		opt.TIGguess = EntryTIG;
 
 		rtcc->TEITargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
 
@@ -2550,6 +2524,103 @@ int ARCore::subThread()
 		{
 			pdipad = temppdipad;
 		}
+
+		Result = 0;
+	}
+	break;
+	case 17: //Deorbit Maneuver
+	{
+		EntryResults res;
+		EarthEntryOpt opt;
+
+		if (entrylongmanual)
+		{
+			opt.lng = EntryLng;
+		}
+		else
+		{
+			opt.lng = (double)landingzone;
+		}
+		
+		opt.GETbase = GETbase;
+
+		if (DeorbitEngineOpt == 0)
+		{
+			opt.impulsive = RTCC_NONIMPULSIVE;
+		}
+		else
+		{
+			opt.impulsive = RTCC_NONIMPULSIVERCS;
+		}
+		
+		opt.entrylongmanual = entrylongmanual;
+		opt.ReA = EntryAng;
+		opt.TIGguess = EntryTIG;
+		opt.vessel = vessel;
+		opt.nominal = entrynominal;
+
+		rtcc->BlockDataProcessor(&opt, &res);
+
+		Entry_DV = res.dV_LVLH;
+		EntryTIGcor = res.P30TIG;
+		EntryLatcor = res.latitude;
+		EntryLngcor = res.longitude;
+		P37GET400K = res.GET05G;
+		EntryRTGO = res.RTGO;
+		EntryAngcor = res.ReA;
+		P30TIG = EntryTIGcor;
+		dV_LVLH = Entry_DV;
+		entryprecision = res.precision;
+
+		Result = 0;
+	}
+	break;
+	case 18: //RTE Flyby Targeting
+	{
+		RTEFlybyOpt opt;
+		EntryResults res;
+		double SVMJD;
+
+		SVMJD = oapiGetSimMJD();
+
+		entryprecision = 1;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
+
+		if (entrylongmanual)
+		{
+			opt.EntryLng = EntryLng;
+		}
+		else
+		{
+			opt.EntryLng = (double)landingzone;
+		}
+		opt.GETbase = GETbase;
+		opt.returnspeed = returnspeed;
+		opt.FlybyType = FlybyType;
+		opt.vessel = vessel;
+		opt.entrylongmanual = entrylongmanual;
+		opt.TIGguess = EntryTIG;
+
+		rtcc->RTEFlybyTargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
+
+		Entry_DV = res.dV_LVLH;
+		EntryTIGcor = res.P30TIG;
+		EntryLatcor = res.latitude;
+		EntryLngcor = res.longitude;
+		P37GET400K = res.GET05G;
+		EntryRTGO = res.RTGO;
+		EntryAngcor = res.ReA;
+		P30TIG = EntryTIGcor;
+		dV_LVLH = Entry_DV;
+		entryprecision = res.precision;
 
 		Result = 0;
 	}
