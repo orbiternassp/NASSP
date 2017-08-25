@@ -361,6 +361,9 @@ ARCore::ARCore(VESSEL* v)
 	TLCCFRIncl = 0.0;
 	TLCCFRLat = 0.0;
 	TLCCFRLng = 0.0;
+	TLCCAscendingNode = true;
+	TLCCFRDesiredInclination = 0.0;
+	TLCCIterationStep = 0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2489,7 +2492,7 @@ int ARCore::subThread()
 				dV_LVLH = TLCC_dV_LVLH;
 			}
 		}
-		else
+		else if (TLCCmaneuver == 7)
 		{
 			MCCFlybyMan opt;
 			TLMCCResults res;
@@ -2521,6 +2524,46 @@ int ARCore::subThread()
 				TLCCFRIncl = res.FRInclination;
 				TLCCFRLat = res.SplashdownLat;
 				TLCCFRLng = res.SplashdownLng;
+
+				P30TIG = TLCC_TIG;
+				dV_LVLH = TLCC_dV_LVLH;
+			}
+		}
+		else if (TLCCmaneuver == 8)
+		{
+			MCCSPSLunarFlybyMan opt;
+			TLMCCResults res;
+
+			opt.GETbase = GETbase;
+			opt.lat = TLCCEMPLat;
+			opt.PeriGET = TLCCPeriGET;
+			opt.MCCGET = TLCC_GET;
+			opt.vessel = vessel;
+			opt.h_peri = TLCCFlybyPeriAlt;
+			opt.AscendingNode = TLCCAscendingNode;
+			opt.FRInclination = TLCCFRDesiredInclination;
+
+			if (vesseltype == 0 || vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
+
+			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(&opt, &res, TLCCIterationStep);
+
+			if (TLCCSolGood)
+			{
+				TLCC_dV_LVLH = res.dV_LVLH;
+				TLCC_TIG = res.P30TIG;
+				TLCCPeriGETcor = res.PericynthionGET;
+				TLCCReentryGET = res.EntryInterfaceGET;
+				TLCCFRIncl = res.FRInclination;
+				TLCCFRLat = res.SplashdownLat;
+				TLCCFRLng = res.SplashdownLng;
+				TLCCEMPLatcor = res.EMPLatitude;
 
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;

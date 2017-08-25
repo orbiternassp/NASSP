@@ -390,6 +390,21 @@ struct MCCFlybyMan
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
 };
 
+struct MCCSPSLunarFlybyMan
+{
+	VESSEL* vessel; //vessel
+	double GETbase; //usually MJD at launch
+	double MCCGET; //GET for the MCC
+	double lat; //Earth-Moon-Plane latitude, initial guess
+	double PeriGET; //initial guess for the GET at pericynthion
+	double h_peri;	//pericynthion altitude
+	double FRInclination;
+	bool AscendingNode;
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
+	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+};
+
 struct LOIMan
 {
 	VESSEL* vessel;		//vessel
@@ -650,6 +665,7 @@ public:
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCResults *res);
+	bool TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyMan *opt, TLMCCResults *res, int &step);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_node, double &GET_node);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -673,12 +689,16 @@ public:
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
-	void TLMCFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, double &v_peri, double &azi_peri, double &lng_peri);
-	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, SV &sv_peri, SV &sv_reentry);
-	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, double &v_peri, double &azi_peri, double &lng_EMP, SV &sv_peri, SV &sv_reentry);
-	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, SV &sv_peri, SV &sv_reentry);
-	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, SV &sv_peri, SV &sv_reentry, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
-	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
+	void TLMCFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, VECTOR3 &DV, SV &sv_peri);
+	void TLMCFirstGuess(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, VECTOR3 &DV, SV &sv_peri);
+	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
+	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
+	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
+	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
+	bool TLMCConicFlybyToInclinationSubprocessor(SV sv_mcc, double lat_EMP_guess, double lat_EMP_min, double lat_EMP_max, double h_peri, double inc_fr_des, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMP);
+	bool TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double lat_EMP_guess, double lat_EMP_min, double lat_EMP_max, double h_peri, double inc_fr_des, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMP);
+	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_P_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
+	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 &DV, SV &sv_peri, double &lat_EMPcor, VECTOR3 &R_node, double &GET_node);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 

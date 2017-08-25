@@ -756,8 +756,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Maneuver type", 0, 'T' },
 		{ "Maneuver GET", 0, 'G' },
 		{ "Pericynthion GET", 0, 'G' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "FR Inclination", 0, 'I' },
+		{ "Ascending or Descending Node", 0, 'N' },
 		{ "", 0, ' ' },
 
 		{ "Calculate maneuver", 0, 'C' },
@@ -773,9 +773,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("MAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSwitchTLCCManeuver);
 	RegisterFunction("TIG", OAPI_KEY_G, &ApolloRTCCMFD::menuSetTLCCGET);
 	RegisterFunction("GET", OAPI_KEY_P, &ApolloRTCCMFD::menuSetTLCCPeriGET);
+	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetTLCCDesiredInclination);
+	RegisterFunction("ASC", OAPI_KEY_N, &ApolloRTCCMFD::menuSwitchTLCCAscendingNode);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTLCCCalc);
 	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuSetTLCCLat);

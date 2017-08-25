@@ -216,6 +216,9 @@ public:
 	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
+	bool TLCCAscendingNode;
+	double TLCCFRDesiredInclination;
+	int TLCCIterationStep;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2

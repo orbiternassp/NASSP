@@ -183,6 +183,9 @@ public:
 	void set_TLCCLng(double lng);
 	void menuSetTLCCAlt();
 	void set_TLCCAlt(double alt);
+	void menuSetTLCCDesiredInclination();
+	void set_TLCCDesiredInclination(double inc);
+	void menuSwitchTLCCAscendingNode();
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();

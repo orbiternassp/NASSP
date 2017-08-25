@@ -1314,7 +1314,7 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, double t, VECTOR3 &R1,
 	}
 }
 
-VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, double tol)
+void ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, VECTOR3 &V1_apo, VECTOR3 &V2_apo, double tol)
 {
 	//INPUT:
 	//R1: Pericynthion position vector
@@ -1325,6 +1325,10 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 	//grav2: minor or major body, for position vector 2
 	//V_guess: initial guess for velocity vector at pericynthion
 
+	//OUTPUT:
+	//V1_apo: Pericynthion velocity vector
+	//V2_apo: MCC/TLI velocity vector
+
 	double mu1;
 	VECTOR3 Vt1;
 	
@@ -1334,6 +1338,8 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 	//if grav1 = grav2, simply use Lambert solution
 	if (grav1 == grav2)
 	{
+		VECTOR3 R2_apo;
+
 		if (dt > 0)
 		{
 			Vt1 = elegant_lambert(R1, V_guess, R2, dt, 0, false, mu1);
@@ -1343,7 +1349,9 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 			Vt1 = elegant_lambert(R1, -V_guess, R2, -dt, 0, true, mu1);
 		}
 
-		return Vt1*sign(dt);
+		V1_apo =  Vt1*sign(dt);
+
+		rv_from_r0v0(R1, V1_apo, dt, R2_apo, V2_apo, mu1);
 	}
 
 	//Three bodies
@@ -1399,7 +1407,8 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 			dr2 = unit(dr2)*max_dr;
 		}
 	}
-	return V1_star;
+	V1_apo = V1_star;
+	V2_apo = V2_star;
 }
 
 void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2)
@@ -4080,13 +4089,13 @@ void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C)
 	V_C = unit(crossp(crossp(R, V), R))*sqrt(mu*(2.0 / length(R_C) - 1.0 / a_D) - v_V*v_V) + R_C*v_V/length(R_C);
 }
 
-void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo)
+void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo, double dx0)
 {
 	double dx;
 
 	if (c == 0)
 	{
-		dx = 1.0;
+		dx = dx0;
 		c = c + 1.0;eo = e;xo = x;x = x - dx;
 	}
 	else if (c == 0.5)
@@ -4098,7 +4107,7 @@ void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double 
 	{
 		if (e - eo == 0)
 		{
-			dx = 3.0;
+			dx = 3.0*dx0;
 			c = c + 1.0;eo = e;xo = x;x = x - dx;
 		}
 		else
@@ -4743,6 +4752,30 @@ void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &
 	R_EM2 = _V(R_EM.x, R_EM.z, R_EM.y);
 	radius = length(R_EM);
 	ra_and_dec_from_r(R_EM2, ra, dec);
+}
+
+void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl)
+{
+	MATRIX3 M_EMP;
+
+	//EMP Matrix
+	M_EMP = OrbMech::EMPMatrix(MJD);
+
+	//Convert EMP position to ecliptic
+	R_Ecl = tmul(M_EMP, R_EMP);
+	V_Ecl = tmul(M_EMP, V_EMP);
+}
+
+void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP)
+{
+	MATRIX3 M_EMP;
+
+	//EMP Matrix
+	M_EMP = OrbMech::EMPMatrix(MJD);
+
+	//Convert ecliptic position to EMP
+	R_EMP = mul(M_EMP, R_Ecl);
+	V_EMP = mul(M_EMP, V_Ecl);
 }
 
 double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep)

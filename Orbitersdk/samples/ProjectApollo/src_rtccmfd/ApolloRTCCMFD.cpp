@@ -2265,14 +2265,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 5: Nonfree-return BAP, Free LPO, LS", 48);
 		}
-		else
+		else if (G->TLCCmaneuver == 7)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 6/7: Circumlunar free-return flyby", 47);
 		}
-		
-		if (G->subThreadStatus > 0)
+		else
 		{
-			skp->Text(5 * W / 8, 1 * H / 14, "Calculating...", 14);
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 8: SPS flyby to spec. FR inclination", 49);
+		}
+		
+		if (G->TLCCmaneuver == 8)
+		{
+			if (G->subThreadStatus > 0)
+			{
+				sprintf(Buffer, "Iteration step %d/7...", G->TLCCIterationStep);
+				skp->Text(5 * W / 8, 1 * H / 14, Buffer, strlen(Buffer));
+			}
+		}
+		else
+		{
+			if (G->subThreadStatus > 0)
+			{
+				skp->Text(5 * W / 8, 1 * H / 14, "Calculating...", 14);
+			}
 		}
 
 		if (!G->TLCCSolGood)
@@ -2315,55 +2330,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f NM", G->TLCCNodeAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 4)
-		{
-			GET_Display(Buffer, G->TLCCPeriGET);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 11 * H / 21, "Pericynthion:", 13);
-			GET_Display(Buffer, G->TLCCPeriGETcor);
-			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 13 * H / 21, "Reentry:", 8);
-			GET_Display(Buffer, G->TLCCReentryGET);
-			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 15 * H / 21, "FR Inclination:", 15);
-			sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
-			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 17 * H / 21, "Splashdown Latitude:", 20);
-			sprintf(Buffer, "%.3f°", G->TLCCFRLat*DEG);
-			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 19 * H / 21, "Splashdown Longitude:", 21);
-			sprintf(Buffer, "%.3f°", G->TLCCFRLng*DEG);
-			skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
-			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
-		{
-			GET_Display(Buffer, G->TLCCPeriGET);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
-			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else //free return target display
+		else if (G->TLCCmaneuver == 1 || G->TLCCmaneuver == 3 || G->TLCCmaneuver == 4 || G->TLCCmaneuver == 7) //free return target display
 		{
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
@@ -2393,6 +2360,51 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			sprintf(Buffer, "%.2f NM", G->TLCCFlybyPeriAlt / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
+		{
+			GET_Display(Buffer, G->TLCCPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (G->TLCCmaneuver == 8)
+		{
+			sprintf(Buffer, "%.3f°", G->TLCCFRDesiredInclination*DEG);
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			if (G->TLCCAscendingNode)
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "Ascending Node", 14);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 10 * H / 14, "Descending Node", 15);
+			}
+
+			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f NM", G->TLCCFlybyPeriAlt / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 17 * H / 21, "Splashdown Latitude:", 20);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLat*DEG);
+			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 19 * H / 21, "Splashdown Longitude:", 21);
+			sprintf(Buffer, "%.3f°", G->TLCCFRLng*DEG);
+			skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 4 || G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6 || G->TLCCmaneuver == 8)
+		{
+			sprintf(Buffer, "New Lat: %.5f°", G->TLCCEMPLatcor*DEG);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 23)
@@ -4805,7 +4817,7 @@ void ApolloRTCCMFD::menuSwitchLOIOption()
 
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
-	if (G->TLCCmaneuver < 7)
+	if (G->TLCCmaneuver < 8)
 	{
 		G->TLCCmaneuver++;
 	}
@@ -4889,6 +4901,38 @@ bool TLandGETnput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_TLand(double time)
 {
 	G->t_Land = time;
+}
+
+void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
+{
+	if (G->TLCCmaneuver == 8)
+	{
+		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the desired inclination:", TLCCDesiredInclinationInput, 0, 20, (void*)this);
+	}
+}
+
+bool TLCCDesiredInclinationInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_TLCCDesiredInclination(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLCCDesiredInclination(double inc)
+{
+	G->TLCCFRDesiredInclination = inc*RAD;
+}
+
+void ApolloRTCCMFD::menuSwitchTLCCAscendingNode()
+{
+	if (G->TLCCmaneuver == 8)
+	{
+		G->TLCCAscendingNode = !G->TLCCAscendingNode;
+	}
 }
 
 void ApolloRTCCMFD::menuSetTLCCLat()
@@ -5017,7 +5061,7 @@ void ApolloRTCCMFD::set_TLCCAlt(double alt)
 	{
 		this->G->TLCCNodeAlt = alt*1852.0;
 	}
-	else if (G->TLCCmaneuver == 1 || G->TLCCmaneuver == 7)
+	else if (G->TLCCmaneuver == 1 || G->TLCCmaneuver == 7 || G->TLCCmaneuver == 8)
 	{
 		this->G->TLCCFlybyPeriAlt = alt*1852.0;
 	}
