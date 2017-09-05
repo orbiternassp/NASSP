@@ -2278,7 +2278,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			if (G->subThreadStatus > 0)
 			{
-				sprintf(Buffer, "Iteration step %d/7...", G->TLCCIterationStep);
+				sprintf(Buffer, "Iteration step %d/8...", G->TLCCIterationStep);
 				skp->Text(5 * W / 8, 1 * H / 14, Buffer, strlen(Buffer));
 			}
 		}
@@ -2358,7 +2358,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.5f°", G->TLCCEMPLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.2f NM", G->TLCCFlybyPeriAlt / 1852.0);
+			if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 4)
+			{
+				sprintf(Buffer, "%.2f NM", G->TLCCLAHPeriAlt / 1852.0);
+			}
+			else
+			{
+				sprintf(Buffer, "%.2f NM", G->TLCCFlybyPeriAlt / 1852.0);
+			}
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
@@ -2374,6 +2381,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->TLCCmaneuver == 8)
 		{
+			GET_Display(Buffer, G->TLCCPeriGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
 			sprintf(Buffer, "%.3f°", G->TLCCFRDesiredInclination*DEG);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
