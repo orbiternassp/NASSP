@@ -395,6 +395,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				calcParams.lng_node = res.NodeLng;
 				calcParams.GET_node = res.NodeGET;
 				calcParams.LOI = res.PericynthionGET;
+				dV_LVLH = res.dV_LVLH;
+				P30TIG = res.P30TIG;
 			}
 		}
 		else //Nodal Targeting
@@ -5329,7 +5331,6 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 	SV sv0, sv1, sv_peri2, sv_reentry2, sv_peri3, sv_reentry3, sv_peri, sv_reentry, sv_peri5, sv_node3, sv_node;
 	double mass, LMmass, dt1, dt2, PeriMJDguess, mu_E, lat_EMP3;
 	double r_peri3, v_peri3, lng_peri3, lat_peri3, fpav_peri3, azi_peri3;
-	bool solgood = true;
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 Llambda, DV, DV1, var_conv1, DV2, DV3, R_EMP3, V_EMP3, DV5, var_converged5;
 	MATRIX3 Q_Xx;
@@ -5425,7 +5426,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 
 	EntryCalculations::Reentry(R_EI, V_EI, sv_reentry.MJD - dt_EI / 24.0 / 3600.0, true, res->SplashdownLat, res->SplashdownLng, rtgo, vio, ret);
 
-	return solgood;
+	return true;
 }
 
 bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res)
