@@ -510,7 +510,6 @@ public:
 		SRF_LEM_PRIM_C02,
 		SRF_LEM_SEC_C02,
 		SRF_LEM_SGD_LEVER,
-		SRF_LEM_ECS_PANEL,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1390,6 +1389,52 @@ protected:
 	CircuitBrakerSwitch LMPCrossTieBalCB;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+
+	///////////////
+	// ECS Panel //
+	///////////////
+
+	SwitchRow ECSSuitGasDiverterSwitchRow;
+	CircuitBrakerSwitch SuitGasDiverter;
+
+	SwitchRow OxygenControlSwitchRow;
+	RotationalSwitch CabinRepressValve;
+	RotationalSwitch PLSSFillValve;
+	RotationalSwitch PressRegAValve;
+	RotationalSwitch PressRegBValve;
+	RotationalSwitch DESO2Valve;
+	RotationalSwitch ASCO2Valve1;
+	RotationalSwitch ASCO2Valve2;
+
+	SwitchRow SuitIsolSwitchRow;
+	RotationalSwitch CDRSuitIsolValve;
+	ToggleSwitch	   CDRActuatorOvrd;    // Check if this is right.
+	RotationalSwitch LMPSuitIsolValve;
+	ToggleSwitch	   LMPActuatorOvrd;
+
+	SwitchRow WaterControlSwitchRow;
+	RotationalSwitch SecEvapFlowValve;
+	RotationalSwitch PrimEvap2FlowValve;
+	RotationalSwitch DESH2OValve;
+	RotationalSwitch PrimEvap1FlowValve;
+	RotationalSwitch WaterTankSelectValve;
+	RotationalSwitch SuitTempValve;
+
+	SwitchRow ASCH2OSwitchRow;
+	RotationalSwitch ASCH2OValve;
+
+	SwitchRow GarmentCoolingSwitchRow;
+	RotationalSwitch LiquidGarmentCoolingValve;
+
+	SwitchRow SuitCircuitAssySwitchRow;
+	RotationalSwitch SuitCircuitReliefValve;
+	RotationalSwitch CabinGasReturnValve;
+	RotationalSwitch CO2CanisterSelect;
+	RotationalSwitch CO2CanisterPrimValve;
+	PushSwitch       CO2CanisterPrimVent;
+	RotationalSwitch CO2CanisterSecValve;
+	PushSwitch       CO2CanisterSecVent;
+	CircuitBrakerSwitch WaterSepSelect;
 
 	///////////////////////////
 	// LEM Rendezvous Window //
