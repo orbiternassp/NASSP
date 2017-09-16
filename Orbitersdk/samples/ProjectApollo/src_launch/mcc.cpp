@@ -1753,6 +1753,20 @@ void MCC::TimeStep(double simdt){
 				}
 			}
 			break;
+			case MTP_D:
+			switch (MissionState)
+			{
+			case MST_D_INSERTION:	//Insertion to SV Update
+				if (cm->MissionTime > 3 * 60 * 60 + 15 * 60)
+				{
+					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 50 * 60, 2, MST_D_DAY1STATE1);
+				}
+				break;
+			case MST_D_DAY1STATE1:	//SV Update to SPS-1
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
+				break;
+			}
+			break;
 		}
 	}
 

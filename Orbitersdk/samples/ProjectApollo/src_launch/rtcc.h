@@ -466,19 +466,27 @@ struct PCMan
 	double alt;	//altitude of the landing site
 };
 
-struct OrbAdjOpt
+struct GMPOpt
 {
-	VESSEL* vessel;
-	OBJHANDLE gravref;
-	double SPSGET;
+	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
+	//1 = Fixed TIG, specify apoapsis altitude
+	//2 = Fixed TIG, specify periapsis altitude
+	int type = 0;
 	double GETbase; //usually MJD at launch
-	double h_apo;	//
-	double h_peri;	//
-	double inc;		//
+	VESSEL* vessel;
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
-	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	int impulsive = 1; //Calculated with nonimpulsive maneuver compensation or without
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
+	bool AltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
+	double LSAlt;	//Landing site altitude, if used
+
+	//maneuver parameters
+
+	double TIG_GET;	//time of ignition, used for options 0 and 1
+	double h_apo;	//apoapsis altitude, used for options 0 and 1
+	double h_peri;	//periapsis altitude, used for option 0
+	double inc;		//orbital inclination, used for option 0
 };
 
 struct TLIPADOpt
@@ -671,7 +679,7 @@ public:
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
@@ -719,6 +727,7 @@ public:
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
+	void OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -742,6 +751,7 @@ private:
 
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
+	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 
 protected:
 	double TimeofIgnition;

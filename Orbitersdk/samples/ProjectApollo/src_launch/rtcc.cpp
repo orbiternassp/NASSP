@@ -83,6 +83,111 @@ bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char 
 	{
 		scrubbed =  CalculationMTP_C_PRIME(fcn, pad, upString, upDesc);
 	}
+	else if (mission == MTP_D)
+	{
+		scrubbed = CalculationMTP_D(fcn, pad, upString, upDesc);
+	}
+	return scrubbed;
+}
+
+bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc)
+{
+	char* uplinkdata = new char[1000];
+	bool preliminary = true;
+	bool scrubbed = false;
+
+	double AGCEpoch = 40221.525;
+
+	switch (fcn) {
+	case 1: //GENERIC CSM STATE VECTOR UPDATE
+	{
+		SV sv;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 2: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD
+	{
+		AP7NAV * form = (AP7NAV *)pad;
+
+		SV sv;
+		double GETbase;
+
+		GETbase = getGETBase();
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		NavCheckPAD(sv, *form, GETbase);
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 10:	//SPS-1
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		GMPOpt orbopt;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, dt2, TIG;
+		VECTOR3 dV_LVLH;
+		SV sv0, sv1;
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GETbase = getGETBase();
+		NomTIG = OrbMech::HHMMSSToSS(6.0, 1.0, 40.0);
+		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
+		dt1 = NomTIG - sv0GET;
+		sv1 = coast(sv0, dt1 - 10.0*60.0);
+
+		dt2 = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -167.675*RAD);	//find 167.675°W
+		TIG = round((dt2 + (sv1.MJD - GETbase)*24.0*3600.0) / 60.0)*60.0;	//Round to next minute
+
+		orbopt.csmlmdocked = true;
+		orbopt.GETbase = GETbase;
+		orbopt.h_apo = 128.0*1852.0;
+		orbopt.h_peri = 113.0*1852.0;
+		orbopt.impulsive = RTCC_NONIMPULSIVE;
+		orbopt.inc = 30.0*RAD;
+		orbopt.TIG_GET = TIG;
+		orbopt.vessel = calcParams.src;
+
+		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0; //SPS
+		opt.HeadsUp = false;
+		opt.sxtstardtime = 0;
+		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		opt.navcheckGET = 0;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-1");
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv0, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
+		}
+	}
+	break;
+	}
+
 	return scrubbed;
 }
 
@@ -1729,7 +1834,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
-		OrbAdjOpt orbopt;
+		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH;
@@ -1744,17 +1849,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.GETbase = GETbase;
-		orbopt.gravref = gravref;
 		orbopt.h_apo = 160.1*1852.0;
 		orbopt.h_peri = 90.3*1852.0;
 		orbopt.inc = 31.26*RAD;
-		orbopt.SPSGET = OrbMech::HHMMSSToSS(75, 48, 0);
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 48, 0);
 		orbopt.useSV = false;
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
 		orbopt.csmlmdocked = false;
 
-		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -2057,7 +2161,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
-		OrbAdjOpt orbopt;
+		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, Rlat, Vlat;
@@ -2075,16 +2179,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv, TIGguess - (sv.MJD - GETbase)*24.0*3600.0);
 
 		orbopt.GETbase = GETbase;
-		orbopt.gravref = gravref;
 		orbopt.h_apo = 240.6*1852.0;
 		orbopt.h_peri = 89.8*1852.0;
 		orbopt.inc = 30.09*RAD;
-		orbopt.SPSGET = TIGguess + OrbMech::findlatitude(sv1.R, sv1.V, GETbase + TIGguess/24.0/3600.0, gravref, 28.7319*RAD, true, Rlat, Vlat);//OrbMech::HHMMSSToSS(165, 0, 0);
+		orbopt.TIG_GET = TIGguess + OrbMech::findlatitude(sv1.R, sv1.V, GETbase + TIGguess/24.0/3600.0, gravref, 28.7319*RAD, true, Rlat, Vlat);//OrbMech::HHMMSSToSS(165, 0, 0);
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_IMPULSIVE;
 		orbopt.csmlmdocked = false;
 
-		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -2380,7 +2483,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
-		OrbAdjOpt orbopt;
+		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH;
@@ -2395,17 +2498,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.GETbase = GETbase;
-		orbopt.gravref = gravref;
 		orbopt.h_apo = 230.3*1852.0;
 		orbopt.h_peri = 90.0*1852.0;
 		orbopt.inc = 29.88*RAD;
-		orbopt.SPSGET = OrbMech::HHMMSSToSS(239, 6, 12);
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(239, 6, 12);
 		orbopt.useSV = false;
 		orbopt.vessel = calcParams.src;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
 		orbopt.csmlmdocked = false;
 
-		OrbitAdjustCalc(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -5786,56 +5888,132 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 	return true;
 }
 
-void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
-	double R_E, SPSMJD, SVMJD, mu, r, phi, lambda, apo, peri, a, e, theta1, theta2, beta1, beta2, ll1, ll2, h, w11, w12, w21, w22, dlambda1, dlambda2, lambda11, lambda12, CSMmass;
-	VECTOR3 u, RPOS, RVEL, Requ, Vequ, R2, V2, R3, V3, DVX;
-	MATRIX3 obli, Q_Xx;
-	VECTOR3 VXvec[4], DVXvec[4];
-
-	mu = GGRAV*oapiGetMass(opt->gravref);									//Standard gravitational parameter GM
-
-	SPSMJD = opt->GETbase + opt->SPSGET / 24.0 / 60.0 / 60.0;					//The MJD of the maneuver
-	obli = OrbMech::GetObliquityMatrix(opt->gravref, SPSMJD);
+	SV sv0, sv1, sv_tig_imp;
+	VECTOR3 DV;
+	double dt1, LMmass, mass, R_E;
 
 	if (opt->useSV)
 	{
-		Requ = opt->RV_MCC.R;
-		Vequ = opt->RV_MCC.V;
-		SVMJD = opt->RV_MCC.MJD;
-		CSMmass = opt->RV_MCC.mass;
+		sv0 = opt->RV_MCC;
 	}
 	else
 	{
-		opt->vessel->GetRelativePos(opt->gravref, RPOS);				//The current position vecotr of the vessel in the ecliptic frame
-		opt->vessel->GetRelativeVel(opt->gravref, RVEL);				//The current velocity vector of the vessel in the ecliptic frame
-		SVMJD = oapiGetSimMJD();										//The time mark for this state vector
-		CSMmass = opt->vessel->GetMass();
-
-		Requ = _V(RPOS.x, RPOS.z, RPOS.y);
-		Vequ = _V(RVEL.x, RVEL.z, RVEL.y);
+		sv0 = StateVectorCalc(opt->vessel);
 	}
 
-	OrbMech::oneclickcoast(Requ, Vequ, SVMJD, (SPSMJD - SVMJD)*24.0*60.0*60.0, R2, V2, opt->gravref, opt->gravref);	//propagate state vector to ignition time
-
-
-	//R2 = tmul(obli, R2);
-	//V2 = tmul(obli, V2);
-	R3 = _V(R2.x, R2.z, R2.y);
-	V3 = _V(V2.x, V2.z, V2.y);
-	R3 = tmul(obli, R3);
-	V3 = tmul(obli, V3);
-	R3 = _V(R3.x, R3.z, R3.y);
-	V3 = _V(V3.x, V3.z, V3.y);
-
-	if (opt->gravref == oapiGetObjectByName("Earth"))
+	if (opt->csmlmdocked)
 	{
-		R_E = 6371.0e3;				//Better use Earth mean radius for this
+		LMmass = GetDockedVesselMass(opt->vessel);
 	}
 	else
 	{
-		R_E = oapiGetSize(opt->gravref);
+		LMmass = 0.0;
 	}
+
+	mass = LMmass + sv0.mass;
+
+	dt1 = opt->TIG_GET + (opt->GETbase - sv0.MJD)*24.0*3600.0;
+	sv1 = coast(sv0, dt1);
+
+	//Body radius
+	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	{
+		if (opt->AltRef == 0)
+		{
+			R_E = 6371.0e3;
+		}
+		else
+		{
+			R_E = oapiGetSize(sv1.gravref);
+		}
+	}
+	else
+	{
+		if (opt->AltRef == 0)
+		{
+			R_E = oapiGetSize(sv1.gravref);
+		}
+		else
+		{
+			R_E = oapiGetSize(sv1.gravref) + opt->LSAlt;
+		}
+	}
+
+	if (opt->type == 0)
+	{
+		sv_tig_imp = sv1;
+		OrbitAdjustCalc(sv_tig_imp, R_E + opt->h_apo, R_E + opt->h_peri, opt->inc, DV);
+	}
+	else if (opt->type == 1 || opt->type == 2)
+	{
+		double mu;
+
+		dt1 = opt->TIG_GET + (opt->GETbase - sv0.MJD)*24.0*3600.0;
+		sv1 = coast(sv0, dt1);
+		sv_tig_imp = sv1;
+
+		mu = GGRAV*oapiGetMass(sv_tig_imp.gravref);
+
+		if (opt->type == 1)
+		{
+			DV = OrbMech::AdjustApoapsis(sv_tig_imp.R, sv_tig_imp.V, mu, R_E + opt->h_apo);
+		}
+		else
+		{
+			DV = OrbMech::AdjustPeriapsis(sv_tig_imp.R, sv_tig_imp.V, mu, R_E + opt->h_peri);
+		}
+	}
+
+	MATRIX3 Q_Xx;
+
+	if (opt->impulsive == RTCC_IMPULSIVE || length(DV) < 0.001)
+	{
+		Q_Xx = OrbMech::LVLH_Matrix(sv_tig_imp.R, sv_tig_imp.V);
+		dV_LVLH = mul(Q_Xx, DV);
+		P30TIG = (sv_tig_imp.MJD - opt->GETbase)*24.0*3600.0;
+	}
+	else
+	{
+		VECTOR3 Llambda;
+		double t_slip;
+		bool main;
+		SV sv_tig_cor;
+
+		if (opt->impulsive == RTCC_NONIMPULSIVE)
+		{
+			main = true;
+		}
+		else
+		{
+			main = false;
+		}
+
+		FiniteBurntimeCompensation(opt->vessel, sv_tig_imp, LMmass, DV, main, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+
+		sv_tig_cor = coast(sv_tig_imp, t_slip);	//Calculate the state vector at the corrected ignition time
+
+		Q_Xx = OrbMech::LVLH_Matrix(sv_tig_cor.R, sv_tig_cor.V);
+
+		dV_LVLH = mul(Q_Xx, Llambda);
+		P30TIG = (sv_tig_imp.MJD - opt->GETbase)*24.0*3600.0 + t_slip;
+	}
+}
+
+void RTCC::OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV)
+{
+	double mu, r, phi, lambda, apo, peri, a, e, theta1, theta2, beta1, beta2, ll1, ll2, h, w11, w12, w21, w22, dlambda1, dlambda2, lambda11, lambda12;
+	VECTOR3 u, R3, V3, DVX;
+	MATRIX3 obli;
+	VECTOR3 VXvec[4], DVXvec[4];
+
+	mu = GGRAV*oapiGetMass(sv_tig.gravref);									//Standard gravitational parameter GM
+
+	obli = OrbMech::GetObliquityMatrix(sv_tig.gravref, sv_tig.MJD);
+
+	R3 = rhtmul(obli, sv_tig.R);
+	V3 = rhtmul(obli, sv_tig.V);
 
 	//OrbMech::local_to_equ(R2, r, phi, lambda);							//Calculates the radius, latitude and longitude of the maneuver position
 	u = unit(R3);
@@ -5843,8 +6021,8 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	phi = atan(u.z / sqrt(u.x*u.x + u.y*u.y));
 	lambda = atan2(u.y, u.x);
 
-	apo = R_E + opt->h_apo;									//calculates the apoapsis radius in the metric system
-	peri = R_E + opt->h_peri;								//calculates the periapsis radius in the metric system
+	apo = r_apo;													//calculates the apoapsis radius in the metric system
+	peri = r_peri;													//calculates the periapsis radius in the metric system
 
 	if (r > apo)													//If the maneuver radius is higher than the desired apoapsis, then we would get no solution
 	{
@@ -5861,7 +6039,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	theta1 = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
 	theta2 = PI2 - theta1;											//Calculates the second possible true anomaly of the desired orbit
 
-	beta1 = asin(min(1.0, max(-1.0,cos(opt->inc) / cos(phi))));		//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
+	beta1 = asin(min(1.0, max(-1.0,cos(inc) / cos(phi))));				//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
 	beta2 = PI - beta1;													//The second possible azimuth heading
 
 	ll1 = atan2(tan(phi), cos(beta1));    //angular distance between the ascending node and the current position (beta1)
@@ -5882,10 +6060,10 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 	VECTOR3 RX1, RX2, RX3, RX4;
 
-	OrbMech::perifocal(h, mu, e, theta1, opt->inc, lambda11, w11, RX1, VXvec[0]); //The required velocity vector for the desired orbit (beta1, theta1)
-	OrbMech::perifocal(h, mu, e, theta2, opt->inc, lambda11, w12, RX2, VXvec[1]); //The required velocity vector for the desired orbit (beta1, theta2)
-	OrbMech::perifocal(h, mu, e, theta1, opt->inc, lambda12, w21, RX3, VXvec[2]); //The required velocity vector for the desired orbit (beta2, theta1)
-	OrbMech::perifocal(h, mu, e, theta2, opt->inc, lambda12, w22, RX4, VXvec[3]); //The required velocity vector for the desired orbit (beta2, theta2)
+	OrbMech::perifocal(h, mu, e, theta1, inc, lambda11, w11, RX1, VXvec[0]); //The required velocity vector for the desired orbit (beta1, theta1)
+	OrbMech::perifocal(h, mu, e, theta2, inc, lambda11, w12, RX2, VXvec[1]); //The required velocity vector for the desired orbit (beta1, theta2)
+	OrbMech::perifocal(h, mu, e, theta1, inc, lambda12, w21, RX3, VXvec[2]); //The required velocity vector for the desired orbit (beta2, theta1)
+	OrbMech::perifocal(h, mu, e, theta2, inc, lambda12, w22, RX4, VXvec[3]); //The required velocity vector for the desired orbit (beta2, theta2)
 
 	DVXvec[0] = VXvec[0] - V3;									//Calculates the DV vectors to achieve the desired orbit
 	DVXvec[1] = VXvec[1] - V3;
@@ -5905,42 +6083,7 @@ void RTCC::OrbitAdjustCalc(OrbAdjOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	DVX = mul(obli, DVX);
 	DVX = _V(DVX.x, DVX.z, DVX.y);
 
-	if (opt->impulsive == RTCC_IMPULSIVE)
-	{
-		Q_Xx = OrbMech::LVLH_Matrix(R2, V2);
-		dV_LVLH = mul(Q_Xx, DVX);
-		P30TIG = opt->SPSGET;
-	}
-	else
-	{
-		VECTOR3 Llambda, R2_cor, V2_cor;
-		double t_slip, LMmass;
-		SV sv_tig;
-
-		if (opt->csmlmdocked)
-		{
-			LMmass = GetDockedVesselMass(opt->vessel);
-		}
-		else
-		{
-			LMmass = 0;
-		}
-
-		sv_tig.gravref = opt->gravref;
-		sv_tig.mass = CSMmass;
-		sv_tig.MJD = SPSMJD;
-		sv_tig.R = R2;
-		sv_tig.V = V2;
-
-		FiniteBurntimeCompensation(opt->vessel, sv_tig, LMmass, DVX, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
-
-		OrbMech::oneclickcoast(R2, V2, SPSMJD, t_slip, R2_cor, V2_cor, opt->gravref, opt->gravref); //Calculate the state vector at the corrected ignition time
-
-		Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-
-		dV_LVLH = mul(Q_Xx, Llambda);		//The lowest DV vector is saved in the displayed DV vector
-		P30TIG = opt->SPSGET + t_slip;
-	}
+	DV = DVX;
 }
 
 void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
