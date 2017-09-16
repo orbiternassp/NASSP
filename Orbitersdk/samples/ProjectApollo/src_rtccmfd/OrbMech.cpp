@@ -3040,6 +3040,80 @@ bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 	return los;
 }
 
+VECTOR3 AdjustApoapsis(VECTOR3 R, VECTOR3 V, double mu, double r_apo_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) > r_apo_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_apo - r_apo_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 AdjustPeriapsis(VECTOR3 R, VECTOR3 V, double mu, double r_peri_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) < r_peri_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_peri - r_peri_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
 double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
 {
 	MATRIX3 Rot2;

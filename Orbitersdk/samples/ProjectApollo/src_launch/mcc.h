@@ -350,6 +350,12 @@
 // post-TLI abort, ends at abort burn (if any)
 // goes to MST_CP_TRANSEARTH with an abort flag.
 
+// MISSION STATES: MISSION D
+
+#define MST_D_INSERTION		10
+#define MST_D_DAY1STATE1	11
+#define MST_D_DAY1STATE2	12
+
 // Ground Station Information Structure
 struct GroundStation {
 	char Name[64];		 // Station name

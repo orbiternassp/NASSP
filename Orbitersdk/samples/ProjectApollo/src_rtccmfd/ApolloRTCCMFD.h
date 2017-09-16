@@ -83,6 +83,8 @@ public:
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjCalc();
+	void menuCycleOrbAdjOptions();
+	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
 	void calcphaseoff(double angdeg);

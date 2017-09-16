@@ -207,8 +207,9 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMATdirect = true;
 	REFSMMATHeadsUp = true;
 
+	GMPType = 0;
 	OrbAdjDVX = _V(0, 0, 0);
-	SPSGET = (oapiGetSimMJD() - GETbase) * 24 * 60 * 60;
+	SPSGET = 0.0;
 	apo_desnm = 0;
 	peri_desnm = 0;
 	incdeg = 0;
@@ -1780,18 +1781,21 @@ int ARCore::subThread()
 	break;
 	case 3:	//Orbital Adjustment Targeting
 	{
-		OrbAdjOpt opt;
+		GMPOpt opt;
 		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 
+		opt.type = GMPType;
 		opt.GETbase = GETbase;
-		opt.gravref = gravref;
 		opt.h_apo = apo_desnm * 1852.0;
 		opt.h_peri = peri_desnm * 1852.0;
 		opt.impulsive = RTCC_NONIMPULSIVE;
 		opt.inc = incdeg*RAD;
-		opt.SPSGET = SPSGET;
+		opt.TIG_GET = SPSGET;
 		opt.vessel = vessel;
 		opt.useSV = false;
+		opt.AltRef = OrbAdjAltRef;
+		opt.LSAlt = LSAlt;
+
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			opt.csmlmdocked = false;
@@ -1801,7 +1805,7 @@ int ARCore::subThread()
 			opt.csmlmdocked = true;
 		}
 
-		rtcc->OrbitAdjustCalc(&opt, OrbAdjDVX, P30TIG);
+		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG);
 
 		dV_LVLH = OrbAdjDVX;
 
