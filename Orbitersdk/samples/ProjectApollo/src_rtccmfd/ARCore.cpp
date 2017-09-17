@@ -456,7 +456,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCEMPLat = -1.962929*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(83.0, 25.0, 50.8);
 		TLCCFlybyPeriAlt = 1851.7*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);
 		TLCCNodeLat = 6.5*RAD;
 		TLCCNodeLng = 177.4*RAD;
 		TLCCNodeAlt = 59.9*1852.0;
@@ -509,7 +509,9 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 58.3*1852.0;
+		TLCCEMPLat = -16.904842*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCFlybyPeriAlt = 1500 * 1852.0;
 		TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
 		TLCCNodeLat = -23.3*RAD;
 		TLCCNodeLng = 171.7*RAD;
@@ -517,6 +519,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		AGSKFactor = 100.0*3600.0;
+		DOI_PeriAng = 16.0*RAD;
 	}
 	else if (mission == 16)
 	{
@@ -526,12 +529,16 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.6*1852.0;
 		LOIperi = 58.5*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);;
+		TLCCEMPLat = 5.529042*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
+		TLCCFlybyPeriAlt = 1500 * 1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
 		TLCCNodeLat = 7.8*RAD;
 		TLCCNodeLng = 176.8*RAD;
 		TLCCNodeAlt = 71.4*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
+		DOI_PeriAng = 16.0*RAD;
 	}
 	else if (mission == 17)
 	{
@@ -541,13 +548,17 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -90.0*RAD;
 		LOIapo = 170.8*1852.0;
 		LOIperi = 51.4*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);;
+		TLCCEMPLat = -13.411797*RAD;
+		TLCCPeriGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);
+		TLCCFlybyPeriAlt = 1500 * 1852.0;
+		TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);
 		TLCCNodeLat = -10.4*RAD;
 		TLCCNodeLng = 174.1*RAD;
 		TLCCNodeAlt = 51.3*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		AGSKFactor = 110.0*3600.0;
+		DOI_PeriAng = -10.0*RAD;
 	}
 
 	Skylabmaneuver = 0;
