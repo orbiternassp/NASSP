@@ -233,6 +233,10 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "PCTIG", G->PC_TIG);
 	papiWriteScenario_vec(scn, "PC_DV_LVLH", G->PC_dV_LVLH);
 
+	oapiWriteScenario_int(scn, "DOI_N", G->DOI_N);
+	papiWriteScenario_double(scn, "DOIGET", G->DOIGET);
+	papiWriteScenario_double(scn, "DOI_PERIANG", G->DOI_PeriAng);
+
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
 }
@@ -353,6 +357,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "PCEARLIESTGET", G->PCEarliestGET);
 		papiReadScenario_double(line, "PCTIG", G->PC_TIG);
 		papiReadScenario_vec(line, "PC_DV_LVLH", G->PC_dV_LVLH);
+
+		papiReadScenario_int(line, "DOI_N", G->DOI_N);
+		papiReadScenario_double(line, "DOIGET", G->DOIGET);
+		papiReadScenario_double(line, "DOI_PERIANG", G->DOI_PeriAng);
 
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
@@ -551,6 +559,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Fixed TIG, specify periapsis altitude", 37);
 		}
+		else if (G->GMPType == 3)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Fixed TIG, circularize orbit", 28);
+		}
+		else if (G->GMPType == 4)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Circularize orbit at specified altitude", 39);
+		}
 
 		GET_Display(Buffer, G->SPSGET);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -561,7 +577,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->GMPType == 0 || G->GMPType == 2)
+		if (G->GMPType == 0 || G->GMPType == 2 || G->GMPType == 4)
 		{
 			sprintf(Buffer, "%f NM", G->peri_desnm);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
@@ -581,6 +597,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "Launch Pad/Landing Site", 23);
 		}
+
+		GET_Display(Buffer, G->P30TIG);
+		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 8 * H / 14, "DVX", 3);
 		skp->Text(5 * W / 8, 9 * H / 14, "DVY", 3);
@@ -3309,7 +3328,7 @@ void ApolloRTCCMFD::set_getbase()
 
 void ApolloRTCCMFD::menuCycleOrbAdjOptions()
 {
-	if (G->GMPType > 1)
+	if (G->GMPType > 3)
 	{
 		G->GMPType = 0;
 	}
@@ -3791,7 +3810,7 @@ void ApolloRTCCMFD::set_OrbAdjApo(double apo)
 
 void ApolloRTCCMFD::OrbAdjPeriDialogue()
 {
-	if (G->GMPType == 0 || G->GMPType == 2)
+	if (G->GMPType == 0 || G->GMPType == 2 || G->GMPType == 4)
 	{
 		bool OrbAdjPeriInput(void* id, char *str, void *data);
 		oapiOpenInputBox("Periapsis in NM:", OrbAdjPeriInput, 0, 20, (void*)this);

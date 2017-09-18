@@ -2682,6 +2682,12 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
 
+double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout)
+{
+	VECTOR3 RPRE, VPRE;
+	return time_radius_integ(R, V, mjd0, r, s, gravref, gravout, RPRE, VPRE);
+}
+
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
 	double dt1, sing, cosg, x2PRE, dt21,beta12,beta4,RF,phi4,dt21apo,beta13,dt2,beta14,mu;
@@ -3110,6 +3116,19 @@ VECTOR3 AdjustPeriapsis(VECTOR3 R, VECTOR3 V, double mu, double r_peri_des)
 			}
 		}
 	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 CircularOrbitDV(VECTOR3 R, VECTOR3 V, double mu)
+{
+	VECTOR3 U_H, U_hor, V_apo;
+	double v_circ;
+
+	U_H = unit(crossp(R, V));
+	U_hor = unit(crossp(U_H, unit(R)));
+	v_circ = sqrt(mu/length(R));
+	V_apo = U_hor*v_circ;
 
 	return V_apo - V;
 }
