@@ -157,10 +157,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.csmlmdocked = true;
 		orbopt.GETbase = GETbase;
 		orbopt.h_apo = 128.0*1852.0;
-		orbopt.h_peri = 113.0*1852.0;
 		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.inc = 30.0*RAD;
 		orbopt.TIG_GET = TIG;
+		orbopt.type = 1;
 		orbopt.vessel = calcParams.src;
 
 		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
@@ -5892,7 +5891,7 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 {
 	SV sv0, sv1, sv_tig_imp;
 	VECTOR3 DV;
-	double dt1, LMmass, mass, R_E;
+	double dt1, LMmass, mass, R_E, mu;
 
 	if (opt->useSV)
 	{
@@ -5941,29 +5940,62 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 		}
 	}
 
+	mu = GGRAV*oapiGetMass(sv1.gravref);
+
 	if (opt->type == 0)
 	{
 		sv_tig_imp = sv1;
 		OrbitAdjustCalc(sv_tig_imp, R_E + opt->h_apo, R_E + opt->h_peri, opt->inc, DV);
 	}
-	else if (opt->type == 1 || opt->type == 2)
+	else if (opt->type == 1 || opt->type == 2 || opt->type == 3)
 	{
-		double mu;
-
 		dt1 = opt->TIG_GET + (opt->GETbase - sv0.MJD)*24.0*3600.0;
 		sv1 = coast(sv0, dt1);
 		sv_tig_imp = sv1;
-
-		mu = GGRAV*oapiGetMass(sv_tig_imp.gravref);
 
 		if (opt->type == 1)
 		{
 			DV = OrbMech::AdjustApoapsis(sv_tig_imp.R, sv_tig_imp.V, mu, R_E + opt->h_apo);
 		}
-		else
+		else if (opt->type == 2)
 		{
 			DV = OrbMech::AdjustPeriapsis(sv_tig_imp.R, sv_tig_imp.V, mu, R_E + opt->h_peri);
 		}
+		else if (opt->type == 3)
+		{
+			DV = OrbMech::CircularOrbitDV(sv_tig_imp.R, sv_tig_imp.V, mu);
+		}
+	}
+	else if (opt->type == 4)
+	{
+		VECTOR3 U_H, U_hor, V_apo;
+		double a, dt2, dt21, dt22, v_circ;
+
+		dt1 = opt->TIG_GET + (opt->GETbase - sv0.MJD)*24.0*3600.0;
+		sv1 = coast(sv0, dt1);
+
+		a = opt->h_peri + R_E;
+
+		dt21 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, a, -1.0, sv1.gravref, sv1.gravref);
+		dt22 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, a, 1.0, sv1.gravref, sv1.gravref);
+
+		if (dt21 < dt22)
+		{
+			dt2 = dt21;
+		}
+		else
+		{
+			dt2 = dt22;
+		}
+
+		sv_tig_imp = coast(sv1, dt2);
+
+		U_H = unit(crossp(sv_tig_imp.R, sv_tig_imp.V));
+		U_hor = unit(crossp(U_H, unit(sv_tig_imp.R)));
+		v_circ = sqrt(mu*(2.0 / length(sv_tig_imp.R) - 1.0 / a));
+		V_apo = U_hor*v_circ;
+
+		DV = V_apo - sv_tig_imp.V;
 	}
 
 	MATRIX3 Q_Xx;

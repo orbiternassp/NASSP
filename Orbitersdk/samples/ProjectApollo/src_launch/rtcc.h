@@ -471,6 +471,8 @@ struct GMPOpt
 	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
 	//1 = Fixed TIG, specify apoapsis altitude
 	//2 = Fixed TIG, specify periapsis altitude
+	//3 = Fixed TIG, circularize orbit
+	//4 = Circularize orbit at specified altitude
 	int type = 0;
 	double GETbase; //usually MJD at launch
 	VESSEL* vessel;

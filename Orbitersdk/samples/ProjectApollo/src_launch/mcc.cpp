@@ -793,6 +793,7 @@ void MCC::TimeStep(double simdt){
 					break;
 				case 9:
 					MissionType = MTP_D;
+					setState(MST_SV_PRELAUNCH);
 					break;
 				case 10:
 					MissionType = MTP_F;
@@ -941,11 +942,14 @@ void MCC::TimeStep(double simdt){
 			{
 				// Await insertion
 				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					addMessage("INSERTION");
+					MissionPhase = MMST_EARTH_ORBIT;
 					switch (MissionType) {
 					case MTP_C_PRIME:
-						addMessage("INSERTION");
-						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
+						break;
+					case MTP_D:
+						setState(MST_D_INSERTION);
 						break;
 					}
 				}
@@ -1966,6 +1970,11 @@ int MCC::subThread(){
 	{
 		Sleep(5000); // Waste 5 seconds
 		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_D)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_C_PRIME)
 	{

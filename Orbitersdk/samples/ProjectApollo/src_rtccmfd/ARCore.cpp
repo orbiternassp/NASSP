@@ -208,6 +208,7 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMATHeadsUp = true;
 
 	GMPType = 0;
+	OrbAdjAltRef = true;
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = 0.0;
 	apo_desnm = 0;
