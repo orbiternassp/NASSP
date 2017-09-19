@@ -480,7 +480,7 @@ struct GMPOpt
 	SV RV_MCC;		//State vector as input
 	int impulsive = 1; //Calculated with nonimpulsive maneuver compensation or without
 	bool csmlmdocked; //0 = CSM alone, 1 = CSM/LM
-	bool AltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
+	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double LSAlt;	//Landing site altitude, if used
 
 	//maneuver parameters

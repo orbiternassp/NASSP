@@ -138,8 +138,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		AP7ManPADOpt opt;
-		GMPOpt orbopt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, dt2, TIG;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD;
 		VECTOR3 dV_LVLH;
 		SV sv0, sv1;
 
@@ -151,31 +150,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dt1 = NomTIG - sv0GET;
 		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		dt2 = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -167.675*RAD);	//find 167.675°W
-		TIG = round((dt2 + (sv1.MJD - GETbase)*24.0*3600.0) / 60.0)*60.0;	//Round to next minute
-
-		orbopt.csmlmdocked = true;
-		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 128.0*1852.0;
-		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.TIG_GET = TIG;
-		orbopt.type = 1;
-		orbopt.vessel = calcParams.src;
-
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -167.675*RAD);	//find 167.675°W
+		P30TIG = round((TIGMJD - GETbase)*24.0*3600.0 / 60.0)*60.0;	//Round to next minute
+		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
 
 		opt.GETbase = getGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.engopt = 0; //SPS
-		opt.HeadsUp = false;
-		opt.sxtstardtime = 0;
+		opt.HeadsUp = true;
+		opt.sxtstardtime = -30.0*60.0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
 		opt.navcheckGET = 0;
+		opt.vesseltype = 1;
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "SPS-1");
+		sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
 
 		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv0, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
 		if (upString != NULL) {
@@ -3560,9 +3552,9 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	ManPADApo = apo - oapiGetSize(sv2.gravref);
 	ManPADPeri = peri - oapiGetSize(sv2.gravref);
 
-	pad.Weight = opt->vessel->GetMass() / 0.45359237;
+	pad.Weight = sv1.mass / 0.45359237;
 
-	pad.burntime = v_e / F *opt->vessel->GetMass()*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
+	pad.burntime = v_e / F *(sv1.mass + LMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 
 	if (opt->engopt == 0)
 	{
@@ -6663,7 +6655,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 {
 	SV sv1;
 	VECTOR3 R, V;
-	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt;
+	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt, scalR, scalV;
 
 	AGSEpochTime = (opt->sv.MJD - opt->GETbase)*24.0*3600.0;
 	AGSEpochTime2 = ceil(AGSEpochTime / 6.0)*6.0;
@@ -6677,24 +6669,35 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 
 	AGSEpochTime3 = AGSEpochTime2 - opt->AGSbase;
 
+	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	{
+		scalR = 1000.0;
+		scalV = 1.0;
+	}
+	else
+	{
+		scalR = 100.0;
+		scalV = 0.1;
+	}
+
 	if (opt->csm)
 	{
-		pad.DEDA244 = R.x / 0.3048 / 100.0;
-		pad.DEDA245 = R.y / 0.3048 / 100.0;
-		pad.DEDA246 = R.z / 0.3048 / 100.0;
-		pad.DEDA264 = V.x / 0.3048;
-		pad.DEDA265 = V.y / 0.3048;
-		pad.DEDA266 = V.z / 0.3048;
+		pad.DEDA244 = R.x / 0.3048 / scalR;
+		pad.DEDA245 = R.y / 0.3048 / scalR;
+		pad.DEDA246 = R.z / 0.3048 / scalR;
+		pad.DEDA264 = V.x / 0.3048 / scalV;
+		pad.DEDA265 = V.y / 0.3048 / scalV;
+		pad.DEDA266 = V.z / 0.3048 / scalV;
 		pad.DEDA272 = AGSEpochTime3 / 60.0;
 	}
 	else
 	{
-		pad.DEDA240 = R.x / 0.3048 / 100.0;
-		pad.DEDA241 = R.y / 0.3048 / 100.0;
-		pad.DEDA242 = R.z / 0.3048 / 100.0;
-		pad.DEDA260 = V.x / 0.3048;
-		pad.DEDA261 = V.y / 0.3048;
-		pad.DEDA262 = V.z / 0.3048;
+		pad.DEDA240 = R.x / 0.3048 / scalR;
+		pad.DEDA241 = R.y / 0.3048 / scalR;
+		pad.DEDA242 = R.z / 0.3048 / scalR;
+		pad.DEDA260 = V.x / 0.3048 / scalV;
+		pad.DEDA261 = V.y / 0.3048 / scalV;
+		pad.DEDA262 = V.z / 0.3048 / scalV;
 		pad.DEDA254 = AGSEpochTime3 / 60.0;
 	}
 }
