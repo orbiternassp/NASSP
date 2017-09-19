@@ -962,13 +962,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(4 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 6 * H / 21, "242", 3);
 
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA260);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA260);
 			skp->Text(4 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 7 * H / 21, "260", 3);
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA261);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA261);
 			skp->Text(4 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 8 * H / 21, "261", 3);
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA262);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA262);
 			skp->Text(4 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 9 * H / 21, "262", 3);
 
@@ -986,13 +986,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(4 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 13 * H / 21, "246", 3);
 
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA264);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA264);
 			skp->Text(4 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 14 * H / 21, "264", 3);
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA265);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA265);
 			skp->Text(4 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 15 * H / 21, "265", 3);
-			sprintf(Buffer, "%+07.1f", G->agssvpad.DEDA266);
+			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA266);
 			skp->Text(4 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 			skp->Text(6 * W / 8, 16 * H / 21, "266", 3);
 

@@ -6655,7 +6655,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 {
 	SV sv1;
 	VECTOR3 R, V;
-	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt;
+	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt, scalR, scalV;
 
 	AGSEpochTime = (opt->sv.MJD - opt->GETbase)*24.0*3600.0;
 	AGSEpochTime2 = ceil(AGSEpochTime / 6.0)*6.0;
@@ -6669,24 +6669,35 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 
 	AGSEpochTime3 = AGSEpochTime2 - opt->AGSbase;
 
+	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	{
+		scalR = 1000.0;
+		scalV = 1.0;
+	}
+	else
+	{
+		scalR = 100.0;
+		scalV = 0.1;
+	}
+
 	if (opt->csm)
 	{
-		pad.DEDA244 = R.x / 0.3048 / 100.0;
-		pad.DEDA245 = R.y / 0.3048 / 100.0;
-		pad.DEDA246 = R.z / 0.3048 / 100.0;
-		pad.DEDA264 = V.x / 0.3048;
-		pad.DEDA265 = V.y / 0.3048;
-		pad.DEDA266 = V.z / 0.3048;
+		pad.DEDA244 = R.x / 0.3048 / scalR;
+		pad.DEDA245 = R.y / 0.3048 / scalR;
+		pad.DEDA246 = R.z / 0.3048 / scalR;
+		pad.DEDA264 = V.x / 0.3048 / scalV;
+		pad.DEDA265 = V.y / 0.3048 / scalV;
+		pad.DEDA266 = V.z / 0.3048 / scalV;
 		pad.DEDA272 = AGSEpochTime3 / 60.0;
 	}
 	else
 	{
-		pad.DEDA240 = R.x / 0.3048 / 100.0;
-		pad.DEDA241 = R.y / 0.3048 / 100.0;
-		pad.DEDA242 = R.z / 0.3048 / 100.0;
-		pad.DEDA260 = V.x / 0.3048;
-		pad.DEDA261 = V.y / 0.3048;
-		pad.DEDA262 = V.z / 0.3048;
+		pad.DEDA240 = R.x / 0.3048 / scalR;
+		pad.DEDA241 = R.y / 0.3048 / scalR;
+		pad.DEDA242 = R.z / 0.3048 / scalR;
+		pad.DEDA260 = V.x / 0.3048 / scalV;
+		pad.DEDA261 = V.y / 0.3048 / scalV;
+		pad.DEDA262 = V.z / 0.3048 / scalV;
 		pad.DEDA254 = AGSEpochTime3 / 60.0;
 	}
 }
