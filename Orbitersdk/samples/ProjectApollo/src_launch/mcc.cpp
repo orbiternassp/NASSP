@@ -1769,6 +1769,9 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY1STATE1:	//SV Update to SPS-1
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
 				break;
+			case MST_D_DAY1STATE2: //SPS-1 to Daylight Star Check
+
+				break;
 			}
 			break;
 		}
@@ -3112,7 +3115,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 	{
 		switch (SubState) {
 		case 0:
-			if (MissionType == MTP_C)
+			if (MissionType == MTP_C || MissionType == MTP_D)
 			{
 				allocPad(4); // Allocate AP7 Maneuver Pad
 			}
@@ -3586,7 +3589,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P30MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
@@ -3607,7 +3610,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P47MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
