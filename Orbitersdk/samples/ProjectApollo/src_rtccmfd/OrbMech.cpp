@@ -2682,6 +2682,12 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
 
+double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout)
+{
+	VECTOR3 RPRE, VPRE;
+	return time_radius_integ(R, V, mjd0, r, s, gravref, gravout, RPRE, VPRE);
+}
+
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
 	double dt1, sing, cosg, x2PRE, dt21,beta12,beta4,RF,phi4,dt21apo,beta13,dt2,beta14,mu;
@@ -3038,6 +3044,93 @@ bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 		los = true;
 	}
 	return los;
+}
+
+VECTOR3 AdjustApoapsis(VECTOR3 R, VECTOR3 V, double mu, double r_apo_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) > r_apo_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_apo - r_apo_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 AdjustPeriapsis(VECTOR3 R, VECTOR3 V, double mu, double r_peri_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) < r_peri_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_peri - r_peri_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 CircularOrbitDV(VECTOR3 R, VECTOR3 V, double mu)
+{
+	VECTOR3 U_H, U_hor, V_apo;
+	double v_circ;
+
+	U_H = unit(crossp(R, V));
+	U_hor = unit(crossp(U_H, unit(R)));
+	v_circ = sqrt(mu/length(R));
+	V_apo = U_hor*v_circ;
+
+	return V_apo - V;
 }
 
 double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)

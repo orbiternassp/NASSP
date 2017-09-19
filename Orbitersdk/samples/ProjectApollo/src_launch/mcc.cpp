@@ -793,6 +793,7 @@ void MCC::TimeStep(double simdt){
 					break;
 				case 9:
 					MissionType = MTP_D;
+					setState(MST_SV_PRELAUNCH);
 					break;
 				case 10:
 					MissionType = MTP_F;
@@ -941,11 +942,14 @@ void MCC::TimeStep(double simdt){
 			{
 				// Await insertion
 				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					addMessage("INSERTION");
+					MissionPhase = MMST_EARTH_ORBIT;
 					switch (MissionType) {
 					case MTP_C_PRIME:
-						addMessage("INSERTION");
-						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
+						break;
+					case MTP_D:
+						setState(MST_D_INSERTION);
 						break;
 					}
 				}
@@ -1753,6 +1757,23 @@ void MCC::TimeStep(double simdt){
 				}
 			}
 			break;
+			case MTP_D:
+			switch (MissionState)
+			{
+			case MST_D_INSERTION:	//Insertion to SV Update
+				if (cm->MissionTime > 3 * 60 * 60 + 15 * 60)
+				{
+					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 50 * 60, 2, MST_D_DAY1STATE1);
+				}
+				break;
+			case MST_D_DAY1STATE1:	//SV Update to SPS-1
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
+				break;
+			case MST_D_DAY1STATE2: //SPS-1 to Daylight Star Check
+
+				break;
+			}
+			break;
 		}
 	}
 
@@ -1952,6 +1973,11 @@ int MCC::subThread(){
 	{
 		Sleep(5000); // Waste 5 seconds
 		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_D)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_C_PRIME)
 	{
@@ -3089,7 +3115,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 	{
 		switch (SubState) {
 		case 0:
-			if (MissionType == MTP_C)
+			if (MissionType == MTP_C || MissionType == MTP_D)
 			{
 				allocPad(4); // Allocate AP7 Maneuver Pad
 			}
@@ -3563,7 +3589,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P30MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
@@ -3584,7 +3610,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P47MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
