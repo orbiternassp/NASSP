@@ -1760,17 +1760,17 @@ void MCC::TimeStep(double simdt){
 			case MTP_D:
 			switch (MissionState)
 			{
-			case MST_D_INSERTION:	//Insertion to SV Update
+			case MST_D_INSERTION:	//SV Update to SPS-1
 				if (cm->MissionTime > 3 * 60 * 60 + 15 * 60)
 				{
 					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 50 * 60, 2, MST_D_DAY1STATE1);
 				}
 				break;
-			case MST_D_DAY1STATE1:	//SV Update to SPS-1
+			case MST_D_DAY1STATE1:	//SPS-1 to Daylight Star Check
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
 				break;
-			case MST_D_DAY1STATE2: //SPS-1 to Daylight Star Check
-
+			case MST_D_DAY1STATE2: //Daylight Star Check to SV Update
+				UpdateMacro(UTP_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 25 * 60, 3, MST_D_DAY1STATE3);
 				break;
 			}
 			break;
@@ -2257,6 +2257,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
 		}
+		else if (padNumber == 11)
+		{
+			STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+			SAVE_DOUBLE("MCC_STARCHKPAD_GET", form->GET[0]);
+			SAVE_V3("MCC_STARCHKPAD_Att", form->Att[0]);
+			SAVE_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2277,7 +2285,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("MCC_GT_Enabled", GT_Enabled);
 		LOAD_BOOL("MCC_MT_Enabled", MT_Enabled);
 		LOAD_BOOL("MCC_padAutoShow", padAutoShow);
-		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);		
+		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);
 		LOAD_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 		LOAD_INT("MCC_MissionType", MissionType);
 		LOAD_INT("MCC_MissionPhase", MissionPhase);
@@ -2304,7 +2312,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		if (padNumber == 1)
 		{
 			char tmpbuf[36];
-			
+
 			AP7BLK * form = (AP7BLK *)padForm;
 
 			for (int i = 0;i < 8;i++)
@@ -2512,6 +2520,14 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_TLIPAD_SepATT", form->SepATT);
 			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
+		}
+		else if (padNumber == 11)
+		{
+			STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+			LOAD_DOUBLE("MCC_STARCHKPAD_GET", form->GET[0]);
+			LOAD_V3("MCC_STARCHKPAD_Att", form->Att[0]);
+			LOAD_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -2732,6 +2748,22 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
+	case 11: //STARCHKPAD
+	{
+		STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+		int hh, mm, hh2, mm2;
+		double ss, ss2;
+
+		sprintf(buffer, "CSM STAR CHECK UPDATE");
+		SStoHHMMSS(form->GET[0], hh, mm, ss);
+		SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2);
+
+		sprintf(buffer, "%s\n%+06d HR GET\n%+06d MIN SR\n%+07.2f SEC\n%05.1f R FDAI\nXXX%05.1f P\nXXX%05.1f Y\n%+06d HR T ALIGN\n%+06d MIN\n%+07.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	default:
 		sprintf(buffer,"Unknown padNumber %d",padNumber);
 		oapiAnnotationSetText(NHpad,buffer);
@@ -2783,6 +2815,9 @@ void MCC::allocPad(int Number){
 		break;
 	case 10: // TLIPAD
 		padForm = calloc(1, sizeof(TLIPAD));
+		break;
+	case 11: // STARCHKPAD
+		padForm = calloc(1, sizeof(STARCHKPAD));
 		break;
 
 	default:
@@ -3706,6 +3741,14 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		}
 		padState = 0;
 		// Pretend we did the math
+	}
+	else if (type == UTP_STARCHKPAD)
+	{
+		STARCHKPAD * form = (STARCHKPAD *)padForm;
+		// Ask RTCC for numbers
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm);
+		// Done filling form, OK to show
+		padState = 0;
 	}
 	else if (type == UTP_NONE)
 	{
