@@ -133,6 +133,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 3: //DAYLIGHT STAR CHECK
+	{
+
+	}
+	break;
 	case 10:	//SPS-1
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -3568,7 +3573,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		X_B = unit(V_G);
 		UX = X_B;
 		UY = unit(crossp(X_B, sv1.R*headsswitch));
-		UZ = unit(crossp(X_B, crossp(X_B, sv1.R*headsswitch)));
+		UZ = unit(crossp(X_B, UY));
 
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
@@ -4417,12 +4422,18 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		UZ = unit(-sv4.R);
 		UX = crossp(UY, UZ);
 
-
-
 		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
-			MATRIX3 M, M_R, M_RTM;
-			double p_T, y_T, headsswitch;
+			double headsswitch;
+
+			if (opt->HeadsUp)
+			{
+				headsswitch = 1.0;
+			}
+			else
+			{
+				headsswitch = -1.0;
+			}
 
 			DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 			if (length(DV_P) != 0.0)
@@ -4435,38 +4446,61 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			{
 				V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
 			}
-			if (opt->REFSMMATopt == 0)
+
+			if (opt->vesseltype < 2)
 			{
-				if (opt->HeadsUp)
+				MATRIX3 M, M_R, M_RTM;
+				double p_T, y_T;
+
+				if (opt->REFSMMATopt == 0)
 				{
-					headsswitch = 1.0;
+					p_T = -2.15*RAD;
+					X_B = unit(V_G);
 				}
 				else
 				{
-					headsswitch = -1.0;
+					headsswitch = 1.0;
+					p_T = 2.15*RAD;
+					X_B = -unit(V_G);
 				}
+				UX = X_B;
+				UY = unit(crossp(UX, sv4.R*headsswitch));
+				UZ = unit(crossp(UX, UY));
 
-				p_T = -2.15*RAD;
-				X_B = unit(V_G);// tmul(REFSMMAT, dV_LVLH));
+				y_T = 0.95*RAD;
+
+				M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+				M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
+				M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
+				X_SM = mul(M_RTM, _V(1.0, 0.0, 0.0));
+				Y_SM = mul(M_RTM, _V(0.0, 1.0, 0.0));
+				Z_SM = mul(M_RTM, _V(0.0, 0.0, 1.0));
 			}
 			else
 			{
-				headsswitch = 1.0;
-				p_T = 2.15*RAD;
-				X_B = -unit(V_G);// tmul(REFSMMAT, dV_LVLH));
+				VECTOR3 U_FDI;
+
+				U_FDI = unit(V_G);
+
+				if (opt->REFSMMATopt == 0)
+				{
+					X_SM = U_FDI;
+				}
+				else
+				{
+					X_SM = -U_FDI;
+				}
+				if (abs(dotp(X_SM, unit(sv4.R))) < cos(0.01*RAD))
+				{
+					Y_SM = unit(crossp(X_SM, -sv4.R*headsswitch));
+				}
+				else
+				{
+					Y_SM = unit(crossp(X_SM, sv4.V));
+				}
+				Z_SM = unit(crossp(X_SM, Y_SM));
 			}
-			UX = X_B;
-			UY = unit(crossp(X_B, sv4.R*headsswitch));
-			UZ = unit(crossp(X_B, crossp(X_B, sv4.R*headsswitch)));
 
-			y_T = 0.95*RAD;
-
-			M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-			M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-			M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
-			X_SM = mul(M_RTM, _V(1.0, 0.0, 0.0));
-			Y_SM = mul(M_RTM, _V(0.0, 1.0, 0.0));
-			Z_SM = mul(M_RTM, _V(0.0, 0.0, 1.0));
 			return _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 
 			//IMUangles = OrbMech::CALCGAR(REFSMMAT, mul(transpose_matrix(M), M_R));

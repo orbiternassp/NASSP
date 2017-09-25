@@ -1850,6 +1850,7 @@ int ARCore::subThread()
 		}
 
 		opt.vessel = vessel;
+		opt.vesseltype = vesseltype;
 		opt.HeadsUp = REFSMMATHeadsUp;
 
 		if (vesseltype == 0 || vesseltype == 2)
