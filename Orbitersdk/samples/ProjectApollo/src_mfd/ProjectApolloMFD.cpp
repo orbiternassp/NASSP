@@ -1264,55 +1264,67 @@ void ProjectApolloMFD::Update (HDC hDC)
 	// Draw ECS
 	else if (screen == PROG_ECS) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Environmental Control System", 28);
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), "Crew status:", 12);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45),  "Crew number:", 12);
 
-		ECSStatus ecs;
-		saturn->GetECSStatus(ecs);
+		if (saturn)
+		{
 
-		SetTextAlign (hDC, TA_CENTER);
-		if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.4), "OK", 2);	
-		} else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
-			SetTextColor (hDC, RGB(255, 255, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.4), "CRITICAL", 8);	
-			SetTextColor (hDC, RGB(0, 255, 0));
-		} else {
-			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.4), "DEAD", 4);	
-			SetTextColor (hDC, RGB(0, 255, 0));
+			SetTextAlign(hDC, TA_LEFT);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+
+			ECSStatus ecs;
+			saturn->GetECSStatus(ecs);
+
+			SetTextAlign(hDC, TA_CENTER);
+			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+			}
+			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
+				SetTextColor(hDC, RGB(255, 255, 0));
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				SetTextColor(hDC, RGB(0, 255, 0));
+			}
+			else {
+				SetTextColor(hDC, RGB(255, 0, 0));
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				SetTextColor(hDC, RGB(0, 255, 0));
+			}
+
+			sprintf(buffer, "%d", ecs.crewNumber);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+
+			TextOut(hDC, (int)(width * 0.5), (int)(height * 0.525), "Glycol Coolant Loops", 20);
+			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.6), "Prim.", 5);
+			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.6), "Sec.", 4);
+
+			SetTextAlign(hDC, TA_LEFT);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Heating:", 8);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
+
+			SetTextAlign(hDC, TA_CENTER);
+			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
+			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.65), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
+			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.7), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
+			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
+			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.65), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
+			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.7), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
+			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.8), buffer, strlen(buffer));
+
+			MoveToEx(hDC, (int)(width * 0.5), (int)(height * 0.775), 0);
+			LineTo(hDC, (int)(width * 0.9), (int)(height * 0.775));
+
 		}
-
-		sprintf(buffer, "%d", ecs.crewNumber);
-		TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), buffer, strlen(buffer)); 
-
-		TextOut(hDC, (int) (width * 0.5), (int) (height * 0.525), "Glycol Coolant Loops", 20);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.6), "Prim.", 5);
-		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.6), "Sec.", 4);
-
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Heating:", 8);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Actual:", 7);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), "Test:", 5);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Total:", 6);
-
-		SetTextAlign (hDC, TA_CENTER);
-		sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.65), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.7), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.8), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
-		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.65), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
-		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.7), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
-		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.8), buffer, strlen(buffer));
-
-		MoveToEx (hDC, (int) (width * 0.5), (int) (height * 0.775), 0);
-		LineTo (hDC, (int) (width * 0.9), (int) (height * 0.775));
+		else
+		{
+			TextOut(hDC, width / 2, (int)(height * 0.4), "LM ECS not implemented yet", 26);
+		}
 	// Draw IMFD
 	} else if (screen == PROG_IMFD) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "IMFD Burn Data", 14);
