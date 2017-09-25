@@ -4245,10 +4245,7 @@ void ApolloRTCCMFD::menuSVCalc()
 		}
 		else if (G->svmode == 2)
 		{
-			if (!G->svtarget->GroundContact())
-			{
-				G->AGSStateVectorCalc();
-			}
+			G->AGSStateVectorCalc();
 		}
 	}
 }
