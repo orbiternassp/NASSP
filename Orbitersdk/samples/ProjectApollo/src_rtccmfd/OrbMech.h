@@ -239,6 +239,7 @@ namespace OrbMech {
 	VECTOR3 AdjustApoapsis(VECTOR3 R, VECTOR3 V, double mu, double r_apo_des);
 	VECTOR3 AdjustPeriapsis(VECTOR3 R, VECTOR3 V, double mu, double r_peri_des);
 	VECTOR3 CircularOrbitDV(VECTOR3 R, VECTOR3 V, double mu);
+	VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang);
 	double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d);
 	void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng);
 	void latlong_from_r(VECTOR3 R, double &lat, double &lng);

@@ -1770,7 +1770,34 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
 				break;
 			case MST_D_DAY1STATE2: //Daylight Star Check to SV Update
-				UpdateMacro(UTP_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 25 * 60, 3, MST_D_DAY1STATE3);
+				UpdateMacro(UTP_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 20 * 60, 3, MST_D_DAY1STATE3);
+				break;
+			case MST_D_DAY1STATE3: //SV Update to Block Data 2
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 8 * 60 * 60 + 27 * 60, 2, MST_D_DAY1STATE4);
+				break;
+			case MST_D_DAY1STATE4: //Block Data 2 to Block Data 3
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 19 * 60 * 60 + 15 * 60, 11, MST_D_DAY2STATE1);
+				break;
+			case MST_D_DAY2STATE1: //Block Data 3 to SPS-2
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 20 * 60 * 60 + 37 * 60, 12, MST_D_DAY2STATE2);
+				break;
+			case MST_D_DAY2STATE2: //SPS-2 to SPS-3
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 23 * 60 * 60 + 55 * 60, 13, MST_D_DAY2STATE3);
+				break;
+			case MST_D_DAY2STATE3: //SPS-3 to SPS-4
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 26 * 60 * 60 + 50 * 60, 14, MST_D_DAY2STATE4);
+				break;
+			case MST_D_DAY2STATE4: //SPS-4 to SV Update
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 28 * 60 * 60 + 50 * 60, 15, MST_D_DAY2STATE5);
+				break;
+			case MST_D_DAY2STATE5: //SV Update to Block Data 4
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 28 * 60 * 60 + 55 * 60, 2, MST_D_DAY2STATE6);
+				break;
+			case MST_D_DAY2STATE6: //Block Data 4 to Block Data 5
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 40 * 60 * 60 + 10 * 60, 16, MST_D_DAY3STATE1);
+				break;
+			case MST_D_DAY3STATE1: //Block Data 5
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 41 * 60 * 60 + 10 * 60, 17, MST_D_DAY3STATE2);
 				break;
 			}
 			break;
@@ -2595,7 +2622,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GETI[i + 4]);
-				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f  XXX%+05.1f LAT\nXX%+06.1f  XX%+06.1f LONG\n%s  %s GETI\nXXX%4.1f  XXX%4.1f DVC\n%s       %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
+				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s     %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}
@@ -2759,7 +2786,7 @@ void MCC::drawPad(){
 		SStoHHMMSS(form->GET[0], hh, mm, ss);
 		SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2);
 
-		sprintf(buffer, "%s\n%+06d HR GET\n%+06d MIN SR\n%+07.2f SEC\n%05.1f R FDAI\nXXX%05.1f P\nXXX%05.1f Y\n%+06d HR T ALIGN\n%+06d MIN\n%+07.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
+		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R FDAI\n%+06.1f P\n%+06.1f Y\nXX%03d HR T ALIGN\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3601,6 +3628,44 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			{
 				NCOption_Enabled = false;
 				setSubState(0);
+			}
+			break;
+		}
+	}
+	else if (type == UTP_STARCHKPAD)//Star Check PAD without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(11);// Allocate STARCHK PAD
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
 			}
 			break;
 		}

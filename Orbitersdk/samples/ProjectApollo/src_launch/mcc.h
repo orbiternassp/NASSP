@@ -357,6 +357,15 @@
 #define MST_D_DAY1STATE1	11
 #define MST_D_DAY1STATE2	12
 #define MST_D_DAY1STATE3	13
+#define MST_D_DAY1STATE4	14
+#define MST_D_DAY2STATE1	20
+#define MST_D_DAY2STATE2	21
+#define MST_D_DAY2STATE3	22
+#define MST_D_DAY2STATE4	23
+#define MST_D_DAY2STATE5	24
+#define MST_D_DAY2STATE6	25
+#define MST_D_DAY3STATE1	30
+#define MST_D_DAY3STATE2	31
 
 // Ground Station Information Structure
 struct GroundStation {

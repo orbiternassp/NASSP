@@ -135,7 +135,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 3: //DAYLIGHT STAR CHECK
 	{
+		STARCHKPAD * form = (STARCHKPAD *)pad;
 
+		form->Att[0] = _V(68.0, 291.1, 330.2);
+		form->GET[0] = OrbMech::HHMMSSToSS(6.0, 49.0, 45.0);
+		form->TAlign[0] = 0.0;
 	}
 	break;
 	case 10:	//SPS-1
@@ -159,7 +163,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = round((TIGMJD - GETbase)*24.0*3600.0 / 60.0)*60.0;	//Round to next minute
 		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
 
-		opt.GETbase = getGETBase();
+		opt.GETbase = GETbase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
@@ -179,6 +183,126 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, target load");
+		}
+	}
+	break;
+	case 11: //BLOCK DATA 2
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		const int n = 6;
+		double lng[n] = { 145.0*RAD, -161.7*RAD, -23.0*RAD, -32.1*RAD, -26.4*RAD, -27.9*RAD };
+		double GETI[n] = { OrbMech::HHMMSSToSS(13,14,31),OrbMech::HHMMSSToSS(15,02,51),OrbMech::HHMMSSToSS(15,40,24),OrbMech::HHMMSSToSS(17,13,49),OrbMech::HHMMSSToSS(18,50,57),OrbMech::HHMMSSToSS(20,24,40) };
+		char area[n][10] = { "009-3B", "010-CC", "011-AC", "012-AC", "013-2A", "014-AC" };
+		char **test;
+		test = new char*[n];
+		for (int i = 0;i < n;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 12: //BLOCK DATA 3
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		const int n = 6;
+		double lng[n] = { -67.0*RAD, -67.0*RAD, -67.0*RAD, -66.3*RAD, -69.2*RAD, -165.5*RAD };
+		double GETI[n] = { OrbMech::HHMMSSToSS(21,52,49),OrbMech::HHMMSSToSS(23,28,3),OrbMech::HHMMSSToSS(25,2,25),OrbMech::HHMMSSToSS(26,37,58),OrbMech::HHMMSSToSS(28,11,50),OrbMech::HHMMSSToSS(31,7,17) };
+		char area[n][10] = { "015-1B", "016-1B", "017-1B", "018-1B", "019-1B", "020-4A" };
+		char **test;
+		test = new char*[n];
+		for (int i = 0;i < n;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 13: //SPS-2
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		GMPOpt gmpopt;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
+		VECTOR3 dV_LVLH;
+		MATRIX3 REFSMMAT;
+		SV sv0, sv1;
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GETbase = getGETBase();
+		NomTIG = OrbMech::HHMMSSToSS(22.0, 12.0, 0.0);
+		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
+		dt1 = NomTIG - sv0GET;
+		sv1 = coast(sv0, dt1 - 10.0*60.0);
+
+		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -64.783*RAD);	//find 64.783°W
+		TIG = (TIGMJD - GETbase)*24.0*3600.0;
+
+		gmpopt.csmlmdocked = true;
+		gmpopt.GETbase = GETbase;
+		gmpopt.h_apo = 192.0*1852.0;
+		gmpopt.impulsive = RTCC_NONIMPULSIVE;
+		gmpopt.rot_ang = 1.89*RAD;
+		gmpopt.TIG_GET = TIG;
+		gmpopt.type = 5;
+		gmpopt.vessel = calcParams.src;
+
+		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+
+		refsopt.csmlmdocked = true;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-2");
+
+		//Bias pitch trim gimbal angle by 0.5° to induce transient at ignition. Gets mentioned in pre-mission documents, but wasn't actually done during the mission?!
+		form->pTrim += 0.5;
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv0, true, AGCEpoch, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
 		}
 	}
 	break;
@@ -3386,12 +3510,10 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 	if (opt->engopt == 0)
 	{
-		double x1 = LMmass / (sv1.mass + LMmass)*6.2;
-		ManPADPTrim = atan2(-2.15 * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
-		ManPADYTrim = atan2(0.95 * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
+		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
 
-		p_T = -2.15*RAD + ManPADPTrim;
-		y_T = 0.95*RAD + ManPADYTrim;
+		ManPADPTrim = p_T + 2.15*RAD;
+		ManPADYTrim = y_T - 0.95*RAD;
 
 		X_B = unit(V_G);
 		UX = X_B;
@@ -3563,12 +3685,10 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 	if (opt->engopt == 0)
 	{
-		double x1 = LMmass / (sv1.mass + LMmass)*6.2;
-		ManPADPTrim = atan2(-2.15 * RAD * 5.0, 5.0 + x1) + 2.15*RAD;
-		ManPADYTrim = atan2(0.95 * RAD * 5.0, 5.0 + x1) - 0.95*RAD;
+		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
 
-		p_T = -2.15*RAD + ManPADPTrim;
-		y_T = 0.95*RAD + ManPADYTrim;
+		ManPADPTrim = p_T + 2.15*RAD;
+		ManPADYTrim = y_T - 0.95*RAD;
 
 		X_B = unit(V_G);
 		UX = X_B;
@@ -4452,9 +4572,10 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 				MATRIX3 M, M_R, M_RTM;
 				double p_T, y_T;
 
+				CalcSPSGimbalTrimAngles(sv4.mass, LMmass, p_T, y_T);
+
 				if (opt->REFSMMATopt == 0)
 				{
-					p_T = -2.15*RAD;
 					X_B = unit(V_G);
 				}
 				else
@@ -4466,8 +4587,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 				UX = X_B;
 				UY = unit(crossp(UX, sv4.R*headsswitch));
 				UZ = unit(crossp(UX, UY));
-
-				y_T = 0.95*RAD;
 
 				M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 				M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
@@ -5973,7 +6092,7 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 		sv_tig_imp = sv1;
 		OrbitAdjustCalc(sv_tig_imp, R_E + opt->h_apo, R_E + opt->h_peri, opt->inc, DV);
 	}
-	else if (opt->type == 1 || opt->type == 2 || opt->type == 3)
+	else if (opt->type == 1 || opt->type == 2 || opt->type == 3 || opt->type == 5)
 	{
 		dt1 = opt->TIG_GET + (opt->GETbase - sv0.MJD)*24.0*3600.0;
 		sv1 = coast(sv0, dt1);
@@ -5990,6 +6109,13 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 		else if (opt->type == 3)
 		{
 			DV = OrbMech::CircularOrbitDV(sv_tig_imp.R, sv_tig_imp.V, mu);
+		}
+		else if (opt->type == 5)
+		{
+			VECTOR3 DV2, DV3;
+			DV2 = OrbMech::RotateVelocityVector(sv_tig_imp.R, sv_tig_imp.V, opt->rot_ang);
+			DV3 = OrbMech::AdjustApoapsis(sv_tig_imp.R, sv_tig_imp.V + DV2, mu, R_E + opt->h_apo);
+			DV = DV2 + DV3;
 		}
 	}
 	else if (opt->type == 4)
@@ -6486,7 +6612,7 @@ char* RTCC::CMCExternalDeltaVUpdate(double P30TIG, VECTOR3 dV_LVLH)
 	return str;
 }
 
-char* RTCC::CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch)
+char* RTCC::CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, bool v66)
 {
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
@@ -6532,8 +6658,7 @@ char* RTCC::CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch)
 		emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
 		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
-
-	if (sv.gravref == hEarth) {
+	else if (sv.gravref == hEarth) {
 
 		emem[0] = 21;
 		emem[1] = 1501;
@@ -6563,6 +6688,10 @@ char* RTCC::CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch)
 		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
 	str = V71Update(emem, 17);
+	if (v66 && csm)
+	{
+		sprintf(str, "%sV66E", str);
+	}
 	return str;
 }
 
@@ -8973,4 +9102,13 @@ void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highs
 	res->VIO = length(V05G);
 	res->GET400K = t2;
 	res->GET05G = t2 + t32 + dt22;	
+}
+
+void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, double &y_T)
+{
+	double x1;
+
+	x1 = LMmass / (CSMmass + LMmass)*6.2;
+	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
+	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
 }

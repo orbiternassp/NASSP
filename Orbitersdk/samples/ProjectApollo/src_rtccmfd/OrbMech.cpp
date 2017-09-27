@@ -3133,6 +3133,16 @@ VECTOR3 CircularOrbitDV(VECTOR3 R, VECTOR3 V, double mu)
 	return V_apo - V;
 }
 
+VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang)
+{
+	VECTOR3 V_apo;
+
+	V_apo = RotateVector(unit(R), ang, unit(V));
+	V_apo = unit(V_apo)*length(V);
+
+	return V_apo - V;
+}
+
 double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
 {
 	MATRIX3 Rot2;
