@@ -2065,6 +2065,30 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_MISSIONTIME:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	
@@ -2134,6 +2158,30 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel) 
 		{
 			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterGroupLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
 			return true;
 		}
 		break;

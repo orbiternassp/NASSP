@@ -68,10 +68,15 @@ enum IULVMessageType
 	IULV_ENABLE_J2,							///< Enable the J2 engine.
 	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
 	IULV_SET_APS_THRUST_LEVEL,				///< Set APS thrust level.
+	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
+	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
+	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
 	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
 	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
 	IULV_ACTIVATE_S4RCS,					///< Activate the SIVb RCS.
 	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
+	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
+	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
 	IULV_SET_ATTITUDE_ROT_LEVEL,			///< Set rotational thruster levels.
 	IULV_ADD_FORCE,							///< Add force.
@@ -101,6 +106,10 @@ enum IULVMessageType
 	IULV_GET_BANK,							///< Get local bank
 	IULV_GET_SLIP_ANGLE,					///< Get local slip angle
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
+	IULV_GET_MISSIONTIME,
+	IULV_GET_APOLLONO,
+	IULV_GET_MAIN_THRUSTER,
+	IULV_GET_THRUSTER_LEVEL,
 };
 
 ///
@@ -163,12 +172,18 @@ public:
 	void SetJ2ThrustLevel(double thrust);
 	void SetAPSThrustLevel(double thrust);
 	void SetVentingThruster();
+	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
+	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
+	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
 
 	void DeactivateNavmode(int mode);
 	void ActivateNavmode(int mode);
 
 	void DeactivateS4RCS();
 	void ActivateS4RCS();
+
+	void DeactivatePrelaunchVenting();
+	void ActivatePrelaunchVenting();
 
 	void SetAttitudeLinLevel(int a1, int a2);
 	void SetAttitudeRotLevel (VECTOR3 th);
@@ -188,6 +203,10 @@ public:
 	bool GetForceVector(VECTOR3 &f);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
+	double GetMissionTime();
+	int GetApolloNo();
+	THRUSTER_HANDLE GetMainThruster(int n);
+	double GetThrusterLevel(THRUSTER_HANDLE th);
 
 	void Local2Global(VECTOR3 &local, VECTOR3 &global);
 	void GetApDist(double &d);

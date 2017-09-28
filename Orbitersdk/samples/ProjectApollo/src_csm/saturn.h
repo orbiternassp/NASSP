@@ -915,6 +915,8 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
+	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -1020,6 +1022,9 @@ public:
 
 	void ActivateS4RCS();
 	void DeactivateS4RCS();
+
+	virtual void ActivatePrelaunchVenting() = 0;
+	virtual void DeactivatePrelaunchVenting() = 0;
 
 	///
 	/// \brief Enable or disable the J2 engine on the SIVb.
@@ -3941,8 +3946,6 @@ protected:
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
-	virtual void ActivatePrelaunchVenting() = 0;
-	virtual void DeactivatePrelaunchVenting() = 0;
 
 	//
 	// Save/Load support functions.

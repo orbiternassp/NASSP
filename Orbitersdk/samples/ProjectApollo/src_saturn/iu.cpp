@@ -1349,6 +1349,42 @@ void IUToLVCommandConnector::SetVentingThruster()
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::SetThrusterLevel(THRUSTER_HANDLE th, double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_THRUSTER_LEVEL;
+	cm.val1.pValue = th;
+	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetThrusterGroupLevel(THGROUP_HANDLE thg, double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_THRUSTER_GROUP_LEVEL;
+	cm.val1.pValue = thg;
+	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_THRUSTER_RESOURCE;
+	cm.val1.pValue = th;
+	cm.val2.pValue = ph;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SetAPSThrustLevel(double thrust)
 
 {
@@ -1441,6 +1477,28 @@ void IUToLVCommandConnector::ActivateS4RCS()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_ACTIVATE_S4RCS;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::DeactivatePrelaunchVenting()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEACTIVATE_PRELAUNCH_VENTING;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::ActivatePrelaunchVenting()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ACTIVATE_PRELAUNCH_VENTING;
 
 	SendMessage(cm);
 }
@@ -1801,6 +1859,68 @@ double IUToLVCommandConnector::GetSlipAngle()
 	if (SendMessage(cm))
 	{
 		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetMissionTime()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_MISSIONTIME;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+int IUToLVCommandConnector::GetApolloNo()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_APOLLONO;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.iValue;
+	}
+
+	return 0.0;
+}
+
+THRUSTER_HANDLE IUToLVCommandConnector::GetMainThruster(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_MAIN_THRUSTER;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.pValue;
+	}
+
+	return 0;
+}
+
+double IUToLVCommandConnector::GetThrusterLevel(THRUSTER_HANDLE th)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_THRUSTER_LEVEL;
+	cm.val1.pValue = th;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.dValue;
 	}
 
 	return 0.0;

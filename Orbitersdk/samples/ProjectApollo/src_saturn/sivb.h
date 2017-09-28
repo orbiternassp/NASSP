@@ -290,6 +290,8 @@ public:
 	///
 	double GetMissionTime();
 
+	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+
 	///
 	/// \brief Get main propellant mass.
 	/// \return Propellant mass in kg.
