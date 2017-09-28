@@ -3746,6 +3746,7 @@ void Saturn::GenericLoadStateSetup()
 	{
 		iu.ConnectToCSM(&iuCommandConnector);
 		iu.ConnectToLV(&sivbCommandConnector);
+		lvCommandConnector.ConnectTo(&sivbCommandConnector);
 	}
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);

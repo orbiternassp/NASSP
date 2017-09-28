@@ -39,7 +39,7 @@ class Saturn1b;
 class LVDC {
 public:
 	LVDC();											// Constructor
-	void Init(Saturn* vs);
+	void Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -48,6 +48,7 @@ public:
 	double LinInter(double x0, double x1, double y0, double y1, double x);
 private:
 	Saturn* owner;									// Saturn LV
+	IUToLVCommandConnector* lvCommandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 	FILE* lvlog;									// LV Log file
@@ -429,7 +430,7 @@ private:
 class LVDC1B {
 public:
 	LVDC1B();										// Constructor
-	void init(Saturn* own);
+	void init(Saturn* own, IUToLVCommandConnector* lvCommandConnector);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -438,6 +439,7 @@ private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
 	Saturn* owner;
+	IUToLVCommandConnector* lvCommandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 

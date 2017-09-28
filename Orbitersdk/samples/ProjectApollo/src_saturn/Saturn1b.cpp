@@ -476,7 +476,7 @@ void Saturn1b::LoadLVDC(FILEHANDLE scn){
 	// If the LVDC does not yet exist, create it.
 	if(lvdc == NULL){
 		lvdc = new LVDC1B;
-		lvdc->init(this);
+		lvdc->init(this, &lvCommandConnector);
 	}
 	lvdc->LoadState(scn);
 }
@@ -491,7 +491,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	// This happens if the USE_LVDC flag is set but there is no LVDC section in the scenario file.
 	if(lvdc == NULL){
 		lvdc = new LVDC1B;
-		lvdc->init(this);
+		lvdc->init(this, &lvCommandConnector);
 	}
 
 	switch (stage) {

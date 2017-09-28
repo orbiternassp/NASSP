@@ -32,8 +32,11 @@
 #include "soundlib.h"
 
 #include "nasspdefs.h"
-#include "LVIMU.h"
+#include "apolloguidance.h"
+#include "csmcomputer.h"
 #include "papi.h"
+#include "saturn.h"
+#include "LVIMU.h"
 
 LVIMU::LVIMU()
 
@@ -769,7 +772,7 @@ LVRG::LVRG() {
 	rates = _V(0,0,0);
 }
 
-void LVRG::Init(VESSEL *v) {
+void LVRG::Init(IUToLVCommandConnector *v) {
 	// Initialize
 	sat = v;
 }

@@ -154,13 +154,13 @@ public: MATRIX3 getRotationMatrixX(double angle);
 class LVRG {
 public: 
 	LVRG();                                                                  // Cons
-	void Init(VESSEL *v);													 // Initialization
+	void Init(IUToLVCommandConnector *v);									 // Initialization
 	void Timestep(double simdt);                                             // Update function
 	VECTOR3 GetRates() { return rates; };
 
 protected:
 	VECTOR3 rates;                                                           // Detected rotation acceleration
-	VESSEL *sat;                                                             // Pointer to ship we're attached to
+	IUToLVCommandConnector *sat;                                             // Pointer to ship we're attached to
 };
 
 #endif

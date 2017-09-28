@@ -332,7 +332,7 @@ LVDC1B::LVDC1B(){
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 }
 
-void LVDC1B::init(Saturn* own){
+void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn){
 	if(Initialized == true){ 
 		if(owner == own){
 			fprintf(lvlog,"init called after init, ignored\r\n");
@@ -344,8 +344,9 @@ void LVDC1B::init(Saturn* own){
 		}
 	}
 	owner = own;
+	lvCommandConnector = lvCommandConn;
 	lvimu.Init();							// Initialize IMU
-	lvrg.Init(owner);						// LV Rate Gyro Package
+	lvrg.Init(lvCommandConnector);			// LV Rate Gyro Package
 	lvimu.SetVessel(owner);					// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	//presettings in order of boeing listing for easier maintainece
@@ -3180,7 +3181,7 @@ LVDC::LVDC(){
 }
 
 // Setup
-void LVDC::Init(Saturn* vs){
+void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn){
 	if(vs == NULL){ return; }				// Bail
 	if(Initialized == true){ 
 		if(owner == vs){
@@ -3193,8 +3194,9 @@ void LVDC::Init(Saturn* vs){
 		}
 	}
 	owner = vs;								// Our ship
+	lvCommandConnector = lvCommandConn;
 	lvimu.Init();							// Initialize IMU
-	lvrg.Init(owner);						// LV Rate Gyro Package
+	lvrg.Init(lvCommandConnector);						// LV Rate Gyro Package
 	lvimu.SetVessel(owner);					// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	//presettings in order of boeing listing for easier maintainece

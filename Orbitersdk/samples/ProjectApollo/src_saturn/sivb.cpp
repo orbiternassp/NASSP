@@ -2057,6 +2057,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_ANGULARVEL:
+		if (OurVessel)
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	

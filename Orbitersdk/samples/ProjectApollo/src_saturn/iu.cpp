@@ -1733,6 +1733,18 @@ void IUToLVCommandConnector::GetRotationMatrix(MATRIX3 &rot)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::GetAngularVel(VECTOR3 &avel)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_ANGULARVEL;
+	cm.val1.pValue = &avel;
+
+	SendMessage(cm);
+}
+
 double IUToLVCommandConnector::GetPitch()
 
 {

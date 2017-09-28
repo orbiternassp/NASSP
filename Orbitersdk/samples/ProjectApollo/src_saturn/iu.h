@@ -99,6 +99,7 @@ enum IULVMessageType
 	IULV_GET_PITCH,							///< Get local pitch
 	IULV_GET_BANK,							///< Get local bank
 	IULV_GET_SLIP_ANGLE,					///< Get local slip angle
+	IULV_GET_ANGULARVEL,					///< Get angular velocity
 };
 
 ///
@@ -184,6 +185,7 @@ public:
 	bool GetWeightVector(VECTOR3 &w);
 	bool GetForceVector(VECTOR3 &f);
 	void GetRotationMatrix(MATRIX3 &rot);
+	void GetAngularVel(VECTOR3 &avel);
 
 	void Local2Global(VECTOR3 &local, VECTOR3 &global);
 	void GetApDist(double &d);
