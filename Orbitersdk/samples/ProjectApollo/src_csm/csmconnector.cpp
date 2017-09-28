@@ -273,6 +273,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_ANGULARVEL:
+		if (OurVessel)
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	
@@ -350,6 +358,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel) 
 		{
 			OurVessel->SetSaturnAttitudeRotLevel(m.val1.vValue);
+			return true;
+		}
+		break;
+
+	case IULV_ADD_FORCE:
+		if (OurVessel)
+		{
+			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
 			return true;
 		}
 		break;

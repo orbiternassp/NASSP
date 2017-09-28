@@ -74,6 +74,7 @@ enum IULVMessageType
 	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
 	IULV_SET_ATTITUDE_ROT_LEVEL,			///< Set rotational thruster levels.
+	IULV_ADD_FORCE,							///< Add force.
 	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
@@ -171,6 +172,7 @@ public:
 
 	void SetAttitudeLinLevel(int a1, int a2);
 	void SetAttitudeRotLevel (VECTOR3 th);
+	void AddForce(VECTOR3 F, VECTOR3 r);
 
 	int GetStage();
 	double GetAltitude();

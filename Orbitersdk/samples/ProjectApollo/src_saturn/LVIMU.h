@@ -50,7 +50,7 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v) { OurVessel = v; };
+	void SetVessel(IUToLVCommandConnector *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
 	bool IsCaged();
@@ -99,7 +99,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
 
-	VESSEL *OurVessel;
+	IUToLVCommandConnector *OurVessel;
 
 	bool Operate;
 	bool TurnedOn;

@@ -2619,6 +2619,7 @@ void Saturn::SetStage(int s)
 		iuCommandConnector.Disconnect();
 		sivbCommandConnector.Disconnect();
 		sivbControlConnector.Disconnect();
+		lvCommandConnector.Disconnect();
 
 		CSMToSIVBConnector.AddTo(&iuCommandConnector);
 		CSMToSIVBConnector.AddTo(&sivbControlConnector);
@@ -3745,7 +3746,7 @@ void Saturn::GenericLoadStateSetup()
 	else
 	{
 		iu.ConnectToCSM(&iuCommandConnector);
-		iu.ConnectToLV(&sivbCommandConnector);
+		//iu.ConnectToLV(&sivbCommandConnector);
 		lvCommandConnector.ConnectTo(&sivbCommandConnector);
 	}
 

@@ -347,7 +347,7 @@ void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn){
 	lvCommandConnector = lvCommandConn;
 	lvimu.Init();							// Initialize IMU
 	lvrg.Init(lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.SetVessel(owner);					// set vessel pointer
+	lvimu.SetVessel(lvCommandConnector);	// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -583,7 +583,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// Orbiter 2016 fix
 				// Force GetWeightVector() to the correct value at LVDC initiation
 				if (simt < 0.5) {
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+					lvCommandConnector->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 				}
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
@@ -3196,8 +3196,8 @@ void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn){
 	owner = vs;								// Our ship
 	lvCommandConnector = lvCommandConn;
 	lvimu.Init();							// Initialize IMU
-	lvrg.Init(lvCommandConnector);						// LV Rate Gyro Package
-	lvimu.SetVessel(owner);					// set vessel pointer
+	lvrg.Init(lvCommandConnector);			// LV Rate Gyro Package
+	lvimu.SetVessel(lvCommandConnector);	// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -4896,7 +4896,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// Orbiter 2016 fix
 				// Force GetWeightVector() to the correct value at LVDC initiation
 				if (simt < 0.5) {
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+					lvCommandConnector->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 				}
 
 				// Prelaunch tank venting between -3:00h and engine ignition

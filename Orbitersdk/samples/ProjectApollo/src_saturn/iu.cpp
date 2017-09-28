@@ -1386,6 +1386,19 @@ void IUToLVCommandConnector::SetAttitudeRotLevel (VECTOR3 th)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::AddForce(VECTOR3 F, VECTOR3 r)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ADD_FORCE;
+	cm.val1.vValue = F;
+	cm.val2.vValue = r;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::ActivateNavmode(int mode)
 
 {
