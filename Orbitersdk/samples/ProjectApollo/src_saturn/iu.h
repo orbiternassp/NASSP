@@ -106,6 +106,7 @@ enum IULVMessageType
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_STATUS,						///< Get vessel status.
+	IULV_GET_GLOBAL_ORIENTATION,
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
 	IULV_GET_SIVB_PROPELLANT_MASS,			///< Get the S-IVB propellant mass.
@@ -258,6 +259,7 @@ public:
 	double GetMaxFuelMass();
 	double GetFuelMass();
 	void GetStatus(VESSELSTATUS &status);
+	void GetGlobalOrientation(VECTOR3 &arot);
 	void GetPMI(VECTOR3 &pmi);
 	double GetSize();
 	double GetMaxThrust(ENGINETYPE eng);

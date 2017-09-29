@@ -2043,6 +2043,18 @@ void IUToLVCommandConnector::GetStatus(VESSELSTATUS &status)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::GetGlobalOrientation(VECTOR3 &arot)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_GLOBAL_ORIENTATION;
+	cm.val1.pValue = &arot;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::GetPMI(VECTOR3 &pmi)
 
 {

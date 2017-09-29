@@ -139,6 +139,19 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_GLOBAL_ORIENTATION:
+		if (OurVessel)
+		{
+			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
+			VECTOR3 ar;
+
+			OurVessel->GetGlobalOrientation(ar);
+
+			*arot = ar;
+			return true;
+		}
+		break;
+
 	case IULV_GET_MASS:
 		if (OurVessel)
 		{
