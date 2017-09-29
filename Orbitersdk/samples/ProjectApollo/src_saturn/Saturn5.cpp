@@ -185,9 +185,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(DockS, "docking.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
-
-	// Moved to instantiation time
-	// lvdc_init();
 }
 
 SaturnV::~SaturnV()
@@ -586,20 +583,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	GenericTimestep(simt, simdt, mjd);
 
 	if (stage < CSM_LEM_STAGE) {
-
-		// LVDC++
-		if (iu->lvdc != NULL) {
-			iu->lvdc->TimeStep(simt, simdt);
-		}
 	} else {
-		
-		if (iu->lvdc != NULL) {
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete iu->lvdc;
-			iu->lvdc = NULL;
-		}
-		
 		GenericTimestepStage(simt, simdt);
 	}
 
@@ -728,15 +712,10 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 }
 
 void SaturnV::SaveLVDC(FILEHANDLE scn){
-	if (iu->lvdc != NULL){ iu->lvdc->SaveState(scn); }
+	iu->lvdc->SaveState(scn);
 }
 
 void SaturnV::LoadLVDC(FILEHANDLE scn){
-	// If the LVDC does not yet exist, create it.
-	if(iu->lvdc == NULL){
-		iu->lvdc = new LVDCSV;
-		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
-	}
 	iu->lvdc->LoadState(scn);
 }
 
@@ -749,14 +728,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	ClearMeshes();
 	SetupMeshes();
-
-	// DS20150720 LVDC++ ON WHEELS
-	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
-	// This happens if the USE_LVDC flag is set but no LVDC section is present.
-	if(iu->lvdc == NULL){
-		iu->lvdc = new LVDCSV;
-		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
-	}
 
 	//
 	// This code all needs to be fixed up.
@@ -1167,7 +1138,10 @@ void SaturnV::SetRandomFailures()
 			}
 		}
 
-		iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+		if (iu->lvdc)
+		{
+			iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+		}
 
 		if (!(random() & 127))
 		{

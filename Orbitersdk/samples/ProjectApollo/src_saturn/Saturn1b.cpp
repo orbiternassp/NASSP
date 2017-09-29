@@ -327,18 +327,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	GenericTimestep(simt, simdt, mjd);
 
 	if (stage < CSM_LEM_STAGE) {
-		if (iu->lvdc != NULL) {
-			iu->lvdc->TimeStep(simt, simdt);
-		}
 	} else {
-
-		if (iu->lvdc != NULL) {
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete iu->lvdc;
-			iu->lvdc = NULL;
-		}
-
 		GenericTimestepStage(simt, simdt);
 	}
 
@@ -472,15 +461,10 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 }
 
 void Saturn1b::SaveLVDC(FILEHANDLE scn){
-	if (iu->lvdc != NULL){ iu->lvdc->SaveState(scn); }
+	iu->lvdc->SaveState(scn);
 }
 
 void Saturn1b::LoadLVDC(FILEHANDLE scn){
-	// If the LVDC does not yet exist, create it.
-	if(iu->lvdc == NULL){
-		iu->lvdc = new LVDC1B;
-		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
-	}
 	iu->lvdc->LoadState(scn);
 }
 
@@ -488,14 +472,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
 	SetupMeshes();
-
-	// DS20150804 LVDC++ ON WHEELS
-	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do it here.
-	// This happens if the USE_LVDC flag is set but there is no LVDC section in the scenario file.
-	if(iu->lvdc == NULL){
-		iu->lvdc = new LVDC1B;
-		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
-	}
 
 	switch (stage) {
 
@@ -730,7 +706,10 @@ void Saturn1b::SetRandomFailures()
 			}
 		}
 
-		iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
+		if (iu->lvdc)
+		{
+			iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
+		}
 
 		if (!(random() & 127))
 		{

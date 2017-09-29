@@ -62,9 +62,7 @@ IU::IU()
 	VesselThrust = 0;
 
 	commandConnector.SetIU(this);
-	GNC.Configure(&lvCommandConnector, 0);
-	lvdc = NULL;
-	//lvdc->Init(&lvCommandConnector, &commandConnector);
+	//GNC.Configure(&lvCommandConnector, 0);
 	ExternalGNC = false;
 
 	AttitudeHold = false;
@@ -75,7 +73,7 @@ IU::IU()
 IU::~IU()
 
 {
-	// Nothing for now.
+	delete lvdc;
 }
 
 void IU::SetVesselStats(double ISP, double Thrust)
@@ -578,7 +576,8 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 void IU::PostStep(double simt, double simdt, double mjd) {
 
-	GNC.PostStep(mjd, simdt);
+	lvdc->TimeStep(simt, simdt);
+	//GNC.PostStep(mjd, simdt);
 
 	// Shutdown the engine in the same time step
 	if (State == 200 && !ExternalGNC && !GNC.IsEngineOn()) {
@@ -2951,10 +2950,12 @@ void IUGNC::LoadState(FILEHANDLE scn)
 
 IU1B::IU1B()
 {
-	//lvdc = new LVDC1B;
+	lvdc = new LVDC1B;
+	lvdc->Init(&lvCommandConnector, &commandConnector);
 }
 
 IUSV::IUSV()
 {
-	//lvdc = new LVDCSV;
+	lvdc = new LVDCSV;
+	lvdc->Init(&lvCommandConnector, &commandConnector);
 }

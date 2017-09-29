@@ -49,6 +49,8 @@
 
 // Constructor
 LVDC1B::LVDC1B(){
+	lvCommandConnector = NULL;
+	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
@@ -2755,6 +2757,8 @@ void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *S
 
 // Constructor
 LVDCSV::LVDCSV(){
+	lvCommandConnector = NULL;
+	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 
@@ -3169,7 +3173,6 @@ LVDCSV::LVDCSV(){
 
 // Setup
 void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
-	if(commandConnector == NULL){ return; }				// Bail
 	if(Initialized == true){ 
 		if(commandConnector == commandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
@@ -4869,7 +4872,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 		// Note that GenericTimestep will update MissionTime.
 
-		//Switch Check, TBD: Integrate with old CSM to IU Connector
+		//Switch Check
 		INH = commandConnector->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
 		
 		//Reset Direct Staging switch for S-IVB shutdown

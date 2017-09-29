@@ -4250,8 +4250,6 @@ protected:
 	///
 	CSMToIUConnector iuCommandConnector;
 	SaturnToIUCommandConnector sivbCommandConnector;
-	IUToLVCommandConnector lvCommandConnector;
-	IUToCSMCommandConnector commandConnector;
 
 	MultiConnector CSMToSIVBConnector;
 	MultiConnector CSMToLEMConnector;

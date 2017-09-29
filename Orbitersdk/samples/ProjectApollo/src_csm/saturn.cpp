@@ -1378,6 +1378,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu->SaveState(scn);
+		SaveLVDC(scn);
 	}
 
 	gdc.SaveState(scn);
@@ -1429,10 +1430,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
-	if (stage < CSM_LEM_STAGE)
-	{
-		SaveLVDC(scn);
-	}
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -2029,14 +2026,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, BMAG2_START_STRING, sizeof(BMAG2_START_STRING))) {
 		bmag2.LoadState(scn);
 	}
-	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
-		LoadLVDC(scn);
-	}
 	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
 		ascp.LoadState(scn);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		iu->LoadState(scn);
+	}
+	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+		LoadLVDC(scn);
 	}
 	else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
 		cws.LoadState(scn);
@@ -2603,8 +2600,6 @@ void Saturn::SetStage(int s)
 		iuCommandConnector.Disconnect();
 		sivbCommandConnector.Disconnect();
 		sivbControlConnector.Disconnect();
-		lvCommandConnector.Disconnect();
-		commandConnector.Disconnect();
 
 		CSMToSIVBConnector.AddTo(&iuCommandConnector);
 		CSMToSIVBConnector.AddTo(&sivbControlConnector);
@@ -3730,10 +3725,8 @@ void Saturn::GenericLoadStateSetup()
 	}
 	else
 	{
-		//iu.ConnectToCSM(&iuCommandConnector);
-		//iu.ConnectToLV(&sivbCommandConnector);
-		lvCommandConnector.ConnectTo(&sivbCommandConnector);
-		commandConnector.ConnectTo(&iuCommandConnector);
+		iu->ConnectToCSM(&iuCommandConnector);
+		iu->ConnectToLV(&sivbCommandConnector);
 	}
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
