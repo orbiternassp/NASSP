@@ -46,6 +46,15 @@
 
 #include "tracer.h"
 
+//
+// Random functions from Yaagc.
+//
+
+extern "C" {
+	void srandom(unsigned int x);
+	long int random();
+}
+
 char trace_file[] = "ProjectApollo Saturn1b.log";
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
@@ -686,4 +695,54 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// Nothing for now
 
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
+}
+
+void Saturn1b::SetRandomFailures()
+{
+	Saturn::SetRandomFailures();
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
+
+		//
+		// Engine failure times for first stage.
+		//
+
+		bool EarlySICutoff[8];
+		double FirstStageFailureTime[8];
+
+		for (int i = 0;i < 8;i++)
+		{
+			EarlySICutoff[i] = 0;
+			FirstStageFailureTime[i] = 0.0;
+		}
+
+		for (int i = 0;i < 8;i++)
+		{
+			if (!(random() & 63))
+			{
+				EarlySICutoff[i] = 1;
+				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+			}
+		}
+
+		lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+
+		if (!(random() & 127))
+		{
+			LaunchFail.LETAutoJetFail = 1;
+		}
+		if (!(random() & 63))
+		{
+			LaunchFail.SIIAutoSepFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LESJetMotorFail = 1;
+		}
+	}
 }

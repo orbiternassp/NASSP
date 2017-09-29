@@ -938,6 +938,7 @@ public:
 	THGROUP_HANDLE GetAPSThrusterGroup() { return thg_aps; }
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
+	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
 	bool GetSIISepLight() { return SIISepState; };
 
 	///
@@ -1153,6 +1154,10 @@ public:
 	int GetTwoEngineOutAutoSwitchState();
 
 	bool GetBECOSignal();
+	int GetAGCAttitudeError(int axis);
+
+	void AddRCS_S4B();
+	void SetSIVBThrusters(bool active);
 
 	///
 	/// \brief Load sounds required for TLI burn.
@@ -1460,20 +1465,6 @@ protected:
 	///
 	EventTimer EventTimer306Display;
 	SaturnEventTimer SaturnEventTimer306Display;	//Dummy for checklist controller
-	
-	//
-	// Engine failure times for first stage.
-	//
-
-	bool EarlySICutoff[8];
-	double FirstStageFailureTime[8];
-
-	//
-	// Engine failure times for first stage.
-	//
-
-	bool EarlySIICutoff[5];
-	double SecondStageFailureTime[5];
 
 	///
 	/// Flag for use of low-res meshes to reduce graphics lag.
@@ -3884,7 +3875,6 @@ protected:
 	//
 
 	void AddRCSJets(double TRANZ,double MaxThrust);
-	void AddRCS_S4B();
 	void SetRecovery();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
@@ -3927,7 +3917,6 @@ protected:
 	void SystemsTimestep(double simt, double simdt, double mjd);
 	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep();
-	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void FireLaunchEscapeMotor();
 	void FireTowerJettisonMotor();
@@ -3963,7 +3952,7 @@ protected:
 	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
-	void SetRandomFailures();
+	virtual void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
 
 	//

@@ -143,6 +143,7 @@ protected:
 	void DeactivatePrelaunchVenting();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
+	void SetRandomFailures();
 
 	//
 	// Class variables.

@@ -1364,6 +1364,22 @@ bool IUToCSMCommandConnector::GetBECOSignal()
 	return false;
 }
 
+int IUToCSMCommandConnector::GetAGCAttitudeError(int axis)
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_AGC_ATTITUDE_ERROR;
+	cm.val1.iValue = axis;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.iValue;
+	}
+
+	return 0;
+}
+
 bool IUToCSMCommandConnector::GetAGCInputChannelBit(int channel, int bit)
 {
 	ConnectorMessage cm;
@@ -1782,6 +1798,17 @@ void IUToLVCommandConnector::ActivateS4RCS()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_ACTIVATE_S4RCS;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::AddRCS_S4B()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ADD_S4RCS;
 
 	SendMessage(cm);
 }
@@ -2396,6 +2423,21 @@ PROPELLANT_HANDLE IUToLVCommandConnector::GetFirstStagePropellantHandle()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.pValue;
+	}
+
+	return 0;
+}
+
+PROPELLANT_HANDLE IUToLVCommandConnector::GetThirdStagePropellantHandle()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE;
 
 	if (SendMessage(cm))
 	{

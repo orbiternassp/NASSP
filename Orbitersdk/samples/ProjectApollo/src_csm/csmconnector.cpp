@@ -401,6 +401,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetThirdStagePropellantHandle();
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	
@@ -562,10 +570,18 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_ADD_S4RCS:
+		if (OurVessel)
+		{
+			OurVessel->AddRCS_S4B();
+			return true;
+		}
+		break;
+
 	case IULV_ACTIVATE_S4RCS:
 		if (OurVessel)
 		{
-			OurVessel->ActivateS4RCS();
+			OurVessel->SetSIVBThrusters(true);
 			return true;
 		}
 		break;
@@ -573,7 +589,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_DEACTIVATE_S4RCS:
 		if (OurVessel)
 		{
-			OurVessel->DeactivateS4RCS();
+			OurVessel->SetSIVBThrusters(false);
 			return true;
 		}
 		break;
@@ -636,12 +652,20 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	switch (messageType)
 	{
 	case IUCSM_SET_INPUT_CHANNEL_BIT:
-		agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
-		return true;
+		if (OurVessel)
+		{
+			agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
+			return true;
+		}
+		break;
 
 	case IUCSM_SET_OUTPUT_CHANNEL:
-		agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
-		return true;
+		if (OurVessel)
+		{
+			agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;		
 
 	case IUCSM_GET_INPUT_CHANNEL_BIT:
 		if (OurVessel)
@@ -695,6 +719,14 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetBECOSignal();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_AGC_ATTITUDE_ERROR:
+		if (OurVessel)
+		{
+			m.val2.iValue = OurVessel->GetAGCAttitudeError(m.val1.iValue);
 			return true;
 		}
 		break;

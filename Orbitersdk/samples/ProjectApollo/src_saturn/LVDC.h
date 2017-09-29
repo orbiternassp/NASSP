@@ -46,6 +46,7 @@ public:
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:
 	Saturn* owner;									// Saturn LV
 	IUToLVCommandConnector* lvCommandConnector;
@@ -61,6 +62,13 @@ private:
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
 	double S1_Sep_Time;								// S1C Separation Counter
 
+	double BoiloffTime;
+
+	//Engine Failure variables
+	bool EarlySICutoff[5];
+	double FirstStageFailureTime[5];
+	bool EarlySIICutoff[5];
+	double SecondStageFailureTime[5];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_EI_On;								// Engine Indicator lights on
@@ -436,6 +444,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	double SVCompare();
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
@@ -450,6 +459,11 @@ private:
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 	double S1B_Sep_Time;							// S1B Separation Counter
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
+	double BoiloffTime;
+
+	//Engine Failure variables
+	bool EarlySICutoff[8];
+	double FirstStageFailureTime[8];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_EI_On;								// Engine Indicator lights on

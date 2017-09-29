@@ -53,6 +53,7 @@ enum IUCSMMessageType
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_SIGNAL,					///< Get Boost Engine Cutoff command from SECS.
+	IUCSM_GET_AGC_ATTITUDE_ERROR,
 	IUCSM_GET_INPUT_CHANNEL_BIT,			///< Get AGC input channel bit.
 	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
 	IUCSM_PLAY_COUNT_SOUND,					///< Play/stop countdown sound.
@@ -88,6 +89,7 @@ enum IULVMessageType
 	IULV_SET_THRUSTER_DIR,					///< Set thruster direction.
 	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
 	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
+	IULV_ADD_S4RCS,
 	IULV_ACTIVATE_S4RCS,					///< Activate the SIVb RCS.
 	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
 	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
@@ -134,6 +136,7 @@ enum IULVMessageType
 	IULV_GET_THRUSTER_LEVEL,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE,
+	IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE,
 	IULV_GET_THRUSTER_MAX,
 	IULV_GET_MAIN_THRUSTER_GROUP,
 	IULV_GET_VERNIER_THRUSTER_GROUP,
@@ -181,6 +184,7 @@ public:
 	int LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitchState();
 	bool GetBECOSignal();
+	int GetAGCAttitudeError(int axis);
 
 	void SetIU(IU *iu) { ourIU = iu; };
 
@@ -232,6 +236,7 @@ public:
 	void DeactivateNavmode(int mode);
 	void ActivateNavmode(int mode);
 
+	void AddRCS_S4B();
 	void DeactivateS4RCS();
 	void ActivateS4RCS();
 
@@ -273,6 +278,7 @@ public:
 	double GetThrusterGroupLevel(THGROUP_HANDLE thg);
 	double GetFirstStageThrust();
 	PROPELLANT_HANDLE GetFirstStagePropellantHandle();
+	PROPELLANT_HANDLE GetThirdStagePropellantHandle();
 
 	void Local2Global(VECTOR3 &local, VECTOR3 &global);
 	void GetApDist(double &d);

@@ -105,6 +105,7 @@ protected:
 	void DeactivateStagingVent();
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
+	void SetRandomFailures();
 };
 
 

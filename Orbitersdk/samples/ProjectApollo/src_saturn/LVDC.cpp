@@ -120,6 +120,7 @@ LVDC1B::LVDC1B(){
 	beta_y3c = 0;
 	beta_y4c = 0;
 	beta_yc = 0;
+	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -548,6 +549,11 @@ void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCom
 	TAS=0;
 	t_clock = 0;
 
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = 0;
+		FirstStageFailureTime[i] = 0.0;
+	}
 
 	// Set up remainder
 	LVDC_Timebase = -1;										// Start up halted in pre-PTL wait
@@ -555,6 +561,7 @@ void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCom
 	LVDC_Stop = false;
 	IGMCycle = 0;
 	sinceLastIGM = 0;
+	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	LVDC_EI_On = false;
 	S1B_Sep_Time = 0;
@@ -888,14 +895,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 				}
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= owner->NextMissionEventTime){
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime){
 					if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.5){
 						lvCommandConnector->SIVBBoiloff();
 					}
-					owner->NextMissionEventTime = lvCommandConnector->GetMissionTime()+10.0;				
+					BoiloffTime = lvCommandConnector->GetMissionTime()+10.0;
 				}
 
-				if (lvCommandConnector->GetApolloNo() == 5)
+				/*if (lvCommandConnector->GetApolloNo() == 5)
 				{
 					//
 					// Separate nosecap
@@ -938,7 +945,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						oapiSetFocusObject(owner->hs4bM);
 						oapiDeleteVessel(owner->GetHandle(), owner->hs4bM);
 					}
-				}
+				}*/
 
 				break;
 		}
@@ -1745,9 +1752,9 @@ minorloop: //minor loop;
 		if(LVDC_Timebase == 4 && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
-			AttitudeError.y = owner->gdc.fdai_err_y * RAD / 31.6;
-			AttitudeError.z = owner->gdc.fdai_err_z * RAD / -31.6;
+			AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
+			AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
+			AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
 		}
 		/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
 		if(LVDC_Timebase == 1 && LVDC_TB_ETime < 60){
@@ -1882,7 +1889,7 @@ minorloop: //minor loop;
 		{
 			for (int i = 0;i < 8;i++)
 			{
-				if (owner->EarlySICutoff[i] && (t_clock > owner->FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+				if (EarlySICutoff[i] && (t_clock > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
 				{
 					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
 					S1B_Engine_Out = true;
@@ -2093,6 +2100,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta_y3c", beta_y3c);
 	papiWriteScenario_double(scn, "LVDC_beta_y4c", beta_y4c);
 	papiWriteScenario_double(scn, "LVDC_beta_yc", beta_yc);
+	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
@@ -2461,6 +2469,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta_y3c", beta_y3c);
 		papiReadScenario_double(line, "LVDC_beta_y4c", beta_y4c);
 		papiReadScenario_double(line, "LVDC_beta_yc", beta_yc);
+		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -2732,6 +2741,15 @@ double LVDC1B::SVCompare()
 	return length(PosS - newpos);
 }
 
+void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
+{
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = SICut[i];
+		FirstStageFailureTime[i] = SICutTimes[i];
+	}
+}
+
 // ***************************
 // DS20150720 LVDC++ ON WHEELS
 // ***************************
@@ -2740,6 +2758,19 @@ double LVDC1B::SVCompare()
 LVDC::LVDC(){
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
+
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySICutoff[i] = 0;
+		FirstStageFailureTime[i] = 0.0;
+	}
+
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySIICutoff[i] = 0;
+		SecondStageFailureTime[i] = 0.0;
+	}
+
 	// Zeroize
 	// booleans
 	alpha_D_op = false;
@@ -2821,6 +2852,7 @@ LVDC::LVDC(){
 	beta_y3c = 0;
 	beta_y4c = 0;
 	beta_yc = 0;
+	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -3480,6 +3512,7 @@ void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn, IUToCSMComman
 	sinceLastCycle = 0;
 	sinceLastGuidanceCycle = 0;
 	OrbNavCycle = 0;
+	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	LVDC_EI_On = false;
 	S1_Sep_Time = 0;
@@ -3580,6 +3613,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta_y3c", beta_y3c);
 	papiWriteScenario_double(scn, "LVDC_beta_y4c", beta_y4c);
 	papiWriteScenario_double(scn, "LVDC_beta_yc", beta_yc);
+	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -4252,6 +4286,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta_y3c", beta_y3c);
 		papiReadScenario_double(line, "LVDC_beta_y4c", beta_y4c);
 		papiReadScenario_double(line, "LVDC_beta_yc", beta_yc);
+		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -5022,15 +5057,13 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
-				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
+				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5	
+				// Actually it is a timer in the LVDA... I think
 				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO){
 					//Apollo 11
-					lvCommandConnector->SwitchSelector(16);
 					if (!S1_Engine_Out)
 					{
-						lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(4), NULL); // Should stop the engine
-						owner->SShutS.play(NOLOOP, 235);
-						owner->SShutS.done();
+						lvCommandConnector->SwitchSelector(16);
 					}
 
 					S1_Engine_Out = true;
@@ -5056,7 +5089,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetFuelMass() <= 0){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)),owner->GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)),lvCommandConnector->GetAltitude());
 					lvCommandConnector->SwitchSelector(17);
 					// Set timer
 					S1_Sep_Time = lvCommandConnector->GetMissionTime();
@@ -5151,14 +5184,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if (LVDC_TB_ETime > 0.8 && lvCommandConnector->GetStage() <= LAUNCH_STAGE_TWO_ISTG_JET) {
 					// S2ShutS.done(); No CECO on AP8
 					fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					owner->SPUShiftS.done(); // Make sure it's done
-					commandConnector->ClearEngineIndicators();
-					lvCommandConnector->SeparateStage(LAUNCH_STAGE_SIVB);
-					lvCommandConnector->SetStage(LAUNCH_STAGE_SIVB);
-					owner->AddRCS_S4B();
-					owner->SetSIVBThrusters(true);
-					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetVernierThrusterGroup(),1.0);
-					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(0), owner->ph_3rd);
+					lvCommandConnector->SwitchSelector(27);
 					lvCommandConnector->SwitchSelector(5);					
 				}
 			
@@ -5224,11 +5250,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 				}
 
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= owner->NextMissionEventTime) {
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime) {
 					if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.5) {
 						lvCommandConnector->SIVBBoiloff();
 					}
-					owner->NextMissionEventTime = lvCommandConnector->GetMissionTime() + 10.0;
+					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 				break;
 			case 6:
@@ -5262,7 +5288,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_EI_On == false)
 				{
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
-					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(0), owner->ph_3rd);
+					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(0), lvCommandConnector->GetThirdStagePropellantHandle());
 					lvCommandConnector->SwitchSelector(6);
 				}	
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
@@ -6905,9 +6931,9 @@ minorloop:
 		if ((LVDC_Timebase == 5 || (lvCommandConnector->GetApolloNo() >= 11 && LVDC_Timebase > 0)) && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))){
 			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
-			AttitudeError.y = owner->gdc.fdai_err_y * RAD / 31.6;
-			AttitudeError.z = owner->gdc.fdai_err_z * RAD / -31.6;
+			AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
+			AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
+			AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
 		}
 
 		/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
@@ -7138,9 +7164,10 @@ minorloop:
 		{
 			for (int i = 0;i < 5;i++)
 			{
-				if (owner->EarlySICutoff[i] && (t_clock > owner->FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+				if (EarlySICutoff[i] && (t_clock > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
 				{
 					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
+					commandConnector->ClearLiftoffLight();
 					S1_Engine_Out = true;
 				}
 			}
@@ -7150,7 +7177,7 @@ minorloop:
 		{
 			for (int i = 0;i < 5;i++)
 			{
-				if (owner->EarlySIICutoff[i] && (LVDC_TB_ETime > owner->SecondStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+				if (EarlySIICutoff[i] && (LVDC_TB_ETime > SecondStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
 				{
 					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
 					S2_ENGINE_OUT = true;
@@ -7254,4 +7281,15 @@ double LVDC::SVCompare()
 double LVDC::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
+}
+
+void LVDC::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySICutoff[i] = SICut[i];
+		FirstStageFailureTime[i] = SICutTimes[i];
+		EarlySIICutoff[i] = SIICut[i];
+		SecondStageFailureTime[i] = SIICutTimes[i];
+	}
 }

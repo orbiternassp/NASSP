@@ -466,22 +466,6 @@ void Saturn::initSaturn()
 	agc.SetDesiredAzimuth(45);
 
 	//
-	// Engine failure times
-	//
-
-	for (int i = 0;i < 8;i++)
-	{
-		EarlySICutoff[i] = 0;
-		FirstStageFailureTime[i] = 0.0;
-	}
-
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySIICutoff[i] = 0;
-		SecondStageFailureTime[i] = 0.0;
-	}
-
-	//
 	// Failure modes.
 	//
 
@@ -4588,46 +4572,6 @@ void Saturn::SetRandomFailures()
 	//
 
 	//
-	// Set up launch failures.
-	//
-
-	if (!LaunchFail.Init)
-	{
-		LaunchFail.Init = 1;
-
-		for (int i = 0;i < 8;i++)
-		{
-			if (!(random() & 63))
-			{
-				EarlySICutoff[i] = 1;
-				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
-			}
-		}
-
-		for (int i = 0;i < 5;i++)
-		{
-			if (!(random() & 3))
-			{
-				EarlySIICutoff[i] = 1;
-				SecondStageFailureTime[i] = 20.0 + ((double)(random() & 3071) / 10.0);
-			}
-		}
-
-		if (!(random() & 127))
-		{
-			LaunchFail.LETAutoJetFail = 1;
-		}
-		if (!(random() & 63))
-		{
-			LaunchFail.SIIAutoSepFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LESJetMotorFail = 1;
-		}
-	}
-
-	//
 	// Set up landing failures.
 	//
 
@@ -4797,6 +4741,24 @@ int Saturn::GetTwoEngineOutAutoSwitchState()
 bool Saturn::GetBECOSignal()
 {
 	return secs.BECO();
+}
+
+int Saturn::GetAGCAttitudeError(int axis)
+{
+	if (axis == 0)
+	{
+		return gdc.fdai_err_x;
+	}
+	else if (axis == 1)
+	{
+		return gdc.fdai_err_y;
+	}
+	else if (axis == 2)
+	{
+		return gdc.fdai_err_z;
+	}
+
+	return 0;
 }
 
 void Saturn::SetContrailLevel(double level)
