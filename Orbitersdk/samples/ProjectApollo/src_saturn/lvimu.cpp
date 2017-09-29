@@ -175,17 +175,17 @@ void LVIMU::Timestep(double simt)
 	}
 	
 	// fill OrbiterData
-	VESSELSTATUS vs;
-	OurVessel->GetStatus(vs);
+	VECTOR3 arot;
+	OurVessel->GetGlobalOrientation(arot);
 
-	Orbiter.Attitude.X = vs.arot.x;
-	Orbiter.Attitude.Y = vs.arot.y;
-	Orbiter.Attitude.Z = vs.arot.z;
+	Orbiter.Attitude.X = arot.x;
+	Orbiter.Attitude.Y = arot.y;
+	Orbiter.Attitude.Z = arot.z;
 
 	// Vessel to Orbiter global transformation
-	MATRIX3	tinv = getRotationMatrixZ(-vs.arot.z);
-	tinv = mul(getRotationMatrixY(-vs.arot.y), tinv);
-	tinv = mul(getRotationMatrixX(-vs.arot.x), tinv);
+	MATRIX3	tinv = getRotationMatrixZ(-arot.z);
+	tinv = mul(getRotationMatrixY(-arot.y), tinv);
+	tinv = mul(getRotationMatrixX(-arot.x), tinv);
 
 	if (!Initialized) {
 		SetOrbiterAttitudeReference();
