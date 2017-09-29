@@ -2620,6 +2620,7 @@ void Saturn::SetStage(int s)
 		sivbCommandConnector.Disconnect();
 		sivbControlConnector.Disconnect();
 		lvCommandConnector.Disconnect();
+		commandConnector.Disconnect();
 
 		CSMToSIVBConnector.AddTo(&iuCommandConnector);
 		CSMToSIVBConnector.AddTo(&sivbControlConnector);
@@ -3745,9 +3746,10 @@ void Saturn::GenericLoadStateSetup()
 	}
 	else
 	{
-		iu.ConnectToCSM(&iuCommandConnector);
+		//iu.ConnectToCSM(&iuCommandConnector);
 		//iu.ConnectToLV(&sivbCommandConnector);
 		lvCommandConnector.ConnectTo(&sivbCommandConnector);
+		commandConnector.ConnectTo(&iuCommandConnector);
 	}
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
@@ -4766,6 +4768,40 @@ int Saturn::GetSIISIVbSepSwitchState()
 
 {
 	return SIISIVBSepSwitch.GetState();
+}
+
+int Saturn::GetLVGuidanceSwitchState()
+
+{
+	return LVGuidanceSwitch.GetState();
+}
+
+int Saturn::GetEDSSwitchState()
+
+{
+	return EDSSwitch.GetState();
+}
+
+int Saturn::GetLVRateAutoSwitchState()
+
+{
+	return LVRateAutoSwitch.GetState();
+}
+
+int Saturn::GetTwoEngineOutAutoSwitchState()
+
+{
+	return TwoEngineOutAutoSwitch.GetState();
+}
+
+bool Saturn::GetBECOSignal()
+{
+	return secs.BECO();
+}
+
+void Saturn::SetContrailLevel(double level)
+{
+	contrailLevel = level;
 }
 
 void Saturn::PlayCountSound(bool StartStop)

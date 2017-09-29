@@ -390,20 +390,16 @@ void Saturn1b::SwitchSelector(int item){
 		DeactivatePrelaunchVenting();
 		break;
 	case 15:
-		SetLiftoffLight();								// Light liftoff lamp
-		SetStage(LAUNCH_STAGE_ONE);						// Switch to stage one
-		// Start mission and event timers
-		MissionTimerDisplay.Reset();
-		MissionTimerDisplay.SetEnabled(true);
-		EventTimerDisplay.Reset();
-		EventTimerDisplay.SetEnabled(true);
-		EventTimerDisplay.SetRunning(true);
-		agc.SetInputChannelBit(030, LiftOff, true);			// Inform AGC of liftoff
-		SetThrusterGroupLevel(thg_main, 1.0);			// Set full thrust, just in case
+		SetLiftoffLight();										// And light liftoff lamp
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+																		// Start mission and event timers
+		secs.LiftoffA();
+		secs.LiftoffB();
+		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
+		SetThrusterGroupLevel(thg_main, 1.0);				// Set full thrust, just in case
 		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()){			
-			// And play launch sound
-			LaunchS.play(NOLOOP,255);
+		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
+			LaunchS.play(NOLOOP, 255);
 			LaunchS.done();
 		}
 		break;
@@ -414,8 +410,6 @@ void Saturn1b::SwitchSelector(int item){
 		SetThrusterResource(th_main[7], NULL);
 		SShutS.play(NOLOOP,235);
 		SShutS.done();
-		// Clear liftoff light now - Apollo 15 checklist item
-		ClearLiftoffLight();
 		break;
 	case 17:
 		// Move hidden S1B
@@ -476,7 +470,7 @@ void Saturn1b::LoadLVDC(FILEHANDLE scn){
 	// If the LVDC does not yet exist, create it.
 	if(lvdc == NULL){
 		lvdc = new LVDC1B;
-		lvdc->init(this, &lvCommandConnector);
+		lvdc->init(this, &lvCommandConnector, &commandConnector);
 	}
 	lvdc->LoadState(scn);
 }
@@ -491,7 +485,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	// This happens if the USE_LVDC flag is set but there is no LVDC section in the scenario file.
 	if(lvdc == NULL){
 		lvdc = new LVDC1B;
-		lvdc->init(this, &lvCommandConnector);
+		lvdc->init(this, &lvCommandConnector, &commandConnector);
 	}
 
 	switch (stage) {

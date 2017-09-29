@@ -736,12 +736,26 @@ public:
 	///
 	void SetEngineIndicator(int i);
 
+	bool GetEngineIndicator(int i);
+
 	///
 	/// Turn off an engine indicator light on the control panel.
 	/// \brief Turn off engine light
 	/// \param i Specify the engine light number to turn off (1-8).
 	///
 	void ClearEngineIndicator(int i);
+
+	///
+	/// Set all engine indicator lights on the control panel.
+	/// \brief Set engine indicator lights.
+	///
+	void SetEngineIndicators();
+
+	///
+	/// Clear all engine indicator lights on the control panel.
+	/// \brief Clear engine indicator lights.
+	///
+	void ClearEngineIndicators();
 
 	///
 	/// Call this function to jettison the LET and BPC from the Saturn. This should work during any stage,
@@ -751,6 +765,8 @@ public:
 	/// \param AbortJettison If we're jettisoning during an abort, the BPC will take the docking probe with it.
 	///
 	void JettisonLET(bool AbortJettison = false);
+
+	void SetEDSAbort(int eds);
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
@@ -916,6 +932,13 @@ public:
 	double GetMissionTime() { return MissionTime; };
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+	THRUSTER_HANDLE GetAPSThruster(int n) { return th_att_rot[n]; }
+	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
+	THGROUP_HANDLE GetVernierThrusterGroup() { return thg_ver; }
+	THGROUP_HANDLE GetAPSThrusterGroup() { return thg_aps; }
+	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
+	bool GetSIISepLight() { return SIISepState; };
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -1026,6 +1049,49 @@ public:
 	virtual void ActivatePrelaunchVenting() = 0;
 	virtual void DeactivatePrelaunchVenting() = 0;
 
+	void SetContrailLevel(double level);
+
+	void SetStage(int s);
+	virtual void SeparateStage(int stage) = 0;
+
+	///
+	/// Turn on the liftoff light on the control panel.
+	/// \brief Set the liftoff light.
+	///
+	void SetLiftoffLight();
+
+	///
+	/// Turn off the liftoff light on the control panel.
+	/// \brief Clear the liftoff light.
+	///
+	void ClearLiftoffLight();
+
+	///
+	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
+	/// failure.
+	/// \brief Set the LV Guidance light.
+	///
+	void SetLVGuidLight();
+
+	///
+	/// Turn off the LV Guidance warning light on the control panel.
+	/// \brief Clear the LV Guidance light.
+	///
+	void ClearLVGuidLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel, indicating that the spacecraft
+	/// is turning too fast.
+	/// \brief Set the LV Rate light.
+	///
+	void SetLVRateLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel.
+	/// \brief Set the LV Rate light.
+	///
+	void ClearLVRateLight();
+
 	///
 	/// \brief Enable or disable the J2 engine on the SIVb.
 	/// \param Enable Engine on or off.
@@ -1054,10 +1120,9 @@ public:
 	/// \param thrust Thrust level 0.0 - 1.0.
 	///
 	void SetAPSThrustLevel(double thrust);
-
 	void SetSaturnAttitudeRotLevel(VECTOR3 th);
-
 	double GetSaturnMaxThrust(ENGINETYPE eng);
+	void SIVBBoiloff();
 
 	///
 	/// \brief Get propellant mass in the SIVb stage.
@@ -1082,6 +1147,12 @@ public:
 	/// \return Switch state.
 	///
 	int GetTLIEnableSwitchState();
+	int GetLVGuidanceSwitchState();
+	int GetEDSSwitchState();
+	int GetLVRateAutoSwitchState();
+	int GetTwoEngineOutAutoSwitchState();
+
+	bool GetBECOSignal();
 
 	///
 	/// \brief Load sounds required for TLI burn.
@@ -1212,56 +1283,6 @@ protected:
 	// FILE *PanelsdkLogFile;
 
 	void InitSwitches();
-
-	///
-	/// Set all engine indicator lights on the control panel.
-	/// \brief Set engine indicator lights.
-	///
-	void SetEngineIndicators();
-
-	///
-	/// Clear all engine indicator lights on the control panel.
-	/// \brief Clear engine indicator lights.
-	///
-	void ClearEngineIndicators();
-
-	///
-	/// Turn on the liftoff light on the control panel.
-	/// \brief Set the liftoff light.
-	///
-	void SetLiftoffLight();
-
-	///
-	/// Turn off the liftoff light on the control panel.
-	/// \brief Clear the liftoff light.
-	///
-	void ClearLiftoffLight();
-
-	///
-	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
-	/// failure.
-	/// \brief Set the LV Guidance light.
-	///
-	void SetLVGuidLight();
-
-	///
-	/// Turn off the LV Guidance warning light on the control panel.
-	/// \brief Clear the LV Guidance light.
-	///
-	void ClearLVGuidLight();
-
-	///
-	/// Turn on the LV Rate warning light on the control panel, indicating that the spacecraft
-	/// is turning too fast.
-	/// \brief Set the LV Rate light.
-	///
-	void SetLVRateLight();
-
-	///
-	/// Turn on the LV Rate warning light on the control panel.
-	/// \brief Set the LV Rate light.
-	///
-	void ClearLVRateLight();
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
@@ -3886,7 +3907,6 @@ protected:
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
-	void SetStage(int s);
 	void initSaturn();
 	void SwitchClick();
 	void ProbeSound();
@@ -3918,7 +3938,6 @@ protected:
 
 	void ClearPropellants();
 	void ClearThrusters();
-	virtual void SeparateStage (int stage) = 0;
 	virtual void ConfigureStageMeshes(int stage_state) = 0;
 	virtual void ConfigureStageEngines(int stage_state) = 0;
 	virtual void CreateStageOne() = 0;
@@ -4003,7 +4022,6 @@ protected:
 	void GenericTimestepStage(double simt, double simdt);
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-	void SIVBBoiloff();
 	void LookForSIVb();
 	void LookForLEM();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
@@ -4244,6 +4262,7 @@ protected:
 	CSMToIUConnector iuCommandConnector;
 	SaturnToIUCommandConnector sivbCommandConnector;
 	IUToLVCommandConnector lvCommandConnector;
+	IUToCSMCommandConnector commandConnector;
 
 	MultiConnector CSMToSIVBConnector;
 	MultiConnector CSMToLEMConnector;

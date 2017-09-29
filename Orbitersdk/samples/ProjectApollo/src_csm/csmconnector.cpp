@@ -110,10 +110,18 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
+	case IULV_GET_SIVB_PROPELLANT_MASS:
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_PROPELLANT_MASS:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
 			return true;
 		}
 		break;
@@ -151,6 +159,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->GetApDist(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_FUEL_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetFuelMass();
 			return true;
 		}
 		break;
@@ -241,6 +257,22 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_THRUSTER_MAX:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetThrusterMax((THRUSTER_HANDLE) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetThrusterResource((THRUSTER_HANDLE)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_LOCAL2GLOBAL:
 		if (OurVessel)
 		{
@@ -305,10 +337,66 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_APS_THRUSTER:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetAPSThruster(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetMainThrusterGroup();
+			return true;
+		}
+		break;
+
+	case IULV_GET_VERNIER_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetVernierThrusterGroup();
+			return true;
+		}
+		break;
+
+	case IULV_GET_APS_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetAPSThrusterGroup();
+			return true;
+		}
+		break;
+
 	case IULV_GET_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
+			m.val2.dValue = OurVessel->GetThrusterLevel((THRUSTER_HANDLE) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetThrusterGroupLevel((THGROUP_HANDLE)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_FIRST_STAGE_THRUST:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetFirstStageThrust();
+			return true;
+		}
+		break;
+
+	case IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetFirstStagePropellantHandle();
 			return true;
 		}
 		break;
@@ -354,6 +442,30 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SEPARATE_STAGE:
+		if (OurVessel)
+		{
+			OurVessel->SeparateStage(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_STAGE:
+		if (OurVessel)
+		{
+			OurVessel->SetStage(m.val1.iValue);
+			return true;
+		}
+		break;
+
 	case IULV_J2_DONE:
 		if (OurVessel) 
 		{
@@ -378,6 +490,22 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_SET_CONTRAIL_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetContrailLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SIVB_BOILOFF:
+		if (OurVessel)
+		{
+			OurVessel->SIVBBoiloff();
+			return true;
+		}
+		break;
+
 	case IULV_SET_ATTITUDE_LIN_LEVEL:
 		if (OurVessel) 
 		{
@@ -397,7 +525,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			OurVessel->SetThrusterLevel((THRUSTER_HANDLE) m.val1.pValue, m.val2.dValue);
 			return true;
 		}
 		break;
@@ -405,7 +533,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_THRUSTER_GROUP_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterGroupLevel(m.val1.pValue, m.val2.dValue);
+			OurVessel->SetThrusterGroupLevel((THGROUP_HANDLE) m.val1.pValue, m.val2.dValue);
 			return true;
 		}
 		break;
@@ -413,7 +541,15 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_THRUSTER_RESOURCE:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
+			OurVessel->SetThrusterResource((THRUSTER_HANDLE) m.val1.pValue, (PROPELLANT_HANDLE) m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterDir(m.val1.pValue, *(VECTOR3 *)m.val2.pValue);
 			return true;
 		}
 		break;
@@ -499,14 +635,82 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 	switch (messageType)
 	{
+	case IUCSM_SET_INPUT_CHANNEL_BIT:
+		agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
+		return true;
+
 	case IUCSM_SET_OUTPUT_CHANNEL:
 		agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
 		return true;
+
+	case IUCSM_GET_INPUT_CHANNEL_BIT:
+		if (OurVessel)
+		{
+			m.val3.bValue = agc.GetInputChannelBit(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
 
 	case IUCSM_GET_SIISIVBSEP_SWITCH_STATE:
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetSIISIVbSepSwitchState();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_LV_GUIDANCE_SWITCH_STATE:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetLVGuidanceSwitchState();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_EDS_SWITCH_STATE:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetEDSSwitchState();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetLVRateAutoSwitchState();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetTwoEngineOutAutoSwitchState();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_BECO_SIGNAL:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetBECOSignal();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_SII_SEP_LIGHT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIISepLight();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_ENGINE_INDICATOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetEngineIndicator(m.val1.iValue);
 			return true;
 		}
 		break;
@@ -529,6 +733,74 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			else
 			{
 				OurVessel->ClearSIISep();
+			}
+			return true;
+		}
+		break;
+
+	case IUCSM_SET_LIFTOFF_LIGHT:
+		if (OurVessel)
+		{
+			if (m.val1.bValue)
+			{
+				OurVessel->SetLiftoffLight();
+			}
+			else
+			{
+				OurVessel->ClearLiftoffLight();
+			}
+			return true;
+		}
+		break;
+
+	case IUCSM_SET_LV_RATE_LIGHT:
+		if (OurVessel)
+		{
+			if (m.val1.bValue)
+			{
+				OurVessel->SetLVRateLight();
+			}
+			else
+			{
+				OurVessel->ClearLVRateLight();
+			}
+			return true;
+		}
+		break;
+
+	case IUCSM_SET_LV_GUID_LIGHT:
+		if (OurVessel)
+		{
+			if (m.val1.bValue)
+			{
+				OurVessel->SetLVGuidLight();
+			}
+			else
+			{
+				OurVessel->ClearLVGuidLight();
+			}
+			return true;
+		}
+		break;
+
+	case IUCSM_SET_EDS_ABORT:
+		if (OurVessel)
+		{
+			OurVessel->SetEDSAbort(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IUCSM_SET_ENGINE_INDICATORS:
+		if (OurVessel)
+		{
+			if (m.val1.bValue)
+			{
+				OurVessel->SetEngineIndicators();
+			}
+			else
+			{
+				OurVessel->ClearEngineIndicators();
 			}
 			return true;
 		}

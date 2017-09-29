@@ -291,6 +291,7 @@ public:
 	double GetMissionTime();
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
 
 	///
 	/// \brief Get main propellant mass.

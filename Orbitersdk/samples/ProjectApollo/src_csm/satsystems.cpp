@@ -2222,6 +2222,15 @@ void Saturn::ClearLVRateLight()
 	LVRateLight = false;
 }
 
+bool Saturn::GetEngineIndicator(int i)
+
+{
+	if (i < 1 || i > 8)
+		return false;
+
+	return ENGIND[i - 1];
+}
+
 void Saturn::SetEngineIndicator(int i)
 
 {
@@ -2238,6 +2247,22 @@ void Saturn::ClearEngineIndicator(int i)
 		return;
 
 	ENGIND[i - 1] = false;
+}
+
+void Saturn::SetEDSAbort(int eds)
+{
+	if (eds == 1)
+	{
+		secs.SetEDSAbort1(true);
+	}
+	else if (eds == 2)
+	{
+		secs.SetEDSAbort2(true);
+	}
+	else if (eds == 3)
+	{
+		secs.SetEDSAbort3(true);
+	}
 }
 
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {

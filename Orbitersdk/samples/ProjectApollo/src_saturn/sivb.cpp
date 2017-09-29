@@ -1894,10 +1894,18 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
+	case IULV_GET_SIVB_PROPELLANT_MASS:
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_PROPELLANT_MASS:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
 			return true;
 		}
 		break;
@@ -2081,6 +2089,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_MAIN_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetMainThrusterGroup();
+			return true;
+		}
+		break;
+
 	case IULV_GET_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
@@ -2182,6 +2198,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterDir(m.val1.pValue, *(VECTOR3 *)m.val2.pValue);
 			return true;
 		}
 		break;
