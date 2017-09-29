@@ -93,8 +93,8 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	TRACESETUP("SaturnV");
 	
 	hMaster = hObj;
-	lvdc = NULL;
 	initSaturnV();
+	iu = new IUSV;
 }
 
 //
@@ -295,7 +295,7 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	// Give the AGC our new stats.
 	//
 
-	iu.SetVesselStats(isp, thrust);
+	iu->SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
@@ -337,7 +337,7 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	// Give the AGC our new stats.
 	//
 
-	iu.SetVesselStats(isp, thrust);
+	iu->SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
@@ -588,16 +588,16 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	if (stage < CSM_LEM_STAGE) {
 
 		// LVDC++
-		if (lvdc != NULL) {
-			lvdc->TimeStep(simt, simdt);
+		if (iu->lvdc != NULL) {
+			iu->lvdc->TimeStep(simt, simdt);
 		}
 	} else {
 		
-		if (lvdc != NULL) {
+		if (iu->lvdc != NULL) {
 			// At this point we are done with the LVDC, we can delete it.
 			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
+			delete iu->lvdc;
+			iu->lvdc = NULL;
 		}
 		
 		GenericTimestepStage(simt, simdt);
@@ -728,16 +728,16 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 }
 
 void SaturnV::SaveLVDC(FILEHANDLE scn){
-	if (lvdc != NULL){ lvdc->SaveState(scn); }
+	if (iu->lvdc != NULL){ iu->lvdc->SaveState(scn); }
 }
 
 void SaturnV::LoadLVDC(FILEHANDLE scn){
 	// If the LVDC does not yet exist, create it.
-	if(lvdc == NULL){
-		lvdc = new LVDC;
-		lvdc->Init(this, &lvCommandConnector, &commandConnector);
+	if(iu->lvdc == NULL){
+		iu->lvdc = new LVDCSV;
+		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
 	}
-	lvdc->LoadState(scn);
+	iu->lvdc->LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -753,9 +753,9 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	// DS20150720 LVDC++ ON WHEELS
 	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
 	// This happens if the USE_LVDC flag is set but no LVDC section is present.
-	if(lvdc == NULL){
-		lvdc = new LVDC;
-		lvdc->Init(this, &lvCommandConnector, &commandConnector);
+	if(iu->lvdc == NULL){
+		iu->lvdc = new LVDCSV;
+		iu->lvdc->Init(&lvCommandConnector, &commandConnector);
 	}
 
 	//
@@ -1167,7 +1167,7 @@ void SaturnV::SetRandomFailures()
 			}
 		}
 
-		lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+		iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
 
 		if (!(random() & 127))
 		{

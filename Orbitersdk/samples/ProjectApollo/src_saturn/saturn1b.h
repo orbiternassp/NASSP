@@ -78,7 +78,6 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	LVDC1B* lvdc;
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();

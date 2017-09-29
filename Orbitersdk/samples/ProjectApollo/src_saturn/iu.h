@@ -27,6 +27,8 @@
 
 class SoundLib;
 class IU;
+class LVDC;
+class LVDC1B;
 
 ///
 /// \ingroup Connectors
@@ -449,6 +451,8 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+	LVDC* lvdc;
+
 protected:
 	bool SIVBStart();
 	void SIVBStop();
@@ -500,6 +504,20 @@ protected:
 	bool AttitudeHold;
 	VECTOR3 AttitudeToHold;
 	VECTOR3 AttitudeToHold2;
+};
+
+class IU1B :public IU
+{
+public:
+	IU1B();
+protected:
+};
+
+class IUSV :public IU
+{
+public:
+	IUSV();
+protected:
 };
 
 //

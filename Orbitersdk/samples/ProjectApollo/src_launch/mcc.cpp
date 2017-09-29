@@ -1282,27 +1282,28 @@ void MCC::TimeStep(double simdt){
 					{
 						SlowIfDesired();
 						SaturnV *SatV = (SaturnV*)cm;
+						LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
 						LVDCTLIparam tliparam;
 
-						tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-						tliparam.Azimuth = SatV->lvdc->Azimuth;
-						tliparam.beta = SatV->lvdc->beta;
-						tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-						tliparam.C_3 = SatV->lvdc->C_3;
-						tliparam.e_N = SatV->lvdc->e_N;
-						tliparam.f = SatV->lvdc->f;
-						tliparam.mu = SatV->lvdc->mu;
-						tliparam.MX_A = SatV->lvdc->MX_A;
-						tliparam.omega_E = SatV->lvdc->omega_E;
-						tliparam.R_N = SatV->lvdc->R_N;
-						tliparam.TargetVector = SatV->lvdc->TargetVector;
-						tliparam.TB5 = SatV->lvdc->TB5;
-						tliparam.theta_EO = SatV->lvdc->theta_EO;
-						tliparam.t_D = SatV->lvdc->t_D;
-						tliparam.T_L = SatV->lvdc->T_L;
-						tliparam.T_RG = SatV->lvdc->T_RG;
-						tliparam.T_ST = SatV->lvdc->T_ST;
+						tliparam.alpha_TS = lvdc->alpha_TS;
+						tliparam.Azimuth = lvdc->Azimuth;
+						tliparam.beta = lvdc->beta;
+						tliparam.cos_sigma = lvdc->cos_sigma;
+						tliparam.C_3 = lvdc->C_3;
+						tliparam.e_N = lvdc->e_N;
+						tliparam.f = lvdc->f;
+						tliparam.mu = lvdc->mu;
+						tliparam.MX_A = lvdc->MX_A;
+						tliparam.omega_E = lvdc->omega_E;
+						tliparam.R_N = lvdc->R_N;
+						tliparam.TargetVector = lvdc->TargetVector;
+						tliparam.TB5 = lvdc->TB5;
+						tliparam.theta_EO = lvdc->theta_EO;
+						tliparam.t_D = lvdc->t_D;
+						tliparam.T_L = lvdc->T_L;
+						tliparam.T_RG = lvdc->T_RG;
+						tliparam.T_ST = lvdc->T_ST;
 
 						rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();

@@ -179,9 +179,6 @@ protected:
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
-	
-	// DS20150804 LVDC++ ON WHEELS
-	LVDC* lvdc;
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;

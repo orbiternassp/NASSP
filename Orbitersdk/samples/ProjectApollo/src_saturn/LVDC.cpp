@@ -333,9 +333,9 @@ LVDC1B::LVDC1B(){
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 }
 
-void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
+void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
 	if(Initialized == true){ 
-		if(owner == own){
+		if(commandConnector == commandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -344,7 +344,6 @@ void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCom
 			fflush(lvlog);
 		}
 	}
-	owner = own;
 	lvCommandConnector = lvCommandConn;
 	commandConnector = commandConn;
 	lvimu.Init();							// Initialize IMU
@@ -577,7 +576,7 @@ void LVDC1B::init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCom
 // DS20070205 LVDC++ EXECUTION
 void LVDC1B::TimeStep(double simt, double simdt) {
 	// Bail if uninitialized
-	if(owner == NULL){ return; }
+	if (lvCommandConnector->connectedTo == NULL) { return; }
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 	
@@ -2741,7 +2740,7 @@ double LVDC1B::SVCompare()
 	return length(PosS - newpos);
 }
 
-void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
+void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
 {
 	for (int i = 0;i < 8;i++)
 	{
@@ -2755,7 +2754,7 @@ void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 // ***************************
 
 // Constructor
-LVDC::LVDC(){
+LVDCSV::LVDCSV(){
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 
@@ -3169,10 +3168,10 @@ LVDC::LVDC(){
 }
 
 // Setup
-void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
-	if(vs == NULL){ return; }				// Bail
+void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
+	if(commandConnector == NULL){ return; }				// Bail
 	if(Initialized == true){ 
-		if(owner == vs){
+		if(commandConnector == commandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -3181,7 +3180,6 @@ void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn, IUToCSMComman
 			fflush(lvlog);
 		}
 	}
-	owner = vs;								// Our ship
 	lvCommandConnector = lvCommandConn;
 	commandConnector = commandConn;
 	lvimu.Init();							// Initialize IMU
@@ -3523,7 +3521,7 @@ void LVDC::Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn, IUToCSMComman
 	Initialized = true;
 }
 
-void LVDC::SaveState(FILEHANDLE scn) {
+void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Here we go
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
@@ -4179,7 +4177,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	lvimu.SaveState(scn);
 }
 
-void LVDC::LoadState(FILEHANDLE scn){
+void LVDCSV::LoadState(FILEHANDLE scn){
 	char *line;	
 	int tmp=0; // for bool loader
 	if(Initialized){
@@ -4861,8 +4859,8 @@ void LVDC::LoadState(FILEHANDLE scn){
 	return;
 }
 
-void LVDC::TimeStep(double simt, double simdt) {
-	if(owner == NULL){ return; }
+void LVDCSV::TimeStep(double simt, double simdt) {
+	if (lvCommandConnector->connectedTo == NULL) { return; }
 	if (lvCommandConnector->GetStage() < PRELAUNCH_STAGE) { return; }
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
@@ -7265,7 +7263,7 @@ minorloop:
 	}
 }
 
-double LVDC::SVCompare()
+double LVDCSV::SVCompare()
 {
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
@@ -7278,12 +7276,12 @@ double LVDC::SVCompare()
 	return length(PosS - newpos);
 }
 
-double LVDC::LinInter(double x0, double x1, double y0, double y1, double x)
+double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
 }
 
-void LVDC::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+void LVDCSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
 {
 	for (int i = 0;i < 5;i++)
 	{

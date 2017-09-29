@@ -36,10 +36,20 @@ class Saturn1b;
 /// \ingroup Saturns
 ///
 
-class LVDC {
+class LVDC
+{
 public:
-	LVDC();											// Constructor
-	void Init(Saturn* vs, IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
+	virtual void TimeStep(double simt, double simdt) = 0;
+	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
+	virtual void SaveState(FILEHANDLE scn) = 0;
+	virtual void LoadState(FILEHANDLE scn) = 0;
+	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
+};
+
+class LVDCSV: public LVDC {
+public:
+	LVDCSV();											// Constructor
+	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -47,8 +57,7 @@ public:
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
-private:
-	Saturn* owner;									// Saturn LV
+private:								// Saturn LV
 	IUToLVCommandConnector* lvCommandConnector;
 	IUToCSMCommandConnector* commandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
@@ -436,19 +445,18 @@ private:
  * LVDC++ S1B VERSION *
  ******************** */
 
-class LVDC1B {
+class LVDC1B: public LVDC {
 public:
 	LVDC1B();										// Constructor
-	void init(Saturn* own, IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
+	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	double SVCompare();
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
-	Saturn* owner;
 	IUToCSMCommandConnector* commandConnector;
 	IUToLVCommandConnector* lvCommandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)

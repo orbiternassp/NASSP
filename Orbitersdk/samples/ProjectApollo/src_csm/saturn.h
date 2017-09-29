@@ -957,7 +957,7 @@ public:
 	/// \brief Access the Saturn IU.
 	/// \return Pointer to IU object.
 	///
-	IU *GetIU() { return &iu; };
+	IU *GetIU() { return iu; };
 
 	///
 	/// \brief Get settings for the Saturn payload.
@@ -3635,7 +3635,7 @@ protected:
 	IMU imu;
 	CDU tcdu;
 	CDU scdu;
-	IU iu;
+	IU* iu;
 	CSMCautionWarningSystem cws;
 
 	DockingProbe dockingprobe;

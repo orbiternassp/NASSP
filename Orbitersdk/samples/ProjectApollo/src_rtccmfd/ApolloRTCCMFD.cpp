@@ -2973,20 +2973,21 @@ void ApolloRTCCMFD::menuP30Upload()
 		SaturnV* testves;
 
 		testves = (SaturnV*)G->g_Data.progVessel;
+		LVDCSV *lvdc = (LVDCSV*)testves->iu->lvdc;
 
-		coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, testves->lvdc->TB5, testves->lvdc->mu, testves->lvdc->T_RG);
+		coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->GETbase, G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
 
-		testves->lvdc->TU = true;
-		testves->lvdc->TU10 = false;
-		testves->lvdc->GATE3 = false;
+		lvdc->TU = true;
+		lvdc->TU10 = false;
+		lvdc->GATE3 = false;
 
-		testves->lvdc->T_RP = coe.T_RP;
-		testves->lvdc->C_3 = coe.C3;
-		testves->lvdc->Inclination = coe.Inclination;
-		testves->lvdc->e = coe.e;
-		testves->lvdc->alpha_D = coe.alpha_D;
-		testves->lvdc->f = coe.f;
-		testves->lvdc->theta_N = coe.theta_N;
+		lvdc->T_RP = coe.T_RP;
+		lvdc->C_3 = coe.C3;
+		lvdc->Inclination = coe.Inclination;
+		lvdc->e = coe.e;
+		lvdc->alpha_D = coe.alpha_D;
+		lvdc->f = coe.f;
+		lvdc->theta_N = coe.theta_N;
 	}
 	else if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
@@ -4331,8 +4332,9 @@ void ApolloRTCCMFD::menuCalcManPAD()
 			double T_TLI;
 
 			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
+			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
-			if (SatV->lvdc->TU)
+			if (lvdc->TU)
 			{
 				G->TLI_PAD();
 			}
@@ -4340,24 +4342,24 @@ void ApolloRTCCMFD::menuCalcManPAD()
 			{
 				LVDCTLIparam tliparam;
 
-				tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-				tliparam.Azimuth = SatV->lvdc->Azimuth;
-				tliparam.beta = SatV->lvdc->beta;
-				tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-				tliparam.C_3 = SatV->lvdc->C_3;
-				tliparam.e_N = SatV->lvdc->e_N;
-				tliparam.f = SatV->lvdc->f;
-				tliparam.mu = SatV->lvdc->mu;
-				tliparam.MX_A = SatV->lvdc->MX_A;
-				tliparam.omega_E = SatV->lvdc->omega_E;
-				tliparam.R_N = SatV->lvdc->R_N;
-				tliparam.TargetVector = SatV->lvdc->TargetVector;
-				tliparam.TB5 = SatV->lvdc->TB5;
-				tliparam.theta_EO = SatV->lvdc->theta_EO;
-				tliparam.t_D = SatV->lvdc->t_D;
-				tliparam.T_L = SatV->lvdc->T_L;
-				tliparam.T_RG = SatV->lvdc->T_RG;
-				tliparam.T_ST = SatV->lvdc->T_ST;
+				tliparam.alpha_TS = lvdc->alpha_TS;
+				tliparam.Azimuth = lvdc->Azimuth;
+				tliparam.beta = lvdc->beta;
+				tliparam.cos_sigma = lvdc->cos_sigma;
+				tliparam.C_3 = lvdc->C_3;
+				tliparam.e_N = lvdc->e_N;
+				tliparam.f = lvdc->f;
+				tliparam.mu = lvdc->mu;
+				tliparam.MX_A = lvdc->MX_A;
+				tliparam.omega_E = lvdc->omega_E;
+				tliparam.R_N = lvdc->R_N;
+				tliparam.TargetVector = lvdc->TargetVector;
+				tliparam.TB5 = lvdc->TB5;
+				tliparam.theta_EO = lvdc->theta_EO;
+				tliparam.t_D = lvdc->t_D;
+				tliparam.T_L = lvdc->T_L;
+				tliparam.T_RG = lvdc->T_RG;
+				tliparam.T_ST = lvdc->T_ST;
 
 				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
 
@@ -4366,7 +4368,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 				opt.REFSMMAT = G->REFSMMAT;
 				opt.TIG = G->P30TIG;
 				opt.vessel = G->vessel;
-				opt.SeparationAttitude = SatV->lvdc->XLunarAttitude;
+				opt.SeparationAttitude = lvdc->XLunarAttitude;
 				opt.TLI = T_TLI;
 				opt.R_TLI = G->R_TLI;
 				opt.V_TLI = G->V_TLI;

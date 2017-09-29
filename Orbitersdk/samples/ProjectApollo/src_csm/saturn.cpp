@@ -1187,7 +1187,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		ems.TimeStep(MissionTime, simdt);
 		CrewStatus.Timestep(simdt);
 
-		iu.PostStep(simt, simdt, mjd);
+		iu->PostStep(simt, simdt, mjd);
 	}
 	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
@@ -1377,7 +1377,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	//
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu.SaveState(scn);
+		iu->SaveState(scn);
 	}
 
 	gdc.SaveState(scn);
@@ -2036,7 +2036,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		ascp.LoadState(scn);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-		iu.LoadState(scn);
+		iu->LoadState(scn);
 	}
 	else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
 		cws.LoadState(scn);
@@ -3085,21 +3085,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_2 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_2 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG2;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	if (key == OAPI_KEY_3 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
 	{
 		//
 		// Key 3 switches to position 3 by default, then cycles around them.
@@ -3883,7 +3883,7 @@ void Saturn::GenericLoadStateSetup()
 	// Initialize the IU
 	//
 
-	iu.SetMissionInfo(TLICapableBooster, Crewed); 
+	iu->SetMissionInfo(TLICapableBooster, Crewed); 
 
 	//
 	// Disable master alarm sound on unmanned flights.

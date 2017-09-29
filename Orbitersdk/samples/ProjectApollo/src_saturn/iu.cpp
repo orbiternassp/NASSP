@@ -42,6 +42,7 @@
 #include "saturn.h"
 #include "sivb.h"
 #include "papi.h"
+#include "LVDC.h"
 
 
 IU::IU()
@@ -62,6 +63,8 @@ IU::IU()
 
 	commandConnector.SetIU(this);
 	GNC.Configure(&lvCommandConnector, 0);
+	lvdc = NULL;
+	//lvdc->Init(&lvCommandConnector, &commandConnector);
 	ExternalGNC = false;
 
 	AttitudeHold = false;
@@ -2944,4 +2947,14 @@ void IUGNC::LoadState(FILEHANDLE scn)
 		papiReadScenario_double(line, "TD", tD); 
 		papiReadScenario_double(line, "CUTMJD", CutMJD); 
 	}
+}
+
+IU1B::IU1B()
+{
+	//lvdc = new LVDC1B;
+}
+
+IUSV::IUSV()
+{
+	//lvdc = new LVDCSV;
 }
