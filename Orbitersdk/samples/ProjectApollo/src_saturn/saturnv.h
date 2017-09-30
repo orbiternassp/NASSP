@@ -22,9 +22,6 @@
 
   **************************************************************************/
 
-// LVDC moved here
-#include "LVDC.h"
-
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -131,8 +128,6 @@ protected:
 	//
 
 	void SaveVehicleStats(FILEHANDLE scn);
-	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
 
 	//
 	// Odds and ends.

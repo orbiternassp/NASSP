@@ -44,6 +44,7 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "s1c.h"
+#include "LVDC.h"
 #include "tracer.h"
 
 //
@@ -709,14 +710,6 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
-}
-
-void SaturnV::SaveLVDC(FILEHANDLE scn){
-	iu->lvdc->SaveState(scn);
-}
-
-void SaturnV::LoadLVDC(FILEHANDLE scn){
-	iu->lvdc->LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)

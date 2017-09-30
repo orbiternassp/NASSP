@@ -33,6 +33,7 @@
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "LVDC.h"
 
 // This is a threadenwerfer. It werfs threaden.
 static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	

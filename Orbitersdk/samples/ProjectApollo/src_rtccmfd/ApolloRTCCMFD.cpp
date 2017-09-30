@@ -17,6 +17,7 @@
 
 #include "ApolloRTCCMFD.h"
 #include "papi.h"
+#include "LVDC.h"
 
 // ==============================================================
 // Global variables

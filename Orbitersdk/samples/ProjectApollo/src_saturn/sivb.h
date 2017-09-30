@@ -480,7 +480,7 @@ protected:
 	///
 	/// \brief Instrument Unit.
 	///
-	IU iu;
+	IU* iu;
 
 	///
 	/// \brief Connector from SIVb to CSM when docked.

@@ -682,3 +682,6 @@ private:
 	double eps_ymr;									//error command for APS engines: yaw mixed -roll
 	// TABLE25 is apparently only used on direct-ascent
 };
+
+#define LVDC_START_STRING "LVDC_BEGIN"
+#define LVDC_END_STRING "LVDC_END"

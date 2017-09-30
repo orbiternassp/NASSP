@@ -63,6 +63,7 @@ IU::IU()
 
 	commandConnector.SetIU(this);
 	//GNC.Configure(&lvCommandConnector, 0);
+	lvdc = NULL;
 	ExternalGNC = false;
 
 	AttitudeHold = false;
@@ -73,7 +74,11 @@ IU::IU()
 IU::~IU()
 
 {
-	delete lvdc;
+	if (lvdc != NULL)
+	{
+		delete lvdc;
+		lvdc = NULL;
+	}
 }
 
 void IU::SetVesselStats(double ISP, double Thrust)
@@ -992,6 +997,10 @@ void IU::LoadState(FILEHANDLE scn)
 			GNC.LoadState(scn);
 		}
 	}
+}
+
+void IU::SaveLVDC(FILEHANDLE scn) {
+	lvdc->SaveState(scn);
 }
 
 void IU::ConnectToCSM(Connector *csmConnector)
@@ -2950,12 +2959,30 @@ void IUGNC::LoadState(FILEHANDLE scn)
 
 IU1B::IU1B()
 {
-	lvdc = new LVDC1B;
-	lvdc->Init(&lvCommandConnector, &commandConnector);
+
+}
+
+void IU1B::LoadLVDC(FILEHANDLE scn) {
+	// If the LVDC does not yet exist, create it.
+	if (lvdc == NULL) {
+		lvdc = new LVDC1B;
+		lvdc->Init(&lvCommandConnector, &commandConnector);
+
+	}
+	lvdc->LoadState(scn);
 }
 
 IUSV::IUSV()
 {
-	lvdc = new LVDCSV;
-	lvdc->Init(&lvCommandConnector, &commandConnector);
+
+}
+
+void IUSV::LoadLVDC(FILEHANDLE scn) {
+	// If the LVDC does not yet exist, create it.
+	if (lvdc == NULL) {
+		lvdc = new LVDCSV;
+		lvdc->Init(&lvCommandConnector, &commandConnector);
+
+	}
+	lvdc->LoadState(scn);
 }

@@ -46,6 +46,7 @@
 #include "LEM.h"
 #include "papi.h"
 #include "mcc.h"
+#include "LVDC.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
@@ -2409,6 +2410,15 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		checkControl.autoExecuteAllItemsAutomatic(false);
 	
 	}
+}
+
+
+void Saturn::SaveLVDC(FILEHANDLE scn) {
+	iu->SaveLVDC(scn);
+}
+
+void Saturn::LoadLVDC(FILEHANDLE scn) {
+	iu->LoadLVDC(scn);
 }
 
 //

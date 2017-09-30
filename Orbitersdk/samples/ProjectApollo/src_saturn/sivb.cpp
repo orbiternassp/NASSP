@@ -45,6 +45,7 @@
 #include "sivb.h"
 #include "astp.h"
 #include "lem.h"
+#include "LVDC.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -459,17 +460,17 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true);
+		iu->SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
+		iu->SetMissionInfo(true, true);
 
 		//
 		// Set up the IU connections.
 		//
 
-		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
+		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
-	iu.ConnectToLV(&IUCommandConnector);
+	iu->ConnectToLV(&IUCommandConnector);
 	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
@@ -720,14 +721,14 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	if (VehicleNo == 205) {
 		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
 			// retrograde LVLH orbital-rate
-			iu.SetLVLHAttitude(_V(-1, 0, 0));			
+			iu->SetLVLHAttitude(_V(-1, 0, 0));
 		} else {
-			iu.HoldAttitude();
+			iu->HoldAttitude();
 		}
 	} else {
 		// In all other missions maintain initial attitude for now
 		// \todo Correct behaviour of the S-IVB 
-		iu.HoldAttitude();
+		iu->HoldAttitude();
 	}	
 
 	//
@@ -753,7 +754,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu.Timestep(MissionTime, simdt, mjd);
+	iu->Timestep(MissionTime, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 
@@ -818,7 +819,8 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
-	iu.SaveState(scn);
+	iu->SaveState(scn);
+	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
 }
 
@@ -1262,7 +1264,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			iu.LoadState(scn);
+			iu->LoadState(scn);
+		}
+		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+			iu->LoadLVDC(scn);
 		}
 		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk

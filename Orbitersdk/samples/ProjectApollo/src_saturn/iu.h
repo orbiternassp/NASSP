@@ -451,6 +451,9 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+	void SaveLVDC(FILEHANDLE scn);
+	virtual void LoadLVDC(FILEHANDLE scn) = 0;
+
 	LVDC* lvdc;
 
 protected:
@@ -510,6 +513,7 @@ class IU1B :public IU
 {
 public:
 	IU1B();
+	void LoadLVDC(FILEHANDLE scn);
 protected:
 };
 
@@ -517,6 +521,7 @@ class IUSV :public IU
 {
 public:
 	IUSV();
+	void LoadLVDC(FILEHANDLE scn);
 protected:
 };
 
