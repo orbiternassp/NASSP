@@ -300,90 +300,6 @@ public:
 };
 
 ///
-/// S-IVB IU GNC
-///
-/// \ingroup LVSystems
-/// \brief S-IVB IU GNC.
-///
-class IUGNC {
-
-public:
-			 IUGNC();
-			~IUGNC();
-
-	void	Reset();
-
-	void	PostStep(double sim_mjd, double dt);
-	void	PreStep(double sim_mjd, double dt);
-
-	void	Configure(IUToLVCommandConnector *lvc, int Ref);
-	void	SetThrusterForce(double Force, double ISP, double TailOff);
-
-	VECTOR3 Get_uTD();
-	VECTOR3 Get_dV();
-	double	Get_tGO();
-	double	Get_IgnMJD() { return IgnMJD; }
-	VECTOR3 Get_vG() { return _vG; }
-	VECTOR3 Get_uTDInit() { return _uTDInit; }
-	bool	IsEngineOn() { return engine; };
-	
-	bool	ActivateP30(VECTOR3 _rign, VECTOR3 _vign, VECTOR3 _dv, double IgnMJD);
-	bool	ActivateP31(VECTOR3 _rign, VECTOR3 _vign, VECTOR3 _lap, double IgnMJD, double TgtMJD);
-
-	void LoadState(FILEHANDLE scn);
-	void SaveState(FILEHANDLE scn);
-
-private:
-
-	void    EngineOn();
-	void    EngineOff();
-
-	double	GetMass();
-	VECTOR3 Lambert(VECTOR3 init, VECTOR3 rad, double time, double mu, double dm, VECTOR3 *tv=NULL);
-
-	VECTOR3 create_vector(VECTOR3 normal, VECTOR3 zero, double angle);
-	VECTOR3 GlobalToLV(VECTOR3 _in, VECTOR3 _pos, VECTOR3 _vel);
-	VECTOR3 GlobalToP30_LVLH(VECTOR3 _in, VECTOR3 _r, VECTOR3 _v, double mass, double thrust);
-
-	// Set by IU
-	IUToLVCommandConnector *lvCommandConnector;
-	double Thrust;
-	double TailOff;
-	double ISP;
-
-	// Planet configuration
-	int Ref;
-	OBJHANDLE RefHandle;
-	double RefMu;
-	double Mass;
-
-	// ** VECTORS **
-	VECTOR3 _PIPA;
-	VECTOR3 _uTD;
-	VECTOR3 _vG;
-	VECTOR3 _r1;
-	VECTOR3 _v1;
-	VECTOR3 _ri;
-	VECTOR3 _vi;
-	VECTOR3 _r2;
-	VECTOR3 _lastWeight;
-	VECTOR3 _uTDInit;
-
-	//** FLAGS **
-	bool ExtDV;
-	bool ready;
-	bool engine;
-
-	// ** SCALARS **
-	double tGO;
-	double tBurn;
-	double IgnMJD;
-	double TInMJD;
-	double tD;
-	double CutMJD;
-};
-
-///
 /// This class simulates the Saturn Instrument Unit, which flew the Saturn launch vehicle
 /// prior to the CSM seperating from the SIVb.
 ///
@@ -395,46 +311,10 @@ class IU {
 public:
 	IU();
 	virtual ~IU();
-	
-	void SetVesselStats(double ISP, double Thrust);
-	void GetVesselStats(double &ISP, double &Thrust);
+
 	void SetMissionInfo(bool tlicapable, bool crewed);
 
-	///
-	/// \brief Move to or hold attitude v in LVLH coordinates (by setting attitude thrusters, call each timestep)
-	///
-	void SetLVLHAttitude(VECTOR3 v);
-
-	///
-	/// \brief Hold attitude stored at first call, reset by SetLVLHAttitude (by setting attitude thrusters, call each timestep)
-	///
-	void HoldAttitude();
-
-	///
-	/// \brief Start TLI burn sequence or update burn data
-	///
-	virtual bool StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn);
-
-	///
-	/// \brief Legacy support for Simple AGC P15, very unprecise and not recommended
-	///
-	void ChannelOutput(int address, int value);
-
-
 	bool IsTLICapable() { return TLICapable; };
-	bool IsTLIInProgress() { return (TLIBurnState != 0); }
-
-	///
-	/// \brief Get vessel mass.
-	/// \return The mass of the vessel we're controlling.
-	///
-	double GetMass();
-
-	///
-	/// \brief Get vessel fuel mass.
-	/// \return The mass of fuel in the vessel we're controlling.
-	///
-	double GetFuelMass();
 
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
@@ -457,15 +337,6 @@ public:
 	LVDC* lvdc;
 
 protected:
-	bool SIVBStart();
-	void SIVBStop();
-	void SIVBBoiloff();
-	void TLIInhibit();
-	VECTOR3 OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor, VECTOR3 &vec2);
-
-	int TLIBurnState;
-	bool TLIBurnStart;
-	bool TLIBurnDone;
 	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
@@ -477,8 +348,6 @@ protected:
 
 	bool Crewed;
 	bool TLICapable;
-	double VesselISP;
-	double VesselThrust;
 
 	///
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
@@ -494,19 +363,6 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
-
-	///
-	/// \brief Guidance
-	///
-	IUGNC GNC;
-	bool ExternalGNC;
-
-	///
-	/// \brief Attitude control
-	///
-	bool AttitudeHold;
-	VECTOR3 AttitudeToHold;
-	VECTOR3 AttitudeToHold2;
 };
 
 class IU1B :public IU

@@ -464,7 +464,6 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu->SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
 		iu->SetMissionInfo(true, true);
 
 		//
@@ -715,24 +714,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 				PanelsOpened = true;
 			}
 		}
-	}
-
-	//
-	// Attitude control
-	//
-
-	// Special handling Apollo 7
-	if (VehicleNo == 205) {
-		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
-			// retrograde LVLH orbital-rate
-			iu->SetLVLHAttitude(_V(-1, 0, 0));
-		} else {
-			iu->HoldAttitude();
-		}
-	} else {
-		// In all other missions maintain initial attitude for now
-		// \todo Correct behaviour of the S-IVB 
-		iu->HoldAttitude();
 	}	
 
 	//

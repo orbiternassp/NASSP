@@ -291,12 +291,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 		SetThrusterMax0 (th_main[i], thrust);
 	}
 
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu->SetVesselStats(isp, thrust);
-
 	MixtureRatio = ratio;
 }
 
@@ -332,12 +326,6 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 
 	SetThrusterIsp (th_main[0], isp, isp);
 	SetThrusterMax0 (th_main[0], thrust);
-
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu->SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
