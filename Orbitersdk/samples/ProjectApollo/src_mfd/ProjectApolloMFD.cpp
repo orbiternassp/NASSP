@@ -70,20 +70,11 @@ static int g_MFDmode; // identifier for new MFD mode
 // This screen pulls data from the CMC to be used for initializing the LGC
 #define PROG_LGC		8
 
-#define PROGSTATE_NONE				0
-#define PROGSTATE_TLI_START			1
-#define PROGSTATE_TLI_REQUESTING	2
-#define PROGSTATE_TLI_WAITING		3
-#define PROGSTATE_TLI_RUNNING		4
-#define PROGSTATE_TLI_ERROR			5
-
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 
 #define  UPLINK_SV				0
-#define  UPLINK_P30				1
-#define  UPLINK_P31				2
 
 
 // Time to ejection when the IU is programmed
@@ -91,17 +82,8 @@ static int g_MFDmode; // identifier for new MFD mode
 
 static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
-	int progState;  
 	Saturn *progVessel;
 	LEM *gorpVessel;
-
-	double nextRequestTime;
-	IMFD_BURN_DATA burnData;
-	bool isRequesting;
-	bool isRequestingManually;
-	double requestMjd;
-	bool hasError;
-	char *errorMessage;
 
 	int emem[24];
 	int connStatus;
@@ -143,19 +125,11 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_hDLL = hDLL;
 
 	g_Data.prog = PROG_NONE;
-	g_Data.progState = 0;
 	g_Data.progVessel = NULL;
 	g_Data.gorpVessel = NULL;
-	g_Data.nextRequestTime = 0;
 	g_Data.uplinkLEM = 0;
 	g_Data.uplinkSlot = 0;
 
-	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
-	g_Data.isRequesting = false;
-	g_Data.isRequestingManually = false;
-	g_Data.requestMjd = 0;
-	g_Data.hasError = false;
-	g_Data.errorMessage = "";
 	g_Data.connStatus = 0;
 	g_Data.uplinkDataReady = 0;
 	g_Data.uplinkDataType = 0;
@@ -180,20 +154,6 @@ void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
 {
 	// Unregister the custom MFD mode when the module is unloaded
 	oapiUnregisterMFDMode (g_MFDmode);
-}
-
-void StartIMFDRequest() {
-
-	g_Data.isRequesting = true;
-	if (!g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting())
-		g_Data.progVessel->GetIMFDClient()->StartBurnDataRequests();
-}
-
-void StopIMFDRequest() {
-
-	g_Data.isRequesting = false;
-	if (!g_Data.isRequestingManually)
-		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
 int DoubleToBuffer(double x, double q, int m)
@@ -455,20 +415,6 @@ void UpdateClock()
 
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
-	// Recover if MFD was closed and TLI is in progress
-	if (g_Data.progVessel) {
-		if (g_Data.progVessel->GetIU()->IsTLIInProgress()) {
-			if (g_Data.prog != PROG_IMFDTLI || g_Data.progState != PROGSTATE_TLI_RUNNING) {
-				g_Data.prog = PROG_IMFDTLI;
-				g_Data.progState = PROGSTATE_TLI_RUNNING;
-				if (!g_Data.isRequesting) {
-					StartIMFDRequest();
-					g_Data.requestMjd = mjd;
-				}
-			}
-   		}
-	}
-
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
 		if (simt > g_Data.uplinkBufferSimt + 0.05) {
 			unsigned char data = g_Data.uplinkBuffer.front();
@@ -485,78 +431,6 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 			closesocket(m_socket);
 		} else if (g_Data.connStatus == 2 && g_Data.updateClockReady == 2) {
 			UpdateClock();
-		}
-	}
-
-
-	if (g_Data.prog == PROG_IMFDTLI) {
-		switch (g_Data.progState) {
-		case PROGSTATE_TLI_START:
-			StartIMFDRequest();
-			g_Data.requestMjd = mjd;
-			g_Data.progState = PROGSTATE_TLI_REQUESTING;
-			break;
-
-		case PROGSTATE_TLI_REQUESTING:
-			if (g_Data.progVessel->GetIMFDClient()->IsBurnDataValid()) {
-				g_Data.burnData = g_Data.progVessel->GetIMFDClient()->GetBurnData();
-				StopIMFDRequest();
-				if (!g_Data.burnData.p30mode || g_Data.burnData.impulsive) {
-					g_Data.errorMessage ="IMFD not in Off-Axis, P30 Mode";
-					g_Data.progState = PROGSTATE_TLI_ERROR;
-				} else if ((g_Data.burnData.IgnMJD - mjd) * 24. * 3600. <= IUSTARTTIME) {
-					g_Data.errorMessage ="Time to burn smaller than 900s";
-					g_Data.progState = PROGSTATE_TLI_ERROR;
-				} else {
-					g_Data.progState = PROGSTATE_TLI_WAITING;
-				}
-			} else if ((mjd - g_Data.requestMjd) * 24. * 3600. > 10) {
-				StopIMFDRequest();
-				g_Data.errorMessage ="Request timeout";
-				g_Data.progState = PROGSTATE_TLI_ERROR;
-			}
-			break;
-
-		case PROGSTATE_TLI_WAITING:
-			if ((g_Data.burnData.IgnMJD - mjd) * 24. * 3600. <= IUSTARTTIME) {
-				if (g_Data.progVessel->GetIU()->StartTLIBurn(g_Data.burnData._RIgn, g_Data.burnData._VIgn, g_Data.burnData._dV_LVLH, g_Data.burnData.IgnMJD)) {
-					g_Data.nextRequestTime = 500;
-					g_Data.progState = PROGSTATE_TLI_RUNNING;
-				} else {
-					g_Data.errorMessage ="S-IVB start error";
-					g_Data.progState = PROGSTATE_TLI_ERROR;
-				}
-			}
-			break;
-
-		case PROGSTATE_TLI_RUNNING:
-			if (!g_Data.isRequesting) {
-				if (g_Data.nextRequestTime > 0 && (g_Data.burnData.IgnMJD - mjd) * 24. * 3600. <= g_Data.nextRequestTime) {
-					StartIMFDRequest();
-					g_Data.requestMjd = mjd;
-				}
-			} else {
-				if (g_Data.progVessel->GetIMFDClient()->IsBurnDataValid()) {
-					g_Data.burnData = g_Data.progVessel->GetIMFDClient()->GetBurnData();
-					StopIMFDRequest();
-					if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive && g_Data.burnData.IgnMJD > mjd) {
-						g_Data.progVessel->GetIU()->StartTLIBurn(g_Data.burnData._RIgn, g_Data.burnData._VIgn, g_Data.burnData._dV_LVLH, g_Data.burnData.IgnMJD);
-					}
-				} else if ((mjd - g_Data.requestMjd) * 24. * 3600. > 2) {
-					StopIMFDRequest();
-				}
-				if (!g_Data.isRequesting) {
-					g_Data.nextRequestTime -= 100;
-					if (g_Data.nextRequestTime <= 10) 
-						g_Data.nextRequestTime = 0;
-					else if (g_Data.nextRequestTime <= 100) 
-						g_Data.nextRequestTime = 4;
-				}
-			}
-			if (!g_Data.progVessel->GetIU()->IsTLIInProgress()) {
-				g_Data.prog = PROG_NONE;
-				g_Data.progState = PROGSTATE_NONE;
-   			}
 		}
 	}
 
@@ -636,8 +510,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelGNC[4] = {"BCK", "KILR", "EMS", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
-	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[11] = {"BCK", "SV", "P30", "P31", "SRC", "REF", "REQ", "CLK", "", "", "SLT"};
+	static char *labelTELE[11] = {"BCK", "SV", "", "", "SRC", "REF", "", "CLK", "", "", "SLT"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 	static char *labelLGC[5] = {"BCK", "", "", "", "V42"};
@@ -653,10 +526,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		return (bt < 4 ? labelECS[bt] : 0);
 	}
 	else if (screen == PROG_IMFD) {
-		if (g_Data.progState == PROGSTATE_NONE)
-			return (bt < 3 ? labelIMFDTliStop[bt] : 0);
-		else
-			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
+		return (bt < 3 ? labelIMFDTliStop[bt] : 0);
 	}
 	else if(screen == PROG_TELE) {
 		return (bt < 11 ? labelTELE[bt] : 0);
@@ -716,11 +586,11 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	static const MFDBUTTONMENU mnuTELE[11] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
-		{"P30 - Ext. DV Uplink", 0, 'D'},
-		{"P31 - Lambert Aim Point Uplink", 0, 'L'},
+		{ 0,0,0 },
+		{ 0,0,0 },
 		{"Change Source",0,'S'},
 		{"Change Reference Body", 0, 'R'},
-		{"Toggle burn data requests", 0, 'I'},
+		{ 0,0,0 },
 		{"Clock Update", 0, 'C'},
 		{0,0,0},
 		{0,0,0},
@@ -764,13 +634,8 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		if (menu) *menu = mnuECS;
 		return 4; 
 	} else if (screen == PROG_IMFD) {
-		if (g_Data.progState == PROGSTATE_NONE) {
-			if (menu) *menu = mnuIMFDTliStop;
-			return 3;
-		} else {
-			if (menu) *menu = mnuIMFDTliRun;
-			return 3;
-		}
+		if (menu) *menu = mnuIMFDTliStop;
+		return 3;
 	}	
 	else if (screen == PROG_TELE) {
 		if (menu) *menu = mnuTELE;
@@ -864,7 +729,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 	} else if (screen == PROG_TELE) {
 		if (key == OAPI_KEY_B) {
 			if(g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
-				g_Data.hasError = false;
 				screen = PROG_NONE;
 				InvalidateDisplay();
 				InvalidateButtons();
@@ -887,58 +751,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 				}
 			}
 			return true;
-		} else if (key == OAPI_KEY_D) {
-			if (saturn) {
-				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
-					if( saturn->GetIMFDClient()->IsBurnDataValid()) {
-						IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-						if (bd.DataMJD==0.0 || !bd.p30mode || bd.impulsive) {
-							g_Data.hasError = true;
-						} else {
-							g_Data.hasError = false;							
-							g_Data.uplinkDataReady = 1;
-							g_Data.uplinkDataType = UPLINK_P30;
-						}
-					} else {
-						g_Data.hasError = true;
-					}
-				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_P30) {		
-					IMFDP30Uplink();
-				}
-			}
-			return true;
-		} else if (key == OAPI_KEY_L) {
-			if (saturn) {
-				if (g_Data.uplinkDataReady == 0 && g_Data.updateClockReady == 0) {
-					if( saturn->GetIMFDClient()->IsBurnDataValid()) {
-						IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-						if (bd.DataMJD==0.0 || bd.LAP_MJD == 0 || !bd.p30mode || bd.impulsive) {
-							g_Data.hasError = true;
-						} else {
-							g_Data.hasError = false;
-							g_Data.uplinkDataReady = 1;							
-							g_Data.uplinkDataType = UPLINK_P31;
-						}
-					} else {
-						g_Data.hasError = true;
-					}
-				} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == UPLINK_P31) {
-					IMFDP31Uplink();		
-				}
-			}
-			return true;
-		} else if (key == OAPI_KEY_I && !g_Data.isRequestingManually && saturn != NULL) {						
-			if (!saturn->GetIMFDClient()->IsBurnDataRequesting()) {
-				saturn->GetIMFDClient()->StartBurnDataRequests();
-				g_Data.hasError = false;
-				g_Data.isRequestingManually = true;
-			}
-		} else if (key == OAPI_KEY_I && g_Data.isRequestingManually && saturn != NULL) {
-			if (!g_Data.isRequesting && g_Data.connStatus == 0) {
-				saturn->GetIMFDClient()->StopBurnDataRequests();	
-				g_Data.hasError = false;
-				g_Data.isRequestingManually = false;
-			}
 		} else if (key == OAPI_KEY_C) {
 			if (saturn || lem) {
 				if (g_Data.updateClockReady == 0 && g_Data.uplinkDataReady == 0) {
@@ -1004,33 +816,15 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 
-		} else if (key == OAPI_KEY_R && !g_Data.isRequestingManually) {						
-			if (!saturn->GetIMFDClient()->IsBurnDataRequesting()) {
-				saturn->GetIMFDClient()->StartBurnDataRequests();
-			}
-			g_Data.isRequestingManually = true;
-		} else if (key == OAPI_KEY_R && g_Data.isRequestingManually) {
-			if (!g_Data.isRequesting) {
-				saturn->GetIMFDClient()->StopBurnDataRequests();
-			}
-			g_Data.isRequestingManually = false;
-		
-		} else if (key == OAPI_KEY_S && g_Data.progState == PROGSTATE_NONE) {
+		} else if (key == OAPI_KEY_R) {						
+
+		} else if (key == OAPI_KEY_S) {
 			g_Data.prog = PROG_IMFDTLI;
-			g_Data.progState = PROGSTATE_TLI_START;
 			g_Data.progVessel = saturn;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-
-		} else if (key == OAPI_KEY_S && (g_Data.progState == PROGSTATE_TLI_WAITING || g_Data.progState == PROGSTATE_TLI_ERROR)) {
-			g_Data.prog = PROG_NONE;
-			g_Data.progState = PROGSTATE_NONE;
-			g_Data.errorMessage = "";
-			InvalidateDisplay();
-			InvalidateButtons();
-			return true;
-		} 
+		}
 	}
 	//This program is for the socket, remove before release.
 	else if (screen == PROG_SOCK)
@@ -1094,7 +888,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyGNC[4] = { OAPI_KEY_B, OAPI_KEY_K, OAPI_KEY_E, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C, 0, 0, OAPI_KEY_T };
+	static const DWORD btkeyTELE[11] = { OAPI_KEY_B, OAPI_KEY_U, 0, 0, OAPI_KEY_S, OAPI_KEY_R, 0, OAPI_KEY_C, 0, 0, OAPI_KEY_T };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 	static const DWORD btkeyLgc[5] = { OAPI_KEY_B, 0, 0, 0, OAPI_KEY_F };
@@ -1331,53 +1125,6 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "Status:", 7);
 		SetTextAlign (hDC, TA_CENTER);
-		if (g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "REQUESTING", 10);	
-		} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
-			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NO DATA", 7);	
-			SetTextColor (hDC, RGB(0, 255, 0));
-		} else {
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NONE", 4);
-		}
-		if (saturn->GetIMFDClient()->IsBurnDataValid() && g_Data.isRequestingManually) {
-			IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-			if (bd.p30mode && !bd.impulsive) {
-				SetTextAlign (hDC, TA_LEFT);
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "GET Ignition:", 13);
-
-				SetTextAlign (hDC, TA_RIGHT);				
-				mt = ((bd.IgnMJD - oapiGetSimMJD()) * 24. * 3600.) + saturn->GetMissionTime();
-				secs = abs((int) mt);
-				hours = (secs / 3600);
-				secs -= (hours * 3600);
-				minutes = (secs / 60);
-				secs -= 60 * minutes;
-				if (mt < 0)
-					sprintf(buffer, "-%d:%02d:%02d", hours, minutes, secs);
-				else
-					sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
-				TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-
-				SetTextAlign (hDC, TA_LEFT);
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "dV x:", 5);
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "dV y:", 5);
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "dV z:", 5);
-
-				SetTextAlign (hDC, TA_RIGHT);				
-				sprintf(buffer, "%.1lf ft/s", bd._dV_LVLH.x * FPS);
-				TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
-				sprintf(buffer, "%.1lf ft/s", bd._dV_LVLH.y * FPS);
-				TextOut(hDC, (int) (width * 0.9), (int) (height * 0.55), buffer, strlen(buffer));
-				sprintf(buffer, "%.1lf ft/s", bd._dV_LVLH.z * FPS);
-				TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
-			} else {
-				SetTextAlign (hDC, TA_CENTER);
-				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.5), "IMFD not in P30 Mode", 20);
-				SetTextColor (hDC, RGB(0, 255, 0));
-			}
-		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.7), "S-IVB Burn Program", 18);
@@ -1385,44 +1132,6 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), "Status:", 7);
 
 		SetTextAlign (hDC, TA_CENTER);
-		if (g_Data.progState == PROGSTATE_NONE) {
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.75), "IDLE", 4);
-
-		} else if (g_Data.progState == PROGSTATE_TLI_REQUESTING) {
-			SetTextColor (hDC, RGB(255, 255, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.75), "REQUESTING", 10);
-			SetTextColor (hDC, RGB(0, 255, 0));
-
-		} else if (g_Data.progState == PROGSTATE_TLI_WAITING) {
-			SetTextColor (hDC, RGB(255, 255, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.75), "WAITING", 7);
-			SetTextColor (hDC, RGB(0, 255, 0));
-
-		} else if (g_Data.progState == PROGSTATE_TLI_RUNNING) {
-			SetTextColor (hDC, RGB(255, 255, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.75), "RUNNING", 7);
-			SetTextColor (hDC, RGB(0, 255, 0));
-
-		} else if (g_Data.progState == PROGSTATE_TLI_ERROR) {
-			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.75), "ERROR", 5);
-			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.8), g_Data.errorMessage, strlen(g_Data.errorMessage));
-			SetTextColor (hDC, RGB(0, 255, 0));
-		}
-		if (g_Data.progState == PROGSTATE_TLI_WAITING || g_Data.progState == PROGSTATE_TLI_RUNNING) {
-			SetTextAlign (hDC, TA_LEFT);
-			if (g_Data.burnData.IgnMJD != 0) {
-				if (oapiGetSimMJD() < g_Data.burnData.IgnMJD) {
-					TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Time to Ignition:", 17);
-					sprintf(buffer, "%.0lf s", (oapiGetSimMJD() - g_Data.burnData.IgnMJD) * 24. * 3600.);
-				} else {
-					TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Remaining Burn Time:", 20);
-					sprintf(buffer, "%.0lf s", g_Data.burnData.BT - ((oapiGetSimMJD() - g_Data.burnData.IgnMJD) * 24. * 3600.));
-				}
-				SetTextAlign (hDC, TA_RIGHT);
-				TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
-			}
-		}
 	}
 	//Draw Telemetry
 	else if (screen == PROG_TELE) {
@@ -1430,35 +1139,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "Telemetry:", 10);
 		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), debugWinsock, strlen(debugWinsock));
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 15);
-		if (saturn){
-			if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
-			} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
-				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
-				SetTextColor (hDC, RGB(0, 255, 0));
-			} else {
-				TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
-			}
-		} else {
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "N/A", 3);
-		}
-		if (g_Data.hasError) {
-			if (saturn && saturn->GetIMFDClient()->IsBurnDataValid()) {
-				IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();				
-				if (!bd.p30mode || bd.impulsive)
-					g_Data.errorMessage ="IMFD not in Off-Axis, P30 Mode";
-				else if (bd.LAP_MJD==0.0)
-					g_Data.errorMessage ="IMFD does not have Lambert Data";
-			} else {
-				g_Data.errorMessage ="IMFD data not available";
-			}
-			SetTextAlign (hDC, TA_CENTER);
-			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, width / 2, (int) (height * 0.45), "ERROR", 5);
-			TextOut(hDC, width / 2, (int) (height * 0.5), g_Data.errorMessage, strlen(g_Data.errorMessage));
-		} else if (g_Data.uplinkDataReady == 1 || g_Data.updateClockReady == 1) {
+
+		if (g_Data.uplinkDataReady == 1 || g_Data.updateClockReady == 1) {
 			if (lem) {
 				SetTextAlign (hDC, TA_CENTER);
 				sprintf(buffer, "Checklist");
@@ -1489,10 +1171,6 @@ void ProjectApolloMFD::Update (HDC hDC)
 			if (g_Data.uplinkDataReady == 1) {
 				if (g_Data.uplinkDataType == UPLINK_SV)
 					sprintf(buffer, "Press SV to start upload");
-				else if (g_Data.uplinkDataType == UPLINK_P30)
-					sprintf(buffer, "Press P30 to start upload");
-				else if (g_Data.uplinkDataType == UPLINK_P31)
-					sprintf(buffer, "Press P31 to start upload");
 			}
 			else
 				sprintf(buffer, "Press CLK to start upload");
@@ -1522,14 +1200,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "315   %ld", g_Data.emem[9]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));		
 			linepos = 0.4;
-			if (g_Data.uplinkDataType != UPLINK_P30) {
-				sprintf(buffer, "316   %ld", g_Data.emem[10]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-				sprintf(buffer, "317   %ld", g_Data.emem[11]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-				sprintf(buffer, "320   %ld", g_Data.emem[12]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-			}
+			sprintf(buffer, "316   %ld", g_Data.emem[10]);
+			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			sprintf(buffer, "317   %ld", g_Data.emem[11]);
+			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			sprintf(buffer, "320   %ld", g_Data.emem[12]);
+			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 			if (g_Data.uplinkDataType >= UPLINK_SV) {
 				sprintf(buffer, "321   %ld", g_Data.emem[13]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
@@ -1810,110 +1486,14 @@ void ProjectApolloMFD::GetStateVector (void)
 	g_Data.uplinkDataReady = 0; // Abort uplink
 }
 
-void ProjectApolloMFD::IMFDP30Uplink(void)
-{
-	double get;
-	IMFD_BURN_DATA bd;
-	IMFD_BURN_DATA *pbd;
-
-	if (g_Data.isRequestingManually) {
-		bd = saturn->GetIMFDClient()->GetBurnData();
-		pbd = &bd;
-	}
-	else pbd = &g_Data.burnData;
-	
-	if (pbd->DataMJD==0.0) {
-		g_Data.uplinkDataReady = 0;		// Abort uplink
-		return;
-	}
-
-	if (saturn){ get = fabs(saturn->GetMissionTime()); }
-	if(crawler){ get = fabs(crawler->GetMissionTime()); }
-	if(lem){     get = fabs(lem->GetMissionTime()); }
-
-	double liftoff = oapiGetSimMJD()-get/86400.0;
-	double getign  = (pbd->IgnMJD - liftoff) * 86400.0;
-
-	g_Data.emem[0] = 12;
-	g_Data.emem[1] = 3404;
-	g_Data.emem[2] = DoubleToBuffer(pbd->_dV_LVLH.x/100.0, 7, 1);
-	g_Data.emem[3] = DoubleToBuffer(pbd->_dV_LVLH.x/100.0, 7, 0);
-	g_Data.emem[4] = DoubleToBuffer(pbd->_dV_LVLH.y/100.0, 7, 1);
-	g_Data.emem[5] = DoubleToBuffer(pbd->_dV_LVLH.y/100.0, 7, 0);
-	g_Data.emem[6] = DoubleToBuffer(pbd->_dV_LVLH.z/100.0, 7, 1);
-	g_Data.emem[7] = DoubleToBuffer(pbd->_dV_LVLH.z/100.0, 7, 0);
-	g_Data.emem[8] = DoubleToBuffer(getign*100.0, 28, 1);
-	g_Data.emem[9] = DoubleToBuffer(getign*100.0, 28, 0);
-
-	g_Data.uplinkDataReady = 2;
-	UplinkData(); // Go for uplink
-}
-
-void ProjectApolloMFD::IMFDP31Uplink(void)
-{
-	double get;
-	IMFD_BURN_DATA bd;
-	IMFD_BURN_DATA *pbd;
-
-	if (g_Data.isRequestingManually) {
-		bd = saturn->GetIMFDClient()->GetBurnData();
-		pbd = &bd;
-	}
-	else pbd = &g_Data.burnData;
-	
-	if (pbd->DataMJD==0.0 || pbd->LAP_MJD==0.0) {
-		g_Data.uplinkDataReady = 0;		// Abort uplink
-		return;
-	}
-
-	if (saturn){ get = fabs(saturn->GetMissionTime()); }
-	if(crawler){ get = fabs(crawler->GetMissionTime()); }
-	if(lem){     get = fabs(lem->GetMissionTime()); }
-
-	double liftoff    = oapiGetSimMJD()-get/86400.0;
-	double getign     = (pbd->IgnMJD - liftoff) * 86400.0;
-	double delta      = (pbd->LAP_MJD - pbd->IgnMJD) * 86400.0;
-	double ecsteer    = 0.9;  // Cross-product steering constant
-	
-	VECTOR3 _L  = pbd->_LAP;
-
-	MATRIX3 Rot = J2000EclToBRCS(40221.525);
-
-	_L = mul(Rot, _V(_L.x, _L.z, _L.y));
-
-	g_Data.emem[0] = 15;
-	g_Data.emem[1] = 3412;
-	g_Data.emem[2] = DoubleToBuffer(getign*100.0, 28, 1);
-	g_Data.emem[3] = DoubleToBuffer(getign*100.0, 28, 0);
-	g_Data.emem[4] = DoubleToBuffer(_L.x, 29, 1);
-	g_Data.emem[5] = DoubleToBuffer(_L.x, 29, 0);
-	g_Data.emem[6] = DoubleToBuffer(_L.y, 29, 1);
-	g_Data.emem[7] = DoubleToBuffer(_L.y, 29, 0);
-	g_Data.emem[8] = DoubleToBuffer(_L.z, 29, 1);
-	g_Data.emem[9] = DoubleToBuffer(_L.z, 29, 0);
-	g_Data.emem[10] = DoubleToBuffer(delta*100.0, 28, 1);
-	g_Data.emem[11] = DoubleToBuffer(delta*100.0, 28, 0);
-	g_Data.emem[12] = DoubleToBuffer(ecsteer, 2, 1);
-
-	g_Data.uplinkDataReady = 2;
-	UplinkData(); // Go for uplink
-}
-
 void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 {
 	oapiWriteScenario_int(scn, "SCREEN", screen);
 	oapiWriteScenario_int(scn, "PROGNO", g_Data.prog);
-	oapiWriteScenario_int(scn, "PROGSTATE", g_Data.progState);
 	if (g_Data.progVessel)
 		oapiWriteScenario_string(scn, "PROGVESSEL", g_Data.progVessel->GetName());
 	if (g_Data.gorpVessel)
 		oapiWriteScenario_string(scn, "GORPVESSEL", g_Data.gorpVessel->GetName());
-	papiWriteScenario_double(scn, "NEXTREQUESTTIME", g_Data.nextRequestTime);
-	papiWriteScenario_double(scn, "BURNDATA_IGNMJD", g_Data.burnData.IgnMJD);
-	papiWriteScenario_double(scn, "BURNDATA_BT", g_Data.burnData.BT);
-	papiWriteScenario_vec(scn, "BURNDATA_RIGN", g_Data.burnData._RIgn);
-	papiWriteScenario_vec(scn, "BURNDATA_VIGN", g_Data.burnData._VIgn);
-	papiWriteScenario_vec(scn, "BURNDATA_DVLVLH", g_Data.burnData._dV_LVLH);
 }
 
 void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
@@ -1938,13 +1518,6 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 		} 
 		papiReadScenario_int(line, "SCREEN", screen);
 		papiReadScenario_int(line, "PROGNO", g_Data.prog);
-		papiReadScenario_int(line, "PROGSTATE", g_Data.progState);
-		papiReadScenario_double(line, "NEXTREQUESTTIME", g_Data.nextRequestTime);
-		papiReadScenario_double(line, "BURNDATA_IGNMJD", g_Data.burnData.IgnMJD);
-		papiReadScenario_double(line, "BURNDATA_BT", g_Data.burnData.BT);
-		papiReadScenario_vec(line, "BURNDATA_RIGN", g_Data.burnData._RIgn);
-		papiReadScenario_vec(line, "BURNDATA_VIGN", g_Data.burnData._VIgn);
-		papiReadScenario_vec(line, "BURNDATA_DVLVLH", g_Data.burnData._dV_LVLH);
 	}
 }
 
