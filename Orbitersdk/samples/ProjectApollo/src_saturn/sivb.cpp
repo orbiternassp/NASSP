@@ -166,6 +166,8 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
+	delete iu;
+
 	//
 	// Delete LM PAD data.
 	//
@@ -183,6 +185,8 @@ void SIVB::InitS4b()
 
 {
 	int i;
+
+	iu = NULL;
 
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
@@ -1264,6 +1268,14 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
+			if (SaturnVStage)
+			{
+				iu = new IUSV;
+			}
+			else
+			{
+				iu = new IU1B;
+			}
 			iu->LoadState(scn);
 		}
 		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
@@ -1488,6 +1500,19 @@ void SIVB::SetState(SIVBSettings &state)
 	{
 		THRUST_THIRD_VAC = state.THRUST_VAC;
 		ISP_THIRD_VAC = state.ISP_VAC;
+	}
+
+	if (state.SettingsType.SIVB_SETTINGS_LVDC)
+	{
+		if (SaturnVStage)
+		{
+			iu = new IUSV;
+		}
+		else
+		{
+			iu = new IU1B;
+		}
+		iu->lvdc = state.lvdc_pointer;
 	}
 
 	State = SIVB_STATE_WAITING;

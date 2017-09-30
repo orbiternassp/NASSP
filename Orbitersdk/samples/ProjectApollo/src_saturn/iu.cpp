@@ -581,7 +581,9 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 void IU::PostStep(double simt, double simdt, double mjd) {
 
-	lvdc->TimeStep(simt, simdt);
+	if (lvdc != NULL) {
+		lvdc->TimeStep(simt, simdt);
+	}
 	//GNC.PostStep(mjd, simdt);
 
 	// Shutdown the engine in the same time step
@@ -1000,7 +1002,7 @@ void IU::LoadState(FILEHANDLE scn)
 }
 
 void IU::SaveLVDC(FILEHANDLE scn) {
-	lvdc->SaveState(scn);
+	if (lvdc != NULL) { lvdc->SaveState(scn); }
 }
 
 void IU::ConnectToCSM(Connector *csmConnector)
