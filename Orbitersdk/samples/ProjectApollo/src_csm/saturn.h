@@ -1407,13 +1407,6 @@ protected:
 	double LastMissionEventTime;
 
 	///
-	/// The time in seconds of when the SIVB booster cutoff. This
-	/// is a generic value used by the autopilot code.
-	/// \brief Time of SIVB cutoff
-	///
-	double SIVBCutoffTime;
-
-	///
 	/// Is the S-IVB J2 engine active for burns or venting
 	/// \brief Is the S-IVB J2 engine active for burns or venting
 	///
@@ -4159,35 +4152,10 @@ protected:
 	// LEM data.
 	//
 
-	double LMLandingLatitude;
-	double LMLandingLongitude;
-	double LMLandingAltitude;
-	char   LMLandingBase[256];
-	double LMLandingMJD;		// MJD of lunar landing
 	double LMDescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
 	double LMDescentEmptyMassKg;
 	double LMAscentEmptyMassKg;
-
-	//
-	// Earth landing data.
-	//
-
-	double SplashdownLatitude;
-	double SplashdownLongitude;
-	double EntryInterfaceMJD;			// MJD of normal return entry interface
-
-	//
-	// Mission TLI and LOI parameters
-	//
-
-	double TransLunarInjectionMJD;			// MJD of TLI burn
-	double LunarOrbitInsertionMJD;			// MJD of first LOI burn
-	double FreeReturnPericynthionMJD;		// MJD of free return pericynthion
-	double FreeReturnPericynthionAltitude;	// Altitude of free return pericynthion
-	double TransLunarInjectionOffsetLon;	// TLI target offset
-	double TransLunarInjectionOffsetLat;	// TLI target offset
-	double TransLunarInjectionOffsetRad;	// TLI target offset
 
 	//
 	// Random motion.

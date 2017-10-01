@@ -1500,7 +1500,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 

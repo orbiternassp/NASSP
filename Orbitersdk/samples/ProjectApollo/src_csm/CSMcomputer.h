@@ -124,36 +124,6 @@ public:
 	// Data access.
 	//
 
-	///
-	/// \brief Get the desired apogee for the autopilot.
-	///
-	double GetDesiredApogee() { return DesiredApogee; };
-
-	///
-	/// \brief Get the desired perigee for the autopilot.
-	///
-	double GetDesiredPerigee() { return DesiredPerigee; };
-
-	///
-	/// \brief Get the desired launch azimuth for the autopilot.
-	///
-	double GetDesiredAzimuth() { return DesiredAzimuth; };
-
-	///
-	/// \brief Set the desired apogee for the autopilot.
-	///
-	void SetDesiredApogee(double val) { DesiredApogee = val; };
-
-	///
-	/// \brief Set the desired perigee for the autopilot.
-	///
-	void SetDesiredPerigee(double val) { DesiredPerigee = val; };
-
-	///
-	/// \brief Set the desired launch azimuth for the autopilot.
-	///
-	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
-
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
@@ -182,8 +152,6 @@ protected:
 	unsigned int LastOut5;
 	unsigned int LastOut6;
 	unsigned int LastOut11;
-
-	unsigned int VesselStatusDisplay;
 
 	///
 	/// \brief Second DSKY in the lower equipment bay.

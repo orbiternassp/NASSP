@@ -83,9 +83,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 		lvdc->TimeStep(simt, simdt);
 	}
 
-	// Only SIVB in orbit for now
-	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB) return;
-
 	//
 	// Update mission time.
 	//
@@ -94,24 +91,10 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	// Initialization
 	if (!FirstTimeStepDone) {
 
-		//
-		// Disable the engines if we're waiting for
-		// the user to start the TLI burn or if it's been done.
-		//
-		if (State <= 107 || State >= 202)	{
-			lvCommandConnector.EnableDisableJ2(false);
-		} else {
-			lvCommandConnector.EnableDisableJ2(true);
-		}
 		FirstTimeStepDone = true;
 		return;
 	}
 
-	// Switches to inhibit TLI
-	bool XLunar = (commandConnector.TLIEnableSwitchState() == TOGGLESWITCH_UP);
-	bool SIISIVBSep = (commandConnector.SIISIVbSwitchState() == TOGGLESWITCH_UP);
-
-	//sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {

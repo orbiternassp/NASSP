@@ -47,8 +47,6 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CD
 {
 	isLGC = false;
 
-	VesselStatusDisplay = 0;
-
 	//
 	// Last RCS settings.
 	//

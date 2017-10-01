@@ -362,7 +362,6 @@ void Saturn::initSaturn()
 
 	ThrustAdjust = 1.0;
 	MixtureRatio = 5.5;
-	SIVBCutoffTime = -MINUS_INFINITY;
 	J2IsActive = true;
 
 	DockAngle = 0;
@@ -457,14 +456,6 @@ void Saturn::initSaturn()
 
 	NextFlashUpdate = MINUS_INFINITY;
 	PanelFlashOn = false;
-
-	//
-	// Defaults.
-	//
-
-	agc.SetDesiredApogee(220);
-	agc.SetDesiredPerigee(215);
-	agc.SetDesiredAzimuth(45);
 
 	//
 	// Failure modes.
@@ -805,37 +796,6 @@ void Saturn::initSaturn()
 	VAGCChecklistAutoEnabled = false;
 
 	//
-	// LM landing data.
-	//
-
-	LMLandingLatitude = 0;
-	LMLandingLongitude = 0;
-	LMLandingAltitude = 0;
-	LMLandingBase[0] = 0;
-	LMLandingMJD = 0;
-
-	//
-	// Earth landing data.
-	//
-
-	SplashdownLatitude = 0;
-	SplashdownLongitude = 0;
-	EntryInterfaceMJD = 0;
-
-	//
-	// Mission TLI and LOI parameters
-	//
-
-	TransLunarInjectionMJD = 0;			
-	LunarOrbitInsertionMJD = 0;	
-	FreeReturnPericynthionMJD = 0;		
-	FreeReturnPericynthionAltitude = 0;	
-	TransLunarInjectionOffsetLon = 0;	
-	TransLunarInjectionOffsetLat = 0;	
-	TransLunarInjectionOffsetRad = 0;	
-
-
-	//
 	// Load textures that are used a lot. Should these be global
 	// variables?
 	//
@@ -900,33 +860,6 @@ void Saturn::clbkPostCreation() {
 	CMRCS1.CheckPropellantMass();
 	CMRCS2.CheckPropellantMass();
 	SPSPropellant.CheckPropellantMass();
-
-	//
-	// IMFD5 communication support
-	//
-	
-	IMFD_Client.SetVessel(this);
-	// Set constant configuration
-	IMFDConstantConfiguration cc;
-	strcpy(cc.LandingBase, LMLandingBase);
-	strcpy(cc.TargetCelbody, "Moon");
-	cc.AZIMUTCOR = agc.GetDesiredAzimuth() - 90.0;
-	cc.MJDTLI = TransLunarInjectionMJD;
-	cc.MJDLOI = LunarOrbitInsertionMJD;
-	cc.MJDPEC = FreeReturnPericynthionMJD;
-	cc.ALTPEC = FreeReturnPericynthionAltitude;
-	cc.TLIOffsetLon = TransLunarInjectionOffsetLon; 
-	cc.TLIOffsetLat = TransLunarInjectionOffsetLat; 
-	cc.TLIOffsetRad = TransLunarInjectionOffsetRad; 
-	cc.MJDLDG = LMLandingMJD;
-	cc.MJDSPL = EntryInterfaceMJD;
-	cc.SPL_lon = SplashdownLongitude;
-	cc.SPL_lat = SplashdownLatitude;
-	cc.ApolloP30Mode = true;
-	IMFD_Client.SetConstantConfiguration(cc);
-
-	// Connect to IMFD
-	IMFD_Client.Connect();
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
@@ -1222,7 +1155,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
-	papiWriteScenario_double (scn, "SIVBCUTOFFTIME", SIVBCutoffTime);
 	papiWriteScenario_bool (scn, "J2ISACTIVE", J2IsActive);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
@@ -1283,13 +1215,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "CMFUELLOAD", CM_FuelMass);
 	papiWriteScenario_double (scn, "CMMASS", CM_EmptyMass);
 
-	papiWriteScenario_double (scn, "MOONLAT", LMLandingLatitude);
-	papiWriteScenario_double (scn, "MOONLONG", LMLandingLongitude);
-	papiWriteScenario_double (scn, "MOONALT", LMLandingAltitude);
-	papiWriteScenario_double (scn, "MOONMJD", LMLandingMJD);	
-	if (LMLandingBase[0])
-		oapiWriteScenario_string (scn, "MOONBASE", LMLandingBase);
-
 	if (!PayloadDataTransfer) {
 		if (LMPadCount > 0) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
@@ -1309,18 +1234,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			}
 		}
 	}
-
-	papiWriteScenario_double (scn, "SPLASHLAT", SplashdownLatitude);
-	papiWriteScenario_double (scn, "SPLASHLONG", SplashdownLongitude);
-	papiWriteScenario_double (scn, "EARTHEIMJD", EntryInterfaceMJD);
-
-	papiWriteScenario_double (scn, "TLIMJD", TransLunarInjectionMJD);
-	papiWriteScenario_double (scn, "LOIMJD", LunarOrbitInsertionMJD);
-	papiWriteScenario_double (scn, "FREERETURNPECMJD", FreeReturnPericynthionMJD);
-	papiWriteScenario_double (scn, "FREERETURNPECALT", FreeReturnPericynthionAltitude);
-	papiWriteScenario_double (scn, "TLIOFFSETLON", TransLunarInjectionOffsetLon);
-	papiWriteScenario_double (scn, "TLIOFFSETLAT", TransLunarInjectionOffsetLat);
-	papiWriteScenario_double (scn, "TLIOFFSETRAD", TransLunarInjectionOffsetRad);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
@@ -1434,19 +1347,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, BMAG2_START_STRING);
 	bmag2.SaveState(scn);
-
-	//
-	// This has to be after the AGC otherwise the AGC state will override it.
-	// Both should be saving the same information, but this is human-readable
-	// and the AGC data isn't.
-	//
-
-	if (stage < STAGE_ORBIT_SIVB)
-	{
-		papiWriteScenario_double (scn, "TOAPO", agc.GetDesiredApogee());
-		papiWriteScenario_double (scn, "TOPER", agc.GetDesiredPerigee());
-		papiWriteScenario_double (scn, "TOHDG", agc.GetDesiredAzimuth());
-	}
 
 	// save the internal systems 
 	oapiWriteScenario_int(scn, "SYSTEMSSTATE", systemsState);
@@ -1678,7 +1578,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
 	float ftcp;
-	double autopTime, d;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int DummyLoad, i;
@@ -1692,18 +1591,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "NASSPVER", 8)) {
 		sscanf (line + 8, "%d", &nasspver);
 	}
-	else if (!strnicmp (line, "TOALT", 5)) {
-        int toalt;
-		sscanf (line+5, "%d", &toalt);
-		agc.SetDesiredApogee(toalt);
-		agc.SetDesiredPerigee(toalt * 0.98);
-	}
-	else if (papiReadScenario_double(line, "TOAPO", d)) { 
-		agc.SetDesiredApogee(d);
-	}
-	else if (papiReadScenario_double(line, "TOPER", d)) { 
-		agc.SetDesiredPerigee(d);
-	}
 	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 		sscanf (line+11, "%d", &buildstatus);
 	}
@@ -1716,9 +1603,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (papiReadScenario_double(line, "DOCKANGLE", DockAngle));
 	else if (!strnicmp(line, "STAGECONFIG", 11)) {
 		strncpy (StagesString, line + 12, 256);
-	}
-	else if (papiReadScenario_double(line, "TOHDG", d)) { 
-		agc.SetDesiredAzimuth(d);
 	}
 	else if (!strnicmp (line, "VECHNO", 6)) {
         int numb;
@@ -1833,10 +1717,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "SATTYPE", 7)) {
 		sscanf (line+7, "%d", &SaturnType);
 	}
-	else if (!strnicmp (line, "AUTOTIMER", 9)) {
-        sscanf (line+9, "%f", &ftcp);
-		autopTime = ftcp;
-	}
 	else if (!strnicmp(line, "MISSNTIME", 9)) {
         sscanf (line+9, "%f", &ftcp);
 		MissionTime = ftcp;
@@ -1931,18 +1811,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int i;
 		sscanf (line + 12, "%d", &i);
 		UseATC = (i != 0);
-	}
-	else if (!strnicmp(line, "MOONLAT", 7)) {
-		sscanf(line + 7, "%f", &ftcp);
-		LMLandingLatitude = ftcp;
-	}
-	else if (!strnicmp(line, "MOONLONG", 8)) {
-		sscanf(line + 8, "%f", &ftcp);
-		LMLandingLongitude = ftcp;
-	}
-	else if (!strnicmp(line, "MOONALT", 7)) {
-		sscanf(line + 7, "%f", &ftcp);
-		LMLandingAltitude = ftcp;
 	}
 	else if (!strnicmp(line, "UNMANNED", 8)) {
 		int i;
@@ -2259,26 +2127,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 			sscanf(line + 12, "%i", &i);
 			rhc_thctoggle = (i != 0);
-		}
-		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
+		} 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
 		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
 		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
-		else if (!strnicmp(line, "MOONBASE", 8)) {
-			strncpy (LMLandingBase, line + 9, 256);
-		}
-		else if (papiReadScenario_double(line, "SPLASHLAT", SplashdownLatitude)); 
-		else if (papiReadScenario_double(line, "SPLASHLONG", SplashdownLongitude)); 
-		else if (papiReadScenario_double(line, "EARTHEIMJD", EntryInterfaceMJD)); 
-		else if (papiReadScenario_double(line, "TLIMJD", TransLunarInjectionMJD)); 
-		else if (papiReadScenario_double(line, "LOIMJD", LunarOrbitInsertionMJD)); 
-		else if (papiReadScenario_double(line, "FREERETURNPECMJD", FreeReturnPericynthionMJD)); 
-		else if (papiReadScenario_double(line, "FREERETURNPECALT", FreeReturnPericynthionAltitude)); 
-		else if (papiReadScenario_double(line, "TLIOFFSETLON", TransLunarInjectionOffsetLon)); 
-		else if (papiReadScenario_double(line, "TLIOFFSETLAT", TransLunarInjectionOffsetLat)); 
-		else if (papiReadScenario_double(line, "TLIOFFSETRAD", TransLunarInjectionOffsetRad)); 
-		else if (papiReadScenario_double(line, "SIVBCUTOFFTIME", SIVBCutoffTime)); 
 		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
@@ -2312,9 +2165,6 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 {
 	ls.AutoSlow = AutoSlow;
 	ls.Crewed = Crewed;
-	ls.LandingAltitude = LMLandingAltitude;
-	ls.LandingLatitude = LMLandingLatitude;
-	ls.LandingLongitude = LMLandingLongitude;
 	ls.AscentFuelKg = LMAscentFuelMassKg;
 	ls.DescentFuelKg = LMDescentFuelMassKg;
 	ls.AscentEmptyKg = LMAscentEmptyMassKg;

@@ -110,14 +110,6 @@ public:
 	int GetApolloNo() { return ApolloNo; };
 
 	///
-	/// \brief Set the desired landing site (Moon for LEM, Earth for CSM)
-	/// \param latitude Latitude in degrees.
-	/// \param longitude Longitude in degrees.
-	/// \param altitude Altitude above surface in meters.
-	///
-	void SetDesiredLanding(double latitude, double longitude, double altitude);
-
-	///
 	/// \brief Force the AGC to restart.
 	///
 	void ForceRestart();
@@ -410,36 +402,6 @@ protected:
 	/// \brief Have we loaded the initial startup data into the Virtual AGC?
 	///
 	bool PadLoaded;
-
-	///
-	/// \brief Desired Apogee for launch or orbit change.
-	///
-	double DesiredApogee;
-
-	///
-	/// \brief Desired Perigee for launch or orbit change.
-	///
-	double DesiredPerigee;
-
-	///
-	/// \brief Desired Azimuth for launch.
-	///
-	double DesiredAzimuth;
-
-	///
-	/// \brief Desired latitude for landing (Earth for CSM or Moon for LEM).
-	///
-	double LandingLatitude;
-
-	///
-	/// \brief Desired longitude for landing (Earth for CSM or Moon for LEM).
-	///
-	double LandingLongitude;
-
-	///
-	/// \brief Desired altitude for landing on the Moon.
-	///
-	double LandingAltitude;
 
 
 #define MAX_INPUT_CHANNELS	0200

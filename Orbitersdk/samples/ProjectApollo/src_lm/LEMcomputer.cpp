@@ -51,10 +51,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 	// Default ascent parameters.
 	//
 
-	DesiredApogee = 82.250;
-	DesiredPerigee = 74.360;
-	DesiredAzimuth = 270.0;
-
     mode = -1;
 	simcomputert = -1.0;
     timeremaining = 99999.0;
