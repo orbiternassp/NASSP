@@ -44,6 +44,10 @@ public:
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
+	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc) { lvCommandConnector = lvc; commandConnector = csmc; }
+protected:
+	IUToLVCommandConnector* lvCommandConnector;
+	IUToCSMCommandConnector* commandConnector;
 };
 
 class LVDCSV: public LVDC {
@@ -58,8 +62,6 @@ public:
 	double LinInter(double x0, double x1, double y0, double y1, double x);
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:								// Saturn LV
-	IUToLVCommandConnector* lvCommandConnector;
-	IUToCSMCommandConnector* commandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 	FILE* lvlog;									// LV Log file
@@ -457,8 +459,6 @@ public:
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
-	IUToCSMCommandConnector* commandConnector;
-	IUToLVCommandConnector* lvCommandConnector;
 	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG lvrg;										// LV rate gyro package
 

@@ -166,6 +166,14 @@ void IU::ConnectToLV(Connector *CommandConnector)
 	lvCommandConnector.ConnectTo(CommandConnector);
 }
 
+void IU::ConnectLVDC()
+{
+	if (lvdc)
+	{
+		lvdc->Configure(&lvCommandConnector, &commandConnector);
+	}
+}
+
 IUToCSMCommandConnector::IUToCSMCommandConnector()
 
 {

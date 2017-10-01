@@ -320,6 +320,8 @@ public:
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
+	void ConnectLVDC();
+
 	///
 	/// \brief Timestep function.
 	/// \param simt The current Mission Elapsed Time in seconds from launch.
@@ -370,7 +372,6 @@ class IU1B :public IU
 public:
 	IU1B();
 	void LoadLVDC(FILEHANDLE scn);
-protected:
 };
 
 class IUSV :public IU
@@ -378,7 +379,6 @@ class IUSV :public IU
 public:
 	IUSV();
 	void LoadLVDC(FILEHANDLE scn);
-protected:
 };
 
 //

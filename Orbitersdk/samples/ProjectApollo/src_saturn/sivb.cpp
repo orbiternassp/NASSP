@@ -1494,6 +1494,7 @@ void SIVB::SetState(SIVBSettings &state)
 			iu = new IU1B;
 		}
 		iu->lvdc = state.lvdc_pointer;
+		iu->ConnectLVDC();
 	}
 
 	State = SIVB_STATE_WAITING;

@@ -1188,7 +1188,10 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		ems.TimeStep(MissionTime, simdt);
 		CrewStatus.Timestep(simdt);
 
-		iu->PostStep(simt, simdt, mjd);
+		if (stage < CSM_LEM_STAGE)
+		{
+			iu->PostStep(simt, simdt, mjd);
+		}
 	}
 	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
