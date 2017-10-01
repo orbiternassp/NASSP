@@ -47,6 +47,15 @@
 
 //#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 
+void LVDC::Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc)
+{
+	lvCommandConnector = lvc;
+	commandConnector = csmc;
+
+	lvrg.Init(lvCommandConnector);
+	lvimu.SetVessel(lvCommandConnector);
+}
+
 // Constructor
 LVDC1B::LVDC1B(){
 	lvCommandConnector = NULL;
@@ -3159,6 +3168,7 @@ LVDCSV::LVDCSV(){
 	TargetVector = _V(0, 0, 0);
 	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
+	XLunarSlingshotAttitude = _V(0, 0, 0);
 	// MATRIX3
 	MX_A = _M(0,0,0,0,0,0,0,0,0);
 	MX_B = _M(0,0,0,0,0,0,0,0,0);
@@ -3504,6 +3514,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	TAS=0;
 	t_clock = 0;
 
+	XLunarSlingshotAttitude = _V(PI, PI, 0.0);
 
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
@@ -4865,6 +4876,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 void LVDCSV::TimeStep(double simt, double simdt) {
 	if (lvCommandConnector->connectedTo == NULL) { return; }
 	if (lvCommandConnector->GetStage() < PRELAUNCH_STAGE) { return; }
+
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
 		// Update timebase ET
@@ -6516,21 +6528,31 @@ orbitalguidance:
 			}
 			else
 			{
-				if (GATE6)
-				{	
-					//attitude hold for T&D
-					CommandedAttitude = ACommandedAttitude;
-					fprintf(lvlog, "T&D attitude hold\r\n");
-					goto minorloop;
+				if (TAS - TB7 - 6540.0 < 0) {
+					if (GATE6)
+					{
+						//attitude hold for T&D
+						CommandedAttitude = ACommandedAttitude;
+						fprintf(lvlog, "T&D attitude hold\r\n");
+						goto minorloop;
+					}
+					else
+					{
+						//attitude for T&D
+						alpha_1 = XLunarAttitude.y;
+						alpha_2 = XLunarAttitude.z;
+						CommandedAttitude.x = XLunarAttitude.x;
+						GATE6 = true;
+						fprintf(lvlog, "T&D attitude\r\n");
+						goto orbatt;
+					}
 				}
 				else
 				{
-					//attitude for T&D					
-					alpha_1 = XLunarAttitude.y;
-					alpha_2 = XLunarAttitude.z;
-					CommandedAttitude.x = XLunarAttitude.x;
-					GATE6 = true;
-					fprintf(lvlog, "T&D attitude\r\n");
+					alpha_1 = XLunarSlingshotAttitude.y;
+					alpha_2 = XLunarSlingshotAttitude.z;
+					CommandedAttitude.x = XLunarSlingshotAttitude.x;
+					fprintf(lvlog, "Slingshot attitude\r\n");
 					goto orbatt;
 				}
 			}

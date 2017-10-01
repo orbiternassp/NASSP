@@ -236,6 +236,8 @@ public:
 	///
 	void clbkPreStep(double simt, double simdt, double mjd);
 
+	void clbkPostStep(double simt, double simdt, double mjd);
+
 	///
 	/// \brief Orbiter state loading function.
 	/// \param scn Scenario file to load from.
@@ -294,6 +296,7 @@ public:
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
 	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
+	THRUSTER_HANDLE GetAPSThruster(int n) { return th_att_rot[n]; }
 
 	///
 	/// \brief Get main propellant mass.

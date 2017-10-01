@@ -743,6 +743,10 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	Panelsdk.Timestep(MissionTime);
 }
 
+void SIVB::clbkPostStep(double simt, double simdt, double mjd)
+{
+	iu->PostStep(simt, simdt, mjd);
+}
 
 void SIVB::GetApolloName(char *s)
 
@@ -2110,6 +2114,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_APS_THRUSTER:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetAPSThruster(m.val1.iValue);
 			return true;
 		}
 		break;

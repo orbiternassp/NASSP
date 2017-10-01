@@ -44,10 +44,13 @@ public:
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
-	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc) { lvCommandConnector = lvc; commandConnector = csmc; }
+	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc);
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
 	IUToCSMCommandConnector* commandConnector;
+
+	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
+	LVRG lvrg;										// LV rate gyro package
 };
 
 class LVDCSV: public LVDC {
@@ -62,8 +65,6 @@ public:
 	double LinInter(double x0, double x1, double y0, double y1, double x);
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:								// Saturn LV
-	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
-	LVRG lvrg;										// LV rate gyro package
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
 
@@ -165,6 +166,7 @@ private:								// Saturn LV
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
+	VECTOR3 XLunarSlingshotAttitude;				// Attitude the SIVB enters for slingshot maneuver.
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2,V_ex3;						// IGM Exhaust Velocities
@@ -459,8 +461,6 @@ public:
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
-	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
-	LVRG lvrg;										// LV rate gyro package
 
 	bool LVDC_Stop;									// Program Stop Flag
 	int LVDC_Timebase;								// Time Base
