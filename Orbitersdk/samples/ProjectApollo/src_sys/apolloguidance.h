@@ -465,8 +465,6 @@ protected:
 	bool GimbalLockAlarm;
 };
 
-extern char TwoSpaceTwoFormat[];
-
 //
 // Strings for state saving.
 //

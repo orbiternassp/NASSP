@@ -957,6 +957,13 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 				}*/
 
+				//For now, disable LVDC at TB4+16,800 seconds
+				if (LVDC_TB_ETime > 16800.0)
+				{
+					LVDC_Stop = true;
+					return;
+				}
+
 				break;
 		}
 		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
@@ -5367,6 +5374,13 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if (LVDC_TB_ETime > 20 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
+				}
+
+				//For now, disable LVDC at TB7+10,000 seconds
+				if (LVDC_TB_ETime > 10000.0)
+				{
+					LVDC_Stop = true;
+					return;
 				}
 				break;
 		}
