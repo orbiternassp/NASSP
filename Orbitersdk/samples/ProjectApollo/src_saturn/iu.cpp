@@ -79,6 +79,10 @@ void IU::SetMissionInfo(bool tlicapable, bool crewed)
 void IU::Timestep(double simt, double simdt, double mjd)
 
 {
+	if (lvdc != NULL) {
+		lvdc->TimeStep(simt, simdt);
+	}
+
 	// Only SIVB in orbit for now
 	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB) return;
 
@@ -112,9 +116,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 void IU::PostStep(double simt, double simdt, double mjd) {
 
-	if (lvdc != NULL) {
-		lvdc->TimeStep(simt, simdt);
-	}
 }
 
 void IU::SaveState(FILEHANDLE scn)
