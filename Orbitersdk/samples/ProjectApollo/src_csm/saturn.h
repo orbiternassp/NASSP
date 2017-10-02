@@ -59,6 +59,7 @@
 #include "MechanicalAccelerometer.h"
 #include "checklistController.h"
 #include "payload.h"
+#include "csmcomputer.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"

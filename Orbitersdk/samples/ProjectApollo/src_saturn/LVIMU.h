@@ -27,6 +27,8 @@
 #if !defined(_PA_LVIMU_H)
 #define _PA_LVIMU_H
 
+class IUToLVCommandConnector;
+
 // Indexes into CDURegisters
 #define LVRegCDUX  000
 #define LVRegCDUY  001

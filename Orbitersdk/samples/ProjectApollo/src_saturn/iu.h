@@ -25,10 +25,11 @@
 #if !defined(_PA_IU_H)
 #define _PA_IU_H
 
+#include "LVIMU.h"
+
 class SoundLib;
 class IU;
 class LVDC;
-class LVDC1B;
 
 ///
 /// \ingroup Connectors
@@ -337,6 +338,8 @@ public:
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 
 	LVDC* lvdc;
+	LVIMU lvimu;
+	LVRG lvrg;
 
 protected:
 	int State;

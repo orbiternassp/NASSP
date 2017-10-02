@@ -23,8 +23,10 @@
   **************************************************************************/
 
 #pragma once
-#include "LVIMU.h"
-class Saturn1b;
+class IUToLVCommandConnector;
+class IUToCSMCommandConnector;
+class LVIMU;
+class LVRG;
 
 /* *******************
  * LVDC++ SV VERSION *
@@ -39,6 +41,7 @@ class Saturn1b;
 class LVDC
 {
 public:
+	LVDC(LVIMU &imu, LVRG &rg);
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
@@ -49,13 +52,13 @@ protected:
 	IUToLVCommandConnector* lvCommandConnector;
 	IUToCSMCommandConnector* commandConnector;
 
-	LVIMU lvimu;									// ST-124-M3 IMU (LV version)
-	LVRG lvrg;										// LV rate gyro package
+	LVIMU &lvimu;									// ST-124-M3 IMU (LV version)
+	LVRG &lvrg;										// LV rate gyro package
 };
 
 class LVDCSV: public LVDC {
 public:
-	LVDCSV();											// Constructor
+	LVDCSV(LVIMU &imu, LVRG &rg);											// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -451,7 +454,7 @@ private:								// Saturn LV
 
 class LVDC1B: public LVDC {
 public:
-	LVDC1B();										// Constructor
+	LVDC1B(LVIMU &imu, LVRG &rg);										// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);

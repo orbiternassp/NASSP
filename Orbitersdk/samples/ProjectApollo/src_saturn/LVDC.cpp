@@ -44,20 +44,24 @@
 #include "s1b.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "LVDC.h"
+#include "LVIMU.h"
 
 //#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
+
+LVDC::LVDC(LVIMU &imu, LVRG &rg) : lvimu(imu), lvrg(rg)
+{
+
+}
 
 void LVDC::Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc)
 {
 	lvCommandConnector = lvc;
 	commandConnector = csmc;
-
-	lvrg.Init(lvCommandConnector);
-	lvimu.SetVessel(lvCommandConnector);
 }
 
 // Constructor
-LVDC1B::LVDC1B(){
+LVDC1B::LVDC1B(LVIMU &imu, LVRG &rg) : LVDC(imu, rg)
+{
 	lvCommandConnector = NULL;
 	commandConnector = NULL;
 	int x=0;
@@ -357,10 +361,7 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	}
 	lvCommandConnector = lvCommandConn;
 	commandConnector = commandConn;
-	lvimu.Init();							// Initialize IMU
-	lvrg.Init(lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.SetVessel(lvCommandConnector);	// set vessel pointer
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
 	e = 0.00417135950879776;
@@ -966,8 +967,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
-		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
 		/*
 		if (lvimu.Operate) { fprintf(lvlog, "IMU: Operate\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: NO-Operate\r\n"); }
@@ -2359,7 +2358,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_mx(scn, "LVDC_MX_phi_T", MX_phi_T);
 	// Done
 	oapiWriteLine(scn, LVDC_END_STRING);
-	lvimu.SaveState(scn);
 }
 
 void LVDC1B::LoadState(FILEHANDLE scn){
@@ -2727,20 +2725,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_mat(line, "LVDC_MX_G", MX_G);
 		papiReadScenario_mat(line, "LVDC_MX_K", MX_K);
 		papiReadScenario_mat(line, "LVDC_MX_phi_T", MX_phi_T);
-	}	
-	if(oapiReadScenario_nextline (scn, line)){
-		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-			// fprintf(lvlog, "LVIMU LoadState() called\r\n");
-			// fflush(lvlog);
-			lvimu.LoadState(scn);
-			/*
-			if(lvimu.Initialized) { fprintf(lvlog, "LVIMU Initialized\r\n"); }
-			if(lvimu.Operate){ fprintf(lvlog, "LVIMU Operate\r\n"); }
-			if(lvimu.Caged) { fprintf(lvlog, "LVIMU Caged\r\n"); }			
-			if(lvimu.TurnedOn) { fprintf(lvlog, "LVIMU Turned On\r\n"); }
-			fflush(lvlog);
-			*/
-		}
 	}
 	return;
 }
@@ -2772,7 +2756,8 @@ void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *S
 // ***************************
 
 // Constructor
-LVDCSV::LVDCSV(){
+LVDCSV::LVDCSV(LVIMU &imu, LVRG &rg) : LVDC(imu, rg)
+{
 	lvCommandConnector = NULL;
 	commandConnector = NULL;
 	int x=0;
@@ -3202,10 +3187,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	}
 	lvCommandConnector = lvCommandConn;
 	commandConnector = commandConn;
-	lvimu.Init();							// Initialize IMU
-	lvrg.Init(lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.SetVessel(lvCommandConnector);	// set vessel pointer
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
 	C_3 = -60731530.2; // Stored as twice the etc etc.
@@ -4195,7 +4177,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_mx(scn, "LVDC_MX_phi_T", MX_phi_T);
 	// All done
 	oapiWriteLine(scn, LVDC_END_STRING);
-	lvimu.SaveState(scn);
 }
 
 void LVDCSV::LoadState(FILEHANDLE scn){
@@ -4872,11 +4853,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_mat(line, "LVDC_MX_phi_T", MX_phi_T);
 		// Done
 	}
-	if(oapiReadScenario_nextline (scn, line)){
-		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-			lvimu.LoadState(scn);
-		}
-	}
 	return;
 }
 
@@ -5384,8 +5360,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 				break;
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
-		lvrg.Timestep(simdt);								// and RG
 		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
 		AttRate = lvrg.GetRates();							// Get rates	
 		//This is the actual LVDC code & logic; has to be independent from any of the above events

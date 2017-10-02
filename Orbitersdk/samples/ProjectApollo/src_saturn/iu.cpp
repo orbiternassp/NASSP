@@ -80,6 +80,8 @@ void IU::Timestep(double simt, double simdt, double mjd)
 
 {
 	if (lvdc != NULL) {
+		lvimu.Timestep(simt);
+		lvrg.Timestep(simdt);
 		lvdc->TimeStep(simt, simdt);
 	}
 
@@ -128,10 +130,6 @@ void IU::LoadState(FILEHANDLE scn)
 	}
 }
 
-void IU::SaveLVDC(FILEHANDLE scn) {
-	if (lvdc != NULL) { lvdc->SaveState(scn); }
-}
-
 void IU::ConnectToCSM(Connector *csmConnector)
 
 {
@@ -154,6 +152,8 @@ void IU::ConnectLVDC()
 {
 	if (lvdc)
 	{
+		lvrg.Init(&lvCommandConnector);
+		lvimu.SetVessel(&lvCommandConnector);
 		lvdc->Configure(&lvCommandConnector, &commandConnector);
 	}
 }
@@ -1595,19 +1595,38 @@ PROPELLANT_HANDLE IUToLVCommandConnector::GetThirdStagePropellantHandle()
 	return 0;
 }
 
+void IU::SaveLVDC(FILEHANDLE scn) {
+	if (lvdc != NULL) {
+		lvdc->SaveState(scn);
+		lvimu.SaveState(scn);
+	}
+}
+
 IU1B::IU1B()
 {
 
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {
+
+	char *line;
+
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDC1B;
+		lvdc = new LVDC1B(lvimu, lvrg);
+		lvimu.Init();							// Initialize IMU
+		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
+		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-
 	}
 	lvdc->LoadState(scn);
+
+	if (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
+			lvimu.LoadState(scn);
+		}
+	}
 }
 
 IUSV::IUSV()
@@ -1616,11 +1635,24 @@ IUSV::IUSV()
 }
 
 void IUSV::LoadLVDC(FILEHANDLE scn) {
+
+	char *line;
+
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDCSV;
+		lvdc = new LVDCSV(lvimu, lvrg);
+		lvimu.Init();							// Initialize IMU
+		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
+		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
 
 	}
 	lvdc->LoadState(scn);
+
+	if (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
+			lvimu.LoadState(scn);
+		}
+	}
 }
