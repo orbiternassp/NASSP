@@ -296,7 +296,8 @@ public:
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
 	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
-	THRUSTER_HANDLE GetAPSThruster(int n) { return th_att_rot[n]; }
+	void SetSIVBThrusterDir(VECTOR3 &dir) { SetThrusterDir(th_main[0], dir); }
+	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
 
 	///
 	/// \brief Get main propellant mass.

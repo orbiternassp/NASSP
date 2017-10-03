@@ -26,6 +26,7 @@
 #define _PA_IU_H
 
 #include "LVIMU.h"
+#include "FCC.h"
 
 class SoundLib;
 class IU;
@@ -87,9 +88,11 @@ enum IULVMessageType
 	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
 	IULV_SET_APS_THRUST_LEVEL,				///< Set APS thrust level.
 	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
+	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
+	IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
-	IULV_SET_THRUSTER_DIR,					///< Set thruster direction.
+	IULV_SET_SATURN_THRUSTER_DIR,			///< Set thruster direction.
 	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
 	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
 	IULV_ADD_S4RCS,
@@ -144,9 +147,7 @@ enum IULVMessageType
 	IULV_GET_THRUSTER_MAX,
 	IULV_GET_MAIN_THRUSTER_GROUP,
 	IULV_GET_VERNIER_THRUSTER_GROUP,
-	IULV_GET_APS_THRUSTER_GROUP,
 	IULV_GET_THRUSTER_RESOURCE,
-	IULV_GET_APS_THRUSTER,
 	IULV_GET_THRUSTER_GROUP_LEVEL,
 };
 
@@ -230,8 +231,10 @@ public:
 	void SetVentingThruster();
 	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
+	void SetAPSUllageThrusterGroupLevel(double level);
+	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
-	void SetThrusterDir(THRUSTER_HANDLE th, VECTOR3 &dir);
+	void SetThrusterDir(int n, VECTOR3 &dir);
 
 	void SwitchSelector(int item);
 	void SeparateStage(int stage);
@@ -275,10 +278,8 @@ public:
 	double GetMissionTime();
 	int GetApolloNo();
 	THRUSTER_HANDLE GetMainThruster(int n);
-	THRUSTER_HANDLE GetAPSThruster(int n);
 	THGROUP_HANDLE GetMainThrusterGroup();
 	THGROUP_HANDLE GetVernierThrusterGroup();
-	THGROUP_HANDLE GetAPSThrusterGroup();
 	double GetThrusterLevel(THRUSTER_HANDLE th);
 	double GetThrusterGroupLevel(THGROUP_HANDLE thg);
 	double GetFirstStageThrust();
@@ -321,14 +322,14 @@ public:
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
-	void ConnectLVDC();
+	virtual void ConnectLVDC();
 
 	///
 	/// \brief Timestep function.
 	/// \param simt The current Mission Elapsed Time in seconds from launch.
 	/// \param simdt The time in seconds since the last timestep call.
 	///
-	void Timestep(double simt, double simdt, double mjd);
+	virtual void Timestep(double simt, double simdt, double mjd);
 	void PostStep(double simt, double simdt, double mjd);
 
 	void LoadState(FILEHANDLE scn);
@@ -336,6 +337,9 @@ public:
 
 	void SaveLVDC(FILEHANDLE scn);
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
+
+	virtual void SaveFCC(FILEHANDLE scn) = 0;
+	virtual void LoadFCC(FILEHANDLE scn) = 0;
 
 	LVDC* lvdc;
 	LVIMU lvimu;
@@ -374,14 +378,26 @@ class IU1B :public IU
 {
 public:
 	IU1B();
+	void Timestep(double simt, double simdt, double mjd);
 	void LoadLVDC(FILEHANDLE scn);
+	void SaveFCC(FILEHANDLE scn);
+	void LoadFCC(FILEHANDLE scn);
+	void ConnectLVDC();
+protected:
+	FCC1B fcc;
 };
 
 class IUSV :public IU
 {
 public:
 	IUSV();
+	void Timestep(double simt, double simdt, double mjd);
 	void LoadLVDC(FILEHANDLE scn);
+	void SaveFCC(FILEHANDLE scn);
+	void LoadFCC(FILEHANDLE scn);
+	void ConnectLVDC();
+protected:
+	FCCSV fcc;
 };
 
 //

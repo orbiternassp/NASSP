@@ -41,7 +41,7 @@ class LVRG;
 class LVDC
 {
 public:
-	LVDC(LVIMU &imu, LVRG &rg);
+	LVDC(LVIMU &imu, LVRG &rg, FCC &fc);
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
@@ -54,11 +54,12 @@ protected:
 
 	LVIMU &lvimu;									// ST-124-M3 IMU (LV version)
 	LVRG &lvrg;										// LV rate gyro package
+	FCC &fcc;
 };
 
 class LVDCSV: public LVDC {
 public:
-	LVDCSV(LVIMU &imu, LVRG &rg);											// Constructor
+	LVDCSV(LVIMU &imu, LVRG &rg, FCC &fc);											// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -107,6 +108,7 @@ private:								// Saturn LV
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	int OrbNavCycle;								// Orbital cycle counter (for debugging)
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
+	int CommandSequence;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -421,27 +423,6 @@ private:								// Saturn LV
 	}TABLE15[2];
 	int tgt_index;				// Non-LVDC variable to enable selecting the correct set of injection parameters
 
-	//flight control computer
-	double a_0p;									// pitch error gain
-	double a_0y;									// yaw error gain
-	double a_0r;									// roll error gain
-	double a_1p;									// pitch rate gain
-	double a_1y;									// yaw rate gain
-	double a_1r;									// roll rate gain
-	double beta_pc;									// commanded pitch thrust direction
-	double beta_yc;									// commanded yaw thrust direction
-	double beta_rc;									// commanded roll thrust direction
-	double beta_p1c;								// commanded actuator angles in pitch/yaw for resp. engine
-	double beta_p2c;
-	double beta_p3c;
-	double beta_p4c;
-	double beta_y1c;
-	double beta_y2c;
-	double beta_y3c;
-	double beta_y4c;
-	double eps_p;									//error command for APS engines: pitch
-	double eps_ypr;									//error command for APS engines: yaw mixed +roll
-	double eps_ymr;									//error command for APS engines: yaw mixed -roll
 	// TABLE25 is apparently only used on direct-ascent
 
 	friend class MCC;
@@ -454,7 +435,7 @@ private:								// Saturn LV
 
 class LVDC1B: public LVDC {
 public:
-	LVDC1B(LVIMU &imu, LVRG &rg);										// Constructor
+	LVDC1B(LVIMU &imu, LVRG &rg, FCC &fc);										// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -662,27 +643,6 @@ private:
 	double sin_chi_Zit;
 	double cos_chi_Zit;
 
-	//flight control computer
-	double a_0p;									// pitch error gain
-	double a_0y;									// yaw error gain
-	double a_0r;									// roll error gain
-	double a_1p;									// pitch rate gain
-	double a_1y;									// yaw rate gain
-	double a_1r;									// roll rate gain
-	double beta_pc;									// commanded pitch thrust direction
-	double beta_yc;									// commanded yaw thrust direction
-	double beta_rc;									// commanded roll thrust direction
-	double beta_p1c;								// commanded actuator angles in pitch/yaw for resp. engine
-	double beta_p2c;
-	double beta_p3c;
-	double beta_p4c;
-	double beta_y1c;
-	double beta_y2c;
-	double beta_y3c;
-	double beta_y4c;
-	double eps_p;									//error command for APS engines: pitch
-	double eps_ypr;									//error command for APS engines: yaw mixed +roll
-	double eps_ymr;									//error command for APS engines: yaw mixed -roll
 	// TABLE25 is apparently only used on direct-ascent
 };
 

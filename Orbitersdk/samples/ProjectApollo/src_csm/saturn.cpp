@@ -4616,6 +4616,24 @@ int Saturn::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
+void Saturn::SetSaturnThrusterDir(int n, VECTOR3 &dir)
+{
+	if (th_main[n])
+		SetThrusterDir(th_main[n], dir);
+}
+
+void Saturn::SetAPSUllageThrusterGroupLevel(double level)
+{
+	if (thg_aps)
+		SetThrusterGroupLevel(thg_aps, level);
+}
+
+void Saturn::SetAPSThrusterLevel(int n, double level)
+{
+	if (th_att_rot[n])
+		SetThrusterLevel(th_att_rot[n], level);
+}
+
 void Saturn::SetContrailLevel(double level)
 {
 	contrailLevel = level;

@@ -2118,14 +2118,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_APS_THRUSTER:
-		if (OurVessel)
-		{
-			m.val2.pValue = OurVessel->GetAPSThruster(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_MAIN_THRUSTER_GROUP:
 		if (OurVessel)
 		{
@@ -2223,6 +2215,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_SET_APS_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
 	case IULV_SET_THRUSTER_GROUP_LEVEL:
 		if (OurVessel)
 		{
@@ -2239,10 +2239,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_THRUSTER_DIR:
+	case IULV_SET_SATURN_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterDir(m.val1.pValue, *(VECTOR3 *)m.val2.pValue);
+			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);
 			return true;
 		}
 		break;

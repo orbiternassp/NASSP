@@ -350,14 +350,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_APS_THRUSTER:
-		if (OurVessel)
-		{
-			m.val2.pValue = OurVessel->GetAPSThruster(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_MAIN_THRUSTER_GROUP:
 		if (OurVessel)
 		{
@@ -370,14 +362,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.pValue = OurVessel->GetVernierThrusterGroup();
-			return true;
-		}
-		break;
-
-	case IULV_GET_APS_THRUSTER_GROUP:
-		if (OurVessel)
-		{
-			m.val1.pValue = OurVessel->GetAPSThrusterGroup();
 			return true;
 		}
 		break;
@@ -551,10 +535,26 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_SET_APS_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
 	case IULV_SET_THRUSTER_GROUP_LEVEL:
 		if (OurVessel)
 		{
 			OurVessel->SetThrusterGroupLevel((THGROUP_HANDLE) m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSUllageThrusterGroupLevel(m.val1.dValue);
 			return true;
 		}
 		break;
@@ -567,10 +567,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_THRUSTER_DIR:
+	case IULV_SET_SATURN_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterDir(m.val1.pValue, *(VECTOR3 *)m.val2.pValue);
+			OurVessel->SetSaturnThrusterDir(m.val1.iValue, *(VECTOR3 *)m.val2.pValue);
 			return true;
 		}
 		break;

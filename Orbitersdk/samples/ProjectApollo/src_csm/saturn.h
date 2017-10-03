@@ -927,14 +927,15 @@ public:
 	double GetMissionTime() { return MissionTime; };
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
-	THRUSTER_HANDLE GetAPSThruster(int n) { return th_att_rot[n]; }
 	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
 	THGROUP_HANDLE GetVernierThrusterGroup() { return thg_ver; }
-	THGROUP_HANDLE GetAPSThrusterGroup() { return thg_aps; }
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
 	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
 	bool GetSIISepLight() { return SIISepState; };
+	void SetSaturnThrusterDir(int n, VECTOR3 &dir);
+	void SetAPSUllageThrusterGroupLevel(double level);
+	void SetAPSThrusterLevel(int n, double level);
 
 	///
 	/// \brief Triggers Virtual AGC core dump

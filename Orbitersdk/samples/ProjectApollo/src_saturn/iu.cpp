@@ -46,7 +46,6 @@
 
 
 IU::IU()
-
 {
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -112,6 +111,8 @@ void IU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
+	SaveFCC(scn);
+	
 	oapiWriteLine(scn, IU_END_STRING);
 }
 
@@ -125,8 +126,11 @@ void IU::LoadState(FILEHANDLE scn)
 			return;
 
 		if (papiReadScenario_int(line, "STATE", State)); 
-		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime)); 
-		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime)) {};
+		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime));
+		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime));
+		else if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
+			LoadFCC(scn);
+		}
 	}
 }
 
@@ -752,6 +756,18 @@ void IUToLVCommandConnector::SetThrusterLevel(THRUSTER_HANDLE th, double level)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::SetAPSThrusterLevel(int n, double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_APS_THRUSTER_LEVEL;
+	cm.val1.iValue = n;
+	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SetThrusterGroupLevel(THGROUP_HANDLE thg, double level)
 {
 	ConnectorMessage cm;
@@ -760,6 +776,17 @@ void IUToLVCommandConnector::SetThrusterGroupLevel(THGROUP_HANDLE thg, double le
 	cm.messageType = IULV_SET_THRUSTER_GROUP_LEVEL;
 	cm.val1.pValue = thg;
 	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetAPSUllageThrusterGroupLevel(double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL;
+	cm.val1.dValue = level;
 
 	SendMessage(cm);
 }
@@ -776,13 +803,13 @@ void IUToLVCommandConnector::SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetThrusterDir(THRUSTER_HANDLE th, VECTOR3 &dir)
+void IUToLVCommandConnector::SetThrusterDir(int n, VECTOR3 &dir)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_THRUSTER_DIR;
-	cm.val1.pValue = th;
+	cm.messageType = IULV_SET_SATURN_THRUSTER_DIR;
+	cm.val1.iValue = n;
 	cm.val2.pValue = &dir;
 
 	SendMessage(cm);
@@ -1457,22 +1484,6 @@ THRUSTER_HANDLE IUToLVCommandConnector::GetMainThruster(int n)
 	return 0;
 }
 
-THRUSTER_HANDLE IUToLVCommandConnector::GetAPSThruster(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_APS_THRUSTER;
-	cm.val1.iValue = n;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.pValue;
-	}
-
-	return 0;
-}
-
 THGROUP_HANDLE IUToLVCommandConnector::GetMainThrusterGroup()
 {
 	ConnectorMessage cm;
@@ -1494,21 +1505,6 @@ THGROUP_HANDLE IUToLVCommandConnector::GetVernierThrusterGroup()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_VERNIER_THRUSTER_GROUP;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.pValue;
-	}
-
-	return 0;
-}
-
-THGROUP_HANDLE IUToLVCommandConnector::GetAPSThrusterGroup()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_APS_THRUSTER_GROUP;
 
 	if (SendMessage(cm))
 	{
@@ -1602,9 +1598,16 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	}
 }
 
-IU1B::IU1B()
+IU1B::IU1B() : fcc(lvrg)
 {
 
+}
+
+void IU1B::Timestep(double simt, double simdt, double mjd)
+{
+	IU::Timestep(simt, simdt, mjd);
+
+	fcc.Timestep(simdt);
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {
@@ -1613,12 +1616,13 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDC1B(lvimu, lvrg);
+		lvdc = new LVDC1B(lvimu, lvrg, fcc);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
+		fcc.Configure(&lvCommandConnector);
 	}
 	lvdc->LoadState(scn);
 
@@ -1629,9 +1633,36 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 	}
 }
 
-IUSV::IUSV()
+void IU1B::SaveFCC(FILEHANDLE scn)
+{
+	fcc.SaveState(scn, "FCC_BEGIN", "FCC_END");
+}
+
+void IU1B::LoadFCC(FILEHANDLE scn)
+{
+	fcc.LoadState(scn, "FCC_END");
+}
+
+void IU1B::ConnectLVDC()
+{
+	IU::ConnectLVDC();
+
+	if (lvdc)
+	{
+		fcc.Configure(&lvCommandConnector);
+	}
+}
+
+IUSV::IUSV() : fcc(lvrg)
 {
 
+}
+
+void IUSV::Timestep(double simt, double simdt, double mjd)
+{
+	IU::Timestep(simt, simdt, mjd);
+
+	fcc.Timestep(simdt);
 }
 
 void IUSV::LoadLVDC(FILEHANDLE scn) {
@@ -1640,13 +1671,13 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDCSV(lvimu, lvrg);
+		lvdc = new LVDCSV(lvimu, lvrg, fcc);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-
+		fcc.Configure(&lvCommandConnector);
 	}
 	lvdc->LoadState(scn);
 
@@ -1654,5 +1685,25 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
 			lvimu.LoadState(scn);
 		}
+	}
+}
+
+void IUSV::SaveFCC(FILEHANDLE scn)
+{
+	fcc.SaveState(scn, "FCC_BEGIN", "FCC_END");
+}
+
+void IUSV::LoadFCC(FILEHANDLE scn)
+{
+	fcc.LoadState(scn, "FCC_END");
+}
+
+void IUSV::ConnectLVDC()
+{
+	IU::ConnectLVDC();
+
+	if (lvdc)
+	{
+		fcc.Configure(&lvCommandConnector);
 	}
 }
