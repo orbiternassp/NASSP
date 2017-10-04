@@ -5423,6 +5423,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				break;
 
 			case 4:	//Timebase 4
+			case 40:
 				switch (CommandSequence)
 				{
 				case 0:
@@ -5590,7 +5591,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				default:
 					break;
 				}
-			case 40:
 				// S2 STAGE SEP
 				if (LVDC_TB_ETime > 0.8 && lvCommandConnector->GetStage() <= LAUNCH_STAGE_TWO_ISTG_JET) {
 					// S2ShutS.done(); No CECO on AP8
@@ -5696,6 +5696,156 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
+				case 12:
+					//TB5+4.1: Aux Hydraulix Pump Flight Mode Off (S-IVB)
+					if (LVDC_TB_ETime > 4.1)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB5+4.2: Telemetry Calibrator In-Flight Calibrate On (IU)
+					if (LVDC_TB_ETime > 4.2)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB5+5.0: S/C Control of Saturn Enable
+					if (LVDC_TB_ETime > 5.0)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB5+6.5: In-Flight Calibration On (S-IVB)
+					if (LVDC_TB_ETime > 6.5)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB5+7.0: TM Calibrate On (S-IVB)
+					if (LVDC_TB_ETime > 7.0)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB5+9.2: Telemetry Calibrator In-Flight Calibrate Off (IU)
+					if (LVDC_TB_ETime > 9.2)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB5+10.0: S-IVB Engine Out Indication "A" Enable Reset
+					if (LVDC_TB_ETime > 10.0)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB5+10.2: S-IVB Engine Out Indication "B" Enable Reset
+					if (LVDC_TB_ETime > 10.2)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB5+10.4: S-I RF Assembly Power Off
+					if (LVDC_TB_ETime > 10.4)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB5+11.3: Tape Recorder Playback Reverse On
+					if (LVDC_TB_ETime > 11.3)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB5+12.0: TM Calibrate Off (S-IVB)
+					if (LVDC_TB_ETime > 12.0)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB5+12.5: In-Flight Calibration On (S-IVB)
+					if (LVDC_TB_ETime > 12.5)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB5+22.0: Single Sideband FM Transmitter Off
+					if (LVDC_TB_ETime > 22.0)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB5+59.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 59.0)
+						CommandSequence++;
+					break;
+				case 26:
+					//TB5+59.1: LH2 Tank Continuous Vent Relief Override Valve Open On
+					if (LVDC_TB_ETime > 59.1)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB5+61.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 61.0)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB5+61.1: LH2 Tank Continuous Vent Relief Override Valve Open Off
+					if (LVDC_TB_ETime > 61.1)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB5+82.1: Tape Recorder Playback Reverse Off
+					if (LVDC_TB_ETime > 82.1)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB5+87.0: S-IVB Ullage Engine No.1 Off
+					if (LVDC_TB_ETime > 87.0)
+						CommandSequence++;
+					break;
+				case 31:
+					//TB5+87.1: S-IVB Ullage Engine No.2 Off
+					if (LVDC_TB_ETime > 87.1)
+						CommandSequence++;
+					break;
+				case 32:
+					//TB5+87.2: S-IVB Ullage Thrust Present Indication Off
+					if (LVDC_TB_ETime > 87.2)
+						CommandSequence++;
+					break;
+				case 33:
+					//TB5+500.0: PU Inverter and DC Power Off
+					if (LVDC_TB_ETime > 500.0)
+						CommandSequence++;
+					break;
+				case 34:
+					//TB5+602.6: Engine Pump Purge Control Valve Enable Off
+					if (LVDC_TB_ETime > 602.6)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB5+2600.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 2600.0)
+						CommandSequence++;
+					break;
+				case 36:
+					//TB5+2648.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 2648.0)
+						CommandSequence++;
+					break;
+				case 37:
+					//TB5+5000.0: PU Inverter and DC Power On
+					if (LVDC_TB_ETime > 5000.0)
+						CommandSequence++;
+					break;
+				case 38:
+					//TB5+5400.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 5400.0)
+						CommandSequence++;
+					break;
+				case 39:
+					//TB5+5448.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 5448.0)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB5+10500.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 10500.0)
+						CommandSequence++;
+					break;
+				case 41:
+					//TB5+10980.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 10980.0)
+						CommandSequence++;
+					break;
 				default:
 					break;
 				}
@@ -5743,32 +5893,447 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				break;
 			case 6:
 				//TB6 timed events
-				if (poweredflight == false)
-				{poweredflight = true;}
 
-				// SII SEP light
-				if (S4B_REIGN == false && commandConnector->GetSIISepLight() == false && LVDC_TB_ETime < 38.0)
+				switch (CommandSequence)
 				{
-					commandConnector->SetSIISep();	//Set SII SEP light to notify crew of TB6 start
-					commandConnector->TLIBegun();
+				case 0:
+					//TB6+0.0:Begin Restart Preparations
+					poweredflight = true;
+					CommandSequence++;
+					break;
+				case 1:
+					//TB6+0.1: S-IVB Restart Alert On
+					if (LVDC_TB_ETime > 0.1)
+					{
+						commandConnector->SetSIISep();	//Set SII SEP light to notify crew of TB6 start
+						commandConnector->TLIBegun();
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB6+0.3: S/C Control of Saturn Disable
+					if (LVDC_TB_ETime > 0.3)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB6+1.0: In-Flight Calibration Mode On
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB6+1.2: Telemetry Calibration In-Flight Calibrate On
+					if (LVDC_TB_ETime > 1.2)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB6+1.4: TM Calibrate On
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB6+6.2: Telemetry Calibration In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 6.2)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB6+6.4: TM Calibrate Off
+					if (LVDC_TB_ETime > 6.4)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB6+7.0: In-Flight Calibration Mode Off
+					if (LVDC_TB_ETime > 7.0)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB6+10.0: S-IVB Engine Cutoff Off
+					if (LVDC_TB_ETime > 10.0)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB6+10.5: Single Sideband FM Transmitter On
+					if (LVDC_TB_ETime > 10.5)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB6+36.3: LH2 Tank Vent and Latching Relief Valve Boost Close On
+					if (LVDC_TB_ETime > 36.3)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB6+36.5: LOX Tank Vent and NPV Valves Boost Close On
+					if (LVDC_TB_ETime > 36.5)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB6+36.7: S-IVB Restart Alert Off
+					if (LVDC_TB_ETime > 37.3)
+					{
+						commandConnector->ClearSIISep(); //This would signal the crew to start their event timer at 51:00, counting up
+						CommandSequence++;
+					}
+					break;
+				case 14:
+					//TB6+38.3: LH2 Tank Vent and Latching Relief Valve Boost Close Off
+					if (LVDC_TB_ETime > 38.3)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB6+38.5: LOX Tank Vent and NPV Valves Boost Close Off
+					if (LVDC_TB_ETime > 38.5)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB6+41.1: Repressurization System Mode Selector Off (Amb)
+					if (LVDC_TB_ETime > 41.1)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB6+41.3: Burner LH2 Propellant Valve Open On
+					if (LVDC_TB_ETime > 41.3)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB6+41.6: Burner Exciters On
+					if (LVDC_TB_ETime > 41.6)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB6+42.0: Burner LOX Shutdown Valve Open On
+					if (LVDC_TB_ETime > 42.0)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB6+42.2: LH2 Tank Continuous Vent Valve Close On
+					if (LVDC_TB_ETime > 42.2)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB6+42.8: Burner LH2 Propellant Valve Open Off
+					if (LVDC_TB_ETime > 42.8)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB6+43.5: Burner LOX Shutdown Valve Open Off
+					if (LVDC_TB_ETime > 43.5)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB6+44.2: LH2 Tank Continuous Vent Valve Close Off
+					if (LVDC_TB_ETime > 44.2)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB6+45.4: Burner Exciters Off
+					if (LVDC_TB_ETime > 45.4)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB6+48.0: Burner Automatic Cutoff System Arm
+					if (LVDC_TB_ETime > 48.0)
+						CommandSequence++;
+					break;
+				case 26:
+					//TB6+48.1: LH2 Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 48.1)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB6+48.3: LOX Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 48.3)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB6+219.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 219.0)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB6+249.0: LOX Chilldown Pump On
+					if (LVDC_TB_ETime > 249.0)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB6+254.0: Fuel Chilldown Pump On
+					if (LVDC_TB_ETime > 254.0)
+						CommandSequence++;
+					break;
+				case 31:
+					//TB6+259.0: Prevalves Close On
+					if (LVDC_TB_ETime > 259.0)
+						CommandSequence++;
+					break;
+				case 32:
+					//TB6+400.0: In-Flight Calibration Mode On
+					if (LVDC_TB_ETime > 400.0)
+						CommandSequence++;
+					break;
+				case 33:
+					//TB6+400.2: Telemetry Calibration In-Flight Calibrate On
+					if (LVDC_TB_ETime > 400.2)
+						CommandSequence++;
+					break;
+				case 34:
+					//TB6+400.4: TM Calibrate On
+					if (LVDC_TB_ETime > 400.4)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB6+405.2: Telemetry Calibration In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 405.2)
+						CommandSequence++;
+					break;
+				case 36:
+					//TB6+405.4: TM Calibrate Off
+					if (LVDC_TB_ETime > 405.4)
+						CommandSequence++;
+					break;
+				case 37:
+					//TB6+406.0: In-Flight Calibration Mode Off
+					if (LVDC_TB_ETime > 406.0)
+						CommandSequence++;
+					break;
+				case 38:
+					//TB6+450.0: Second Burn Relay On
+					if (LVDC_TB_ETime > 450.0)
+						CommandSequence++;
+					break;
+				case 39:
+					//TB6+450.1: PU Valve Hardover Position On
+					if (LVDC_TB_ETime > 450.1)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB6+493.6: S-IVB Restart Alert On
+					if (LVDC_TB_ETime > 493.6)
+					{
+						commandConnector->SetSIISep();
+						CommandSequence++;
+					}
+					break;
+				case 41:
+					//TB6+496.3: S-IVB Ullage Engine No.1 On
+					if (LVDC_TB_ETime > 496.3)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						CommandSequence++;
+					}
+					break;
+				case 42:
+					//TB6+496.4: S-IVB Ullage Engine No.2 On
+					if (LVDC_TB_ETime > 496.4)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						CommandSequence++;
+					}
+					break;
+				case 43:
+					//TB6+496.5: S-IVB Ullage Thrust Present Indication
+					if (LVDC_TB_ETime > 496.5)
+						CommandSequence++;
+					break;
+				case 44:
+					//TB6+496.6: LOX Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 496.6)
+						CommandSequence++;
+					break;
+				case 45:
+					//TB6+496.7: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 496.7)
+						CommandSequence++;
+					break;
+				case 46:
+					//TB6+496.8: Burner LH2 Propellant Valve Close On
+					if (LVDC_TB_ETime > 496.8)
+						CommandSequence++;
+					break;
+				case 47:
+					//TB6+497.0: Burner Automatic Cutoff System Disarm
+					if (LVDC_TB_ETime > 497.0)
+						CommandSequence++;
+					break;
+				case 48:
+					//TB6+497.2: LH2 Tank Continuous Vent Valve Close On
+					if (LVDC_TB_ETime > 497.2)
+						CommandSequence++;
+					break;
+				case 49:
+					//TB6+497.6: Repressurization System Mode Selector On (Amb)
+					if (LVDC_TB_ETime > 497.6)
+						CommandSequence++;
+					break;
+				case 50:
+					//TB6+499.2: LH2 Tank Continuous Vent Valve Close Off
+					if (LVDC_TB_ETime > 499.2)
+						CommandSequence++;
+					break;
+				case 51:
+					//TB6+499.8: Burner LH2 Propellant Valve Close Off
+					if (LVDC_TB_ETime > 499.8)
+						CommandSequence++;
+					break;
+				case 52:
+					//TB6+500.0: LOX Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 500.0)
+						CommandSequence++;
+					break;
+				case 53:
+					//TB6+501.3: Burner LOX Shutdown Valve Close On
+					if (LVDC_TB_ETime > 501.3)
+						CommandSequence++;
+					break;
+				case 54:
+					//TB6+504.3: Burner LOX Shutdown Valve Close Off
+					if (LVDC_TB_ETime > 504.3)
+						CommandSequence++;
+					break;
+				case 55:
+					//TB6+520.0: LH2 Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 520.0)
+						CommandSequence++;
+					break;
+				case 56:
+					//TB6+559.4: Prevalves Close Off
+					if (LVDC_TB_ETime > 559.4)
+						CommandSequence++;
+					break;
+				case 57:
+					//TB6+560.0: S-IVB Restart Alert Off
+					if (LVDC_TB_ETime > 560.0)
+					{
+						commandConnector->ClearSIISep();
+						CommandSequence++;
+					}
+					break;
+				case 58:
+					//TB6+568.6: Engine Ready Bypass
+					if (LVDC_TB_ETime > 568.6)
+						CommandSequence++;
+					break;
+				case 59:
+					//TB6+569.4: Fuel Chilldown Pump Off
+					if (LVDC_TB_ETime > 569.4)
+						CommandSequence++;
+					break;
+				case 60:
+					//TB6+569.6: LOX Chilldown Pump Off
+					if (LVDC_TB_ETime > 569.6)
+						CommandSequence++;
+					break;
+				case 61:
+					//TB6+570.0: S-IVB Engine Start On
+					if (LVDC_TB_ETime > 570.0)
+						CommandSequence++;
+					break;
+				case 62:
+					//TB6+573.0: S-IVB Ullage Engine No.1 Off
+					if (LVDC_TB_ETime > 573.0)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						CommandSequence++;
+					}
+					break;
+				case 63:
+					//TB6+573.1: S-IVB Ullage Engine No.2 Off
+					if (LVDC_TB_ETime > 573.1)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						CommandSequence++;
+					}
+					break;
+				case 64:
+					//TB6+573.2: S-IVB Ullage Thrust Present Indication Off
+					if (LVDC_TB_ETime > 573.2)
+						CommandSequence++;
+					break;
+				case 65:
+					//TB6+577.2: S-IVB Engine Out Indication "A" Enable
+					if (LVDC_TB_ETime > 577.2)
+						CommandSequence++;
+					break;
+				case 66:
+					//TB6+577.3: LOX Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 577.3)
+						CommandSequence++;
+					break;
+				case 67:
+					//TB6+577.4: S-IVB Engine Out Indication "B" Enable
+					if (LVDC_TB_ETime > 577.4)
+						CommandSequence++;
+					break;
+				case 68:
+					//TB6+577.5: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 577.5)
+						CommandSequence++;
+					break;
+				case 69:
+					//TB6+577.6: Flight Control Computer S-IVB Burn Mode On "A"
+					if (LVDC_TB_ETime > 577.6)
+					{
+						fcc.SetSIVBBurnMode(true);
+						CommandSequence++;
+					}
+					break;
+				case 70:
+					//TB6+577.8: Flight Control Computer S-IVB Burn Mode On "B"
+					if (LVDC_TB_ETime > 577.8)
+					{
+						fcc.SetSIVBBurnMode(true);
+						CommandSequence++;
+					}
+					break;
+				case 71:
+					//TB6+578.0: Fuel Injection Temperature OK Bypass
+					if (LVDC_TB_ETime > 578.0)
+						CommandSequence++;
+					break;
+				case 72:
+					//TB6+578.2: LOX Tank Flight Pressure System on
+					if (LVDC_TB_ETime > 578.2)
+						CommandSequence++;
+					break;
+				case 73:
+					//TB6+578.4: LOX Tank Pressurization Shutoff Valves Open
+					if (LVDC_TB_ETime > 578.4)
+						CommandSequence++;
+					break;
+				case 74:
+					//TB6+578.6: S-IVB Engine Start Off
+					if (LVDC_TB_ETime > 578.6)
+						CommandSequence++;
+					break;
+				case 75:
+					//TB6+583.0: PU Valve Hardover Position Off
+					if (LVDC_TB_ETime > 583.0)
+						CommandSequence++;
+					break;
+				case 76:
+					//TB6+588.0: Fuel Injection Temperature OK Bypass Reset
+					if (LVDC_TB_ETime > 588.0)
+						CommandSequence++;
+					break;
+				case 77:
+					//TB6+683.0: Flight Control Computer Switch Point No. 6
+					if (LVDC_TB_ETime > 683.0)
+					{
+						fcc.SetGainSwitch(6);
+						CommandSequence++;
+					}
+					break;
+				case 78:
+					//TB6+850.0: Second Burn Relay Off
+					if (LVDC_TB_ETime > 850.0)
+						CommandSequence++;
+					break;
+				case 79:
+					//TB6+892.1: Point Level Sensor Arming
+					if (LVDC_TB_ETime > 892.1)
+						CommandSequence++;
+					break;
+				default:
+					break;
 				}
-				if(LVDC_TB_ETime>=38 && LVDC_TB_ETime < 493.6 && S4B_REIGN==false && commandConnector->GetSIISepLight() == true)
-				{
-					commandConnector->ClearSIISep();} //This would signal the crew to start their event timer at 51:00, counting up
-				if (LVDC_TB_ETime >= 493.6 && LVDC_TB_ETime < 560.0 && commandConnector->GetSIISepLight() == false)
-				{
-					commandConnector->SetSIISep();}
-				if (LVDC_TB_ETime >= 560.0 && commandConnector->GetSIISepLight() == true)
-				{
-					commandConnector->ClearSIISep();}
 
-				//Ullage
-				if(LVDC_TB_ETime>=496.3 && S4B_REIGN == false)
-				{
-					lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);} //Ullage thrust starts
-				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
-				{
-					lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);}//Ullage thrust ends
 				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_EI_On == false)
 				{
 					LVDC_EI_On = true;	//Engine start notification at T-0:01
@@ -5799,6 +6364,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					TB7 = TAS;//-simdt;
 					LVDC_Timebase = 7;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 
 					//HSL Exit settings
 					GATE = false;
@@ -5813,6 +6379,145 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				break;
 			case 7:
 				// TB7 timed events
+
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB7+0.0: S-IVB Engine Cutoff
+					poweredflight = true;
+					CommandSequence++;
+					break;
+				case 1:
+					//TB7+0.1: S-IVB Engine Cutoff
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB7+0.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.5)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB7+0.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB7+0.7: LOX Tank NPV Valve Open On
+					if (LVDC_TB_ETime > 0.7)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB7+0.8: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 0.8)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB7+0.9: Point Level Sensor Disarming
+					if (LVDC_TB_ETime > 0.9)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB7+1.0: LOX Tank Pressurization Shutoff Valves Close
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB7+1.1: LOX Tank Flight Pressure System Off
+					if (LVDC_TB_ETime > 1.1)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB7+1.2: Second Burn Relay Off
+					if (LVDC_TB_ETime > 1.2)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB7+2.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.5)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB7+2.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.6)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB7+2.7: LOX NPV Valve Latch Open On
+					if (LVDC_TB_ETime > 2.7)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB7+2.8: LH2 Tank Latching Relief Valve Latch On
+					if (LVDC_TB_ETime > 2.8)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB7+3.6: Flight Control Computer S-IVB Burn Mode Off "A"
+					if (LVDC_TB_ETime > 3.6)
+					{
+						fcc.SetSIVBBurnMode(false);
+						CommandSequence++;
+					}
+					break;
+				case 15:
+					//TB7+3.7: LOX Tank NPV Valve Open Off
+					if (LVDC_TB_ETime > 3.7)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB7+3.8: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 3.8)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB7+3.9: Flight Control Computer S-IVB Burn Mode Off "B"
+					if (LVDC_TB_ETime > 3.9)
+					{
+						fcc.SetSIVBBurnMode(false);
+						CommandSequence++;
+					}
+					break;
+				case 18:
+					//TB7+4.1: Aux Hydraulic Pump Flight Mode Off
+					if (LVDC_TB_ETime > 4.1)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB7+4.7: LOX Tank NPV Valve Latch Open Off
+					if (LVDC_TB_ETime > 4.7)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB7+4.8: LH2 Tank Latching Relief Valve Latch Off
+					if (LVDC_TB_ETime > 4.8)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB7+5.0: S/C Control of Saturn Enable
+					if (LVDC_TB_ETime > 5.0)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB7+10.0: S-IVB Engine Out Indication "A" Enable Reset
+					if (LVDC_TB_ETime > 10.0)
+					{
+						LVDC_EI_On = false;
+						CommandSequence++;
+					}
+					break;
+				case 23:
+					//TB7+10.2: S-IVB Engine Out Indication "B" Enable Reset
+					if (LVDC_TB_ETime > 10.2)
+					{
+						LVDC_EI_On = false;
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
+				}
+
 				// Cutoff transient thrust
 				if (LVDC_TB_ETime < 2) {
 					if (LVDC_TB_ETime < 0.25) {
@@ -5830,9 +6535,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 						}
 					}
 					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
-				}
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true) {
-					LVDC_EI_On = false;
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {
@@ -7261,6 +7963,7 @@ restartprep:
 				TB6 = TAS;//-simdt;
 				LVDC_TB_ETime = 0;
 				LVDC_Timebase = 6;
+				CommandSequence = 0;
 				goto restartprep;
 			}
 			else if (TAS - TB6 - T_RG < 0) //Time elapsed enough for TB6?
@@ -7364,6 +8067,7 @@ minorloop:
 			TB7 = TAS;//-simdt;
 			LVDC_Timebase = 7;
 			LVDC_TB_ETime = 0;
+			CommandSequence = 0;
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
 			commandConnector->TLIEnded();
 		}
