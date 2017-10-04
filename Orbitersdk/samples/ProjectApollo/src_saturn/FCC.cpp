@@ -62,6 +62,7 @@ void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteScenario_int(scn, "GAINSWITCH", GainSwitch);
 	oapiWriteScenario_int(scn, "STAGESWITCH", StageSwitch);
 	papiWriteScenario_bool(scn, "SIVBBURNMODE", SIVBBurnMode);
+	papiWriteScenario_vec(scn, "ATTITUDEERROR", AttitudeError);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -78,6 +79,7 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_int(line, "GAINSWITCH", GainSwitch);
 		papiReadScenario_int(line, "STAGESWITCH", StageSwitch);
 		papiReadScenario_bool(line, "SIVBBURNMODE", SIVBBurnMode);
+		papiReadScenario_vec(line, "ATTITUDEERROR", AttitudeError);
 
 	}
 }
@@ -327,7 +329,7 @@ void FCCSV::Timestep(double simdt)
 		lvCommandConnector->SetThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
 		lvCommandConnector->SetThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
 	}
-	if (SIVBBurnMode == true) {
+	else if (SIVBBurnMode == true && StageSwitch == 2) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
@@ -394,4 +396,6 @@ void FCCSV::Timestep(double simdt)
 			lvCommandConnector->SetAPSThrusterLevel(2, 0);
 		}
 	}
+
+	//sprintf(oapiDebugString(), "%d %d %d %f %f %f", GainSwitch, StageSwitch, SIVBBurnMode, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
 }
