@@ -4802,6 +4802,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					TB1 = TAS;//-simdt;
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 					break;
 				}
 				break;
@@ -5468,7 +5469,12 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 8:
 					//TB4+0.8: S-II/S-IVB Separation
 					if (LVDC_TB_ETime > 0.8)
+					{
+						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SwitchSelector(27);
+						lvCommandConnector->SwitchSelector(5);
 						CommandSequence++;
+					}
 					break;
 				case 9:
 					//TB4+1.0: S-IVB Engine Start On
@@ -5591,13 +5597,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				default:
 					break;
 				}
-				// S2 STAGE SEP
-				if (LVDC_TB_ETime > 0.8 && lvCommandConnector->GetStage() <= LAUNCH_STAGE_TWO_ISTG_JET) {
-					// S2ShutS.done(); No CECO on AP8
-					fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					lvCommandConnector->SwitchSelector(27);
-					lvCommandConnector->SwitchSelector(5);					
-				}
 			
 				if(LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
 					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime-4)*0.36));
@@ -5648,12 +5647,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB5+0.3: S-IVB Ullage Engine No. 1 On
 					if (LVDC_TB_ETime > 0.3)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB5+0.4: S-IVB Ullage Engine No. 2 On
 					if (LVDC_TB_ETime > 0.4)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
 						CommandSequence++;
+					}
 					break;
 				case 5:
 					//TB5+0.6: S-IVB Ullage Thrust Present Indication On
@@ -5729,12 +5734,19 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 18:
 					//TB5+10.0: S-IVB Engine Out Indication "A" Enable Reset
 					if (LVDC_TB_ETime > 10.0)
+					{
+						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						LVDC_EI_On = false;
 						CommandSequence++;
+					}
 					break;
 				case 19:
 					//TB5+10.2: S-IVB Engine Out Indication "B" Enable Reset
 					if (LVDC_TB_ETime > 10.2)
+					{
+						LVDC_EI_On = false;
 						CommandSequence++;
+					}
 					break;
 				case 20:
 					//TB5+10.4: S-I RF Assembly Power Off
@@ -5789,12 +5801,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 30:
 					//TB5+87.0: S-IVB Ullage Engine No.1 Off
 					if (LVDC_TB_ETime > 87.0)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
 						CommandSequence++;
+					}
 					break;
 				case 31:
 					//TB5+87.1: S-IVB Ullage Engine No.2 Off
 					if (LVDC_TB_ETime > 87.1)
+					{
+						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
 						CommandSequence++;
+					}
 					break;
 				case 32:
 					//TB5+87.2: S-IVB Ullage Thrust Present Indication Off
@@ -5868,16 +5886,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
 				}
 
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
-					lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
-					LVDC_EI_On = false;
-				}
-				if(LVDC_TB_ETime < 87){//ullage thrust on
-					lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
-				}
-				if(LVDC_TB_ETime >= 87){//ullage thrust off
-					lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
-				}
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
