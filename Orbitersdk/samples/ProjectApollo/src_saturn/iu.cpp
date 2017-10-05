@@ -81,7 +81,6 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	if (lvdc != NULL) {
 		lvimu.Timestep(simt);
 		lvrg.Timestep(simdt);
-		lvdc->TimeStep(simt, simdt);
 	}
 
 	//
@@ -112,6 +111,7 @@ void IU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
 	SaveFCC(scn);
+	SaveEDS(scn);
 	
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -130,6 +130,9 @@ void IU::LoadState(FILEHANDLE scn)
 		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime));
 		else if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
 			LoadFCC(scn);
+		}
+		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS1_BEGIN"))) {
+			LoadEDS(scn);
 		}
 	}
 }
@@ -499,6 +502,22 @@ bool IUToCSMCommandConnector::GetBECOSignal()
 	if (SendMessage(cm))
 	{
 		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::IsEDSBusPowered(int eds)
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_IS_EDS_BUS_POWERED;
+	cm.val1.iValue = eds;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
 	}
 
 	return false;
@@ -1598,7 +1617,7 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	}
 }
 
-IU1B::IU1B() : fcc(lvrg)
+IU1B::IU1B() : fcc(lvrg), eds(lvrg)
 {
 
 }
@@ -1607,6 +1626,10 @@ void IU1B::Timestep(double simt, double simdt, double mjd)
 {
 	IU::Timestep(simt, simdt, mjd);
 
+	if (lvdc != NULL) {
+		eds.Timestep(simdt);
+		lvdc->TimeStep(simt, simdt);
+	}
 	fcc.Timestep(simdt);
 }
 
@@ -1643,6 +1666,16 @@ void IU1B::LoadFCC(FILEHANDLE scn)
 	fcc.LoadState(scn, "FCC_END");
 }
 
+void IU1B::SaveEDS(FILEHANDLE scn)
+{
+	eds.SaveState(scn, "EDS_BEGIN", "EDS_END");
+}
+
+void IU1B::LoadEDS(FILEHANDLE scn)
+{
+	eds.LoadState(scn, "EDS_END");
+}
+
 void IU1B::ConnectLVDC()
 {
 	IU::ConnectLVDC();
@@ -1653,7 +1686,7 @@ void IU1B::ConnectLVDC()
 	}
 }
 
-IUSV::IUSV() : fcc(lvrg)
+IUSV::IUSV() : fcc(lvrg), eds(lvrg)
 {
 
 }
@@ -1662,6 +1695,10 @@ void IUSV::Timestep(double simt, double simdt, double mjd)
 {
 	IU::Timestep(simt, simdt, mjd);
 
+	if (lvdc != NULL) {
+		eds.Timestep(simdt);
+		lvdc->TimeStep(simt, simdt);
+	}
 	fcc.Timestep(simdt);
 }
 
@@ -1696,6 +1733,16 @@ void IUSV::SaveFCC(FILEHANDLE scn)
 void IUSV::LoadFCC(FILEHANDLE scn)
 {
 	fcc.LoadState(scn, "FCC_END");
+}
+
+void IUSV::SaveEDS(FILEHANDLE scn)
+{
+	eds.SaveState(scn, "EDS_BEGIN", "EDS_END");
+}
+
+void IUSV::LoadEDS(FILEHANDLE scn)
+{
+	eds.LoadState(scn, "EDS_END");
 }
 
 void IUSV::ConnectLVDC()

@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_saturn\eds.cpp" />
     <ClCompile Include="..\..\src_saturn\FCC.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
@@ -442,6 +443,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_saturn\eds.h" />
     <ClInclude Include="..\..\src_saturn\FCC.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />

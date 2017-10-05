@@ -45,6 +45,7 @@
 #include "../src_rtccmfd/OrbMech.h"
 #include "LVDC.h"
 #include "LVIMU.h"
+#include "eds.h"
 
 //#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 
@@ -71,8 +72,6 @@ LVDC1B::LVDC1B(LVIMU &imu, LVRG &rg, FCC &fc) : LVDC(imu, rg, fc)
 	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	GATE = false;
 	GATE5 = false;
 	GRR_init = false;
@@ -88,7 +87,6 @@ LVDC1B::LVDC1B(LVIMU &imu, LVRG &rg, FCC &fc) : LVDC(imu, rg, fc)
 	MRS = false;
 	poweredflight = false;
 	S1B_Engine_Out = false;
-	S1B_TwoEngines_Out = false;
 	S1B_CECO_Commanded = false;
 	S4B_IGN = false;
 	theta_N_op = false;
@@ -557,8 +555,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	LVDC_EI_On = false;
 	S1B_Sep_Time = 0;
 	CountPIPA = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -763,7 +759,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0) {
 					commandConnector->ClearLiftoffLight();
-					TwoEngOutAutoAbortDeactivate = true;
 
 					// Begin timebase 2
 					LVDC_Timebase = 2;
@@ -1788,73 +1783,6 @@ minorloop: //minor loop;
 			}
 		}
 
-		//EDS
-
-		if (LVDC_Timebase == 1)
-		{
-			int enginesout = 0;
-
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(5)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(6)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(7)) < 0.65) enginesout++;
-
-			if (enginesout >= 2)
-			{
-				S1B_TwoEngines_Out = true;
-			}
-			else
-			{
-				S1B_TwoEngines_Out = false;
-			}
-		}
-		else
-		{
-			S1B_TwoEngines_Out = false;
-		}
-
-		//Auto Abort
-		//LV Rates light
-		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-		{
-			commandConnector->SetLVRateLight();
-		}
-		else
-		{
-			commandConnector->ClearLVRateLight();
-		}
-
-		AutoAbortInitiate = false;
-
-		if (commandConnector->EDSSwitchState() == TOGGLESWITCH_UP)
-		{
-			if (commandConnector->LVRateAutoSwitchState() == TOGGLESWITCH_UP)
-			{
-				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-			if (commandConnector->TwoEngineOutAutoSwitchState() == TOGGLESWITCH_UP)
-			{
-				if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-		}
-
-		if (AutoAbortInitiate)
-		{
-			commandConnector->SetEDSAbort(1);
-			commandConnector->SetEDSAbort(2);
-			commandConnector->SetEDSAbort(3);
-		}
-
 		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
 			// Control contrail
 			if (lvCommandConnector->GetMissionTime() > 12) {
@@ -1925,7 +1853,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// Thank heaven for text processing.
 	// bool
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
-	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -1944,11 +1871,9 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
 	oapiWriteScenario_int(scn, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
-	oapiWriteScenario_int(scn, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
-	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -2278,7 +2203,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_UP", UP);
 		// BOOL
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
-		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -2297,11 +2221,9 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
-		papiReadScenario_bool(line, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
-		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2618,8 +2540,6 @@ LVDCSV::LVDCSV(LVIMU &imu, LVRG &rg, FCC &fc) : LVDC(imu, rg, fc)
 	Direct_Ascent = false;
 	directstageint = false;
 	directstagereset = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	IGM_Failed = false;
 	first_op = false;
 	TerminalConditions = false;
@@ -2644,7 +2564,6 @@ LVDCSV::LVDCSV(LVIMU &imu, LVRG &rg, FCC &fc) : LVDC(imu, rg, fc)
 	poweredflight = false;
 	ROT = false;
 	S1_Engine_Out = false;
-	S1_TwoEngines_Out = false;
 	S2_BURNOUT = false;
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
@@ -3032,8 +2951,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	directstagereset = true;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	IGM_Failed = false;
 	CommandSequence = 0;
 
@@ -3238,7 +3155,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	S2_BURNOUT=false;						// SII Burn Out
 	LVDC_GRR = false;
 	S1_Engine_Out = false;
-	S1_TwoEngines_Out = false;
 	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
@@ -3346,7 +3262,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Here we go
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
-	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -3377,7 +3292,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
 	oapiWriteScenario_int(scn, "LVDC_ROTR", ROTR);
 	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
-	oapiWriteScenario_int(scn, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -3388,7 +3302,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
-	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
@@ -3995,7 +3908,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		// So we do it in single lines.
 		// booleans
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
-		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -4025,7 +3937,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
 		papiReadScenario_bool(line, "LVDC_ROTR", ROTR);
 		papiReadScenario_bool(line, "LVDC_S1_Engine_Out", S1_Engine_Out);
-		papiReadScenario_bool(line, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S2_BURNOUT", S2_BURNOUT);
 		papiReadScenario_bool(line, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -4036,7 +3947,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
-		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// integers
 		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
@@ -4997,7 +4907,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					}
 
 					S1_Engine_Out = true;
-					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					TB2 = TAS;//-simdt;
 					LVDC_Timebase = 2;
@@ -8123,6 +8032,8 @@ minorloop:
 		DeltaAtt.z = fmod((CurrentAttitude.z - CommandedAttitude.z + TWO_PI), TWO_PI);
 		if (DeltaAtt.z > PI) { DeltaAtt.z -= TWO_PI; }
 
+		fprintf(lvlog, "Delta Attitude: %f %f %f \r\n", DeltaAtt.x*DEG, DeltaAtt.y*DEG, DeltaAtt.z*DEG);
+
 		//-euler correction-
 		//calculate correction factors
 		A1 = cos(CurrentAttitude.x) * cos(CurrentAttitude.z);
@@ -8146,7 +8057,11 @@ minorloop:
 			AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
 			AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
 			AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
+
+			fprintf(lvlog, "MANUAL LV TAKEOVER \r\n");
 		}
+
+		fprintf(lvlog, "Attitude Error: %f %f %f \r\n", AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
 
 		fcc.SetAttitudeError(AttitudeError);
 
@@ -8256,70 +8171,6 @@ minorloop:
 					S2_ENGINE_OUT = true;
 				}
 			}
-		}
-
-		//EDS
-
-		if (LVDC_Timebase == 1)
-		{
-			int enginesout = 0;
-
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) < 0.65) enginesout++;
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) < 0.65) enginesout++;
-
-			if (enginesout >= 2)
-			{
-				S1_TwoEngines_Out = true;
-			}
-			else
-			{
-				S1_TwoEngines_Out = false;
-			}
-		}
-		else
-		{
-			S1_TwoEngines_Out = false;
-		}
-
-		//Auto Abort
-		//LV Rates light
-		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-		{
-			commandConnector->SetLVRateLight();
-		}
-		else
-		{
-			commandConnector->ClearLVRateLight();
-		}
-
-		AutoAbortInitiate = false;
-
-		if (commandConnector->EDSSwitchState() == TOGGLESWITCH_UP)
-		{
-			if (commandConnector->LVRateAutoSwitchState() == TOGGLESWITCH_UP)
-			{
-				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-			if (commandConnector->TwoEngineOutAutoSwitchState() == TOGGLESWITCH_UP)
-			{
-				if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-		}
-
-		if (AutoAbortInitiate)
-		{
-			commandConnector->SetEDSAbort(1);
-			commandConnector->SetEDSAbort(2);
-			commandConnector->SetEDSAbort(3);
 		}
 
 		// End of test for LVDC_Stop

@@ -4598,6 +4598,27 @@ bool Saturn::GetBECOSignal()
 	return secs.BECO();
 }
 
+bool Saturn::IsEDSBusPowered(int eds)
+{
+	if (EDSPowerSwitch.IsUp())
+	{
+		if (eds == 1)
+		{
+			return EDS1BatACircuitBraker.IsPowered();
+		}
+		else if (eds == 2)
+		{
+			return EDS2BatCCircuitBraker.IsPowered();
+		}
+		else if (eds == 3)
+		{
+			return EDS3BatBCircuitBraker.IsPowered();
+		}
+	}
+
+	return false;
+}
+
 int Saturn::GetAGCAttitudeError(int axis)
 {
 	if (axis == 0)

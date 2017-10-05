@@ -1150,6 +1150,7 @@ public:
 	int GetTwoEngineOutAutoSwitchState();
 
 	bool GetBECOSignal();
+	bool IsEDSBusPowered(int eds);
 	int GetAGCAttitudeError(int axis);
 
 	void AddRCS_S4B();

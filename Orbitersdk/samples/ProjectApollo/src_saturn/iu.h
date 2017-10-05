@@ -27,6 +27,7 @@
 
 #include "LVIMU.h"
 #include "FCC.h"
+#include "eds.h"
 
 class SoundLib;
 class IU;
@@ -57,6 +58,7 @@ enum IUCSMMessageType
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_SIGNAL,					///< Get Boost Engine Cutoff command from SECS.
+	IUCSM_IS_EDS_BUS_POWERED,
 	IUCSM_GET_AGC_ATTITUDE_ERROR,
 	IUCSM_GET_INPUT_CHANNEL_BIT,			///< Get AGC input channel bit.
 	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
@@ -190,6 +192,7 @@ public:
 	int TwoEngineOutAutoSwitchState();
 	bool GetBECOSignal();
 	int GetAGCAttitudeError(int axis);
+	bool IsEDSBusPowered(int eds);
 
 	void SetIU(IU *iu) { ourIU = iu; };
 
@@ -341,6 +344,9 @@ public:
 	virtual void SaveFCC(FILEHANDLE scn) = 0;
 	virtual void LoadFCC(FILEHANDLE scn) = 0;
 
+	virtual void SaveEDS(FILEHANDLE scn) = 0;
+	virtual void LoadEDS(FILEHANDLE scn) = 0;
+
 	LVDC* lvdc;
 	LVIMU lvimu;
 	LVRG lvrg;
@@ -382,9 +388,12 @@ public:
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
 	void LoadFCC(FILEHANDLE scn);
+	void SaveEDS(FILEHANDLE scn);
+	void LoadEDS(FILEHANDLE scn);
 	void ConnectLVDC();
 protected:
 	FCC1B fcc;
+	EDS1B eds;
 };
 
 class IUSV :public IU
@@ -395,9 +404,12 @@ public:
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
 	void LoadFCC(FILEHANDLE scn);
+	void SaveEDS(FILEHANDLE scn);
+	void LoadEDS(FILEHANDLE scn;
 	void ConnectLVDC();
 protected:
 	FCCSV fcc;
+	EDSSV eds;
 };
 
 //
