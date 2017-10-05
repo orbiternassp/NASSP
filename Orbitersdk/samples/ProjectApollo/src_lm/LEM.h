@@ -1410,7 +1410,7 @@ protected:
 	RotationalSwitch CDRSuitIsolValve;
 	ToggleSwitch	   CDRActuatorOvrd;    // Check if this is right.
 	RotationalSwitch LMPSuitIsolValve;
-	ToggleSwitch	   LMPActuatorOvrd;
+	ToggleSwitch     LMPActuatorOvrd;
 
 	SwitchRow WaterControlSwitchRow;
 	RotationalSwitch SecEvapFlowValve;
@@ -1430,10 +1430,12 @@ protected:
 	RotationalSwitch SuitCircuitReliefValve;
 	RotationalSwitch CabinGasReturnValve;
 	RotationalSwitch CO2CanisterSelect;
-	RotationalSwitch CO2CanisterPrimValve;
-	PushSwitch       CO2CanisterPrimVent;
-	RotationalSwitch CO2CanisterSecValve;
-	PushSwitch       CO2CanisterSecVent;
+	//RotationalSwitch CO2CanisterPrimValve;
+  ToggleSwitch CO2CanisterPrimValve;
+	ToggleSwitch       CO2CanisterPrimVent;
+	//RotationalSwitch CO2CanisterSecValve;
+  ToggleSwitch CO2CanisterSecValve;
+	ToggleSwitch       CO2CanisterSecVent;
 	CircuitBrakerSwitch WaterSepSelect;
 
 	///////////////////////////

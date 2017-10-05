@@ -894,17 +894,17 @@ void LEM::InitSwitches() {
 	ASCO2Valve2.AddPosition(0, 0);
 	ASCO2Valve2.AddPosition(1, 210);
 
-	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 1);
+	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 0);
 	CDRSuitIsolValve.AddPosition(0, 0);
-	CDRSuitIsolValve.AddPosition(1, 90);
+	CDRSuitIsolValve.AddPosition(1, 345);
 
-	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
+  CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
+
+	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
 	LMPSuitIsolValve.AddPosition(0, 0);
-	LMPSuitIsolValve.AddPosition(1, 90);
+	LMPSuitIsolValve.AddPosition(1, 345);
 
-	/*
-	// Both actuator overrides here
-	*/
+  LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
 	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
 	SecEvapFlowValve.AddPosition(0, 0);
@@ -912,7 +912,7 @@ void LEM::InitSwitches() {
 
 	PrimEvap1FlowValve.Register(PSH, "PrimEvap1FlowValve", 1);
 	PrimEvap1FlowValve.AddPosition(0, 15);
-	PrimEvap1FlowValve.AddPosition(1, 310);
+	PrimEvap1FlowValve.AddPosition(1, 300);
 
 	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 1);
 	PrimEvap2FlowValve.AddPosition(0, 0);
@@ -935,15 +935,16 @@ void LEM::InitSwitches() {
 	SuitTempValve.AddPosition(4, 90);
 
 	ASCH2OValve.Register(PSH, "ASCH2OValve", 0);
-	ASCH2OValve.AddPosition(0, 350);
-	ASCH2OValve.AddPosition(1, 100); // Might be 90 actually
+	ASCH2OValve.AddPosition(0, 340);
+	ASCH2OValve.AddPosition(1, 100);
 
-	/*LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0); // Needs better positions
+	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0); // Needs better positions
 	LiquidGarmentCoolingValve.AddPosition(0, 0);
 	LiquidGarmentCoolingValve.AddPosition(1, 22);
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
 	LiquidGarmentCoolingValve.AddPosition(3, 67);
-	LiquidGarmentCoolingValve.AddPosition(4, 90);*/
+	LiquidGarmentCoolingValve.AddPosition(4, 90);
+  LiquidGarmentCoolingValve.AddPosition(5, 120);
 
 	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
 	SuitCircuitReliefValve.AddPosition(0, 0);
@@ -960,12 +961,12 @@ void LEM::InitSwitches() {
 	CO2CanisterSelect.AddPosition(1, 130);
 
 	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
-	CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 330);
+	/*CO2CanisterPrimValve.AddPosition(0, 0);
+	CO2CanisterPrimValve.AddPosition(1, 15);*/
 
 	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
-	CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 330);
+	/*CO2CanisterSecValve.AddPosition(0, 0);
+	CO2CanisterSecValve.AddPosition(1, 15);*/
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
@@ -1748,10 +1749,10 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,					_R(196,  720, 271, 1047), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1607,    0, 1670,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,				_R( 26,   66,  61,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0,  1456, 1049),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			           PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(196,  720,  271, 1047),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1607,   0, 1670,  156),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				           PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,			_R( 26,   66,   61,   96),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				           PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI/3.0)), optics.OpticsShaft*PI / 3.0);
 		oapiCameraSetCockpitDir(0, 0);
@@ -1760,10 +1761,13 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_ECSPANEL: // LEM ECS Panel 
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,    _R(204, 129, 204+126, 129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ECS_WCM,      _R(40,  410,     440,    1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ASC_H2O,      _R(597, 634,     712,     750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    //oapiRegisterPanelArea(AID_LEM_GARMENT_COOL, _R(600, 1073,    600+115, 1073+115), PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,         _R( 204,  129,  204+126,  129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_MOUSE,  PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -2497,19 +2501,44 @@ void LEM::SetSwitches(int panel) {
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);
 	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], NULL, ECSSuitGasDiverterSwitchRow); // Need borders
 
+  OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
+  CabinRepressValve.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  PLSSFillValve.Init(340, 7, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  DESO2Valve.Init(4, 163, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+  ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+
+  SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
+  CDRSuitIsolValve.Init(22, 59, 169, 169, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
+  CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
+  LMPSuitIsolValve.Init(281+22 , 59, 169, 169, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
+  LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
+
   WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
   SecEvapFlowValve.Init(74, 30, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  //WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME
+  WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME
   SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
 
   ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
   ASCH2OValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, ASCH2OSwitchRow);
 
-  //GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
-  //LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, GarmentCoolingSwitchRow);
+  GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
+  LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, GarmentCoolingSwitchRow);
+
+  SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
+  SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
+  CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
+  CO2CanisterSelect.Init(290, 233, 122, 265, srf[SRF_LEM_CAN_SEL], NULL, SuitCircuitAssySwitchRow);
+  CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], NULL, SuitCircuitAssySwitchRow); // FIXME
+  CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);          // FIXME
+  CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], NULL, SuitCircuitAssySwitchRow);
+  CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
+  WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], NULL, SuitCircuitAssySwitchRow);
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {

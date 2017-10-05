@@ -769,16 +769,18 @@
 #define IDB_LEM_ACT_OVRD				        1043
 #define IDB_LEM_CAN_SEL					        1044
 #define IDB_LEM_ECS_ROTARY			        1045
-#define AID_LEM_ASC_H2O                 1045
-#define AID_LEM_ECS_WCM                 1045
-#define AID_LEM_GARMENT_COOL            1045
-#define IDB_LEM_H20_SEL					        1046
-#define IDB_LEM_H20_SEP					        1047
-#define IDB_LEM_ISOL_ROTARY		          1048
-#define IDB_LEM_PRIM_C02				        1049
-#define IDB_LEM_SEC_C02					        1050
-#define IDB_LEM_SGD_LEVER				        1051
-#define IDB_LEM_ECS_PANEL				        1052
+#define AID_LEM_ASC_H2O                 1046
+#define AID_LEM_ECS_WCM                 1047
+#define AID_LEM_ECS_OCM                 1048
+#define AID_LEM_GARMENT_COOL            1049
+#define IDB_LEM_H20_SEL					        1050
+#define IDB_LEM_H20_SEP					        1051
+#define IDB_LEM_ISOL_ROTARY		          1052
+#define IDB_LEM_PRIM_C02				        1053
+#define IDB_LEM_SEC_C02					        1054
+#define IDB_LEM_SGD_LEVER				        1055
+#define IDB_LEM_ECS_PANEL				        1056
+#define AID_LEM_SUIT_CIRCUIT_ASSY       1057
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
