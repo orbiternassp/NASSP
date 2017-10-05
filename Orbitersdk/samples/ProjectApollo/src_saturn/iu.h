@@ -28,6 +28,7 @@
 #include "LVIMU.h"
 #include "FCC.h"
 #include "eds.h"
+#include "LVDA.h"
 
 class SoundLib;
 class IU;
@@ -332,7 +333,8 @@ public:
 	/// \param simt The current Mission Elapsed Time in seconds from launch.
 	/// \param simdt The time in seconds since the last timestep call.
 	///
-	virtual void Timestep(double simt, double simdt, double mjd);
+	virtual void Timestep(double misst, double simt, double simdt, double mjd);
+	virtual void SwitchSelector(int item) = 0;
 	void PostStep(double simt, double simdt, double mjd);
 
 	void LoadState(FILEHANDLE scn);
@@ -347,9 +349,12 @@ public:
 	virtual void SaveEDS(FILEHANDLE scn) = 0;
 	virtual void LoadEDS(FILEHANDLE scn) = 0;
 
+	virtual FCC* GetFCC() = 0;
+
 	LVDC* lvdc;
 	LVIMU lvimu;
 	LVRG lvrg;
+	LVDA lvda;
 
 protected:
 	int State;
@@ -384,13 +389,15 @@ class IU1B :public IU
 {
 public:
 	IU1B();
-	void Timestep(double simt, double simdt, double mjd);
+	void Timestep(double misst, double simt, double simdt, double mjd);
+	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
 	void LoadEDS(FILEHANDLE scn);
 	void ConnectLVDC();
+	FCC* GetFCC() { return &fcc; }
 protected:
 	FCC1B fcc;
 	EDS1B eds;
@@ -400,13 +407,15 @@ class IUSV :public IU
 {
 public:
 	IUSV();
-	void Timestep(double simt, double simdt, double mjd);
+	void Timestep(double misst, double simt, double simdt, double mjd);
+	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
-	void LoadEDS(FILEHANDLE scn;
+	void LoadEDS(FILEHANDLE scn);
 	void ConnectLVDC();
+	FCC* GetFCC() { return &fcc; }
 protected:
 	FCCSV fcc;
 	EDSSV eds;

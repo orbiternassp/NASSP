@@ -42,7 +42,7 @@ class EDS;
 class LVDC
 {
 public:
-	LVDC(LVIMU &imu, LVRG &rg, FCC &fc);
+	LVDC(LVIMU &imu, LVDA &lvd);
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
@@ -54,13 +54,12 @@ protected:
 	IUToCSMCommandConnector* commandConnector;
 
 	LVIMU &lvimu;									// ST-124-M3 IMU (LV version)
-	LVRG &lvrg;										// LV rate gyro package
-	FCC &fcc;
+	LVDA &lvda;
 };
 
 class LVDCSV: public LVDC {
 public:
-	LVDCSV(LVIMU &imu, LVRG &rg, FCC &fc);											// Constructor
+	LVDCSV(LVIMU &imu, LVDA &lvd);											// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -88,7 +87,6 @@ private:								// Saturn LV
 	double SecondStageFailureTime[5];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
-	bool LVDC_EI_On;								// Engine Indicator lights on
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
 	bool S2_Startup;								// S2 Engine Start
@@ -99,7 +97,6 @@ private:								// Saturn LV
 	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
 	double OPitch[4],OYaw[4];						// Previous value of above, for rate limitation
 	double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
-	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 WV;										// Gravity
 	double sinceLastCycle;							// Time since last IGM run
@@ -433,7 +430,7 @@ private:								// Saturn LV
 
 class LVDC1B: public LVDC {
 public:
-	LVDC1B(LVIMU &imu, LVRG &rg, FCC &fc);										// Constructor
+	LVDC1B(LVIMU &imu, LVDA &lvd);										// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -456,12 +453,10 @@ private:
 	double FirstStageFailureTime[8];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
-	bool LVDC_EI_On;								// Engine Indicator lights on
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
 	
 	// These are variables that are not really part of the LVDC software.
-	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
 

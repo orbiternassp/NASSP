@@ -739,7 +739,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu->Timestep(simt, simdt, mjd);
+	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 

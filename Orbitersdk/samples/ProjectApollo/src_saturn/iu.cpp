@@ -75,7 +75,7 @@ void IU::SetMissionInfo(bool tlicapable, bool crewed)
 	Crewed = crewed;
 }
 
-void IU::Timestep(double simt, double simdt, double mjd)
+void IU::Timestep(double misst, double simt, double simdt, double mjd)
 
 {
 	if (lvdc != NULL) {
@@ -86,7 +86,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	//
 	// Update mission time.
 	//
-	MissionTime = simt;
+	MissionTime = misst;
 
 	// Initialization
 	if (!FirstTimeStepDone) {
@@ -1619,18 +1619,26 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 
 IU1B::IU1B() : fcc(lvrg), eds(lvrg)
 {
-
+	lvda.Init(this);
+	eds.Configure(&lvCommandConnector, &commandConnector);
 }
 
-void IU1B::Timestep(double simt, double simdt, double mjd)
+void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 {
-	IU::Timestep(simt, simdt, mjd);
+	IU::Timestep(misst, simt, simdt, mjd);
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simt, simdt);
 	}
 	fcc.Timestep(simdt);
+
+	//For now, enable the LV lights here
+	if (MissionTime > -250.0 && MissionTime < -10.0)
+	{
+		eds.SetEngineOutIndicationA(true);
+		eds.SetEngineOutIndicationB(true);
+	}
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {
@@ -1639,7 +1647,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDC1B(lvimu, lvrg, fcc);
+		lvdc = new LVDC1B(lvimu, lvda);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
@@ -1686,20 +1694,33 @@ void IU1B::ConnectLVDC()
 	}
 }
 
-IUSV::IUSV() : fcc(lvrg), eds(lvrg)
+void IU1B::SwitchSelector(int item)
 {
 
 }
 
-void IUSV::Timestep(double simt, double simdt, double mjd)
+IUSV::IUSV() : fcc(lvrg), eds(lvrg)
 {
-	IU::Timestep(simt, simdt, mjd);
+	lvda.Init(this);
+	eds.Configure(&lvCommandConnector, &commandConnector);
+}
+
+void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
+{
+	IU::Timestep(misst, simt, simdt, mjd);
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simt, simdt);
 	}
 	fcc.Timestep(simdt);
+
+	//For now, enable the LV lights here
+	if (MissionTime > -250.0 && MissionTime < -10.0)
+	{
+		eds.SetEngineOutIndicationA(true);
+		eds.SetEngineOutIndicationB(true);
+	}
 }
 
 void IUSV::LoadLVDC(FILEHANDLE scn) {
@@ -1708,7 +1729,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDCSV(lvimu, lvrg, fcc);
+		lvdc = new LVDCSV(lvimu, lvda);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
@@ -1752,5 +1773,93 @@ void IUSV::ConnectLVDC()
 	if (lvdc)
 	{
 		fcc.Configure(&lvCommandConnector);
+	}
+}
+
+void IUSV::SwitchSelector(int item)
+{
+	switch (item)
+	{
+	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
+		fcc.SetGainSwitch(0);
+		break;
+	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
+		eds.SetExcessiveRatesAutoAbortInhibit(true);
+		eds.SetRateGyroSCIndicationSwitchA(true);
+		break;
+	case 4: //Flight Control Computer Switch Point No. 4
+		fcc.SetGainSwitch(4);
+		break;
+	case 5: //Flight Control Computer Switch Point No. 6
+		fcc.SetGainSwitch(6);
+		break;
+	case 9: //S-IVB Engine Out Indication "A" Enable
+		eds.SetEngineOutIndicationA(true);
+		break;
+	case 11: //S-IVB Engine Out Indication "B" Enable
+		eds.SetEngineOutIndicationB(true);
+		break;
+	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
+		fcc.SetSIVBBurnMode(false);
+		break;
+	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
+		break;
+	case 18: //S-IVB Engine Out Indication "A" Enable Reset
+		eds.SetEngineOutIndicationA(false);
+		break;
+	case 21: //Flight Control Computer Switch Pointer No. 2
+		fcc.SetGainSwitch(2);
+		break;
+	case 22: //Flight Control Computer Switch Pointer No. 3
+		fcc.SetGainSwitch(3);
+		break;
+	case 26: //Flight Control Computer Switch Pointer No. 1
+		fcc.SetGainSwitch(1);
+		break;
+	case 28: //S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
+		eds.SetEngineOutIndicationA(true);
+		break;
+	case 31: //Flight Control Computer Burn Mode On "A"
+		fcc.SetStageSwitch(2);
+		fcc.SetSIVBBurnMode(true);
+		break;
+	case 33: //Switch Engine Control to S-II and S-IC Outboard Engine Cant Off "A"
+		fcc.SetStageSwitch(1);
+		break;
+	case 35: //S-IC Two Engines Out Auto-Abort Inhibit
+		eds.SetTwoEngOutAutoAbortInhibit(true);
+		break;
+	case 38: //Launch Vehicle Engines EDS Cutoff Enable
+		eds.SetLVEnginesCutoffEnable(true);
+		break;
+	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
+		eds.SetEngineOutIndicationB(true);
+		break;
+	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
+		eds.SetExcessiveRatesAutoAbortInhibit(true);
+		eds.SetRateGyroSCIndicationSwitchB(true);
+		break;
+	case 51: //S-IC Two Engines Out Auto-Abort Inhibit Enable
+		break;
+	case 53: //S-IVB Engine Out Indication "B" Enable Reset
+		eds.SetEngineOutIndicationB(false);
+		break;
+	case 74: //Flight Control Computer Burn Mode On "B"
+		fcc.SetStageSwitch(2);
+		fcc.SetSIVBBurnMode(true);
+		break;
+	case 75: //Flight Control Computer S-IVB Burn Mode Off "B"
+		fcc.SetSIVBBurnMode(false);
+		break;
+	case 80: //S-IVB Restart Alert On
+		commandConnector.SetSIISep();
+		break;
+	case 81: //S-IVB Restart Alert Off
+		commandConnector.ClearSIISep();
+		break;
+	case 83: //S-IC Outboard Engines Cant On "A"
+		break;
+	default:
+		break;
 	}
 }
