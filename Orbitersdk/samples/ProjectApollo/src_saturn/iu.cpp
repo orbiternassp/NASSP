@@ -822,26 +822,37 @@ void IUToLVCommandConnector::SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetThrusterDir(int n, VECTOR3 &dir)
+void IUToLVCommandConnector::SetSIThrusterDir(int n, VECTOR3 &dir)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SATURN_THRUSTER_DIR;
+	cm.messageType = IULV_SET_SI_THRUSTER_DIR;
 	cm.val1.iValue = n;
 	cm.val2.pValue = &dir;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetAPSThrustLevel(double thrust)
-
+void IUToLVCommandConnector::SetSIIThrusterDir(int n, VECTOR3 &dir)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_APS_THRUST_LEVEL;
-	cm.val1.dValue = thrust;
+	cm.messageType = IULV_SET_SII_THRUSTER_DIR;
+	cm.val1.iValue = n;
+	cm.val2.pValue = &dir;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetSIVBThrusterDir(VECTOR3 &dir)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_SIVB_THRUSTER_DIR;
+	cm.val1.pValue = &dir;
 
 	SendMessage(cm);
 }
