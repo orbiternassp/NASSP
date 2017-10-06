@@ -1621,6 +1621,21 @@ PROPELLANT_HANDLE IUToLVCommandConnector::GetThirdStagePropellantHandle()
 	return 0;
 }
 
+bool IUToLVCommandConnector::CSMSeparationSensed()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_CSM_SEPARATION_SENSED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 void IU::SaveLVDC(FILEHANDLE scn) {
 	if (lvdc != NULL) {
 		lvdc->SaveState(scn);
@@ -1842,6 +1857,9 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 38: //Launch Vehicle Engines EDS Cutoff Enable
 		eds.SetLVEnginesCutoffEnable(true);
+		break;
+	case 44: //Flight Control Computer Switch Point No. 5
+		fcc.SetGainSwitch(5);
 		break;
 	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 		eds.SetEngineOutIndicationB(true);

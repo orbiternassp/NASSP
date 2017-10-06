@@ -103,6 +103,7 @@ private:								// Saturn LV
 	int OrbNavCycle;								// Orbital cycle counter (for debugging)
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 	int CommandSequence;
+	int CommandSequenceStored;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -155,6 +156,7 @@ private:								// Saturn LV
 	bool GATE4;										// Permit only one pass through direct-staging guidance update
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool GATE6;										// Logic gate that ensures only one pass through separation attitude calculation
+	bool GATE7;										// Inhibit second TLI opportunity
 	bool INH,INH1,INH2;								// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
@@ -186,9 +188,13 @@ private:								// Saturn LV
 	double TB2;										// Time of TB2
 	double TB3;										// Time of TB3
 	double TB4;										// Time of TB4
-	double TB4A;									// Time of TB4a
+	double TB4a;									// Time of TB4a
 	double TB5;										// Time of TB5
+	double TB5a;									// Time of TB5a
 	double TB6;										// Time of TB6
+	double TB6a;									// Time of TB6a
+	double TB6b;									// Time of TB6b
+	double TB6c;									// Time of TB6c
 	double TB7;										// Time of TB7
 	double T_IGM;									// Time from start of TB6 to IGM start during second SIVB burn
 	double T_RG;									// Time from TB6 start to reignition for second SIVB burn

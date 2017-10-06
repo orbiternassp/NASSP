@@ -153,6 +153,7 @@ enum IULVMessageType
 	IULV_GET_VERNIER_THRUSTER_GROUP,
 	IULV_GET_THRUSTER_RESOURCE,
 	IULV_GET_THRUSTER_GROUP_LEVEL,
+	IULV_CSM_SEPARATION_SENSED,
 };
 
 ///
@@ -305,6 +306,8 @@ public:
 
 	OBJHANDLE GetElements(ELEMENTS &el, double &mjd_ref);
 	OBJHANDLE GetGravityRef();
+
+	bool CSMSeparationSensed();
 };
 
 ///

@@ -638,6 +638,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 			return true;
 		}
 		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = false;
+			return true;
+		}
+		break;
 	}
 
 	return false;

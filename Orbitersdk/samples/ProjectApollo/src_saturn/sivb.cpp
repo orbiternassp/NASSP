@@ -2277,6 +2277,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = true;
+			return true;
+		}
+		break;
+
 	//
 	// The RCS is always enabled, so don't bother turning it on and off.
 	//
