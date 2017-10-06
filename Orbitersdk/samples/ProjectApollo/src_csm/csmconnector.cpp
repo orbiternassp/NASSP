@@ -736,6 +736,14 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
+	case IUCSM_IS_EDS_BUS_POWERED:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->IsEDSBusPowered(m.val1.iValue);
+			return true;
+		}
+		break;
+
 	case IUCSM_GET_AGC_ATTITUDE_ERROR:
 		if (OurVessel)
 		{

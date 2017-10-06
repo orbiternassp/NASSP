@@ -145,7 +145,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_saturn\eds.cpp" />
     <ClCompile Include="..\..\src_saturn\FCC.cpp" />
+    <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
@@ -161,7 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_saturn\eds.h" />
     <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />

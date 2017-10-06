@@ -537,7 +537,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu->Timestep(simt, simdt, mjd);
+			iu->Timestep(MissionTime, simt, simdt, mjd);
 		}	
 		bmag1.Timestep(simdt);
 		bmag2.Timestep(simdt);

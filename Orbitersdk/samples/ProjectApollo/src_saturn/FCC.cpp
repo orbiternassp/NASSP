@@ -43,8 +43,10 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 
 	a_0p = a_0y = a_0r = 0.0;
 	a_1p = a_1y = a_1r = 0.0;
+	beta_pc = beta_yc = beta_rc = 0.0;
 	beta_y1c = beta_y2c = beta_y3c = beta_y4c = 0.0;
 	beta_p1c = beta_p2c = beta_p3c = beta_p4c = 0.0;
+	eps_p = eps_ymr = eps_ypr = 0.0;
 
 	AttitudeError = _V(0.0, 0.0, 0.0);
 
@@ -349,51 +351,51 @@ void FCCSV::Timestep(double simdt)
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
-			if (eps_p >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(1, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(1, (eps_p - 1) / 0.6); }
+			if (eps_p >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(1, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(1, (eps_p - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(1, 0);
+			lvCommandConnector->SetAPSThrusterLevel(1, 0.0);
 		}
 		if (eps_p < -1) {
 			//fire-pitch
-			if (eps_p <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(0, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(0, (-eps_p - 1) / 0.6); }
+			if (eps_p <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(0, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(0, (-eps_p - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(0, 0);
+			lvCommandConnector->SetAPSThrusterLevel(0, 0.0);
 		}
 		if (eps_ymr > 1) {
 			//fire+yaw-roll;
-			if (eps_ymr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(3, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(3, (eps_ymr - 1) / 0.6); }
+			if (eps_ymr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(3, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(3, (eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(3, 0);
+			lvCommandConnector->SetAPSThrusterLevel(3, 0.0);
 		}
 		if (eps_ymr < -1) {
 			//fire-yaw+roll;
-			if (eps_ymr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(5, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(5, (-eps_ymr - 1) / 0.6); }
+			if (eps_ymr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(5, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(5, (-eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(5, 0);
+			lvCommandConnector->SetAPSThrusterLevel(5, 0.0);
 		}
 		if (eps_ypr > 1) {
 			//fire+yaw+roll;
-			if (eps_ypr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(4, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(4, (eps_ypr - 1) / 0.6); }
+			if (eps_ypr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(4, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(4, (eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(4, 0);
+			lvCommandConnector->SetAPSThrusterLevel(4, 0.0);
 		}
 		if (eps_ypr < -1) {
 			//fire-yaw-roll;
-			if (eps_ypr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(2, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(2, (-eps_ypr - 1) / 0.6); }
+			if (eps_ypr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(2, 1.0); }
+			else { lvCommandConnector->SetAPSThrusterLevel(2, (-eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(2, 0);
+			lvCommandConnector->SetAPSThrusterLevel(2, 0.0);
 		}
 	}
 
