@@ -94,9 +94,6 @@ private:								// Saturn LV
 	bool IGM_Failed;
 	
 	// These are variables that are not really part of the LVDC software.
-	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
-	double OPitch[4],OYaw[4];						// Previous value of above, for rate limitation
-	double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 WV;										// Gravity
 	double sinceLastCycle;							// Time since last IGM run
