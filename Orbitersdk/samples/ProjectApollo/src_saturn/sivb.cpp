@@ -1531,13 +1531,6 @@ void SIVB::SetJ2ThrustLevel(double thrust)
 		SetThrusterLevel(th_main[0], thrust);
 }
 
-void SIVB::SetAPSThrustLevel(double thrust)
-
-{
-	if (thg_aps)
-		SetThrusterGroupLevel(thg_aps, thrust);
-}
-
 double SIVB::GetJ2ThrustLevel()
 
 {
@@ -1551,6 +1544,20 @@ double SIVB::GetMissionTime()
 
 {
 	return MissionTime;
+}
+
+void SIVB::SetSIVBThrusterDir(VECTOR3 &dir)
+{
+	if (th_main[0])
+		SetThrusterDir(th_main[0], dir);
+}
+
+void SIVB::SetAPSUllageThrusterGroupLevel(double level)
+{
+	if (!thg_aps)
+		return;
+
+	SetThrusterGroupLevel(thg_aps, level);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -2183,14 +2190,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_APS_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAPSThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_ATTITUDE_LIN_LEVEL:
 		if (OurVessel) 
 		{
@@ -2231,6 +2230,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSUllageThrusterGroupLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
 	case IULV_SET_THRUSTER_RESOURCE:
 		if (OurVessel)
 		{
@@ -2239,7 +2246,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_SATURN_THRUSTER_DIR:
+	case IULV_SET_SIVB_THRUSTER_DIR:
 		if (OurVessel)
 		{
 			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);

@@ -933,7 +933,9 @@ public:
 	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
 	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
 	bool GetSIISepLight() { return SIISepState; };
-	void SetSaturnThrusterDir(int n, VECTOR3 &dir);
+	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetAPSUllageThrusterGroupLevel(double level);
 	void SetAPSThrusterLevel(int n, double level);
 
@@ -1112,11 +1114,6 @@ public:
 	///
 	double GetJ2ThrustLevel();
 
-	///
-	/// \brief Set thrust level of the SIVb APS engines.
-	/// \param thrust Thrust level 0.0 - 1.0.
-	///
-	void SetAPSThrustLevel(double thrust);
 	void SetSaturnAttitudeRotLevel(VECTOR3 th);
 	double GetSaturnMaxThrust(ENGINETYPE eng);
 	void SIVBBoiloff();

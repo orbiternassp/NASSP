@@ -153,16 +153,16 @@ void FCC1B::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		beta_p4c = beta_pc + beta_rc / pow(2, 0.5);
 
-		lvCommandConnector->SetThrusterDir(0, _V(beta_y1c, beta_p1c, 1));
-		lvCommandConnector->SetThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
-		lvCommandConnector->SetThrusterDir(2, _V(beta_y3c, beta_p3c, 1));
-		lvCommandConnector->SetThrusterDir(3, _V(beta_y4c, beta_p4c, 1));
+		lvCommandConnector->SetSIThrusterDir(0, _V(beta_y1c, beta_p1c, 1));
+		lvCommandConnector->SetSIThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
+		lvCommandConnector->SetSIThrusterDir(2, _V(beta_y3c, beta_p3c, 1));
+		lvCommandConnector->SetSIThrusterDir(3, _V(beta_y4c, beta_p4c, 1));
 	}
 	else if (SIVBBurnMode == true) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		lvCommandConnector->SetThrusterDir(0, _V(beta_y1c, beta_p1c, 1));
+		lvCommandConnector->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
@@ -319,23 +319,26 @@ void FCCSV::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		if (StageSwitch < 1) {
 			//SIC
-			lvCommandConnector->SetThrusterDir(0, _V(beta_y4c, beta_p4c, 1));
-			lvCommandConnector->SetThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
+			lvCommandConnector->SetSIThrusterDir(0, _V(beta_y4c, beta_p4c, 1));
+			lvCommandConnector->SetSIThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
+			//1 & 3 are the same on both stages
+			lvCommandConnector->SetSIThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
+			lvCommandConnector->SetSIThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
-			lvCommandConnector->SetThrusterDir(0, _V(beta_y2c, beta_p2c, 1));
-			lvCommandConnector->SetThrusterDir(1, _V(beta_y4c, beta_p4c, 1));
+			lvCommandConnector->SetSIIThrusterDir(0, _V(beta_y2c, beta_p2c, 1));
+			lvCommandConnector->SetSIIThrusterDir(1, _V(beta_y4c, beta_p4c, 1));
+			//1 & 3 are the same on both stages
+			lvCommandConnector->SetSIIThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
+			lvCommandConnector->SetSIIThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
 		}
-		//1 & 3 are the same on both stages
-		lvCommandConnector->SetThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
-		lvCommandConnector->SetThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
 	}
 	else if (SIVBBurnMode == true && StageSwitch == 2) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		lvCommandConnector->SetThrusterDir(0, _V(beta_y1c, beta_p1c, 1));
+		lvCommandConnector->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);

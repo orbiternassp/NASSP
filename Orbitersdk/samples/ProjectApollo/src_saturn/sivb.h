@@ -277,12 +277,6 @@ public:
 	double GetJ2ThrustLevel();
 
 	///
-	/// \brief Set thrust level of the APS engine.
-	/// \param thrust Thrust level from 0.0 to 1.0.
-	///
-	void SetAPSThrustLevel(double thrust);
-
-	///
 	/// \brief Enable or disable the J2 engine.
 	/// \param Enable Enable if true, disable if false.
 	///
@@ -296,8 +290,9 @@ public:
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
 	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
-	void SetSIVBThrusterDir(VECTOR3 &dir) { SetThrusterDir(th_main[0], dir); }
+	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
+	void SetAPSUllageThrusterGroupLevel(double level);
 
 	///
 	/// \brief Get main propellant mass.

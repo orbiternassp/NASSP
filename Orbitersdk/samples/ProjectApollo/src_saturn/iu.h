@@ -89,13 +89,14 @@ enum IULVMessageType
 {
 	IULV_ENABLE_J2,							///< Enable the J2 engine.
 	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
-	IULV_SET_APS_THRUST_LEVEL,				///< Set APS thrust level.
 	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
 	IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
-	IULV_SET_SATURN_THRUSTER_DIR,			///< Set thruster direction.
+	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
+	IULV_SET_SII_THRUSTER_DIR,
+	IULV_SET_SIVB_THRUSTER_DIR,
 	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
 	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
 	IULV_ADD_S4RCS,
@@ -231,14 +232,15 @@ public:
 
 	void EnableDisableJ2(bool Enable);
 	void SetJ2ThrustLevel(double thrust);
-	void SetAPSThrustLevel(double thrust);
 	void SetVentingThruster();
 	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
 	void SetAPSUllageThrusterGroupLevel(double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
-	void SetThrusterDir(int n, VECTOR3 &dir);
+	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIVBThrusterDir(VECTOR3 &dir);
 
 	void SwitchSelector(int item);
 	void SeparateStage(int stage);
