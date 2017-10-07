@@ -25,9 +25,6 @@
 #pragma once
 class IUToLVCommandConnector;
 class IUToCSMCommandConnector;
-class LVIMU;
-class LVRG;
-class EDS;
 
 /* *******************
  * LVDC++ SV VERSION *
@@ -42,7 +39,7 @@ class EDS;
 class LVDC
 {
 public:
-	LVDC(LVIMU &imu, LVDA &lvd);
+	LVDC(LVDA &lvd);
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
@@ -53,13 +50,12 @@ protected:
 	IUToLVCommandConnector* lvCommandConnector;
 	IUToCSMCommandConnector* commandConnector;
 
-	LVIMU &lvimu;									// ST-124-M3 IMU (LV version)
 	LVDA &lvda;
 };
 
 class LVDCSV: public LVDC {
 public:
-	LVDCSV(LVIMU &imu, LVDA &lvd);											// Constructor
+	LVDCSV(LVDA &lvd);											// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -433,7 +429,7 @@ private:								// Saturn LV
 
 class LVDC1B: public LVDC {
 public:
-	LVDC1B(LVIMU &imu, LVDA &lvd);										// Constructor
+	LVDC1B(LVDA &lvd);										// Constructor
 	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);

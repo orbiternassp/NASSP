@@ -77,3 +77,28 @@ void LVDA::ZeroLVIMUPIPACounters()
 {
 	iu->lvimu.ZeroPIPACounters();
 }
+
+void LVDA::ZeroLVIMUCDUs()
+{
+	iu->lvimu.ZeroIMUCDUFlag = true;
+}
+
+void LVDA::ReleaseLVIMUCDUs()
+{
+	iu->lvimu.ZeroIMUCDUFlag = false;
+}
+
+void LVDA::ReleaseLVIMU()
+{
+	iu->lvimu.SetCaged(false);
+}
+
+void LVDA::DriveLVIMUGimbals(double x, double y, double z)
+{
+	iu->lvimu.DriveGimbals(x, y, z);
+}
+
+VECTOR3 LVDA::GetLVIMUPIPARegisters()
+{
+	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
+}

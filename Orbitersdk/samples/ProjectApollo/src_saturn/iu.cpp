@@ -1674,7 +1674,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDC1B(lvimu, lvda);
+		lvdc = new LVDC1B(lvda);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
@@ -1756,7 +1756,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 	// If the LVDC does not yet exist, create it.
 	if (lvdc == NULL) {
-		lvdc = new LVDCSV(lvimu, lvda);
+		lvdc = new LVDCSV(lvda);
 		lvimu.Init();							// Initialize IMU
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer

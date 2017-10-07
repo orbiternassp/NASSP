@@ -44,12 +44,11 @@
 #include "s1b.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "LVDC.h"
-#include "LVIMU.h"
 #include "LVDA.h"
 
 //#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 
-LVDC::LVDC(LVIMU &imu, LVDA &lvd) : lvimu(imu), lvda(lvd)
+LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 {
 
 }
@@ -61,7 +60,7 @@ void LVDC::Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc)
 }
 
 // Constructor
-LVDC1B::LVDC1B(LVIMU &imu, LVDA &lvd) : LVDC(imu, lvd)
+LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 {
 	lvCommandConnector = NULL;
 	commandConnector = NULL;
@@ -594,7 +593,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					Minutes       -= Hours*60;
 					if (lvCommandConnector->GetMissionTime() < -1200){
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
+						lvda.ZeroLVIMUCDUs();					// Zero IMU CDUs
 						break;
 					}else{
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
@@ -607,17 +606,17 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvCommandConnector->GetMissionTime() >= -17){
-					lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
+				if (lvCommandConnector->GetMissionTime() >= -17){				
+					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
 					if (lvCommandConnector->GetApolloNo() == 5)
 					{
-						lvimu.DriveGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment 
+						lvda.DriveLVIMUGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment
 					}
 					else
 					{
-						lvimu.DriveGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
+						lvda.DriveLVIMUGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
 					}
-					lvimu.SetCaged(false);							// Release IMU
+					lvda.ReleaseLVIMU();							// Release IMU
 					CountPIPA = true;								// Enable PIPA storage			
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
@@ -937,7 +936,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				break;
 		}
-		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
+		CurrentAttitude = lvda.GetLVIMUAttitude();			// Get current attitude
 		/*
 		if (lvimu.Operate) { fprintf(lvlog, "IMU: Operate\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: NO-Operate\r\n"); }
 		if (lvimu.TurnedOn) { fprintf(lvlog, "IMU: Turned On\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: Turned OFF\r\n"); }
@@ -1084,7 +1083,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			PCommandedAttitude.x = (1.5* PI) + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 			sinceLastIGM = 0;
 			GRR_init = true;
 			fprintf(lvlog,"Initialization completed.\r\n\r\n");
@@ -1103,9 +1102,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 		//powered flight nav
 		if(LVDC_GRR == true){
 			if(poweredflight == true){
-				DotM_act.x += (lvimu.CDURegisters[LVRegPIPAX]); //read the PIPA CDUs
-				DotM_act.y += (lvimu.CDURegisters[LVRegPIPAY]);
-				DotM_act.z += (lvimu.CDURegisters[LVRegPIPAZ]);
+				DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			}
 			Fm = pow((pow(((DotM_act.x - DotM_last.x)/dt_c),2)+ pow(((DotM_act.y - DotM_last.y)/dt_c),2)+ pow(((DotM_act.z - DotM_last.z)/dt_c),2)),0.5);
 			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2 + (DotG_last.x + ddotG_last.x * dt_c / 2)*dt_c + Dot0.x * dt_c; //position vector
@@ -1143,7 +1140,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"Dist. from Earth's Center: %f \r\n",R);
 			fprintf(lvlog,"S: %f \r\n",S);
 			fprintf(lvlog,"P: %f \r\n",P);
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 		}
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
@@ -2460,7 +2457,7 @@ void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *S
 // ***************************
 
 // Constructor
-LVDCSV::LVDCSV(LVIMU &imu, LVDA &lvd) : LVDC(imu, lvd)
+LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 {
 	lvCommandConnector = NULL;
 	commandConnector = NULL;
@@ -4508,7 +4505,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
+					lvda.ZeroLVIMUCDUs();						// Zero IMU CDUs
 					break;
 				}
 
@@ -7309,12 +7306,12 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
 
-			lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-			lvimu.DriveGimbals(Azimuth - PI05, 0, 0);		// Now bring to alignment 
-			lvimu.SetCaged(false);							// Release IMU
+			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
+			lvda.DriveLVIMUGimbals(Azimuth - PI05, 0, 0);	// Now bring to alignment 
+			lvda.ReleaseLVIMU();							// Release IMU
 			CountPIPA = true;								// Enable PIPA storage	
 
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 			sinceLastCycle = 0;
 			init = true;
 			fprintf(lvlog, "Initialization completed.\r\n\r\n");
@@ -7366,9 +7363,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				IGMCycle++;				// For debugging
 				fprintf(lvlog, "[%d+%f] *** Major Loop (powered) %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
 				//read the PIPA CDUs
-				DotM_act.x += (lvimu.CDURegisters[LVRegPIPAX]);
-				DotM_act.y += (lvimu.CDURegisters[LVRegPIPAY]);
-				DotM_act.z += (lvimu.CDURegisters[LVRegPIPAZ]);
+				DotM_act += lvda.GetLVIMUPIPARegisters();
 				Fm = pow((pow(((DotM_act.x - DotM_last.x) / dt_c), 2) + pow(((DotM_act.y - DotM_last.y) / dt_c), 2) + pow(((DotM_act.z - DotM_last.z) / dt_c), 2)), 0.5);
 				PosS = PosS + (DotM_act + DotM_last) * dt_c / 2.0 + (DotG_last + ddotG_last * dt_c / 2.0)*dt_c; //position vector
 				Y_u = -(PosS.x*MX_A.m21 + PosS.y*MX_A.m22 + PosS.z*MX_A.m23); //position component south of equator
@@ -7392,7 +7387,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "Powered Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
 				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
-				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n",lvimu.CDURegisters[LVRegPIPAX], lvimu.CDURegisters[LVRegPIPAY], lvimu.CDURegisters[LVRegPIPAZ]);
+				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n", lvda.GetLVIMUPIPARegisters().x, lvda.GetLVIMUPIPARegisters().y, lvda.GetLVIMUPIPARegisters().z);
 				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
 				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
@@ -7523,7 +7518,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				DotM_act = _V(0.0, 0.0, 0.0);
 				DotM_last = _V(0.0, 0.0, 0.0);
 				DotG_last = DotS;
-				lvimu.ZeroPIPACounters();
+				lvda.ZeroLVIMUPIPACounters();
 
 				fprintf(lvlog, "Orbital Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
