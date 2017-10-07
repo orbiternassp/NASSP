@@ -354,6 +354,7 @@ public:
 	virtual void SaveEDS(FILEHANDLE scn) = 0;
 	virtual void LoadEDS(FILEHANDLE scn) = 0;
 
+	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 
 	LVDC* lvdc;
@@ -403,6 +404,7 @@ public:
 	void LoadEDS(FILEHANDLE scn);
 	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
+	EDS* GetEDS() { return &eds; }
 protected:
 	FCC1B fcc;
 	EDS1B eds;
@@ -421,6 +423,8 @@ public:
 	void LoadEDS(FILEHANDLE scn);
 	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
+	EDS* GetEDS() { return &eds; }
+
 protected:
 	FCCSV fcc;
 	EDSSV eds;

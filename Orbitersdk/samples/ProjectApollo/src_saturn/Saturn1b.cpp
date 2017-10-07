@@ -695,10 +695,7 @@ void Saturn1b::SetRandomFailures()
 			}
 		}
 
-		if (iu->lvdc)
-		{
-			iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
-		}
+		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
 
 		if (!(random() & 127))
 		{

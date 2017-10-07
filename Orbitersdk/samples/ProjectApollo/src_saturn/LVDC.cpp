@@ -531,12 +531,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	TAS=0;
 	t_clock = 0;
 
-	for (int i = 0;i < 8;i++)
-	{
-		EarlySICutoff[i] = 0;
-		FirstStageFailureTime[i] = 0.0;
-	}
-
 	// Set up remainder
 	LVDC_Timebase = -1;										// Start up halted in pre-PTL wait
 	LVDC_TB_ETime = 0;
@@ -1752,14 +1746,7 @@ minorloop: //minor loop;
 		//Engine failure code
 		if (LVDC_Timebase == 1)
 		{
-			for (int i = 0;i < 8;i++)
-			{
-				if (EarlySICutoff[i] && (t_clock > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
-				{
-					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
-					S1B_Engine_Out = true;
-				}
-			}
+			S1B_Engine_Out = lvda.GetSIEngineOut();
 		}
 
 		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
@@ -2439,15 +2426,6 @@ double LVDC1B::SVCompare()
 	return length(PosS - newpos);
 }
 
-void LVDC1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
-{
-	for (int i = 0;i < 8;i++)
-	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
-	}
-}
-
 // ***************************
 // DS20150720 LVDC++ ON WHEELS
 // ***************************
@@ -2459,18 +2437,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
-
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySICutoff[i] = 0;
-		FirstStageFailureTime[i] = 0.0;
-	}
-
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySIICutoff[i] = 0;
-		SecondStageFailureTime[i] = 0.0;
-	}
 
 	// Zeroize
 	// booleans
@@ -2491,7 +2457,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	GATE4 = false;
 	GATE5 = false;
 	GATE6 = false;
-	GATE7 = false;
 	HSL = false;
 	INH = false;
 	INH1 = false;
@@ -2872,7 +2837,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	GATE4 = false;							// allows single pass through direct-staging guidance update when false
 	GATE5 = false;							// allows single pass through HSL initialization when false
 	GATE6 = false;
-	GATE7 = false;
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
 	INH1 = true;							// inhibits first EPO roll/pitch maneuver
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
@@ -3212,7 +3176,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE4", GATE4);
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
 	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
-	oapiWriteScenario_int(scn, "LVDC_GATE7", GATE7);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
 	oapiWriteScenario_int(scn, "LVDC_IGM_Failed", IGM_Failed);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
@@ -3844,7 +3807,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE4", GATE4);
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
 		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
-		papiReadScenario_bool(line, "LVDC_GATE7", GATE7);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
 		papiReadScenario_bool(line, "LVDC_IGM_Failed", IGM_Failed);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
@@ -6407,13 +6369,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					}
 				}
 
-				//Inhibit second TLI opportunity
-				if (LVDC_TB_ETime > 497.3 && GATE7 == false && !INH && LVDC_Timebase == 6)
-				{
-					fprintf(lvlog, "[TB%d+%f] Second TLI Opportunity Inhibited\r\n", LVDC_Timebase, LVDC_TB_ETime);
-					GATE7 = true;
-				}
-
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset)
 					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()
@@ -8637,21 +8592,10 @@ restartprep:
 			{goto orbitalguidance;}
 			
 		INHcheck:
-			if (GATE7)
+			 if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
 			{
-				goto orbitalguidance;
-			}
-			else if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
-			{
-				if (first_op)
-				{
-					GATE0 = GATE1 = false;	//Select second opportunity targeting
-					first_op = false;
-				}
-				else
-				{
-					GATE7 = true;
-				}
+				GATE0 = GATE1 = false;	//Select second opportunity targeting
+				first_op = false;
 				goto orbitalguidance;
 			}
 			else if (!GATE0)
@@ -8865,27 +8809,11 @@ minorloop:
 		//Engine failure code
 		if (LVDC_Timebase == 1)
 		{
-			for (int i = 0;i < 5;i++)
-			{
-				if (EarlySICutoff[i] && (t_clock > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
-				{
-					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
-					commandConnector->ClearLiftoffLight();
-					S1_Engine_Out = true;
-				}
-			}
+			S1_Engine_Out = lvda.GetSIEngineOut();
 		}
-
 		if (LVDC_Timebase == 3)
 		{
-			for (int i = 0;i < 5;i++)
-			{
-				if (EarlySIICutoff[i] && (LVDC_TB_ETime > SecondStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
-				{
-					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
-					S2_ENGINE_OUT = true;
-				}
-			}
+			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
 		}
 
 		// End of test for LVDC_Stop
@@ -8920,15 +8848,4 @@ double LVDCSV::SVCompare()
 double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
-}
-
-void LVDCSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
-{
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
-		EarlySIICutoff[i] = SIICut[i];
-		SecondStageFailureTime[i] = SIICutTimes[i];
-	}
 }

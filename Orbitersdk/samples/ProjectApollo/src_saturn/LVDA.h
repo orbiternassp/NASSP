@@ -45,6 +45,8 @@ public:
 	void ReleaseLVIMU();
 	void DriveLVIMUGimbals(double x, double y, double z);
 	VECTOR3 GetLVIMUPIPARegisters();
+	bool GetSIEngineOut();
+	bool GetSIIEngineOut();
 protected:
 	IU *iu;
 };

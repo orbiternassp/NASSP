@@ -1114,17 +1114,14 @@ void SaturnV::SetRandomFailures()
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!(random() & 3))
+			if (!(random() & 63))
 			{
 				EarlySIICutoff[i] = 1;
-				SecondStageFailureTime[i] = 20.0 + ((double)(random() & 3071) / 10.0);
+				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
 			}
 		}
 
-		if (iu->lvdc)
-		{
-			iu->lvdc->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
-		}
+		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
 
 		if (!(random() & 127))
 		{

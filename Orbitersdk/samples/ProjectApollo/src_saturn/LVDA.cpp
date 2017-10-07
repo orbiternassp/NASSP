@@ -102,3 +102,13 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 {
 	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
 }
+
+bool LVDA::GetSIEngineOut()
+{
+	return iu->GetEDS()->GetSIEngineOut();
+}
+
+bool LVDA::GetSIIEngineOut()
+{
+	return iu->GetEDS()->GetSIIEngineOut();
+}

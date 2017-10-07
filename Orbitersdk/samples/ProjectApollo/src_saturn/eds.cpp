@@ -50,6 +50,8 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	RateGyroSCIndicationSwitchB = false;
 	EngineOutIndicationA = false;
 	EngineOutIndicationB = false;
+	SI_Engine_Out = false;
+	SII_Engine_Out = false;
 }
 
 void EDS::Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector *commandConn)
@@ -70,6 +72,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
 	papiWriteScenario_bool(scn, "ENGINEOUTINDICATIONA", EngineOutIndicationA);
 	papiWriteScenario_bool(scn, "ENGINEOUTINDICATIONB", EngineOutIndicationB);
+	papiWriteScenario_bool(scn, "SIENGINEOUT", SI_Engine_Out);
+	papiWriteScenario_bool(scn, "SIIENGINEOUT", SII_Engine_Out);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -93,13 +97,28 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
 		papiReadScenario_bool(line, "ENGINEOUTINDICATIONA", EngineOutIndicationA);
 		papiReadScenario_bool(line, "ENGINEOUTINDICATIONB", EngineOutIndicationB);
+		papiReadScenario_bool(line, "SIENGINEOUT", SI_Engine_Out);
+		papiReadScenario_bool(line, "SIIENGINEOUT", SII_Engine_Out);
 
 	}
 }
 
 EDS1B::EDS1B(LVRG &rg) : EDS(rg)
 {
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = false;
+		FirstStageFailureTime[i] = 0.0;
+	}
+}
 
+void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+{
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = SICut[i];
+		FirstStageFailureTime[i] = SICutTimes[i];
+	}
 }
 
 void EDS1B::Timestep(double simdt)
@@ -267,11 +286,46 @@ void EDS1B::Timestep(double simdt)
 		commandConnector->SetEngineIndicator(7);
 		commandConnector->SetEngineIndicator(8);
 	}
+
+	//Engine failure code
+	switch (lvCommandConnector->GetStage())
+	{
+	case LAUNCH_STAGE_ONE:
+		for (int i = 0;i < 8;i++)
+		{
+			if (EarlySICutoff[i] && (lvCommandConnector->GetMissionTime() > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+			{
+				lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
+				SI_Engine_Out = true;
+			}
+		}
+		break;
+	default:
+		SI_Engine_Out = false;
+		break;
+	}
 }
 
 EDSSV::EDSSV(LVRG &rg) : EDS(rg)
 {
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySICutoff[i] = false;
+		FirstStageFailureTime[i] = 0.0;
+		EarlySIICutoff[i] = false;
+		SecondStageFailureTime[i] = 0.0;
+	}
+}
 
+void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		EarlySICutoff[i] = SICut[i];
+		FirstStageFailureTime[i] = SICutTimes[i];
+		EarlySIICutoff[i] = SIICut[i];
+		SecondStageFailureTime[i] = SIICutTimes[i];
+	}
 }
 
 void EDSSV::Timestep(double simdt)
@@ -451,5 +505,38 @@ void EDSSV::Timestep(double simdt)
 		commandConnector->ClearEngineIndicator(3);
 		commandConnector->ClearEngineIndicator(4);
 		commandConnector->ClearEngineIndicator(5);
+	}
+
+	//Engine failure code
+
+	switch (lvCommandConnector->GetStage()) {
+	case LAUNCH_STAGE_ONE:
+		SII_Engine_Out = false;
+		for (int i = 0;i < 5;i++)
+		{
+			if (EarlySICutoff[i] && (lvCommandConnector->GetMissionTime() > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+			{
+				lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
+				commandConnector->ClearLiftoffLight();
+				SI_Engine_Out = true;
+			}
+		}
+		break;
+	case LAUNCH_STAGE_TWO:
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+		SI_Engine_Out = false;
+		for (int i = 0;i < 5;i++)
+		{
+			if (EarlySIICutoff[i] && (lvCommandConnector->GetMissionTime() > SecondStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
+			{
+				lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
+				SII_Engine_Out = true;
+			}
+		}
+		break;
+	default:
+		SI_Engine_Out = false;
+		SII_Engine_Out = false;
+		break;
 	}
 }

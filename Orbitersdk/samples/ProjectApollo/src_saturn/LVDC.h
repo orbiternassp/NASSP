@@ -44,7 +44,6 @@ public:
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
-	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
 	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc);
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
@@ -63,7 +62,6 @@ public:
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
@@ -75,12 +73,6 @@ private:								// Saturn LV
 	double S1_Sep_Time;								// S1C Separation Counter
 
 	double BoiloffTime;
-
-	//Engine Failure variables
-	bool EarlySICutoff[5];
-	double FirstStageFailureTime[5];
-	bool EarlySIICutoff[5];
-	double SecondStageFailureTime[5];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
@@ -152,7 +144,6 @@ private:								// Saturn LV
 	bool GATE4;										// Permit only one pass through direct-staging guidance update
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool GATE6;										// Logic gate that ensures only one pass through separation attitude calculation
-	bool GATE7;										// Inhibit second TLI opportunity
 	bool INH,INH1,INH2;								// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
@@ -434,8 +425,8 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+
 	double SVCompare();
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
@@ -446,10 +437,6 @@ private:
 	double S1B_Sep_Time;							// S1B Separation Counter
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	double BoiloffTime;
-
-	//Engine Failure variables
-	bool EarlySICutoff[8];
-	double FirstStageFailureTime[8];
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
