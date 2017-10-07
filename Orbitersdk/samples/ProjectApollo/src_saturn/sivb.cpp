@@ -1552,12 +1552,12 @@ void SIVB::SetSIVBThrusterDir(VECTOR3 &dir)
 		SetThrusterDir(th_main[0], dir);
 }
 
-void SIVB::SetAPSUllageThrusterGroupLevel(double level)
+void SIVB::SetAPSUllageThrusterLevel(int n, double level)
 {
-	if (!thg_aps)
-		return;
+	if (n < 0 || n > 1) return;
+	if (!th_att_lin[n]) return;
 
-	SetThrusterGroupLevel(thg_aps, level);
+	SetThrusterLevel(th_att_lin[n], level);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -2230,10 +2230,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL:
+	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetAPSUllageThrusterGroupLevel(m.val1.dValue);
+			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
 			return true;
 		}
 		break;

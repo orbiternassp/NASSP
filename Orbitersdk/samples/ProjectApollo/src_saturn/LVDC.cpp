@@ -5580,7 +5580,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB5+0.3: S-IVB Ullage Engine No. 1 On
 					if (LVDC_TB_ETime > 0.3)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
 						CommandSequence++;
 					}
 					break;
@@ -5588,7 +5588,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB5+0.4: S-IVB Ullage Engine No. 2 On
 					if (LVDC_TB_ETime > 0.4)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
 						CommandSequence++;
 					}
 					break;
@@ -5755,7 +5755,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB5+87.0: S-IVB Ullage Engine No.1 Off
 					if (LVDC_TB_ETime > 87.0)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
 						CommandSequence++;
 					}
 					break;
@@ -5763,7 +5763,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB5+87.1: S-IVB Ullage Engine No.2 Off
 					if (LVDC_TB_ETime > 87.1)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
 						CommandSequence++;
 					}
 					break;
@@ -6105,7 +6105,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6+496.3: S-IVB Ullage Engine No.1 On
 					if (LVDC_TB_ETime > 496.3)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
 						CommandSequence++;
 					}
 					break;
@@ -6113,7 +6113,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6+496.4: S-IVB Ullage Engine No.2 On
 					if (LVDC_TB_ETime > 496.4)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
 						CommandSequence++;
 					}
 					break;
@@ -6222,7 +6222,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6+573.0: S-IVB Ullage Engine No.1 Off
 					if (LVDC_TB_ETime > 573.0)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
 						CommandSequence++;
 					}
 					break;
@@ -6230,7 +6230,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6+573.1: S-IVB Ullage Engine No.2 Off
 					if (LVDC_TB_ETime > 573.1)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
 						CommandSequence++;
 					}
 					break;
@@ -7025,7 +7025,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6b+0.2: S-IVB Ullage Engine No. 1 On
 					if (LVDC_TB_ETime > 0.2)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1.0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
 						CommandSequence++;
 					}
 					break;
@@ -7033,14 +7033,17 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6b+0.3: S-IVB Ullage Engine No. 2 On
 					if (LVDC_TB_ETime > 0.3)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(1.0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
 						CommandSequence++;
 					}
 					break;
 				case 3:
 					//TB6b+0.5: S-IVB Ullage Thrust Present Indication On
 					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
 						CommandSequence++;
+					}
 					break;
 				case 5:
 					//Return to TB5
@@ -7089,7 +7092,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6c+1.2: S-IVB Ullage Engine No. 1 Off
 					if (LVDC_TB_ETime > 1.2)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0.0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
 						CommandSequence++;
 					}
 					break;
@@ -7097,7 +7100,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6c+1.3: S-IVB Ullage Engine No. 2 Off
 					if (LVDC_TB_ETime > 1.3)
 					{
-						lvCommandConnector->SetAPSUllageThrusterGroupLevel(0.0);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
 						CommandSequence++;
 					}
 					break;
@@ -7109,7 +7112,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 9:
 					//TB6c+1.5: S-IVB Ullage Thrust Present Indication Off
 					if (LVDC_TB_ETime > 1.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 46);
 						CommandSequence++;
+					}
 					break;
 				case 10:
 					//TB6c+1.6: LOX Chilldown Pump Off

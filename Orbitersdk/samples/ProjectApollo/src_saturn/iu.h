@@ -92,7 +92,7 @@ enum IULVMessageType
 	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
-	IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL,
+	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
@@ -236,7 +236,7 @@ public:
 	void SetVentingThruster();
 	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
-	void SetAPSUllageThrusterGroupLevel(double level);
+	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);

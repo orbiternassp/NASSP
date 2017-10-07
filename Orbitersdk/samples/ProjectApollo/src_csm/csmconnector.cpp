@@ -543,10 +543,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL:
+	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetAPSUllageThrusterGroupLevel(m.val1.dValue);
+			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
 			return true;
 		}
 		break;
