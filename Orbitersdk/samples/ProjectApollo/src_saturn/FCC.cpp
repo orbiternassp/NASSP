@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
+#include "ioChannels.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "saturn.h"
@@ -40,6 +41,7 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 	GainSwitch = -1;
 	StageSwitch = 0;
 	SIVBBurnMode = false;
+	SCControlEnableRelay = false;
 
 	a_0p = a_0y = a_0r = 0.0;
 	a_1p = a_1y = a_1r = 0.0;
@@ -48,14 +50,15 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 	beta_p1c = beta_p2c = beta_p3c = beta_p4c = 0.0;
 	eps_p = eps_ymr = eps_ypr = 0.0;
 
-	AttitudeError = _V(0.0, 0.0, 0.0);
+	LVDCAttitudeError = _V(0.0, 0.0, 0.0);
 
 	lvCommandConnector = NULL;
 }
 
-void FCC::Configure(IUToLVCommandConnector *lvCommandConn)
+void FCC::Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector* commandConn)
 {
 	lvCommandConnector = lvCommandConn;
+	commandConnector = commandConn;
 }
 
 void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -64,7 +67,8 @@ void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteScenario_int(scn, "GAINSWITCH", GainSwitch);
 	oapiWriteScenario_int(scn, "STAGESWITCH", StageSwitch);
 	papiWriteScenario_bool(scn, "SIVBBURNMODE", SIVBBurnMode);
-	papiWriteScenario_vec(scn, "ATTITUDEERROR", AttitudeError);
+	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+	papiWriteScenario_vec(scn, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -81,7 +85,8 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_int(line, "GAINSWITCH", GainSwitch);
 		papiReadScenario_int(line, "STAGESWITCH", StageSwitch);
 		papiReadScenario_bool(line, "SIVBBURNMODE", SIVBBurnMode);
-		papiReadScenario_vec(line, "ATTITUDEERROR", AttitudeError);
+		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+		papiReadScenario_vec(line, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	}
 }
@@ -97,9 +102,22 @@ void FCC1B::Timestep(double simdt)
 	if (lvCommandConnector == NULL) return;
 	if (lvCommandConnector->connectedTo == NULL) return;
 
-	VECTOR3 AttRate;
+	VECTOR3 AttRate, AttitudeError;
 
 	AttRate = lvrg.GetRates();
+
+	// S/C takeover function
+	if (SCControlEnableRelay == true && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))) {
+		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
+		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
+		AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
+		AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
+		AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
+	}
+	else
+	{
+		AttitudeError = LVDCAttitudeError;
+	}
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
 	if (GainSwitch == 0) {
@@ -238,9 +256,21 @@ void FCCSV::Timestep(double simdt)
 	if (lvCommandConnector == NULL) return;
 	if (lvCommandConnector->connectedTo == NULL) return;
 
-	VECTOR3 AttRate;
+	VECTOR3 AttRate, AttitudeError;
 
 	AttRate = lvrg.GetRates();
+
+	if ((SCControlEnableRelay == true || lvCommandConnector->GetApolloNo() >= 11) && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))) {
+		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
+		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
+		AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
+		AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
+		AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
+	}
+	else
+	{
+		AttitudeError = LVDCAttitudeError;
+	}
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
 	if (GainSwitch == 0) {

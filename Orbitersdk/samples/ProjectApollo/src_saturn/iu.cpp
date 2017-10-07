@@ -1680,7 +1680,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-		fcc.Configure(&lvCommandConnector);
+		fcc.Configure(&lvCommandConnector, &commandConnector);
 	}
 	lvdc->LoadState(scn);
 
@@ -1717,7 +1717,7 @@ void IU1B::ConnectLVDC()
 
 	if (lvdc)
 	{
-		fcc.Configure(&lvCommandConnector);
+		fcc.Configure(&lvCommandConnector, &commandConnector);
 	}
 }
 
@@ -1762,7 +1762,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-		fcc.Configure(&lvCommandConnector);
+		fcc.Configure(&lvCommandConnector, &commandConnector);
 	}
 	lvdc->LoadState(scn);
 
@@ -1799,7 +1799,7 @@ void IUSV::ConnectLVDC()
 
 	if (lvdc)
 	{
-		fcc.Configure(&lvCommandConnector);
+		fcc.Configure(&lvCommandConnector, &commandConnector);
 	}
 }
 
@@ -1880,13 +1880,13 @@ void IUSV::SwitchSelector(int item)
 	case 39: //Tape Recorder Record On
 		break;
 	case 43: // S-IVB Ullage Thrust Present Indication On
-
+		commandConnector.SetAGCInputChannelBit(030, UllageThrust, true);
 		break;
 	case 44: //Flight Control Computer Switch Point No. 5
 		fcc.SetGainSwitch(5);
 		break;
 	case 46: //S-IVB Ullage Thrust Present Indication Off
-
+		commandConnector.SetAGCInputChannelBit(030, UllageThrust, false);
 		break;
 	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 		eds.SetEngineOutIndicationB(true);
@@ -1909,8 +1909,10 @@ void IUSV::SwitchSelector(int item)
 	case 65: //CCS Coax Switch Low Gain Antenna
 		break;
 	case 68: //S/C Control of Saturn Enable
+		fcc.EnableSCControl();
 		break;
 	case 69: //S/C Control of Saturn Disable
+		fcc.DisableSCControl();
 		break;
 	case 74: //Flight Control Computer Burn Mode On "B"
 		fcc.SetStageSwitch(2);

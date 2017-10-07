@@ -67,3 +67,13 @@ void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
 {
 	iu->GetFCC()->SetAttitudeError(atterr);
 }
+
+VECTOR3 LVDA::GetLVIMUAttitude()
+{
+	return iu->lvimu.GetTotalAttitude();
+}
+
+void LVDA::ZeroLVIMUPIPACounters()
+{
+	iu->lvimu.ZeroPIPACounters();
+}

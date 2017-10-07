@@ -1733,15 +1733,6 @@ minorloop: //minor loop;
 		AttitudeError.y = -(A1 * DeltaAtt.y + A2 * DeltaAtt.z); 
 		// YAW ERROR
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
-	
-		// S/C takeover function
-		if(LVDC_Timebase == 4 && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))){
-			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
-			AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
-			AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
-		}
 
 		lvda.SetFCCAttitudeError(AttitudeError);
 
@@ -7179,7 +7170,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				break;
 
 		}
-		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
+		CurrentAttitude = lvda.GetLVIMUAttitude();			// Get current attitude	
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
@@ -7412,7 +7403,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
 				fprintf(lvlog, "S: %f \r\n", S);
 				fprintf(lvlog, "P: %f \r\n", P);
-				lvimu.ZeroPIPACounters();
+				lvda.ZeroLVIMUPIPACounters();
 			}
 			else
 			{
@@ -8775,17 +8766,6 @@ minorloop:
 		AttitudeError.y = -(A1 * DeltaAtt.y + A2 * DeltaAtt.z);
 		// YAW ERROR
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
-
-		// LV takeover
-		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
-		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if ((LVDC_Timebase == 5 || (lvCommandConnector->GetApolloNo() >= 11 && LVDC_Timebase > 0)) && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))){
-			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
-			AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
-			AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
-		}
 
 		lvda.SetFCCAttitudeError(AttitudeError);
 
