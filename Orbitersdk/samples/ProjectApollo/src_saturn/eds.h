@@ -33,6 +33,7 @@ class EDS
 public:
 	EDS(LVRG &rg);
 	virtual void Timestep(double simdt) = 0;
+	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
 	void Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector *commandConn);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -45,6 +46,9 @@ public:
 	void SetRateGyroSCIndicationSwitchA(bool set) { RateGyroSCIndicationSwitchA = set; }
 	void SetRateGyroSCIndicationSwitchB(bool set) { RateGyroSCIndicationSwitchB = set; }
 	void SetLVEnginesCutoffEnable(bool set) { LVEnginesCutoffEnable = set; }
+
+	bool GetSIEngineOut() { return SI_Engine_Out; }
+	bool GetSIIEngineOut() { return SII_Engine_Out; }
 protected:
 	LVRG &lvrg;
 
@@ -70,6 +74,8 @@ protected:
 	bool RateGyroSCIndicationSwitchB;
 	bool EngineOutIndicationA;
 	bool EngineOutIndicationB;
+	bool SI_Engine_Out;
+	bool SII_Engine_Out;
 };
 
 class EDS1B : public EDS
@@ -77,6 +83,11 @@ class EDS1B : public EDS
 public:
 	EDS1B(LVRG &rg);
 	void Timestep(double simdt);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+protected:
+	//Engine Failure variables
+	bool EarlySICutoff[8];
+	double FirstStageFailureTime[8];
 };
 
 class EDSSV : public EDS
@@ -84,4 +95,11 @@ class EDSSV : public EDS
 public:
 	EDSSV(LVRG &rg);
 	void Timestep(double simdt);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+protected:
+	//Engine Failure variables
+	bool EarlySICutoff[5];
+	double FirstStageFailureTime[5];
+	bool EarlySIICutoff[5];
+	double SecondStageFailureTime[5];
 };

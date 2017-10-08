@@ -92,7 +92,7 @@ enum IULVMessageType
 	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
-	IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL,
+	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
@@ -153,6 +153,7 @@ enum IULVMessageType
 	IULV_GET_VERNIER_THRUSTER_GROUP,
 	IULV_GET_THRUSTER_RESOURCE,
 	IULV_GET_THRUSTER_GROUP_LEVEL,
+	IULV_CSM_SEPARATION_SENSED,
 };
 
 ///
@@ -235,7 +236,7 @@ public:
 	void SetVentingThruster();
 	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
-	void SetAPSUllageThrusterGroupLevel(double level);
+	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
@@ -305,6 +306,8 @@ public:
 
 	OBJHANDLE GetElements(ELEMENTS &el, double &mjd_ref);
 	OBJHANDLE GetGravityRef();
+
+	bool CSMSeparationSensed();
 };
 
 ///
@@ -328,7 +331,7 @@ public:
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
-	virtual void ConnectLVDC();
+	void DisconnectIU();
 
 	///
 	/// \brief Timestep function.
@@ -351,6 +354,7 @@ public:
 	virtual void SaveEDS(FILEHANDLE scn) = 0;
 	virtual void LoadEDS(FILEHANDLE scn) = 0;
 
+	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 
 	LVDC* lvdc;
@@ -398,8 +402,8 @@ public:
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
 	void LoadEDS(FILEHANDLE scn);
-	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
+	EDS* GetEDS() { return &eds; }
 protected:
 	FCC1B fcc;
 	EDS1B eds;
@@ -416,8 +420,9 @@ public:
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
 	void LoadEDS(FILEHANDLE scn);
-	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
+	EDS* GetEDS() { return &eds; }
+
 protected:
 	FCCSV fcc;
 	EDSSV eds;

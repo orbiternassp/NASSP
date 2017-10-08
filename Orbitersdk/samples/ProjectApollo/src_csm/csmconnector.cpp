@@ -543,10 +543,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_APS_ULLAGE_THRUSTER_GROUP_LEVEL:
+	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetAPSUllageThrusterGroupLevel(m.val1.dValue);
+			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
 			return true;
 		}
 		break;
@@ -635,6 +635,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->EnableDisableJ2(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = false;
 			return true;
 		}
 		break;

@@ -26,24 +26,28 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 class LVRG;
 class IUToLVCommandConnector;
+class IUToCSMCommandConnector;
 
 class FCC
 {
 public:
 	FCC(LVRG &rg);
 	virtual void Timestep(double simdt) = 0;
-	void Configure(IUToLVCommandConnector *lvCommandConn);
+	void Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector* commandConn);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
-	void SetAttitudeError(VECTOR3 atterr) { AttitudeError = atterr; }
+	void SetAttitudeError(VECTOR3 atterr) { LVDCAttitudeError = atterr; }
 	void SetGainSwitch(int n) { GainSwitch = n; }
 	void SetStageSwitch(int n) { StageSwitch = n; }
 	void SetSIVBBurnMode(bool n) { SIVBBurnMode = n; }
+	void EnableSCControl() { SCControlEnableRelay = true; }
+	void DisableSCControl() { SCControlEnableRelay = false; }
 protected:
 	int GainSwitch;
 	int StageSwitch;
 	bool SIVBBurnMode;
+	bool SCControlEnableRelay;
 
 	double a_0p, a_0y, a_0r;
 	double a_1p, a_1y, a_1r;
@@ -52,11 +56,12 @@ protected:
 	double beta_p1c, beta_p2c, beta_p3c, beta_p4c;
 	double eps_p, eps_ymr, eps_ypr;
 
-	VECTOR3 AttitudeError;
+	VECTOR3 LVDCAttitudeError;
 
 	LVRG &lvrg;
 
 	IUToLVCommandConnector *lvCommandConnector;
+	IUToCSMCommandConnector* commandConnector;
 };
 
 class FCC1B : public FCC

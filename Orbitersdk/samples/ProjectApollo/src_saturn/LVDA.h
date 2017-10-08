@@ -38,6 +38,15 @@ public:
 	void Init(IU* i);
 	void SwitchSelector(int stage, int channel);
 	void SetFCCAttitudeError(VECTOR3 atterr);
+	VECTOR3 GetLVIMUAttitude();
+	void ZeroLVIMUPIPACounters();
+	void ZeroLVIMUCDUs();
+	void ReleaseLVIMUCDUs();
+	void ReleaseLVIMU();
+	void DriveLVIMUGimbals(double x, double y, double z);
+	VECTOR3 GetLVIMUPIPARegisters();
+	bool GetSIEngineOut();
+	bool GetSIIEngineOut();
 protected:
 	IU *iu;
 };

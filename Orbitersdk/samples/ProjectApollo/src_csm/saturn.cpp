@@ -4654,12 +4654,13 @@ void Saturn::SetSIVBThrusterDir(VECTOR3 &dir)
 	SetThrusterDir(th_main[0], dir);
 }
 
-void Saturn::SetAPSUllageThrusterGroupLevel(double level)
+void Saturn::SetAPSUllageThrusterLevel(int n, double level)
 {
-	if ((stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) || !thg_aps)
-		return;
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+	if (n < 0 || n > 1) return;
+	if (!th_att_lin[n]) return;
 
-	SetThrusterGroupLevel(thg_aps, level);
+	SetThrusterLevel(th_att_lin[n], level);
 }
 
 void Saturn::SetAPSThrusterLevel(int n, double level)
