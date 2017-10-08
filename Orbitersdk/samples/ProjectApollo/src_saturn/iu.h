@@ -331,7 +331,7 @@ public:
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
-	virtual void ConnectLVDC();
+	void DisconnectIU();
 
 	///
 	/// \brief Timestep function.
@@ -402,7 +402,6 @@ public:
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
 	void LoadEDS(FILEHANDLE scn);
-	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 protected:
@@ -421,7 +420,6 @@ public:
 	void LoadFCC(FILEHANDLE scn);
 	void SaveEDS(FILEHANDLE scn);
 	void LoadEDS(FILEHANDLE scn);
-	void ConnectLVDC();
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 

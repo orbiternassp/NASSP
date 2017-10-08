@@ -640,7 +640,6 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 	S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
 	S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
-	S4Config.SettingsType.SIVB_SETTINGS_LVDC = 1;
 	S4Config.Payload = SIVBPayload;
 	S4Config.VehicleNo = VehicleNo;
 	S4Config.EmptyMass = S4B_EmptyMass;
@@ -666,7 +665,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.AEAPadCount = AEAPadCount;
 	sprintf(S4Config.LEMCheck, LEMCheck);
 
-	S4Config.lvdc_pointer = iu->lvdc;
+	S4Config.iu_pointer = iu;
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);

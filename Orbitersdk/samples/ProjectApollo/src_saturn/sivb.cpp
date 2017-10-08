@@ -1468,6 +1468,17 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			RotationLimit = 0.25;
 		}
+
+		if (SaturnVStage)
+		{
+			iu = new IUSV;
+		}
+		else
+		{
+			iu = new IU1B;
+		}
+		iu = state.iu_pointer;
+		iu->DisconnectIU();
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_MASS)
@@ -1485,20 +1496,6 @@ void SIVB::SetState(SIVBSettings &state)
 	{
 		THRUST_THIRD_VAC = state.THRUST_VAC;
 		ISP_THIRD_VAC = state.ISP_VAC;
-	}
-
-	if (state.SettingsType.SIVB_SETTINGS_LVDC)
-	{
-		if (SaturnVStage)
-		{
-			iu = new IUSV;
-		}
-		else
-		{
-			iu = new IU1B;
-		}
-		iu->lvdc = state.lvdc_pointer;
-		iu->ConnectLVDC();
 	}
 
 	State = SIVB_STATE_WAITING;

@@ -155,14 +155,10 @@ void IU::ConnectToLV(Connector *CommandConnector)
 	lvCommandConnector.ConnectTo(CommandConnector);
 }
 
-void IU::ConnectLVDC()
+void IU::DisconnectIU()
 {
-	if (lvdc)
-	{
-		lvrg.Init(&lvCommandConnector);
-		lvimu.SetVessel(&lvCommandConnector);
-		lvdc->Configure(&lvCommandConnector, &commandConnector);
-	}
+	lvCommandConnector.Disconnect();
+	commandConnector.Disconnect();
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
@@ -1711,16 +1707,6 @@ void IU1B::LoadEDS(FILEHANDLE scn)
 	eds.LoadState(scn, "EDS_END");
 }
 
-void IU1B::ConnectLVDC()
-{
-	IU::ConnectLVDC();
-
-	if (lvdc)
-	{
-		fcc.Configure(&lvCommandConnector, &commandConnector);
-	}
-}
-
 void IU1B::SwitchSelector(int item)
 {
 
@@ -1791,16 +1777,6 @@ void IUSV::SaveEDS(FILEHANDLE scn)
 void IUSV::LoadEDS(FILEHANDLE scn)
 {
 	eds.LoadState(scn, "EDS_END");
-}
-
-void IUSV::ConnectLVDC()
-{
-	IU::ConnectLVDC();
-
-	if (lvdc)
-	{
-		fcc.Configure(&lvCommandConnector, &commandConnector);
-	}
 }
 
 void IUSV::SwitchSelector(int item)

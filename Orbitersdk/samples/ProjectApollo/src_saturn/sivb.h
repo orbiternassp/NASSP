@@ -46,7 +46,6 @@ union SIVbSettingFlags
 		unsigned SIVB_SETTINGS_PAYLOAD:1;		///< Payload type settings are valid.
 		unsigned SIVB_SETTINGS_ENGINES:1;		///< Engine settings are valid.
 		unsigned SIVB_SETTINGS_PAYLOAD_INFO:1;	///< Detailed payload settings (e.g. LEM name/mass/PAD) are valid.
-		unsigned SIVB_SETTINGS_LVDC:1;			///< LVDC valid
 	};
 	unsigned int word;						///< Set to zero to clear all flags.
 
@@ -106,7 +105,7 @@ struct SIVBSettings
 
 	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0; };
 
-	LVDC *lvdc_pointer;
+	IU *iu_pointer;
 };
 
 class SIVB;
