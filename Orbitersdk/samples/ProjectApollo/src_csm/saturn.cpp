@@ -1106,6 +1106,17 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		sprintf(debugString(), "Please enable the Project Apollo MFD on the modules tab of the launchpad.");
 		debugConnected = true;
 	}
+
+	// Orbiter 2016 fix
+	// Force GetWeightVector() to the correct value
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	if (vs.status == 1) {
+		if (simt < 0.5) {
+			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
+		}
+	}
+
 	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 
 		//
