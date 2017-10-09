@@ -41,8 +41,10 @@ public:
 
 	void SetTwoEngOutAutoAbortInhibit(bool set) { TwoEngOutAutoAbortInhibit = set; }
 	void SetExcessiveRatesAutoAbortInhibit(bool set) { ExcessiveRatesAutoAbortInhibit = set; }
-	void SetEngineOutIndicationA(bool set) { EngineOutIndicationA = set; }
-	void SetEngineOutIndicationB(bool set) { EngineOutIndicationB = set; }
+	void SetSIEngineOutIndicationA(bool set) { SIEngineOutIndicationA = set; }
+	void SetSIEngineOutIndicationB(bool set) { SIEngineOutIndicationB = set; }
+	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
+	void SetSIVBEngineOutIndicationB(bool set) { SIVBEngineOutIndicationB = set; }
 	void SetRateGyroSCIndicationSwitchA(bool set) { RateGyroSCIndicationSwitchA = set; }
 	void SetRateGyroSCIndicationSwitchB(bool set) { RateGyroSCIndicationSwitchB = set; }
 	void SetLVEnginesCutoffEnable(bool set) { LVEnginesCutoffEnable = set; }
@@ -72,8 +74,12 @@ protected:
 	bool LVEnginesCutoffEnable;
 	bool RateGyroSCIndicationSwitchA;
 	bool RateGyroSCIndicationSwitchB;
-	bool EngineOutIndicationA;
-	bool EngineOutIndicationB;
+	bool SIEngineOutIndicationA;
+	bool SIEngineOutIndicationB;
+	bool SIIEngineOutIndicationA;
+	bool SIIEngineOutIndicationB;
+	bool SIVBEngineOutIndicationA;
+	bool SIVBEngineOutIndicationB;
 	bool SI_Engine_Out;
 	bool SII_Engine_Out;
 };
@@ -84,6 +90,7 @@ public:
 	EDS1B(LVRG &rg);
 	void Timestep(double simdt);
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+	void LVIndicatorsOff();
 protected:
 	//Engine Failure variables
 	bool EarlySICutoff[8];
@@ -96,6 +103,9 @@ public:
 	EDSSV(LVRG &rg);
 	void Timestep(double simdt);
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+	void LVIndicatorsOff();
+	void SetSIIEngineOutIndicationA(bool set) { SIIEngineOutIndicationA = set; }
+	void SetSIIEngineOutIndicationB(bool set) { SIIEngineOutIndicationB = set; }
 protected:
 	//Engine Failure variables
 	bool EarlySICutoff[5];

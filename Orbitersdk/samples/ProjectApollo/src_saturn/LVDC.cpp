@@ -2468,7 +2468,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	S2_BURNOUT = false;
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
-	S2_Startup = false;
 	S4B_IGN = false;
 	theta_N_op = false;
 	TU = false;
@@ -3190,7 +3189,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
-	oapiWriteScenario_int(scn, "LVDC_S2_Startup", S2_Startup);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
@@ -3820,7 +3818,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_BURNOUT", S2_BURNOUT);
 		papiReadScenario_bool(line, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
-		papiReadScenario_bool(line, "LVDC_S2_Startup", S2_Startup);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
@@ -4958,13 +4955,16 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB3+0.5: S-II Ullage Trigger
 					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 24);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB3+0.7: S-IC/S-II Separation (No. 1)
 					if (LVDC_TB_ETime > 0.7)
 					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 15);
 						CommandSequence++;
 					}
 					break;
@@ -4972,7 +4972,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB3+0.8: S-IC/S-II Separation (No. 2)
 					if (LVDC_TB_ETime > 0.8)
 					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 19);
 						CommandSequence++;
 					}
 					break;
@@ -5211,15 +5211,9 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				default:
 					break;
 				}
-				// S1B/C SEPARATION TRIGGER
-				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE  && LVDC_TB_ETime >= 0.5){
-					lvCommandConnector->SwitchSelector(18);					
-					S2_Startup = false;
-				}
 
 				// S2 ENGINE STARTUP
 				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
-					S2_Startup = true;
 					lvCommandConnector->SwitchSelector(19);
 					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime-2.4)*0.45));
 				}
@@ -5331,8 +5325,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB4+0.8: S-II/S-IVB Separation
 					if (LVDC_TB_ETime > 0.8)
 					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
 						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
 						lvCommandConnector->SwitchSelector(27);
 						lvCommandConnector->SwitchSelector(5);
@@ -6648,8 +6640,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB4a+1.7: S-II/S-IVB Separation
 					if (LVDC_TB_ETime > 1.7)
 					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
 						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
 						lvCommandConnector->SwitchSelector(27);
 						lvCommandConnector->SwitchSelector(5);

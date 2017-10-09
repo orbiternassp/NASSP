@@ -48,8 +48,12 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	LVEnginesCutoffEnable = false;
 	RateGyroSCIndicationSwitchA = false;
 	RateGyroSCIndicationSwitchB = false;
-	EngineOutIndicationA = false;
-	EngineOutIndicationB = false;
+	SIEngineOutIndicationA = false;
+	SIEngineOutIndicationB = false;
+	SIIEngineOutIndicationA = false;
+	SIIEngineOutIndicationB = false;
+	SIVBEngineOutIndicationA = false;
+	SIVBEngineOutIndicationB = false;
 	SI_Engine_Out = false;
 	SII_Engine_Out = false;
 }
@@ -70,8 +74,12 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTINHIBIT", TwoEngOutAutoAbortInhibit);
 	papiWriteScenario_bool(scn, "RATEGYROSCINDICATIONSWITCHA", RateGyroSCIndicationSwitchA);
 	papiWriteScenario_bool(scn, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
-	papiWriteScenario_bool(scn, "ENGINEOUTINDICATIONA", EngineOutIndicationA);
-	papiWriteScenario_bool(scn, "ENGINEOUTINDICATIONB", EngineOutIndicationB);
+	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
+	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
+	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
+	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
+	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
+	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIENGINEOUT", SI_Engine_Out);
 	papiWriteScenario_bool(scn, "SIIENGINEOUT", SII_Engine_Out);
 
@@ -95,8 +103,12 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "EXCESSIVERATESAUTOABORTINHIBIT", ExcessiveRatesAutoAbortInhibit);
 		papiReadScenario_bool(line, "RATEGYROSCINDICATIONSWITCHA", RateGyroSCIndicationSwitchA);
 		papiReadScenario_bool(line, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
-		papiReadScenario_bool(line, "ENGINEOUTINDICATIONA", EngineOutIndicationA);
-		papiReadScenario_bool(line, "ENGINEOUTINDICATIONB", EngineOutIndicationB);
+		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
+		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
+		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
+		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
+		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
+		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIENGINEOUT", SI_Engine_Out);
 		papiReadScenario_bool(line, "SIIENGINEOUT", SII_Engine_Out);
 
@@ -119,6 +131,18 @@ void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SI
 		EarlySICutoff[i] = SICut[i];
 		FirstStageFailureTime[i] = SICutTimes[i];
 	}
+}
+
+void EDS1B::LVIndicatorsOff()
+{
+	commandConnector->ClearEngineIndicator(1);
+	commandConnector->ClearEngineIndicator(2);
+	commandConnector->ClearEngineIndicator(3);
+	commandConnector->ClearEngineIndicator(4);
+	commandConnector->ClearEngineIndicator(5);
+	commandConnector->ClearEngineIndicator(6);
+	commandConnector->ClearEngineIndicator(7);
+	commandConnector->ClearEngineIndicator(8);
 }
 
 void EDS1B::Timestep(double simdt)
@@ -251,40 +275,35 @@ void EDS1B::Timestep(double simdt)
 	}
 
 	// Update engine indicators and failure flags
-	if ((EngineOutIndicationA && EDSBus1Powered) || (EngineOutIndicationB && EDSBus3Powered)) {
-		int i = 0;
-		switch (lvCommandConnector->GetStage()) {
-			// 5-engine stages
-		case PRELAUNCH_STAGE:
-		case LAUNCH_STAGE_ONE:
-			while (i<8) {
+	switch (lvCommandConnector->GetStage()) {
+	case PRELAUNCH_STAGE:
+	case LAUNCH_STAGE_ONE:
+		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
+			int i = 0;
+			while (i < 8) {
 				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
 				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) < 0.65 && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
 				i++;
 			}
-			break;
-			// S4B only
-		case LAUNCH_STAGE_SIVB:
-		case STAGE_ORBIT_SIVB:
+		}
+		else
+		{
+			LVIndicatorsOff();
+		}
+		break;
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
 			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) >= 0.65  && commandConnector->GetEngineIndicator(1) == true) { commandConnector->ClearEngineIndicator(1); } // UNLIGHT
 			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.65 && commandConnector->GetEngineIndicator(1) == false) { commandConnector->SetEngineIndicator(1); }   // LIGHT
-			break;
-			// Error
-		default:
-			EngineOutIndicationA = false;
-			EngineOutIndicationB = false;
-			break;
 		}
-	}
-	else {
-		commandConnector->SetEngineIndicator(1);
-		commandConnector->SetEngineIndicator(2);
-		commandConnector->SetEngineIndicator(3);
-		commandConnector->SetEngineIndicator(4);
-		commandConnector->SetEngineIndicator(5);
-		commandConnector->SetEngineIndicator(6);
-		commandConnector->SetEngineIndicator(7);
-		commandConnector->SetEngineIndicator(8);
+		else
+		{
+			LVIndicatorsOff();
+		}
+		break;
+	default:
+		break;
 	}
 
 	//Engine failure code
@@ -328,11 +347,23 @@ void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SI
 	}
 }
 
+void EDSSV::LVIndicatorsOff()
+{
+	commandConnector->ClearEngineIndicator(1);
+	commandConnector->ClearEngineIndicator(2);
+	commandConnector->ClearEngineIndicator(3);
+	commandConnector->ClearEngineIndicator(4);
+	commandConnector->ClearEngineIndicator(5);
+}
+
 void EDSSV::Timestep(double simdt)
 {
 
 	if (lvCommandConnector == NULL) return;
 	if (lvCommandConnector->connectedTo == NULL) return;
+
+	sprintf(oapiDebugString(), "%d %d %d %d %d %d", SIEngineOutIndicationA, SIEngineOutIndicationB, SIIEngineOutIndicationA, SIIEngineOutIndicationB,
+		SIVBEngineOutIndicationA, SIVBEngineOutIndicationB);
 
 	VECTOR3 AttRate;
 
@@ -454,57 +485,51 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	// Update engine indicators and failure flags
-	if ((EngineOutIndicationA && EDSBus1Powered) || (EngineOutIndicationB && EDSBus3Powered)) {
-		double level;
-		switch (lvCommandConnector->GetStage()) {
-
-			// 5-engine stages
-		case PRELAUNCH_STAGE:
-		case LAUNCH_STAGE_ONE:
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) >= 0.90  && commandConnector->GetEngineIndicator(4) == true) { commandConnector->ClearEngineIndicator(4); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.90 && commandConnector->GetEngineIndicator(4) == false) { commandConnector->SetEngineIndicator(4); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) >= 0.90  && commandConnector->GetEngineIndicator(2) == true) { commandConnector->ClearEngineIndicator(2); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) < 0.90 && commandConnector->GetEngineIndicator(2) == false) { commandConnector->SetEngineIndicator(2); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) >= 0.90  && commandConnector->GetEngineIndicator(1) == true) { commandConnector->ClearEngineIndicator(1); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) < 0.90 && commandConnector->GetEngineIndicator(1) == false) { commandConnector->SetEngineIndicator(1); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) >= 0.90  && commandConnector->GetEngineIndicator(3) == true) { commandConnector->ClearEngineIndicator(3); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) < 0.90 && commandConnector->GetEngineIndicator(3) == false) { commandConnector->SetEngineIndicator(3); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) >= 0.90  && commandConnector->GetEngineIndicator(5) == true) { commandConnector->ClearEngineIndicator(5); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) < 0.90 && commandConnector->GetEngineIndicator(5) == false) { commandConnector->SetEngineIndicator(5); }
-			break;
-		case LAUNCH_STAGE_TWO:
-		case LAUNCH_STAGE_TWO_ISTG_JET:
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) >= 0.65  && commandConnector->GetEngineIndicator(2) == true) { commandConnector->ClearEngineIndicator(2); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.65 && commandConnector->GetEngineIndicator(2) == false) { commandConnector->SetEngineIndicator(2); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) >= 0.65  && commandConnector->GetEngineIndicator(4) == true) { commandConnector->ClearEngineIndicator(4); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1)) < 0.65 && commandConnector->GetEngineIndicator(4) == false) { commandConnector->SetEngineIndicator(4); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) >= 0.65  && commandConnector->GetEngineIndicator(1) == true) { commandConnector->ClearEngineIndicator(1); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2)) < 0.65 && commandConnector->GetEngineIndicator(1) == false) { commandConnector->SetEngineIndicator(1); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) >= 0.65  && commandConnector->GetEngineIndicator(3) == true) { commandConnector->ClearEngineIndicator(3); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3)) < 0.65 && commandConnector->GetEngineIndicator(3) == false) { commandConnector->SetEngineIndicator(3); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) >= 0.65  && commandConnector->GetEngineIndicator(5) == true) { commandConnector->ClearEngineIndicator(5); }
-			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(4)) < 0.65 && commandConnector->GetEngineIndicator(5) == false) { commandConnector->SetEngineIndicator(5); }
-			break;
-			// S4B only
-		case LAUNCH_STAGE_SIVB:
-		case STAGE_ORBIT_SIVB:
-			level = lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0));
-			if (level >= 0.65  && commandConnector->GetEngineIndicator(1) == true) { commandConnector->ClearEngineIndicator(1); } // UNLIGHT
-			if (level < 0.65 && commandConnector->GetEngineIndicator(1) == false) { commandConnector->SetEngineIndicator(1); }  // LIGHT
-			break;
-			// Error
-		default:
-			EngineOutIndicationA = false;
-			EngineOutIndicationB = false;
-			break;
+	switch (lvCommandConnector->GetStage()) {
+	case PRELAUNCH_STAGE:
+	case LAUNCH_STAGE_ONE:
+		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
+			int i = 0;
+			while (i < 5) {
+				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
+				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) < 0.65 && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
+				i++;
+			}
 		}
-	}
-	else {
-		commandConnector->ClearEngineIndicator(1);
-		commandConnector->ClearEngineIndicator(2);
-		commandConnector->ClearEngineIndicator(3);
-		commandConnector->ClearEngineIndicator(4);
-		commandConnector->ClearEngineIndicator(5);
+		else
+		{
+			LVIndicatorsOff();
+		}
+		break;
+	case LAUNCH_STAGE_TWO:
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+		if ((SIIEngineOutIndicationA && EDSBus1Powered) || (SIIEngineOutIndicationB && EDSBus3Powered)) {
+			int i = 0;
+			while (i < 5) {
+				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
+				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) < 0.65 && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
+				i++;
+			}
+		}
+		else
+		{
+			LVIndicatorsOff();
+		}
+		break;
+		break;
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
+			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) >= 0.65  && commandConnector->GetEngineIndicator(1) == true) { commandConnector->ClearEngineIndicator(1); } // UNLIGHT
+			if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.65 && commandConnector->GetEngineIndicator(1) == false) { commandConnector->SetEngineIndicator(1); }   // LIGHT
+		}
+		else
+		{
+			LVIndicatorsOff();
+		}
+		break;
+	default:
+		break;
 	}
 
 	//Engine failure code

@@ -1064,7 +1064,7 @@ void SaturnV::SwitchSelector(int item){
 
 void SaturnV::SISwitchSelector(int channel)
 {
-	if (stage != LAUNCH_STAGE_ONE) return;
+	if (stage > LAUNCH_STAGE_ONE) return;
 
 	switch (channel)
 	{
@@ -1095,12 +1095,35 @@ void SaturnV::SISwitchSelector(int channel)
 	case 14: //Outboard Engines Cutoff Enable
 		break;
 	case 15: //S-IC/S-II Separation (No. 1)
+		if (stage == LAUNCH_STAGE_ONE)
+		{
+			// Drop old stage
+			SeparateStage(LAUNCH_STAGE_TWO);
+			SetStage(LAUNCH_STAGE_TWO);
+			ActivateStagingVent();
+			if (SII_UllageNum) {
+				SetThrusterGroupLevel(thg_ull, 1.0);
+				SepS.play(LOOP, 130);
+			}
+		}
+		break;
 		break;
 	case 16: //Inboard Engine Cutoff Backup
 		break;
 	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
 		break;
 	case 19: //S-IC/S-II Separation (No. 2)
+		if (stage == LAUNCH_STAGE_ONE)
+		{
+			// Drop old stage
+			SeparateStage(LAUNCH_STAGE_TWO);
+			SetStage(LAUNCH_STAGE_TWO);
+			ActivateStagingVent();
+			if (SII_UllageNum) {
+				SetThrusterGroupLevel(thg_ull, 1.0);
+				SepS.play(LOOP, 130);
+			}
+		}
 		break;
 	case 20: //Separation and Retro No. 2 EBW Firing Units Arm
 		break;
@@ -1111,7 +1134,25 @@ void SaturnV::SISwitchSelector(int channel)
 
 void SaturnV::SIISwitchSelector(int channel)
 {
+	if (stage > LAUNCH_STAGE_TWO_ISTG_JET) return;
 
+	switch (channel)
+	{
+	case 9: //Stop First PAM - FM/FM Calibration
+		break;
+	case 11: //S-II Ordnance Arm
+		break;
+	case 24: //S-II Ullage Trigger
+		break;
+	case 30: //Start First PAM - FM/FM Relays Reset
+		break;
+	case 38: //LH2 Tank High Pressure Vent Mode
+		break;
+	case 71: //Start Data Recorders
+		break;
+	default:
+		break;
+	}
 }
 
 void SaturnV::SIVBSwitchSelector(int channel)

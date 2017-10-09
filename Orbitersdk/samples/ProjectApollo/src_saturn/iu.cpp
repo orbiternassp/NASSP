@@ -1712,8 +1712,8 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	//For now, enable the LV lights here
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
-		eds.SetEngineOutIndicationA(true);
-		eds.SetEngineOutIndicationB(true);
+		eds.SetSIEngineOutIndicationA(true);
+		eds.SetSIEngineOutIndicationB(true);
 	}
 }
 
@@ -1784,8 +1784,8 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	//For now, enable the LV lights here
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
-		eds.SetEngineOutIndicationA(true);
-		eds.SetEngineOutIndicationB(true);
+		eds.SetSIEngineOutIndicationA(true);
+		eds.SetSIEngineOutIndicationB(true);
 	}
 }
 
@@ -1854,10 +1854,10 @@ void IUSV::SwitchSelector(int item)
 		fcc.SetGainSwitch(6);
 		break;
 	case 9: //S-IVB Engine Out Indication "A" Enable
-		eds.SetEngineOutIndicationA(true);
+		eds.SetSIVBEngineOutIndicationA(true);
 		break;
 	case 11: //S-IVB Engine Out Indication "B" Enable
-		eds.SetEngineOutIndicationB(true);
+		eds.SetSIVBEngineOutIndicationB(true);
 		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
 		fcc.SetSIVBBurnMode(false);
@@ -1869,7 +1869,7 @@ void IUSV::SwitchSelector(int item)
 	case 17: //Tape Recorder Record Off
 		break;
 	case 18: //S-IVB Engine Out Indication "A" Enable Reset
-		eds.SetEngineOutIndicationA(false);
+		eds.SetSIVBEngineOutIndicationA(false);
 		break;
 	case 19: //Tape Recorder Playback Reverse On
 		break;
@@ -1887,7 +1887,7 @@ void IUSV::SwitchSelector(int item)
 		fcc.SetGainSwitch(1);
 		break;
 	case 28: //S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
-		eds.SetEngineOutIndicationA(true);
+		eds.SetSIIEngineOutIndicationA(true);
 		break;
 	case 29: //S-IVB Engine EDS Cutoff No. 1 Disable
 		break;
@@ -1918,7 +1918,7 @@ void IUSV::SwitchSelector(int item)
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, false);
 		break;
 	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
-		eds.SetEngineOutIndicationB(true);
+		eds.SetSIIEngineOutIndicationB(true);
 		break;
 	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
 		eds.SetExcessiveRatesAutoAbortInhibit(true);
@@ -1927,7 +1927,7 @@ void IUSV::SwitchSelector(int item)
 	case 51: //S-IC Two Engines Out Auto-Abort Inhibit Enable
 		break;
 	case 53: //S-IVB Engine Out Indication "B" Enable Reset
-		eds.SetEngineOutIndicationB(false);
+		eds.SetSIVBEngineOutIndicationB(false);
 		break;
 	case 60: //PCM Coax Switch Low Gain Antenna
 		break;

@@ -77,7 +77,6 @@ private:								// Saturn LV
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
-	bool S2_Startup;								// S2 Engine Start
 	bool directstagereset;							// Direct Stage Reset
 	bool IGM_Failed;
 	
