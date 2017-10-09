@@ -902,7 +902,7 @@ void LEM::InitSwitches() {
 
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
 	LMPSuitIsolValve.AddPosition(0, 0);
-	LMPSuitIsolValve.AddPosition(1, 345);
+	LMPSuitIsolValve.AddPosition(1, 15);
 
   LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
@@ -922,10 +922,10 @@ void LEM::InitSwitches() {
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
 
-	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 2);
-	WaterTankSelectValve.AddPosition(0, 355); // Might need tweaking
+	/*WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 2);
+	WaterTankSelectValve.AddPosition(0, 355);
 	WaterTankSelectValve.AddPosition(1, 230);
-	WaterTankSelectValve.AddPosition(2, 120);
+	WaterTankSelectValve.AddPosition(2, 120);*/
 
 	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 	SuitTempValve.AddPosition(0, 0);
@@ -957,16 +957,16 @@ void LEM::InitSwitches() {
 	CabinGasReturnValve.AddPosition(2, 180);
 
 	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", 0);
-	CO2CanisterSelect.AddPosition(0, 230);
-	CO2CanisterSelect.AddPosition(1, 130);
+	CO2CanisterSelect.AddPosition(0, 340);
+	CO2CanisterSelect.AddPosition(1, 20);
 
 	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
-	/*CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 15);*/
+	CO2CanisterPrimValve.AddPosition(0, 0);
+	CO2CanisterPrimValve.AddPosition(1, 15);
 
 	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
-	/*CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 15);*/
+	CO2CanisterSecValve.AddPosition(0, 0);
+	CO2CanisterSecValve.AddPosition(1, 15);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
@@ -1761,13 +1761,13 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_ECSPANEL: // LEM ECS Panel 
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,         _R( 204,  129,  204+126,  129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_MOUSE,  PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,         _R( 204,  129,  204+126,  129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_MOUSE,  PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+    oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -2521,7 +2521,7 @@ void LEM::SetSwitches(int panel) {
   PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME
+  //WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME; Needs special class.
   SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
 
   ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
@@ -2533,9 +2533,9 @@ void LEM::SetSwitches(int panel) {
   SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
   SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
   CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterSelect.Init(290, 233, 122, 265, srf[SRF_LEM_CAN_SEL], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], NULL, SuitCircuitAssySwitchRow); // FIXME
-  CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);          // FIXME
+  CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], NULL, SuitCircuitAssySwitchRow);
+  CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], NULL, SuitCircuitAssySwitchRow);
+  CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
   CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], NULL, SuitCircuitAssySwitchRow);
   CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
   WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], NULL, SuitCircuitAssySwitchRow);

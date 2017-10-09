@@ -1408,7 +1408,7 @@ protected:
 
 	SwitchRow SuitIsolSwitchRow;
 	RotationalSwitch CDRSuitIsolValve;
-	ToggleSwitch	   CDRActuatorOvrd;    // Check if this is right.
+	ToggleSwitch	   CDRActuatorOvrd;
 	RotationalSwitch LMPSuitIsolValve;
 	ToggleSwitch     LMPActuatorOvrd;
 
@@ -1417,7 +1417,7 @@ protected:
 	RotationalSwitch PrimEvap2FlowValve;
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
-	RotationalSwitch WaterTankSelectValve;
+	//RotationalSwitch WaterTankSelectValve;  // Needs special treatment due to assymetric shape.
 	RotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
@@ -1430,12 +1430,10 @@ protected:
 	RotationalSwitch SuitCircuitReliefValve;
 	RotationalSwitch CabinGasReturnValve;
 	RotationalSwitch CO2CanisterSelect;
-	//RotationalSwitch CO2CanisterPrimValve;
-  ToggleSwitch CO2CanisterPrimValve;
-	ToggleSwitch       CO2CanisterPrimVent;
-	//RotationalSwitch CO2CanisterSecValve;
-  ToggleSwitch CO2CanisterSecValve;
-	ToggleSwitch       CO2CanisterSecVent;
+	RotationalSwitch CO2CanisterPrimValve;
+  PushSwitch       CO2CanisterPrimVent;
+	RotationalSwitch CO2CanisterSecValve;
+  PushSwitch       CO2CanisterSecVent;
 	CircuitBrakerSwitch WaterSepSelect;
 
 	///////////////////////////
