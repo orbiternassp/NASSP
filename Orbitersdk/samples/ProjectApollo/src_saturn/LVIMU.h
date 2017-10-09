@@ -48,7 +48,7 @@ public:
 	~LVIMU();
 
 	void Init();
-	void Timestep(double simt);
+	void Timestep(double mjd);
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);

@@ -79,7 +79,7 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 
 {
 	if (lvdc != NULL) {
-		lvimu.Timestep(simt);
+		lvimu.Timestep(mjd);
 		lvrg.Timestep(simdt);
 	}
 
