@@ -4729,6 +4729,10 @@ void Saturn::PlayTLIStartSound(bool StartStop)
 {
 }
 
+void Saturn::SIISwitchSelector(int channel)
+{
+}
+
 // Get checklist controller pointer
 ChecklistController *Saturn::GetChecklistControl()
 {

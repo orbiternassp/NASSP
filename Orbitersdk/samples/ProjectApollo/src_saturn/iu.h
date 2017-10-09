@@ -107,6 +107,9 @@ enum IULVMessageType
 	IULV_SET_CONTRAIL_LEVEL,
 	IULV_SIVB_BOILOFF,
 	IULV_SWITCH_SELECTOR,
+	IULV_SI_SWITCH_SELECTOR,
+	IULV_SII_SWITCH_SELECTOR,
+	IULV_SIVB_SWITCH_SELECTOR,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
@@ -244,6 +247,10 @@ public:
 	void SetSIVBThrusterDir(VECTOR3 &dir);
 
 	void SwitchSelector(int item);
+	void SISwitchSelector(int channel);
+	void SIISwitchSelector(int channel);
+	void SIVBSwitchSelector(int channel);
+
 	void SeparateStage(int stage);
 	void SetStage(int stage);
 
@@ -356,6 +363,8 @@ public:
 
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
+
+	void ControlDistributor(int stage, int channel);
 
 	LVDC* lvdc;
 	LVIMU lvimu;

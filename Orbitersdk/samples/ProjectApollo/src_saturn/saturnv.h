@@ -79,6 +79,9 @@ public:
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 
 	void SwitchSelector(int item);
+	void SISwitchSelector(int channel);
+	void SIISwitchSelector(int channel);
+	void SIVBSwitchSelector(int channel);
 
 	//
 	// Functions that external code shouldn't need to access.

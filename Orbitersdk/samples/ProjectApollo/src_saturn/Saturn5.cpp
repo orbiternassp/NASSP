@@ -1062,6 +1062,63 @@ void SaturnV::SwitchSelector(int item){
 	}
 }
 
+void SaturnV::SISwitchSelector(int channel)
+{
+	if (stage != LAUNCH_STAGE_ONE) return;
+
+	switch (channel)
+	{
+	case 1: //Telemeter Calibrate Off
+		break;
+	case 2: //Telemeter Calibrate On
+		break;
+	case 3: //Multiple Engine Cutoff Enable
+		break;
+	case 4: //LOX Tank Strobe Lights Off
+		break;
+	case 5: //Fuel Pressurizing Valve No. 2 Open & Tape Recorder Record
+		break;
+	case 6: //Fuel Pressurizing Valve No. 3 Open
+		break;
+	case 7: //Fuel Pressurizing Valve No. 4 Open
+		break;
+	case 8: //Inboard Engine Cutoff
+		break;
+	case 9: //Outboard Engines Cutoff Enable
+		break;
+	case 10: //Separation and Retro No. 1 EBW Firing Units Arm
+		break;
+	case 12: //Separation Camera On
+		break;
+	case 13: //Telemetry Measurement Switchover
+		break;
+	case 14: //Outboard Engines Cutoff Enable
+		break;
+	case 15: //S-IC/S-II Separation (No. 1)
+		break;
+	case 16: //Inboard Engine Cutoff Backup
+		break;
+	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
+		break;
+	case 19: //S-IC/S-II Separation (No. 2)
+		break;
+	case 20: //Separation and Retro No. 2 EBW Firing Units Arm
+		break;
+	default:
+		break;
+	}
+}
+
+void SaturnV::SIISwitchSelector(int channel)
+{
+
+}
+
+void SaturnV::SIVBSwitchSelector(int channel)
+{
+
+}
+
 void SaturnV::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();

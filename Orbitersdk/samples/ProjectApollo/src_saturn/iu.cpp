@@ -948,6 +948,39 @@ void IUToLVCommandConnector::SwitchSelector(int item)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::SISwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SI_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SIISwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SII_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SIVBSwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SIVB_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SeparateStage(int stage)
 {
 	ConnectorMessage cm;
@@ -1637,6 +1670,26 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	if (lvdc != NULL) {
 		lvdc->SaveState(scn);
 		lvimu.SaveState(scn);
+	}
+}
+
+void IU::ControlDistributor(int stage, int channel)
+{
+	if (stage == SWITCH_SELECTOR_IU)
+	{
+		SwitchSelector(channel);
+	}
+	else if (stage == SWITCH_SELECTOR_SI)
+	{
+		lvCommandConnector.SISwitchSelector(channel);
+	}
+	else if (stage == SWITCH_SELECTOR_SII)
+	{
+		lvCommandConnector.SIISwitchSelector(channel);
+	}
+	else if (stage == SWITCH_SELECTOR_SIVB)
+	{
+		lvCommandConnector.SIVBSwitchSelector(channel);
 	}
 }
 

@@ -45,22 +45,9 @@ void LVDA::Init(IU *i)
 
 void LVDA::SwitchSelector(int stage, int channel)
 {
-	if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SwitchSelector(channel);
-	}
-	/*else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu-> SISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SIISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SIVBSwitchSelector(channel);
-	}*/
+	if (stage < 0 || stage > 3) return;
+
+	iu->ControlDistributor(stage, channel);
 }
 
 void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
