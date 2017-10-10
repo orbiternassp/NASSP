@@ -1030,11 +1030,15 @@ aea_engine (ags_t * State)
       break;
     case 060:	// COM
       State->Accumulator = (0777777 & -State->Accumulator);
+      if (State->Accumulator == 0400000) // NASSP TEST #1 -- COM NEGMAX -> OVERFLOW
+        State->Overflow = 1;
       break;
     case 062:	// ABS
       i = SignExtend (State->Accumulator);
       if (i < 0 && i > -0400000)
         State->Accumulator = -i;
+      if (State->Accumulator == 0400000) // NASSP TEST #2 -- ABS NEGMAX -> OVERFLOW
+        State->Overflow = 1;
       break;
     case 064:	// INP
       MicrosecondsThisInstruction = Input (State, AddressField, &State->Accumulator);
