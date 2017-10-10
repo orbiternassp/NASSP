@@ -65,15 +65,15 @@ void AttitudeReference::Timestep(double simdt) {
 
 	LastAttitude = Attitude;	
 
-	// Get vessel status
-	VESSELSTATUS vs;
 	if (Vessel == NULL) return;
-	Vessel->GetStatus(vs);
+	// Get vessel status
+	VECTOR3 arot;
+	Vessel->GetGlobalOrientation(arot);
 
 	// Get eccliptic-plane attitude
-	OrbiterAttitude.Attitude.x = vs.arot.x;
-	OrbiterAttitude.Attitude.y = vs.arot.y;
-	OrbiterAttitude.Attitude.z = vs.arot.z;
+	OrbiterAttitude.Attitude.x = arot.x;
+	OrbiterAttitude.Attitude.y = arot.y;
+	OrbiterAttitude.Attitude.z = arot.z;
 
 	if (!AttitudeInitialized) {
 		// Reset		
@@ -2916,16 +2916,15 @@ void EMS::SystemTimestep(double simdt) {
 
 void EMS::AccelerometerTimeStep(double simdt) {
 
-	VESSELSTATUS vs;
-	VECTOR3 w, vel;
+	VECTOR3 arot, w, vel;
 
-	sat->GetStatus(vs);
+	sat->GetGlobalOrientation(arot);
 	sat->GetWeightVector(w);
 	sat->GetGlobalVel(vel);
 
-	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
-	tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
-	tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
+	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-arot.z);
+	tinv = mul(AttitudeReference::GetRotationMatrixY(-arot.y), tinv);
+	tinv = mul(AttitudeReference::GetRotationMatrixX(-arot.x), tinv);
 	w = mul(tinv, w) / sat->GetMass();
 
 	if (!dVInitialized) {
@@ -2944,9 +2943,9 @@ void EMS::AccelerometerTimeStep(double simdt) {
 		lastSimDT = simdt;
 
 		// Transform to vessel coordinates
-		MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
-		t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
-		t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
+		MATRIX3	t = AttitudeReference::GetRotationMatrixX(arot.x);
+		t = mul(AttitudeReference::GetRotationMatrixY(arot.y), t);
+		t = mul(AttitudeReference::GetRotationMatrixZ(arot.z), t);
 		VECTOR3 avg = (dw1 + dw2) / 2.0;
 		avg = mul(t, avg);	
 		xacc = -avg.z;

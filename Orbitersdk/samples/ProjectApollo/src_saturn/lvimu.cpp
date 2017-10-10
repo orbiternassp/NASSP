@@ -32,8 +32,11 @@
 #include "soundlib.h"
 
 #include "nasspdefs.h"
-#include "LVIMU.h"
+#include "apolloguidance.h"
+#include "csmcomputer.h"
 #include "papi.h"
+#include "saturn.h"
+#include "LVIMU.h"
 
 LVIMU::LVIMU()
 
@@ -172,17 +175,17 @@ void LVIMU::Timestep(double simt)
 	}
 	
 	// fill OrbiterData
-	VESSELSTATUS vs;
-	OurVessel->GetStatus(vs);
+	VECTOR3 arot;
+	OurVessel->GetGlobalOrientation(arot);
 
-	Orbiter.Attitude.X = vs.arot.x;
-	Orbiter.Attitude.Y = vs.arot.y;
-	Orbiter.Attitude.Z = vs.arot.z;
+	Orbiter.Attitude.X = arot.x;
+	Orbiter.Attitude.Y = arot.y;
+	Orbiter.Attitude.Z = arot.z;
 
 	// Vessel to Orbiter global transformation
-	MATRIX3	tinv = getRotationMatrixZ(-vs.arot.z);
-	tinv = mul(getRotationMatrixY(-vs.arot.y), tinv);
-	tinv = mul(getRotationMatrixX(-vs.arot.x), tinv);
+	MATRIX3	tinv = getRotationMatrixZ(-arot.z);
+	tinv = mul(getRotationMatrixY(-arot.y), tinv);
+	tinv = mul(getRotationMatrixX(-arot.x), tinv);
 
 	if (!Initialized) {
 		SetOrbiterAttitudeReference();
@@ -769,7 +772,7 @@ LVRG::LVRG() {
 	rates = _V(0,0,0);
 }
 
-void LVRG::Init(VESSEL *v) {
+void LVRG::Init(IUToLVCommandConnector *v) {
 	// Initialize
 	sat = v;
 }

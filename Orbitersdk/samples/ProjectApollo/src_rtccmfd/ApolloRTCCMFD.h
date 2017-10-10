@@ -83,6 +83,8 @@ public:
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjCalc();
+	void menuCycleOrbAdjOptions();
+	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
 	void calcphaseoff(double angdeg);
@@ -106,13 +108,17 @@ public:
 	void set_entrylng(double lng);
 	void EntryLngDialogue();
 	void menuEntryCalc();
+	void menuEntryUpdateCalc();
+	void menuDeorbitCalc();
+	void menuTEICalc();
+	void menuRTEFlybyCalc();
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
 	void menuSVCalc();
 	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuEntryUpload();
-	void CycleEntryOpt();
+	void menuEntryUpdateUpload();
 	void set_spherical();
 	void menuSwitchHeadsUp();
 	void menuSwitchManPADDirect();
@@ -121,6 +127,7 @@ public:
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
 	void menuSwitchCritical();
+	void menuSwitchFlybyType();
 	void menuSwitchEntryPADOpt();
 	void menuSwitchEntryPADDirect();
 	void menuManPADTIG();
@@ -161,6 +168,8 @@ public:
 	void menuCycleSVMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
+	void menuSwitchDeorbitEngineOption();
+	void menuSwitchReturnSpeed();
 	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
@@ -176,6 +185,9 @@ public:
 	void set_TLCCLng(double lng);
 	void menuSetTLCCAlt();
 	void set_TLCCAlt(double alt);
+	void menuSetTLCCDesiredInclination();
+	void set_TLCCDesiredInclination(double inc);
+	void menuSwitchTLCCAscendingNode();
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
@@ -201,6 +213,11 @@ public:
 	void menuSetLunarLiftoffPage();
 	void menuSetEMPPage();
 	void menuSetNavCheckPADPage();
+	void menuSetDeorbitPage();
+	void menuSetEarthEntryPage();
+	void menuSetMoonEntryPage();
+	void menuSetTEIPage();
+	void menuSetEntryUpdatePage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);

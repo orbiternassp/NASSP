@@ -41,7 +41,9 @@ public:
 	void LOICalc();
 	void LmkCalc();
 	void TEICalc();
+	void RTEFlybyCalc();
 	void EntryCalc();
+	void DeorbitCalc();
 	void TLCCCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
@@ -122,11 +124,18 @@ public:
 	VECTOR3 CDHdeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
-	double apo_desnm;		//Desired apoapsis altitude in NM
-	double peri_desnm;		//Desired periapsis altitude in NM
-	double incdeg;			//Desired inclination in degrees
-	double SPSGET;			//Maneuver GET
-	VECTOR3 OrbAdjDVX;		//LVLH maneuver vector
+	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
+	//1 = Fixed TIG, specify apoapsis altitude
+	//2 = Fixed TIG, specify periapsis altitude
+	//3 = Fixed TIG, circularize orbit
+	//4 = Circularize orbit at specified altitude
+	int GMPType;
+	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
+	double apo_desnm;	//Desired apoapsis altitude in NM
+	double peri_desnm;	//Desired periapsis altitude in NM
+	double incdeg;		//Desired inclination in degrees
+	double SPSGET;		//Maneuver GET
+	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
@@ -139,7 +148,7 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
+	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
 	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
 	double EntryLat;
@@ -149,15 +158,14 @@ public:
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
-	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
-	bool TEIfail;
+	int DeorbitEngineOpt; //0 = SPS, 1 = RCS
+	int FlybyType;	//1 = Flyby, 2 = PC+2
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
@@ -212,8 +220,12 @@ public:
 	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
 	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
+	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
+	bool TLCCAscendingNode;
+	double TLCCFRDesiredInclination;
+	int TLCCIterationStep;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2

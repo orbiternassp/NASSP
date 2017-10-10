@@ -86,7 +86,9 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 {
 	double alpha;
 	double range;
+	double press;
 
+	press = GetAtmPressure();
 	alpha = GetAltitude();
 	alpha = alpha / 0.3048;
 
@@ -95,7 +97,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 #define ALTIMETER_RADIUS	55.0
 
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 55000) alpha = 55000;
+	if (alpha > 55000 || press < 1000.0) alpha = 55000;
 
 	if (alpha < 4001){
 		range = 120 * RAD;
@@ -2104,6 +2106,7 @@ void Saturn::SetSwitches(int panel) {
 	UPTLMSwitchesRow.Init(AID_UPTLMSWITCHES, MainPanel);
 	UPTLMSwitch1.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
 	UPTLMSwitch2.Init(53, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
+	UPTLMSwitch2.SetDelayTime(1);
 
 	SBandAntennaSwitchesRow.Init(AID_SBANDANTENNASWITCHES, MainPanel);
 	SBandAntennaSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAntennaSwitchesRow);

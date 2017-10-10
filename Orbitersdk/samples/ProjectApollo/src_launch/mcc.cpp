@@ -33,6 +33,7 @@
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "LVDC.h"
 
 // This is a threadenwerfer. It werfs threaden.
 static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	
@@ -793,6 +794,7 @@ void MCC::TimeStep(double simdt){
 					break;
 				case 9:
 					MissionType = MTP_D;
+					setState(MST_SV_PRELAUNCH);
 					break;
 				case 10:
 					MissionType = MTP_F;
@@ -941,11 +943,14 @@ void MCC::TimeStep(double simdt){
 			{
 				// Await insertion
 				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					addMessage("INSERTION");
+					MissionPhase = MMST_EARTH_ORBIT;
 					switch (MissionType) {
 					case MTP_C_PRIME:
-						addMessage("INSERTION");
-						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_CP_INSERTION);
+						break;
+					case MTP_D:
+						setState(MST_D_INSERTION);
 						break;
 					}
 				}
@@ -1278,27 +1283,28 @@ void MCC::TimeStep(double simdt){
 					{
 						SlowIfDesired();
 						SaturnV *SatV = (SaturnV*)cm;
+						LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
 						LVDCTLIparam tliparam;
 
-						tliparam.alpha_TS = SatV->lvdc->alpha_TS;
-						tliparam.Azimuth = SatV->lvdc->Azimuth;
-						tliparam.beta = SatV->lvdc->beta;
-						tliparam.cos_sigma = SatV->lvdc->cos_sigma;
-						tliparam.C_3 = SatV->lvdc->C_3;
-						tliparam.e_N = SatV->lvdc->e_N;
-						tliparam.f = SatV->lvdc->f;
-						tliparam.mu = SatV->lvdc->mu;
-						tliparam.MX_A = SatV->lvdc->MX_A;
-						tliparam.omega_E = SatV->lvdc->omega_E;
-						tliparam.R_N = SatV->lvdc->R_N;
-						tliparam.TargetVector = SatV->lvdc->TargetVector;
-						tliparam.TB5 = SatV->lvdc->TB5;
-						tliparam.theta_EO = SatV->lvdc->theta_EO;
-						tliparam.t_D = SatV->lvdc->t_D;
-						tliparam.T_L = SatV->lvdc->T_L;
-						tliparam.T_RG = SatV->lvdc->T_RG;
-						tliparam.T_ST = SatV->lvdc->T_ST;
+						tliparam.alpha_TS = lvdc->alpha_TS;
+						tliparam.Azimuth = lvdc->Azimuth;
+						tliparam.beta = lvdc->beta;
+						tliparam.cos_sigma = lvdc->cos_sigma;
+						tliparam.C_3 = lvdc->C_3;
+						tliparam.e_N = lvdc->e_N;
+						tliparam.f = lvdc->f;
+						tliparam.mu = lvdc->mu;
+						tliparam.MX_A = lvdc->MX_A;
+						tliparam.omega_E = lvdc->omega_E;
+						tliparam.R_N = lvdc->R_N;
+						tliparam.TargetVector = lvdc->TargetVector;
+						tliparam.TB5 = lvdc->TB5;
+						tliparam.theta_EO = lvdc->theta_EO;
+						tliparam.t_D = lvdc->t_D;
+						tliparam.T_L = lvdc->T_L;
+						tliparam.T_RG = lvdc->T_RG;
+						tliparam.T_ST = lvdc->T_ST;
 
 						rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
@@ -1753,6 +1759,50 @@ void MCC::TimeStep(double simdt){
 				}
 			}
 			break;
+			case MTP_D:
+			switch (MissionState)
+			{
+			case MST_D_INSERTION:	//SV Update to SPS-1
+				if (cm->MissionTime > 3 * 60 * 60 + 15 * 60)
+				{
+					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 50 * 60, 2, MST_D_DAY1STATE1);
+				}
+				break;
+			case MST_D_DAY1STATE1:	//SPS-1 to Daylight Star Check
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
+				break;
+			case MST_D_DAY1STATE2: //Daylight Star Check to SV Update
+				UpdateMacro(UTP_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 20 * 60, 3, MST_D_DAY1STATE3);
+				break;
+			case MST_D_DAY1STATE3: //SV Update to Block Data 2
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 8 * 60 * 60 + 27 * 60, 2, MST_D_DAY1STATE4);
+				break;
+			case MST_D_DAY1STATE4: //Block Data 2 to Block Data 3
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 19 * 60 * 60 + 15 * 60, 11, MST_D_DAY2STATE1);
+				break;
+			case MST_D_DAY2STATE1: //Block Data 3 to SPS-2
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 20 * 60 * 60 + 37 * 60, 12, MST_D_DAY2STATE2);
+				break;
+			case MST_D_DAY2STATE2: //SPS-2 to SPS-3
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 23 * 60 * 60 + 55 * 60, 13, MST_D_DAY2STATE3);
+				break;
+			case MST_D_DAY2STATE3: //SPS-3 to SPS-4
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 26 * 60 * 60 + 50 * 60, 14, MST_D_DAY2STATE4);
+				break;
+			case MST_D_DAY2STATE4: //SPS-4 to SV Update
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > 28 * 60 * 60 + 50 * 60, 15, MST_D_DAY2STATE5);
+				break;
+			case MST_D_DAY2STATE5: //SV Update to Block Data 4
+				UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 28 * 60 * 60 + 55 * 60, 2, MST_D_DAY2STATE6);
+				break;
+			case MST_D_DAY2STATE6: //Block Data 4 to Block Data 5
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 40 * 60 * 60 + 10 * 60, 16, MST_D_DAY3STATE1);
+				break;
+			case MST_D_DAY3STATE1: //Block Data 5
+				UpdateMacro(UTP_BLOCKDATA, cm->MissionTime > 41 * 60 * 60 + 10 * 60, 17, MST_D_DAY3STATE2);
+				break;
+			}
+			break;
 		}
 	}
 
@@ -1952,6 +2002,11 @@ int MCC::subThread(){
 	{
 		Sleep(5000); // Waste 5 seconds
 		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_D)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_C_PRIME)
 	{
@@ -2231,6 +2286,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
 		}
+		else if (padNumber == 11)
+		{
+			STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+			SAVE_DOUBLE("MCC_STARCHKPAD_GET", form->GET[0]);
+			SAVE_V3("MCC_STARCHKPAD_Att", form->Att[0]);
+			SAVE_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2251,7 +2314,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("MCC_GT_Enabled", GT_Enabled);
 		LOAD_BOOL("MCC_MT_Enabled", MT_Enabled);
 		LOAD_BOOL("MCC_padAutoShow", padAutoShow);
-		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);		
+		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);
 		LOAD_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
 		LOAD_INT("MCC_MissionType", MissionType);
 		LOAD_INT("MCC_MissionPhase", MissionPhase);
@@ -2278,7 +2341,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		if (padNumber == 1)
 		{
 			char tmpbuf[36];
-			
+
 			AP7BLK * form = (AP7BLK *)padForm;
 
 			for (int i = 0;i < 8;i++)
@@ -2487,6 +2550,14 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
 		}
+		else if (padNumber == 11)
+		{
+			STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+			LOAD_DOUBLE("MCC_STARCHKPAD_GET", form->GET[0]);
+			LOAD_V3("MCC_STARCHKPAD_Att", form->Att[0]);
+			LOAD_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -2553,7 +2624,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GETI[i + 4]);
-				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f  XXX%+05.1f LAT\nXX%+06.1f  XX%+06.1f LONG\n%s  %s GETI\nXXX%4.1f  XXX%4.1f DVC\n%s       %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
+				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s     %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}
@@ -2706,6 +2777,22 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
+	case 11: //STARCHKPAD
+	{
+		STARCHKPAD * form = (STARCHKPAD *)padForm;
+
+		int hh, mm, hh2, mm2;
+		double ss, ss2;
+
+		sprintf(buffer, "CSM STAR CHECK UPDATE");
+		SStoHHMMSS(form->GET[0], hh, mm, ss);
+		SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2);
+
+		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R FDAI\n%+06.1f P\n%+06.1f Y\nXX%03d HR T ALIGN\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	default:
 		sprintf(buffer,"Unknown padNumber %d",padNumber);
 		oapiAnnotationSetText(NHpad,buffer);
@@ -2757,6 +2844,9 @@ void MCC::allocPad(int Number){
 		break;
 	case 10: // TLIPAD
 		padForm = calloc(1, sizeof(TLIPAD));
+		break;
+	case 11: // STARCHKPAD
+		padForm = calloc(1, sizeof(STARCHKPAD));
 		break;
 
 	default:
@@ -3089,7 +3179,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 	{
 		switch (SubState) {
 		case 0:
-			if (MissionType == MTP_C)
+			if (MissionType == MTP_C || MissionType == MTP_D)
 			{
 				allocPad(4); // Allocate AP7 Maneuver Pad
 			}
@@ -3544,6 +3634,44 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			break;
 		}
 	}
+	else if (type == UTP_STARCHKPAD)//Star Check PAD without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(11);// Allocate STARCHK PAD
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && padState > -1) {
+				addMessage("You can has PAD");
+				if (padAutoShow == true && padState == 0) { drawPad(); }
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -3563,7 +3691,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P30MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
@@ -3584,7 +3712,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_P47MANEUVER)
 	{
-		if (MissionType == MTP_C)
+		if (MissionType == MTP_C || MissionType == MTP_D)
 		{
 			AP7MNV * form = (AP7MNV *)padForm;
 		}
@@ -3680,6 +3808,14 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		}
 		padState = 0;
 		// Pretend we did the math
+	}
+	else if (type == UTP_STARCHKPAD)
+	{
+		STARCHKPAD * form = (STARCHKPAD *)padForm;
+		// Ask RTCC for numbers
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm);
+		// Done filling form, OK to show
+		padState = 0;
 	}
 	else if (type == UTP_NONE)
 	{

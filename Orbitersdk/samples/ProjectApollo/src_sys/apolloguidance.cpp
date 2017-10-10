@@ -52,14 +52,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastTimestep = 0;
 	LastCycled = 0;
 
-	DesiredApogee = 0.0;
-	DesiredPerigee = 0.0;
-	DesiredAzimuth = 0.0;
-
-	LandingLongitude = 0.0;
-	LandingLatitude = 0.0;
-	LandingAltitude = 0.0;
-
 	//
 	// Flight number.
 	//
@@ -345,7 +337,7 @@ typedef union
 		unsigned SbyPressed:1;
 		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
-		unsigned CheckParity:1;
+		unsigned Spare1:1;
 		unsigned NightWatchmanTripped:1;
 		unsigned GeneratedWarning:1;
 		unsigned TookBZF:1;
@@ -365,10 +357,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	int val;
 
 	oapiWriteLine(scn, AGC_START_STRING);
-
-	oapiWriteScenario_float(scn, "TGTA", DesiredApogee);
-	oapiWriteScenario_float(scn, "TGTP", DesiredPerigee);
-	oapiWriteScenario_float(scn, "TGTZ", DesiredAzimuth);
 
 	if (OtherVesselName[0])
 		oapiWriteScenario_string(scn, "ONAME", OtherVesselName);
@@ -400,7 +388,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.SbyPressed = vagc.SbyPressed;
 	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
-	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 	state.u.GeneratedWarning = vagc.GeneratedWarning;
 	state.u.TookBZF = vagc.TookBZF;
@@ -487,7 +474,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 {
 	char	*line;
-	float	flt;
 
 	//
 	// Now load the data.
@@ -497,19 +483,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, AGC_END_STRING, sizeof(AGC_END_STRING)))
 			break;
 			
-		if (!strnicmp (line, "TGTA", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredApogee = flt;
-		}
-		else if (!strnicmp (line, "TGTP", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredPerigee = flt;
-		}
-		else if (!strnicmp (line, "TGTZ", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredAzimuth = flt;
-		}
-		else if (!strnicmp (line, "EMEM", 4)) {
+		if (!strnicmp (line, "EMEM", 4)) {
 			int num, val;
 			sscanf(line+4, "%o", &num);
 			sscanf(line+9, "%o", &val);
@@ -594,7 +568,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.SbyPressed = state.u.SbyPressed;
 			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
-			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 			vagc.GeneratedWarning = state.u.GeneratedWarning;
 			vagc.TookBZF = state.u.TookBZF;
@@ -953,14 +926,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		val ^= 077777;
 
 	return val;
-}
-
-void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double altitude)
-
-{
-	LandingAltitude = altitude;
-	LandingLongitude = longitude;
-	LandingLatitude = latitude;
 }
 
 bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)

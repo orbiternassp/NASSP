@@ -37,9 +37,7 @@ public:
 	bool ConsumeButton (int bt, int event);
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
-	void GetStateVector (void);	
-	void IMFDP30Uplink (void);
-	void IMFDP31Uplink (void);
+	void GetStateVector (void);
 	bool SetSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);

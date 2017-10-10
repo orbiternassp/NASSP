@@ -35,20 +35,31 @@
 #include "soundlib.h"
 #include "toggleswitch.h"
 
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "ioChannels.h"
 #include "papi.h"
 #include "saturn.h"
-#include "saturn1b.h"
-#include "s1b.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "LVDC.h"
+#include "LVDA.h"
 
 //#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 
+LVDC::LVDC(LVDA &lvd) : lvda(lvd)
+{
+
+}
+
+void LVDC::Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc)
+{
+	lvCommandConnector = lvc;
+	commandConnector = csmc;
+}
+
 // Constructor
-LVDC1B::LVDC1B(){
+LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
+{
+	lvCommandConnector = NULL;
+	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
@@ -56,8 +67,6 @@ LVDC1B::LVDC1B(){
 	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	GATE = false;
 	GATE5 = false;
 	GRR_init = false;
@@ -67,13 +76,11 @@ LVDC1B::LVDC1B(){
 	INH2 = false;
 	i_op = false;
 	liftoff = false;
-	LVDC_EI_On = false;
 	LVDC_GRR = false;
 	LVDC_Stop = false;
 	MRS = false;
 	poweredflight = false;
 	S1B_Engine_Out = false;
-	S1B_TwoEngines_Out = false;
 	S1B_CECO_Commanded = false;
 	S4B_IGN = false;
 	theta_N_op = false;
@@ -86,9 +93,6 @@ LVDC1B::LVDC1B(){
 	UP = 0;
 	// double
 	a = 0;
-	a_0p = 0;
-	a_0r = 0;
-	a_0y = 0;
 	a_1 = 0;
 	a_2 = 0;
 	A1 = 0;
@@ -96,9 +100,6 @@ LVDC1B::LVDC1B(){
 	A3 = 0;
 	A4 = 0;
 	A5 = 0;
-	a_1p = 0;
-	a_1r = 0;
-	a_1y = 0;
 	alpha_1 = 0;
 	alpha_2 = 0;
 	alpha_D = 0;
@@ -109,17 +110,7 @@ LVDC1B::LVDC1B(){
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
-	beta_p1c = 0;
-	beta_p2c = 0;
-	beta_p3c = 0;
-	beta_p4c = 0;
-	beta_pc = 0;
-	beta_rc = 0;
-	beta_y1c = 0;
-	beta_y2c = 0;
-	beta_y3c = 0;
-	beta_y4c = 0;
-	beta_yc = 0;
+	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -162,9 +153,6 @@ LVDC1B::LVDC1B(){
 	eps_2 = 0;
 	eps_3 = 0;
 	eps_4 = 0;
-	eps_p = 0;
-	eps_ymr = 0;
-	eps_ypr = 0;
 	f = 0;
 	F = 0;
 	Fm = 0;
@@ -303,7 +291,6 @@ LVDC1B::LVDC1B(){
 	// VECTOR3 
 	ACommandedAttitude = _V(0,0,0);
 	AttitudeError = _V(0,0,0);
-	AttRate = _V(0,0,0);
 	CommandedAttitude = _V(0,0,0);
 	CommandRateLimits = _V(0,0,0);
 	CurrentAttitude = _V(0,0,0);
@@ -332,9 +319,9 @@ LVDC1B::LVDC1B(){
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 }
 
-void LVDC1B::init(Saturn* own){
+void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
 	if(Initialized == true){ 
-		if(owner == own){
+		if(commandConnector == commandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -343,11 +330,9 @@ void LVDC1B::init(Saturn* own){
 			fflush(lvlog);
 		}
 	}
-	owner = own;
-	lvimu.Init();							// Initialize IMU
-	lvrg.Init(owner);						// LV Rate Gyro Package
-	lvimu.SetVessel(owner);					// set vessel pointer
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvCommandConnector = lvCommandConn;
+	commandConnector = commandConn;
+	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
 	e = 0.00417135950879776;
@@ -546,19 +531,16 @@ void LVDC1B::init(Saturn* own){
 	TAS=0;
 	t_clock = 0;
 
-
 	// Set up remainder
 	LVDC_Timebase = -1;										// Start up halted in pre-PTL wait
 	LVDC_TB_ETime = 0;
 	LVDC_Stop = false;
 	IGMCycle = 0;
 	sinceLastIGM = 0;
+	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
-	LVDC_EI_On = false;
 	S1B_Sep_Time = 0;
 	CountPIPA = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -568,7 +550,7 @@ void LVDC1B::init(Saturn* own){
 // DS20070205 LVDC++ EXECUTION
 void LVDC1B::TimeStep(double simt, double simdt) {
 	// Bail if uninitialized
-	if(owner == NULL){ return; }
+	if (lvCommandConnector->connectedTo == NULL) { return; }
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 	
@@ -582,26 +564,26 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// Orbiter 2016 fix
 				// Force GetWeightVector() to the correct value at LVDC initiation
 				if (simt < 0.5) {
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+					lvCommandConnector->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 				}
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if (owner->MissionTime < -10800){
-					owner->DeactivatePrelaunchVenting();
+				if (lvCommandConnector->GetMissionTime() < -10800){
+					lvCommandConnector->SwitchSelector(10);
 				}else{
-					owner->ActivatePrelaunchVenting();
+					lvCommandConnector->SwitchSelector(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
-					double Source  = fabs(owner->MissionTime);
+					double Source  = fabs(lvCommandConnector->GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					if (owner->MissionTime < -1200){
+					if (lvCommandConnector->GetMissionTime() < -1200){
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-						lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
+						lvda.ZeroLVIMUCDUs();					// Zero IMU CDUs
 						break;
 					}else{
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
@@ -609,57 +591,42 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 			
 				// WAIT FOR GRR
-				// Engine lights on at T-00:04:10
-				if (owner->MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
 				// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (owner->MissionTime >= -17){
-					lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-					if (owner->ApolloNo == 5)
+				if (lvCommandConnector->GetMissionTime() >= -17){				
+					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
+					if (lvCommandConnector->GetApolloNo() == 5)
 					{
-						lvimu.DriveGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment 
+						lvda.DriveLVIMUGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment
 					}
 					else
 					{
-						lvimu.DriveGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
+						lvda.DriveLVIMUGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
 					}
-					lvimu.SetCaged(false);							// Release IMU
+					lvda.ReleaseLVIMU();							// Release IMU
 					CountPIPA = true;								// Enable PIPA storage			
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-					owner->SetThrusterGroupLevel(owner->thg_main, 0);	// Ensure off
-					{
-						int i;
-						for (i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines						
-							owner->SetThrusterResource(owner->th_main[i], owner->ph_1st);
-						}
-					}
-					owner->CreateStageOne();						// Create hidden stage one, for later use in staging
+					lvCommandConnector->SwitchSelector(12);
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
-
-					//Apply force to trigger GetWeightVector() function
-					//owner->AddForce(_V(0, 0, 1.0), _V(0, 0, 0));
 				}
 				break;
 			case 0: // MORE TB0
 				double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
 
 									// At 10 seconds, play the countdown sound.
-				if (owner->MissionTime >= -10.3) { // Was -10.9
-					if (!owner->UseATC && owner->Scount.isValid()) {
-						owner->Scount.play();
-						owner->Scount.done();
-					}
+				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
+					lvCommandConnector->SwitchSelector(13);
 				}
 
 				// Shut down venting at T - 9
-				if (owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->DeactivatePrelaunchVenting(); }
+				if (lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
 
 				// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
 
@@ -672,7 +639,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// Source: Apollo 7 LV Flight Evaluation
 
 				// Transition from seperate throttles to single throttle
-				if (owner->MissionTime < -0.715) {
+				if (lvCommandConnector->GetMissionTime() < -0.715) {
 					int x = 0; // Start Sequence Index
 					double tm_1, tm_2, tm_3, tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
 					double SumThrust = 0;
@@ -692,21 +659,21 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						tm_2 = tm_1 + 0.3;  // Start of 1st rise
 						tm_3 = tm_2 + 0.085; // Start of 2nd rise
 						tm_4 = tm_3 + 0.75; // End of 2nd rise
-						if (owner->MissionTime >= tm_1) {
+						if (lvCommandConnector->GetMissionTime() >= tm_1) {
 							// Light CC
-							if (owner->MissionTime < tm_2) {
+							if (lvCommandConnector->GetMissionTime() < tm_2) {
 								// Idle at 2.5% thrust
 								thrst[x] = 0.025;
 							}
 							else {
-								if (owner->MissionTime < tm_3) {
+								if (lvCommandConnector->GetMissionTime() < tm_3) {
 									// the actual rise is so fast that any 'smoothing' is pointless
 									thrst[x] = 0.93;
 								}
 								else {
-									if (owner->MissionTime < tm_4) {
+									if (lvCommandConnector->GetMissionTime() < tm_4) {
 										// Rise to 100% at a rate of 9 percent per second.
-										thrst[x] = 0.93 + (0.09*(owner->MissionTime - tm_3));
+										thrst[x] = 0.93 + (0.09*(lvCommandConnector->GetMissionTime() - tm_3));
 									}
 									else {
 										// Hold 100%
@@ -721,30 +688,26 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
 					//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
 					if (SumThrust > 0) { //let's hope that those numberings are right...
-						owner->SetThrusterLevel(owner->th_main[0], thrst[3]); // Engine 1
-						owner->SetThrusterLevel(owner->th_main[1], thrst[2]); // Engine 2
-						owner->SetThrusterLevel(owner->th_main[2], thrst[3]); // Engine 3
-						owner->SetThrusterLevel(owner->th_main[3], thrst[2]); // Engine 4
-						owner->SetThrusterLevel(owner->th_main[4], thrst[0]); // Engine 5
-						owner->SetThrusterLevel(owner->th_main[5], thrst[1]); // Engine 6
-						owner->SetThrusterLevel(owner->th_main[6], thrst[0]); // Engine 7
-						owner->SetThrusterLevel(owner->th_main[7], thrst[1]); // Engine 8
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), thrst[3]); // Engine 1
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(1), thrst[2]); // Engine 2
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(2), thrst[3]); // Engine 3
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(3), thrst[2]); // Engine 4
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(4), thrst[0]); // Engine 5
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(5), thrst[1]); // Engine 6
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(6), thrst[0]); // Engine 7
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(7), thrst[1]); // Engine 8
 
-						owner->contrailLevel = SumThrust / 8;
-						// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-						//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*(SumThrust + .01))), _V(0, 0, 0)); // Maintain hold-down lock
+						lvCommandConnector->SetContrailLevel(SumThrust / 8);
 					}
 				}
 				else {
 					// Get 100% thrust on all engines.
-					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",owner->MissionTime,LVDC_TB_ETime);
-					owner->SetThrusterGroupLevel(owner->thg_main,1);
-					owner->contrailLevel = 1;				
-					// owner->AddForce(_V(0, 0, -10. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
-					//owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC*1.01)), _V(0, 0, 0));
+					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",lvCommandConnector->GetMissionTime(),LVDC_TB_ETime);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(),1);
+					lvCommandConnector->SetContrailLevel(1);
 				}
 
-				if (owner->MissionTime >= 0) {
+				if (lvCommandConnector->GetMissionTime() >= 0) {
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
 				}
@@ -753,45 +716,33 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			case 1: // LIFTOFF TIME
 				if(liftoff == false){
 					liftoff = true;
-					owner->SetLiftoffLight();										// And light liftoff lamp
-					owner->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-					// Start mission and event timers
-					owner->secs.LiftoffA();
-					owner->secs.LiftoffB();
-					owner->agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
-					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);				// Set full thrust, just in case
-					owner->contrailLevel = 1.0;
-					if (owner->LaunchS.isValid() && !owner->LaunchS.isPlaying()){	// And play launch sound
-						owner->LaunchS.play(NOLOOP,255);
-						owner->LaunchS.done();
-					}			
+					lvCommandConnector->SwitchSelector(15);			
 					sinceLastIGM = 1.7-simdt; // Rig to pass on fall-in
 				}
 
 				// Soft-Release Pin Dragging
-				if(owner->MissionTime < 0.5){
-					double PinDragFactor = 1 - (owner->MissionTime*2);
-					owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC * PinDragFactor)), _V(0, 0, 0));
+				if(lvCommandConnector->GetMissionTime() < 0.5){
+					double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
+					lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
-				if (owner->secs.BECO())
+				if (commandConnector->GetBECOSignal())
 				{
 					if (t_clock > 40.0)
 					{
-						owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
-					owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
+					commandConnector->SetAGCInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
 
 				//Timebase 2 initiated at certain fuel level
 
-				if (owner->stage == LAUNCH_STAGE_ONE && owner->GetPropellantMass(owner->ph_1st) <= 24000.0) {
-					owner->ClearLiftoffLight();
-					TwoEngOutAutoAbortDeactivate = true;
+				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0) {
+					commandConnector->ClearLiftoffLight();
 
 					// Begin timebase 2
 					LVDC_Timebase = 2;
@@ -803,43 +754,26 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			case 2:
 				// S1B CECO TRIGGER:
 				if (LVDC_TB_ETime > 3.2 && !S1B_CECO_Commanded) { // Apollo 7
-					owner->SetThrusterResource(owner->th_main[4], NULL);
-					owner->SetThrusterResource(owner->th_main[5], NULL);
-					owner->SetThrusterResource(owner->th_main[6], NULL);
-					owner->SetThrusterResource(owner->th_main[7], NULL);
-					owner->SShutS.play(NOLOOP, 235);
-					owner->SShutS.done();
+					lvCommandConnector->SwitchSelector(16);
 					S1B_Engine_Out = true;
 					S1B_CECO_Commanded = true;
 				}
 
-				if (owner->secs.BECO())
+				if (commandConnector->GetBECOSignal())
 				{
-					owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					LVDC_Stop = true;
 				}
 				
 				// S1B OECO TRIGGER
 				// Done by low-level sensor.
-				if (owner->stage == LAUNCH_STAGE_ONE && owner->GetFuelMass() <= 0){
+				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetFuelMass() <= 0){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						owner->MissionTime,owner->GetThrusterMax(owner->th_main[0]),owner->GetAltitude());
-
-					// Move hidden S1B
-					if (owner->hstg1) {
-						VESSELSTATUS vs;
-						owner->GetStatus(vs);
-						S1B *stage1 = (S1B *) oapiGetVesselInterface(owner->hstg1);
-						stage1->DefSetState(&vs);
-					}				
+						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)), lvCommandConnector->GetAltitude());
+					lvCommandConnector->SwitchSelector(17);
 					// Set timer
-					S1B_Sep_Time = owner->MissionTime;
-					// Engine Shutdown
-					int i;
-					for (i = 0; i < 5; i++){
-						owner->SetThrusterResource(owner->th_main[i], NULL);
-					}
+					S1B_Sep_Time = lvCommandConnector->GetMissionTime();
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -848,29 +782,29 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 			case 3:
 				// S1B SEPARATION TRIGGER
-				if(owner->stage == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
+				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
 					// Drop old stage
-					owner->SwitchSelector(18);
+					lvCommandConnector->SwitchSelector(18);
 				}
 						
-				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && owner->stage == LAUNCH_STAGE_SIVB){
-					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-4)*0.36));
-					if(LVDC_TB_ETime >= 5){ owner->SetThrusterGroupLevel(owner->thg_ver,0); }
+				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime-4)*0.36));
+					if(LVDC_TB_ETime >= 5){ lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetVernierThrusterGroup(),0); }
 				}
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && owner->stage == LAUNCH_STAGE_SIVB){
-					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 1.0);
 					S4B_IGN=true;
 				}
 				if(LVDC_TB_ETime > 311.5 && MRS == false){
 					// MR Shift
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					owner->SwitchSelector(23);
+					lvCommandConnector->SwitchSelector(23);
 					MRS = true;
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (owner->secs.BECO() || owner->GetThrusterLevel(owner->th_main[0]) == 0))
+				if (S4B_IGN == true && (commandConnector->GetBECOSignal() || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -894,51 +828,51 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime < 2){
 					if(LVDC_TB_ETime < 0.25){
 						// 95% of thrust dies in the first .25 second
-						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.3048));
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 1-(LVDC_TB_ETime*3.3048));
 					}else{
 						if(LVDC_TB_ETime < 1.5){
 							// The remainder dies over the next 1.25 second
-							owner->SetThrusterLevel(owner->th_main[0], 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
 						}else{
 							// Engine is completely shut down at 1.5 second
-							owner->SetThrusterLevel(owner->th_main[0], 0);
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0);
 						}
 					}
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,owner->GetThrusterLevel(owner->th_main[0]));
+					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
 				}
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
-					owner->SetStage(STAGE_ORBIT_SIVB);
+				/*if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
+					lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
 					fprintf(lvlog,"[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					LVDC_EI_On = false;
-				}
+				}*/
 				if(LVDC_TB_ETime > 100){
 					poweredflight = false; //powered flight nav off
 				}
 				// Orbital stage timed events
-				if(owner->stage != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
+				if(lvCommandConnector->GetStage() != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
 				// Venting			
 				if (LVDC_TB_ETime >= 5773) {				
-					if (owner->GetThrusterLevel(owner->th_main[0]) > 0) {
-						owner->SetJ2ThrustLevel(0);
-						owner->EnableDisableJ2(false);
+					if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) > 0) {
+						lvCommandConnector->SetJ2ThrustLevel(0);
+						lvCommandConnector->EnableDisableJ2(false);
 					}
 				}else{
 					if (LVDC_TB_ETime >= 5052) {					
-						if (owner->GetThrusterLevel(owner->th_main[0]) == 0) {
-							owner->EnableDisableJ2(true);
-							owner->SetJ2ThrustLevel(1);
+						if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0) {
+							lvCommandConnector->EnableDisableJ2(true);
+							lvCommandConnector->SetJ2ThrustLevel(1);
 						}
 					}
 				}
 				// Fuel boiloff every ten seconds.
-				if (owner->MissionTime >= owner->NextMissionEventTime){
-					if (owner->GetThrusterLevel(owner->th_main[0]) < 0.5){
-						owner->SIVBBoiloff();					
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime){
+					if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.5){
+						lvCommandConnector->SIVBBoiloff();
 					}
-					owner->NextMissionEventTime = owner->MissionTime+10.0;				
+					BoiloffTime = lvCommandConnector->GetMissionTime()+10.0;
 				}
 
-				if (owner->ApolloNo == 5)
+				/*if (lvCommandConnector->GetApolloNo() == 5)
 				{
 					//
 					// Separate nosecap
@@ -946,7 +880,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 					if (!owner->Crewed && owner->NosecapAttached && !owner->hNosecapVessel && LVDC_TB_ETime >= 45.0)
 					{
-						owner->SlowIfDesired();
+						commandConnector->SlowIfDesired();
 						owner->NosecapAttached = false;
 						owner->SetNosecapMesh();
 						owner->JettisonNosecap();
@@ -960,16 +894,16 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0 - 20.))
 					{
-						owner->SlowIfDesired();
+						commandConnector->SlowIfDesired();
 					}
 
 					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0))
 					{
-						owner->SlowIfDesired();
+						commandConnector->SlowIfDesired();
 						PayloadDeployed = true;
 						// Payload deploy
-						owner->SeparateStage(CSM_LEM_STAGE);
-						owner->SetStage(CSM_LEM_STAGE);
+						lvCommandConnector->SeparateStage(CSM_LEM_STAGE);
+						lvCommandConnector->SetStage(CSM_LEM_STAGE);
 					}
 
 					//
@@ -981,13 +915,18 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						oapiSetFocusObject(owner->hs4bM);
 						oapiDeleteVessel(owner->GetHandle(), owner->hs4bM);
 					}
+				}*/
+
+				//For now, disable LVDC at TB4+16,800 seconds
+				if (LVDC_TB_ETime > 16800.0)
+				{
+					LVDC_Stop = true;
+					return;
 				}
 
 				break;
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
-		lvrg.Timestep(simdt);								// and RG
-		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude
+		CurrentAttitude = lvda.GetLVIMUAttitude();			// Get current attitude
 		/*
 		if (lvimu.Operate) { fprintf(lvlog, "IMU: Operate\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: NO-Operate\r\n"); }
 		if (lvimu.TurnedOn) { fprintf(lvlog, "IMU: Turned On\r\n"); }else{ fprintf(lvlog, "ERROR: IMU: Turned OFF\r\n"); }
@@ -995,15 +934,15 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 		if (lvimu.CoarseAlignEnableFlag) { fprintf(lvlog, "IMU: ERROR: Coarse-Align-Enable-Flag\r\n"); }
 		if (lvimu.Caged) { fprintf(lvlog, "IMU: ERROR: Caged\r\n"); }
 		*/
-		AttRate = lvrg.GetRates();							// Get rates	
+
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
-			fprintf(lvlog,"[T%f] GRR received!\r\n",owner->MissionTime);
+			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
 
 			// Initial Position & Velocity
 			MATRIX3 rot;
-			owner->GetRelativePos(oapiGetGbodyByName ("Earth"), PosS);
-			owner->GetRelativeVel(oapiGetGbodyByName ("Earth"), Dot0);
+			lvCommandConnector->GetRelativePos(oapiGetGbodyByName ("Earth"), PosS);
+			lvCommandConnector->GetRelativeVel(oapiGetGbodyByName ("Earth"), Dot0);
 			
 			oapiGetPlanetObliquityMatrix(oapiGetGbodyByName("Earth"),&rot);
 			PosS = tmul(rot,PosS);
@@ -1134,7 +1073,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			PCommandedAttitude.x = (1.5* PI) + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 			sinceLastIGM = 0;
 			GRR_init = true;
 			fprintf(lvlog,"Initialization completed.\r\n\r\n");
@@ -1153,9 +1092,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 		//powered flight nav
 		if(LVDC_GRR == true){
 			if(poweredflight == true){
-				DotM_act.x += (lvimu.CDURegisters[LVRegPIPAX]); //read the PIPA CDUs
-				DotM_act.y += (lvimu.CDURegisters[LVRegPIPAY]);
-				DotM_act.z += (lvimu.CDURegisters[LVRegPIPAZ]);
+				DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			}
 			Fm = pow((pow(((DotM_act.x - DotM_last.x)/dt_c),2)+ pow(((DotM_act.y - DotM_last.y)/dt_c),2)+ pow(((DotM_act.z - DotM_last.z)/dt_c),2)),0.5);
 			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2 + (DotG_last.x + ddotG_last.x * dt_c / 2)*dt_c + Dot0.x * dt_c; //position vector
@@ -1193,7 +1130,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"Dist. from Earth's Center: %f \r\n",R);
 			fprintf(lvlog,"S: %f \r\n",S);
 			fprintf(lvlog,"P: %f \r\n",P);
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 		}
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
@@ -1278,7 +1215,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				fprintf(lvlog,"Post-MRS\n");
 				if(t_B1 <= t_B3){
 					tau2 = V_ex2/Fm;
-					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm,owner->GetMass());
+					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm,lvCommandConnector->GetMass());
 				}else{
 					// This is the "ARTIFICIAL TAU" code.
 					t_B3 += dt_c; 
@@ -1300,7 +1237,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					fprintf(lvlog,"T_2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n",T_2,T_1,dotM_1,dotM_2);		
 				}else{															
 					tau1 = V_ex1/Fm; 
-					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, owner->GetMass());
+					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, lvCommandConnector->GetMass());
 				}
 			}
 			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");
@@ -1783,123 +1720,9 @@ minorloop: //minor loop;
 		AttitudeError.y = -(A1 * DeltaAtt.y + A2 * DeltaAtt.z); 
 		// YAW ERROR
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
-	
-		// S/C takeover function
-		if(LVDC_Timebase == 4 && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
-			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
-			AttitudeError.y = owner->gdc.fdai_err_y * RAD / 31.6;
-			AttitudeError.z = owner->gdc.fdai_err_z * RAD / -31.6;
-		}
-		/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime < 60){
-			a_0p = a_0y = 2;
-			a_0r = 0.3;
-			a_1p = a_1y = 1.6;
-			a_1r = 0.25;
-		}
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime >= 60 && LVDC_TB_ETime < 90){
-			a_0p = a_0y = 3;
-			a_0r = 0.3;
-			a_1p = a_1y = 1.6;
-			a_1r = 0.25;
-		}
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime >= 90 && LVDC_TB_ETime < 120){
-			a_0p = a_0y = 2;
-			a_0r = 0.3;
-			a_1p = a_1y = 1.6;
-			a_1r = 0.25;
-		}
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime >= 120){
-			a_0p = a_0y = 0.7;
-			a_0r = 0.2;
-			a_1p = a_1y = 0.75;
-			a_1r = 0.15;
-		}
-		if(LVDC_Timebase == 3){
-			a_0p = a_0y = 0.6;
-			a_0r = 1;
-			a_1p = a_1y = 0.5;
-			a_1r = 5;
-		}
-		if(LVDC_Timebase == 4){
-			a_0p = a_0y = 1;
-			a_0r = 1;
-			a_1p = a_1y = 5;
-			a_1r = 5;
-		}
-		beta_pc = a_0p * AttitudeError.y + a_1p * AttRate.y;
-		beta_yc = a_0y * AttitudeError.z + a_1y * AttRate.z;
-		beta_rc = a_0r * AttitudeError.x + a_1r * AttRate.x;
-		if(LVDC_Timebase < 3){
-			beta_y1c = beta_yc + beta_rc/pow(2,0.5); //orbiter's engines are gimballed differently then the real one
-			beta_p1c = beta_pc - beta_rc/pow(2,0.5);
-			beta_y2c = beta_yc - beta_rc/pow(2,0.5);
-			beta_p2c = beta_pc - beta_rc/pow(2,0.5);
-			beta_y3c = beta_yc - beta_rc/pow(2,0.5);
-			beta_p3c = beta_pc + beta_rc/pow(2,0.5);
-			beta_y4c = beta_yc + beta_rc/pow(2,0.5);
-			beta_p4c = beta_pc + beta_rc/pow(2,0.5);
-			owner->SetThrusterDir(owner->th_main[0],_V(beta_y1c,beta_p1c,1)); 
-			owner->SetThrusterDir(owner->th_main[1],_V(beta_y2c,beta_p2c,1));
-			owner->SetThrusterDir(owner->th_main[2],_V(beta_y3c,beta_p3c,1)); 
-			owner->SetThrusterDir(owner->th_main[3],_V(beta_y4c,beta_p4c,1)); 
-		}
-		if(LVDC_Timebase == 3){
-			//SIVB powered flight
-			beta_p1c = beta_pc; //gimbal angles
-			beta_y1c = beta_yc;
-			owner->SetThrusterDir(owner->th_main[0],_V(beta_y1c,beta_p1c,1));
-			eps_p = 0; //we want neither the APS pitch thrusters to fire
-			eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
-			eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
-		}
-		if(LVDC_Timebase == 4){
-			//SIVB coast flight; full APS control
-			eps_p   = (a_0p * AttitudeError.y * DEG) + (a_1p * AttRate.y * DEG); //pitch thruster demand
-			eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
-			eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
-		}
-		if((LVDC_Timebase == 3 && S4B_IGN == true)|| LVDC_Timebase == 4){
-			//APS thruster on/off control
-			if(eps_p > 1){
-				//fire+pitch
-				if(eps_p >= 1.6){owner->SetThrusterLevel(owner->th_att_rot[1],1);}else{owner->SetThrusterLevel(owner->th_att_rot[1],(eps_p-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[1],0);
-			}
-			if(eps_p < -1){
-				//fire-pitch
-				if(eps_p <= -1.6){owner->SetThrusterLevel(owner->th_att_rot[0],1);}else{owner->SetThrusterLevel(owner->th_att_rot[0],(-eps_p-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[0],0);
-			}
-			if(eps_ymr > 1){
-				//fire+yaw-roll;
-				if(eps_ymr >= 1.6){owner->SetThrusterLevel(owner->th_att_rot[3],1);}else{owner->SetThrusterLevel(owner->th_att_rot[3],(eps_ymr-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[3],0);
-			}
-			if(eps_ymr < -1){
-				//fire-yaw+roll;
-				if(eps_ymr <= -1.6){owner->SetThrusterLevel(owner->th_att_rot[5],1);}else{owner->SetThrusterLevel(owner->th_att_rot[5],(-eps_ymr-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[5],0);
-			}
-			if(eps_ypr > 1){
-				//fire+yaw+roll;
-				if(eps_ypr >= 1.6){owner->SetThrusterLevel(owner->th_att_rot[4],1);}else{owner->SetThrusterLevel(owner->th_att_rot[4],(eps_ypr-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[4],0);
-			}
-			if(eps_ypr < -1){
-				//fire-yaw-roll;
-				if(eps_ypr <= -1.6){owner->SetThrusterLevel(owner->th_att_rot[2],1);}else{owner->SetThrusterLevel(owner->th_att_rot[2],(-eps_ypr-1)/0.6);}
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[2],0);
-			}
-		}
+
+		lvda.SetFCCAttitudeError(AttitudeError);
+
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
@@ -1923,98 +1746,24 @@ minorloop: //minor loop;
 		//Engine failure code
 		if (LVDC_Timebase == 1)
 		{
-			for (int i = 0;i < 8;i++)
-			{
-				if (owner->EarlySICutoff[i] && (t_clock > owner->FirstStageFailureTime[i]) && (owner->GetThrusterResource(owner->th_main[i]) != NULL))
-				{
-					owner->SetThrusterResource(owner->th_main[i], NULL); // Should stop the engine
-					S1B_Engine_Out = true;
-				}
-			}
+			S1B_Engine_Out = lvda.GetSIEngineOut();
 		}
 
-		//EDS
-
-		if (LVDC_Timebase == 1)
-		{
-			int enginesout = 0;
-
-			if (owner->GetThrusterLevel(owner->th_main[0]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[1]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[2]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[3]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[4]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[5]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[6]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[7]) < 0.65) enginesout++;
-
-			if (enginesout >= 2)
-			{
-				S1B_TwoEngines_Out = true;
-			}
-			else
-			{
-				S1B_TwoEngines_Out = false;
-			}
-		}
-		else
-		{
-			S1B_TwoEngines_Out = false;
-		}
-
-		//Auto Abort
-		//LV Rates light
-		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-		{
-			owner->LVRateLight = true;
-		}
-		else
-		{
-			owner->LVRateLight = false;
-		}
-
-		AutoAbortInitiate = false;
-
-		if (owner->EDSSwitch.IsUp())
-		{
-			if (owner->LVRateAutoSwitch.IsUp())
-			{
-				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-			if (owner->TwoEngineOutAutoSwitch.IsUp())
-			{
-				if (S1B_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-		}
-
-		if (AutoAbortInitiate)
-		{
-			owner->secs.SetEDSAbort1(true);
-			owner->secs.SetEDSAbort2(true);
-			owner->secs.SetEDSAbort3(true);
-		}
-
-		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
 			// Control contrail
-			if (owner->MissionTime > 12) {
-				owner->contrailLevel = 0;
+			if (lvCommandConnector->GetMissionTime() > 12) {
+				lvCommandConnector->SetContrailLevel(0);
 			}
 			else {
-				if (owner->MissionTime > 7) {
-					owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
+				if (lvCommandConnector->GetMissionTime() > 7) {
+					lvCommandConnector->SetContrailLevel((12.0 - lvCommandConnector->GetMissionTime()) / 100.0);
 				}
 				else {
-					if (owner->MissionTime > 2) {
-						owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+					if (lvCommandConnector->GetMissionTime() > 2) {
+						lvCommandConnector->SetContrailLevel(1.38 - 0.95 / 5.0 * lvCommandConnector->GetMissionTime());
 					}
 					else {
-						owner->contrailLevel = 1;
+						lvCommandConnector->SetContrailLevel(1);
 					}
 				}
 			}
@@ -2028,41 +1777,6 @@ minorloop: //minor loop;
 			DotS.x,DotS.y,DotS.z);
 			*/
 //	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
-
-	// Update engine indicators and failure flags
-	if(LVDC_EI_On == true){
-		int i=0;
-		switch(owner->stage){
-			// 5-engine stages
-			case PRELAUNCH_STAGE:
-			case LAUNCH_STAGE_ONE:
-				while (i<8){
-				if(owner->GetThrusterLevel(owner->th_main[i]) >= 0.65  && owner->ENGIND[i] == true){  owner->ENGIND[i] = false; } 
-				if(owner->GetThrusterLevel(owner->th_main[i]) < 0.65 && owner->ENGIND[i] == false){  owner->ENGIND[i] = true; }
-				i++;
-				}
-				break;
-			// S4B only
-			case LAUNCH_STAGE_SIVB:
-			case STAGE_ORBIT_SIVB:				
-				if(owner->GetThrusterLevel(owner->th_main[0]) >= 0.65  && owner->ENGIND[0] == true){  owner->ENGIND[0] = false; } // UNLIGHT
-				if(owner->GetThrusterLevel(owner->th_main[0]) < 0.65 && owner->ENGIND[0] == false){  owner->ENGIND[0] = true; }   // LIGHT
-				break;	
-			// Error
-			default:
-				LVDC_EI_On = false;
-				break;
-		}
-	}else{
-		owner->ENGIND[0] = false;
-		owner->ENGIND[1] = false;
-		owner->ENGIND[2] = false;
-		owner->ENGIND[3] = false;
-		owner->ENGIND[4] = false;
-		owner->ENGIND[5] = false;
-		owner->ENGIND[6] = false;
-		owner->ENGIND[7] = false;
-	}
 }
 
 void LVDC1B::SaveState(FILEHANDLE scn) {
@@ -2070,7 +1784,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// Thank heaven for text processing.
 	// bool
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
-	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -2082,18 +1795,15 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
-	oapiWriteScenario_int(scn, "LVDC_LVDC_EI_On", LVDC_EI_On);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_GRR", LVDC_GRR);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
 	oapiWriteScenario_int(scn, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
-	oapiWriteScenario_int(scn, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
-	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -2102,9 +1812,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_UP", UP);
 	// double
 	papiWriteScenario_double(scn, "LVDC_a", a);
-	papiWriteScenario_double(scn, "LVDC_a_0p", a_0p);
-	papiWriteScenario_double(scn, "LVDC_a_0r", a_0r);
-	papiWriteScenario_double(scn, "LVDC_a_0y", a_0y);
 	papiWriteScenario_double(scn, "LVDC_a_1", a_1);
 	papiWriteScenario_double(scn, "LVDC_a_2", a_2);
 	papiWriteScenario_double(scn, "LVDC_A1", A1);
@@ -2112,9 +1819,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_A3", A3);
 	papiWriteScenario_double(scn, "LVDC_A4", A4);
 	papiWriteScenario_double(scn, "LVDC_A5", A5);
-	papiWriteScenario_double(scn, "LVDC_a_1p", a_1p);
-	papiWriteScenario_double(scn, "LVDC_a_1r", a_1r);
-	papiWriteScenario_double(scn, "LVDC_a_1y", a_1y);
 	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
@@ -2125,17 +1829,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
 	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
 	papiWriteScenario_double(scn, "LVDC_B_22", B_22);
-	papiWriteScenario_double(scn, "LVDC_beta_p1c", beta_p1c);
-	papiWriteScenario_double(scn, "LVDC_beta_p2c", beta_p2c);
-	papiWriteScenario_double(scn, "LVDC_beta_p3c", beta_p3c);
-	papiWriteScenario_double(scn, "LVDC_beta_p4c", beta_p4c);
-	papiWriteScenario_double(scn, "LVDC_beta_pc", beta_pc);
-	papiWriteScenario_double(scn, "LVDC_beta_rc", beta_rc);
-	papiWriteScenario_double(scn, "LVDC_beta_y1c", beta_y1c);
-	papiWriteScenario_double(scn, "LVDC_beta_y2c", beta_y2c);
-	papiWriteScenario_double(scn, "LVDC_beta_y3c", beta_y3c);
-	papiWriteScenario_double(scn, "LVDC_beta_y4c", beta_y4c);
-	papiWriteScenario_double(scn, "LVDC_beta_yc", beta_yc);
+	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
@@ -2178,9 +1872,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_eps_2", eps_2);
 	papiWriteScenario_double(scn, "LVDC_eps_3", eps_3);
 	papiWriteScenario_double(scn, "LVDC_eps_4", eps_4);
-	papiWriteScenario_double(scn, "LVDC_eps_p", eps_p);
-	papiWriteScenario_double(scn, "LVDC_eps_ymr", eps_ymr);
-	papiWriteScenario_double(scn, "LVDC_eps_ypr", eps_ypr);
 	papiWriteScenario_double(scn, "LVDC_f", f);
 	papiWriteScenario_double(scn, "LVDC_F", F);
 	papiWriteScenario_double(scn, "LVDC_Fm", Fm);
@@ -2348,7 +2039,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// VECTOR3
 	papiWriteScenario_vec(scn, "LVDC_ACommandedAttitude", ACommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
-	papiWriteScenario_vec(scn, "LVDC_AttRate", AttRate);
 	papiWriteScenario_vec(scn, "LVDC_CommandedAttitude", CommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_CommandRateLimits", CommandRateLimits);
 	papiWriteScenario_vec(scn, "LVDC_CurrentAttitude", CurrentAttitude);
@@ -2377,7 +2067,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_mx(scn, "LVDC_MX_phi_T", MX_phi_T);
 	// Done
 	oapiWriteLine(scn, LVDC_END_STRING);
-	lvimu.SaveState(scn);
 }
 
 void LVDC1B::LoadState(FILEHANDLE scn){
@@ -2443,7 +2132,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_UP", UP);
 		// BOOL
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
-		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -2455,24 +2143,18 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
-		papiReadScenario_bool(line, "LVDC_LVDC_EI_On", LVDC_EI_On);
 		papiReadScenario_bool(line, "LVDC_LVDC_GRR", LVDC_GRR);
 		papiReadScenario_bool(line, "LVDC_LVDC_Stop", LVDC_Stop);
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
-		papiReadScenario_bool(line, "LVDC_S1B_TwoEngines_Out", S1B_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
-		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
-		papiReadScenario_double(line, "LVDC_a_0p", a_0p);
-		papiReadScenario_double(line, "LVDC_a_0r", a_0r);
-		papiReadScenario_double(line, "LVDC_a_0y", a_0y);
 		papiReadScenario_double(line, "LVDC_a_1", a_1);
 		papiReadScenario_double(line, "LVDC_a_2", a_2);
 		papiReadScenario_double(line, "LVDC_A1", A1);
@@ -2480,9 +2162,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_A3", A3);
 		papiReadScenario_double(line, "LVDC_A4", A4);
 		papiReadScenario_double(line, "LVDC_A5", A5);
-		papiReadScenario_double(line, "LVDC_a_1p", a_1p);
-		papiReadScenario_double(line, "LVDC_a_1r", a_1r);
-		papiReadScenario_double(line, "LVDC_a_1y", a_1y);
 		papiReadScenario_double(line, "LVDC_alpha_1", alpha_1);
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
@@ -2493,17 +2172,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_B_12", B_12);
 		papiReadScenario_double(line, "LVDC_B_21", B_21);
 		papiReadScenario_double(line, "LVDC_B_22", B_22);
-		papiReadScenario_double(line, "LVDC_beta_p1c", beta_p1c);
-		papiReadScenario_double(line, "LVDC_beta_p2c", beta_p2c);
-		papiReadScenario_double(line, "LVDC_beta_p3c", beta_p3c);
-		papiReadScenario_double(line, "LVDC_beta_p4c", beta_p4c);
-		papiReadScenario_double(line, "LVDC_beta_pc", beta_pc);
-		papiReadScenario_double(line, "LVDC_beta_rc", beta_rc);
-		papiReadScenario_double(line, "LVDC_beta_y1c", beta_y1c);
-		papiReadScenario_double(line, "LVDC_beta_y2c", beta_y2c);
-		papiReadScenario_double(line, "LVDC_beta_y3c", beta_y3c);
-		papiReadScenario_double(line, "LVDC_beta_y4c", beta_y4c);
-		papiReadScenario_double(line, "LVDC_beta_yc", beta_yc);
+		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -2545,9 +2214,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_eps_2", eps_2);
 		papiReadScenario_double(line, "LVDC_eps_3", eps_3);
 		papiReadScenario_double(line, "LVDC_eps_4", eps_4);
-		papiReadScenario_double(line, "LVDC_eps_p", eps_p);
-		papiReadScenario_double(line, "LVDC_eps_ymr", eps_ymr);
-		papiReadScenario_double(line, "LVDC_eps_ypr", eps_ypr);
 		papiReadScenario_double(line, "LVDC_e", e);
 		papiReadScenario_double(line, "LVDC_F", F);
 		papiReadScenario_double(line, "LVDC_Fm", Fm);
@@ -2716,7 +2382,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		// VECTOR3
 		papiReadScenario_vec(line, "LVDC_ACommandedAttitude", ACommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_AttitudeError", AttitudeError);
-		papiReadScenario_vec(line, "LVDC_AttRate", AttRate);
 		papiReadScenario_vec(line, "LVDC_CommandedAttitude", CommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_CommandRateLimits", CommandRateLimits);
 		papiReadScenario_vec(line, "LVDC_CurrentAttitude", CurrentAttitude);
@@ -2744,20 +2409,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_mat(line, "LVDC_MX_G", MX_G);
 		papiReadScenario_mat(line, "LVDC_MX_K", MX_K);
 		papiReadScenario_mat(line, "LVDC_MX_phi_T", MX_phi_T);
-	}	
-	if(oapiReadScenario_nextline (scn, line)){
-		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-			// fprintf(lvlog, "LVIMU LoadState() called\r\n");
-			// fflush(lvlog);
-			lvimu.LoadState(scn);
-			/*
-			if(lvimu.Initialized) { fprintf(lvlog, "LVIMU Initialized\r\n"); }
-			if(lvimu.Operate){ fprintf(lvlog, "LVIMU Operate\r\n"); }
-			if(lvimu.Caged) { fprintf(lvlog, "LVIMU Caged\r\n"); }			
-			if(lvimu.TurnedOn) { fprintf(lvlog, "LVIMU Turned On\r\n"); }
-			fflush(lvlog);
-			*/
-		}
 	}
 	return;
 }
@@ -2769,7 +2420,7 @@ double LVDC1B::SVCompare()
 	double day;
 	modf(oapiGetSimMJD(), &day);
 	mat = OrbMech::Orbiter2PACSS13(40140.626701, 28.5217969*RAD, -80.5612465*RAD, Azimuth);
-	owner->GetRelativePos(owner->GetGravityRef(), pos);
+	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);
@@ -2780,9 +2431,13 @@ double LVDC1B::SVCompare()
 // ***************************
 
 // Constructor
-LVDC::LVDC(){
+LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
+{
+	lvCommandConnector = NULL;
+	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
+
 	// Zeroize
 	// booleans
 	alpha_D_op = false;
@@ -2791,8 +2446,6 @@ LVDC::LVDC(){
 	Direct_Ascent = false;
 	directstageint = false;
 	directstagereset = false;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	IGM_Failed = false;
 	first_op = false;
 	TerminalConditions = false;
@@ -2811,13 +2464,11 @@ LVDC::LVDC(){
 	init = false;
 	i_op = false;
 	liftoff = false;
-	LVDC_EI_On = false;
 	LVDC_GRR = false;
 	MRS = false;
 	poweredflight = false;
 	ROT = false;
 	S1_Engine_Out = false;
-	S1_TwoEngines_Out = false;
 	S2_BURNOUT = false;
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
@@ -2835,14 +2486,8 @@ LVDC::LVDC(){
 	UP = 0;
 	// doubles
 	a = 0;
-	a_0p = 0;
-	a_0r = 0;
-	a_0y = 0;
 	a_1 = 0;
 	a_2 = 0;
-	a_1p = 0;
-	a_1r = 0;
-	a_1y = 0;
 	alpha_1 = 0;
 	alpha_2 = 0;
 	alpha_D = 0;
@@ -2853,17 +2498,7 @@ LVDC::LVDC(){
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
-	beta_p1c = 0;
-	beta_p2c = 0;
-	beta_p3c = 0;
-	beta_p4c = 0;
-	beta_pc = 0;
-	beta_rc = 0;
-	beta_y1c = 0;
-	beta_y2c = 0;
-	beta_y3c = 0;
-	beta_y4c = 0;
-	beta_yc = 0;
+	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -2921,9 +2556,6 @@ LVDC::LVDC(){
 	eps_2R = 0;
 	eps_3R = 0;
 	eps_4R = 0;
-	eps_p = 0;
-	eps_ymr = 0;
-	eps_ypr = 0;
 	f = 0;
 	F = 0;
 	Fm = 0;
@@ -2942,12 +2574,6 @@ LVDC::LVDC(){
 		fxt[x] = 0;
 		gx[x] = 0;
 		gxt[x] = 0;
-	}
-	for(x=0; x < 4; x++){
-		GPitch[x] = 0;
-		GYaw[x] = 0;
-		OPitch[x] = 0;
-		OYaw[x] = 0;
 	}
 	for (x = 0; x < 6; x++) {
 		Rho[x] = 0;
@@ -3022,8 +2648,6 @@ LVDC::LVDC(){
 	Q_P = 0;
 	R = 0;
 	RAS = 0;
-	RateGain = 0;
-	ErrorGain = 0;
 	ROV = 0;
 	ROVR = 0;
 	ROVs = 0;
@@ -3080,9 +2704,13 @@ LVDC::LVDC(){
 	TB3 = 0;
 	t_B4 = 0;
 	TB4 = 0;
-	TB4A = 0;
+	TB4a = 0;
 	TB5 = 0;
+	TB5a = 0;
 	TB6 = 0;
+	TB6a = 0;
+	TB6b = 0;
+	TB6c = 0;
 	TB7 = 0;
 	T_c = 0;
 	tchi_y_last = 0;
@@ -3145,7 +2773,6 @@ LVDC::LVDC(){
 	// VECTOR3
 	ACommandedAttitude = _V(0,0,0);
 	AttitudeError = _V(0,0,0);
-	AttRate = _V(0,0,0);
 	CommandedAttitude = _V(0,0,0);
 	CommandRateLimits = _V(0,0,0);
 	CurrentAttitude = _V(0,0,0);
@@ -3167,6 +2794,7 @@ LVDC::LVDC(){
 	TargetVector = _V(0, 0, 0);
 	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
+	XLunarSlingshotAttitude = _V(0, 0, 0);
 	// MATRIX3
 	MX_A = _M(0,0,0,0,0,0,0,0,0);
 	MX_B = _M(0,0,0,0,0,0,0,0,0);
@@ -3177,13 +2805,14 @@ LVDC::LVDC(){
 	TABLE15[0] = {};
 	TABLE15[1] = {};
 	tgt_index = 0;
+	CommandSequence = 0;
+	CommandSequenceStored = 0;
 }
 
 // Setup
-void LVDC::Init(Saturn* vs){
-	if(vs == NULL){ return; }				// Bail
+void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
 	if(Initialized == true){ 
-		if(owner == vs){
+		if(commandConnector == commandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -3192,11 +2821,9 @@ void LVDC::Init(Saturn* vs){
 			fflush(lvlog);
 		}
 	}
-	owner = vs;								// Our ship
-	lvimu.Init();							// Initialize IMU
-	lvrg.Init(owner);						// LV Rate Gyro Package
-	lvimu.SetVessel(owner);					// set vessel pointer
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvCommandConnector = lvCommandConn;
+	commandConnector = commandConn;
+
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
 	C_3 = -60731530.2; // Stored as twice the etc etc.
@@ -3215,7 +2842,7 @@ void LVDC::Init(Saturn* vs){
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
-	TB1 = TB2 = TB3 = TB4 = TB4A = TB5 = TB6 = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
+	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	T_LET = 40.671;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
@@ -3225,9 +2852,9 @@ void LVDC::Init(Saturn* vs){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	directstagereset = true;
-	AutoAbortInitiate = false;
-	TwoEngOutAutoAbortDeactivate = false;
 	IGM_Failed = false;
+	CommandSequence = 0;
+
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -3363,7 +2990,7 @@ void LVDC::Init(Saturn* vs){
 	TI5F2 = 20.0;
 
 	double day;
-	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - owner->MissionTime - 17.0;
+	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvCommandConnector->GetMissionTime() - 17.0;
 	t_SD1 = 10984.2;
 	t_SD2 = 5518.9;
 	t_SD3 = 1233.6;
@@ -3429,7 +3056,6 @@ void LVDC::Init(Saturn* vs){
 	S2_BURNOUT=false;						// SII Burn Out
 	LVDC_GRR = false;
 	S1_Engine_Out = false;
-	S1_TwoEngines_Out = false;
 	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
 	Inclination=0;							// Inclination
@@ -3512,6 +3138,7 @@ void LVDC::Init(Saturn* vs){
 	TAS=0;
 	t_clock = 0;
 
+	XLunarSlingshotAttitude = _V(PI, PI, 0.0);
 
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
@@ -3521,8 +3148,8 @@ void LVDC::Init(Saturn* vs){
 	sinceLastCycle = 0;
 	sinceLastGuidanceCycle = 0;
 	OrbNavCycle = 0;
+	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
-	LVDC_EI_On = false;
 	S1_Sep_Time = 0;
 	CountPIPA = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
@@ -3531,11 +3158,10 @@ void LVDC::Init(Saturn* vs){
 	Initialized = true;
 }
 
-void LVDC::SaveState(FILEHANDLE scn) {
+void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Here we go
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
-	oapiWriteScenario_int(scn, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -3558,7 +3184,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
-	oapiWriteScenario_int(scn, "LVDC_LVDC_EI_On", LVDC_EI_On);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_GRR", LVDC_GRR);
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
 	oapiWriteScenario_int(scn, "LVDC_OrbNavCycle", OrbNavCycle);
@@ -3566,7 +3191,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
 	oapiWriteScenario_int(scn, "LVDC_ROTR", ROTR);
 	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
-	oapiWriteScenario_int(scn, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 	oapiWriteScenario_int(scn, "LVDC_S2_BURNOUT", S2_BURNOUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -3577,7 +3201,8 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
-	oapiWriteScenario_int(scn, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
+	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
+	oapiWriteScenario_int(scn, "LVDC_CommandSequenceStored", CommandSequenceStored);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -3586,14 +3211,8 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
 	oapiWriteScenario_int(scn, "LVDC_UP", UP);
 	papiWriteScenario_double(scn, "LVDC_a", a);
-	papiWriteScenario_double(scn, "LVDC_a_0p", a_0p);
-	papiWriteScenario_double(scn, "LVDC_a_0r", a_0r);
-	papiWriteScenario_double(scn, "LVDC_a_0y", a_0y);
 	papiWriteScenario_double(scn, "LVDC_a_1", a_1);
 	papiWriteScenario_double(scn, "LVDC_a_2", a_2);
-	papiWriteScenario_double(scn, "LVDC_a_1p", a_1p);
-	papiWriteScenario_double(scn, "LVDC_a_1r", a_1r);
-	papiWriteScenario_double(scn, "LVDC_a_1y", a_1y);
 	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
@@ -3610,17 +3229,7 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
-	papiWriteScenario_double(scn, "LVDC_beta_p1c", beta_p1c);
-	papiWriteScenario_double(scn, "LVDC_beta_p2c", beta_p2c);
-	papiWriteScenario_double(scn, "LVDC_beta_p3c", beta_p3c);
-	papiWriteScenario_double(scn, "LVDC_beta_p4c", beta_p4c);
-	papiWriteScenario_double(scn, "LVDC_beta_pc", beta_pc);
-	papiWriteScenario_double(scn, "LVDC_beta_rc", beta_rc);
-	papiWriteScenario_double(scn, "LVDC_beta_y1c", beta_y1c);
-	papiWriteScenario_double(scn, "LVDC_beta_y2c", beta_y2c);
-	papiWriteScenario_double(scn, "LVDC_beta_y3c", beta_y3c);
-	papiWriteScenario_double(scn, "LVDC_beta_y4c", beta_y4c);
-	papiWriteScenario_double(scn, "LVDC_beta_yc", beta_yc);
+	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -3804,9 +3413,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_eps_3R", eps_3R);
 	papiWriteScenario_double(scn, "LVDC_eps_4", eps_4);
 	papiWriteScenario_double(scn, "LVDC_eps_4R", eps_4R);
-	papiWriteScenario_double(scn, "LVDC_eps_p", eps_p);
-	papiWriteScenario_double(scn, "LVDC_eps_ymr", eps_ymr);
-	papiWriteScenario_double(scn, "LVDC_eps_ypr", eps_ypr);
 	papiWriteScenario_double(scn, "LVDC_f", f);
 	papiWriteScenario_double(scn, "LVDC_F", F);
 	papiWriteScenario_double(scn, "LVDC_FA", TABLE15[0].f);
@@ -3851,14 +3457,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_fxt[4]", fxt[4]);
 	papiWriteScenario_double(scn, "LVDC_fxt[5]", fxt[5]);
 	papiWriteScenario_double(scn, "LVDC_fxt[6]", fxt[6]);
-	papiWriteScenario_double(scn, "LVDC_GPitch[0]", GPitch[0]);
-	papiWriteScenario_double(scn, "LVDC_GPitch[1]", GPitch[1]);
-	papiWriteScenario_double(scn, "LVDC_GPitch[2]", GPitch[2]);
-	papiWriteScenario_double(scn, "LVDC_GPitch[3]", GPitch[3]);
-	papiWriteScenario_double(scn, "LVDC_GYaw[0]", GYaw[0]);
-	papiWriteScenario_double(scn, "LVDC_GYaw[1]", GYaw[1]);
-	papiWriteScenario_double(scn, "LVDC_GYaw[2]", GYaw[2]);
-	papiWriteScenario_double(scn, "LVDC_GYaw[3]", GYaw[3]);
 	papiWriteScenario_double(scn, "LVDC_G_T", G_T);
 	papiWriteScenario_double(scn, "LVDC_gx[0]", gx[0]);
 	papiWriteScenario_double(scn, "LVDC_gx[1]", gx[1]);
@@ -3925,14 +3523,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
 	papiWriteScenario_double(scn, "LVDC_mu", mu);
 	papiWriteScenario_double(scn, "LVDC_omega_E", omega_E);
-	papiWriteScenario_double(scn, "LVDC_OPitch[0]", OPitch[0]);
-	papiWriteScenario_double(scn, "LVDC_OPitch[1]", OPitch[1]);
-	papiWriteScenario_double(scn, "LVDC_OPitch[2]", OPitch[2]);
-	papiWriteScenario_double(scn, "LVDC_OPitch[3]", OPitch[3]);
-	papiWriteScenario_double(scn, "LVDC_OYaw[0]", OYaw[0]);
-	papiWriteScenario_double(scn, "LVDC_OYaw[1]", OYaw[1]);
-	papiWriteScenario_double(scn, "LVDC_OYaw[2]", OYaw[2]);
-	papiWriteScenario_double(scn, "LVDC_OYaw[3]", OYaw[3]);
 	papiWriteScenario_double(scn, "LVDC_p", p);
 	papiWriteScenario_double(scn, "LVDC_P_1", P_1);
 	papiWriteScenario_double(scn, "LVDC_P_2", P_2);
@@ -3978,8 +3568,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB14", TABLE15[1].target[14].RAS);
-	papiWriteScenario_double(scn, "LVDC_RateGain", RateGain);
-	papiWriteScenario_double(scn, "LVDC_ErrorGain", ErrorGain);
 	papiWriteScenario_double(scn, "LVDC_rho", rho);
 	papiWriteScenario_double(scn, "LVDC_Rho[0]", Rho[0]);
 	papiWriteScenario_double(scn, "LVDC_Rho[1]", Rho[1]);
@@ -4046,9 +3634,13 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TB3", TB3);
 	papiWriteScenario_double(scn, "LVDC_t_B4", t_B4);
 	papiWriteScenario_double(scn, "LVDC_TB4", TB4);
-	papiWriteScenario_double(scn, "LVDC_TB4A", TB4A);
+	papiWriteScenario_double(scn, "LVDC_TB4a", TB4a);
 	papiWriteScenario_double(scn, "LVDC_TB5", TB5);
+	papiWriteScenario_double(scn, "LVDC_TB5a", TB5a);
 	papiWriteScenario_double(scn, "LVDC_TB6", TB6);
+	papiWriteScenario_double(scn, "LVDC_TB6a", TB6a);
+	papiWriteScenario_double(scn, "LVDC_TB6b", TB6b);
+	papiWriteScenario_double(scn, "LVDC_TB6c", TB6c);
 	papiWriteScenario_double(scn, "LVDC_TB7", TB7);
 	papiWriteScenario_double(scn, "LVDC_T_c", T_c);
 	papiWriteScenario_double(scn, "LVDC_tchi_y_last", tchi_y_last);
@@ -4154,7 +3746,6 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Y_u", Y_u);
 	papiWriteScenario_vec(scn, "LVDC_ACommandedAttitude", ACommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
-	papiWriteScenario_vec(scn, "LVDC_AttRate", AttRate);
 	papiWriteScenario_vec(scn, "LVDC_CommandedAttitude", CommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_CommandRateLimits", CommandRateLimits);
 	papiWriteScenario_vec(scn, "LVDC_CurrentAttitude", CurrentAttitude);
@@ -4183,10 +3774,9 @@ void LVDC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_mx(scn, "LVDC_MX_phi_T", MX_phi_T);
 	// All done
 	oapiWriteLine(scn, LVDC_END_STRING);
-	lvimu.SaveState(scn);
 }
 
-void LVDC::LoadState(FILEHANDLE scn){
+void LVDCSV::LoadState(FILEHANDLE scn){
 	char *line;	
 	int tmp=0; // for bool loader
 	if(Initialized){
@@ -4203,7 +3793,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		// So we do it in single lines.
 		// booleans
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
-		papiReadScenario_bool(line, "LVDC_AutoAbortInitiate", AutoAbortInitiate);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
@@ -4226,14 +3815,12 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
-		papiReadScenario_bool(line, "LVDC_LVDC_EI_On", LVDC_EI_On);
 		papiReadScenario_bool(line, "LVDC_LVDC_GRR", LVDC_GRR);
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
 		papiReadScenario_bool(line, "LVDC_ROTR", ROTR);
 		papiReadScenario_bool(line, "LVDC_S1_Engine_Out", S1_Engine_Out);
-		papiReadScenario_bool(line, "LVDC_S1_TwoEngines_Out", S1_TwoEngines_Out);
 		papiReadScenario_bool(line, "LVDC_S2_BURNOUT", S2_BURNOUT);
 		papiReadScenario_bool(line, "LVDC_S2_ENGINE_OUT", S2_ENGINE_OUT);
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
@@ -4244,9 +3831,10 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
-		papiReadScenario_bool(line, "LVDC_TwoEngOutAutoAbortDeactivate", TwoEngOutAutoAbortDeactivate);
 
 		// integers
+		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
+		papiReadScenario_int(line, "LVDC_CommandSequenceStored", CommandSequenceStored);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
 		papiReadScenario_int(line, "LVDC_OrbNavCycle", OrbNavCycle);
 		papiReadScenario_int(line, "LVDC_LVDC_Stop", LVDC_Stop);
@@ -4258,14 +3846,8 @@ void LVDC::LoadState(FILEHANDLE scn){
 
 		// doubles
 		papiReadScenario_double(line, "LVDC_a", a);
-		papiReadScenario_double(line, "LVDC_a_0p", a_0p);
-		papiReadScenario_double(line, "LVDC_a_0r", a_0r);
-		papiReadScenario_double(line, "LVDC_a_0y", a_0y);
 		papiReadScenario_double(line, "LVDC_a_1", a_1);
 		papiReadScenario_double(line, "LVDC_a_2", a_2);
-		papiReadScenario_double(line, "LVDC_a_1p", a_1p);
-		papiReadScenario_double(line, "LVDC_a_1r", a_1r);
-		papiReadScenario_double(line, "LVDC_a_1y", a_1y);
 		papiReadScenario_double(line, "LVDC_alpha_1", alpha_1);
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
@@ -4282,17 +3864,7 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
-		papiReadScenario_double(line, "LVDC_beta_p1c", beta_p1c);
-		papiReadScenario_double(line, "LVDC_beta_p2c", beta_p2c);
-		papiReadScenario_double(line, "LVDC_beta_p3c", beta_p3c);
-		papiReadScenario_double(line, "LVDC_beta_p4c", beta_p4c);
-		papiReadScenario_double(line, "LVDC_beta_pc", beta_pc);
-		papiReadScenario_double(line, "LVDC_beta_rc", beta_rc);
-		papiReadScenario_double(line, "LVDC_beta_y1c", beta_y1c);
-		papiReadScenario_double(line, "LVDC_beta_y2c", beta_y2c);
-		papiReadScenario_double(line, "LVDC_beta_y3c", beta_y3c);
-		papiReadScenario_double(line, "LVDC_beta_y4c", beta_y4c);
-		papiReadScenario_double(line, "LVDC_beta_yc", beta_yc);
+		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -4476,9 +4048,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_eps_3R", eps_3R);
 		papiReadScenario_double(line, "LVDC_eps_4", eps_4);
 		papiReadScenario_double(line, "LVDC_eps_4R", eps_4R);
-		papiReadScenario_double(line, "LVDC_eps_p", eps_p);
-		papiReadScenario_double(line, "LVDC_eps_ymr", eps_ymr);
-		papiReadScenario_double(line, "LVDC_eps_ypr", eps_ypr);
 		papiReadScenario_double(line, "LVDC_f", f);
 		papiReadScenario_double(line, "LVDC_F", F);
 		papiReadScenario_double(line, "LVDC_FA", TABLE15[0].f);
@@ -4523,14 +4092,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Fx[4][2]", Fx[4][2]);
 		papiReadScenario_double(line, "LVDC_Fx[4][3]", Fx[4][3]);
 		papiReadScenario_double(line, "LVDC_Fx[4][4]", Fx[4][4]);
-		papiReadScenario_double(line, "LVDC_GPitch[0]", GPitch[0]);
-		papiReadScenario_double(line, "LVDC_GPitch[1]", GPitch[1]);
-		papiReadScenario_double(line, "LVDC_GPitch[2]", GPitch[2]);
-		papiReadScenario_double(line, "LVDC_GPitch[3]", GPitch[3]);
-		papiReadScenario_double(line, "LVDC_GYaw[0]", GYaw[0]);
-		papiReadScenario_double(line, "LVDC_GYaw[1]", GYaw[1]);
-		papiReadScenario_double(line, "LVDC_GYaw[2]", GYaw[2]);
-		papiReadScenario_double(line, "LVDC_GYaw[3]", GYaw[3]);
 		papiReadScenario_double(line, "LVDC_G_T", G_T);
 		papiReadScenario_double(line, "LVDC_gx[0]", gx[0]);
 		papiReadScenario_double(line, "LVDC_gx[1]", gx[1]);
@@ -4597,14 +4158,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
 		papiReadScenario_double(line, "LVDC_mu", mu);
 		papiReadScenario_double(line, "LVDC_omega_E", omega_E);
-		papiReadScenario_double(line, "LVDC_OPitch[0]", OPitch[0]);
-		papiReadScenario_double(line, "LVDC_OPitch[1]", OPitch[1]);
-		papiReadScenario_double(line, "LVDC_OPitch[2]", OPitch[2]);
-		papiReadScenario_double(line, "LVDC_OPitch[3]", OPitch[3]);
-		papiReadScenario_double(line, "LVDC_OYaw[0]", OYaw[0]);
-		papiReadScenario_double(line, "LVDC_OYaw[1]", OYaw[1]);
-		papiReadScenario_double(line, "LVDC_OYaw[2]", OYaw[2]);
-		papiReadScenario_double(line, "LVDC_OYaw[3]", OYaw[3]);
 		papiReadScenario_double(line, "LVDC_p", p);
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
 		papiReadScenario_double(line, "LVDC_P_2", P_2);
@@ -4650,8 +4203,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 		papiReadScenario_double(line, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 		papiReadScenario_double(line, "LVDC_RASB14", TABLE15[1].target[14].RAS);
-		papiReadScenario_double(line, "LVDC_RateGain", RateGain);
-		papiReadScenario_double(line, "LVDC_ErrorGain", ErrorGain);
 		papiReadScenario_double(line, "LVDC_rho", rho);
 		papiReadScenario_double(line, "LVDC_R_N", R_N);
 		papiReadScenario_double(line, "LVDC_RNA", TABLE15[0].R_N);
@@ -4718,9 +4269,13 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TB3", TB3);
 		papiReadScenario_double(line, "LVDC_t_B4", t_B4);
 		papiReadScenario_double(line, "LVDC_TB4", TB4);
-		papiReadScenario_double(line, "LVDC_TB4A", TB4A);
+		papiReadScenario_double(line, "LVDC_TB4a", TB4a);
 		papiReadScenario_double(line, "LVDC_TB5", TB5);
+		papiReadScenario_double(line, "LVDC_TB5a", TB5a);
 		papiReadScenario_double(line, "LVDC_TB6", TB6);
+		papiReadScenario_double(line, "LVDC_TB6a", TB6a);
+		papiReadScenario_double(line, "LVDC_TB6b", TB6b);
+		papiReadScenario_double(line, "LVDC_TB6c", TB6c);
 		papiReadScenario_double(line, "LVDC_TB7", TB7);
 		papiReadScenario_double(line, "LVDC_T_c", T_c);
 		papiReadScenario_double(line, "LVDC_tchi_p_last", tchi_p_last);
@@ -4828,7 +4383,6 @@ void LVDC::LoadState(FILEHANDLE scn){
 		// VECTOR3
 		papiReadScenario_vec(line, "LVDC_ACommandedAttitude", ACommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_AttitudeError", AttitudeError);
-		papiReadScenario_vec(line, "LVDC_AttRate", AttRate);
 		papiReadScenario_vec(line, "LVDC_CommandedAttitude", CommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_CommandRateLimits", CommandRateLimits);
 		papiReadScenario_vec(line, "LVDC_CurrentAttitude", CurrentAttitude);
@@ -4859,17 +4413,13 @@ void LVDC::LoadState(FILEHANDLE scn){
 		papiReadScenario_mat(line, "LVDC_MX_phi_T", MX_phi_T);
 		// Done
 	}
-	if(oapiReadScenario_nextline (scn, line)){
-		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
-			lvimu.LoadState(scn);
-		}
-	}
 	return;
 }
 
-void LVDC::TimeStep(double simt, double simdt) {
-	if(owner == NULL){ return; }
-	if (owner->stage < PRELAUNCH_STAGE) { return; }
+void LVDCSV::TimeStep(double simt, double simdt) {
+	if (lvCommandConnector->connectedTo == NULL) { return; }
+	if (lvCommandConnector->GetStage() < PRELAUNCH_STAGE) { return; }
+
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
 		// Update timebase ET
@@ -4877,11 +4427,11 @@ void LVDC::TimeStep(double simt, double simdt) {
 
 		// Note that GenericTimestep will update MissionTime.
 
-		//Switch Check, TBD: Integrate with old CSM to IU Connector
-		INH = owner->TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
+		//Switch Check
+		INH = commandConnector->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
 		
 		//Reset Direct Staging switch for S-IVB shutdown
-		if (directstageint && !directstagereset && owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_DOWN)
+		if (directstageint && !directstagereset && commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_DOWN)
 		{
 			directstagereset = true;
 		}
@@ -4894,38 +4444,35 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// Orbiter 2016 fix
 				// Force GetWeightVector() to the correct value at LVDC initiation
 				if (simt < 0.5) {
-					owner->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
+					lvCommandConnector->AddForce(_V(0, 0, -1.0), _V(0, 0, 0));
 				}
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if(owner->MissionTime < -10800){
-					owner->SwitchSelector(10);
+				if(lvCommandConnector->GetMissionTime() < -10800){
+					lvCommandConnector->SwitchSelector(10);
 				}else{
-					owner->SwitchSelector(11);
+					lvCommandConnector->SwitchSelector(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				if(owner->MissionTime < -1200){
-					double Source  = fabs(owner->MissionTime);
+				if(lvCommandConnector->GetMissionTime() < -1200){
+					double Source  = fabs(lvCommandConnector->GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
 					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-					lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
+					lvda.ZeroLVIMUCDUs();						// Zero IMU CDUs
 					break;
 				}
-		
-				// Engine lights on at T-00:04:10
-				if (owner->MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
 				// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (owner->MissionTime < -17){
-					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",owner->MissionTime,
+				if (lvCommandConnector->GetMissionTime() < -17){
+					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 					break;
@@ -4941,15 +4488,15 @@ void LVDC::TimeStep(double simt, double simdt) {
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-					owner->SwitchSelector(12);
+					lvCommandConnector->SwitchSelector(12);
 				}
 
 				// At 10 seconds, play the countdown sound.
-				if (owner->MissionTime >= -10.3) { // Was -10.9
-					owner->SwitchSelector(13);
+				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
+					lvCommandConnector->SwitchSelector(13);
 				}
 				// Shut down venting at T - 9
-				if(owner->MissionTime > -9 && owner->prelaunchvent[0] != NULL) { owner->SwitchSelector(14); }
+				if(lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
 
 				// SATURN V ENGINE STARTUP
 				// Engine startup was staggered 1-2-2, with engine 5 starting first, then 1+3, then 2+4. 
@@ -4964,7 +4511,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				// Source: Apollo 8 LV Flight Evaluation
 
 				// Transition from seperate throttles to single throttle
-				if(owner->MissionTime < -0.715){ 
+				if(lvCommandConnector->GetMissionTime() < -0.715){ 
 					int x=0; // Start Sequence Index
 					double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
 					double SumThrust=0;
@@ -4985,19 +4532,19 @@ void LVDC::TimeStep(double simt, double simdt) {
 						tm_2 = tm_1 + 0.3;  // Start of 1st rise
 						tm_3 = tm_2 + 0.85; // Start of 2nd rise
 						tm_4 = tm_3 + 0.75; // End of 2nd rise
-						if(owner->MissionTime >= tm_1){
+						if(lvCommandConnector->GetMissionTime() >= tm_1){
 							// Light CC
-							if(owner->MissionTime < tm_2){
+							if(lvCommandConnector->GetMissionTime() < tm_2){
 								// Idle at 2.5% thrust
 								thrst[x] = 0.025;
 							}else{
-								if(owner->MissionTime < tm_3){
+								if(lvCommandConnector->GetMissionTime() < tm_3){
 									// Rise to 93% at a rate of 106 percent per second
-									thrst[x] = 0.025+(1.06*(owner->MissionTime-tm_2));
+									thrst[x] = 0.025+(1.06*(lvCommandConnector->GetMissionTime()-tm_2));
 								}else{
-									if(owner->MissionTime < tm_4){
+									if(lvCommandConnector->GetMissionTime() < tm_4){
 										// Rise to 100% at a rate of 9 percent per second.
-										thrst[x] = 0.93+(0.09*(owner->MissionTime-tm_3));
+										thrst[x] = 0.93+(0.09*(lvCommandConnector->GetMissionTime()-tm_3));
 									}else{
 										// Hold 100%
 										thrst[x] = 1;
@@ -5011,131 +4558,689 @@ void LVDC::TimeStep(double simt, double simdt) {
 	//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
 	//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
 					if(SumThrust > 0){
-						owner->SetThrusterLevel(owner->th_main[2],thrst[1]); // Engine 1
-						owner->SetThrusterLevel(owner->th_main[1],thrst[2]); // Engine 2
-						owner->SetThrusterLevel(owner->th_main[3],thrst[1]); // Engine 3
-						owner->SetThrusterLevel(owner->th_main[0],thrst[2]); // Engine 4
-						owner->SetThrusterLevel(owner->th_main[4],thrst[0]); // Engine 5
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(2),thrst[1]); // Engine 1
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(1),thrst[2]); // Engine 2
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(3),thrst[1]); // Engine 3
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0),thrst[2]); // Engine 4
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(4),thrst[0]); // Engine 5
 
-						owner->contrailLevel = SumThrust/5;
-						owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+						lvCommandConnector->SetContrailLevel(SumThrust/5);
+						lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}else{
 					// Get 100% thrust on all engines.
-					owner->SetThrusterGroupLevel(owner->thg_main,1);
-					owner->contrailLevel = 1;				
-					owner->AddForce(_V(0, 0, -5. * owner->THRUST_FIRST_VAC), _V(0, 0, 0));
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(),1);
+					lvCommandConnector->SetContrailLevel(1);
+					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
 				}
 
 				// LIFTOFF
-				if(owner->MissionTime >= 0){
+				if(lvCommandConnector->GetMissionTime() >= 0){
 					TB1 = TAS;//-simdt;
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 					break;
 				}
 				break;
 
 			case 1: // LIFTOFF TIME
-				if(liftoff == false){
+				
+				switch (CommandSequence)
+				{
+				case 0:
 					liftoff = true;
-					owner->SwitchSelector(15);
+					lvCommandConnector->SwitchSelector(15);
 					// Fall into TB1
-					sinceLastCycle = 1.7-simdt; // Rig to pass on fall-in
+					sinceLastCycle = 1.7 - simdt; // Rig to pass on fall-in
+					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
+					CommandSequence++;
+					break;
+				case 1:
+					//TB1+5: Sensor Bias On
+					if (LVDC_TB_ETime > 5.0)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB1+14: Multiple Engine Cutoff Enable
+					if (LVDC_TB_ETime > 14.0)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB1+19.8: S-IC Outboard Engines Cant On "A"
+					if (LVDC_TB_ETime > 19.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 83);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB1+20.0: S-IC Outboard Engines Cant On "B"
+					if (LVDC_TB_ETime > 20.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 84);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB1+20.2: S-IC Outboard Engines Cant On "C"
+					if (LVDC_TB_ETime > 20.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 85);
+						CommandSequence++;
+					}
+					break;
+				case 6:
+					//TB1+24.0: Telemeter Calibrate On
+					if (LVDC_TB_ETime > 24.0)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB1+27.0: Telemetry Calibrator Inflight Calibrate On
+					if (LVDC_TB_ETime > 27.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 8:
+					//TB1+29.0: Telemeter Calibrate Off
+					if (LVDC_TB_ETime > 29.0)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB1+30.0: Launch Vehicle Engines EDS Cutoff Enable
+					if (LVDC_TB_ETime > 30.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] Launch Vehicle Engines EDS Cutoff Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 38);
+						CommandSequence++;
+					}
+					break;
+				case 10:
+					//TB1+32.0: Telemetry Calibrator Inflight Calibrate Off
+					if (LVDC_TB_ETime > 32.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 11:
+					//TB1+49.5: Fuel Pressurizing Valve No. 2 Open & Tape Recorder Record
+					if (LVDC_TB_ETime > 49.5)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB1+74.0: Start Data Recorders (S-II)
+					if (LVDC_TB_ETime > 74.0)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB1+75.0: Cooling System Electronic Assembly Power Off
+					if (LVDC_TB_ETime > 75.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
+						CommandSequence++;
+					}
+				case 14:
+					//TB1+90.0: Telemetry Calibrator Inflight Calibrate On
+					if (LVDC_TB_ETime > 90.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 15:
+					//TB1+95.0: Telemetry Calibrator Inflight Calibrate Off
+					if (LVDC_TB_ETime > 95.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 16:
+					//TB1+95.3: Fuel Pressurizing Valve No. 3 Open
+					if (LVDC_TB_ETime > 95.3)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB1+105.0: Flight Control Computer Switch Pointer No. 1
+					if (LVDC_TB_ETime > 105.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Pointer No. 1\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 26);
+						CommandSequence++;
+					}
+					break;
+				case 18:
+					//TB1+115.1: Telemeter Calibrate On
+					if (LVDC_TB_ETime > 115.1)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB1+120.0: Flight Control Computer Switch Pointer No. 2
+					if (LVDC_TB_ETime > 120.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Pointer No. 2\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 21);
+						CommandSequence++;
+					}
+					break;
+				case 20:
+					//TB1+120.1: Telemeter Calibrate Off
+					if (LVDC_TB_ETime > 120.1)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB1+123.5: Fuel Pressurizing Valve No. 4 Open
+					if (LVDC_TB_ETime > 123.5)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB1+123.8: Tape Recorder On
+					if (LVDC_TB_ETime > 123.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 39);
+						CommandSequence++;
+					}
+					break;
+				case 23:
+					//TB1+124.1: LOX Tank Strobe Lights Off
+					if (LVDC_TB_ETime > 124.1)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB1+124.3: S-IC Two Engines Out Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 124.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 51);
+						CommandSequence++;
+					}
+					break;
+				case 25:
+					//TB1+124.5: S-IC Two Engines Out Auto-Abort Inhibit
+					if (LVDC_TB_ETime > 124.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IC Two Engines Out Auto-Abort Inhibit\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 35);
+						CommandSequence++;
+					}
+					break;
+				case 26:
+					//TB1+124.7: Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 124.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 15);
+						CommandSequence++;
+					}
+					break;
+				case 27:
+					//TB1+124.9: Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
+					if (LVDC_TB_ETime > 124.9)
+					{
+						fprintf(lvlog, "[TB%d+%f] Excess Rate (P,Y,R) Auto-Abort Inhibit\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 2);
+						CommandSequence++;
+					}
+					break;
+				case 28:
+					//TB1+125.1: Two Adjacent Outboard Engines Out Cutoff Enable
+					if (LVDC_TB_ETime > 125.1)
+						CommandSequence++;
+					break;
+				default:
+					break;
 				}
 
 				// Soft-Release Pin Dragging
-				if(owner->MissionTime < 0.5){
-				  double PinDragFactor = 1 - (owner->MissionTime*2);
-				  owner->AddForce(_V(0, 0, -(owner->THRUST_FIRST_VAC * PinDragFactor)), _V(0, 0, 0));
+				if(lvCommandConnector->GetMissionTime() < 0.5){
+				  double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
+				  lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
-				if (owner->secs.BECO())
+				if (commandConnector->GetBECOSignal())
 				{
 					if (t_clock > 30.0)
 					{
-						owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					owner->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
-					owner->agc.SetInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
+					commandConnector->SetAGCInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
+					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
 
 				// S1C CECO TRIGGER:
 				// I have multiple conflicting leads as to the CECO trigger.
-				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5			
-				if(owner->MissionTime > t_S1C_CECO){
+				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5	
+				// Actually it is a timer in the LVDA... I think
+				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO){
 					//Apollo 11
-					owner->SwitchSelector(16);
 					if (!S1_Engine_Out)
 					{
-						owner->SetThrusterResource(owner->th_main[4], NULL); // Should stop the engine
-						owner->SShutS.play(NOLOOP, 235);
-						owner->SShutS.done();
+						lvCommandConnector->SwitchSelector(16);
 					}
 
 					S1_Engine_Out = true;
-					TwoEngOutAutoAbortDeactivate = true;
 					// Begin timebase 2
 					TB2 = TAS;//-simdt;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 					break;
 				}
 				break;
 
 			case 2:
 
-				if (owner->secs.BECO())
+				switch (CommandSequence)
 				{
-					owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+				case 0:
+					//TB2+0.0: Inboard Engine Cutoff
+					CommandSequence++;
+					break;
+				case 1:
+					//TB2+0.2: Inboard Engine Cutoff Backup
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB2+0.4: Start First PAM - FM/FM Calibration
+					if (LVDC_TB_ETime > 0.4)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB2+0.6: Auto-Abort Enable Relays Reset
+					if (LVDC_TB_ETime > 0.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 16);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB2+0.8: Excessive Rate (Roll) Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 34);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB2+1.0: Excessive Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
+					if (LVDC_TB_ETime > 1.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 50);
+						CommandSequence++;
+					}
+					break;
+				case 6:
+					//TB2+5.4: Stop First PAM - FM/FM Calibration
+					if (LVDC_TB_ETime > 5.4)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB2+15.9: S-II Ordnance Arm
+					if (LVDC_TB_ETime > 15.9)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB2+16.1: Separation and Retro No. 1 EBW Firing Units Arm
+					if (LVDC_TB_ETime > 16.1)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB2+16.3: Separation and Retro No. 2 EBW Firing Units Arm
+					if (LVDC_TB_ETime > 16.3)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB2+19.1: Telemetry Measurement Switchover
+					if (LVDC_TB_ETime > 19.1)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB2+19.3: Separation Camera On
+					if (LVDC_TB_ETime > 19.3)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB2+19.4: Q-Ball Power Off
+					if (LVDC_TB_ETime > 19.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 1);
+						CommandSequence++;
+					}
+					break;
+				case 13:
+					//TB2+19.5: Outboard Engines Cutoff Enable
+					if (LVDC_TB_ETime > 19.5)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB2+19.7: Outboard Engines Cutoff Backup Enable
+					if (LVDC_TB_ETime > 19.7)
+						CommandSequence++;
+					break;
+				default:
+					break;
+				}
+
+				if (commandConnector->GetBECOSignal())
+				{
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					LVDC_Stop = true;
 				}
 
 				// S1B/C OECO TRIGGER
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
-				if (owner->stage == LAUNCH_STAGE_ONE && owner->GetFuelMass() <= 0){
+				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetFuelMass() <= 0){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",owner->MissionTime,owner->GetThrusterMax(owner->th_main[0]),owner->GetAltitude());
-					owner->SwitchSelector(17);
+					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)),lvCommandConnector->GetAltitude());
+					lvCommandConnector->SwitchSelector(17);
 					// Set timer
-					S1_Sep_Time = owner->MissionTime;
+					S1_Sep_Time = lvCommandConnector->GetMissionTime();
 					// Begin timebase 3
 					TB3 = TAS;//-simdt;
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 				break;
 
 			case 3:
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB3+0.0: Outboard Engine Cutoff
+					CommandSequence++;
+					break;
+				case 1:
+					//TB3+0.1: LH2 Tank High Pressure Vent Mode (S-II)
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB3+0.2: S-II LH2 Recirculation Pumps Off
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB3+0.5: S-II Ullage Trigger
+					if (LVDC_TB_ETime > 0.5)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB3+0.7: S-IC/S-II Separation (No. 1)
+					if (LVDC_TB_ETime > 0.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB3+0.8: S-IC/S-II Separation (No. 2)
+					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						CommandSequence++;
+					}
+					break;
+				case 6:
+					//TB3+0.9: S-II Engines Cutoff Reset
+					if (LVDC_TB_ETime > 0.9)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB3+1.0: Engines Ready Bypass (S-II)
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB3+1.1: Prevalves Lockout Reset
+					if (LVDC_TB_ETime > 1.1)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB3+1.2: Switch Engine Control to S-II and S-IC Outboard Engine Cant Off "A"
+					if (LVDC_TB_ETime > 1.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 33);
+						CommandSequence++;
+					}
+					break;
+				case 10:
+					//TB3+1.3: S-IC Outboard Engine Cant Off "B"
+					if (LVDC_TB_ETime > 1.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 86);
+						CommandSequence++;
+					}
+					break;
+				case 11:
+					//TB3+1.4: S-II Engine Start
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB3+1.5: S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
+					if (LVDC_TB_ETime > 1.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 28);
+						CommandSequence++;
+					}
+					break;
+				case 13:
+					//TB3+1.7: S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
+					if (LVDC_TB_ETime > 1.7)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB3+1.9: Engines Ready Bypass Reset
+					if (LVDC_TB_ETime > 1.9)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB3+2.0: Measurement Transfer Mode Position "B" (S-IVB)
+					if (LVDC_TB_ETime > 2.0)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB3+3.0: S-II Hydraulic Accumulators Unlock
+					if (LVDC_TB_ETime > 3.0)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB3+6.2: PU System Open Loop Arm
+					if (LVDC_TB_ETime > 6.2)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB3+6.7: Chilldown Valves Close (S-II)
+					if (LVDC_TB_ETime > 6.7)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB3+6.8: S-II Start Phase Limiter Cutoff Arm
+					if (LVDC_TB_ETime > 6.8)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB3+6.9: High (5.5) Engine Mixture Ratio On
+					if (LVDC_TB_ETime > 6.9)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB3+7.7: S-II Start Phase Limiter Cutoff Arm Reset
+					if (LVDC_TB_ETime > 7.7)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB3+7.8: Prevalves Close Arm (S-II)
+					if (LVDC_TB_ETime > 7.8)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB3+11.7: Tape Recorder Record Off (IU)
+					if (LVDC_TB_ETime > 11.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 17);
+						CommandSequence++;
+					}
+					break;
+				case 24:
+					//TB3+11.9: Stop Data Recorders (S-II)
+					if (LVDC_TB_ETime > 11.9)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB3+30.7: S-II Aft Interstage Separation
+					if (LVDC_TB_ETime > 30.7)
+					{
+						lvCommandConnector->SwitchSelector(21);
+						commandConnector->ClearSIISep();
+						CommandSequence++;
+					}
+					break;
+				case 26:
+					//TB3+31.0: Water Coolant Valve Open
+					if (LVDC_TB_ETime > 31.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 107);
+						CommandSequence++;
+					}
+					break;
+				case 27:
+					//TB3+61.4: Flight Control Computer Switch Pointer No. 3
+					if (LVDC_TB_ETime > 61.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Pointer No. 3\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 22);
+						CommandSequence++;
+					}
+					break;
+				case 28:
+					//TB3+125.0: Start Second PAM-FM/FM Calibration (S-II)
+					if (LVDC_TB_ETime > 125.0)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB3+130.0: Stop Second PAM-FM/FM Calibration (S-II)
+					if (LVDC_TB_ETime > 130.0)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB3+191.4: Flight Control Computer Switch Pointer No. 4
+					if (LVDC_TB_ETime > 191.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Pointer No. 4\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 4);
+						CommandSequence++;
+					}
+					break;
+				case 31:
+					//TB3+202.7: Telemetry Calibrator In-Flight Calibrate On
+					if (LVDC_TB_ETime > 202.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 32:
+					//TB3+207.7: Telemetry Calibrator In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 207.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 33:
+					//TB3+212.7: Measurement Control Switch No. 2 Activate
+					if (LVDC_TB_ETime > 212.7)
+						CommandSequence++;
+					break;
+				case 34:
+					//TB3+225.0: Start Third PAM-FM/FM Calibration (S-II)
+					if (LVDC_TB_ETime > 225.0)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB3+230.0: Stop Second PAM-FM/FM Calibration (S-II)
+					if (LVDC_TB_ETime > 230.0)
+						CommandSequence++;
+					break;
+				case 36:
+					//TB3+290.9: Telemetry Calibrator In-Flight Calibrate On
+					if (LVDC_TB_ETime > 290.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 37:
+					//TB3+295.9: Telemetry Calibrator In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 295.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 38:
+					//TB3+300.0: S-II LH2 Step Pressurization
+					if (LVDC_TB_ETime > 300.0)
+						CommandSequence++;
+					break;
+				case 39:
+					//TB3+331.2: Charge Ullage Ignition On
+					if (LVDC_TB_ETime > 331.2)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB3+331.4: S-II/S-IVB Ordnance Arm
+					if (LVDC_TB_ETime > 331.4)
+						CommandSequence++;
+					break;
+				case 41:
+					//TB3+332.3: Tape Recorder Record On
+					if (LVDC_TB_ETime > 332.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 39);
+						CommandSequence++;
+					}
+					break;
+				case 42:
+					//TB3+335.1: S-II LOX Depletion Sensors Cutoff Arm
+					if (LVDC_TB_ETime > 335.1)
+						CommandSequence++;
+					break;
+				case 43:
+					//TB3+335.3: S-II LH2 Depletion Sensors Cutoff Arm
+					if (LVDC_TB_ETime > 335.3)
+						CommandSequence++;
+					break;
+				default:
+					break;
+				}
 				// S1B/C SEPARATION TRIGGER
-				if(owner->stage == LAUNCH_STAGE_ONE  && LVDC_TB_ETime >= 0.5){
-					owner->SwitchSelector(18);					
+				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE  && LVDC_TB_ETime >= 0.5){
+					lvCommandConnector->SwitchSelector(18);					
 					S2_Startup = false;
 				}
 
 				// S2 ENGINE STARTUP
-				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
+				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
 					S2_Startup = true;
-					owner->SwitchSelector(19);
-					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-2.4)*0.45));
+					lvCommandConnector->SwitchSelector(19);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime-2.4)*0.45));
 				}
-				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
-					owner->SwitchSelector(20);
+				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
+					lvCommandConnector->SwitchSelector(20);
 					S2_IGNITION = true;
 					S1_Sep_Time = 0; // All done
 				}
 
-				// Drop Interstage Ring
-				if(owner->stage == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 30.7 && owner->SIISepState == true){
-					owner->SwitchSelector(21);
-					owner->SIISepState = false;
-				}	
-
-				if (owner->secs.BECO())
+				if (commandConnector->GetBECOSignal())
 				{
-					owner->SetEngineLevel(ENGINE_MAIN, 0);			// Kill the engines
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					LVDC_Stop = true;
 				}
 
@@ -5145,80 +5250,256 @@ void LVDC::TimeStep(double simt, double simdt) {
 					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false && owner->GetApolloNo() >= 10)
 					{
 						S2_ENGINE_OUT = true;
-						owner->SwitchSelector(24);
+						lvCommandConnector->SwitchSelector(24);
 					}
 				}*/
 			
 				// MR Shift
-				if(LVDC_TB_ETime > 284.4 && owner->stage == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
+				if(LVDC_TB_ETime > 284.4 && lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					owner->SwitchSelector(23);
+					lvCommandConnector->SwitchSelector(23);
 					MRS = true;
 				}
 
 				// After MRS, check for S2 OECO (was allowed to happen by itself)
 				if(MRS == true){
-					double oetl = owner->GetThrusterLevel(owner->th_main[0])+owner->GetThrusterLevel(owner->th_main[1])+owner->GetThrusterLevel(owner->th_main[2])+owner->GetThrusterLevel(owner->th_main[3]);
+					double oetl = lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3));
 					if(oetl == 0){
 						fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
 						// S2 OECO, start TB4
-						owner->SetThrusterGroupLevel(owner->thg_main, 0);
+						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);
 						S2_BURNOUT = true;
 						MRS = false;
 						TB4 = TAS;//-simdt;
 						LVDC_Timebase = 4;
-						LVDC_TB_ETime = 0;					
+						LVDC_TB_ETime = 0;
+						CommandSequence = 0;
 					}
 				}
 				
-				if (LVDC_TB_ETime >= 1.4 && owner->SIISIVBSepSwitch.GetState())
+				if (LVDC_TB_ETime >= 1.4 && commandConnector->SIISIVbSwitchState())
 				{
-					owner->stage = LAUNCH_STAGE_TWO_ISTG_JET;
+					lvCommandConnector->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 					directstageint = true;
 					directstagereset = false;
-					owner->SetThrusterGroupLevel(owner->thg_main, 0);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);
 					S2_BURNOUT = true;
 					MRS = false;
-					TB4A = TAS;
+					TB4a = TAS;
 					LVDC_Timebase = 40;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 				break;
 
-			case 4:
-			case 40:
-				// S2 STAGE SEP
-				if (LVDC_TB_ETime > 0.8 && owner->stage <= LAUNCH_STAGE_TWO_ISTG_JET) {
-					// S2ShutS.done(); No CECO on AP8
-					fprintf(lvlog,"[%d+%f] S2/S4B STAGING\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					owner->SPUShiftS.done(); // Make sure it's done
-					owner->ClearEngineIndicators();
-					owner->SeparateStage(LAUNCH_STAGE_SIVB);
-					owner->SetStage(LAUNCH_STAGE_SIVB);
-					owner->AddRCS_S4B();
-					owner->SetSIVBThrusters(true);
-					owner->SetThrusterGroupLevel(owner->thg_ver,1.0);
-					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
-					owner->SwitchSelector(5);					
+			case 4:	//Timebase 4
+
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB4+0.0: Cutoff S-II Engines
+					CommandSequence++;
+					break;
+				case 1:
+					//TB4+0.1: Start Recorder Timers
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB4+0.2: Prevalves Close Off
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB4+0.3: S-IVB Engine Cutoff Off
+					if (LVDC_TB_ETime > 0.3)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB4+0.4: LOX Tank Flight Pressure System On
+					if (LVDC_TB_ETime > 0.4)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB4+0.5: Engine Ready Bypass
+					if (LVDC_TB_ETime > 0.5)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB4+0.6: LOX Chilldown Pump Off
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB4+0.7: Fire Ullage Ignition On
+					if (LVDC_TB_ETime > 0.7)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB4+0.8: S-II/S-IVB Separation
+					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SwitchSelector(27);
+						lvCommandConnector->SwitchSelector(5);
+						CommandSequence++;
+					}
+					break;
+				case 9:
+					//TB4+1.0: S-IVB Engine Start On
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB4+1.2: Flight Control Computer Burn Mode On "A"
+					if (LVDC_TB_ETime > 1.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 31);
+						CommandSequence++;
+					}
+					break;
+				case 11:
+					//TB4+1.3: Flight Control Computer Burn Mode On "B"
+					if (LVDC_TB_ETime > 1.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 74);
+						CommandSequence++;
+					}
+					break;
+				case 12:
+					//TB4+2.2: Fuel Chilldown Pump Off
+					if (LVDC_TB_ETime > 2.2)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB4+2.5: S-IVB Engine Out Indication "A" Enable
+					if (LVDC_TB_ETime > 2.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 9);
+						CommandSequence++;
+					}
+					break;
+				case 14:
+					//TB4+2.7: S-IVB Engine Out Indication "B" Enable
+					if (LVDC_TB_ETime > 2.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 11);
+						CommandSequence++;
+					}
+					break;
+				case 15:
+					//TB4+4.0: Fuel Injector Temperature OK Bypass
+					if (LVDC_TB_ETime > 4.0)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB4+4.2: S-IVB Engine Start Off
+					if (LVDC_TB_ETime > 4.2)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB4+5.8: First Burn Relay On
+					if (LVDC_TB_ETime > 5.8)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB4+9.8: Charge Ullage Jettison On
+					if (LVDC_TB_ETime > 9.8)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB4+12.8: Fire Ullage Jettison On
+					if (LVDC_TB_ETime > 12.8)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB4+13.8: Ullage Charging Reset
+					if (LVDC_TB_ETime > 13.8)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB4+14.0: Ullage Firing Reset
+					if (LVDC_TB_ETime > 14.0)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB4+14.2: Fuel Injection Temperature OK Bypass Reset
+					if (LVDC_TB_ETime > 14.2)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB4+14.4: Tape Recorder Record Off
+					if (LVDC_TB_ETime > 14.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 17);
+						CommandSequence++;
+					}
+					break;
+				case 24:
+					//TB4+16.8: Telemetry Calibrator In-Flight Calibrate On
+					if (LVDC_TB_ETime > 16.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 25:
+					//TB4+21.8: Telemetry Calibrator In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 21.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 26:
+					//TB4+24.0: Heat Exchanger Bypass Valve Control Enable (S-IVB)
+					if (LVDC_TB_ETime > 24.0)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB4+25.7: Inflight Calibration Mode On
+					if (LVDC_TB_ETime > 25.7)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB4+26.2: TM Calibrate On
+					if (LVDC_TB_ETime > 26.2)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB4+31.2: TM Calibrate Off
+					if (LVDC_TB_ETime > 31.2)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB4+31.7: Inflight Calibration Mode Off
+					if (LVDC_TB_ETime > 31.7)
+						CommandSequence++;
+					break;
+				default:
+					break;
 				}
 			
-				if(LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && owner->stage == LAUNCH_STAGE_SIVB){
-					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime-4)*0.36));
+				if(LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime-4)*0.36));
 				}
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && owner->stage == LAUNCH_STAGE_SIVB){
-					owner->SetThrusterGroupLevel(owner->thg_main, 1.0);
-					owner->SetThrusterGroupLevel(owner->thg_ver, 0.0);
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 1.0);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetVernierThrusterGroup(), 0.0);
 					S4B_IGN=true;
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) || owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO()))
+				if (S4B_IGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;//-simdt;
 					LVDC_Timebase = 5;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 
 					//HSL Exit settings
 					GATE = false;
@@ -5232,99 +5513,872 @@ void LVDC::TimeStep(double simt, double simdt) {
 				break;
 			case 5:
 				// TB5 timed events
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB5+0.0: Velocity Cutoff S-IVB Engine
+					CommandSequence++;
+					break;
+				case 1:
+					//TB5+0.1: S-IVB Engine Cutoff
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB5+0.2: Point Level Sensor Disarming
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB5+0.3: S-IVB Ullage Engine No. 1 On
+					if (LVDC_TB_ETime > 0.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB5+0.4: S-IVB Ullage Engine No. 2 On
+					if (LVDC_TB_ETime > 0.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB5+0.6: S-IVB Ullage Thrust Present Indication On
+					if (LVDC_TB_ETime > 0.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
+						CommandSequence++;
+					}
+					break;
+				case 6:
+					//TB5+0.8: First Burn Relay Off
+					if (LVDC_TB_ETime > 0.8)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB5+1.2: LOX Tank Flight Pressure System Off
+					if (LVDC_TB_ETime > 1.2)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB5+1.4: LOX Tank Pressurization Shutoff Valves Close
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB5+1.6: Engine Pump Purge Control Valve Enable On
+					if (LVDC_TB_ETime > 1.6)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB5+3.5: Flight Control Computer S-IVB Burn Mode Off "A"
+					if (LVDC_TB_ETime > 3.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode Off 'A'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 12);
+						CommandSequence++;
+					}
+					break;
+				case 11:
+					//TB5+3.7: Flight Control Computer S-IVB Burn Mode Off "B"
+					if (LVDC_TB_ETime > 3.7)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode Off 'B'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 75);
+						CommandSequence++;
+					}
+					break;
+				case 12:
+					//TB5+4.1: Aux Hydraulix Pump Flight Mode Off (S-IVB)
+					if (LVDC_TB_ETime > 4.1)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB5+4.2: Telemetry Calibrator In-Flight Calibrate On (IU)
+					if (LVDC_TB_ETime > 4.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 14:
+					//TB5+5.0: S/C Control of Saturn Enable
+					if (LVDC_TB_ETime > 5.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+						CommandSequence++;
+					}
+					break;
+				case 15:
+					//TB5+6.5: In-Flight Calibration On (S-IVB)
+					if (LVDC_TB_ETime > 6.5)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB5+7.0: TM Calibrate On (S-IVB)
+					if (LVDC_TB_ETime > 7.0)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB5+9.2: Telemetry Calibrator In-Flight Calibrate Off (IU)
+					if (LVDC_TB_ETime > 9.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 18:
+					//TB5+10.0: S-IVB Engine Out Indication "A" Enable Reset
+					if (LVDC_TB_ETime > 10.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						CommandSequence++;
+					}
+					break;
+				case 19:
+					//TB5+10.2: S-IVB Engine Out Indication "B" Enable Reset
+					if (LVDC_TB_ETime > 10.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'B' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						CommandSequence++;
+					}
+					break;
+				case 20:
+					//TB5+10.4: S-I RF Assembly Power Off
+					if (LVDC_TB_ETime > 10.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 106);
+						CommandSequence++;
+					}
+					break;
+				case 21:
+					//TB5+11.3: Tape Recorder Playback Reverse On
+					if (LVDC_TB_ETime > 11.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 19);
+						CommandSequence++;
+					}
+					break;
+				case 22:
+					//TB5+12.0: TM Calibrate Off (S-IVB)
+					if (LVDC_TB_ETime > 12.0)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB5+12.5: In-Flight Calibration On (S-IVB)
+					if (LVDC_TB_ETime > 12.5)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB5+22.0: Single Sideband FM Transmitter Off
+					if (LVDC_TB_ETime > 22.0)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB5+59.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 59.0)
+						CommandSequence++;
+					break;
+				case 26:
+					//TB5+59.1: LH2 Tank Continuous Vent Relief Override Valve Open On
+					if (LVDC_TB_ETime > 59.1)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB5+61.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 61.0)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB5+61.1: LH2 Tank Continuous Vent Relief Override Valve Open Off
+					if (LVDC_TB_ETime > 61.1)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB5+82.1: Tape Recorder Playback Reverse Off
+					if (LVDC_TB_ETime > 82.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
+						CommandSequence++;
+					}
+					break;
+				case 30:
+					//TB5+87.0: S-IVB Ullage Engine No.1 Off
+					if (LVDC_TB_ETime > 87.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						CommandSequence++;
+					}
+					break;
+				case 31:
+					//TB5+87.1: S-IVB Ullage Engine No.2 Off
+					if (LVDC_TB_ETime > 87.1)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						CommandSequence++;
+					}
+					break;
+				case 32:
+					//TB5+87.2: S-IVB Ullage Thrust Present Indication Off
+					if (LVDC_TB_ETime > 87.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 46);
+						CommandSequence++;
+					}
+					break;
+				case 33:
+					//TB5+500.0: PU Inverter and DC Power Off
+					if (LVDC_TB_ETime > 500.0)
+						CommandSequence++;
+					break;
+				case 34:
+					//TB5+602.6: Engine Pump Purge Control Valve Enable Off
+					if (LVDC_TB_ETime > 602.6)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB5+2600.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 2600.0)
+						CommandSequence++;
+					break;
+				case 36:
+					//TB5+2648.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 2648.0)
+						CommandSequence++;
+					break;
+				case 37:
+					//TB5+5000.0: PU Inverter and DC Power On
+					if (LVDC_TB_ETime > 5000.0)
+						CommandSequence++;
+					break;
+				case 38:
+					//TB5+5400.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 5400.0)
+						CommandSequence++;
+					break;
+				case 39:
+					//TB5+5448.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 5448.0)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB5+10500.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 10500.0)
+						CommandSequence++;
+					break;
+				case 41:
+					//TB5+10980.0: Aux Hydraulix Pump Flight Mode Off
+					if (LVDC_TB_ETime > 10980.0)
+						CommandSequence++;
+					break;
+				default:
+					break;
+				}
+
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					if(LVDC_TB_ETime < 0.25){
 						// 95% of thrust dies in the first .25 second
-						owner->SetThrusterLevel(owner->th_main[0], 1-(LVDC_TB_ETime*3.3048));
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 1-(LVDC_TB_ETime*3.3048));
 					}else{
 						if(LVDC_TB_ETime < 1.5){
 							// The remainder dies over the next 1.25 second
-							owner->SetThrusterLevel(owner->th_main[0], 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0.1738-((LVDC_TB_ETime-0.25)*0.1390));
 						}else{
 							// Engine is completely shut down at 1.5 second
-							owner->SetThrusterLevel(owner->th_main[0], 0);
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0);
 						}
 					}
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,owner->GetThrusterLevel(owner->th_main[0]));
+					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
 				}
 
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
-					owner->SetStage(STAGE_ORBIT_SIVB);
-					LVDC_EI_On = false;
-				}
-				if(LVDC_TB_ETime < 87 && owner->GetThrusterGroupLevel(owner->thg_aps) < 1){//ullage thrust on
-					owner->SetThrusterGroupLevel(owner->thg_aps, 1);
-				}
-				if(LVDC_TB_ETime >= 87 && owner->GetThrusterGroupLevel(owner->thg_aps) > 0){//ullage thrust off
-					owner->SetThrusterGroupLevel(owner->thg_aps, 0);
-				}
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
 				}
 
 				// Fuel boiloff every ten seconds.
-				if (owner->MissionTime >= owner->NextMissionEventTime) {
-					if (owner->GetThrusterLevel(owner->th_main[0]) < 0.5) {
-						owner->SIVBBoiloff();
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime) {
+					if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) < 0.5) {
+						lvCommandConnector->SIVBBoiloff();
 					}
-					owner->NextMissionEventTime = owner->MissionTime + 10.0;
+					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
+
+				//CSM separation detection
+				if (lvCommandConnector->CSMSeparationSensed() && TB5a >= 99999.0)
+				{
+					TB5a = TAS;
+					LVDC_TB_ETime = 0;
+					LVDC_Timebase = 50;
+					CommandSequenceStored = CommandSequence;
+					CommandSequence = 0;
+				}
+
 				break;
 			case 6:
 				//TB6 timed events
-				if (poweredflight == false)
-				{poweredflight = true;}
 
-				// SII SEP light
-				if (S4B_REIGN == false && owner->SIISepState == false && LVDC_TB_ETime < 38.0)
+				switch (CommandSequence)
 				{
-					owner->SetSIISep();	//Set SII SEP light to notify crew of TB6 start
-					owner->TLI_Begun();
+				case 0:
+					//TB6+0.0:Begin Restart Preparations
+					poweredflight = true;
+					commandConnector->TLIBegun();
+					CommandSequence++;
+					break;
+				case 1:
+					//TB6+0.1: S-IVB Restart Alert On
+					if (LVDC_TB_ETime > 0.1)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Restart Alert On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 80);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB6+0.3: S/C Control of Saturn Disable
+					if (LVDC_TB_ETime > 0.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 69);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB6+1.0: In-Flight Calibration Mode On
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB6+1.2: Telemetry Calibration In-Flight Calibrate On
+					if (LVDC_TB_ETime > 1.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB6+1.4: TM Calibrate On
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB6+6.2: Telemetry Calibration In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 6.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 7:
+					//TB6+6.4: TM Calibrate Off
+					if (LVDC_TB_ETime > 6.4)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB6+7.0: In-Flight Calibration Mode Off
+					if (LVDC_TB_ETime > 7.0)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB6+10.0: S-IVB Engine Cutoff Off
+					if (LVDC_TB_ETime > 10.0)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB6+10.5: Single Sideband FM Transmitter On
+					if (LVDC_TB_ETime > 10.5)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB6+36.3: LH2 Tank Vent and Latching Relief Valve Boost Close On
+					if (LVDC_TB_ETime > 36.3)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB6+36.5: LOX Tank Vent and NPV Valves Boost Close On
+					if (LVDC_TB_ETime > 36.5)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB6+36.7: S-IVB Restart Alert Off
+					if (LVDC_TB_ETime > 37.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Restart Alert Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+						CommandSequence++;
+					}
+					break;
+				case 14:
+					//TB6+38.3: LH2 Tank Vent and Latching Relief Valve Boost Close Off
+					if (LVDC_TB_ETime > 38.3)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB6+38.5: LOX Tank Vent and NPV Valves Boost Close Off
+					if (LVDC_TB_ETime > 38.5)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB6+41.1: Repressurization System Mode Selector Off (Amb)
+					if (LVDC_TB_ETime > 41.1)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB6+41.3: Burner LH2 Propellant Valve Open On
+					if (LVDC_TB_ETime > 41.3)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB6+41.6: Burner Exciters On
+					if (LVDC_TB_ETime > 41.6)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB6+42.0: Burner LOX Shutdown Valve Open On
+					if (LVDC_TB_ETime > 42.0)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB6+42.2: LH2 Tank Continuous Vent Valve Close On
+					if (LVDC_TB_ETime > 42.2)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB6+42.8: Burner LH2 Propellant Valve Open Off
+					if (LVDC_TB_ETime > 42.8)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB6+43.5: Burner LOX Shutdown Valve Open Off
+					if (LVDC_TB_ETime > 43.5)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB6+44.2: LH2 Tank Continuous Vent Valve Close Off
+					if (LVDC_TB_ETime > 44.2)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB6+45.4: Burner Exciters Off
+					if (LVDC_TB_ETime > 45.4)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB6+48.0: Burner Automatic Cutoff System Arm
+					if (LVDC_TB_ETime > 48.0)
+						CommandSequence++;
+					break;
+				case 26:
+					//TB6+48.1: LH2 Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 48.1)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB6+48.3: LOX Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 48.3)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB6+219.0: Aux Hydraulix Pump Flight Mode On
+					if (LVDC_TB_ETime > 219.0)
+						CommandSequence++;
+					break;
+				case 29:
+					//TB6+249.0: LOX Chilldown Pump On
+					if (LVDC_TB_ETime > 249.0)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB6+254.0: Fuel Chilldown Pump On
+					if (LVDC_TB_ETime > 254.0)
+						CommandSequence++;
+					break;
+				case 31:
+					//TB6+259.0: Prevalves Close On
+					if (LVDC_TB_ETime > 259.0)
+						CommandSequence++;
+					break;
+				case 32:
+					//TB6+400.0: In-Flight Calibration Mode On
+					if (LVDC_TB_ETime > 400.0)
+						CommandSequence++;
+					break;
+				case 33:
+					//TB6+400.2: Telemetry Calibration In-Flight Calibrate On
+					if (LVDC_TB_ETime > 400.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 34:
+					//TB6+400.4: TM Calibrate On
+					if (LVDC_TB_ETime > 400.4)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB6+405.2: Telemetry Calibration In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 405.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 36:
+					//TB6+405.4: TM Calibrate Off
+					if (LVDC_TB_ETime > 405.4)
+						CommandSequence++;
+					break;
+				case 37:
+					//TB6+406.0: In-Flight Calibration Mode Off
+					if (LVDC_TB_ETime > 406.0)
+						CommandSequence++;
+					break;
+				case 38:
+					//TB6+450.0: Second Burn Relay On
+					if (LVDC_TB_ETime > 450.0)
+						CommandSequence++;
+					break;
+				case 39:
+					//TB6+450.1: PU Valve Hardover Position On
+					if (LVDC_TB_ETime > 450.1)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB6+493.6: S-IVB Restart Alert On
+					if (LVDC_TB_ETime > 493.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Restart Alert On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 80);
+						CommandSequence++;
+					}
+					break;
+				case 41:
+					//TB6+496.3: S-IVB Ullage Engine No.1 On
+					if (LVDC_TB_ETime > 496.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						CommandSequence++;
+					}
+					break;
+				case 42:
+					//TB6+496.4: S-IVB Ullage Engine No.2 On
+					if (LVDC_TB_ETime > 496.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						CommandSequence++;
+					}
+					break;
+				case 43:
+					//TB6+496.5: S-IVB Ullage Thrust Present Indication
+					if (LVDC_TB_ETime > 496.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
+						CommandSequence++;
+					}
+					break;
+				case 44:
+					//TB6+496.6: LOX Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 496.6)
+						CommandSequence++;
+					break;
+				case 45:
+					//TB6+496.7: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 496.7)
+						CommandSequence++;
+					break;
+				case 46:
+					//TB6+496.8: Burner LH2 Propellant Valve Close On
+					if (LVDC_TB_ETime > 496.8)
+						CommandSequence++;
+					break;
+				case 47:
+					//TB6+497.0: Burner Automatic Cutoff System Disarm
+					if (LVDC_TB_ETime > 497.0)
+						CommandSequence++;
+					break;
+				case 48:
+					//TB6+497.2: LH2 Tank Continuous Vent Valve Close On
+					if (LVDC_TB_ETime > 497.2)
+						CommandSequence++;
+					break;
+				case 49:
+					//TB6+497.6: Repressurization System Mode Selector On (Amb)
+					if (LVDC_TB_ETime > 497.6)
+						CommandSequence++;
+					break;
+				case 50:
+					//TB6+499.2: LH2 Tank Continuous Vent Valve Close Off
+					if (LVDC_TB_ETime > 499.2)
+						CommandSequence++;
+					break;
+				case 51:
+					//TB6+499.8: Burner LH2 Propellant Valve Close Off
+					if (LVDC_TB_ETime > 499.8)
+						CommandSequence++;
+					break;
+				case 52:
+					//TB6+500.0: LOX Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 500.0)
+						CommandSequence++;
+					break;
+				case 53:
+					//TB6+501.3: Burner LOX Shutdown Valve Close On
+					if (LVDC_TB_ETime > 501.3)
+						CommandSequence++;
+					break;
+				case 54:
+					//TB6+504.3: Burner LOX Shutdown Valve Close Off
+					if (LVDC_TB_ETime > 504.3)
+						CommandSequence++;
+					break;
+				case 55:
+					//TB6+520.0: LH2 Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 520.0)
+						CommandSequence++;
+					break;
+				case 56:
+					//TB6+559.4: Prevalves Close Off
+					if (LVDC_TB_ETime > 559.4)
+						CommandSequence++;
+					break;
+				case 57:
+					//TB6+560.0: S-IVB Restart Alert Off
+					if (LVDC_TB_ETime > 560.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Restart Alert Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+						CommandSequence++;
+					}
+					break;
+				case 58:
+					//TB6+568.6: Engine Ready Bypass
+					if (LVDC_TB_ETime > 568.6)
+						CommandSequence++;
+					break;
+				case 59:
+					//TB6+569.4: Fuel Chilldown Pump Off
+					if (LVDC_TB_ETime > 569.4)
+						CommandSequence++;
+					break;
+				case 60:
+					//TB6+569.6: LOX Chilldown Pump Off
+					if (LVDC_TB_ETime > 569.6)
+						CommandSequence++;
+					break;
+				case 61:
+					//TB6+570.0: S-IVB Engine Start On
+					if (LVDC_TB_ETime > 570.0)
+						CommandSequence++;
+					break;
+				case 62:
+					//TB6+573.0: S-IVB Ullage Engine No.1 Off
+					if (LVDC_TB_ETime > 573.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						CommandSequence++;
+					}
+					break;
+				case 63:
+					//TB6+573.1: S-IVB Ullage Engine No.2 Off
+					if (LVDC_TB_ETime > 573.1)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						CommandSequence++;
+					}
+					break;
+				case 64:
+					//TB6+573.2: S-IVB Ullage Thrust Present Indication Off
+					if (LVDC_TB_ETime > 573.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 46);
+						CommandSequence++;
+					}
+					break;
+				case 65:
+					//TB6+577.2: S-IVB Engine Out Indication "A" Enable
+					if (LVDC_TB_ETime > 577.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 9);
+						CommandSequence++;
+					}
+					break;
+				case 66:
+					//TB6+577.3: LOX Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 577.3)
+						CommandSequence++;
+					break;
+				case 67:
+					//TB6+577.4: S-IVB Engine Out Indication "B" Enable
+					if (LVDC_TB_ETime > 577.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'B' Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 11);
+						CommandSequence++;
+					}
+					break;
+				case 68:
+					//TB6+577.5: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 577.5)
+						CommandSequence++;
+					break;
+				case 69:
+					//TB6+577.6: Flight Control Computer S-IVB Burn Mode On "A"
+					if (LVDC_TB_ETime > 577.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode On 'A'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 31);
+						CommandSequence++;
+					}
+					break;
+				case 70:
+					//TB6+577.8: Flight Control Computer S-IVB Burn Mode On "B"
+					if (LVDC_TB_ETime > 577.8)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode On 'B'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 74);
+						CommandSequence++;
+					}
+					break;
+				case 71:
+					//TB6+578.0: Fuel Injection Temperature OK Bypass
+					if (LVDC_TB_ETime > 578.0)
+						CommandSequence++;
+					break;
+				case 72:
+					//TB6+578.2: LOX Tank Flight Pressure System on
+					if (LVDC_TB_ETime > 578.2)
+						CommandSequence++;
+					break;
+				case 73:
+					//TB6+578.4: LOX Tank Pressurization Shutoff Valves Open
+					if (LVDC_TB_ETime > 578.4)
+						CommandSequence++;
+					break;
+				case 74:
+					//TB6+578.6: S-IVB Engine Start Off
+					if (LVDC_TB_ETime > 578.6)
+						CommandSequence++;
+					break;
+				case 75:
+					//TB6+583.0: PU Valve Hardover Position Off
+					if (LVDC_TB_ETime > 583.0)
+						CommandSequence++;
+					break;
+				case 76:
+					//TB6+588.0: Fuel Injection Temperature OK Bypass Reset
+					if (LVDC_TB_ETime > 588.0)
+						CommandSequence++;
+					break;
+				case 77:
+					//TB6+683.0: Flight Control Computer Switch Point No. 6
+					if (LVDC_TB_ETime > 683.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Point No. 6\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 5);
+						CommandSequence++;
+					}
+					break;
+				case 78:
+					//TB6+850.0: Second Burn Relay Off
+					if (LVDC_TB_ETime > 850.0)
+						CommandSequence++;
+					break;
+				case 79:
+					//TB6+892.1: Point Level Sensor Arming
+					if (LVDC_TB_ETime > 892.1)
+						CommandSequence++;
+					break;
+				default:
+					break;
 				}
-				if(LVDC_TB_ETime>=38 && LVDC_TB_ETime < 493.6 && S4B_REIGN==false && owner->SIISepState == true)
-				{owner->ClearSIISep();} //This would signal the crew to start their event timer at 51:00, counting up
-				if (LVDC_TB_ETime >= 493.6 && LVDC_TB_ETime < 560.0 && owner->SIISepState == false)
-				{owner->SetSIISep();}
-				if (LVDC_TB_ETime >= 560.0 && owner->SIISepState == true)
-				{owner->ClearSIISep();}
 
-				//Ullage
-				if(LVDC_TB_ETime>=496.3 && S4B_REIGN == false)
-				{owner->SetThrusterGroupLevel(owner->thg_aps,1);} //Ullage thrust starts
-				if(LVDC_TB_ETime >= 573 && S4B_REIGN == false)
-				{owner->SetThrusterGroupLevel(owner->thg_aps, 0);}//Ullage thrust ends
-				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_EI_On == false)
+				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_TB_ETime < T_RG)
 				{
-					LVDC_EI_On = true;	//Engine start notification at T-0:01
-					owner->SetThrusterResource(owner->th_main[0], owner->ph_3rd);
-					owner->SwitchSelector(6);
+					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(0), lvCommandConnector->GetThirdStagePropellantHandle());
+					lvCommandConnector->SwitchSelector(6);
 				}	
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
-					owner->SetThrusterGroupLevel(owner->thg_main, ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
-					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, owner->GetThrusterLevel(owner->th_main[0]));
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
+					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
 				}
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
 					S4B_REIGN = true;
-					owner->SetThrusterGroupLevel(owner->thg_main, 1);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 1);
 				}
 				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
 				{
-					owner->SwitchSelector(7);//Final MRS
+					lvCommandConnector->SwitchSelector(7);//Final MRS
 					MRS = true;
 				}
 
+				//TLI Inhibit check
+				if (INH)
+				{
+					if (LVDC_TB_ETime > 560.0)
+					{
+						//TLI commit, inhibit will be ignored
+					}
+					else if (LVDC_TB_ETime > 497.3)
+					{
+						//Inhibit after 41 seconds will be accepted at 8min 17.3sec
+
+						//Switch to TB6c
+						TB6c = TAS;
+						LVDC_TB_ETime = 0.0;
+						LVDC_Timebase = 62;
+						CommandSequence = 0;
+
+						TB6 = 100000;
+					}
+					else if (LVDC_TB_ETime < 41.0)
+					{
+						//Return to TB5
+						LVDC_TB_ETime = TAS - TB5;
+						LVDC_Timebase = 5;
+						CommandSequence = CommandSequenceStored;
+
+						poweredflight = false;
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+
+						TB6 = 100000;
+					}
+				}
+
 				//Manual S-IVB Shutdown
-				if (S4B_REIGN == true && ((owner->SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP && directstagereset) 
-					|| owner->GetThrusterLevel(owner->th_main[0]) == 0 || owner->secs.BECO() 
-					|| (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBCutoff))))
+				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset)
+					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()
+					|| ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, SIVBCutoff))))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;//-simdt;
 					LVDC_Timebase = 7;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 
 					//HSL Exit settings
 					GATE = false;
@@ -5334,47 +6388,813 @@ void LVDC::TimeStep(double simt, double simdt) {
 					BOOST = false;
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
-					owner->TLI_Ended();
+					commandConnector->TLIEnded();
+				}
+
+				//CSM separation detection
+				if (lvCommandConnector->CSMSeparationSensed() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
+				{
+					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
+					TB5a = TAS;
+					LVDC_TB_ETime = 0;
+					LVDC_Timebase = 50;
+					CommandSequenceStored = CommandSequence;
+					CommandSequence = 0;
+					poweredflight = false;
 				}
 				break;
 			case 7:
 				// TB7 timed events
+
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB7+0.0: S-IVB Engine Cutoff
+					poweredflight = true;
+					CommandSequence++;
+					break;
+				case 1:
+					//TB7+0.1: S-IVB Engine Cutoff
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB7+0.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.5)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB7+0.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB7+0.7: LOX Tank NPV Valve Open On
+					if (LVDC_TB_ETime > 0.7)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB7+0.8: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 0.8)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB7+0.9: Point Level Sensor Disarming
+					if (LVDC_TB_ETime > 0.9)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB7+1.0: LOX Tank Pressurization Shutoff Valves Close
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB7+1.1: LOX Tank Flight Pressure System Off
+					if (LVDC_TB_ETime > 1.1)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB7+1.2: Second Burn Relay Off
+					if (LVDC_TB_ETime > 1.2)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB7+2.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.5)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB7+2.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.6)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB7+2.7: LOX NPV Valve Latch Open On
+					if (LVDC_TB_ETime > 2.7)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB7+2.8: LH2 Tank Latching Relief Valve Latch On
+					if (LVDC_TB_ETime > 2.8)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB7+3.6: Flight Control Computer S-IVB Burn Mode Off "A"
+					if (LVDC_TB_ETime > 3.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode Off 'A'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 12);
+						CommandSequence++;
+					}
+					break;
+				case 15:
+					//TB7+3.7: LOX Tank NPV Valve Open Off
+					if (LVDC_TB_ETime > 3.7)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB7+3.8: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 3.8)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB7+3.9: Flight Control Computer S-IVB Burn Mode Off "B"
+					if (LVDC_TB_ETime > 3.9)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer S-IVB Burn Mode Off 'B'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 75);
+						CommandSequence++;
+					}
+					break;
+				case 18:
+					//TB7+4.1: Aux Hydraulic Pump Flight Mode Off
+					if (LVDC_TB_ETime > 4.1)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB7+4.7: LOX Tank NPV Valve Latch Open Off
+					if (LVDC_TB_ETime > 4.7)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB7+4.8: LH2 Tank Latching Relief Valve Latch Off
+					if (LVDC_TB_ETime > 4.8)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB7+5.0: S/C Control of Saturn Enable
+					if (LVDC_TB_ETime > 5.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+						CommandSequence++;
+					}
+					break;
+				case 22:
+					//TB7+10.0: S-IVB Engine Out Indication "A" Enable Reset
+					if (LVDC_TB_ETime > 10.0)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						CommandSequence++;
+					}
+					break;
+				case 23:
+					//TB7+10.2: S-IVB Engine Out Indication "B" Enable Reset
+					if (LVDC_TB_ETime > 10.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'B' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
+				}
+
 				// Cutoff transient thrust
 				if (LVDC_TB_ETime < 2) {
 					if (LVDC_TB_ETime < 0.25) {
 						// 95% of thrust dies in the first .25 second
-						owner->SetThrusterLevel(owner->th_main[0], 1 - (LVDC_TB_ETime*3.3048));
+						lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 1 - (LVDC_TB_ETime*3.3048));
 					}
 					else {
 						if (LVDC_TB_ETime < 1.5) {
 							// The remainder dies over the next 1.25 second
-							owner->SetThrusterLevel(owner->th_main[0], 0.1738 - ((LVDC_TB_ETime - 0.25)*0.1390));
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0.1738 - ((LVDC_TB_ETime - 0.25)*0.1390));
 						}
 						else {
 							// Engine is completely shut down at 1.5 second
-							owner->SetThrusterLevel(owner->th_main[0], 0);
+							lvCommandConnector->SetThrusterLevel(lvCommandConnector->GetMainThruster(0), 0);
 						}
 					}
-					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, owner->GetThrusterLevel(owner->th_main[0]));
-				}
-				if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true) {
-					LVDC_EI_On = false;
+					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)));
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
 				}
+
+				//CSM separation detection
+				if (lvCommandConnector->CSMSeparationSensed() && TB5a > 99999.9)
+				{
+					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
+					TB5a = TAS;
+					LVDC_TB_ETime = 0;
+					LVDC_Timebase = 50;
+					CommandSequenceStored = CommandSequence;
+					CommandSequence = 0;
+					poweredflight = false;
+				}
+
+				//For now, disable LVDC at TB7+10,000 seconds
+				if (LVDC_TB_ETime > 10000.0)
+				{
+					LVDC_Stop = true;
+					return;
+				}
 				break;
+			case 40:
+
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB4a+0.0: Cutoff S-II Engines
+					CommandSequence++;
+					break;
+				case 1:
+					//TB4a+0.1: S-II Engines Cutoff
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB4a+0.2: Charge Ullage Ignition On
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB4a+0.3: S-II/S-IVB Separation Ordnance Arm
+					if (LVDC_TB_ETime > 0.3)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB4a+0.4: S-IVB Engine Cutoff Off
+					if (LVDC_TB_ETime > 0.4)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB4a+0.5: Engine Ready Bypass
+					if (LVDC_TB_ETime > 0.5)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB4a+0.6: Start Data Recorder
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 7:
+					//TB4a+0.7: Tape Recorder Record On
+					if (LVDC_TB_ETime > 0.7)
+						CommandSequence++;
+					break;
+				case 8:
+					//TB4a+1.1: Start Recorder Timers
+					if (LVDC_TB_ETime > 1.1)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB4a+1.4: Prevalves Open
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 10:
+					//TB4a+1.6: Fire Ullage Ignition On
+					if (LVDC_TB_ETime > 1.6)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB4a+1.7: S-II/S-IVB Separation
+					if (LVDC_TB_ETime > 1.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SwitchSelector(27);
+						lvCommandConnector->SwitchSelector(5);
+						CommandSequence++;
+					}
+					break;
+				case 12:
+					//TB4a+5.0: LOX Tank Flight Pressure System On
+					if (LVDC_TB_ETime > 5.0)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB4a+5.2: LOX Chilldown Pump Off
+					if (LVDC_TB_ETime > 5.2)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB4a+5.7: S-IVB Engine Start On
+					if (LVDC_TB_ETime > 5.7)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB4a+5.9: Flight Control Computer Burn Mode On "A"
+					if (LVDC_TB_ETime > 5.9)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Burn Mode On 'A'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 31);
+						CommandSequence++;
+					}
+					break;
+				case 16:
+					//TB4a+6.1: Flight Control Computer Burn Mode On "B"
+					if (LVDC_TB_ETime > 6.1)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Burn Mode On 'B'\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 74);
+						CommandSequence++;
+					}
+					break;
+				case 17:
+					//TB4a+6.5: S-IVB Engine Out Indication "A" Enable
+					if (LVDC_TB_ETime > 6.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 9);
+						CommandSequence++;
+					}
+					break;
+				case 18:
+					//TB4a+6.7: S-IVB Engine Out Indication "B" Enable
+					if (LVDC_TB_ETime > 6.7)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'B' Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 11);
+						CommandSequence++;
+					}
+					break;
+				case 19:
+					//TB4a+6.9: Fuel Chilldown Pump Off
+					if (LVDC_TB_ETime > 6.9)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB4a+8.7: Fuel Injector Temperature OK Bypass
+					if (LVDC_TB_ETime > 8.7)
+						CommandSequence++;
+					break;
+				case 21:
+					//TB4a+10.3: S-IVB Engine Start Off
+					if (LVDC_TB_ETime > 10.3)
+						CommandSequence++;
+					break;
+				case 22:
+					//TB4a+10.5: First Burn Relay On
+					if (LVDC_TB_ETime > 10.5)
+						CommandSequence++;
+					break;
+				case 23:
+					//TB4a+10.7: Charge Ullage Jettison On
+					if (LVDC_TB_ETime > 10.7)
+						CommandSequence++;
+					break;
+				case 24:
+					//TB4a+13.9: Fire Ullage Jettison On
+					if (LVDC_TB_ETime > 13.9)
+						CommandSequence++;
+					break;
+				case 25:
+					//TB4a+17.1: Ullage Charging Reset
+					if (LVDC_TB_ETime > 17.1)
+						CommandSequence++;
+					break;
+				case 26:
+					//TB4a+17.3: Ullage Firing Reset
+					if (LVDC_TB_ETime > 17.3)
+						CommandSequence++;
+					break;
+				case 27:
+					//TB4a+18.7: Fuel Injection Temperature OK Bypass Reset
+					if (LVDC_TB_ETime > 18.7)
+						CommandSequence++;
+					break;
+				case 28:
+					//TB4a+22.0: Tape Recorder Record Off
+					if (LVDC_TB_ETime > 22.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 17);
+						CommandSequence++;
+					}
+					break;
+				case 29:
+					//TB4a+22.9: Inflight Calibration Mode On
+					if (LVDC_TB_ETime > 22.9)
+						CommandSequence++;
+					break;
+				case 30:
+					//TB4a+23.2: Telemetry Calibrator In-Flight Calibrate On
+					if (LVDC_TB_ETime > 23.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 31:
+					//TB4a+23.4: TM Calibrate On
+					if (LVDC_TB_ETime > 23.4)
+						CommandSequence++;
+					break;
+				case 32:
+					//TB4a+28.0: Water Coolant Valve Open
+					if (LVDC_TB_ETime > 28.0)
+						CommandSequence++;
+					break;
+				case 33:
+					//TB4a+28.2: Telemetry Calibrator In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 28.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 34:
+					//TB4a+28.4: TM Calibrate Off
+					if (LVDC_TB_ETime > 28.4)
+						CommandSequence++;
+					break;
+				case 35:
+					//TB4a+28.7: Heat Exchanger Bypass Valve Control Enable (S-IVB)
+					if (LVDC_TB_ETime > 28.7)
+						CommandSequence++;
+					break;
+				case 36:
+					//TB4a+28.9: Inflight Calibration Mode Off
+					if (LVDC_TB_ETime > 28.9)
+						CommandSequence++;
+					break;
+				case 37:
+					//TB4a+199.7: Inflight Calibration Mode On
+					if (LVDC_TB_ETime > 199.7)
+						CommandSequence++;
+					break;
+				case 38:
+					//TB4a+200.0: Telemetry Calibrator In-Flight Calibrate On
+					if (LVDC_TB_ETime > 200.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 23);
+						CommandSequence++;
+					}
+					break;
+				case 39:
+					//TB4a+200.2: TM Calibrate On
+					if (LVDC_TB_ETime > 200.2)
+						CommandSequence++;
+					break;
+				case 40:
+					//TB4a+205.0: Telemetry Calibrator In-Flight Calibrate Off
+					if (LVDC_TB_ETime > 205.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 24);
+						CommandSequence++;
+					}
+					break;
+				case 41:
+					//TB4a+205.2: TM Calibrate Off
+					if (LVDC_TB_ETime > 205.2)
+						CommandSequence++;
+					break;
+				case 42:
+					//TB4a+205.7: Inflight Calibration Mode Off
+					if (LVDC_TB_ETime > 205.7)
+						CommandSequence++;
+					break;
+				case 43:
+					//TB4a+305.7: First Burn Relay Off
+					if (LVDC_TB_ETime > 305.7)
+						CommandSequence++;
+					break;
+				case 44:
+					//TB4a+408.7: Flight Control Computer Switch Point No. 6
+					if (LVDC_TB_ETime > 408.7)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Point No. 6\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 5);
+						CommandSequence++;
+					}
+					break;
+				case 45:
+					//TB4a+467.7: Point Level Sensor Arming
+					if (LVDC_TB_ETime > 467.7)
+						CommandSequence++;
+					break;
+				default:
+					break;
+				}
+
+				if (LVDC_TB_ETime >= 8.7 && LVDC_TB_ETime < 11.5 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime - 8.7)*0.36));
+				}
+				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 1.0);
+					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetVernierThrusterGroup(), 0.0);
+					S4B_IGN = true;
+				}
+
+				//Manual S-IVB Shutdown
+				if (S4B_IGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()))
+				{
+					S4B_IGN = false;
+					TB5 = TAS;//-simdt;
+					LVDC_Timebase = 5;
+					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
+
+					//HSL Exit settings
+					GATE = false;
+					GATE5 = false;
+					Tt_T = 1000;
+					HSL = false;
+					BOOST = false;
+
+					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+				}
+				break;
+			case 50:
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB5a+0.0: Start of Time Base 5a
+					CommandSequence++;
+					break;
+				case 1:
+					//TB5a+0.2: Flight Control Computer Switch Point No. 5
+					if (LVDC_TB_ETime > 0.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] Flight Control Computer Switch Point No. 5\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 44);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB5a+0.4: S-IVB Engine EDS Cutoff No. 1 Disable
+					if (LVDC_TB_ETime > 0.4)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine EDS Cutoff No. 1 Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 29);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB5a+0.6: S-IVB Engine EDS Cutoff No. 2 Disable
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB5a+0.8: IU Command System Enable
+					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 82);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB5a+1.0: Burner LH2 Propellant Valve Close Off
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB5a+1.2: Burner LOX Shutdown Valve Close Off
+					if (LVDC_TB_ETime > 1.2)
+						CommandSequence++;
+					break;
+				case 7:
+					//Return to TB5 or TB7
+					if (TB7 > 99999.9)
+					{
+						LVDC_TB_ETime = TAS - TB5;
+						LVDC_Timebase = 5;
+						CommandSequence = CommandSequenceStored;
+					}
+					else
+					{
+						LVDC_TB_ETime = TAS - TB7;
+						LVDC_Timebase = 7;
+						CommandSequence = CommandSequenceStored;
+					}
+					break;
+				default:
+					break;
+				}
+				break;
+
+			case 60: //Timebase 6a
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB6a+0.0: Start of Time Base 6a
+					CommandSequence++;
+					break;
+				case 1:
+					//TB6a+0.2: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB6a+0.4: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
+					if (LVDC_TB_ETime > 0.4)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB6a+2.2: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.2)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB6a+2.4: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 2.4)
+						CommandSequence++;
+					break;
+				case 5:
+					//Return to TB5
+					LVDC_TB_ETime = TAS - TB5;
+					LVDC_Timebase = 5;
+					CommandSequence = CommandSequenceStored;
+					break;
+				default:
+					break;
+				}
+				break;
+
+			case 61: //Timebase 6b
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB6b+0.0: Start of Time Base 6b
+					CommandSequence++;
+					break;
+				case 1:
+					//TB6b+0.2: S-IVB Ullage Engine No. 1 On
+					if (LVDC_TB_ETime > 0.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB6b+0.3: S-IVB Ullage Engine No. 2 On
+					if (LVDC_TB_ETime > 0.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB6b+0.5: S-IVB Ullage Thrust Present Indication On
+					if (LVDC_TB_ETime > 0.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication On\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//Return to TB5
+					LVDC_TB_ETime = TAS - TB5;
+					LVDC_Timebase = 5;
+					CommandSequence = CommandSequenceStored;
+					break;
+				default:
+					break;
+				}
+				break;
+
+			case 62: //Timebase 6c
+				switch (CommandSequence)
+				{
+				case 0:
+					//TB6c+0.0: Start of Time Base 6c
+					fprintf(lvlog, "[TB%d+%f] TIMEBASE 6c STARTED\r\n", LVDC_Timebase, LVDC_TB_ETime);
+					CommandSequence++;
+					break;
+				case 1:
+					//TB6c+0.1: LOX Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 0.1)
+						CommandSequence++;
+					break;
+				case 2:
+					//TB6c+0.2: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB6c+0.6: LH2 Tank Continuous Vent Valve Open Off
+					if (LVDC_TB_ETime > 0.6)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB6c+1.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 1.0)
+						CommandSequence++;
+					break;
+				case 5:
+					//TB6c+1.1: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
+					if (LVDC_TB_ETime > 1.1)
+						CommandSequence++;
+					break;
+				case 6:
+					//TB6c+1.2: S-IVB Ullage Engine No. 1 Off
+					if (LVDC_TB_ETime > 1.2)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						CommandSequence++;
+					}
+					break;
+				case 7:
+					//TB6c+1.3: S-IVB Ullage Engine No. 2 Off
+					if (LVDC_TB_ETime > 1.3)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						CommandSequence++;
+					}
+					break;
+				case 8:
+					//TB6c+1.4: Fuel Chilldown Pump Off
+					if (LVDC_TB_ETime > 1.4)
+						CommandSequence++;
+					break;
+				case 9:
+					//TB6c+1.5: S-IVB Ullage Thrust Present Indication Off
+					if (LVDC_TB_ETime > 1.5)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Thrust Present Indication Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 46);
+						CommandSequence++;
+					}
+					break;
+				case 10:
+					//TB6c+1.6: LOX Chilldown Pump Off
+					if (LVDC_TB_ETime > 1.6)
+						CommandSequence++;
+					break;
+				case 11:
+					//TB6c+1.8: Prevalves Close Off
+					if (LVDC_TB_ETime > 1.8)
+						CommandSequence++;
+					break;
+				case 12:
+					//TB6c+2.0: Aux Hydraulic Pump Flight Mode Off
+					if (LVDC_TB_ETime > 2.0)
+						CommandSequence++;
+					break;
+				case 13:
+					//TB6c+2.2: Burner LH2 Propellant Valve Close On
+					if (LVDC_TB_ETime > 2.2)
+						CommandSequence++;
+					break;
+				case 14:
+					//TB6c+2.4: Burner Automatic Cutoff System Disarm
+					if (LVDC_TB_ETime > 2.4)
+						CommandSequence++;
+					break;
+				case 15:
+					//TB6c+3.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 3.0)
+						CommandSequence++;
+					break;
+				case 16:
+					//TB6c+3.1: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 3.1)
+						CommandSequence++;
+					break;
+				case 17:
+					//TB6c+5.2: Burner LH2 Propellant Valve Close Off
+					if (LVDC_TB_ETime > 5.2)
+						CommandSequence++;
+					break;
+				case 18:
+					//TB6c+6.7: Burner LOX Shutdown Valve Close On
+					if (LVDC_TB_ETime > 6.7)
+						CommandSequence++;
+					break;
+				case 19:
+					//TB6c+9.7: Burner LOX Shutdown Valve Close Off
+					if (LVDC_TB_ETime > 9.7)
+						CommandSequence++;
+					break;
+				case 20:
+					//TB6c+9.9: S/C Control of Saturn Enable
+					if (LVDC_TB_ETime > 9.9)
+					{
+						fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Enable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+						CommandSequence++;
+					}
+					break;
+				case 21:
+					//Return to TB5
+					LVDC_TB_ETime = TAS - TB5;
+					LVDC_Timebase = 5;
+					CommandSequence = CommandSequenceStored;
+					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+					break;
+				default:
+					break;
+				}
+				break;
+
 		}
-		lvimu.Timestep(simt);								// Give a timestep to the LV IMU
-		lvrg.Timestep(simdt);								// and RG
-		CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
-		AttRate = lvrg.GetRates();							// Get rates	
+		CurrentAttitude = lvda.GetLVIMUAttitude();			// Get current attitude	
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
-			fprintf(lvlog,"[T%f] GRR received!\r\n",owner->MissionTime);
+			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
 
 			// Initial Position & Velocity from Apollo 9 operational trajectory
 			/*PosS.x = 6373324.5;
@@ -5509,12 +7329,12 @@ void LVDC::TimeStep(double simt, double simdt) {
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
 
-			lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
-			lvimu.DriveGimbals(Azimuth - PI05, 0, 0);		// Now bring to alignment 
-			lvimu.SetCaged(false);							// Release IMU
+			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
+			lvda.DriveLVIMUGimbals(Azimuth - PI05, 0, 0);	// Now bring to alignment 
+			lvda.ReleaseLVIMU();							// Release IMU
 			CountPIPA = true;								// Enable PIPA storage	
 
-			lvimu.ZeroPIPACounters();
+			lvda.ZeroLVIMUPIPACounters();
 			sinceLastCycle = 0;
 			init = true;
 			fprintf(lvlog, "Initialization completed.\r\n\r\n");
@@ -5566,9 +7386,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				IGMCycle++;				// For debugging
 				fprintf(lvlog, "[%d+%f] *** Major Loop (powered) %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
 				//read the PIPA CDUs
-				DotM_act.x += (lvimu.CDURegisters[LVRegPIPAX]);
-				DotM_act.y += (lvimu.CDURegisters[LVRegPIPAY]);
-				DotM_act.z += (lvimu.CDURegisters[LVRegPIPAZ]);
+				DotM_act += lvda.GetLVIMUPIPARegisters();
 				Fm = pow((pow(((DotM_act.x - DotM_last.x) / dt_c), 2) + pow(((DotM_act.y - DotM_last.y) / dt_c), 2) + pow(((DotM_act.z - DotM_last.z) / dt_c), 2)), 0.5);
 				PosS = PosS + (DotM_act + DotM_last) * dt_c / 2.0 + (DotG_last + ddotG_last * dt_c / 2.0)*dt_c; //position vector
 				Y_u = -(PosS.x*MX_A.m21 + PosS.y*MX_A.m22 + PosS.z*MX_A.m23); //position component south of equator
@@ -5592,7 +7410,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "Powered Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
 				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
-				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n",lvimu.CDURegisters[LVRegPIPAX], lvimu.CDURegisters[LVRegPIPAY], lvimu.CDURegisters[LVRegPIPAZ]);
+				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n", lvda.GetLVIMUPIPARegisters().x, lvda.GetLVIMUPIPARegisters().y, lvda.GetLVIMUPIPARegisters().z);
 				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
 				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
 				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
@@ -5603,7 +7421,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
 				fprintf(lvlog, "S: %f \r\n", S);
 				fprintf(lvlog, "P: %f \r\n", P);
-				lvimu.ZeroPIPACounters();
+				lvda.ZeroLVIMUPIPACounters();
 			}
 			else
 			{
@@ -5643,7 +7461,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
 				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*owner->GetMass());
+				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
 
 				DDotS_4sec = ddotG_act + DDotS_D;
 
@@ -5668,7 +7486,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
 				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*owner->GetMass());
+				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
 
 				DDotS_8secP = ddotG_act + DDotS_D;
 
@@ -5693,7 +7511,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
 				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*owner->GetMass());
+				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
 
 				ddotM_act = ddotG_act + DDotS_D;
 				// The messy RK3 having been done, we now commit the integrated position and velocity into platform data
@@ -5709,8 +7527,8 @@ void LVDC::TimeStep(double simt, double simdt) {
 					double day;
 					modf(oapiGetSimMJD(), &day);
 					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-					owner->GetRelativePos(owner->GetGravityRef(), pos);
-					owner->GetRelativeVel(owner->GetGravityRef(), vel);
+					lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
+					lvCommandConnector->GetRelativeVel(lvCommandConnector->GetGravityRef(), vel);
 					PosS = mul(mat, pos);
 					DotS = mul(mat, vel);
 				}
@@ -5723,7 +7541,7 @@ void LVDC::TimeStep(double simt, double simdt) {
 				DotM_act = _V(0.0, 0.0, 0.0);
 				DotM_last = _V(0.0, 0.0, 0.0);
 				DotG_last = DotS;
-				lvimu.ZeroPIPACounters();
+				lvda.ZeroLVIMUPIPACounters();
 
 				fprintf(lvlog, "Orbital Navigation \r\n");
 				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
@@ -5784,7 +7602,7 @@ GuidanceLoop:
 				GATE4 = true;
 				fprintf(lvlog,"[%d+%f] Direct stage interrupt received! Guidance update executed!\r\n",LVDC_Timebase,LVDC_TB_ETime);
 			}
-			if(TAS-TB4A-TS4BS < 0){ goto minorloop; }else{ goto IGM; }						
+			if(TAS-TB4a-TS4BS < 0){ goto minorloop; }else{ goto IGM; }
 		}
 		if(TAS-TB3-T_LET < 0){
 			// Pre-IGM guidance:
@@ -5918,7 +7736,7 @@ IGM:	if(HSL == false){
 				if (Ct >= Ct_o){
 					relightentry1:
 					tau3 = V_ex3/Fm;
-					fprintf(lvlog,"Normal Tau: tau3 = %f, F = %f, m = %f \r\n",tau3,owner->GetThrusterMax(owner->th_main[0])*owner->GetThrusterLevel(owner->th_main[0]),owner->GetMass());
+					fprintf(lvlog,"Normal Tau: tau3 = %f, F = %f, m = %f \r\n",tau3, lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0))*lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)), lvCommandConnector->GetMass());
 				}else{
 					tau3 = tau3N + (V_ex3/Fm - dt_c/2 - tau3N)*pow((Ct/Ct_o),4);
 					tau3N = tau3N - dt_c;
@@ -5961,7 +7779,7 @@ IGM:	if(HSL == false){
 				if(t_B1 <= t_B3){
 					relightentry2:
 					tau2 = V_ex2/Fm;
-					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm,owner->GetMass());
+					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm, lvCommandConnector->GetMass());
 				}else{
 					// This is the "ARTIFICIAL TAU" code.
 					t_B3 += dt_c; 
@@ -6001,7 +7819,7 @@ IGM:	if(HSL == false){
 					}					
 				}else{															
 					tau1 = V_ex1/Fm; 
-					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, owner->GetMass());
+					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, lvCommandConnector->GetMass());
 				}
 			}
 			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");
@@ -6041,7 +7859,7 @@ chitilde:	Pos4 = mul(MX_G,PosS);
 			if (isnan(Lt_3))
 			{
 				IGM_Failed = true;
-				owner->SetLVGuidLight();
+				commandConnector->SetLVGuidLight();
 				fprintf(lvlog, "IGM Error Detected! \r\n");
 				goto minorloop;
 			}
@@ -6295,7 +8113,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					// dT_4 CALCULATION
 					if (LVDC_Timebase == 40)
 					{
-						t_3i = TB4A + T_c;
+						t_3i = TB4a + T_c;
 					}
 					else
 					{
@@ -6504,16 +8322,19 @@ orbitalguidance:
 				}else{
 					alpha_1 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
+					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
 				}
 			}else{
 				if(first_op){
 					alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
 					alpha_2 = K_Y1 + K_Y2 * dTt_4;
+					fprintf(lvlog, "Orient for restart\r\n");
 					goto orbatt;
 				}else{
 					alpha_1 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
+					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
 				}
 			}
@@ -6521,25 +8342,36 @@ orbitalguidance:
 			if (TAS - TB7 - 900 < 0) {
 				alpha_1 = 0 * RAD;
 				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Maintain orbrate\r\n");
 				goto orbatt;
 			}
 			else
 			{
-				if (GATE6)
-				{	
-					//attitude hold for T&D
-					CommandedAttitude = ACommandedAttitude;
-					fprintf(lvlog, "T&D attitude hold\r\n");
-					goto minorloop;
+				if (TAS - TB7 - 6540.0 < 0) {
+					if (GATE6)
+					{
+						//attitude hold for T&D
+						CommandedAttitude = ACommandedAttitude;
+						fprintf(lvlog, "T&D attitude hold\r\n");
+						goto minorloop;
+					}
+					else
+					{
+						//attitude for T&D
+						alpha_1 = XLunarAttitude.y;
+						alpha_2 = XLunarAttitude.z;
+						CommandedAttitude.x = XLunarAttitude.x;
+						GATE6 = true;
+						fprintf(lvlog, "T&D attitude\r\n");
+						goto orbatt;
+					}
 				}
 				else
 				{
-					//attitude for T&D					
-					alpha_1 = XLunarAttitude.y;
-					alpha_2 = XLunarAttitude.z;
-					CommandedAttitude.x = XLunarAttitude.x;
-					GATE6 = true;
-					fprintf(lvlog, "T&D attitude\r\n");
+					alpha_1 = XLunarSlingshotAttitude.y;
+					alpha_2 = XLunarSlingshotAttitude.z;
+					CommandedAttitude.x = XLunarSlingshotAttitude.x;
+					fprintf(lvlog, "Slingshot attitude\r\n");
 					goto orbatt;
 				}
 			}
@@ -6596,7 +8428,7 @@ restartprep:
 			// TLI restart & targeting logic;
 
 			//Manual TB6 Initiation
-			if (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+			if ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
 			{
 				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
 				goto INHcheck;
@@ -6760,7 +8592,7 @@ restartprep:
 			{goto orbitalguidance;}
 			
 		INHcheck:
-			if (INH)	//XLUNAR switch to INHIBIT in the CSM?
+			 if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
 			{
 				GATE0 = GATE1 = false;	//Select second opportunity targeting
 				first_op = false;
@@ -6772,6 +8604,8 @@ restartprep:
 				TB6 = TAS;//-simdt;
 				LVDC_TB_ETime = 0;
 				LVDC_Timebase = 6;
+				CommandSequenceStored = CommandSequence;
+				CommandSequence = 0;
 				goto restartprep;
 			}
 			else if (TAS - TB6 - T_RG < 0) //Time elapsed enough for TB6?
@@ -6866,6 +8700,7 @@ minorloop:
 			TB5 = TAS;//-simdt;
 			LVDC_Timebase = 5;
 			LVDC_TB_ETime = 0;
+			CommandSequence = 0;
 			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
 		}
 		if (T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true) {
@@ -6874,8 +8709,9 @@ minorloop:
 			TB7 = TAS;//-simdt;
 			LVDC_Timebase = 7;
 			LVDC_TB_ETime = 0;
+			CommandSequence = 0;
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
-			owner->TLI_Ended();
+			commandConnector->TLIEnded();
 		}
 
 		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
@@ -6884,6 +8720,7 @@ minorloop:
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.x){
+			fprintf(lvlog, "Rate limit x-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.x*DEG, PCommandedAttitude.x*DEG, diff*DEG, dt_g);
 			if(diff > 0){
 				CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_g;
 			}else{
@@ -6893,6 +8730,7 @@ minorloop:
 		diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.y){
+			fprintf(lvlog, "Rate limit y-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.y*DEG, PCommandedAttitude.y*DEG, diff*DEG, dt_g);
 			if(diff > 0){
 				CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_g;
 			}else{
@@ -6902,6 +8740,7 @@ minorloop:
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.z){
+			fprintf(lvlog, "Rate limit z-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.z*DEG, PCommandedAttitude.z*DEG, diff*DEG, dt_g);
 			if(diff > 0){
 				CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_g;
 			}else{
@@ -6935,158 +8774,8 @@ minorloop:
 		// YAW ERROR
 		AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 
-		// LV takeover
-		// AS-506 Tech Info Summary says this is enabled in TB1. The LVDA will follow the CMC needles.
-		// The needles are driven by polynomial until S1C/S2 staging, after which the astronaut can tell the CMC he wants control.
-		if ((LVDC_Timebase == 5 || (owner->ApolloNo >= 11 && LVDC_Timebase > 0)) && (owner->LVGuidanceSwitch.IsDown() && owner->agc.GetInputChannelBit(012, EnableSIVBTakeover))){
-			//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-			//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-			AttitudeError.x = owner->gdc.fdai_err_x * RAD / 31.6;
-			AttitudeError.y = owner->gdc.fdai_err_y * RAD / 31.6;
-			AttitudeError.z = owner->gdc.fdai_err_z * RAD / -31.6;
-		}
+		lvda.SetFCCAttitudeError(AttitudeError);
 
-		/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime < 105){
-			a_0p = a_0y = 0.9;
-			a_0r = 0.9;
-			a_1p = a_1y = 0.69;
-			a_1r = 0.69;
-		}
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime >= 105 && LVDC_TB_ETime < 120){
-			a_0p = a_0y = 0.45;
-			a_0r = 0.45;
-			a_1p = a_1y = 0.44;
-			a_1r = 0.44;
-		}
-		if(LVDC_Timebase == 1 && LVDC_TB_ETime >= 120){
-			a_0p = a_0y = 0.32;
-			a_0r = 0.32;
-			a_1p = a_1y = 0.30;
-			a_1r = 0.30;
-		}
-		if(LVDC_Timebase == 3 && LVDC_TB_ETime < 60){
-			a_0p = a_0y = 1.12;
-			a_0r = 1.12;
-			a_1p = a_1y = 1.9;
-			a_1r = 1.9;
-		}
-		if(LVDC_Timebase == 3 && LVDC_TB_ETime >= 60 && LVDC_TB_ETime < 190){
-			a_0p = a_0y = 0.65;
-			a_0r = 0.65;
-			a_1p = a_1y = 1.1;
-			a_1r = 1.1;
-		}
-		if(LVDC_Timebase == 3 && LVDC_TB_ETime >= 190){
-			a_0p = a_0y = 0.44;
-			a_0r = 0.44;
-			a_1p = a_1y = 0.74;
-			a_1r = 0.74;
-		}
-		if(LVDC_Timebase == 4 || LVDC_Timebase == 40){
-			a_0p = a_0y = 0.81;
-			a_0r = 1;
-			a_1p = a_1y = 0.97;
-			a_1r = 5;
-		}
-		if(LVDC_Timebase == 5){
-			a_0p = a_0y = 1;
-			a_0r = 1;
-			a_1p = a_1y = 5;
-			a_1r = 5;
-		}
-		if (LVDC_Timebase == 6) {
-			a_0p = a_0y = 0.81;
-			a_0r = 1;
-			a_1p = a_1y = 0.7;
-			a_1r = 5;
-		}
-		if (LVDC_Timebase == 7) {
-			a_0p = a_0y = 1;
-			a_0r = 1;
-			a_1p = a_1y = 5;
-			a_1r = 5;
-		}
-		beta_pc = a_0p * AttitudeError.y + a_1p * AttRate.y;
-		beta_yc = a_0y * AttitudeError.z + a_1y * AttRate.z;
-		beta_rc = a_0r * AttitudeError.x + a_1r * AttRate.x;
-		if(LVDC_Timebase < 4){
-			//orbiter's engines are gimballed differently then the real one
-			beta_p1c = beta_pc + beta_rc/pow(2,0.5);
-			beta_p2c = beta_pc + beta_rc/pow(2,0.5);
-			beta_p3c = beta_pc - beta_rc/pow(2,0.5);
-			beta_p4c = beta_pc - beta_rc/pow(2,0.5);
-			beta_y1c = beta_yc + beta_rc/pow(2,0.5);
-			beta_y2c = beta_yc - beta_rc/pow(2,0.5);
-			beta_y3c = beta_yc - beta_rc/pow(2,0.5);
-			beta_y4c = beta_yc + beta_rc/pow(2,0.5);
-			if(LVDC_Timebase < 3){
-				//SIC
-				owner->SetThrusterDir(owner->th_main[0],_V(beta_y4c,beta_p4c,1)); 
-				owner->SetThrusterDir(owner->th_main[1],_V(beta_y2c,beta_p2c,1));
-			}else{
-				//SII: engines 2 & 4 are flipped!
-				owner->SetThrusterDir(owner->th_main[0],_V(beta_y2c,beta_p2c,1)); 
-				owner->SetThrusterDir(owner->th_main[1],_V(beta_y4c,beta_p4c,1)); 
-			}
-			//1 & 3 are the same on both stages
-			owner->SetThrusterDir(owner->th_main[2],_V(beta_y1c,beta_p1c,1)); 
-			owner->SetThrusterDir(owner->th_main[3],_V(beta_y3c,beta_p3c,1)); 
-		}
-		if (LVDC_Timebase == 4 || LVDC_Timebase == 40 || (LVDC_Timebase == 6 && S4B_REIGN == true)) {
-			//SIVB powered flight
-			beta_p1c = beta_pc; //gimbal angles
-			beta_y1c = beta_yc;
-			owner->SetThrusterDir(owner->th_main[0], _V(beta_y1c, beta_p1c, 1));
-			eps_p = 0; //we want neither the APS pitch thrusters to fire
-			eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
-			eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
-		}
-		if(LVDC_Timebase == 5 || (LVDC_Timebase == 6 && S4B_REIGN == false) || LVDC_Timebase == 7){
-			//SIVB coast flight; full APS control
-			eps_p   = (a_0p * AttitudeError.y * DEG) + (a_1p * AttRate.y * DEG); //pitch thruster demand
-			eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
-			eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
-		}
-		if(((LVDC_Timebase == 4 || LVDC_Timebase == 40) && S4B_IGN == true)|| LVDC_Timebase == 5 || LVDC_Timebase == 6 || LVDC_Timebase == 7){
-			//APS thruster on/off control
-			if(eps_p > 1){
-				//fire+pitch
-				if(eps_p >= 1.6){ owner->SetThrusterLevel(owner->th_att_rot[1],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[1],(eps_p-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[1],0);
-			}
-			if(eps_p < -1){
-				//fire-pitch
-				if(eps_p <= -1.6){ owner->SetThrusterLevel(owner->th_att_rot[0],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[0],(-eps_p-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[0],0);
-			}
-			if(eps_ymr > 1){
-				//fire+yaw-roll;
-				if(eps_ymr >= 1.6){ owner->SetThrusterLevel(owner->th_att_rot[3],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[3],(eps_ymr-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[3],0);
-			}
-			if(eps_ymr < -1){
-				//fire-yaw+roll;
-				if(eps_ymr <= -1.6){ owner->SetThrusterLevel(owner->th_att_rot[5],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[5],(-eps_ymr-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[5],0);
-			}
-			if(eps_ypr > 1){
-				//fire+yaw+roll;
-				if(eps_ypr >= 1.6){ owner->SetThrusterLevel(owner->th_att_rot[4],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[4],(eps_ypr-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[4],0);
-			}
-			if(eps_ypr < -1){
-				//fire-yaw-roll;
-				if(eps_ypr <= -1.6){ owner->SetThrusterLevel(owner->th_att_rot[2],1); }else{ owner->SetThrusterLevel(owner->th_att_rot[2],(-eps_ypr-1)/0.6); }
-			}else{
-				owner->SetThrusterLevel(owner->th_att_rot[2],0);
-			}
-		}
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
@@ -7117,176 +8806,46 @@ minorloop:
 			*/
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
 
-		// Update engine indicators and failure flags
-		if(LVDC_EI_On == true){
-			double level;
-			switch(owner->stage){
-				// 5-engine stages
-				case PRELAUNCH_STAGE:
-				case LAUNCH_STAGE_ONE:
-					if(owner->GetThrusterLevel(owner->th_main[0]) >= 0.65  && owner->ENGIND[3] == true){ owner->ENGIND[3] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[0]) < 0.65 && owner->ENGIND[3] == false){  owner->ENGIND[3] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[1]) >= 0.65  && owner->ENGIND[1] == true){ owner->ENGIND[1] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[1]) < 0.65 && owner->ENGIND[1] == false){  owner->ENGIND[1] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[2]) >= 0.65  && owner->ENGIND[0] == true){ owner->ENGIND[0] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[2]) < 0.65 && owner->ENGIND[0] == false){  owner->ENGIND[0] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[3]) >= 0.65  && owner->ENGIND[2] == true){ owner->ENGIND[2] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[3]) < 0.65 && owner->ENGIND[2] == false){  owner->ENGIND[2] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[4]) >= 0.65  && owner->ENGIND[4] == true){ owner->ENGIND[4] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[4]) < 0.65 && owner->ENGIND[4] == false){  owner->ENGIND[4] = true; }   
-					break;
-				case LAUNCH_STAGE_TWO:
-				case LAUNCH_STAGE_TWO_ISTG_JET:
-					if(owner->GetThrusterLevel(owner->th_main[0]) >= 0.65  && owner->ENGIND[1] == true){ owner->ENGIND[1] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[0]) < 0.65 && owner->ENGIND[1] == false){  owner->ENGIND[1] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[1]) >= 0.65  && owner->ENGIND[3] == true){ owner->ENGIND[3] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[1]) < 0.65 && owner->ENGIND[3] == false){  owner->ENGIND[3] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[2]) >= 0.65  && owner->ENGIND[0] == true){ owner->ENGIND[0] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[2]) < 0.65 && owner->ENGIND[0] == false){  owner->ENGIND[0] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[3]) >= 0.65  && owner->ENGIND[2] == true){ owner->ENGIND[2] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[3]) < 0.65 && owner->ENGIND[2] == false){  owner->ENGIND[2] = true; }   
-					if(owner->GetThrusterLevel(owner->th_main[4]) >= 0.65  && owner->ENGIND[4] == true){ owner->ENGIND[4] = false; } 
-					if(owner->GetThrusterLevel(owner->th_main[4]) < 0.65 && owner->ENGIND[4] == false){  owner->ENGIND[4] = true; }
-					break;
-				// S4B only
-				case LAUNCH_STAGE_SIVB:
-				case STAGE_ORBIT_SIVB:
-					level = owner->GetThrusterLevel(owner->th_main[0]);
-					if(level >= 0.65  && owner->ENGIND[0] == true){ owner->ENGIND[0] = false; } // UNLIGHT
-					if(level < 0.65 && owner->ENGIND[0] == false){  owner->ENGIND[0] = true; }  // LIGHT
-					break;	
-				// Error
-				default:
-					LVDC_EI_On = false;
-					break;
-			}
-		}else{
-			owner->ENGIND[0] = false;
-			owner->ENGIND[1] = false;
-			owner->ENGIND[2] = false;
-			owner->ENGIND[3] = false;
-			owner->ENGIND[4] = false;
-		}
-
 		//Engine failure code
 		if (LVDC_Timebase == 1)
 		{
-			for (int i = 0;i < 5;i++)
-			{
-				if (owner->EarlySICutoff[i] && (t_clock > owner->FirstStageFailureTime[i]) && (owner->GetThrusterResource(owner->th_main[i]) != NULL))
-				{
-					owner->SetThrusterResource(owner->th_main[i], NULL); // Should stop the engine
-					S1_Engine_Out = true;
-				}
-			}
+			S1_Engine_Out = lvda.GetSIEngineOut();
 		}
-
 		if (LVDC_Timebase == 3)
 		{
-			for (int i = 0;i < 5;i++)
-			{
-				if (owner->EarlySIICutoff[i] && (LVDC_TB_ETime > owner->SecondStageFailureTime[i]) && (owner->GetThrusterResource(owner->th_main[i]) != NULL))
-				{
-					owner->SetThrusterResource(owner->th_main[i], NULL); // Should stop the engine
-					S2_ENGINE_OUT = true;
-				}
-			}
-		}
-
-		//EDS
-
-		if (LVDC_Timebase == 1)
-		{
-			int enginesout = 0;
-
-			if (owner->GetThrusterLevel(owner->th_main[0]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[1]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[2]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[3]) < 0.65) enginesout++;
-			if (owner->GetThrusterLevel(owner->th_main[4]) < 0.65) enginesout++;
-
-			if (enginesout >= 2)
-			{
-				S1_TwoEngines_Out = true;
-			}
-			else
-			{
-				S1_TwoEngines_Out = false;
-			}
-		}
-		else
-		{
-			S1_TwoEngines_Out = false;
-		}
-
-		//Auto Abort
-		//LV Rates light
-		if (abs(AttRate.y) > 4.0*RAD || abs(AttRate.z) > 9.2*RAD || abs(AttRate.x) > 20.0*RAD)
-		{
-			owner->LVRateLight = true;
-		}
-		else
-		{
-			owner->LVRateLight = false;
-		}
-
-		AutoAbortInitiate = false;
-
-		if (owner->EDSSwitch.IsUp())
-		{
-			if (owner->LVRateAutoSwitch.IsUp())
-			{
-				if (abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD || abs(AttRate.x) > 20.5*RAD)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-			if (owner->TwoEngineOutAutoSwitch.IsUp())
-			{
-				if (S1_TwoEngines_Out && !TwoEngOutAutoAbortDeactivate)
-				{
-					AutoAbortInitiate = true;
-				}
-			}
-		}
-
-		if (AutoAbortInitiate)
-		{
-			owner->secs.SetEDSAbort1(true);
-			owner->secs.SetEDSAbort2(true);
-			owner->secs.SetEDSAbort3(true);
+			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
 		}
 
 		// End of test for LVDC_Stop
 
-		if (owner->stage == LAUNCH_STAGE_ONE && owner->MissionTime < 12.5) {
+		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
 			// Control contrail
-			if (owner->MissionTime > 12)
-				owner->contrailLevel = 0;
-			else if (owner->MissionTime > 7)
-				owner->contrailLevel = (12.0 - owner->MissionTime) / 100.0;
-			else if (owner->MissionTime > 2)
-				owner->contrailLevel = 1.38 - 0.95 / 5.0 * owner->MissionTime;
+			if (lvCommandConnector->GetMissionTime() > 12)
+				lvCommandConnector->SetContrailLevel(0);
+			else if (lvCommandConnector->GetMissionTime() > 7)
+				lvCommandConnector->SetContrailLevel((12.0 - lvCommandConnector->GetMissionTime()) / 100.0);
+			else if (lvCommandConnector->GetMissionTime() > 2)
+				lvCommandConnector->SetContrailLevel(1.38 - 0.95 / 5.0 * lvCommandConnector->GetMissionTime());
 			else
-				owner->contrailLevel = 1;
+				lvCommandConnector->SetContrailLevel(1);
 		}
 	}
 }
 
-double LVDC::SVCompare()
+double LVDCSV::SVCompare()
 {
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
 	double day;
 	modf(oapiGetSimMJD(), &day);
 	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-	owner->GetRelativePos(owner->GetGravityRef(), pos);
+	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);
 }
 
-double LVDC::LinInter(double x0, double x1, double y0, double y1, double x)
+double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
 }

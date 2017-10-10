@@ -22,7 +22,6 @@
 
   **************************************************************************/
 #pragma once
-#include "LVDC.h"
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -78,7 +77,6 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	LVDC1B* lvdc;
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
@@ -92,8 +90,6 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
-	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
@@ -105,6 +101,7 @@ protected:
 	void DeactivateStagingVent();
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
+	void SetRandomFailures();
 };
 
 

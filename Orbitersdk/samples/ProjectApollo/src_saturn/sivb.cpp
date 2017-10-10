@@ -45,6 +45,7 @@
 #include "sivb.h"
 #include "astp.h"
 #include "lem.h"
+#include "LVDC.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -165,6 +166,8 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
+	delete iu;
+
 	//
 	// Delete LM PAD data.
 	//
@@ -182,6 +185,8 @@ void SIVB::InitS4b()
 
 {
 	int i;
+
+	iu = NULL;
 
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
@@ -459,17 +464,16 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true);
+		iu->SetMissionInfo(true, true);
 
 		//
 		// Set up the IU connections.
 		//
 
-		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
+		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
-	iu.ConnectToLV(&IUCommandConnector);
+	iu->ConnectToLV(&IUCommandConnector);
 	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
@@ -710,24 +714,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 				PanelsOpened = true;
 			}
 		}
-	}
-
-	//
-	// Attitude control
-	//
-
-	// Special handling Apollo 7
-	if (VehicleNo == 205) {
-		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
-			// retrograde LVLH orbital-rate
-			iu.SetLVLHAttitude(_V(-1, 0, 0));			
-		} else {
-			iu.HoldAttitude();
-		}
-	} else {
-		// In all other missions maintain initial attitude for now
-		// \todo Correct behaviour of the S-IVB 
-		iu.HoldAttitude();
 	}	
 
 	//
@@ -753,10 +739,14 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu.Timestep(MissionTime, simdt, mjd);
+	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 
+void SIVB::clbkPostStep(double simt, double simdt, double mjd)
+{
+	iu->PostStep(simt, simdt, mjd);
+}
 
 void SIVB::GetApolloName(char *s)
 
@@ -818,7 +808,8 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
-	iu.SaveState(scn);
+	iu->SaveState(scn);
+	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
 }
 
@@ -1262,7 +1253,18 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			iu.LoadState(scn);
+			if (SaturnVStage)
+			{
+				iu = new IUSV;
+			}
+			else
+			{
+				iu = new IU1B;
+			}
+			iu->LoadState(scn);
+		}
+		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+			iu->LoadLVDC(scn);
 		}
 		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1466,6 +1468,17 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			RotationLimit = 0.25;
 		}
+
+		if (SaturnVStage)
+		{
+			iu = new IUSV;
+		}
+		else
+		{
+			iu = new IU1B;
+		}
+		iu = state.iu_pointer;
+		iu->DisconnectIU();
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_MASS)
@@ -1515,13 +1528,6 @@ void SIVB::SetJ2ThrustLevel(double thrust)
 		SetThrusterLevel(th_main[0], thrust);
 }
 
-void SIVB::SetAPSThrustLevel(double thrust)
-
-{
-	if (thg_aps)
-		SetThrusterGroupLevel(thg_aps, thrust);
-}
-
 double SIVB::GetJ2ThrustLevel()
 
 {
@@ -1535,6 +1541,20 @@ double SIVB::GetMissionTime()
 
 {
 	return MissionTime;
+}
+
+void SIVB::SetSIVBThrusterDir(VECTOR3 &dir)
+{
+	if (th_main[0])
+		SetThrusterDir(th_main[0], dir);
+}
+
+void SIVB::SetAPSUllageThrusterLevel(int n, double level)
+{
+	if (n < 0 || n > 1) return;
+	if (!th_att_lin[n]) return;
+
+	SetThrusterLevel(th_att_lin[n], level);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -1894,10 +1914,18 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
+	case IULV_GET_SIVB_PROPELLANT_MASS:
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_PROPELLANT_MASS:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
 			return true;
 		}
 		break;
@@ -1911,6 +1939,19 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 			OurVessel->GetStatus(stat);
 
 			*status = stat;
+			return true;
+		}
+		break;
+
+	case IULV_GET_GLOBAL_ORIENTATION:
+		if (OurVessel)
+		{
+			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
+			VECTOR3 ar;
+
+			OurVessel->GetGlobalOrientation(ar);
+
+			*arot = ar;
 			return true;
 		}
 		break;
@@ -2057,6 +2098,46 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_ANGULARVEL:
+		if (OurVessel)
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MISSIONTIME:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetMainThrusterGroup();
+			return true;
+		}
+		break;
+
+	case IULV_GET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	
@@ -2106,14 +2187,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_APS_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAPSThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_ATTITUDE_LIN_LEVEL:
 		if (OurVessel) 
 		{
@@ -2130,6 +2203,62 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_SET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterGroupLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_SIVB_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_ADD_FORCE:
+		if (OurVessel)
+		{
+			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
+			return true;
+		}
+		break;
+
 	case IULV_ENABLE_J2:
 		if (OurVessel)
 		{
@@ -2142,6 +2271,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->SetVentingThruster();
+		}
+		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = true;
+			return true;
 		}
 		break;
 

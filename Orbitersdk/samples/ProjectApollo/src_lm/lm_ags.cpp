@@ -61,9 +61,11 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	Initialized = false;
 	Operate = false;
 	PulsesSent = false;
-	CurrentRotationMatrix = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
-	EulerAngles = _V(0., 0., 0.);
+	CurrentRotationMatrix = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	EulerAngles = _V(0.0, 0.0, 0.0);
 	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
+	LastWeightAcceleration = _V(0.0, 0.0, 0.0);
+	LastGlobalVel = _V(0.0, 0.0, 0.0);
 	LastSimDT = -1.0;
 }
 
@@ -1075,7 +1077,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	
 	// We will use a similar scan as the DSKY power consumption
 
-	// The DSYK power consumption is a little bit hard to figure out. According 
+	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
 	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
 	// track the number of lights that are lit, because during pause the still called render 

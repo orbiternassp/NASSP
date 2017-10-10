@@ -59,6 +59,7 @@
 #include "MechanicalAccelerometer.h"
 #include "checklistController.h"
 #include "payload.h"
+#include "csmcomputer.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -303,12 +304,6 @@ typedef struct {
 	double PropellantLineTempF;
 	double OxidizerLineTempF;
 } SPSStatus;
-
-// LVDC save file start/end strings, here temporarily
-// Get used for LVDC or LVDC1B depending on which vehicle this is.
-// Unused for everything else.
-#define LVDC_START_STRING "LVDC_BEGIN"
-#define LVDC_END_STRING "LVDC_END"
 
 ///
 /// \brief Generic Saturn launch vehicle class.
@@ -736,12 +731,26 @@ public:
 	///
 	void SetEngineIndicator(int i);
 
+	bool GetEngineIndicator(int i);
+
 	///
 	/// Turn off an engine indicator light on the control panel.
 	/// \brief Turn off engine light
 	/// \param i Specify the engine light number to turn off (1-8).
 	///
 	void ClearEngineIndicator(int i);
+
+	///
+	/// Set all engine indicator lights on the control panel.
+	/// \brief Set engine indicator lights.
+	///
+	void SetEngineIndicators();
+
+	///
+	/// Clear all engine indicator lights on the control panel.
+	/// \brief Clear engine indicator lights.
+	///
+	void ClearEngineIndicators();
 
 	///
 	/// Call this function to jettison the LET and BPC from the Saturn. This should work during any stage,
@@ -751,6 +760,8 @@ public:
 	/// \param AbortJettison If we're jettisoning during an abort, the BPC will take the docking probe with it.
 	///
 	void JettisonLET(bool AbortJettison = false);
+
+	void SetEDSAbort(int eds);
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
@@ -915,6 +926,19 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
+	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
+	THGROUP_HANDLE GetVernierThrusterGroup() { return thg_ver; }
+	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
+	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
+	bool GetSIISepLight() { return SIISepState; };
+	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetAPSUllageThrusterLevel(int n, double level);
+	void SetAPSThrusterLevel(int n, double level);
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -931,7 +955,7 @@ public:
 	/// \brief Access the Saturn IU.
 	/// \return Pointer to IU object.
 	///
-	IU *GetIU() { return &iu; };
+	IU *GetIU() { return iu; };
 
 	///
 	/// \brief Get settings for the Saturn payload.
@@ -1021,6 +1045,52 @@ public:
 	void ActivateS4RCS();
 	void DeactivateS4RCS();
 
+	virtual void ActivatePrelaunchVenting() = 0;
+	virtual void DeactivatePrelaunchVenting() = 0;
+
+	void SetContrailLevel(double level);
+
+	void SetStage(int s);
+	virtual void SeparateStage(int stage) = 0;
+
+	///
+	/// Turn on the liftoff light on the control panel.
+	/// \brief Set the liftoff light.
+	///
+	void SetLiftoffLight();
+
+	///
+	/// Turn off the liftoff light on the control panel.
+	/// \brief Clear the liftoff light.
+	///
+	void ClearLiftoffLight();
+
+	///
+	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
+	/// failure.
+	/// \brief Set the LV Guidance light.
+	///
+	void SetLVGuidLight();
+
+	///
+	/// Turn off the LV Guidance warning light on the control panel.
+	/// \brief Clear the LV Guidance light.
+	///
+	void ClearLVGuidLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel, indicating that the spacecraft
+	/// is turning too fast.
+	/// \brief Set the LV Rate light.
+	///
+	void SetLVRateLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel.
+	/// \brief Set the LV Rate light.
+	///
+	void ClearLVRateLight();
+
 	///
 	/// \brief Enable or disable the J2 engine on the SIVb.
 	/// \param Enable Engine on or off.
@@ -1044,15 +1114,9 @@ public:
 	///
 	double GetJ2ThrustLevel();
 
-	///
-	/// \brief Set thrust level of the SIVb APS engines.
-	/// \param thrust Thrust level 0.0 - 1.0.
-	///
-	void SetAPSThrustLevel(double thrust);
-
 	void SetSaturnAttitudeRotLevel(VECTOR3 th);
-
 	double GetSaturnMaxThrust(ENGINETYPE eng);
+	void SIVBBoiloff();
 
 	///
 	/// \brief Get propellant mass in the SIVb stage.
@@ -1077,6 +1141,17 @@ public:
 	/// \return Switch state.
 	///
 	int GetTLIEnableSwitchState();
+	int GetLVGuidanceSwitchState();
+	int GetEDSSwitchState();
+	int GetLVRateAutoSwitchState();
+	int GetTwoEngineOutAutoSwitchState();
+
+	bool GetBECOSignal();
+	bool IsEDSBusPowered(int eds);
+	int GetAGCAttitudeError(int axis);
+
+	void AddRCS_S4B();
+	void SetSIVBThrusters(bool active);
 
 	///
 	/// \brief Load sounds required for TLI burn.
@@ -1209,56 +1284,6 @@ protected:
 	void InitSwitches();
 
 	///
-	/// Set all engine indicator lights on the control panel.
-	/// \brief Set engine indicator lights.
-	///
-	void SetEngineIndicators();
-
-	///
-	/// Clear all engine indicator lights on the control panel.
-	/// \brief Clear engine indicator lights.
-	///
-	void ClearEngineIndicators();
-
-	///
-	/// Turn on the liftoff light on the control panel.
-	/// \brief Set the liftoff light.
-	///
-	void SetLiftoffLight();
-
-	///
-	/// Turn off the liftoff light on the control panel.
-	/// \brief Clear the liftoff light.
-	///
-	void ClearLiftoffLight();
-
-	///
-	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
-	/// failure.
-	/// \brief Set the LV Guidance light.
-	///
-	void SetLVGuidLight();
-
-	///
-	/// Turn off the LV Guidance warning light on the control panel.
-	/// \brief Clear the LV Guidance light.
-	///
-	void ClearLVGuidLight();
-
-	///
-	/// Turn on the LV Rate warning light on the control panel, indicating that the spacecraft
-	/// is turning too fast.
-	/// \brief Set the LV Rate light.
-	///
-	void SetLVRateLight();
-
-	///
-	/// Turn on the LV Rate warning light on the control panel.
-	/// \brief Set the LV Rate light.
-	///
-	void ClearLVRateLight();
-
-	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
 	/// LEM testing.
 	/// \brief Do we have a CSM?
@@ -1382,13 +1407,6 @@ protected:
 	double LastMissionEventTime;
 
 	///
-	/// The time in seconds of when the SIVB booster cutoff. This
-	/// is a generic value used by the autopilot code.
-	/// \brief Time of SIVB cutoff
-	///
-	double SIVBCutoffTime;
-
-	///
 	/// Is the S-IVB J2 engine active for burns or venting
 	/// \brief Is the S-IVB J2 engine active for burns or venting
 	///
@@ -1434,20 +1452,6 @@ protected:
 	///
 	EventTimer EventTimer306Display;
 	SaturnEventTimer SaturnEventTimer306Display;	//Dummy for checklist controller
-	
-	//
-	// Engine failure times for first stage.
-	//
-
-	bool EarlySICutoff[8];
-	double FirstStageFailureTime[8];
-
-	//
-	// Engine failure times for first stage.
-	//
-
-	bool EarlySIICutoff[5];
-	double SecondStageFailureTime[5];
 
 	///
 	/// Flag for use of low-res meshes to reduce graphics lag.
@@ -3620,7 +3624,7 @@ protected:
 	IMU imu;
 	CDU tcdu;
 	CDU scdu;
-	IU iu;
+	IU* iu;
 	CSMCautionWarningSystem cws;
 
 	DockingProbe dockingprobe;
@@ -3860,7 +3864,6 @@ protected:
 	//
 
 	void AddRCSJets(double TRANZ,double MaxThrust);
-	void AddRCS_S4B();
 	void SetRecovery();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
@@ -3883,7 +3886,6 @@ protected:
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
-	void SetStage(int s);
 	void initSaturn();
 	void SwitchClick();
 	void ProbeSound();
@@ -3904,7 +3906,6 @@ protected:
 	void SystemsTimestep(double simt, double simdt, double mjd);
 	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep();
-	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void FireLaunchEscapeMotor();
 	void FireTowerJettisonMotor();
@@ -3915,7 +3916,6 @@ protected:
 
 	void ClearPropellants();
 	void ClearThrusters();
-	virtual void SeparateStage (int stage) = 0;
 	virtual void ConfigureStageMeshes(int stage_state) = 0;
 	virtual void ConfigureStageEngines(int stage_state) = 0;
 	virtual void CreateStageOne() = 0;
@@ -3941,10 +3941,8 @@ protected:
 	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
-	void SetRandomFailures();
+	virtual void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
-	virtual void ActivatePrelaunchVenting() = 0;
-	virtual void DeactivatePrelaunchVenting() = 0;
 
 	//
 	// Save/Load support functions.
@@ -3975,8 +3973,8 @@ protected:
 	virtual void SetVehicleStats() = 0;
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
-	virtual void SaveLVDC(FILEHANDLE scn) = 0;
-	virtual void LoadLVDC(FILEHANDLE scn) = 0;
+	void SaveLVDC(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
@@ -4002,7 +4000,6 @@ protected:
 	void GenericTimestepStage(double simt, double simdt);
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-	void SIVBBoiloff();
 	void LookForSIVb();
 	void LookForLEM();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
@@ -4157,35 +4154,10 @@ protected:
 	// LEM data.
 	//
 
-	double LMLandingLatitude;
-	double LMLandingLongitude;
-	double LMLandingAltitude;
-	char   LMLandingBase[256];
-	double LMLandingMJD;		// MJD of lunar landing
 	double LMDescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
 	double LMDescentEmptyMassKg;
 	double LMAscentEmptyMassKg;
-
-	//
-	// Earth landing data.
-	//
-
-	double SplashdownLatitude;
-	double SplashdownLongitude;
-	double EntryInterfaceMJD;			// MJD of normal return entry interface
-
-	//
-	// Mission TLI and LOI parameters
-	//
-
-	double TransLunarInjectionMJD;			// MJD of TLI burn
-	double LunarOrbitInsertionMJD;			// MJD of first LOI burn
-	double FreeReturnPericynthionMJD;		// MJD of free return pericynthion
-	double FreeReturnPericynthionAltitude;	// Altitude of free return pericynthion
-	double TransLunarInjectionOffsetLon;	// TLI target offset
-	double TransLunarInjectionOffsetLat;	// TLI target offset
-	double TransLunarInjectionOffsetRad;	// TLI target offset
 
 	//
 	// Random motion.

@@ -44,7 +44,17 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "s1c.h"
+#include "LVDC.h"
 #include "tracer.h"
+
+//
+// Random functions from Yaagc.
+//
+
+extern "C" {
+	void srandom(unsigned int x);
+	long int random();
+}
 
 //
 // Set the file name for the tracer code.
@@ -84,8 +94,8 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	TRACESETUP("SaturnV");
 	
 	hMaster = hObj;
-	lvdc = NULL;
 	initSaturnV();
+	iu = new IUSV;
 }
 
 //
@@ -176,9 +186,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(DockS, "docking.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
-
-	// Moved to instantiation time
-	// lvdc_init();
 }
 
 SaturnV::~SaturnV()
@@ -187,6 +194,8 @@ SaturnV::~SaturnV()
 	TRACESETUP("~SaturnV");
 
 	ReleaseSurfaces();
+
+	delete iu;
 }
 
 void SaturnV::CalculateStageMass ()
@@ -282,12 +291,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 		SetThrusterMax0 (th_main[i], thrust);
 	}
 
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu.SetVesselStats(isp, thrust);
-
 	MixtureRatio = ratio;
 }
 
@@ -323,12 +326,6 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 
 	SetThrusterIsp (th_main[0], isp, isp);
 	SetThrusterMax0 (th_main[0], thrust);
-
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
@@ -577,20 +574,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	GenericTimestep(simt, simdt, mjd);
 
 	if (stage < CSM_LEM_STAGE) {
-
-		// LVDC++
-		if (lvdc != NULL) {
-			lvdc->TimeStep(simt, simdt);
-		}
 	} else {
-		
-		if (lvdc != NULL) {
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
-		}
-		
 		GenericTimestepStage(simt, simdt);
 	}
 
@@ -718,19 +702,6 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
-void SaturnV::SaveLVDC(FILEHANDLE scn){
-	if (lvdc != NULL){ lvdc->SaveState(scn); }
-}
-
-void SaturnV::LoadLVDC(FILEHANDLE scn){
-	// If the LVDC does not yet exist, create it.
-	if(lvdc == NULL){
-		lvdc = new LVDC;
-		lvdc->Init(this);
-	}
-	lvdc->LoadState(scn);
-}
-
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {
@@ -740,14 +711,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	ClearMeshes();
 	SetupMeshes();
-
-	// DS20150720 LVDC++ ON WHEELS
-	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
-	// This happens if the USE_LVDC flag is set but no LVDC section is present.
-	if(lvdc == NULL){
-		lvdc = new LVDC;
-		lvdc->Init(this);
-	}
 
 	//
 	// This code all needs to be fixed up.
@@ -969,6 +932,18 @@ void SaturnV::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
+	case 5:
+		// S4B Startup
+		SetSIVbCMixtureRatio(4.946);
+		break;
+	case 6:
+		// S4B restart
+		SetSIVbCMixtureRatio(4.5);
+		break;
+	case 7:
+		// S4B MRS
+		SetSIVbCMixtureRatio(4.946);
+		break;
 	case 10:
 		DeactivatePrelaunchVenting();
 		break;
@@ -1008,6 +983,9 @@ void SaturnV::SwitchSelector(int item){
 	case 16:
 		// Clear liftoff light now - Apollo 15 checklist item
 		ClearLiftoffLight();
+		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
 		break;
 	case 17:
 		// Move hidden S1C
@@ -1064,17 +1042,98 @@ void SaturnV::SwitchSelector(int item){
 		S2ShutS.play(NOLOOP, 235);
 		S2ShutS.done();
 		break;
-	case 5:
-		// S4B Startup
-		SetSIVbCMixtureRatio(4.946);
+	case 25:
+		// SII OECO
 		break;
-	case 6:
-		// S4B restart
-		SetSIVbCMixtureRatio(4.5);
+	case 26:
+		// SII/SIVB Direct Staging
 		break;
-	case 7:
-		// S4B MRS
-		SetSIVbCMixtureRatio(4.946);
+	case 27:
+		//Second Staging
+		SPUShiftS.done(); // Make sure it's done
+		ClearEngineIndicators();
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
+		SetSIVBThrusters(true);
+		SetThrusterGroupLevel(thg_ver, 1.0);
+		SetThrusterResource(th_main[0], ph_3rd);
 		break;
+	}
+}
+
+void SaturnV::SetRandomFailures()
+{
+	Saturn::SetRandomFailures();
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
+
+		//
+		// Engine failure times for first stage.
+		//
+
+		bool EarlySICutoff[5];
+		double FirstStageFailureTime[5];
+
+		//
+		// Engine failure times for first stage.
+		//
+
+		bool EarlySIICutoff[5];
+		double SecondStageFailureTime[5];
+
+		//
+		// Engine failure times
+		//
+
+		for (int i = 0;i < 5;i++)
+		{
+			EarlySICutoff[i] = 0;
+			FirstStageFailureTime[i] = 0.0;
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			EarlySIICutoff[i] = 0;
+			SecondStageFailureTime[i] = 0.0;
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			if (!(random() & 63))
+			{
+				EarlySICutoff[i] = 1;
+				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+			}
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			if (!(random() & 63))
+			{
+				EarlySIICutoff[i] = 1;
+				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
+			}
+		}
+
+		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+
+		if (!(random() & 127))
+		{
+			LaunchFail.LETAutoJetFail = 1;
+		}
+		if (!(random() & 63))
+		{
+			LaunchFail.SIIAutoSepFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LESJetMotorFail = 1;
+		}
 	}
 }

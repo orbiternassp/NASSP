@@ -27,9 +27,6 @@
 
 struct PayloadSettings {
 
-	double LandingLatitude;
-	double LandingLongitude;
-	double LandingAltitude;
 	double AscentFuelKg;
 	double DescentFuelKg;
 	double AscentEmptyKg;

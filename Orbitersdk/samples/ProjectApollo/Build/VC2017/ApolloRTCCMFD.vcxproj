@@ -108,7 +108,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Debug\ProjectApolloMFD/ProjectApolloMFD.bsc</OutputFile>
+      <OutputFile>.\Debug\ApolloRTCCMFD/ApolloRTCCMFD.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -129,10 +129,10 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release\ProjectApolloMFD/ProjectApolloMFD.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release\ProjectApolloMFD/</AssemblerListingLocation>
-      <ObjectFileName>.\Release\ProjectApolloMFD/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release\ProjectApolloMFD/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\Release\ApolloRTCCMFD/ApolloRTCCMFD.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Release\ApolloRTCCMFD/</AssemblerListingLocation>
+      <ObjectFileName>.\Release\ApolloRTCCMFD/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\ApolloRTCCMFD/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -156,7 +156,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release\ProjectApolloMFD/ProjectApolloMFD.bsc</OutputFile>
+      <OutputFile>.\Release\ApolloRTCCMFD/ApolloRTCCMFD.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

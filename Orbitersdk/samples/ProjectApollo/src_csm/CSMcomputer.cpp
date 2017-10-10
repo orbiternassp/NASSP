@@ -47,8 +47,6 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CD
 {
 	isLGC = false;
 
-	VesselStatusDisplay = 0;
-
 	//
 	// Last RCS settings.
 	//
@@ -210,10 +208,10 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;
 				vagc.RestartLight = 1;
-				sat->dsky.ClearRestart();
-				sat->dsky2.ClearRestart();
-				sat->dsky.ClearStby();
-				sat->dsky2.ClearStby();
+				dsky.ClearRestart();
+				dsky2.ClearRestart();
+				dsky.ClearStby();
+				dsky2.ClearStby();
 				// Reset last cycling time
 				LastCycled = 0;
 			// We should issue telemetry though.

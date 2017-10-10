@@ -353,23 +353,6 @@ void LEM::Init()
 	PanelFlashOn = false;
 
 	//
-	// For now we'll turn on the mission timer. We don't yet have a switch to control
-	// it.
-	//
-	// Switch added -- DS20100501
-	//
-
-	// MissionTimerDisplay.SetRunning(true);
-	// MissionTimerDisplay.SetEnabled(true);
-
-	//
-	// And Event Timer.
-	//
-
-	EventTimerDisplay.SetRunning(true);
-	EventTimerDisplay.SetEnabled(true);
-
-	//
 	// Initial sound setup
 	//
 
@@ -1517,7 +1500,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 
@@ -1531,6 +1513,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	AscentEmptyMassKg = ls.AscentEmptyKg;
 
 	agc.SetMissionInfo(ApolloNo, CSMName);
+	aea.SetMissionInfo(ApolloNo);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);

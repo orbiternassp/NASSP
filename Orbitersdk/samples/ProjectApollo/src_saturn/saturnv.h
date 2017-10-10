@@ -22,9 +22,6 @@
 
   **************************************************************************/
 
-// LVDC moved here
-#include "LVDC.h"
-
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -131,8 +128,6 @@ protected:
 	//
 
 	void SaveVehicleStats(FILEHANDLE scn);
-	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
 
 	//
 	// Odds and ends.
@@ -143,6 +138,7 @@ protected:
 	void DeactivatePrelaunchVenting();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
+	void SetRandomFailures();
 
 	//
 	// Class variables.
@@ -178,9 +174,6 @@ protected:
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
-	
-	// DS20150804 LVDC++ ON WHEELS
-	LVDC* lvdc;
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;
