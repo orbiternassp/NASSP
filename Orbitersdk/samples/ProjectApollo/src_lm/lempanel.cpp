@@ -868,7 +868,7 @@ void LEM::InitSwitches() {
 
 	PLSSFillValve.Register(PSH, "PLSSFillValve", 1);
 	PLSSFillValve.AddPosition(0, 0);
-	PLSSFillValve.AddPosition(1, 210); // How many intermittent positions do we need?
+	PLSSFillValve.AddPosition(1, 210);
 
 	PressRegAValve.Register(PSH, "PressRegAValve", 3);
 	PressRegAValve.AddPosition(0, 180);
@@ -938,7 +938,7 @@ void LEM::InitSwitches() {
 	ASCH2OValve.AddPosition(0, 340);
 	ASCH2OValve.AddPosition(1, 100);
 
-	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0); // Needs better positions
+	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 	LiquidGarmentCoolingValve.AddPosition(0, 0);
 	LiquidGarmentCoolingValve.AddPosition(1, 22);
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
@@ -1222,8 +1222,7 @@ void LEM::ReleaseSurfaces ()
 void LEM::InitPanel (int panel)
 
 {
-//	switch (panel) {
-//	case LMPANEL_MAIN: // LEM Main Panel
+    // LEM Main Panel
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -1385,8 +1384,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SEC_C02],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SGD_LEVER],			g_Param.col[4]);
 
-		//		break;
-		//
+    //
 		// Borders need to set the center color to transparent so only the outline
 		// is visible.
 		//
@@ -1414,17 +1412,8 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_38x38], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_40x40], g_Param.col[4]);
-
-
-//		break;	
-//	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
-//	case LMPANEL_LEFTWINDOW: // LEM Left Window 
-		
-//		break;
-
-//	}
-
-	SetSwitches(panel);
+    
+    SetSwitches(panel);
 }
 
 bool LEM::clbkLoadPanel (int id) {
