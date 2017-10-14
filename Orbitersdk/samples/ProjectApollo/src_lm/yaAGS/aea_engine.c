@@ -128,6 +128,10 @@ static const int64_t CONST64_3 = 1i64;
 // rounded quotient is captured as one of the output parameters.  This 
 // calculation assumes that "long long" is at least 64 bits.
 
+static int abscom_caused_ovf = 0;
+static int abscom_ovf_addr = 0;
+static int abscom_problem_addr = 0;
+
 #if 0
 static int 
 LongDivide (int64_t Dividend, long rDivisor, int *RoundedQuotient)
@@ -581,6 +585,7 @@ aea_engine (ags_t * State)
 	  // supposed to be.  I take the liberty of making it the largest
 	  // positive or negative value.
 	  State->Overflow = 1;
+          abscom_caused_ovf = 0;
 	  if (lli >= 0)
 	    State->Accumulator = State->Quotient = 0377777;
 	  else
@@ -591,7 +596,10 @@ aea_engine (ags_t * State)
 	  // A and Y of equal magnitude is a special case that requires 
 	  // some wacky output settings.
 	  if (i < 0)		// Y negative
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	  State->Accumulator = State->Quotient = 0400000;
         }
       else 
@@ -856,7 +864,10 @@ aea_engine (ags_t * State)
 	  {
 	    double f;
 	    if (abs (j) >= abs (i))		// See note (a) above.
+            {
 	      State->Overflow = 1;   
+              abscom_caused_ovf = 0;
+            }
 	    if (i == -1 && lli == -0200000)	// See note (b) above.
 	      {
 	        State->Quotient = 0177777;
@@ -903,7 +914,10 @@ aea_engine (ags_t * State)
       i = SignExtend (State->Accumulator);
       i += SignExtend (ValueFromY);
       if (i > 0377777 || i < -0400000)
+      {
         State->Overflow = 1;
+        abscom_caused_ovf = 0;
+      }
       State->Accumulator = (i & 0777777);
       if (OpCode == 032)
         NewValueForY = 0;
@@ -913,7 +927,10 @@ aea_engine (ags_t * State)
       i = SignExtend (State->Accumulator);
       i -= SignExtend (ValueFromY);
       if (i > 0377777 || i < -0400000)
+      {
         State->Overflow = 1;
+        abscom_caused_ovf = 0;
+      }
       State->Accumulator = (i & 0777777);
       if (OpCode == 034)
         NewValueForY = 0;
@@ -956,6 +973,11 @@ aea_engine (ags_t * State)
     case 044:	// TOV
       if (State->Overflow)
         {	
+          if (abscom_caused_ovf)
+          {
+            abscom_problem_addr = abscom_ovf_addr;
+            fprintf(stderr, "!!!!! ABS/COM OVF ADDR: %04o", abscom_problem_addr);
+          }
 	  AddBacktraceAGS (State);
 	  State->Overflow = 0;
 	  NewProgramCounter = AddressField;	
@@ -990,7 +1012,10 @@ aea_engine (ags_t * State)
 	  llj = (lli & llk);
 	  if ((0 == (State->Accumulator & 0400000) && llj != 0) ||
 	      (0 != (State->Accumulator & 0400000) && llj != llk))
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	}
       // The actual shifting part is really easy.
       PutLongAccumulator (State, lli << i);
@@ -1026,22 +1051,39 @@ aea_engine (ags_t * State)
 	  j = (State->Accumulator & k);
 	  if ((0 == (State->Accumulator & 0400000) && j != 0) ||
 	      (0 != (State->Accumulator & 0400000) && j != k))
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	}
       // The actual shifting part is really easy.
       State->Accumulator = ((State->Accumulator << i) & 0777777);
       break;
     case 060:	// COM
       State->Accumulator = (0777777 & -State->Accumulator);
-      if (State->Accumulator == 0400000) // NASSP TEST #1 -- COM NEGMAX -> OVERFLOW
-        State->Overflow = 1;
+      if (State->Accumulator == 0400000)
+        {
+          if (!State->Overflow)
+            {
+              abscom_caused_ovf = 1;
+              abscom_ovf_addr = State->ProgramCounter;
+            }
+          State->Overflow = 1;
+        }
       break;
     case 062:	// ABS
       i = SignExtend (State->Accumulator);
       if (i < 0 && i > -0400000)
         State->Accumulator = -i;
-      if (State->Accumulator == 0400000) // NASSP TEST #2 -- ABS NEGMAX -> OVERFLOW
-        State->Overflow = 1;
+      if (State->Accumulator == 0400000)
+        {
+          if (!State->Overflow)
+            {
+              abscom_caused_ovf = 1;
+              abscom_ovf_addr = State->ProgramCounter;
+            }
+          State->Overflow = 1;
+        }
       break;
     case 064:	// INP
       MicrosecondsThisInstruction = Input (State, AddressField, &State->Accumulator);
