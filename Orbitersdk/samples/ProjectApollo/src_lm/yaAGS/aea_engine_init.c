@@ -121,6 +121,7 @@ aea_engine_init (ags_t * State, const char *RomImage, const char *CoreDump)
   State->Quotient = 0;
   State->Index = 0;
   State->Overflow = 0;
+  State->AbsComAddr = 0;
   // The discrete outputs and inputs.
   State->OutputPorts[IO_ODISCRETES] = 0777777;
   State->InputPorts[IO_2020] = 0777777;

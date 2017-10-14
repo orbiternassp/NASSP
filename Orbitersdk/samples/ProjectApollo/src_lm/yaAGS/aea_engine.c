@@ -130,7 +130,6 @@ static const int64_t CONST64_3 = 1i64;
 
 static int abscom_caused_ovf = 0;
 static int abscom_ovf_addr = 0;
-static int abscom_problem_addr = 0;
 
 #if 0
 static int 
@@ -975,8 +974,8 @@ aea_engine (ags_t * State)
         {	
           if (abscom_caused_ovf)
           {
-            abscom_problem_addr = abscom_ovf_addr;
-            fprintf(stderr, "!!!!! ABS/COM OVF ADDR: %04o", abscom_problem_addr);
+            State->AbsComAddr = abscom_ovf_addr;
+            fprintf(stderr, "!!!!! ABS/COM OVF ADDR: %04o", State->AbsComAddr);
           }
 	  AddBacktraceAGS (State);
 	  State->Overflow = 0;

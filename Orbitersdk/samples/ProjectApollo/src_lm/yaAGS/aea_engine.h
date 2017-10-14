@@ -90,6 +90,7 @@ typedef struct
   int Index;
   int Overflow;
   int Halt;
+  int AbsComAddr;
   // The following variable counts the total number of clock cycles since
   // CPU-startup.  A 64-bit integer is used.
   uint64_t /* unsigned long long */ CycleCounter;
