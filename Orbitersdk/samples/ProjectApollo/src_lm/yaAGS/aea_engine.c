@@ -52,6 +52,9 @@
 				(finally) with what I think is a correct 
 				implementation.
 		2005-08-22 RSB	"unsigned long long" replaced by uint64_t.
+		2017-10-11 MAS	Changed a "1" to "1LL" in LLS mask calculations.
+				This fixes overflow being incorrectly set for
+				certain cases of LLS.
   
   The scans of the original AGS/AEA technical documentation can be found
   at the website listed above.  Also at that site you can find the source code
@@ -59,7 +62,7 @@
   source code.  The document specifically of interest is the AEA Programming
   Reference by Stiverson.
   
-  What THIS file contains is basicly a pure simulation of the CPU, without any
+  What THIS file contains is basically a pure simulation of the CPU, without any
   input and output as such.  (I/O, to the DEDA or to LM hardware 
   simulations occurs through the mechanism of sockets, and hence the DEDA 
   front-end and hardware back-end simulations may be implemented as complete 
@@ -983,7 +986,7 @@ aea_engine (ags_t * State)
       // will be the picked-off bits.
       if (i)
         {
-	  llk = (CONST64_2 & ~((1 << (34 - i)) - 1));
+	  llk = (CONST64_2 & ~((CONST64_3 << (34 - i)) - 1));
 	  llj = (lli & llk);
 	  if ((0 == (State->Accumulator & 0400000) && llj != 0) ||
 	      (0 != (State->Accumulator & 0400000) && llj != llk))
