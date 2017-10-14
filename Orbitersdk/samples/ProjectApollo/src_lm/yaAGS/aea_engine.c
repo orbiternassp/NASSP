@@ -52,6 +52,9 @@
 				(finally) with what I think is a correct 
 				implementation.
 		2005-08-22 RSB	"unsigned long long" replaced by uint64_t.
+		2017-10-11 MAS	Changed a "1" to "1LL" in LLS mask calculations.
+				This fixes overflow being incorrectly set for
+				certain cases of LLS.
   
   The scans of the original AGS/AEA technical documentation can be found
   at the website listed above.  Also at that site you can find the source code
@@ -124,6 +127,9 @@ static const int64_t CONST64_3 = 1i64;
 // long-division routine.  The return value is the quotient, while the 
 // rounded quotient is captured as one of the output parameters.  This 
 // calculation assumes that "long long" is at least 64 bits.
+
+static int abscom_caused_ovf = 0;
+static int abscom_ovf_addr = 0;
 
 #if 0
 static int 
@@ -578,6 +584,7 @@ aea_engine (ags_t * State)
 	  // supposed to be.  I take the liberty of making it the largest
 	  // positive or negative value.
 	  State->Overflow = 1;
+          abscom_caused_ovf = 0;
 	  if (lli >= 0)
 	    State->Accumulator = State->Quotient = 0377777;
 	  else
@@ -588,7 +595,10 @@ aea_engine (ags_t * State)
 	  // A and Y of equal magnitude is a special case that requires 
 	  // some wacky output settings.
 	  if (i < 0)		// Y negative
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	  State->Accumulator = State->Quotient = 0400000;
         }
       else 
@@ -853,7 +863,10 @@ aea_engine (ags_t * State)
 	  {
 	    double f;
 	    if (abs (j) >= abs (i))		// See note (a) above.
+            {
 	      State->Overflow = 1;   
+              abscom_caused_ovf = 0;
+            }
 	    if (i == -1 && lli == -0200000)	// See note (b) above.
 	      {
 	        State->Quotient = 0177777;
@@ -900,7 +913,10 @@ aea_engine (ags_t * State)
       i = SignExtend (State->Accumulator);
       i += SignExtend (ValueFromY);
       if (i > 0377777 || i < -0400000)
+      {
         State->Overflow = 1;
+        abscom_caused_ovf = 0;
+      }
       State->Accumulator = (i & 0777777);
       if (OpCode == 032)
         NewValueForY = 0;
@@ -910,7 +926,10 @@ aea_engine (ags_t * State)
       i = SignExtend (State->Accumulator);
       i -= SignExtend (ValueFromY);
       if (i > 0377777 || i < -0400000)
+      {
         State->Overflow = 1;
+        abscom_caused_ovf = 0;
+      }
       State->Accumulator = (i & 0777777);
       if (OpCode == 034)
         NewValueForY = 0;
@@ -953,6 +972,11 @@ aea_engine (ags_t * State)
     case 044:	// TOV
       if (State->Overflow)
         {	
+          if (abscom_caused_ovf)
+          {
+            State->AbsComAddr = abscom_ovf_addr;
+            fprintf(stderr, "!!!!! ABS/COM OVF ADDR: %04o", State->AbsComAddr);
+          }
 	  AddBacktraceAGS (State);
 	  State->Overflow = 0;
 	  NewProgramCounter = AddressField;	
@@ -983,11 +1007,14 @@ aea_engine (ags_t * State)
       // will be the picked-off bits.
       if (i)
         {
-	  llk = (CONST64_2 & ~((1 << (34 - i)) - 1));
+	  llk = (CONST64_2 & ~((CONST64_3 << (34 - i)) - 1));
 	  llj = (lli & llk);
 	  if ((0 == (State->Accumulator & 0400000) && llj != 0) ||
 	      (0 != (State->Accumulator & 0400000) && llj != llk))
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	}
       // The actual shifting part is really easy.
       PutLongAccumulator (State, lli << i);
@@ -1023,18 +1050,39 @@ aea_engine (ags_t * State)
 	  j = (State->Accumulator & k);
 	  if ((0 == (State->Accumulator & 0400000) && j != 0) ||
 	      (0 != (State->Accumulator & 0400000) && j != k))
+          {
 	    State->Overflow = 1;
+            abscom_caused_ovf = 0;
+          }
 	}
       // The actual shifting part is really easy.
       State->Accumulator = ((State->Accumulator << i) & 0777777);
       break;
     case 060:	// COM
       State->Accumulator = (0777777 & -State->Accumulator);
+      if (State->Accumulator == 0400000)
+        {
+          if (!State->Overflow)
+            {
+              abscom_caused_ovf = 1;
+              abscom_ovf_addr = State->ProgramCounter;
+            }
+          State->Overflow = 1;
+        }
       break;
     case 062:	// ABS
       i = SignExtend (State->Accumulator);
       if (i < 0 && i > -0400000)
         State->Accumulator = -i;
+      if (State->Accumulator == 0400000)
+        {
+          if (!State->Overflow)
+            {
+              abscom_caused_ovf = 1;
+              abscom_ovf_addr = State->ProgramCounter;
+            }
+          State->Overflow = 1;
+        }
       break;
     case 064:	// INP
       MicrosecondsThisInstruction = Input (State, AddressField, &State->Accumulator);
