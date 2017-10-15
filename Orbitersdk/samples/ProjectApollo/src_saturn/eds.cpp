@@ -362,9 +362,6 @@ void EDSSV::Timestep(double simdt)
 	if (lvCommandConnector == NULL) return;
 	if (lvCommandConnector->connectedTo == NULL) return;
 
-	sprintf(oapiDebugString(), "%d %d %d %d %d %d", SIEngineOutIndicationA, SIEngineOutIndicationB, SIIEngineOutIndicationA, SIIEngineOutIndicationB,
-		SIVBEngineOutIndicationA, SIVBEngineOutIndicationB);
-
 	VECTOR3 AttRate;
 
 	AttRate = lvrg.GetRates();
