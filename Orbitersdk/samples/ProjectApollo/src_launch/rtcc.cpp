@@ -5424,6 +5424,7 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 	sv1 = coast(sv0, dt0);
 
 	TLIFirstGuessConic(sv1, opt->lat, opt->h_peri, PeriMJDguess, DV_guess, var_conv);
+	IntegratedTLMC(sv1, opt->lat, opt->h_peri, 0.0, PeriMJDguess, var_conv, DV_guess, var_conv, sv_peri);
 
 	while (abs(dTIG) > 1.0)
 	{
@@ -5431,9 +5432,7 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 		dt1 = (TIGMJD - sv1.MJD) * 24.0 * 60.0 * 60.0;
 		sv2 = coast(sv1, dt1);
 
-		IntegratedTLMC(sv2, opt->lat, opt->h_peri, 0.0, PeriMJDguess, var_conv, DV_guess, var_conv, sv_peri);
-		TLMCFlyby(sv2, opt->lat, opt->h_peri, DV_guess, DV, sv_peri, sv_reentry);
-		PeriMJDguess = sv_peri.MJD;
+		TLIFlyby(sv2, opt->lat, opt->h_peri, sv_peri, DV, sv_peri, sv_reentry);
 
 		if (ii < 2)
 		{
@@ -8275,7 +8274,11 @@ void RTCC::TLIFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double M
 	v_peri = var_fg.x;
 
 	//Conic first guess seems to break down above 1500NM pericynthion altitude
-	if (r_peri > 4.5e6) return;
+	if (r_peri > 4.5e6)
+	{
+		var_converged = var_fg;
+		return;
+	}
 
 	do
 	{
@@ -8325,6 +8328,97 @@ VECTOR3 RTCC::TLMCEmpiricalFirstGuess(double r, double dt)
 	V = sqrt(0.184 + 0.553 / (r / R_E))*R_E / 3600.0 - 0.0022*dt*3600.0;
 
 	return _V(V, psi, lambda);
+}
+
+bool RTCC::TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry)
+{
+	SV sv_TLI_apo, sv_p, sv_r;
+	MATRIX3 M_EMP;
+	VECTOR3 R_EMP, V_EMP;
+	double dt, mu, ddt, VacPeri, R_E, e_H, e_Ho, c_I, p_H, eps2, dto, r_peri, lngtest, lattest, fpatest, rtest, v_peri, lng_EMP, azi_peri;
+	int s_F;
+	OBJHANDLE hMoon, hEarth;
+	OELEMENTS coe;
+
+	c_I = p_H = dto = 0.0;
+	eps2 = 0.1;
+	s_F = 0;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV*oapiGetMass(hMoon);
+	R_E = oapiGetSize(hEarth);
+
+	sv_p.gravref = hMoon;
+	sv_r.gravref = hEarth;
+
+	r_peri = oapiGetSize(hMoon) + h_peri;
+	dt = (sv_peri_guess.MJD - sv_TLI.MJD)*24.0*3600.0;
+
+	M_EMP = OrbMech::EMPMatrix(sv_peri_guess.MJD);
+	R_EMP = mul(M_EMP, sv_peri_guess.R);
+	V_EMP = mul(M_EMP, sv_peri_guess.V);
+	OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lng_EMP, lattest, fpatest, azi_peri);
+
+	do
+	{
+		sv_p.MJD = sv_TLI.MJD + dt / 24.0 / 3600.0;
+
+		do
+		{
+			//Position vector in EMP Coordinates
+			OrbMech::adbar_from_rv(r_peri, v_peri, lng_EMP, lat_EMP, PI05, azi_peri, R_EMP, V_EMP);
+
+			//EMP Matrix
+			M_EMP = OrbMech::EMPMatrix(sv_p.MJD);
+
+			//Convert EMP position to ecliptic
+			sv_p.R = tmul(M_EMP, R_EMP);
+			sv_p.V = tmul(M_EMP, V_EMP);
+
+			//Calculate pericynthion velocity
+			sv_p.V = OrbMech::Vinti(sv_p.R, _V(0.0, 0.0, 0.0), sv_TLI.R, sv_p.MJD, -dt, 0, false, hMoon, hMoon, sv_TLI.gravref, sv_p.V);
+
+			//save azi and vmag as new initial guess
+			V_EMP = mul(M_EMP, sv_p.V);
+			OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lngtest, lattest, fpatest, azi_peri);
+
+			coe = OrbMech::coe_from_sv(sv_p.R, sv_p.V, mu);
+			ddt = OrbMech::timetoperi(sv_p.R, sv_p.V, mu);
+
+			if (coe.TA > PI)
+			{
+				lng_EMP += coe.TA - PI2;
+			}
+			else
+			{
+				lng_EMP += coe.TA;
+			}
+		} while (abs(ddt) > 0.01);
+
+		OrbMech::ReturnPerigee(sv_p.R, sv_p.V, sv_p.MJD, hMoon, hEarth, 1.0, sv_r.MJD, sv_r.R, sv_r.V);
+		VacPeri = length(sv_r.R);
+
+		//20NM vacuum perigee
+		e_H = VacPeri - R_E - 20.0*1852.0;
+
+		if (p_H == 0 || abs(dt - dto) >= eps2)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dt, e_Ho, dto);
+			if (s_F == 1)
+			{
+				return false;
+			}
+		}
+	} while (abs(dt - dto) >= eps2);
+
+	sv_TLI_apo = coast(sv_p, -dt);
+
+	DV = sv_TLI_apo.V - sv_TLI.V;
+	sv_peri = sv_p;
+	sv_reentry = sv_r;
+
+	return true;
 }
 
 bool RTCC::TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry)
