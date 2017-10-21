@@ -37,11 +37,8 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -481,7 +478,7 @@ void Saturn::SetCSMStage ()
 
 	SetSize(10);
 	SetCOG_elev(3.5);
-	SetEmptyMass(CM_Mass + SM_EmptyMass);
+	SetEmptyMass(CM_EmptyMass + SM_EmptyMass);
 
 	// ************************* propellant specs **********************************
 	if (!ph_sps) {
@@ -516,7 +513,7 @@ void Saturn::SetCSMStage ()
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	SetRotDrag(_V(0.7,0.7,0.3));
 	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
+	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0);
 
 	const double CGOffset = 12.25+21.5-1.8+0.35;
@@ -660,10 +657,15 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 
 	S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
+	S4Config.LMAscentEmptyMassKg = LMAscentEmptyMassKg;
+	S4Config.LMDescentEmptyMassKg = LMDescentEmptyMassKg;
 	S4Config.LMPad = LMPad;
 	S4Config.LMPadCount = LMPadCount;
+	S4Config.AEAPad = AEAPad;
+	S4Config.AEAPadCount = AEAPadCount;
 	sprintf(S4Config.LEMCheck, LEMCheck);
-	S4Config.LEMCheckAuto = LEMCheckAuto;
+
+	S4Config.iu_pointer = iu;
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);
@@ -1074,7 +1076,7 @@ void Saturn::SetChuteStage1()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale(-5e-3);
-		SetBankMomentScale(-5e-3);
+		SetYawMomentScale(-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1103,7 +1105,7 @@ void Saturn::SetChuteStage2()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1130,7 +1132,7 @@ void Saturn::SetChuteStage3()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale(-5e-3);
-		SetBankMomentScale(-5e-3);
+		SetYawMomentScale(-5e-3);
 	}
 	SetLiftCoeffFunc (0);
     ClearExhaustRefs();
@@ -1157,7 +1159,7 @@ void Saturn::SetChuteStage4()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1184,7 +1186,7 @@ void Saturn::SetSplashStage()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();
@@ -1217,7 +1219,7 @@ void Saturn::SetRecovery()
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetYawMomentScale (-5e-3);
 	}
 	SetLiftCoeffFunc(0);
     ClearExhaustRefs();

@@ -98,9 +98,12 @@
 		03/26/17 MAS	Added previously-static items from agc_engine.c to agc_t.
 		03/27/17 MAS	Added a bit for Night Watchman's 1.28s-long assertion of
 						its channel 77 bit.
+		04/02/17 MAS	Added a couple of flags used for simulation of the
+						TC Trap hardware bug.
 		04/16/17 MAS    Added a voltage counter and input flag for the AGC
 						warning filter, as well as a channel 163 flag for
 						the AGC (CMC/LGC) warning light.
+		07/13/17 MAS	Added flags for the three HANDRUPT traps.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -334,7 +337,6 @@ typedef struct
   int16_t InputChannel[NUM_CHANNELS];
   int16_t OutputChannel7;
   int16_t OutputChannel10[16];
-  int16_t Ch33Switches; // Special values for switches on ch 33
   // The indexing value.
   int16_t IndexValue;
   int8_t InterruptRequests[1 + NUM_INTERRUPT_TYPES];	// 0-index not used.
@@ -361,7 +363,12 @@ typedef struct
   unsigned ParityFail:1;        // Set when a parity failure is encountered accessing memory (in yaAGC, just hitting banks 44+)
   unsigned CheckParity:1;       // Enable parity checking for fixed memory.
   unsigned RestartLight:1;      // The present state of the RESTART light
-  unsigned GeneratedWarning : 1;  // Whether there is a pending input to the warning filter
+  unsigned TookBZF:1;           // Flag for having just taken a BZF branch, used for simulation of a TC Trap hardware bug
+  unsigned TookBZMF:1;          // Flag for having just taken a BZMF branch, used for simulation of a TC Trap hardware bug
+  unsigned GeneratedWarning:1;  // Whether there is a pending input to the warning filter
+  unsigned Trap31A:1;           // Enable flag for Trap 31A
+  unsigned Trap31B:1;           // Enable flag for Trap 31B
+  unsigned Trap32:1;            // Enable flag for Trap 32
   uint32_t WarningFilter;       // Current voltage of the AGC warning filter
   int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
@@ -744,9 +751,6 @@ void GenerateUPRUPT(agc_t * State);
 void GenerateRADARUPT(agc_t * State);
 void GenerateHANDRUPT(agc_t * State);
 int IsUPRUPTActive (agc_t * State);
-// DS20060827 Change bits in channel 33
-void SetCh33Bits(agc_t * State, int16_t Value);
-void SetLMCh33Bits(agc_t * State, int16_t Value);
 // DS20060903 Make these available externally
 int CounterPINC (int16_t * Counter);
 int CounterPCDU (int16_t * Counter);

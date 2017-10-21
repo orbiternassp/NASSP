@@ -27,6 +27,8 @@
 
 #include "thread.h"
 
+class PanelSwitchItem;
+
 // OPTICS CONFIGURATION DEFINES
 // Step values in radians.
 #define OCDU_SHAFT_STEP 0.000191747598876953125 
@@ -78,6 +80,7 @@ class Saturn;
 class IU;
 class CSMToIUConnector;
 class CSMToSIVBControlConnector;
+class CDU;
 
 //
 // Class definition.
@@ -107,7 +110,7 @@ public:
 	/// \param i The launch vehicle Instrument Unit connector for the launch vehicle autopilot.
 	/// \param sivb The CSM to SIVb command connector (e.g. for fuel venting).
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
 	virtual ~CSMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -118,63 +121,10 @@ public:
 	void agcTimestep(double simt, double simdt);
 
 	//
-	// External event handling.
-	//
-
-	///
-	/// Called to tell the AGC that liftoff has occured, and it should switch into the liftoff
-	/// program.
-	///
-	/// \brief Liftoff trigger.
-	///
-	void Liftoff(double simt);
-
-	//
 	// Data access.
 	//
 
-	///
-	/// \brief Get the desired apogee for the autopilot.
-	///
-	double GetDesiredApogee() { return DesiredApogee; };
-
-	///
-	/// \brief Get the desired perigee for the autopilot.
-	///
-	double GetDesiredPerigee() { return DesiredPerigee; };
-
-	///
-	/// \brief Get the desired launch azimuth for the autopilot.
-	///
-	double GetDesiredAzimuth() { return DesiredAzimuth; };
-
-	///
-	/// \brief Get the desired launch inclination for the autopilot.
-	///
-	double GetDesiredInclination() { return DesiredInclination; };
-
-	///
-	/// \brief Set the desired apogee for the autopilot.
-	///
-	void SetDesiredApogee(double val) { DesiredApogee = val; };
-
-	///
-	/// \brief Set the desired perigee for the autopilot.
-	///
-	void SetDesiredPerigee(double val) { DesiredPerigee = val; };
-
-	///
-	/// \brief Set the desired launch azimuth for the autopilot.
-	///
-	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
-
-	///
-	/// \brief Set the desired inclination for the autopilot.
-	///
-	void SetDesiredInclination(double val) { DesiredInclination = val; };
-
 	void SetInputChannelBit(int channel, int bit, bool val);
-	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
 	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
@@ -194,6 +144,7 @@ protected:
 	void ProcessChannel141(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+	void ProcessIMUCDUReadCount(int channel, int val);
 
 	FILE *Dfile;
 	int count;
@@ -201,8 +152,6 @@ protected:
 	unsigned int LastOut5;
 	unsigned int LastOut6;
 	unsigned int LastOut11;
-
-	unsigned int VesselStatusDisplay;
 
 	///
 	/// \brief Second DSKY in the lower equipment bay.

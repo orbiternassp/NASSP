@@ -89,19 +89,23 @@ struct SIVBSettings
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
 
 	int LMPadCount;					///< Count of LM PAD data.
 	unsigned int *LMPad;			///< LM PAD data.
+	int AEAPadCount;				///< Count of AEA PAD data.
+	unsigned int *AEAPad;			///< AEA PAD data.
 
 	///
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; LEMCheck[0] = 0; LEMCheckAuto = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0; };
 
+	IU *iu_pointer;
 };
 
 class SIVB;
@@ -231,6 +235,8 @@ public:
 	///
 	void clbkPreStep(double simt, double simdt, double mjd);
 
+	void clbkPostStep(double simt, double simdt, double mjd);
+
 	///
 	/// \brief Orbiter state loading function.
 	/// \param scn Scenario file to load from.
@@ -270,12 +276,6 @@ public:
 	double GetJ2ThrustLevel();
 
 	///
-	/// \brief Set thrust level of the APS engine.
-	/// \param thrust Thrust level from 0.0 to 1.0.
-	///
-	void SetAPSThrustLevel(double thrust);
-
-	///
 	/// \brief Enable or disable the J2 engine.
 	/// \param Enable Enable if true, disable if false.
 	///
@@ -286,6 +286,12 @@ public:
 	/// \return Mission time in seconds since launch.
 	///
 	double GetMissionTime();
+
+	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
+	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
+	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
+	void SetAPSUllageThrusterLevel(int n, double level);
 
 	///
 	/// \brief Get main propellant mass.
@@ -436,6 +442,8 @@ protected:
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
+	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 
 	//
 	// LM PAD
@@ -447,6 +455,12 @@ protected:
 	int LMPadLoadCount;
 	int LMPadValueCount;
 
+	int AEAPadCount;				///< Count of AEA PAD values.
+	unsigned int *AEAPad;			///< AEA PAD load data.
+
+	int AEAPadLoadCount;
+	int AEAPadValueCount;
+
 	char PayloadName[64];			///< Name of payload, if appropriate.
 
 	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
@@ -455,7 +469,6 @@ protected:
 	/// LEM checklist file
 	///
 	char LEMCheck[100];
-	bool LEMCheckAuto;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
@@ -467,7 +480,7 @@ protected:
 	///
 	/// \brief Instrument Unit.
 	///
-	IU iu;
+	IU* iu;
 
 	///
 	/// \brief Connector from SIVb to CSM when docked.

@@ -213,6 +213,23 @@ struct DSKYChecklistItem
 	char item2[100];
 };
 
+struct DEDAChecklistItem
+{
+	DEDAChecklistItem()
+	{
+		key[0] = 0;
+	};
+
+	void init(char *k);
+
+	char key[10];
+	/// -------------------------------------------------------------
+	/// reference to the panel switch that must be thrown, used to
+	/// spawn reference box
+	/// -------------------------------------------------------------
+	char item[100];
+};
+
 
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
@@ -328,6 +345,10 @@ struct ChecklistItem
 	int dskyIndex;
 	int dskyNo;
 	bool dskyPressed;
+
+	vector<DEDAChecklistItem> dedaItemsSet;
+	int dedaIndex;
+	bool dedaPressed;
 
 /// -------------------------------------------------------------
 /// This is an internal operator for the class.  The output should
@@ -591,6 +612,7 @@ private:
 	bool iterateChecklistItem(double missiontime, SaturnEvents eventController, bool autoexec = false);
 
 	bool isDSKYChecklistItem();
+	bool isDEDAChecklistItem();
 
 protected:	
 	/// Access to the vessels sound handler

@@ -52,6 +52,9 @@
 				(finally) with what I think is a correct 
 				implementation.
 		2005-08-22 RSB	"unsigned long long" replaced by uint64_t.
+		2017-10-11 MAS	Changed a "1" to "1LL" in LLS mask calculations.
+				This fixes overflow being incorrectly set for
+				certain cases of LLS.
   
   The scans of the original AGS/AEA technical documentation can be found
   at the website listed above.  Also at that site you can find the source code
@@ -59,7 +62,7 @@
   source code.  The document specifically of interest is the AEA Programming
   Reference by Stiverson.
   
-  What THIS file contains is basicly a pure simulation of the CPU, without any
+  What THIS file contains is basically a pure simulation of the CPU, without any
   input and output as such.  (I/O, to the DEDA or to LM hardware 
   simulations occurs through the mechanism of sockets, and hence the DEDA 
   front-end and hardware back-end simulations may be implemented as complete 
@@ -279,7 +282,7 @@ PutLongAccumulator (ags_t *State, int64_t lli)
 //----------------------------------------------------------------------------
 // This function is used to get buffered DEDA shift-register data.  
 
-extern int DedaBuffer[9], DedaBufferCount, DedaBufferWanted,
+/*extern int DedaBuffer[9], DedaBufferCount, DedaBufferWanted,
   DedaBufferReadout, DedaBufferDefault;
 
 static int
@@ -301,7 +304,7 @@ FetchDedaShift (ags_t *State)
     State->InputPorts[IO_2040] |= 04000;
     }
   return (DedaBufferDefault);
-}
+}*/
 
 //-----------------------------------------------------------------------------
 // Handles everything about the OUT instruction. 
@@ -318,22 +321,22 @@ Output (ags_t *State, int AddressField, int Value)
 	switch (Address) 
 	  {
 	  case 02001:		// sin theta
-	    ChannelOutputAGS (020, State->OutputPorts[IO_2001] = (Value & 0777400));
+	    ChannelOutputAGS (State, 020, State->OutputPorts[IO_2001] = (Value & 0777400));
 	    break;
 	  case 02002:		// cos theta
-	    ChannelOutputAGS (021, State->OutputPorts[IO_2002] = (Value & 0777400));
+	    ChannelOutputAGS (State, 021, State->OutputPorts[IO_2002] = (Value & 0777400));
 	    break;
 	  case 02004:		// sin phi
-	    ChannelOutputAGS (022, State->OutputPorts[IO_2004] = (Value & 0777400));
+	    ChannelOutputAGS (State, 022, State->OutputPorts[IO_2004] = (Value & 0777400));
 	    break;
 	  case 02010:		// cos phi
-	    ChannelOutputAGS (023, State->OutputPorts[IO_2010] = (Value & 0777400));
+	    ChannelOutputAGS (State, 023, State->OutputPorts[IO_2010] = (Value & 0777400));
 	    break;
 	  case 02020:		// sin psi
-	    ChannelOutputAGS (024, State->OutputPorts[IO_2020] = (Value & 0777400));
+	    ChannelOutputAGS (State, 024, State->OutputPorts[IO_2020] = (Value & 0777400));
 	    break;
 	  case 02040:		// cos psi
-	    ChannelOutputAGS (025, State->OutputPorts[IO_2040] = (Value & 0777400));
+	    ChannelOutputAGS (State, 025, State->OutputPorts[IO_2040] = (Value & 0777400));
 	    break;
 	  case 02200:		// DEDA
 	    // We don't actually complete the operation until the DEDA-shift-out
@@ -350,14 +353,14 @@ Output (ags_t *State, int AddressField, int Value)
 	    NewDiscreteOutputs &= ~04;
 	    break;
 	  case 02500:		// DEDA shift in discrete set
-	    // NewDiscreteOutputs &= ~010;
-	    DedaBufferReadout++;
+	    NewDiscreteOutputs &= ~010;
+	    //DedaBufferReadout++;
 	    //printf ("CPU issued DEDA Shift In.\n");
 	    break;
 	  case 02600:		// DEDA shift out discrete set
 	    // We don't actually change this bit at all.  Instead, we transmit
 	    // the DEDA shift register.
-	    ChannelOutputAGS (027, State->OutputPorts[IO_2200]);
+	    ChannelOutputAGS (State, 027, State->OutputPorts[IO_2200]);
 	    break;
 	  case 03010:		// ripple carry inhibit reset.
 	    NewDiscreteOutputs |= 01;
@@ -366,29 +369,29 @@ Output (ags_t *State, int AddressField, int Value)
 	    NewDiscreteOutputs |= 06;
 	    break;
 	  case 06001:		// Ex
-	    ChannelOutputAGS (030, State->OutputPorts[IO_6001] = (Value & 0777400));
+	    ChannelOutputAGS (State, 030, State->OutputPorts[IO_6001] = (Value & 0777400));
 	    break;
 	  case 06002:		// Ey
-	    ChannelOutputAGS (031, State->OutputPorts[IO_6002] = (Value & 0777400));
+	    ChannelOutputAGS (State, 031, State->OutputPorts[IO_6002] = (Value & 0777400));
 	    break;
 	  case 06004:		// Ez
-	    ChannelOutputAGS (032, State->OutputPorts[IO_6004] = (Value & 0777400));
+	    ChannelOutputAGS (State, 032, State->OutputPorts[IO_6004] = (Value & 0777400));
 	    break;
 	  case 06010:		// altitude / altitude-rate 
-	    ChannelOutputAGS (033, State->OutputPorts[IO_6010] = (Value & 0777770));
+	    ChannelOutputAGS (State, 033, State->OutputPorts[IO_6010] = (Value & 0777770));
 	    break;
 	  case 06020:		// lateral velocity
-	    ChannelOutputAGS (034, State->OutputPorts[IO_6020] = (Value & 0777000));
+	    ChannelOutputAGS (State, 034, State->OutputPorts[IO_6020] = (Value & 0777000));
 	    break;
 	  case 06100:		// output telemetry word 2
 	    State->OutputPorts[IO_6100] = Value;
-	    ChannelOutputAGS (036, Value);
+	    ChannelOutputAGS (State, 036, Value);
 	    State->InputPorts[IO_2020] &= ~0200000;	// set output telemetry stop.
 	    break;
 	  case 06200:		// output telemetry word 1
 	    State->OutputPorts[IO_6200] = Value;
 	    State->InputPorts[IO_2020] |= 0200000;	// reset Output Telemetry stop.
-	    ChannelOutputAGS (037, Value);
+	    ChannelOutputAGS (State, 037, Value);
 	    break;
 	  case 06401:		// GSE discrete 4 set.
 	    NewDiscreteOutputs &= ~040;
@@ -434,7 +437,7 @@ Output (ags_t *State, int AddressField, int Value)
   if (NewDiscreteOutputs != State->OutputPorts[IO_ODISCRETES])
     {
       State->OutputPorts[IO_ODISCRETES] = NewDiscreteOutputs;
-      ChannelOutputAGS (040, NewDiscreteOutputs);
+      ChannelOutputAGS (State, 040, NewDiscreteOutputs);
     }
 }
 
@@ -464,12 +467,12 @@ Input (ags_t *State, int AddressField, int *Value)
   for (i = 0; (Mask = (1 << i)) != 0400; i++)
     if (0 != (AddressField & Mask))
       {
-        if (IO_2200 == BaseAddress + i)
-	  {
-	    *Value |= FetchDedaShift (State);
+        //if (IO_2200 == BaseAddress + i)
+	  //{
+	   // *Value |= FetchDedaShift (State);
 	    //printf ("INP 2200: %02o\n", (*Value >> 13) & 017);
-	  }
-	else
+	  //}
+	//else
           *Value |= State->InputPorts[BaseAddress + i];
 	// Certain input registers are reset when they are read.
 	if (BaseAddress == IO_6001)
@@ -983,7 +986,7 @@ aea_engine (ags_t * State)
       // will be the picked-off bits.
       if (i)
         {
-	  llk = (CONST64_2 & ~((1 << (34 - i)) - 1));
+	  llk = (CONST64_2 & ~((CONST64_3 << (34 - i)) - 1));
 	  llj = (lli & llk);
 	  if ((0 == (State->Accumulator & 0400000) && llj != 0) ||
 	      (0 != (State->Accumulator & 0400000) && llj != llk))

@@ -39,14 +39,13 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "lemcomputer.h"
-#include "imu.h"
 
 #include "payload.h"
 #include "sivb.h"
 #include "astp.h"
 #include "lem.h"
+#include "LVDC.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -167,6 +166,8 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
+	delete iu;
+
 	//
 	// Delete LM PAD data.
 	//
@@ -174,12 +175,18 @@ SIVB::~SIVB()
 		delete[] LMPad;
 		LMPad = 0;
 	}
+	if (AEAPad) {
+		delete[] AEAPad;
+		AEAPad = 0;
+	}
 }
 
 void SIVB::InitS4b()
 
 {
 	int i;
+
+	iu = NULL;
 
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
@@ -255,6 +262,8 @@ void SIVB::InitS4b()
 
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
+	LMAscentEmptyMassKg = 2150.0;
+	LMDescentEmptyMassKg = 2224.0;
 	Payloaddatatransfer = false;
 
 	//
@@ -262,7 +271,6 @@ void SIVB::InitS4b()
 	//
 
 	LEMCheck[0] = 0;
-	LEMCheckAuto = 0;
 
 	//
 	// LM PAD data.
@@ -272,6 +280,11 @@ void SIVB::InitS4b()
 	LMPad = 0;
 	LMPadLoadCount = 0;
 	LMPadValueCount = 0;
+
+	AEAPadCount = 0;
+	AEAPad = 0;
+	AEAPadLoadCount = 0;
+	AEAPadValueCount = 0;
 
 	//
 	// Set up the connections.
@@ -330,7 +343,7 @@ void SIVB::SetS4b()
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
+	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
     ClearExhaustRefs();
     ClearAttExhaustRefs();
@@ -451,17 +464,16 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true, 0.0, 0.0);
+		iu->SetMissionInfo(true, true);
 
 		//
 		// Set up the IU connections.
 		//
 
-		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
+		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
-	iu.ConnectToLV(&IUCommandConnector);
+	iu->ConnectToLV(&IUCommandConnector);
 	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
@@ -702,24 +714,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 				PanelsOpened = true;
 			}
 		}
-	}
-
-	//
-	// Attitude control
-	//
-
-	// Special handling Apollo 7
-	if (VehicleNo == 205) {
-		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
-			// retrograde LVLH orbital-rate
-			iu.SetLVLHAttitude(_V(-1, 0, 0));			
-		} else {
-			iu.HoldAttitude();
-		}
-	} else {
-		// In all other missions maintain initial attitude for now
-		// \todo Correct behaviour of the S-IVB 
-		iu.HoldAttitude();
 	}	
 
 	//
@@ -745,10 +739,14 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu.Timestep(MissionTime, simdt, mjd);
+	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 
+void SIVB::clbkPostStep(double simt, double simdt, double mjd)
+{
+	iu->PostStep(simt, simdt, mjd);
+}
 
 void SIVB::GetApolloName(char *s)
 
@@ -787,10 +785,11 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	{
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
-			oapiWriteScenario_int(scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 		if (LMPadCount > 0 && LMPad) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			char str[64];
@@ -799,9 +798,18 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 				oapiWriteScenario_string (scn, "LMPAD", str);
 			}
 		}
+		if (AEAPadCount > 0 && AEAPad) {
+			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
+			char str[64];
+			for (int i = 0; i < AEAPadCount; i++) {
+				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+				oapiWriteScenario_string(scn, "AEAPAD", str);
+			}
+		}
 	}
 
-	iu.SaveState(scn);
+	iu->SaveState(scn);
+	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
 }
 
@@ -1188,14 +1196,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%d", &i);
 			State = (SIVbState) i;
 		}
-		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
-			int temp = 0;
-			sscanf(line + 12, "%i", &temp);
-			if (temp != 0)
-				LEMCheckAuto = true;
-			else
-				LEMCheckAuto = false;
-		}
 		else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(LEMCheck, line + 9);
 		}
@@ -1209,6 +1209,14 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "LMASCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
 			LMAscentFuelMassKg = flt;
+		}
+		else if (!strnicmp(line, "LMDSCEMPTY", 10)) {
+			sscanf(line + 10, "%f", &flt);
+			LMDescentEmptyMassKg = flt;
+		}
+		else if (!strnicmp(line, "LMASCEMPTY", 10)) {
+			sscanf(line + 10, "%f", &flt);
+			LMAscentEmptyMassKg = flt;
 		}
 		else if (!strnicmp (line, "LMPADCNT", 8)) {
 			if (!LMPad) {
@@ -1227,8 +1235,36 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				LMPad[LMPadLoadCount++] = val;
 			}
 		}
+		else if (!strnicmp(line, "AEAPADCNT", 9)) {
+			if (!AEAPad) {
+				sscanf(line + 9, "%d", &AEAPadCount);
+				if (AEAPadCount > 0) {
+					AEAPad = new unsigned int[AEAPadCount * 2];
+				}
+			}
+		}
+		else if (!strnicmp(line, "AEAPAD", 6)) {
+			unsigned int addr, val;
+			sscanf(line + 6, "%o %o", &addr, &val);
+			AEAPadValueCount++;
+			if (AEAPad && AEAPadLoadCount < (AEAPadCount * 2)) {
+				AEAPad[AEAPadLoadCount++] = addr;
+				AEAPad[AEAPadLoadCount++] = val;
+			}
+		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			iu.LoadState(scn);
+			if (SaturnVStage)
+			{
+				iu = new IUSV;
+			}
+			else
+			{
+				iu = new IU1B;
+			}
+			iu->LoadState(scn);
+		}
+		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+			iu->LoadLVDC(scn);
 		}
 		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1378,11 +1414,12 @@ void SIVB::SetState(SIVBSettings &state)
 
 		if (state.LEMCheck[0]) {
 			strcpy(LEMCheck, state.LEMCheck);
-			LEMCheckAuto = state.LEMCheckAuto;
 		}
 
 		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
 		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
+		LMDescentEmptyMassKg = state.LMDescentEmptyMassKg;
+		LMAscentEmptyMassKg = state.LMAscentEmptyMassKg;
 
 		//
 		// Copy LM PAD data across.
@@ -1395,6 +1432,17 @@ void SIVB::SetState(SIVBSettings &state)
 			for (i = 0; i < (LMPadCount * 2); i++)
 			{
 				LMPad[i] = state.LMPad[i];
+			}
+		}
+
+		AEAPadCount = state.AEAPadCount;
+
+		if (AEAPadCount > 0) {
+			int i;
+			AEAPad = new unsigned int[AEAPadCount * 2];
+			for (i = 0; i < (AEAPadCount * 2); i++)
+			{
+				AEAPad[i] = state.AEAPad[i];
 			}
 		}
 	}
@@ -1420,6 +1468,17 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			RotationLimit = 0.25;
 		}
+
+		if (SaturnVStage)
+		{
+			iu = new IUSV;
+		}
+		else
+		{
+			iu = new IU1B;
+		}
+		iu = state.iu_pointer;
+		iu->DisconnectIU();
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_MASS)
@@ -1469,13 +1528,6 @@ void SIVB::SetJ2ThrustLevel(double thrust)
 		SetThrusterLevel(th_main[0], thrust);
 }
 
-void SIVB::SetAPSThrustLevel(double thrust)
-
-{
-	if (thg_aps)
-		SetThrusterGroupLevel(thg_aps, thrust);
-}
-
 double SIVB::GetJ2ThrustLevel()
 
 {
@@ -1489,6 +1541,20 @@ double SIVB::GetMissionTime()
 
 {
 	return MissionTime;
+}
+
+void SIVB::SetSIVBThrusterDir(VECTOR3 &dir)
+{
+	if (th_main[0])
+		SetThrusterDir(th_main[0], dir);
+}
+
+void SIVB::SetAPSUllageThrusterLevel(int n, double level)
+{
+	if (n < 0 || n > 1) return;
+	if (!th_att_lin[n]) return;
+
+	SetThrusterLevel(th_att_lin[n], level);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -1643,8 +1709,9 @@ void SIVB::StartSeparationPyros()
 
 	ps.DescentFuelKg = LMDescentFuelMassKg;
 	ps.AscentFuelKg = LMAscentFuelMassKg;
+	ps.DescentEmptyKg = LMDescentEmptyMassKg;
+	ps.AscentEmptyKg = LMAscentEmptyMassKg;
 	sprintf(ps.checklistFile, LEMCheck);
-	ps.checkAutoExecute = LEMCheckAuto;
 
 	//
 	// Initialise the state of the LEM AGC information.
@@ -1686,6 +1753,14 @@ void SIVB::StartSeparationPyros()
 				int i;
 				for (i = 0; i < LMPadCount; i++) {
 					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+				}
+			}
+
+			if (AEAPad && AEAPadCount > 0)
+			{
+				int i;
+				for (i = 0; i < AEAPadCount; i++) {
+					lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
 				}
 			}
 
@@ -1839,10 +1914,18 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
+	case IULV_GET_SIVB_PROPELLANT_MASS:
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_PROPELLANT_MASS:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
 			return true;
 		}
 		break;
@@ -1856,6 +1939,19 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 			OurVessel->GetStatus(stat);
 
 			*status = stat;
+			return true;
+		}
+		break;
+
+	case IULV_GET_GLOBAL_ORIENTATION:
+		if (OurVessel)
+		{
+			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
+			VECTOR3 ar;
+
+			OurVessel->GetGlobalOrientation(ar);
+
+			*arot = ar;
 			return true;
 		}
 		break;
@@ -2002,6 +2098,46 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_ANGULARVEL:
+		if (OurVessel)
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MISSIONTIME:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER:
+		if (OurVessel)
+		{
+			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAIN_THRUSTER_GROUP:
+		if (OurVessel)
+		{
+			m.val1.pValue = OurVessel->GetMainThrusterGroup();
+			return true;
+		}
+		break;
+
+	case IULV_GET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_PITCH:
 		if (OurVessel)
 		{	
@@ -2051,14 +2187,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_APS_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAPSThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_ATTITUDE_LIN_LEVEL:
 		if (OurVessel) 
 		{
@@ -2075,6 +2203,62 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_SET_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_GROUP_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterGroupLevel(m.val1.pValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_SIVB_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_ADD_FORCE:
+		if (OurVessel)
+		{
+			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
+			return true;
+		}
+		break;
+
 	case IULV_ENABLE_J2:
 		if (OurVessel)
 		{
@@ -2087,6 +2271,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->SetVentingThruster();
+		}
+		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = true;
+			return true;
 		}
 		break;
 

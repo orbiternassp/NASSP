@@ -38,16 +38,23 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"
 #include "s1c.h"
+#include "LVDC.h"
 #include "tracer.h"
+
+//
+// Random functions from Yaagc.
+//
+
+extern "C" {
+	void srandom(unsigned int x);
+	long int random();
+}
 
 //
 // Set the file name for the tracer code.
@@ -75,18 +82,6 @@ const double BASE_SII_MASS = 42400 + 3490;		// Stage + SII/SIVB interstage
 
 GDIParams g_Param;
 
-//
-// Default pitch program.
-//
-/*
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   75, 60, 50,   40,  35,  30,  30,  30,  25,  20,  10 ,  5,  -2,   0};	// Commanded pitch in °
-
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110,   130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   81.5, 56, 50,   35.5,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
-*/
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110,   130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   81.6, 56, 50,   35.5,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
 // 3 was 80.5
 //
 // SaturnV constructor, derived from basic Saturn class.
@@ -100,6 +95,7 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	
 	hMaster = hObj;
 	initSaturnV();
+	iu = new IUSV;
 }
 
 //
@@ -190,18 +186,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(DockS, "docking.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
-
-	//
-	// Pitch program.
-	//
-
-	for (int i = 0; i < PITCH_TABLE_SIZE; i++) {
-		met[i] = default_met[i];
-		cpitch[i] = default_cpitch[i];
-	}
-
-	// Moved to instantiation time
-	// lvdc_init();
 }
 
 SaturnV::~SaturnV()
@@ -210,6 +194,8 @@ SaturnV::~SaturnV()
 	TRACESETUP("~SaturnV");
 
 	ReleaseSurfaces();
+
+	delete iu;
 }
 
 void SaturnV::CalculateStageMass ()
@@ -220,7 +206,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
@@ -232,7 +218,7 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = 0;
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
 		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
@@ -305,12 +291,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 		SetThrusterMax0 (th_main[i], thrust);
 	}
 
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu.SetVesselStats(isp, thrust);
-
 	MixtureRatio = ratio;
 }
 
@@ -346,12 +326,6 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 
 	SetThrusterIsp (th_main[0], isp, isp);
 	SetThrusterMax0 (th_main[0], thrust);
-
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
@@ -600,23 +574,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	GenericTimestep(simt, simdt, mjd);
 
 	if (stage < CSM_LEM_STAGE) {
-
-		// LVDC++
-		if (use_lvdc) {
-			if (lvdc != NULL) {
-				lvdc->TimeStep(simt, simdt);
-			}
-		}
 	} else {
-		
-		if (lvdc != NULL) {
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
-			use_lvdc = false;
-		}
-		
 		GenericTimestepStage(simt, simdt);
 	}
 
@@ -741,21 +699,7 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
-}
-
-void SaturnV::SaveLVDC(FILEHANDLE scn){
-	if (use_lvdc && lvdc != NULL){ lvdc->SaveState(scn); }
-}
-
-void SaturnV::LoadLVDC(FILEHANDLE scn){
-	if (use_lvdc){
-		// If the LVDC does not yet exist, create it.
-		if(lvdc == NULL){
-			lvdc = new LVDC;
-			lvdc->Init(this);
-		}
-		lvdc->LoadState(scn);
-	}
+	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -767,14 +711,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	ClearMeshes();
 	SetupMeshes();
-
-	// DS20150720 LVDC++ ON WHEELS
-	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do that here.
-	// This happens if the USE_LVDC flag is set but no LVDC section is present.
-	if(use_lvdc && lvdc == NULL){
-		lvdc = new LVDC;
-		lvdc->Init(this);
-	}
 
 	//
 	// This code all needs to be fixed up.
@@ -996,6 +932,18 @@ void SaturnV::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
+	case 5:
+		// S4B Startup
+		SetSIVbCMixtureRatio(4.946);
+		break;
+	case 6:
+		// S4B restart
+		SetSIVbCMixtureRatio(4.5);
+		break;
+	case 7:
+		// S4B MRS
+		SetSIVbCMixtureRatio(4.946);
+		break;
 	case 10:
 		DeactivatePrelaunchVenting();
 		break;
@@ -1033,11 +981,11 @@ void SaturnV::SwitchSelector(int item){
 		}
 		break;
 	case 16:
-		SetThrusterResource(th_main[4], NULL); // Should stop the engine
-		SShutS.play(NOLOOP,235);
-		SShutS.done();
 		// Clear liftoff light now - Apollo 15 checklist item
 		ClearLiftoffLight();
+		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
 		break;
 	case 17:
 		// Move hidden S1C
@@ -1094,17 +1042,196 @@ void SaturnV::SwitchSelector(int item){
 		S2ShutS.play(NOLOOP, 235);
 		S2ShutS.done();
 		break;
-	case 5:
-		// S4B Startup
-		SetSIVbCMixtureRatio(4.946);
+	case 25:
+		// SII OECO
 		break;
-	case 6:
-		// S4B restart
-		SetSIVbCMixtureRatio(4.5);
+	case 26:
+		// SII/SIVB Direct Staging
 		break;
-	case 7:
-		// S4B MRS
-		SetSIVbCMixtureRatio(4.946);
+	case 27:
+		//Second Staging
+		SPUShiftS.done(); // Make sure it's done
+		ClearEngineIndicators();
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
+		SetSIVBThrusters(true);
+		SetThrusterGroupLevel(thg_ver, 1.0);
+		SetThrusterResource(th_main[0], ph_3rd);
 		break;
+	}
+}
+
+void SaturnV::SISwitchSelector(int channel)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	switch (channel)
+	{
+	case 1: //Telemeter Calibrate Off
+		break;
+	case 2: //Telemeter Calibrate On
+		break;
+	case 3: //Multiple Engine Cutoff Enable
+		break;
+	case 4: //LOX Tank Strobe Lights Off
+		break;
+	case 5: //Fuel Pressurizing Valve No. 2 Open & Tape Recorder Record
+		break;
+	case 6: //Fuel Pressurizing Valve No. 3 Open
+		break;
+	case 7: //Fuel Pressurizing Valve No. 4 Open
+		break;
+	case 8: //Inboard Engine Cutoff
+		break;
+	case 9: //Outboard Engines Cutoff Enable
+		break;
+	case 10: //Separation and Retro No. 1 EBW Firing Units Arm
+		break;
+	case 12: //Separation Camera On
+		break;
+	case 13: //Telemetry Measurement Switchover
+		break;
+	case 14: //Outboard Engines Cutoff Enable
+		break;
+	case 15: //S-IC/S-II Separation (No. 1)
+		if (stage == LAUNCH_STAGE_ONE)
+		{
+			// Drop old stage
+			SeparateStage(LAUNCH_STAGE_TWO);
+			SetStage(LAUNCH_STAGE_TWO);
+			ActivateStagingVent();
+			if (SII_UllageNum) {
+				SetThrusterGroupLevel(thg_ull, 1.0);
+				SepS.play(LOOP, 130);
+			}
+		}
+		break;
+		break;
+	case 16: //Inboard Engine Cutoff Backup
+		break;
+	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
+		break;
+	case 19: //S-IC/S-II Separation (No. 2)
+		if (stage == LAUNCH_STAGE_ONE)
+		{
+			// Drop old stage
+			SeparateStage(LAUNCH_STAGE_TWO);
+			SetStage(LAUNCH_STAGE_TWO);
+			ActivateStagingVent();
+			if (SII_UllageNum) {
+				SetThrusterGroupLevel(thg_ull, 1.0);
+				SepS.play(LOOP, 130);
+			}
+		}
+		break;
+	case 20: //Separation and Retro No. 2 EBW Firing Units Arm
+		break;
+	default:
+		break;
+	}
+}
+
+void SaturnV::SIISwitchSelector(int channel)
+{
+	if (stage > LAUNCH_STAGE_TWO_ISTG_JET) return;
+
+	switch (channel)
+	{
+	case 9: //Stop First PAM - FM/FM Calibration
+		break;
+	case 11: //S-II Ordnance Arm
+		break;
+	case 24: //S-II Ullage Trigger
+		break;
+	case 30: //Start First PAM - FM/FM Relays Reset
+		break;
+	case 38: //LH2 Tank High Pressure Vent Mode
+		break;
+	case 71: //Start Data Recorders
+		break;
+	default:
+		break;
+	}
+}
+
+void SaturnV::SIVBSwitchSelector(int channel)
+{
+
+}
+
+void SaturnV::SetRandomFailures()
+{
+	Saturn::SetRandomFailures();
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
+
+		//
+		// Engine failure times for first stage.
+		//
+
+		bool EarlySICutoff[5];
+		double FirstStageFailureTime[5];
+
+		//
+		// Engine failure times for first stage.
+		//
+
+		bool EarlySIICutoff[5];
+		double SecondStageFailureTime[5];
+
+		//
+		// Engine failure times
+		//
+
+		for (int i = 0;i < 5;i++)
+		{
+			EarlySICutoff[i] = 0;
+			FirstStageFailureTime[i] = 0.0;
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			EarlySIICutoff[i] = 0;
+			SecondStageFailureTime[i] = 0.0;
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			if (!(random() & 63))
+			{
+				EarlySICutoff[i] = 1;
+				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+			}
+		}
+
+		for (int i = 0;i < 5;i++)
+		{
+			if (!(random() & 63))
+			{
+				EarlySIICutoff[i] = 1;
+				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
+			}
+		}
+
+		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+
+		if (!(random() & 127))
+		{
+			LaunchFail.LETAutoJetFail = 1;
+		}
+		if (!(random() & 63))
+		{
+			LaunchFail.SIIAutoSepFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LESJetMotorFail = 1;
+		}
 	}
 }

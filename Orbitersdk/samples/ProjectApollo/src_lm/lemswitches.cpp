@@ -38,7 +38,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "LEMcomputer.h"
-#include "IMU.h"
+#include "lm_channels.h"
 
 #include "LEM.h"
 
@@ -736,6 +736,38 @@ void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
+// Thrust/Weight Indicator
+ThrustWeightInd::ThrustWeightInd()
+
+{
+	NeedleSurface = 0;
+}
+
+void ThrustWeightInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+
+{
+	MeterSwitch::Init(row);
+	lem = s;
+	NeedleSurface = surf;
+}
+
+double ThrustWeightInd::QueryValue()
+
+{
+	return lem->mechanicalAccelerometer.GetYAccel() / 1.594104;
+}
+
+void ThrustWeightInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, 20, (int)(161.5 - 25.0*v), 0, 0, 8, 7, SURF_PREDEF_CK);
+}
+
+double ThrustWeightInd::AdjustForPower(double val)
+{
+	return val;
+}
+
 // Main Fuel Temperature Indicator
 MainFuelTempInd::MainFuelTempInd()
 
@@ -770,18 +802,28 @@ MainFuelPressInd::MainFuelPressInd()
 	NeedleSurface = 0;
 }
 
-void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainFuelPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetFuelTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainFuelPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -824,18 +866,28 @@ MainOxidizerPressInd::MainOxidizerPressInd()
 	NeedleSurface = 0;
 }
 
-void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainOxidizerPressInd::QueryValue()
 
 {
-	return 150.0;
+	if (monswitch->IsUp())
+	{
+		return 150.0;
+	}
+	else if (monswitch->IsCenter() || monswitch->IsDown())
+	{
+		return lem->GetDPSPropellant()->GetOxidizerTankUllagePressurePSI();
+	}
+
+	return 0.0;
 }
 
 void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -1307,8 +1359,24 @@ double LEMVoltCB::Current()
 	return Amperes;
 }
 
-void EngineStartButton::Init(ToggleSwitch* stopbutton) {
+void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton) {
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	this->stopbutton = stopbutton;
+}
+
+bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
 }
 
 bool EngineStartButton::Push()
@@ -1319,7 +1387,7 @@ bool EngineStartButton::Push()
 	{
 		if (ToggleSwitch::SwitchTo(1)) {
 
-			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", GetState(), stopbutton->GetState());
+			Sclick.play();
 			return true;
 		}
 	}
@@ -1327,8 +1395,24 @@ bool EngineStartButton::Push()
 	return false;
 }
 
-void EngineStopButton::Init(ToggleSwitch* startbutton) {
+void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton) {
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	this->startbutton = startbutton;
+}
+
+bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
 }
 
 bool EngineStopButton::Push()
@@ -1339,12 +1423,111 @@ bool EngineStopButton::Push()
 		
 		if (newstate = 1)
 		{
-			startbutton->SwitchTo(0);
-			sprintf(oapiDebugString(), "Engine Start: %d, Engine Stop: %d", startbutton->GetState(), GetState());
+			if (startbutton)
+			{
+				startbutton->SwitchTo(0);
+			}
 		}
+		Sclick.play();
 		return true;
 	}
 
+	return false;
+}
+
+bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		if (state == 0) {
+			SwitchTo(1, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+		}
+		else if (state == 1) {
+			SwitchTo(0, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+		}
+	}
+	return true;
+}
+
+void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+LMAbortStageButton::LMAbortStageButton() 
+{ 
+	lem = 0; 
+};
+
+void LMAbortStageButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
+}
+
+void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if (guardState) {
+		DoDrawSwitch(DrawSurface);
+	}
+	else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+	}
+}
+
+bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardWidth &&
+			my >= guardY && my <= guardY + guardHeight) {
+			if (guardState) {
+				Guard();
+			}
+			else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN)) {
+		if (guardState) {
+
+
+			if (!visible) return false;
+			if (mx < x || my < y) return false;
+			if (mx >(x + width) || my >(y + height)) return false;
+
+			if (state == 0) {
+				SwitchTo(1);
+				Sclick.play();
+			}
+			else if (state == 1) {
+				SwitchTo(0);
+				Sclick.play();
+			}
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -1362,4 +1545,213 @@ void LEMPanelOrdeal::SetState(int value) {
 	if (value == 0) value = -1;
 
 	lem->ordealEnabled = value;
+}
+
+RadarSignalStrengthAttenuator::RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut) :
+	VoltageAttenuator(i_name, minIn, maxIn, minOut, maxOut)
+{
+}
+
+void RadarSignalStrengthAttenuator::Init(LEM *l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum)
+{
+	lem = l;
+	TestMonitorRotarySwitch = testmonitorselectorswitch;
+
+	WireTo(Instrum);
+}
+
+double RadarSignalStrengthAttenuator::GetValue()
+{
+	double val = 0.0;
+
+	switch (TestMonitorRotarySwitch->GetState())
+	{
+	case 0:	//ALT XMTR
+		val = 0.0;
+		break;
+	case 1:	//VEL XMTR
+		val = 0.0;
+		break;
+	case 2:	//AGC
+		val = lem->RR.GetSignalStrength();
+		break;
+	case 3:	//XMTR PWR
+		val = 0.0;
+		break;
+	case 4:	//SHAFT ERR
+		val = lem->RR.GetShaftErrorSignal();
+		break;
+	case 5:	//TRUN ERR
+		val = lem->RR.GetTrunnionErrorSignal();
+		break;
+	}
+
+	return val;
+}
+
+void LEMSteerableAntennaPitchMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaPitchMeter::QueryValue() {
+	return lem->SBandSteerable.GetPitch();
+}
+
+void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (210.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSteerableAntennaYawMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSteerableAntennaYawMeter::QueryValue() {
+	return lem->SBandSteerable.GetYaw();
+}
+
+void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = (120.0 - v) * 0.75;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+void LEMSBandAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
+double LEMSBandAntennaStrengthMeter::QueryValue() {
+	return lem->SBand.rcvr_agc_voltage;
+}
+
+void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface) {
+	v = 220.0 - 2.7*v;
+	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+}
+
+LEMDPSValveTalkback::LEMDPSValveTalkback()
+{
+	valve = 0;
+}
+
+
+void LEMDPSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	valve = v;
+}
+
+int LEMDPSValveTalkback::GetState()
+
+{
+	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+		state = valve->IsOpen() ? 1 : 0;
+	else
+		// Should this fail open?
+		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
+{
+	MeterSwitch::Init(row);
+	Digits = surf;
+	lem = l;
+}
+
+void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (lem->stage > 1) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown()) return;
+
+	double percent = v * 100.0;
+
+	int Curdigit2 = (int)percent;
+	int Curdigit = (int)percent / 10;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+}
+
+double LEMDPSOxidPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetOxidPercent();
+}
+
+
+double LEMDPSFuelPercentMeter::QueryValue()
+{
+	return lem->GetDPSPropellant()->GetFuelPercent();
+}
+
+LEMDigitalHeliumPressureMeter::LEMDigitalHeliumPressureMeter()
+
+{
+	source = 0;
+	Digits = 0;
+}
+
+void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	Digits = surf;
+	lem = l;
+}
+
+double LEMDigitalHeliumPressureMeter::QueryValue()
+
+{
+	if (!source) return 0;
+
+	if (source->GetState() == 0)
+	{
+		return 0.0;
+	}
+	else if (source->GetState() == 1)
+	{
+		return lem->GetDPSPropellant()->GetAmbientHeliumPressPSI();
+	}
+	else if (source->GetState() == 2)
+	{
+		return lem->GetDPSPropellant()->GetSupercriticalHeliumPressPSI();
+	}
+
+	return 0;
+}
+
+void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0) return;
+
+	int Curdigit4 = (int)v;
+	int Curdigit3 = (int)v / 10;
+	int Curdigit2 = (int)v / 100;
+	int Curdigit = (int)v / 1000;
+
+	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+}
+
+void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (IsUp()) {
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 173, width, height, SURF_PREDEF_CK);
+	}
 }

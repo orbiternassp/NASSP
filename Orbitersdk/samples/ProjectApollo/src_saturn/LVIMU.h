@@ -27,6 +27,8 @@
 #if !defined(_PA_LVIMU_H)
 #define _PA_LVIMU_H
 
+class IUToLVCommandConnector;
+
 // Indexes into CDURegisters
 #define LVRegCDUX  000
 #define LVRegCDUY  001
@@ -46,11 +48,11 @@ public:
 	~LVIMU();
 
 	void Init();
-	void Timestep(double simt);
+	void Timestep(double mjd);
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v) { OurVessel = v; };
+	void SetVessel(IUToLVCommandConnector *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
 	bool IsCaged();
@@ -99,7 +101,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
 
-	VESSEL *OurVessel;
+	IUToLVCommandConnector *OurVessel;
 
 	bool Operate;
 	bool TurnedOn;
@@ -154,13 +156,13 @@ public: MATRIX3 getRotationMatrixX(double angle);
 class LVRG {
 public: 
 	LVRG();                                                                  // Cons
-	void Init(VESSEL *v);													 // Initialization
+	void Init(IUToLVCommandConnector *v);									 // Initialization
 	void Timestep(double simdt);                                             // Update function
 	VECTOR3 GetRates() { return rates; };
 
 protected:
 	VECTOR3 rates;                                                           // Detected rotation acceleration
-	VESSEL *sat;                                                             // Pointer to ship we're attached to
+	IUToLVCommandConnector *sat;                                             // Pointer to ship we're attached to
 };
 
 #endif

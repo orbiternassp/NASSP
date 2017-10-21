@@ -20,7 +20,6 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
@@ -84,6 +83,8 @@ public:
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjCalc();
+	void menuCycleOrbAdjOptions();
+	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
 	void calcphaseoff(double angdeg);
@@ -91,6 +92,7 @@ public:
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
 	char* AGC_Display(char * Buff, double time);
+	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
 	double timetoapo();
@@ -106,20 +108,26 @@ public:
 	void set_entrylng(double lng);
 	void EntryLngDialogue();
 	void menuEntryCalc();
+	void menuEntryUpdateCalc();
+	void menuDeorbitCalc();
+	void menuTEICalc();
+	void menuRTEFlybyCalc();
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
 	void menuSVCalc();
 	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuEntryUpload();
-	void CycleEntryOpt();
+	void menuEntryUpdateUpload();
 	void set_spherical();
 	void menuSwitchHeadsUp();
+	void menuSwitchManPADDirect();
 	void menuCalcManPAD();
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
 	void menuSwitchCritical();
+	void menuSwitchFlybyType();
 	void menuSwitchEntryPADOpt();
 	void menuSwitchEntryPADDirect();
 	void menuManPADTIG();
@@ -138,6 +146,8 @@ public:
 	void menuREFSMMATdirect();
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
+	void menuSetAGSKFactor();
+	void set_AGSKFactor(double time);
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSwitchUplinkInhibit();
@@ -147,6 +157,7 @@ public:
 	void menuSetAGCEpoch();
 	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
+	void menuUpdateLiftoffTime();
 	void cycleREFSMMATupl();
 	void set_svtarget();
 	void offvecdialogue();
@@ -157,9 +168,12 @@ public:
 	void menuCycleSVMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
+	void menuSwitchDeorbitEngineOption();
+	void menuSwitchReturnSpeed();
 	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
+	void menuSwitchLOIOption();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
@@ -171,6 +185,9 @@ public:
 	void set_TLCCLng(double lng);
 	void menuSetTLCCAlt();
 	void set_TLCCAlt(double alt);
+	void menuSetTLCCDesiredInclination();
+	void set_TLCCDesiredInclination(double inc);
+	void menuSwitchTLCCAscendingNode();
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
@@ -193,6 +210,14 @@ public:
 	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
 	void menuTranslunarPage();
+	void menuSetLunarLiftoffPage();
+	void menuSetEMPPage();
+	void menuSetNavCheckPADPage();
+	void menuSetDeorbitPage();
+	void menuSetEarthEntryPage();
+	void menuSetMoonEntryPage();
+	void menuSetTEIPage();
+	void menuSetEntryUpdatePage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -203,8 +228,11 @@ public:
 	void set_LSAlt(double alt);
 	void menuSetDOIRevs();
 	void set_DOIRevs(int N);
+	void menuSetDOIPeriAng();
+	void set_DOIPeriAng(double ang);
 	void menuDOICalc();
 	void menuSetDOIPage();
+	void menuDOIOption();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();
@@ -230,6 +258,13 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuSetTPIguess();
+	void menuLunarLiftoffCalc();
+	void menuLunarLiftoffTimeOption();
+	void set_TPIguess(double time);
+	void menuSetEMPUplinkP99();
+	void menuEMPUplink();
+	void menuSetEMPUplinkNumber();
 	void menuTMLat();
 	void set_TMLat(double lat);
 	void menuTMLng();
@@ -244,6 +279,9 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuNavCheckPADCalc();
+	void menuSetNavCheckGET();
+	void set_NavCheckGET(double time);
 
 protected:
 	oapi::Font *font;

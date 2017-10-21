@@ -273,6 +273,27 @@ double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu)
 	return dt;
 }
 
+void ra_and_dec_from_r(VECTOR3 R, double &ra, double &dec)
+{
+	double r, l, m, n;
+
+	r = length(R);
+	l = R.x / r;
+	m = R.y / r;
+	n = R.z / r;
+
+	dec = asin(n);
+
+	if (m > 0)
+	{
+		ra = acos(l / cos(dec));
+	}
+	else
+	{
+		ra = PI2 - acos(l / cos(dec));
+	}
+}
+
 void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x)	//computes the state vector (R,V) from the initial state vector (R0,V0) and the elapsed time
 {
 	double r0, v0, vr0, alpha, f, g, fdot, gdot, r, xx, paratol, x0;
@@ -546,7 +567,7 @@ void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V)	//computes the
 	incl = el.i;
 	TA = el.TA;
 	w = el.w;// el.omegab - el.theta;
-	rp_factor = h*h / (mu*(1 + e*cos(TA)));
+	rp_factor = h*h / (mu*(1.0 + e*cos(TA)));
 	rp.x = rp_factor*cos(TA);
 	rp.y = rp_factor*sin(TA);
 	rp.z = 0;
@@ -554,7 +575,7 @@ void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V)	//computes the
 	vp.x = -vp_factor*sin(TA);
 	vp.y = vp_factor*(e + cos(TA));
 	vp.z = 0;
-	R3_W = _M(cos(RA), sin(RA), 0, -sin(RA), cos(RA), 0, 0, 0, 1);
+	R3_W = _M(cos(RA), sin(RA), 0.0, -sin(RA), cos(RA), 0.0, 0.0, 0.0, 1.0);
 	R1_i = _M(1, 0, 0, 0, cos(incl), sin(incl), 0, -sin(incl), cos(incl));
 	R3_w = _M(cos(w), sin(w), 0, -sin(w), cos(w), 0, 0, 0, 1);
 	R2 = mul(R3_w, R1_i);
@@ -1014,7 +1035,7 @@ void SolveQuartic(double *A, double *R, int &N)
 			N = 4;
 
 			double x1, x2, x3, x4, phi;
-			
+
 			phi = acos(delta1 / (2.0*sqrt(delta0*delta0*delta0)));
 			S = 0.5*sqrt(-2.0 / 3.0*p + 2.0 / 3.0 / a*sqrt(delta0)*cos(phi / 3.0));
 
@@ -1107,6 +1128,576 @@ void SolveQuartic(double *A, double *R, int &N)
 	}
 }
 
+VECTOR3 GeneralizedIterator(VECTOR3(*state_evaluation)(VECTOR3, void*), bool(*endcondition)(VECTOR3), VECTOR3 Target, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants)
+{
+	VECTOR3 var_star;
+	VECTOR3 dy, Y_star;
+	VECTOR3 v_l[3][4];
+	VECTOR3 Y[3][4];
+	VECTOR3 T[3];
+	MATRIX3 T2;
+	double h, rho;
+	int n, nMax;
+
+	nMax = 100;
+	h = 1.0;//10e-3;
+	rho = 0.5;
+	n = 0;
+
+	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
+
+	var_star = var_guess;
+
+	Y_star = state_evaluation(var_star, constants);
+	dy = Target - Y_star;
+
+	while (endcondition(dy) && nMax >= n)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			v_l[0][i] = var_star + _V(stepsizes.x, 0, 0)*hvec[i];
+			v_l[1][i] = var_star + _V(0, stepsizes.y, 0)*hvec[i];
+			v_l[2][i] = var_star + _V(0, 0, stepsizes.z)*hvec[i];
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				Y[i][j] = state_evaluation(v_l[i][j], constants);
+			}
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			T[i] = (Y[i][2] - Y[i][3] - (Y[i][0] - Y[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*stepsizes.data[i]*(1.0 - OrbMech::power(rho, 2.0)));
+		}
+		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
+		var_star = var_star + mul(inverse(T2), dy);
+		Y_star = state_evaluation(var_star, constants);
+		dy = Target - Y_star;
+
+		n++;
+	}
+
+	return var_star;
+}
+
+VECTOR3 GeneralizedIterator2(VECTOR3(*state_evaluation)(VECTOR3, void*), bool(*endcondition)(VECTOR3), VECTOR3 Target, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants)
+{
+	VECTOR3 var_star;
+	VECTOR3 dy, Y_star;
+	VECTOR3 v_l[3][4];
+	VECTOR3 Y[3][4];
+	VECTOR3 T[3];
+	MATRIX3 T2;
+	double h, rho, max_dr;
+	int n, nMax;
+
+	nMax = 100;
+	h = 1.0;//10e-3;
+	rho = 0.5;
+	n = 0;
+
+	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
+
+	var_star = var_guess;
+
+	Y_star = state_evaluation(var_star, constants);
+	dy = Target - Y_star;
+	max_dr = 0.5*length(Y_star);
+	if (length(dy) > max_dr)
+	{
+		dy = unit(dy)*max_dr;
+	}
+
+	while (endcondition(dy) && nMax >= n)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			v_l[0][i] = var_star + _V(stepsizes.x, 0, 0)*hvec[i];
+			v_l[1][i] = var_star + _V(0, stepsizes.y, 0)*hvec[i];
+			v_l[2][i] = var_star + _V(0, 0, stepsizes.z)*hvec[i];
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				Y[i][j] = state_evaluation(v_l[i][j], constants);
+			}
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			T[i] = (Y[i][2] - Y[i][3] - (Y[i][0] - Y[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*stepsizes.data[i] * (1.0 - OrbMech::power(rho, 2.0)));
+		}
+		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
+		var_star = var_star + mul(inverse(T2), dy);
+		Y_star = state_evaluation(var_star, constants);
+		dy = Target - Y_star;
+		max_dr = 0.5*length(Y_star);
+		if (length(dy) > max_dr)
+		{
+			dy = unit(dy)*max_dr;
+		}
+
+		n++;
+	}
+
+	return var_star;
+}
+
+VECTOR3 function_TLMCConicFirstGuessEval(VECTOR3 var, void *constPtr)
+{
+	TLMCConstants *constants;
+	VECTOR3 R_EMP, V_EMP, R1, V1, R2, V2;
+	double V, psi, lng;
+
+	constants = static_cast<TLMCConstants*>(constPtr);
+	V = var.x;
+	psi = var.y;
+	lng = var.z;
+
+	adbar_from_rv(constants->r, V, lng, constants->lat, constants->gamma + PI05, psi, R_EMP, V_EMP);
+	OrbMech::EMPToEcl(R_EMP, V_EMP, constants->MJD, R1, V1);
+	rv_from_r0v0_tb(R1, V1, constants->MJD, constants->hMoon, constants->gravout, constants->dt, R2, V2);
+
+	return R2;
+}
+
+bool function_TLMCConicFirstGuessEndConditions(VECTOR3 DR)
+{
+	if (abs(DR.x) > 0.0657*1852.0 || abs(DR.y) > 0.0657*1852.0 || abs(DR.z) > 0.0657*1852.0)
+		return true;
+
+	return false;
+}
+
+VECTOR3 TLMCConicFirstGuessIterator(double r_peri, double lat_EMP, double gamma, VECTOR3 var_guess, VECTOR3 R2, VECTOR3 step, double MJD0, double dt, OBJHANDLE hMoon, OBJHANDLE gravout)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCConicFirstGuessEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCConicFirstGuessEndConditions;
+
+	void *constPtr;
+	TLMCConstants constants;
+
+	constants.lat = lat_EMP;
+	constants.r = r_peri;
+	constants.gamma = gamma;
+	constants.MJD = MJD0;
+	constants.dt = dt;
+	constants.hMoon = hMoon;
+	constants.gravout = gravout;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator2(func_ptr, end_ptr, R2, var_guess, step, constPtr);
+}
+
+bool function_IntegratedTLMCEndConditions(VECTOR3 DR)
+{
+	if (abs(DR.x) > 0.0657*1852.0 || abs(DR.y) > 0.0657*1852.0 || abs(DR.z) > 0.0657*1852.0)
+		return true;
+
+	return false;
+}
+
+VECTOR3 function_IntegratedTLMCEval(VECTOR3 var, void *constPtr)
+{
+	TLMCConstants *constants;
+	VECTOR3 R_EMP, V_EMP, R1, V1, R2, V2;
+	double V, psi, lng;
+
+	constants = static_cast<TLMCConstants*>(constPtr);
+	V = var.x;
+	psi = var.y;
+	lng = var.z;
+
+	adbar_from_rv(constants->r, V, lng, constants->lat, constants->gamma + PI05, psi, R_EMP, V_EMP);
+	OrbMech::EMPToEcl(R_EMP, V_EMP, constants->MJD, R1, V1);
+	oneclickcoast(R1, V1, constants->MJD, constants->dt, R2, V2, constants->hMoon, constants->gravout);
+
+	return R2;
+}
+
+VECTOR3 IntegratedTLMCIterator(double r_peri, double lat_EMP, double gamma, VECTOR3 var_guess, VECTOR3 R2, VECTOR3 step, double mjd0, double dt, OBJHANDLE hMoon, OBJHANDLE gravout)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_IntegratedTLMCEval;
+	bool(*end_ptr)(VECTOR3) = function_IntegratedTLMCEndConditions;
+
+	void *constPtr;
+	TLMCConstants constants;
+
+	constants.lat = lat_EMP;
+	constants.r = r_peri;
+	constants.gamma = gamma;
+	constants.MJD = mjd0;
+	constants.dt = dt;
+	constants.hMoon = hMoon;
+	constants.gravout = gravout;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator2(func_ptr, end_ptr, R2, var_guess, step, constPtr);
+}
+
+bool function_TLMCXYZTEndConditions(VECTOR3 dx)
+{
+	double dH, dlat, dlng;
+	dH = dx.x;
+	dlat = dx.y;
+	dlng = dx.z;
+
+	if (abs(dH) > 0.5*1852.0 || abs(dlat) > 0.01*RAD || abs(dlng) > 0.01*RAD)
+		return true;
+
+	return false;
+}
+
+VECTOR3 function_TLMCIntegratedXYZTEval(VECTOR3 var, void *constPtr)
+{
+	TLMCXYZTConstants *constants;
+	VECTOR3 DV, R2, V2, Y, R_EMP, V_EMP;
+	double MJD_N, R_M, H, lat, lng;
+	OBJHANDLE hMoon;
+
+	hMoon = oapiGetObjectByName("Moon");
+
+	constants = static_cast<TLMCXYZTConstants*>(constPtr);
+	DV = var;
+	MJD_N = constants->MJD + constants->dt / 24.0 / 3600.0;
+	R_M = oapiGetSize(hMoon);
+
+	oneclickcoast(constants->R1, constants->V1 + DV, constants->MJD, constants->dt, R2, V2, constants->gravin, hMoon);
+
+	H = length(R2) - R_M;
+	EclToEMP(R2, V2, MJD_N, R_EMP, V_EMP);
+
+	latlong_from_r(R_EMP, lat, lng);
+	if (lng < 0.0)
+	{
+		lng += PI2;
+	}
+	Y = _V(H, lat, lng);
+
+	return Y;
+}
+
+VECTOR3 TLMCIntegratedXYZTIterator(VECTOR3 R1, VECTOR3 V1, double mjd1, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step, double dt)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCIntegratedXYZTEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCXYZTEndConditions;
+
+	void *constPtr;
+	TLMCXYZTConstants constants;
+
+	constants.R1 = R1;
+	constants.V1 = V1;
+	constants.MJD = mjd1;
+	constants.dt = dt;
+	constants.gravin = gravin;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator(func_ptr, end_ptr, target, DV_guess, step, constPtr);
+}
+
+bool function_TLMCFlybyEndConditions(VECTOR3 dx)
+{
+	double dH_pc, dlat, dH_fr_rtny;
+	dH_pc = dx.x;
+	dlat = dx.y;
+	dH_fr_rtny = dx.z;
+
+	if (abs(dH_pc) > 0.5*1852.0 || abs(dlat) > 0.01*RAD || abs(dH_fr_rtny) > 1.735*1852.0)
+		return true;
+
+	return false;
+}
+
+VECTOR3 function_TLMCConicFlybyEval(VECTOR3 DV, void *constPtr)
+{
+	TLMCFlybyConstants *constants;
+	OBJHANDLE hMoon, hEarth;
+	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_EMP, V_EMP, R_patch, V_patch;
+	double dt1, dt2, mu_E, mu_M, MJD_peri, MJD_reentry, R_E, R_M, lat, lng;
+	double H_pc, lat_pc, H_fr_rtny;
+
+	constants = static_cast<TLMCFlybyConstants*>(constPtr);
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	mu_E = GGRAV*oapiGetMass(hEarth);
+	mu_M = GGRAV*oapiGetMass(hMoon);
+	R_E = oapiGetSize(hEarth);
+	R_M = oapiGetSize(hMoon);
+
+	if (constants->gravin == hEarth)
+	{
+		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_E, mu_M, R_patch, V_patch);
+	}
+	else
+	{
+		R_patch = constants->R1;
+		V_patch = constants->V1 + DV;
+		dt1 = 0.0;
+	}
+
+	dt2 = timetoperi(R_patch, V_patch, mu_M);
+	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_M);
+
+	MJD_peri = constants->mjd0 + (dt1 + dt2) / 24.0 / 3600.0;
+	EclToEMP(R_peri, V_peri, MJD_peri, R_EMP, V_EMP);
+	latlong_from_r(R_EMP, lat, lng);
+
+	ReturnPerigeeConic(R_peri, V_peri, MJD_peri, hMoon, hEarth, MJD_reentry, R_reentry, V_reentry);
+
+	H_pc = length(R_peri) - R_M;
+	lat_pc = lat;
+	H_fr_rtny = length(R_reentry) - R_E;
+
+	return _V(H_pc, lat_pc, H_fr_rtny);
+}
+
+VECTOR3 TLMCConicFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCConicFlybyEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCFlybyEndConditions;
+
+	void *constPtr;
+	TLMCFlybyConstants constants;
+
+	constants.R1 = R1;
+	constants.V1 = V1;
+	constants.mjd0 = mjd0;
+	constants.gravin = gravin;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator(func_ptr, end_ptr, target, DV_guess, step, constPtr);
+}
+
+VECTOR3 function_TLMCIntegratedFlybyEval(VECTOR3 DV, void *constPtr)
+{
+	TLMCFlybyConstants *constants;
+	VECTOR3 R_peri, V_peri, R_EMP, V_EMP, R_reentry, V_reentry;
+	double dt1, MJD_peri, MJD_reentry, R_E, R_M, lat, lng;
+	double H_pc, lat_pc, H_fr_rtny;
+	OBJHANDLE hEarth, hMoon;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	R_E = oapiGetSize(hEarth);
+	R_M = oapiGetSize(hMoon);
+
+	constants = static_cast<TLMCFlybyConstants*>(constPtr);
+
+	dt1 = timetoperi_integ(constants->R1, constants->V1 + DV, constants->mjd0, constants->gravin, hMoon, R_peri, V_peri);
+	MJD_peri = constants->mjd0 + dt1 / 24.0 / 3600.0;
+	
+	EclToEMP(R_peri, V_peri, MJD_peri, R_EMP, V_EMP);
+	latlong_from_r(R_EMP, lat, lng);
+
+	ReturnPerigee(R_peri, V_peri, MJD_peri, hMoon, hEarth, 1.0, MJD_reentry, R_reentry, V_reentry);
+
+	H_pc = length(R_peri) - R_M;
+	lat_pc = lat;
+	H_fr_rtny = length(R_reentry) - R_E;
+
+	return _V(H_pc, lat_pc, H_fr_rtny);
+}
+
+VECTOR3 TLMCIntegratedFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCIntegratedFlybyEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCFlybyEndConditions;
+
+	void *constPtr;
+	TLMCFlybyConstants constants;
+
+	constants.R1 = R1;
+	constants.V1 = V1;
+	constants.mjd0 = mjd0;
+	constants.gravin = gravin;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator(func_ptr, end_ptr, target, DV_guess, step, constPtr);
+}
+
+bool function_TLMCSPSLunarFlybyEndConditions(VECTOR3 dx)
+{
+	double dH_pc, dH_fr_rtny, dInc;
+	dH_pc = dx.x;
+	dH_fr_rtny = dx.y;
+	dInc = dx.z;
+
+	if (abs(dH_pc) > 0.5*1852.0 || abs(dH_fr_rtny) > 1.735*1852.0 || abs(dInc) > 0.01*RAD)
+		return true;
+
+	return false;
+}
+
+VECTOR3 function_TLMCConicSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
+{
+	TLMCFlybyConstants *constants;
+	OBJHANDLE hMoon, hEarth;
+	MATRIX3 Rot_reentry;
+	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_patch, V_patch, R_geo, V_geo, H_geo;
+	double dt1, dt2, mu_E, mu_M, MJD_peri, MJD_reentry, R_E, R_M;
+	double H_pc, H_fr_rtny, Inc_FR;
+
+	constants = static_cast<TLMCFlybyConstants*>(constPtr);
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	mu_E = GGRAV*oapiGetMass(hEarth);
+	mu_M = GGRAV*oapiGetMass(hMoon);
+	R_E = oapiGetSize(hEarth);
+	R_M = oapiGetSize(hMoon);
+
+	if (constants->gravin == hEarth)
+	{
+		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_E, mu_M, R_patch, V_patch);
+	}
+	else
+	{
+		R_patch = constants->R1;
+		V_patch = constants->V1 + DV;
+		dt1 = 0.0;
+	}
+
+	dt2 = timetoperi(R_patch, V_patch, mu_M);
+	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_M);
+
+	MJD_peri = constants->mjd0 + (dt1 + dt2) / 24.0 / 3600.0;
+
+	ReturnPerigeeConic(R_peri, V_peri, MJD_peri, hMoon, hEarth, MJD_reentry, R_reentry, V_reentry);
+	Rot_reentry = OrbMech::GetRotationMatrix(hEarth, MJD_reentry);
+	R_geo = rhtmul(Rot_reentry, R_reentry);
+	V_geo = rhtmul(Rot_reentry, V_reentry);
+	H_geo = crossp(R_geo, V_geo);
+	Inc_FR = acos(H_geo.z / length(H_geo));
+
+	H_pc = length(R_peri) - R_M;
+	H_fr_rtny = length(R_reentry) - R_E;
+
+	return _V(H_pc, H_fr_rtny, Inc_FR);
+}
+
+VECTOR3 TLMCConicSPSLunarFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCConicSPSLunarFlybyEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCSPSLunarFlybyEndConditions;
+
+	void *constPtr;
+	TLMCFlybyConstants constants;
+
+	constants.R1 = R1;
+	constants.V1 = V1;
+	constants.mjd0 = mjd0;
+	constants.gravin = gravin;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator(func_ptr, end_ptr, target, DV_guess, step, constPtr);
+}
+
+VECTOR3 function_TLMCIntegratedSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
+{
+	TLMCFlybyConstants *constants;
+	MATRIX3 Rot_reentry;
+	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_geo, V_geo, H_geo;
+	double dt1, MJD_peri, MJD_reentry, R_E, R_M;
+	double H_pc, H_fr_rtny, Inc_FR;
+	OBJHANDLE hEarth, hMoon;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	R_E = oapiGetSize(hEarth);
+	R_M = oapiGetSize(hMoon);
+
+	constants = static_cast<TLMCFlybyConstants*>(constPtr);
+
+	dt1 = timetoperi_integ(constants->R1, constants->V1 + DV, constants->mjd0, constants->gravin, hMoon, R_peri, V_peri);
+	MJD_peri = constants->mjd0 + dt1 / 24.0 / 3600.0;
+
+
+	ReturnPerigee(R_peri, V_peri, MJD_peri, hMoon, hEarth, 1.0, MJD_reentry, R_reentry, V_reentry);
+	Rot_reentry = OrbMech::GetRotationMatrix(hEarth, MJD_reentry);
+	R_geo = rhtmul(Rot_reentry, R_reentry);
+	V_geo = rhtmul(Rot_reentry, V_reentry);
+	H_geo = crossp(R_geo, V_geo);
+
+	Inc_FR = acos(H_geo.z / length(H_geo));
+
+	H_pc = length(R_peri) - R_M;
+	H_fr_rtny = length(R_reentry) - R_E;
+
+	return _V(H_pc, H_fr_rtny, Inc_FR);
+}
+
+VECTOR3 TLMCIntegratedSPSLunarFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step)
+{
+	VECTOR3(*func_ptr)(VECTOR3, void*) = function_TLMCIntegratedSPSLunarFlybyEval;
+	bool(*end_ptr)(VECTOR3) = function_TLMCSPSLunarFlybyEndConditions;
+
+	void *constPtr;
+	TLMCFlybyConstants constants;
+
+	constants.R1 = R1;
+	constants.V1 = V1;
+	constants.mjd0 = mjd0;
+	constants.gravin = gravin;
+
+	constPtr = &constants;
+
+	return GeneralizedIterator(func_ptr, end_ptr, target, DV_guess, step, constPtr);
+}
+
+double findpatchpoint(VECTOR3 R1, VECTOR3 V1, double mjd1, double mu_E, double mu_M, VECTOR3 &RP_M, VECTOR3 &VP_M)
+{
+	//INPUT:
+	//R1: Earth-centered position vector
+	//V1: Earth-centered velocity vector
+
+	VECTOR3 R_EM, V_EM, RP_E, VP_E;
+	double dt1, dt2, MJD_patch, r_patch, phi4;
+
+	r_patch = 64373760.0;
+	dt2 = 1.0;
+
+	//Initial guess
+	dt1 = time_radius(R1, V1, 310.0e6, 1.0, mu_E);
+
+	while (abs(dt2) > 0.1)
+	{
+		rv_from_r0v0(R1, V1, dt1, RP_E, VP_E, mu_E);
+		MJD_patch = mjd1 + dt1 / 24.0 / 3600.0;
+
+		GetLunarEphemeris(MJD_patch, R_EM, V_EM);
+
+		RP_M = RP_E - R_EM;
+		VP_M = VP_E - V_EM;
+
+		if (length(RP_M) > r_patch)
+		{
+			phi4 = 1.0;
+		}
+		else
+		{
+			phi4 = -1.0;
+		}
+
+		dt2 = time_radius(RP_M, VP_M*phi4, r_patch, -phi4, mu_M);
+		dt2 *= phi4;
+
+		if (abs(dt2) > 0.1)
+		{
+			dt1 += dt2;
+		}
+	}
+
+	return dt1;
+}
+
 VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess, double tol)
 {
 	double h, rho, error3, mu, max_dr;
@@ -1133,40 +1724,40 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 
 	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
 
-	if (gravref != gravin)
-	{
-		oneclickcoast(R1, V1, mjd0, 0.0, R1_ref, V1_ref, gravin, gravref);
-		R2_ref = R2;
-	}
-	else if (gravref != gravout)
-	{
-		VECTOR3 V2_ref;
-		R1_ref = R1;
-		V1_ref = V1;
-		oneclickcoast(R2, V1, mjd0 + dt / 24.0 / 3600.0, 0.0, R2_ref, V2_ref, gravout, gravref);
-	}
-	else
-	{
-		R1_ref = R1;
-		V1_ref = V1;
-		R2_ref = R2;
-	}
-
-	if (dt > 0)
-	{
-		Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, dt, N, prog, mu);
-	}
-	else
-	{
-		Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, -dt, N, !prog, mu);
-	}
-	if (gravref != gravin)
-	{
-		VECTOR3 R1_unused;
-		oneclickcoast(R1_ref, Vt1, mjd0, 0.0, R1_unused, Vt1, gravref, gravin);
-	}
 	if (length(V_guess) == 0.0)
 	{
+		if (gravref != gravin)
+		{
+			oneclickcoast(R1, V1, mjd0, 0.0, R1_ref, V1_ref, gravin, gravref);
+			R2_ref = R2;
+		}
+		else if (gravref != gravout)
+		{
+			VECTOR3 V2_ref;
+			R1_ref = R1;
+			V1_ref = V1;
+			oneclickcoast(R2, V1, mjd0 + dt / 24.0 / 3600.0, 0.0, R2_ref, V2_ref, gravout, gravref);
+		}
+		else
+		{
+			R1_ref = R1;
+			V1_ref = V1;
+			R2_ref = R2;
+		}
+
+		if (dt > 0)
+		{
+			Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, dt, N, prog, mu);
+		}
+		else
+		{
+			Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, -dt, N, !prog, mu);
+		}
+		if (gravref != gravin)
+		{
+			VECTOR3 R1_unused;
+			oneclickcoast(R1_ref, Vt1, mjd0, 0.0, R1_unused, Vt1, gravref, gravin);
+		}
 		V1_star = Vt1*sign(dt);
 	}
 	else
@@ -1218,6 +1809,11 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 
 	oneclickcoast(R1, V1_star, mjd0, dt, R2_star, V2_star, gravin, gravout);
 	dr2 = R2 - R2_star;
+	max_dr = 0.5*length(R2_star);
+	if (length(dr2) > max_dr)
+	{
+		dr2 = unit(dr2)*max_dr;
+	}
 
 	while (length(dr2) > tol && nMax >= n)
 	{
@@ -1252,25 +1848,48 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	return V1_star;
 }
 
-void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, double t, VECTOR3 &R1, VECTOR3 &V1)
+void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1)
 {
 	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
-	double dt, MJD, mu_M, mu_E;
+	double dt, MJD, mu_M, phi4;
 	double *MoonPos;
 	MoonPos = new double[12];
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
 
 	mu_M = GGRAV*oapiGetMass(hMoon);
-	mu_E = GGRAV*oapiGetMass(hEarth);
 
-	dt = time_radius(R0, V0, 64373760.0, sign(t), mu_M);
-	dt *= sign(t);
-	rv_from_r0v0(R0, V0, dt, RP_M, VP_M, mu_M);
+	if (t > 0.0)
+	{
+		phi4 = 1.0;
+	}
+	else
+	{
+		phi4 = -1.0;
+	}
 
-	MJD = mjd0 + dt / 86400.0;
+	dt = time_radius(R0, V0*phi4, 64373760.0, -phi4, mu_M);
+	dt = phi4*dt;
+
+	if (abs(dt) > abs(t))
+	{
+		if (gravout == hMoon)
+		{
+			rv_from_r0v0(R0, V0, t, R1, V1, mu_M);
+
+			return;
+		}
+		else
+		{
+			rv_from_r0v0(R0, V0, t, RP_M, VP_M, mu_M);
+			MJD = mjd0 + t / 86400.0;
+		}
+	}
+	else
+	{
+		rv_from_r0v0(R0, V0, dt, RP_M, VP_M, mu_M);
+		MJD = mjd0 + dt / 86400.0;
+	}
 
 	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
 
@@ -1282,6 +1901,10 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, double t, VECTOR3 &R1,
 
 	if (abs(t) > abs(dt))
 	{
+		double mu_E;
+
+		mu_E = GGRAV*oapiGetMass(gravout);
+
 		//continue coasting
 		rv_from_r0v0(RP_E, VP_E, t - dt, R1, V1, mu_E);
 	}
@@ -1293,16 +1916,35 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, double t, VECTOR3 &R1,
 	}
 }
 
-VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, double tol)
+void GetLunarEphemeris(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM)
+{
+	double *MoonPos;
+	MoonPos = new double[12];
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	CELBODY *cMoon;
+	cMoon = oapiGetCelbodyInterface(hMoon);
+
+	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
+
+	R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+	V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+
+}
+
+void ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, VECTOR3 &V1_apo, VECTOR3 &V2_apo, double tol)
 {
 	//INPUT:
 	//R1: Pericynthion position vector
 	//R2: MCC/TLI position vector
 	//mjd0: MJD at pericynthion
-	//dt: time between two position vectors
+	//dt: time between two position vectors (R1 to R2)
 	//grav1: minor body, for position vector 1
 	//grav2: minor or major body, for position vector 2
 	//V_guess: initial guess for velocity vector at pericynthion
+
+	//OUTPUT:
+	//V1_apo: Pericynthion velocity vector
+	//V2_apo: MCC/TLI velocity vector
 
 	double mu1;
 	VECTOR3 Vt1;
@@ -1313,16 +1955,22 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 	//if grav1 = grav2, simply use Lambert solution
 	if (grav1 == grav2)
 	{
+		VECTOR3 R2_apo;
+
 		if (dt > 0)
 		{
 			Vt1 = elegant_lambert(R1, V_guess, R2, dt, 0, false, mu1);
 		}
 		else
 		{
-			Vt1 = elegant_lambert(R1, V_guess, R2, -dt, 0, true, mu1);
+			Vt1 = elegant_lambert(R1, -V_guess, R2, -dt, 0, true, mu1);
 		}
 
-		return Vt1*sign(dt);
+		V1_apo =  Vt1*sign(dt);
+
+		rv_from_r0v0(R1, V1_apo, dt, R2_apo, V2_apo, mu1);
+
+		return;
 	}
 
 	//Three bodies
@@ -1345,8 +1993,13 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 
 	double hvec[4] = { h / 2.0, -h / 2.0, rho*h / 2.0, -rho*h / 2.0 };
 
-	rv_from_r0v0_tb(R1, V1_star, mjd0, dt, R2_star, V2_star);
+	rv_from_r0v0_tb(R1, V1_star, mjd0, grav1, grav2, dt, R2_star, V2_star);
 	dr2 = R2 - R2_star;
+	max_dr = 0.5*length(R2_star);
+	if (length(dr2) > max_dr)
+	{
+		dr2 = unit(dr2)*max_dr;
+	}
 
 	while (length(dr2) > tol && nMax >= n)
 	{
@@ -1361,7 +2014,7 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				rv_from_r0v0_tb(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j]);
+				rv_from_r0v0_tb(R1, v_l[i][j], mjd0, grav1, grav2, dt, R2l[i][j], V2l[i][j]);
 			}
 		}
 		for (int i = 0; i < 3; i++)
@@ -1370,7 +2023,7 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 		}
 		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
 		V1_star = V1_star + mul(inverse(T2), dr2);
-		rv_from_r0v0_tb(R1, V1_star, mjd0, dt, R2_star, V2_star);
+		rv_from_r0v0_tb(R1, V1_star, mjd0, grav1, grav2, dt, R2_star, V2_star);
 		dr2 = R2 - R2_star;
 		max_dr = 0.5*length(R2_star);
 		if (length(dr2) > max_dr)
@@ -1378,7 +2031,8 @@ VECTOR3 ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2,
 			dr2 = unit(dr2)*max_dr;
 		}
 	}
-	return V1_star;
+	V1_apo = V1_star;
+	V2_apo = V2_star;
 }
 
 void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2)
@@ -1859,7 +2513,6 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 {
 	double r0, v0, vr0, alpha, a, e, x, dt;
 	VECTOR3 Ex;
-	
 
 	r0 = length(R);
 	v0 = length(V);
@@ -1881,7 +2534,7 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 		}
 		else
 		{
-			sinhF = s*sqrt(coshF*coshF - 1);
+			sinhF = s*sqrt(coshF*coshF - 1.0);
 		}
 		F = atanh(sinhF / coshF);
 
@@ -1970,10 +2623,11 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 	return dt;
 }
 
-void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri)
+void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri)
 {
 	//INPUT:
 	//R and V in Moon relative coordinates, e>1
+	//phi: 1 = return perigee, -1 = Earth departure perigee
 
 
 	VECTOR3 R_patch, V_patch;
@@ -1982,9 +2636,10 @@ void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE
 	r_SPH = 64373760.0;
 	mu = GGRAV*oapiGetMass(hMoon);
 
-	dt = time_radius(R, V, r_SPH, 1.0, mu);
-	oneclickcoast(R, V, mjd0, dt, R_patch, V_patch, hMoon, hEarth);
-	MJD_patch = mjd0 + dt / 24.0 / 3600.0;
+	//Assumption: reentry will never happen before 24 hours after leaving the lunar SOI
+	dt = time_radius(R, V*phi, r_SPH, 1.0, mu) + 24.0*3600.0;
+	oneclickcoast(R, V, mjd0, dt*phi, R_patch, V_patch, hMoon, hEarth);
+	MJD_patch = mjd0 + dt*phi / 24.0 / 3600.0;
 
 	dt2 = timetoperi_integ(R_patch, V_patch, MJD_patch, hEarth, hEarth, R_peri, V_peri);
 
@@ -2025,6 +2680,12 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 	rv_from_r0v0(RP_E, VP_E, dt2, R_peri, V_peri, mu_E);
 
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
+}
+
+double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout)
+{
+	VECTOR3 RPRE, VPRE;
+	return time_radius_integ(R, V, mjd0, r, s, gravref, gravout, RPRE, VPRE);
 }
 
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
@@ -2383,6 +3044,103 @@ bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 		los = true;
 	}
 	return los;
+}
+
+VECTOR3 AdjustApoapsis(VECTOR3 R, VECTOR3 V, double mu, double r_apo_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) > r_apo_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_apo - r_apo_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 AdjustPeriapsis(VECTOR3 R, VECTOR3 V, double mu, double r_peri_des)
+{
+	MATRIX3 Q_Xx;
+	VECTOR3 V_apo;
+	double p_H, c_I, dv, r_apo, r_peri, e_H, eps, e_Ho, dvo;
+	int s_F;
+
+	if (length(R) < r_peri_des)
+	{
+		return _V(0.0, 0.0, 0.0);
+	}
+
+	p_H = c_I = dv = 0.0;
+	s_F = 0;
+	eps = 0.1;
+
+	Q_Xx = LVLH_Matrix(R, V);
+
+	do
+	{
+		V_apo = V + tmul(Q_Xx, _V(dv, 0.0, 0.0));
+		periapo(R, V_apo, mu, r_apo, r_peri);
+		e_H = r_peri - r_peri_des;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return _V(0.0, 0.0, 0.0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_apo - V;
+}
+
+VECTOR3 CircularOrbitDV(VECTOR3 R, VECTOR3 V, double mu)
+{
+	VECTOR3 U_H, U_hor, V_apo;
+	double v_circ;
+
+	U_H = unit(crossp(R, V));
+	U_hor = unit(crossp(U_H, unit(R)));
+	v_circ = sqrt(mu/length(R));
+	V_apo = U_hor*v_circ;
+
+	return V_apo - V;
+}
+
+VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang)
+{
+	VECTOR3 V_apo;
+
+	V_apo = RotateVector(unit(R), ang, unit(V));
+	V_apo = unit(V_apo)*length(V);
+
+	return V_apo - V;
 }
 
 double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
@@ -3727,9 +4485,93 @@ MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 	return _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
 }
 
+void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_P, double h_A, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
+{
+	MATRIX3 Q_Xx, Rot;
+	VECTOR3 R_D, V_D, R_DOI, V_DOI, U_N, V_DH, R_PP, V_PP, U_L, R_LS, U_LS, R_int, V_int;
+	double dt, dt2, err, r_P, r_DOI, theta_DOI, T_P, t_H, PDI_MJD, dt3, erro, e_DOI, h_DOI, v_LV, v_LH, t_peri;
+	int s_F;
+	double c_I, p_H, theta_DOIo, eps2;
+
+	c_I = p_H = 0.0;
+	s_F = 0;
+
+	eps2 = 0.2*RAD;
+	theta_DOI = 180.0;
+
+	r_P = length(R_LSA) + h_P;
+
+	dt = t_E - t_0;
+	oneclickcoast(R_0, V_0, GETbase + t_0 / 24.0 / 3600.0, dt, R_D, V_D, plan, plan);
+	dt2 = 0.0;//timetoperi_integ(R_D, V_D, GETbase + (t_0 + dt) / 24.0 / 3600.0, plan, plan, R_DOI, V_DOI);
+	R_DOI = R_D;
+	V_DOI = V_D;
+
+	r_DOI = length(R_DOI);
+	U_N = unit(crossp(R_DOI, V_DOI));
+
+	Q_Xx = LVLH_Matrix(R_DOI, V_DOI);
+
+	do
+	{
+		e_DOI = (r_DOI - r_P) / (r_P - r_DOI*cos(theta_DOI*RAD));
+		h_DOI = sqrt(r_P*mu*(1.0 + e_DOI));
+
+		v_LV = mu / h_DOI*e_DOI*sin(theta_DOI*RAD);
+		v_LH = mu / h_DOI*(1.0 + e_DOI*cos(theta_DOI*RAD));
+		V_DH = tmul(Q_Xx, _V(v_LH, 0.0, -v_LV));
+
+		T_P = period(R_DOI, V_DH, mu);
+		t_H = (double)N*T_P;
+
+		rv_from_r0v0(R_DOI, V_DH, t_H, R_int, V_int, mu);
+		//oneclickcoast(R_DOI, V_DH, GETbase + (t_0 + dt + dt2) / 24.0 / 3600.0, t_H, R_int, V_int, plan, plan);
+
+		//dt3 = timetoperi_integ(R_int, V_int, GETbase + (t_0 + dt + dt2 + t_H) / 24.0 / 3600.0, plan, plan, R_PP, V_PP);
+		dt3 = timetoperi(R_int, V_int, mu);
+		if (dt3 < 0.0)
+		{
+			dt3 += T_P;
+		}
+		rv_from_r0v0(R_int, V_int, dt3, R_PP, V_PP, mu);
+
+		t_peri = t_0 + dt + dt2 + t_H + dt3;
+		PDI_MJD = t_peri / 24.0 / 3600.0 + GETbase;
+		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
+		Rot = GetRotationMatrix(plan, PDI_MJD);
+		R_LS = rhmul(Rot, R_LSA);
+		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
+		err = sign(dotp(U_N, crossp(U_L, U_LS)))*acos(dotp(U_L, U_LS));
+
+		if (p_H == 0 || abs(err) >= eps2)
+		{
+			ITER(c_I, s_F, err, p_H, theta_DOI, erro, theta_DOIo);
+
+			if (abs(theta_DOI - theta_DOIo) > 10.0)
+			{
+				theta_DOI = theta_DOIo + sign(theta_DOI - theta_DOIo)*10.0;
+			}
+
+			if (s_F == 1)
+			{
+				//return false;
+			}
+		}
+	} while (abs(err) >= eps2 && s_F == 0);
+
+	double dt4;
+	dt4 = time_theta(R_PP, V_PP, theta_F - 15.0*RAD, mu);
+
+	t_DOI = t_0 + dt + dt2;
+	t_PDI = t_peri + dt4;
+	t_L = t_PDI + t_F;
+	DV_DOI = V_DH - V_DOI;
+	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
+}
+
 void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR)
 {
-	double er, nmax, t_U, r_DP, r_P, r_A, r_D, v_D, a_D, t_H, tLMJD, alpha, t_D;
+	double er, nmax, t_U, r_DP, r_P, r_A, r_D, v_D, a_D, t_H, tLMJD, alpha, t_D, t_PP;
 	VECTOR3 U_N, U_L, U_LS, V_DH, R_PP, V_PP, R_LS, R_D, V_D;
 	MATRIX3 Rot;
 	int n;
@@ -3758,8 +4600,8 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 		t_H = ((double)N*PI2 + PI)*sqrt(OrbMech::power(r_A + r_P, 3.0) / (8.0*mu));
 		V_DH = unit(crossp(U_N, R_D))*sqrt(2.0*mu*r_P / (r_A*(r_P + r_A)));
 		oneclickcoast(R_D, V_DH, GETbase + t_D / 24.0 / 3600.0, t_H, R_PP, V_PP, plan, plan);
-		t_L = t_D + t_H + t_F;
-		tLMJD = t_L / 24.0 / 3600.0 + GETbase;
+		t_PP = t_D + t_H;
+		tLMJD = t_PP / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
 		Rot = GetRotationMatrix(plan, tLMJD);
 		R_LS = rhmul(Rot, R_LSA);
@@ -3769,10 +4611,181 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 		t_U = alpha*sqrt(OrbMech::power(a_D, 3.0) / mu);
 		n++;
 	}
+
+	double dt4;
+	dt4 = time_theta(R_PP, V_PP, theta_F - 15.0*RAD, mu);
+
 	t_DOI = t_D;
-	t_PDI = t_DOI + t_H;
+	t_PDI = t_DOI + dt4 + t_H;
+	t_L = t_PDI + t_F;
 	DV_DOI = V_DH - V_D;
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
+}
+
+void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double &t_TPI, double theta_F, double &t_IG, double &t_TPF, double &v_LH, double &v_LV)
+{
+	MATRIX3 Rot;
+	VECTOR3 U_N, R_1, V_1, R_2, V_2, R_6, V_6, R_5, R_L, U_L;
+	int n;
+	double r_M, mu, theta_2, r_A, x, theta_6, MJD_TPI, theta_S, dt, MJD_L, dt_S, t_2, sw, theta_u, r_Ins, dt_F;
+	double dt_2, e_Ins, h_Ins, t_L, dt_TPI;
+
+	r_M = length(R_LS);
+	mu = GGRAV*oapiGetMass(hMoon);
+
+	U_N = unit(crossp(R_P, V_P));
+	n = 0;
+	dt = 100.0;
+	r_Ins = r_M + h_1;
+	R_1 = _V(r_Ins, 0, 0);
+
+	t_L = t_TPI - 40.0*60.0;
+
+	while (n < 10 && abs(dt)>0.5)
+	{
+		dt_TPI = 100.0;
+
+		while (abs(dt_TPI) > 0.01)
+		{
+			MJD_TPI = GETbase + t_TPI / 24.0 / 3600.0;
+			oneclickcoast(R_P, V_P, MJD_P, (MJD_TPI - MJD_P)*24.0*3600.0, R_6, V_6, hMoon, hMoon);
+			r_A = length(R_6) - DH;
+
+			e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
+			h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
+			v_LV = mu / h_Ins*e_Ins*sin(theta_Ins);
+			v_LH = mu / h_Ins*(1.0 + e_Ins*cos(theta_Ins));
+			V_1 = _V(v_LV, v_LH, 0);
+			dt_2 = timetoapo(R_1, V_1, mu);
+
+			rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
+			theta_2 = acos(dotp(unit(R_1), unit(R_2)));
+
+			x = asin((1.0 - DH / length(R_6))*cos(E));
+			theta_6 = sign(DH)*(PI05 - x) - E;
+			R_5 = (unit(R_6)*cos(theta_6) - unit(crossp(crossp(R_6, V_6), R_6))*sin(theta_6))*(length(R_6) - DH);
+			dt_F = time_theta(R_6, V_6, theta_F, mu);
+			dt_TPI = t_L + dt_1 + dt_2 - t_TPI;
+			t_TPI += dt_TPI;
+		}
+
+		dt_S = dt_1 + dt_2;
+		theta_S = theta_1 + theta_2;
+		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		Rot = GetRotationMatrix(hMoon, MJD_L);
+		R_L = rhmul(Rot, R_LS);
+		U_N = unit(crossp(R_6, V_6));
+		U_L = unit(R_L - U_N*dotp(U_N, R_L));
+		R_2 = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*length(R_2);
+		t_2 = t_L + dt_S;
+
+		sw = sign(dotp(U_N, crossp(R_2, R_5)));
+		theta_u = sw*acos(dotp(unit(R_2), unit(R_5))) + PI*(1.0 - sw);
+		dt = time_theta(R_6, V_6, theta_u, mu);
+		t_L -= dt;
+		t_TPI -= dt;
+	}
+
+	t_IG = t_L;
+	t_TPF = t_TPI + dt_F;
+}
+
+void LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_TPI, double theta_F, double &t_IG, double &t_CSI, double &t_CDH, double &t_TPF, double &v_LH, double &v_LV)
+{
+	MATRIX3 Rot;
+	VECTOR3 U_N, R_1, V_1, R_2, V_2, R_6, V_6, R_5, V_2F, R_3, V_3, R_S, R_L, U_L, R_3P, V_3P, V_5, R_3F, V_3F;
+	int n;
+	double r_M, mu, theta_2, r_A, x, theta_6, dt_3, MJD_TPI, theta_S, dt, MJD_L, dt_S, t_3, sw, theta_5, theta_u, dt_3P, dt_5, a_1, p, t_AT, theta_3, r_Ins;
+	double dt_2, e_Ins, h_Ins, t_L;
+
+	r_M = length(R_LS);
+	mu = GGRAV*oapiGetMass(hMoon);
+	MJD_TPI = GETbase + t_TPI / 24.0 / 3600.0;
+
+	U_N = unit(crossp(R_P, V_P));
+	n = 0;
+	dt = 100.0;
+	t_L = t_TPI - 2.5*3600.0;
+	r_Ins = r_M + h_1;
+	R_1 = _V(r_Ins, 0, 0);
+
+	oneclickcoast(R_P, V_P, MJD_P, (MJD_TPI - MJD_P)*24.0*3600.0, R_6, V_6, hMoon, hMoon);
+	r_A = length(R_6) - DH;
+
+	e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
+	h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
+	v_LV = mu / h_Ins*e_Ins*sin(theta_Ins);
+	v_LH = mu / h_Ins*(1.0 + e_Ins*cos(theta_Ins));
+	V_1 = _V(v_LV, v_LH, 0);
+	dt_2 = timetoapo(R_1, V_1, mu);
+
+	rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
+	theta_2 = acos(dotp(unit(R_1), unit(R_2)));
+
+	//v_V2 = dotp(V_2, R_2) / sqrt(length(R_2)*mu);
+	x = asin((1.0 - DH / length(R_6))*cos(E));
+	theta_6 = sign(DH)*(PI05 - x) - E;
+	R_5 = (unit(R_6)*cos(theta_6) - unit(crossp(crossp(R_6, V_6), R_6))*sin(theta_6))*(length(R_6) - DH);
+	
+	while (n < 10 && abs(dt)>1.0)
+	{
+		//v_H2 = 1.0;//sqrt((2.0*(1.0 - length(R_2) / r_A) - v_V2*v_V2) / (1.0 - length(R_2)*length(R_2) / r_A / r_A));
+		theta_3 = PI;// -acos(1.0 / sqrt(pow(v_V2*v_H2 / (v_H2*v_H2 - 1.0), 2.0) + 1.0));
+		V_2F = unit(crossp(crossp(R_2, V_2), R_2))*sqrt(mu / length(R_2));
+		//V_2F = (unit(R_2)*v_V2 + unit(crossp(crossp(R_2, V_2), R_2))*v_H2)*sqrt(mu / length(R_2));
+		dt_3 = time_theta(R_2, V_2F, theta_3, mu);
+		rv_from_r0v0(R_2, V_2F, dt_3, R_3, V_3, mu);
+		dt_S = dt_1 + dt_2 + dt_3;
+		R_S = R_3;
+		theta_S = theta_1 + theta_2 + theta_3;
+
+		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		Rot = GetRotationMatrix(hMoon, MJD_L);
+		R_L = rhmul(Rot, R_LS);
+		U_N = unit(crossp(R_6, V_6));
+		U_L = unit(R_L - U_N*dotp(U_N, R_L));
+		R_3 = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*length(R_3);
+		t_3 = t_L + dt_S;
+
+		sw = sign(dotp(U_N, crossp(R_3, R_5)));
+		theta_5 = sw*acos(dotp(unit(R_3), unit(R_5))) + PI*(1.0 - sw);
+		theta_u = sw*acos(dotp(unit(R_3), unit(R_6))) + PI*(1.0 - sw);
+		dt_3P = time_theta(R_6, V_6, -theta_u, mu);
+		rv_from_r0v0(R_6, V_6, dt_3P, R_3P, V_3P, mu);
+		COE(R_3P, V_3P, DH, mu, R_3F, V_3F);
+
+		dt_5 = time_theta(R_3, V_3F, theta_5, mu);
+		if (dt_5 < 0.0)
+		{
+			dt_5 += period(R_3, V_3F, mu);
+		}
+		rv_from_r0v0(R_3, V_3F, dt_5, R_5, V_5, mu);
+		a_1 = length(R_3) / (2.0 - length(V_3F)*length(V_3F)*length(R_3) / mu);
+		r_A = length(R_3P) - DH;
+		p = PI2*sqrt(pow(a_1, 3) / mu);
+		t_AT = t_3 + dt_5 + p*floor((t_TPI - t_3) / p);
+		dt = t_TPI - t_AT;
+
+		if (abs(dt) > 1.0)
+		{
+			n++;
+			t_L = t_L + dt;
+		}
+	}
+
+	double v_V3, dV_CSI, dV_CDH, dt_F;
+
+	t_IG = t_L;
+	t_CSI = t_L + dt_1 + dt_2;
+	t_CDH = t_3;
+
+	dt_F = time_theta(R_6, V_6, theta_F, mu);
+
+	t_TPF = t_TPI + dt_F;
+	dV_CSI = length(V_2F - V_2);
+	v_V3 = dotp(V_3, unit(R_S));
+	V_3 = unit(R_3)*v_V3 + unit(crossp(U_N, R_3))*sqrt(length(V_3)*length(V_3) - v_V3*v_V3);
+	dV_CDH = length(V_3F - V_3);
 }
 
 void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t)
@@ -3804,13 +4817,13 @@ void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C)
 	V_C = unit(crossp(crossp(R, V), R))*sqrt(mu*(2.0 / length(R_C) - 1.0 / a_D) - v_V*v_V) + R_C*v_V/length(R_C);
 }
 
-void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo)
+void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo, double dx0)
 {
 	double dx;
 
 	if (c == 0)
 	{
-		dx = 1.0;
+		dx = dx0;
 		c = c + 1.0;eo = e;xo = x;x = x - dx;
 	}
 	else if (c == 0.5)
@@ -3822,7 +4835,7 @@ void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double 
 	{
 		if (e - eo == 0)
 		{
-			dx = 3.0;
+			dx = 3.0*dx0;
 			c = c + 1.0;eo = e;xo = x;x = x - dx;
 		}
 		else
@@ -3899,7 +4912,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	MATRIX3 Q_Xx;
 	int nmax, n;
 
-	Q_Xx = OrbMech::LVLH_Matrix(RA1, VA1);
+	Q_Xx = LVLH_Matrix(RA1, VA1);
 
 	f2 = 1;
 	n = 0;
@@ -3908,8 +4921,8 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 	RPP1 = RP2off;
 	RPP2 = RP2off*(length(RP2off) + 10.0) / length(RP2off);
 
-	VAP1 = OrbMech::elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
-	VAP2 = OrbMech::elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
+	VAP1 = elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
+	VAP2 = elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
 
 	r1 = length(RPP1);
 	r2 = length(RPP2);
@@ -3927,7 +4940,7 @@ void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, b
 		r1 = r2;
 		r2 = y;
 
-		VAP2 = OrbMech::elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
+		VAP2 = elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
 
 		n++;
 	}
@@ -4199,6 +5212,11 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+double GETfromMJD(double MJD, double GETBase)
+{
+	return (MJD - GETBase)*24.0*3600.0;
+}
+
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
 {
 	MATRIX3 Rot;
@@ -4445,6 +5463,49 @@ MATRIX3 EMPMatrix(double MJD)
 	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
 }
 
+void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius)
+{
+	MATRIX3 Rot;
+	VECTOR3 R_EM, R_EM2;
+	double *MoonPos;
+	MoonPos = new double[12];
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	CELBODY *cMoon;
+
+	cMoon = oapiGetCelbodyInterface(hMoon);
+	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
+	Rot = GetObliquityMatrix(hEarth, MJD);
+	R_EM = tmul(Rot, _V(MoonPos[0], MoonPos[1], MoonPos[2]));
+	R_EM2 = _V(R_EM.x, R_EM.z, R_EM.y);
+	radius = length(R_EM);
+	ra_and_dec_from_r(R_EM2, ra, dec);
+}
+
+void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl)
+{
+	MATRIX3 M_EMP;
+
+	//EMP Matrix
+	M_EMP = OrbMech::EMPMatrix(MJD);
+
+	//Convert EMP position to ecliptic
+	R_Ecl = tmul(M_EMP, R_EMP);
+	V_Ecl = tmul(M_EMP, V_EMP);
+}
+
+void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP)
+{
+	MATRIX3 M_EMP;
+
+	//EMP Matrix
+	M_EMP = OrbMech::EMPMatrix(MJD);
+
+	//Convert ecliptic position to EMP
+	R_EMP = mul(M_EMP, R_Ecl);
+	V_EMP = mul(M_EMP, V_Ecl);
+}
+
 double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep)
 {
 	double dvar;
@@ -4476,7 +5537,7 @@ double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *
 	varguess += dvar;
 	c++;
 
-	if (c > 10)
+	if (c > 100)
 	{
 		s = 1;
 	}

@@ -364,6 +364,19 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
+class ThrustWeightInd : public MeterSwitch {
+public:
+	ThrustWeightInd();
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	double AdjustForPower(double val);
+
+protected:
+	LEM *lem;
+	SURFHANDLE NeedleSurface;
+};
+
 class MainFuelTempInd : public MeterSwitch {
 public:
 	MainFuelTempInd();
@@ -379,13 +392,14 @@ protected:
 class MainFuelPressInd : public MeterSwitch {
 public:
 	MainFuelPressInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class MainOxidizerTempInd : public MeterSwitch {
@@ -403,20 +417,22 @@ protected:
 class MainOxidizerPressInd : public MeterSwitch {
 public:
 	MainOxidizerPressInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class EngineStartButton : public ToggleSwitch {
 
 public:
 	EngineStartButton() {};
-	void Init(ToggleSwitch* stopbutton);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton);
+	bool CheckMouseClick(int event, int mx, int my);
 	bool Push();
 protected:
 	ToggleSwitch* stopbutton;
@@ -426,10 +442,31 @@ class EngineStopButton : public ToggleSwitch {
 
 public:
 	EngineStopButton() {};
-	void Init(ToggleSwitch* startbutton);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton);
+	bool CheckMouseClick(int event, int mx, int my);
 	bool Push();
 protected:
 	ToggleSwitch* startbutton;
+};
+
+class LMAbortButton : public ToggleSwitch {
+public:
+	LMAbortButton() {};
+	bool CheckMouseClick(int event, int mx, int my);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
+protected:
+	LEM *lem;
+};
+
+class LMAbortStageButton : public GuardedToggleSwitch {
+public:
+	LMAbortStageButton();
+
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
+	bool CheckMouseClick(int event, int mx, int my);
+	void DrawSwitch(SURFHANDLE DrawSurface);
+protected:
+	LEM *lem;
 };
 
 class LEMPanelOrdeal : public MeterSwitch {
@@ -443,4 +480,93 @@ public:
 
 protected:
 	LEM *lem;
+};
+
+class RadarSignalStrengthAttenuator : public VoltageAttenuator {
+public:
+	RadarSignalStrengthAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	void Init(LEM* l, RotationalSwitch *testmonitorselectorswitch, e_object *Instrum);
+	double GetValue();
+protected:
+	LEM *lem;
+	RotationalSwitch *TestMonitorRotarySwitch;
+};
+
+class LEMSteerableAntennaPitchMeter : public LEMRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+protected:
+	SURFHANDLE FrameSurface;
+};
+
+class LEMSteerableAntennaYawMeter : public LEMRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+protected:
+	SURFHANDLE FrameSurface;
+};
+
+class LEMSBandAntennaStrengthMeter : public LEMRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+protected:
+	SURFHANDLE FrameSurface;
+};
+
+class LEMDPSValveTalkback : public IndicatorSwitch {
+public:
+	LEMDPSValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DPSValve *v, bool failopen);
+	int GetState();
+
+protected:
+	DPSValve *valve;
+};
+
+class LEMDPSDigitalMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	SURFHANDLE Digits;
+	LEM *lem;
+};
+
+class LEMDPSOxidPercentMeter : public LEMDPSDigitalMeter {
+public:
+	double QueryValue();
+};
+
+class LEMDPSFuelPercentMeter : public LEMDPSDigitalMeter {
+public:
+	double QueryValue();
+};
+
+class LEMDigitalHeliumPressureMeter : public MeterSwitch {
+public:
+	LEMDigitalHeliumPressureMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
+	double QueryValue();
+	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	RotationalSwitch *source;
+	SURFHANDLE Digits;
+	LEM *lem;
+};
+
+class DEDAPushSwitch : public PushSwitch {
+protected:
+	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 };

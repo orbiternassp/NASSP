@@ -36,8 +36,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "dsky.h"
-#include "IMU.h"
 
 #include "LEM.h"
 
@@ -94,7 +92,7 @@ void LEM::SetView() {
 	}
 
 	//
-	// Change FOV for the LPD window 
+	// Change FOV for the LPD window and AOT view
 	//
 	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 	   // if this is the first time we've been here, save the current FOV
@@ -104,7 +102,15 @@ void LEM::SetView() {
 		}
 		//set FOV to 70 degrees
 		oapiCameraSetAperture(RAD * 35.0);
-
+	}
+	else if (PanelId == LMPANEL_AOTVIEW) {
+		// if this is the first time we've been here, save the current FOV
+		if (InFOV) {
+			SaveFOV = oapiCameraAperture();
+			InFOV = false;
+		}
+		//set FOV to 60 degrees
+		oapiCameraSetAperture(RAD * 30.0);
 	} else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);

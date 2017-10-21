@@ -1,0 +1,3 @@
+BEGIN_DESC
+This folder contains work-in-progress scenarios that are aimed for future NASSP releases, they are however mostly functional and can be used. Bugs may be reported at https://github.com/dseagrav/NASSP/issues
+END_DESC

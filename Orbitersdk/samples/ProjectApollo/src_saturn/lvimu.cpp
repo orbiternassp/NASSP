@@ -32,8 +32,11 @@
 #include "soundlib.h"
 
 #include "nasspdefs.h"
-#include "LVIMU.h"
+#include "apolloguidance.h"
+#include "csmcomputer.h"
 #include "papi.h"
+#include "saturn.h"
+#include "LVIMU.h"
 
 LVIMU::LVIMU()
 
@@ -95,7 +98,7 @@ void LVIMU::Init()
 	CDURegisters[LVRegPIPAZ]=0;
 
 	ZeroIMUCDUs();
-	LastTime = -1;
+	LastTime = 0;
 }
 
 bool LVIMU::IsCaged()
@@ -147,7 +150,7 @@ bool LVIMU::IsPowered()
 }
 
 
-void LVIMU::Timestep(double simt)
+void LVIMU::Timestep(double mjd)
 
 {
 	double deltaTime, pulses;
@@ -172,17 +175,17 @@ void LVIMU::Timestep(double simt)
 	}
 	
 	// fill OrbiterData
-	VESSELSTATUS vs;
-	OurVessel->GetStatus(vs);
+	VECTOR3 arot;
+	OurVessel->GetGlobalOrientation(arot);
 
-	Orbiter.Attitude.X = vs.arot.x;
-	Orbiter.Attitude.Y = vs.arot.y;
-	Orbiter.Attitude.Z = vs.arot.z;
+	Orbiter.Attitude.X = arot.x;
+	Orbiter.Attitude.Y = arot.y;
+	Orbiter.Attitude.Z = arot.z;
 
 	// Vessel to Orbiter global transformation
-	MATRIX3	tinv = getRotationMatrixZ(-vs.arot.z);
-	tinv = mul(getRotationMatrixY(-vs.arot.y), tinv);
-	tinv = mul(getRotationMatrixX(-vs.arot.x), tinv);
+	MATRIX3	tinv = getRotationMatrixZ(-arot.z);
+	tinv = mul(getRotationMatrixY(-arot.y), tinv);
+	tinv = mul(getRotationMatrixX(-arot.x), tinv);
 
 	if (!Initialized) {
 		SetOrbiterAttitudeReference();
@@ -196,11 +199,11 @@ void LVIMU::Timestep(double simt)
 
 		OurVessel->GetGlobalVel(LastGlobalVel);
 
-		LastTime = simt;
+		LastTime = mjd;
 		Initialized = true;
 	} 
 	else {
-		deltaTime = (simt - LastTime);
+		deltaTime = (mjd - LastTime)*86400.0;
 
 		// Calculate accelerations
 		VECTOR3 w, vel;
@@ -278,7 +281,7 @@ void LVIMU::Timestep(double simt)
 			pulses = (accel.z * deltaTime);
 			PulsePIPA(LVRegPIPAZ, pulses);
 		}
-		LastTime = simt;
+		LastTime = mjd;
 	}	
 }
 
@@ -550,7 +553,7 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m33 = flt;
 		}
-		else if (!strnicmp(line, "LTM", 3)) {
+		else if (!strnicmp(line, "MJD", 3)) {
 			sscanf(line + 3, "%lf", &flt);
 			LastTime = flt;
 		}
@@ -598,7 +601,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
 	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
 	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	papiWriteScenario_double(scn, "LTM", LastTime);
+	papiWriteScenario_double(scn, "MJD", LastTime);
 
 	//
 	// Copy internal state to the structure.
@@ -769,7 +772,7 @@ LVRG::LVRG() {
 	rates = _V(0,0,0);
 }
 
-void LVRG::Init(VESSEL *v) {
+void LVRG::Init(IUToLVCommandConnector *v) {
 	// Initialize
 	sat = v;
 }

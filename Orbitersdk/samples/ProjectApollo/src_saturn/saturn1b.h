@@ -22,7 +22,6 @@
 
   **************************************************************************/
 #pragma once
-#include "LVDC.h"
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -71,6 +70,8 @@ public:
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 
 	void SwitchSelector(int item);
+	void SISwitchSelector(int channel);
+	void SIVBSwitchSelector(int channel);
 
 protected:
 
@@ -78,13 +79,9 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	LVDC1B* lvdc;
 	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
-	void AttitudeLaunch1();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetFirstStage ();
 	void SetFirstStageMeshes(double offset);
 	void SetFirstStageEngines ();
@@ -95,8 +92,6 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
-	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
@@ -108,6 +103,7 @@ protected:
 	void DeactivateStagingVent();
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
+	void SetRandomFailures();
 };
 
 

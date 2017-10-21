@@ -38,10 +38,7 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "VAB.h"
 #include "ML.h"
@@ -134,7 +131,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	SetRotDrag (_V(0, 0, 0));
 	SetCW(0, 0, 0, 0);
 	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
+	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0); 
 
     ClearMeshes();

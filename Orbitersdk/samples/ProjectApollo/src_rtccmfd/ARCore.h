@@ -10,7 +10,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -38,13 +37,17 @@ public:
 	void SkylabCalc();
 	void DOICalc();
 	void PCCalc();
+	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
 	void TEICalc();
+	void RTEFlybyCalc();
 	void EntryCalc();
+	void DeorbitCalc();
 	void TLCCCalc();
 	void EntryUpdateCalc();
 	void StateVectorCalc();
+	void AGSStateVectorCalc();
 	void LandingSiteUpdate();
 	void LandingSiteUplink();
 	void VecPointCalc();
@@ -62,11 +65,14 @@ public:
 	void REFSMMATUplink(void);
 	void StateVectorUplink();
 	void TLANDUplink(void);
+	void EMPP99Uplink(int i);
 	void ManeuverPAD();
 	void EntryPAD();
 	void TPIPAD();
 	void TLI_PAD();
+	void PDI_PAD();
 	void MapUpdate();
+	void NavCheckPAD();
 	int REFSMMAT_Address();
 
 	int startSubthread(int fcn);
@@ -97,6 +103,7 @@ public:
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	bool inhibUplLOS;
+	bool PADSolGood;
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -117,11 +124,18 @@ public:
 	VECTOR3 CDHdeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
-	double apo_desnm;		//Desired apoapsis altitude in NM
-	double peri_desnm;		//Desired periapsis altitude in NM
-	double incdeg;			//Desired inclination in degrees
-	double SPSGET;			//Maneuver GET
-	VECTOR3 OrbAdjDVX;		//LVLH maneuver vector
+	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
+	//1 = Fixed TIG, specify apoapsis altitude
+	//2 = Fixed TIG, specify periapsis altitude
+	//3 = Fixed TIG, circularize orbit
+	//4 = Circularize orbit at specified altitude
+	int GMPType;
+	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
+	double apo_desnm;	//Desired apoapsis altitude in NM
+	double peri_desnm;	//Desired periapsis altitude in NM
+	double incdeg;		//Desired inclination in degrees
+	double SPSGET;		//Maneuver GET
+	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
@@ -134,7 +148,7 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	int entrycritical; //0 = Fuel critical, 1 = time critical, 2 = Abort
+	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
 	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
 	double EntryLat;
@@ -144,15 +158,14 @@ public:
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
-	int entrycalcmode; //0=LEO mode with angle and longitude, 1=Entry Prediction, 2=P37 Block Data, 3 = TEI
 	double entryrange;
 	double P37GET400K;
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int TEItype;	//0 = TEI, 1 = Flyby, 2 = PC+2
-	bool TEIfail;
+	int DeorbitEngineOpt; //0 = SPS, 1 = RCS
+	int FlybyType;	//1 = Flyby, 2 = PC+2
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
@@ -161,7 +174,11 @@ public:
 	VESSEL* svtarget;
 	int svtargetnumber;
 	bool svtimemode; //0 = Now, 1 = GET
-	int svmode;		//0 = state vector, 1 = landing site update
+	int svmode;		//0 = state vector, 1 = landing site update, 2 = AGS State Vector Update
+	double AGSEpochTime;
+	VECTOR3 AGSPositionVector, AGSVelocityVector;
+	double AGSKFactor;
+	AP11AGSSVPAD agssvpad;
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
@@ -174,6 +191,8 @@ public:
 	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
 	double sxtstardtime;
 	TLIPAD tlipad;
+	AP11PDIPAD pdipad;
+	bool ManPADdirect;
 
 	///ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
@@ -187,7 +206,10 @@ public:
 	int mappage, mapgs;
 
 	//TLCC PAGE
-	int TLCCmaneuver;	//0 = TLI (nodal), 1 = TLI (free return), 2 = XYZ and T (Nodal) Targeting, 3 = FR BAP Fixed LPO, 4 = Circumlunar free-return flyby, specified H_PC and phi_PC
+
+	//0 = TLI (nodal), 1 = TLI (free return), 2 = XYZ and T (Nodal) Targeting, 3 = FR BAP Fixed LPO, 4 = FR BAP Free LPO
+	//5 = Non Free BAP Fixed LPO, 6 = Non Free BAP Free LPO, 7 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	int TLCCmaneuver;
 	VECTOR3 TLCC_dV_LVLH;
 	//Initial guess of pericynthion GET
 	double TLCCPeriGET;
@@ -195,15 +217,20 @@ public:
 	double TLCCPeriGETcor;
 	//Initial guess and corrected TIG
 	double TLCC_GET, TLCC_TIG;
-	double TLCCPeri;
-	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl;
+	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
+	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
+	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
+	bool TLCCAscendingNode;
+	double TLCCFRDesiredInclination;
+	int TLCCIterationStep;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
-	double LOIapo, LOIperi, LOIazi;
+	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
+	double LOIapo, LOIperi, LOIazi, LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
 
@@ -226,6 +253,8 @@ public:
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
 	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
+	double DOI_PeriAng;					//Angle from landing site to 
+	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -251,6 +280,18 @@ public:
 
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
+
+	//Lunar Liftoff Time Prediction
+	LunarLiftoffResults LunarLiftoffTimes;
+	double t_TPIguess;
+	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile
+
+	//Erasable Memory Programs
+	int EMPUplinkType;	// 0 = P99
+	int EMPUplinkNumber;
+
+	//NAV CHECK PAGE
+	AP7NAV navcheckpad;
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;

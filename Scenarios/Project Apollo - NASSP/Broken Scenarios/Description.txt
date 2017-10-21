@@ -1,0 +1,3 @@
+BEGIN_DESC
+This folder contains older scenarios that have not been updated in a while. Use of these scenarios is not recommended for now, please see the WIP (work-in-progress) scenario folder.
+END_DESC

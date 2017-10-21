@@ -221,7 +221,6 @@
 #define AID_LGC_THRUSTER_QUADS          432
 #define AID_RCS_SYSTEMA_SYSTEMB         433
 #define AID_MAIN_SOV_SWITCHES           434
-#define AID_LANDING_GEAR_SWITCH         435
 #define AID_ENGINE_GIMBAL_SWITCH        436
 #define AID_ASCENT_HE                   437
 #define AID_EXPLOSIVE_DEVICES2          438
@@ -754,6 +753,29 @@
 #define AID_RANGE_TAPE                  1027
 #define AID_RATE_TAPE                   1028
 #define IDB_ORDEAL_PANEL				1029
+#define IDB_TW_NEEDLE					1030
+#define AID_THRUST_WEIGHT_INDICATOR		1031
+#define IDB_SEQ_LIGHT					1032
+#define AID_SEQ_LIGHT1					1033
+#define AID_SEQ_LIGHT2					1034
+#define AID_MPS_OXID_QUANTITY_INDICATOR 1035
+#define AID_MPS_FUEL_QUANTITY_INDICATOR 1036
+#define AID_MPS_HELIUM_PRESS_INDICATOR  1037
+#define IDB_LMENGINESTARTSTOPBUTTONS    1038
+#define AID_LMP_MANUAL_ENGINE_STOP_SWITCH 1039
+#define IDB_LMTRANSLBUTTON				1040
+#define IDB_BORDER_40x40                1041
+#define AID_LEMVENT						1042
+#define AID_LEM_ACT_OVRD				1043
+#define AID_LEM_CAN_SEL					1044
+#define AID_LEM_ECS_ROTARY				1045
+#define AID_LEM_H20_SEL					1046
+#define AID_LEM_H20_SEP					1047
+#define AID_LEM_ISOL_ROTARY				1048
+#define AID_LEM_PRIM_C02				1049
+#define AID_LEM_SEC_C02					1050
+#define AID_LEM_SGD_LEVER				1051
+#define IDB_LEM_ECS_PANEL				1052
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

@@ -22,9 +22,6 @@
 
   **************************************************************************/
 
-// LVDC moved here
-#include "LVDC.h"
-
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -82,6 +79,9 @@ public:
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 
 	void SwitchSelector(int item);
+	void SISwitchSelector(int channel);
+	void SIISwitchSelector(int channel);
+	void SIVBSwitchSelector(int channel);
 
 	//
 	// Functions that external code shouldn't need to access.
@@ -99,10 +99,6 @@ private:
 	void SetThirdStageMesh (double offset);
 	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
-	void AttitudeLaunch1();
-	void AttitudeLaunch2();
-	void AttitudeLaunch4();
-	void AutoPilot(double autoT);
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();
@@ -135,8 +131,6 @@ protected:
 	//
 
 	void SaveVehicleStats(FILEHANDLE scn);
-	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
 
 	//
 	// Odds and ends.
@@ -147,6 +141,7 @@ protected:
 	void DeactivatePrelaunchVenting();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
+	void SetRandomFailures();
 
 	//
 	// Class variables.
@@ -182,9 +177,6 @@ protected:
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
-	
-	// DS20150804 LVDC++ ON WHEELS
-	LVDC* lvdc;
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;

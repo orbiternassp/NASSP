@@ -38,39 +38,19 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "cdu.h"
 #include "powersource.h"
 #include "papi.h"
 
 #include "tracer.h"
 
-char TwoSpaceTwoFormat[7] = "XXX XX";
-char RegFormat[7] = "XXXXXX";
-
-// Moved DELTAT definition to avoid INTERNAL COMPILER ERROR
-#define DELTAT 2.0
-
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
 
 {
 	Reset = false;
 	CurrentTimestep = 0;
 	LastTimestep = 0;
 	LastCycled = 0;
-
-	DesiredApogee = 0.0;
-	DesiredPerigee = 0.0;
-	DesiredAzimuth = 0.0;
-	DesiredInclination = 0.0;
-
-	LandingLongitude = 0.0;
-	LandingLatitude = 0.0;
-	LandingAltitude = 0.0;
-
-	//
-	// Expected dV from thrust decay of engine.
-	//
-
-	ThrustDecayDV = 0.0;
 
 	//
 	// Flight number.
@@ -88,8 +68,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 
 	for (i = 0; i <= MAX_OUTPUT_CHANNELS; i++)
 		OutputChannel[i] = 0;
-	for (i = 0; i <= MAX_INPUT_CHANNELS; i++)
-		InputChannel[i] = 0;
 
 	//
 	// Dsky interface.
@@ -156,19 +134,16 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		val30.set(IMUOperate);
 
 		vagc.InputChannel[030] = (int16_t)val30.to_ulong();
-		InputChannel[030] = (val30.to_ulong() ^ 077777);
 
 		val31 = 077777;
 		// Default position of the CMC MODE switch is FREE
 		val31[FreeFunction] = 0;
 
 		vagc.InputChannel[031] = (int16_t)val31.to_ulong();
-		InputChannel[031] = (val31.to_ulong() ^ 077777);
 
 
 		val32 = 077777;
 		vagc.InputChannel[032] = (int16_t)val32.to_ulong();
-		InputChannel[032] = (val32.to_ulong() ^ 077777);
 
 		val33 = 077777;
 	//	val33.Bits.RangeUnitDataGood = 0;
@@ -186,7 +161,6 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		val33[AGCWarning] = 0;
 		
 		vagc.InputChannel[033] = (int16_t)val33.to_ulong();
-		InputChannel[033] = (val33.to_ulong() ^ 077777);
 	}
 }
 
@@ -271,41 +245,6 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName)
 
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);
-}
-
-//
-// Most of this burn calculation code is lifted from the Soyuz guidance MFD.
-//
-
-// Returns the absolute value of a vector
-double AbsOfVector(const VECTOR3 &Vec)
-{
-	double Result;
-	Result = sqrt(Vec.x*Vec.x + Vec.y*Vec.y + Vec.z*Vec.z);
-	return Result;
-}
-
-void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos)
-{
-		VECTOR3 a;
-		double obliq, theta, rot;
-		OBJHANDLE hbody=OurVessel->GetGravityRef();
-		a.x=cos(vlat)*cos(vlon)*vrad;
-		a.z=cos(vlat)*sin(vlon)*vrad;
-		a.y=sin(vlat)*vrad;
-		obliq=oapiGetPlanetObliquity(hbody);
-		theta=oapiGetPlanetTheta(hbody);
-		rot=oapiGetPlanetCurrentRotation(hbody);
-		pos.x=a.x*(cos(theta)*cos(rot)-sin(theta)*cos(obliq)*sin(rot))-
-			a.y*sin(theta)*sin(obliq)-
-			a.z*(cos(theta)*sin(rot)+sin(theta)*cos(obliq)*cos(rot));
-		pos.y=a.x*(-sin(obliq)*sin(rot))+
-			a.y*cos(obliq)-
-			a.z*sin(obliq)*cos(rot);
-		pos.z=a.x*(sin(theta)*cos(rot)+cos(theta)*cos(obliq)*sin(rot))+
-			a.y*cos(theta)*sin(obliq)+
-			a.z*(-sin(theta)*sin(rot)+cos(theta)*cos(obliq)*cos(rot));
-
 }
 
 //
@@ -398,9 +337,14 @@ typedef union
 		unsigned SbyPressed:1;
 		unsigned SbyStillPressed:1;
 		unsigned ParityFail:1;
-		unsigned CheckParity:1;
+		unsigned Spare1:1;
 		unsigned NightWatchmanTripped:1;
 		unsigned GeneratedWarning:1;
+		unsigned TookBZF:1;
+		unsigned TookBZMF:1;
+		unsigned Trap31A:1;
+		unsigned Trap31B:1;
+		unsigned Trap32:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -413,10 +357,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	int val;
 
 	oapiWriteLine(scn, AGC_START_STRING);
-
-	oapiWriteScenario_float(scn, "TGTA", DesiredApogee);
-	oapiWriteScenario_float(scn, "TGTP", DesiredPerigee);
-	oapiWriteScenario_float(scn, "TGTZ", DesiredAzimuth);
 
 	if (OtherVesselName[0])
 		oapiWriteScenario_string(scn, "ONAME", OtherVesselName);
@@ -448,9 +388,13 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.SbyPressed = vagc.SbyPressed;
 	state.u.SbyStillPressed = vagc.SbyStillPressed;
 	state.u.ParityFail = vagc.ParityFail;
-	state.u.CheckParity = vagc.CheckParity;
 	state.u.NightWatchmanTripped = vagc.NightWatchmanTripped;
 	state.u.GeneratedWarning = vagc.GeneratedWarning;
+	state.u.TookBZF = vagc.TookBZF;
+	state.u.TookBZMF = vagc.TookBZMF;
+	state.u.Trap31A = vagc.Trap31A;
+	state.u.Trap31B = vagc.Trap31B;
+	state.u.Trap32 = vagc.Trap32;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
 
@@ -503,7 +447,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SCALERCOUNTER", vagc.ScalerCounter);
 	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
 	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
-	oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
 	oapiWriteScenario_int(scn, "WARNINGFILTER", vagc.WarningFilter);
 
 	sprintf(buffer, "  CYCLECOUNTER %I64d", vagc.CycleCounter);
@@ -531,7 +474,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 {
 	char	*line;
-	float	flt;
 
 	//
 	// Now load the data.
@@ -541,30 +483,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, AGC_END_STRING, sizeof(AGC_END_STRING)))
 			break;
 			
-		if (!strnicmp (line, "TGTA", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredApogee = flt;
-		}
-		else if (!strnicmp (line, "TGTP", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredPerigee = flt;
-		}
-		else if (!strnicmp (line, "TGTZ", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredAzimuth = flt;
-		}
-		else if (!strnicmp (line, "EMEM", 4)) {
+		if (!strnicmp (line, "EMEM", 4)) {
 			int num, val;
 			sscanf(line+4, "%o", &num);
 			sscanf(line+9, "%o", &val);
 			WriteMemory(num, val);
-		}
-		else if (!strnicmp (line, "ICHAN", 5)) {
-			int num;
-			unsigned int val;
-			sscanf(line+5, "%d", &num);
-			sscanf(line+9, "%d", &val);
-			InputChannel[num] = val;
 		}
 		else if (!strnicmp (line, "VICHAN", 6)) {
 			int num;
@@ -604,9 +527,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "DSKYCHANNEL163", 14)) {
 			sscanf(line + 14, "%d", &vagc.DskyChannel163);
-		}
-		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
-			sscanf (line+12, "%" SCNd16, &vagc.Ch33Switches);
 		}
 		else if (!strnicmp(line, "WARNINGFILTER", 13)) {
 			sscanf(line + 13, "%" SCNd32, &vagc.WarningFilter);
@@ -648,9 +568,13 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.SbyPressed = state.u.SbyPressed;
 			vagc.SbyStillPressed = state.u.SbyStillPressed;
 			vagc.ParityFail = state.u.ParityFail;
-			vagc.CheckParity = state.u.CheckParity;
 			vagc.NightWatchmanTripped = state.u.NightWatchmanTripped;
 			vagc.GeneratedWarning = state.u.GeneratedWarning;
+			vagc.TookBZF = state.u.TookBZF;
+			vagc.TookBZMF = state.u.TookBZMF;
+			vagc.Trap31A = state.u.Trap31A;
+			vagc.Trap31B = state.u.Trap31B;
+			vagc.Trap32 = state.u.Trap32;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
@@ -658,16 +582,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
-	}
-
-	//
-	// Quick hack to make the code work with old scenario files. Can be removed after NASSP 7
-	// release.
-	//
-
-	if (!OtherVesselName[0] && OurVessel) {
-		strncpy (OtherVesselName, OurVessel->GetName(), 63);
-		OtherVesselName[6] = 0;
 	}
 }
 
@@ -718,11 +632,8 @@ unsigned int ApolloGuidance::GetOutputChannel(int channel)
 	return OutputChannel[channel];
 }
 
-void ApolloGuidance::SetInputChannel(int channel, std::bitset<16> val) 
+void ApolloGuidance::SetInputChannel(int channel, ChannelValue val)
 {
-	if (channel >= 0 && channel <= MAX_INPUT_CHANNELS)
-		InputChannel[channel] = val.to_ulong();
-
 	//
 	// Do nothing if we have no power.
 	//
@@ -766,9 +677,8 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	unsigned int mask = (1 << (bit));
-	int	data = InputChannel[channel];
+	int	data = vagc.InputChannel[channel];
 
-	data = vagc.InputChannel[channel];
 	//
 	// Channels 030-034 are inverted!
 	//
@@ -790,8 +700,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 		data &= ~mask;
 	}
 
-	InputChannel[channel] = data;
-
 	//
 	// Do nothing if we have no power.
 	//
@@ -804,18 +712,6 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 	if ((channel >= 030) && (channel <= 034))
 		data ^= 077777;
-
-	// Channel 33 special hack
-	if(channel == 033){
-		if(bit == 10){
-			// Update channel 33 switch bits
-			int ch33bits = GetCh33Switches();
-			if(val != 0){ ch33bits |= 001000; }else{ ch33bits &= 076777; }
-				SetCh33Switches(ch33bits);
-			// We're done here. SetCh33Switches rewrites the IO channel.
-			return;
-		}
-	}
 
 	// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 	if (channel == 015 && val != 0){
@@ -888,7 +784,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		break;
 
 	// Various control bits
-	case 012:		
+	case 012:
+		scdu.ChannelOutput(channel, val);
+		tcdu.ChannelOutput(channel, val);
 	// 174-177 are ficticious channels with the IMU CDU angles.
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
@@ -902,10 +800,12 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
 		ProcessChannel140(val);
+		scdu.ChannelOutput(channel, val);
 		break;
 
 	case 0141:
 		ProcessChannel141(val);
+		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
 		ProcessChannel142(val);
@@ -959,6 +859,9 @@ void ApolloGuidance::ProcessChannel143(ChannelValue val) {
 void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 }
 
+void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
+}
+
 void ApolloGuidance::GenerateHandrupt() {
 	GenerateHANDRUPT(&vagc);
 }
@@ -980,19 +883,6 @@ bool ApolloGuidance::IsUpruptActive() {
 	return (IsUPRUPTActive(&vagc) == 1);
 }
 
-// DS200608xx CH33 SWITCHES
-void ApolloGuidance::SetCh33Switches(unsigned int val){
-	if( isLGC)
-		SetLMCh33Bits(&vagc,val);
-	else 
-		SetCh33Bits(&vagc,val);
-}
-
-unsigned int ApolloGuidance::GetCh33Switches(){
-	return vagc.Ch33Switches; 
-}
-
-
 // DS20060903 PINC, DINC, ETC
 int ApolloGuidance::DoPINC(int16_t *Counter){
 	return(CounterPINC(Counter));
@@ -1008,51 +898,6 @@ int ApolloGuidance::DoMCDU(int16_t *Counter){
 
 int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
 	return(CounterDINC(&vagc,CounterNum,Counter));
-}
-
-
-void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
-
-{
-	unsigned int mask = (1 << (bit));
-
-	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
-		return;
-
-	if (val) {
-		OutputChannel[channel] |= mask;
-	}
-	else {
-		OutputChannel[channel] &= ~mask;
-	}
-
-	//
-	// Special-case processing.
-	//
-
-	switch (channel)
-	{
-	case 05:
-		ProcessChannel5(OutputChannel[05]);
-		break;
-
-	case 06:
-		ProcessChannel6(OutputChannel[06]);
-		break;
-
-	case 010:
-		ProcessChannel10(OutputChannel[010]);
-		break;
-
-	case 011:
-		ProcessChannel11Bit(bit, val);
-		break;
-
-	case 012:
-	case 014:
-		imu.ChannelOutput(channel, OutputChannel[channel]);
-		break;
-	}
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
@@ -1081,24 +926,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		val ^= 077777;
 
 	return val;
-}
-
-void ApolloGuidance::KillAllThrusters()
-{
-	OurVessel->SetAttitudeLinLevel(0, 0);
-	OurVessel->SetAttitudeLinLevel(1, 0);
-	OurVessel->SetAttitudeLinLevel(2, 0);
-	OurVessel->SetAttitudeRotLevel(0, 0);
-	OurVessel->SetAttitudeRotLevel(1, 0);
-	OurVessel->SetAttitudeRotLevel(2, 0);
-}
-
-void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double altitude)
-
-{
-	LandingAltitude = altitude;
-	LandingLongitude = longitude;
-	LandingLatitude = latitude;
 }
 
 bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)

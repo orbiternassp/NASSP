@@ -36,8 +36,6 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -187,7 +185,11 @@ void Saturn::SystemsInit() {
 	// Pyros
 	CMSMPyros.WireTo(&CMSMPyrosFeeder);  
 	CMDockingRingPyros.WireTo(&CMDockingRingPyrosFeeder);
-	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);	 
+	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);
+	ApexCoverPyros.WireTo(&ApexCoverPyrosFeeder);
+	DrogueChutesDeployPyros.WireTo(&DrogueChutesDeployPyrosFeeder);
+	MainChutesDeployPyros.WireTo(&MainChutesDeployPyrosFeeder);
+	MainChutesReleasePyros.WireTo(&MainChutesReleasePyrosFeeder);
 
 	//
 	// SECS Logic buses
@@ -366,11 +368,16 @@ void Saturn::SystemsInit() {
 	eca.Init(this);
 	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	mechanicalAccelerometer.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);
 	hga.Init(this);
+	omnia.Init(this);
+	omnib.Init(this);
+	omnic.Init(this);
+	omnid.Init(this);
 	dataRecorder.Init(this);
 	pcm.Init(this);
 
@@ -530,7 +537,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu.Timestep(MissionTime, simdt, mjd);
+			iu->Timestep(MissionTime, simt, simdt, mjd);
 		}	
 		bmag1.Timestep(simdt);
 		bmag2.Timestep(simdt);
@@ -543,6 +550,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
+		mechanicalAccelerometer.TimeStep(simdt);
+		MissionTimerDisplay.Timestep(simt, simdt, false);
+		MissionTimer306Display.Timestep(simt, simdt, false);
+		EventTimerDisplay.Timestep(simt, simdt, true);
+		EventTimer306Display.Timestep(simt, simdt, true);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
@@ -560,6 +572,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
 		hga.TimeStep(MissionTime, simdt);
+		omnia.TimeStep();
+		omnib.TimeStep();
+		omnic.TimeStep();
+		omnid.TimeStep();
 		dataRecorder.TimeStep( MissionTime, simdt );
 
 		//
@@ -2070,15 +2086,6 @@ void Saturn::CheckSMSystemsState()
 	}
 }
 
-bool Saturn::AutopilotActive()
-
-{
-	ChannelValue val12;
-	val12 = agc.GetOutputChannel(012);
-
-	return autopilot && !val12[EnableSIVBTakeover];
-}
-
 bool Saturn::CabinFansActive()
 
 {
@@ -2215,6 +2222,15 @@ void Saturn::ClearLVRateLight()
 	LVRateLight = false;
 }
 
+bool Saturn::GetEngineIndicator(int i)
+
+{
+	if (i < 1 || i > 8)
+		return false;
+
+	return ENGIND[i - 1];
+}
+
 void Saturn::SetEngineIndicator(int i)
 
 {
@@ -2231,6 +2247,22 @@ void Saturn::ClearEngineIndicator(int i)
 		return;
 
 	ENGIND[i - 1] = false;
+}
+
+void Saturn::SetEDSAbort(int eds)
+{
+	if (eds == 1)
+	{
+		secs.SetEDSAbort1(true);
+	}
+	else if (eds == 2)
+	{
+		secs.SetEDSAbort2(true);
+	}
+	else if (eds == 3)
+	{
+		secs.SetEDSAbort3(true);
+	}
 }
 
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
@@ -2543,6 +2575,18 @@ void Saturn::GetSECSStatus( SECSStatus &ss )
 {
 	ss.BusAVoltage = SECSLogicBusA.Voltage();
 	ss.BusBVoltage = SECSLogicBusB.Voltage();
+	ss.CMRCSPressureSignalA = secs.MESCA.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseA = secs.MESCA.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputA = secs.MESCA.EDSAbortLogicOutput;
+	ss.RCSActivateSignalA = secs.MESCA.RCSActivateSignal;
+	ss.SLASepRelayA = secs.MESCA.SLASepRelay;
+	ss.FwdHeatshieldJettA = secs.MESCA.FwdHeatshieldJett;
+	ss.CMRCSPressureSignalB = secs.MESCB.CMRCSPressureSignal;
+	ss.CMSMSepRelayCloseB = secs.MESCB.CMSMSepRelayClose;
+	ss.EDSAbortLogicOutputB = secs.MESCB.EDSAbortLogicOutput;
+	ss.RCSActivateSignalB = secs.MESCB.RCSActivateSignal;
+	ss.SLASepRelayB = secs.MESCB.SLASepRelay;
+	ss.FwdHeatshieldJettB = secs.MESCB.FwdHeatshieldJett;
 }
 
 void Saturn::GetPyroStatus( PyroStatus &ps )
@@ -3245,28 +3289,6 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	// Temp alarm
 	if (val11[LightTempCaution])
 		aws.PGNSWarning = true;
-}
-
-//
-// Check whether the ELS is active and whether it's in auto mode.
-//
-
-bool Saturn::ELSActive()
-
-{
-	return (ELSLogicSwitch.IsUp() && (SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE || SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE));
-}
-
-bool Saturn::ELSAuto()
-
-{
-	return (ELSActive() && ELSAutoSwitch.IsUp());
-}
-
-bool Saturn::PyrosArmed()
-
-{
-	return (PyroBusA.Voltage() > SP_MIN_DCVOLTAGE || PyroBusB.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::LETAttached()

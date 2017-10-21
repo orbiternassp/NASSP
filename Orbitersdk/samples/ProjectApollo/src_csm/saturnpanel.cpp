@@ -42,8 +42,6 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "ioChannels.h"
-#include "IMU.h"
-#include "lvimu.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -88,16 +86,18 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 {
 	double alpha;
 	double range;
+	double press;
 
+	press = GetAtmPressure();
 	alpha = GetAltitude();
-	alpha = alpha / 0.305;
+	alpha = alpha / 0.3048;
 
 #define ALTIMETER_X_CENTER	68
 #define ALTIMETER_Y_CENTER	69
 #define ALTIMETER_RADIUS	55.0
 
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
-	if (alpha > 50000) alpha = 50000;
+	if (alpha > 55000 || press < 1000.0) alpha = 55000;
 
 	if (alpha < 4001){
 		range = 120 * RAD;
@@ -124,19 +124,19 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 8001 && alpha < 10001){
-		range = 20 * RAD;
+		range = 30 * RAD;
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+180*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 10001 && alpha < 20001){
-		range = 55 * RAD;
+		range = 45 * RAD;
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+60*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 20001 && alpha < 40001){
@@ -1567,7 +1567,7 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 	// Panel 101
 	oapiRegisterPanelArea (AID_DCVOLTS_PANEL101,							_R(1121 + offset,  65, 1231 + offset,  175), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SYSTEMTESTROTARIES,							_R(1069 + offset,  213, 1280 + offset,  304), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(1093 + offset,  486, 1251 + offset,  515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 
 	oapiRegisterPanelArea (AID_GNMODESWITCH,								_R(1365 + offset,  951, 1399 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -1779,7 +1779,7 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2DSwitch.Init (303, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
 
 	CMUplinkSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row, &agc);
-	CMUplinkSwitch.SetChannelData(033, 10, true);	// Down is 'Block Uplink Input'
+	CMUplinkSwitch.SetChannelData(033, 10, false);	// Down is 'Block Uplink Input'
 
 	if (!SkylabCM)
 		IUUplinkSwitch.Init(43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
@@ -2106,6 +2106,7 @@ void Saturn::SetSwitches(int panel) {
 	UPTLMSwitchesRow.Init(AID_UPTLMSWITCHES, MainPanel);
 	UPTLMSwitch1.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
 	UPTLMSwitch2.Init(53, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
+	UPTLMSwitch2.SetDelayTime(1);
 
 	SBandAntennaSwitchesRow.Init(AID_SBANDANTENNASWITCHES, MainPanel);
 	SBandAntennaSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAntennaSwitchesRow);
@@ -2662,24 +2663,24 @@ void Saturn::SetSwitches(int panel) {
 	PCMTLMGroup2CB.Init			(  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	FLTBusMNACB.Init			( 77, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusA);
 	FLTBusMNBCB.Init			( 77, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusB);
-	PMPPowerPrimCB.Init			( 77,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	PMPPowerAuxCB.Init			( 77,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	PMPPowerPrimCB.Init			( 77,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
+	PMPPowerAuxCB.Init			( 77,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus);
-	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch);
-	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	SBandFMXMTRGroup1CB.Init	(171,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
+	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch, 2.0);
+	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
+	SBandFMXMTRGroup1CB.Init	(171,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup1Switch, 2.0);
 	CentralTimingEquipMNACB.Init(264, 400, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	CentralTimingEquipMNBCB.Init(264, 357, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	RNDZXPNDRFLTBusCB.Init		(264, 314, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	SIGCondrFLTBusCB.Init		(264, 271, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	SBandPWRAmpl1FLTBusCB.Init	(264, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	SBandPWRAmpl1Group1CB.Init	(264, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	SBandPWRAmpl2FLTBusCB.Init	(264,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	SBandPWRAmpl2Group1CB.Init	(264,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandPWRAmpl1FLTBusCB.Init	(264, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
+	SBandPWRAmpl1Group1CB.Init	(264, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup1Switch, 2.0);
+	SBandPWRAmpl2FLTBusCB.Init	(264,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
+	SBandPWRAmpl2Group1CB.Init	(264,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch, 2.0);
 	
 	Panel226CircuitBreakersRow.Init(AID_PANEL226CIRCUITBRAKERS, MainPanel);
 	FuelCell1PumpsACCB.Init		 (  0, 292, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &FuelCellPumps1Switch);
@@ -3038,8 +3039,8 @@ void Saturn::SetSwitches(int panel) {
 	EDS3BatBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EDSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
 
 	ELSCircuitBrakerRow.Init(AID_ELSCIRCUITBREAKERS, MainPanel);
-	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
-	ELSBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow);
+	ELSBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow, &EPSBatBusACircuitBraker, 5.0);
+	ELSBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ELSCircuitBrakerRow, &EPSBatBusBCircuitBraker, 5.0);
 
 	PLVentCircuitBrakerRow.Init(AID_PLVENTCIRCUITBREAKER, MainPanel);
 	FLTPLCircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], PLVentCircuitBrakerRow, &FlightPostLandingBus);
@@ -4833,25 +4834,25 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNLEFT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINLEFT);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNLEFT);
 		break;
 
 	case MFD_RIGHT:
-		if (!MainPanelSplit) oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_RIGHT, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNRIGHT);
+		if (!MainPanelSplit) TriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_MAIN_RIGHT, AID_MFDMAINRIGHT);
+		TriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNRIGHT);
 		break;
 
 	case MFD_USER1:
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER1);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER1);
 		break;
 
 	case MFD_USER2:
-		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER2);
+		TriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER2);
 		break;
 
 	}
@@ -6205,7 +6206,7 @@ void Saturn::InitSwitches() {
 	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	PanelOrdeal.Register(PSH, "PanelOrdeal",0, 0, 0, 0);	// dummy switch/display for checklist controller
 
-	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", false);
+	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	CMRCSHTRSSwitch.Register(PSH, "CMRCSHTRSSwitch", false);
 	WasteH2ODumpSwitch.Register(PSH, "WasteH2ODumpSwitch", THREEPOSSWITCH_CENTER);

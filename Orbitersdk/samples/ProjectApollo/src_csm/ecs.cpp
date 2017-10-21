@@ -34,10 +34,7 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
-#include "lvimu.h"
 #include "ioChannels.h"
 
 #include "saturn.h"
@@ -831,7 +828,7 @@ void CrewStatus::Timestep(double simdt) {
 		}
 	} else {
 		VECTOR3 v;
-		saturn->GetHorizonAirspeedVector(v);
+		saturn->GetAirspeedVector(FRAME_HORIZON, v);
 		lastVerticalVelocity = v.y;
 	}
 }

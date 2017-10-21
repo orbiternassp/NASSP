@@ -220,7 +220,7 @@ static inline bool papiReadScenario_string(char *line, char *item, char *i) {
 
 	if (sscanf(line, "%s", buffer) == 1) {
 		if (!strcmp(buffer, item)) {
-			if (sscanf(line, "%s %s", buffer, i) == 2) {
+			if (sscanf(line, "%s %[^\t\n]", buffer, i) == 2) {
 				return true;
 			}
 		}

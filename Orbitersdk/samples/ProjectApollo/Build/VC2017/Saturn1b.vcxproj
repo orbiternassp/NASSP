@@ -148,6 +148,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_saturn\eds.cpp" />
+    <ClCompile Include="..\..\src_saturn\FCC.cpp" />
+    <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -168,6 +171,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\cdu.cpp" />
     <ClCompile Include="..\..\src_sys\checklistController.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -207,6 +211,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\dsky.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -265,6 +270,7 @@
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -288,13 +294,6 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\pyro.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\sat1ap.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -330,13 +329,6 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_saturn\Saturn1b.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\saturnap.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -451,11 +443,16 @@
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src_launch\mcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_saturn\eds.h" />
+    <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\LVDA.h" />
+    <ClInclude Include="..\..\src_saturn\LVDC.h" />
+    <ClInclude Include="..\..\src_saturn\LVIMU.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
+    <ClInclude Include="..\..\src_sys\cdu.h" />
     <ClInclude Include="..\..\src_sys\checklistController.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_csm\csm_telecom.h" />
@@ -464,12 +461,14 @@
     <ClInclude Include="..\..\src_csm\csmconnector.h" />
     <ClInclude Include="..\..\src_csm\csmrcs.h" />
     <ClInclude Include="..\..\src_csm\dockingprobe.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\dsky.h" />
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
     <ClInclude Include="..\..\src_sys\ioChannels.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
+    <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h" />
     <ClInclude Include="..\..\src_sys\missiontimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\nasspsound.h" />

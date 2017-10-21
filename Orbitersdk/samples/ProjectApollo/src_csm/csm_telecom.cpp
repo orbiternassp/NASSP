@@ -32,10 +32,7 @@
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "dsky.h"
 #include "csmcomputer.h"
-#include "IMU.h"
-#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -52,9 +49,14 @@ void PMP::Init(Saturn *vessel){
 }
 
 void PMP::SystemTimestep(double simdt) {
-	if(sat->PMPSwitch.GetState() != THREEPOSSWITCH_CENTER){
-		if(sat->FlightBus.Voltage() > 18){
-			sat->FlightBus.DrawPower(8.5);
+	if (sat->PMPSwitch.GetState() == THREEPOSSWITCH_UP) {
+		if (sat->PMPPowerPrimCB.Voltage() > 18) {
+			sat->PMPPowerPrimCB.DrawPower(8.5);
+		}
+	}
+	else if (sat->PMPSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+		if (sat->PMPPowerAuxCB.Voltage() > 18) {
+			sat->PMPPowerAuxCB.DrawPower(8.5);
 		}
 	}
 }
@@ -66,25 +68,35 @@ void PMP::TimeStep(double simt){
 // Unifed S-Band System
 USB::USB(){
 	sat = NULL;
+	ant = NULL;
 	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
+	rcvr_agc_voltage = 0.0;
 }
 
 void USB::Init(Saturn *vessel){
 	sat = vessel;
+	ant = &sat->omnib;
 	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
+	rcvr_agc_voltage = 0.0;
 }
 
-void USB::SystemTimestep(double simdt) {	
+void USB::SystemTimestep(double simdt) {
 	// S-Band Transponder power
 	if(sat->SBandNormalXPDRSwitch.GetState() != xpdr_sel){		
-		if(sat->FlightBus.Voltage() > 12){
-			sat->FlightBus.DrawPower(1); // Consume switching power
+		if (sat->SBandPWRAmpl1FLTBusCB.Voltage() > 12.0 && sat->SBandNormalXPDRSwitch.GetState() == THREEPOSSWITCH_UP)
+		{
+			sat->SBandPWRAmpl1FLTBusCB.DrawPower(1); // Consume switching power
+			xpdr_sel = sat->SBandNormalXPDRSwitch.GetState();
+		}
+		else if (sat->SBandPWRAmpl2FLTBusCB.Voltage() > 12.0 && sat->SBandNormalXPDRSwitch.GetState() == THREEPOSSWITCH_DOWN)
+		{
+			sat->SBandPWRAmpl2FLTBusCB.DrawPower(1); // Consume switching power
 			xpdr_sel = sat->SBandNormalXPDRSwitch.GetState();
 		}
 	}
@@ -92,33 +104,33 @@ void USB::SystemTimestep(double simdt) {
 		case THREEPOSSWITCH_CENTER: // OFF
 			break; 
 		case THREEPOSSWITCH_UP:     // PRIM
-			if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(16.5); } break;
+			if(sat->SBandPWRAmpl1Group1CB.Voltage() > 100){ sat->SBandPWRAmpl1Group1CB.DrawPower(16.5); } break;
 		case THREEPOSSWITCH_DOWN:   // SEC
-			if(sat->TelcomGroup2Switch.Voltage() > 100){ sat->TelcomGroup2Switch.DrawPower(16.5); } break;
+			if(sat->SBandPWRAmpl2Group1CB.Voltage() > 100){ sat->SBandPWRAmpl2Group1CB.DrawPower(16.5); } break;
 	}
 	// S-Band FM Transmitter power
 	if(fm_ena > 0){
 		if(fm_ena == 2){ // Forced on by up tlm
-			if(fm_opr == false && sat->FlightBus.Voltage() > 12){
-				sat->FlightBus.DrawPower(1.5); // Consume switching power
+			if(fm_opr == false && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+				sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 				fm_opr = true;
 			}
 		}else{
 			if(sat->SBandAuxSwitch1.GetState() == THREEPOSSWITCH_UP){ // TAPE selected
-				if(fm_opr == false && sat->FlightBus.Voltage() > 12){
-					sat->FlightBus.DrawPower(1.5); // Consume switching power
+				if(fm_opr == false && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+					sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 					fm_opr = true;
 				}
 			}else{
 				if(sat->SBandAuxSwitch2.GetState() != THREEPOSSWITCH_CENTER){ // TV or SCI selected
-					if(fm_opr == false && sat->FlightBus.Voltage() > 12){
-						sat->FlightBus.DrawPower(1.5); // Consume switching power
+					if(fm_opr == false && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+						sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 						fm_opr = true;
 					}
 				}else{
 					// Both off
-					if(fm_opr == true && sat->FlightBus.Voltage() > 12){
-						sat->FlightBus.DrawPower(1.5); // Consume switching power
+					if(fm_opr == true && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+						sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 						fm_opr = false;
 					}
 				}
@@ -126,8 +138,8 @@ void USB::SystemTimestep(double simdt) {
 		}
 	}else{
 		// FM disabled by telemetry
-		if(fm_opr == true && sat->FlightBus.Voltage() > 12){
-			sat->FlightBus.DrawPower(1.5); // Consume switching power
+		if(fm_opr == true && sat->SBandFMXMTRFLTBusCB.Voltage() > 12){
+			sat->SBandFMXMTRFLTBusCB.DrawPower(1.5); // Consume switching power
 			fm_opr = false;
 		}
 	}
@@ -228,6 +240,31 @@ void USB::SystemTimestep(double simdt) {
 void USB::TimeStep(double simt) {
 
 	/// \todo Move all DrawPower's to SystemTimestep
+
+	//S-Band Antenna switches
+	if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_UP)
+	{
+		if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_UP)
+		{
+			ant = &sat->omnia;
+		}
+		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_CENTER)
+		{
+			ant = &sat->omnib;
+		}
+		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_DOWN)
+		{
+			ant = &sat->omnic;
+		}
+	}
+	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_CENTER)
+	{
+		ant = &sat->omnid;
+	}
+	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_DOWN)
+	{
+		ant = &sat->hga;
+	}
 	 
 	// Power Amplifier #1 
 	switch(pa_mode_1){
@@ -437,6 +474,24 @@ void USB::TimeStep(double simt) {
 		}
 	}
 
+	// Receiver AGC Voltage
+	if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
+		if (ant && pa_mode_1 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+	else {
+		if (ant && pa_mode_2 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
@@ -493,6 +548,10 @@ bool HGA::IsPowered()
 
 // Draw power
 void HGA::SystemTimestep(double simdt) {	
+	
+	//Do we still have a SM?
+	if (sat->GetStage() > CSM_LEM_STAGE) return;
+	
 	// Do we have power?
 	if (!IsPowered()) return;
 
@@ -513,8 +572,8 @@ void HGA::TimeStep(double simt, double simdt) {
 	SignalStrength = 0;
 	scanlimitwarn = false;
 
-	// Do we have power?
-	if (!IsPowered()) return;
+	// Do we have power and a SM?
+	if (!IsPowered() || sat->GetStage() > CSM_LEM_STAGE) return;
 
 	double PitchCmd, YawCmd, gain;
 
@@ -652,6 +711,62 @@ void HGA::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%lf %lf", Pitch, Yaw);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
+}
+
+OMNI::OMNI(VECTOR3 dir)
+{
+	direction = unit(dir);
+	hpbw_factor = 0.0;
+	hMoon = NULL;
+	hEarth = NULL;
+}
+
+void OMNI::Init(Saturn *vessel) {
+	sat = vessel;
+
+	double beamwidth = 50.0*RAD;
+	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+}
+
+void OMNI::TimeStep()
+{
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	MATRIX3 Rot;
+	double relang, Moonrelang;
+
+	//Unit vector of antenna in vessel's local frame
+	U_RP = _V(direction.y, -direction.z, direction.x);
+
+	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	sat->GetGlobalPos(pos);
+	oapiGetGlobalPos(hEarth, &R_E);
+	oapiGetGlobalPos(hMoon, &R_M);
+	sat->GetRotationMatrix(Rot);
+
+	//Calculate antenna pointing vector in global frame
+	U_R = mul(Rot, U_RP);
+	//relative angle between antenna pointing vector and direction of Earth
+	relang = acos(dotp(U_R, unit(R_E - pos)));
+
+	if (relang < PI05 / hpbw_factor)
+	{
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*50.0;
+	}
+	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//Moon in the way
+	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+
+	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
+	{
+		SignalStrength = 0.0;
+	}
 }
 
 // Socket registration method (registers sockets to be deinitialized
@@ -865,6 +980,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	PyroStatus pyroStatus;
 	SECSStatus secsStatus;
 	RCSStatus rcsStatus;
+
+	unsigned char data = 0;
 
 	switch(type){
 		case TLM_A:  // ANALOG
@@ -1858,7 +1975,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   7 = CM RCS PRESS SIG A
 							   8 = TRANS CTL +Y CMD
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CMRCSPressureSignalA << 0);
+							data |= (secsStatus.SLASepRelayA << 4);
+							data |= (secsStatus.CMRCSPressureSignalA << 6);
+							return data;
 						case 23:
 							/* 1 = CM-SM SEP RELAY B
 							   3 = SCS CHANNEL ENABLE RCS B
@@ -1866,15 +1988,23 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   6 = TRANS CTL -Y CMD
 							   7 = SLA SEP RELAY B
 							   8 = TRANS CTL +Z CMD
-								*/
-							return(0);
+								*/;
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CMRCSPressureSignalB << 0);
+							data |= (secsStatus.SLASepRelayB << 4);
+							data |= (secsStatus.CMRCSPressureSignalB << 6);
+							return data;
 						case 24:
 							/* 1 = FWD HS JET A
 							   2 = TRANS CTL -Z CMD
 							   3 = DIRECT RCS #1
 							   4 = DIRECT RCS #2
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.FwdHeatshieldJettA << 0);
+							return data;
 						case 25:
 							/* 1 = LIMIT CYCLE
 							   3 = MANUAL ATT PITCH ACCEL CMD
@@ -1888,7 +2018,10 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 26:
 							/* 5 = FWD HS JET B
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.FwdHeatshieldJettB << 4);
+							return data;
 						case 27: // ZEROES
 							return(0);
 						case 28:

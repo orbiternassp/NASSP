@@ -85,7 +85,7 @@ void CMChute::clbkSetClassCaps(FILEHANDLE cfg)
  SetSurfaceFrictionCoeff(1,1);
  if(GetFlightModel()>=1){
   SetPitchMomentScale(-5e-3);
-  SetBankMomentScale(-5e-3);
+  SetYawMomentScale(-5e-3);
  }
  SetLiftCoeffFunc(0);
  
@@ -167,7 +167,7 @@ void CMChute::clbkPreStep(double simt,double simdt,double mjd)
     SetAnimation(anim[state],proc[state]);
    }else state++;
   }else if(state==STATE_DEPLOYED){
-   if(GetAltitude()<2.3){
+   if(GetAltitude(ALTMODE_GROUND)<2.3){
     if(procLanding<1){
      procLanding=min(procLanding+simdt/20,1);
      SetAnimation(animLanding,procLanding);

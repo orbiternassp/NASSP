@@ -153,6 +153,12 @@
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -169,9 +175,11 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\cdu.cpp" />
     <ClCompile Include="..\..\src_sys\checklistController.cpp" />
     <ClCompile Include="..\..\src_sys\checklistControllerHelpers.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\dsky.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -249,6 +257,7 @@
     <ClCompile Include="..\..\src_lm\lm_telecom.cpp" />
     <ClCompile Include="..\..\src_lm\lmscs.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
+    <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -263,6 +272,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\pyro.cpp" />
     <ClCompile Include="..\..\src_sys\soundevents.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -345,14 +355,24 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_lm\lmresource.h" />
+    <ClInclude Include="..\..\src_lm\lm_aca.h" />
+    <ClInclude Include="..\..\src_lm\lm_aps.h" />
+    <ClInclude Include="..\..\src_lm\lm_channels.h" />
+    <ClInclude Include="..\..\src_lm\lm_dps.h" />
+    <ClInclude Include="..\..\src_lm\lm_eds.h" />
+    <ClInclude Include="..\..\src_lm\lm_programer.h" />
+    <ClInclude Include="..\..\src_lm\lm_ttca.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
+    <ClInclude Include="..\..\src_sys\cdu.h" />
     <ClInclude Include="..\..\src_sys\checklistController.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_csm\csmcautionwarning.h" />
     <ClInclude Include="..\..\src_csm\CSMcomputer.h" />
     <ClInclude Include="..\..\src_csm\dockingprobe.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\dsky.h" />
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
@@ -366,6 +386,7 @@
     <ClInclude Include="..\..\src_lm\lm_telecom.h" />
     <ClInclude Include="..\..\src_lm\lmscs.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
+    <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h" />
     <ClInclude Include="..\..\src_sys\missiontimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\nasspsound.h" />

@@ -36,8 +36,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "dsky.h"
-#include "IMU.h"
 
 #include "LEM.h"
 #include "tracer.h"
@@ -1943,15 +1941,18 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 // S-Band System
 LM_SBAND::LM_SBAND(){
 	lem = NULL;
+	ant = NULL;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	tc_mode_1 = 0; tc_timer_1 = 0;
 	tc_mode_2 = 0; tc_timer_2 = 0;
-
+	rcvr_agc_voltage = 0.0;
 }
 
 void LM_SBAND::Init(LEM *vessel){
 	lem = vessel;
+	ant = &lem->omni_aft;
+	rcvr_agc_voltage = 0.0;
 }
 
 void LM_SBAND::SystemTimestep(double simdt) {
@@ -1990,6 +1991,20 @@ void LM_SBAND::SystemTimestep(double simdt) {
 
 void LM_SBAND::TimeStep(double simt){
 	if(lem == NULL){ return; } // Do nothing if not initialized
+	
+	if (lem->Panel12SBandAntSelKnob.GetState() == 0)
+	{
+		ant = &lem->omni_fwd;
+	}
+	else if (lem->Panel12SBandAntSelKnob.GetState() == 1)
+	{
+		ant = &lem->omni_aft;
+	}
+	if (lem->Panel12SBandAntSelKnob.GetState() == 2)
+	{
+		ant = &lem->SBandSteerable;
+	}
+	
 	switch(tc_mode_1){
 		case 0: // OFF
 			break;
@@ -2163,13 +2178,53 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			break;
 	}
+
+	// Receiver AGC Voltage
+	if (lem->SBandPASelSwitch.IsUp()) {
+		if (ant && pa_mode_1 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+	else if (lem->SBandPASelSwitch.IsDown()){
+		if (ant && pa_mode_2 > 2) {
+			rcvr_agc_voltage = ant->GetSignalStrength();
+		}
+		else {
+			rcvr_agc_voltage = 0.0;
+		}
+	}
+	else
+	{
+		rcvr_agc_voltage = 0.0;
+	}
+}
+
+void LM_SBAND::LoadState(char *line) {
+	sscanf(line + 12, "%i %i %lf %lf", &pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2);
+}
+
+
+void LM_SBAND::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%i %i %lf %lf", pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2);
+
+	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
 
 // S-Band Steerable Antenna
 LEM_SteerableAnt::LEM_SteerableAnt()// : antenna("LEM-SBand-Steerable-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
 	//antheater("LEM-SBand-Steerable-Antenna-Heater",1,NULL,40,51.7,0,233.15,255,&antenna)
 {
-	lem = NULL;	
+	lem = NULL;
+	pitch = 0.0;
+	yaw = 0.0;
+	moving = false;
+	hpbw_factor = 0.0;
+	SignalStrength = 0.0;
 }
 
 void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
@@ -2189,27 +2244,225 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 		antheater->Enable();
 		antheater->SetPumpAuto();
 	}
+
+	pitch = -75.0*RAD;
+	yaw = -12.0*RAD;
+
+	double beamwidth = 12.5*RAD;
+	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
 }
 
 void LEM_SteerableAnt::TimeStep(double simdt){
 	if(lem == NULL){ return; }
 	// Draw DC power from COMM_SBAND_ANT_CB to position.
 	// Use 7.6 watts to move the antenna and 0.7 watts to maintain auto track.
-	// Draw AC power from ???
+	// Draw AC power from SBD_ANT_AC_CB
 	// Use 27.9 watts to move the antenna and 4.0 watts to maintain auto track.
 
+	moving = false;
+
+	if (!IsPowered())
+	{
+		SignalStrength = 0.0;
+		return;
+	}
+
+	double pitchrate = 0.0;
+	double yawrate = 0.0;
+
+	double PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
+	double YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+
+	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+	//Slew Mode
+
+	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
+	{
+		if (abs(PitchSlew - pitch) > 0.01*RAD)
+		{
+			pitchrate = (PitchSlew - pitch)*2.0;
+			if (abs(pitchrate) > 5.0*RAD)
+			{
+				pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
+			}
+			moving = true;
+		}
+
+		if (abs(YawSlew - yaw) > 0.01*RAD)
+		{
+			yawrate = (YawSlew - yaw)*2.0;
+			if (abs(yawrate) > 5.0*RAD)
+			{
+				yawrate = 5.0*RAD*yawrate / abs(yawrate);
+			}
+			moving = true;
+		}
+	}
+
+	//TBD: Auto Tracking
+
+	//Drive Antenna
+	pitch += pitchrate*simdt;
+	yaw += yawrate*simdt;
+
+	//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
+
+	//Antenna Limits
+	if (pitch > 255.0*RAD)
+	{
+		pitch = 255.0*RAD;
+	}
+	else if (pitch < -75.0*RAD)
+	{
+		pitch = -75.0*RAD;
+	}
+
+	if (yaw > 87.0*RAD)
+	{
+		yaw = 87.0*RAD;
+	}
+	else if (yaw < -87.0*RAD)
+	{
+		yaw = -87.0*RAD;
+	}
+
+	//Signal Strength
+
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	MATRIX3 Rot, RX, RY;
+	double relang, Moonrelang;
+
+	//Unit vector of antenna in vessel's local frame
+	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
+	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
+	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
+	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+
+	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	lem->GetGlobalPos(pos);
+	oapiGetGlobalPos(hEarth, &R_E);
+	oapiGetGlobalPos(hMoon, &R_M);
+	lem->GetRotationMatrix(Rot);
+
+	//Calculate antenna pointing vector in global frame
+	U_R = mul(Rot, U_RP);
+	//relative angle between antenna pointing vector and direction of Earth
+	relang = acos(dotp(U_R, unit(R_E - pos)));
+
+	if (relang < PI05 / hpbw_factor)
+	{
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*75.625;
+	}
+	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//Moon in the way
+	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+
+	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
+	{
+		SignalStrength = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
 }
 
-void LEM_SteerableAnt::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+void LEM_SteerableAnt::SystemTimestep(double simdt)
+{
+	// Do we have power?
+	if (!IsPowered()) return;
 
+	if (moving)
+	{
+		lem->SBD_ANT_AC_CB.DrawPower(27.9);
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);
+	}
 }
 
-void LEM_SteerableAnt::LoadState(FILEHANDLE scn,char *end_str){
+bool LEM_SteerableAnt::IsPowered()
+{
+	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_CENTER) return false;
 
+	if (!(lem->SBD_ANT_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) || !lem->COMM_SBAND_ANT_CB.IsPowered()) return false;
+
+	return true;
+}
+
+// Load
+void LEM_SteerableAnt::LoadState(char *line) {
+	sscanf(line + 16, "%lf %lf", &pitch, &yaw);
+}
+
+// Save
+void LEM_SteerableAnt::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf %lf", pitch, yaw);
+
+	oapiWriteScenario_string(scn, "STEERABLEANTENNA", buffer);
 }
 
 double LEM_SteerableAnt::GetAntennaTempF(){
 
 	return(0);
+}
+
+LM_OMNI::LM_OMNI(VECTOR3 dir)
+{
+	direction = unit(dir);
+	hpbw_factor = 0.0;
+	hMoon = NULL;
+	hEarth = NULL;
+}
+
+void LM_OMNI::Init(LEM *vessel) {
+	lem = vessel;
+
+	double beamwidth = 70.0*RAD;
+	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+}
+
+void LM_OMNI::TimeStep()
+{
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	MATRIX3 Rot;
+	double relang, Moonrelang;
+
+	//Unit vector of antenna in vessel's local frame
+	U_RP = _V(direction.y, direction.x, direction.z);
+
+	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	lem->GetGlobalPos(pos);
+	oapiGetGlobalPos(hEarth, &R_E);
+	oapiGetGlobalPos(hMoon, &R_M);
+	lem->GetRotationMatrix(Rot);
+
+	//Calculate antenna pointing vector in global frame
+	U_R = mul(Rot, U_RP);
+	//relative angle between antenna pointing vector and direction of Earth
+	relang = acos(dotp(U_R, unit(R_E - pos)));
+
+	if (relang < PI05 / hpbw_factor)
+	{
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*40.0;
+	}
+	else
+	{
+		SignalStrength = 0.0;
+	}
+
+	//Moon in the way
+	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+
+	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
+	{
+		SignalStrength = 0.0;
+	}
 }
