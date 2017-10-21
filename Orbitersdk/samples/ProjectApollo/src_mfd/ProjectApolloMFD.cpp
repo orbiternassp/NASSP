@@ -995,7 +995,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (saturn) {
 			planet = saturn->GetGravityRef();
 			saturn->GetRelativeVel(planet, vel); 
-			if (saturn->GetAirspeedVector(FRAME_HORIZON, hvel)) {
+			if (saturn->GetHorizonAirspeedVector(hvel)) {
 				vvel = hvel.y * 3.2808399;
 			}
 			saturn->GetApDist(apDist);
@@ -1005,7 +1005,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		} else if (lem) {
 			planet = lem->GetGravityRef();
 			lem->GetRelativeVel(planet, vel); 
-			if (lem->GetAirspeedVector(FRAME_HORIZON, hvel)) {
+			if (lem->GetHorizonAirspeedVector(hvel)) {
 				vvel = hvel.y * 3.2808399;
 			}
 			lem->GetApDist(apDist);

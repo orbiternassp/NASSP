@@ -828,7 +828,7 @@ void CrewStatus::Timestep(double simdt) {
 		}
 	} else {
 		VECTOR3 v;
-		saturn->GetAirspeedVector(FRAME_HORIZON, v);
+		saturn->GetHorizonAirspeedVector(v);
 		lastVerticalVelocity = v.y;
 	}
 }

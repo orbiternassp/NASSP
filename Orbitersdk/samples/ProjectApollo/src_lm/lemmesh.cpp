@@ -287,42 +287,7 @@ void LEM::SetLmAscentHoverStage()
 	ClearAttExhaustRefs();
 
 	double tdph = -5.8;
-    double Mass = 4495.0;
-	double ro = 5;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = 0;
-	td[0].pos.y = tdph;
-	td[0].pos.z = 1 * ro;
-	td[1].pos.x = -cos(30 * RAD)*ro;
-	td[1].pos.y = tdph;
-	td[1].pos.z = -sin(30 * RAD)*ro;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = tdph;
-	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = 0;
-	td[3].pos.y = 2.8;
-	td[3].pos.z = 0;
-
-	SetTouchdownPoints(td, 4);
-
-    /*static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, tdph, 5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(-5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(0, tdph + 5, 0), 2e4, 3e5, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
-
+	SetTouchdownPoints(_V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
 	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	
