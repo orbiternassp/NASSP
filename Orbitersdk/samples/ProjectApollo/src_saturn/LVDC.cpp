@@ -5517,7 +5517,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 0.3)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 42);
 						CommandSequence++;
 					}
 					break;
@@ -5526,7 +5526,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 0.4)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 101);
 						CommandSequence++;
 					}
 					break;
@@ -5700,7 +5700,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 87.0)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
 						CommandSequence++;
 					}
 					break;
@@ -5709,7 +5709,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 87.1)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 102);
 						CommandSequence++;
 					}
 					break;
@@ -6057,7 +6057,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 496.3)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 42);
 						CommandSequence++;
 					}
 					break;
@@ -6066,7 +6066,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 496.4)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 101);
 						CommandSequence++;
 					}
 					break;
@@ -6178,7 +6178,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 573.0)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
 						CommandSequence++;
 					}
 					break;
@@ -6187,7 +6187,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 573.1)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No.2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 102);
 						CommandSequence++;
 					}
 					break;
@@ -7001,7 +7001,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 0.2)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 42);
 						CommandSequence++;
 					}
 					break;
@@ -7010,7 +7010,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 0.3)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 On\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 1);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 101);
 						CommandSequence++;
 					}
 					break;
@@ -7072,7 +7072,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 1.2)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 1 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(0, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
 						CommandSequence++;
 					}
 					break;
@@ -7081,7 +7081,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 1.3)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Ullage Engine No. 2 Off\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetAPSUllageThrusterLevel(1, 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 102);
 						CommandSequence++;
 					}
 					break;
