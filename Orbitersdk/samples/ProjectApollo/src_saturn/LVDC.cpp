@@ -1787,6 +1787,7 @@ minorloop: //minor loop;
 			BOOST = false;
 			LVDC_Timebase = 4;
 			LVDC_TB_ETime = 0;
+			CommandSequence = 0;
 			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
 		};
 		//calculate delta attitude
