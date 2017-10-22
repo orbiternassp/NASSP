@@ -1437,13 +1437,6 @@ void Saturn::SetMainState(int s)
 	SplashdownPlayed = (state.SplashdownPlayed != 0);
 	FirePCM = state.FirePCM;
 	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
-	MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
-	MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
-	EventTimerDisplay.SetRunning(state.EventTimerRunning != 0);
-	EventTimerDisplay.SetEnabled(state.EventTimerEnabled != 0);
-	//Hack to make EventTimer306Display work in old scenarios. Remove at some point.
-	EventTimer306Display.SetEnabled(state.EventTimerEnabled != 0);
-	EventTimerDisplay.SetCountUp(state.EventTimerCountUp);
 	SkylabSM = (state.SkylabSM != 0);
 	SkylabCM = (state.SkylabCM != 0);
 	S1bPanel = (state.S1bPanel != 0);
@@ -1730,14 +1723,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "MISSNTIME", 9)) {
         sscanf (line+9, "%f", &ftcp);
 		MissionTime = ftcp;
-	}
-	else if (!strnicmp(line, "MTD", 3)) {
-        sscanf (line + 3, "%f", &ftcp);
-		MissionTimerDisplay.SetTime(ftcp);
-	}
-	else if (!strnicmp(line, "ETD", 3)) {
-        sscanf (line + 3, "%f", &ftcp);
-		EventTimerDisplay.SetTime(ftcp);
 	}
 	else if (!strnicmp(line, "NMISSNTIME", 10)) {
         sscanf (line + 10, "%f", &ftcp);

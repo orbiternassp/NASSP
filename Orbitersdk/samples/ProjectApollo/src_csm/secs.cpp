@@ -511,7 +511,6 @@ void MESC::Timestep(double simdt)
 		{
 			Sat->EventTimerDisplay.Reset();
 			Sat->EventTimerDisplay.SetRunning(true);
-			Sat->EventTimerDisplay.SetEnabled(true);
 
 			AbortStarted = true;
 		}
@@ -872,9 +871,7 @@ void MESC::Liftoff()
 	if (MESCLogicBus())
 	{
 		MissionTimerDisplay->Reset();
-		MissionTimerDisplay->SetEnabled(true);
 		EventTimerDisplay->Reset();
-		EventTimerDisplay->SetEnabled(true);
 		EventTimerDisplay->SetRunning(true);
 
 		if (Sat->EDSSwitch.GetState())

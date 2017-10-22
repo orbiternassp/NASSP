@@ -665,7 +665,7 @@ public:
 	///
 	union MainState {
 		struct {
-			unsigned MissionTimerRunning:1;			///< Is the Mission timer running?
+			unsigned unused2:1;						///< Spare
 			unsigned SIISepState:1;					///< State of the SII Sep light.
 			unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
 			unsigned Scorrec:1;						///< Have we played the course correction sound?
@@ -679,10 +679,10 @@ public:
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
-			unsigned MissionTimerEnabled:1;			///< Is the Mission Timer enabled?
-			unsigned EventTimerEnabled:1;			///< Is the Event Timer enabled?
-			unsigned EventTimerRunning:1;			///< Is the Event Timer running?
-			unsigned EventTimerCountUp:2;			///< Is the Event Timer counting up?
+			unsigned unused3:1;						///< Spare
+			unsigned unused4:1;						///< Spare
+			unsigned unused5:1;						///< Spare
+			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
 			unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
