@@ -97,6 +97,16 @@ void RCSC::Timestep(double simdt)
 	{
 		RCSCCMSMTransferA = false;
 	}
+
+	if (RCSCCMSMTransferA)
+	{
+		Sat->agc.SetInputChannelBit(030, CMSMSeperate, true);
+	}
+	else
+	{
+		Sat->agc.SetInputChannelBit(030, CMSMSeperate, false);
+	}
+
 	if (Sat->secs.MESCB.GetCMSMDeadFace())
 	{
 		RCSCCMSMTransferB = true;

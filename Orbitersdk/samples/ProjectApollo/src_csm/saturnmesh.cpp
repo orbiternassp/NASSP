@@ -778,12 +778,6 @@ void Saturn::SetReentryStage ()
 	ClearAirfoilDefinitions();
 	ClearEngineIndicators();
 
-	//
-	// Tell AGC the CM has seperated from the SM.
-	//
-
-	agc.SetInputChannelBit(030, CMSMSeperate, true);
-
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 
 	SetSize(6.0);
