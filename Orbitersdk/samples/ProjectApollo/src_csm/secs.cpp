@@ -370,11 +370,12 @@ MESC::MESC():
 	AutoTowerJettison = false;
 	SSSInput1 = false;
 	SSSInput2 = false;
+	IsSystemA = false;
 
 	EDSLogicBreaker = NULL;
 }
 
-void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem)
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA)
 {
 	SECSLogicBus = LogicBus;
 	SECSPyroBus = PyroBus;
@@ -387,6 +388,7 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch 
 	EventTimerDisplay = ET;
 	Sat = v;
 	OtherMESC = OtherMESCSystem;
+	IsSystemA = IsSysA;
 }
 
 void MESC::TimerTimestep(double simdt)
@@ -664,6 +666,18 @@ void MESC::Timestep(double simdt)
 		{
 			UllageRelay = true;
 			TD11.SetRunning(true);
+		}
+	}
+
+	if (IsSystemA)
+	{
+		if (UllageRelay)
+		{
+			Sat->agc.SetInputChannelBit(030, SIVBSeperateAbort, true);
+		}
+		else
+		{
+			Sat->agc.SetInputChannelBit(030, SIVBSeperateAbort, false);
 		}
 	}
 
@@ -1024,8 +1038,8 @@ void SECS::ControlVessel(Saturn *v)
 {
 	Sat = v;
 	rcsc.ControlVessel(v);
-	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &MESCB);
-	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &MESCA);
+	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &MESCB, true);
+	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &MESCA, false);
 }
 
 void SECS::SetSaturnType(int sattype)

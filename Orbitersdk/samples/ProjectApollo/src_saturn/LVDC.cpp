@@ -768,7 +768,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					{
 						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					commandConnector->SetAGCInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
 					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
@@ -4889,7 +4888,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					{
 						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					commandConnector->SetAGCInputChannelBit(030, SIVBSeperateAbort, true);	// Notify the AGC of the abort
 					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
