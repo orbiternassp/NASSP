@@ -444,6 +444,7 @@ private:
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
+	int CommandSequence;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time

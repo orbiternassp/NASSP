@@ -317,6 +317,8 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	MX_G = _M(0,0,0,0,0,0,0,0,0);
 	MX_K = _M(0,0,0,0,0,0,0,0,0);
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
+
+	CommandSequence = 0;
 }
 
 void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
@@ -541,6 +543,9 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	S1B_Sep_Time = 0;
 	CountPIPA = false;
+
+	CommandSequence = 0;
+
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -706,14 +711,47 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if (lvCommandConnector->GetMissionTime() >= 0) {
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 				break;
 
 			case 1: // LIFTOFF TIME
-				if(liftoff == false){
+				
+				switch (CommandSequence)
+				{
+				case 0:
 					liftoff = true;
-					lvCommandConnector->SwitchSelector(15);			
-					sinceLastIGM = 1.7-simdt; // Rig to pass on fall-in
+					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
+					lvCommandConnector->SwitchSelector(15);
+					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
+					CommandSequence++;
+					break;
+				case 1:
+					//TB1+60.0: Flight Control Computer Switch Point No. 1
+					if (LVDC_TB_ETime > 60.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB1+90.0: Flight Control Computer Switch Point No. 2
+					if (LVDC_TB_ETime > 90.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 21);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB1+120.0: Flight Control Computer Switch Point No. 3
+					if (LVDC_TB_ETime > 120.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 22);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
 				}
 
 				// Soft-Release Pin Dragging
@@ -743,6 +781,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Begin timebase 2
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 
 				break;
@@ -773,10 +812,37 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 				break;
 
 			case 3:
+
+				switch (CommandSequence)
+				{
+				case 0:
+					CommandSequence++;
+					break;
+				case 1:
+					//TB3+1.5: Flight Control Computer S-IVB Burn Mode On "A"
+					if (LVDC_TB_ETime > 1.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB3+1.7: Flight Control Computer S-IVB Burn Mode On "B"
+					if (LVDC_TB_ETime > 1.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 6);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
+				}
+
 				// S1B SEPARATION TRIGGER
 				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
 					// Drop old stage
@@ -805,6 +871,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
 					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 
 					//HSL Exit settings
 					GATE = false;
@@ -820,6 +887,33 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 			case 4:
 				// TB4 timed events
+
+				switch (CommandSequence)
+				{
+				case 0:
+					CommandSequence++;
+					break;
+				case 1:
+					//TB4+3.5: Flight Control Computer S-IVB Burn Mode Off "A"
+					if (LVDC_TB_ETime > 3.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 12);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB4+3.7: Flight Control Computer S-IVB Burn Mode On "B"
+					if (LVDC_TB_ETime > 3.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 5);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
+				}
+
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					if(LVDC_TB_ETime < 0.25){
@@ -1801,6 +1895,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	// int
+	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
 	oapiWriteScenario_int(scn, "LVDC_T_EO1", T_EO1);
@@ -2121,6 +2216,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		// Doing it in long chains makes the MS compiler silently optimize away the tail of the chain.
 		// So we do it in small groups.
 		// INT
+		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
 		papiReadScenario_int(line, "LVDC_LVDC_Timebase", LVDC_Timebase);
 		papiReadScenario_int(line, "LVDC_T_EO1", T_EO1);

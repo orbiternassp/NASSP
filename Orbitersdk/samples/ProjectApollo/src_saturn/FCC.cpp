@@ -138,19 +138,19 @@ void FCC1B::Timestep(double simdt)
 		a_1p = a_1y = 1.6;
 		a_1r = 0.25;
 	}
-	else if (GainSwitch == 3) {
+	else if (GainSwitch == 3 && StageSwitch == 0) {
 		a_0p = a_0y = 0.7;
 		a_0r = 0.2;
 		a_1p = a_1y = 0.75;
 		a_1r = 0.15;
 	}
-	else if (GainSwitch == 4 && SIVBBurnMode == true) {
+	else if (StageSwitch == 2 && SIVBBurnMode == true) {
 		a_0p = a_0y = 0.6;
 		a_0r = 1;
 		a_1p = a_1y = 0.5;
 		a_1r = 5;
 	}
-	else if (GainSwitch == 4 && SIVBBurnMode == false) {
+	else if (StageSwitch == 2 && SIVBBurnMode == false) {
 		a_0p = a_0y = 1;
 		a_0r = 1;
 		a_1p = a_1y = 5;

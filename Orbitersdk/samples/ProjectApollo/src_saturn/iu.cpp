@@ -1762,7 +1762,37 @@ void IU1B::LoadEDS(FILEHANDLE scn)
 
 void IU1B::SwitchSelector(int item)
 {
-
+	switch (item)
+	{
+	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
+		fcc.SetGainSwitch(0);
+		break;
+	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
+		fcc.SetSIVBBurnMode(false);
+		break;
+	case 6: //Flight Control Computer S-IVB Burn Mode On "B"
+		fcc.SetStageSwitch(2);
+		fcc.SetSIVBBurnMode(true);
+		break;
+	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
+		fcc.SetSIVBBurnMode(false);
+		break;
+	case 21: //Flight Control Computer Switch Point No. 2
+		fcc.SetGainSwitch(2);
+		break;
+	case 22: //Flight Control Computer Switch Point No. 3
+		fcc.SetGainSwitch(3);
+		break;
+	case 43: //Flight Control Computer Switch Point No. 1
+		fcc.SetGainSwitch(1);
+		break;
+	case 53: //Flight Control Computer S-IVB Burn Mode On "A"
+		fcc.SetStageSwitch(2);
+		fcc.SetSIVBBurnMode(true);
+		break;
+	default:
+		break;
+	}
 }
 
 IUSV::IUSV() : fcc(lvrg), eds(lvrg)
