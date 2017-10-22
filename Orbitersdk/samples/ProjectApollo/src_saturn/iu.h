@@ -364,6 +364,8 @@ public:
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 
+	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
+
 	void ControlDistributor(int stage, int channel);
 
 	LVDC* lvdc;

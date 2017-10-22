@@ -47,6 +47,8 @@ public:
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetSIEngineOut();
 	bool GetSIIEngineOut();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBShutdown();
 protected:
 	IU *iu;
 };

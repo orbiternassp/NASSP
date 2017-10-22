@@ -6452,7 +6452,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset)
 					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()
-					|| ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, SIVBCutoff))))
+					|| ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && lvda.GetCMCSIVBShutdown())))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;//-simdt;
@@ -8506,7 +8506,7 @@ restartprep:
 			// TLI restart & targeting logic;
 
 			//Manual TB6 Initiation
-			if ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
+			if (lvda.GetCMCSIVBIgnitionSequenceStart())
 			{
 				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
 				goto INHcheck;

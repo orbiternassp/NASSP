@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
+#include "ioChannels.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "saturn.h"
@@ -98,4 +99,20 @@ bool LVDA::GetSIEngineOut()
 bool LVDA::GetSIIEngineOut()
 {
 	return iu->GetEDS()->GetSIIEngineOut();
+}
+
+bool LVDA::GetCMCSIVBIgnitionSequenceStart()
+{
+	if ((iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool LVDA::GetCMCSIVBShutdown()
+{
+	if (iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
 }
