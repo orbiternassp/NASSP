@@ -727,6 +727,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					CommandSequence++;
 					break;
 				case 1:
+					//TB1+40.0: Launch Vehicle Engines EDS Cutoff Enable
+					if (LVDC_TB_ETime > 40.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 38);
+						CommandSequence++;
+					}
+					break;
+				case 2:
 					//TB1+60.0: Flight Control Computer Switch Point No. 1
 					if (LVDC_TB_ETime > 60.0)
 					{
@@ -734,7 +742,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 2:
+				case 3:
 					//TB1+90.0: Flight Control Computer Switch Point No. 2
 					if (LVDC_TB_ETime > 90.0)
 					{
@@ -742,11 +750,43 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 3:
+				case 4:
 					//TB1+120.0: Flight Control Computer Switch Point No. 3
 					if (LVDC_TB_ETime > 120.0)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 22);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB1+131.2: Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 131.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 15);
+						CommandSequence++;
+					}
+					break;
+				case 6:
+					//TB1+131.4: Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
+					if (LVDC_TB_ETime > 131.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 2);
+						CommandSequence++;
+					}
+					break;
+				case 7:
+					//TB1+131.6: S-IB Two Engines Out Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 131.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 51);
+						CommandSequence++;
+					}
+					break;
+				case 8:
+					//TB1+131.8: S-IB Two Engines Out Auto-Abort Inhibit
+					if (LVDC_TB_ETime > 131.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 35);
 						CommandSequence++;
 					}
 					break;
@@ -775,7 +815,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				//Timebase 2 initiated at certain fuel level
 
 				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0) {
-					commandConnector->ClearLiftoffLight();
 
 					// Begin timebase 2
 					LVDC_Timebase = 2;
@@ -786,11 +825,48 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				break;
 
 			case 2:
-				// S1B CECO TRIGGER:
-				if (LVDC_TB_ETime > 3.2 && !S1B_CECO_Commanded) { // Apollo 7
-					lvCommandConnector->SwitchSelector(16);
-					S1B_Engine_Out = true;
-					S1B_CECO_Commanded = true;
+
+				switch (CommandSequence)
+				{
+				case 0:
+					CommandSequence++;
+					break;
+				case 1:
+					//TB2+0.2: Excess Rate (Roll) Auto-Abort Inhibit Enable
+					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 34);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB2+0.4: Excess Rate (Roll) Auto-Abort Inhibit And Switch Rate Gyros SC Indication "B"
+					if (LVDC_TB_ETime > 0.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 50);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB2+3.1: Inboard Engines Cutoff
+					if (LVDC_TB_ETime > 3.1)
+					{
+						lvCommandConnector->SwitchSelector(16);
+						S1B_Engine_Out = true;
+						S1B_CECO_Commanded = true;
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB2+3.4: Auto Abort Enable Relays Reset
+					if (LVDC_TB_ETime > 3.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 16);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
 				}
 
 				if (commandConnector->GetBECOSignal())
@@ -835,6 +911,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 1.7)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 6);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB3+2.4: S-IVB Engine Out Indication A Enable
+					if (LVDC_TB_ETime > 2.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 9);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB3+2.6: S-IVB Engine Out Indication B Enable
+					if (LVDC_TB_ETime > 2.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 29);
 						CommandSequence++;
 					}
 					break;
@@ -905,6 +997,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 3.7)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 5);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB4+5.0: S/C Control Of Saturn Enable
+					if (LVDC_TB_ETime > 5.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB4+10.0: S-IVB Engine EDS Cutoffs Disable
+					if (LVDC_TB_ETime > 10.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
 						CommandSequence++;
 					}
 					break;

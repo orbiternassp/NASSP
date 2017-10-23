@@ -433,6 +433,9 @@ void Saturn::SetCSMStage ()
 	ClearMeshes();
     ClearThrusterDefinitions();
 	ClearEngineIndicators();
+	ClearLVGuidLight();
+	ClearLVRateLight();
+	ClearSIISep();
 
 	//
 	// Delete any dangling propellant resources.
@@ -777,6 +780,9 @@ void Saturn::SetReentryStage ()
 	ClearPropellants();
 	ClearAirfoilDefinitions();
 	ClearEngineIndicators();
+	ClearLVGuidLight();
+	ClearLVRateLight();
+	ClearSIISep();
 
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 

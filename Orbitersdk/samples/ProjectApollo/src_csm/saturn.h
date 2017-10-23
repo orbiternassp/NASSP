@@ -590,14 +590,14 @@ public:
 			unsigned Engind4:1;
 			unsigned Engind5:1;
 			unsigned LVGuidLight:1;
-			unsigned Launchind0:1;
-			unsigned Launchind1:1;
-			unsigned Launchind2:1;
-			unsigned Launchind3:1;
-			unsigned Launchind4:1;
-			unsigned Launchind5:1;
-			unsigned Launchind6:1;
-			unsigned Launchind7:1;
+			unsigned LiftoffLight:1;
+			unsigned NoAutoAbortLight:1;
+			unsigned spare1:1;
+			unsigned spare2:1;
+			unsigned spare3:1;
+			unsigned spare4:1;
+			unsigned spare5:1;
+			unsigned spare6:1;
 			unsigned Engind6:1;
 			unsigned Engind7:1;
 			unsigned Engind8:1;
@@ -1067,6 +1067,18 @@ public:
 	/// \brief Clear the liftoff light.
 	///
 	void ClearLiftoffLight();
+
+	///
+	/// Turn on the no auto abort light on the control panel.
+	/// \brief Set the no auto abort light.
+	///
+	void SetNoAutoAbortLight();
+
+	///
+	/// Turn off the no auto abort light on the control panel.
+	/// \brief Clear the no auto abort light.
+	///
+	void ClearNoAutoAbortLight();
 
 	///
 	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
@@ -3393,7 +3405,8 @@ protected:
 	/// \brief Engine indicator lights.
 	///
 	bool ENGIND[9];
-	bool LAUNCHIND[8];
+	bool LiftoffLight;
+	bool NoAutoAbortLight;
 	bool LVGuidLight;
 	bool LVRateLight;
 

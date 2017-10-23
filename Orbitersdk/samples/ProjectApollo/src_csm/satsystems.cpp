@@ -2189,13 +2189,23 @@ void Saturn::ClearEngineIndicators()
 void Saturn::SetLiftoffLight()
 
 {
-	LAUNCHIND[0] = true;
+	LiftoffLight = true;
 }
 
 void Saturn::ClearLiftoffLight()
 
 {
-	LAUNCHIND[0] = false;
+	LiftoffLight = false;
+}
+
+void Saturn::SetNoAutoAbortLight()
+{
+	NoAutoAbortLight = true;
+}
+
+void Saturn::ClearNoAutoAbortLight()
+{
+	NoAutoAbortLight = false;
 }
 
 void Saturn::SetLVGuidLight()

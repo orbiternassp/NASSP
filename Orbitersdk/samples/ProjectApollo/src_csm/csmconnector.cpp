@@ -831,21 +831,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_SET_LIFTOFF_LIGHT:
-		if (OurVessel)
-		{
-			if (m.val1.bValue)
-			{
-				OurVessel->SetLiftoffLight();
-			}
-			else
-			{
-				OurVessel->ClearLiftoffLight();
-			}
-			return true;
-		}
-		break;
-
 	case IUCSM_SET_LV_RATE_LIGHT:
 		if (OurVessel)
 		{
@@ -1057,6 +1042,22 @@ double CSMToIUConnector::GetFuelMass()
 	}
 
 	return 1.0;
+}
+
+bool CSMToIUConnector::GetLiftOffCircuit(bool sysA)
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_LIFTOFF_CIRCUIT;
+	cm.val1.bValue = sysA;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
+	}
+
+	return false;
 }
 
 void CSMToIUConnector::ChannelOutput(int channel, int value)

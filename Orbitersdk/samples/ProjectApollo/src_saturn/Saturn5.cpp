@@ -967,11 +967,7 @@ void SaturnV::SwitchSelector(int item){
 		DeactivatePrelaunchVenting();
 		break;
 	case 15:
-		SetLiftoffLight();										// And light liftoff lamp
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		// Start mission and event timers
-		secs.LiftoffA();
-		secs.LiftoffB();
 		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;
@@ -981,8 +977,6 @@ void SaturnV::SwitchSelector(int item){
 		}
 		break;
 	case 16:
-		// Clear liftoff light now - Apollo 15 checklist item
-		ClearLiftoffLight();
 		SetThrusterResource(th_main[4], NULL); // Should stop the engine
 		SShutS.play(NOLOOP, 235);
 		SShutS.done();

@@ -124,13 +124,13 @@ public:
 	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA);
 	void Timestep(double simdt);
 
-	void Liftoff();
-	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; };
-	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; };
-	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; };
-	bool GetCMSMDeadFace() { return CMSMDeadFace && MESCLogicBus(); };
-	bool GetCMRCSPressRelay() { return CMRCSPress; };
-	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; };
+	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
+	bool GetCSMLVSeparateRelay() { return CSMLVSeparateRelay; }
+	bool GetCMSMSeparateRelay() { return CMSMSeparateRelay; }
+	bool GetCMSMDeadFace() { return CMSMDeadFace && MESCLogicBus(); }
+	bool GetCMRCSPressRelay() { return CMRCSPress; }
+	bool GetAutoAbortEnableRelay() { return AutoAbortEnableRelay; }
+	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; }
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
 	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
 	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
@@ -139,6 +139,8 @@ public:
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 	bool ELSActivateLogic();
 
+	//Source 23/26
+	bool EDSLiftoffCircuitPower();
 	//Source 31
 	bool EDSMainPower();
 
@@ -235,6 +237,7 @@ protected:
 	bool SSSInput1;
 	bool SSSInput2;
 	bool IsSystemA;
+	bool LiftoffFlag;
 	MESC* OtherMESC;
 
 	//Abort Start Delay
@@ -285,11 +288,10 @@ public:
 	void ControlVessel(Saturn *v);
 	void Timestep(double simt, double simdt);
 
-	void LiftoffA();
-	void LiftoffB();
-
 	bool AbortLightPowerA();
 	bool AbortLightPowerB();
+	bool LiftoffLightPower();
+	bool NoAutoAbortLightPower();
 	virtual bool BECO();
 
 	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };

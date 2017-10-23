@@ -224,30 +224,6 @@ void IUToCSMCommandConnector::ClearSIISep()
 	SendMessage(cm);
 }
 
-void IUToCSMCommandConnector::SetLiftoffLight()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SET_LIFTOFF_LIGHT;
-	cm.val1.bValue = true;
-
-	SendMessage(cm);
-}
-
-void IUToCSMCommandConnector::ClearLiftoffLight()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SET_LIFTOFF_LIGHT;
-	cm.val1.bValue = false;
-
-	SendMessage(cm);
-}
-
 void IUToCSMCommandConnector::SetLVRateLight()
 
 {
@@ -705,6 +681,21 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 		if (ourIU)
 		{
 			//m.val1.dValue = ourIU->GetFuelMass();
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_LIFTOFF_CIRCUIT:
+		if (ourIU)
+		{
+			if (m.val1.bValue)
+			{
+				m.val2.bValue = ourIU->GetEDS()->GetLiftoffCircuitA();
+			}
+			else
+			{
+				m.val2.bValue = ourIU->GetEDS()->GetLiftoffCircuitB();
+			}
 			return true;
 		}
 		break;
@@ -1767,6 +1758,14 @@ void IU1B::SwitchSelector(int item)
 	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
 		fcc.SetGainSwitch(0);
 		break;
+	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
+		eds.SetExcessiveRatesAutoAbortInhibit(true);
+		eds.SetRateGyroSCIndicationSwitchA(true);
+		break;
+	case 3: //S-IVB Engine EDS Cutoffs Disable
+		eds.SetSIVBEngineOutIndicationA(false);
+		eds.SetSIVBEngineOutIndicationB(false);
+		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
 		fcc.SetSIVBBurnMode(false);
 		break;
@@ -1774,8 +1773,19 @@ void IU1B::SwitchSelector(int item)
 		fcc.SetStageSwitch(2);
 		fcc.SetSIVBBurnMode(true);
 		break;
+	case 9: //S-IVB Engine Out Indication "A" Enable
+		eds.SetSIVBEngineOutIndicationA(true);
+		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
 		fcc.SetSIVBBurnMode(false);
+		break;
+	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
+		break;
+	case 16: //Auto-Abort Enable Relays Reset
+		eds.ResetAutoAbortRelays();
+		break;
+	case 18: //S/C Control of Saturn Enable
+		fcc.EnableSCControl();
 		break;
 	case 21: //Flight Control Computer Switch Point No. 2
 		fcc.SetGainSwitch(2);
@@ -1783,8 +1793,25 @@ void IU1B::SwitchSelector(int item)
 	case 22: //Flight Control Computer Switch Point No. 3
 		fcc.SetGainSwitch(3);
 		break;
+	case 29: //S-IVB Engine Out Indication "B" Enable
+		eds.SetSIVBEngineOutIndicationB(true);
+		break;
+	case 34: //Excess Rate (Roll) Auto-Abort Inhibit Enable
+		break;
+	case 35: //S-IB Two Engines Out Auto-Abort Inhibit
+		eds.SetTwoEngOutAutoAbortInhibit(true);
+		break;
+	case 38: //Launch Vehicle Engines EDS Cutoff Enable
+		eds.SetLVEnginesCutoffEnable(true);
+		break;
 	case 43: //Flight Control Computer Switch Point No. 1
 		fcc.SetGainSwitch(1);
+		break;
+	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
+		eds.SetExcessiveRatesAutoAbortInhibit(true);
+		eds.SetRateGyroSCIndicationSwitchB(true);
+		break;
+	case 51: //S-IB Two Engines Out Auto-Abort Inhibit Enable
 		break;
 	case 53: //Flight Control Computer S-IVB Burn Mode On "A"
 		fcc.SetStageSwitch(2);
@@ -1895,6 +1922,7 @@ void IUSV::SwitchSelector(int item)
 	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
+		eds.ResetAutoAbortRelays();
 		break;
 	case 17: //Tape Recorder Record Off
 		break;

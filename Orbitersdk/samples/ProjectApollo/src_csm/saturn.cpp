@@ -667,11 +667,7 @@ void Saturn::initSaturn()
 	ClearLVGuidLight();
 	ClearLVRateLight();
 	ClearLiftoffLight();
-
-	for (i = 0; i < 8; i++)
-	{
-		LAUNCHIND[i] = false;
-	}
+	ClearNoAutoAbortLight();
 
 	for (i = 0; i < nsurf; i++)
 	{
@@ -1537,14 +1533,8 @@ int Saturn::GetLightState()
 	state.Engind7 = ENGIND[7];
 	state.Engind8 = ENGIND[8];
 	state.LVGuidLight = LVGuidLight;
-	state.Launchind0 = LAUNCHIND[0];
-	state.Launchind1 = LAUNCHIND[1];
-	state.Launchind2 = LAUNCHIND[2];
-	state.Launchind3 = LAUNCHIND[3];
-	state.Launchind4 = LAUNCHIND[4];
-	state.Launchind5 = LAUNCHIND[5];
-	state.Launchind6 = LAUNCHIND[6];
-	state.Launchind7 = LAUNCHIND[7];
+	state.LiftoffLight = LiftoffLight;
+	state.NoAutoAbortLight = NoAutoAbortLight;
 	state.LVRateLight = LVRateLight;
 
 	return state.word;
@@ -1566,14 +1556,8 @@ void Saturn::SetLightState(int s)
 	ENGIND[7] = (state.Engind7 != 0);
 	ENGIND[8] = (state.Engind8 != 0);
 	LVGuidLight = (state.LVGuidLight != 0);
-	LAUNCHIND[0] = (state.Launchind0 != 0);
-	LAUNCHIND[1] = (state.Launchind1 != 0);
-	LAUNCHIND[2] = (state.Launchind2 != 0);
-	LAUNCHIND[3] = (state.Launchind3 != 0);
-	LAUNCHIND[4] = (state.Launchind4 != 0);
-	LAUNCHIND[5] = (state.Launchind5 != 0);
-	LAUNCHIND[6] = (state.Launchind6 != 0);
-	LAUNCHIND[7] = (state.Launchind7 != 0);
+	LiftoffLight = (state.LiftoffLight != 0);
+	NoAutoAbortLight = (state.NoAutoAbortLight != 0);
 	LVRateLight = (state.LVRateLight != 0);
 }
 
@@ -4114,15 +4098,6 @@ void Saturn::SIVBBoiloff()
 void Saturn::StageSix(double simt)
 
 {
-	//
-	// Should we be turning off these lights here?
-	//
-
-	for (int i=0 ;i<6; i++)
-	{
-		LAUNCHIND[i]=false;
-	}
-
 	if (ApolloNo == 1301) {
 
 		//

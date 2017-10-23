@@ -43,7 +43,6 @@ enum IUCSMMessageType
 	IUCSM_SET_INPUT_CHANNEL_BIT,			///< Set an AGC input channel bit value.
 	IUCSM_SET_OUTPUT_CHANNEL,				///< Set an AGC output channel value.
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
-	IUCSM_SET_LIFTOFF_LIGHT,				///< Light or clear liftoff light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
 	IUCSM_SET_EDS_ABORT,					///< Set EDS abort signal.
@@ -79,6 +78,7 @@ enum IUCSMMessageType
 	CSMIU_GET_VESSEL_STATS,					///< Get vessel ISP and thrust.
 	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
 	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
+	CSMIU_GET_LIFTOFF_CIRCUIT,
 };
 
 ///
@@ -177,8 +177,6 @@ public:
 	void SetEngineIndicator(int eng);
 	void ClearEngineIndicator(int eng);
 	void ClearEngineIndicators();
-	void SetLiftoffLight();
-	void ClearLiftoffLight();
 	void SetLVRateLight();
 	void ClearLVRateLight();
 	void SetLVGuidLight();

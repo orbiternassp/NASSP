@@ -56,6 +56,10 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	SIVBEngineOutIndicationB = false;
 	SI_Engine_Out = false;
 	SII_Engine_Out = false;
+	AutoAbortEnableRelayA = false;
+	AutoAbortEnableRelayB = false;
+	LiftoffA = false;
+	LiftoffB = false;
 }
 
 void EDS::Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector *commandConn)
@@ -68,6 +72,10 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_bool(scn, "AUTOABORTINITIATE", AutoAbortInitiate);
+	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYA", AutoAbortEnableRelayA);
+	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
+	papiWriteScenario_bool(scn, "LIFTOFFA", LiftoffA);
+	papiWriteScenario_bool(scn, "LIFTOFFB", LiftoffB);
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTDEACTIVATE", TwoEngOutAutoAbortDeactivate);
 	papiWriteScenario_bool(scn, "EXCESSRATESAUTOABORTDEACTIVATEPY", ExcessRatesAutoAbortDeactivatePY);
 	papiWriteScenario_bool(scn, "EXCESSRATESAUTOABORTDEACTIVATER", ExcessRatesAutoAbortDeactivateR);
@@ -96,6 +104,10 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 			break;
 		}
 		papiReadScenario_bool(line, "AUTOABORTINITIATE", AutoAbortInitiate);
+		papiReadScenario_bool(line, "AUTOABORTENABLERELAYA", AutoAbortEnableRelayA);
+		papiReadScenario_bool(line, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
+		papiReadScenario_bool(line, "LIFTOFFA", LiftoffA);
+		papiReadScenario_bool(line, "LIFTOFFB", LiftoffB);
 		papiReadScenario_bool(line, "TWOENGOUTAUTOABORTDEACTIVATE", TwoEngOutAutoAbortDeactivate);
 		papiReadScenario_bool(line, "EXCESSRATESAUTOABORTDEACTIVATEPY", ExcessRatesAutoAbortDeactivatePY);
 		papiReadScenario_bool(line, "EXCESSRATESAUTOABORTDEACTIVATER", ExcessRatesAutoAbortDeactivateR);
@@ -121,7 +133,15 @@ EDS1B::EDS1B(LVRG &rg) : EDS(rg)
 	{
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
+		ThrustOK[i] = false;
 	}
+}
+
+bool EDS1B::ThrustCommitEval()
+{
+	for (int i = 0;i < 8;i++) if (!ThrustOK[i]) return false;
+
+	return true;
 }
 
 void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
@@ -158,11 +178,11 @@ void EDS1B::Timestep(double simdt)
 	int EDSSwitch = commandConnector->EDSSwitchState();
 	int LVRateAutoSwitch = commandConnector->LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitch = commandConnector->TwoEngineOutAutoSwitchState();
+	int Stage = lvCommandConnector->GetStage();
 
 	bool EDSBus1Powered = commandConnector->IsEDSBusPowered(1);
 	bool EDSBus2Powered = commandConnector->IsEDSBusPowered(2);
 	bool EDSBus3Powered = commandConnector->IsEDSBusPowered(3);
-
 
 	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
 	{
@@ -186,7 +206,7 @@ void EDS1B::Timestep(double simdt)
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
 
-	if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE)
+	if (Stage == LAUNCH_STAGE_ONE)
 	{
 		int enginesout = 0;
 
@@ -275,14 +295,15 @@ void EDS1B::Timestep(double simdt)
 	}
 
 	// Update engine indicators and failure flags
-	switch (lvCommandConnector->GetStage()) {
+	switch (Stage) {
 	case PRELAUNCH_STAGE:
 	case LAUNCH_STAGE_ONE:
 		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 8) {
-				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
-				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) < 0.65 && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
+				ThrustOK[i] = lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65;
+				if (ThrustOK[i] && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
+				if (!ThrustOK[i] && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
 				i++;
 			}
 		}
@@ -306,8 +327,38 @@ void EDS1B::Timestep(double simdt)
 		break;
 	}
 
+	if (Stage == PRELAUNCH_STAGE)
+	{
+		if (!AutoAbortEnableRelayA && !AutoAbortEnableRelayB)
+		{
+			if (ThrustCommitEval())
+			{
+				AutoAbortEnableRelayA = true;
+				AutoAbortEnableRelayB = true;
+			}
+		}
+	}
+
+	if (EDSBus1Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayA)
+	{
+		LiftoffA = true;
+	}
+	else
+	{
+		LiftoffA = false;
+	}
+
+	if (EDSBus3Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayB)
+	{
+		LiftoffB = true;
+	}
+	else
+	{
+		LiftoffB = false;
+	}
+
 	//Engine failure code
-	switch (lvCommandConnector->GetStage())
+	switch (Stage)
 	{
 	case LAUNCH_STAGE_ONE:
 		for (int i = 0;i < 8;i++)
@@ -333,7 +384,15 @@ EDSSV::EDSSV(LVRG &rg) : EDS(rg)
 		FirstStageFailureTime[i] = 0.0;
 		EarlySIICutoff[i] = false;
 		SecondStageFailureTime[i] = 0.0;
+		ThrustOK[i] = false;
 	}
+}
+
+bool EDSSV::ThrustCommitEval()
+{
+	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return false;
+
+	return true;
 }
 
 void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
@@ -369,6 +428,7 @@ void EDSSV::Timestep(double simdt)
 	int EDSSwitch = commandConnector->EDSSwitchState();
 	int LVRateAutoSwitch = commandConnector->LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitch = commandConnector->TwoEngineOutAutoSwitchState();
+	int Stage = lvCommandConnector->GetStage();
 
 	bool EDSBus1Powered = commandConnector->IsEDSBusPowered(1);
 	bool EDSBus2Powered = commandConnector->IsEDSBusPowered(2);
@@ -396,7 +456,7 @@ void EDSSV::Timestep(double simdt)
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
 
-	if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE)
+	if (Stage == LAUNCH_STAGE_ONE)
 	{
 		int enginesout = 0;
 
@@ -482,14 +542,15 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	// Update engine indicators and failure flags
-	switch (lvCommandConnector->GetStage()) {
+	switch (Stage) {
 	case PRELAUNCH_STAGE:
 	case LAUNCH_STAGE_ONE:
 		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.65  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
-				if (lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) < 0.65 && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
+				ThrustOK[i] = lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(i)) >= 0.90;
+				if (ThrustOK[i]  && commandConnector->GetEngineIndicator(i + 1) == true) { commandConnector->ClearEngineIndicator(i + 1); }
+				if (!ThrustOK[i] && commandConnector->GetEngineIndicator(i + 1) == false) { commandConnector->SetEngineIndicator(i + 1); }
 				i++;
 			}
 		}
@@ -529,9 +590,39 @@ void EDSSV::Timestep(double simdt)
 		break;
 	}
 
+	if (Stage == PRELAUNCH_STAGE)
+	{
+		if (!AutoAbortEnableRelayA && !AutoAbortEnableRelayB)
+		{
+			if (ThrustCommitEval())
+			{
+				AutoAbortEnableRelayA = true;
+				AutoAbortEnableRelayB = true;
+			}
+		}
+	}
+
+	if (EDSBus1Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayA)
+	{
+		LiftoffA = true;
+	}
+	else
+	{
+		LiftoffA = false;
+	}
+
+	if (EDSBus3Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayB)
+	{
+		LiftoffB = true;
+	}
+	else
+	{
+		LiftoffB = false;
+	}
+
 	//Engine failure code
 
-	switch (lvCommandConnector->GetStage()) {
+	switch (Stage) {
 	case LAUNCH_STAGE_ONE:
 		SII_Engine_Out = false;
 		for (int i = 0;i < 5;i++)
@@ -539,7 +630,6 @@ void EDSSV::Timestep(double simdt)
 			if (EarlySICutoff[i] && (lvCommandConnector->GetMissionTime() > FirstStageFailureTime[i]) && (lvCommandConnector->GetThrusterResource(lvCommandConnector->GetMainThruster(i)) != NULL))
 			{
 				lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(i), NULL); // Should stop the engine
-				commandConnector->ClearLiftoffLight();
 				SI_Engine_Out = true;
 			}
 		}
