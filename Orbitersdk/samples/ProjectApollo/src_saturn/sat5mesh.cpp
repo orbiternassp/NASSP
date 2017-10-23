@@ -443,7 +443,7 @@ void SaturnV::SetFirstStage ()
 	double Mass = Stage1Mass + SI_FuelMass;
 	double ro = 30;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -463,7 +463,7 @@ void SaturnV::SetFirstStage ()
 	td[2].pos.z = TCP;
 	td[3].pos.x = 0;
 	td[3].pos.y = 0;
-	td[3].pos.z = 15 * ro;
+	td[3].pos.z = TCP+100;
 	
 	SetTouchdownPoints(td, 4);
 	

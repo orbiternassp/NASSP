@@ -237,7 +237,7 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	td[2].pos.z = TCP;
 	td[3].pos.x = 0;
 	td[3].pos.y = 0;
-	td[3].pos.z = 15 * ro;
+	td[3].pos.z = TCP+60;
 	
 	SetTouchdownPoints(td, 4);
 
