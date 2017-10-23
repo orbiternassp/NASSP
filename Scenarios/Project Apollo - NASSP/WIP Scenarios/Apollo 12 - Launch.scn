@@ -320,6 +320,7 @@ Yankee Clipper:ProjectApollo\Saturn5
   ASCP_END
   LVDC_BEGIN
     LVDC_hx[0][0] 72.029
+	LVDC_T_LO 58903.0
     LVDC_XLunarAttitude 3.141589512 2.094395207 -0.5235987756
   LVDC_END
   LVIMU_BEGIN
