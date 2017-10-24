@@ -968,7 +968,6 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 15:
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;
 		if (LaunchS.isValid() && !LaunchS.isPlaying()){			// And play launch sound			

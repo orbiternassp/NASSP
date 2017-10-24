@@ -808,7 +808,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					{
 						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
 
@@ -2646,7 +2645,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Direct_Ascent = false;
 	directstageint = false;
 	directstagereset = false;
-	IGM_Failed = false;
+	GuidanceReferenceFailure = false;
 	first_op = false;
 	TerminalConditions = false;
 	GATE = false;
@@ -3051,7 +3050,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	directstagereset = true;
-	IGM_Failed = false;
+	GuidanceReferenceFailure = false;
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
@@ -3376,7 +3375,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
 	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
-	oapiWriteScenario_int(scn, "LVDC_IGM_Failed", IGM_Failed);
+	oapiWriteScenario_int(scn, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
@@ -4006,7 +4005,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
 		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
-		papiReadScenario_bool(line, "LVDC_IGM_Failed", IGM_Failed);
+		papiReadScenario_bool(line, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
@@ -4996,7 +4995,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					{
 						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
 					}
-					commandConnector->SetAGCInputChannelBit(030, LiftOff, true);	// and the liftoff, if it's not set already
 					LVDC_Stop = true;
 				}
 
@@ -7760,7 +7758,7 @@ GuidanceLoop:
 				}
 				else
 				{
-					if (!IGM_Failed)
+					if (!GuidanceReferenceFailure)
 					{
 						goto IGM;
 					}
@@ -8042,7 +8040,7 @@ chitilde:	Pos4 = mul(MX_G,PosS);
 
 			if (isnan(Lt_3))
 			{
-				IGM_Failed = true;
+				GuidanceReferenceFailure = true;
 				commandConnector->SetLVGuidLight();
 				fprintf(lvlog, "IGM Error Detected! \r\n");
 				goto minorloop;

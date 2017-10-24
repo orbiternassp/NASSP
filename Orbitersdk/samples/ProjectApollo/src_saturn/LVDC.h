@@ -78,7 +78,7 @@ private:								// Saturn LV
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
 	bool directstagereset;							// Direct Stage Reset
-	bool IGM_Failed;
+	bool GuidanceReferenceFailure;
 	
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error

@@ -1757,6 +1757,7 @@ void IU1B::SwitchSelector(int item)
 	{
 	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
 		fcc.SetGainSwitch(0);
+		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		eds.SetExcessiveRatesAutoAbortInhibit(true);
@@ -1895,6 +1896,7 @@ void IUSV::SwitchSelector(int item)
 	{
 	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
 		fcc.SetGainSwitch(0);
+		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
 	case 1: //Q-Ball Power Off
 		break;
