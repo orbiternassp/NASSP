@@ -813,7 +813,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				//Timebase 2 initiated at certain fuel level
 
-				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0) {
+				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0 && DotS.z > 500.0) {
 
 					// Begin timebase 2
 					LVDC_Timebase = 2;
@@ -4999,16 +4999,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// S1C CECO TRIGGER:
-				// I have multiple conflicting leads as to the CECO trigger.
-				// One says it happens at 4G acceleration and another says it happens by a timer at T+135.5	
-				// Actually it is a timer in the LVDA... I think
-				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO){
-					//Apollo 11
-					if (!S1_Engine_Out)
-					{
-						lvCommandConnector->SwitchSelector(16);
-					}
-
+				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO && DotS.z > 500.0){
 					S1_Engine_Out = true;
 					// Begin timebase 2
 					TB2 = TAS;//-simdt;
@@ -5025,12 +5016,16 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					//TB2+0.0: Inboard Engine Cutoff
+					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					CommandSequence++;
 					break;
 				case 1:
 					//TB2+0.2: Inboard Engine Cutoff Backup
 					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 16);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB2+0.4: Start First PAM - FM/FM Calibration

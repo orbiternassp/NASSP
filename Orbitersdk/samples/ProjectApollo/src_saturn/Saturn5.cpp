@@ -975,11 +975,6 @@ void SaturnV::SwitchSelector(int item){
 			LaunchS.done();
 		}
 		break;
-	case 16:
-		SetThrusterResource(th_main[4], NULL); // Should stop the engine
-		SShutS.play(NOLOOP, 235);
-		SShutS.done();
-		break;
 	case 17:
 		// Move hidden S1C
 		if (hstg1) {
@@ -1076,6 +1071,9 @@ void SaturnV::SISwitchSelector(int channel)
 	case 7: //Fuel Pressurizing Valve No. 4 Open
 		break;
 	case 8: //Inboard Engine Cutoff
+		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
 		break;
 	case 9: //Outboard Engines Cutoff Enable
 		break;
@@ -1102,6 +1100,7 @@ void SaturnV::SISwitchSelector(int channel)
 		break;
 		break;
 	case 16: //Inboard Engine Cutoff Backup
+		SetThrusterResource(th_main[4], NULL);
 		break;
 	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
 		break;
