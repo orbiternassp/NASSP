@@ -214,7 +214,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	ROV = 0;
 	ROVs = 0;
 	R_T = 0;
-	S1B_Sep_Time = 0;
 	S_1 = 0;
 	S_2 = 0;
 	S_P = 0;
@@ -541,7 +540,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	sinceLastIGM = 0;
 	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
-	S1B_Sep_Time = 0;
 	CountPIPA = false;
 
 	CommandSequence = 0;
@@ -850,7 +848,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					//TB2+3.1: Inboard Engines Cutoff
 					if (LVDC_TB_ETime > 3.1)
 					{
-						lvCommandConnector->SwitchSelector(16);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 98);
 						S1B_Engine_Out = true;
 						S1B_CECO_Commanded = true;
 						CommandSequence++;
@@ -880,9 +878,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
 						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)), lvCommandConnector->GetAltitude());
-					lvCommandConnector->SwitchSelector(17);
-					// Set timer
-					S1B_Sep_Time = lvCommandConnector->GetMissionTime();
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -898,6 +893,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					CommandSequence++;
 					break;
 				case 1:
+					//TB3+0.1: S-IB Outboard Engines Cutoff
+					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 18);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB3+1.3: S-IB/S-IVB Separation On
+					if (LVDC_TB_ETime > 1.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 23);
+						CommandSequence++;
+					}
+					break;
+				case 3:
 					//TB3+1.5: Flight Control Computer S-IVB Burn Mode On "A"
 					if (LVDC_TB_ETime > 1.5)
 					{
@@ -905,7 +916,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 2:
+				case 4:
 					//TB3+1.7: Flight Control Computer S-IVB Burn Mode On "B"
 					if (LVDC_TB_ETime > 1.7)
 					{
@@ -913,7 +924,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 3:
+				case 5:
 					//TB3+2.4: S-IVB Engine Out Indication A Enable
 					if (LVDC_TB_ETime > 2.4)
 					{
@@ -921,7 +932,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 4:
+				case 6:
 					//TB3+2.6: S-IVB Engine Out Indication B Enable
 					if (LVDC_TB_ETime > 2.6)
 					{
@@ -929,14 +940,34 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
+				case 7:
+					//TB3+8.7: P.U. Mixture Ratio 5.5 On
+					if (LVDC_TB_ETime > 8.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 34);
+						CommandSequence++;
+					}
+					break;
+				case 8:
+					//TB3+311.3: P.U. Mixture Ratio 5.5 Off
+					if (LVDC_TB_ETime > 311.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 35);
+						CommandSequence++;
+					}
+					break;
+				case 9:
+					//TB3+311.5: P.U. Mixture Ratio 4.5 On
+					if (LVDC_TB_ETime > 311.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 32);
+						fprintf(lvlog, "[TB%d+%f] MR Shift\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						MRS = true;
+						CommandSequence++;
+					}
+					break;
 				default:
 					break;
-				}
-
-				// S1B SEPARATION TRIGGER
-				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && LVDC_TB_ETime >= 0.5){
-					// Drop old stage
-					lvCommandConnector->SwitchSelector(18);
 				}
 						
 				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
@@ -946,13 +977,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
 					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 1.0);
 					S4B_IGN=true;
-				}
-				if(LVDC_TB_ETime > 311.5 && MRS == false){
-					// MR Shift
-					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					lvCommandConnector->SwitchSelector(23);
-					MRS = true;
 				}
 
 				//Manual S-IVB Shutdown
@@ -2160,7 +2184,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
 	papiWriteScenario_double(scn, "LVDC_ROVs", ROVs);
 	papiWriteScenario_double(scn, "LVDC_R_T", R_T);
-	papiWriteScenario_double(scn, "LVDC_S1B_Sep_Time", S1B_Sep_Time);
 	papiWriteScenario_double(scn, "LVDC_S_1", S_1);
 	papiWriteScenario_double(scn, "LVDC_S_2", S_2);
 	papiWriteScenario_double(scn, "LVDC_S_P", S_P);
@@ -2503,7 +2526,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_ROV", ROV);
 		papiReadScenario_double(line, "LVDC_ROVs", ROVs);
 		papiReadScenario_double(line, "LVDC_R_T", R_T);
-		papiReadScenario_double(line, "LVDC_S1B_Sep_Time", S1B_Sep_Time);
 		papiReadScenario_double(line, "LVDC_S_1", S_1);
 		papiReadScenario_double(line, "LVDC_S_2", S_2);
 		papiReadScenario_double(line, "LVDC_S_P", S_P);
