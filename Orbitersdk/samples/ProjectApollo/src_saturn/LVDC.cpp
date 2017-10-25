@@ -6122,8 +6122,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB6+0.3: S/C Control of Saturn Disable
 					if (LVDC_TB_ETime > 0.3)
 					{
-						fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 69);
+						if (!PermanentSCControl)
+						{
+							fprintf(lvlog, "[TB%d+%f] S/C Control of Saturn Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 69);
+						}
 						CommandSequence++;
 					}
 					break;
