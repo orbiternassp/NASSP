@@ -95,6 +95,10 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		return;
 	}
 
+	if (lvdc->GetGuidanceReferenceFailure())
+	{
+		commandConnector.SetLVGuidLight();
+	}
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
@@ -1687,7 +1691,7 @@ void IU::ControlDistributor(int stage, int channel)
 IU1B::IU1B() : fcc(lvrg), eds(lvrg)
 {
 	lvda.Init(this);
-	eds.Configure(&lvCommandConnector, &commandConnector);
+	eds.Init(this);
 }
 
 void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
@@ -1720,7 +1724,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-		fcc.Configure(&lvCommandConnector, &commandConnector);
+		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
 
@@ -1826,7 +1830,7 @@ void IU1B::SwitchSelector(int item)
 IUSV::IUSV() : fcc(lvrg), eds(lvrg)
 {
 	lvda.Init(this);
-	eds.Configure(&lvCommandConnector, &commandConnector);
+	eds.Init(this);
 }
 
 void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
@@ -1859,7 +1863,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 		lvdc->Init(&lvCommandConnector, &commandConnector);
-		fcc.Configure(&lvCommandConnector, &commandConnector);
+		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
 

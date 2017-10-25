@@ -44,6 +44,7 @@ public:
 	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
+	virtual bool GetGuidanceReferenceFailure() = 0;
 	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc);
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
@@ -59,6 +60,8 @@ public:
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+
+	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
@@ -148,6 +151,7 @@ private:								// Saturn LV
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
+	bool PermanentSCControl;						// SC has permanent control of the FCC
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -425,6 +429,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
+
 	double SVCompare();
 private:
 	bool Initialized;								// Clobberness flag
@@ -439,6 +445,7 @@ private:
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
+	bool GuidanceReferenceFailure;
 	
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error
@@ -481,7 +488,8 @@ private:
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool INH,INH1,INH2;								// Dunno yet
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
-	
+	bool PermanentSCControl;						// SC has permanent control of the FCC
+
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	

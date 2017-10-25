@@ -4456,6 +4456,18 @@ void Saturn::SetRandomFailures()
 		}
 	}
 
+	if (stage > PRELAUNCH_STAGE) return;
+
+	bool PlatformFailure;
+	double PlatformFailureTime;
+
+	if (!(random() & 63))
+	{
+		PlatformFailure = true;
+		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
+
+		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
+	}
 }
 
 void Saturn::SetJ2ThrustLevel(double thrust)
