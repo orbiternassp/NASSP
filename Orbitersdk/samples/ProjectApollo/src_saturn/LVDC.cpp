@@ -2849,6 +2849,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 		TABLE15[x].f = 0;
 		TABLE15[x].T_ST = 0;
 		TABLE15[x].R_N = 0;
+		TABLE15[x].T3PR = 0;
+		TABLE15[x].TAU3R = 0;
+		TABLE15[x].dV_BR = 0;
 		for (y = 0; y < 15; y++)
 		{
 			TABLE15[x].target[y].alpha_D = 0;
@@ -3205,6 +3208,12 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	TABLE15[0].target[1].RAS = -114.382494;
 	TABLE15[0].target[0].t_D = 0.0;
 	TABLE15[0].target[1].t_D = 1000.0;
+	TABLE15[0].T3PR = 310.8243;
+	TABLE15[1].T3PR = 308.6854;
+	TABLE15[0].TAU3R = 684.5038;
+	TABLE15[1].TAU3R = 682.1127;
+	TABLE15[0].dV_BR = 2.8816;
+	TABLE15[1].dV_BR = 2.8816;
 
 	MRS = false;							// MR Shift
 	dotM_1 = 1224.13817;//1219.299283;					// Mass flowrate of S2 from approximately LET jettison to second MRS
@@ -3637,6 +3646,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dV", dV);
 	papiWriteScenario_double(scn, "LVDC_dV_B", dV_B);
 	papiWriteScenario_double(scn, "LVDC_dV_BR", dV_BR);
+	papiWriteScenario_double(scn, "LVDC_DVBRA", TABLE15[0].dV_BR);
+	papiWriteScenario_double(scn, "LVDC_DVBRB", TABLE15[1].dV_BR);
 	papiWriteScenario_double(scn, "LVDC_e", e);
 	papiWriteScenario_double(scn, "LVDC_e_N", e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -3880,6 +3891,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_4N", T_4N);
 	papiWriteScenario_double(scn, "LVDC_t_5", t_5);
 	papiWriteScenario_double(scn, "LVDC_t_6", t_6);
+	papiWriteScenario_double(scn, "LVDC_T3PRA", TABLE15[0].T3PR);
+	papiWriteScenario_double(scn, "LVDC_T3PRB", TABLE15[1].T3PR);
 	papiWriteScenario_double(scn, "LVDC_TA1", TA1);
 	papiWriteScenario_double(scn, "LVDC_TA2", TA2);
 	papiWriteScenario_double(scn, "LVDC_T_ar", T_ar);
@@ -3890,6 +3903,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_tau3", tau3);
 	papiWriteScenario_double(scn, "LVDC_tau3N", tau3N);
 	papiWriteScenario_double(scn, "LVDC_tau3R", tau3R);
+	papiWriteScenario_double(scn, "LVDC_TAU3RA", TABLE15[0].TAU3R);
+	papiWriteScenario_double(scn, "LVDC_TAU3RB", TABLE15[1].TAU3R);
 	papiWriteScenario_double(scn, "LVDC_t_B1", t_B1);
 	papiWriteScenario_double(scn, "LVDC_TB1", TB1);
 	papiWriteScenario_double(scn, "LVDC_t_B2", t_B2);
@@ -4272,6 +4287,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dV", dV);
 		papiReadScenario_double(line, "LVDC_dV_B", dV_B);
 		papiReadScenario_double(line, "LVDC_dV_BR", dV_BR);
+		papiReadScenario_double(line, "LVDC_DVBRA", TABLE15[0].dV_BR);
+		papiReadScenario_double(line, "LVDC_DVBRB", TABLE15[1].dV_BR);
 		papiReadScenario_double(line, "LVDC_e", e);
 		papiReadScenario_double(line, "LVDC_e_N", e_N);
 		papiReadScenario_double(line, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -4515,6 +4532,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_4N", T_4N);
 		papiReadScenario_double(line, "LVDC_t_5", t_5);
 		papiReadScenario_double(line, "LVDC_t_6", t_6);
+		papiReadScenario_double(line, "LVDC_T3PRA", TABLE15[0].T3PR);
+		papiReadScenario_double(line, "LVDC_T3PRB", TABLE15[1].T3PR);
 		papiReadScenario_double(line, "LVDC_TA1", TA1);
 		papiReadScenario_double(line, "LVDC_TA2", TA2);
 		papiReadScenario_double(line, "LVDC_T_ar", T_ar);
@@ -4525,6 +4544,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_tau3", tau3);
 		papiReadScenario_double(line, "LVDC_tau3N", tau3N);
 		papiReadScenario_double(line, "LVDC_tau3R", tau3R);
+		papiReadScenario_double(line, "LVDC_TAU3RA", TABLE15[0].TAU3R);
+		papiReadScenario_double(line, "LVDC_TAU3RB", TABLE15[1].TAU3R);
 		papiReadScenario_double(line, "LVDC_t_B1", t_B1);
 		papiReadScenario_double(line, "LVDC_TB1", TB1);
 		papiReadScenario_double(line, "LVDC_t_B2", t_B2);
@@ -8706,6 +8727,9 @@ restartprep:
 					alpha_TS = TABLE15[1].alphaS_TS*RAD;
 					T_ST = TABLE15[1].T_ST;
 					R_N = TABLE15[1].R_N;
+					tau3R = TABLE15[1].TAU3R;
+					Tt_3R = TABLE15[1].T3PR;
+					dV_BR = TABLE15[1].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = true;
 				}
@@ -8739,6 +8763,9 @@ restartprep:
 					alpha_TS = TABLE15[0].alphaS_TS*RAD;
 					T_ST = TABLE15[0].T_ST;
 					R_N = TABLE15[0].R_N;
+					tau3R = TABLE15[0].TAU3R;
+					Tt_3R = TABLE15[0].T3PR;
+					dV_BR = TABLE15[0].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = GATE2 = true;
 				}
