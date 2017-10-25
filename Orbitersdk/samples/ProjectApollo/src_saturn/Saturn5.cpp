@@ -1393,7 +1393,7 @@ void SaturnV::SetRandomFailures()
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySICutoff[i] = 1;
 				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
@@ -1402,7 +1402,7 @@ void SaturnV::SetRandomFailures()
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySIICutoff[i] = 1;
 				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);

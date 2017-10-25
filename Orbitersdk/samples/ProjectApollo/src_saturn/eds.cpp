@@ -561,8 +561,8 @@ void EDSSV::Timestep(double simdt)
 			int i = 0;
 			while (i < 5) {
 				ThrustOK[i] = iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.90;
-				if (ThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i + 1); }
-				if (!ThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i + 1); }
+				if (ThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIEngInd[i]); }
+				if (!ThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIEngInd[i]); }
 				i++;
 			}
 		}
@@ -576,8 +576,8 @@ void EDSSV::Timestep(double simdt)
 		if ((SIIEngineOutIndicationA && EDSBus1Powered) || (SIIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i + 1); }
-				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i + 1); }
+				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
+				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
 				i++;
 			}
 		}

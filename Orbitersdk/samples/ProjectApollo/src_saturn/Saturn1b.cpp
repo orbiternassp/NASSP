@@ -711,7 +711,7 @@ void Saturn1b::SetRandomFailures()
 
 		for (int i = 0;i < 8;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySICutoff[i] = 1;
 				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);

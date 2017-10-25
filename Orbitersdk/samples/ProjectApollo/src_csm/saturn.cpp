@@ -355,6 +355,8 @@ void Saturn::initSaturn()
 	FireTJM = false;
 	FirePCM = false;
 
+	FailureMultiplier = 1.0;
+
 	DeleteLaunchSite = true;
 
 	buildstatus = 6;
@@ -1149,6 +1151,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	char str[256];
 
 	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
+	if (stage < LAUNCH_STAGE_SIVB)
+	{
+		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
+	}
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
@@ -1577,6 +1583,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "NASSPVER", 8)) {
 		sscanf (line + 8, "%d", &nasspver);
+	}
+	else if (!strnicmp(line, "FAILUREMULTIPLIER", 17)) {
+		sscanf(line + 17, "%lf", &FailureMultiplier);
 	}
 	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 		sscanf (line+11, "%d", &buildstatus);
@@ -4461,7 +4470,7 @@ void Saturn::SetRandomFailures()
 	bool PlatformFailure;
 	double PlatformFailureTime;
 
-	if (!(random() & 63))
+	if (!(random() & (int)(127.0 / FailureMultiplier)))
 	{
 		PlatformFailure = true;
 		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);

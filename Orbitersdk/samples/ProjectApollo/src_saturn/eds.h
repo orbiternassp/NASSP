@@ -127,4 +127,8 @@ protected:
 	double SecondStageFailureTime[5];
 
 	bool ThrustOK[5];
+
+private:
+	const int SIEngInd[5] = { 4,2,1,3,5 };
+	const int SIIEngInd[5] = { 2,4,1,3,5 };
 };
