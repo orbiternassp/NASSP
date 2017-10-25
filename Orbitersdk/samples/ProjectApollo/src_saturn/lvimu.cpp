@@ -58,6 +58,7 @@ void LVIMU::Init()
 	Caged = false;
 	ZeroIMUCDUFlag = false;
 	CoarseAlignEnableFlag = false;
+	Failed = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -117,6 +118,17 @@ void LVIMU::SetCaged(bool val)
 			ZeroIMUCDUs();
 		}
 	}
+}
+
+bool LVIMU::IsFailed()
+
+{
+	return Failed;
+}
+
+void LVIMU::SetFailed()
+{
+	Failed = true;
 }
 
 //
@@ -254,6 +266,12 @@ void LVIMU::Timestep(double mjd)
 			DriveGimbalX(-newAngles.x - Gimbal.X);
 		  	DriveGimbalY(-newAngles.y - Gimbal.Y);
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
+
+			/*if (Failed)
+			{
+				double failang = 20.0*RAD*deltaTime;
+				Orbiter.AttitudeReference = mul(Orbiter.AttitudeReference, _M(1.0, 0.0, 0.0, 0.0, cos(failang), -sin(failang), 0.0, sin(failang), cos(failang)));
+			}*/
 
 			// PIPAs
 			accel = tmul(Orbiter.AttitudeReference, accel);
@@ -432,6 +450,7 @@ typedef union
 		unsigned TurnedOn:1;
 		unsigned Initialized:1;
 		unsigned Caged:1;
+		unsigned Failed:1;
 	} u;
 	unsigned long word;
 } IMUState;
@@ -565,6 +584,7 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			Initialized = (state.u.Initialized != 0);
 			TurnedOn = (state.u.TurnedOn != 0);
 			Caged = (state.u.Caged != 0);
+			Failed = (state.u.Failed != 0);
 		}
 	}
 }
@@ -614,6 +634,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	state.u.TurnedOn = TurnedOn;
 	state.u.Initialized = Initialized;
 	state.u.Caged = Caged;
+	state.u.Failed = Failed;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 

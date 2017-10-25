@@ -58,6 +58,8 @@ public:
 	bool IsCaged();
 	bool IsPowered();
 	void SetCaged(bool val);
+	void SetFailed();
+	bool IsFailed();
 	void ZeroPIPACounters();
 
 	void LoadState(FILEHANDLE scn);
@@ -107,6 +109,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	bool TurnedOn;
 	bool Initialized;
 	bool Caged;
+	bool Failed;
 
 	union {
 		struct {

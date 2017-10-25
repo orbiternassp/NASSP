@@ -363,6 +363,7 @@ public:
 	virtual FCC* GetFCC() = 0;
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
+	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
 
 	void ControlDistributor(int stage, int channel);
 

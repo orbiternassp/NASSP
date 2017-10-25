@@ -968,18 +968,12 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 15:
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;
 		if (LaunchS.isValid() && !LaunchS.isPlaying()){			// And play launch sound			
 			LaunchS.play(NOLOOP,255);
 			LaunchS.done();
 		}
-		break;
-	case 16:
-		SetThrusterResource(th_main[4], NULL); // Should stop the engine
-		SShutS.play(NOLOOP, 235);
-		SShutS.done();
 		break;
 	case 17:
 		// Move hidden S1C
@@ -1077,6 +1071,9 @@ void SaturnV::SISwitchSelector(int channel)
 	case 7: //Fuel Pressurizing Valve No. 4 Open
 		break;
 	case 8: //Inboard Engine Cutoff
+		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
 		break;
 	case 9: //Outboard Engines Cutoff Enable
 		break;
@@ -1103,6 +1100,7 @@ void SaturnV::SISwitchSelector(int channel)
 		break;
 		break;
 	case 16: //Inboard Engine Cutoff Backup
+		SetThrusterResource(th_main[4], NULL);
 		break;
 	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
 		break;
@@ -1395,7 +1393,7 @@ void SaturnV::SetRandomFailures()
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySICutoff[i] = 1;
 				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
@@ -1404,7 +1402,7 @@ void SaturnV::SetRandomFailures()
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySIICutoff[i] = 1;
 				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);

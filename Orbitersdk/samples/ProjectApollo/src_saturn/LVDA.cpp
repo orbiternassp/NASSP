@@ -103,7 +103,7 @@ bool LVDA::GetSIIEngineOut()
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()
 {
-	if ((iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
 		return true;
 
 	return false;
@@ -111,8 +111,20 @@ bool LVDA::GetCMCSIVBIgnitionSequenceStart()
 
 bool LVDA::GetCMCSIVBShutdown()
 {
-	if (iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
 		return true;
 
 	return false;
+}
+
+bool LVDA::GetCMCSIVBTakeover()
+{
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+bool LVDA::GetLVIMUFailure()
+{
+	return iu->lvimu.IsFailed();
 }

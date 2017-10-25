@@ -386,7 +386,6 @@ void Saturn1b::SwitchSelector(int item){
 		break;
 	case 15:
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		agc.SetInputChannelBit(030, LiftOff, true);					// Inform AGC of liftoff
 		SetThrusterGroupLevel(thg_main, 1.0);				// Set full thrust, just in case
 		contrailLevel = 1.0;
 		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
@@ -394,53 +393,70 @@ void Saturn1b::SwitchSelector(int item){
 			LaunchS.done();
 		}
 		break;
-	case 16:
-		SetThrusterResource(th_main[4], NULL);
-		SetThrusterResource(th_main[5], NULL);
-		SetThrusterResource(th_main[6], NULL);
-		SetThrusterResource(th_main[7], NULL);
-		SShutS.play(NOLOOP,235);
-		SShutS.done();
-		break;
-	case 17:
-		// Move hidden S1B
-		if(hstg1){
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
-			stage1->DefSetState(&vs);
-		}				
-		// Engine Shutdown
-		for (i = 0; i < 5; i++){
-			SetThrusterResource(th_main[i], NULL);
-		}
-		break;
-	case 18:
-		ClearEngineIndicators();
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		AddRCS_S4B();
-		SetSIVBThrusters(true);
-		SetThrusterGroupLevel(thg_ver,1.0);
-		SetThrusterResource(th_main[0], ph_3rd);
-		SetSIVBMixtureRatio(5.5);				
-		break;
-	case 23:
-		SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-		SPUShiftS.play(NOLOOP,255); 
-		SPUShiftS.done();
-		break;
 	}
 }
 
 void Saturn1b::SISwitchSelector(int channel)
 {
+	if (stage > LAUNCH_STAGE_ONE) return;
 
+	switch (channel)
+	{
+	case 18: //Outboard Engines Cutoff
+		// Move hidden S1B
+		if (hstg1) {
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs);
+		}
+		// Engine Shutdown
+		for (int i = 0; i < 5; i++) {
+			SetThrusterResource(th_main[i], NULL);
+		}
+		break;
+	case 23: //S-IB/S-IVB Separation On
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
+		SetSIVBThrusters(true);
+		SetThrusterGroupLevel(thg_ver, 1.0);
+		SetThrusterResource(th_main[0], ph_3rd);
+		break;
+	case 98: //Inboard Engines Cutoff
+		SetThrusterResource(th_main[4], NULL);
+		SetThrusterResource(th_main[5], NULL);
+		SetThrusterResource(th_main[6], NULL);
+		SetThrusterResource(th_main[7], NULL);
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
+		break;
+	default:
+		break;
+	}
 }
 
 void Saturn1b::SIVBSwitchSelector(int channel)
 {
+	if (stage >= CSM_LEM_STAGE) return;
 
+	switch (channel)
+	{
+	case 32: //P.U. Mixture Ratio 4.5 On
+		SetSIVBMixtureRatio(4.5); // Is this 4.7 or 4.2? AP8 says 4.5
+		SPUShiftS.play(NOLOOP, 255);
+		SPUShiftS.done();
+		break;
+	case 33: //P.U. Mixture Ratio 4.5 Off
+		break;
+	case 34: //P.U. Mixture Ratio 5.5 On
+		SetSIVBMixtureRatio(5.5);
+		break;
+	case 35: //P.U. Mixture Ratio 5.5 Off
+		break;
+	default:
+		break;
+	}
 }
 
 
@@ -695,7 +711,7 @@ void Saturn1b::SetRandomFailures()
 
 		for (int i = 0;i < 8;i++)
 		{
-			if (!(random() & 63))
+			if (!(random() & (int)(127.0 / FailureMultiplier)))
 			{
 				EarlySICutoff[i] = 1;
 				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);

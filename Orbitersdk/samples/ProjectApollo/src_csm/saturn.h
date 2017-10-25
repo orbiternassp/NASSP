@@ -3804,6 +3804,8 @@ protected:
 	bool FireTJM;
 	bool FirePCM;
 
+	double FailureMultiplier;
+
 	OBJHANDLE hEVA;
 
 	SoundLib soundlib;

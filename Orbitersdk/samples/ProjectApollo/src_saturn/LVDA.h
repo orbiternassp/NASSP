@@ -49,6 +49,8 @@ public:
 	bool GetSIIEngineOut();
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBShutdown();
+	bool GetCMCSIVBTakeover();
+	bool GetLVIMUFailure();
 protected:
 	IU *iu;
 };
