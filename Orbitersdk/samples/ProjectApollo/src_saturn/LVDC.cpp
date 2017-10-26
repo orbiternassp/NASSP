@@ -5533,19 +5533,17 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					MRS = true;
 				}
 
-				// After MRS, check for S2 OECO (was allowed to happen by itself)
-				if(MRS == true){
-					if(lvda.GetSIIPropellantDepletionEngineCutoff()){
-						fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
-						// S2 OECO, start TB4
-						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
-						S2_BURNOUT = true;
-						MRS = false;
-						TB4 = TAS;
-						LVDC_Timebase = 4;
-						LVDC_TB_ETime = 0;
-						CommandSequence = 0;
-					}
+				// Check for S2 OECO
+				if(lvda.GetSIIPropellantDepletionEngineCutoff() && LVDC_TB_ETime > 5.0){
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
+					// S2 OECO, start TB4
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
+					S2_BURNOUT = true;
+					MRS = false;
+					TB4 = TAS;
+					LVDC_Timebase = 4;
+					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
 				}
 				
 				if (LVDC_TB_ETime >= 1.4 && lvda.SCInitiationOfSIISIVBSeparation())
@@ -5762,7 +5760,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0)
+				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;
