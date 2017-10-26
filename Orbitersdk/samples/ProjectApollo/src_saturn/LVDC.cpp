@@ -803,15 +803,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
-				if (commandConnector->GetBECOSignal())
-				{
-					if (t_clock > 40.0)
-					{
-						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
-					}
-					LVDC_Stop = true;
-				}
-
 				//Timebase 2 initiated at certain fuel level
 
 				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetPropellantMass(lvCommandConnector->GetFirstStagePropellantHandle()) <= 24000.0 && DotS.z > 500.0) {
@@ -820,6 +811,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+				}
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
 				}
 
 				break;
@@ -868,12 +864,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				default:
 					break;
 				}
-
-				if (commandConnector->GetBECOSignal())
-				{
-					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
-					LVDC_Stop = true;
-				}
 				
 				// S1B OECO TRIGGER
 				// Done by low-level sensor.
@@ -886,6 +876,12 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
 				}
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
+				}
+
 				break;
 
 			case 3:
@@ -983,7 +979,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (commandConnector->GetBECOSignal() || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
+				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -998,6 +994,11 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					BOOST = false;
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+				}
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
 				}
 
 				break;
@@ -4713,10 +4714,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 		// Note that GenericTimestep will update MissionTime.
 
 		//Switch Check
-		INH = commandConnector->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
+		INH = lvda.SIVBInjectionDelay();
 		
 		//Reset Direct Staging switch for S-IVB shutdown
-		if (directstageint && !directstagereset && commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_DOWN)
+		if (directstageint && !directstagereset && !lvda.SCInitiationOfSIISIVBSeparation())
 		{
 			directstagereset = true;
 		}
@@ -4877,12 +4878,12 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					CommandSequence++;
 					break;
 				case 1:
-					//TB1+5: Sensor Bias On
+					//TB1+5.0: Sensor Bias On
 					if (LVDC_TB_ETime > 5.0)
 						CommandSequence++;
 					break;
 				case 2:
-					//TB1+14: Multiple Engine Cutoff Enable
+					//TB1+14.0: Multiple Engine Cutoff Enable
 					if (LVDC_TB_ETime > 14.0)
 						CommandSequence++;
 					break;
@@ -5078,15 +5079,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				  lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
-				if (commandConnector->GetBECOSignal())
-				{
-					if (t_clock > 30.0)
-					{
-						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
-					}
-					LVDC_Stop = true;
-				}
-
 				// S1C CECO TRIGGER:
 				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO && DotS.z > 500.0){
 					S1_Engine_Out = true;
@@ -5097,6 +5089,12 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					CommandSequence = 0;
 					break;
 				}
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
+				}
+
 				break;
 
 			case 2:
@@ -5197,12 +5195,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					break;
 				}
 
-				if (commandConnector->GetBECOSignal())
-				{
-					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
-					LVDC_Stop = true;
-				}
-
 				// S1B/C OECO TRIGGER
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
@@ -5219,6 +5211,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					CommandSequence = 0;
 				}
 				break;
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
+				}
 
 			case 3:
 				switch (CommandSequence)
@@ -5508,9 +5505,13 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					S1_Sep_Time = 0; // All done
 				}
 
-				if (commandConnector->GetBECOSignal())
+				if (lvda.SpacecraftSeparationIndication())
 				{
-					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);			// Kill the engines
+					if (LVDC_TB_ETime >= 1.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
+					}
+
 					LVDC_Stop = true;
 				}
 
@@ -5534,11 +5535,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// After MRS, check for S2 OECO (was allowed to happen by itself)
 				if(MRS == true){
-					double oetl = lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(1))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(2))+ lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(3));
-					if(oetl == 0){
+					if(lvda.GetSIIPropellantDepletionEngineCutoff()){
 						fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
 						// S2 OECO, start TB4
-						lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 						S2_BURNOUT = true;
 						MRS = false;
 						TB4 = TAS;
@@ -5548,12 +5548,12 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					}
 				}
 				
-				if (LVDC_TB_ETime >= 1.4 && commandConnector->SIISIVbSwitchState())
+				if (LVDC_TB_ETime >= 1.4 && lvda.SCInitiationOfSIISIVBSeparation())
 				{
 					lvCommandConnector->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 					directstageint = true;
 					directstagereset = false;
-					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), 0);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
 					MRS = false;
 					TB4a = TAS;
@@ -5569,6 +5569,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					//TB4+0.0: Cutoff S-II Engines
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					CommandSequence++;
 					break;
 				case 1:
@@ -5761,7 +5762,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()))
+				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0)
 				{
 					S4B_IGN = false;
 					TB5 = TAS;
@@ -5777,6 +5778,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					BOOST = false;
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+				}
+
+				if (lvda.SpacecraftSeparationIndication())
+				{
+					LVDC_Stop = true;
 				}
 				break;
 			case 5:
@@ -6641,8 +6647,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset)
-					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()
+				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
+					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0
 					|| ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && lvda.GetCMCSIVBShutdown())))
 				{
 					S4B_REIGN = false;
@@ -6663,7 +6669,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//CSM separation detection
-				if (lvCommandConnector->CSMSeparationSensed() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
+				if (lvda.SpacecraftSeparationIndication() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
 				{
 					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
 					TB5a = TAS;
@@ -7153,7 +7159,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((commandConnector->SIISIVbSwitchState() == TOGGLESWITCH_UP && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || commandConnector->GetBECOSignal()))
+				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;

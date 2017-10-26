@@ -1161,7 +1161,7 @@ public:
 	int GetLVRateAutoSwitchState();
 	int GetTwoEngineOutAutoSwitchState();
 
-	bool GetBECOSignal();
+	bool GetBECOSignal(bool IsSysA);
 	bool IsEDSBusPowered(int eds);
 	int GetAGCAttitudeError(int axis);
 

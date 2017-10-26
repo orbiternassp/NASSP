@@ -45,12 +45,19 @@ public:
 	void ReleaseLVIMU();
 	void DriveLVIMUGimbals(double x, double y, double z);
 	VECTOR3 GetLVIMUPIPARegisters();
+	bool GetLVIMUFailure();
+
+	//LVDC Input Discretes and Interrupts
+
 	bool GetSIEngineOut();
 	bool GetSIIEngineOut();
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBShutdown();
 	bool GetCMCSIVBTakeover();
-	bool GetLVIMUFailure();
+	bool SIVBInjectionDelay();
+	bool SCInitiationOfSIISIVBSeparation();
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool SpacecraftSeparationIndication();
 protected:
 	IU *iu;
 };

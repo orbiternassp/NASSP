@@ -87,6 +87,9 @@ protected:
 	bool AutoAbortEnableRelayB;
 	bool LiftoffA;
 	bool LiftoffB;
+	bool LVEnginesCutoff1;
+	bool LVEnginesCutoff2;
+	bool LVEnginesCutoff3;
 
 	//Common Saturn Failures
 	bool PlatformFailure;

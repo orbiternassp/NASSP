@@ -768,10 +768,10 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_GET_BECO_SIGNAL:
+	case IUCSM_GET_BECO_COMMAND:
 		if (OurVessel)
 		{
-			m.val1.bValue = OurVessel->GetBECOSignal();
+			m.val2.bValue = OurVessel->GetBECOSignal(m.val1.bValue);
 			return true;
 		}
 		break;
