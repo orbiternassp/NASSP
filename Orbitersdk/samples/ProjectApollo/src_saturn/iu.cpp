@@ -1749,7 +1749,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector, &commandConnector);
+		lvdc->Init(&lvCommandConnector);
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
@@ -1888,7 +1888,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector, &commandConnector);
+		lvdc->Init(&lvCommandConnector);
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);

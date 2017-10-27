@@ -49,17 +49,10 @@ LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 
 }
 
-void LVDC::Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc)
-{
-	lvCommandConnector = lvc;
-	commandConnector = csmc;
-}
-
 // Constructor
 LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 {
 	lvCommandConnector = NULL;
-	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
@@ -322,9 +315,9 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	CommandSequence = 0;
 }
 
-void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
+void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	if(Initialized == true){ 
-		if(commandConnector == commandConn){
+		if(lvCommandConnector == lvCommandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -334,7 +327,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 		}
 	}
 	lvCommandConnector = lvCommandConn;
-	commandConnector = commandConn;
 	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -2698,7 +2690,6 @@ double LVDC1B::SVCompare()
 LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 {
 	lvCommandConnector = NULL;
-	commandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 
@@ -3076,9 +3067,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 }
 
 // Setup
-void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn){
+void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	if(Initialized == true){ 
-		if(commandConnector == commandConn){
+		if(lvCommandConnector == lvCommandConn){
 			fprintf(lvlog,"init called after init, ignored\r\n");
 			fflush(lvlog);
 			return;
@@ -3088,7 +3079,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 		}
 	}
 	lvCommandConnector = lvCommandConn;
-	commandConnector = commandConn;
 
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
