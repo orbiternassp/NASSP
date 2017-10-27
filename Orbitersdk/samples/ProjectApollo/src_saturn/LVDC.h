@@ -73,7 +73,6 @@ private:								// Saturn LV
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
-	double S1_Sep_Time;								// S1C Separation Counter
 
 	double BoiloffTime;
 

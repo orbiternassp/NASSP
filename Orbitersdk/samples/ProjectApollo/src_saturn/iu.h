@@ -362,7 +362,9 @@ public:
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 
+	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIVBEngineOut();
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }

@@ -58,6 +58,8 @@ public:
 	bool SCInitiationOfSIISIVBSeparation();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool SpacecraftSeparationIndication();
+	bool GetSIVBEngineOut();
+	bool GetSIPropellantDepletionEngineCutoff();
 protected:
 	IU *iu;
 };

@@ -867,7 +867,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				
 				// S1B OECO TRIGGER
 				// Done by low-level sensor.
-				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetFuelMass() <= 0){
+				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
 						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)), lvCommandConnector->GetAltitude());
@@ -2925,7 +2925,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	S_12 = 0;
 	S_P = 0;
 	S_Y = 0;
-	S1_Sep_Time = 0;
 	sinceLastCycle = 0;
 	sinceLastGuidanceCycle = 0;
 	sin_chi_Yit = 0;
@@ -3424,7 +3423,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector
 	OrbNavCycle = 0;
 	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
-	S1_Sep_Time = 0;
 	CountPIPA = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
@@ -3864,7 +3862,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_S_12", S_12);
 	papiWriteScenario_double(scn, "LVDC_S_P", S_P);
 	papiWriteScenario_double(scn, "LVDC_S_Y", S_Y);
-	papiWriteScenario_double(scn, "LVDC_S1_Sep_Time", S1_Sep_Time);
 	papiWriteScenario_double(scn, "LVDC_sinceLastCycle", sinceLastCycle);
 	papiWriteScenario_double(scn, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Yit", sin_chi_Yit);
@@ -4505,7 +4502,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_S_12", S_12);
 		papiReadScenario_double(line, "LVDC_S_P", S_P);
 		papiReadScenario_double(line, "LVDC_S_Y", S_Y);
-		papiReadScenario_double(line, "LVDC_S1_Sep_Time", S1_Sep_Time);
 		papiReadScenario_double(line, "LVDC_sinceLastCycle", sinceLastCycle);
 		papiReadScenario_double(line, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 		papiReadScenario_double(line, "LVDC_sin_chi_Yit", sin_chi_Yit);
@@ -5198,12 +5194,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// S1B/C OECO TRIGGER
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
-				if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetFuelMass() <= 0){
+				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
 					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)),lvCommandConnector->GetAltitude());
 					lvCommandConnector->SwitchSelector(17);
-					// Set timer
-					S1_Sep_Time = lvCommandConnector->GetMissionTime();
 					// Begin timebase 3
 					TB3 = TAS;
 					LVDC_Timebase = 3;
@@ -5502,7 +5496,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 					lvCommandConnector->SwitchSelector(20);
 					S2_IGNITION = true;
-					S1_Sep_Time = 0; // All done
 				}
 
 				if (lvda.SpacecraftSeparationIndication())
@@ -7157,7 +7150,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0))
+				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvda.GetSIVBEngineOut()))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;

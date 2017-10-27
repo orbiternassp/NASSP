@@ -158,8 +158,29 @@ void IU::ConnectToLV(Connector *CommandConnector)
 	lvCommandConnector.ConnectTo(CommandConnector);
 }
 
+bool IU::GetSIPropellantDepletionEngineCutoff()
+{
+	int stage = lvCommandConnector.GetStage();
+	if (stage != LAUNCH_STAGE_ONE) return false;
+
+	if (lvCommandConnector.GetFuelMass() <= 0) return true;
+
+	return false;
+}
+
 bool IU::GetSIIPropellantDepletionEngineCutoff()
 {
+	return false;
+}
+
+bool IU::GetSIVBEngineOut()
+{
+	int stage = lvCommandConnector.GetStage();
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
+
+	double oetl = lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(0));
+	if (oetl == 0) return true;
+
 	return false;
 }
 
