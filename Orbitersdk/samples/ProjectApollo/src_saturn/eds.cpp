@@ -58,6 +58,9 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	AutoAbortEnableRelayB = false;
 	LiftoffA = false;
 	LiftoffB = false;
+	LVEnginesCutoff1 = false;
+	LVEnginesCutoff2 = false;
+	LVEnginesCutoff3 = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
@@ -98,6 +101,10 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIENGINEOUT", SI_Engine_Out);
 	papiWriteScenario_bool(scn, "SIIENGINEOUT", SII_Engine_Out);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFF1", LVEnginesCutoff1);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -131,6 +138,10 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIENGINEOUT", SI_Engine_Out);
 		papiReadScenario_bool(line, "SIIENGINEOUT", SII_Engine_Out);
+		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
+		papiReadScenario_bool(line, "LVENGINESCUTOFF1", LVEnginesCutoff1);
+		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
+		papiReadScenario_bool(line, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 
 	}
 }
@@ -191,6 +202,9 @@ void EDS1B::Timestep(double simdt)
 	bool EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
 	bool EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
 
+	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
+	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
+
 	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
 	{
 		TwoEngOutAutoAbortDeactivate = true;
@@ -209,6 +223,48 @@ void EDS1B::Timestep(double simdt)
 	{
 		ExcessRatesAutoAbortDeactivatePY = false;
 		ExcessRatesAutoAbortDeactivateR = false;
+	}
+
+	if (LVEnginesCutoffEnable)
+	{
+		if (BECOA)
+		{
+			LVEnginesCutoff1 = true;
+		}
+		else
+		{
+			LVEnginesCutoff1 = false;
+		}
+
+		if (BECOA && BECOB)
+		{
+			LVEnginesCutoff2 = true;
+		}
+		else
+		{
+			LVEnginesCutoff2 = false;
+		}
+
+		if (BECOB)
+		{
+			LVEnginesCutoff3 = true;
+		}
+		else
+		{
+			LVEnginesCutoff3 = false;
+		}
+	}
+	else
+	{
+		LVEnginesCutoff1 = false;
+		LVEnginesCutoff2 = false;
+		LVEnginesCutoff3 = false;
+	}
+
+	//EDS Engine Cutoff
+	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
+	{
+		iu->GetLVCommandConnector()->SetThrusterGroupLevel(iu->GetLVCommandConnector()->GetMainThrusterGroup(), 0);
 	}
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
@@ -446,6 +502,9 @@ void EDSSV::Timestep(double simdt)
 	bool EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
 	bool EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
 
+	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
+	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
+
 	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
 	{
 		TwoEngOutAutoAbortDeactivate = true;
@@ -464,6 +523,48 @@ void EDSSV::Timestep(double simdt)
 	{
 		ExcessRatesAutoAbortDeactivatePY = false;
 		ExcessRatesAutoAbortDeactivateR = false;
+	}
+
+	if (LVEnginesCutoffEnable)
+	{
+		if (BECOA)
+		{
+			LVEnginesCutoff1 = true;
+		}
+		else
+		{
+			LVEnginesCutoff1 = false;
+		}
+
+		if (BECOA && BECOB)
+		{
+			LVEnginesCutoff2 = true;
+		}
+		else
+		{
+			LVEnginesCutoff2 = false;
+		}
+
+		if (BECOB)
+		{
+			LVEnginesCutoff3 = true;
+		}
+		else
+		{
+			LVEnginesCutoff3 = false;
+		}
+	}
+	else
+	{
+		LVEnginesCutoff1 = false;
+		LVEnginesCutoff2 = false;
+		LVEnginesCutoff3 = false;
+	}
+
+	//EDS Engine Cutoff
+	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
+	{
+		iu->GetLVCommandConnector()->SetThrusterGroupLevel(iu->GetLVCommandConnector()->GetMainThrusterGroup(), 0);
 	}
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;

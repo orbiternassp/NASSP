@@ -4576,9 +4576,11 @@ int Saturn::GetTwoEngineOutAutoSwitchState()
 	return TwoEngineOutAutoSwitch.GetState();
 }
 
-bool Saturn::GetBECOSignal()
+bool Saturn::GetBECOSignal(bool IsSysA)
 {
-	return secs.BECO();
+	if (IsSysA) return secs.MESCA.BECO();
+
+	return secs.MESCB.BECO();
 }
 
 bool Saturn::IsEDSBusPowered(int eds)

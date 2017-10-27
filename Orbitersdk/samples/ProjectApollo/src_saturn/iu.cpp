@@ -76,13 +76,7 @@ void IU::SetMissionInfo(bool tlicapable, bool crewed)
 }
 
 void IU::Timestep(double misst, double simt, double simdt, double mjd)
-
 {
-	if (lvdc != NULL) {
-		lvimu.Timestep(mjd);
-		lvrg.Timestep(simdt);
-	}
-
 	//
 	// Update mission time.
 	//
@@ -94,6 +88,11 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		FirstTimeStepDone = true;
 		return;
 	}
+
+	if (lvdc == NULL) return;
+
+	lvimu.Timestep(mjd);
+	lvrg.Timestep(simdt);
 
 	if (lvdc->GetGuidanceReferenceFailure())
 	{
@@ -157,6 +156,11 @@ void IU::ConnectToLV(Connector *CommandConnector)
 
 {
 	lvCommandConnector.ConnectTo(CommandConnector);
+}
+
+bool IU::GetSIIPropellantDepletionEngineCutoff()
+{
+	return false;
 }
 
 void IU::DisconnectIU()
@@ -468,16 +472,17 @@ int IUToCSMCommandConnector::TwoEngineOutAutoSwitchState()
 	return -1;
 }
 
-bool IUToCSMCommandConnector::GetBECOSignal()
+bool IUToCSMCommandConnector::GetBECOCommand(bool IsSysA)
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_BECO_SIGNAL;
+	cm.messageType = IUCSM_GET_BECO_COMMAND;
+	cm.val1.bValue = IsSysA;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.bValue;
+		return cm.val2.bValue;
 	}
 
 	return false;
@@ -1872,6 +1877,17 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 			lvimu.LoadState(scn);
 		}
 	}
+}
+
+bool IUSV::GetSIIPropellantDepletionEngineCutoff()
+{
+	int stage = lvCommandConnector.GetStage();
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+
+	double oetl = lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(0)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(1)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(2)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(3));
+	if (oetl == 0) return true;
+
+	return false;
 }
 
 void IUSV::SaveFCC(FILEHANDLE scn)

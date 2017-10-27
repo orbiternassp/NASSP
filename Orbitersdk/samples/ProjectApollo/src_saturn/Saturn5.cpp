@@ -330,6 +330,14 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	MixtureRatio = ratio;
 }
 
+void SaturnV::SetSIIThrustLevel(double lvl)
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
+	if (!thg_main) return;
+
+	SetThrusterGroupLevel(thg_main, lvl);
+}
+
 void SaturnV::MoveEVA()
 
 {
@@ -1133,6 +1141,9 @@ void SaturnV::SIISwitchSelector(int channel)
 	case 9: //Stop First PAM - FM/FM Calibration
 		break;
 	case 11: //S-II Ordnance Arm
+		break;
+	case 18: //S-II Engines Cutoff
+		SetSIIThrustLevel(0.0);
 		break;
 	case 24: //S-II Ullage Trigger
 		break;

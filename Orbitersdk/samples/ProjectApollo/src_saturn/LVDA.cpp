@@ -128,3 +128,23 @@ bool LVDA::GetLVIMUFailure()
 {
 	return iu->lvimu.IsFailed();
 }
+
+bool LVDA::SIVBInjectionDelay()
+{
+	return iu->GetCommandConnector()->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
+}
+
+bool LVDA::SCInitiationOfSIISIVBSeparation()
+{
+	return iu->GetCommandConnector()->SIISIVbSwitchState() == TOGGLESWITCH_UP;
+}
+
+bool LVDA::GetSIIPropellantDepletionEngineCutoff()
+{
+	return iu->GetSIIPropellantDepletionEngineCutoff();
+}
+
+bool LVDA::SpacecraftSeparationIndication()
+{
+	return iu->GetLVCommandConnector()->CSMSeparationSensed();
+}

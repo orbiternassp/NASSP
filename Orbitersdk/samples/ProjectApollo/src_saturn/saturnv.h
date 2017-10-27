@@ -101,6 +101,7 @@ private:
 	MESHHANDLE GetInterstageMesh();
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
+	void SetSIIThrustLevel(double lvl);
 	void MoveEVA();
 
 	void SeparateStage (int stage);
