@@ -158,3 +158,13 @@ bool LVDA::GetSIPropellantDepletionEngineCutoff()
 {
 	return iu->GetSIPropellantDepletionEngineCutoff();
 }
+
+void LVDA::TLIBegun()
+{
+	iu->GetCommandConnector()->TLIBegun();
+}
+
+void LVDA::TLIEnded()
+{
+	iu->GetCommandConnector()->TLIEnded();
+}

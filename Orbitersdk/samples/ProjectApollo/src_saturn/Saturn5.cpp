@@ -1009,7 +1009,6 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 19:
 		// S2 Engine Startup
-		SIISepState = true;
 		SetSIICMixtureRatio(5.5);
 		DeactivateStagingVent();
 		break;

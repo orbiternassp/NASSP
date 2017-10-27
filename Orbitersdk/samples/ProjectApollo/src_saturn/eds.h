@@ -90,6 +90,7 @@ protected:
 	bool LVEnginesCutoff1;
 	bool LVEnginesCutoff2;
 	bool LVEnginesCutoff3;
+	bool SecondPlaneSeparationMonitorRelay;
 
 	//Common Saturn Failures
 	bool PlatformFailure;

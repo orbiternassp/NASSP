@@ -60,6 +60,10 @@ public:
 	bool SpacecraftSeparationIndication();
 	bool GetSIVBEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
+
+	//Not real LVDA functions
+	void TLIBegun();
+	void TLIEnded();
 protected:
 	IU *iu;
 };

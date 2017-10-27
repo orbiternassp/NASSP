@@ -61,6 +61,7 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	LVEnginesCutoff1 = false;
 	LVEnginesCutoff2 = false;
 	LVEnginesCutoff3 = false;
+	SecondPlaneSeparationMonitorRelay = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
@@ -105,6 +106,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF1", LVEnginesCutoff1);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF3", LVEnginesCutoff3);
+	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -142,6 +144,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "LVENGINESCUTOFF1", LVEnginesCutoff1);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF3", LVEnginesCutoff3);
+		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
 
 	}
 }
@@ -501,6 +504,7 @@ void EDSSV::Timestep(double simdt)
 	bool EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
 	bool EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
 	bool EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
+	bool EDSPowered = EDSBus1Powered || EDSBus2Powered || EDSBus3Powered;
 
 	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
@@ -701,6 +705,18 @@ void EDSSV::Timestep(double simdt)
 		break;
 	default:
 		break;
+	}
+
+	//Second Plane Separation Monitor
+	if (Stage == LAUNCH_STAGE_TWO && !SecondPlaneSeparationMonitorRelay && EDSPowered)
+	{
+		SecondPlaneSeparationMonitorRelay = true;
+		iu->GetCommandConnector()->SetSIISep();
+	}
+	else if ((Stage != LAUNCH_STAGE_TWO || !EDSPowered) && SecondPlaneSeparationMonitorRelay)
+	{
+		SecondPlaneSeparationMonitorRelay = false;
+		iu->GetCommandConnector()->ClearSIISep();
 	}
 
 	if (Stage == PRELAUNCH_STAGE)

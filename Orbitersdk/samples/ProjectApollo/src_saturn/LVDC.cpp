@@ -5364,7 +5364,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 30.7)
 					{
 						lvCommandConnector->SwitchSelector(21);
-						commandConnector->ClearSIISep();
 						CommandSequence++;
 					}
 					break;
@@ -6103,7 +6102,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 0:
 					//TB6+0.0:Begin Restart Preparations
 					poweredflight = true;
-					commandConnector->TLIBegun();
+					lvda.TLIBegun();
 					CommandSequence++;
 					break;
 				case 1:
@@ -6639,8 +6638,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0
-					|| ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && lvda.GetCMCSIVBShutdown())))
+					|| lvCommandConnector->GetThrusterLevel(lvCommandConnector->GetMainThruster(0)) == 0 || (lvda.GetCMCSIVBShutdown())))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;
@@ -6656,7 +6654,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					BOOST = false;
 
 					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
-					commandConnector->TLIEnded();
+					lvda.TLIEnded();
 				}
 
 				//CSM separation detection
@@ -8973,7 +8971,7 @@ minorloop:
 			LVDC_TB_ETime = 0;
 			CommandSequence = 0;
 			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
-			commandConnector->TLIEnded();
+			lvda.TLIEnded();
 		}
 
 		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
