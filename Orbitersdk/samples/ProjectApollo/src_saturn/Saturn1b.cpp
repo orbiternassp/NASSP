@@ -384,15 +384,6 @@ void Saturn1b::SwitchSelector(int item){
 	case 14:
 		DeactivatePrelaunchVenting();
 		break;
-	case 15:
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_main, 1.0);				// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
-			LaunchS.play(NOLOOP, 255);
-			LaunchS.done();
-		}
-		break;
 	}
 }
 
@@ -402,6 +393,15 @@ void Saturn1b::SISwitchSelector(int channel)
 
 	switch (channel)
 	{
+	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+		SetThrusterGroupLevel(thg_main, 1.0);				// Set full thrust, just in case
+		contrailLevel = 1.0;
+		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
+			LaunchS.play(NOLOOP, 255);
+			LaunchS.done();
+		}
+		break;
 	case 18: //Outboard Engines Cutoff
 		// Move hidden S1B
 		if (hstg1) {

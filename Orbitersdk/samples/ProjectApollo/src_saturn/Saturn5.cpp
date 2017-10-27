@@ -940,18 +940,6 @@ void SaturnV::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
-	case 5:
-		// S4B Startup
-		SetSIVbCMixtureRatio(4.946);
-		break;
-	case 6:
-		// S4B restart
-		SetSIVbCMixtureRatio(4.5);
-		break;
-	case 7:
-		// S4B MRS
-		SetSIVbCMixtureRatio(4.946);
-		break;
 	case 10:
 		DeactivatePrelaunchVenting();
 		break;
@@ -973,15 +961,6 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 14:
 		DeactivatePrelaunchVenting();
-		break;
-	case 15:
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()){			// And play launch sound			
-			LaunchS.play(NOLOOP,255);
-			LaunchS.done();
-		}
 		break;
 	case 17:
 		// Move hidden S1C
@@ -1018,41 +997,11 @@ void SaturnV::SwitchSelector(int item){
 		if(SII_UllageNum){ SetThrusterGroupLevel(thg_ull,0.0); }
 		SepS.stop();
 		break;
-	case 21:
-		SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
-		SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-		break;
-	case 22:
-		//JettisonLET();
-		break;
-	case 23:
-		// MR Shift
-		SetSIICMixtureRatio(4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-		SPUShiftS.play(NOLOOP,255); 
-		SPUShiftS.done();
-		break;
 	case 24:
 		// SII IECO
 		SetThrusterResource(th_main[4], NULL);
 		S2ShutS.play(NOLOOP, 235);
 		S2ShutS.done();
-		break;
-	case 25:
-		// SII OECO
-		break;
-	case 26:
-		// SII/SIVB Direct Staging
-		break;
-	case 27:
-		//Second Staging
-		SPUShiftS.done(); // Make sure it's done
-		ClearEngineIndicators();
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		AddRCS_S4B();
-		SetSIVBThrusters(true);
-		SetThrusterGroupLevel(thg_ver, 1.0);
-		SetThrusterResource(th_main[0], ph_3rd);
 		break;
 	}
 }
@@ -1063,6 +1012,15 @@ void SaturnV::SISwitchSelector(int channel)
 
 	switch (channel)
 	{
+	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
+		contrailLevel = 1.0;
+		if (LaunchS.isValid() && !LaunchS.isPlaying()) {			// And play launch sound			
+			LaunchS.play(NOLOOP, 255);
+			LaunchS.done();
+		}
+		break;
 	case 1: //Telemeter Calibrate Off
 		break;
 	case 2: //Telemeter Calibrate On
@@ -1137,6 +1095,21 @@ void SaturnV::SIISwitchSelector(int channel)
 
 	switch (channel)
 	{
+	case 5: //S-II/S-IVB Separation
+		if (stage < LAUNCH_STAGE_SIVB)
+		{
+			SPUShiftS.done(); // Make sure it's done
+			ClearEngineIndicators();
+			SeparateStage(LAUNCH_STAGE_SIVB);
+			SetStage(LAUNCH_STAGE_SIVB);
+			AddRCS_S4B();
+			SetSIVBThrusters(true);
+			SetThrusterGroupLevel(thg_ver, 1.0);
+			SetThrusterResource(th_main[0], ph_3rd);
+
+			SetSIVbCMixtureRatio(4.946);
+		}
+		break;
 	case 9: //Stop First PAM - FM/FM Calibration
 		break;
 	case 11: //S-II Ordnance Arm
@@ -1144,11 +1117,25 @@ void SaturnV::SIISwitchSelector(int channel)
 	case 18: //S-II Engines Cutoff
 		SetSIIThrustLevel(0.0);
 		break;
+	case 23: //S-II Aft Interstage Separation
+		if (stage == LAUNCH_STAGE_TWO)
+		{
+			SeparateStage(LAUNCH_STAGE_TWO_ISTG_JET);
+			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+		}
+		break;
 	case 24: //S-II Ullage Trigger
 		break;
 	case 30: //Start First PAM - FM/FM Relays Reset
 		break;
 	case 38: //LH2 Tank High Pressure Vent Mode
+		break;
+	case 56: //Low (4.5) Engine MR Ratio On
+		SetSIICMixtureRatio(4.5);
+		SPUShiftS.play(NOLOOP, 255);
+		SPUShiftS.done();
+		break;
+	case 58: //High (5.5) Engine MR Ratio Off
 		break;
 	case 71: //Start Data Recorders
 		break;
@@ -1192,8 +1179,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 16: //Fuel Injector Temperature OK Bypass Reset
 		break;
 	case 17: //PU Valve Hardover Position On
+		SetSIVbCMixtureRatio(4.5);
 		break;
 	case 18: //PU Valve Hardover Position Off
+		SetSIVbCMixtureRatio(4.946);
 		break;
 	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable
 		break;

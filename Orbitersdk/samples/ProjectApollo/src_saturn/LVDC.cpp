@@ -715,7 +715,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				case 0:
 					liftoff = true;
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
-					lvCommandConnector->SwitchSelector(15);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
 					CommandSequence++;
 					break;
@@ -4857,9 +4857,9 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					liftoff = true;
-					lvCommandConnector->SwitchSelector(15);
 					// Fall into TB1
 					sinceLastCycle = 1.7 - simdt; // Rig to pass on fall-in
+					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					CommandSequence++;
 					break;
@@ -5353,7 +5353,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					//TB3+30.7: S-II Aft Interstage Separation
 					if (LVDC_TB_ETime > 30.7)
 					{
-						lvCommandConnector->SwitchSelector(21);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 23);
 						CommandSequence++;
 					}
 					break;
@@ -5511,7 +5511,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime > 284.4 && lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					lvCommandConnector->SwitchSelector(23);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 58);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 56);
 					MRS = true;
 				}
 
@@ -5592,8 +5593,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 0.8)
 					{
 						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SwitchSelector(27);
-						lvCommandConnector->SwitchSelector(5);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 5);
 						CommandSequence++;
 					}
 					break;
@@ -6315,7 +6315,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 39:
 					//TB6+450.1: PU Valve Hardover Position On
 					if (LVDC_TB_ETime > 450.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 17);
 						CommandSequence++;
+					}
 					break;
 				case 40:
 					//TB6+493.6: S-IVB Restart Alert On
@@ -6576,7 +6579,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime>= T_RG - 1.0 && S4B_REIGN == false && LVDC_TB_ETime < T_RG)
 				{
 					lvCommandConnector->SetThrusterResource(lvCommandConnector->GetMainThruster(0), lvCommandConnector->GetThirdStagePropellantHandle());
-					lvCommandConnector->SwitchSelector(6);
 				}	
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
 					lvCommandConnector->SetThrusterGroupLevel(lvCommandConnector->GetMainThrusterGroup(), ((LVDC_TB_ETime - 578.6)*0.53)); //Engine ignites at MR 4.5 and throttles up
@@ -6589,7 +6591,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
 				{
-					lvCommandConnector->SwitchSelector(7);//Final MRS
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 18);
 					MRS = true;
 				}
 
@@ -6914,8 +6916,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 1.7)
 					{
 						fprintf(lvlog, "[%d+%f] S2/S4B STAGING\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SwitchSelector(27);
-						lvCommandConnector->SwitchSelector(5);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 5);
 						CommandSequence++;
 					}
 					break;
