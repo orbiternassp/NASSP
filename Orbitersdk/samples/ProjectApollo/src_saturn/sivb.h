@@ -287,7 +287,6 @@ public:
 	///
 	double GetMissionTime();
 
-	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
 	double GetSIVBThrusterLevel();
 
 	void SetSIVBThrusterDir(VECTOR3 &dir);

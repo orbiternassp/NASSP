@@ -869,7 +869,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)), lvCommandConnector->GetAltitude());
+						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(), lvCommandConnector->GetAltitude());
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -5197,7 +5197,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0)),lvCommandConnector->GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(),lvCommandConnector->GetAltitude());
 					lvCommandConnector->SwitchSelector(17);
 					// Begin timebase 3
 					TB3 = TAS;
@@ -7996,7 +7996,7 @@ IGM:	if(HSL == false){
 				if (Ct >= Ct_o){
 					relightentry1:
 					tau3 = V_ex3/Fm;
-					fprintf(lvlog,"Normal Tau: tau3 = %f, F = %f, m = %f \r\n",tau3, lvCommandConnector->GetThrusterMax(lvCommandConnector->GetMainThruster(0))*lvCommandConnector->GetSIVBThrusterLevel(), lvCommandConnector->GetMass());
+					fprintf(lvlog,"Normal Tau: tau3 = %f\r\n",tau3);
 				}else{
 					tau3 = tau3N + (V_ex3/Fm - dt_c/2 - tau3N)*pow((Ct/Ct_o),4);
 					tau3N = tau3N - dt_c;
@@ -8039,7 +8039,7 @@ IGM:	if(HSL == false){
 				if(t_B1 <= t_B3){
 					relightentry2:
 					tau2 = V_ex2/Fm;
-					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm, lvCommandConnector->GetMass());
+					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f\r\n",tau2,Fm);
 				}else{
 					// This is the "ARTIFICIAL TAU" code.
 					t_B3 += dt_c; 
@@ -8079,7 +8079,7 @@ IGM:	if(HSL == false){
 					}					
 				}else{															
 					tau1 = V_ex1/Fm; 
-					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, lvCommandConnector->GetMass());
+					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f\r\n",tau1,Fm);
 				}
 			}
 			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");

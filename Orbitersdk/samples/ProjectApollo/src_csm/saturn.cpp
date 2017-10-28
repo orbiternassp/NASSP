@@ -4692,6 +4692,15 @@ void Saturn::ClearSIThrusterResource(int n)
 	SetThrusterResource(th_main[n], NULL);
 }
 
+void Saturn::ClearSIIThrusterResource(int n)
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
+	if (n < 0 || n > 4) return;
+	if (!th_main[n]) return;
+
+	SetThrusterResource(th_main[n], NULL);
+}
+
 void Saturn::SetSIThrusterLevel(int n, double level)
 {
 	if (stage != LAUNCH_STAGE_ONE) return;

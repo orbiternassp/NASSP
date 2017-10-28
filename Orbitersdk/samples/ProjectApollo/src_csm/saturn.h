@@ -926,7 +926,6 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
-	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 	bool GetSIISepLight() { return SIISepState; };
 
@@ -943,6 +942,7 @@ public:
 	void SetAPSThrusterLevel(int n, double level);
 	void SetVernierThrusterLevel(double level);
 	void ClearSIThrusterResource(int n);
+	void ClearSIIThrusterResource(int n);
 
 	///
 	/// \brief Triggers Virtual AGC core dump

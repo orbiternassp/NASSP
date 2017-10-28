@@ -890,6 +890,17 @@ void IUToLVCommandConnector::ClearSIThrusterResource(int n)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::ClearSIIThrusterResource(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_CLEAR_SII_THRUSTER_RESOURCE;
+	cm.val1.iValue = n;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SetSIThrusterDir(int n, VECTOR3 &dir)
 {
 	ConnectorMessage cm;
@@ -1176,40 +1187,6 @@ double IUToLVCommandConnector::GetMaxThrust(ENGINETYPE eng)
 	}
 
 	return 0.0;
-}
-
-double IUToLVCommandConnector::GetThrusterMax(THRUSTER_HANDLE th)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_THRUSTER_MAX;
-	cm.val1.pValue = th;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
-	}
-
-	return 0.0;
-}
-
-PROPELLANT_HANDLE IUToLVCommandConnector::GetThrusterResource(THRUSTER_HANDLE th)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_THRUSTER_RESOURCE;
-	cm.val1.pValue = th;
-
-	if (SendMessage(cm))
-	{
-		return (PROPELLANT_HANDLE) cm.val2.pValue;
-	}
-
-	return 0;
 }
 
 int IUToLVCommandConnector::GetStage()
@@ -1598,38 +1575,6 @@ int IUToLVCommandConnector::GetApolloNo()
 	return 0;
 }
 
-THRUSTER_HANDLE IUToLVCommandConnector::GetMainThruster(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MAIN_THRUSTER;
-	cm.val1.iValue = n;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.pValue;
-	}
-
-	return 0;
-}
-
-double IUToLVCommandConnector::GetThrusterLevel(THRUSTER_HANDLE th)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_THRUSTER_LEVEL;
-	cm.val1.pValue = th;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
-	}
-
-	return 0.0;
-}
-
 double IUToLVCommandConnector::GetSIThrusterLevel(int n)
 {
 	ConnectorMessage cm;
@@ -1672,22 +1617,6 @@ double IUToLVCommandConnector::GetSIVBThrusterLevel()
 	if (SendMessage(cm))
 	{
 		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetThrusterGroupLevel(THGROUP_HANDLE th)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_THRUSTER_GROUP_LEVEL;
-	cm.val1.pValue = th;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
 	}
 
 	return 0.0;

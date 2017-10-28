@@ -270,22 +270,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_THRUSTER_MAX:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetThrusterMax((THRUSTER_HANDLE) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_THRUSTER_RESOURCE:
-		if (OurVessel)
-		{
-			m.val2.pValue = OurVessel->GetThrusterResource((THRUSTER_HANDLE)m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_LOCAL2GLOBAL:
 		if (OurVessel)
 		{
@@ -342,22 +326,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_MAIN_THRUSTER:
-		if (OurVessel)
-		{
-			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetThrusterLevel((THRUSTER_HANDLE) m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_SI_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
@@ -370,14 +338,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
-			return true;
-		}
-		break;
-
-	case IULV_GET_THRUSTER_GROUP_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetThrusterGroupLevel((THGROUP_HANDLE)m.val1.pValue);
 			return true;
 		}
 		break;
@@ -595,6 +555,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->ClearSIThrusterResource(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_CLEAR_SII_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			OurVessel->ClearSIIThrusterResource(m.val1.iValue);
 			return true;
 		}
 		break;

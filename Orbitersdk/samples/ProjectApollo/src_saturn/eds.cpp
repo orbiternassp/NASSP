@@ -443,7 +443,7 @@ void EDS1B::Timestep(double simdt)
 	case LAUNCH_STAGE_ONE:
 		for (int i = 0;i < 8;i++)
 		{
-			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]) && (iu->GetLVCommandConnector()->GetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i)) != NULL))
+			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]))
 			{
 				iu->GetLVCommandConnector()->ClearSIThrusterResource(i); // Should stop the engine
 				SI_Engine_Out = true;
@@ -789,7 +789,7 @@ void EDSSV::Timestep(double simdt)
 		SII_Engine_Out = false;
 		for (int i = 0;i < 5;i++)
 		{
-			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]) && (iu->GetLVCommandConnector()->GetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i)) != NULL))
+			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]))
 			{
 				iu->GetLVCommandConnector()->ClearSIThrusterResource(i); // Should stop the engine
 				SI_Engine_Out = true;
@@ -801,9 +801,9 @@ void EDSSV::Timestep(double simdt)
 		SI_Engine_Out = false;
 		for (int i = 0;i < 5;i++)
 		{
-			if (EarlySIICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > SecondStageFailureTime[i]) && (iu->GetLVCommandConnector()->GetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i)) != NULL))
+			if (EarlySIICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > SecondStageFailureTime[i]))
 			{
-				iu->GetLVCommandConnector()->SetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i), NULL); // Should stop the engine
+				iu->GetLVCommandConnector()->ClearSIIThrusterResource(i); // Should stop the engine
 				SII_Engine_Out = true;
 			}
 		}

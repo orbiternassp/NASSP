@@ -2120,22 +2120,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_MAIN_THRUSTER:
-		if (OurVessel)
-		{
-			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_SIVB_THRUSTER_LEVEL:
 		if (OurVessel)
 		{

@@ -98,6 +98,7 @@ enum IULVMessageType
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
+	IULV_CLEAR_SII_THRUSTER_RESOURCE,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
@@ -150,15 +151,10 @@ enum IULVMessageType
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
-	IULV_GET_MAIN_THRUSTER,
-	IULV_GET_THRUSTER_LEVEL,
 	IULV_GET_SI_THRUSTER_LEVEL,
 	IULV_GET_SII_THRUSTER_LEVEL,
 	IULV_GET_SIVB_THRUSTER_LEVEL,
 	IULV_GET_FIRST_STAGE_THRUST,
-	IULV_GET_THRUSTER_MAX,
-	IULV_GET_THRUSTER_RESOURCE,
-	IULV_GET_THRUSTER_GROUP_LEVEL,
 	IULV_CSM_SEPARATION_SENSED,
 };
 
@@ -249,6 +245,7 @@ public:
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
 	void ClearSIThrusterResource(int n);
+	void ClearSIIThrusterResource(int n);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
@@ -292,18 +289,13 @@ public:
 	double GetMaxThrust(ENGINETYPE eng);
 	bool GetWeightVector(VECTOR3 &w);
 	bool GetForceVector(VECTOR3 &f);
-	double GetThrusterMax(THRUSTER_HANDLE th);
-	PROPELLANT_HANDLE GetThrusterResource(THRUSTER_HANDLE th);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetApolloNo();
-	THRUSTER_HANDLE GetMainThruster(int n);
-	double GetThrusterLevel(THRUSTER_HANDLE th);
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
 	double GetSIVBThrusterLevel();
-	double GetThrusterGroupLevel(THGROUP_HANDLE thg);
 	double GetFirstStageThrust();
 
 	void Local2Global(VECTOR3 &local, VECTOR3 &global);
