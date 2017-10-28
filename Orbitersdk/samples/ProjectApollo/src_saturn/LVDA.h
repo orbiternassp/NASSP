@@ -60,6 +60,7 @@ public:
 	bool SpacecraftSeparationIndication();
 	bool GetSIVBEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
+	bool SIBLowLevelSensorsDry();
 
 	//Not real LVDA functions
 	void TLIBegun();

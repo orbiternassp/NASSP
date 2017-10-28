@@ -1557,6 +1557,20 @@ void SIVB::SetAPSUllageThrusterLevel(int n, double level)
 	SetThrusterLevel(th_att_lin[n], level);
 }
 
+void SIVB::SetSIVBThrusterLevel(double level)
+{
+	if (!th_main[0]) return;
+
+	SetThrusterLevel(th_main[0], level);
+}
+
+double SIVB::GetSIVBThrusterLevel()
+{
+	if (!th_main[0]) return 0.0;
+
+	return GetThrusterLevel(th_main[0]);
+}
+
 double SIVB::GetSIVbPropellantMass()
 
 {
@@ -1922,14 +1936,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_STATUS:
 		if (OurVessel)
 		{
@@ -2122,18 +2128,18 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_MAIN_THRUSTER_GROUP:
-		if (OurVessel)
-		{
-			m.val1.pValue = OurVessel->GetMainThrusterGroup();
-			return true;
-		}
-		break;
-
 	case IULV_GET_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
 			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIVB_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
 			return true;
 		}
 		break;
@@ -2203,10 +2209,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_THRUSTER_LEVEL:
+	case IULV_SET_SIVB_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			OurVessel->SetSIVBThrusterLevel(m.val1.dValue);
 			return true;
 		}
 		break;

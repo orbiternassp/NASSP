@@ -288,10 +288,12 @@ public:
 	double GetMissionTime();
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
-	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
+	double GetSIVBThrusterLevel();
+
 	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
 	void SetAPSUllageThrusterLevel(int n, double level);
+	void SetSIVBThrusterLevel(double level);
 
 	///
 	/// \brief Get main propellant mass.

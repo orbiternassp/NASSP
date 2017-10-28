@@ -1163,6 +1163,7 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 8: //PU Inverter and DC Power Off
 		break;
 	case 9: //S-IVB Engine Start On
+		SetThrusterResource(th_main[0], ph_3rd);
 		break;
 	case 10: //Engine Ready Bypass
 		break;

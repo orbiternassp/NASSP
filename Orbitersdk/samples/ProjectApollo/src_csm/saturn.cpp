@@ -4513,6 +4513,15 @@ double Saturn::GetJ2ThrustLevel()
 	return GetThrusterLevel(th_main[0]);
 }
 
+double Saturn::GetSIPropellantMass()
+
+{
+	if (stage > LAUNCH_STAGE_ONE || !ph_1st)
+		return 0.0;
+
+	return GetPropellantMass(ph_1st);
+}
+
 double Saturn::GetSIVbPropellantMass()
 
 {
@@ -4622,6 +4631,32 @@ int Saturn::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
+double Saturn::GetSIThrusterLevel(int n)
+{
+	if (stage != LAUNCH_STAGE_ONE) return 0.0;
+	if (n < 0 || n > 7) return 0.0;
+	if (!th_main[n]) return 0.0;
+
+	return GetThrusterLevel(th_main[n]);
+}
+
+double Saturn::GetSIIThrusterLevel(int n)
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return 0.0;
+	if (n < 0 || n > 4) return 0.0;
+	if (!th_main[n]) return 0.0;
+
+	return GetThrusterLevel(th_main[n]);
+}
+
+double Saturn::GetSIVBThrusterLevel()
+{
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return 0.0;
+	if (!th_main[0]) return 0.0;
+
+	return GetThrusterLevel(th_main[0]);
+}
+
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
 {
 	if (n < 0 || n > 7) return;
@@ -4648,6 +4683,41 @@ void Saturn::SetSIVBThrusterDir(VECTOR3 &dir)
 	SetThrusterDir(th_main[0], dir);
 }
 
+void Saturn::ClearSIThrusterResource(int n)
+{
+	if (stage != LAUNCH_STAGE_ONE) return;
+	if (n < 0 || n > 7) return;
+	if (!th_main[n]) return;
+
+	SetThrusterResource(th_main[n], NULL);
+}
+
+void Saturn::SetSIThrusterLevel(int n, double level)
+{
+	if (stage != LAUNCH_STAGE_ONE) return;
+	if (n < 0 || n > 7) return;
+	if (!th_main[n]) return;
+
+	SetThrusterLevel(th_main[n], level);
+}
+
+void Saturn::SetSIIThrusterLevel(int n, double level)
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
+	if (n < 0 || n > 4) return;
+	if (!th_main[n]) return;
+
+	SetThrusterLevel(th_main[n], level);
+}
+
+void Saturn::SetSIVBThrusterLevel(double level)
+{
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+	if (!th_main[0]) return;
+
+	SetThrusterLevel(th_main[0], level);
+}
+
 void Saturn::SetAPSUllageThrusterLevel(int n, double level)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
@@ -4664,6 +4734,14 @@ void Saturn::SetAPSThrusterLevel(int n, double level)
 	if (!th_att_rot[n]) return;
 
 	SetThrusterLevel(th_att_rot[n], level);
+}
+
+void Saturn::SetVernierThrusterLevel(double level)
+{
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+	if (!thg_ver) return;
+
+	SetThrusterGroupLevel(thg_ver, level);
 }
 
 void Saturn::SetContrailLevel(double level)

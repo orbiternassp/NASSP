@@ -267,7 +267,21 @@ void EDS1B::Timestep(double simdt)
 	//EDS Engine Cutoff
 	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
 	{
-		iu->GetLVCommandConnector()->SetThrusterGroupLevel(iu->GetLVCommandConnector()->GetMainThrusterGroup(), 0);
+		if (Stage == LAUNCH_STAGE_ONE)
+		{
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(0, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(1, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(2, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(3, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(4, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(5, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(6, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(7, 0);
+		}
+		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
+		{
+			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+		}
 	}
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
@@ -276,14 +290,14 @@ void EDS1B::Timestep(double simdt)
 	{
 		int enginesout = 0;
 
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(1)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(2)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(3)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(4)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(5)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(6)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(7)) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(0) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(1) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(2) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(3) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(4) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(5) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(6) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(7) < 0.65) enginesout++;
 
 		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate)
 		{
@@ -367,7 +381,7 @@ void EDS1B::Timestep(double simdt)
 		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 8) {
-				ThrustOK[i] = iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.65;
+				ThrustOK[i] = iu->GetLVCommandConnector()->GetSIThrusterLevel(i) >= 0.65;
 				if (ThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i + 1); }
 				if (!ThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i + 1); }
 				i++;
@@ -381,8 +395,8 @@ void EDS1B::Timestep(double simdt)
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
-			if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
-			if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
 		}
 		else
 		{
@@ -431,7 +445,7 @@ void EDS1B::Timestep(double simdt)
 		{
 			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]) && (iu->GetLVCommandConnector()->GetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i)) != NULL))
 			{
-				iu->GetLVCommandConnector()->SetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i), NULL); // Should stop the engine
+				iu->GetLVCommandConnector()->ClearSIThrusterResource(i); // Should stop the engine
 				SI_Engine_Out = true;
 			}
 		}
@@ -568,7 +582,26 @@ void EDSSV::Timestep(double simdt)
 	//EDS Engine Cutoff
 	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
 	{
-		iu->GetLVCommandConnector()->SetThrusterGroupLevel(iu->GetLVCommandConnector()->GetMainThrusterGroup(), 0);
+		if (Stage == LAUNCH_STAGE_ONE)
+		{
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(0, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(1, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(2, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(3, 0);
+			iu->GetLVCommandConnector()->SetSIThrusterLevel(4, 0);
+		}
+		else if (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET)
+		{
+			iu->GetLVCommandConnector()->SetSIIThrusterLevel(0, 0);
+			iu->GetLVCommandConnector()->SetSIIThrusterLevel(1, 0);
+			iu->GetLVCommandConnector()->SetSIIThrusterLevel(2, 0);
+			iu->GetLVCommandConnector()->SetSIIThrusterLevel(3, 0);
+			iu->GetLVCommandConnector()->SetSIIThrusterLevel(4, 0);
+		}
+		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
+		{
+			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+		}
 	}
 
 	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
@@ -577,11 +610,11 @@ void EDSSV::Timestep(double simdt)
 	{
 		int enginesout = 0;
 
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(1)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(2)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(3)) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(4)) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(0) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(1) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(2) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(3) < 0.65) enginesout++;
+		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(4) < 0.65) enginesout++;
 
 		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate)
 		{
@@ -665,7 +698,7 @@ void EDSSV::Timestep(double simdt)
 		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				ThrustOK[i] = iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.90;
+				ThrustOK[i] = iu->GetLVCommandConnector()->GetSIThrusterLevel(i) >= 0.90;
 				if (ThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIEngInd[i]); }
 				if (!ThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIEngInd[i]); }
 				i++;
@@ -681,8 +714,8 @@ void EDSSV::Timestep(double simdt)
 		if ((SIIEngineOutIndicationA && EDSBus1Powered) || (SIIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
-				if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(i)) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
+				if (iu->GetLVCommandConnector()->GetSIIThrusterLevel(i) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
+				if (iu->GetLVCommandConnector()->GetSIIThrusterLevel(i) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
 				i++;
 			}
 		}
@@ -695,8 +728,8 @@ void EDSSV::Timestep(double simdt)
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
-			if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
-			if (iu->GetLVCommandConnector()->GetThrusterLevel(iu->GetLVCommandConnector()->GetMainThruster(0)) < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
 		}
 		else
 		{
@@ -758,7 +791,7 @@ void EDSSV::Timestep(double simdt)
 		{
 			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]) && (iu->GetLVCommandConnector()->GetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i)) != NULL))
 			{
-				iu->GetLVCommandConnector()->SetThrusterResource(iu->GetLVCommandConnector()->GetMainThruster(i), NULL); // Should stop the engine
+				iu->GetLVCommandConnector()->ClearSIThrusterResource(i); // Should stop the engine
 				SI_Engine_Out = true;
 			}
 		}

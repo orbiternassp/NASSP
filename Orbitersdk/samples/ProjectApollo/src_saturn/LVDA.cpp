@@ -159,6 +159,11 @@ bool LVDA::GetSIPropellantDepletionEngineCutoff()
 	return iu->GetSIPropellantDepletionEngineCutoff();
 }
 
+bool LVDA::SIBLowLevelSensorsDry()
+{
+	return iu->SIBLowLevelSensorsDry();
+}
+
 void LVDA::TLIBegun()
 {
 	iu->GetCommandConnector()->TLIBegun();

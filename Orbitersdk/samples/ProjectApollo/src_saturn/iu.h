@@ -89,11 +89,15 @@ enum IULVMessageType
 {
 	IULV_ENABLE_J2,							///< Enable the J2 engine.
 	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
-	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
+	IULV_SET_SI_THRUSTER_LEVEL,
+	IULV_SET_SII_THRUSTER_LEVEL,
+	IULV_SET_SIVB_THRUSTER_LEVEL,
+	IULV_SET_VERNIER_THRUSTER_LEVEL,
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
+	IULV_CLEAR_SI_THRUSTER_RESOURCE,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
@@ -123,7 +127,7 @@ enum IULVMessageType
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
 	IULV_GET_SIVB_PROPELLANT_MASS,			///< Get the S-IVB propellant mass.
-	IULV_GET_PROPELLANT_MASS,
+	IULV_GET_SI_PROPELLANT_MASS,
 	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
 	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
@@ -148,12 +152,11 @@ enum IULVMessageType
 	IULV_GET_APOLLONO,
 	IULV_GET_MAIN_THRUSTER,
 	IULV_GET_THRUSTER_LEVEL,
+	IULV_GET_SI_THRUSTER_LEVEL,
+	IULV_GET_SII_THRUSTER_LEVEL,
+	IULV_GET_SIVB_THRUSTER_LEVEL,
 	IULV_GET_FIRST_STAGE_THRUST,
-	IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE,
-	IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE,
 	IULV_GET_THRUSTER_MAX,
-	IULV_GET_MAIN_THRUSTER_GROUP,
-	IULV_GET_VERNIER_THRUSTER_GROUP,
 	IULV_GET_THRUSTER_RESOURCE,
 	IULV_GET_THRUSTER_GROUP_LEVEL,
 	IULV_CSM_SEPARATION_SENSED,
@@ -235,11 +238,17 @@ public:
 	void EnableDisableJ2(bool Enable);
 	void SetJ2ThrustLevel(double thrust);
 	void SetVentingThruster();
-	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
+
+	void SetSIThrusterLevel(int n, double level);
+	void SetSIIThrusterLevel(int n, double level);
+	void SetSIVBThrusterLevel(double level);
+	void SetVernierThrusterLevel(double level);
+
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
+	void ClearSIThrusterResource(int n);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
@@ -272,7 +281,7 @@ public:
 	double GetAltitude();
 	double GetJ2ThrustLevel();
 	double GetSIVBPropellantMass();
-	double GetPropellantMass(PROPELLANT_HANDLE ph);
+	double GetSIPropellantMass();
 	double GetMass();
 	double GetMaxFuelMass();
 	double GetFuelMass();
@@ -290,13 +299,12 @@ public:
 	double GetMissionTime();
 	int GetApolloNo();
 	THRUSTER_HANDLE GetMainThruster(int n);
-	THGROUP_HANDLE GetMainThrusterGroup();
-	THGROUP_HANDLE GetVernierThrusterGroup();
 	double GetThrusterLevel(THRUSTER_HANDLE th);
+	double GetSIThrusterLevel(int n);
+	double GetSIIThrusterLevel(int n);
+	double GetSIVBThrusterLevel();
 	double GetThrusterGroupLevel(THGROUP_HANDLE thg);
 	double GetFirstStageThrust();
-	PROPELLANT_HANDLE GetFirstStagePropellantHandle();
-	PROPELLANT_HANDLE GetThirdStagePropellantHandle();
 
 	void Local2Global(VECTOR3 &local, VECTOR3 &global);
 	void GetApDist(double &d);
@@ -363,6 +371,7 @@ public:
 	virtual FCC* GetFCC() = 0;
 
 	bool GetSIPropellantDepletionEngineCutoff();
+	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIVBEngineOut();
 
@@ -410,6 +419,7 @@ class IU1B :public IU
 public:
 	IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
+	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);

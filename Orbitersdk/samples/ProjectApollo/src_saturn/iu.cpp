@@ -168,6 +168,11 @@ bool IU::GetSIPropellantDepletionEngineCutoff()
 	return false;
 }
 
+bool IU::SIBLowLevelSensorsDry()
+{
+	return false;
+}
+
 bool IU::GetSIIPropellantDepletionEngineCutoff()
 {
 	return false;
@@ -178,7 +183,7 @@ bool IU::GetSIVBEngineOut()
 	int stage = lvCommandConnector.GetStage();
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	double oetl = lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(0));
+	double oetl = lvCommandConnector.GetSIVBThrusterLevel();
 	if (oetl == 0) return true;
 
 	return false;
@@ -780,14 +785,48 @@ void IUToLVCommandConnector::SetVentingThruster()
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetThrusterLevel(THRUSTER_HANDLE th, double level)
+void IUToLVCommandConnector::SetSIThrusterLevel(int n, double level)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_THRUSTER_LEVEL;
-	cm.val1.pValue = th;
+	cm.messageType = IULV_SET_SI_THRUSTER_LEVEL;
+	cm.val1.iValue = n;
 	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetSIIThrusterLevel(int n, double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_SII_THRUSTER_LEVEL;
+	cm.val1.iValue = n;
+	cm.val2.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetSIVBThrusterLevel(double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_SIVB_THRUSTER_LEVEL;
+	cm.val1.dValue = level;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetVernierThrusterLevel(double level)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_VERNIER_THRUSTER_LEVEL;
+	cm.val1.dValue = level;
 
 	SendMessage(cm);
 }
@@ -836,6 +875,17 @@ void IUToLVCommandConnector::SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_
 	cm.messageType = IULV_SET_THRUSTER_RESOURCE;
 	cm.val1.pValue = th;
 	cm.val2.pValue = ph;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::ClearSIThrusterResource(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_CLEAR_SI_THRUSTER_RESOURCE;
+	cm.val1.iValue = n;
 
 	SendMessage(cm);
 }
@@ -1226,18 +1276,17 @@ double IUToLVCommandConnector::GetSIVBPropellantMass()
 	return 0.0;
 }
 
-double IUToLVCommandConnector::GetPropellantMass(PROPELLANT_HANDLE ph)
+double IUToLVCommandConnector::GetSIPropellantMass()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_PROPELLANT_MASS;
-	cm.val1.pValue = ph;
+	cm.messageType = IULV_GET_SI_PROPELLANT_MASS;
 
 	if (SendMessage(cm))
 	{
-		return cm.val2.dValue;
+		return cm.val1.dValue;
 	}
 
 	return 0.0;
@@ -1565,36 +1614,6 @@ THRUSTER_HANDLE IUToLVCommandConnector::GetMainThruster(int n)
 	return 0;
 }
 
-THGROUP_HANDLE IUToLVCommandConnector::GetMainThrusterGroup()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MAIN_THRUSTER_GROUP;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.pValue;
-	}
-
-	return 0;
-}
-
-THGROUP_HANDLE IUToLVCommandConnector::GetVernierThrusterGroup()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_VERNIER_THRUSTER_GROUP;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.pValue;
-	}
-
-	return 0;
-}
-
 double IUToLVCommandConnector::GetThrusterLevel(THRUSTER_HANDLE th)
 {
 	ConnectorMessage cm;
@@ -1606,6 +1625,53 @@ double IUToLVCommandConnector::GetThrusterLevel(THRUSTER_HANDLE th)
 	if (SendMessage(cm))
 	{
 		return cm.val2.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIThrusterLevel(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SI_THRUSTER_LEVEL;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIIThrusterLevel(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SII_THRUSTER_LEVEL;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIVBThrusterLevel()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SIVB_THRUSTER_LEVEL;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
 	}
 
 	return 0.0;
@@ -1640,36 +1706,6 @@ double IUToLVCommandConnector::GetFirstStageThrust()
 	}
 
 	return 0.0;
-}
-
-PROPELLANT_HANDLE IUToLVCommandConnector::GetFirstStagePropellantHandle()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.pValue;
-	}
-
-	return 0;
-}
-
-PROPELLANT_HANDLE IUToLVCommandConnector::GetThirdStagePropellantHandle()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.pValue;
-	}
-
-	return 0;
 }
 
 bool IUToLVCommandConnector::CSMSeparationSensed()
@@ -1736,6 +1772,13 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 		eds.SetSIEngineOutIndicationA(true);
 		eds.SetSIEngineOutIndicationB(true);
 	}
+}
+
+bool IU1B::SIBLowLevelSensorsDry()
+{
+	if (lvCommandConnector.GetSIPropellantMass() <= 24000.0) return true;
+
+	return false;
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {
@@ -1905,7 +1948,7 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 	int stage = lvCommandConnector.GetStage();
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
-	double oetl = lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(0)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(1)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(2)) + lvCommandConnector.GetThrusterLevel(lvCommandConnector.GetMainThruster(3));
+	double oetl = lvCommandConnector.GetSIIThrusterLevel(0) + lvCommandConnector.GetSIIThrusterLevel(1) + lvCommandConnector.GetSIIThrusterLevel(2) + lvCommandConnector.GetSIIThrusterLevel(3);
 	if (oetl == 0) return true;
 
 	return false;

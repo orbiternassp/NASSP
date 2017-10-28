@@ -927,17 +927,22 @@ public:
 	double GetMissionTime() { return MissionTime; };
 
 	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
-	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
-	THGROUP_HANDLE GetVernierThrusterGroup() { return thg_ver; }
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
-	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
-	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
 	bool GetSIISepLight() { return SIISepState; };
+
+	double GetSIThrusterLevel(int n);
+	double GetSIIThrusterLevel(int n);
+	double GetSIVBThrusterLevel();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIThrusterLevel(int n, double level);
+	void SetSIIThrusterLevel(int n, double level);
+	void SetSIVBThrusterLevel(double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
+	void SetVernierThrusterLevel(double level);
+	void ClearSIThrusterResource(int n);
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -1132,6 +1137,8 @@ public:
 	void SetSaturnAttitudeRotLevel(VECTOR3 th);
 	double GetSaturnMaxThrust(ENGINETYPE eng);
 	void SIVBBoiloff();
+
+	double GetSIPropellantMass();
 
 	///
 	/// \brief Get propellant mass in the SIVb stage.
