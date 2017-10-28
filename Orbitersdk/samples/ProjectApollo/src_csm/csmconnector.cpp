@@ -334,6 +334,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_SII_THRUSTER_LEVEL:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetSIIThrusterLevel(m.val1.iValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_SIVB_THRUSTER_LEVEL:
 		if (OurVessel)
 		{

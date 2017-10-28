@@ -4633,7 +4633,7 @@ int Saturn::GetAGCAttitudeError(int axis)
 
 double Saturn::GetSIThrusterLevel(int n)
 {
-	if (stage != LAUNCH_STAGE_ONE) return 0.0;
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
 	if (n < 0 || n > 7) return 0.0;
 	if (!th_main[n]) return 0.0;
 
@@ -4660,7 +4660,7 @@ double Saturn::GetSIVBThrusterLevel()
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
 {
 	if (n < 0 || n > 7) return;
-	if (stage != LAUNCH_STAGE_ONE) return;
+	if (stage > LAUNCH_STAGE_ONE) return;
 	if (!th_main[n]) return;
 
 	SetThrusterDir(th_main[n], dir);
@@ -4703,7 +4703,7 @@ void Saturn::ClearSIIThrusterResource(int n)
 
 void Saturn::SetSIThrusterLevel(int n, double level)
 {
-	if (stage != LAUNCH_STAGE_ONE) return;
+	if (stage != PRELAUNCH_STAGE && stage != LAUNCH_STAGE_ONE) return;
 	if (n < 0 || n > 7) return;
 	if (!th_main[n]) return;
 
