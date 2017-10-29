@@ -808,6 +808,8 @@ void Saturn::initSaturn()
 
 	pMCC = NULL;
 
+	iu = NULL;
+
 	//
 	// Timestep tracking for debugging.
 	//
@@ -1311,7 +1313,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	//
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SaveState(scn);
+		SaveIU(scn);
 		SaveLVDC(scn);
 	}
 
@@ -1898,7 +1900,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		qball.LoadState(scn, QBALL_END_STRING);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-		iu->LoadState(scn);
+		LoadIU(scn);
 	}
 	else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
 		LoadLVDC(scn);
@@ -2261,13 +2263,12 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	}
 }
 
-
 void Saturn::SaveLVDC(FILEHANDLE scn) {
-	iu->SaveLVDC(scn);
+	if (iu != NULL) { iu->SaveLVDC(scn); }
 }
 
 void Saturn::LoadLVDC(FILEHANDLE scn) {
-	iu->LoadLVDC(scn);
+	if (iu != NULL) { iu->LoadLVDC(scn); }
 }
 
 //

@@ -95,7 +95,6 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 	
 	hMaster = hObj;
 	initSaturnV();
-	iu = new IUSV;
 }
 
 //
@@ -708,6 +707,20 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
+}
+
+void SaturnV::SaveIU(FILEHANDLE scn)
+{
+	if (iu != NULL) { iu->SaveState(scn); }
+}
+
+void SaturnV::LoadIU(FILEHANDLE scn)
+{
+	// If the IU does not yet exist, create it.
+	if (iu == NULL) {
+		iu = new IUSV;
+	}
+	iu->LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)

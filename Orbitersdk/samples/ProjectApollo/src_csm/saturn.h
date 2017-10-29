@@ -4000,6 +4000,8 @@ protected:
 	virtual void SetVehicleStats() = 0;
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
+	virtual void LoadIU(FILEHANDLE scn) = 0;
+	virtual void SaveIU(FILEHANDLE scn) = 0;
 	void SaveLVDC(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
 

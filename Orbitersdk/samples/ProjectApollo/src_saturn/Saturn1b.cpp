@@ -76,7 +76,6 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 {
 	hMaster = hObj;
 	initSaturn1b();
-	iu = new IU1B;
 }
 
 Saturn1b::~Saturn1b()
@@ -478,6 +477,20 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
+}
+
+void Saturn1b::SaveIU(FILEHANDLE scn)
+{
+	if (iu != NULL) { iu->SaveState(scn); }
+}
+
+void Saturn1b::LoadIU(FILEHANDLE scn)
+{
+	// If the IU does not yet exist, create it.
+	if (iu == NULL) {
+		iu = new IU1B;
+	}
+	iu->LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
