@@ -3814,6 +3814,7 @@ protected:
 	bool FireTJM;
 	bool FirePCM;
 
+	double PlatFail;
 	double FailureMultiplier;
 
 	OBJHANDLE hEVA;
