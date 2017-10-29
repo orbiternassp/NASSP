@@ -928,7 +928,6 @@ public:
 	double GetMissionTime() { return MissionTime; };
 
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
-	bool GetSIISepLight() { return SIISepState; };
 
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);

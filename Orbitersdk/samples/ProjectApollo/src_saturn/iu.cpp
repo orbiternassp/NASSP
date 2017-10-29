@@ -358,33 +358,6 @@ void IUToCSMCommandConnector::ClearEngineIndicators()
 	SendMessage(cm);
 }
 
-void IUToCSMCommandConnector::SlowIfDesired()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SLOW_IF_DESIRED;
-
-	SendMessage(cm);
-}
-
-bool IUToCSMCommandConnector::GetSIISepLight()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_SII_SEP_LIGHT;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
 bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 
 {
@@ -1166,22 +1139,6 @@ double IUToLVCommandConnector::GetMass()
 	return 0.0;
 }
 
-double IUToLVCommandConnector::GetSize()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIZE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
 double IUToLVCommandConnector::GetMaxThrust(ENGINETYPE eng)
 
 {
@@ -1311,18 +1268,6 @@ double IUToLVCommandConnector::GetFuelMass()
 	return 0.0;
 }
 
-void IUToLVCommandConnector::GetStatus(VESSELSTATUS &status)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_STATUS;
-	cm.val1.pValue = &status;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::GetGlobalOrientation(VECTOR3 &arot)
 
 {
@@ -1331,18 +1276,6 @@ void IUToLVCommandConnector::GetGlobalOrientation(VECTOR3 &arot)
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_GLOBAL_ORIENTATION;
 	cm.val1.pValue = &arot;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::GetPMI(VECTOR3 &pmi)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_PMI;
-	cm.val1.pValue = &pmi;
 
 	SendMessage(cm);
 }
@@ -1361,36 +1294,6 @@ OBJHANDLE IUToLVCommandConnector::GetGravityRef()
 	}
 
 	return 0;
-}
-
-void IUToLVCommandConnector::GetApDist(double &d)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_AP_DIST;
-
-	if (SendMessage(cm))
-	{
-		d = cm.val1.dValue;
-		return;
-	}
-
-	d = 0.0;
-}
-
-void IUToLVCommandConnector::Local2Global(VECTOR3 &local, VECTOR3 &global)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_LOCAL2GLOBAL;
-	cm.val1.pValue = &local;
-	cm.val2.pValue = &global;
-
-	SendMessage(cm);
 }
 
 void IUToLVCommandConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
@@ -1431,24 +1334,6 @@ void IUToLVCommandConnector::GetGlobalVel(VECTOR3 &v)
 	SendMessage(cm);
 }
 
-OBJHANDLE IUToLVCommandConnector::GetElements(ELEMENTS &el, double &mjd_ref)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_ELEMENTS;
-	cm.val1.pValue = &el;
-
-	if (SendMessage(cm))
-	{
-		mjd_ref = cm.val2.dValue;
-		return cm.val3.hValue;
-	}
-
-	return 0;
-}
-
 bool IUToLVCommandConnector::GetWeightVector(VECTOR3 &w)
 
 {
@@ -1457,23 +1342,6 @@ bool IUToLVCommandConnector::GetWeightVector(VECTOR3 &w)
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_WEIGHTVECTOR;
 	cm.val1.pValue = &w;
-
-	if (SendMessage(cm))
-	{		
-		return cm.val2.bValue; 
-	}
-
-	return false;
-}
-
-bool IUToLVCommandConnector::GetForceVector(VECTOR3 &f)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_FORCEVECTOR;
-	cm.val1.pValue = &f;
 
 	if (SendMessage(cm))
 	{		
@@ -1505,54 +1373,6 @@ void IUToLVCommandConnector::GetAngularVel(VECTOR3 &avel)
 	cm.val1.pValue = &avel;
 
 	SendMessage(cm);
-}
-
-double IUToLVCommandConnector::GetPitch()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_PITCH;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetBank()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_BANK;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetSlipAngle()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SLIP_ANGLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
 }
 
 double IUToLVCommandConnector::GetMissionTime()

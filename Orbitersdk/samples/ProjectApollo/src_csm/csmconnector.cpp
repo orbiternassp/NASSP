@@ -126,19 +126,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_STATUS:
-		if (OurVessel)
-		{
-			VESSELSTATUS *status = static_cast<VESSELSTATUS *> (m.val1.pValue);
-			VESSELSTATUS stat;
-
-			OurVessel->GetStatus(stat);
-
-			*status = stat;
-			return true;
-		}
-		break;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
@@ -164,14 +151,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_AP_DIST:
-		if (OurVessel)
-		{
-			OurVessel->GetApDist(m.val1.dValue);
 			return true;
 		}
 		break;
@@ -232,36 +211,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_ELEMENTS:
-		if (OurVessel)
-		{
-			ELEMENTS el;
-			ELEMENTS *e = static_cast<ELEMENTS *> (m.val1.pValue);
-
-			m.val3.hValue = OurVessel->GetElements(el, m.val2.dValue);
-
-			*e = el;
-
-			return true;
-		}
-		break;
-
-	case IULV_GET_PMI:
-		if (OurVessel)
-		{
-			OurVessel->GetPMI(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIZE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSize();
-			return true;
-		}
-		break;
-
 	case IULV_GET_MAXTHRUST:
 		if (OurVessel)
 		{
@@ -270,26 +219,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_LOCAL2GLOBAL:
-		if (OurVessel)
-		{
-			OurVessel->Local2Global(*(VECTOR3 *) m.val1.pValue, *(VECTOR3 *) m.val2.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_WEIGHTVECTOR:
 		if (OurVessel)
 		{
 			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_FORCEVECTOR:
-		if (OurVessel)
-		{
-			m.val2.bValue = OurVessel->GetForceVector(*(VECTOR3 *) m.val1.pValue);
 			return true;
 		}
 		break;
@@ -354,30 +287,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetFirstStageThrust();
-			return true;
-		}
-		break;
-
-	case IULV_GET_PITCH:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetPitch();
-			return true;
-		}
-		break;
-			
-	case IULV_GET_BANK:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetBank();
-			return true;
-		}
-		break;
-			
-	case IULV_GET_SLIP_ANGLE:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetSlipAngle();
 			return true;
 		}
 		break;
@@ -792,14 +701,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_GET_SII_SEP_LIGHT:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIISepLight();
-			return true;
-		}
-		break;
-
 	case IUCSM_GET_ENGINE_INDICATOR:
 		if (OurVessel)
 		{
@@ -895,14 +796,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			{
 				OurVessel->ClearEngineIndicator(m.val1.iValue);
 			}
-			return true;
-		}
-		break;
-
-	case IUCSM_SLOW_IF_DESIRED:
-		if (OurVessel)
-		{
-			OurVessel->SlowIfDesired();
 			return true;
 		}
 		break;
