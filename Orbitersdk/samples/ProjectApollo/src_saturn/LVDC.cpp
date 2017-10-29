@@ -1465,7 +1465,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				fprintf(lvlog,"Post-MRS\n");
 				if(t_B1 <= t_B3){
 					tau2 = V_ex2/Fm;
-					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f, m = %f \r\n",tau2,Fm,lvCommandConnector->GetMass());
+					fprintf(lvlog,"Normal Tau: tau2 = %f, F/m = %f\r\n",tau2,Fm);
 				}else{
 					// This is the "ARTIFICIAL TAU" code.
 					t_B3 += dt_c; 
@@ -1487,7 +1487,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					fprintf(lvlog,"T_2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n",T_2,T_1,dotM_1,dotM_2);		
 				}else{															
 					tau1 = V_ex1/Fm; 
-					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f m = %f\r\n",tau1,Fm, lvCommandConnector->GetMass());
+					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f\r\n",tau1,Fm);
 				}
 			}
 			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");
@@ -7508,7 +7508,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
-			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
+			fprintf(lvlog,"[T%f] GRR received!\r\n", lvCommandConnector->GetMissionTime());
 
 			// Initial Position & Velocity from Apollo 9 operational trajectory
 			/*PosS.x = 6373324.5;
