@@ -4144,10 +4144,12 @@ protected:
 	// Thruster group handles. We have a lot of these :).
 	//
 
-	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_lem;//, thg_tjm;
+	THGROUP_HANDLE thg_1st, thg_2nd, thg_3rd, thg_sps;
+	THGROUP_HANDLE thg_ull, thg_ver, thg_lem;//, thg_tjm;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3];                       // handles for orbiter main engines
+	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
+	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              
 	THRUSTER_HANDLE	th_aps[3];

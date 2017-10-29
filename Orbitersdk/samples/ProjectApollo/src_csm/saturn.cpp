@@ -179,7 +179,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CMRCS1(ph_rcs_cm_1, Panelsdk),
 	CMRCS2(ph_rcs_cm_2, Panelsdk),
 	SPSPropellant(ph_sps, Panelsdk),
-	SPSEngine(th_main[0]),
+	SPSEngine(th_sps[0]),
 	CMSMPyros("CM-SM-Pyros", Panelsdk),
 	CMSMPyrosFeeder("CM-SM-Pyros-Feeder", Panelsdk),
 	CMDockingRingPyros("CM-DockingRing-Pyros", Panelsdk),
@@ -602,7 +602,10 @@ void Saturn::initSaturn()
 	// Thruster groups.
 	//
 
-	thg_main = 0;
+	thg_1st = 0;
+	thg_2nd = 0;
+	thg_3rd = 0;
+	thg_sps = 0;
 	thg_lem = 0;
 	//thg_tjm = 0;
 	thg_ull = 0;
@@ -676,10 +679,18 @@ void Saturn::initSaturn()
 		srf[i] = 0;
 	}
 
+	for (i = 0; i < 8; i++)
+	{
+		th_1st[i] = 0;
+	}
+
 	for (i = 0; i < 5; i++)
 	{
-		th_main[i] = 0;
+		th_2nd[i] = 0;
 	}
+
+	th_3rd[0] = 0;
+	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
 	{
@@ -3850,7 +3861,10 @@ void Saturn::ClearThrusters()
 	// Thruster groups.
 	//
 
-	thg_main = 0;
+	thg_1st = 0;
+	thg_2nd = 0;
+	thg_3rd = 0;
+	thg_sps = 0;
 	thg_lem = 0;
 	//thg_tjm = 0;
 	thg_ull = 0;
@@ -4491,35 +4505,35 @@ void Saturn::SetRandomFailures()
 void Saturn::SetJ2ThrustLevel(double thrust)
 
 {
-	if (stage != STAGE_ORBIT_SIVB || !th_main[0])
+	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0])
 		return;
 
-	SetThrusterLevel(th_main[0], thrust);
+	SetThrusterLevel(th_3rd[0], thrust);
 }
 
 void Saturn::EnableDisableJ2(bool Enable)
 
 {
-	if (stage != STAGE_ORBIT_SIVB || !th_main[0] || !ph_3rd)
+	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0] || !ph_3rd)
 		return;
 
 	if (Enable)
 	{
-		SetThrusterResource(th_main[0], ph_3rd);
+		SetThrusterResource(th_3rd[0], ph_3rd);
 	}
 	else
 	{
-		SetThrusterResource(th_main[0], NULL);
+		SetThrusterResource(th_3rd[0], NULL);
 	}
 }
 
 double Saturn::GetJ2ThrustLevel()
 
 {
-	if (stage != STAGE_ORBIT_SIVB || !th_main[0])
+	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0])
 		return 0.0;
 
-	return GetThrusterLevel(th_main[0]);
+	return GetThrusterLevel(th_3rd[0]);
 }
 
 double Saturn::GetSIPropellantMass()
@@ -4644,70 +4658,70 @@ double Saturn::GetSIThrusterLevel(int n)
 {
 	if (stage > LAUNCH_STAGE_ONE) return 0.0;
 	if (n < 0 || n > 7) return 0.0;
-	if (!th_main[n]) return 0.0;
+	if (!th_1st[n]) return 0.0;
 
-	return GetThrusterLevel(th_main[n]);
+	return GetThrusterLevel(th_1st[n]);
 }
 
 double Saturn::GetSIIThrusterLevel(int n)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return 0.0;
 	if (n < 0 || n > 4) return 0.0;
-	if (!th_main[n]) return 0.0;
+	if (!th_2nd[n]) return 0.0;
 
-	return GetThrusterLevel(th_main[n]);
+	return GetThrusterLevel(th_2nd[n]);
 }
 
 double Saturn::GetSIVBThrusterLevel()
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return 0.0;
-	if (!th_main[0]) return 0.0;
+	if (!th_3rd[0]) return 0.0;
 
-	return GetThrusterLevel(th_main[0]);
+	return GetThrusterLevel(th_3rd[0]);
 }
 
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
 {
 	if (n < 0 || n > 7) return;
 	if (stage > LAUNCH_STAGE_ONE) return;
-	if (!th_main[n]) return;
+	if (!th_1st[n]) return;
 
-	SetThrusterDir(th_main[n], dir);
+	SetThrusterDir(th_1st[n], dir);
 }
 
 void Saturn::SetSIIThrusterDir(int n, VECTOR3 &dir)
 {
 	if (n < 0 || n > 4) return;
 	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (!th_main[n]) return;
+	if (!th_2nd[n]) return;
 
-	SetThrusterDir(th_main[n], dir);
+	SetThrusterDir(th_2nd[n], dir);
 }
 
 void Saturn::SetSIVBThrusterDir(VECTOR3 &dir)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_main[0]) return;
+	if (!th_3rd[0]) return;
 
-	SetThrusterDir(th_main[0], dir);
+	SetThrusterDir(th_3rd[0], dir);
 }
 
 void Saturn::ClearSIThrusterResource(int n)
 {
 	if (stage != LAUNCH_STAGE_ONE) return;
 	if (n < 0 || n > 7) return;
-	if (!th_main[n]) return;
+	if (!th_1st[n]) return;
 
-	SetThrusterResource(th_main[n], NULL);
+	SetThrusterResource(th_1st[n], NULL);
 }
 
 void Saturn::ClearSIIThrusterResource(int n)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 	if (n < 0 || n > 4) return;
-	if (!th_main[n]) return;
+	if (!th_2nd[n]) return;
 
-	SetThrusterResource(th_main[n], NULL);
+	SetThrusterResource(th_2nd[n], NULL);
 }
 
 void Saturn::SetQBallPowerOff()
@@ -4719,26 +4733,26 @@ void Saturn::SetSIThrusterLevel(int n, double level)
 {
 	if (stage != PRELAUNCH_STAGE && stage != LAUNCH_STAGE_ONE) return;
 	if (n < 0 || n > 7) return;
-	if (!th_main[n]) return;
+	if (!th_1st[n]) return;
 
-	SetThrusterLevel(th_main[n], level);
+	SetThrusterLevel(th_1st[n], level);
 }
 
 void Saturn::SetSIIThrusterLevel(int n, double level)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 	if (n < 0 || n > 4) return;
-	if (!th_main[n]) return;
+	if (!th_2nd[n]) return;
 
-	SetThrusterLevel(th_main[n], level);
+	SetThrusterLevel(th_2nd[n], level);
 }
 
 void Saturn::SetSIVBThrusterLevel(double level)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_main[0]) return;
+	if (!th_3rd[0]) return;
 
-	SetThrusterLevel(th_main[0], level);
+	SetThrusterLevel(th_3rd[0], level);
 }
 
 void Saturn::SetAPSUllageThrusterLevel(int n, double level)

@@ -286,8 +286,8 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	//
 
 	for (int i = 0; i < 5; i++) {
-		SetThrusterIsp (th_main[i], isp, isp);
-		SetThrusterMax0 (th_main[i], thrust);
+		SetThrusterIsp (th_2nd[i], isp, isp);
+		SetThrusterMax0 (th_2nd[i], thrust);
 	}
 
 	MixtureRatio = ratio;
@@ -323,8 +323,8 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	// be in near-vacuum anyway.
 	//
 
-	SetThrusterIsp (th_main[0], isp, isp);
-	SetThrusterMax0 (th_main[0], thrust);
+	SetThrusterIsp (th_3rd[0], isp, isp);
+	SetThrusterMax0 (th_3rd[0], thrust);
 
 	MixtureRatio = ratio;
 }
@@ -332,9 +332,9 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 void SaturnV::SetSIIThrustLevel(double lvl)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (!thg_main) return;
+	if (!thg_2nd) return;
 
-	SetThrusterGroupLevel(thg_main, lvl);
+	SetThrusterGroupLevel(thg_2nd, lvl);
 }
 
 void SaturnV::MoveEVA()
@@ -960,9 +960,9 @@ void SaturnV::SwitchSelector(int item){
 		ActivatePrelaunchVenting();
 		break;
 	case 12:
-		SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_main[i], ph_1st);
+			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
 		break;
@@ -985,7 +985,7 @@ void SaturnV::SwitchSelector(int item){
 		}				
 		// Engine Shutdown
 		for (i = 0; i < 5; i++){
-			SetThrusterResource(th_main[i], NULL);
+			SetThrusterResource(th_1st[i], NULL);
 		}
 		break;
 	case 18:
@@ -1006,13 +1006,13 @@ void SaturnV::SwitchSelector(int item){
 		break;
 	case 20:
 		// S2 Engine Startup P2
-		SetThrusterGroupLevel(thg_main, 1); // Full power
+		SetThrusterGroupLevel(thg_2nd, 1); // Full power
 		if(SII_UllageNum){ SetThrusterGroupLevel(thg_ull,0.0); }
 		SepS.stop();
 		break;
 	case 24:
 		// SII IECO
-		SetThrusterResource(th_main[4], NULL);
+		SetThrusterResource(th_2nd[4], NULL);
 		S2ShutS.play(NOLOOP, 235);
 		S2ShutS.done();
 		break;
@@ -1027,7 +1027,7 @@ void SaturnV::SISwitchSelector(int channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
 		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
+		SetThrusterGroupLevel(thg_1st, 1.0);					// Set full thrust, just in case
 		contrailLevel = 1.0;
 		if (LaunchS.isValid() && !LaunchS.isPlaying()) {			// And play launch sound			
 			LaunchS.play(NOLOOP, 255);
@@ -1049,7 +1049,7 @@ void SaturnV::SISwitchSelector(int channel)
 	case 7: //Fuel Pressurizing Valve No. 4 Open
 		break;
 	case 8: //Inboard Engine Cutoff
-		SetThrusterResource(th_main[4], NULL); // Should stop the engine
+		SetThrusterResource(th_1st[4], NULL); // Should stop the engine
 		SShutS.play(NOLOOP, 235);
 		SShutS.done();
 		break;
@@ -1078,7 +1078,7 @@ void SaturnV::SISwitchSelector(int channel)
 		break;
 		break;
 	case 16: //Inboard Engine Cutoff Backup
-		SetThrusterResource(th_main[4], NULL);
+		SetThrusterResource(th_1st[4], NULL);
 		break;
 	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
 		break;
@@ -1118,7 +1118,7 @@ void SaturnV::SIISwitchSelector(int channel)
 			AddRCS_S4B();
 			SetSIVBThrusters(true);
 			SetThrusterGroupLevel(thg_ver, 1.0);
-			SetThrusterResource(th_main[0], ph_3rd);
+			SetThrusterResource(th_3rd[0], ph_3rd);
 
 			SetSIVbCMixtureRatio(4.946);
 		}
@@ -1176,7 +1176,7 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 8: //PU Inverter and DC Power Off
 		break;
 	case 9: //S-IVB Engine Start On
-		SetThrusterResource(th_main[0], ph_3rd);
+		SetThrusterResource(th_3rd[0], ph_3rd);
 		break;
 	case 10: //Engine Ready Bypass
 		break;
