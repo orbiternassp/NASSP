@@ -355,6 +355,7 @@ void Saturn::initSaturn()
 	FireTJM = false;
 	FirePCM = false;
 
+	PlatFail = 0;
 	FailureMultiplier = 1.0;
 
 	DeleteLaunchSite = true;
@@ -1167,6 +1168,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < LAUNCH_STAGE_SIVB)
 	{
 		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
+		if (PlatFail > 0) {
+			papiWriteScenario_double(scn, "PLATFAIL", PlatFail);
+		}
 	}
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
@@ -1601,6 +1605,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "NASSPVER", 8)) {
 		sscanf (line + 8, "%d", &nasspver);
+	}
+	else if (!strnicmp(line, "PLATFAIL", 8)) {
+		sscanf(line + 8, "%lf", &PlatFail);
 	}
 	else if (!strnicmp(line, "FAILUREMULTIPLIER", 17)) {
 		sscanf(line + 17, "%lf", &FailureMultiplier);
@@ -4493,7 +4500,14 @@ void Saturn::SetRandomFailures()
 	bool PlatformFailure;
 	double PlatformFailureTime;
 
-	if (!(random() & (int)(127.0 / FailureMultiplier)))
+	if (PlatFail > 0)
+	{
+		PlatformFailure = true;
+		PlatformFailureTime = PlatFail;
+
+		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
+	}
+	else if (!(random() & (int)(127.0 / FailureMultiplier)))
 	{
 		PlatformFailure = true;
 		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
