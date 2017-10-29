@@ -28,13 +28,17 @@ class SIVBSystems
 {
 public:
 	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2);
-	void Timestep(double simt, double simdt);
+	void Timestep(double simdt);
 
 	void EngineCutoff() { EngineStop = true; }
 	void EngineCutoffOff() { EngineStop = false; }
 	void EngineReadyBypass() { EngineReady = true; }
 	void EngineStartOn() { EngineStart = true; }
 	void EngineStartOff() { EngineStart = true; }
+	void FirstBurnRelayOn() { FirstBurnRelay = true; }
+	void FirstBurnRelayOff() { FirstBurnRelay = false; }
+	void SecondBurnRelayOn() { SecondBurnRelay = true; }
+	void SecondBurnRelayOff() { SecondBurnRelay = false; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -45,9 +49,13 @@ protected:
 	bool EngineStop;
 	bool EngineReady;
 
-	double ThrustLevel;
 	double ThrustTimer;
+
+	bool ThrustOK;
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;
 };
+
+#define SIVBSYSTEMS_START_STRING	"SIVBSYSTEMS_BEGIN"
+#define SIVBSYSTEMS_END_STRING		"SIVBSYSTEMS_END"

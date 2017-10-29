@@ -61,6 +61,7 @@
 #include "payload.h"
 #include "csmcomputer.h"
 #include "qball.h"
+#include "sivbsystems.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -937,12 +938,12 @@ public:
 	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
-	void SetSIVBThrusterLevel(double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetVernierThrusterLevel(double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
+	void ClearSIVBThrusterResource();
 	void SetQBallPowerOff();
 
 	///
@@ -3647,6 +3648,7 @@ protected:
 	CDU tcdu;
 	CDU scdu;
 	IU* iu;
+	SIVBSystems sivb;
 	CSMCautionWarningSystem cws;
 
 	DockingProbe dockingprobe;

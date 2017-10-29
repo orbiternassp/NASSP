@@ -782,17 +782,6 @@ void IUToLVCommandConnector::SetSIIThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIVBThrusterLevel(double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SIVB_THRUSTER_LEVEL;
-	cm.val1.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetVernierThrusterLevel(double level)
 {
 	ConnectorMessage cm;
@@ -816,18 +805,6 @@ void IUToLVCommandConnector::SetAPSThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetThrusterGroupLevel(THGROUP_HANDLE thg, double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_THRUSTER_GROUP_LEVEL;
-	cm.val1.pValue = thg;
-	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetAPSUllageThrusterLevel(int n, double level)
 {
 	ConnectorMessage cm;
@@ -836,18 +813,6 @@ void IUToLVCommandConnector::SetAPSUllageThrusterLevel(int n, double level)
 	cm.messageType = IULV_SET_APS_ULLAGE_THRUSTER_LEVEL;
 	cm.val1.iValue = n;
 	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_THRUSTER_RESOURCE;
-	cm.val1.pValue = th;
-	cm.val2.pValue = ph;
 
 	SendMessage(cm);
 }
@@ -870,6 +835,16 @@ void IUToLVCommandConnector::ClearSIIThrusterResource(int n)
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_CLEAR_SII_THRUSTER_RESOURCE;
 	cm.val1.iValue = n;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::ClearSIVBThrusterResource()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_CLEAR_SIVB_THRUSTER_RESOURCE;
 
 	SendMessage(cm);
 }
@@ -936,31 +911,6 @@ void IUToLVCommandConnector::SIVBBoiloff()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SIVB_BOILOFF;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetAttitudeLinLevel(int a1, int a2)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_ATTITUDE_LIN_LEVEL;
-	cm.val1.iValue = a1;
-	cm.val2.iValue = a2;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetAttitudeRotLevel (VECTOR3 th)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_ATTITUDE_ROT_LEVEL;
-	cm.val1.vValue = th;
 
 	SendMessage(cm);
 }

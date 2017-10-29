@@ -26,6 +26,7 @@
 #define _PA_SIVB_H
 
 #include "payload.h"
+#include "SIVBSystems.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -292,7 +293,7 @@ public:
 	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
 	void SetAPSUllageThrusterLevel(int n, double level);
-	void SetSIVBThrusterLevel(double level);
+	void ClearSIVBThrusterResource();
 
 	///
 	/// \brief Get main propellant mass.
@@ -482,6 +483,8 @@ protected:
 	/// \brief Instrument Unit.
 	///
 	IU* iu;
+
+	SIVBSystems sivbsys;
 
 	///
 	/// \brief Connector from SIVb to CSM when docked.

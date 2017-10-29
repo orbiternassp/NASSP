@@ -222,7 +222,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnia(_V(0.0, 0.707108, 0.707108)),
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108))
+	omnid(_V(0.0, 0.707108, -0.707108)),
+	sivb(this, th_3rd[0])
 
 #pragma warning ( pop ) // disable:4355
 
@@ -1324,6 +1325,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	//
 	if (stage < CSM_LEM_STAGE)
 	{
+		sivb.SaveState(scn);
 		SaveIU(scn);
 		SaveLVDC(scn);
 	}
@@ -1909,6 +1911,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
+	}
+	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
+		sivb.LoadState(scn);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		LoadIU(scn);
@@ -4724,6 +4729,14 @@ void Saturn::ClearSIIThrusterResource(int n)
 	SetThrusterResource(th_2nd[n], NULL);
 }
 
+void Saturn::ClearSIVBThrusterResource()
+{
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+	if (!th_3rd[0]) return;
+
+	SetThrusterResource(th_3rd[0], NULL);
+}
+
 void Saturn::SetQBallPowerOff()
 {
 	qball.SetPowerOff();
@@ -4745,14 +4758,6 @@ void Saturn::SetSIIThrusterLevel(int n, double level)
 	if (!th_2nd[n]) return;
 
 	SetThrusterLevel(th_2nd[n], level);
-}
-
-void Saturn::SetSIVBThrusterLevel(double level)
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_3rd[0]) return;
-
-	SetThrusterLevel(th_3rd[0], level);
 }
 
 void Saturn::SetAPSUllageThrusterLevel(int n, double level)

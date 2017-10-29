@@ -1177,14 +1177,18 @@ void SaturnV::SIVBSwitchSelector(int channel)
 		break;
 	case 9: //S-IVB Engine Start On
 		SetThrusterResource(th_3rd[0], ph_3rd);
+		sivb.EngineStartOn();
 		break;
 	case 10: //Engine Ready Bypass
+		sivb.EngineReadyBypass();
 		break;
 	case 11: //Fuel Injection Temperature OK Bypass
 		break;
 	case 12: //S-IVB Engine Cutoff
+		sivb.EngineCutoff();
 		break;
 	case 13: //S-IVB Engine Cutoff Off
+		sivb.EngineCutoffOff();
 		break;
 	case 14: //Engine Mainstage Control Valve Open On
 		break;
@@ -1211,6 +1215,7 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 26: //Burner LH2 Propellant Valve Open On
 		break;
 	case 27: //S-IVB Engine Start Off
+		sivb.EngineStartOff();
 		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
 		break;
@@ -1221,8 +1226,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 31: //Start Bottle Vent Control Valve Open Off
 		break;
 	case 32: //Second Burn Relay On
+		sivb.SecondBurnRelayOn();
 		break;
 	case 33: //Second Burn Relay Off
+		sivb.SecondBurnRelayOff();
 		break;
 	case 36: //Repressurization System Mode Select On (Amb)
 		break;
@@ -1277,8 +1284,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 65: //LH2 Tank Latching Relief Valve Latch Off
 		break;
 	case 68: //First Burn Relay On
+		sivb.FirstBurnRelayOn();
 		break;
 	case 69: //First Burn Relay Off
+		sivb.FirstBurnRelayOff();
 		break;
 	case 70: //Burner Exciters On
 		break;

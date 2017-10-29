@@ -280,7 +280,7 @@ void EDS1B::Timestep(double simdt)
 		}
 		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
 		{
-			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+			iu->GetLVCommandConnector()->ClearSIVBThrusterResource();
 		}
 	}
 
@@ -600,7 +600,7 @@ void EDSSV::Timestep(double simdt)
 		}
 		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
 		{
-			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+			iu->GetLVCommandConnector()->ClearSIVBThrusterResource();
 		}
 	}
 

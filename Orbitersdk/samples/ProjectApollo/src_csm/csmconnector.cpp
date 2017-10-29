@@ -388,22 +388,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_ATTITUDE_LIN_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_ROT_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetSaturnAttitudeRotLevel(m.val1.vValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_SI_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
@@ -416,14 +400,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->SetSIIThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SIVB_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetSIVBThrusterLevel(m.val1.dValue);
 			return true;
 		}
 		break;
@@ -444,26 +420,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_THRUSTER_GROUP_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetThrusterGroupLevel((THGROUP_HANDLE) m.val1.pValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
 			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_THRUSTER_RESOURCE:
-		if (OurVessel)
-		{
-			OurVessel->SetThrusterResource((THRUSTER_HANDLE) m.val1.pValue, (PROPELLANT_HANDLE) m.val2.pValue);
 			return true;
 		}
 		break;
@@ -480,6 +440,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->ClearSIIThrusterResource(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_CLEAR_SIVB_THRUSTER_RESOURCE:
+		if (OurVessel)
+		{
+			OurVessel->ClearSIVBThrusterResource();
 			return true;
 		}
 		break;
