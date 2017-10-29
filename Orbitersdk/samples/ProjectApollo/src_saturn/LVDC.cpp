@@ -2872,6 +2872,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	}
 	G_T = 0;
 	H = 0;
+	h = 0;
+	h_1 = 0;
+	h_2 = 0;
 	IGMInterval = 0;
 	Inclination = 0;
 	J = 0;
@@ -2887,6 +2890,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_3 = 0;
 	K_4 = 0;
 	K_5 = 0;
+	K_D = 0;
 	K_P1 = 0;
 	K_P2 = 0;
 	K_Y1 = 0;
@@ -2921,6 +2925,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Q_P = 0;
 	R = 0;
 	RAS = 0;
+	rho = 0;
+	rho_c = 0;
 	ROV = 0;
 	ROVR = 0;
 	ROVs = 0;
@@ -3230,6 +3236,8 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	ROTR = true;
 	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	dV_BR = 2.8816;
+	rho = 0;
+	rho_c = 0.5e-7;
 	ROV = 1.48119724870249; //0.75-17
 	ROVs = 1.5;
 	ROVR = 0.0;
@@ -3300,6 +3308,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	//rate limits: set in pre-igm
 	alpha_1 = 0;							// orbital guidance pitch
 	alpha_2 = 0;							// orbital guidance yaw
+	K_D = 0.131764e-3;
 	K_P1 = 0.0;//4.3 * RAD;					// restart attitude coefficients
 	K_P2 = 0;
 	K_Y1 = 0;
@@ -3395,6 +3404,9 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	T_T=0;									// Time-To-Go computed using T_3
 	X_1 = 0;
 	X_2 = 0;
+	h = 0;
+	h_1 = 1.5e5;
+	h_2 = 3.0e5;
 	
 	tchi_y=0; tchi_p=0;						// Angles to null velocity deficiencies without regard to terminal data
 	dot_zeta_T=0; dot_xi_T=0; dot_eta_T=0;	// I don't know.
@@ -3752,6 +3764,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_gxt[5]", gxt[5]);
 	papiWriteScenario_double(scn, "LVDC_gxt[6]", gxt[6]);
 	papiWriteScenario_double(scn, "LVDC_H", H);
+	papiWriteScenario_double(scn, "LVDC_h_1", h_1);
+	papiWriteScenario_double(scn, "LVDC_h_2", h_2);
 	papiWriteScenario_double(scn, "LVDC_hx[0][0]", hx[0][0]);
 	papiWriteScenario_double(scn, "LVDC_hx[0][1]", hx[0][1]);
 	papiWriteScenario_double(scn, "LVDC_hx[0][2]", hx[0][2]);
@@ -3782,6 +3796,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_3", K_3);
 	papiWriteScenario_double(scn, "LVDC_K_4", K_4);
 	papiWriteScenario_double(scn, "LVDC_K_5", K_5);
+	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
 	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
 	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
@@ -3847,7 +3862,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB14", TABLE15[1].target[14].RAS);
-	papiWriteScenario_double(scn, "LVDC_rho", rho);
+	papiWriteScenario_double(scn, "LVDC_rho_c", rho_c);
 	papiWriteScenario_double(scn, "LVDC_Rho[0]", Rho[0]);
 	papiWriteScenario_double(scn, "LVDC_Rho[1]", Rho[1]);
 	papiWriteScenario_double(scn, "LVDC_Rho[2]", Rho[2]);
@@ -4392,6 +4407,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_gxt[5]", gxt[5]);
 		papiReadScenario_double(line, "LVDC_gxt[6]", gxt[6]);
 		papiReadScenario_double(line, "LVDC_H", H);
+		papiReadScenario_double(line, "LVDC_h_1", h_1);
+		papiReadScenario_double(line, "LVDC_h_2", h_2);
 		papiReadScenario_double(line, "LVDC_hx[0][0]", hx[0][0]);
 		papiReadScenario_double(line, "LVDC_hx[0][1]", hx[0][1]);
 		papiReadScenario_double(line, "LVDC_hx[0][2]", hx[0][2]);
@@ -4422,6 +4439,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_3", K_3);
 		papiReadScenario_double(line, "LVDC_K_4", K_4);
 		papiReadScenario_double(line, "LVDC_K_5", K_5);
+		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_P1", K_P1);
 		papiReadScenario_double(line, "LVDC_K_P2", K_P2);
 		papiReadScenario_double(line, "LVDC_K_Y1", K_Y1);
@@ -4487,7 +4505,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 		papiReadScenario_double(line, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 		papiReadScenario_double(line, "LVDC_RASB14", TABLE15[1].target[14].RAS);
-		papiReadScenario_double(line, "LVDC_rho", rho);
+		papiReadScenario_double(line, "LVDC_rho_c", rho_c);
 		papiReadScenario_double(line, "LVDC_R_N", R_N);
 		papiReadScenario_double(line, "LVDC_RNA", TABLE15[0].R_N);
 		papiReadScenario_double(line, "LVDC_RNB", TABLE15[1].R_N);
@@ -7724,12 +7742,24 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				ddotG_act.z = PosS_4sec.z*S - MX_A.m23*P;
 
 				//Drag (4sec)
-				rho = Rho[0] + (R - a)*(Rho[1] + (R - a)*(Rho[2] + (R - a)*(Rho[3] + (R - a)*(Rho[4] + (R - a)*Rho[5]))));
-				gamma = asin(dotp(PosS_4sec, DotS_4sec) / R / length(DotS_4sec));
-				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
+				h = R - a;
+				if (h > h_2)
+				{
+					rho = 0.0;
+				}
+				else if (h < h_1)
+				{
+					rho = rho_c;
+				}
+				else
+				{
+					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+				}
 				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
+				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z)+DotS_R.y*sin(CurrentAttitude.z)-DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
+				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
+				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
 
 				DDotS_4sec = ddotG_act + DDotS_D;
 
@@ -7749,12 +7779,24 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				ddotG_act.z = PosS_8secP.z*S - MX_A.m23*P;
 
 				//Drag (8sec intermediate)
-				rho = Rho[0] + (R - a)*(Rho[1] + (R - a)*(Rho[2] + (R - a)*(Rho[3] + (R - a)*(Rho[4] + (R - a)*Rho[5]))));
-				gamma = asin(dotp(PosS_8secP, DotS_8secP) / R / length(DotS_8secP));
-				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
+				h = R - a;
+				if (h > h_2)
+				{
+					rho = 0.0;
+				}
+				else if (h < h_1)
+				{
+					rho = rho_c;
+				}
+				else
+				{
+					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+				}
 				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
+				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
+				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
+				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
 
 				DDotS_8secP = ddotG_act + DDotS_D;
 
@@ -7774,12 +7816,24 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				ddotG_act.z = PosS_8sec.z*S - MX_A.m23*P;
 
 				//Drag (8sec final)
-				rho = Rho[0] + (R - a)*(Rho[1] + (R - a)*(Rho[2] + (R - a)*(Rho[3] + (R - a)*(Rho[4] + (R - a)*Rho[5]))));
-				gamma = asin(dotp(PosS_8sec, DotS_8sec) / R / length(DotS_8sec));
-				drag_area = Drag_Area[0] + Drag_Area[1] * gamma + Drag_Area[2] * pow(gamma, 2) + Drag_Area[3] * pow(gamma, 3) + Drag_Area[4] * pow(gamma, 4);
+				h = R - a;
+				if (h > h_2)
+				{
+					rho = 0.0;
+				}
+				else if (h < h_1)
+				{
+					rho = rho_c;
+				}
+				else
+				{
+					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+				}
 				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
 				V_R = Mag(DotS_R);
-				DDotS_D = -DotS_R*rho*drag_area*V_R / (2.0*lvCommandConnector->GetMass());
+				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
+				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
+				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
 
 				ddotM_act = ddotG_act + DDotS_D;
 				// The messy RK3 having been done, we now commit the integrated position and velocity into platform data
