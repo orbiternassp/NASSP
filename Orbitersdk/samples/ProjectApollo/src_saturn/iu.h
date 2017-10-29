@@ -115,6 +115,7 @@ enum IULVMessageType
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
 	IULV_SIVB_SWITCH_SELECTOR,
+	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
@@ -249,6 +250,8 @@ public:
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
+
+	void SetQBallPowerOff();
 
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);

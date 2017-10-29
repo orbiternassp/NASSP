@@ -936,6 +936,16 @@ void IUToLVCommandConnector::SetSIVBThrusterDir(VECTOR3 &dir)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::SetQBallPowerOff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_QBALL_POWER_OFF;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SetContrailLevel(double level)
 {
 	ConnectorMessage cm;
@@ -1761,6 +1771,9 @@ void IU1B::SwitchSelector(int item)
 		fcc.SetGainSwitch(0);
 		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
+	case 1: //Q-Ball Power Off
+		lvCommandConnector.SetQBallPowerOff();
+		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		eds.SetExcessiveRatesAutoAbortInhibit(true);
 		eds.SetRateGyroSCIndicationSwitchA(true);
@@ -1912,6 +1925,7 @@ void IUSV::SwitchSelector(int item)
 		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
 	case 1: //Q-Ball Power Off
+		lvCommandConnector.SetQBallPowerOff();
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		eds.SetExcessiveRatesAutoAbortInhibit(true);

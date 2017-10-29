@@ -599,6 +599,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_SET_QBALL_POWER_OFF:
+		if (OurVessel)
+		{
+			OurVessel->SetQBallPowerOff();
+			return true;
+		}
+		break;
+
 	case IULV_ADD_FORCE:
 		if (OurVessel)
 		{

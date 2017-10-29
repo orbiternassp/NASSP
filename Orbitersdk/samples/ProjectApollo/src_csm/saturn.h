@@ -60,6 +60,7 @@
 #include "checklistController.h"
 #include "payload.h"
 #include "csmcomputer.h"
+#include "qball.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -943,6 +944,7 @@ public:
 	void SetVernierThrusterLevel(double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
+	void SetQBallPowerOff();
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -3652,6 +3654,8 @@ protected:
 	SECS secs;
 	ELS els;
 
+	QBall qball;
+
 	Pyro CMSMPyros;
 	Pyro CMDockingRingPyros;
 	Pyro CSMLVPyros;
@@ -4365,6 +4369,7 @@ protected:
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
 	friend class SaturnSystemTestAttenuator;
+	friend class SaturnLVSPSPcMeter;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

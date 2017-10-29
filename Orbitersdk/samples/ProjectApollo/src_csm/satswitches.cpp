@@ -1326,8 +1326,8 @@ double SaturnLVSPSPcMeter::QueryValue()
 		return Sat->GetSPSEngine()->GetChamberPressurePSI();
 
 	} else {
-		if (Sat->LETAttached() && Sat->GetDynPressure() > 100.0) {
-			return fabs((10.0 / RAD) * Sat->GetAOA());
+		if (Sat->stage < CSM_LEM_STAGE) {
+			return fabs((10.0 / RAD) * Sat->qball.GetAOA());
 		} else {
 			return 0;
 		}

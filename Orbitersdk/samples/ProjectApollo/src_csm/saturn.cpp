@@ -1301,6 +1301,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	secs.SaveState(scn);
 	els.SaveState(scn);
 
+	if (LESAttached)
+	{
+		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
+	}
+
 	//
 	// If we've seperated from the SIVb, the IU is history.
 	//
@@ -1888,6 +1893,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
 		ascp.LoadState(scn);
+	}
+	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
+		qball.LoadState(scn, QBALL_END_STRING);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		iu->LoadState(scn);
@@ -4699,6 +4707,11 @@ void Saturn::ClearSIIThrusterResource(int n)
 	if (!th_main[n]) return;
 
 	SetThrusterResource(th_main[n], NULL);
+}
+
+void Saturn::SetQBallPowerOff()
+{
+	qball.SetPowerOff();
 }
 
 void Saturn::SetSIThrusterLevel(int n, double level)

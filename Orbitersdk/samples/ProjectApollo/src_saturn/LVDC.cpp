@@ -860,6 +860,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
+				case 5:
+					//TB2+4.0: Q-Ball Power Off
+					if (LVDC_TB_ETime > 4.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 1);
+						CommandSequence++;
+					}
+					break;
 				default:
 					break;
 				}
