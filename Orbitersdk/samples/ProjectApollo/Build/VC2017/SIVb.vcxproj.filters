@@ -48,6 +48,9 @@
     <ClCompile Include="..\..\src_saturn\LVDA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\connector.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_saturn\LVDA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\sivbsystems.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
