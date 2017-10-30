@@ -275,10 +275,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_SIVB_THRUSTER_LEVEL:
+	case IULV_GET_SIVB_THRUST_OK:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
+			m.val1.bValue = OurVessel->GetSIVBThrustOK();
 			return true;
 		}
 		break;
@@ -364,14 +364,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_J2_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_CONTRAIL_LEVEL:
 		if (OurVessel)
 		{
@@ -444,10 +436,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_CLEAR_SIVB_THRUSTER_RESOURCE:
+	case IULV_SIVB_EDS_CUTOFF:
 		if (OurVessel)
 		{
-			OurVessel->ClearSIVBThrusterResource();
+			OurVessel->SIVBEDSCutoff(m.val1.bValue);
 			return true;
 		}
 		break;

@@ -265,12 +265,6 @@ public:
 	virtual void SetState(SIVBSettings &state);
 
 	///
-	/// \brief Set thrust level of the J2 engine.
-	/// \param thrust Thrust level from 0.0 to 1.0.
-	///
-	void SetJ2ThrustLevel(double thrust);
-
-	///
 	/// \brief Get thrust level of the J2 engine.
 	/// \return Thrust level from 0.0 to 1.0.
 	///
@@ -288,12 +282,12 @@ public:
 	///
 	double GetMissionTime();
 
-	double GetSIVBThrusterLevel();
+	bool GetSIVBThrustOK();
 
 	void SetSIVBThrusterDir(VECTOR3 &dir);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
 	void SetAPSUllageThrusterLevel(int n, double level);
-	void ClearSIVBThrusterResource();
+	void SIVBEDSCutoff(bool cut);
 
 	///
 	/// \brief Get main propellant mass.

@@ -4507,15 +4507,6 @@ void Saturn::SetRandomFailures()
 	}
 }
 
-void Saturn::SetJ2ThrustLevel(double thrust)
-
-{
-	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0])
-		return;
-
-	SetThrusterLevel(th_3rd[0], thrust);
-}
-
 void Saturn::EnableDisableJ2(bool Enable)
 
 {
@@ -4677,12 +4668,11 @@ double Saturn::GetSIIThrusterLevel(int n)
 	return GetThrusterLevel(th_2nd[n]);
 }
 
-double Saturn::GetSIVBThrusterLevel()
+bool Saturn::GetSIVBThrustOK()
 {
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return 0.0;
-	if (!th_3rd[0]) return 0.0;
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	return GetThrusterLevel(th_3rd[0]);
+	return sivb.GetThrustOK();
 }
 
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
@@ -4729,12 +4719,11 @@ void Saturn::ClearSIIThrusterResource(int n)
 	SetThrusterResource(th_2nd[n], NULL);
 }
 
-void Saturn::ClearSIVBThrusterResource()
+void Saturn::SIVBEDSCutoff(bool cut)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_3rd[0]) return;
 
-	SetThrusterResource(th_3rd[0], NULL);
+	sivb.EDSEngineCutoff(cut);
 }
 
 void Saturn::SetQBallPowerOff()

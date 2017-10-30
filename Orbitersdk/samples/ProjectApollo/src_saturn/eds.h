@@ -49,6 +49,7 @@ public:
 	void SetRateGyroSCIndicationSwitchB(bool set) { RateGyroSCIndicationSwitchB = set; }
 	void SetLVEnginesCutoffEnable(bool set) { LVEnginesCutoffEnable = set; }
 	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
+	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 
 	bool GetSIEngineOut() { return SI_Engine_Out; }
 	bool GetSIIEngineOut() { return SII_Engine_Out; }
@@ -91,6 +92,8 @@ protected:
 	bool LVEnginesCutoff2;
 	bool LVEnginesCutoff3;
 	bool SecondPlaneSeparationMonitorRelay;
+	bool SIVBEngineCutoffDisabled;
+	bool SIVBEDSCutoff;
 
 	//Common Saturn Failures
 	bool PlatformFailure;

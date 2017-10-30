@@ -1527,13 +1527,6 @@ bool SIVB::IsVenting()
 	return FuelVenting;
 }
 
-void SIVB::SetJ2ThrustLevel(double thrust)
-
-{
-	if (th_main[0])
-		SetThrusterLevel(th_main[0], thrust);
-}
-
 double SIVB::GetJ2ThrustLevel()
 
 {
@@ -1563,18 +1556,14 @@ void SIVB::SetAPSUllageThrusterLevel(int n, double level)
 	SetThrusterLevel(th_att_lin[n], level);
 }
 
-double SIVB::GetSIVBThrusterLevel()
+bool SIVB::GetSIVBThrustOK()
 {
-	if (!th_main[0]) return 0.0;
-
-	return GetThrusterLevel(th_main[0]);
+	return sivbsys.GetThrustOK();
 }
 
-void SIVB::ClearSIVBThrusterResource()
+void SIVB::SIVBEDSCutoff(bool cut)
 {
-	if (!th_main[0]) return;
-
-	SetThrusterResource(th_main[0], NULL);
+	sivbsys.EDSEngineCutoff(cut);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -2059,10 +2048,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_SIVB_THRUSTER_LEVEL:
+	case IULV_GET_SIVB_THRUST_OK:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
+			m.val1.bValue = OurVessel->GetSIVBThrustOK();
 			return true;
 		}
 		break;
@@ -2084,18 +2073,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_J2_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_CLEAR_SIVB_THRUSTER_RESOURCE:
+	case IULV_SIVB_EDS_CUTOFF:
 		if (OurVessel)
 		{
-			OurVessel->ClearSIVBThrusterResource();
+			OurVessel->SIVBEDSCutoff(m.val1.bValue);
 			return true;
 		}
 		break;

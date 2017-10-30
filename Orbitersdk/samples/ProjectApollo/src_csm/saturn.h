@@ -932,7 +932,7 @@ public:
 
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
-	double GetSIVBThrusterLevel();
+	bool GetSIVBThrustOK();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
@@ -943,7 +943,7 @@ public:
 	void SetVernierThrusterLevel(double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
-	void ClearSIVBThrusterResource();
+	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 
 	///

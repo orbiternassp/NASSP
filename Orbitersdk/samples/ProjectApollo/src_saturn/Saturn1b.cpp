@@ -448,10 +448,10 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 		sivb.EngineReadyBypass();
 		break;
 	case 12: //S-IVB Engine Cutoff No. 1 On
-		sivb.EngineCutoff();
+		sivb.LVDCEngineCutoff();
 		break;
 	case 13: //S-IVB Engine Cutoff No. 1 Off
-		sivb.EngineCutoffOff();
+		sivb.LVDCEngineCutoffOff();
 		break;
 	case 19: //Engine Ready Bypass On
 		sivb.EngineReadyBypass();
@@ -469,10 +469,10 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 	case 35: //P.U. Mixture Ratio 5.5 Off
 		break;
 	case 43: //S-IVB Engine Cutoff No. 2 On
-		sivb.EngineCutoff();
+		sivb.LVDCEngineCutoff();
 		break;
 	case 49: //S-IVB Engine Cutoff No. 2 Off
-		sivb.EngineCutoffOff();
+		sivb.LVDCEngineCutoffOff();
 		break;
 	default:
 		break;

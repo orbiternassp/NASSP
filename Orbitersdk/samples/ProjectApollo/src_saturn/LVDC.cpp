@@ -1026,7 +1026,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvCommandConnector->GetSIVBThrusterLevel() == 0))
+				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvda.GetSIVBEngineOut()))
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -1113,7 +1113,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
 				/*if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
 					lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
@@ -1125,8 +1125,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 				// Orbital stage timed events
 				if(lvCommandConnector->GetStage() != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
-				// Venting			
-				if (LVDC_TB_ETime >= 5773) {				
+				// Venting (TEMPORARY BROKEN)			
+				/*if (LVDC_TB_ETime >= 5773) {				
 					if (lvCommandConnector->GetSIVBThrusterLevel() > 0) {
 						lvCommandConnector->SetJ2ThrustLevel(0);
 						lvCommandConnector->EnableDisableJ2(false);
@@ -1138,12 +1138,10 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 							lvCommandConnector->SetJ2ThrustLevel(1);
 						}
 					}
-				}
+				}*/
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime){
-					if (lvCommandConnector->GetSIVBThrusterLevel() < 0.5){
-						lvCommandConnector->SIVBBoiloff();
-					}
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0){
+					lvCommandConnector->SIVBBoiloff();
 					BoiloffTime = lvCommandConnector->GetMissionTime()+10.0;
 				}
 
@@ -5838,7 +5836,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetSIVBThrusterLevel() == 0))
+				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvda.GetSIVBEngineOut()))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;
@@ -6148,7 +6146,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
 
 				if(LVDC_TB_ETime > 100){
@@ -6157,10 +6155,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime) {
-					if (lvCommandConnector->GetSIVBThrusterLevel() < 0.5) {
-						lvCommandConnector->SIVBBoiloff();
-					}
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0) {
+					lvCommandConnector->SIVBBoiloff();
 					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 
@@ -6686,7 +6682,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
-					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog, "S4B IGNITION: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
@@ -6733,7 +6729,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| lvCommandConnector->GetSIVBThrusterLevel() == 0 || (lvda.GetCMCSIVBShutdown())))
+					|| lvda.GetSIVBEngineOut() || lvda.GetCMCSIVBShutdown()))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;
@@ -6922,7 +6918,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if (LVDC_TB_ETime < 2) {
-					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {
@@ -7295,7 +7291,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB5a+0.6: S-IVB Engine EDS Cutoff No. 2 Disable
 					if (LVDC_TB_ETime > 0.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine EDS Cutoff No. 2 Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 19);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB5a+0.8: IU Command System Enable

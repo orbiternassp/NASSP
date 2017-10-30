@@ -1185,10 +1185,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 11: //Fuel Injection Temperature OK Bypass
 		break;
 	case 12: //S-IVB Engine Cutoff
-		sivb.EngineCutoff();
+		sivb.LVDCEngineCutoff();
 		break;
 	case 13: //S-IVB Engine Cutoff Off
-		sivb.EngineCutoffOff();
+		sivb.LVDCEngineCutoffOff();
 		break;
 	case 14: //Engine Mainstage Control Valve Open On
 		break;
@@ -1203,6 +1203,7 @@ void SaturnV::SIVBSwitchSelector(int channel)
 		SetSIVbCMixtureRatio(4.946);
 		break;
 	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable
+		sivb.EDSCutoffDisable();
 		break;
 	case 22: //LOX Chilldown Pump On
 		break;

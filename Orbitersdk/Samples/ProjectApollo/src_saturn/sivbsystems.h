@@ -30,8 +30,9 @@ public:
 	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2);
 	void Timestep(double simdt);
 
-	void EngineCutoff() { EngineStop = true; }
-	void EngineCutoffOff() { EngineStop = false; }
+	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
+	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
+	void EDSEngineCutoff(bool cut) { EDSEngineStop = cut; }
 	void EngineReadyBypass() { EngineReady = true; }
 	void EngineStartOn() { EngineStart = true; }
 	void EngineStartOff() { EngineStart = true; }
@@ -39,19 +40,39 @@ public:
 	void FirstBurnRelayOff() { FirstBurnRelay = false; }
 	void SecondBurnRelayOn() { SecondBurnRelay = true; }
 	void SecondBurnRelayOff() { SecondBurnRelay = false; }
+	void EDSCutoffDisable() { EDSCutoffDisabled = true; }
+	
+	bool GetThrustOK() { return ThrustOKRelay; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
 	bool FirstBurnRelay;
 	bool SecondBurnRelay;
-	bool EngineStart;
-	bool EngineStop;
 	bool EngineReady;
 
-	double ThrustTimer;
+	//K100 and K101
+	bool ThrustOKRelay;
+	//K105
+	bool AftPowerDisableRelay;
+	//K106
+	bool CutoffInhibitRelay;
+	//K112
+	bool LVDCEngineStopRelay;
 
-	bool ThrustOK;
+	bool RSSEngineStop;
+	bool EDSEngineStop;
+	bool PropellantDepletionSensors;
+
+	bool EnginePower;
+	bool EngineCutoffBus;
+	bool EngineStart;
+	bool EngineStop;
+
+	bool EDSCutoffDisabled;
+
+	double ThrustTimer;
+	double ThrustLevel;
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;

@@ -86,7 +86,6 @@ enum IUCSMMessageType
 enum IULVMessageType
 {
 	IULV_ENABLE_J2,							///< Enable the J2 engine.
-	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_SII_THRUSTER_LEVEL,
 	IULV_SET_VERNIER_THRUSTER_LEVEL,
@@ -94,7 +93,7 @@ enum IULVMessageType
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
 	IULV_CLEAR_SII_THRUSTER_RESOURCE,
-	IULV_CLEAR_SIVB_THRUSTER_RESOURCE,
+	IULV_SIVB_EDS_CUTOFF,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
@@ -138,7 +137,7 @@ enum IULVMessageType
 	IULV_GET_APOLLONO,
 	IULV_GET_SI_THRUSTER_LEVEL,
 	IULV_GET_SII_THRUSTER_LEVEL,
-	IULV_GET_SIVB_THRUSTER_LEVEL,
+	IULV_GET_SIVB_THRUST_OK,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
 };
@@ -215,7 +214,6 @@ public:
 	~IUToLVCommandConnector();
 
 	void EnableDisableJ2(bool Enable);
-	void SetJ2ThrustLevel(double thrust);
 	void SetVentingThruster();
 
 	void SetSIThrusterLevel(int n, double level);
@@ -226,7 +224,7 @@ public:
 	void SetAPSThrusterLevel(int n, double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
-	void ClearSIVBThrusterResource();
+	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
@@ -272,7 +270,7 @@ public:
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
-	double GetSIVBThrusterLevel();
+	double GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);

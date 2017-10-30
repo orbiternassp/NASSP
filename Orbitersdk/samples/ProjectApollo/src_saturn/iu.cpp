@@ -183,7 +183,7 @@ bool IU::GetSIVBEngineOut()
 	int stage = lvCommandConnector.GetStage();
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	double oetl = lvCommandConnector.GetSIVBThrusterLevel();
+	double oetl = lvCommandConnector.GetSIVBThrustOK();
 	if (oetl == 0) return true;
 
 	return false;
@@ -735,18 +735,6 @@ void IUToLVCommandConnector::EnableDisableJ2(bool Enable)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetJ2ThrustLevel(double thrust)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_J2_THRUST_LEVEL;
-	cm.val1.dValue = thrust;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetVentingThruster()
 
 {
@@ -839,12 +827,13 @@ void IUToLVCommandConnector::ClearSIIThrusterResource(int n)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::ClearSIVBThrusterResource()
+void IUToLVCommandConnector::SIVBEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_CLEAR_SIVB_THRUSTER_RESOURCE;
+	cm.messageType = IULV_SIVB_EDS_CUTOFF;
+	cm.val1.bValue = cut;
 
 	SendMessage(cm);
 }
@@ -1387,19 +1376,19 @@ double IUToLVCommandConnector::GetSIIThrusterLevel(int n)
 	return 0.0;
 }
 
-double IUToLVCommandConnector::GetSIVBThrusterLevel()
+double IUToLVCommandConnector::GetSIVBThrustOK()
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIVB_THRUSTER_LEVEL;
+	cm.messageType = IULV_GET_SIVB_THRUST_OK;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.dValue;
+		return cm.val1.bValue;
 	}
 
-	return 0.0;
+	return false;
 }
 
 double IUToLVCommandConnector::GetFirstStageThrust()
@@ -1551,6 +1540,7 @@ void IU1B::SwitchSelector(int item)
 	case 3: //S-IVB Engine EDS Cutoffs Disable
 		eds.SetSIVBEngineOutIndicationA(false);
 		eds.SetSIVBEngineOutIndicationB(false);
+		eds.SetSIVBEngineCutoffDisabled();
 		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
 		fcc.SetSIVBBurnMode(false);
@@ -1747,6 +1737,7 @@ void IUSV::SwitchSelector(int item)
 		eds.SetSIIEngineOutIndicationA(true);
 		break;
 	case 29: //S-IVB Engine EDS Cutoff No. 1 Disable
+		eds.SetSIVBEngineCutoffDisabled();
 		break;
 	case 31: //Flight Control Computer Burn Mode On "A"
 		fcc.SetStageSwitch(2);

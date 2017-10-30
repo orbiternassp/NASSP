@@ -41,8 +41,14 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2) :
 	FirstBurnRelay = false;
 	SecondBurnRelay = false;
 	EngineStart = false;
-	EngineStop = false;
+	LVDCEngineStopRelay = false;
+	EDSEngineStop = false;
 	EngineReady = false;
+	EnginePower = false;
+	PropellantDepletionSensors = false;
+	CutoffInhibitRelay = false;
+	RSSEngineStop = false;
+	ThrustOKRelay = false;
 
 	ThrustTimer = 0.0;
 }
@@ -53,9 +59,14 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FIRSTBURNRELAY", FirstBurnRelay);
 	papiWriteScenario_bool(scn, "SECONDBURNRELAY", SecondBurnRelay);
 	papiWriteScenario_bool(scn, "ENGINESTART", EngineStart);
+	papiWriteScenario_bool(scn, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
+	papiWriteScenario_bool(scn, "EDSENGINESTOP", EDSEngineStop);
+	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
 	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
 	papiWriteScenario_bool(scn, "ENGINEREADY", EngineReady);
+	papiWriteScenario_bool(scn, "CUTOFFINHIBITRELAY", CutoffInhibitRelay);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
+	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 
 	oapiWriteLine(scn, SIVBSYSTEMS_END_STRING);
 }
@@ -70,9 +81,14 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "FIRSTBURNRELAY", FirstBurnRelay);
 		papiReadScenario_bool(line, "SECONDBURNRELAY", SecondBurnRelay);
 		papiReadScenario_bool(line, "ENGINESTART", EngineStart);
+		papiReadScenario_bool(line, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
+		papiReadScenario_bool(line, "EDSENGINESTOP", EDSEngineStop);
+		papiReadScenario_bool(line, "RSSENGINESTOP", RSSEngineStop);
 		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
 		papiReadScenario_bool(line, "ENGINEREADY", EngineReady);
+		papiReadScenario_bool(line, "CUTOFFINHIBITRELAY", CutoffInhibitRelay);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
+		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 
 	}
 }
@@ -81,7 +97,59 @@ void SIVBSystems::Timestep(double simdt)
 {
 	if (j2engine == NULL) return;
 
-	double ThrustLevel = 0.0;
+	//Thrust OK switch
+	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
+
+	//TBD: Propellant Depletion
+
+	//Engine Control Power Switch (EDS no. 1, range safety no. 1)
+	if ((!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop)
+	{
+		AftPowerDisableRelay = true;
+	}
+	else
+	{
+		AftPowerDisableRelay = false;
+	}
+
+	//Engine Power
+	if (!AftPowerDisableRelay)
+	{
+		EnginePower = true;
+	}
+	else
+	{
+		EnginePower = false;
+	}
+
+	if (EnginePower && ThrustOK)
+	{
+		ThrustOKRelay = true;
+	}
+	else
+	{
+		ThrustOKRelay = false;
+	}
+
+	if (ThrustOKRelay)
+	{
+		CutoffInhibitRelay = true;
+	}
+
+	//Engine Cutoff Bus (switch selector, range safety system no. 2, EDS no. 2, propellant depletion sensors)
+	if (LVDCEngineStopRelay || EDSEngineStop || RSSEngineStop || PropellantDepletionSensors)
+	{
+		EngineCutoffBus = true;
+	}
+	else
+	{
+		EngineCutoffBus = false;
+	}
+
+	if ((!ThrustOKRelay && CutoffInhibitRelay) || EngineCutoffBus)
+	{
+		EngineStop = true;
+	}
 
 	if (EngineStop)
 	{
@@ -90,6 +158,7 @@ void SIVBSystems::Timestep(double simdt)
 			ThrustTimer = 0.0;
 			EngineStart = false;
 			EngineReady = false;
+			CutoffInhibitRelay = false;
 		}
 
 		ThrustTimer += simdt;
@@ -100,19 +169,26 @@ void SIVBSystems::Timestep(double simdt)
 			if (ThrustTimer < 2.0) {
 				if (ThrustTimer < 0.25) {
 					// 95% of thrust dies in the first .25 second
-					vessel->SetThrusterLevel(j2engine, 1 - (ThrustTimer*3.3048));
+					ThrustLevel = 1.0 - (ThrustTimer*3.3048);
+					vessel->SetThrusterLevel(j2engine, ThrustLevel);
 				}
 				else {
 					if (ThrustTimer < 1.5) {
 						// The remainder dies over the next 1.25 second
-						vessel->SetThrusterLevel(j2engine, 0.1738 - ((ThrustTimer - 0.25)*0.1390));
+						ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
+						vessel->SetThrusterLevel(j2engine, ThrustLevel);
 					}
 					else {
 						// Engine is completely shut down at 1.5 second
-						vessel->SetThrusterLevel(j2engine, 0);
+						ThrustLevel = 0.0;
+						vessel->SetThrusterLevel(j2engine, ThrustLevel);
 					}
 				}
 			}
+		}
+		else
+		{
+			EngineStop = false;
 		}
 	}
 	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0)
