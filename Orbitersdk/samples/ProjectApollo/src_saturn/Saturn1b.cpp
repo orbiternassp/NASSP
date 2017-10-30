@@ -498,6 +498,10 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 
 	SetupMeshes();
 
+	if (iu == NULL && stage < CSM_LEM_STAGE) {
+		iu = new IU1B;
+	}
+
 	switch (stage) {
 
 	case ROLLOUT_STAGE:
