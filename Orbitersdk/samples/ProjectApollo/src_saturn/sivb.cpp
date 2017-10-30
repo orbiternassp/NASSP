@@ -156,7 +156,7 @@ void SIVbLoadMeshes()
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk),
-	sivbsys(this, th_main[0])
+	sivbsys(this, th_main[0], th_lox_vent)
 
 {
 	PanelSDKInitalised = false;
@@ -195,9 +195,6 @@ void SIVB::InitS4b()
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
 
-	J2IsActive = false;
-	FuelVenting = false;
-
 	hDock = 0;
 	ph_aps = 0;
 	ph_main = 0;
@@ -225,6 +222,7 @@ void SIVB::InitS4b()
 		th_att_lin[i] = 0;
 
 	th_main[0] = 0;
+	th_lox_vent = 0;
 	panelProc = 0;
 	panelProcPlusX = 0;
 	panelTimestepCount = 0;
@@ -826,68 +824,9 @@ int SIVB::GetMainState()
 	state.PanelsOpened = PanelsOpened;
 	state.SaturnVStage = SaturnVStage;
 	state.LowRes = LowRes;
-	state.J2IsActive = J2IsActive;
-	state.FuelVenting = FuelVenting;
 	state.Payloaddatatransfer = Payloaddatatransfer;
 
 	return state.word;
-}
-
-void SIVB::SetVentingThruster()
-
-{
-	//
-	// Clear old thrusters.
-	//
-	if (thg_main)
-		DelThrusterGroup(THGROUP_MAIN, true);
-
-	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), 1000.0, ph_main, 30.0, 30.0);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
-	AddExhaustStream(th_main[0], &fuel_venting_spec);
-
-	J2IsActive = false;
-}
-
-void SIVB::SetActiveJ2Thruster()
-
-{
-	//
-	// Clear old thrusters.
-	//
-	if (thg_main)
-		DelThrusterGroup(THGROUP_MAIN, true);
-
-	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
-
-	J2IsActive = true;
-}
-
-void SIVB::StartVenting()
-
-{
-	if (!J2IsActive && th_main[0])
-	{
-		FuelVenting = true;
-
-		EnableDisableJ2(true);
-		SetThrusterLevel(th_main[0], 1.0);
-	}
-}
-
-void SIVB::StopVenting()
-
-{
-	if (!J2IsActive && th_main[0])
-	{
-		FuelVenting = false;
-
-		SetThrusterLevel(th_main[0], 0.0);
-		EnableDisableJ2(false);
-	}
 }
 
 double SIVB::GetMainBatteryPower()
@@ -966,14 +905,23 @@ void SIVB::AddRCS_S4B()
 	// Unless this is dockable, the main engine is just venting fuel through the exhaust: low thrust and low ISP.
 	//
 
-	if (J2IsActive)
-	{
-		SetActiveJ2Thruster();
-	}
-	else
-	{
-		SetVentingThruster();
-	}
+	//
+	// Clear old thrusters.
+	//
+	if (thg_main)
+		DelThrusterGroup(THGROUP_MAIN, true);
+
+	th_main[0] = CreateThruster(mainExhaustPos, _V(0, 0, 1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
+	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
+	AddExhaust(th_main[0], 25.0, 1.5, SMMETex);
+
+	//
+	// Clear old thrusters.
+	//
+
+	th_lox_vent = CreateThruster(mainExhaustPos, _V(0, 0, 1), 1000.0, ph_main, 30.0, 30.0);
+
+	AddExhaustStream(th_lox_vent, &fuel_venting_spec);
 
 	//
 	// Rotational thrusters are 150lb (666N) thrust. ISP is estimated at 3000.0.
@@ -1029,11 +977,6 @@ void SIVB::AddRCS_S4B()
 	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
 
 	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
-
-	if (FuelVenting)
-	{
-		StartVenting();
-	}
 
 	//
 	// Seperation junk 'thrusters'.
@@ -1106,8 +1049,6 @@ void SIVB::SetMainState(int s)
 	PanelsHinged = (state.PanelsHinged != 0);
 	PanelsOpened = (state.PanelsOpened != 0);
 	LowRes = (state.LowRes != 0);
-	J2IsActive = (state.J2IsActive);
-	FuelVenting = (state.FuelVenting);
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 }
 
@@ -1404,11 +1345,6 @@ void SIVB::SetState(SIVBSettings &state)
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD)
 	{
 		PayloadType = state.Payload;
-
-		if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
-		{
-			J2IsActive = true;
-		}
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO)
@@ -1506,25 +1442,6 @@ void SIVB::SetState(SIVBSettings &state)
 
 	State = SIVB_STATE_WAITING;
 	SetS4b();
-}
-
-void SIVB::EnableDisableJ2(bool Enable)
-
-{
-	if (Enable || FuelVenting)
-	{
-		SetThrusterResource(th_main[0], ph_main);
-	}
-	else
-	{
-		SetThrusterResource(th_main[0], NULL);
-	}
-}
-
-bool SIVB::IsVenting()
-
-{
-	return FuelVenting;
 }
 
 double SIVB::GetJ2ThrustLevel()
@@ -2202,34 +2119,10 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 
 	switch (messageType)
 	{
-	case CSMSIVB_IS_VENTING:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->IsVenting();
-			return true;
-		}
-		break;
-
 	case CSMSIVB_IS_VENTABLE:
 		if (OurVessel)
 		{
 			m.val1.bValue = true;
-			return true;
-		}
-		break;
-
-	case CSMSIVB_START_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->StartVenting();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_STOP_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->StopVenting();
 			return true;
 		}
 		break;

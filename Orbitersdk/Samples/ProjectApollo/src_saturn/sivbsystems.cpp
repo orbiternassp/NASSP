@@ -33,8 +33,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2) :
-	j2engine(j2) {
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox) :
+	j2engine(j2), loxvent(lox) {
 
 	vessel = v;
 
@@ -46,11 +46,12 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2) :
 	EngineReady = false;
 	EnginePower = false;
 	PropellantDepletionSensors = false;
-	CutoffInhibitRelay = false;
 	RSSEngineStop = false;
 	ThrustOKRelay = false;
+	LOXVentValveOpen = false;
 
 	ThrustTimer = 0.0;
+	ThrustLevel = 0.0;
 }
 
 void SIVBSystems::SaveState(FILEHANDLE scn) {
@@ -64,7 +65,6 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
 	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
 	papiWriteScenario_bool(scn, "ENGINEREADY", EngineReady);
-	papiWriteScenario_bool(scn, "CUTOFFINHIBITRELAY", CutoffInhibitRelay);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 
@@ -86,7 +86,6 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "RSSENGINESTOP", RSSEngineStop);
 		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
 		papiReadScenario_bool(line, "ENGINEREADY", EngineReady);
-		papiReadScenario_bool(line, "CUTOFFINHIBITRELAY", CutoffInhibitRelay);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 
@@ -103,7 +102,7 @@ void SIVBSystems::Timestep(double simdt)
 	//TBD: Propellant Depletion
 
 	//Engine Control Power Switch (EDS no. 1, range safety no. 1)
-	if ((!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop)
+	if (EDSEngineStop || RSSEngineStop)
 	{
 		AftPowerDisableRelay = true;
 	}
@@ -131,13 +130,8 @@ void SIVBSystems::Timestep(double simdt)
 		ThrustOKRelay = false;
 	}
 
-	if (ThrustOKRelay)
-	{
-		CutoffInhibitRelay = true;
-	}
-
 	//Engine Cutoff Bus (switch selector, range safety system no. 2, EDS no. 2, propellant depletion sensors)
-	if (LVDCEngineStopRelay || EDSEngineStop || RSSEngineStop || PropellantDepletionSensors)
+	if (LVDCEngineStopRelay || (!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop || PropellantDepletionSensors)
 	{
 		EngineCutoffBus = true;
 	}
@@ -146,9 +140,13 @@ void SIVBSystems::Timestep(double simdt)
 		EngineCutoffBus = false;
 	}
 
-	if ((!ThrustOKRelay && CutoffInhibitRelay) || EngineCutoffBus)
+	if (EngineCutoffBus)
 	{
 		EngineStop = true;
+	}
+	else
+	{
+		EngineStop = false;
 	}
 
 	if (EngineStop)
@@ -158,13 +156,12 @@ void SIVBSystems::Timestep(double simdt)
 			ThrustTimer = 0.0;
 			EngineStart = false;
 			EngineReady = false;
-			CutoffInhibitRelay = false;
 		}
-
-		ThrustTimer += simdt;
 
 		if (ThrustLevel > 0.0)
 		{
+			ThrustTimer += simdt;
+
 			// Cutoff transient thrust
 			if (ThrustTimer < 2.0) {
 				if (ThrustTimer < 0.25) {
@@ -185,10 +182,6 @@ void SIVBSystems::Timestep(double simdt)
 					}
 				}
 			}
-		}
-		else
-		{
-			EngineStop = false;
 		}
 	}
 	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0)
@@ -225,6 +218,21 @@ void SIVBSystems::Timestep(double simdt)
 	else if (ThrustTimer > 0.0)
 	{
 		ThrustTimer = 0.0;
+	}
+
+	//Venting
+
+	if (loxvent)
+	{
+		if (vessel->GetThrusterLevel(loxvent) < 1.0 && LOXVentValveOpen)
+		{
+			vessel->SetThrusterLevel(loxvent, 1.0);
+		}
+		else if (vessel->GetThrusterLevel(loxvent) > 0.0 && !LOXVentValveOpen)
+		{
+			vessel->SetThrusterLevel(loxvent, 0.0);
+		}
+
 	}
 
 	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);

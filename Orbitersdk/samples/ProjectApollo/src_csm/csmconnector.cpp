@@ -979,22 +979,6 @@ bool CSMToSIVBControlConnector::IsVentable()
 	return false;
 }
 
-bool CSMToSIVBControlConnector::IsVenting()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_IS_VENTING;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
 double CSMToSIVBControlConnector::GetFuelMass()
 
 {
@@ -1069,28 +1053,6 @@ void CSMToSIVBControlConnector::StopSeparationPyros()
 
 	cm.destination = type;
 	cm.messageType = CSMSIVB_STOP_SEPARATION;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBControlConnector::StartVenting()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_START_VENTING;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBControlConnector::StopVenting()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_STOP_VENTING;
 
 	SendMessage(cm);
 }

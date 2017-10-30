@@ -223,7 +223,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
-	sivb(this, th_3rd[0])
+	sivb(this, th_3rd[0], th_3rd_lox)
 
 #pragma warning ( pop ) // disable:4355
 

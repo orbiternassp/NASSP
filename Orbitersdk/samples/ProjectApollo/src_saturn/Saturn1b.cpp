@@ -474,6 +474,12 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 	case 49: //S-IVB Engine Cutoff No. 2 Off
 		sivb.LVDCEngineCutoffOff();
 		break;
+	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
+		sivb.StartLOXVenting();
+		break;
+	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
+		sivb.EndLOXVenting();
+		break;
 	default:
 		break;
 	}

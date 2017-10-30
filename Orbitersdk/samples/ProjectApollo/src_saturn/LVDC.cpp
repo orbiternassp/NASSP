@@ -1103,6 +1103,24 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 10.0)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
+						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						fprintf(lvlog, "[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						CommandSequence++;
+					}
+					break;
+				case 7:
+					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
+					if (LVDC_TB_ETime > 5052.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 80);
+						CommandSequence++;
+					}
+					break;
+				case 8:
+					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
+					if (LVDC_TB_ETime > 5773.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 79);
 						CommandSequence++;
 					}
 					break;
@@ -1115,34 +1133,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
-				/*if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
-					lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
-					fprintf(lvlog,"[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					LVDC_EI_On = false;
-				}*/
 				if(LVDC_TB_ETime > 100){
 					poweredflight = false; //powered flight nav off
 				}
-				// Orbital stage timed events
-				if(lvCommandConnector->GetStage() != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
-				// Venting (TEMPORARY BROKEN)			
-				/*if (LVDC_TB_ETime >= 5773) {				
-					if (lvCommandConnector->GetSIVBThrusterLevel() > 0) {
-						lvCommandConnector->SetJ2ThrustLevel(0);
-						lvCommandConnector->EnableDisableJ2(false);
-					}
-				}else{
-					if (LVDC_TB_ETime >= 5052) {					
-						if (lvCommandConnector->GetSIVBThrusterLevel() == 0) {
-							lvCommandConnector->EnableDisableJ2(true);
-							lvCommandConnector->SetJ2ThrustLevel(1);
-						}
-					}
-				}*/
+
 				// Fuel boiloff every ten seconds.
 				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0){
 					lvCommandConnector->SIVBBoiloff();
-					BoiloffTime = lvCommandConnector->GetMissionTime()+10.0;
+					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 
 				/*if (lvCommandConnector->GetApolloNo() == 5)
