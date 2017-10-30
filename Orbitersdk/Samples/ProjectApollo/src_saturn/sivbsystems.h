@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SIVBSystems
 {
 public:
-	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2);
+	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox);
 	void Timestep(double simdt);
 
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
@@ -41,6 +41,8 @@ public:
 	void SecondBurnRelayOn() { SecondBurnRelay = true; }
 	void SecondBurnRelayOff() { SecondBurnRelay = false; }
 	void EDSCutoffDisable() { EDSCutoffDisabled = true; }
+	void StartLOXVenting() { LOXVentValveOpen = true; }
+	void EndLOXVenting() { LOXVentValveOpen = false; }
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 
@@ -55,8 +57,6 @@ protected:
 	bool ThrustOKRelay;
 	//K105
 	bool AftPowerDisableRelay;
-	//K106
-	bool CutoffInhibitRelay;
 	//K112
 	bool LVDCEngineStopRelay;
 
@@ -74,8 +74,11 @@ protected:
 	double ThrustTimer;
 	double ThrustLevel;
 
+	bool LOXVentValveOpen;
+
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;
+	THRUSTER_HANDLE &loxvent;
 };
 
 #define SIVBSYSTEMS_START_STRING	"SIVBSYSTEMS_BEGIN"

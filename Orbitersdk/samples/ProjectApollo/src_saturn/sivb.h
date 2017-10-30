@@ -209,8 +209,8 @@ public:
 			unsigned PanelsOpened:1;
 			unsigned SaturnVStage:1;
 			unsigned LowRes:1;
-			unsigned J2IsActive:1;
-			unsigned FuelVenting:1;
+			unsigned spare1:1;
+			unsigned spare2:1;
 			unsigned Payloaddatatransfer:1;
 		};
 		unsigned long word;
@@ -271,12 +271,6 @@ public:
 	double GetJ2ThrustLevel();
 
 	///
-	/// \brief Enable or disable the J2 engine.
-	/// \param Enable Enable if true, disable if false.
-	///
-	void EnableDisableJ2(bool Enable);
-
-	///
 	/// \brief Get mission time.
 	/// \return Mission time in seconds since launch.
 	///
@@ -300,32 +294,6 @@ public:
 	/// \return Mass in kg.
 	///
 	double GetTotalMass();
-
-	///
-	/// \brief Set up engines as fuel venting thurster.
-	///
-	void SetVentingThruster();
-
-	///
-	/// \brief Set up active J2 engine.
-	///
-	void SetActiveJ2Thruster();
-
-	///
-	/// \brief Start venting.
-	///
-	void StartVenting();
-
-	///
-	/// \brief Stop venting.
-	///
-	void StopVenting();
-
-	///
-	/// \brief Is the SIVb venting fuel?
-	/// \return True if venting.
-	///
-	bool IsVenting();
 
 	///
 	/// \brief Get main battery power.
@@ -427,8 +395,6 @@ protected:
 	bool PanelsOpened;				///< SLA Panels are open.
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool LowRes;					///< Using low-res meshes.
-	bool J2IsActive;				///< Is the J2 active for burns?
-	bool FuelVenting;				///< Is the SIVb venting fuel?
 
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
@@ -506,6 +472,7 @@ protected:
 	Battery *MainBattery;
 
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
+	THRUSTER_HANDLE th_lox_vent;
 	THGROUP_HANDLE thg_aps, thg_main, thg_sep, thg_sepPanel;
 	PROPELLANT_HANDLE ph_aps, ph_main;
 
@@ -534,9 +501,6 @@ enum CSMSIVBMessageType
 	CSMSIVB_GET_MAIN_BATTERY_POWER,			///< Get the main battery power level.
 	CSMSIVB_GET_MAIN_BATTERY_ELECTRICS,		///< Get the main battery voltage and current.
 	CSMSIVB_IS_VENTABLE,					///< Is this a ventable vessel?
-	CSMSIVB_IS_VENTING,						///< Is the vessel venting fuel?
-	CSMSIVB_START_VENTING,					///< Start fuel venting.
-	CSMSIVB_STOP_VENTING,					///< Stop fuel venting.
 	CSMSIVB_START_SEPARATION,				///< Start charging separation pyros.
 	CSMSIVB_STOP_SEPARATION,				///< Stop charging separation pyros.
 	SIVBCSM_IGNORE_DOCK_EVENT,				///< CSM docking probe should ignore next docking event (for payload creation)
