@@ -907,6 +907,32 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					break;
 				case 2:
+					//TB3+0.2: LOX Tank Pressurization Shutoff Valves Open
+					if (LVDC_TB_ETime > 0.2)
+						CommandSequence++;
+					break;
+				case 3:
+					//TB3+0.3: LOX Tank Flight Pressurization System On
+					if (LVDC_TB_ETime > 0.3)
+						CommandSequence++;
+					break;
+				case 4:
+					//TB3+0.4: S-IVB Engine Cutoff No. 1 Off
+					if (LVDC_TB_ETime > 0.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 13);
+						CommandSequence++;
+					}
+					break;
+				case 5:
+					//TB3+0.5: S-IVB Engine Cutoff No. 2 Off
+					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 49);
+						CommandSequence++;
+					}
+					break;
+				case 6:
 					//TB3+1.3: S-IB/S-IVB Separation On
 					if (LVDC_TB_ETime > 1.3)
 					{
@@ -914,7 +940,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 3:
+				case 7:
 					//TB3+1.5: Flight Control Computer S-IVB Burn Mode On "A"
 					if (LVDC_TB_ETime > 1.5)
 					{
@@ -922,7 +948,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 4:
+				case 8:
 					//TB3+1.7: Flight Control Computer S-IVB Burn Mode On "B"
 					if (LVDC_TB_ETime > 1.7)
 					{
@@ -930,7 +956,15 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 5:
+				case 9:
+					//TB3+1.9: Engine Ready Bypass On
+					if (LVDC_TB_ETime > 1.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 10);
+						CommandSequence++;
+					}
+					break;
+				case 10:
 					//TB3+2.4: S-IVB Engine Out Indication A Enable
 					if (LVDC_TB_ETime > 2.4)
 					{
@@ -938,7 +972,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 6:
+				case 11:
 					//TB3+2.6: S-IVB Engine Out Indication B Enable
 					if (LVDC_TB_ETime > 2.6)
 					{
@@ -946,7 +980,15 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 7:
+				case 12:
+					//TB3+2.7: Engine Ignition Sequence Start
+					if (LVDC_TB_ETime > 1.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 9);
+						CommandSequence++;
+					}
+					break;
+				case 13:
 					//TB3+8.7: P.U. Mixture Ratio 5.5 On
 					if (LVDC_TB_ETime > 8.7)
 					{
@@ -954,7 +996,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 8:
+				case 14:
 					//TB3+311.3: P.U. Mixture Ratio 5.5 Off
 					if (LVDC_TB_ETime > 311.3)
 					{
@@ -962,7 +1004,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 9:
+				case 15:
 					//TB3+311.5: P.U. Mixture Ratio 4.5 On
 					if (LVDC_TB_ETime > 311.5)
 					{
@@ -976,17 +1018,15 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				}
 						
-				if(LVDC_TB_ETime >= 2 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetSIVBThrusterLevel((LVDC_TB_ETime-4)*0.36);
-					if(LVDC_TB_ETime >= 5){ lvCommandConnector->SetVernierThrusterLevel(0); }
+				if(LVDC_TB_ETime >= 5 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+					lvCommandConnector->SetVernierThrusterLevel(0);
 				}
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetSIVBThrusterLevel(1.0);
 					S4B_IGN=true;
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvCommandConnector->GetSIVBThrusterLevel() == 0))
+				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvda.GetSIVBEngineOut()))
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -1019,6 +1059,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					CommandSequence++;
 					break;
 				case 1:
+					//TB4+0.1: S-IVB Engine Cutoff No. 1 On
+					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB4+0.2: S-IVB Engine Cutoff No. 2 On
+					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
+						CommandSequence++;
+					}
+					break;
+				case 3:
 					//TB4+3.5: Flight Control Computer S-IVB Burn Mode Off "A"
 					if (LVDC_TB_ETime > 3.5)
 					{
@@ -1026,7 +1082,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 2:
+				case 4:
 					//TB4+3.7: Flight Control Computer S-IVB Burn Mode On "B"
 					if (LVDC_TB_ETime > 3.7)
 					{
@@ -1034,7 +1090,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 3:
+				case 5:
 					//TB4+5.0: S/C Control Of Saturn Enable
 					if (LVDC_TB_ETime > 5.0)
 					{
@@ -1042,7 +1098,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 4:
+				case 6:
 					//TB4+10.0: S-IVB Engine EDS Cutoffs Disable
 					if (LVDC_TB_ETime > 10.0)
 					{
@@ -1057,19 +1113,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
-					if(LVDC_TB_ETime < 0.25){
-						// 95% of thrust dies in the first .25 second
-						lvCommandConnector->SetSIVBThrusterLevel(1-(LVDC_TB_ETime*3.3048));
-					}else{
-						if(LVDC_TB_ETime < 1.5){
-							// The remainder dies over the next 1.25 second
-							lvCommandConnector->SetSIVBThrusterLevel(0.1738-((LVDC_TB_ETime-0.25)*0.1390));
-						}else{
-							// Engine is completely shut down at 1.5 second
-							lvCommandConnector->SetSIVBThrusterLevel(0);
-						}
-					}
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
 				/*if (LVDC_TB_ETime >= 10 && LVDC_EI_On == true){
 					lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
@@ -1081,8 +1125,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 				// Orbital stage timed events
 				if(lvCommandConnector->GetStage() != STAGE_ORBIT_SIVB){ break; } // Stop here until enabled			
-				// Venting			
-				if (LVDC_TB_ETime >= 5773) {				
+				// Venting (TEMPORARY BROKEN)			
+				/*if (LVDC_TB_ETime >= 5773) {				
 					if (lvCommandConnector->GetSIVBThrusterLevel() > 0) {
 						lvCommandConnector->SetJ2ThrustLevel(0);
 						lvCommandConnector->EnableDisableJ2(false);
@@ -1094,12 +1138,10 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 							lvCommandConnector->SetJ2ThrustLevel(1);
 						}
 					}
-				}
+				}*/
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime){
-					if (lvCommandConnector->GetSIVBThrusterLevel() < 0.5){
-						lvCommandConnector->SIVBBoiloff();
-					}
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0){
+					lvCommandConnector->SIVBBoiloff();
 					BoiloffTime = lvCommandConnector->GetMissionTime()+10.0;
 				}
 
@@ -5607,7 +5649,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB4+0.3: S-IVB Engine Cutoff Off
 					if (LVDC_TB_ETime > 0.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 13);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB4+0.4: LOX Tank Flight Pressure System On
@@ -5617,7 +5662,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 5:
 					//TB4+0.5: Engine Ready Bypass
 					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 10);
 						CommandSequence++;
+					}
 					break;
 				case 6:
 					//TB4+0.6: LOX Chilldown Pump Off
@@ -5641,7 +5689,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 9:
 					//TB4+1.0: S-IVB Engine Start On
 					if (LVDC_TB_ETime > 1.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 9);
 						CommandSequence++;
+					}
 					break;
 				case 10:
 					//TB4+1.2: Flight Control Computer Burn Mode On "A"
@@ -5688,12 +5739,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 16:
 					//TB4+4.2: S-IVB Engine Start Off
 					if (LVDC_TB_ETime > 4.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 27);
 						CommandSequence++;
+					}
 					break;
 				case 17:
 					//TB4+5.8: First Burn Relay On
 					if (LVDC_TB_ETime > 5.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 68);
 						CommandSequence++;
+					}
 					break;
 				case 18:
 					//TB4+9.8: Charge Ullage Jettison On
@@ -5773,17 +5830,13 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					break;
 				}
 			
-				if(LVDC_TB_ETime >= 4 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetSIVBThrusterLevel((LVDC_TB_ETime-4)*0.36);
-				}
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetSIVBThrusterLevel(1.0);
 					lvCommandConnector->SetVernierThrusterLevel(0.0);
 					S4B_IGN=true;
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvCommandConnector->GetSIVBThrusterLevel() == 0))
+				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvda.GetSIVBEngineOut()))
 				{
 					S4B_IGN = false;
 					TB5 = TAS;
@@ -5812,12 +5865,16 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					//TB5+0.0: Velocity Cutoff S-IVB Engine
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
 					CommandSequence++;
 					break;
 				case 1:
 					//TB5+0.1: S-IVB Engine Cutoff
 					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB5+0.2: Point Level Sensor Disarming
@@ -5854,7 +5911,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 6:
 					//TB5+0.8: First Burn Relay Off
 					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 69);
 						CommandSequence++;
+					}
 					break;
 				case 7:
 					//TB5+1.2: LOX Tank Flight Pressure System Off
@@ -6086,19 +6146,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
-					if(LVDC_TB_ETime < 0.25){
-						// 95% of thrust dies in the first .25 second
-						lvCommandConnector->SetSIVBThrusterLevel(1-(LVDC_TB_ETime*3.3048));
-					}else{
-						if(LVDC_TB_ETime < 1.5){
-							// The remainder dies over the next 1.25 second
-							lvCommandConnector->SetSIVBThrusterLevel(0.1738-((LVDC_TB_ETime-0.25)*0.1390));
-						}else{
-							// Engine is completely shut down at 1.5 second
-							lvCommandConnector->SetSIVBThrusterLevel(0);
-						}
-					}
-					fprintf(lvlog,"S4B CUTOFF: Time %f Thrust %f\r\n",LVDC_TB_ETime,lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
 
 				if(LVDC_TB_ETime > 100){
@@ -6107,10 +6155,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime) {
-					if (lvCommandConnector->GetSIVBThrusterLevel() < 0.5) {
-						lvCommandConnector->SIVBBoiloff();
-					}
+				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0) {
+					lvCommandConnector->SIVBBoiloff();
 					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 
@@ -6196,7 +6242,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 9:
 					//TB6+10.0: S-IVB Engine Cutoff Off
 					if (LVDC_TB_ETime > 10.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 13);
 						CommandSequence++;
+					}
 					break;
 				case 10:
 					//TB6+10.5: Single Sideband FM Transmitter On
@@ -6351,7 +6400,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 38:
 					//TB6+450.0: Second Burn Relay On
 					if (LVDC_TB_ETime > 450.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 32);
 						CommandSequence++;
+					}
 					break;
 				case 39:
 					//TB6+450.1: PU Valve Hardover Position On
@@ -6474,7 +6526,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 58:
 					//TB6+568.6: Engine Ready Bypass
 					if (LVDC_TB_ETime > 568.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 10);
 						CommandSequence++;
+					}
 					break;
 				case 59:
 					//TB6+569.4: Fuel Chilldown Pump Off
@@ -6585,7 +6640,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 74:
 					//TB6+578.6: S-IVB Engine Start Off
 					if (LVDC_TB_ETime > 578.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 27);
 						CommandSequence++;
+					}
 					break;
 				case 75:
 					//TB6+583.0: PU Valve Hardover Position Off
@@ -6609,7 +6667,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 78:
 					//TB6+850.0: Second Burn Relay Off
 					if (LVDC_TB_ETime > 850.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 33);
 						CommandSequence++;
+					}
 					break;
 				case 79:
 					//TB6+892.1: Point Level Sensor Arming
@@ -6621,13 +6682,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
-					lvCommandConnector->SetSIVBThrusterLevel((LVDC_TB_ETime - 578.6)*0.53); //Engine ignites at MR 4.5 and throttles up
-					fprintf(lvlog, "S4B IGNITION: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog, "S4B IGNITION: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
 					S4B_REIGN = true;
-					lvCommandConnector->SetSIVBThrusterLevel(1);
 				}
 				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
 				{
@@ -6670,7 +6729,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| lvCommandConnector->GetSIVBThrusterLevel() == 0 || (lvda.GetCMCSIVBShutdown())))
+					|| lvda.GetSIVBEngineOut() || lvda.GetCMCSIVBShutdown()))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;
@@ -6709,12 +6768,16 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 0:
 					//TB7+0.0: S-IVB Engine Cutoff
 					poweredflight = true;
-					CommandSequence++;
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+						CommandSequence++;
 					break;
 				case 1:
 					//TB7+0.1: S-IVB Engine Cutoff
 					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB7+0.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
@@ -6754,7 +6817,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 9:
 					//TB7+1.2: Second Burn Relay Off
 					if (LVDC_TB_ETime > 1.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 33);
 						CommandSequence++;
+					}
 					break;
 				case 10:
 					//TB7+2.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
@@ -6852,21 +6918,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Cutoff transient thrust
 				if (LVDC_TB_ETime < 2) {
-					if (LVDC_TB_ETime < 0.25) {
-						// 95% of thrust dies in the first .25 second
-						lvCommandConnector->SetSIVBThrusterLevel(1 - (LVDC_TB_ETime*3.3048));
-					}
-					else {
-						if (LVDC_TB_ETime < 1.5) {
-							// The remainder dies over the next 1.25 second
-							lvCommandConnector->SetSIVBThrusterLevel(0.1738 - ((LVDC_TB_ETime - 0.25)*0.1390));
-						}
-						else {
-							// Engine is completely shut down at 1.5 second
-							lvCommandConnector->SetSIVBThrusterLevel(0);
-						}
-					}
-					fprintf(lvlog, "S4B CUTOFF: Time %f Thrust %f\r\n", LVDC_TB_ETime, lvCommandConnector->GetSIVBThrusterLevel());
+					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 
 				if (LVDC_TB_ETime > 20 && poweredflight) {
@@ -6919,12 +6971,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 4:
 					//TB4a+0.4: S-IVB Engine Cutoff Off
 					if (LVDC_TB_ETime > 0.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 13);
 						CommandSequence++;
+					}
 					break;
 				case 5:
 					//TB4a+0.5: Engine Ready Bypass
 					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 10);
 						CommandSequence++;
+					}
 					break;
 				case 6:
 					//TB4a+0.6: Start Data Recorder
@@ -6973,7 +7031,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 14:
 					//TB4a+5.7: S-IVB Engine Start On
 					if (LVDC_TB_ETime > 5.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 9);
 						CommandSequence++;
+					}
 					break;
 				case 15:
 					//TB4a+5.9: Flight Control Computer Burn Mode On "A"
@@ -7024,12 +7085,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 21:
 					//TB4a+10.3: S-IVB Engine Start Off
 					if (LVDC_TB_ETime > 10.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 11);
 						CommandSequence++;
+					}
 					break;
 				case 22:
 					//TB4a+10.5: First Burn Relay On
 					if (LVDC_TB_ETime > 10.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 68);
 						CommandSequence++;
+					}
 					break;
 				case 23:
 					//TB4a+10.7: Charge Ullage Jettison On
@@ -7149,7 +7216,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 43:
 					//TB4a+305.7: First Burn Relay Off
 					if (LVDC_TB_ETime > 305.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 69);
 						CommandSequence++;
+					}
 					break;
 				case 44:
 					//TB4a+408.7: Flight Control Computer Switch Point No. 6
@@ -7169,11 +7239,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					break;
 				}
 
-				if (LVDC_TB_ETime >= 8.7 && LVDC_TB_ETime < 11.5 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
-					lvCommandConnector->SetSIVBThrusterLevel((LVDC_TB_ETime - 8.7)*0.36);
-				}
 				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
-					lvCommandConnector->SetSIVBThrusterLevel(1.0);
 					lvCommandConnector->SetVernierThrusterLevel(0.0);
 					S4B_IGN = true;
 				}
@@ -7225,7 +7291,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB5a+0.6: S-IVB Engine EDS Cutoff No. 2 Disable
 					if (LVDC_TB_ETime > 0.6)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-IVB Engine EDS Cutoff No. 2 Disable\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 19);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB5a+0.8: IU Command System Enable

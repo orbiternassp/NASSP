@@ -441,6 +441,21 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 
 	switch (channel)
 	{
+	case 9: //Engine Ignition Sequence Start
+		sivb.EngineStartOn();
+		break;
+	case 10: //Engine Ready Bypass On
+		sivb.EngineReadyBypass();
+		break;
+	case 12: //S-IVB Engine Cutoff No. 1 On
+		sivb.LVDCEngineCutoff();
+		break;
+	case 13: //S-IVB Engine Cutoff No. 1 Off
+		sivb.LVDCEngineCutoffOff();
+		break;
+	case 19: //Engine Ready Bypass On
+		sivb.EngineReadyBypass();
+		break;
 	case 32: //P.U. Mixture Ratio 4.5 On
 		SetSIVBMixtureRatio(4.5); // Is this 4.7 or 4.2? AP8 says 4.5
 		SPUShiftS.play(NOLOOP, 255);
@@ -452,6 +467,12 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 		SetSIVBMixtureRatio(5.5);
 		break;
 	case 35: //P.U. Mixture Ratio 5.5 Off
+		break;
+	case 43: //S-IVB Engine Cutoff No. 2 On
+		sivb.LVDCEngineCutoff();
+		break;
+	case 49: //S-IVB Engine Cutoff No. 2 Off
+		sivb.LVDCEngineCutoffOff();
 		break;
 	default:
 		break;
@@ -491,6 +512,15 @@ void Saturn1b::LoadIU(FILEHANDLE scn)
 		iu = new IU1B;
 	}
 	iu->LoadState(scn);
+}
+
+void Saturn1b::LoadLVDC(FILEHANDLE scn) {
+
+	if (iu == NULL) {
+		iu = new IU1B;
+	}
+
+	iu->LoadLVDC(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){

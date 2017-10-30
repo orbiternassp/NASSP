@@ -85,18 +85,14 @@ enum IUCSMMessageType
 ///
 enum IULVMessageType
 {
-	IULV_ENABLE_J2,							///< Enable the J2 engine.
-	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_SII_THRUSTER_LEVEL,
-	IULV_SET_SIVB_THRUSTER_LEVEL,
 	IULV_SET_VERNIER_THRUSTER_LEVEL,
 	IULV_SET_APS_THRUSTER_LEVEL,
-	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
-	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
 	IULV_CLEAR_SII_THRUSTER_RESOURCE,
+	IULV_SIVB_EDS_CUTOFF,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
@@ -116,10 +112,7 @@ enum IULVMessageType
 	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
-	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
-	IULV_SET_ATTITUDE_ROT_LEVEL,			///< Set rotational thruster levels.
 	IULV_ADD_FORCE,							///< Add force.
-	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_GLOBAL_ORIENTATION,
@@ -142,7 +135,7 @@ enum IULVMessageType
 	IULV_GET_APOLLONO,
 	IULV_GET_SI_THRUSTER_LEVEL,
 	IULV_GET_SII_THRUSTER_LEVEL,
-	IULV_GET_SIVB_THRUSTER_LEVEL,
+	IULV_GET_SIVB_THRUST_OK,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
 };
@@ -218,21 +211,15 @@ public:
 	IUToLVCommandConnector();
 	~IUToLVCommandConnector();
 
-	void EnableDisableJ2(bool Enable);
-	void SetJ2ThrustLevel(double thrust);
-	void SetVentingThruster();
-
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
-	void SetSIVBThrusterLevel(double level);
 	void SetVernierThrusterLevel(double level);
 
-	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
-	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
+	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
@@ -259,8 +246,6 @@ public:
 	void SetContrailLevel(double level);
 	void SIVBBoiloff();
 
-	void SetAttitudeLinLevel(int a1, int a2);
-	void SetAttitudeRotLevel (VECTOR3 th);
 	void AddForce(VECTOR3 F, VECTOR3 r);
 
 	int GetStage();
@@ -280,7 +265,7 @@ public:
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
-	double GetSIVBThrusterLevel();
+	double GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
@@ -428,8 +413,5 @@ protected:
 
 #define IU_START_STRING		"IU_BEGIN"
 #define IU_END_STRING		"IU_END"
-
-#define IUGNC_START_STRING	"IUGNC_BEGIN"
-#define IUGNC_END_STRING	"IUGNC_END"
 
 #endif

@@ -155,7 +155,8 @@ void SIVbLoadMeshes()
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
+		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk),
+	sivbsys(this, th_main[0])
 
 {
 	PanelSDKInitalised = false;
@@ -739,6 +740,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
+	sivbsys.Timestep(simdt);
 	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
@@ -808,6 +810,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
+	sivbsys.SaveState(scn);
 	iu->SaveState(scn);
 	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
@@ -1252,6 +1255,9 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				AEAPad[AEAPadLoadCount++] = val;
 			}
 		}
+		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
+			sivbsys.LoadState(scn);
+		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			if (SaturnVStage)
 			{
@@ -1521,13 +1527,6 @@ bool SIVB::IsVenting()
 	return FuelVenting;
 }
 
-void SIVB::SetJ2ThrustLevel(double thrust)
-
-{
-	if (th_main[0])
-		SetThrusterLevel(th_main[0], thrust);
-}
-
 double SIVB::GetJ2ThrustLevel()
 
 {
@@ -1557,18 +1556,14 @@ void SIVB::SetAPSUllageThrusterLevel(int n, double level)
 	SetThrusterLevel(th_att_lin[n], level);
 }
 
-void SIVB::SetSIVBThrusterLevel(double level)
+bool SIVB::GetSIVBThrustOK()
 {
-	if (!th_main[0]) return;
-
-	SetThrusterLevel(th_main[0], level);
+	return sivbsys.GetThrustOK();
 }
 
-double SIVB::GetSIVBThrusterLevel()
+void SIVB::SIVBEDSCutoff(bool cut)
 {
-	if (!th_main[0]) return 0.0;
-
-	return GetThrusterLevel(th_main[0]);
+	sivbsys.EDSEngineCutoff(cut);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -2053,10 +2048,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_SIVB_THRUSTER_LEVEL:
+	case IULV_GET_SIVB_THRUST_OK:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
+			m.val1.bValue = OurVessel->GetSIVBThrustOK();
 			return true;
 		}
 		break;
@@ -2078,34 +2073,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_J2_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_LIN_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_ROT_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SIVB_THRUSTER_LEVEL:
+	case IULV_SIVB_EDS_CUTOFF:
 		if (OurVessel)
 		{
-			OurVessel->SetSIVBThrusterLevel(m.val1.dValue);
+			OurVessel->SIVBEDSCutoff(m.val1.bValue);
 			return true;
 		}
 		break;
@@ -2118,26 +2089,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_THRUSTER_GROUP_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetThrusterGroupLevel(m.val1.pValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
 			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_THRUSTER_RESOURCE:
-		if (OurVessel)
-		{
-			OurVessel->SetThrusterResource(m.val1.pValue, m.val2.pValue);
 			return true;
 		}
 		break;
@@ -2155,21 +2110,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		{
 			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
 			return true;
-		}
-		break;
-
-	case IULV_ENABLE_J2:
-		if (OurVessel)
-		{
-			OurVessel->EnableDisableJ2(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_J2_DONE:
-		if (OurVessel)
-		{
-			OurVessel->SetVentingThruster();
 		}
 		break;
 

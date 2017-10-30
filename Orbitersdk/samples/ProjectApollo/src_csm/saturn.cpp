@@ -222,7 +222,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnia(_V(0.0, 0.707108, 0.707108)),
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108))
+	omnid(_V(0.0, 0.707108, -0.707108)),
+	sivb(this, th_3rd[0])
 
 #pragma warning ( pop ) // disable:4355
 
@@ -363,7 +364,6 @@ void Saturn::initSaturn()
 
 	ThrustAdjust = 1.0;
 	MixtureRatio = 5.5;
-	J2IsActive = true;
 
 	DockAngle = 0;
 
@@ -690,6 +690,8 @@ void Saturn::initSaturn()
 	}
 
 	th_3rd[0] = 0;
+	th_3rd_lox = 0;
+	th_3rd_lh2 = 0;
 	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
@@ -1180,7 +1182,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
-	papiWriteScenario_bool (scn, "J2ISACTIVE", J2IsActive);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -1324,6 +1325,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	//
 	if (stage < CSM_LEM_STAGE)
 	{
+		sivb.SaveState(scn);
 		SaveIU(scn);
 		SaveLVDC(scn);
 	}
@@ -1910,6 +1912,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
 	}
+	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
+		sivb.LoadState(scn);
+	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		LoadIU(scn);
 	}
@@ -2141,7 +2146,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
 		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
 		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
-		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		} else if (!strnicmp(line, "LEMCHECK", 8)) {
@@ -2276,10 +2280,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 void Saturn::SaveLVDC(FILEHANDLE scn) {
 	if (iu != NULL) { iu->SaveLVDC(scn); }
-}
-
-void Saturn::LoadLVDC(FILEHANDLE scn) {
-	if (iu != NULL) { iu->LoadLVDC(scn); }
 }
 
 //
@@ -4505,31 +4505,6 @@ void Saturn::SetRandomFailures()
 	}
 }
 
-void Saturn::SetJ2ThrustLevel(double thrust)
-
-{
-	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0])
-		return;
-
-	SetThrusterLevel(th_3rd[0], thrust);
-}
-
-void Saturn::EnableDisableJ2(bool Enable)
-
-{
-	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0] || !ph_3rd)
-		return;
-
-	if (Enable)
-	{
-		SetThrusterResource(th_3rd[0], ph_3rd);
-	}
-	else
-	{
-		SetThrusterResource(th_3rd[0], NULL);
-	}
-}
-
 double Saturn::GetJ2ThrustLevel()
 
 {
@@ -4675,12 +4650,11 @@ double Saturn::GetSIIThrusterLevel(int n)
 	return GetThrusterLevel(th_2nd[n]);
 }
 
-double Saturn::GetSIVBThrusterLevel()
+bool Saturn::GetSIVBThrustOK()
 {
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return 0.0;
-	if (!th_3rd[0]) return 0.0;
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	return GetThrusterLevel(th_3rd[0]);
+	return sivb.GetThrustOK();
 }
 
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
@@ -4727,6 +4701,13 @@ void Saturn::ClearSIIThrusterResource(int n)
 	SetThrusterResource(th_2nd[n], NULL);
 }
 
+void Saturn::SIVBEDSCutoff(bool cut)
+{
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+
+	sivb.EDSEngineCutoff(cut);
+}
+
 void Saturn::SetQBallPowerOff()
 {
 	qball.SetPowerOff();
@@ -4748,14 +4729,6 @@ void Saturn::SetSIIThrusterLevel(int n, double level)
 	if (!th_2nd[n]) return;
 
 	SetThrusterLevel(th_2nd[n], level);
-}
-
-void Saturn::SetSIVBThrusterLevel(double level)
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_3rd[0]) return;
-
-	SetThrusterLevel(th_3rd[0], level);
 }
 
 void Saturn::SetAPSUllageThrusterLevel(int n, double level)

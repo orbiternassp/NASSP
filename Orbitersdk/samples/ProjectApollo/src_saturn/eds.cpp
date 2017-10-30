@@ -62,6 +62,8 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	LVEnginesCutoff2 = false;
 	LVEnginesCutoff3 = false;
 	SecondPlaneSeparationMonitorRelay = false;
+	SIVBEngineCutoffDisabled = false;
+	SIVBEDSCutoff = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
@@ -107,6 +109,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+	papiWriteScenario_bool(scn, "SIVBEDSCUTOFF", SIVBEDSCutoff);
+	papiWriteScenario_bool(scn, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -145,6 +149,8 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+		papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
+		papiReadScenario_bool(line, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
 
 	}
 }
@@ -280,7 +286,19 @@ void EDS1B::Timestep(double simdt)
 		}
 		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
 		{
-			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+			if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
+			{
+				SIVBEDSCutoff = true;
+				iu->GetLVCommandConnector()->SIVBEDSCutoff(true);
+			}
+		}
+	}
+	else
+	{
+		if (SIVBEDSCutoff == true)
+		{
+			iu->GetLVCommandConnector()->SIVBEDSCutoff(false);
+			SIVBEDSCutoff = false;
 		}
 	}
 
@@ -395,8 +413,8 @@ void EDS1B::Timestep(double simdt)
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
-			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
-			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrustOK() && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
+			if (!iu->GetLVCommandConnector()->GetSIVBThrustOK() && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
 		}
 		else
 		{
@@ -600,7 +618,19 @@ void EDSSV::Timestep(double simdt)
 		}
 		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
 		{
-			iu->GetLVCommandConnector()->SetSIVBThrusterLevel(0);
+			if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
+			{
+				SIVBEDSCutoff = true;
+				iu->GetLVCommandConnector()->SIVBEDSCutoff(true);
+			}
+		}
+	}
+	else
+	{
+		if (SIVBEDSCutoff == true)
+		{
+			iu->GetLVCommandConnector()->SIVBEDSCutoff(false);
+			SIVBEDSCutoff = false;
 		}
 	}
 
@@ -728,8 +758,8 @@ void EDSSV::Timestep(double simdt)
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		if ((SIVBEngineOutIndicationA && EDSBus1Powered) || (SIVBEngineOutIndicationB && EDSBus3Powered)) {
-			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() >= 0.65  && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
-			if (iu->GetLVCommandConnector()->GetSIVBThrusterLevel() < 0.65 && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
+			if (iu->GetLVCommandConnector()->GetSIVBThrustOK() && iu->GetCommandConnector()->GetEngineIndicator(1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(1); } // UNLIGHT
+			if (!iu->GetLVCommandConnector()->GetSIVBThrustOK() && iu->GetCommandConnector()->GetEngineIndicator(1) == false) { iu->GetCommandConnector()->SetEngineIndicator(1); }   // LIGHT
 		}
 		else
 		{
