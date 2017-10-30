@@ -370,6 +370,8 @@ void Saturn::SystemsInit() {
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
 	mechanicalAccelerometer.Init(this);
 
+	qball.Init(this);
+
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);

@@ -76,7 +76,6 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 {
 	hMaster = hObj;
 	initSaturn1b();
-	iu = new IU1B;
 }
 
 Saturn1b::~Saturn1b()
@@ -298,8 +297,8 @@ void Saturn1b::SetSIVBMixtureRatio (double ratio)
 	// be in near-vacuum anyway.
 	//
 
-	SetThrusterIsp (th_main[0], isp, isp);
-	SetThrusterMax0 (th_main[0], thrust);
+	SetThrusterIsp (th_3rd[0], isp, isp);
+	SetThrusterMax0 (th_3rd[0], thrust);
 
 	MixtureRatio = ratio;
 }
@@ -369,9 +368,9 @@ void Saturn1b::SwitchSelector(int item){
 		ActivatePrelaunchVenting();
 		break;
 	case 12:
-		SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_main[i], ph_1st);
+			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
 		break;
@@ -384,15 +383,6 @@ void Saturn1b::SwitchSelector(int item){
 	case 14:
 		DeactivatePrelaunchVenting();
 		break;
-	case 15:
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_main, 1.0);				// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
-			LaunchS.play(NOLOOP, 255);
-			LaunchS.done();
-		}
-		break;
 	}
 }
 
@@ -402,6 +392,15 @@ void Saturn1b::SISwitchSelector(int channel)
 
 	switch (channel)
 	{
+	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+		SetThrusterGroupLevel(thg_1st, 1.0);				// Set full thrust, just in case
+		contrailLevel = 1.0;
+		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
+			LaunchS.play(NOLOOP, 255);
+			LaunchS.done();
+		}
+		break;
 	case 18: //Outboard Engines Cutoff
 		// Move hidden S1B
 		if (hstg1) {
@@ -412,7 +411,7 @@ void Saturn1b::SISwitchSelector(int channel)
 		}
 		// Engine Shutdown
 		for (int i = 0; i < 5; i++) {
-			SetThrusterResource(th_main[i], NULL);
+			SetThrusterResource(th_1st[i], NULL);
 		}
 		break;
 	case 23: //S-IB/S-IVB Separation On
@@ -421,13 +420,13 @@ void Saturn1b::SISwitchSelector(int channel)
 		AddRCS_S4B();
 		SetSIVBThrusters(true);
 		SetThrusterGroupLevel(thg_ver, 1.0);
-		SetThrusterResource(th_main[0], ph_3rd);
+		SetThrusterResource(th_3rd[0], ph_3rd);
 		break;
 	case 98: //Inboard Engines Cutoff
-		SetThrusterResource(th_main[4], NULL);
-		SetThrusterResource(th_main[5], NULL);
-		SetThrusterResource(th_main[6], NULL);
-		SetThrusterResource(th_main[7], NULL);
+		SetThrusterResource(th_1st[4], NULL);
+		SetThrusterResource(th_1st[5], NULL);
+		SetThrusterResource(th_1st[6], NULL);
+		SetThrusterResource(th_1st[7], NULL);
 		SShutS.play(NOLOOP, 235);
 		SShutS.done();
 		break;
@@ -478,6 +477,20 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 
 	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
+}
+
+void Saturn1b::SaveIU(FILEHANDLE scn)
+{
+	if (iu != NULL) { iu->SaveState(scn); }
+}
+
+void Saturn1b::LoadIU(FILEHANDLE scn)
+{
+	// If the IU does not yet exist, create it.
+	if (iu == NULL) {
+		iu = new IU1B;
+	}
+	iu->LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){

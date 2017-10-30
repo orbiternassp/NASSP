@@ -279,19 +279,19 @@ void Saturn1b::SetFirstStageEngines()
 	VECTOR3 m_exhaust_pos4= {-2.12,2.12,Offset1st+55};
 
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
-	thg_main = CreateThrusterGroup (th_main, 8, THGROUP_MAIN);
+	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_MAIN);
 	for (i = 0; i < 8; i++)
-		AddExhaust(th_main[i], 30.0, 0.80, tex);
+		AddExhaust(th_1st[i], 30.0, 0.80, tex);
 
 	srb_exhaust.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_Saturn2");
 	s1b_exhaust.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_Saturn");
@@ -307,23 +307,23 @@ void Saturn1b::SetFirstStageEngines()
 	//AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,-15), &srb_contrail);
 	//AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-15), &srb_contrail);
 
-	AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,exhpos2), &s1b_exhaust);
-	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[0], m_exhaust_pos1+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[1], m_exhaust_pos2+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[2], m_exhaust_pos3+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[3], m_exhaust_pos4+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[4], m_exhaust_pos5+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[5], m_exhaust_pos6+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[6], m_exhaust_pos7+_V(0,0,exhpos2), &s1b_exhaust);
+	AddExhaustStream (th_1st[7], m_exhaust_pos8+_V(0,0,exhpos2), &s1b_exhaust);
 	
-	AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,exhpos), &srb_exhaust);
-	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[0], m_exhaust_pos1+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[1], m_exhaust_pos2+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[2], m_exhaust_pos3+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[3], m_exhaust_pos4+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[4], m_exhaust_pos5+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[5], m_exhaust_pos6+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[6], m_exhaust_pos7+_V(0,0,exhpos), &srb_exhaust);
+	AddExhaustStream (th_1st[7], m_exhaust_pos8+_V(0,0,exhpos), &srb_exhaust);
 /**/
 
 	// Contrail
@@ -534,9 +534,9 @@ void Saturn1b::SetSecondStageEngines ()
 	//
 
 	if (J2IsActive) {
-		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-		AddExhaust (th_main[0], 30.0, 2.9, J2Tex);
+		th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
+		thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+		AddExhaust (th_3rd[0], 30.0, 2.9, J2Tex);
 
 		//
 		// Set the actual stats.
@@ -581,17 +581,17 @@ void Saturn1b::SetVentingJ2Thruster() {
 	//
 	// Clear old thrusters.
 	//
-	if (thg_main)
+	if (thg_3rd)
 		DelThrusterGroup(THGROUP_MAIN, true);
 
 	VECTOR3 m_exhaust_pos1= {0, 0, -9. - STG1O + 10};
 	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
 	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
-	th_main[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
-	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
+	th_3rd[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
+	thg_3rd = CreateThrusterGroup(th_3rd, 1, THGROUP_MAIN);
 
 	fuel_venting_spec.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_SaturnVenting");
-	AddExhaustStream(th_main[0], &fuel_venting_spec);
+	AddExhaustStream(th_3rd[0], &fuel_venting_spec);
 
 	J2IsActive = false;
 }
@@ -705,7 +705,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
 			S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
-			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+			S1Config.CurrentThrust = GetThrusterLevel(th_1st[0]);
 			S1Config.LowRes = LowRes;
 
 			stage1->SetState(S1Config);

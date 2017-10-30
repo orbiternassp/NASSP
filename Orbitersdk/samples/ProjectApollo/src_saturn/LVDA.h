@@ -58,6 +58,13 @@ public:
 	bool SCInitiationOfSIISIVBSeparation();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool SpacecraftSeparationIndication();
+	bool GetSIVBEngineOut();
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool SIBLowLevelSensorsDry();
+
+	//Not real LVDA functions
+	void TLIBegun();
+	void TLIEnded();
 protected:
 	IU *iu;
 };

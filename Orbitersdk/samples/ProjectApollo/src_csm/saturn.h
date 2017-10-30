@@ -60,6 +60,7 @@
 #include "checklistController.h"
 #include "payload.h"
 #include "csmcomputer.h"
+#include "qball.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -926,18 +927,23 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
-	THRUSTER_HANDLE GetMainThruster(int n) { return th_main[n]; }
-	THGROUP_HANDLE GetMainThrusterGroup() { return thg_main; }
-	THGROUP_HANDLE GetVernierThrusterGroup() { return thg_ver; }
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
-	PROPELLANT_HANDLE GetFirstStagePropellantHandle() { return ph_1st; }
-	PROPELLANT_HANDLE GetThirdStagePropellantHandle() { return ph_3rd; }
-	bool GetSIISepLight() { return SIISepState; };
+
+	double GetSIThrusterLevel(int n);
+	double GetSIIThrusterLevel(int n);
+	double GetSIVBThrusterLevel();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIThrusterLevel(int n, double level);
+	void SetSIIThrusterLevel(int n, double level);
+	void SetSIVBThrusterLevel(double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
+	void SetVernierThrusterLevel(double level);
+	void ClearSIThrusterResource(int n);
+	void ClearSIIThrusterResource(int n);
+	void SetQBallPowerOff();
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -1132,6 +1138,8 @@ public:
 	void SetSaturnAttitudeRotLevel(VECTOR3 th);
 	double GetSaturnMaxThrust(ENGINETYPE eng);
 	void SIVBBoiloff();
+
+	double GetSIPropellantMass();
 
 	///
 	/// \brief Get propellant mass in the SIVb stage.
@@ -3645,6 +3653,8 @@ protected:
 	SECS secs;
 	ELS els;
 
+	QBall qball;
+
 	Pyro CMSMPyros;
 	Pyro CMDockingRingPyros;
 	Pyro CSMLVPyros;
@@ -3989,6 +3999,8 @@ protected:
 	virtual void SetVehicleStats() = 0;
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
+	virtual void LoadIU(FILEHANDLE scn) = 0;
+	virtual void SaveIU(FILEHANDLE scn) = 0;
 	void SaveLVDC(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
 
@@ -4131,10 +4143,12 @@ protected:
 	// Thruster group handles. We have a lot of these :).
 	//
 
-	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_lem;//, thg_tjm;
+	THGROUP_HANDLE thg_1st, thg_2nd, thg_3rd, thg_sps;
+	THGROUP_HANDLE thg_ull, thg_ver, thg_lem;//, thg_tjm;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3];                       // handles for orbiter main engines
+	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
+	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              
 	THRUSTER_HANDLE	th_aps[3];
@@ -4358,6 +4372,7 @@ protected:
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
 	friend class SaturnSystemTestAttenuator;
+	friend class SaturnLVSPSPcMeter;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

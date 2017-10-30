@@ -24,7 +24,6 @@
 
 #pragma once
 class IUToLVCommandConnector;
-class IUToCSMCommandConnector;
 
 /* *******************
  * LVDC++ SV VERSION *
@@ -41,14 +40,12 @@ class LVDC
 public:
 	LVDC(LVDA &lvd);
 	virtual void TimeStep(double simt, double simdt) = 0;
-	virtual void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn) = 0;
+	virtual void Init(IUToLVCommandConnector* lvCommandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual bool GetGuidanceReferenceFailure() = 0;
-	void Configure(IUToLVCommandConnector* lvc, IUToCSMCommandConnector* csmc);
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
-	IUToCSMCommandConnector* commandConnector;
 
 	LVDA &lvda;
 };
@@ -56,7 +53,7 @@ protected:
 class LVDCSV: public LVDC {
 public:
 	LVDCSV(LVDA &lvd);											// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
+	void Init(IUToLVCommandConnector* lvCommandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -73,7 +70,6 @@ private:								// Saturn LV
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
-	double S1_Sep_Time;								// S1C Separation Counter
 
 	double BoiloffTime;
 
@@ -235,6 +231,10 @@ private:								// Saturn LV
 	double K_pc;									// Constant time used to force MRS in out-of-orbit mode
 	double R_N;										// Nominal radius at SIVB reignition
 	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
+	double K_D;										// Orbital drag model constant
+	double rho_c;									// Constant rho for use when altitude is less than h_1
+	double h_1;										// Lower limit of h for atmospheric density polynomial
+	double h_2;										// Upper limit of h for atmospheric density polynomial
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -332,7 +332,7 @@ private:								// Saturn LV
 	double H;										// coefficient for third zonal gravity harmonic
 	double D;										// coefficient for fourth zonal gravity harmonic
 	double CG;
-	double gamma;									// Computed flight path angle
+	double cos_alpha;								// cosine of the angle of attack
 	double gamma_T;									// Desired terminal flight path angle
 	double alpha_D;									// Angle from perigee to DN vector
 	bool alpha_D_op;								// Option to determine alpha_D or load it
@@ -380,6 +380,7 @@ private:								// Saturn LV
 	double cos_chi_Yit;
 	double sin_chi_Zit;
 	double cos_chi_Zit;
+	double h;										// Altitude of the vehicle above the oblate spheroid of the earth
 	// TABLE15
 	/*
 		These tables store the precomputed out-of-orbit targeting data for the Saturn V launches.
@@ -427,7 +428,7 @@ private:								// Saturn LV
 class LVDC1B: public LVDC {
 public:
 	LVDC1B(LVDA &lvd);										// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn, IUToCSMCommandConnector* commandConn);
+	void Init(IUToLVCommandConnector* lvCommandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

@@ -46,10 +46,8 @@ enum IUCSMMessageType
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
 	IUCSM_SET_EDS_ABORT,					///< Set EDS abort signal.
-	IUCSM_SLOW_IF_DESIRED,					///< Slow if desired.
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
-	IUCSM_GET_SII_SEP_LIGHT,
 	IUCSM_GET_ENGINE_INDICATOR,
 	IUCSM_GET_SIISIVBSEP_SWITCH_STATE,		///< State of SII/SIVb Sep switch.
 	IUCSM_GET_TLI_ENABLE_SWITCH_STATE,		///< State of TLI Enable switch.
@@ -89,11 +87,16 @@ enum IULVMessageType
 {
 	IULV_ENABLE_J2,							///< Enable the J2 engine.
 	IULV_SET_J2_THRUST_LEVEL,				///< Set the J2 thrust level.
-	IULV_SET_THRUSTER_LEVEL,				///< Set thruster level.
+	IULV_SET_SI_THRUSTER_LEVEL,
+	IULV_SET_SII_THRUSTER_LEVEL,
+	IULV_SET_SIVB_THRUSTER_LEVEL,
+	IULV_SET_VERNIER_THRUSTER_LEVEL,
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_GROUP_LEVEL,			///< Set thruster group level.
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_SET_THRUSTER_RESOURCE,				///< Set thruster resource.
+	IULV_CLEAR_SI_THRUSTER_RESOURCE,
+	IULV_CLEAR_SII_THRUSTER_RESOURCE,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
@@ -110,6 +113,7 @@ enum IULVMessageType
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
 	IULV_SIVB_SWITCH_SELECTOR,
+	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
@@ -118,44 +122,28 @@ enum IULVMessageType
 	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
-	IULV_GET_STATUS,						///< Get vessel status.
 	IULV_GET_GLOBAL_ORIENTATION,
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
 	IULV_GET_SIVB_PROPELLANT_MASS,			///< Get the S-IVB propellant mass.
-	IULV_GET_PROPELLANT_MASS,
+	IULV_GET_SI_PROPELLANT_MASS,
 	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
 	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
 	IULV_GET_GRAVITY_REF,					///< Get gravity reference.
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
 	IULV_GET_RELATIVE_VEL,					///< Get relative velocity.
-	IULV_GET_AP_DIST,						///< Get Ap Dist.
-	IULV_GET_ELEMENTS,						///< Get orbital elements.
-	IULV_GET_PMI,							///< Get PMI.
-	IULV_GET_SIZE,							///< Get size.
 	IULV_GET_MAXTHRUST,						///< Get max. thrust
-	IULV_LOCAL2GLOBAL,						///< Local to global
 	IULV_GET_WEIGHTVECTOR,					///< Get weight vector 
-	IULV_GET_FORCEVECTOR,					///< Get force vector
 	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
 	IULV_GET_GLOBAL_VEL,					///< Get global vel
-	IULV_GET_PITCH,							///< Get local pitch
-	IULV_GET_BANK,							///< Get local bank
-	IULV_GET_SLIP_ANGLE,					///< Get local slip angle
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
-	IULV_GET_MAIN_THRUSTER,
-	IULV_GET_THRUSTER_LEVEL,
+	IULV_GET_SI_THRUSTER_LEVEL,
+	IULV_GET_SII_THRUSTER_LEVEL,
+	IULV_GET_SIVB_THRUSTER_LEVEL,
 	IULV_GET_FIRST_STAGE_THRUST,
-	IULV_GET_FIRST_STAGE_PROPELLANT_HANDLE,
-	IULV_GET_THIRD_STAGE_PROPELLANT_HANDLE,
-	IULV_GET_THRUSTER_MAX,
-	IULV_GET_MAIN_THRUSTER_GROUP,
-	IULV_GET_VERNIER_THRUSTER_GROUP,
-	IULV_GET_THRUSTER_RESOURCE,
-	IULV_GET_THRUSTER_GROUP_LEVEL,
 	IULV_CSM_SEPARATION_SENSED,
 };
 
@@ -173,7 +161,6 @@ public:
 	void SetAGCOutputChannel(int channel, int val);
 	void SetSIISep();
 	void ClearSIISep();
-	void SlowIfDesired();
 	void SetEngineIndicator(int eng);
 	void ClearEngineIndicator(int eng);
 	void ClearEngineIndicators();
@@ -186,7 +173,6 @@ public:
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 	bool GetAGCInputChannelBit(int channel, int bit);
-	bool GetSIISepLight();
 	bool GetEngineIndicator(int eng);
 	int SIISIVbSwitchState();
 	int TLIEnableSwitchState();
@@ -235,14 +221,23 @@ public:
 	void EnableDisableJ2(bool Enable);
 	void SetJ2ThrustLevel(double thrust);
 	void SetVentingThruster();
-	void SetThrusterLevel(THRUSTER_HANDLE th, double level);
+
+	void SetSIThrusterLevel(int n, double level);
+	void SetSIIThrusterLevel(int n, double level);
+	void SetSIVBThrusterLevel(double level);
+	void SetVernierThrusterLevel(double level);
+
 	void SetThrusterGroupLevel(THGROUP_HANDLE thg, double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void SetThrusterResource(THRUSTER_HANDLE th, PROPELLANT_HANDLE ph);
+	void ClearSIThrusterResource(int n);
+	void ClearSIIThrusterResource(int n);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIVBThrusterDir(VECTOR3 &dir);
+
+	void SetQBallPowerOff();
 
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
@@ -272,44 +267,26 @@ public:
 	double GetAltitude();
 	double GetJ2ThrustLevel();
 	double GetSIVBPropellantMass();
-	double GetPropellantMass(PROPELLANT_HANDLE ph);
+	double GetSIPropellantMass();
 	double GetMass();
 	double GetMaxFuelMass();
 	double GetFuelMass();
-	void GetStatus(VESSELSTATUS &status);
 	void GetGlobalOrientation(VECTOR3 &arot);
-	void GetPMI(VECTOR3 &pmi);
-	double GetSize();
 	double GetMaxThrust(ENGINETYPE eng);
 	bool GetWeightVector(VECTOR3 &w);
-	bool GetForceVector(VECTOR3 &f);
-	double GetThrusterMax(THRUSTER_HANDLE th);
-	PROPELLANT_HANDLE GetThrusterResource(THRUSTER_HANDLE th);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetApolloNo();
-	THRUSTER_HANDLE GetMainThruster(int n);
-	THGROUP_HANDLE GetMainThrusterGroup();
-	THGROUP_HANDLE GetVernierThrusterGroup();
-	double GetThrusterLevel(THRUSTER_HANDLE th);
-	double GetThrusterGroupLevel(THGROUP_HANDLE thg);
+	double GetSIThrusterLevel(int n);
+	double GetSIIThrusterLevel(int n);
+	double GetSIVBThrusterLevel();
 	double GetFirstStageThrust();
-	PROPELLANT_HANDLE GetFirstStagePropellantHandle();
-	PROPELLANT_HANDLE GetThirdStagePropellantHandle();
-
-	void Local2Global(VECTOR3 &local, VECTOR3 &global);
-	void GetApDist(double &d);
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);
 	void GetGlobalVel(VECTOR3 &v);
 
-	double GetPitch(void);
-	double GetBank(void);
-	double GetSlipAngle(void);
-
-	OBJHANDLE GetElements(ELEMENTS &el, double &mjd_ref);
 	OBJHANDLE GetGravityRef();
 
 	bool CSMSeparationSensed();
@@ -362,7 +339,10 @@ public:
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 
+	bool GetSIPropellantDepletionEngineCutoff();
+	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIVBEngineOut();
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
@@ -408,6 +388,7 @@ class IU1B :public IU
 public:
 	IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
+	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);

@@ -1557,6 +1557,20 @@ void SIVB::SetAPSUllageThrusterLevel(int n, double level)
 	SetThrusterLevel(th_att_lin[n], level);
 }
 
+void SIVB::SetSIVBThrusterLevel(double level)
+{
+	if (!th_main[0]) return;
+
+	SetThrusterLevel(th_main[0], level);
+}
+
+double SIVB::GetSIVBThrusterLevel()
+{
+	if (!th_main[0]) return 0.0;
+
+	return GetThrusterLevel(th_main[0]);
+}
+
 double SIVB::GetSIVbPropellantMass()
 
 {
@@ -1922,27 +1936,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetPropellantMass(m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_STATUS:
-		if (OurVessel)
-		{
-			VESSELSTATUS *status = static_cast<VESSELSTATUS *> (m.val1.pValue);
-			VESSELSTATUS stat;
-
-			OurVessel->GetStatus(stat);
-
-			*status = stat;
-			return true;
-		}
-		break;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
@@ -1968,14 +1961,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_AP_DIST:
-		if (OurVessel)
-		{
-			OurVessel->GetApDist(m.val1.dValue);
 			return true;
 		}
 		break;
@@ -2028,36 +2013,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_ELEMENTS:
-		if (OurVessel)
-		{
-			ELEMENTS el;
-			ELEMENTS *e = (ELEMENTS *) m.val1.pValue;
-
-			m.val3.hValue = OurVessel->GetElements(el, m.val2.dValue);
-
-			*e = el;
-
-			return true;
-		}
-		break;
-
-	case IULV_GET_PMI:
-		if (OurVessel)
-		{
-			OurVessel->GetPMI(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIZE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSize();
-			return true;
-		}
-		break;
-
 	case IULV_GET_MAXTHRUST:
 		if (OurVessel)
 		{
@@ -2066,26 +2021,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_LOCAL2GLOBAL:
-		if (OurVessel)
-		{
-			OurVessel->Local2Global(*(VECTOR3 *) m.val1.pValue, *(VECTOR3 *) m.val2.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_WEIGHTVECTOR:
 		if (OurVessel)
 		{
 			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_FORCEVECTOR:
-		if (OurVessel)
-		{
-			m.val2.bValue = OurVessel->GetForceVector(*(VECTOR3 *) m.val1.pValue);
 			return true;
 		}
 		break;
@@ -2114,50 +2053,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_MAIN_THRUSTER:
+	case IULV_GET_SIVB_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			m.val2.pValue = OurVessel->GetMainThruster(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAIN_THRUSTER_GROUP:
-		if (OurVessel)
-		{
-			m.val1.pValue = OurVessel->GetMainThrusterGroup();
-			return true;
-		}
-		break;
-
-	case IULV_GET_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetThrusterLevel(m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_PITCH:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetPitch();
-			return true;
-		}
-		break;
-			
-	case IULV_GET_BANK:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetBank();
-			return true;
-		}
-		break;
-			
-	case IULV_GET_SLIP_ANGLE:
-		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetSlipAngle();
+			m.val1.dValue = OurVessel->GetSIVBThrusterLevel();
 			return true;
 		}
 		break;
@@ -2203,10 +2102,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_THRUSTER_LEVEL:
+	case IULV_SET_SIVB_THRUSTER_LEVEL:
 		if (OurVessel)
 		{
-			OurVessel->SetThrusterLevel(m.val1.pValue, m.val2.dValue);
+			OurVessel->SetSIVBThrusterLevel(m.val1.dValue);
 			return true;
 		}
 		break;
