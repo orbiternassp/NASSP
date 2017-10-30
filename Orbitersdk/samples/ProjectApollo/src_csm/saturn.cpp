@@ -3751,7 +3751,10 @@ void Saturn::GenericLoadStateSetup()
 	// Initialize the IU
 	//
 
-	iu->SetMissionInfo(TLICapableBooster, Crewed); 
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu->SetMissionInfo(TLICapableBooster, Crewed);
+	}
 
 	//
 	// Disable master alarm sound on unmanned flights.

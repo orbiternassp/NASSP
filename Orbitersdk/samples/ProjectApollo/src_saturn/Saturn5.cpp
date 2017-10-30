@@ -733,6 +733,10 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	ClearMeshes();
 	SetupMeshes();
 
+	if (iu == NULL && stage < CSM_LEM_STAGE) {
+		iu = new IUSV;
+	}
+
 	//
 	// This code all needs to be fixed up.
 	//
