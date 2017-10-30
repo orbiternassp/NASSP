@@ -2113,21 +2113,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_ENABLE_J2:
-		if (OurVessel)
-		{
-			OurVessel->EnableDisableJ2(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_J2_DONE:
-		if (OurVessel)
-		{
-			OurVessel->SetVentingThruster();
-		}
-		break;
-
 	case IULV_CSM_SEPARATION_SENSED:
 		if (OurVessel)
 		{

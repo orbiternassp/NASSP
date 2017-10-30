@@ -85,7 +85,6 @@ enum IUCSMMessageType
 ///
 enum IULVMessageType
 {
-	IULV_ENABLE_J2,							///< Enable the J2 engine.
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_SII_THRUSTER_LEVEL,
 	IULV_SET_VERNIER_THRUSTER_LEVEL,
@@ -114,7 +113,6 @@ enum IULVMessageType
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_ADD_FORCE,							///< Add force.
-	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_GLOBAL_ORIENTATION,
@@ -212,9 +210,6 @@ class IUToLVCommandConnector : public Connector
 public:
 	IUToLVCommandConnector();
 	~IUToLVCommandConnector();
-
-	void EnableDisableJ2(bool Enable);
-	void SetVentingThruster();
 
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);

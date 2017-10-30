@@ -533,20 +533,22 @@ void Saturn1b::SetSecondStageEngines ()
 	// orbiter main thrusters
 	//
 
-	if (J2IsActive) {
-		th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-		thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
-		AddExhaust (th_3rd[0], 30.0, 2.9, J2Tex);
+	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
+	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+	AddExhaust (th_3rd[0], 30.0, 2.9, J2Tex);
 
-		//
-		// Set the actual stats.
-		//
+	//
+	// Set the actual stats.
+	//
 
-		SetSIVBMixtureRatio(MixtureRatio);
+	SetSIVBMixtureRatio(MixtureRatio);
 
-	} else {
-		SetVentingJ2Thruster();
-	}
+	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
+	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
+	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
+
+	fuel_venting_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Contrail_SaturnVenting");
+	AddExhaustStream(th_3rd_lox, &fuel_venting_spec);
 
 	//
 	//  Ullage rockets (3)
@@ -571,29 +573,6 @@ void Saturn1b::SetSecondStageEngines ()
 		AddExhaustStream(th_ver[i], &solid_exhaust);
 	}
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
-}
-
-void Saturn1b::SetVentingJ2Thruster() {
-
-	if (stage != STAGE_ORBIT_SIVB || !ph_3rd)
-		return;
-
-	//
-	// Clear old thrusters.
-	//
-	if (thg_3rd)
-		DelThrusterGroup(THGROUP_MAIN, true);
-
-	VECTOR3 m_exhaust_pos1= {0, 0, -9. - STG1O + 10};
-	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
-	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
-	th_3rd[0] = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
-	thg_3rd = CreateThrusterGroup(th_3rd, 1, THGROUP_MAIN);
-
-	fuel_venting_spec.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_SaturnVenting");
-	AddExhaustStream(th_3rd[0], &fuel_venting_spec);
-
-	J2IsActive = false;
 }
 
 void Saturn1b::SeparateStage (int new_stage)

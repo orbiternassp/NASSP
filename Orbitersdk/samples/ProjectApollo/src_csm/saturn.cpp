@@ -364,7 +364,6 @@ void Saturn::initSaturn()
 
 	ThrustAdjust = 1.0;
 	MixtureRatio = 5.5;
-	J2IsActive = true;
 
 	DockAngle = 0;
 
@@ -691,6 +690,8 @@ void Saturn::initSaturn()
 	}
 
 	th_3rd[0] = 0;
+	th_3rd_lox = 0;
+	th_3rd_lh2 = 0;
 	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
@@ -1181,7 +1182,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
 	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
 	papiWriteScenario_double (scn, "MR", MixtureRatio);
-	papiWriteScenario_bool (scn, "J2ISACTIVE", J2IsActive);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -2146,7 +2146,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
 		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
 		else if (papiReadScenario_double(line, "LMASCEMPTY", LMAscentEmptyMassKg));
-		else if (papiReadScenario_bool(line, "J2ISACTIVE", J2IsActive)); 
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		} else if (!strnicmp(line, "LEMCHECK", 8)) {
@@ -4504,22 +4503,6 @@ void Saturn::SetRandomFailures()
 		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
 
 		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
-	}
-}
-
-void Saturn::EnableDisableJ2(bool Enable)
-
-{
-	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0] || !ph_3rd)
-		return;
-
-	if (Enable)
-	{
-		SetThrusterResource(th_3rd[0], ph_3rd);
-	}
-	else
-	{
-		SetThrusterResource(th_3rd[0], NULL);
 	}
 }
 

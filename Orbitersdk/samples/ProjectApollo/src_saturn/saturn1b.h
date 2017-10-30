@@ -61,11 +61,6 @@ public:
 	///
 	void clbkPostStep (double simt, double simdt, double mjd);
 
-	///
-	/// \brief Set up J2 engines as fuel venting thruster.
-	///
-	virtual void SetVentingJ2Thruster();
-
 	/// 
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 

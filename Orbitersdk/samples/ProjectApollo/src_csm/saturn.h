@@ -1114,23 +1114,6 @@ public:
 	void ClearLVRateLight();
 
 	///
-	/// \brief Enable or disable the J2 engine on the SIVb.
-	/// \param Enable Engine on or off.
-	///
-	void EnableDisableJ2(bool Enable);
-
-	///
-	/// \brief Set up J2 engines as fuel venting thruster.
-	///
-	virtual void SetVentingJ2Thruster() = 0;
-
-	///
-	/// \brief Set thrust level of the SIVb J2 engine.
-	/// \param thrust Thrust level 0.0 - 1.0.
-	///
-	void SetJ2ThrustLevel(double thrust);
-
-	///
 	/// \brief Get thrust level of the SIVb J2 engine.
 	/// \return Thrust level 0.0 - 1.0.
 	///
@@ -1429,12 +1412,6 @@ protected:
 	/// \brief Time of last event.
 	///
 	double LastMissionEventTime;
-
-	///
-	/// Is the S-IVB J2 engine active for burns or venting
-	/// \brief Is the S-IVB J2 engine active for burns or venting
-	///
-	bool J2IsActive; 
 
 
 	///
@@ -4150,6 +4127,7 @@ protected:
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
+	THRUSTER_HANDLE th_3rd_lox, th_3rd_lh2;
 	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              

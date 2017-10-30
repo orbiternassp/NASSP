@@ -723,29 +723,6 @@ IUToLVCommandConnector::~IUToLVCommandConnector()
 {
 }
 
-void IUToLVCommandConnector::EnableDisableJ2(bool Enable)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ENABLE_J2;
-	cm.val1.bValue = Enable;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetVentingThruster()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_J2_DONE;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetSIThrusterLevel(int n, double level)
 {
 	ConnectorMessage cm;

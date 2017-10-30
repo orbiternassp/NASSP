@@ -356,14 +356,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_J2_DONE:
-		if (OurVessel) 
-		{
-			OurVessel->SetVentingJ2Thruster();
-			return true;
-		}
-		break;
-
 	case IULV_SET_CONTRAIL_LEVEL:
 		if (OurVessel)
 		{
@@ -520,14 +512,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->DeactivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
-	case IULV_ENABLE_J2:
-		if (OurVessel)
-		{
-			OurVessel->EnableDisableJ2(m.val1.bValue);
 			return true;
 		}
 		break;
