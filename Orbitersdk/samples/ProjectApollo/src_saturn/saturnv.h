@@ -134,6 +134,7 @@ protected:
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
 	void SaveIU(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
 
 	//
 	// Odds and ends.

@@ -723,6 +723,15 @@ void SaturnV::LoadIU(FILEHANDLE scn)
 	iu->LoadState(scn);
 }
 
+void SaturnV::LoadLVDC(FILEHANDLE scn) {
+
+	if (iu == NULL) {
+		iu = new IUSV;
+	}
+
+	iu->LoadLVDC(scn);
+}
+
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {

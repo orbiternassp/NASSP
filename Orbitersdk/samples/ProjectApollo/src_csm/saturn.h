@@ -3981,7 +3981,7 @@ protected:
 	virtual void LoadIU(FILEHANDLE scn) = 0;
 	virtual void SaveIU(FILEHANDLE scn) = 0;
 	void SaveLVDC(FILEHANDLE scn);
-	void LoadLVDC(FILEHANDLE scn);
+	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

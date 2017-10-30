@@ -2282,10 +2282,6 @@ void Saturn::SaveLVDC(FILEHANDLE scn) {
 	if (iu != NULL) { iu->SaveLVDC(scn); }
 }
 
-void Saturn::LoadLVDC(FILEHANDLE scn) {
-	if (iu != NULL) { iu->LoadLVDC(scn); }
-}
-
 //
 // Set the appropriate mass based on the SIVB payload. I believe these are roughly the
 // correct numbers.

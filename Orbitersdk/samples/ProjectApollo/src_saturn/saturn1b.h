@@ -90,6 +90,7 @@ protected:
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
 	void SaveIU(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);

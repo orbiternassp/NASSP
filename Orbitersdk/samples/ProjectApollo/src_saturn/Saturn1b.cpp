@@ -514,6 +514,15 @@ void Saturn1b::LoadIU(FILEHANDLE scn)
 	iu->LoadState(scn);
 }
 
+void Saturn1b::LoadLVDC(FILEHANDLE scn) {
+
+	if (iu == NULL) {
+		iu = new IU1B;
+	}
+
+	iu->LoadLVDC(scn);
+}
+
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
