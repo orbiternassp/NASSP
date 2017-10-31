@@ -393,7 +393,7 @@ void LEM::SetLmAscentHoverStage()
 		ph_Dsc = 0;
 	}
 	
-	VECTOR3 dockpos = {0.0 ,0.58, 0.0};
+	VECTOR3 dockpos = {0.0 ,0.75, 0.0};
 	VECTOR3 dockdir = {0,1,0};
 
 	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
