@@ -156,7 +156,7 @@ void SIVbLoadMeshes()
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk),
-	sivbsys(this, th_main[0], th_lox_vent)
+	sivbsys(this, th_main[0], th_lox_vent, thg_ver)
 
 {
 	PanelSDKInitalised = false;
@@ -201,6 +201,7 @@ void SIVB::InitS4b()
 	thg_aps = 0;
 	thg_sep = 0;
 	thg_sepPanel = 0;
+	thg_ver = 0;
 
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;

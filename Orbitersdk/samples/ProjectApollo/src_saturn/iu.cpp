@@ -747,17 +747,6 @@ void IUToLVCommandConnector::SetSIIThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetVernierThrusterLevel(double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_VERNIER_THRUSTER_LEVEL;
-	cm.val1.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetAPSThrusterLevel(int n, double level)
 {
 	ConnectorMessage cm;

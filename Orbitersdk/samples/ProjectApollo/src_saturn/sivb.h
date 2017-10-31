@@ -473,7 +473,7 @@ protected:
 
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
 	THRUSTER_HANDLE th_lox_vent;
-	THGROUP_HANDLE thg_aps, thg_main, thg_sep, thg_sepPanel;
+	THGROUP_HANDLE thg_aps, thg_main, thg_sep, thg_sepPanel, thg_ver;
 	PROPELLANT_HANDLE ph_aps, ph_main;
 
 	UINT panelAnim;

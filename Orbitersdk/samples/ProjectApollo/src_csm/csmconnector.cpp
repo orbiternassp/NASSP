@@ -388,14 +388,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_VERNIER_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetVernierThrusterLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_THRUSTER_LEVEL:
 		if (OurVessel)
 		{

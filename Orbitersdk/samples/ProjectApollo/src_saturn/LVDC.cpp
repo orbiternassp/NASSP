@@ -933,6 +933,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					break;
 				case 6:
+					//TB3+1.1: Ullage Rockets Ignition
+					if (LVDC_TB_ETime > 1.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 56);
+						CommandSequence++;
+					}
+					break;
+				case 7:
 					//TB3+1.3: S-IB/S-IVB Separation On
 					if (LVDC_TB_ETime > 1.3)
 					{
@@ -940,7 +948,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 7:
+				case 8:
 					//TB3+1.5: Flight Control Computer S-IVB Burn Mode On "A"
 					if (LVDC_TB_ETime > 1.5)
 					{
@@ -948,7 +956,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 8:
+				case 9:
 					//TB3+1.7: Flight Control Computer S-IVB Burn Mode On "B"
 					if (LVDC_TB_ETime > 1.7)
 					{
@@ -956,7 +964,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 9:
+				case 10:
 					//TB3+1.9: Engine Ready Bypass On
 					if (LVDC_TB_ETime > 1.9)
 					{
@@ -964,7 +972,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 10:
+				case 11:
 					//TB3+2.4: S-IVB Engine Out Indication A Enable
 					if (LVDC_TB_ETime > 2.4)
 					{
@@ -972,7 +980,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 11:
+				case 12:
 					//TB3+2.6: S-IVB Engine Out Indication B Enable
 					if (LVDC_TB_ETime > 2.6)
 					{
@@ -980,7 +988,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 12:
+				case 13:
 					//TB3+2.7: Engine Ignition Sequence Start
 					if (LVDC_TB_ETime > 1.9)
 					{
@@ -988,7 +996,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 13:
+				case 14:
 					//TB3+8.7: P.U. Mixture Ratio 5.5 On
 					if (LVDC_TB_ETime > 8.7)
 					{
@@ -996,7 +1004,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 14:
+				case 15:
 					//TB3+311.3: P.U. Mixture Ratio 5.5 Off
 					if (LVDC_TB_ETime > 311.3)
 					{
@@ -1004,7 +1012,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 15:
+				case 16:
 					//TB3+311.5: P.U. Mixture Ratio 4.5 On
 					if (LVDC_TB_ETime > 311.5)
 					{
@@ -1017,10 +1025,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				default:
 					break;
 				}
-						
-				if(LVDC_TB_ETime >= 5 && LVDC_TB_ETime < 6.8 && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetVernierThrusterLevel(0);
-				}
+
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
 					S4B_IGN=true;
 				}
@@ -5673,7 +5678,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 7:
 					//TB4+0.7: Fire Ullage Ignition On
 					if (LVDC_TB_ETime > 0.7)
+					{
+						fprintf(lvlog, "[%d+%f] FIRE ULLAGE IGNITION ON\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 56);
 						CommandSequence++;
+					}
 					break;
 				case 8:
 					//TB4+0.8: S-II/S-IVB Separation
@@ -5829,7 +5838,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 			
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
-					lvCommandConnector->SetVernierThrusterLevel(0.0);
 					S4B_IGN=true;
 				}
 
@@ -7005,7 +7013,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 10:
 					//TB4a+1.6: Fire Ullage Ignition On
 					if (LVDC_TB_ETime > 1.6)
+					{
+						fprintf(lvlog, "[%d+%f] FIRE ULLAGE IGNITION ON\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 56);
 						CommandSequence++;
+					}
 					break;
 				case 11:
 					//TB4a+1.7: S-II/S-IVB Separation
@@ -7238,7 +7250,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
-					lvCommandConnector->SetVernierThrusterLevel(0.0);
 					S4B_IGN = true;
 				}
 

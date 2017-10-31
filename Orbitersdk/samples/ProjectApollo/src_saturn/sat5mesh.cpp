@@ -854,6 +854,15 @@ void SaturnV::SetThirdStageEngines (double offset)
 	if (!ph_3rd) 
 		ph_3rd  = CreatePropellantResource(S4B_FuelMass); //3rd stage Propellant
 
+	if (!ph_ullage3)
+	{
+		//
+		// Create SIVB stage ullage rocket propellant
+		//
+
+		ph_ullage3 = CreatePropellantResource(2*26.67);
+	}
+
 	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
 
 	if (ph_2nd) {
@@ -924,8 +933,8 @@ void SaturnV::SetThirdStageEngines (double offset)
 	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6 + offset);
 	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6 + offset);
 
-	th_ver[0] = CreateThruster (u_exhaust_pos6, _V( -0.4,0.0,1), 311 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (u_exhaust_pos7, _V( 0.4,0.0,1), 311 , ph_3rd, 45790.85);
+	th_ver[0] = CreateThruster(u_exhaust_pos6, _V(-0.4, 0.0, 1), 15079.47, ph_ullage3, 2188.1);
+	th_ver[1] = CreateThruster(u_exhaust_pos7, _V(0.4, 0.0, 1), 15079.47, ph_ullage3, 2188.1);
 
 	for (int i = 0; i < 2; i++)
 		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);

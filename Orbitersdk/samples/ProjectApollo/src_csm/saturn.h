@@ -940,7 +940,6 @@ public:
 	void SetSIIThrusterLevel(int n, double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
-	void SetVernierThrusterLevel(double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
 	void SIVBEDSCutoff(bool cut);
