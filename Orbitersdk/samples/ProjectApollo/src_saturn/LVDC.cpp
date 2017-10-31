@@ -5568,7 +5568,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					lvCommandConnector->SetSIIThrusterLevel(3, ((LVDC_TB_ETime - 2.4)*0.45));
 					lvCommandConnector->SetSIIThrusterLevel(4, ((LVDC_TB_ETime - 2.4)*0.45));
 				}
-				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 5 && S2_IGNITION == false){
+				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 					lvCommandConnector->SwitchSelector(20);
 					S2_IGNITION = true;
 				}
@@ -5594,7 +5594,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}*/
 			
 				// MR Shift
-				if(LVDC_TB_ETime > 284.4 && lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO_ISTG_JET && MRS == false){
+				if(LVDC_TB_ETime > 284.4 && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 58);
@@ -5837,7 +5837,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					break;
 				}
 			
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false){
 					S4B_IGN=true;
 				}
 
@@ -6167,7 +6167,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//CSM separation detection
-				if (lvCommandConnector->CSMSeparationSensed() && TB5a >= 99999.0)
+				if (lvda.SpacecraftSeparationIndication() && TB5a >= 99999.0)
 				{
 					TB5a = TAS;
 					LVDC_TB_ETime = 0;
@@ -6933,7 +6933,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				//CSM separation detection
-				if (lvCommandConnector->CSMSeparationSensed() && TB5a > 99999.9)
+				if (lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
 				{
 					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
 					TB5a = TAS;
@@ -7249,7 +7249,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					break;
 				}
 
-				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB) {
+				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false) {
 					S4B_IGN = true;
 				}
 
