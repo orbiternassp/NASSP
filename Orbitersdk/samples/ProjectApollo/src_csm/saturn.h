@@ -3793,6 +3793,7 @@ protected:
 	bool FirePCM;
 
 	double FailureMultiplier;
+	double PlatFail;
 
 	OBJHANDLE hEVA;
 
