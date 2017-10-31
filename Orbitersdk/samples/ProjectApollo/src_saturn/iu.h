@@ -87,7 +87,6 @@ enum IULVMessageType
 {
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_SII_THRUSTER_LEVEL,
-	IULV_SET_VERNIER_THRUSTER_LEVEL,
 	IULV_SET_APS_THRUSTER_LEVEL,
 	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
@@ -213,7 +212,6 @@ public:
 
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
-	void SetVernierThrusterLevel(double level);
 
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);

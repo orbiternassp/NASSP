@@ -514,7 +514,7 @@ void Saturn1b::SetSecondStageEngines ()
 		// Create SIVB stage ullage rocket propellant
 		//
 
-		ph_ullage3  = CreatePropellantResource(80.0);
+		ph_ullage3  = CreatePropellantResource(3*26.67);
 	}
 
 	//
@@ -564,9 +564,9 @@ void Saturn1b::SetSecondStageEngines ()
 	// Ullage rocket thrust and ISP is a guess for now.
 	//
 
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( 0.45,0.0,1), 10000, ph_ullage3, 3000);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( -0.23,-0.39,1), 10000, ph_ullage3, 3000);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( -0.23,0.39,1), 10000, ph_ullage3, 3000);
+	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( 0.45,0.0,1), 15079.47, ph_ullage3, 2188.1);
+	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( -0.23,-0.39,1), 15079.47, ph_ullage3, 2188.1);
+	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( -0.23,0.39,1), 15079.47, ph_ullage3, 2188.1);
 
 	for (i = 0; i < 3; i++) {
 		AddExhaust(th_ver[i], 7.0, 0.2, exhaust_tex);
@@ -693,7 +693,6 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSecondStage ();
 		SetSecondStageEngines ();
 		ShiftCentreOfMass (_V(0,0,12.25));
-		SetThrusterGroupLevel(thg_ver,1.0);
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB && new_stage != CM_STAGE) || stage == STAGE_ORBIT_SIVB)

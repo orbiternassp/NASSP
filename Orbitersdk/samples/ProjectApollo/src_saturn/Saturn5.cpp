@@ -1130,7 +1130,6 @@ void SaturnV::SIISwitchSelector(int channel)
 			SetStage(LAUNCH_STAGE_SIVB);
 			AddRCS_S4B();
 			SetSIVBThrusters(true);
-			SetThrusterGroupLevel(thg_ver, 1.0);
 			SetThrusterResource(th_3rd[0], ph_3rd);
 
 			SetSIVbCMixtureRatio(4.946);
@@ -1278,6 +1277,7 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 55: //Charge Ullage Jettison On
 		break;
 	case 56: //Fire Ullage Ignition On
+		sivb.FireUllageIgnitionOn();
 		break;
 	case 57: //Fire Ullage Jettison On
 		break;

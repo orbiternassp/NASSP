@@ -419,7 +419,6 @@ void Saturn1b::SISwitchSelector(int channel)
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
 		SetSIVBThrusters(true);
-		SetThrusterGroupLevel(thg_ver, 1.0);
 		SetThrusterResource(th_3rd[0], ph_3rd);
 		break;
 	case 98: //Inboard Engines Cutoff
@@ -473,6 +472,9 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 		break;
 	case 49: //S-IVB Engine Cutoff No. 2 Off
 		sivb.LVDCEngineCutoffOff();
+		break;
+	case 56: //Fire Ullage Ignition On
+		sivb.FireUllageIgnitionOn();
 		break;
 	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
 		sivb.StartLOXVenting();

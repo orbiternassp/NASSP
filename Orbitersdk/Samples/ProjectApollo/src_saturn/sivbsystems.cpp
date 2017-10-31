@@ -33,8 +33,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox) :
-	j2engine(j2), loxvent(lox) {
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
+	j2engine(j2), loxvent(lox), vernier(ver) {
 
 	vessel = v;
 
@@ -49,6 +49,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox) :
 	RSSEngineStop = false;
 	ThrustOKRelay = false;
 	LOXVentValveOpen = false;
+	FireUllageIgnition = false;
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
@@ -65,6 +66,8 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
 	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
 	papiWriteScenario_bool(scn, "ENGINEREADY", EngineReady);
+	papiWriteScenario_double(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
+	papiWriteScenario_double(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 
@@ -86,6 +89,8 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "RSSENGINESTOP", RSSEngineStop);
 		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
 		papiReadScenario_bool(line, "ENGINEREADY", EngineReady);
+		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
+		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 
@@ -233,6 +238,15 @@ void SIVBSystems::Timestep(double simdt)
 			vessel->SetThrusterLevel(loxvent, 0.0);
 		}
 
+	}
+
+	if (vernier)
+	{
+		if (vessel->GetThrusterGroupLevel(vernier) < 1.0 && FireUllageIgnition)
+		{
+			vessel->SetThrusterGroupLevel(vernier, 1.0);
+			FireUllageIgnition = false;
+		}
 	}
 
 	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);
