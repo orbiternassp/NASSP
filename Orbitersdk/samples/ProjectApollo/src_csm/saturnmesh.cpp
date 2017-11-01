@@ -647,6 +647,8 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.VehicleNo = VehicleNo;
 	S4Config.EmptyMass = S4B_EmptyMass;
 	S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
+	S4Config.ApsFuel1Kg = GetPropellantMass(ph_aps1);
+	S4Config.ApsFuel2Kg = GetPropellantMass(ph_aps2);
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
 	S4Config.MissionTime = MissionTime;

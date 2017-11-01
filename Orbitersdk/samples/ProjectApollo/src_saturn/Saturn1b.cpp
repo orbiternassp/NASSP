@@ -418,7 +418,6 @@ void Saturn1b::SISwitchSelector(int channel)
 		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
-		SetSIVBThrusters(true);
 		SetThrusterResource(th_3rd[0], ph_3rd);
 		break;
 	case 98: //Inboard Engines Cutoff
