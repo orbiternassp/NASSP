@@ -251,3 +251,40 @@ void SIVBSystems::Timestep(double simdt)
 
 	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);
 }
+
+void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
+{
+	if (j2engine == NULL) return;
+
+	VECTOR3 j2vector;
+
+	if (beta_y > 7.0*RAD)
+	{
+		j2vector.x = 7.0*RAD;
+	}
+	else if (beta_y < -7.0*RAD)
+	{
+		j2vector.x = -7.0*RAD;
+	}
+	else
+	{
+		j2vector.x = beta_y;
+	}
+
+	if (beta_p > 7.0*RAD)
+	{
+		j2vector.y = 7.0*RAD;
+	}
+	else if (beta_p < -7.0*RAD)
+	{
+		j2vector.y = -7.0*RAD;
+	}
+	else
+	{
+		j2vector.y = beta_p;
+	}
+
+	j2vector.z = 1.0;
+
+	vessel->SetThrusterDir(j2engine, j2vector);
+}

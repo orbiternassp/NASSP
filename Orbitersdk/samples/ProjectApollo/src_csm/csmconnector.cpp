@@ -439,7 +439,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_SIVB_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);
+			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
 			return true;
 		}
 		break;

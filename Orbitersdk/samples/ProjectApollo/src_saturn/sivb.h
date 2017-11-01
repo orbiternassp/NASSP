@@ -279,7 +279,7 @@ public:
 
 	bool GetSIVBThrustOK();
 
-	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_aps_rot[n], level); }
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SIVBEDSCutoff(bool cut);

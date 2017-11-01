@@ -178,7 +178,7 @@ void FCC1B::Timestep(double simdt)
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		iu->GetLVCommandConnector()->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
+		iu->GetLVCommandConnector()->SetSIVBThrusterDir(beta_y1c, beta_p1c);
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
@@ -365,7 +365,7 @@ void FCCSV::Timestep(double simdt)
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		iu->GetLVCommandConnector()->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
+		iu->GetLVCommandConnector()->SetSIVBThrusterDir(beta_y1c, beta_p1c);
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);

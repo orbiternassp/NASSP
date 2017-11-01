@@ -828,13 +828,14 @@ void IUToLVCommandConnector::SetSIIThrusterDir(int n, VECTOR3 &dir)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIVBThrusterDir(VECTOR3 &dir)
+void IUToLVCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_SIVB_THRUSTER_DIR;
-	cm.val1.pValue = &dir;
+	cm.val1.dValue = yaw;
+	cm.val2.dValue = pitch;
 
 	SendMessage(cm);
 }

@@ -1453,10 +1453,9 @@ double SIVB::GetMissionTime()
 	return MissionTime;
 }
 
-void SIVB::SetSIVBThrusterDir(VECTOR3 &dir)
+void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
 {
-	if (th_main[0])
-		SetThrusterDir(th_main[0], dir);
+	sivbsys.SetThrusterDir(yaw, pitch);
 }
 
 void SIVB::SetAPSUllageThrusterLevel(int n, double level)
@@ -2003,7 +2002,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	case IULV_SET_SIVB_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetSIVBThrusterDir(*(VECTOR3 *)m.val1.pValue);
+			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
 			return true;
 		}
 		break;

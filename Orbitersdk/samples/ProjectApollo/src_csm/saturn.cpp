@@ -4620,12 +4620,11 @@ void Saturn::SetSIIThrusterDir(int n, VECTOR3 &dir)
 	SetThrusterDir(th_2nd[n], dir);
 }
 
-void Saturn::SetSIVBThrusterDir(VECTOR3 &dir)
+void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_3rd[0]) return;
 
-	SetThrusterDir(th_3rd[0], dir);
+	sivb.SetThrusterDir(yaw, pitch);
 }
 
 void Saturn::ClearSIThrusterResource(int n)

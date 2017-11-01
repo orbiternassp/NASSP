@@ -217,7 +217,7 @@ public:
 	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
-	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIVBThrusterDir(double yaw, double pitch);
 
 	void SetQBallPowerOff();
 

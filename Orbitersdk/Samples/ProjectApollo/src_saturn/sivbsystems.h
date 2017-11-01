@@ -44,6 +44,7 @@ public:
 	void StartLOXVenting() { LOXVentValveOpen = true; }
 	void EndLOXVenting() { LOXVentValveOpen = false; }
 	void FireUllageIgnitionOn() { FireUllageIgnition = true; }
+	void SetThrusterDir(double beta_y, double beta_p);
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 

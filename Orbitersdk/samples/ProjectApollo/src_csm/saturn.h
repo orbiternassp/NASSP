@@ -935,7 +935,7 @@ public:
 	bool GetSIVBThrustOK();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
-	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
 	void SetAPSUllageThrusterLevel(int n, double level);
