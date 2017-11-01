@@ -257,7 +257,7 @@ public:
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
-	double GetSIVBThrustOK();
+	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);

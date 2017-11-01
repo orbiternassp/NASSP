@@ -183,8 +183,10 @@ bool IU::GetSIVBEngineOut()
 	int stage = lvCommandConnector.GetStage();
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	double oetl = lvCommandConnector.GetSIVBThrustOK();
-	if (oetl == 0) return true;
+	if (lvCommandConnector.GetSIVBThrustOK() == false)
+	{
+		return true;
+	}
 
 	return false;
 }
@@ -1304,7 +1306,7 @@ double IUToLVCommandConnector::GetSIIThrusterLevel(int n)
 	return 0.0;
 }
 
-double IUToLVCommandConnector::GetSIVBThrustOK()
+bool IUToLVCommandConnector::GetSIVBThrustOK()
 {
 	ConnectorMessage cm;
 
