@@ -211,14 +211,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_MAXTHRUST:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetSaturnMaxThrust((ENGINETYPE) m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_WEIGHTVECTOR:
 		if (OurVessel)
 		{
@@ -472,22 +464,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->AddRCS_S4B();
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->SetSIVBThrusters(true);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->SetSIVBThrusters(false);
 			return true;
 		}
 		break;

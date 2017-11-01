@@ -98,8 +98,6 @@ enum IULVMessageType
 	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
 	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
 	IULV_ADD_S4RCS,
-	IULV_ACTIVATE_S4RCS,					///< Activate the SIVb RCS.
-	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
 	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
 	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
 	IULV_SET_CONTRAIL_LEVEL,
@@ -125,7 +123,6 @@ enum IULVMessageType
 	IULV_GET_GRAVITY_REF,					///< Get gravity reference.
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
 	IULV_GET_RELATIVE_VEL,					///< Get relative velocity.
-	IULV_GET_MAXTHRUST,						///< Get max. thrust
 	IULV_GET_WEIGHTVECTOR,					///< Get weight vector 
 	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
 	IULV_GET_GLOBAL_VEL,					///< Get global vel
@@ -236,8 +233,6 @@ public:
 	void ActivateNavmode(int mode);
 
 	void AddRCS_S4B();
-	void DeactivateS4RCS();
-	void ActivateS4RCS();
 
 	void DeactivatePrelaunchVenting();
 	void ActivatePrelaunchVenting();
@@ -255,7 +250,6 @@ public:
 	double GetMaxFuelMass();
 	double GetFuelMass();
 	void GetGlobalOrientation(VECTOR3 &arot);
-	double GetMaxThrust(ENGINETYPE eng);
 	bool GetWeightVector(VECTOR3 &w);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);

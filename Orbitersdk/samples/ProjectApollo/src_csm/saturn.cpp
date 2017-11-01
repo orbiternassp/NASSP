@@ -357,6 +357,7 @@ void Saturn::initSaturn()
 	FirePCM = false;
 
 	FailureMultiplier = 1.0;
+	PlatFail = 0;
 
 	DeleteLaunchSite = true;
 
@@ -597,6 +598,8 @@ void Saturn::initSaturn()
 	ph_ullage1 = 0;
 	ph_ullage2 = 0;
 	ph_ullage3 = 0;
+	ph_aps1 = 0;
+	ph_aps2 = 0;
 
 	//
 	// Thruster groups.
@@ -612,7 +615,6 @@ void Saturn::initSaturn()
 	thg_ver = 0;
 	thg_retro1 = 0;
 	thg_retro2 = 0;
-	thg_aps = 0;
 	th_o2_vent = 0;
 
 	//
@@ -715,7 +717,14 @@ void Saturn::initSaturn()
 
 	for (i = 0; i < 3; i++) {
 		th_ver[i] = 0;
-		th_aps[i] = 0;
+	}
+
+	for (i = 0; i < 6; i++) {
+		th_aps_rot[i] = 0;
+	}
+
+	for (i = 0; i < 2; i++) {
+		th_aps_ull[i] = 0;
 	}
 
 	//
@@ -1169,6 +1178,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < LAUNCH_STAGE_SIVB)
 	{
 		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
+		if (PlatFail > 0) {
+			papiWriteScenario_double(scn, "PLATFAIL", PlatFail);
+		}
 	}
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
@@ -1606,6 +1618,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "FAILUREMULTIPLIER", 17)) {
 		sscanf(line + 17, "%lf", &FailureMultiplier);
+	}
+	else if (!strnicmp(line, "PLATFAIL", 8)) {
+		sscanf(line + 8, "%lf", &PlatFail);
 	}
 	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 		sscanf (line+11, "%d", &buildstatus);
@@ -3256,90 +3271,42 @@ void Saturn::AddRCS_S4B()
 	if (SaturnType == SAT_SATURN1B)
 		offset=7.7;
 
-	th_att_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25 + offset), _V(0, -1, 0), SIVB_RCS_PITCH_THRUST, ph_3rd,5000000, 4000000);
-	th_att_rot[1] = CreateThruster(_V(0, -ATTCOOR2 - 0.15, TRANZ - 0.25 + offset), _V(0, 1, 0), SIVB_RCS_PITCH_THRUST, ph_3rd,5000000, 4000000);
-	
-	AddExhaust (th_att_rot[0], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[1], 0.6, 0.078, SIVBRCSTex);
-
-	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
-	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
-
-	AddExhaust (th_att_rot[2], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[3], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[4], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[5], 0.6, 0.078, SIVBRCSTex);
-
-	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
-		
-	AddExhaust (th_att_rot[6], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[7], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[8], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[9], 0.6, 0.078, SIVBRCSTex);
-
-	//
-	// APS thrusters are only 320N (72 pounds) thrust
-	//
-
-	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
-	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
-	AddExhaust (th_att_lin[0], 7, 0.15, SIVBRCSTex);
-	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
-
-	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_USER);
-}
-
-void Saturn::SetSaturnAttitudeRotLevel(VECTOR3 th) {
-
-	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)) {
-		if (th_att_rot[0] != 0) {
-			if (th.x >= 0) {
-				SetThrusterLevel(th_att_rot[0], th.x);
-				SetThrusterLevel(th_att_rot[1], 0);
-			} else {
-				SetThrusterLevel(th_att_rot[0], 0);
-				SetThrusterLevel(th_att_rot[1], -th.x);
-			}
-			if (th.y >= 0) {
-				SetThrusterLevel(th_att_rot[6], th.y);
-				SetThrusterLevel(th_att_rot[7], th.y);
-				SetThrusterLevel(th_att_rot[8], 0);
-				SetThrusterLevel(th_att_rot[9], 0);
-			} else {
-				SetThrusterLevel(th_att_rot[6], 0);
-				SetThrusterLevel(th_att_rot[7], 0);
-				SetThrusterLevel(th_att_rot[8], -th.y);
-				SetThrusterLevel(th_att_rot[9], -th.y);
-			}
-			if (th.z >= 0) {
-				SetThrusterLevel(th_att_rot[5], th.z);
-				SetThrusterLevel(th_att_rot[4], th.z);
-				SetThrusterLevel(th_att_rot[3], 0);
-				SetThrusterLevel(th_att_rot[2], 0);
-			} else {
-				SetThrusterLevel(th_att_rot[5], 0);
-				SetThrusterLevel(th_att_rot[4], 0);
-				SetThrusterLevel(th_att_rot[3], -th.z);
-				SetThrusterLevel(th_att_rot[2], -th.z);
-			}
-		}
-	} else {
-		SetAttitudeRotLevel(th);
+	if (!ph_aps1)
+	{
+		ph_aps1 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
 	}
-}
 
-double Saturn::GetSaturnMaxThrust(ENGINETYPE eng) {
+	if (!ph_aps2)
+	{
+		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
+	}
 
-	if (stage == STAGE_ORBIT_SIVB && eng == ENGINE_ATTITUDE) { 
-		// thrust of the THGROUP_ATT_PITCHUP thruster (Orbiter API manual)
-		return SIVB_RCS_PITCH_THRUST;
-	} else {
-		return GetMaxThrust(eng);
+	th_aps_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25 + offset), _V(0, -1, 0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[1] = CreateThruster(_V(0, -ATTCOOR2 - 0.15, TRANZ - 0.25 + offset), _V(0, 1, 0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	
+	AddExhaust (th_aps_rot[0], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[1], 0.6, 0.078, SIVBRCSTex);
+
+	th_aps_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+
+	AddExhaust (th_aps_rot[2], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[3], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[4], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[5], 0.6, 0.078, SIVBRCSTex);
+
+	//
+	// APS thrusters are only 310N (72 pounds) thrust
+	//
+
+	if (SaturnType == SAT_SATURNV)
+	{
+		th_aps_ull[0] = CreateThruster(_V(0, ATTCOOR2 - 0.15, TRANZ - .25 + offset), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+		th_aps_ull[1] = CreateThruster(_V(0, -ATTCOOR2 + .15, TRANZ - .25 + offset), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+		AddExhaust(th_aps_ull[0], 7, 0.15, SIVBRCSTex);
+		AddExhaust(th_aps_ull[1], 7, 0.15, SIVBRCSTex);
 	}
 }
 
@@ -3874,7 +3841,6 @@ void Saturn::ClearThrusters()
 	thg_ver = 0;
 	thg_retro1 = 0;
 	thg_retro2 = 0;
-	thg_aps = 0;
 	th_o2_vent = 0;
 
 }
@@ -3916,6 +3882,9 @@ void Saturn::ClearPropellants()
 	ph_ullage3 = 0;
 
 	ph_o2_vent = 0;
+
+	ph_aps1 = 0;
+	ph_aps2 = 0;
 }
 
 //
@@ -3926,45 +3895,6 @@ bool Saturn::SaturnHasCSM()
 
 {
 	return CSMAttached;
-}
-
-//
-// Set thruster state on or off. This should really turn off all but roll
-// thrusters until we're in orbit.
-//
-// Also, they should have their own fuel tank rather than use the main SIVB
-// fuel!
-//
-
-void Saturn::SetSIVBThrusters(bool active)
-
-{
-	if (active)
-	{
-		SetThrusterResource(th_att_rot[0], ph_3rd);
-		SetThrusterResource(th_att_rot[1], ph_3rd);
-		SetThrusterResource(th_att_rot[2], ph_3rd);
-		SetThrusterResource(th_att_rot[3], ph_3rd);
-		SetThrusterResource(th_att_rot[4], ph_3rd);
-		SetThrusterResource(th_att_rot[5], ph_3rd);
-		SetThrusterResource(th_att_rot[7], ph_3rd);
-		SetThrusterResource(th_att_rot[6], ph_3rd);
-		SetThrusterResource(th_att_rot[8], ph_3rd);
-		SetThrusterResource(th_att_rot[9], ph_3rd);
-	}
-	else
-	{
-		SetThrusterResource(th_att_rot[0], NULL);
-		SetThrusterResource(th_att_rot[1], NULL);
-		SetThrusterResource(th_att_rot[2], NULL);
-		SetThrusterResource(th_att_rot[3], NULL);
-		SetThrusterResource(th_att_rot[4], NULL);
-		SetThrusterResource(th_att_rot[5], NULL);
-		SetThrusterResource(th_att_rot[6], NULL);
-		SetThrusterResource(th_att_rot[7], NULL);
-		SetThrusterResource(th_att_rot[8], NULL);
-		SetThrusterResource(th_att_rot[9], NULL);
-	}
 }
 
 void Saturn::FireLaunchEscapeMotor()
@@ -4496,7 +4426,22 @@ void Saturn::SetRandomFailures()
 	bool PlatformFailure;
 	double PlatformFailureTime;
 
-	if (!(random() & (int)(127.0 / FailureMultiplier)))
+	if (PlatFail > 0)
+	{
+		if (PlatFail > 1)
+		{
+			PlatformFailure = true;
+			PlatformFailureTime = PlatFail;
+		}
+		else
+		{
+			PlatformFailure = true;
+			PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
+		}
+		
+		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
+	}
+	else if (!(random() & (int)(127.0 / FailureMultiplier)))
 	{
 		PlatformFailure = true;
 		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
@@ -4735,18 +4680,18 @@ void Saturn::SetAPSUllageThrusterLevel(int n, double level)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 	if (n < 0 || n > 1) return;
-	if (!th_att_lin[n]) return;
+	if (!th_aps_ull[n]) return;
 
-	SetThrusterLevel(th_att_lin[n], level);
+	SetThrusterLevel(th_aps_ull[n], level);
 }
 
 void Saturn::SetAPSThrusterLevel(int n, double level)
 {
 	if (n < 0 || n > 5) return;
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_att_rot[n]) return;
+	if (!th_aps_rot[n]) return;
 
-	SetThrusterLevel(th_att_rot[n], level);
+	SetThrusterLevel(th_aps_rot[n], level);
 }
 
 void Saturn::SetContrailLevel(double level)

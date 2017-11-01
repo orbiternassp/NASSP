@@ -75,7 +75,8 @@ struct SIVBSettings
 	double MissionTime;				///< Current MET in seconds.
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.
-	double ApsFuelKg;				///< APS fuel in kg.
+	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
+	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 	double MainFuelKg;				///< Remaining fuel in kg.
 
 	bool PanelsHinged;				///< Are SLA panels hinged?
@@ -279,7 +280,7 @@ public:
 	bool GetSIVBThrustOK();
 
 	void SetSIVBThrusterDir(VECTOR3 &dir);
-	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_att_rot[n], level); }
+	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_aps_rot[n], level); }
 	void SetAPSUllageThrusterLevel(int n, double level);
 	void SIVBEDSCutoff(bool cut);
 
@@ -386,6 +387,8 @@ protected:
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.
 	double MainFuel;				///< Main fuel mass in kg.
+	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
+	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 
 	double MissionTime;				///< Current MET in seconds.
 	double NextMissionEventTime;	///< Next event time for automated operation.
@@ -471,10 +474,10 @@ protected:
 
 	Battery *MainBattery;
 
-	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
+	THRUSTER_HANDLE th_aps_rot[6], th_main[1], th_aps_ull[2];                 // handles for APS engines
 	THRUSTER_HANDLE th_lox_vent;
-	THGROUP_HANDLE thg_aps, thg_main, thg_sep, thg_sepPanel, thg_ver;
-	PROPELLANT_HANDLE ph_aps, ph_main;
+	THGROUP_HANDLE thg_main, thg_sep, thg_sepPanel, thg_ver;
+	PROPELLANT_HANDLE ph_aps1, ph_aps2, ph_main;
 
 	UINT panelAnim;
 	UINT panelAnimPlusX;

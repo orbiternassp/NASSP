@@ -197,7 +197,7 @@ void SIVBSystems::Timestep(double simdt)
 		{
 			//Second Burn
 			if (ThrustTimer >= 8.6 && ThrustTimer < 11.4) {
-				ThrustLevel = (ThrustTimer - 8.6)*0.53;
+				ThrustLevel = (ThrustTimer - 8.6)*0.357;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
 			}
 			else if (ThrustTimer > 11.4 && ThrustLevel < 1.0)
@@ -210,7 +210,7 @@ void SIVBSystems::Timestep(double simdt)
 		{
 			//First Burn
 			if (ThrustTimer >= 3.0 && ThrustTimer < 5.8) {
-				ThrustLevel = (ThrustTimer - 3.0)*0.36;
+				ThrustLevel = (ThrustTimer - 3.0)*0.357;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
 			}
 			else if (ThrustTimer > 5.8 && ThrustLevel < 1.0)

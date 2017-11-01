@@ -1118,8 +1118,6 @@ public:
 	///
 	double GetJ2ThrustLevel();
 
-	void SetSaturnAttitudeRotLevel(VECTOR3 th);
-	double GetSaturnMaxThrust(ENGINETYPE eng);
 	void SIVBBoiloff();
 
 	double GetSIPropellantMass();
@@ -1157,7 +1155,6 @@ public:
 	int GetAGCAttitudeError(int axis);
 
 	void AddRCS_S4B();
-	void SetSIVBThrusters(bool active);
 
 	///
 	/// \brief Load sounds required for TLI burn.
@@ -3793,6 +3790,7 @@ protected:
 	bool FirePCM;
 
 	double FailureMultiplier;
+	double PlatFail;
 
 	OBJHANDLE hEVA;
 
@@ -4117,20 +4115,24 @@ protected:
 	///
 	PROPELLANT_HANDLE ph_o2_vent;
 
+	//S-IVB APS modules
+	PROPELLANT_HANDLE ph_aps1, ph_aps2;
+
 	//
 	// Thruster group handles. We have a lot of these :).
 	//
 
 	THGROUP_HANDLE thg_1st, thg_2nd, thg_3rd, thg_sps;
 	THGROUP_HANDLE thg_ull, thg_ver, thg_lem;//, thg_tjm;
-	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
+	THGROUP_HANDLE thg_retro1, thg_retro2;
 
 	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
 	THRUSTER_HANDLE th_3rd_lox, th_3rd_lh2;
 	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
-	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              
-	THRUSTER_HANDLE	th_aps[3];
+	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];
+	THRUSTER_HANDLE	th_aps_rot[6];
+	THRUSTER_HANDLE	th_aps_ull[2];
 	THRUSTER_HANDLE	th_sep[8], th_sep2[8];
 	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// SM RCS quads. Entry zero is not used, to match Apollo numbering
 	THRUSTER_HANDLE th_att_cm[12], th_att_cm_sys1[6], th_att_cm_sys2[6];    // CM RCS  

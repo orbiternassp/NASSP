@@ -973,28 +973,6 @@ void IUToLVCommandConnector::SetStage(int stage)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::DeactivateS4RCS()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_DEACTIVATE_S4RCS;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::ActivateS4RCS()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ACTIVATE_S4RCS;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::AddRCS_S4B()
 
 {
@@ -1039,23 +1017,6 @@ double IUToLVCommandConnector::GetMass()
 	if (SendMessage(cm))
 	{
 		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetMaxThrust(ENGINETYPE eng)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MAXTHRUST;
-	cm.val1.iValue = eng;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
 	}
 
 	return 0.0;

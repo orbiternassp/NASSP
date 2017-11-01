@@ -496,17 +496,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	// whole system has been initialised.
 	//
 
-	switch (stage) {
-
-	case STAGE_ORBIT_SIVB:
-		//
-		// Always enable SIVB RCS for now, once we hit orbit.
-		//
-
-		SetSIVBThrusters(true);
-		break;
-	}
-
 	//
 	// Get the handles for any odds and ends that are out there.
 	//
@@ -783,11 +772,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		SetThirdStage();
 		SetThirdStageEngines(-STG2O);
 		AddRCS_S4B();
-		//
-		// Always enable SIVB RCS for now, once we hit orbit.
-		//
-
-		SetSIVBThrusters(true);
 		break;
 
 	default:
@@ -1129,7 +1113,6 @@ void SaturnV::SIISwitchSelector(int channel)
 			SeparateStage(LAUNCH_STAGE_SIVB);
 			SetStage(LAUNCH_STAGE_SIVB);
 			AddRCS_S4B();
-			SetSIVBThrusters(true);
 			SetThrusterResource(th_3rd[0], ph_3rd);
 
 			SetSIVbCMixtureRatio(4.946);

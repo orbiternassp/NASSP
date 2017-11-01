@@ -331,7 +331,11 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			413.7		// AOH
 
-#define SIVB_RCS_PITCH_THRUST	20740.0		///\todo probably wrong
+#define S4B_APS_FUEL_PER_TANK	143.0
+#define S4B_APS_THRUST			670.0
+#define S4B_APS_ULL_THRUST		310.0
+#define S4B_APS_ISP				(290.0 * G)
+#define S4B_APS_ISP_SL			50.0
 
 //
 // Mission times for specific events.
