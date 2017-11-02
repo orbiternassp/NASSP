@@ -418,7 +418,6 @@ void Saturn1b::SISwitchSelector(int channel)
 		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
-		SetThrusterResource(th_3rd[0], ph_3rd);
 		break;
 	case 98: //Inboard Engines Cutoff
 		SetThrusterResource(th_1st[4], NULL);
@@ -480,6 +479,12 @@ void Saturn1b::SIVBSwitchSelector(int channel)
 		break;
 	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
 		sivb.EndLOXVenting();
+		break;
+	case 97: //Point Level Sensor Arming
+		sivb.PointLevelSensorArming();
+		break;
+	case 98: //Point Level Sensor Disarming
+		sivb.PointLevelSensorDisarming();
 		break;
 	default:
 		break;

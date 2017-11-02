@@ -1113,7 +1113,6 @@ void SaturnV::SIISwitchSelector(int channel)
 			SeparateStage(LAUNCH_STAGE_SIVB);
 			SetStage(LAUNCH_STAGE_SIVB);
 			AddRCS_S4B();
-			SetThrusterResource(th_3rd[0], ph_3rd);
 
 			SetSIVbCMixtureRatio(4.946);
 		}
@@ -1171,7 +1170,6 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 8: //PU Inverter and DC Power Off
 		break;
 	case 9: //S-IVB Engine Start On
-		SetThrusterResource(th_3rd[0], ph_3rd);
 		sivb.EngineStartOn();
 		break;
 	case 10: //Engine Ready Bypass
@@ -1331,8 +1329,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 96: //LOX Tank Vent and NPV Valv Boost Close Off
 		break;
 	case 97: //Point Level Sensor Arming
+		sivb.PointLevelSensorArming();
 		break;
 	case 98: //Point Level Sensor Disarming
+		sivb.PointLevelSensorDisarming();
 		break;
 	case 99: //LH2 Tank Latching Relief Valve Open On
 		break;
