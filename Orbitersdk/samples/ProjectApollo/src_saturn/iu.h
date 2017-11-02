@@ -88,7 +88,6 @@ enum IULVMessageType
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_SII_THRUSTER_LEVEL,
 	IULV_SET_APS_THRUSTER_LEVEL,
-	IULV_SET_APS_ULLAGE_THRUSTER_LEVEL,
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
 	IULV_CLEAR_SII_THRUSTER_RESOURCE,
 	IULV_SIVB_EDS_CUTOFF,
@@ -210,14 +209,13 @@ public:
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
 
-	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
 	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, VECTOR3 &dir);
-	void SetSIVBThrusterDir(VECTOR3 &dir);
+	void SetSIVBThrusterDir(double yaw, double pitch);
 
 	void SetQBallPowerOff();
 
@@ -257,7 +255,7 @@ public:
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
 	double GetSIIThrusterLevel(int n);
-	double GetSIVBThrustOK();
+	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);

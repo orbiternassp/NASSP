@@ -1022,6 +1022,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
+				case 17:
+					//TB3+437.2: Propellant Depletion Cutoff Aarm
+					if (LVDC_TB_ETime > 437.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 97);
+						CommandSequence++;
+					}
+					break;
 				default:
 					break;
 				}
@@ -1073,13 +1081,21 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				case 2:
 					//TB4+0.2: S-IVB Engine Cutoff No. 2 On
-					if (LVDC_TB_ETime > 0.1)
+					if (LVDC_TB_ETime > 0.2)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
 						CommandSequence++;
 					}
 					break;
 				case 3:
+					//TB4+1.8: Propellant Depletion Cutoff Disarm
+					if (LVDC_TB_ETime > 1.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 98);
+						CommandSequence++;
+					}
+					break;
+				case 4:
 					//TB4+3.5: Flight Control Computer S-IVB Burn Mode Off "A"
 					if (LVDC_TB_ETime > 3.5)
 					{
@@ -1087,7 +1103,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 4:
+				case 5:
 					//TB4+3.7: Flight Control Computer S-IVB Burn Mode On "B"
 					if (LVDC_TB_ETime > 3.7)
 					{
@@ -1095,7 +1111,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 5:
+				case 6:
 					//TB4+5.0: S/C Control Of Saturn Enable
 					if (LVDC_TB_ETime > 5.0)
 					{
@@ -1103,7 +1119,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 6:
+				case 7:
 					//TB4+10.0: S-IVB Engine EDS Cutoffs Disable
 					if (LVDC_TB_ETime > 10.0)
 					{
@@ -1113,7 +1129,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 7:
+				case 8:
 					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
 					if (LVDC_TB_ETime > 5052.0)
 					{
@@ -1121,7 +1137,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 8:
+				case 9:
 					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
 					if (LVDC_TB_ETime > 5773.0)
 					{
@@ -5885,7 +5901,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 2:
 					//TB5+0.2: Point Level Sensor Disarming
 					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 98);
 						CommandSequence++;
+					}
 					break;
 				case 3:
 					//TB5+0.3: S-IVB Ullage Engine No. 1 On
@@ -6681,7 +6700,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 79:
 					//TB6+892.1: Point Level Sensor Arming
 					if (LVDC_TB_ETime > 892.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 97);
 						CommandSequence++;
+					}
 					break;
 				default:
 					break;
@@ -6735,7 +6757,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| lvda.GetSIVBEngineOut() || lvda.GetCMCSIVBShutdown()))
+					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBShutdown()))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;
@@ -6808,7 +6830,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 6:
 					//TB7+0.9: Point Level Sensor Disarming
 					if (LVDC_TB_ETime > 0.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 98);
 						CommandSequence++;
+					}
 					break;
 				case 7:
 					//TB7+1.0: LOX Tank Pressurization Shutoff Valves Close
@@ -7243,7 +7268,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 45:
 					//TB4a+467.7: Point Level Sensor Arming
 					if (LVDC_TB_ETime > 467.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 97);
 						CommandSequence++;
+					}
 					break;
 				default:
 					break;
@@ -7832,7 +7860,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 				else
 				{
-					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
 				V_R = Mag(DotS_R);
@@ -7869,7 +7897,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 				else
 				{
-					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
 				V_R = Mag(DotS_R);
@@ -7906,7 +7934,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 				else
 				{
-					rho = Rho[0] + h*(Rho[1] + h*(Rho[2] + h*(Rho[3] + h*(Rho[4] + h*Rho[5]))));
+					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
 				V_R = Mag(DotS_R);

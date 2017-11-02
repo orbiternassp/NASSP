@@ -1113,7 +1113,6 @@ void SaturnV::SIISwitchSelector(int channel)
 			SeparateStage(LAUNCH_STAGE_SIVB);
 			SetStage(LAUNCH_STAGE_SIVB);
 			AddRCS_S4B();
-			SetThrusterResource(th_3rd[0], ph_3rd);
 
 			SetSIVbCMixtureRatio(4.946);
 		}
@@ -1171,7 +1170,6 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 8: //PU Inverter and DC Power Off
 		break;
 	case 9: //S-IVB Engine Start On
-		SetThrusterResource(th_3rd[0], ph_3rd);
 		sivb.EngineStartOn();
 		break;
 	case 10: //Engine Ready Bypass
@@ -1234,10 +1232,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 39: //LH2 Tank Repressurization Control Valve Open On
 		break;
 	case 42: //S-IVB Ullage Engine No. 1 On
-		SetAPSUllageThrusterLevel(0, 1);
+		sivb.APSUllageEngineOn(1);
 		break;
 	case 43: //S-IVB Ullage Engine No. 1 Off
-		SetAPSUllageThrusterLevel(0, 0);
+		sivb.APSUllageEngineOff(1);
 		break;
 	case 44: //LOX Tank NPV Valve Latch Open On
 		break;
@@ -1331,18 +1329,20 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 96: //LOX Tank Vent and NPV Valv Boost Close Off
 		break;
 	case 97: //Point Level Sensor Arming
+		sivb.PointLevelSensorArming();
 		break;
 	case 98: //Point Level Sensor Disarming
+		sivb.PointLevelSensorDisarming();
 		break;
 	case 99: //LH2 Tank Latching Relief Valve Open On
 		break;
 	case 100: //LH2 Tank Latching Relief Valve Open Off
 		break;
 	case 101: //S-IVB Ullage Engine No. 2 On
-		SetAPSUllageThrusterLevel(1, 1);
+		sivb.APSUllageEngineOn(2);
 		break;
 	case 102: //S-IVB Ullage Engine No. 2 Off
-		SetAPSUllageThrusterLevel(1, 0);
+		sivb.APSUllageEngineOff(2);
 		break;
 	case 103: //LOX Tank Flight Pressure System On
 		break;

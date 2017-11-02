@@ -27,8 +27,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SIVBSystems
 {
 public:
-	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
 	void Timestep(double simdt);
+	bool PropellantLowLevel();
 
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
 	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
@@ -44,6 +45,11 @@ public:
 	void StartLOXVenting() { LOXVentValveOpen = true; }
 	void EndLOXVenting() { LOXVentValveOpen = false; }
 	void FireUllageIgnitionOn() { FireUllageIgnition = true; }
+	void SetThrusterDir(double beta_y, double beta_p);
+	void PointLevelSensorArming() { PointLevelSensorArmed = true; }
+	void PointLevelSensorDisarming() { PointLevelSensorArmed = false; }
+	void APSUllageEngineOn(int n);
+	void APSUllageEngineOff(int n);
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 
@@ -77,11 +83,16 @@ protected:
 
 	bool LOXVentValveOpen;
 	bool FireUllageIgnition;
+	bool PointLevelSensorArmed;
+	bool APSUllageOnRelay[2];
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;
+	THRUSTER_HANDLE *ullage;
 	THRUSTER_HANDLE &loxvent;
 	THGROUP_HANDLE &vernier;
+
+	PROPELLANT_HANDLE &main_propellant;
 };
 
 #define SIVBSYSTEMS_START_STRING	"SIVBSYSTEMS_BEGIN"

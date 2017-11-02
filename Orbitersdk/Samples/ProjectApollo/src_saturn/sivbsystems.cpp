@@ -33,8 +33,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
-	j2engine(j2), loxvent(lox), vernier(ver) {
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
+	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), ullage(ull) {
 
 	vessel = v;
 
@@ -50,6 +50,12 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, THRUSTER_HANDLE &lox, T
 	ThrustOKRelay = false;
 	LOXVentValveOpen = false;
 	FireUllageIgnition = false;
+	PointLevelSensorArmed = false;
+
+	for (int i = 0;i < 2;i++)
+	{
+		APSUllageOnRelay[i] = false;
+	}
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
@@ -66,8 +72,10 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
 	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
 	papiWriteScenario_bool(scn, "ENGINEREADY", EngineReady);
-	papiWriteScenario_double(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
-	papiWriteScenario_double(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
+	papiWriteScenario_bool(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
+	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
+	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 
@@ -91,6 +99,8 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "ENGINEREADY", EngineReady);
 		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
+		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 
@@ -104,7 +114,15 @@ void SIVBSystems::Timestep(double simdt)
 	//Thrust OK switch
 	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
 
-	//TBD: Propellant Depletion
+	//Propellant Depletion
+	if (PropellantLowLevel())
+	{
+		PropellantDepletionSensors = true;
+	}
+	else
+	{
+		PropellantDepletionSensors = false;
+	}
 
 	//Engine Control Power Switch (EDS no. 1, range safety no. 1)
 	if (EDSEngineStop || RSSEngineStop)
@@ -250,4 +268,71 @@ void SIVBSystems::Timestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);
+}
+
+void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
+{
+	if (j2engine == NULL) return;
+
+	VECTOR3 j2vector;
+
+	if (beta_y > 7.0*RAD)
+	{
+		j2vector.x = 7.0*RAD;
+	}
+	else if (beta_y < -7.0*RAD)
+	{
+		j2vector.x = -7.0*RAD;
+	}
+	else
+	{
+		j2vector.x = beta_y;
+	}
+
+	if (beta_p > 7.0*RAD)
+	{
+		j2vector.y = 7.0*RAD;
+	}
+	else if (beta_p < -7.0*RAD)
+	{
+		j2vector.y = -7.0*RAD;
+	}
+	else
+	{
+		j2vector.y = beta_p;
+	}
+
+	j2vector.z = 1.0;
+
+	vessel->SetThrusterDir(j2engine, j2vector);
+}
+
+bool SIVBSystems::PropellantLowLevel()
+{
+	if (PointLevelSensorArmed)
+	{
+		if (main_propellant)
+		{
+			if (vessel->GetPropellantMass(main_propellant) < 50.0)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void SIVBSystems::APSUllageEngineOn(int n)
+{
+	if (n < 1 || n > 2) return;
+	if (ullage[n - 1])
+		vessel->SetThrusterLevel(ullage[n - 1], 1);
+}
+
+void SIVBSystems::APSUllageEngineOff(int n)
+{
+	if (n < 1 || n > 2) return;
+	if (ullage[n - 1])
+		vessel->SetThrusterLevel(ullage[n - 1], 0);
 }
