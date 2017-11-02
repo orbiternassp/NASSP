@@ -223,7 +223,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
-	sivb(this, th_3rd[0], ph_3rd, th_3rd_lox, thg_ver)
+	sivb(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver)
 
 #pragma warning ( pop ) // disable:4355
 
@@ -4673,15 +4673,6 @@ void Saturn::SetSIIThrusterLevel(int n, double level)
 	if (!th_2nd[n]) return;
 
 	SetThrusterLevel(th_2nd[n], level);
-}
-
-void Saturn::SetAPSUllageThrusterLevel(int n, double level)
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (n < 0 || n > 1) return;
-	if (!th_aps_ull[n]) return;
-
-	SetThrusterLevel(th_aps_ull[n], level);
 }
 
 void Saturn::SetAPSThrusterLevel(int n, double level)

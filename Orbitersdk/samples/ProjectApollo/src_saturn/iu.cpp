@@ -761,18 +761,6 @@ void IUToLVCommandConnector::SetAPSThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetAPSUllageThrusterLevel(int n, double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_APS_ULLAGE_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::ClearSIThrusterResource(int n)
 {
 	ConnectorMessage cm;

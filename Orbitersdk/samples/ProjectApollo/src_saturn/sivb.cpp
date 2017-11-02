@@ -156,7 +156,7 @@ void SIVbLoadMeshes()
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk),
-	sivbsys(this, th_main[0], ph_main, th_lox_vent, thg_ver)
+	sivbsys(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver)
 
 {
 	PanelSDKInitalised = false;
@@ -1458,14 +1458,6 @@ void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
 	sivbsys.SetThrusterDir(yaw, pitch);
 }
 
-void SIVB::SetAPSUllageThrusterLevel(int n, double level)
-{
-	if (n < 0 || n > 1) return;
-	if (!th_aps_ull[n]) return;
-
-	SetThrusterLevel(th_aps_ull[n], level);
-}
-
 bool SIVB::GetSIVBThrustOK()
 {
 	return sivbsys.GetThrustOK();
@@ -1987,14 +1979,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
 			return true;
 		}
 		break;

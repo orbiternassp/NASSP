@@ -33,8 +33,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
-	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop) {
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
+	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), ullage(ull) {
 
 	vessel = v;
 
@@ -51,6 +51,11 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	LOXVentValveOpen = false;
 	FireUllageIgnition = false;
 	PointLevelSensorArmed = false;
+
+	for (int i = 0;i < 2;i++)
+	{
+		APSUllageOnRelay[i] = false;
+	}
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
@@ -70,6 +75,7 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 
@@ -94,6 +100,7 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 
@@ -306,7 +313,7 @@ bool SIVBSystems::PropellantLowLevel()
 	{
 		if (main_propellant)
 		{
-			if (vessel->GetPropellantMass(main_propellant) < 500.0)
+			if (vessel->GetPropellantMass(main_propellant) < 50.0)
 			{
 				return true;
 			}
@@ -314,4 +321,18 @@ bool SIVBSystems::PropellantLowLevel()
 	}
 
 	return false;
+}
+
+void SIVBSystems::APSUllageEngineOn(int n)
+{
+	if (n < 1 || n > 2) return;
+	if (ullage[n - 1])
+		vessel->SetThrusterLevel(ullage[n - 1], 1);
+}
+
+void SIVBSystems::APSUllageEngineOff(int n)
+{
+	if (n < 1 || n > 2) return;
+	if (ullage[n - 1])
+		vessel->SetThrusterLevel(ullage[n - 1], 0);
 }

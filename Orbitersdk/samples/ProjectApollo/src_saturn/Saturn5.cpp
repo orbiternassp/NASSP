@@ -1232,10 +1232,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 39: //LH2 Tank Repressurization Control Valve Open On
 		break;
 	case 42: //S-IVB Ullage Engine No. 1 On
-		SetAPSUllageThrusterLevel(0, 1);
+		sivb.APSUllageEngineOn(1);
 		break;
 	case 43: //S-IVB Ullage Engine No. 1 Off
-		SetAPSUllageThrusterLevel(0, 0);
+		sivb.APSUllageEngineOff(1);
 		break;
 	case 44: //LOX Tank NPV Valve Latch Open On
 		break;
@@ -1339,10 +1339,10 @@ void SaturnV::SIVBSwitchSelector(int channel)
 	case 100: //LH2 Tank Latching Relief Valve Open Off
 		break;
 	case 101: //S-IVB Ullage Engine No. 2 On
-		SetAPSUllageThrusterLevel(1, 1);
+		sivb.APSUllageEngineOn(2);
 		break;
 	case 102: //S-IVB Ullage Engine No. 2 Off
-		SetAPSUllageThrusterLevel(1, 0);
+		sivb.APSUllageEngineOff(2);
 		break;
 	case 103: //LOX Tank Flight Pressure System On
 		break;

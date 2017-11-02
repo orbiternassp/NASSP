@@ -388,14 +388,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_APS_ULLAGE_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetAPSUllageThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_CLEAR_SI_THRUSTER_RESOURCE:
 		if (OurVessel)
 		{

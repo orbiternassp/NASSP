@@ -938,7 +938,6 @@ public:
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
-	void SetAPSUllageThrusterLevel(int n, double level);
 	void SetAPSThrusterLevel(int n, double level);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
