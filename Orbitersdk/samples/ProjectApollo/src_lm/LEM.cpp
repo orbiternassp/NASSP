@@ -290,7 +290,6 @@ void LEM::Init()
 	CDREVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
-	ContactOK = false;
 	stage = 0;
 	status = 0;
 	HasProgramer = false;
@@ -853,14 +852,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
-		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
+		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED
 			if (!sevent.isValid())
 #endif
 				Scontact.play();
-
-			ContactOK = true;
 
 			SetLmLandedMesh();
 		}
