@@ -540,8 +540,11 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 
 	SetupMeshes();
 
-	if (iu == NULL && stage < CSM_LEM_STAGE) {
-		iu = new IU1B;
+	if (stage < CSM_LEM_STAGE)
+	{
+		if (iu == NULL) {
+			iu = new IU1B;
+		}
 	}
 
 	switch (stage) {
@@ -755,29 +758,34 @@ void Saturn1b::SetRandomFailures()
 	{
 		LaunchFail.Init = 1;
 
-		//
-		// Engine failure times for first stage.
-		//
-
-		bool EarlySICutoff[8];
-		double FirstStageFailureTime[8];
-
-		for (int i = 0;i < 8;i++)
+		if (stage < STAGE_ORBIT_SIVB)
 		{
-			EarlySICutoff[i] = 0;
-			FirstStageFailureTime[i] = 0.0;
-		}
 
-		for (int i = 0;i < 8;i++)
-		{
-			if (!(random() & (int)(127.0 / FailureMultiplier)))
+			//
+			// Engine failure times for first stage.
+			//
+
+			bool EarlySICutoff[8];
+			double FirstStageFailureTime[8];
+
+			for (int i = 0;i < 8;i++)
 			{
-				EarlySICutoff[i] = 1;
-				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+				EarlySICutoff[i] = 0;
+				FirstStageFailureTime[i] = 0.0;
 			}
-		}
 
-		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
+			for (int i = 0;i < 8;i++)
+			{
+				if (!(random() & (int)(127.0 / FailureMultiplier)))
+				{
+					EarlySICutoff[i] = 1;
+					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+				}
+			}
+
+			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, NULL, NULL);
+
+		}
 
 		if (!(random() & 127))
 		{

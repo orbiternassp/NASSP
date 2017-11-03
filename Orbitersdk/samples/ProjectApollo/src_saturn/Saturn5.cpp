@@ -1380,55 +1380,61 @@ void SaturnV::SetRandomFailures()
 	{
 		LaunchFail.Init = 1;
 
-		//
-		// Engine failure times for first stage.
-		//
 
-		bool EarlySICutoff[5];
-		double FirstStageFailureTime[5];
-
-		//
-		// Engine failure times for first stage.
-		//
-
-		bool EarlySIICutoff[5];
-		double SecondStageFailureTime[5];
-
-		//
-		// Engine failure times
-		//
-
-		for (int i = 0;i < 5;i++)
+		if (stage < STAGE_ORBIT_SIVB)
 		{
-			EarlySICutoff[i] = 0;
-			FirstStageFailureTime[i] = 0.0;
-		}
 
-		for (int i = 0;i < 5;i++)
-		{
-			EarlySIICutoff[i] = 0;
-			SecondStageFailureTime[i] = 0.0;
-		}
+			//
+			// Engine failure times for first stage.
+			//
 
-		for (int i = 0;i < 5;i++)
-		{
-			if (!(random() & (int)(127.0 / FailureMultiplier)))
+			bool EarlySICutoff[5];
+			double FirstStageFailureTime[5];
+
+			//
+			// Engine failure times for first stage.
+			//
+
+			bool EarlySIICutoff[5];
+			double SecondStageFailureTime[5];
+
+			//
+			// Engine failure times
+			//
+
+			for (int i = 0;i < 5;i++)
 			{
-				EarlySICutoff[i] = 1;
-				FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+				EarlySICutoff[i] = 0;
+				FirstStageFailureTime[i] = 0.0;
 			}
-		}
 
-		for (int i = 0;i < 5;i++)
-		{
-			if (!(random() & (int)(127.0 / FailureMultiplier)))
+			for (int i = 0;i < 5;i++)
 			{
-				EarlySIICutoff[i] = 1;
-				SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
+				EarlySIICutoff[i] = 0;
+				SecondStageFailureTime[i] = 0.0;
 			}
-		}
 
-		iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+			for (int i = 0;i < 5;i++)
+			{
+				if (!(random() & (int)(127.0 / FailureMultiplier)))
+				{
+					EarlySICutoff[i] = 1;
+					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+				}
+			}
+
+			for (int i = 0;i < 5;i++)
+			{
+				if (!(random() & (int)(127.0 / FailureMultiplier)))
+				{
+					EarlySIICutoff[i] = 1;
+					SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
+				}
+			}
+
+			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+
+		}
 
 		if (!(random() & 127))
 		{
