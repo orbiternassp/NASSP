@@ -193,6 +193,8 @@ SaturnV::~SaturnV()
 	TRACESETUP("~SaturnV");
 
 	ReleaseSurfaces();
+
+	delete iu;
 }
 
 void SaturnV::CalculateStageMass ()
