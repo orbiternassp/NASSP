@@ -938,7 +938,7 @@ public:
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetSIThrusterLevel(int n, double level);
 	void SetSIIThrusterLevel(int n, double level);
-	void SetAPSThrusterLevel(int n, double level);
+	void SetAPSAttitudeEngine(int n, bool on);
 	void ClearSIThrusterResource(int n);
 	void ClearSIIThrusterResource(int n);
 	void SIVBEDSCutoff(bool cut);

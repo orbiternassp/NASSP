@@ -194,57 +194,57 @@ void FCC1B::Timestep(double simdt)
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 1);
-			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, (eps_p - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, true);
+			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, (eps_p - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, false);
 		}
 		if (eps_p < -1) {
 			//fire-pitch
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 1);
-			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, (-eps_p - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, true);
+			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, (-eps_p - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, false);
 		}
 		if (eps_ymr > 1) {
 			//fire+yaw-roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 1);
-			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, (eps_ymr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, true);
+			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, (eps_ymr - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, false);
 		}
 		if (eps_ymr < -1) {
 			//fire-yaw+roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 1);
-			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, (-eps_ymr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, true);
+			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, (-eps_ymr - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, false);
 		}
 		if (eps_ypr > 1) {
 			//fire+yaw+roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 1);
-			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, (eps_ypr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, true);
+			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, (eps_ypr - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, false);
 		}
 		if (eps_ypr < -1) {
 			//fire-yaw-roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 1);
-			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 1); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, (-eps_ypr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, true);
+			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, (-eps_ypr - 1) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, false);
 		}
 	}
 }
@@ -387,57 +387,57 @@ void FCCSV::Timestep(double simdt)
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 1.0);
-			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, (eps_p - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, true);
+			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, (eps_p - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(1, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, false);
 		}
 		if (eps_p < -1) {
 			//fire-pitch
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 1.0);
-			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, (-eps_p - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, true);
+			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, (-eps_p - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(0, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, false);
 		}
 		if (eps_ymr > 1) {
 			//fire+yaw-roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 1.0);
-			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, (eps_ymr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, true);
+			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, (eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(3, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, false);
 		}
 		if (eps_ymr < -1) {
 			//fire-yaw+roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 1.0);
-			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, (-eps_ymr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, true);
+			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, (-eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(5, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, false);
 		}
 		if (eps_ypr > 1) {
 			//fire+yaw+roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 1.0);
-			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, (eps_ypr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, true);
+			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, (eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(4, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, false);
 		}
 		if (eps_ypr < -1) {
 			//fire-yaw-roll;
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 1.0);
-			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 1.0); }
-			//else { iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, (-eps_ypr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, true);
+			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, (-eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			iu->GetLVCommandConnector()->SetAPSThrusterLevel(2, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, false);
 		}
 	}
 

@@ -31,7 +31,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SIVBSystems
 {
 public:
-	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
 	virtual ~SIVBSystems();
 	void RecalculateEngineParameters(double BaseThrust);
 	virtual void RecalculateEngineParameters() = 0;
@@ -60,6 +60,7 @@ public:
 	void PointLevelSensorDisarming() { PointLevelSensorArmed = false; }
 	void APSUllageEngineOn(int n);
 	void APSUllageEngineOff(int n);
+	void SetAPSAttitudeEngine(int n, bool on);
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 
@@ -103,6 +104,7 @@ protected:
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;
+	THRUSTER_HANDLE *apsThrusters;
 	THRUSTER_HANDLE *ullage;
 	THRUSTER_HANDLE &loxvent;
 	THGROUP_HANDLE &vernier;
@@ -113,7 +115,7 @@ protected:
 class SIVB200Systems : public SIVBSystems
 {
 public:
-	SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
 	~SIVB200Systems() {};
 	void RecalculateEngineParameters();
 	void SwitchSelector(int channel);
@@ -123,7 +125,7 @@ public:
 class SIVB500Systems : public SIVBSystems
 {
 public:
-	SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
 	~SIVB500Systems() {};
 	void RecalculateEngineParameters();
 	void SwitchSelector(int channel);

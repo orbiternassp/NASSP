@@ -749,14 +749,14 @@ void IUToLVCommandConnector::SetSIIThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetAPSThrusterLevel(int n, double level)
+void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_APS_THRUSTER_LEVEL;
+	cm.messageType = IULV_SET_APS_ATTITUDE_ENGINE;
 	cm.val1.iValue = n;
-	cm.val2.dValue = level;
+	cm.val2.bValue = on;
 
 	SendMessage(cm);
 }

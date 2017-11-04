@@ -1197,11 +1197,11 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
 			if (SaturnVStage)
 			{
-				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 			}
 			else
 			{
-				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 			}
 			sivbsys->LoadState(scn);
 		}
@@ -1232,11 +1232,11 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	{
 		if (SaturnVStage)
 		{
-			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		else
 		{
-			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 	}
 
@@ -1432,12 +1432,12 @@ void SIVB::SetState(SIVBSettings &state)
 		if (SaturnVStage)
 		{
 			iu = new IUSV;
-			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		else
 		{
 			iu = new IU1B;
-			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		iu = state.iu_pointer;
 		iu->DisconnectIU();
@@ -2008,10 +2008,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_APS_THRUSTER_LEVEL:
+	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
-			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
 			return true;
 		}
 		break;

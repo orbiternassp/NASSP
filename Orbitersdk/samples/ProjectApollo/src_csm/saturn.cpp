@@ -4686,13 +4686,12 @@ void Saturn::SetSIIThrusterLevel(int n, double level)
 	SetThrusterLevel(th_2nd[n], level);
 }
 
-void Saturn::SetAPSThrusterLevel(int n, double level)
+void Saturn::SetAPSAttitudeEngine(int n, bool on)
 {
 	if (n < 0 || n > 5) return;
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-	if (!th_aps_rot[n]) return;
 
-	SetThrusterLevel(th_aps_rot[n], level);
+	sivb->SetAPSAttitudeEngine(n, on);
 }
 
 void Saturn::SetContrailLevel(double level)

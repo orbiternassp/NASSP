@@ -380,10 +380,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_APS_THRUSTER_LEVEL:
+	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
-			OurVessel->SetAPSThrusterLevel(m.val1.iValue, m.val2.dValue);
+			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
 			return true;
 		}
 		break;

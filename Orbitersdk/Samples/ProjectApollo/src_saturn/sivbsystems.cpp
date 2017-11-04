@@ -33,8 +33,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
-	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), ullage(ull) {
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
+	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull) {
 
 	vessel = v;
 
@@ -347,6 +347,21 @@ void SIVBSystems::APSUllageEngineOff(int n)
 		vessel->SetThrusterLevel(ullage[n - 1], 0);
 }
 
+void SIVBSystems::SetAPSAttitudeEngine(int n, bool on)
+{
+	if (apsThrusters[0])
+	{
+		if (on)
+		{
+			vessel->SetThrusterLevel(apsThrusters[n], 1.0);
+		}
+		else
+		{
+			vessel->SetThrusterLevel(apsThrusters[n], 0.0);
+		}
+	}
+}
+
 void SIVBSystems::SetPUValve(int state)
 {
 	if (state == PUVALVE_CLOSED)
@@ -402,8 +417,8 @@ void SIVBSystems::GetJ2ISP(double ratio, double &isp, double &ThrustAdjust)
 	}
 }
 
-SIVB200Systems::SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
-	: SIVBSystems(v, j2, j2prop, ull, lox, ver)
+SIVB200Systems::SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
+	: SIVBSystems(v, j2, j2prop, aps, ull, lox, ver)
 {
 }
 
@@ -512,8 +527,8 @@ void SIVB200Systems::SwitchSelector(int channel)
 	}
 }
 
-SIVB500Systems::SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
-	: SIVBSystems(v, j2, j2prop, ull, lox, ver)
+SIVB500Systems::SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
+	: SIVBSystems(v, j2, j2prop, aps, ull, lox, ver)
 {
 }
 

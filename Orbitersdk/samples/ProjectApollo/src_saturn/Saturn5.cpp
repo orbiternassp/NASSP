@@ -683,7 +683,7 @@ void SaturnV::LoadLVDC(FILEHANDLE scn) {
 void SaturnV::LoadSIVB(FILEHANDLE scn) {
 
 	if (sivb == NULL) {
-		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
 	}
 
 	sivb->LoadState(scn);
@@ -706,7 +706,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		}
 		if (sivb == NULL)
 		{
-			sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
+			sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
 		}
 	}
 
