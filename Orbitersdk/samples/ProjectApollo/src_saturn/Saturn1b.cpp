@@ -82,8 +82,6 @@ Saturn1b::~Saturn1b()
 
 {
 	ReleaseSurfaces();
-
-	delete iu;
 }
 
 
@@ -271,38 +269,6 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hNosecapVessel = oapiGetVesselByName(VName);
 }
 
-//
-// Adjust the mixture ratio of the engine on the SIVB stage. This occured late in
-// the flight to ensure that the fuel was fully burnt before the stage was dropped.
-//
-
-void Saturn1b::SetSIVBMixtureRatio (double ratio)
-
-{
-	double isp, thrust;
-
-	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
-
-	if (ratio >= 5.0) {
-		thrust = 1009902;
-		isp = 424*G;
-	
-	} else {
-		thrust = 770000.;
-		isp = 428*G;
-	}
-
-	//
-	// For simplicity assume no ISP change at sea-level: SIVb stage should always
-	// be in near-vacuum anyway.
-	//
-
-	SetThrusterIsp (th_3rd[0], isp, isp);
-	SetThrusterMax0 (th_3rd[0], thrust);
-
-	MixtureRatio = ratio;
-}
-
 void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 {
@@ -432,66 +398,6 @@ void Saturn1b::SISwitchSelector(int channel)
 	}
 }
 
-void Saturn1b::SIVBSwitchSelector(int channel)
-{
-	if (stage >= CSM_LEM_STAGE) return;
-
-	switch (channel)
-	{
-	case 9: //Engine Ignition Sequence Start
-		sivb.EngineStartOn();
-		break;
-	case 10: //Engine Ready Bypass On
-		sivb.EngineReadyBypass();
-		break;
-	case 12: //S-IVB Engine Cutoff No. 1 On
-		sivb.LVDCEngineCutoff();
-		break;
-	case 13: //S-IVB Engine Cutoff No. 1 Off
-		sivb.LVDCEngineCutoffOff();
-		break;
-	case 19: //Engine Ready Bypass On
-		sivb.EngineReadyBypass();
-		break;
-	case 32: //P.U. Mixture Ratio 4.5 On
-		SetSIVBMixtureRatio(4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-		SPUShiftS.play(NOLOOP, 255);
-		SPUShiftS.done();
-		break;
-	case 33: //P.U. Mixture Ratio 4.5 Off
-		break;
-	case 34: //P.U. Mixture Ratio 5.5 On
-		SetSIVBMixtureRatio(5.5);
-		break;
-	case 35: //P.U. Mixture Ratio 5.5 Off
-		break;
-	case 43: //S-IVB Engine Cutoff No. 2 On
-		sivb.LVDCEngineCutoff();
-		break;
-	case 49: //S-IVB Engine Cutoff No. 2 Off
-		sivb.LVDCEngineCutoffOff();
-		break;
-	case 56: //Fire Ullage Ignition On
-		sivb.FireUllageIgnitionOn();
-		break;
-	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
-		sivb.StartLOXVenting();
-		break;
-	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
-		sivb.EndLOXVenting();
-		break;
-	case 97: //Point Level Sensor Arming
-		sivb.PointLevelSensorArming();
-		break;
-	case 98: //Point Level Sensor Disarming
-		sivb.PointLevelSensorDisarming();
-		break;
-	default:
-		break;
-	}
-}
-
-
 //
 // Save any state specific to the Saturn 1b.
 //
@@ -512,11 +418,6 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 }
 
-void Saturn1b::SaveIU(FILEHANDLE scn)
-{
-	if (iu != NULL) { iu->SaveState(scn); }
-}
-
 void Saturn1b::LoadIU(FILEHANDLE scn)
 {
 	// If the IU does not yet exist, create it.
@@ -535,6 +436,15 @@ void Saturn1b::LoadLVDC(FILEHANDLE scn) {
 	iu->LoadLVDC(scn);
 }
 
+void Saturn1b::LoadSIVB(FILEHANDLE scn) {
+
+	if (sivb == NULL) {
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+
+	sivb->LoadState(scn);
+}
+
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
@@ -544,6 +454,10 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	{
 		if (iu == NULL) {
 			iu = new IU1B;
+		}
+		if (sivb == NULL)
+		{
+			sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
 		}
 	}
 

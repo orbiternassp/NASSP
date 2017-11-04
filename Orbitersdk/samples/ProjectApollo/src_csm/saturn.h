@@ -981,7 +981,7 @@ public:
 	virtual void SwitchSelector(int item) = 0;
 	virtual void SISwitchSelector(int channel) = 0;
 	virtual void SIISwitchSelector(int channel);
-	virtual void SIVBSwitchSelector(int channel) = 0;
+	void SIVBSwitchSelector(int channel);
 
 	///
 	/// \brief Has an abort been initiated?
@@ -3620,7 +3620,7 @@ protected:
 	CDU tcdu;
 	CDU scdu;
 	IU* iu;
-	SIVBSystems sivb;
+	SIVBSystems *sivb;
 	CSMCautionWarningSystem cws;
 
 	DockingProbe dockingprobe;
@@ -3975,9 +3975,10 @@ protected:
 	virtual void CalculateStageMass () = 0;
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
 	virtual void LoadIU(FILEHANDLE scn) = 0;
-	virtual void SaveIU(FILEHANDLE scn) = 0;
+	void SaveIU(FILEHANDLE scn);
 	void SaveLVDC(FILEHANDLE scn);
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
+	virtual void LoadSIVB(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

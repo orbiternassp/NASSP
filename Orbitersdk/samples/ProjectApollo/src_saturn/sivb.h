@@ -282,6 +282,7 @@ public:
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSThrusterLevel(int n, double level) { SetThrusterLevel(th_aps_rot[n], level); }
 	void SIVBEDSCutoff(bool cut);
+	void SIVBSwitchSelector(int channel);
 
 	///
 	/// \brief Get main propellant mass.
@@ -446,7 +447,7 @@ protected:
 	///
 	IU* iu;
 
-	SIVBSystems sivbsys;
+	SIVBSystems *sivbsys;
 
 	///
 	/// \brief Connector from SIVb to CSM when docked.

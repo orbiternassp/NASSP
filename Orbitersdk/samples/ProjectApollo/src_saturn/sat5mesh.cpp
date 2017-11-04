@@ -940,8 +940,8 @@ void SaturnV::SetThirdStageEngines (double offset)
 		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);
 
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
-	SetSIVbCMixtureRatio(MixtureRatio);
 
+	sivb->RecalculateEngineParameters(THRUST_THIRD_VAC);
 }
 
 void SaturnV::SeparateStage (int new_stage)

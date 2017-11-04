@@ -193,8 +193,6 @@ SaturnV::~SaturnV()
 	TRACESETUP("~SaturnV");
 
 	ReleaseSurfaces();
-
-	delete iu;
 }
 
 void SaturnV::CalculateStageMass ()
@@ -289,42 +287,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 		SetThrusterIsp (th_2nd[i], isp, isp);
 		SetThrusterMax0 (th_2nd[i], thrust);
 	}
-
-	MixtureRatio = ratio;
-}
-
-//
-// And SIVb.
-//
-
-void SaturnV::SetSIVbCMixtureRatio (double ratio)
-
-{
-	double isp, thrust;
-
-	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
-	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
-
-	//if (ratio > 4.8 && ratio < 5.0) {			// 4.9
-	//	thrust = 901557.;
-	//	isp = 4202.;
-	//
-	//} else if (ratio > 4.4 && ratio < 4.6) {	// 4.5
-	//	thrust = 799000.;
-	//	isp = 4245.;
-	//
-	//} else {
-		isp = GetJ2ISP(ratio);
-		thrust = THRUST_THIRD_VAC * ThrustAdjust;
-	//}
-
-	//
-	// For simplicity assume no ISP change at sea-level: SIVb stage should always
-	// be in near-vacuum anyway.
-	//
-
-	SetThrusterIsp (th_3rd[0], isp, isp);
-	SetThrusterMax0 (th_3rd[0], thrust);
 
 	MixtureRatio = ratio;
 }
@@ -698,11 +660,6 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
-void SaturnV::SaveIU(FILEHANDLE scn)
-{
-	if (iu != NULL) { iu->SaveState(scn); }
-}
-
 void SaturnV::LoadIU(FILEHANDLE scn)
 {
 	// If the IU does not yet exist, create it.
@@ -721,6 +678,15 @@ void SaturnV::LoadLVDC(FILEHANDLE scn) {
 	iu->LoadLVDC(scn);
 }
 
+void SaturnV::LoadSIVB(FILEHANDLE scn) {
+
+	if (sivb == NULL) {
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+
+	sivb->LoadState(scn);
+}
+
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {
@@ -731,8 +697,15 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	ClearMeshes();
 	SetupMeshes();
 
-	if (iu == NULL && stage < CSM_LEM_STAGE) {
-		iu = new IUSV;
+	if (stage < CSM_LEM_STAGE)
+	{
+		if (iu == NULL) {
+			iu = new IUSV;
+		}
+		if (sivb == NULL)
+		{
+			sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver);
+		}
 	}
 
 	//
@@ -1113,8 +1086,6 @@ void SaturnV::SIISwitchSelector(int channel)
 			SeparateStage(LAUNCH_STAGE_SIVB);
 			SetStage(LAUNCH_STAGE_SIVB);
 			AddRCS_S4B();
-
-			SetSIVbCMixtureRatio(4.946);
 		}
 		break;
 	case 9: //Stop First PAM - FM/FM Calibration
@@ -1145,224 +1116,6 @@ void SaturnV::SIISwitchSelector(int channel)
 	case 58: //High (5.5) Engine MR Ratio Off
 		break;
 	case 71: //Start Data Recorders
-		break;
-	default:
-		break;
-	}
-}
-
-void SaturnV::SIVBSwitchSelector(int channel)
-{
-	if (stage >= CSM_LEM_STAGE) return;
-
-	switch (channel)
-	{
-	case 1: //Passivation Enable
-		break;
-	case 2: //Passivation Disable
-		break;
-	case 3: //LOX Tank Repressurization Control Valve Open On
-		break;
-	case 4: //LOX Tank Repressurization Control Valve Open Off
-		break;
-	case 7: //PU Inverter and DC Power On
-		break;
-	case 8: //PU Inverter and DC Power Off
-		break;
-	case 9: //S-IVB Engine Start On
-		sivb.EngineStartOn();
-		break;
-	case 10: //Engine Ready Bypass
-		sivb.EngineReadyBypass();
-		break;
-	case 11: //Fuel Injection Temperature OK Bypass
-		break;
-	case 12: //S-IVB Engine Cutoff
-		sivb.LVDCEngineCutoff();
-		break;
-	case 13: //S-IVB Engine Cutoff Off
-		sivb.LVDCEngineCutoffOff();
-		break;
-	case 14: //Engine Mainstage Control Valve Open On
-		break;
-	case 15: //Engine Mainstage Control Valve Open Off
-		break;
-	case 16: //Fuel Injector Temperature OK Bypass Reset
-		break;
-	case 17: //PU Valve Hardover Position On
-		SetSIVbCMixtureRatio(4.5);
-		break;
-	case 18: //PU Valve Hardover Position Off
-		SetSIVbCMixtureRatio(4.946);
-		break;
-	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable
-		sivb.EDSCutoffDisable();
-		break;
-	case 22: //LOX Chilldown Pump On
-		break;
-	case 23: //LOX Chilldown Pump Off
-		break;
-	case 24: //Engine Pump Purge Control Valve Enable On
-		break;
-	case 25: //Engine Pump Purge Control Valve Enable Off
-		break;
-	case 26: //Burner LH2 Propellant Valve Open On
-		break;
-	case 27: //S-IVB Engine Start Off
-		sivb.EngineStartOff();
-		break;
-	case 28: //Aux Hydraulic Pump Flight Mode On
-		break;
-	case 29: //Aux Hydraulic Pump Flight Mode Off
-		break;
-	case 30: //Start Bottle Vent Control Valve Open On
-		break;
-	case 31: //Start Bottle Vent Control Valve Open Off
-		break;
-	case 32: //Second Burn Relay On
-		sivb.SecondBurnRelayOn();
-		break;
-	case 33: //Second Burn Relay Off
-		sivb.SecondBurnRelayOff();
-		break;
-	case 36: //Repressurization System Mode Select On (Amb)
-		break;
-	case 37: //Repressurization System Mode Select Off (Amb)
-		break;
-	case 39: //LH2 Tank Repressurization Control Valve Open On
-		break;
-	case 42: //S-IVB Ullage Engine No. 1 On
-		sivb.APSUllageEngineOn(1);
-		break;
-	case 43: //S-IVB Ullage Engine No. 1 Off
-		sivb.APSUllageEngineOff(1);
-		break;
-	case 44: //LOX Tank NPV Valve Latch Open On
-		break;
-	case 45: //LOX Tank NPV Valve Latch Open Off
-		break;
-	case 46: //Single Sideband FM Transmitter On
-		break;
-	case 47: //Single Sideband FM Transmitter Off
-		break;
-	case 48: //Inflight Calibration Mode On
-		break;
-	case 49: //Inflight Calibration Mode Off
-		break;
-	case 50: //Heat-Exchanger Bypass Valve Control Enable
-		break;
-	case 52: //Measurement Transfer Mode Position "B"
-		break;
-	case 54: //Charge Ullage Ignition On
-		break;
-	case 55: //Charge Ullage Jettison On
-		break;
-	case 56: //Fire Ullage Ignition On
-		sivb.FireUllageIgnitionOn();
-		break;
-	case 57: //Fire Ullage Jettison On
-		break;
-	case 58: //Fuel Chilldown Pump On
-		break;
-	case 59: //Fuel Chilldown Pump Off
-		break;
-	case 60: //Burner LH2 Propellant Valve Close On
-		break;
-	case 61: //Burner LH2 Propellant Valve Close Off
-		break;
-	case 62: //TM Calibrate On
-		break;
-	case 63: //TM Calibrate Off
-		break;
-	case 64: //LH2 Tank Latching Relief Valve Latch On
-		break;
-	case 65: //LH2 Tank Latching Relief Valve Latch Off
-		break;
-	case 68: //First Burn Relay On
-		sivb.FirstBurnRelayOn();
-		break;
-	case 69: //First Burn Relay Off
-		sivb.FirstBurnRelayOff();
-		break;
-	case 70: //Burner Exciters On
-		break;
-	case 71: //Burner Exciters Off
-		break;
-	case 72: //Burner LH2 Propellant Valve Open Off
-		break;
-	case 73: //Ullage Firing Reset
-		break;
-	case 74: //Burner LOX Shutdown Valve Close On
-		break;
-	case 75: //Burner LOX Shutdown Valve Close Off
-		break;
-	case 77: //LH2 Tank Vent and Latching Relief Valve Boost Close On
-		break;
-	case 78: //LH2 Tank Vent and Latching Relief Valve Boost Close Off
-		break;
-	case 79: //LOX Tank Pressurization Shutoff Valves Close
-		break;
-	case 80: //LOX Tank Pressurization Shutoff Valves Open
-		break;
-	case 81: //LH2 Tank Repressurization Control Valve Open Off
-		break;
-	case 82: //Prevalves Close On
-		break;
-	case 83: //Prevalves Close Off
-		break;
-	case 84: //LH2 Tank Continuous Vent Valve Close On
-		break;
-	case 85: //Burner Automatic Cutoff System Arm
-		break;
-	case 86: //Burner Automatic Cutoff System Disarm
-		break;
-	case 87: //LH2 Tank Continuous Vent Valve Close Off
-		break;
-	case 88: //Ullage Charging Reset
-		break;
-	case 89: //Burner LOX Shutdown Valve Open On
-		break;
-	case 90: //Burner LOX Shutdown Valve Open Off
-		break;
-	case 95: //LOX Tank Vent and NPV Valv Boost Close On
-		break;
-	case 96: //LOX Tank Vent and NPV Valv Boost Close Off
-		break;
-	case 97: //Point Level Sensor Arming
-		sivb.PointLevelSensorArming();
-		break;
-	case 98: //Point Level Sensor Disarming
-		sivb.PointLevelSensorDisarming();
-		break;
-	case 99: //LH2 Tank Latching Relief Valve Open On
-		break;
-	case 100: //LH2 Tank Latching Relief Valve Open Off
-		break;
-	case 101: //S-IVB Ullage Engine No. 2 On
-		sivb.APSUllageEngineOn(2);
-		break;
-	case 102: //S-IVB Ullage Engine No. 2 Off
-		sivb.APSUllageEngineOff(2);
-		break;
-	case 103: //LOX Tank Flight Pressure System On
-		break;
-	case 104: //LOX Tank Flight Pressure System Off
-		break;
-	case 105: //LOX Tank NPV Valve Open On
-		break;
-	case 106: //LOX Tank NPV Valve Open Off
-		break;
-	case 107: //LH2 Tank Continous Vent Relief Override Shutoff Valve Open On
-		break;
-	case 108: //LH2 Tank Continous Vent Relief Override Shutoff Valve Open Off
-		break;
-	case 109: //Engine He Control Valve Open On
-		break;
-	case 110: //Engine He Control Valve Open Off
-		break;
-	case 111: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open On
-		break;
-	case 112: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open Off
 		break;
 	default:
 		break;

@@ -155,8 +155,7 @@ void SIVbLoadMeshes()
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk),
-	sivbsys(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver)
+		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
 
 {
 	PanelSDKInitalised = false;
@@ -167,7 +166,11 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
-	delete iu;
+	if (sivbsys)
+	{
+		delete sivbsys;
+		sivbsys = 0;
+	}
 
 	//
 	// Delete LM PAD data.
@@ -188,6 +191,7 @@ void SIVB::InitS4b()
 	int i;
 
 	iu = NULL;
+	sivbsys = NULL;
 
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
@@ -740,7 +744,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	sivbsys.Timestep(simdt);
+	sivbsys->Timestep(simdt);
 	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
@@ -812,7 +816,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
-	sivbsys.SaveState(scn);
+	sivbsys->SaveState(scn);
 	iu->SaveState(scn);
 	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
@@ -921,6 +925,8 @@ void SIVB::AddRCS_S4B()
 	th_main[0] = CreateThruster(mainExhaustPos, _V(0, 0, 1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
 	AddExhaust(th_main[0], 25.0, 1.5, SMMETex);
+
+	sivbsys->RecalculateEngineParameters(THRUST_THIRD_VAC);
 
 	//
 	// Clear old thrusters.
@@ -1189,7 +1195,15 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
-			sivbsys.LoadState(scn);
+			if (SaturnVStage)
+			{
+				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			}
+			else
+			{
+				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+			}
+			sivbsys->LoadState(scn);
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			if (SaturnVStage)
@@ -1212,6 +1226,18 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			ParseScenarioLineEx (line, vstatus);
         }
+	}
+
+	if (sivbsys == NULL)
+	{
+		if (SaturnVStage)
+		{
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+		}
+		else
+		{
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
+		}
 	}
 
 	SetS4b();
@@ -1406,10 +1432,12 @@ void SIVB::SetState(SIVBSettings &state)
 		if (SaturnVStage)
 		{
 			iu = new IUSV;
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		else
 		{
 			iu = new IU1B;
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		iu = state.iu_pointer;
 		iu->DisconnectIU();
@@ -1455,17 +1483,22 @@ double SIVB::GetMissionTime()
 
 void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
 {
-	sivbsys.SetThrusterDir(yaw, pitch);
+	sivbsys->SetThrusterDir(yaw, pitch);
 }
 
 bool SIVB::GetSIVBThrustOK()
 {
-	return sivbsys.GetThrustOK();
+	return sivbsys->GetThrustOK();
+}
+
+void SIVB::SIVBSwitchSelector(int channel)
+{
+	sivbsys->SwitchSelector(channel);
 }
 
 void SIVB::SIVBEDSCutoff(bool cut)
 {
-	sivbsys.EDSEngineCutoff(cut);
+	sivbsys->EDSEngineCutoff(cut);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -1995,6 +2028,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
+			return true;
+		}
+		break;
+
+	case IULV_SIVB_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SIVBSwitchSelector(m.val1.iValue);
 			return true;
 		}
 		break;

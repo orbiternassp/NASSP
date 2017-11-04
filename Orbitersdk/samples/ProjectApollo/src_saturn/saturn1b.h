@@ -66,7 +66,6 @@ public:
 	/// 
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
-	void SIVBSwitchSelector(int channel);
 
 protected:
 
@@ -89,14 +88,13 @@ protected:
 	void CreateStageOne();
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
-	void SaveIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
+	void LoadSIVB(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
 	void SetVehicleStats();
 	void CalculateStageMass ();
-	void SetSIVBMixtureRatio(double ratio);
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
 	void ActivatePrelaunchVenting();

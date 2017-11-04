@@ -24,12 +24,22 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#define PUVALVE_CLOSED 0
+#define PUVALVE_NULL 1
+#define PUVALVE_OPEN 2
+
 class SIVBSystems
 {
 public:
 	SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	virtual ~SIVBSystems();
+	void RecalculateEngineParameters(double BaseThrust);
+	virtual void RecalculateEngineParameters() = 0;
+	virtual void SetSIVBMixtureRatio(double ratio) = 0;
+	virtual void SwitchSelector(int channel) = 0;
 	void Timestep(double simdt);
 	bool PropellantLowLevel();
+	void SetPUValve(int state);
 
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
 	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
@@ -52,6 +62,8 @@ public:
 	void APSUllageEngineOff(int n);
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
+
+	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -86,6 +98,9 @@ protected:
 	bool PointLevelSensorArmed;
 	bool APSUllageOnRelay[2];
 
+	double J2DefaultThrust;
+	int PUValveState;
+
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;
 	THRUSTER_HANDLE *ullage;
@@ -93,6 +108,26 @@ protected:
 	THGROUP_HANDLE &vernier;
 
 	PROPELLANT_HANDLE &main_propellant;
+};
+
+class SIVB200Systems : public SIVBSystems
+{
+public:
+	SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	~SIVB200Systems() {};
+	void RecalculateEngineParameters();
+	void SwitchSelector(int channel);
+	void SetSIVBMixtureRatio(double ratio);
+};
+
+class SIVB500Systems : public SIVBSystems
+{
+public:
+	SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver);
+	~SIVB500Systems() {};
+	void RecalculateEngineParameters();
+	void SwitchSelector(int channel);
+	void SetSIVBMixtureRatio(double ratio);
 };
 
 #define SIVBSYSTEMS_START_STRING	"SIVBSYSTEMS_BEGIN"

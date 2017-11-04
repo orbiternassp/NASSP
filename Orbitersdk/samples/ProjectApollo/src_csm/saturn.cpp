@@ -222,8 +222,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnia(_V(0.0, 0.707108, 0.707108)),
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108)),
-	sivb(this, th_3rd[0], ph_3rd, th_aps_ull, th_3rd_lox, thg_ver)
+	omnid(_V(0.0, 0.707108, -0.707108))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -267,6 +266,12 @@ Saturn::~Saturn()
 
 {
 	TRACESETUP("~Saturn");
+
+	if (sivb)
+	{
+		delete sivb;
+		sivb = 0;
+	}
 
 	if (LMPad) {
 		delete[] LMPad;
@@ -831,6 +836,7 @@ void Saturn::initSaturn()
 	pMCC = NULL;
 
 	iu = NULL;
+	sivb = NULL;
 
 	//
 	// Timestep tracking for debugging.
@@ -1337,7 +1343,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	//
 	if (stage < CSM_LEM_STAGE)
 	{
-		sivb.SaveState(scn);
+		sivb->SaveState(scn);
 		SaveIU(scn);
 		SaveLVDC(scn);
 	}
@@ -1928,7 +1934,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		qball.LoadState(scn, QBALL_END_STRING);
 	}
 	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
-		sivb.LoadState(scn);
+		LoadSIVB(scn);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		LoadIU(scn);
@@ -2295,6 +2301,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 void Saturn::SaveLVDC(FILEHANDLE scn) {
 	if (iu != NULL) { iu->SaveLVDC(scn); }
+}
+
+void Saturn::SaveIU(FILEHANDLE scn)
+{
+	if (iu != NULL) { iu->SaveState(scn); }
 }
 
 //
@@ -4599,7 +4610,7 @@ bool Saturn::GetSIVBThrustOK()
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
-	return sivb.GetThrustOK();
+	return sivb->GetThrustOK();
 }
 
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
@@ -4624,7 +4635,7 @@ void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
-	sivb.SetThrusterDir(yaw, pitch);
+	sivb->SetThrusterDir(yaw, pitch);
 }
 
 void Saturn::ClearSIThrusterResource(int n)
@@ -4649,7 +4660,7 @@ void Saturn::SIVBEDSCutoff(bool cut)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
-	sivb.EDSEngineCutoff(cut);
+	sivb->EDSEngineCutoff(cut);
 }
 
 void Saturn::SetQBallPowerOff()
@@ -4732,6 +4743,11 @@ void Saturn::PlayTLIStartSound(bool StartStop)
 
 void Saturn::SIISwitchSelector(int channel)
 {
+}
+
+void Saturn::SIVBSwitchSelector(int channel)
+{
+	sivb->SwitchSelector(channel);
 }
 
 // Get checklist controller pointer

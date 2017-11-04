@@ -362,6 +362,7 @@ class IU1B :public IU
 {
 public:
 	IU1B();
+	~IU1B() {};
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
@@ -381,6 +382,7 @@ class IUSV :public IU
 {
 public:
 	IUSV();
+	~IUSV() {};
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	void SwitchSelector(int item);

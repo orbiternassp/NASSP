@@ -541,7 +541,7 @@ void Saturn1b::SetSecondStageEngines ()
 	// Set the actual stats.
 	//
 
-	SetSIVBMixtureRatio(MixtureRatio);
+	sivb->RecalculateEngineParameters(THRUST_SECOND_VAC);
 
 	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
 	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)

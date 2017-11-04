@@ -81,7 +81,6 @@ public:
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
 	void SIISwitchSelector(int channel);
-	void SIVBSwitchSelector(int channel);
 
 	//
 	// Functions that external code shouldn't need to access.
@@ -100,7 +99,6 @@ private:
 	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
 	void SetSIICMixtureRatio (double ratio);
-	void SetSIVbCMixtureRatio(double ratio);
 	void SetSIIThrustLevel(double lvl);
 	void MoveEVA();
 
@@ -133,8 +131,8 @@ protected:
 
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
-	void SaveIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
+	void LoadSIVB(FILEHANDLE scn);
 
 	//
 	// Odds and ends.
