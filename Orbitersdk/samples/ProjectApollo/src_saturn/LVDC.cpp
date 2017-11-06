@@ -692,6 +692,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						lvCommandConnector->SetSIThrusterLevel(7, thrst[1]); // Engine 8
 
 						lvCommandConnector->SetContrailLevel(SumThrust / 8);
+						lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 					}
 				}
 				else {
@@ -706,6 +707,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					lvCommandConnector->SetSIThrusterLevel(6, 1); // Engine 7
 					lvCommandConnector->SetSIThrusterLevel(7, 1); // Engine 8
 					lvCommandConnector->SetContrailLevel(1);
+					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
 				}
 
 				if (lvCommandConnector->GetMissionTime() >= 0) {
