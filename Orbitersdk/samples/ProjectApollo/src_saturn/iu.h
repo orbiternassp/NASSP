@@ -86,10 +86,9 @@ enum IUCSMMessageType
 enum IULVMessageType
 {
 	IULV_SET_SI_THRUSTER_LEVEL,
-	IULV_SET_SII_THRUSTER_LEVEL,
 	IULV_SET_APS_ATTITUDE_ENGINE,
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
-	IULV_CLEAR_SII_THRUSTER_RESOURCE,
+	IULV_SII_EDS_CUTOFF,
 	IULV_SIVB_EDS_CUTOFF,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
@@ -129,7 +128,7 @@ enum IULVMessageType
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
 	IULV_GET_SI_THRUSTER_LEVEL,
-	IULV_GET_SII_THRUSTER_LEVEL,
+	IULV_GET_SII_THRUST_OK,
 	IULV_GET_SIVB_THRUST_OK,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
@@ -207,14 +206,13 @@ public:
 	~IUToLVCommandConnector();
 
 	void SetSIThrusterLevel(int n, double level);
-	void SetSIIThrusterLevel(int n, double level);
 
 	void SetAPSAttitudeEngine(int n, bool on);
 	void ClearSIThrusterResource(int n);
-	void ClearSIIThrusterResource(int n);
+	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
-	void SetSIIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 
 	void SetQBallPowerOff();
@@ -254,7 +252,7 @@ public:
 	double GetMissionTime();
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
-	double GetSIIThrusterLevel(int n);
+	void GetSIIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
 

@@ -618,8 +618,6 @@ void Saturn::SetCSMStage ()
 	InitNavRadios (4);
 	EnableTransponder (true);
 	OrbiterAttitudeToggle.SetActive(true);
-
-	ThrustAdjust = 1.0;
 }
 
 void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)

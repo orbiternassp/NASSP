@@ -46,7 +46,7 @@ public:
 	void EDSEngineCutoff(bool cut) { EDSEngineStop = cut; }
 	void EngineReadyBypass() { EngineReady = true; }
 	void EngineStartOn() { EngineStart = true; }
-	void EngineStartOff() { EngineStart = true; }
+	void EngineStartOff() { EngineStart = false; }
 	void FirstBurnRelayOn() { FirstBurnRelay = true; }
 	void FirstBurnRelayOff() { FirstBurnRelay = false; }
 	void SecondBurnRelayOn() { SecondBurnRelay = true; }

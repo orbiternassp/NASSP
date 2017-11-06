@@ -98,8 +98,6 @@ private:
 	void SetThirdStageMesh (double offset);
 	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
-	void SetSIICMixtureRatio (double ratio);
-	void SetSIIThrustLevel(double lvl);
 	void MoveEVA();
 
 	void SeparateStage (int stage);

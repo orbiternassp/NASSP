@@ -61,6 +61,7 @@
 #include "payload.h"
 #include "csmcomputer.h"
 #include "qball.h"
+#include "siisystems.h"
 #include "sivbsystems.h"
 
 #define DIRECTINPUT_VERSION 0x0800
@@ -931,16 +932,15 @@ public:
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 
 	double GetSIThrusterLevel(int n);
-	double GetSIIThrusterLevel(int n);
+	void GetSIIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
-	void SetSIIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetSIThrusterLevel(int n, double level);
-	void SetSIIThrusterLevel(int n, double level);
 	void SetAPSAttitudeEngine(int n, bool on);
 	void ClearSIThrusterResource(int n);
-	void ClearSIIThrusterResource(int n);
+	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 
@@ -3416,9 +3416,6 @@ protected:
 	double LastSimt[LASTVELOCITYCOUNT];
 	int LastVelocityFilled;
 
-	double ThrustAdjust;
-	double MixtureRatio;
-
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;
@@ -3620,6 +3617,7 @@ protected:
 	CDU tcdu;
 	CDU scdu;
 	IU* iu;
+	SIISystems sii;
 	SIVBSystems *sivb;
 	CSMCautionWarningSystem cws;
 
@@ -3924,7 +3922,6 @@ protected:
 	void StageSix(double simt);
 	void JostleViewpoint(double amount);
 	void UpdatePayloadMass();
-	double GetJ2ISP(double ratio);
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);

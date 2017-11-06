@@ -1783,7 +1783,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				fprintf(lvlog,"--- HI SPEED LOOP ---\r\n");
 				// TGO CALCULATION
 				fprintf(lvlog,"--- TGO CALCULATION ---\r\n");
-				if(GATE5 == false){
+				if(GATE5 == false && GuidanceReferenceFailure == false){
 					fprintf(lvlog,"CHI FREEZE\r\n");
 					// CHI FREEZE
 					tchi_y = tchi_y_last;
@@ -5235,7 +5235,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 7:
 					//TB2+15.9: S-II Ordnance Arm
 					if (LVDC_TB_ETime > 15.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 11);
 						CommandSequence++;
+					}
 					break;
 				case 8:
 					//TB2+16.1: Separation and Retro No. 1 EBW Firing Units Arm
@@ -5343,12 +5346,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 6:
 					//TB3+0.9: S-II Engines Cutoff Reset
 					if (LVDC_TB_ETime > 0.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 31);
 						CommandSequence++;
+					}
 					break;
 				case 7:
 					//TB3+1.0: Engines Ready Bypass (S-II)
 					if (LVDC_TB_ETime > 1.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 20);
 						CommandSequence++;
+					}
 					break;
 				case 8:
 					//TB3+1.1: Prevalves Lockout Reset
@@ -5374,7 +5383,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 11:
 					//TB3+1.4: S-II Engine Start
 					if (LVDC_TB_ETime > 1.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 33);
 						CommandSequence++;
+					}
 					break;
 				case 12:
 					//TB3+1.5: S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
@@ -5392,7 +5404,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 14:
 					//TB3+1.9: Engines Ready Bypass Reset
 					if (LVDC_TB_ETime > 1.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 49);
 						CommandSequence++;
+					}
 					break;
 				case 15:
 					//TB3+2.0: Measurement Transfer Mode Position "B" (S-IVB)
@@ -5422,7 +5437,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 20:
 					//TB3+6.9: High (5.5) Engine Mixture Ratio On
 					if (LVDC_TB_ETime > 6.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 59);
 						CommandSequence++;
+					}
 					break;
 				case 21:
 					//TB3+7.7: S-II Start Phase Limiter Cutoff Arm Reset
@@ -5578,11 +5596,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// S2 ENGINE STARTUP
 				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
 					lvCommandConnector->SwitchSelector(19);
-					lvCommandConnector->SetSIIThrusterLevel(0, ((LVDC_TB_ETime - 2.4)*0.45));
-					lvCommandConnector->SetSIIThrusterLevel(1, ((LVDC_TB_ETime - 2.4)*0.45));
-					lvCommandConnector->SetSIIThrusterLevel(2, ((LVDC_TB_ETime - 2.4)*0.45));
-					lvCommandConnector->SetSIIThrusterLevel(3, ((LVDC_TB_ETime - 2.4)*0.45));
-					lvCommandConnector->SetSIIThrusterLevel(4, ((LVDC_TB_ETime - 2.4)*0.45));
 				}
 				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 					lvCommandConnector->SwitchSelector(20);
@@ -8525,7 +8538,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				fprintf(lvlog,"--- HI SPEED LOOP ---\r\n");
 				// TGO CALCULATION
 				fprintf(lvlog,"--- TGO CALCULATION ---\r\n");
-				if(GATE5 == false){
+				if(GATE5 == false && GuidanceReferenceFailure == false){
 					fprintf(lvlog,"CHI FREEZE\r\n");
 					// CHI FREEZE
 					tchi_y = tchi_y_last;

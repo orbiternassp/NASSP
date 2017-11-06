@@ -93,6 +93,7 @@ protected:
 	bool LVEnginesCutoff3;
 	bool SecondPlaneSeparationMonitorRelay;
 	bool SIVBEngineCutoffDisabled;
+	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
 
 	//Common Saturn Failures
@@ -133,7 +134,8 @@ protected:
 	bool EarlySIICutoff[5];
 	double SecondStageFailureTime[5];
 
-	bool ThrustOK[5];
+	bool SIThrustOK[5];
+	bool SIIThrustOK[5];
 
 private:
 	const int SIEngInd[5] = { 4,2,1,3,5 };

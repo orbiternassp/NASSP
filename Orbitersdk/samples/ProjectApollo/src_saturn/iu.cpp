@@ -737,18 +737,6 @@ void IUToLVCommandConnector::SetSIThrusterLevel(int n, double level)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIIThrusterLevel(int n, double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SII_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 {
 	ConnectorMessage cm;
@@ -772,13 +760,13 @@ void IUToLVCommandConnector::ClearSIThrusterResource(int n)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::ClearSIIThrusterResource(int n)
+void IUToLVCommandConnector::SIIEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_CLEAR_SII_THRUSTER_RESOURCE;
-	cm.val1.iValue = n;
+	cm.messageType = IULV_SII_EDS_CUTOFF;
+	cm.val1.bValue = cut;
 
 	SendMessage(cm);
 }
@@ -806,14 +794,15 @@ void IUToLVCommandConnector::SetSIThrusterDir(int n, VECTOR3 &dir)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIIThrusterDir(int n, VECTOR3 &dir)
+void IUToLVCommandConnector::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_SII_THRUSTER_DIR;
 	cm.val1.iValue = n;
-	cm.val2.pValue = &dir;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
 
 	SendMessage(cm);
 }
@@ -1278,20 +1267,15 @@ double IUToLVCommandConnector::GetSIThrusterLevel(int n)
 	return 0.0;
 }
 
-double IUToLVCommandConnector::GetSIIThrusterLevel(int n)
+void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SII_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
+	cm.messageType = IULV_GET_SII_THRUST_OK;
+	cm.val1.pValue = ok;
 
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
-	}
-
-	return 0.0;
+	SendMessage(cm);
 }
 
 bool IUToLVCommandConnector::GetSIVBThrustOK()
@@ -1568,8 +1552,20 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 	int stage = lvCommandConnector.GetStage();
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
-	double oetl = lvCommandConnector.GetSIIThrusterLevel(0) + lvCommandConnector.GetSIIThrusterLevel(1) + lvCommandConnector.GetSIIThrusterLevel(2) + lvCommandConnector.GetSIIThrusterLevel(3);
-	if (oetl == 0) return true;
+	bool ThrustOK[5];
+	int engineson = 0;
+
+	lvCommandConnector.GetSIIThrustOK(ThrustOK);
+
+	for (int i = 0;i < 5;i++)
+	{
+		if (ThrustOK[i]) engineson++;
+	}
+
+	if (engineson < 3)
+	{
+		return true;
+	}
 
 	return false;
 }

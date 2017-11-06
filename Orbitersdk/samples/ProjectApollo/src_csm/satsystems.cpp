@@ -534,6 +534,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		agc.Timestep(MissionTime, simdt);
 		optics.TimeStep(simdt);
 
+		if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
+		{
+			sii.Timestep(simdt);
+		}
+
 		//
 		// If we've seperated from the SIVb, the IU is history.
 		//

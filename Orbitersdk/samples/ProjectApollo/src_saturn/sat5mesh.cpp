@@ -571,8 +571,6 @@ void SaturnV::SetFirstStageEngines ()
 	contrail[2] = AddParticleStream(&srb_contrail, MAIN1a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
 	contrail[3] = AddParticleStream(&srb_contrail, MAIN3a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
 	contrail[4] = AddParticleStream(&srb_contrail, MAIN5a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
-
-	ThrustAdjust = 1.0;
 }
 
 void SaturnV::SetSecondStage ()
@@ -732,7 +730,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, THGROUP_USER);
 	}
 
-	SetSIICMixtureRatio(MixtureRatio);
+	sii.RecalculateEngineParameters(THRUST_SECOND_VAC);
 }
 
 void SaturnV::SetThirdStage ()

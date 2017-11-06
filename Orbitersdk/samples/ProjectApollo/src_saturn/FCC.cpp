@@ -360,11 +360,11 @@ void FCCSV::Timestep(double simdt)
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
-			iu->GetLVCommandConnector()->SetSIIThrusterDir(0, _V(beta_y2c, beta_p2c, 1));
-			iu->GetLVCommandConnector()->SetSIIThrusterDir(1, _V(beta_y4c, beta_p4c, 1));
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(0, beta_y2c, beta_p2c);
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(1, beta_y4c, beta_p4c);
 			//1 & 3 are the same on both stages
-			iu->GetLVCommandConnector()->SetSIIThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
-			iu->GetLVCommandConnector()->SetSIIThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(2, beta_y1c, beta_p1c);
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(3, beta_y3c, beta_p3c);
 		}
 	}
 	else if (SIVBBurnMode == true && StageSwitch == 2) {

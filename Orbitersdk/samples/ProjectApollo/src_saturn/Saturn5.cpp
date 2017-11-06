@@ -254,53 +254,6 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	*cm = factor*(frac*CM[j+1]+(1.0-frac)*CM[j]);
 }
 
-//
-// Adjust the mixture ratio of the engines on the SII stage. This occured late in
-// the flight to ensure that the fuel was fully burnt before the stage was dropped.
-//
-
-void SaturnV::SetSIICMixtureRatio (double ratio)
-
-{
-	double isp, thrust;
-
-	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
-	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
-
-	//if (ratio > 5.4 && ratio < 5.6) {	// 5.5
-	//	thrust = 1012506;
-	//	isp = 4152;
-	//
-	//} else if (ratio > 4.2 && ratio < 4.4) {	// 4.3
-	//	thrust = 783617.4;
-	//	isp = 4223.7;
-	//
-	//} else {
-		isp = GetJ2ISP(ratio);
-		thrust = THRUST_SECOND_VAC * ThrustAdjust;
-	//}
-
-	//
-	// For simplicity assume no ISP change at sea-level: SII stage should always
-	// be in near-vacuum anyway.
-	//
-
-	for (int i = 0; i < 5; i++) {
-		SetThrusterIsp (th_2nd[i], isp, isp);
-		SetThrusterMax0 (th_2nd[i], thrust);
-	}
-
-	MixtureRatio = ratio;
-}
-
-void SaturnV::SetSIIThrustLevel(double lvl)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (!thg_2nd) return;
-
-	SetThrusterGroupLevel(thg_2nd, lvl);
-}
-
 void SaturnV::MoveEVA()
 
 {
@@ -966,20 +919,16 @@ void SaturnV::SwitchSelector(int item){
 		SetStage(LAUNCH_STAGE_TWO);
 		// Fire S2 ullage
 		if(SII_UllageNum){
-			SetThrusterGroupLevel(thg_ull, 1.0);
 			SepS.play(LOOP, 130);
 		}
 		ActivateStagingVent();
 		break;
 	case 19:
 		// S2 Engine Startup
-		SetSIICMixtureRatio(5.5);
 		DeactivateStagingVent();
 		break;
 	case 20:
 		// S2 Engine Startup P2
-		SetThrusterGroupLevel(thg_2nd, 1); // Full power
-		if(SII_UllageNum){ SetThrusterGroupLevel(thg_ull,0.0); }
 		SepS.stop();
 		break;
 	case 24:
@@ -1078,50 +1027,7 @@ void SaturnV::SIISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_TWO_ISTG_JET) return;
 
-	switch (channel)
-	{
-	case 5: //S-II/S-IVB Separation
-		if (stage < LAUNCH_STAGE_SIVB)
-		{
-			SPUShiftS.done(); // Make sure it's done
-			ClearEngineIndicators();
-			SeparateStage(LAUNCH_STAGE_SIVB);
-			SetStage(LAUNCH_STAGE_SIVB);
-			AddRCS_S4B();
-		}
-		break;
-	case 9: //Stop First PAM - FM/FM Calibration
-		break;
-	case 11: //S-II Ordnance Arm
-		break;
-	case 18: //S-II Engines Cutoff
-		SetSIIThrustLevel(0.0);
-		break;
-	case 23: //S-II Aft Interstage Separation
-		if (stage == LAUNCH_STAGE_TWO)
-		{
-			SeparateStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-		}
-		break;
-	case 24: //S-II Ullage Trigger
-		break;
-	case 30: //Start First PAM - FM/FM Relays Reset
-		break;
-	case 38: //LH2 Tank High Pressure Vent Mode
-		break;
-	case 56: //Low (4.5) Engine MR Ratio On
-		SetSIICMixtureRatio(4.5);
-		SPUShiftS.play(NOLOOP, 255);
-		SPUShiftS.done();
-		break;
-	case 58: //High (5.5) Engine MR Ratio Off
-		break;
-	case 71: //Start Data Recorders
-		break;
-	default:
-		break;
-	}
+	sii.SwitchSelector(channel);
 }
 
 void SaturnV::SetRandomFailures()

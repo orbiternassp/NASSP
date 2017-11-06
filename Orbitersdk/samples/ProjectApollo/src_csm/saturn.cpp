@@ -222,7 +222,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnia(_V(0.0, 0.707108, 0.707108)),
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108))
+	omnid(_V(0.0, 0.707108, -0.707108)),
+	sii(this, th_2nd, ph_2nd, thg_ull, SPUShiftS, SepS)
 
 #pragma warning ( pop ) // disable:4355
 
@@ -367,9 +368,6 @@ void Saturn::initSaturn()
 	DeleteLaunchSite = true;
 
 	buildstatus = 6;
-
-	ThrustAdjust = 1.0;
-	MixtureRatio = 5.5;
 
 	DockAngle = 0;
 
@@ -1198,8 +1196,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
 	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
-	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
-	papiWriteScenario_double (scn, "MR", MixtureRatio);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -1338,6 +1334,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
 	}
 
+	if (stage < LAUNCH_STAGE_SIVB)
+	{
+		sii.SaveState(scn);
+	}
 	//
 	// If we've seperated from the SIVb, the IU is history.
 	//
@@ -1668,10 +1668,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "SIIENG", 6)) {
 		sscanf (line + 6, "%d", &SII_EngineNum);
 	}
-	else if (!strnicmp (line, "THRUSTA", 7)) {
-		sscanf (line + 7, "%f", &ftcp);
-		ThrustAdjust = ftcp;
-	}
 	else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
 		LEM_DISPLAY = true;
 	}
@@ -1933,6 +1929,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
 	}
+	else if (!strnicmp(line, SIISYSTEMS_START_STRING, sizeof(SIISYSTEMS_START_STRING))) {
+		sii.LoadState(scn);
+	}
 	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
 		LoadSIVB(scn);
 	}
@@ -1969,10 +1968,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "COASENABLED", 11)) {
 		sscanf (line + 11, "%i", &coasEnabled);
-	}
-	else if (!strnicmp (line, "MR", 2)) {
-		sscanf (line + 2, "%f", &ftcp);
-		MixtureRatio = ftcp;
 	}
 	else
 		found = false;
@@ -4326,41 +4321,6 @@ void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 }
 
 //
-// Get the J2 ISP from the mixture ratio and calculate the thrust adjustment.
-//
-
-#define MR_STATS 5
-
-static double MixtureRatios[MR_STATS] = {6.0, 5.5, 5.0, 4.3, 4.0 };
-//static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
-static double MRISP[MR_STATS] = { 421.4 * G, 423.4 * G, 426.5 * G, 432.6 * G, 437.6 * G };
-static double MRThrust[MR_STATS] = { 1.1, 1.0, .898, .7391, .7 };
-
-double Saturn::GetJ2ISP(double ratio)
-
-{
-	double isp = 421*G;
-
-	// From Usenet:
-	// It had roughly three stops. 178,000 lbs at 425s Isp and an O/F of 4.5,
-	// 207,000 lbs at 421s Isp and an O/F of 5.0, and 230,500 lbs at 418s Isp
-	// and an O/F of 5.5.
-
-	for (int i = 0; i < MR_STATS; i++) {
-		if (ratio >= MixtureRatios[i]) {
-			double delta = (ratio - MixtureRatios[i]) / (MixtureRatios[i - 1] - MixtureRatios[i]);
-
-			isp = MRISP[i] + ((MRISP[i - 1] - MRISP[i]) * delta);
-			ThrustAdjust = MRThrust[i] + ((MRThrust[i - 1] - MRThrust[i]) * delta);
-
-			return isp;
-		}
-	}
-
-	return isp;
-}
-
-//
 // Set up random failures if required.
 //
 
@@ -4597,13 +4557,16 @@ double Saturn::GetSIThrusterLevel(int n)
 	return GetThrusterLevel(th_1st[n]);
 }
 
-double Saturn::GetSIIThrusterLevel(int n)
+void Saturn::GetSIIThrustOK(bool *ok)
 {
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return 0.0;
-	if (n < 0 || n > 4) return 0.0;
-	if (!th_2nd[n]) return 0.0;
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
 
-	return GetThrusterLevel(th_2nd[n]);
+	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+
+	sii.GetThrustOK(ok);
 }
 
 bool Saturn::GetSIVBThrustOK()
@@ -4622,13 +4585,11 @@ void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
 	SetThrusterDir(th_1st[n], dir);
 }
 
-void Saturn::SetSIIThrusterDir(int n, VECTOR3 &dir)
+void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
-	if (n < 0 || n > 4) return;
 	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (!th_2nd[n]) return;
 
-	SetThrusterDir(th_2nd[n], dir);
+	sii.SetThrusterDir(n, yaw, pitch);
 }
 
 void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
@@ -4647,13 +4608,11 @@ void Saturn::ClearSIThrusterResource(int n)
 	SetThrusterResource(th_1st[n], NULL);
 }
 
-void Saturn::ClearSIIThrusterResource(int n)
+void Saturn::SIIEDSCutoff(bool cut)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (n < 0 || n > 4) return;
-	if (!th_2nd[n]) return;
 
-	SetThrusterResource(th_2nd[n], NULL);
+	sii.EDSEnginesCutoff(cut);
 }
 
 void Saturn::SIVBEDSCutoff(bool cut)
@@ -4675,15 +4634,6 @@ void Saturn::SetSIThrusterLevel(int n, double level)
 	if (!th_1st[n]) return;
 
 	SetThrusterLevel(th_1st[n], level);
-}
-
-void Saturn::SetSIIThrusterLevel(int n, double level)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-	if (n < 0 || n > 4) return;
-	if (!th_2nd[n]) return;
-
-	SetThrusterLevel(th_2nd[n], level);
 }
 
 void Saturn::SetAPSAttitudeEngine(int n, bool on)
