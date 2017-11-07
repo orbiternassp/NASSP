@@ -217,7 +217,7 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	double Mass = Stage1Mass + SI_FuelMass;;
 	double ro = 30;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
