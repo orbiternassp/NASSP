@@ -98,7 +98,7 @@ bool LVDA::GetSIEngineOut()
 
 bool LVDA::GetSIIEngineOut()
 {
-	return iu->GetEDS()->GetSIIEngineOut();
+	return iu->GetSIIEngineOut();
 }
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()

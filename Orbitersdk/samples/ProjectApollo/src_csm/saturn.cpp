@@ -1334,7 +1334,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
 	}
 
-	if (stage < LAUNCH_STAGE_SIVB)
+	if (stage < LAUNCH_STAGE_SIVB && SaturnType == SAT_SATURNV)
 	{
 		sii.SaveState(scn);
 	}
@@ -4564,7 +4564,7 @@ void Saturn::GetSIIThrustOK(bool *ok)
 		ok[i] = false;
 	}
 
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 
 	sii.GetThrustOK(ok);
 }

@@ -315,6 +315,7 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
@@ -383,6 +384,7 @@ public:
 	~IUSV() {};
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIIEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);

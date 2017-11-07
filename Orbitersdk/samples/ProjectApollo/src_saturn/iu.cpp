@@ -178,6 +178,11 @@ bool IU::GetSIIPropellantDepletionEngineCutoff()
 	return false;
 }
 
+bool IU::GetSIIEngineOut()
+{
+	return false;
+}
+
 bool IU::GetSIVBEngineOut()
 {
 	int stage = lvCommandConnector.GetStage();
@@ -1565,6 +1570,24 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 	if (engineson < 3)
 	{
 		return true;
+	}
+
+	return false;
+}
+
+bool IUSV::GetSIIEngineOut()
+{
+	int stage = lvCommandConnector.GetStage();
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+
+	bool ThrustOK[5];
+	int engineson = 0;
+
+	lvCommandConnector.GetSIIThrustOK(ThrustOK);
+
+	for (int i = 0;i < 5;i++)
+	{
+		if (!ThrustOK[i]) return true;
 	}
 
 	return false;

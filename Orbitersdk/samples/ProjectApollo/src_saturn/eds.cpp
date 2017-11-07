@@ -53,7 +53,6 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	SIVBEngineOutIndicationA = false;
 	SIVBEngineOutIndicationB = false;
 	SI_Engine_Out = false;
-	SII_Engine_Out = false;
 	AutoAbortEnableRelayA = false;
 	AutoAbortEnableRelayB = false;
 	LiftoffA = false;
@@ -104,7 +103,6 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIENGINEOUT", SI_Engine_Out);
-	papiWriteScenario_bool(scn, "SIIENGINEOUT", SII_Engine_Out);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF1", LVEnginesCutoff1);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
@@ -145,7 +143,6 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIENGINEOUT", SI_Engine_Out);
-		papiReadScenario_bool(line, "SIIENGINEOUT", SII_Engine_Out);
 		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF1", LVEnginesCutoff1);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
@@ -175,7 +172,7 @@ bool EDS1B::ThrustCommitEval()
 	return true;
 }
 
-void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 {
 	for (int i = 0;i < 8;i++)
 	{
@@ -488,8 +485,6 @@ EDSSV::EDSSV(LVRG &rg) : EDS(rg)
 	{
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
-		EarlySIICutoff[i] = false;
-		SecondStageFailureTime[i] = 0.0;
 		SIThrustOK[i] = false;
 		SIIThrustOK[i] = false;
 	}
@@ -502,14 +497,12 @@ bool EDSSV::ThrustCommitEval()
 	return true;
 }
 
-void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes)
+void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 {
 	for (int i = 0;i < 5;i++)
 	{
 		EarlySICutoff[i] = SICut[i];
 		FirstStageFailureTime[i] = SICutTimes[i];
-		EarlySIICutoff[i] = SIICut[i];
-		SecondStageFailureTime[i] = SIICutTimes[i];
 	}
 }
 
@@ -821,7 +814,7 @@ void EDSSV::Timestep(double simdt)
 
 	switch (Stage) {
 	case LAUNCH_STAGE_ONE:
-		SII_Engine_Out = false;
+		SI_Engine_Out = false;
 		for (int i = 0;i < 5;i++)
 		{
 			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]))
@@ -831,21 +824,8 @@ void EDSSV::Timestep(double simdt)
 			}
 		}
 		break;
-	case LAUNCH_STAGE_TWO:
-	case LAUNCH_STAGE_TWO_ISTG_JET:
-		SI_Engine_Out = false;
-		for (int i = 0;i < 5;i++)
-		{
-			if (EarlySIICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > SecondStageFailureTime[i]))
-			{
-				//iu->GetLVCommandConnector()->ClearSIIThrusterResource(i); // Should stop the engine
-				SII_Engine_Out = true;
-			}
-		}
-		break;
 	default:
 		SI_Engine_Out = false;
-		SII_Engine_Out = false;
 		break;
 	}
 

@@ -5569,7 +5569,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 40:
 					//TB3+331.4: S-II/S-IVB Ordnance Arm
 					if (LVDC_TB_ETime > 331.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 8);
 						CommandSequence++;
+					}
 					break;
 				case 41:
 					//TB3+332.3: Tape Recorder Record On
@@ -5632,7 +5635,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// Check for S2 OECO
-				if(lvda.GetSIIPropellantDepletionEngineCutoff() && LVDC_TB_ETime > 5.0){
+				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
 					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);

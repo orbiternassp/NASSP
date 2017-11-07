@@ -486,6 +486,11 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
+	if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
+	{
+		sii.Timestep(simdt);
+	}
+
 	if (stage < CSM_LEM_STAGE) {
 	} else {
 		GenericTimestepStage(simt, simdt);
@@ -1079,7 +1084,7 @@ void SaturnV::SetRandomFailures()
 			{
 				if (!(random() & (int)(127.0 / FailureMultiplier)))
 				{
-					EarlySICutoff[i] = 1;
+					EarlySICutoff[i] = true;
 					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
 				}
 			}
@@ -1088,12 +1093,13 @@ void SaturnV::SetRandomFailures()
 			{
 				if (!(random() & (int)(127.0 / FailureMultiplier)))
 				{
-					EarlySIICutoff[i] = 1;
-					SecondStageFailureTime[i] = 180.0 + ((double)(random() & 3071) / 10.0);
+					EarlySIICutoff[i] = true;
+					SecondStageFailureTime[i] = 10.0 + ((double)(random() & 3071) / 10.0);
 				}
 			}
 
-			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime, EarlySIICutoff, SecondStageFailureTime);
+			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+			sii.SetEngineFailureParameters(EarlySIICutoff, SecondStageFailureTime);
 
 		}
 

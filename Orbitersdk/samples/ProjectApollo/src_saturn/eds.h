@@ -32,7 +32,7 @@ class EDS
 public:
 	EDS(LVRG &rg);
 	virtual void Timestep(double simdt) = 0;
-	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes) = 0;
+	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes) = 0;
 	void Init(IU *i);
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 
@@ -52,7 +52,6 @@ public:
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 
 	bool GetSIEngineOut() { return SI_Engine_Out; }
-	bool GetSIIEngineOut() { return SII_Engine_Out; }
 	bool GetLiftoffCircuitA() { return LiftoffA; }
 	bool GetLiftoffCircuitB() { return LiftoffB; }
 protected:
@@ -83,7 +82,6 @@ protected:
 	bool SIVBEngineOutIndicationA;
 	bool SIVBEngineOutIndicationB;
 	bool SI_Engine_Out;
-	bool SII_Engine_Out;
 	bool AutoAbortEnableRelayA;
 	bool AutoAbortEnableRelayB;
 	bool LiftoffA;
@@ -106,7 +104,7 @@ class EDS1B : public EDS
 public:
 	EDS1B(LVRG &rg);
 	void Timestep(double simdt);
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
 protected:
@@ -122,7 +120,7 @@ class EDSSV : public EDS
 public:
 	EDSSV(LVRG &rg);
 	void Timestep(double simdt);
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes, bool *SIICut, double *SIICutTimes);
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
 	void SetSIIEngineOutIndicationA(bool set) { SIIEngineOutIndicationA = set; }
@@ -131,8 +129,6 @@ protected:
 	//Engine Failure variables
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
-	bool EarlySIICutoff[5];
-	double SecondStageFailureTime[5];
 
 	bool SIThrustOK[5];
 	bool SIIThrustOK[5];
