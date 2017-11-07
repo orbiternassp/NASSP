@@ -418,6 +418,7 @@ void SIISystems::SwitchSelector(int channel)
 	{
 	case 3: //S-II LOX Depletion Sensors Cutoff Arm
 		SetDepletionSensorsCutoffArm();
+		break;
 	case 5: //S-II/S-IVB Separation
 		if (SIISIVBOrdnanceArmed && vessel->GetStage() < LAUNCH_STAGE_SIVB)
 		{
@@ -460,6 +461,9 @@ void SIISystems::SwitchSelector(int channel)
 		EngineStartOn();
 		break;
 	case 38: //LH2 Tank High Pressure Vent Mode
+		break;
+	case 42: //S-II LH2 Depletion Sensors Cutoff Arm
+		SetDepletionSensorsCutoffArm();
 		break;
 	case 49: //Engines Ready Bypass Reset
 		ResetEnginesReadyBypass();

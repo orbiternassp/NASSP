@@ -3289,12 +3289,12 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TABLE15[0].dV_BR = 2.8816;
 	TABLE15[1].dV_BR = 2.8816;
 
-	MRS = false;							// MR Shift
-	dotM_1 = 1224.13817;//1219.299283;					// Mass flowrate of S2 from approximately LET jettison to second MRS
-	dotM_2 = 890.2122217;//61.8088872;					// Mass flowrate of S2 after second MRS
-	dotM_2R = 178.0424443;//188.221437;//187.007;
-	dotM_3 = 215.2292029;//222.4339038;					// Mass flowrate of S4B during first burn
-	dotM_3R = 217.6503205;//218.586;
+	MRS = false;						// MR Shift
+	dotM_1 = 1221.1489;					// Mass flowrate of S2 from approximately LET jettison to second MRS
+	dotM_2 = 950.4154;					// Mass flowrate of S2 after second MRS
+	dotM_2R = 215.2241;
+	dotM_3 = 208.7674;					// Mass flowrate of S4B during first burn
+	dotM_3R = 215.2241;
 	ROT = false;
 	ROTR = true;
 	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
@@ -5587,12 +5587,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 42:
 					//TB3+335.1: S-II LOX Depletion Sensors Cutoff Arm
 					if (LVDC_TB_ETime > 335.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 3);
 						CommandSequence++;
+					}
 					break;
 				case 43:
 					//TB3+335.3: S-II LH2 Depletion Sensors Cutoff Arm
 					if (LVDC_TB_ETime > 335.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 42);
 						CommandSequence++;
+					}
 					break;
 				default:
 					break;
