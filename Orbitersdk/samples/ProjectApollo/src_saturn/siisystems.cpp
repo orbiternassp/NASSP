@@ -286,6 +286,8 @@ void SIISystems::GetJ2ISP(double ratio, double &isp, double &ThrustAdjust)
 
 			isp = MRISP[i] + ((MRISP[i - 1] - MRISP[i]) * delta);
 			ThrustAdjust = MRThrust[i] + ((MRThrust[i - 1] - MRThrust[i]) * delta);
+
+			return;
 		}
 	}
 }
