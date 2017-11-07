@@ -72,7 +72,7 @@ void Sat5Abort1::init()
 {
 }
 
-void Sat5Abort1::Setup()
+void Sat5Abort1::Setup(bool sm)
 
 {
 	double Offset1st;
@@ -118,8 +118,11 @@ void Sat5Abort1::Setup()
     AddMesh (hsat5stg33, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55+STG0O);
     AddMesh (hsat5stg34, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1+STG0O);
-	AddMesh (hSM, &mesh_dir);
+	if (sm)
+	{
+		mesh_dir = _V(0, SMVO, 19.1 + STG0O);
+		AddMesh(hSM, &mesh_dir);
+	}
 	mesh_dir=_V(0,0,23.5+STG0O);
 	Offset1st = -80.1+STG0O;
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
@@ -137,7 +140,10 @@ void Sat5Abort1::Setup()
 	SetCameraOffset (_V(-1,1.0,32.4+STG0O));
 }
 
-
+void Sat5Abort1::SetState(bool sm)
+{
+	Setup(sm);
+}
 
 // ==============================================================
 // API interface
@@ -167,6 +173,5 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 void Sat5Abort1::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	init();
-	Setup();
 }
 
