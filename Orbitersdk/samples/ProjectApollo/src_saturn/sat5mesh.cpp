@@ -887,6 +887,12 @@ void SaturnV::SetThirdStageEngines (double offset)
 		ph_sep2 = 0;
 	}
 
+	if (ph_ullage2)
+	{
+		DelPropellantResource(ph_ullage2);
+		ph_ullage2 = 0;
+	}
+
 	//
 	// *********************** thruster definitions ********************************
 	//
