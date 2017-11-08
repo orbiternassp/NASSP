@@ -112,7 +112,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	CG = 0;
 	cos_chi_Yit = 0;
 	cos_chi_Zit = 0;
-	cos_phi_L = 0;
 	d2 = 0;
 	ddot_xi_G = 0;
 	ddot_eta_G = 0;
@@ -184,6 +183,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	K_Y2 = 0;
 	K_Y = 0;
 	K_P = 0;
+	KSCLNG = 0;
 	D_P = 0;
 	D_Y = 0;
 	L_1 = 0;
@@ -195,11 +195,12 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	Lt_Y = 0;
 	LVDC_TB_ETime = 0;
 	mu = 0;
+	omega_E = 0;
 	p = 0;
 	P_1 = 0;
 	P_2 = 0;
-	phi_lat = 0;
-	phi_lng = 0;
+	PHI = 0;
+	PHIP = 0;
 	phi_T = 0;
 	Q_1 = 0;
 	Q_2 = 0;
@@ -216,7 +217,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	sinceLastIGM = 0;
 	sin_chi_Yit = 0;
 	sin_chi_Zit = 0;
-	sin_phi_L = 0;
 	sin_ups = 0;
 	cos_ups = 0;
 	SMCG = 0;
@@ -335,7 +335,7 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	C_3 = -60139891.8062616; // Stored as twice the etc etc.
 	Inclination = 31.6050041807581;
 	DescNodeAngle = 118.998976688105;
-	Azimuth = 72.06;
+	Azimuth = 72.0;
 	GATE = false;							// 'chi-freeze-gate': freezes steering commands when true
 	GATE5 = false;							// allows single pass through HSL initialization when false
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
@@ -397,7 +397,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	TI5F2 = 20.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
-	cos_phi_L = 0.878635524;					// cos of the Geodetic Launch site latitude
 	// Inclination from azimuth polynomial
 	fx[0] = 32.55754;  fx[1] = -15.84615; fx[2] = 11.64780; fx[3] = 9.890970;
 	fx[4] = -5.111430; fx[5] = 0;         fx[6] = 0;
@@ -410,7 +409,11 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	dV_B = 6.22; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	ROV = 1.11706196363037;
 	ROVs = 1.5;
-	sin_phi_L = 0.477493054;					// sin of the Geodetic Launch site latitude
+	PHI = 28.5217969*RAD;
+	PHIP = 28.5217969*RAD;
+	R_L = 6373407.3;
+	omega_E = 0.729211e-4;
+	KSCLNG = -80.5612465*RAD;
 	SMCG = 0.05*RAD;
 	TSMC1 = 20; TSMC2 = 5; // AP9
 	// TSMC1 = 60.6 TSMC2 = 15 // AP11
@@ -1253,55 +1256,16 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
 
 			// Initial Position & Velocity
-			MATRIX3 rot;
-			lvCommandConnector->GetRelativePos(oapiGetGbodyByName ("Earth"), PosS);
-			lvCommandConnector->GetRelativeVel(oapiGetGbodyByName ("Earth"), Dot0);
-			
-			oapiGetPlanetObliquityMatrix(oapiGetGbodyByName("Earth"),&rot);
-			PosS = tmul(rot,PosS);
-			Dot0 = tmul(rot,Dot0);
-			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
-			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",Dot0.x,Dot0.y,Dot0.z);
-			double rad      = sqrt  (PosS.x*PosS.x + PosS.y*PosS.y + PosS.z*PosS.z);
-			phi_lng    = atan2 (PosS.z, PosS.x);
-			phi_lat    = asin  (PosS.y/rad);
-			cos_phi_L = cos(phi_lat);
-			sin_phi_L = sin(phi_lat);
-			fprintf(lvlog, "Latitude = %f, Longitude = %f\r\n", phi_lat*DEG, phi_lng*DEG);
-			fprintf(lvlog, "cos_phi_l = %f, sin_phi_l = %f\r\n", cos_phi_L, sin_phi_L);
-			rot.m11 = cos(phi_lng); rot.m12 = 0; rot.m13 = sin(phi_lng);
-			rot.m21 = 0; rot.m22 = 1; rot.m23 = 0;
-			rot.m31 = -sin(phi_lng); rot.m32 = 0; rot.m33 = cos(phi_lng);
-			PosS = mul(rot,PosS);
-			Dot0 = mul(rot,Dot0);
-			fprintf(lvlog,"Rot:longitude\r\n");
-			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
-			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",Dot0.x,Dot0.y,Dot0.z);
-			rot.m11 = cos(-phi_lat); rot.m12 = -sin(-phi_lat); rot.m13 = 0;
-			rot.m21 = sin(-phi_lat); rot.m22 = cos(-phi_lat); rot.m23 = 0;
-			rot.m31 = 0; rot.m32 = 0; rot.m33 = 1;
-			PosS = mul(rot,PosS);
-			Dot0 = mul(rot,Dot0);
-			fprintf(lvlog,"Rot:latitude\r\n");
-			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
-			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",Dot0.x,Dot0.y,Dot0.z);
+			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth*RAD), -sin(PHI - PHIP)*cos(Azimuth*RAD))*R_L;
+			DotS = _V(0, cos(PHIP)*cos(Azimuth*RAD), cos(PHIP)*sin(Azimuth*RAD))*R_L*omega_E;
+			Dot0 = DotS;
+
+			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
+			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 			
 			// Time into launch window = launch time from midnight - reference time of launch from midnight
 			// azimuth = coeff. of azimuth polynomial * time into launch window
 
-			// preset to fixed value to be independent from any external stuff
-			Azimuth = 72.0;
-			fprintf(lvlog,"Azimuth = %f\r\n",Azimuth);
-			rot.m11 = 1; rot.m12 = 0; rot.m13 = 0;
-			rot.m21 = 0; rot.m22 = cos((90-Azimuth)*RAD); rot.m23 = -sin((90-Azimuth)*RAD);
-			rot.m31 = 0; rot.m32 = sin((90-Azimuth)*RAD); rot.m33 = cos((90-Azimuth)*RAD);
-			PosS = mul(rot,PosS);
-			Dot0 = mul(rot,Dot0);
-			fprintf(lvlog,"Rot:azimuth\r\n");
-			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
-			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",Dot0.x,Dot0.y,Dot0.z);
-			PosS.y = -PosS.y;
-			Dot0.y = -Dot0.y;
 			// Azo and Azs are used to scale the polys below. These numbers are from Apollo 11.
 			// Dunno if this actually works. The numbers are in "PIRADS", whatever that is.
 			Azo = 4; 
@@ -1365,8 +1329,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"R_T = %f (Expecting 6,563,366), V_T = %f (Expecting 7793.0429), gamma_T = %f\r\n",R_T,V_T,gamma_T);
 
 			// G MATRIX CALCULATION
-			MX_A.m11 = cos_phi_L;  MX_A.m12 = sin_phi_L*sin(Azimuth); MX_A.m13 = -(sin_phi_L*cos(Azimuth));
-			MX_A.m21 = -sin_phi_L; MX_A.m22 = cos_phi_L*sin(Azimuth); MX_A.m23 = -(cos_phi_L*cos(Azimuth));
+			MX_A.m11 = cos(PHI);  MX_A.m12 = sin(PHI)*sin(Azimuth); MX_A.m13 = -(sin(PHI)*cos(Azimuth));
+			MX_A.m21 = -sin(PHI); MX_A.m22 = cos(PHI)*sin(Azimuth); MX_A.m23 = -(cos(PHI)*cos(Azimuth));
 			MX_A.m31 = 0;  MX_A.m32 = cos(Azimuth);  MX_A.m33 = sin(Azimuth);
 
 			MX_B.m11 = cos(DescNodeAngle); MX_B.m12 = 0; MX_B.m13 = sin(DescNodeAngle);
@@ -2169,7 +2133,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_CG", CG);
 	papiWriteScenario_double(scn, "LVDC_cos_chi_Yit", cos_chi_Yit);
 	papiWriteScenario_double(scn, "LVDC_cos_chi_Zit", cos_chi_Zit);
-	papiWriteScenario_double(scn, "LVDC_cos_phi_L", cos_phi_L);
 	papiWriteScenario_double(scn, "LVDC_d2", d2);
 	papiWriteScenario_double(scn, "LVDC_ddot_xi_G", ddot_xi_G);
 	papiWriteScenario_double(scn, "LVDC_ddot_eta_G", ddot_eta_G);
@@ -2281,17 +2244,19 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Lt_Y", Lt_Y);
 	papiWriteScenario_double(scn, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
 	papiWriteScenario_double(scn, "LVDC_mu", mu);
+	papiWriteScenario_double(scn, "LVDC_omega_E", omega_E);
 	papiWriteScenario_double(scn, "LVDC_p", p);
 	papiWriteScenario_double(scn, "LVDC_P_1", P_1);
 	papiWriteScenario_double(scn, "LVDC_P_2", P_2);
-	papiWriteScenario_double(scn, "LVDC_phi_lat", phi_lat);
-	papiWriteScenario_double(scn, "LVDC_phi_lng", phi_lng);
+	papiWriteScenario_double(scn, "LVDC_PHI", PHI);
+	papiWriteScenario_double(scn, "LVDC_PHIP", PHIP);
 	papiWriteScenario_double(scn, "LVDC_phi_T", phi_T);
 	papiWriteScenario_double(scn, "LVDC_Q_1", Q_1);
 	papiWriteScenario_double(scn, "LVDC_Q_2", Q_2);
 	papiWriteScenario_double(scn, "LVDC_Q_Y", Q_Y);
 	papiWriteScenario_double(scn, "LVDC_Q_P", Q_P);
 	papiWriteScenario_double(scn, "LVDC_R", R);
+	papiWriteScenario_double(scn, "LVDC_R_L", R_L);
 	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
 	papiWriteScenario_double(scn, "LVDC_ROVs", ROVs);
 	papiWriteScenario_double(scn, "LVDC_R_T", R_T);
@@ -2302,7 +2267,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_sinceLastIGM", sinceLastIGM);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Yit", sin_chi_Yit);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Zit", sin_chi_Zit);
-	papiWriteScenario_double(scn, "LVDC_sin_phi_L", sin_phi_L);
 	papiWriteScenario_double(scn, "LVDC_sin_ups", sin_ups);
 	papiWriteScenario_double(scn, "LVDC_cos_ups", cos_ups);
 	papiWriteScenario_double(scn, "LVDC_SMCG", SMCG);
@@ -2514,7 +2478,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_CG", CG);
 		papiReadScenario_double(line, "LVDC_cos_chi_Yit", cos_chi_Yit);
 		papiReadScenario_double(line, "LVDC_cos_chi_Zit", cos_chi_Zit);
-		papiReadScenario_double(line, "LVDC_cos_phi_L", cos_phi_L);
 		papiReadScenario_double(line, "LVDC_d2", d2);
 		papiReadScenario_double(line, "LVDC_ddot_xi_G", ddot_xi_G);
 		papiReadScenario_double(line, "LVDC_ddot_eta_G", ddot_eta_G);
@@ -2625,17 +2588,19 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Lt_Y", Lt_Y);
 		papiReadScenario_double(line, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
 		papiReadScenario_double(line, "LVDC_mu", mu);
+		papiReadScenario_double(line, "LVDC_omega_E", omega_E);
 		papiReadScenario_double(line, "LVDC_p", p);
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
 		papiReadScenario_double(line, "LVDC_P_2", P_2);
-		papiReadScenario_double(line, "LVDC_phi_lat", phi_lat);
-		papiReadScenario_double(line, "LVDC_phi_lng", phi_lng);
+		papiReadScenario_double(line, "LVDC_PHI", PHI);
+		papiReadScenario_double(line, "LVDC_PHIP", PHI);
 		papiReadScenario_double(line, "LVDC_phi_T", phi_T);
 		papiReadScenario_double(line, "LVDC_Q_1", Q_1);
 		papiReadScenario_double(line, "LVDC_Q_2", Q_2);
 		papiReadScenario_double(line, "LVDC_Q_Y", Q_Y);
 		papiReadScenario_double(line, "LVDC_Q_P", Q_P);
 		papiReadScenario_double(line, "LVDC_R", R);
+		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_ROV", ROV);
 		papiReadScenario_double(line, "LVDC_ROVs", ROVs);
 		papiReadScenario_double(line, "LVDC_R_T", R_T);
@@ -2646,7 +2611,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_sinceLastIGM", sinceLastIGM);
 		papiReadScenario_double(line, "LVDC_sin_chi_Yit", sin_chi_Yit);
 		papiReadScenario_double(line, "LVDC_sin_chi_Zit", sin_chi_Zit);
-		papiReadScenario_double(line, "LVDC_sin_phi_L", sin_phi_L);
 		papiReadScenario_double(line, "LVDC_sin_ups", sin_ups);
 		papiReadScenario_double(line, "LVDC_cos_ups", cos_ups);
 		papiReadScenario_double(line, "LVDC_SMCG", SMCG);
@@ -2751,9 +2715,9 @@ double LVDC1B::SVCompare()
 {
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
-	double day;
-	modf(oapiGetSimMJD(), &day);
-	mat = OrbMech::Orbiter2PACSS13(40140.626701, 28.5217969*RAD, -80.5612465*RAD, Azimuth);
+	double MJD_L;
+	MJD_L = oapiGetSimMJD() - (lvCommandConnector->GetMissionTime() + 17.0) / 3600.0 / 24.0;
+	mat = OrbMech::Orbiter2PACSS13(MJD_L, PHI, KSCLNG, Azimuth);
 	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 
@@ -2960,6 +2924,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_Y2 = 0;
 	K_Y = 0;
 	K_P = 0;
+	KSCLNG = 0;
 	D_P = 0;
 	D_Y = 0;
 	L_1 = 0;
@@ -2978,7 +2943,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	P_2 = 0;
 	P_3 = 0;
 	P_12 = 0;
-	phi_L = 0;
+	PHI = 0;
+	PHIP = 0;
+	R_L = 0;
 	phi_T = 0;
 	Q_1 = 0;
 	Q_2 = 0;
@@ -3304,7 +3271,10 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	ROV = 1.48119724870249; //0.75-17
 	ROVs = 1.5;
 	ROVR = 0.0;
-	phi_L = 0.4993088329;					// Geodetic Launch site latitude
+	PHI = 28.6082888*RAD;
+	PHIP = 28.6082888*RAD;
+	R_L = 6373418.5;
+	KSCLNG = -80.6041140*RAD;
 	R_N = 6575100;
 	SMCG = 0.05*RAD;
 	TS4BS = 13.5;
@@ -3885,7 +3855,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_P_2", P_2);
 	papiWriteScenario_double(scn, "LVDC_P_3", P_3);
 	papiWriteScenario_double(scn, "LVDC_P_12", P_12);
-	papiWriteScenario_double(scn, "LVDC_phi_L", phi_L);
+	papiWriteScenario_double(scn, "LVDC_PHI", PHI);
+	papiWriteScenario_double(scn, "LVDC_PHIP", PHIP);
 	papiWriteScenario_double(scn, "LVDC_phi_T", phi_T);
 	papiWriteScenario_double(scn, "LVDC_Q_1", Q_1);
 	papiWriteScenario_double(scn, "LVDC_Q_2", Q_2);
@@ -3932,6 +3903,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Rho[3]", Rho[3]);
 	papiWriteScenario_double(scn, "LVDC_Rho[4]", Rho[4]);
 	papiWriteScenario_double(scn, "LVDC_Rho[5]", Rho[5]);
+	papiWriteScenario_double(scn, "LVDC_R_L", R_L);
 	papiWriteScenario_double(scn, "LVDC_R_N", R_N);
 	papiWriteScenario_double(scn, "LVDC_RNA", TABLE15[0].R_N);
 	papiWriteScenario_double(scn, "LVDC_RNB", TABLE15[1].R_N);
@@ -4528,7 +4500,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_P_2", P_2);
 		papiReadScenario_double(line, "LVDC_P_3", P_3);
 		papiReadScenario_double(line, "LVDC_P_12", P_12);
-		papiReadScenario_double(line, "LVDC_phi_L", phi_L);
+		papiReadScenario_double(line, "LVDC_PHI", PHI);
+		papiReadScenario_double(line, "LVDC_PHIP", PHIP);
 		papiReadScenario_double(line, "LVDC_phi_T", phi_T);
 		papiReadScenario_double(line, "LVDC_Q_1", Q_1);
 		papiReadScenario_double(line, "LVDC_Q_2", Q_2);
@@ -4569,6 +4542,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 		papiReadScenario_double(line, "LVDC_RASB14", TABLE15[1].target[14].RAS);
 		papiReadScenario_double(line, "LVDC_rho_c", rho_c);
+		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_R_N", R_N);
 		papiReadScenario_double(line, "LVDC_RNA", TABLE15[0].R_N);
 		papiReadScenario_double(line, "LVDC_RNB", TABLE15[1].R_N);
@@ -4842,6 +4816,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}else{
 					LVDC_Timebase = 0;
 					LVDC_TB_ETime = 0;
+					oapiSetTimeAcceleration(1);					// Set time acceleration to 1
 					break;
 				}			
 
@@ -4850,7 +4825,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
-					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
 					lvCommandConnector->SwitchSelector(12);
 				}
 
@@ -7641,20 +7615,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 		{
 			fprintf(lvlog,"[T%f] GRR received!\r\n", lvCommandConnector->GetMissionTime());
 
-			// Initial Position & Velocity from Apollo 9 operational trajectory
-			/*PosS.x = 6373324.5;
-			PosS.y = 19255.8;
-			PosS.z = 1174.4;*/
-			/*DotM_act.x = -0.451;
-			DotM_act.y = 125.646;
-			DotM_act.z = 388.841;*/
-			PosS.x = 6373418.5;
-			PosS.y = 0;
-			PosS.z = 0;
-			/*DotS.x = 0;
-			DotS.y = 126.08;
-			DotS.z = 388.03;*/
-
 			// Ground launch targeting
 
 			double day = 0.0;
@@ -7746,8 +7706,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 			fprintf(lvlog,"R_T = %f (Expecting 6,563,366), V_T = %f (Expecting 7793.0429), gamma_T = %f\r\n",R_T,V_T,gamma_T);
 
 			// G MATRIX CALCULATION
-			MX_A.m11 = cos(phi_L);  MX_A.m12 = sin(phi_L)*sin(Azimuth); MX_A.m13 = -(sin(phi_L)*cos(Azimuth));
-			MX_A.m21 = -sin(phi_L); MX_A.m22 = cos(phi_L)*sin(Azimuth); MX_A.m23 = -(cos(phi_L)*cos(Azimuth));
+			MX_A.m11 = cos(PHI);  MX_A.m12 = sin(PHI)*sin(Azimuth); MX_A.m13 = -(sin(PHI)*cos(Azimuth));
+			MX_A.m21 = -sin(PHI); MX_A.m22 = cos(PHI)*sin(Azimuth); MX_A.m23 = -(cos(PHI)*cos(Azimuth));
 			MX_A.m31 = 0;  MX_A.m32 = cos(Azimuth);  MX_A.m33 = sin(Azimuth);
 
 			MX_B.m11 = cos(theta_N); MX_B.m12 = 0; MX_B.m13 = sin(theta_N);
@@ -7756,10 +7716,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
 
-			VECTOR3 U_Z = _V(0.0, -1.0, 0.0);
-			U_Z = tmul(MX_A, U_Z);
-			DotS = crossp(U_Z*omega_E, PosS);
+			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth), -sin(PHI - PHIP)*cos(Azimuth))*R_L;
+			DotS = _V(0, cos(PHIP)*cos(Azimuth), cos(PHIP)*sin(Azimuth))*R_L*omega_E;
 
+			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
 			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 		
 			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
@@ -9304,7 +9264,7 @@ double LVDCSV::SVCompare()
 	MATRIX3 mat;
 	double day;
 	modf(oapiGetSimMJD(), &day);
-	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
+	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
 	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
 	newpos = mul(mat, pos);
 
