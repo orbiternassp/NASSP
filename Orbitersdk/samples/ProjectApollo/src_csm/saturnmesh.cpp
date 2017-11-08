@@ -484,6 +484,16 @@ void Saturn::SetCSMStage ()
 		ph_sep2 = 0;
 	}
 
+	if (ph_aps1) {
+		DelPropellantResource(ph_aps1);
+		ph_aps1 = 0;
+	}
+
+	if (ph_aps2) {
+		DelPropellantResource(ph_aps2);
+		ph_aps2 = 0;
+	}
+
 	SetSize(10);
 	SetCOG_elev(3.5);
 	SetEmptyMass(CM_EmptyMass + SM_EmptyMass);
