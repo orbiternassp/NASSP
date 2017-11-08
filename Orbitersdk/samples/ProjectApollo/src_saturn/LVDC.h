@@ -195,7 +195,10 @@ private:								// Saturn LV
 	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double ROVR;									// Constant for baising terminal-range-angle during out-of-orbit burn
 	double mu;										// Product of G and Earth's mass
-	double phi_L;									// Geodetic latitude of launch site
+	double PHI;										// Geodetic latitude of launch site
+	double PHIP;									// Geocentric latitude of launch site
+	double KSCLNG;									// Longitude of the launch site
+	double R_L;										// Radius from geocentric center of the Earth to the center of the IU on launch pad
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double dotM_2R;									// Mass flow rate of S4B before presumed MRS during out-of-orbit burn
@@ -509,10 +512,11 @@ private:
 	double eps_4;									// Time for cutoff logic entry
 	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double mu;										// Product of G and Earth's mass
-	double sin_phi_L;								// Geodetic latitude of launch site: sin
-	double cos_phi_L;								// Geodetic latitude of launch site: cos
-	double phi_lng;
-	double phi_lat;
+	double PHI;										// Geodetic latitude of launch site
+	double PHIP;									// Geocentric latitude of launch site
+	double KSCLNG;									// Longitude of the launch site
+	double R_L;										// Radius from geocentric center of the Earth to the center of the IU on launch pad
+	double omega_E;									// Rotational rate of the Earth
 	double dotM_1;									// Mass flowrate of S2 from approximately LET jettison to second MRS
 	double dotM_2;									// Mass flowrate of S2 after second MRS
 	double t_B1;									// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
