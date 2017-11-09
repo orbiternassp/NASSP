@@ -166,6 +166,12 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
+	if (!iuinitflag && iu)
+	{
+		delete iu;
+		iu = 0;
+	}
+
 	if (sivbsys)
 	{
 		delete sivbsys;
@@ -192,6 +198,8 @@ void SIVB::InitS4b()
 
 	iu = NULL;
 	sivbsys = NULL;
+
+	iuinitflag = false;
 
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
@@ -1440,6 +1448,7 @@ void SIVB::SetState(SIVBSettings &state)
 			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		iu = state.iu_pointer;
+		iuinitflag = true;
 		iu->DisconnectIU();
 	}
 

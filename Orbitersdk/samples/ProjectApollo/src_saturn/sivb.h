@@ -447,6 +447,8 @@ protected:
 	///
 	IU* iu;
 
+	bool iuinitflag;
+
 	SIVBSystems *sivbsys;
 
 	///

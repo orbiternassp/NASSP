@@ -268,6 +268,12 @@ Saturn::~Saturn()
 {
 	TRACESETUP("~Saturn");
 
+	if (iu)
+	{
+		delete iu;
+		iu = 0;
+	}
+
 	if (sivb)
 	{
 		delete sivb;
