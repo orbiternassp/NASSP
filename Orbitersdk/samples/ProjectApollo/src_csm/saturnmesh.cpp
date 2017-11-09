@@ -537,6 +537,33 @@ void Saturn::SetCSMStage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 	AddSM(30.25 - CGOffset, true);
 
+	double Mass = (CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2));
+	double ro = 4;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.1;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = -6;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = -6;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = -6;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = 5.5;
+
+	SetTouchdownPoints(td, 4);
+
 	VECTOR3 mesh_dir;
 
 	//
