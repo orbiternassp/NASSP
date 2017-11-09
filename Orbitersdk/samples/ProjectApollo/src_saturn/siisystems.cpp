@@ -394,7 +394,7 @@ bool SIISystems::PropellantLowLevel()
 	{
 		if (main_propellant)
 		{
-			if (vessel->GetPropellantMass(main_propellant) < 250.0)
+			if (vessel->GetPropellantMass(main_propellant) < 3866.0)
 			{
 				return true;
 			}
