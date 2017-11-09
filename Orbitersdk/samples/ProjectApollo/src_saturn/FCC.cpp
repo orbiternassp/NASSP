@@ -442,4 +442,5 @@ void FCCSV::Timestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "%d %d %d %f %f %f", GainSwitch, StageSwitch, SIVBBurnMode, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
+	//sprintf(oapiDebugString(), "%f %f %f", eps_p, eps_ymr, eps_ypr);
 }

@@ -5375,7 +5375,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 13:
 					//TB3+1.7: S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 					if (LVDC_TB_ETime > 1.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 48);
 						CommandSequence++;
+					}
 					break;
 				case 14:
 					//TB3+1.9: Engines Ready Bypass Reset
