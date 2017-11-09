@@ -124,8 +124,35 @@ void LEM::SetLmVesselDockStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
-    VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
+
+	double Mass = 15876;
+	double ro = 4;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.1;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = 0;
+	td[0].pos.y = -3.86;
+	td[0].pos.z = 1 * ro;
+	td[1].pos.x = -cos(30 * RAD)*ro;
+	td[1].pos.y = -3.86;
+	td[1].pos.z = -sin(30 * RAD)*ro;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -3.86;
+	td[2].pos.z = -sin(30 * RAD)*ro;
+	td[3].pos.x = 0;
+	td[3].pos.y = 3.86;
+	td[3].pos.z = 0;
+
+	SetTouchdownPoints(td, 4);
+
+	VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -201,12 +228,12 @@ void LEM::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 
 	double Mass = 7137.75;
-	double ro = 7;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double ro = 4;
+	TOUCHDOWNVTX td[7];
+	double x_target = -0.1;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
+	for (int i = 0; i<7; i++) {
 		td[i].damping = damping;
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
@@ -221,11 +248,20 @@ void LEM::SetLmVesselHoverStage()
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = -3.86;
 	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = 0;
-	td[3].pos.y = 3.86;
-	td[3].pos.z = 0;
+	td[3].pos.x = cos(30 * RAD)*ro;
+	td[3].pos.y = -3.86;
+	td[3].pos.z = sin(30 * RAD)*ro;
+	td[4].pos.x = -cos(30 * RAD)*ro;
+	td[4].pos.y = -3.86;
+	td[4].pos.z = sin(30 * RAD)*ro;
+	td[5].pos.x = 0;
+	td[5].pos.y = -3.86;
+	td[5].pos.z = -1 * ro;
+	td[6].pos.x = 0;
+	td[6].pos.y = 3.86;
+	td[6].pos.z = 0;
 
-	SetTouchdownPoints(td, 4);
+	SetTouchdownPoints(td, 7);
 	
 	/*	static const DWORD ntdvtx = 4;
 	static TOUCHDOWNVTX tdvtx[4] = {
