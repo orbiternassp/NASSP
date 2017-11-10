@@ -46,6 +46,7 @@
 #include "sivb.h"
 #include "s1b.h"
 #include "sm.h"
+#include "Saturn1Abort.h"
 
 //
 // Meshes are loaded globally, once, so we use these global
@@ -777,14 +778,26 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage == CM_STAGE)
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage >= CSM_LEM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
 		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
-		SetReentryStage();
+		
+		Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
+		stage1->SetState(new_stage == CM_STAGE);
+
+		if (new_stage == CSM_LEM_STAGE)
+		{
+			SetCSMStage();
+		}
+		else
+		{
+			SetReentryStage();
+		}
+
 		ShiftCentreOfMass(_V(0, 0, 35.15));
 	}
 

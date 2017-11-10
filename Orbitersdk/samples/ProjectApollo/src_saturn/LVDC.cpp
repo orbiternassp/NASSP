@@ -5375,7 +5375,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 13:
 					//TB3+1.7: S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 					if (LVDC_TB_ETime > 1.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 48);
 						CommandSequence++;
+					}
 					break;
 				case 14:
 					//TB3+1.9: Engines Ready Bypass Reset
@@ -6985,7 +6988,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 1:
 					//TB4a+0.1: S-II Engines Cutoff
 					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB4a+0.2: Charge Ullage Ignition On
@@ -6995,7 +7001,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB4a+0.3: S-II/S-IVB Separation Ordnance Arm
 					if (LVDC_TB_ETime > 0.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 8);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB4a+0.4: S-IVB Engine Cutoff Off

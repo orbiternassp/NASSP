@@ -39,6 +39,7 @@ class LVDC
 {
 public:
 	LVDC(LVDA &lvd);
+	virtual ~LVDC() {}
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
