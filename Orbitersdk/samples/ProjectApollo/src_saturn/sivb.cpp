@@ -362,6 +362,35 @@ void SIVB::SetS4b()
     ClearAttExhaustRefs();
 	HideAllMeshes();
 
+	double TCPS4B = -11;
+
+	double MassS4 = 40296;
+	double ro = 7;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.1;
+	double stiffness = (-1)*(MassS4*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(MassS4*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = TCPS4B;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = TCPS4B;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = TCPS4B;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = TCPS4B + 25;
+
+	SetTouchdownPoints(td, 4);
+
 	VECTOR3 dockpos = {0,0.03, 12.6};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
