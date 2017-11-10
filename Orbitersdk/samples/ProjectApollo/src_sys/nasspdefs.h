@@ -344,7 +344,7 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 ///
 /// \brief Mission Elapsed Time when Apollo 13 Oxygen tank exploded.
 ///
-#define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (55.0 * 60.0) + 10.0)
+#define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (54.0 * 60.0) + 53.0)
 
 //
 //
