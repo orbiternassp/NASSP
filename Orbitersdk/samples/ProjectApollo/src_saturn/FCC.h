@@ -31,6 +31,7 @@ class FCC
 {
 public:
 	FCC(LVRG &rg);
+	virtual ~FCC() {}
 	virtual void Timestep(double simdt) = 0;
 	void Init(IU *i);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);

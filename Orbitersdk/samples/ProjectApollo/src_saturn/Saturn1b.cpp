@@ -83,7 +83,11 @@ Saturn1b::~Saturn1b()
 {
 	ReleaseSurfaces();
 
-	delete iu;
+	if (iu)
+	{
+		delete iu;
+		iu = 0;
+	}
 }
 
 

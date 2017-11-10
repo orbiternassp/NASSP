@@ -31,6 +31,7 @@ class EDS
 {
 public:
 	EDS(LVRG &rg);
+	virtual ~EDS() {}
 	virtual void Timestep(double simdt) = 0;
 	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes) = 0;
 	void Init(IU *i);

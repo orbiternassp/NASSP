@@ -59,16 +59,6 @@ IU::IU()
 	lvdc = NULL;
 }
 
-IU::~IU()
-
-{
-	if (lvdc != NULL)
-	{
-		delete lvdc;
-		lvdc = NULL;
-	}
-}
-
 void IU::SetMissionInfo(bool tlicapable, bool crewed)
 {
 	TLICapable = tlicapable;
@@ -1361,6 +1351,15 @@ IU1B::IU1B() : fcc(lvrg), eds(lvrg)
 	eds.Init(this);
 }
 
+IU1B::~IU1B()
+{
+	if (lvdc)
+	{
+		delete lvdc;
+		lvdc = 0;
+	}
+}
+
 void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 {
 	IU::Timestep(misst, simt, simdt, mjd);
@@ -1509,6 +1508,15 @@ IUSV::IUSV() : fcc(lvrg), eds(lvrg)
 {
 	lvda.Init(this);
 	eds.Init(this);
+}
+
+IUSV::~IUSV()
+{
+	if (lvdc)
+	{
+		delete lvdc;
+		lvdc = 0;
+	}
 }
 
 void IUSV::Timestep(double misst, double simt, double simdt, double mjd)

@@ -194,7 +194,11 @@ SaturnV::~SaturnV()
 
 	ReleaseSurfaces();
 
-	delete iu;
+	if (iu)
+	{
+		delete iu;
+		iu = 0;
+	}
 }
 
 void SaturnV::CalculateStageMass ()

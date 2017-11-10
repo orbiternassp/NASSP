@@ -39,7 +39,7 @@ class LVDC
 {
 public:
 	LVDC(LVDA &lvd);
-	virtual ~LVDC() {};
+	virtual ~LVDC() {}
 	virtual void TimeStep(double simt, double simdt) = 0;
 	virtual void Init(IUToLVCommandConnector* lvCommandConn) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
@@ -54,7 +54,6 @@ protected:
 class LVDCSV: public LVDC {
 public:
 	LVDCSV(LVDA &lvd);											// Constructor
-	~LVDCSV() {};
 	void Init(IUToLVCommandConnector* lvCommandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -433,7 +432,6 @@ private:								// Saturn LV
 class LVDC1B: public LVDC {
 public:
 	LVDC1B(LVDA &lvd);										// Constructor
-	~LVDC1B() {};
 	void Init(IUToLVCommandConnector* lvCommandConn);
 	void TimeStep(double simt, double simdt);
 	void SaveState(FILEHANDLE scn);

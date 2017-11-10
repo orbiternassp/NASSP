@@ -276,7 +276,7 @@ class IU {
 
 public:
 	IU();
-	virtual ~IU();
+	virtual ~IU() {}
 
 	void SetMissionInfo(bool tlicapable, bool crewed);
 
@@ -361,7 +361,7 @@ class IU1B :public IU
 {
 public:
 	IU1B();
-	~IU1B() {};
+	~IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
@@ -381,7 +381,7 @@ class IUSV :public IU
 {
 public:
 	IUSV();
-	~IUSV() {};
+	~IUSV();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();

@@ -594,8 +594,6 @@ void SaturnV::SetSecondStage ()
 	SetLiftCoeffFunc (0);
 
 	SetSecondStageMesh(-STG1O);
-
-	SIISepState = InterstageAttached;
 }
 
 void SaturnV::SetSecondStageMesh(double offset)
