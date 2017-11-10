@@ -230,7 +230,7 @@ void LEM::SetLmVesselHoverStage()
 	double Mass = 7137.75;
 	double ro = 4;
 	TOUCHDOWNVTX td[7];
-	double x_target = -0.1;
+	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<7; i++) {
@@ -359,9 +359,9 @@ void LEM::SetLmAscentHoverStage()
 
 	double tdph = -5.8;
     double Mass = 4495.0;
-	double ro = 5;
+	double ro = 3;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double x_target = -0.09;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -456,22 +456,10 @@ void LEM::SeparateStage (UINT stage)
 	ResetThrusters();
 
 	VESSELSTATUS vs1;
-	VECTOR3 ofs1 = _V(0,-5,0);
-	VECTOR3 vel1 = _V(0,0,0);
 
 	if (stage == 1)	{
+		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
 	    GetStatus (vs1);
-		vs1.eng_main = vs1.eng_hovr = 0.0;
-		VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
-		Local2Global (ofs1, vs1.rpos);
-		GlobalRot (vel1, rofs1);
-		vs1.rvel.x = rvel1.x+rofs1.x;
-		vs1.rvel.y = rvel1.y+rofs1.y;
-		vs1.rvel.z = rvel1.z+rofs1.z;
-	    vs1.vrot.x = 0.0;	
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		GetStatus (vs1);
 		// Wrong sound, is Saturn staging
 		// StageS.play(NOLOOP, 150);
 
