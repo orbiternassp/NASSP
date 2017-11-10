@@ -4151,13 +4151,6 @@ void Saturn::StageSix(double simt)
 
 			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
 
-			//
-			// This is actually wrong because it will give us an
-			// artificially low mass for the CSM. We should just disable
-			// the engines.
-			//
-
-			SetPropellantMass(ph_sps,0);
 		}
 
 		//
