@@ -263,15 +263,6 @@ void LEM::SetLmVesselHoverStage()
 
 	SetTouchdownPoints(td, 7);
 	
-	/*	static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -3.86, 5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(-5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
-
 	VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
@@ -344,7 +335,6 @@ void LEM::SetLmAscentHoverStage()
 	ClearThrusterDefinitions();
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
-	SetCOG_elev (5);
 	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
@@ -361,7 +351,7 @@ void LEM::SetLmAscentHoverStage()
     double Mass = 4495.0;
 	double ro = 3;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.09;
+	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -384,15 +374,6 @@ void LEM::SetLmAscentHoverStage()
 	td[3].pos.z = 0;
 
 	SetTouchdownPoints(td, 4);
-
-    /*static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, tdph, 5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(-5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(0, tdph + 5, 0), 2e4, 3e5, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
 
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
@@ -456,6 +437,9 @@ void LEM::SeparateStage (UINT stage)
 	ResetThrusters();
 
 	VESSELSTATUS vs1;
+	VESSELSTATUS2 vs2;
+	memset(&vs2, 0, sizeof(vs2));
+	vs2.version = 2;
 
 	if (stage == 1)	{
 		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
@@ -467,6 +451,12 @@ void LEM::SeparateStage (UINT stage)
 		strcpy (VName, GetName()); strcat (VName, "-DESCENTSTG");
 		hdsc = oapiCreateVessel(VName, "ProjectApollo/sat5LMDSC", vs1);
 
+		if (vs1.status == 1) {
+			GetStatusEx(&vs2);
+			vs2.vrot.x = 5.9;
+			DefSetStateEx(&vs2);
+		}
+		
 		SetLmAscentHoverStage();
 	}
 }
