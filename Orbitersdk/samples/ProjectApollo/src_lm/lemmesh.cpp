@@ -128,7 +128,7 @@ void LEM::SetLmVesselDockStage()
 	double Mass = 15876;
 	double ro = 4;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.1;
+	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -436,28 +436,31 @@ void LEM::SeparateStage (UINT stage)
 {
 	ResetThrusters();
 
-	VESSELSTATUS vs1;
 	VESSELSTATUS2 vs2;
 	memset(&vs2, 0, sizeof(vs2));
 	vs2.version = 2;
 
 	if (stage == 1)	{
 		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
-	    GetStatus (vs1);
-		// Wrong sound, is Saturn staging
-		// StageS.play(NOLOOP, 150);
+		GetStatusEx(&vs2);
+		if (vs2.status == 1) {
+			vs2.vrot.x = 2.7;
+			char VName[256];
+			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
+			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 
-		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-DESCENTSTG");
-		hdsc = oapiCreateVessel(VName, "ProjectApollo/sat5LMDSC", vs1);
-
-		if (vs1.status == 1) {
-			GetStatusEx(&vs2);
-			vs2.vrot.x = 5.9;
+			vs2.vrot.x = 5.8;
 			DefSetStateEx(&vs2);
+			SetLmAscentHoverStage();
 		}
-		
-		SetLmAscentHoverStage();
+		else
+		{
+			char VName[256];
+			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
+			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
+
+			SetLmAscentHoverStage();
+		}
 	}
 }
 
