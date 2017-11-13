@@ -483,6 +483,16 @@ void Saturn1b::LoadSIVB(FILEHANDLE scn) {
 	sivb->LoadState(scn);
 }
 
+void Saturn1b::SaveSI(FILEHANDLE scn)
+{
+
+}
+
+void Saturn1b::LoadSI(FILEHANDLE scn)
+{
+
+}
+
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 

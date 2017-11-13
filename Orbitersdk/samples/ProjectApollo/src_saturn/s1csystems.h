@@ -29,6 +29,8 @@ class F1Engine
 public:
 	F1Engine(VESSEL *v, THRUSTER_HANDLE &f1);
 	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
@@ -58,6 +60,8 @@ class SICSystems
 public:
 	SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS);
 	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
 	void SetEDSCutoff();
 	void SetEngineStart(int n);

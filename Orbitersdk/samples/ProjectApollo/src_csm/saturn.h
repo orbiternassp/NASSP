@@ -3985,6 +3985,8 @@ protected:
 	void SaveLVDC(FILEHANDLE scn);
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 	virtual void LoadSIVB(FILEHANDLE scn) = 0;
+	virtual void SaveSI(FILEHANDLE scn) = 0;
+	virtual void LoadSI(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
@@ -4300,6 +4302,9 @@ protected:
 	int LMPadValueCount;
 	int AEAPadLoadCount;
 	int AEAPadValueCount;
+
+#define SISYSTEMS_START_STRING		"SISYSTEMS_BEGIN"
+#define SISYSTEMS_END_STRING		"SISYSTEMS_END"
 
 	//
 	// IMFD5 communication support

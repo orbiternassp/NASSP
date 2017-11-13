@@ -48,6 +48,39 @@ F1Engine::F1Engine(VESSEL *v, THRUSTER_HANDLE &f1)
 	ThrustTimer = 0.0;
 }
 
+void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "ENGINESTART", EngineStart);
+	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
+	papiWriteScenario_bool(scn, "PROGRAMMEDCUTOFF", ProgrammedCutoff);
+	papiWriteScenario_bool(scn, "EDSCUTOFF", EDSCutoff);
+	papiWriteScenario_bool(scn, "GSECUTOFF", GSECutoff);
+	papiWriteScenario_bool(scn, "RSSCUTOFF", RSSCutoff);
+	papiWriteScenario_bool(scn, "ENGINERUNNING", EngineRunning);
+	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
+	oapiWriteLine(scn, end_str);
+}
+
+void F1Engine::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		papiReadScenario_bool(line, "ENGINESTART", EngineStart);
+		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
+		papiReadScenario_bool(line, "PROGRAMMEDCUTOFF", ProgrammedCutoff);
+		papiReadScenario_bool(line, "EDSCUTOFF", EDSCutoff);
+		papiReadScenario_bool(line, "GSECUTOFF", GSECutoff);
+		papiReadScenario_bool(line, "RSSCUTOFF", RSSCutoff);
+		papiReadScenario_bool(line, "ENGINERUNNING", EngineRunning);
+		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
+	}
+}
+
 void F1Engine::Timestep(double simdt)
 {
 	if (th_f1 == NULL) return;
@@ -207,6 +240,57 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	PropellantDepletionSensors = false;
 	PointLevelSensorArmed = false;
 	TwoAdjacentOutboardEnginesOutCutoff = false;
+}
+
+void SICSystems::SaveState(FILEHANDLE scn) {
+	oapiWriteLine(scn, SISYSTEMS_START_STRING);
+
+	papiWriteScenario_bool(scn, "MULTIPLEENGINECUTOFFENABLED", MultipleEngineCutoffEnabled);
+	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
+	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
+	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
+	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+
+	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
+	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
+	f1engine3.SaveState(scn, "ENGINE3_BEGIN", "ENGINE_END");
+	f1engine4.SaveState(scn, "ENGINE4_BEGIN", "ENGINE_END");
+	f1engine5.SaveState(scn, "ENGINE5_BEGIN", "ENGINE_END");
+
+	oapiWriteLine(scn, SISYSTEMS_END_STRING);
+}
+
+void SICSystems::LoadState(FILEHANDLE scn) {
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, SISYSTEMS_END_STRING, sizeof(SISYSTEMS_END_STRING)))
+			return;
+
+		papiReadScenario_bool(line, "MULTIPLEENGINECUTOFFENABLED", MultipleEngineCutoffEnabled);
+		papiReadScenario_bool(line, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
+		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
+		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 5);
+		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+
+		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
+			f1engine1.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE2_BEGIN", sizeof("ENGINE2_BEGIN"))) {
+			f1engine2.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE3_BEGIN", sizeof("ENGINE3_BEGIN"))) {
+			f1engine3.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE4_BEGIN", sizeof("ENGINE4_BEGIN"))) {
+			f1engine4.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE5_BEGIN", sizeof("ENGINE5_BEGIN"))) {
+			f1engine5.LoadState(scn, "ENGINE_END");
+		}
+	}
 }
 
 void SICSystems::Timestep(double simdt)

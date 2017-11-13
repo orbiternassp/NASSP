@@ -144,6 +144,8 @@ protected:
 	void LoadIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
 	void LoadSIVB(FILEHANDLE scn);
+	void SaveSI(FILEHANDLE scn);
+	void LoadSI(FILEHANDLE scn);
 
 	//
 	// Odds and ends.

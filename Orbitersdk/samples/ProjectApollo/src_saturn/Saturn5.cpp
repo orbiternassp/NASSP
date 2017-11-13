@@ -647,6 +647,16 @@ void SaturnV::LoadSIVB(FILEHANDLE scn) {
 	sivb->LoadState(scn);
 }
 
+void SaturnV::SaveSI(FILEHANDLE scn)
+{
+	sic.SaveState(scn);
+}
+
+void SaturnV::LoadSI(FILEHANDLE scn)
+{
+	sic.LoadState(scn);
+}
+
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {

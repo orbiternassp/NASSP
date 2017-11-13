@@ -1334,6 +1334,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
 	}
 
+	if (stage < LAUNCH_STAGE_TWO)
+	{
+		SaveSI(scn);
+	}
 	if (stage < LAUNCH_STAGE_SIVB && SaturnType == SAT_SATURNV)
 	{
 		sii.SaveState(scn);
@@ -1928,6 +1932,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
+	}
+	else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
+		LoadSI(scn);
 	}
 	else if (!strnicmp(line, SIISYSTEMS_START_STRING, sizeof(SIISYSTEMS_START_STRING))) {
 		sii.LoadState(scn);

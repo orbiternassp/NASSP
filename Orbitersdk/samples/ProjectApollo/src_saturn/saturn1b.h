@@ -96,6 +96,8 @@ protected:
 	void LoadIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
 	void LoadSIVB(FILEHANDLE scn);
+	void SaveSI(FILEHANDLE scn);
+	void LoadSI(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
