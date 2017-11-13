@@ -442,7 +442,7 @@ void SaturnV::SetFirstStage ()
 	double TCP = -101.5 + STG0O - TCPO;
 	
 	double Mass = Stage1Mass + SI_FuelMass;
-	double ro = 15;
+	double ro = 25;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
@@ -467,15 +467,6 @@ void SaturnV::SetFirstStage ()
 	td[3].pos.z = TCP+110;
 	
 	SetTouchdownPoints(td, 4);
-	
-    /*static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -100.0, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(-7, 7, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(7, 7, TCP), 3e8, 4e7, 3, 3 },
-		{ _V(0, 0, TCP + 100), 3e8, 4e7, 1 }
-	 };
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);
