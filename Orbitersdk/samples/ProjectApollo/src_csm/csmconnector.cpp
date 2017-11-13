@@ -259,6 +259,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_SI_THRUST_OK:
+		if (OurVessel)
+		{
+			OurVessel->GetSIThrustOK((bool *)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_SII_THRUST_OK:
 		if (OurVessel)
 		{
@@ -271,6 +279,46 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIVBThrustOK();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_INBOARD_ENGINE_OUT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIInboardEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_OUTBOARD_ENGINE_OUT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIOutboardEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SII_ENGINE_OUT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIIEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIIPropellantDepletionEngineCutoff();
 			return true;
 		}
 		break;
@@ -384,6 +432,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->ClearSIThrusterResource(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SI_EDS_CUTOFF:
+		if (OurVessel)
+		{
+			OurVessel->SIEDSCutoff(m.val1.bValue);
 			return true;
 		}
 		break;

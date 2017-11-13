@@ -93,7 +93,7 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 
 bool LVDA::GetSIEngineOut()
 {
-	return iu->GetEDS()->GetSIEngineOut();
+	return iu->GetSIOutboardEngineOut();
 }
 
 bool LVDA::GetSIIEngineOut()

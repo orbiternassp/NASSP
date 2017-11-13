@@ -150,12 +150,7 @@ void IU::ConnectToLV(Connector *CommandConnector)
 
 bool IU::GetSIPropellantDepletionEngineCutoff()
 {
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_ONE) return false;
-
-	if (lvCommandConnector.GetFuelMass() <= 0) return true;
-
-	return false;
+	return lvCommandConnector.GetSIPropellantDepletionEngineCutoff();
 }
 
 bool IU::SIBLowLevelSensorsDry()
@@ -755,6 +750,17 @@ void IUToLVCommandConnector::ClearSIThrusterResource(int n)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::SIEDSCutoff(bool cut)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SI_EDS_CUTOFF;
+	cm.val1.bValue = cut;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::SIIEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
@@ -1262,6 +1268,62 @@ double IUToLVCommandConnector::GetSIThrusterLevel(int n)
 	return 0.0;
 }
 
+void IUToLVCommandConnector::GetSIThrustOK(bool *ok)
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SI_THRUST_OK;
+	cm.val1.pValue = ok;
+
+	(SendMessage(cm));
+}
+
+bool IUToLVCommandConnector::GetSIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToLVCommandConnector::GetSIInboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SI_INBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToLVCommandConnector::GetSIOutboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SI_OUTBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 {
 	ConnectorMessage cm;
@@ -1271,6 +1333,36 @@ void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 	cm.val1.pValue = ok;
 
 	SendMessage(cm);
+}
+
+bool IUToLVCommandConnector::GetSIIEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SII_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToLVCommandConnector::GetSIIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
 }
 
 bool IUToLVCommandConnector::GetSIVBThrustOK()
@@ -1382,6 +1474,16 @@ bool IU1B::SIBLowLevelSensorsDry()
 {
 	if (lvCommandConnector.GetSIPropellantMass() <= 24000.0) return true;
 
+	return false;
+}
+
+bool IU1B::GetSIInboardEngineOut()
+{
+	return false;
+}
+
+bool IU1B::GetSIOutboardEngineOut()
+{
 	return false;
 }
 
@@ -1560,45 +1662,45 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 	}
 }
 
-bool IUSV::GetSIIPropellantDepletionEngineCutoff()
+bool IUSV::GetSIInboardEngineOut()
 {
 	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+	if (stage != LAUNCH_STAGE_ONE) return false;
 
 	bool ThrustOK[5];
-	int engineson = 0;
 
-	lvCommandConnector.GetSIIThrustOK(ThrustOK);
+	lvCommandConnector.GetSIThrustOK(ThrustOK);
 
-	for (int i = 0;i < 5;i++)
-	{
-		if (ThrustOK[i]) engineson++;
-	}
-
-	if (engineson < 3)
-	{
-		return true;
-	}
+	if (!ThrustOK[4]) return true;
 
 	return false;
 }
 
-bool IUSV::GetSIIEngineOut()
+bool IUSV::GetSIOutboardEngineOut()
 {
 	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+	if (stage != LAUNCH_STAGE_ONE) return false;
 
 	bool ThrustOK[5];
-	int engineson = 0;
 
-	lvCommandConnector.GetSIIThrustOK(ThrustOK);
+	lvCommandConnector.GetSIThrustOK(ThrustOK);
 
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 4;i++)
 	{
 		if (!ThrustOK[i]) return true;
 	}
 
 	return false;
+}
+
+bool IUSV::GetSIIPropellantDepletionEngineCutoff()
+{
+	return lvCommandConnector.GetSIIPropellantDepletionEngineCutoff();
+}
+
+bool IUSV::GetSIIEngineOut()
+{
+	return lvCommandConnector.GetSIIEngineOut();
 }
 
 void IUSV::SaveFCC(FILEHANDLE scn)

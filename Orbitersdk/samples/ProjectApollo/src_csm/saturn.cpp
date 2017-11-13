@@ -4556,10 +4556,6 @@ void Saturn::GetSIIThrustOK(bool *ok)
 	{
 		ok[i] = false;
 	}
-
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.GetThrustOK(ok);
 }
 
 bool Saturn::GetSIVBThrustOK()
@@ -4567,6 +4563,16 @@ bool Saturn::GetSIVBThrustOK()
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
 	return sivb->GetThrustOK();
+}
+
+bool Saturn::GetSIIPropellantDepletionEngineCutoff()
+{
+	return false;
+}
+
+bool Saturn::GetSIIEngineOut()
+{
+	return false;
 }
 
 void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)

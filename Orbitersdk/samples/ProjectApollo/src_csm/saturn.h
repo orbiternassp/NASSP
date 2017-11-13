@@ -932,17 +932,26 @@ public:
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 
 	double GetSIThrusterLevel(int n);
-	void GetSIIThrustOK(bool *ok);
+	virtual void GetSIThrustOK(bool *ok) = 0;
+	virtual void GetSIIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
+	virtual bool GetSIPropellantDepletionEngineCutoff() = 0;
+	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	virtual bool GetSIInboardEngineOut() = 0;
+	virtual bool GetSIOutboardEngineOut() = 0;
+	virtual bool GetSIIEngineOut();
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetSIThrusterLevel(int n, double level);
 	void SetAPSAttitudeEngine(int n, bool on);
 	void ClearSIThrusterResource(int n);
+	virtual void SIEDSCutoff(bool cut) = 0;
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
+
+	virtual void ActivateStagingVent() {}
 
 	///
 	/// \brief Triggers Virtual AGC core dump

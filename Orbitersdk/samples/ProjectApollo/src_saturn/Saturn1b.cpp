@@ -404,6 +404,38 @@ void Saturn1b::SISwitchSelector(int channel)
 	}
 }
 
+void Saturn1b::GetSIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+}
+
+void Saturn1b::SIEDSCutoff(bool cut)
+{
+
+}
+
+bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
+{
+	return false;
+}
+
+bool Saturn1b::GetSIInboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return false;
+}
+
+bool Saturn1b::GetSIOutboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return false;
+}
+
 //
 // Save any state specific to the Saturn 1b.
 //

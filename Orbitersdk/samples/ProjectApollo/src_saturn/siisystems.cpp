@@ -412,6 +412,25 @@ void SIISystems::GetThrustOK(bool *ok)
 	}
 }
 
+bool SIISystems::GetPropellantDepletionEngineCutoff()
+{
+	if (PointLevelSensorArmed)
+	{
+		if (PropellantDepletionSensors) return true;
+
+		for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return true;
+	}
+
+	return false;
+}
+
+bool SIISystems::GetEngineOut()
+{
+	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return true;
+
+	return false;
+}
+
 void SIISystems::SwitchSelector(int channel)
 {
 	switch (channel)

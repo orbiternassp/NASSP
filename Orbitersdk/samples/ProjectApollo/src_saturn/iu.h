@@ -88,6 +88,7 @@ enum IULVMessageType
 	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_APS_ATTITUDE_ENGINE,
 	IULV_CLEAR_SI_THRUSTER_RESOURCE,
+	IULV_SI_EDS_CUTOFF,
 	IULV_SII_EDS_CUTOFF,
 	IULV_SIVB_EDS_CUTOFF,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
@@ -128,8 +129,14 @@ enum IULVMessageType
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
 	IULV_GET_SI_THRUSTER_LEVEL,
+	IULV_GET_SI_THRUST_OK,
 	IULV_GET_SII_THRUST_OK,
 	IULV_GET_SIVB_THRUST_OK,
+	IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IULV_GET_SI_INBOARD_ENGINE_OUT,
+	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
+	IULV_GET_SII_ENGINE_OUT,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
 };
@@ -209,6 +216,7 @@ public:
 
 	void SetAPSAttitudeEngine(int n, bool on);
 	void ClearSIThrusterResource(int n);
+	void SIEDSCutoff(bool cut);
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
 	void SetSIThrusterDir(int n, VECTOR3 &dir);
@@ -252,7 +260,13 @@ public:
 	double GetMissionTime();
 	int GetApolloNo();
 	double GetSIThrusterLevel(int n);
+	void GetSIThrustOK(bool *ok);
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	void GetSIIThrustOK(bool *ok);
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
@@ -315,6 +329,8 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	virtual bool GetSIInboardEngineOut() = 0;
+	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 
@@ -364,6 +380,8 @@ public:
 	~IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
@@ -383,6 +401,8 @@ public:
 	IUSV();
 	~IUSV();
 	void Timestep(double misst, double simt, double simdt, double mjd);
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SwitchSelector(int item);

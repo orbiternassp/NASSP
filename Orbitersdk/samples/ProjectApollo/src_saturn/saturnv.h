@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "s1csystems.h"
+
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -81,6 +85,15 @@ public:
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
 	void SIISwitchSelector(int channel);
+
+	void GetSIThrustOK(bool *ok);
+	void SIEDSCutoff(bool cut);
+	void GetSIIThrustOK(bool *ok);
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIIEngineOut();
 
 	//
 	// Functions that external code shouldn't need to access.
@@ -177,6 +190,8 @@ protected:
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
+
+	SICSystems sic;
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;

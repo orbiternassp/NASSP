@@ -52,17 +52,20 @@ public:
 	void SetThrusterGroupLevel(double level);
 	void SetPUValve(int state);
 
-	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 	void RecalculateEngineParameters();
 	void RecalculateEngineParameters(double BaseThrust);
 	void SetMixtureRatio(double ratio);
 	void SwitchSelector(int channel);
 	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
 
-	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
+	bool GetPropellantDepletionEngineCutoff();
+	bool GetEngineOut();
 
 protected:
+	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
+	bool PropellantLowLevel();
+
 	bool ThrustOK[5];
 
 	int PUValveState;

@@ -62,6 +62,7 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	LVEnginesCutoff3 = false;
 	SecondPlaneSeparationMonitorRelay = false;
 	SIVBEngineCutoffDisabled = false;
+	SIEDSCutoff = false;
 	SIIEDSCutoff = false;
 	SIVBEDSCutoff = false;
 
@@ -108,6 +109,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+	papiWriteScenario_bool(scn, "SIEDSCUTOFF", SIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBEDSCUTOFF", SIVBEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
@@ -148,6 +150,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
 		papiReadScenario_bool(line, "LVENGINESCUTOFF3", LVEnginesCutoff3);
 		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+		papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
 		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
 		papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
 		papiReadScenario_bool(line, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
@@ -483,8 +486,6 @@ EDSSV::EDSSV(LVRG &rg) : EDS(rg)
 {
 	for (int i = 0;i < 5;i++)
 	{
-		EarlySICutoff[i] = false;
-		FirstStageFailureTime[i] = 0.0;
 		SIThrustOK[i] = false;
 		SIIThrustOK[i] = false;
 	}
@@ -499,11 +500,7 @@ bool EDSSV::ThrustCommitEval()
 
 void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 {
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
-	}
+
 }
 
 void EDSSV::LVIndicatorsOff()
@@ -537,6 +534,15 @@ void EDSSV::Timestep(double simdt)
 
 	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
+
+	if (Stage == LAUNCH_STAGE_ONE)
+	{
+		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
+	}
+	else if (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET)
+	{
+		iu->GetLVCommandConnector()->GetSIIThrustOK(SIIThrustOK);
+	}
 
 	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
 	{
@@ -599,11 +605,11 @@ void EDSSV::Timestep(double simdt)
 	{
 		if (Stage == LAUNCH_STAGE_ONE)
 		{
-			iu->GetLVCommandConnector()->SetSIThrusterLevel(0, 0);
-			iu->GetLVCommandConnector()->SetSIThrusterLevel(1, 0);
-			iu->GetLVCommandConnector()->SetSIThrusterLevel(2, 0);
-			iu->GetLVCommandConnector()->SetSIThrusterLevel(3, 0);
-			iu->GetLVCommandConnector()->SetSIThrusterLevel(4, 0);
+			if (!SIEDSCutoff)
+			{
+				SIEDSCutoff = true;
+				iu->GetLVCommandConnector()->SIEDSCutoff(true);
+			}
 		}
 		else if (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET)
 		{
@@ -624,6 +630,16 @@ void EDSSV::Timestep(double simdt)
 	}
 	else
 	{
+		if (SIEDSCutoff == true)
+		{
+			iu->GetLVCommandConnector()->SIEDSCutoff(false);
+			SIEDSCutoff = false;
+		}
+		if (SIIEDSCutoff == true)
+		{
+			iu->GetLVCommandConnector()->SIIEDSCutoff(false);
+			SIIEDSCutoff = false;
+		}
 		if (SIVBEDSCutoff == true)
 		{
 			iu->GetLVCommandConnector()->SIVBEDSCutoff(false);
@@ -637,11 +653,10 @@ void EDSSV::Timestep(double simdt)
 	{
 		int enginesout = 0;
 
-		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(0) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(1) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(2) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(3) < 0.65) enginesout++;
-		if (iu->GetLVCommandConnector()->GetSIThrusterLevel(4) < 0.65) enginesout++;
+		for (int i = 0;i < 5;i++)
+		{
+			if (!SIThrustOK[i]) enginesout++;
+		}
 
 		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate)
 		{
@@ -725,9 +740,8 @@ void EDSSV::Timestep(double simdt)
 		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				SIThrustOK[i] = iu->GetLVCommandConnector()->GetSIThrusterLevel(i) >= 0.90;
-				if (SIThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIEngInd[i]); }
-				if (!SIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIEngInd[i]); }
+				if (SIThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(i+1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i+1); }
+				if (!SIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i+1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i+1); }
 				i++;
 			}
 		}
@@ -740,7 +754,6 @@ void EDSSV::Timestep(double simdt)
 	case LAUNCH_STAGE_TWO_ISTG_JET:
 		if ((SIIEngineOutIndicationA && EDSBus1Powered) || (SIIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
-			iu->GetLVCommandConnector()->GetSIIThrustOK(SIIThrustOK);
 			while (i < 5) {
 				if (SIIThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
 				if (!SIIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
@@ -810,24 +823,7 @@ void EDSSV::Timestep(double simdt)
 		LiftoffB = false;
 	}
 
-	//Engine failure code
-
-	switch (Stage) {
-	case LAUNCH_STAGE_ONE:
-		SI_Engine_Out = false;
-		for (int i = 0;i < 5;i++)
-		{
-			if (EarlySICutoff[i] && (iu->GetLVCommandConnector()->GetMissionTime() > FirstStageFailureTime[i]))
-			{
-				iu->GetLVCommandConnector()->ClearSIThrusterResource(i); // Should stop the engine
-				SI_Engine_Out = true;
-			}
-		}
-		break;
-	default:
-		SI_Engine_Out = false;
-		break;
-	}
+	//Failure code
 
 	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->lvimu.IsFailed())
 	{

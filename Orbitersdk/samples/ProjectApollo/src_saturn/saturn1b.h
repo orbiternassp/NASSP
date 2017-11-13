@@ -67,6 +67,12 @@ public:
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
 
+	void SIEDSCutoff(bool cut);
+	void GetSIThrustOK(bool *ok);
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSIPropellantDepletionEngineCutoff();
+
 protected:
 
 	VECTOR3 RelPos;

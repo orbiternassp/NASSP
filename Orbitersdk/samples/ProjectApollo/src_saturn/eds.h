@@ -92,6 +92,7 @@ protected:
 	bool LVEnginesCutoff3;
 	bool SecondPlaneSeparationMonitorRelay;
 	bool SIVBEngineCutoffDisabled;
+	bool SIEDSCutoff;
 	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
 
@@ -127,14 +128,9 @@ public:
 	void SetSIIEngineOutIndicationA(bool set) { SIIEngineOutIndicationA = set; }
 	void SetSIIEngineOutIndicationB(bool set) { SIIEngineOutIndicationB = set; }
 protected:
-	//Engine Failure variables
-	bool EarlySICutoff[5];
-	double FirstStageFailureTime[5];
-
 	bool SIThrustOK[5];
 	bool SIIThrustOK[5];
 
 private:
-	const int SIEngInd[5] = { 4,2,1,3,5 };
 	const int SIIEngInd[5] = { 2,4,1,3,5 };
 };

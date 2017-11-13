@@ -9242,11 +9242,11 @@ minorloop:
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
 
 		//Engine failure code
-		if (LVDC_Timebase == 1)
+		if (LVDC_Timebase == 1 && LVDC_TB_ETime > 38.0)
 		{
 			S1_Engine_Out = lvda.GetSIEngineOut();
 		}
-		if (LVDC_Timebase == 3)
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
 		{
 			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
 		}
