@@ -4940,12 +4940,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 1:
 					//TB1+5.0: Sensor Bias On
 					if (LVDC_TB_ETime > 5.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 109);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB1+14.0: Multiple Engine Cutoff Enable
 					if (LVDC_TB_ETime > 14.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 3);
 						CommandSequence++;
+					}
 					break;
 				case 3:
 					//TB1+19.8: S-IC Outboard Engines Cant On "A"
@@ -4974,7 +4980,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 6:
 					//TB1+24.0: Telemeter Calibrate On
 					if (LVDC_TB_ETime > 24.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 2);
 						CommandSequence++;
+					}
 					break;
 				case 7:
 					//TB1+27.0: Telemetry Calibrator Inflight Calibrate On
@@ -4987,7 +4996,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 8:
 					//TB1+29.0: Telemeter Calibrate Off
 					if (LVDC_TB_ETime > 29.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 1);
 						CommandSequence++;
+					}
 					break;
 				case 9:
 					//TB1+30.0: Launch Vehicle Engines EDS Cutoff Enable
@@ -5009,12 +5021,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 11:
 					//TB1+49.5: Fuel Pressurizing Valve No. 2 Open & Tape Recorder Record
 					if (LVDC_TB_ETime > 49.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 5);
 						CommandSequence++;
+					}
 					break;
 				case 12:
 					//TB1+74.0: Start Data Recorders (S-II)
 					if (LVDC_TB_ETime > 74.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 71);
 						CommandSequence++;
+					}
 					break;
 				case 13:
 					//TB1+75.0: Cooling System Electronic Assembly Power Off
@@ -5042,7 +5060,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 16:
 					//TB1+95.3: Fuel Pressurizing Valve No. 3 Open
 					if (LVDC_TB_ETime > 95.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 6);
 						CommandSequence++;
+					}
 					break;
 				case 17:
 					//TB1+105.0: Flight Control Computer Switch Pointer No. 1
@@ -5056,7 +5077,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 18:
 					//TB1+115.1: Telemeter Calibrate On
 					if (LVDC_TB_ETime > 115.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 2);
 						CommandSequence++;
+					}
 					break;
 				case 19:
 					//TB1+120.0: Flight Control Computer Switch Pointer No. 2
@@ -5070,12 +5094,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 20:
 					//TB1+120.1: Telemeter Calibrate Off
 					if (LVDC_TB_ETime > 120.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 1);
 						CommandSequence++;
+					}
 					break;
 				case 21:
 					//TB1+123.5: Fuel Pressurizing Valve No. 4 Open
 					if (LVDC_TB_ETime > 123.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 7);
 						CommandSequence++;
+					}
 					break;
 				case 22:
 					//TB1+123.8: Tape Recorder On
@@ -5088,7 +5118,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 23:
 					//TB1+124.1: LOX Tank Strobe Lights Off
 					if (LVDC_TB_ETime > 124.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 4);
 						CommandSequence++;
+					}
 					break;
 				case 24:
 					//TB1+124.3: S-IC Two Engines Out Auto-Abort Inhibit Enable
@@ -5127,7 +5160,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 28:
 					//TB1+125.1: Two Adjacent Outboard Engines Out Cutoff Enable
 					if (LVDC_TB_ETime > 125.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 17);
 						CommandSequence++;
+					}
 					break;
 				default:
 					break;
@@ -5141,6 +5177,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// S1C CECO TRIGGER:
 				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO && DotS.z > 500.0){
+					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					S1_Engine_Out = true;
 					// Begin timebase 2
 					TB2 = TAS;
@@ -5177,7 +5214,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 2:
 					//TB2+0.4: Start First PAM - FM/FM Calibration
 					if (LVDC_TB_ETime > 0.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 30);
 						CommandSequence++;
+					}
 					break;
 				case 3:
 					//TB2+0.6: Auto-Abort Enable Relays Reset
@@ -5206,7 +5246,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 6:
 					//TB2+5.4: Stop First PAM - FM/FM Calibration
 					if (LVDC_TB_ETime > 5.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 9);
 						CommandSequence++;
+					}
 					break;
 				case 7:
 					//TB2+15.9: S-II Ordnance Arm
@@ -5219,22 +5262,34 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 8:
 					//TB2+16.1: Separation and Retro No. 1 EBW Firing Units Arm
 					if (LVDC_TB_ETime > 16.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 10);
 						CommandSequence++;
+					}
 					break;
 				case 9:
 					//TB2+16.3: Separation and Retro No. 2 EBW Firing Units Arm
 					if (LVDC_TB_ETime > 16.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 20);
 						CommandSequence++;
+					}
 					break;
 				case 10:
 					//TB2+19.1: Telemetry Measurement Switchover
 					if (LVDC_TB_ETime > 19.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 13);
 						CommandSequence++;
+					}
 					break;
 				case 11:
 					//TB2+19.3: Separation Camera On
 					if (LVDC_TB_ETime > 19.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 12);
 						CommandSequence++;
+					}
 					break;
 				case 12:
 					//TB2+19.4: Q-Ball Power Off
@@ -5247,12 +5302,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 13:
 					//TB2+19.5: Outboard Engines Cutoff Enable
 					if (LVDC_TB_ETime > 19.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 9);
 						CommandSequence++;
+					}
 					break;
 				case 14:
 					//TB2+19.7: Outboard Engines Cutoff Backup Enable
 					if (LVDC_TB_ETime > 19.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 14);
 						CommandSequence++;
+					}
 					break;
 				default:
 					break;

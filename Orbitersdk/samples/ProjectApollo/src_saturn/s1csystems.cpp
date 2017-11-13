@@ -426,6 +426,7 @@ void SICSystems::SwitchSelector(int channel)
 		InboardEngineCutoff();
 		break;
 	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
+		TwoAdjacentOutboardEnginesOutCutoffEnable();
 		break;
 	case 19: //S-IC/S-II Separation (No. 2)
 		if (vessel->GetStage() == LAUNCH_STAGE_ONE)
