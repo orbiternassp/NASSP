@@ -950,6 +950,7 @@ public:
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
+	virtual void SetSIEngineStart(int n) = 0;
 
 	virtual void ActivateStagingVent() {}
 

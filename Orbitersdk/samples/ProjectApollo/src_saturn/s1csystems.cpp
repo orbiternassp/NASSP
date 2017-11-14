@@ -46,6 +46,7 @@ F1Engine::F1Engine(VESSEL *v, THRUSTER_HANDLE &f1)
 	ThrustOK = false;
 
 	ThrustTimer = 0.0;
+	ThrustLevel = 0.0;
 }
 
 void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -99,7 +100,10 @@ void F1Engine::Timestep(double simdt)
 
 	if (EngineStop)
 	{
-		double tm_1, tm_2, tm_3, ThrustLevel;
+		EngineStart = false;
+		EngineRunning = false;
+
+		double tm_1, tm_2, tm_3;
 
 		ThrustTimer += simdt;
 
@@ -134,7 +138,19 @@ void F1Engine::Timestep(double simdt)
 	}
 	else if (EngineStart && !EngineRunning)
 	{
-		double tm_1, tm_2, tm_3, tm_4, ThrustLevel;
+		// SATURN V ENGINE STARTUP
+		// Engine startup was staggered 1-2-2, with engine 5 starting first, then 1+3, then 2+4. 
+		// This happened by the starter solenoid operating at T-6.585 for engine 5.
+
+		// Engine 5 combustion chamber ignition was at T-3.315, engines 1+3 at T-3.035, and engines 2+4 at T-2.615
+		// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
+		// and then rose to 93% thrust in 0.85 seconds.
+		// The rise from 93 to 100 percent thrust took 0.75 second.
+		// Total engine startup time was 1.9 seconds.
+
+		// Source: Apollo 8 LV Flight Evaluation
+
+		double tm_1, tm_2, tm_3, tm_4;
 
 		ThrustTimer += simdt;
 
@@ -216,7 +232,7 @@ void F1Engine::SetThrusterDir(double beta_y, double beta_p)
 	vessel->SetThrusterDir(th_f1, f1vector);
 }
 
-SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS) :
+SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
 	main_propellant(f1prop),
 	f1engine1(v, f1[2]),
 	f1engine2(v, f1[1]),
@@ -225,7 +241,8 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	f1engine5(v, f1[4]),
 	f1engines(f1),
 	SShutSound(SShutS),
-	LaunchSound(LaunchS)
+	LaunchSound(LaunchS),
+	contrailLevel(contraillvl)
 {
 	vessel = v;
 
@@ -343,6 +360,12 @@ void SICSystems::Timestep(double simdt)
 			vessel->SetThrusterResource(f1engines[i], NULL);
 		}
 	}
+
+	//Contrail Level
+
+	contrailLevel = min(1.0, max(0.0, GetSumThrust()*(-vessel->GetAltitude(ALTMODE_GROUND) + 400.0) / 300.0));
+
+	sprintf(oapiDebugString(), "%f %f %f %f %f %f", contrailLevel, f1engine1.GetThrustLevel(), f1engine2.GetThrustLevel(), f1engine3.GetThrustLevel(), f1engine4.GetThrustLevel(), f1engine5.GetThrustLevel());
 }
 
 bool SICSystems::PropellantLowLevel()
@@ -441,7 +464,10 @@ void SICSystems::EDSEnginesCutoff(bool cut)
 
 void SICSystems::GetThrustOK(bool *ok)
 {
-	ok = ThrustOK;
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = ThrustOK[i];
+	}
 }
 
 void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
@@ -453,13 +479,17 @@ void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 	}
 }
 
+double SICSystems::GetSumThrust()
+{
+	return (f1engine1.GetThrustLevel() + f1engine2.GetThrustLevel() + f1engine3.GetThrustLevel() + f1engine4.GetThrustLevel() + f1engine5.GetThrustLevel()) / 5.0;
+}
+
 void SICSystems::SwitchSelector(int channel)
 {
 	switch (channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
 		vessel->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		vessel->SetContrailLevel(1.0);
 		if (LaunchSound.isValid() && !LaunchSound.isPlaying()) {			// And play launch sound			
 			LaunchSound.play(NOLOOP, 255);
 			LaunchSound.done();

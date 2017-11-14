@@ -72,6 +72,7 @@ public:
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
+	void SetSIEngineStart(int n);
 
 protected:
 

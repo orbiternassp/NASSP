@@ -88,7 +88,7 @@ GDIParams g_Param;
 //
 
 SaturnV::SaturnV (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
-	sic(this, th_1st, ph_1st, LaunchS, SShutS)
+	sic(this, th_1st, ph_1st, LaunchS, SShutS, contrailLevel)
 
 {
 	TRACESETUP("SaturnV");
@@ -900,10 +900,6 @@ void SaturnV::SwitchSelector(int item){
 		ActivatePrelaunchVenting();
 		break;
 	case 12:
-		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
-		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_1st[i], ph_1st);
-		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
 		break;
 	case 13:
@@ -922,21 +918,7 @@ void SaturnV::SwitchSelector(int item){
 			GetStatus(vs);
 			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
 			stage1->DefSetState(&vs);
-		}				
-		// Engine Shutdown
-		for (i = 0; i < 5; i++){
-			SetThrusterResource(th_1st[i], NULL);
 		}
-		break;
-	case 18:
-		// Drop old stage
-		SeparateStage(LAUNCH_STAGE_TWO);
-		SetStage(LAUNCH_STAGE_TWO);
-		// Fire S2 ullage
-		if(SII_UllageNum){
-			SepS.play(LOOP, 130);
-		}
-		ActivateStagingVent();
 		break;
 	case 19:
 		// S2 Engine Startup
@@ -1000,6 +982,13 @@ bool SaturnV::GetSIOutboardEngineOut()
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
 	return sic.GetOutboardEngineOut();
+}
+
+void SaturnV::SetSIEngineStart(int n)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
+
+	sic.SetEngineStart(n);
 }
 
 bool SaturnV::GetSIIPropellantDepletionEngineCutoff()

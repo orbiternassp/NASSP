@@ -94,6 +94,7 @@ public:
 	bool GetSIOutboardEngineOut();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
+	void SetSIEngineStart(int n);
 
 	//
 	// Functions that external code shouldn't need to access.

@@ -535,7 +535,7 @@ void EDSSV::Timestep(double simdt)
 	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
 
-	if (Stage == LAUNCH_STAGE_ONE)
+	if (Stage <= LAUNCH_STAGE_ONE)
 	{
 		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
 	}

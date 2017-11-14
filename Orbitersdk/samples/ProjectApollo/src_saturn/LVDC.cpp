@@ -4835,85 +4835,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Shut down venting at T - 9
 				if(lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
 
-				// SATURN V ENGINE STARTUP
-				// Engine startup was staggered 1-2-2, with engine 5 starting first, then 1+3, then 2+4. 
-				// This happened by the starter solenoid operating at T-6.585 for engine 5.
-
-				// Engine 5 combustion chamber ignition was at T-3.315, engines 1+3 at T-3.035, and engines 2+4 at T-2.615
-				// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
-				// and then rose to 93% thrust in 0.85 seconds.
-				// The rise from 93 to 100 percent thrust took 0.75 second.
-				// Total engine startup time was 1.9 seconds.
-
-				// Source: Apollo 8 LV Flight Evaluation
-
-				// Transition from seperate throttles to single throttle
-				if(lvCommandConnector->GetMissionTime() < -0.715){ 
-					int x=0; // Start Sequence Index
-					double tm_1,tm_2,tm_3,tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-					double SumThrust=0;
-					double thrst[3];	// Thrust Settings for 1-2-2 start (see below)
-					while(x < 3){
-						thrst[x] = 0;
-						switch(x){
-							case 0: // Engine 5
-								tm_1 = -3.315; 
-								break;
-							case 1: // Engine 1+3
-								tm_1 = -3.035; 
-								break;
-							case 2: // Engine 2+4
-								tm_1 = -2.615; 
-								break;
-						}
-						tm_2 = tm_1 + 0.3;  // Start of 1st rise
-						tm_3 = tm_2 + 0.85; // Start of 2nd rise
-						tm_4 = tm_3 + 0.75; // End of 2nd rise
-						if(lvCommandConnector->GetMissionTime() >= tm_1){
-							// Light CC
-							if(lvCommandConnector->GetMissionTime() < tm_2){
-								// Idle at 2.5% thrust
-								thrst[x] = 0.025;
-							}else{
-								if(lvCommandConnector->GetMissionTime() < tm_3){
-									// Rise to 93% at a rate of 106 percent per second
-									thrst[x] = 0.025+(1.06*(lvCommandConnector->GetMissionTime()-tm_2));
-								}else{
-									if(lvCommandConnector->GetMissionTime() < tm_4){
-										// Rise to 100% at a rate of 9 percent per second.
-										thrst[x] = 0.93+(0.09*(lvCommandConnector->GetMissionTime()-tm_3));
-									}else{
-										// Hold 100%
-										thrst[x] = 1;
-									}
-								}
-							}
-						}
-						x++; // Do next
-					}
-					SumThrust = thrst[0]+(thrst[1]*2)+(thrst[2]*2);
-	//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-	//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-					if(SumThrust > 0){
-						lvCommandConnector->SetSIThrusterLevel(2,thrst[1]); // Engine 1
-						lvCommandConnector->SetSIThrusterLevel(1,thrst[2]); // Engine 2
-						lvCommandConnector->SetSIThrusterLevel(3,thrst[1]); // Engine 3
-						lvCommandConnector->SetSIThrusterLevel(0,thrst[2]); // Engine 4
-						lvCommandConnector->SetSIThrusterLevel(4,thrst[0]); // Engine 5
-
-						lvCommandConnector->SetContrailLevel(SumThrust/5);
-						lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
-					}
-				}else{
-					// Get 100% thrust on all engines.
-					lvCommandConnector->SetSIThrusterLevel(2, 1); // Engine 1
-					lvCommandConnector->SetSIThrusterLevel(1, 1); // Engine 2
-					lvCommandConnector->SetSIThrusterLevel(3, 1); // Engine 3
-					lvCommandConnector->SetSIThrusterLevel(0, 1); // Engine 4
-					lvCommandConnector->SetSIThrusterLevel(4, 1); // Engine 5
-					lvCommandConnector->SetContrailLevel(1);
+				//Hold-down force
+				if(lvCommandConnector->GetMissionTime() < -0.715){
 					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
-				}
+					}
 
 				// LIFTOFF
 				if(lvCommandConnector->GetMissionTime() >= 0){
@@ -9313,18 +9238,6 @@ minorloop:
 		}
 
 		// End of test for LVDC_Stop
-
-		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
-			// Control contrail
-			if (lvCommandConnector->GetMissionTime() > 12)
-				lvCommandConnector->SetContrailLevel(0);
-			else if (lvCommandConnector->GetMissionTime() > 7)
-				lvCommandConnector->SetContrailLevel((12.0 - lvCommandConnector->GetMissionTime()) / 100.0);
-			else if (lvCommandConnector->GetMissionTime() > 2)
-				lvCommandConnector->SetContrailLevel(1.38 - 0.95 / 5.0 * lvCommandConnector->GetMissionTime());
-			else
-				lvCommandConnector->SetContrailLevel(1);
-		}
 	}
 }
 

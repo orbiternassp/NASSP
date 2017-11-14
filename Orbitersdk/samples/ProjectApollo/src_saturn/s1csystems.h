@@ -38,6 +38,7 @@ public:
 	void SetThrusterDir(double beta_y, double beta_p);
 
 	bool GetThrustOK() { return ThrustOK; }
+	double GetThrustLevel() { return ThrustLevel; }
 protected:
 	THRUSTER_HANDLE &th_f1;
 	VESSEL *vessel;
@@ -53,12 +54,13 @@ protected:
 	bool EngineRunning;
 
 	double ThrustTimer;
+	double ThrustLevel;
 };
 
 class SICSystems
 {
 public:
-	SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS);
+	SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl);
 	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -81,12 +83,16 @@ public:
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
 protected:
+
+	double GetSumThrust();
+
 	Saturn *vessel;
 	PROPELLANT_HANDLE &main_propellant;
 	THRUSTER_HANDLE *f1engines;
 
 	Sound &SShutSound;
 	Sound &LaunchSound;
+	double &contrailLevel;
 
 	F1Engine f1engine1;
 	F1Engine f1engine2;

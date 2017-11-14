@@ -436,6 +436,11 @@ bool Saturn1b::GetSIOutboardEngineOut()
 	return false;
 }
 
+void Saturn1b::SetSIEngineStart(int n)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
+}
+
 //
 // Save any state specific to the Saturn 1b.
 //
