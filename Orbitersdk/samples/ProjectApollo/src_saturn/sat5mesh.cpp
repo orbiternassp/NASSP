@@ -543,7 +543,16 @@ void SaturnV::SetFirstStageEngines ()
 	th_1st[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_MAIN);
-	for (i = 0; i < SI_EngineNum; i++) AddExhaust (th_1st[i], 120.0, 3.5, exhaust_tex);
+	
+	EXHAUSTSPEC es_1st[5] = {
+		{ th_1st[0], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
+		{ th_1st[1], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
+		{ th_1st[2], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
+		{ th_1st[3], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
+		{ th_1st[4], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex }
+	};
+
+	for (i = 0; i < SI_EngineNum; i++) AddExhaust(es_1st + i);
 
 	AddExhaustStream (th_1st[0], MAIN4a_Vector+_V(0,0,-18), &srb_exhaust);
 	AddExhaustStream (th_1st[1], MAIN2a_Vector+_V(0,0,-18), &srb_exhaust);
@@ -728,8 +737,15 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	thg_2nd = CreateThrusterGroup (th_2nd, SII_EngineNum, THGROUP_MAIN);
 
-	for (i = 0; i < SII_EngineNum; i++)
-		AddExhaust (th_2nd[i], 30.0, 2.9 , J2Tex);
+	EXHAUSTSPEC es_2nd[5] = {
+	    { th_2nd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
+	    { th_2nd[1], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
+	    { th_2nd[2], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
+	    { th_2nd[3], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
+	    { th_2nd[4], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
+	};
+	
+	for (i = 0; i < SII_EngineNum; i++) AddExhaust(es_2nd + i);
 
 	if (SII_UllageNum) {
 		
@@ -986,7 +1002,11 @@ void SaturnV::SetThirdStageEngines (double offset)
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
 	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
 
-	AddExhaust (th_3rd[0], 30.0, 2.9 ,J2Tex);
+	EXHAUSTSPEC es_3rd[1] = {
+		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
+	};
+
+	AddExhaust(es_3rd);
 
 	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6 + offset);
 	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6 + offset);

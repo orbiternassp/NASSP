@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2004-2005
+Copyright 2004-2017
 
 ORBITER vessel module: Lunar Module Descent Stage
 
@@ -97,7 +97,7 @@ void Sat5LMDSC::Setup()
 	td[5].pos.y = tdph;
 	td[5].pos.z = -1 * ro;
 	td[6].pos.x = 0;
-	td[6].pos.y = 2.7;
+	td[6].pos.y = 1.5;
 	td[6].pos.z = 0;
 
 	SetTouchdownPoints(td, 7);
