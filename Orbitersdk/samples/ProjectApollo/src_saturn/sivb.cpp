@@ -961,7 +961,12 @@ void SIVB::AddRCS_S4B()
 
 	th_main[0] = CreateThruster(mainExhaustPos, _V(0, 0, 1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
 	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
-	AddExhaust(th_main[0], 25.0, 1.5, SMMETex);
+	
+	EXHAUSTSPEC es_main[1] = {
+		{ th_main[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, SMMETex }
+	};
+
+	AddExhaust(es_main);
 
 	sivbsys->RecalculateEngineParameters(THRUST_THIRD_VAC);
 

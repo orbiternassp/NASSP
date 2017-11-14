@@ -291,8 +291,20 @@ void Saturn1b::SetFirstStageEngines()
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
 	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_MAIN);
+	
+	EXHAUSTSPEC es_1st[8] = {
+		{ th_1st[0], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[1], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[2], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[3], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[4], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[5], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+		{ th_1st[6], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
+	    { th_1st[7], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex }
+	};
+
 	for (i = 0; i < 8; i++)
-		AddExhaust(th_1st[i], 30.0, 0.80, tex);
+		AddExhaust(es_1st + i);
 
 	srb_exhaust.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_Saturn2");
 	s1b_exhaust.tex = oapiRegisterParticleTexture ("ProjectApollo/Contrail_Saturn");
@@ -536,7 +548,12 @@ void Saturn1b::SetSecondStageEngines ()
 
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
-	AddExhaust (th_3rd[0], 30.0, 2.9, J2Tex);
+	
+	EXHAUSTSPEC es_3rd[1] = {
+		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
+	};
+
+	AddExhaust(es_3rd);
 
 	//
 	// Set the actual stats.
