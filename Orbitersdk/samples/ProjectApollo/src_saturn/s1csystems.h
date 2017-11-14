@@ -36,9 +36,11 @@ public:
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
+	void SetFailed() { EngineFailed = true; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
+	bool GetFailed() { return EngineFailed; }
 protected:
 	THRUSTER_HANDLE &th_f1;
 	VESSEL *vessel;
@@ -53,6 +55,8 @@ protected:
 	bool ThrustOK;
 	bool EngineRunning;
 
+	bool EngineFailed;
+
 	double ThrustTimer;
 	double ThrustLevel;
 };
@@ -65,17 +69,19 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void SetEDSCutoff();
 	void SetEngineStart(int n);
 	void InboardEngineCutoff();
 	void OutboardEnginesCutoff();
 	void OutboardEnginesCutoffEnable() { PointLevelSensorArmed = true; }
 	void OutboardEnginesCutoffDisable() { PointLevelSensorArmed = false; }
 	void TwoAdjacentOutboardEnginesOutCutoffEnable() { TwoAdjacentOutboardEnginesOutCutoff = true; }
+	void MultipleEngineCutoffEnable() { MultipleEngineCutoffEnabled = true; }
 	void EDSEnginesCutoff(bool cut);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
-	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
+
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
+	void SetEngineFailureParameters(int n, double SICutTimes);
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
@@ -88,7 +94,6 @@ protected:
 
 	Saturn *vessel;
 	PROPELLANT_HANDLE &main_propellant;
-	THRUSTER_HANDLE *f1engines;
 
 	Sound &SShutSound;
 	Sound &LaunchSound;
@@ -99,6 +104,7 @@ protected:
 	F1Engine f1engine3;
 	F1Engine f1engine4;
 	F1Engine f1engine5;
+	F1Engine *f1engines[5];
 
 	bool PropellantDepletionSensors;
 	bool PointLevelSensorArmed;

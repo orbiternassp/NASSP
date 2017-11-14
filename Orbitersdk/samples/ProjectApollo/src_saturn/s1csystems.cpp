@@ -44,6 +44,7 @@ F1Engine::F1Engine(VESSEL *v, THRUSTER_HANDLE &f1)
 	RSSCutoff = false;
 	EngineRunning = false;
 	ThrustOK = false;
+	EngineFailed = false;
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
@@ -87,15 +88,11 @@ void F1Engine::Timestep(double simdt)
 	if (th_f1 == NULL) return;
 
 	//Thrust OK switch
-	ThrustOK = vessel->GetThrusterLevel(th_f1) > 0.9;
+	ThrustOK = vessel->GetThrusterLevel(th_f1) > 0.9 && !EngineFailed;
 
-	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff)
+	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff || (!ThrustOK && EngineRunning))
 	{
 		EngineStop = true;
-	}
-	else
-	{
-		EngineStop = false;
 	}
 
 	if (EngineStop)
@@ -239,7 +236,6 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	f1engine3(v, f1[3]),
 	f1engine4(v, f1[0]),
 	f1engine5(v, f1[4]),
-	f1engines(f1),
 	SShutSound(SShutS),
 	LaunchSound(LaunchS),
 	contrailLevel(contraillvl)
@@ -257,6 +253,12 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	PropellantDepletionSensors = false;
 	PointLevelSensorArmed = false;
 	TwoAdjacentOutboardEnginesOutCutoff = false;
+
+	f1engines[0] = &f1engine1;
+	f1engines[1] = &f1engine2;
+	f1engines[2] = &f1engine3;
+	f1engines[3] = &f1engine4;
+	f1engines[4] = &f1engine5;
 }
 
 void SICSystems::SaveState(FILEHANDLE scn) {
@@ -265,6 +267,7 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "MULTIPLEENGINECUTOFFENABLED", MultipleEngineCutoffEnabled);
 	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
 	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
 	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
@@ -288,6 +291,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "MULTIPLEENGINECUTOFFENABLED", MultipleEngineCutoffEnabled);
 		papiReadScenario_bool(line, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
 		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 5);
 		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
@@ -319,11 +323,10 @@ void SICSystems::Timestep(double simdt)
 	f1engine5.Timestep(simdt);
 
 	//Thrust OK
-	ThrustOK[0] = f1engine1.GetThrustOK();
-	ThrustOK[1] = f1engine2.GetThrustOK();
-	ThrustOK[2] = f1engine3.GetThrustOK();
-	ThrustOK[3] = f1engine4.GetThrustOK();
-	ThrustOK[4] = f1engine5.GetThrustOK();
+	for (int i = 0;i < 5;i++)
+	{
+		ThrustOK[i] = f1engines[i]->GetThrustOK();
+	}
 
 	//Propellant Depletion
 	if (PropellantLowLevel())
@@ -355,9 +358,9 @@ void SICSystems::Timestep(double simdt)
 
 	for (int i = 0;i < 5;i++)
 	{
-		if (EarlySICutoff[i] && (vessel->GetMissionTime() > FirstStageFailureTime[i]) && vessel->GetThrusterResource(f1engines[i]) != NULL)
+		if (EarlySICutoff[i] && (vessel->GetMissionTime() > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
 		{
-			vessel->SetThrusterResource(f1engines[i], NULL);
+			f1engines[i]->SetFailed();
 		}
 	}
 
@@ -365,7 +368,8 @@ void SICSystems::Timestep(double simdt)
 
 	contrailLevel = min(1.0, max(0.0, GetSumThrust()*(-vessel->GetAltitude(ALTMODE_GROUND) + 400.0) / 300.0));
 
-	sprintf(oapiDebugString(), "%f %f %f %f %f %f", contrailLevel, f1engine1.GetThrustLevel(), f1engine2.GetThrustLevel(), f1engine3.GetThrustLevel(), f1engine4.GetThrustLevel(), f1engine5.GetThrustLevel());
+	//sprintf(oapiDebugString(), "%f %f %f %f %f %f", contrailLevel, f1engine1.GetThrustLevel(), f1engine2.GetThrustLevel(), f1engine3.GetThrustLevel(), f1engine4.GetThrustLevel(), f1engine5.GetThrustLevel());
+	//sprintf(oapiDebugString(), "%f %f %f %f %f", FirstStageFailureTime[0], FirstStageFailureTime[1], FirstStageFailureTime[2], FirstStageFailureTime[3], FirstStageFailureTime[4]);
 }
 
 bool SICSystems::PropellantLowLevel()
@@ -399,55 +403,16 @@ void SICSystems::OutboardEnginesCutoff()
 
 void SICSystems::SetEngineStart(int n)
 {
-	if (n == 1)
-	{
-		f1engine1.SetEngineStart();
-	}
-	else if (n == 2)
-	{
-		f1engine2.SetEngineStart();
-	}
-	else if (n == 3)
-	{
-		f1engine3.SetEngineStart();
-	}
-	else if (n == 4)
-	{
-		f1engine4.SetEngineStart();
-	}
-	else if (n == 5)
-	{
-		f1engine5.SetEngineStart();
-	}
-}
+	if (n < 1 || n > 5) return;
 
-void SICSystems::SetEDSCutoff()
-{
-	f1engine1.SetEDSCutoff();
-	f1engine2.SetEDSCutoff();
-	f1engine3.SetEDSCutoff();
-	f1engine4.SetEDSCutoff();
-	f1engine5.SetEDSCutoff();
+	f1engines[n]->SetEngineStart();
 }
 
 void SICSystems::SetThrusterDir(int n, double beta_y, double beta_p)
 {
-	if (n == 1)
-	{
-		f1engine1.SetThrusterDir(beta_y, beta_p);
-	}
-	else if (n == 2)
-	{
-		f1engine2.SetThrusterDir(beta_y, beta_p);
-	}
-	else if (n == 3)
-	{
-		f1engine3.SetThrusterDir(beta_y, beta_p);
-	}
-	else if (n == 4)
-	{
-		f1engine4.SetThrusterDir(beta_y, beta_p);
-	}
+	if (n < 1 || n > 4) return;
+
+	f1engines[n]->SetThrusterDir(beta_y, beta_p);
 }
 
 void SICSystems::EDSEnginesCutoff(bool cut)
@@ -479,6 +444,14 @@ void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 	}
 }
 
+void SICSystems::SetEngineFailureParameters(int n, double SICutTimes)
+{
+	if (n < 0 || n > 4) return;
+
+	EarlySICutoff[n] = true;
+	FirstStageFailureTime[n] = SICutTimes;
+}
+
 double SICSystems::GetSumThrust()
 {
 	return (f1engine1.GetThrustLevel() + f1engine2.GetThrustLevel() + f1engine3.GetThrustLevel() + f1engine4.GetThrustLevel() + f1engine5.GetThrustLevel()) / 5.0;
@@ -500,6 +473,7 @@ void SICSystems::SwitchSelector(int channel)
 	case 2: //Telemeter Calibrate On
 		break;
 	case 3: //Multiple Engine Cutoff Enable
+		MultipleEngineCutoffEnable();
 		break;
 	case 4: //LOX Tank Strobe Lights Off
 		break;
