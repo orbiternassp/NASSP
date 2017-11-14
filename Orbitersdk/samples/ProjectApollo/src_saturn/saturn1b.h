@@ -109,6 +109,7 @@ protected:
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
 	void SetRandomFailures();
+	void SetEngineFailure(int failstage, int faileng, double failtime);
 };
 
 

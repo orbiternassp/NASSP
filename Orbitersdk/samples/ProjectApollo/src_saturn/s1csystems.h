@@ -82,6 +82,7 @@ public:
 
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 	void SetEngineFailureParameters(int n, double SICutTimes);
+	bool GetFailInit() { return FailInit; }
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
@@ -113,6 +114,7 @@ protected:
 
 	bool ThrustOK[5];
 
+	bool FailInit;
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
 };

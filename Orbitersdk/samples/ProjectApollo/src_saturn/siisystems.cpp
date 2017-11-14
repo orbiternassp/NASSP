@@ -63,6 +63,7 @@ SIISystems::SIISystems(Saturn *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	PropellantDepletionSensors = false;
 	OrdnanceArmed = false;
 	SIISIVBOrdnanceArmed = false;
+	FailInit = false;
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
@@ -85,6 +86,7 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "ORDNANCEARMED", OrdnanceArmed);
 	papiWriteScenario_bool(scn, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
+	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
@@ -115,6 +117,7 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "ORDNANCEARMED", OrdnanceArmed);
 		papiReadScenario_bool(line, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
+		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
@@ -253,6 +256,18 @@ void SIISystems::SetEngineFailureParameters(bool *SIICut, double *SIICutTimes)
 		EarlySIICutoff[i] = SIICut[i];
 		SecondStageFailureTime[i] = SIICutTimes[i];
 	}
+
+	FailInit = true;
+}
+
+void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes)
+{
+	if (n < 1 || n > 5) return;
+
+	EarlySIICutoff[n - 1] = true;
+	SecondStageFailureTime[n - 1] = SIICutTimes;
+
+	FailInit = true;
 }
 
 void SIISystems::SetThrusterGroupLevel(double level)

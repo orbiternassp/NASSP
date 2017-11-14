@@ -158,6 +158,7 @@ protected:
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
 	void SetRandomFailures();
+	void SetEngineFailure(int failstage, int faileng, double failtime);
 
 	//
 	// Class variables.

@@ -56,7 +56,10 @@ public:
 	void RecalculateEngineParameters(double BaseThrust);
 	void SetMixtureRatio(double ratio);
 	void SwitchSelector(int channel);
+
 	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
+	void SetEngineFailureParameters(int n, double SIICutTimes);
+	bool GetFailInit() { return FailInit; }
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
@@ -93,6 +96,7 @@ protected:
 	bool EarlySIICutoff[5];
 	double SecondStageFailureTime[5];
 	double FailureTimer;
+	bool FailInit;
 
 	Saturn *vessel;
 	THRUSTER_HANDLE *j2engines;

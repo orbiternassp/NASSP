@@ -3988,6 +3988,7 @@ protected:
 	virtual void LoadSIVB(FILEHANDLE scn) = 0;
 	virtual void SaveSI(FILEHANDLE scn) = 0;
 	virtual void LoadSI(FILEHANDLE scn) = 0;
+	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

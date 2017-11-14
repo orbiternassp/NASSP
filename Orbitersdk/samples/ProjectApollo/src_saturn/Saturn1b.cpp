@@ -714,6 +714,11 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
+void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
+{
+
+}
+
 void Saturn1b::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();

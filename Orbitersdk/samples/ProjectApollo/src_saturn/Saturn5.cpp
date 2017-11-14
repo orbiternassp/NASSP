@@ -1024,21 +1024,30 @@ void SaturnV::GetSIIThrustOK(bool *ok)
 	sii.GetThrustOK(ok);
 }
 
+void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
+{
+	if (failstage == 1)
+	{
+		sic.SetEngineFailureParameters(faileng, failtime);
+	}
+	else if (failstage == 2)
+	{
+		sii.SetEngineFailureParameters(faileng, failtime);
+	}
+}
+
 void SaturnV::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();
+
 	//
-	// Set up launch failures.
+	// Engine failure times
 	//
 
-	if (!LaunchFail.Init)
+	if (stage < LAUNCH_STAGE_TWO)
 	{
-		LaunchFail.Init = 1;
-
-
-		if (stage < STAGE_ORBIT_SIVB)
+		if (!sic.GetFailInit())
 		{
-
 			//
 			// Engine failure times for first stage.
 			//
@@ -1046,27 +1055,10 @@ void SaturnV::SetRandomFailures()
 			bool EarlySICutoff[5];
 			double FirstStageFailureTime[5];
 
-			//
-			// Engine failure times for first stage.
-			//
-
-			bool EarlySIICutoff[5];
-			double SecondStageFailureTime[5];
-
-			//
-			// Engine failure times
-			//
-
 			for (int i = 0;i < 5;i++)
 			{
 				EarlySICutoff[i] = 0;
 				FirstStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySIICutoff[i] = 0;
-				SecondStageFailureTime[i] = 0.0;
 			}
 
 			for (int i = 0;i < 5;i++)
@@ -1078,6 +1070,27 @@ void SaturnV::SetRandomFailures()
 				}
 			}
 
+			sic.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+		}
+	}
+
+	if (stage < LAUNCH_STAGE_SIVB)
+	{
+		if (!sii.GetFailInit())
+		{
+			//
+			// Engine failure times for second stage.
+			//
+
+			bool EarlySIICutoff[5];
+			double SecondStageFailureTime[5];
+
+			for (int i = 0;i < 5;i++)
+			{
+				EarlySIICutoff[i] = 0;
+				SecondStageFailureTime[i] = 0.0;
+			}
+
 			for (int i = 0;i < 5;i++)
 			{
 				if (!(random() & (int)(127.0 / FailureMultiplier)))
@@ -1086,11 +1099,18 @@ void SaturnV::SetRandomFailures()
 					SecondStageFailureTime[i] = 10.0 + ((double)(random() & 3071) / 10.0);
 				}
 			}
-
-			sic.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 			sii.SetEngineFailureParameters(EarlySIICutoff, SecondStageFailureTime);
 
 		}
+	}
+
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
 
 		if (!(random() & 127))
 		{
