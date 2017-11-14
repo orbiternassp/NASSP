@@ -314,8 +314,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define SPS_PITCH_OFFSET            -2.15		// in deg
 #define SPS_YAW_OFFSET               0.95		// in deg
 
-#define APS_THRUST		15600
-#define APS_ISP			2840
+#define APS_THRUST		15297.43	// Apollo 11 Mission Report
+#define APS_ISP			(308.8 * G)	// Apollo 11 Mission Report
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 #define DPS_DEFAULT_PROPELLANT		8375.0
