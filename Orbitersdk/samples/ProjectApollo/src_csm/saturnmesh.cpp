@@ -512,7 +512,7 @@ void Saturn::SetCSMStage ()
 		TankQuantities t;
 		GetTankQuantities(t);
 
-		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg + t.O2Tank2QuantityKg);
+		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
 	}
 
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD

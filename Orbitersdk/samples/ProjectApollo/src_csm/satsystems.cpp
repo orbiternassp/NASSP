@@ -2754,16 +2754,20 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 }
 
 //
-// Set O2 tank quantities. For now, just use one fixed input.
+// Set O2 tank quantities.
 //
 
-void Saturn::SetO2TankQuantities(double q)
+void Saturn::SetO2Tank1Quantity(double q)
 
 {
 	O2Tanks[0]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
-	O2Tanks[1]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
 }
 
+void Saturn::SetO2Tank2Quantity(double q)
+
+{
+	O2Tanks[1]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
+}
 //
 // Get fuel cell status. 
 //

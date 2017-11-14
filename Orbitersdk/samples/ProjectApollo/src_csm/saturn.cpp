@@ -4084,6 +4084,7 @@ void Saturn::StageSix(double simt)
 
 			SApollo13.play(NOLOOP, 255);
 			CryoStir = true;
+
 		}
 
 		//
@@ -4174,8 +4175,12 @@ void Saturn::StageSix(double simt)
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
-			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
+			SetO2Tank2Quantity(0);	//Tank 2 explosion, tank pressure and quantity drop to zero
+
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);  //  Tank 1 venting, needs to be adjusted for approximately 130 minute bleed
+			SetO2Tank1Quantity(GetPropellantMass(ph_o2_vent));
+
+
 		}
 	}
 }

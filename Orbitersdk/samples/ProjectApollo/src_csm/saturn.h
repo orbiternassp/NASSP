@@ -1001,7 +1001,8 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
-	void SetO2TankQuantities(double q);
+	void SetO2Tank1Quantity(double q);
+	void SetO2Tank2Quantity(double q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
