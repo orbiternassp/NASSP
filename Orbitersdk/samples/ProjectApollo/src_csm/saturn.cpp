@@ -4104,13 +4104,13 @@ void Saturn::StageSix(double simt)
 			SExploded.play(NOLOOP,255);
 			SExploded.done();
 
-			MasterAlarm();
+			//MasterAlarm();  Main B Undervolt should trigger this alarm
 
 			//
-			// AGC restarted as the explosion occured.
+			// AGC restarted as the explosion occured.  Should be triggered by power transient and not agc.ForceRestart
 			//
 
-			agc.ForceRestart();
+			//agc.ForceRestart();
 
 			ApolloExploded = true;
 
@@ -4175,9 +4175,10 @@ void Saturn::StageSix(double simt)
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetO2Tank2Quantity(0);	//Tank 2 explosion, tank pressure and quantity drop to zero
+			SetO2Tank2Quantity(0);	//Tank 2 explosion, tank 2 pressure and quantity drop to zero
 
 			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);  //  Tank 1 venting, needs to be adjusted for approximately 130 minute bleed
+
 			SetO2Tank1Quantity(GetPropellantMass(ph_o2_vent));
 
 

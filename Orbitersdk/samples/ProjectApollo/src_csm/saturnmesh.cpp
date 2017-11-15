@@ -500,19 +500,21 @@ void Saturn::SetCSMStage ()
 
 	// ************************* propellant specs **********************************
 	if (!ph_sps) {
-		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
+		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage propellant
 	}
 
 	if (ApolloExploded && !ph_o2_vent) {
+	
+			double tank_mass = CSM_O2TANK_CAPACITY / 500.0;
 
-		double tank_mass = CSM_O2TANK_CAPACITY / 500.0;
+			ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //"Thruster" created by O2 venting
 
-		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //SPS stage Propellant
+			TankQuantities t;
 
-		TankQuantities t;
-		GetTankQuantities(t);
+			GetTankQuantities(t);
 
 		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+	
 	}
 
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
