@@ -31,7 +31,8 @@ public:
 	Sat1Abort1(OBJHANDLE hObj, int fmodel);
 	virtual ~Sat1Abort1();
 	void init();
-	void Setup();
+	void Setup(bool sm);
+	virtual void SetState(bool sm);
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 

@@ -1,5 +1,5 @@
 BEGIN_DESC
-Pete Conrad, Al Bean and Dick Gordon make mans second landing on the moon. Pete's prescision landing near Surveyor III makes future accurate exploration possible. November 14, 1969. The scenario starts at T-4h00min, crew ingress is at T-1h40min. (AS-507)
+Pete Conrad, Al Bean and Dick Gordon make man's second landing on the moon. Pete's prescision landing near Surveyor III makes future accurate exploration possible. November 14, 1969. The scenario starts at T-4h00min, crew ingress is at T-1h40min. (AS-507)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -30,16 +30,13 @@ Yankee Clipper:ProjectApollo\Saturn5
   HEADING 270.00
   FUEL 1.000
   APOLLONO 12
-  USE_LVDC PLEASE
   S4PL 0
   NASSPVER 80000
+  VECHNO 507
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
   MISSNTIME -14400
-  TOAPO 185.94
-  TOPER 183.16
-  TOHDG 72.058
   LANG English
   LEMN Intrepid
   LMPADCNT 253
@@ -296,15 +293,35 @@ Yankee Clipper:ProjectApollo\Saturn5
   LMPAD 3430 57777
   LMPAD 3431 20000
   LMPAD 3432 00000
+  AEAPADCNT 19
+  AEAPAD 224 270063
+  AEAPAD 225 261370
+  AEAPAD 227 546670
+  AEAPAD 231 255650
+  AEAPAD 274 756330
+  AEAPAD 307 120235
+  AEAPAD 454 2140
+  AEAPAD 465 470
+  AEAPAD 473 406000
+  AEAPAD 561 12173
+  AEAPAD 566 0
+  AEAPAD 602 0
+  AEAPAD 616 4
+  AEAPAD 622 76
+  AEAPAD 630 327155
+  AEAPAD 654 713244
+  AEAPAD 655 16352
+  AEAPAD 657 0
+  AEAPAD 662 257014
   AUTOSLOW 1
-  AGC_BEGIN
-    YAAGC 1
-  AGC_END
+  LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
   ASCP_BEGIN
     OPX 152.000
   ASCP_END
   LVDC_BEGIN
     LVDC_hx[0][0] 72.029
+	LVDC_T_LO 58903.0
+	LVDC_t_S1C_CECO 134.6
     LVDC_XLunarAttitude 3.141589512 2.094395207 -0.5235987756
   LVDC_END
   LVIMU_BEGIN
@@ -453,9 +470,9 @@ Yankee Clipper:ProjectApollo\Saturn5
   CMPAD3013 5
   CMPAD3014 123
   CMPAD3015 175
-  CMPAD3016 17433
-  CMPAD3017 4510
-  CMPAD3020 333
+  CMPAD3016 37071
+  CMPAD3017 2244
+  CMPAD3020 156
   CMPAD3021 1000
   CMPAD3022 232
   CMPAD3023 0

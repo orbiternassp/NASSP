@@ -314,8 +314,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define SPS_PITCH_OFFSET            -2.15		// in deg
 #define SPS_YAW_OFFSET               0.95		// in deg
 
-#define APS_THRUST		15600
-#define APS_ISP			2840
+#define APS_THRUST		15297.43	// Apollo 11 Mission Report
+#define APS_ISP			(308.8 * G)	// Apollo 11 Mission Report
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 #define DPS_DEFAULT_PROPELLANT		8375.0
@@ -331,7 +331,11 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			413.7		// AOH
 
-#define SIVB_RCS_PITCH_THRUST	20740.0		///\todo probably wrong
+#define S4B_APS_FUEL_PER_TANK	143.0
+#define S4B_APS_THRUST			670.0
+#define S4B_APS_ULL_THRUST		310.0
+#define S4B_APS_ISP				(290.0 * G)
+#define S4B_APS_ISP_SL			50.0
 
 //
 // Mission times for specific events.
@@ -340,7 +344,7 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 ///
 /// \brief Mission Elapsed Time when Apollo 13 Oxygen tank exploded.
 ///
-#define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (55.0 * 60.0) + 10.0)
+#define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (54.0 * 60.0) + 53.0)
 
 //
 //

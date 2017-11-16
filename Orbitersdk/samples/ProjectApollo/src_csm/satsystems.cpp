@@ -370,6 +370,8 @@ void Saturn::SystemsInit() {
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
 	mechanicalAccelerometer.Init(this);
 
+	qball.Init(this);
+
 	// Telecom initialization
 	pmp.Init(this);
 	usb.Init(this);
@@ -537,8 +539,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu.Timestep(MissionTime, simdt, mjd);
-		}	
+			iu->Timestep(MissionTime, simt, simdt, mjd);
+		}
+		if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
+		{
+			sivb->Timestep(simdt);
+		}
+
 		bmag1.Timestep(simdt);
 		bmag2.Timestep(simdt);
 		ascp.TimeStep(simdt);
@@ -2189,13 +2196,23 @@ void Saturn::ClearEngineIndicators()
 void Saturn::SetLiftoffLight()
 
 {
-	LAUNCHIND[0] = true;
+	LiftoffLight = true;
 }
 
 void Saturn::ClearLiftoffLight()
 
 {
-	LAUNCHIND[0] = false;
+	LiftoffLight = false;
+}
+
+void Saturn::SetNoAutoAbortLight()
+{
+	NoAutoAbortLight = true;
+}
+
+void Saturn::ClearNoAutoAbortLight()
+{
+	NoAutoAbortLight = false;
 }
 
 void Saturn::SetLVGuidLight()
@@ -2222,6 +2239,15 @@ void Saturn::ClearLVRateLight()
 	LVRateLight = false;
 }
 
+bool Saturn::GetEngineIndicator(int i)
+
+{
+	if (i < 1 || i > 8)
+		return false;
+
+	return ENGIND[i - 1];
+}
+
 void Saturn::SetEngineIndicator(int i)
 
 {
@@ -2238,6 +2264,22 @@ void Saturn::ClearEngineIndicator(int i)
 		return;
 
 	ENGIND[i - 1] = false;
+}
+
+void Saturn::SetEDSAbort(int eds)
+{
+	if (eds == 1)
+	{
+		secs.SetEDSAbort1(true);
+	}
+	else if (eds == 2)
+	{
+		secs.SetEDSAbort2(true);
+	}
+	else if (eds == 3)
+	{
+		secs.SetEDSAbort3(true);
+	}
 }
 
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {

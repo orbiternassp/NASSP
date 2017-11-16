@@ -2106,6 +2106,7 @@ void Saturn::SetSwitches(int panel) {
 	UPTLMSwitchesRow.Init(AID_UPTLMSWITCHES, MainPanel);
 	UPTLMSwitch1.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
 	UPTLMSwitch2.Init(53, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
+	UPTLMSwitch2.SetDelayTime(1);
 
 	SBandAntennaSwitchesRow.Init(AID_SBANDANTENNASWITCHES, MainPanel);
 	SBandAntennaSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAntennaSwitchesRow);
@@ -4128,8 +4129,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// \todo This should really be moved into the switch code.
 	//
 
-	if (LAUNCHIND[0]) {
-		if (EDSSwitch.GetState() || MissionTime >= 120)
+	LiftoffLight = secs.LiftoffLightPower();
+	NoAutoAbortLight = secs.NoAutoAbortLightPower();
+
+	if (LiftoffLight) {
+		if (!NoAutoAbortLight)
 			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
 		else
 			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);

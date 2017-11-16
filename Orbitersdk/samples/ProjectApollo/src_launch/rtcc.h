@@ -240,6 +240,7 @@ struct REFSMMATOpt
 	int mission; //Just for the launch REFSMMAT
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool HeadsUp = true; //Orientation during the maneuver
+	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 };
 
 struct CDHOpt
@@ -473,6 +474,7 @@ struct GMPOpt
 	//2 = Fixed TIG, specify periapsis altitude
 	//3 = Fixed TIG, circularize orbit
 	//4 = Circularize orbit at specified altitude
+	//5 = Rotate velocity vector, specify apoapsis altitude
 	int type = 0;
 	double GETbase; //usually MJD at launch
 	VESSEL* vessel;
@@ -489,6 +491,7 @@ struct GMPOpt
 	double h_apo;	//apoapsis altitude, used for options 0 and 1
 	double h_peri;	//periapsis altitude, used for option 0
 	double inc;		//orbital inclination, used for option 0
+	double rot_ang;	//rotate velocity vector, used for option 5
 };
 
 struct TLIPADOpt
@@ -705,6 +708,7 @@ public:
 	void IntegratedTLMC(SV sv_mcc, double lat, double h, double gamma, double MJD, VECTOR3 var_guess, VECTOR3 &DV, VECTOR3 &var_converged, SV &sv_node);
 	void TLMCFirstGuessConic(SV sv_mcc, double lat, double h, double gamma, double MJD_P, VECTOR3 &DV, VECTOR3 &var_converged);
 	void TLMCFirstGuess(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, VECTOR3 &DV, SV &sv_peri);
+	bool TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	bool TLMCConicFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri, double inc_fr_des, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMP);
@@ -739,7 +743,7 @@ private:
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked = false);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
-	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch);
+	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, bool v66 = false);
 	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
 	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0);
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
@@ -750,6 +754,7 @@ private:
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV coast(SV sv0, double dt);
 	double PericynthionTime(VESSEL* vessel);
+	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);

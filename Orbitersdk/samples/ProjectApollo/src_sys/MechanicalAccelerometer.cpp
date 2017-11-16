@@ -44,16 +44,15 @@ void MechanicalAccelerometer::Init(VESSEL* v)
 
 void MechanicalAccelerometer::TimeStep(double simdt) {
 
-	VESSELSTATUS vs;
-	VECTOR3 w, vel;
+	VECTOR3 arot, w, vel;
 
-	vessel->GetStatus(vs);
+	vessel->GetGlobalOrientation(arot);
 	vessel->GetWeightVector(w);
 	vessel->GetGlobalVel(vel);
 
-	MATRIX3	tinv = GetRotationMatrixZ(-vs.arot.z);
-	tinv = mul(GetRotationMatrixY(-vs.arot.y), tinv);
-	tinv = mul(GetRotationMatrixX(-vs.arot.x), tinv);
+	MATRIX3	tinv = GetRotationMatrixZ(-arot.z);
+	tinv = mul(GetRotationMatrixY(-arot.y), tinv);
+	tinv = mul(GetRotationMatrixX(-arot.x), tinv);
 	w = mul(tinv, w) / vessel->GetMass();
 
 	if (!dVInitialized) {
@@ -72,9 +71,9 @@ void MechanicalAccelerometer::TimeStep(double simdt) {
 		lastSimDT = simdt;
 
 		// Transform to vessel coordinates
-		MATRIX3	t = GetRotationMatrixX(vs.arot.x);
-		t = mul(GetRotationMatrixY(vs.arot.y), t);
-		t = mul(GetRotationMatrixZ(vs.arot.z), t);
+		MATRIX3	t = GetRotationMatrixX(arot.x);
+		t = mul(GetRotationMatrixY(arot.y), t);
+		t = mul(GetRotationMatrixZ(arot.z), t);
 		VECTOR3 avg = (dw1 + dw2) / 2.0;
 		avg = mul(t, avg);
 		xacc = -avg.z;

@@ -52,14 +52,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastTimestep = 0;
 	LastCycled = 0;
 
-	DesiredApogee = 0.0;
-	DesiredPerigee = 0.0;
-	DesiredAzimuth = 0.0;
-
-	LandingLongitude = 0.0;
-	LandingLatitude = 0.0;
-	LandingAltitude = 0.0;
-
 	//
 	// Flight number.
 	//
@@ -100,8 +92,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	out_file = fopen("ProjectApollo AGC.log", "wt");
 	vagc.out_file = out_file;
 #endif
-
-	PowerConnected = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -366,10 +356,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, AGC_START_STRING);
 
-	oapiWriteScenario_float(scn, "TGTA", DesiredApogee);
-	oapiWriteScenario_float(scn, "TGTP", DesiredPerigee);
-	oapiWriteScenario_float(scn, "TGTZ", DesiredAzimuth);
-
 	if (OtherVesselName[0])
 		oapiWriteScenario_string(scn, "ONAME", OtherVesselName);
 
@@ -486,7 +472,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 {
 	char	*line;
-	float	flt;
 
 	//
 	// Now load the data.
@@ -496,19 +481,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, AGC_END_STRING, sizeof(AGC_END_STRING)))
 			break;
 			
-		if (!strnicmp (line, "TGTA", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredApogee = flt;
-		}
-		else if (!strnicmp (line, "TGTP", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredPerigee = flt;
-		}
-		else if (!strnicmp (line, "TGTZ", 4)) {
-			sscanf (line+4, "%f", &flt);
-			DesiredAzimuth = flt;
-		}
-		else if (!strnicmp (line, "EMEM", 4)) {
+		if (!strnicmp (line, "EMEM", 4)) {
 			int num, val;
 			sscanf(line+4, "%o", &num);
 			sscanf(line+9, "%o", &val);
@@ -618,14 +591,6 @@ bool ApolloGuidance::IsPowered()
 
 {
 	if (DCPower.Voltage() > SP_MIN_DCVOLTAGE)
-		return true;
-
-	//
-	// Quick hack for now: if no power connected, pretend we
-	// have power.
-	//
-
-	if (!PowerConnected)
 		return true;
 
 	return false;
@@ -951,14 +916,6 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		val ^= 077777;
 
 	return val;
-}
-
-void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double altitude)
-
-{
-	LandingAltitude = altitude;
-	LandingLongitude = longitude;
-	LandingLatitude = latitude;
 }
 
 bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)

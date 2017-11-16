@@ -43,8 +43,18 @@
 #include "saturn1b.h"
 
 #include "s1b.h"
+#include "LVDC.h"
 
 #include "tracer.h"
+
+//
+// Random functions from Yaagc.
+//
+
+extern "C" {
+	void srandom(unsigned int x);
+	long int random();
+}
 
 char trace_file[] = "ProjectApollo Saturn1b.log";
 
@@ -65,7 +75,6 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 
 {
 	hMaster = hObj;
-	lvdc = NULL;
 	initSaturn1b();
 }
 
@@ -73,6 +82,12 @@ Saturn1b::~Saturn1b()
 
 {
 	ReleaseSurfaces();
+
+	if (iu)
+	{
+		delete iu;
+		iu = 0;
+	}
 }
 
 
@@ -260,44 +275,6 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hNosecapVessel = oapiGetVesselByName(VName);
 }
 
-//
-// Adjust the mixture ratio of the engine on the SIVB stage. This occured late in
-// the flight to ensure that the fuel was fully burnt before the stage was dropped.
-//
-
-void Saturn1b::SetSIVBMixtureRatio (double ratio)
-
-{
-	double isp, thrust;
-
-	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
-
-	if (ratio >= 5.0) {
-		thrust = 1009902;
-		isp = 424*G;
-	
-	} else {
-		thrust = 770000.;
-		isp = 428*G;
-	}
-
-	//
-	// For simplicity assume no ISP change at sea-level: SIVb stage should always
-	// be in near-vacuum anyway.
-	//
-
-	SetThrusterIsp (th_main[0], isp, isp);
-	SetThrusterMax0 (th_main[0], thrust);
-
-	//
-	// Give the AGC our new stats.
-	//
-
-	iu.SetVesselStats(isp, thrust);
-
-	MixtureRatio = ratio;
-}
-
 void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 {
@@ -318,18 +295,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	GenericTimestep(simt, simdt, mjd);
 
 	if (stage < CSM_LEM_STAGE) {
-		if (lvdc != NULL) {
-			lvdc->TimeStep(simt, simdt);
-		}
 	} else {
-
-		if (lvdc != NULL) {
-			// At this point we are done with the LVDC, we can delete it.
-			// This saves memory and declutters the scenario file.
-			delete lvdc;
-			lvdc = NULL;
-		}
-
 		GenericTimestepStage(simt, simdt);
 	}
 
@@ -374,9 +340,9 @@ void Saturn1b::SwitchSelector(int item){
 		ActivatePrelaunchVenting();
 		break;
 	case 12:
-		SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_main[i], ph_1st);
+			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
 		break;
@@ -389,63 +355,90 @@ void Saturn1b::SwitchSelector(int item){
 	case 14:
 		DeactivatePrelaunchVenting();
 		break;
-	case 15:
-		SetLiftoffLight();								// Light liftoff lamp
-		SetStage(LAUNCH_STAGE_ONE);						// Switch to stage one
-		// Start mission and event timers
-		MissionTimerDisplay.Reset();
-		MissionTimerDisplay.SetEnabled(true);
-		EventTimerDisplay.Reset();
-		EventTimerDisplay.SetEnabled(true);
-		EventTimerDisplay.SetRunning(true);
-		agc.SetInputChannelBit(030, LiftOff, true);			// Inform AGC of liftoff
-		SetThrusterGroupLevel(thg_main, 1.0);			// Set full thrust, just in case
+	}
+}
+
+void Saturn1b::SISwitchSelector(int channel)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	switch (channel)
+	{
+	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
+		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+		SetThrusterGroupLevel(thg_1st, 1.0);				// Set full thrust, just in case
 		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()){			
-			// And play launch sound
-			LaunchS.play(NOLOOP,255);
+		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
+			LaunchS.play(NOLOOP, 255);
 			LaunchS.done();
 		}
 		break;
-	case 16:
-		SetThrusterResource(th_main[4], NULL);
-		SetThrusterResource(th_main[5], NULL);
-		SetThrusterResource(th_main[6], NULL);
-		SetThrusterResource(th_main[7], NULL);
-		SShutS.play(NOLOOP,235);
-		SShutS.done();
-		// Clear liftoff light now - Apollo 15 checklist item
-		ClearLiftoffLight();
-		break;
-	case 17:
+	case 18: //Outboard Engines Cutoff
 		// Move hidden S1B
-		if(hstg1){
+		if (hstg1) {
 			VESSELSTATUS vs;
 			GetStatus(vs);
-			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
 			stage1->DefSetState(&vs);
-		}				
+		}
 		// Engine Shutdown
-		for (i = 0; i < 5; i++){
-			SetThrusterResource(th_main[i], NULL);
+		for (int i = 0; i < 5; i++) {
+			SetThrusterResource(th_1st[i], NULL);
 		}
 		break;
-	case 18:
-		ClearEngineIndicators();
+	case 23: //S-IB/S-IVB Separation On
 		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
-		SetSIVBThrusters(true);
-		SetThrusterGroupLevel(thg_ver,1.0);
-		SetThrusterResource(th_main[0], ph_3rd);
-		SetSIVBMixtureRatio(5.5);				
 		break;
-	case 23:
-		SetSIVBMixtureRatio (4.5); // Is this 4.7 or 4.2? AP8 says 4.5
-		SPUShiftS.play(NOLOOP,255); 
-		SPUShiftS.done();
+	case 98: //Inboard Engines Cutoff
+		SetThrusterResource(th_1st[4], NULL);
+		SetThrusterResource(th_1st[5], NULL);
+		SetThrusterResource(th_1st[6], NULL);
+		SetThrusterResource(th_1st[7], NULL);
+		SShutS.play(NOLOOP, 235);
+		SShutS.done();
+		break;
+	default:
 		break;
 	}
+}
+
+void Saturn1b::GetSIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+}
+
+void Saturn1b::SIEDSCutoff(bool cut)
+{
+
+}
+
+bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
+{
+	return false;
+}
+
+bool Saturn1b::GetSIInboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return false;
+}
+
+bool Saturn1b::GetSIOutboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return false;
+}
+
+void Saturn1b::SetSIEngineStart(int n)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
 }
 
 //
@@ -468,17 +461,41 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 }
 
-void Saturn1b::SaveLVDC(FILEHANDLE scn){
-	if (lvdc != NULL){ lvdc->SaveState(scn); }
+void Saturn1b::LoadIU(FILEHANDLE scn)
+{
+	// If the IU does not yet exist, create it.
+	if (iu == NULL) {
+		iu = new IU1B;
+	}
+	iu->LoadState(scn);
 }
 
-void Saturn1b::LoadLVDC(FILEHANDLE scn){
-	// If the LVDC does not yet exist, create it.
-	if(lvdc == NULL){
-		lvdc = new LVDC1B;
-		lvdc->init(this);
+void Saturn1b::LoadLVDC(FILEHANDLE scn) {
+
+	if (iu == NULL) {
+		iu = new IU1B;
 	}
-	lvdc->LoadState(scn);
+
+	iu->LoadLVDC(scn);
+}
+
+void Saturn1b::LoadSIVB(FILEHANDLE scn) {
+
+	if (sivb == NULL) {
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+
+	sivb->LoadState(scn);
+}
+
+void Saturn1b::SaveSI(FILEHANDLE scn)
+{
+
+}
+
+void Saturn1b::LoadSI(FILEHANDLE scn)
+{
+
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
@@ -486,12 +503,15 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 
 	SetupMeshes();
 
-	// DS20150804 LVDC++ ON WHEELS
-	// If GetScenarioState has set the use_lvdc flag but not created the LVDC++, we need to do it here.
-	// This happens if the USE_LVDC flag is set but there is no LVDC section in the scenario file.
-	if(lvdc == NULL){
-		lvdc = new LVDC1B;
-		lvdc->init(this);
+	if (stage < CSM_LEM_STAGE)
+	{
+		if (iu == NULL) {
+			iu = new IU1B;
+		}
+		if (sivb == NULL)
+		{
+			sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+		}
 	}
 
 	switch (stage) {
@@ -692,4 +712,63 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// Nothing for now
 
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
+}
+
+void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
+{
+
+}
+
+void Saturn1b::SetRandomFailures()
+{
+	Saturn::SetRandomFailures();
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
+
+		if (stage < STAGE_ORBIT_SIVB)
+		{
+
+			//
+			// Engine failure times for first stage.
+			//
+
+			bool EarlySICutoff[8];
+			double FirstStageFailureTime[8];
+
+			for (int i = 0;i < 8;i++)
+			{
+				EarlySICutoff[i] = 0;
+				FirstStageFailureTime[i] = 0.0;
+			}
+
+			for (int i = 0;i < 8;i++)
+			{
+				if (!(random() & (int)(127.0 / FailureMultiplier)))
+				{
+					EarlySICutoff[i] = 1;
+					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
+				}
+			}
+
+			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+		}
+
+		if (!(random() & 127))
+		{
+			LaunchFail.LETAutoJetFail = 1;
+		}
+		if (!(random() & 63))
+		{
+			LaunchFail.SIIAutoSepFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LESJetMotorFail = 1;
+		}
+	}
 }

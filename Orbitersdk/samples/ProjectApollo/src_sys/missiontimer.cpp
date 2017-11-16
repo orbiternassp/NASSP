@@ -43,7 +43,6 @@ MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 
 {
 	Running = false;
-	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
 	TimerTrash = false;
 	DimmerRotationalSwitch = NULL;
@@ -203,7 +202,7 @@ void MissionTimer::Timestep(double simt, double deltat, bool persistent)
 
 	TimerTrash = false;
 
-	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
+	if (Running && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();
 
 		if (CountUp) {
@@ -331,7 +330,6 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 
 void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent) {
 	oapiWriteLine(scn, start_str);
-	papiWriteScenario_bool(scn, "ENABLED", Enabled);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
 	if (!persistent) {
@@ -355,7 +353,6 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
 			sscanf(line + 3, "%f", &ftcp);
 			SetTime(ftcp);
 		}
-		papiReadScenario_bool(line, "ENABLED", Enabled);
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_int(line, "COUNTUP", CountUp);
 		papiReadScenario_bool(line, "TIMERTRASH", TimerTrash);
@@ -414,8 +411,7 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
 
 {
-	// See http://history.nasa.gov/afj/ap16fj/aoh_op_procs.html, Backup Crew Prelaunch Checks, Pdf page 19
-	Enabled = false;
+
 }
 
 EventTimer::~EventTimer()

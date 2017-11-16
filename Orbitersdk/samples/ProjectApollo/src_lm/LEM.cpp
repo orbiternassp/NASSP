@@ -290,7 +290,6 @@ void LEM::Init()
 	CDREVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
-	ContactOK = false;
 	stage = 0;
 	status = 0;
 	HasProgramer = false;
@@ -853,14 +852,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
-		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
+		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED
 			if (!sevent.isValid())
 #endif
 				Scontact.play();
-
-			ContactOK = true;
 
 			SetLmLandedMesh();
 		}
@@ -917,16 +914,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 #endif
 }
 
-typedef union {
-	struct {
-		unsigned MissionTimerRunning : 1;
-		unsigned MissionTimerEnabled : 1;
-		unsigned EventTimerRunning : 1;
-		unsigned EventTimerEnabled : 1;
-	} u;
-	unsigned long word;
-} LEMMainState;
-
 //
 // Scenario state functions.
 //
@@ -953,14 +940,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
-		} 
-		else if (!strnicmp(line, "MTD", 3)) {
-            sscanf (line+3, "%f", &ftcp);
-			MissionTimerDisplay.SetTime(ftcp);
-		} 
-		else if (!strnicmp(line, "ETD", 3)) {
-            sscanf (line+3, "%f", &ftcp);
-			EventTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "UNMANNED", 8)) {
 			int i;
@@ -1059,15 +1038,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
-		}
-		else if (!strnicmp(line, "STATE", 5)) {
-			LEMMainState state;
-			sscanf(line + 5, "%d", &state.word);
-
-			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
-			MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
-			EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
-			EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
 		}
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
@@ -1500,7 +1470,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 

@@ -2833,7 +2833,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 		
 	case AID_DSKY_LIGHTS:
-		if (ApolloNo >= 15)
+		if (ApolloNo >= 15 && ApolloNo != 1301)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY], 0, 0, true, true);
 		}

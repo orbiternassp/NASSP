@@ -734,7 +734,7 @@ void LEM_AEA::SetMissionInfo(int MissionNo)
 {
 	if (AEAInitialized) { return; }
 
-	if (MissionNo < 12)
+	if (MissionNo < 13)
 	{
 		FlightProgram = 6;
 	}
@@ -1077,7 +1077,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	
 	// We will use a similar scan as the DSKY power consumption
 
-	// The DSYK power consumption is a little bit hard to figure out. According 
+	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
 	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
 	// track the number of lights that are lit, because during pause the still called render 

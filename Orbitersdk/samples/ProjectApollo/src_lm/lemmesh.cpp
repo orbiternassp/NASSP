@@ -114,10 +114,7 @@ void LEM::SetLmVesselDockStage()
 	ClearThrusterDefinitions();
 	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 	SetSize (6);
-	// SetPMI (_V(2.8,2.29,2.37));
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
-	// SetCrossSections (_V(21,23,17));
-	//SetPMI(_V(3.26, 2.22, 3.26));
 	SetCrossSections (_V(24.53,21.92,24.40));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
@@ -127,8 +124,35 @@ void LEM::SetLmVesselDockStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
-    VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
+
+	double Mass = 15876;
+	double ro = 4;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.25;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = 0;
+	td[0].pos.y = -3.86;
+	td[0].pos.z = 1 * ro;
+	td[1].pos.x = -cos(30 * RAD)*ro;
+	td[1].pos.y = -3.86;
+	td[1].pos.z = -sin(30 * RAD)*ro;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -3.86;
+	td[2].pos.z = -sin(30 * RAD)*ro;
+	td[3].pos.x = 0;
+	td[3].pos.y = 3.86;
+	td[3].pos.z = 0;
+
+	SetTouchdownPoints(td, 4);
+
+	VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -151,12 +175,17 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),  _V(0,1,0), 46706.3, ph_Dsc, 3107);
-	th_hover[1] = CreateThruster (_V(0.013, -3.0, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
+	th_hover[0] = CreateThruster (_V(0.0  , -2.0,  0.0),  _V(0,1,0), 46706.3, ph_Dsc, 3107);
+	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
 																							//needed for visual gimbaling for corrected engine flames
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
-	AddExhaust(th_hover[1], 10.0, 1.2, exhaustTex);
+	
+	EXHAUSTSPEC es_hover[1] = {
+		{ th_hover[1], NULL, NULL, NULL, 10.0, 1.2, 0, 0.1, exhaustTex }
+	};
+
+	AddExhaust(es_hover);
 
 	SetCameraOffset (_V(-1,1.0,0.0));
 	SetEngineLevel(ENGINE_HOVER,0);
@@ -192,10 +221,8 @@ void LEM::SetLmVesselHoverStage()
 	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
 
 	SetSize (7);
-	SetPMI (_V(3.26,2.22,3.26)); 
+	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	SetCrossSections (_V(24.53,21.92,24.40));
-	// SetPMI (_V(2.8,2.29,2.37));
-	// SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
@@ -206,12 +233,12 @@ void LEM::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 
 	double Mass = 7137.75;
-	double ro = 7;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double ro = 4;
+	TOUCHDOWNVTX td[7];
+	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
+	for (int i = 0; i<7; i++) {
 		td[i].damping = damping;
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
@@ -226,21 +253,21 @@ void LEM::SetLmVesselHoverStage()
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = -3.86;
 	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = 0;
-	td[3].pos.y = 3.86;
-	td[3].pos.z = 0;
+	td[3].pos.x = cos(30 * RAD)*ro;
+	td[3].pos.y = -3.86;
+	td[3].pos.z = sin(30 * RAD)*ro;
+	td[4].pos.x = -cos(30 * RAD)*ro;
+	td[4].pos.y = -3.86;
+	td[4].pos.z = sin(30 * RAD)*ro;
+	td[5].pos.x = 0;
+	td[5].pos.y = -3.86;
+	td[5].pos.z = -1 * ro;
+	td[6].pos.x = 0;
+	td[6].pos.y = 3.86;
+	td[6].pos.z = 0;
 
-	SetTouchdownPoints(td, 4);
+	SetTouchdownPoints(td, 7);
 	
-	/*	static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, -3.86, 5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(-5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(5, -3.86, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(0, 3.86, 0), 2e4, 3e5, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
-
 	VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
@@ -278,7 +305,12 @@ void LEM::SetLmVesselHoverStage()
 																							//needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
-	AddExhaust (th_hover[1], 10.0, 1.5, exhaustTex);
+	
+	EXHAUSTSPEC es_hover[1] = {
+		{ th_hover[1], NULL, NULL, NULL, 10.0, 1.5, 0, 0.1, exhaustTex }
+	};
+
+	AddExhaust(es_hover);
 		
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 1;
@@ -313,7 +345,6 @@ void LEM::SetLmAscentHoverStage()
 	ClearThrusterDefinitions();
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
-	SetCOG_elev (5);
 	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
@@ -328,9 +359,9 @@ void LEM::SetLmAscentHoverStage()
 
 	double tdph = -5.8;
     double Mass = 4495.0;
-	double ro = 5;
+	double ro = 3;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
+	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -354,15 +385,6 @@ void LEM::SetLmAscentHoverStage()
 
 	SetTouchdownPoints(td, 4);
 
-    /*static const DWORD ntdvtx = 4;
-	static TOUCHDOWNVTX tdvtx[4] = {
-		{ _V(0, tdph, 5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(-5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(5, tdph, -5), 1e6, 1e5, 3.0, 3.0 },
-		{ _V(0, tdph + 5, 0), 2e4, 3e5, 0.5 }
-	};
-	SetTouchdownPoints(tdvtx, ntdvtx);*/
-
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
 	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	
@@ -384,7 +406,12 @@ void LEM::SetLmAscentHoverStage()
 																								// needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
-	AddExhaust (th_hover[1], 6.0, 0.8, exhaustTex);
+	
+	EXHAUSTSPEC es_hover[1] = {
+		{ th_hover[1], NULL, NULL, NULL, 6.0, 0.8, 0, 0.1, exhaustTex }
+	};
+
+	AddExhaust(es_hover);
 	
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 2;
@@ -398,7 +425,7 @@ void LEM::SetLmAscentHoverStage()
 		ph_Dsc = 0;
 	}
 	
-	VECTOR3 dockpos = {0.0 ,0.58, 0.0};
+	VECTOR3 dockpos = {0.0 ,0.75, 0.0};
 	VECTOR3 dockdir = {0,1,0};
 
 	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
@@ -424,31 +451,31 @@ void LEM::SeparateStage (UINT stage)
 {
 	ResetThrusters();
 
-	VESSELSTATUS vs1;
-	VECTOR3 ofs1 = _V(0,-5,0);
-	VECTOR3 vel1 = _V(0,0,0);
+	VESSELSTATUS2 vs2;
+	memset(&vs2, 0, sizeof(vs2));
+	vs2.version = 2;
 
 	if (stage == 1)	{
-	    GetStatus (vs1);
-		vs1.eng_main = vs1.eng_hovr = 0.0;
-		VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
-		Local2Global (ofs1, vs1.rpos);
-		GlobalRot (vel1, rofs1);
-		vs1.rvel.x = rvel1.x+rofs1.x;
-		vs1.rvel.y = rvel1.y+rofs1.y;
-		vs1.rvel.z = rvel1.z+rofs1.z;
-	    vs1.vrot.x = 0.0;	
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		GetStatus (vs1);
-		// Wrong sound, is Saturn staging
-		// StageS.play(NOLOOP, 150);
+		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
+		GetStatusEx(&vs2);
+		if (vs2.status == 1) {
+			vs2.vrot.x = 2.7;
+			char VName[256];
+			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
+			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 
-		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-DESCENTSTG");
-		hdsc = oapiCreateVessel(VName, "ProjectApollo/sat5LMDSC", vs1);
+			vs2.vrot.x = 5.8;
+			DefSetStateEx(&vs2);
+			SetLmAscentHoverStage();
+		}
+		else
+		{
+			char VName[256];
+			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
+			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 
-		SetLmAscentHoverStage();
+			SetLmAscentHoverStage();
+		}
 	}
 }
 

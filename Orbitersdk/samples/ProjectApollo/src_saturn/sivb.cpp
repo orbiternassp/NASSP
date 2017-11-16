@@ -45,6 +45,7 @@
 #include "sivb.h"
 #include "astp.h"
 #include "lem.h"
+#include "LVDC.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -165,6 +166,18 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
+	if (!iuinitflag && iu)
+	{
+		delete iu;
+		iu = 0;
+	}
+
+	if (sivbsys)
+	{
+		delete sivbsys;
+		sivbsys = 0;
+	}
+
 	//
 	// Delete LM PAD data.
 	//
@@ -183,25 +196,29 @@ void SIVB::InitS4b()
 {
 	int i;
 
+	iu = NULL;
+	sivbsys = NULL;
+
+	iuinitflag = false;
+
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
 	PanelsOpened = false;
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
 
-	J2IsActive = false;
-	FuelVenting = false;
-
 	hDock = 0;
-	ph_aps = 0;
+	ph_aps1 = 0;
+	ph_aps2 = 0;
 	ph_main = 0;
-	thg_aps = 0;
 	thg_sep = 0;
 	thg_sepPanel = 0;
+	thg_ver = 0;
 
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
+	ApsFuel1Kg = ApsFuel1Kg = S4B_APS_FUEL_PER_TANK;
 
 	THRUST_THIRD_VAC = 1000.0;
 	ISP_THIRD_VAC = 300.0;
@@ -213,12 +230,13 @@ void SIVB::InitS4b()
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
 
-	for (i = 0; i < 10; i++)
-		th_att_rot[i] = 0;
+	for (i = 0; i < 6; i++)
+		th_aps_rot[i] = 0;
 	for (i = 0; i < 2; i++)
-		th_att_lin[i] = 0;
+		th_aps_ull[i] = 0;
 
 	th_main[0] = 0;
+	th_lox_vent = 0;
 	panelProc = 0;
 	panelProcPlusX = 0;
 	panelTimestepCount = 0;
@@ -344,6 +362,35 @@ void SIVB::SetS4b()
     ClearAttExhaustRefs();
 	HideAllMeshes();
 
+	double TCPS4B = -11;
+
+	double MassS4 = 40296;
+	double ro = 7;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.1;
+	double stiffness = (-1)*(MassS4*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(MassS4*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = TCPS4B;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = TCPS4B;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = TCPS4B;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = TCPS4B + 25;
+
+	SetTouchdownPoints(td, 4);
+
 	VECTOR3 dockpos = {0,0.03, 12.6};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
@@ -459,17 +506,16 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
-		iu.SetMissionInfo(true, true);
+		iu->SetMissionInfo(true, true);
 
 		//
 		// Set up the IU connections.
 		//
 
-		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
+		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
-	iu.ConnectToLV(&IUCommandConnector);
+	iu->ConnectToLV(&IUCommandConnector);
 	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
@@ -710,24 +756,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 				PanelsOpened = true;
 			}
 		}
-	}
-
-	//
-	// Attitude control
-	//
-
-	// Special handling Apollo 7
-	if (VehicleNo == 205) {
-		if (MissionTime >= 11815){ // GRR+11820, GRR is 5 seconds before liftoff
-			// retrograde LVLH orbital-rate
-			iu.SetLVLHAttitude(_V(-1, 0, 0));			
-		} else {
-			iu.HoldAttitude();
-		}
-	} else {
-		// In all other missions maintain initial attitude for now
-		// \todo Correct behaviour of the S-IVB 
-		iu.HoldAttitude();
 	}	
 
 	//
@@ -753,10 +781,15 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu.Timestep(MissionTime, simdt, mjd);
+	sivbsys->Timestep(simdt);
+	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 
+void SIVB::clbkPostStep(double simt, double simdt, double mjd)
+{
+	iu->PostStep(simt, simdt, mjd);
+}
 
 void SIVB::GetApolloName(char *s)
 
@@ -777,6 +810,8 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
+	oapiWriteScenario_float(scn, "APSFMASS1", ApsFuel1Kg);
+	oapiWriteScenario_float(scn, "APSFMASS2", ApsFuel2Kg);
 	oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
 	oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
@@ -818,7 +853,9 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
-	iu.SaveState(scn);
+	sivbsys->SaveState(scn);
+	iu->SaveState(scn);
+	iu->SaveLVDC(scn);
 	Panelsdk.Save(scn);
 }
 
@@ -832,68 +869,9 @@ int SIVB::GetMainState()
 	state.PanelsOpened = PanelsOpened;
 	state.SaturnVStage = SaturnVStage;
 	state.LowRes = LowRes;
-	state.J2IsActive = J2IsActive;
-	state.FuelVenting = FuelVenting;
 	state.Payloaddatatransfer = Payloaddatatransfer;
 
 	return state.word;
-}
-
-void SIVB::SetVentingThruster()
-
-{
-	//
-	// Clear old thrusters.
-	//
-	if (thg_main)
-		DelThrusterGroup(THGROUP_MAIN, true);
-
-	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), 1000.0, ph_main, 30.0, 30.0);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
-	AddExhaustStream(th_main[0], &fuel_venting_spec);
-
-	J2IsActive = false;
-}
-
-void SIVB::SetActiveJ2Thruster()
-
-{
-	//
-	// Clear old thrusters.
-	//
-	if (thg_main)
-		DelThrusterGroup(THGROUP_MAIN, true);
-
-	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
-
-	J2IsActive = true;
-}
-
-void SIVB::StartVenting()
-
-{
-	if (!J2IsActive && th_main[0])
-	{
-		FuelVenting = true;
-
-		EnableDisableJ2(true);
-		SetThrusterLevel(th_main[0], 1.0);
-	}
-}
-
-void SIVB::StopVenting()
-
-{
-	if (!J2IsActive && th_main[0])
-	{
-		FuelVenting = false;
-
-		SetThrusterLevel(th_main[0], 0.0);
-		EnableDisableJ2(false);
-	}
 }
 
 double SIVB::GetMainBatteryPower()
@@ -958,8 +936,11 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 	double offset = -2.05;
 
-	if (!ph_aps)
-		ph_aps  = CreatePropellantResource(275.0);
+	if (!ph_aps1)
+		ph_aps1  = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel1Kg);
+
+	if (!ph_aps2)
+		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel2Kg);
 
 	if (!ph_main)
 		ph_main = CreatePropellantResource(MainFuel);
@@ -972,74 +953,60 @@ void SIVB::AddRCS_S4B()
 	// Unless this is dockable, the main engine is just venting fuel through the exhaust: low thrust and low ISP.
 	//
 
-	if (J2IsActive)
-	{
-		SetActiveJ2Thruster();
-	}
-	else
-	{
-		SetVentingThruster();
-	}
+	//
+	// Clear old thrusters.
+	//
+	if (thg_main)
+		DelThrusterGroup(THGROUP_MAIN, true);
+
+	th_main[0] = CreateThruster(mainExhaustPos, _V(0, 0, 1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
+	thg_main = CreateThrusterGroup(th_main, 1, THGROUP_MAIN);
+	
+	EXHAUSTSPEC es_main[1] = {
+		{ th_main[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, SMMETex }
+	};
+
+	AddExhaust(es_main);
+
+	sivbsys->RecalculateEngineParameters(THRUST_THIRD_VAC);
+
+	//
+	// Clear old thrusters.
+	//
+
+	th_lox_vent = CreateThruster(mainExhaustPos, _V(0, 0, 1), 1000.0, ph_main, 30.0, 30.0);
+
+	AddExhaustStream(th_lox_vent, &fuel_venting_spec);
 
 	//
 	// Rotational thrusters are 150lb (666N) thrust. ISP is estimated at 3000.0.
 	//
-	// Unfortunately Orbiter can't handle the real figures, so for rotation we use fake ones that are far
-	// more powerful.
-	//
-
-	double THRUST_APS_ROT = 5000.0; // 666.0;
-	double ISP_APS_ROT = 100000.0; // 3000.0;
 
 	SURFHANDLE SIVBRCSTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 
-	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_aps_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
 	
-	AddExhaust (th_att_rot[0], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[1], 0.6, 0.078, SIVBRCSTex);
-	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
-	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
+	AddExhaust (th_aps_rot[0], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[1], 0.6, 0.078, SIVBRCSTex);
 
-	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_aps_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
 
-	AddExhaust (th_att_rot[2], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[3], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[4], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[5], 0.6, 0.078, SIVBRCSTex);
-	CreateThrusterGroup (th_att_rot+2, 2, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
-
-	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
-
-	AddExhaust (th_att_rot[6], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[7], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[8], 0.6, 0.078, SIVBRCSTex);
-	AddExhaust (th_att_rot[9], 0.6, 0.078, SIVBRCSTex);
-
-	CreateThrusterGroup (th_att_rot+6, 2, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
+	AddExhaust (th_aps_rot[2], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[3], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[4], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_aps_rot[5], 0.6, 0.078, SIVBRCSTex);
 
 	//
-	// APS linear thrusters are 320N (72 pounds) thrust
+	// APS linear thrusters are 310N (72 pounds) thrust
 	//
-	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
-	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
-	AddExhaust (th_att_lin[0], 7, 0.15, SIVBRCSTex);
-	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
-
-	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
-
-	if (FuelVenting)
-	{
-		StartVenting();
-	}
+	th_aps_ull[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), S4B_APS_ULL_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_ull[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), S4B_APS_ULL_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	AddExhaust (th_aps_ull[0], 7, 0.15, SIVBRCSTex);
+	AddExhaust (th_aps_ull[1], 7, 0.15, SIVBRCSTex);
 
 	//
 	// Seperation junk 'thrusters'.
@@ -1112,8 +1079,6 @@ void SIVB::SetMainState(int s)
 	PanelsHinged = (state.PanelsHinged != 0);
 	PanelsOpened = (state.PanelsOpened != 0);
 	LowRes = (state.LowRes != 0);
-	J2IsActive = (state.J2IsActive);
-	FuelVenting = (state.FuelVenting);
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 }
 
@@ -1153,6 +1118,16 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
+		}
+		else if (!strnicmp(line, "APSFMASS1", 9))
+		{
+			sscanf(line + 9, "%g", &flt);
+			ApsFuel1Kg = flt;
+		}
+		else if (!strnicmp(line, "APSFMASS2", 9))
+		{
+			sscanf(line + 9, "%g", &flt);
+			ApsFuel2Kg = flt;
 		}
 		else if (!strnicmp(line, "T3V", 3))
 		{
@@ -1261,8 +1236,30 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 				AEAPad[AEAPadLoadCount++] = val;
 			}
 		}
+		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
+			if (SaturnVStage)
+			{
+				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+			}
+			else
+			{
+				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+			}
+			sivbsys->LoadState(scn);
+		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			iu.LoadState(scn);
+			if (SaturnVStage)
+			{
+				iu = new IUSV;
+			}
+			else
+			{
+				iu = new IU1B;
+			}
+			iu->LoadState(scn);
+		}
+		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+			iu->LoadLVDC(scn);
 		}
 		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
@@ -1271,6 +1268,18 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			ParseScenarioLineEx (line, vstatus);
         }
+	}
+
+	if (sivbsys == NULL)
+	{
+		if (SaturnVStage)
+		{
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+		}
+		else
+		{
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+		}
 	}
 
 	SetS4b();
@@ -1396,11 +1405,6 @@ void SIVB::SetState(SIVBSettings &state)
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD)
 	{
 		PayloadType = state.Payload;
-
-		if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
-		{
-			J2IsActive = true;
-		}
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO)
@@ -1466,6 +1470,20 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			RotationLimit = 0.25;
 		}
+
+		if (SaturnVStage)
+		{
+			iu = new IUSV;
+			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+		}
+		else
+		{
+			iu = new IU1B;
+			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+		}
+		iu = state.iu_pointer;
+		iuinitflag = true;
+		iu->DisconnectIU();
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_MASS)
@@ -1477,6 +1495,8 @@ void SIVB::SetState(SIVBSettings &state)
 	if (state.SettingsType.SIVB_SETTINGS_FUEL)
 	{
 		MainFuel = state.MainFuelKg;
+		ApsFuel1Kg = state.ApsFuel1Kg;
+		ApsFuel2Kg = state.ApsFuel2Kg;
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_ENGINES)
@@ -1487,39 +1507,6 @@ void SIVB::SetState(SIVBSettings &state)
 
 	State = SIVB_STATE_WAITING;
 	SetS4b();
-}
-
-void SIVB::EnableDisableJ2(bool Enable)
-
-{
-	if (Enable || FuelVenting)
-	{
-		SetThrusterResource(th_main[0], ph_main);
-	}
-	else
-	{
-		SetThrusterResource(th_main[0], NULL);
-	}
-}
-
-bool SIVB::IsVenting()
-
-{
-	return FuelVenting;
-}
-
-void SIVB::SetJ2ThrustLevel(double thrust)
-
-{
-	if (th_main[0])
-		SetThrusterLevel(th_main[0], thrust);
-}
-
-void SIVB::SetAPSThrustLevel(double thrust)
-
-{
-	if (thg_aps)
-		SetThrusterGroupLevel(thg_aps, thrust);
 }
 
 double SIVB::GetJ2ThrustLevel()
@@ -1535,6 +1522,26 @@ double SIVB::GetMissionTime()
 
 {
 	return MissionTime;
+}
+
+void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
+{
+	sivbsys->SetThrusterDir(yaw, pitch);
+}
+
+bool SIVB::GetSIVBThrustOK()
+{
+	return sivbsys->GetThrustOK();
+}
+
+void SIVB::SIVBSwitchSelector(int channel)
+{
+	sivbsys->SwitchSelector(channel);
+}
+
+void SIVB::SIVBEDSCutoff(bool cut)
+{
+	sivbsys->EDSEngineCutoff(cut);
 }
 
 double SIVB::GetSIVbPropellantMass()
@@ -1894,7 +1901,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PROPELLANT_MASS:
+	case IULV_GET_SIVB_PROPELLANT_MASS:
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
@@ -1902,15 +1909,15 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_STATUS:
+	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
-			VESSELSTATUS *status = static_cast<VESSELSTATUS *> (m.val1.pValue);
-			VESSELSTATUS stat;
+			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
+			VECTOR3 ar;
 
-			OurVessel->GetStatus(stat);
+			OurVessel->GetGlobalOrientation(ar);
 
-			*status = stat;
+			*arot = ar;
 			return true;
 		}
 		break;
@@ -1927,14 +1934,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_AP_DIST:
-		if (OurVessel)
-		{
-			OurVessel->GetApDist(m.val1.dValue);
 			return true;
 		}
 		break;
@@ -1987,64 +1986,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_ELEMENTS:
-		if (OurVessel)
-		{
-			ELEMENTS el;
-			ELEMENTS *e = (ELEMENTS *) m.val1.pValue;
-
-			m.val3.hValue = OurVessel->GetElements(el, m.val2.dValue);
-
-			*e = el;
-
-			return true;
-		}
-		break;
-
-	case IULV_GET_PMI:
-		if (OurVessel)
-		{
-			OurVessel->GetPMI(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIZE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSize();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAXTHRUST:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetMaxThrust((ENGINETYPE) m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_LOCAL2GLOBAL:
-		if (OurVessel)
-		{
-			OurVessel->Local2Global(*(VECTOR3 *) m.val1.pValue, *(VECTOR3 *) m.val2.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_WEIGHTVECTOR:
 		if (OurVessel)
 		{
 			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_FORCEVECTOR:
-		if (OurVessel)
-		{
-			m.val2.bValue = OurVessel->GetForceVector(*(VECTOR3 *) m.val1.pValue);
 			return true;
 		}
 		break;
@@ -2057,26 +2002,26 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_PITCH:
+	case IULV_GET_ANGULARVEL:
 		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetPitch();
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
 			return true;
 		}
 		break;
-			
-	case IULV_GET_BANK:
+
+	case IULV_GET_MISSIONTIME:
 		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetBank();
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
 			return true;
 		}
 		break;
-			
-	case IULV_GET_SLIP_ANGLE:
+
+	case IULV_GET_SIVB_THRUST_OK:
 		if (OurVessel)
-		{	
-			m.val1.dValue = OurVessel->GetSlipAngle();
+		{
+			m.val1.bValue = OurVessel->GetSIVBThrustOK();
 			return true;
 		}
 		break;
@@ -2098,60 +2043,53 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_SET_J2_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_APS_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAPSThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_LIN_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_ROT_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
-			return true;
-		}
-		break;
-
-	case IULV_ENABLE_J2:
+	case IULV_SIVB_EDS_CUTOFF:
 		if (OurVessel)
 		{
-			OurVessel->EnableDisableJ2(m.val1.bValue);
+			OurVessel->SIVBEDSCutoff(m.val1.bValue);
 			return true;
 		}
 		break;
 
-	case IULV_J2_DONE:
+	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
-			OurVessel->SetVentingThruster();
+			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
+			return true;
 		}
 		break;
 
-	//
-	// The RCS is always enabled, so don't bother turning it on and off.
-	//
+	case IULV_SET_SIVB_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
+			return true;
+		}
+		break;
 
-	case IULV_DEACTIVATE_S4RCS:
-	case IULV_ACTIVATE_S4RCS:
-		return true;
+	case IULV_ADD_FORCE:
+		if (OurVessel)
+		{
+			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
+			return true;
+		}
+		break;
+
+	case IULV_SIVB_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SIVBSwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = true;
+			return true;
+		}
+		break;
 	}
 
 	return false;
@@ -2226,34 +2164,10 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 
 	switch (messageType)
 	{
-	case CSMSIVB_IS_VENTING:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->IsVenting();
-			return true;
-		}
-		break;
-
 	case CSMSIVB_IS_VENTABLE:
 		if (OurVessel)
 		{
 			m.val1.bValue = true;
-			return true;
-		}
-		break;
-
-	case CSMSIVB_START_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->StartVenting();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_STOP_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->StopVenting();
 			return true;
 		}
 		break;

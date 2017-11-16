@@ -249,6 +249,7 @@
 #define UTP_TLIPAD			8
 #define UTP_LUNARENTRY		9
 #define UTP_FINALLUNARENTRY 10
+#define UTP_STARCHKPAD		11
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -355,6 +356,16 @@
 #define MST_D_INSERTION		10
 #define MST_D_DAY1STATE1	11
 #define MST_D_DAY1STATE2	12
+#define MST_D_DAY1STATE3	13
+#define MST_D_DAY1STATE4	14
+#define MST_D_DAY2STATE1	20
+#define MST_D_DAY2STATE2	21
+#define MST_D_DAY2STATE3	22
+#define MST_D_DAY2STATE4	23
+#define MST_D_DAY2STATE5	24
+#define MST_D_DAY2STATE6	25
+#define MST_D_DAY3STATE1	30
+#define MST_D_DAY3STATE2	31
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -468,6 +479,15 @@ struct AP7ENT{
 	double PB_RetBBO[2];// Ret to begin blackout
 	double PB_RetEBO[2];// Ret to end blackout
 	double PB_RetDrog[2];// Ret to drogue deploy
+};
+
+// CSM STAR CHECK UPDATE
+
+struct STARCHKPAD
+{
+	double GET[2];		// Time of sunrise at start of daylight star check
+	VECTOR3 Att[2];		// Gimbal angles required to place SC at proper initial attitude for daylight star check
+	double TAlign[2];	// Align Time for nominal IMU orientation prior to daylight star check - if required
 };
 
 
