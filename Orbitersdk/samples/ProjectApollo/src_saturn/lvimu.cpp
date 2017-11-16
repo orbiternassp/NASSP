@@ -58,6 +58,7 @@ void LVIMU::Init()
 	Caged = false;
 	ZeroIMUCDUFlag = false;
 	CoarseAlignEnableFlag = false;
+	Failed = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -98,7 +99,7 @@ void LVIMU::Init()
 	CDURegisters[LVRegPIPAZ]=0;
 
 	ZeroIMUCDUs();
-	LastTime = -1;
+	LastTime = 0;
 }
 
 bool LVIMU::IsCaged()
@@ -117,6 +118,17 @@ void LVIMU::SetCaged(bool val)
 			ZeroIMUCDUs();
 		}
 	}
+}
+
+bool LVIMU::IsFailed()
+
+{
+	return Failed;
+}
+
+void LVIMU::SetFailed()
+{
+	Failed = true;
 }
 
 //
@@ -150,7 +162,7 @@ bool LVIMU::IsPowered()
 }
 
 
-void LVIMU::Timestep(double simt)
+void LVIMU::Timestep(double mjd)
 
 {
 	double deltaTime, pulses;
@@ -199,11 +211,11 @@ void LVIMU::Timestep(double simt)
 
 		OurVessel->GetGlobalVel(LastGlobalVel);
 
-		LastTime = simt;
+		LastTime = mjd;
 		Initialized = true;
 	} 
 	else {
-		deltaTime = (simt - LastTime);
+		deltaTime = (mjd - LastTime)*86400.0;
 
 		// Calculate accelerations
 		VECTOR3 w, vel;
@@ -255,6 +267,12 @@ void LVIMU::Timestep(double simt)
 		  	DriveGimbalY(-newAngles.y - Gimbal.Y);
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
 
+			/*if (Failed)
+			{
+				double failang = 20.0*RAD*deltaTime;
+				Orbiter.AttitudeReference = mul(Orbiter.AttitudeReference, _M(1.0, 0.0, 0.0, 0.0, cos(failang), -sin(failang), 0.0, sin(failang), cos(failang)));
+			}*/
+
 			// PIPAs
 			accel = tmul(Orbiter.AttitudeReference, accel);
 			// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
@@ -281,7 +299,7 @@ void LVIMU::Timestep(double simt)
 			pulses = (accel.z * deltaTime);
 			PulsePIPA(LVRegPIPAZ, pulses);
 		}
-		LastTime = simt;
+		LastTime = mjd;
 	}	
 }
 
@@ -432,6 +450,7 @@ typedef union
 		unsigned TurnedOn:1;
 		unsigned Initialized:1;
 		unsigned Caged:1;
+		unsigned Failed:1;
 	} u;
 	unsigned long word;
 } IMUState;
@@ -553,7 +572,7 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m33 = flt;
 		}
-		else if (!strnicmp(line, "LTM", 3)) {
+		else if (!strnicmp(line, "MJD", 3)) {
 			sscanf(line + 3, "%lf", &flt);
 			LastTime = flt;
 		}
@@ -565,6 +584,7 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			Initialized = (state.u.Initialized != 0);
 			TurnedOn = (state.u.TurnedOn != 0);
 			Caged = (state.u.Caged != 0);
+			Failed = (state.u.Failed != 0);
 		}
 	}
 }
@@ -601,7 +621,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
 	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
 	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	papiWriteScenario_double(scn, "LTM", LastTime);
+	papiWriteScenario_double(scn, "MJD", LastTime);
 
 	//
 	// Copy internal state to the structure.
@@ -614,6 +634,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	state.u.TurnedOn = TurnedOn;
 	state.u.Initialized = Initialized;
 	state.u.Caged = Caged;
+	state.u.Failed = Failed;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 

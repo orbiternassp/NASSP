@@ -45,8 +45,26 @@ public:
 	void ReleaseLVIMU();
 	void DriveLVIMUGimbals(double x, double y, double z);
 	VECTOR3 GetLVIMUPIPARegisters();
+	bool GetLVIMUFailure();
+
+	//LVDC Input Discretes and Interrupts
+
 	bool GetSIEngineOut();
 	bool GetSIIEngineOut();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBShutdown();
+	bool GetCMCSIVBTakeover();
+	bool SIVBInjectionDelay();
+	bool SCInitiationOfSIISIVBSeparation();
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool SpacecraftSeparationIndication();
+	bool GetSIVBEngineOut();
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool SIBLowLevelSensorsDry();
+
+	//Not real LVDA functions
+	void TLIBegun();
+	void TLIEnded();
 protected:
 	IU *iu;
 };

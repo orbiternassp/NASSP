@@ -63,8 +63,6 @@ public:
 	bool IsDisplayPowered();
 	void SetRunning(bool run) { Running = run; };
 	bool IsRunning() { return Running; };
-	void SetEnabled(bool run) { Enabled = run; };
-	bool IsEnabled() { return Enabled; };
 	void SetCountUp(int val) { CountUp = val; };
 	int GetCountUp() { return CountUp; };
 	int GetHours(){ return hours; }
@@ -85,7 +83,6 @@ protected:
 	double extra;
 
 	bool Running;
-	bool Enabled;
 	bool TimerTrash;
 	int CountUp;
 

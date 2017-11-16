@@ -150,6 +150,7 @@
     <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
+    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
+    <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />

@@ -233,7 +233,7 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 			#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
 
-			if (Sat->GetApolloNo() == 13) {
+			if (Sat->GetApolloNo() == 1301) {
 				if (Sat->GetMissionTime() >= (O2FAILURETIME + 5.0)) {
 					v = 1.05;
 				}
@@ -1326,8 +1326,8 @@ double SaturnLVSPSPcMeter::QueryValue()
 		return Sat->GetSPSEngine()->GetChamberPressurePSI();
 
 	} else {
-		if (Sat->LETAttached() && Sat->GetDynPressure() > 100.0) {
-			return fabs((10.0 / RAD) * Sat->GetAOA());
+		if (Sat->stage < CSM_LEM_STAGE) {
+			return fabs((10.0 / RAD) * Sat->qball.GetAOA());
 		} else {
 			return 0;
 		}

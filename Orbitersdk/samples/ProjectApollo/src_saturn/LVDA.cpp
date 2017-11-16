@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
+#include "ioChannels.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "saturn.h"
@@ -45,22 +46,9 @@ void LVDA::Init(IU *i)
 
 void LVDA::SwitchSelector(int stage, int channel)
 {
-	if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SwitchSelector(channel);
-	}
-	/*else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu-> SISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SIISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_IU)
-	{
-		iu->SIVBSwitchSelector(channel);
-	}*/
+	if (stage < 0 || stage > 3) return;
+
+	iu->ControlDistributor(stage, channel);
 }
 
 void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
@@ -105,10 +93,83 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 
 bool LVDA::GetSIEngineOut()
 {
-	return iu->GetEDS()->GetSIEngineOut();
+	return iu->GetSIOutboardEngineOut();
 }
 
 bool LVDA::GetSIIEngineOut()
 {
-	return iu->GetEDS()->GetSIIEngineOut();
+	return iu->GetSIIEngineOut();
+}
+
+bool LVDA::GetCMCSIVBIgnitionSequenceStart()
+{
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool LVDA::GetCMCSIVBShutdown()
+{
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
+}
+
+bool LVDA::GetCMCSIVBTakeover()
+{
+	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+bool LVDA::GetLVIMUFailure()
+{
+	return iu->lvimu.IsFailed();
+}
+
+bool LVDA::SIVBInjectionDelay()
+{
+	return iu->GetCommandConnector()->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
+}
+
+bool LVDA::SCInitiationOfSIISIVBSeparation()
+{
+	return iu->GetCommandConnector()->SIISIVbSwitchState() == TOGGLESWITCH_UP;
+}
+
+bool LVDA::GetSIIPropellantDepletionEngineCutoff()
+{
+	return iu->GetSIIPropellantDepletionEngineCutoff();
+}
+
+bool LVDA::SpacecraftSeparationIndication()
+{
+	return iu->GetLVCommandConnector()->CSMSeparationSensed();
+}
+
+bool LVDA::GetSIVBEngineOut()
+{
+	return iu->GetSIVBEngineOut();
+}
+
+bool LVDA::GetSIPropellantDepletionEngineCutoff()
+{
+	return iu->GetSIPropellantDepletionEngineCutoff();
+}
+
+bool LVDA::SIBLowLevelSensorsDry()
+{
+	return iu->SIBLowLevelSensorsDry();
+}
+
+void LVDA::TLIBegun()
+{
+	iu->GetCommandConnector()->TLIBegun();
+}
+
+void LVDA::TLIEnded()
+{
+	iu->GetCommandConnector()->TLIEnded();
 }

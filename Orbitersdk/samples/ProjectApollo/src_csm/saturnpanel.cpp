@@ -4129,8 +4129,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// \todo This should really be moved into the switch code.
 	//
 
-	if (LAUNCHIND[0]) {
-		if (EDSSwitch.GetState() || MissionTime >= 120)
+	LiftoffLight = secs.LiftoffLightPower();
+	NoAutoAbortLight = secs.NoAutoAbortLightPower();
+
+	if (LiftoffLight) {
+		if (!NoAutoAbortLight)
 			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
 		else
 			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);

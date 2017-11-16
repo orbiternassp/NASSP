@@ -734,7 +734,7 @@ void LEM_AEA::SetMissionInfo(int MissionNo)
 {
 	if (AEAInitialized) { return; }
 
-	if (MissionNo < 12)
+	if (MissionNo < 13)
 	{
 		FlightProgram = 6;
 	}

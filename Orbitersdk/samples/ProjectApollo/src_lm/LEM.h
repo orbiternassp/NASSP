@@ -1435,7 +1435,6 @@ protected:
 
 	int	viewpos;
 	
-	bool ContactOK;
 	bool SoundsLoaded;
 
 	bool Crewed;

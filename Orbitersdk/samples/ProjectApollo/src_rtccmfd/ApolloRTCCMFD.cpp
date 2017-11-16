@@ -245,10 +245,12 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 {
 	char *line;
+	char Buffer2[100];
+	bool istarget = false;
 
 	while (oapiReadScenario_nextline(scn, line)) {
-		char Buffer2[100];
-		bool istarget;
+		if (!strnicmp(line, "END_MFD", 7))
+			return;
 
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
@@ -276,7 +278,13 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		istarget = papiReadScenario_string(line, "TARGET", Buffer2);
 		if (istarget)
 		{
-			G->target = oapiGetVesselInterface(oapiGetObjectByName(Buffer2));
+			OBJHANDLE obj;
+			obj = oapiGetObjectByName(Buffer2);
+			if (obj)
+			{
+				G->target = oapiGetVesselInterface(obj);
+			}
+			istarget = false;
 		}
 
 		papiReadScenario_int(line, "TARGETNUMBER", G->targetnumber);

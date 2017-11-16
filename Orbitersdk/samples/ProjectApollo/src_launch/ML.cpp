@@ -352,6 +352,22 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -8.9)
+		{
+			sat->SetSIEngineStart(5);
+		}
+		if (sat->GetMissionTime() > -8.62)
+		{
+			sat->SetSIEngineStart(1);
+			sat->SetSIEngineStart(3);
+		}
+		if (sat->GetMissionTime() > -8.2)
+		{
+			sat->SetSIEngineStart(2);
+			sat->SetSIEngineStart(4);
+		}
+
 		if (sat->GetMissionTime() > -4.9) {
 			s1cforwardarmProc = 1;
 			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);

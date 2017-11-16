@@ -63,6 +63,8 @@ public:
 	double GetMass();
 	double GetFuelMass();
 
+	bool GetLiftOffCircuit(bool sysA);
+
 protected:
 	CSMcomputer &agc;
 };
@@ -82,14 +84,10 @@ public:
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 	bool IsVentable();
-	bool IsVenting();
 
 	double GetFuelMass();
 	void GetMainBatteryPower(double &capacity, double &drain);
 	void GetMainBatteryElectrics(double &volts, double &current);
-
-	void StartVenting();
-	void StopVenting();
 
 	void StartSeparationPyros();
 	void StopSeparationPyros();

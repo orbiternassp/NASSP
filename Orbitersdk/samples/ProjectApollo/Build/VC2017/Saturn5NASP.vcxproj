@@ -154,6 +154,10 @@
     <ClCompile Include="..\..\src_saturn\LVDC.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_saturn\qball.cpp" />
+    <ClCompile Include="..\..\src_saturn\s1csystems.cpp" />
+    <ClCompile Include="..\..\src_saturn\siisystems.cpp" />
+    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -399,6 +403,10 @@
     <ClInclude Include="..\..\src_saturn\FCC.h" />
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
+    <ClInclude Include="..\..\src_saturn\qball.h" />
+    <ClInclude Include="..\..\src_saturn\s1csystems.h" />
+    <ClInclude Include="..\..\src_saturn\siisystems.h" />
+    <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
