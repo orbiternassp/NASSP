@@ -23,6 +23,8 @@
   **************************************************************************/
 #pragma once
 
+#include "s1bsystems.h"
+
 ///
 /// \brief Saturn V launch vehicle class.
 /// \ingroup Saturns
@@ -73,6 +75,7 @@ public:
 	bool GetSIOutboardEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
 	void SetSIEngineStart(int n);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
 
 protected:
 
@@ -110,6 +113,8 @@ protected:
 	void DeactivatePrelaunchVenting();
 	void SetRandomFailures();
 	void SetEngineFailure(int failstage, int faileng, double failtime);
+
+	SIBSystems sib;
 };
 
 

@@ -251,14 +251,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_SI_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetSIThrusterLevel(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_SI_THRUST_OK:
 		if (OurVessel)
 		{
@@ -396,14 +388,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_CONTRAIL_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetContrailLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SIVB_BOILOFF:
 		if (OurVessel)
 		{
@@ -412,26 +396,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_SI_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetSIThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
 			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_CLEAR_SI_THRUSTER_RESOURCE:
-		if (OurVessel)
-		{
-			OurVessel->ClearSIThrusterResource(m.val1.iValue);
 			return true;
 		}
 		break;
@@ -463,7 +431,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_SI_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetSIThrusterDir(m.val1.iValue, *(VECTOR3 *)m.val2.pValue);
+			OurVessel->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
 			return true;
 		}
 		break;

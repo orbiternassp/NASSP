@@ -615,9 +615,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 				break;
 			case 0: // MORE TB0
-				double thrst[4];	// Thrust Settings for 2-2-2-2 start (see below)
-
-									// At 10 seconds, play the countdown sound.
+				// At 10 seconds, play the countdown sound.
 				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
 					lvCommandConnector->SwitchSelector(13);
 				}
@@ -625,92 +623,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// Shut down venting at T - 9
 				if (lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
 
-				// Engine startup was staggered 2-2-2-2, with engine 7+5 starting first, then 6+8, then 2+4, then 3+1
-
-				// Engine 7+5 combustion chamber ignition was at T-2.998,  6+8 at T-2.898, 2+4 at T-2.798, 1+3 at T-2.698
-				// The engines idled in low-range thrust (about 2.5% thrust) for about 0.3 seconds
-				// and then rose to 93% thrust in 0.085 seconds.
-				// The rise from 93 to 100 percent thrust took 0.75 second.
-				// Total engine startup time was 1.9 seconds.
-
-				// Source: Apollo 7 LV Flight Evaluation
-
-				// Transition from seperate throttles to single throttle
-				if (lvCommandConnector->GetMissionTime() < -0.715) {
-					int x = 0; // Start Sequence Index
-					double tm_1, tm_2, tm_3, tm_4; // CC light, 1st rise start, and 2nd rise start, and 100% thrust times.
-					double SumThrust = 0;
-
-					while (x < 4) {
-						thrst[x] = 0;
-						switch (x) {
-						case 0: // Engine 7+5
-							tm_1 = -2.998; break;
-						case 1: // Engine 6+8
-							tm_1 = -2.898; break;
-						case 2: // Engine 2+4
-							tm_1 = -2.798; break;
-						case 3: // Engine 1+3
-							tm_1 = -2.698; break;
-						}
-						tm_2 = tm_1 + 0.3;  // Start of 1st rise
-						tm_3 = tm_2 + 0.085; // Start of 2nd rise
-						tm_4 = tm_3 + 0.75; // End of 2nd rise
-						if (lvCommandConnector->GetMissionTime() >= tm_1) {
-							// Light CC
-							if (lvCommandConnector->GetMissionTime() < tm_2) {
-								// Idle at 2.5% thrust
-								thrst[x] = 0.025;
-							}
-							else {
-								if (lvCommandConnector->GetMissionTime() < tm_3) {
-									// the actual rise is so fast that any 'smoothing' is pointless
-									thrst[x] = 0.93;
-								}
-								else {
-									if (lvCommandConnector->GetMissionTime() < tm_4) {
-										// Rise to 100% at a rate of 9 percent per second.
-										thrst[x] = 0.93 + (0.09*(lvCommandConnector->GetMissionTime() - tm_3));
-									}
-									else {
-										// Hold 100%
-										thrst[x] = 1;
-									}
-								}
-							}
-						}
-						x++; // Do next
-					}
-					SumThrust = (thrst[0] * 2) + (thrst[1] * 2) + (thrst[2] * 2) + (thrst[3] * 2);
-					//				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH 0/1/2 = %f %f %f Sum %f",
-					//					MissionTime,LVDC_TB_ETime,thrst[0],thrst[1],thrst[2],SumThrust);
-					if (SumThrust > 0) { //let's hope that those numberings are right...
-						lvCommandConnector->SetSIThrusterLevel(0, thrst[3]); // Engine 1
-						lvCommandConnector->SetSIThrusterLevel(1, thrst[2]); // Engine 2
-						lvCommandConnector->SetSIThrusterLevel(2, thrst[3]); // Engine 3
-						lvCommandConnector->SetSIThrusterLevel(3, thrst[2]); // Engine 4
-						lvCommandConnector->SetSIThrusterLevel(4, thrst[0]); // Engine 5
-						lvCommandConnector->SetSIThrusterLevel(5, thrst[1]); // Engine 6
-						lvCommandConnector->SetSIThrusterLevel(6, thrst[0]); // Engine 7
-						lvCommandConnector->SetSIThrusterLevel(7, thrst[1]); // Engine 8
-
-						lvCommandConnector->SetContrailLevel(SumThrust / 8);
-						lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
-					}
-				}
-				else {
-					// Get 100% thrust on all engines.
-					//sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | TH = 100%%",lvCommandConnector->GetMissionTime(),LVDC_TB_ETime);
-					lvCommandConnector->SetSIThrusterLevel(0, 1); // Engine 1
-					lvCommandConnector->SetSIThrusterLevel(1, 1); // Engine 2
-					lvCommandConnector->SetSIThrusterLevel(2, 1); // Engine 3
-					lvCommandConnector->SetSIThrusterLevel(3, 1); // Engine 4
-					lvCommandConnector->SetSIThrusterLevel(4, 1); // Engine 5
-					lvCommandConnector->SetSIThrusterLevel(5, 1); // Engine 6
-					lvCommandConnector->SetSIThrusterLevel(6, 1); // Engine 7
-					lvCommandConnector->SetSIThrusterLevel(7, 1); // Engine 8
-					lvCommandConnector->SetContrailLevel(1);
-					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
+				if (lvCommandConnector->GetMissionTime() > -4.0) {
+					lvCommandConnector->AddForce(_V(0, 0, -8. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 				}
 
 				if (lvCommandConnector->GetMissionTime() >= 0) {
@@ -732,6 +646,38 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					CommandSequence++;
 					break;
 				case 1:
+					//TB1+5.8: Single Engine Cutoff Enable
+					if (LVDC_TB_ETime > 5.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 100);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//TB1+6.0: LOX Tank Pressurization Shutoff Valves Close On
+					if (LVDC_TB_ETime > 6.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 79);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//TB1+10.0: Multiple Engine Cutoff Enable No. 1
+					if (LVDC_TB_ETime > 10.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 16);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//TB1+10.1: Multiple Engine Cutoff Enable No. 2
+					if (LVDC_TB_ETime > 10.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 15);
+						CommandSequence++;
+					}
+					break;
+				case 5:
 					//TB1+40.0: Launch Vehicle Engines EDS Cutoff Enable
 					if (LVDC_TB_ETime > 40.0)
 					{
@@ -739,7 +685,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 2:
+				case 6:
 					//TB1+60.0: Flight Control Computer Switch Point No. 1
 					if (LVDC_TB_ETime > 60.0)
 					{
@@ -747,7 +693,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 3:
+				case 7:
 					//TB1+90.0: Flight Control Computer Switch Point No. 2
 					if (LVDC_TB_ETime > 90.0)
 					{
@@ -755,7 +701,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 4:
+				case 8:
 					//TB1+120.0: Flight Control Computer Switch Point No. 3
 					if (LVDC_TB_ETime > 120.0)
 					{
@@ -763,7 +709,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 5:
+				case 9:
 					//TB1+131.2: Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
 					if (LVDC_TB_ETime > 131.2)
 					{
@@ -771,7 +717,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 6:
+				case 10:
 					//TB1+131.4: Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 					if (LVDC_TB_ETime > 131.4)
 					{
@@ -779,7 +725,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 7:
+				case 11:
 					//TB1+131.6: S-IB Two Engines Out Auto-Abort Inhibit Enable
 					if (LVDC_TB_ETime > 131.6)
 					{
@@ -787,11 +733,19 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 8:
+				case 12:
 					//TB1+131.8: S-IB Two Engines Out Auto-Abort Inhibit
 					if (LVDC_TB_ETime > 131.8)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 35);
+						CommandSequence++;
+					}
+					break;
+				case 13:
+					//TB1+132.0: Propellant Level Sensors Enable
+					if (LVDC_TB_ETime > 132.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 104);
 						CommandSequence++;
 					}
 					break;
@@ -873,6 +827,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
+				case 6:
+					//TB2+4.6: LOX Depletion Cutoff Enable
+					if (LVDC_TB_ETime > 4.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 97);
+						CommandSequence++;
+					}
+					break;
+				case 7:
+					//TB2+5.6: Fuel Depletion Cutoff Enable
+					if (LVDC_TB_ETime > 5.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 79);
+						CommandSequence++;
+					}
+					break;
 				default:
 					break;
 				}
@@ -883,6 +853,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
 						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(), lvCommandConnector->GetAltitude());
+					lvCommandConnector->SwitchSelector(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -2041,26 +2012,6 @@ minorloop: //minor loop;
 		if (LVDC_Timebase == 1)
 		{
 			S1B_Engine_Out = lvda.GetSIEngineOut();
-		}
-
-		if (lvCommandConnector->GetStage() == LAUNCH_STAGE_ONE && lvCommandConnector->GetMissionTime() < 12.5) {
-			// Control contrail
-			if (lvCommandConnector->GetMissionTime() > 12) {
-				lvCommandConnector->SetContrailLevel(0);
-			}
-			else {
-				if (lvCommandConnector->GetMissionTime() > 7) {
-					lvCommandConnector->SetContrailLevel((12.0 - lvCommandConnector->GetMissionTime()) / 100.0);
-				}
-				else {
-					if (lvCommandConnector->GetMissionTime() > 2) {
-						lvCommandConnector->SetContrailLevel(1.38 - 0.95 / 5.0 * lvCommandConnector->GetMissionTime());
-					}
-					else {
-						lvCommandConnector->SetContrailLevel(1);
-					}
-				}
-			}
 		}
 	}
 
@@ -4836,7 +4787,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if(lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
 
 				//Hold-down force
-				if(lvCommandConnector->GetMissionTime() < -0.715){
+				if(lvCommandConnector->GetMissionTime() > -4.0){
 					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
 					}
 

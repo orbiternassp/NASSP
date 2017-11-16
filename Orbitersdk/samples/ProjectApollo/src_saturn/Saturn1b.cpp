@@ -70,9 +70,8 @@ static int refcount = 0;
 static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
-Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
-: Saturn (hObj, fmodel)
-
+Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
+	sib(this, th_1st, ph_1st, LaunchS, SShutS, contrailLevel)
 {
 	hMaster = hObj;
 	initSaturn1b();
@@ -355,25 +354,7 @@ void Saturn1b::SwitchSelector(int item){
 	case 14:
 		DeactivatePrelaunchVenting();
 		break;
-	}
-}
-
-void Saturn1b::SISwitchSelector(int channel)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	switch (channel)
-	{
-	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_1st, 1.0);				// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
-			LaunchS.play(NOLOOP, 255);
-			LaunchS.done();
-		}
-		break;
-	case 18: //Outboard Engines Cutoff
+	case 17:
 		// Move hidden S1B
 		if (hstg1) {
 			VESSELSTATUS vs;
@@ -381,27 +362,15 @@ void Saturn1b::SISwitchSelector(int channel)
 			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
 			stage1->DefSetState(&vs);
 		}
-		// Engine Shutdown
-		for (int i = 0; i < 5; i++) {
-			SetThrusterResource(th_1st[i], NULL);
-		}
-		break;
-	case 23: //S-IB/S-IVB Separation On
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		AddRCS_S4B();
-		break;
-	case 98: //Inboard Engines Cutoff
-		SetThrusterResource(th_1st[4], NULL);
-		SetThrusterResource(th_1st[5], NULL);
-		SetThrusterResource(th_1st[6], NULL);
-		SetThrusterResource(th_1st[7], NULL);
-		SShutS.play(NOLOOP, 235);
-		SShutS.done();
-		break;
-	default:
 		break;
 	}
+}
+
+void Saturn1b::SISwitchSelector(int channel)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.SwitchSelector(channel);
 }
 
 void Saturn1b::GetSIThrustOK(bool *ok)
@@ -439,6 +408,13 @@ bool Saturn1b::GetSIOutboardEngineOut()
 void Saturn1b::SetSIEngineStart(int n)
 {
 	if (stage >= LAUNCH_STAGE_ONE) return;
+}
+
+void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.SetThrusterDir(n, yaw, pitch);
 }
 
 //

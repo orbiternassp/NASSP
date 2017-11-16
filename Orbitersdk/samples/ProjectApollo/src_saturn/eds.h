@@ -52,7 +52,6 @@ public:
 	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 
-	bool GetSIEngineOut() { return SI_Engine_Out; }
 	bool GetLiftoffCircuitA() { return LiftoffA; }
 	bool GetLiftoffCircuitB() { return LiftoffB; }
 protected:
@@ -82,7 +81,6 @@ protected:
 	bool SIIEngineOutIndicationB;
 	bool SIVBEngineOutIndicationA;
 	bool SIVBEngineOutIndicationB;
-	bool SI_Engine_Out;
 	bool AutoAbortEnableRelayA;
 	bool AutoAbortEnableRelayB;
 	bool LiftoffA;
@@ -114,7 +112,7 @@ protected:
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
 
-	bool ThrustOK[8];
+	bool SIThrustOK[8];
 };
 
 class EDSSV : public EDS

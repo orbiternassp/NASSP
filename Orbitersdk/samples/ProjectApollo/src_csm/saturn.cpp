@@ -4555,15 +4555,6 @@ int Saturn::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
-double Saturn::GetSIThrusterLevel(int n)
-{
-	if (stage > LAUNCH_STAGE_ONE) return 0.0;
-	if (n < 0 || n > 7) return 0.0;
-	if (!th_1st[n]) return 0.0;
-
-	return GetThrusterLevel(th_1st[n]);
-}
-
 void Saturn::GetSIIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
@@ -4589,15 +4580,6 @@ bool Saturn::GetSIIEngineOut()
 	return false;
 }
 
-void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
-{
-	if (n < 0 || n > 7) return;
-	if (stage > LAUNCH_STAGE_ONE) return;
-	if (!th_1st[n]) return;
-
-	SetThrusterDir(th_1st[n], dir);
-}
-
 void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;
@@ -4610,15 +4592,6 @@ void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetThrusterDir(yaw, pitch);
-}
-
-void Saturn::ClearSIThrusterResource(int n)
-{
-	if (stage != LAUNCH_STAGE_ONE) return;
-	if (n < 0 || n > 7) return;
-	if (!th_1st[n]) return;
-
-	SetThrusterResource(th_1st[n], NULL);
 }
 
 void Saturn::SIIEDSCutoff(bool cut)
@@ -4638,15 +4611,6 @@ void Saturn::SIVBEDSCutoff(bool cut)
 void Saturn::SetQBallPowerOff()
 {
 	qball.SetPowerOff();
-}
-
-void Saturn::SetSIThrusterLevel(int n, double level)
-{
-	if (stage != PRELAUNCH_STAGE && stage != LAUNCH_STAGE_ONE) return;
-	if (n < 0 || n > 7) return;
-	if (!th_1st[n]) return;
-
-	SetThrusterLevel(th_1st[n], level);
 }
 
 void Saturn::SetAPSAttitudeEngine(int n, bool on)

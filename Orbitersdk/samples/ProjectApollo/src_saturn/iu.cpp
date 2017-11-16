@@ -715,18 +715,6 @@ IUToLVCommandConnector::~IUToLVCommandConnector()
 {
 }
 
-void IUToLVCommandConnector::SetSIThrusterLevel(int n, double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SI_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 {
 	ConnectorMessage cm;
@@ -735,17 +723,6 @@ void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 	cm.messageType = IULV_SET_APS_ATTITUDE_ENGINE;
 	cm.val1.iValue = n;
 	cm.val2.bValue = on;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::ClearSIThrusterResource(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_CLEAR_SI_THRUSTER_RESOURCE;
-	cm.val1.iValue = n;
 
 	SendMessage(cm);
 }
@@ -783,14 +760,15 @@ void IUToLVCommandConnector::SIVBEDSCutoff(bool cut)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIThrusterDir(int n, VECTOR3 &dir)
+void IUToLVCommandConnector::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_SI_THRUSTER_DIR;
 	cm.val1.iValue = n;
-	cm.val2.pValue = &dir;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
 
 	SendMessage(cm);
 }
@@ -826,17 +804,6 @@ void IUToLVCommandConnector::SetQBallPowerOff()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_QBALL_POWER_OFF;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetContrailLevel(double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_CONTRAIL_LEVEL;
-	cm.val1.dValue = level;
 
 	SendMessage(cm);
 }
@@ -1250,22 +1217,6 @@ int IUToLVCommandConnector::GetApolloNo()
 	}
 
 	return 0;
-}
-
-double IUToLVCommandConnector::GetSIThrusterLevel(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
-	}
-
-	return 0.0;
 }
 
 void IUToLVCommandConnector::GetSIThrustOK(bool *ok)
