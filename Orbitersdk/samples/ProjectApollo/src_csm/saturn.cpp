@@ -4172,6 +4172,7 @@ void Saturn::StageSix(double simt)
 		}
 
 		if (ApolloExploded && ph_o2_vent) {
+
 			TankQuantities t;
 			GetTankQuantities(t);
 
