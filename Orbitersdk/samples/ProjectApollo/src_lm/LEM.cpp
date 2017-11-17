@@ -548,9 +548,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 					optics.OpticsShaft = 5; // Clobber
 				}
 				//Load panel to trigger change of the default camera direction
-				if (PanelId == LMPANEL_AOTVIEW)
+				if (PanelId == LMPANEL_AOTZOOM)
 				{
-					oapiSetPanel(LMPANEL_AOTVIEW);
+					oapiSetPanel(LMPANEL_AOTZOOM);
 				}
 				break;
 
@@ -560,9 +560,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 					optics.OpticsShaft = 0; // Clobber
 				}
 				//Load panel to trigger change of the default camera direction
-				if (PanelId == LMPANEL_AOTVIEW)
+				if (PanelId == LMPANEL_AOTZOOM)
 				{
-					oapiSetPanel(LMPANEL_AOTVIEW);
+					oapiSetPanel(LMPANEL_AOTZOOM);
 				}
 				break;
 

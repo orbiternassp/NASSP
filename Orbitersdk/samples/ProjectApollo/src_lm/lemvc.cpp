@@ -76,14 +76,19 @@ void LEM::SetView() {
 					SetCameraOffset (_V(-0.576, 1.90, 1.26));
 					break;
 				case LMPANEL_RNDZWINDOW:
-					SetCameraOffset (_V(-0.28, -1.00, 1.65));
-					//SetCameraOffset (_V(-0.576, -0.80, 1.26));
+					SetCameraOffset (_V(-0.598, -1.00, 1.106));
 					break;
 				case LMPANEL_LEFTPANEL:
 					SetCameraOffset (_V(-0.576, 1.90, 1.26));
 					break;
 				case LMPANEL_AOTVIEW:
 					SetCameraOffset (_V(0, 2.88, 1.26));
+					break;
+				case LMPANEL_AOTZOOM:
+					SetCameraOffset (_V(0, 2.88, 1.26));
+					break;
+				case LMPANEL_DOCKVIEW:
+					SetCameraOffset (_V(-0.598, -1.00, 1.106));
 					break;
 			}
 		}
@@ -92,7 +97,7 @@ void LEM::SetView() {
 	}
 
 	//
-	// Change FOV for the LPD window and AOT view
+	// Change FOV for the LPD window, AOT zoom and docking view
 	//
 	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 	   // if this is the first time we've been here, save the current FOV
@@ -103,7 +108,7 @@ void LEM::SetView() {
 		//set FOV to 70 degrees
 		oapiCameraSetAperture(RAD * 35.0);
 	}
-	else if (PanelId == LMPANEL_AOTVIEW) {
+	else if (PanelId == LMPANEL_AOTZOOM) {
 		// if this is the first time we've been here, save the current FOV
 		if (InFOV) {
 			SaveFOV = oapiCameraAperture();
@@ -111,7 +116,16 @@ void LEM::SetView() {
 		}
 		//set FOV to 60 degrees
 		oapiCameraSetAperture(RAD * 30.0);
-	} else {
+	}
+	else if (PanelId == LMPANEL_DOCKVIEW) {
+			// if this is the first time we've been here, save the current FOV
+			if (InFOV) {
+				SaveFOV = oapiCameraAperture();
+				InFOV = false;
+			}
+			//set FOV to 20 degrees
+			oapiCameraSetAperture(RAD * 10.0);
+		} else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);
 			InFOV = true;

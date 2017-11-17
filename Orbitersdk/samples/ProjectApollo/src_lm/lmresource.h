@@ -776,6 +776,8 @@
 #define AID_LEM_SEC_C02					1050
 #define AID_LEM_SGD_LEVER				1051
 #define IDB_LEM_ECS_PANEL				1052
+#define IDB_LEM_DOCK_VIEW				1053
+#define IDB_LEM_AOT_ZOOM				1054
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

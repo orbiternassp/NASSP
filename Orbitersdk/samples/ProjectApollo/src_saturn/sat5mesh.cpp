@@ -442,7 +442,7 @@ void SaturnV::SetFirstStage ()
 	double TCP = -101.5 + STG0O - TCPO;
 	
 	double Mass = Stage1Mass + SI_FuelMass;
-	double ro = 25;
+	double ro = 30;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
