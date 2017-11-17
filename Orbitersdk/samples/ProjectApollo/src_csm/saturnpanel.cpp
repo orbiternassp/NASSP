@@ -4837,6 +4837,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		else {
 			CMdocktgt = false;
 		}
+		SetCMdocktgtMesh();
 		return true;
 	}
 	return false;

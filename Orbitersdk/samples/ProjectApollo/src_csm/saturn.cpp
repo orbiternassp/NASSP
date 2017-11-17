@@ -809,6 +809,7 @@ void Saturn::initSaturn()
 	sidehatchburnedidx = -1;
 	sidehatchburnedopenidx = -1;
 	opticscoveridx = -1;
+	cmdocktgtidx = -1;
 
 	Scorrec = false;
 
@@ -1462,6 +1463,7 @@ int Saturn::GetMainState()
 	state.S1bPanel = S1bPanel;
 	state.NoHGA = NoHGA;
 	state.TLISoundsLoaded = TLISoundsLoaded;
+	state.CMdocktgt = CMdocktgt;
 
 	return state.word;
 }
@@ -1488,6 +1490,7 @@ void Saturn::SetMainState(int s)
 	S1bPanel = (state.S1bPanel != 0);
 	NoHGA = (state.NoHGA != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
+	CMdocktgt = (state.CMdocktgt != 0);
 }
 
 int Saturn::GetSLAState()
