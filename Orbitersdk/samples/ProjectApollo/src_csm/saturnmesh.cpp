@@ -200,7 +200,6 @@ void SaturnInitMeshes()
 	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
 
-
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
 }
