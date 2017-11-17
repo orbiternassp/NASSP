@@ -82,6 +82,7 @@ MESHHANDLE hsat5tower;
 MESHHANDLE hFHO2;
 MESHHANDLE hCMPEVA;
 MESHHANDLE hopticscover;
+MESHHANDLE hcmdocktgt;
 
 extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,double *cd);
 
@@ -197,6 +198,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hFHO2, "ProjectApollo/CMB-HatchO");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
 	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
+	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
+
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -594,7 +597,13 @@ void Saturn::SetCSMStage ()
 		crewidx = -1;
 	}
 
-	meshidx = AddMesh (hCMInt, &mesh_dir);
+	//CM docking target
+	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
+	meshidx = AddMesh(hcmdocktgt, &dt_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
+
+	//Interior
+    meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	//Don't Forget the Hatch
@@ -992,6 +1001,12 @@ void Saturn::SetReentryMeshes() {
 		crewidx = -1;
 	}
 
+	//CM docking target
+	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
+	meshidx = AddMesh(hcmdocktgt, &dt_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
+	
+	//Interior
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
