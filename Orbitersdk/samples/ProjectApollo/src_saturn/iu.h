@@ -45,7 +45,6 @@ enum IUCSMMessageType
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
-	IUCSM_SET_EDS_ABORT,					///< Set EDS abort signal.
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
@@ -77,6 +76,7 @@ enum IUCSMMessageType
 	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
 	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
 	CSMIU_GET_LIFTOFF_CIRCUIT,
+	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 };
 
 ///
@@ -132,6 +132,7 @@ enum IULVMessageType
 	IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
 	IULV_GET_SI_INBOARD_ENGINE_OUT,
 	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
+	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
 	IULV_GET_SII_ENGINE_OUT,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
@@ -158,7 +159,6 @@ public:
 	void ClearLVRateLight();
 	void SetLVGuidLight();
 	void ClearLVGuidLight();
-	void SetEDSAbort(int eds);
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
@@ -255,6 +255,7 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
+	bool GetSIBLowLevelSensorsDry();
 	void GetSIIThrustOK(bool *ok);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();

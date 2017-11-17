@@ -57,6 +57,7 @@ H1Engine::H1Engine(VESSEL *v, THRUSTER_HANDLE &h1, bool cangimbal, double pcant,
 
 void H1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "THRUSTOK", ThrustOK);
 	papiWriteScenario_bool(scn, "ENGINESTART", EngineStart);
 	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
 	papiWriteScenario_bool(scn, "PROGRAMMEDCUTOFF", ProgrammedCutoff);
@@ -78,6 +79,7 @@ void H1Engine::LoadState(FILEHANDLE scn, char *end_str) {
 			break;
 		}
 
+		papiReadScenario_bool(line, "THRUSTOK", ThrustOK);
 		papiReadScenario_bool(line, "ENGINESTART", EngineStart);
 		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
 		papiReadScenario_bool(line, "PROGRAMMEDCUTOFF", ProgrammedCutoff);
@@ -107,38 +109,42 @@ void H1Engine::Timestep(double simdt)
 		EngineStart = false;
 		EngineRunning = false;
 
-		double tm_1, tm_2, tm_3;
-
-		ThrustTimer += simdt;
-
-		tm_1 = 0.1;
-		tm_2 = 0.3;
-		tm_3 = 0.7;
-
-		if (ThrustTimer >= tm_1)
+		if (ThrustLevel > 0)
 		{
-			if (ThrustTimer < tm_2)
+
+			double tm_1, tm_2, tm_3;
+
+			ThrustTimer += simdt;
+
+			tm_1 = 0.1;
+			tm_2 = 0.3;
+			tm_3 = 0.7;
+
+			if (ThrustTimer >= tm_1)
 			{
-				ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
-			}
-			else
-			{
-				if (ThrustTimer < tm_3)
+				if (ThrustTimer < tm_2)
 				{
-					ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+					ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
 				}
 				else
 				{
-					ThrustLevel = 0;
+					if (ThrustTimer < tm_3)
+					{
+						ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+					}
+					else
+					{
+						ThrustLevel = 0;
+					}
 				}
 			}
-		}
-		else
-		{
-			ThrustLevel = 1;
-		}
+			else
+			{
+				ThrustLevel = 1;
+			}
 
-		vessel->SetThrusterLevel(th_h1, ThrustLevel);
+			vessel->SetThrusterLevel(th_h1, ThrustLevel);
+		}
 	}
 	else if (EngineStart && !EngineRunning)
 	{
@@ -157,7 +163,7 @@ void H1Engine::Timestep(double simdt)
 
 		ThrustTimer += simdt;
 
-		tm_1 = -2.998 + 8.9;
+		tm_1 = -2.998 + 3.1;
 		tm_2 = tm_1 + 0.3;  // Start of 1st rise
 		tm_3 = tm_2 + 0.085; // Start of 2nd rise
 		tm_4 = tm_3 + 0.75; // End of 2nd rise
@@ -255,16 +261,41 @@ SIBSystems::SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 
 	for (int i = 0;i < 8;i++)
 	{
-		ThrustOK[i] = false;
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
+		EngineCutoffRelay[i] = false;
 	}
 
+	MultiEngineCutoffInhibitBusPowered = false;
+	LiftoffRelay = false;
+	InboardEnginesCutoffRelay = false;
+	OutboardEnginesCutoffRelay = false;
+	LowPropellantLevelRelay = false;
+	PropLevelSensorsEnabledAndRedundantChargingRelay = false;
 	SingleEngineCutoffEnabledLatch = false;
 	SingleEngineCutoffInhibitRelay = false;
 	MultipleEngineCutoffEnabledLatch1 = false;
 	MultipleEngineCutoffEnabledLatch2 = false;
+	PropellantLevelSensorsEnabledLatch = false;
+	InboardEnginesCutoffLatch = false;
+	LOXDepletionCutoffEnabledLatch = false;
+	OutboardEnginesCutoffLatch = false;
+	LOXDepletionCutoffEnabledRelay = false;
+	FuelDepletionCutoffEnabledLatch = false;
+	PropellantLevelSensorsEnabledRelay = false;
+	LOXLowLevelSensorInhibitRelay = false;
+	FuelLowLevelSensorInhibitRelay = false;
+	MultiEngineCutoffInhibitRelay = false;
+	FuelLevelSensor = false;
+	LOXLevelSensor = false;
+	FuelDepletionSensors1 = false;
+	FuelDepletionSensors2 = false;
+	FuelDepletionCutoffEnabledRelay = false;
+	FuelDepletionCutoffInhibitRelay1 = false;
+	FuelDepletionCutoffInhibitRelay2 = false;
+
 	FailInit = false;
+	OutboardEnginesCutoffSignal = false;
 
 	h1engines[0] = &h1engine1;
 	h1engines[1] = &h1engine2;
@@ -279,12 +310,35 @@ SIBSystems::SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 void SIBSystems::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, SISYSTEMS_START_STRING);
 
+	papiWriteScenario_bool(scn, "MULTIENGINECUTOFFINHIBITBUSPOWERED", MultiEngineCutoffInhibitBusPowered);
+	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
+	papiWriteScenario_bool(scn, "INBOARDENGINESCUTOFFRELAY", InboardEnginesCutoffRelay);
+	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFRELAY", OutboardEnginesCutoffRelay);
+	papiWriteScenario_bool(scn, "LOWPROPELLANTLEVELRELAY", LowPropellantLevelRelay);
+	papiWriteScenario_bool(scn, "PROPLEVELSENSORSENABLEDANDREDUNDANTCHARGINGRELAY", PropLevelSensorsEnabledAndRedundantChargingRelay);
 	papiWriteScenario_bool(scn, "SINGLEENGINECUTOFFENABLEDLATCH", SingleEngineCutoffEnabledLatch);
 	papiWriteScenario_bool(scn, "SINGLEENGINECUTOFFINHIBITRELAY", SingleEngineCutoffInhibitRelay);
 	papiWriteScenario_bool(scn, "MULTIPLEENGINECUTOFFENABLEDLATCH1", MultipleEngineCutoffEnabledLatch1);
 	papiWriteScenario_bool(scn, "MULTIPLEENGINECUTOFFENABLEDLATCH2", MultipleEngineCutoffEnabledLatch2);
+	papiWriteScenario_bool(scn, "PROPELLANTLEVELSENSORSENABLEDLATCH", PropellantLevelSensorsEnabledLatch);
+	papiWriteScenario_bool(scn, "INBOARDENGINESCUTOFFLATCH", InboardEnginesCutoffLatch);
+	papiWriteScenario_bool(scn, "LOXDEPLETIONCUTOFFENABLEDLATCH", LOXDepletionCutoffEnabledLatch);
+	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFLATCH", OutboardEnginesCutoffLatch);
+	papiWriteScenario_bool(scn, "LOXDEPLETIONCUTOFFENABLEDRELAY", LOXDepletionCutoffEnabledRelay);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
+	papiWriteScenario_bool(scn, "PROPELLANTLEVELSENSORSENABLEDRELAY", PropellantLevelSensorsEnabledRelay);
+	papiWriteScenario_bool(scn, "LOXLOWLEVELSENSORSINHIBITRELAY", LOXLowLevelSensorInhibitRelay);
+	papiWriteScenario_bool(scn, "FUELLOWLEVELSENSORSINHIBITRELAY", FuelLowLevelSensorInhibitRelay);
+	papiWriteScenario_bool(scn, "MULTIENGINECUTOFFINHIBITRELAY", MultiEngineCutoffInhibitRelay);
+	papiWriteScenario_bool(scn, "FUELLEVELSENSOR", FuelLevelSensor);
+	papiWriteScenario_bool(scn, "LOXLEVELSENSOR", LOXLevelSensor);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONSENSORS1", FuelDepletionSensors1);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONSENSORS2", FuelDepletionSensors2);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
+	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
 	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
-	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 8);
+	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
 	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
 
@@ -307,12 +361,35 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, SISYSTEMS_END_STRING, sizeof(SISYSTEMS_END_STRING)))
 			return;
 
+		papiReadScenario_bool(line, "MULTIENGINECUTOFFINHIBITBUSPOWERED", MultiEngineCutoffInhibitBusPowered);
+		papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
+		papiReadScenario_bool(line, "INBOARDENGINESCUTOFFRELAY", InboardEnginesCutoffRelay);
+		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFRELAY", OutboardEnginesCutoffRelay);
+		papiReadScenario_bool(line, "LOWPROPELLANTLEVELRELAY", LowPropellantLevelRelay);
+		papiReadScenario_bool(line, "PROPLEVELSENSORSENABLEDANDREDUNDANTCHARGINGRELAY", PropLevelSensorsEnabledAndRedundantChargingRelay);
 		papiReadScenario_bool(line, "SINGLEENGINECUTOFFENABLEDLATCH", SingleEngineCutoffEnabledLatch);
 		papiReadScenario_bool(line, "SINGLEENGINECUTOFFINHIBITRELAY", SingleEngineCutoffInhibitRelay);
-		papiReadScenario_bool(line, "MULTIPLEENGINECUTOFFENABLED1LATCH", MultipleEngineCutoffEnabledLatch1);
+		papiReadScenario_bool(line, "MULTIPLEENGINECUTOFFENABLEDLATCH1", MultipleEngineCutoffEnabledLatch1);
 		papiReadScenario_bool(line, "MULTIPLEENGINECUTOFFENABLEDLATCH2", MultipleEngineCutoffEnabledLatch2);
+		papiReadScenario_bool(line, "PROPELLANTLEVELSENSORSENABLEDLATCH", PropellantLevelSensorsEnabledLatch);
+		papiReadScenario_bool(line, "INBOARDENGINESCUTOFFLATCH", InboardEnginesCutoffLatch);
+		papiReadScenario_bool(line, "LOXDEPLETIONCUTOFFENABLEDLATCH", LOXDepletionCutoffEnabledLatch);
+		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFLATCH", OutboardEnginesCutoffLatch);
+		papiReadScenario_bool(line, "LOXDEPLETIONCUTOFFENABLEDRELAY", LOXDepletionCutoffEnabledRelay);
+		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
+		papiReadScenario_bool(line, "PROPELLANTLEVELSENSORSENABLEDRELAY", PropellantLevelSensorsEnabledRelay);
+		papiReadScenario_bool(line, "LOXLOWLEVELSENSORSINHIBITRELAY", LOXLowLevelSensorInhibitRelay);
+		papiReadScenario_bool(line, "FUELLOWLEVELSENSORSINHIBITRELAY", FuelLowLevelSensorInhibitRelay);
+		papiReadScenario_bool(line, "MULTIENGINECUTOFFINHIBITRELAY", MultiEngineCutoffInhibitRelay);
+		papiReadScenario_bool(line, "FUELLEVELSENSOR", FuelLevelSensor);
+		papiReadScenario_bool(line, "LOXLEVELSENSOR", LOXLevelSensor);
+		papiReadScenario_bool(line, "FUELDEPLETIONSENSORS1", FuelDepletionSensors1);
+		papiReadScenario_bool(line, "FUELDEPLETIONSENSORS2", FuelDepletionSensors2);
+		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
+		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
+		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
 		papiReadScenario_bool(line, "FAILINIT", FailInit);
-		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 8);
+		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 8);
 		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
 
@@ -357,22 +434,25 @@ void SIBSystems::Timestep(double simdt)
 	h1engine7.Timestep(simdt);
 	h1engine8.Timestep(simdt);
 
-	//Thrust OK
-	for (int i = 0;i < 5;i++)
-	{
-		ThrustOK[i] = h1engines[i]->GetThrustOK();
-	}
-
 	if (vessel->GetStage() == LAUNCH_STAGE_ONE)
 	{
-		Liftoff = true;
+		LiftoffRelay = false;
 	}
 	else
 	{
-		Liftoff = false;
+		LiftoffRelay = true;
 	}
 
 	if (PropellantLevelSensorsEnabledLatch)
+	{
+		PropLevelSensorsEnabledAndRedundantChargingRelay = true;
+	}
+	else
+	{
+		PropLevelSensorsEnabledAndRedundantChargingRelay = false;
+	}
+
+	if (PropLevelSensorsEnabledAndRedundantChargingRelay)
 	{
 		PropellantLevelSensorsEnabledRelay = true;
 	}
@@ -381,33 +461,37 @@ void SIBSystems::Timestep(double simdt)
 		PropellantLevelSensorsEnabledRelay = false;
 	}
 
-	if (PropellantLevelSensorsEnabledRelay)
+	//Propellant sensors
+	LOXLevelSensor = vessel->GetPropellantMass(main_propellant) < 24000.0;
+	FuelLevelSensor = vessel->GetPropellantMass(main_propellant) < 24000.0;
+	FuelDepletionSensors1 = vessel->GetPropellantMass(main_propellant) < 4211.152;
+	FuelDepletionSensors2 = vessel->GetPropellantMass(main_propellant) < 4211.152;
+
+	if (LOXLowLevelSensorInhibitRelay || (!PropellantLevelSensorsEnabledRelay && LOXLevelSensor))
 	{
-		K75 = true;
+		LOXLowLevelSensorInhibitRelay = true;
 	}
 	else
 	{
-		K75 = false;
+		LOXLowLevelSensorInhibitRelay = false;
 	}
 
-	//TBD: Fuel and LOX Level Sensor
-
-	if (K76 || (!K75 && LOXLevelSensor))
+	if (FuelLowLevelSensorInhibitRelay || (!PropellantLevelSensorsEnabledRelay && FuelLevelSensor))
 	{
-		K76 = true;
+		FuelLowLevelSensorInhibitRelay = true;
 	}
 	else
 	{
-		K76 = false;
+		FuelLowLevelSensorInhibitRelay = false;
 	}
 
-	if (K77 || (!K75 && FuelLevelSensor))
+	if (PropellantLevelSensorsEnabledRelay && ((LOXLevelSensor && !LOXLowLevelSensorInhibitRelay) || (FuelLevelSensor && !FuelLowLevelSensorInhibitRelay)))
 	{
-		K77 = true;
+		LowPropellantLevelRelay = true;
 	}
 	else
 	{
-		K77 = false;
+		LowPropellantLevelRelay = false;
 	}
 
 	if (!MultipleEngineCutoffEnabledLatch1 && !MultipleEngineCutoffEnabledLatch2)
@@ -421,7 +505,7 @@ void SIBSystems::Timestep(double simdt)
 		MultiEngineCutoffInhibitBusPowered = false;
 	}
 
-	if (!SingleEngineCutoffEnabledLatch && Liftoff)
+	if (!SingleEngineCutoffEnabledLatch && !LiftoffRelay)
 	{
 		SingleEngineCutoffInhibitRelay = true;
 	}
@@ -459,8 +543,40 @@ void SIBSystems::Timestep(double simdt)
 		LOXDepletionCutoffEnabledRelay = false;
 	}
 
-	if (OutboardEnginesCutoffLatch || (FuelDepletionCutoffEnabled && FuelDepletionSensors))
+	if (FuelDepletionCutoffEnabledLatch)
 	{
+		FuelDepletionCutoffEnabledRelay = true;
+	}
+	else
+	{
+		FuelDepletionCutoffEnabledRelay = false;
+	}
+
+	if (FuelDepletionCutoffInhibitRelay1 || (FuelDepletionSensors1 && !FuelDepletionCutoffEnabledRelay))
+	{
+		FuelDepletionCutoffInhibitRelay1 = true;
+	}
+	else
+	{
+		FuelDepletionCutoffInhibitRelay1 = false;
+	}
+
+	if (FuelDepletionCutoffInhibitRelay2 || (FuelDepletionSensors2 && !FuelDepletionCutoffEnabledRelay))
+	{
+		FuelDepletionCutoffInhibitRelay2 = true;
+	}
+	else
+	{
+		FuelDepletionCutoffInhibitRelay2 = false;
+	}
+
+	if (OutboardEnginesCutoffLatch)
+	{
+		OutboardEnginesCutoffRelay = true;
+	}
+	else if (FuelDepletionCutoffEnabledRelay && ((!FuelDepletionCutoffInhibitRelay1 && FuelDepletionSensors1) || (!FuelDepletionCutoffInhibitRelay2 && FuelDepletionSensors2)))
+	{
+		OutboardEnginesCutoffSignal = true;
 		OutboardEnginesCutoffRelay = true;
 	}
 	else
@@ -477,6 +593,7 @@ void SIBSystems::Timestep(double simdt)
 		}
 		else if (LOXDepletionCutoffEnabledRelay && OutboardEnginesCutoffRelay)
 		{
+			OutboardEnginesCutoffSignal = true;
 			EngineCutoffRelay[i] = true;
 		}
 		else
@@ -492,7 +609,7 @@ void SIBSystems::Timestep(double simdt)
 		{
 			EngineCutoffRelay[i] = true;
 		}
-		else if (InboardEnginesCutoffRelay && PropellantLevelSensorsEnabledRelay)
+		else if (PropLevelSensorsEnabledAndRedundantChargingRelay && InboardEnginesCutoffRelay)
 		{
 			EngineCutoffRelay[i] = true;
 		}
@@ -504,7 +621,7 @@ void SIBSystems::Timestep(double simdt)
 
 	for (int i = 0;i < 8;i++)
 	{
-		if (EngineCutoffRelay[i])
+		if (EngineCutoffRelay[i] && !LiftoffRelay)
 		{
 			h1engines[i]->SetThrustNotOKCutoff();
 		}
@@ -523,13 +640,70 @@ void SIBSystems::Timestep(double simdt)
 	//Contrail Level
 
 	contrailLevel = min(1.0, max(0.0, GetSumThrust()*(-vessel->GetAltitude(ALTMODE_GROUND) + 400.0) / 300.0));
+
+	//sprintf(oapiDebugString(), "Startup: %f %f %f %f %f %f %f %f", h1engine1.GetThrustLevel(), h1engine2.GetThrustLevel(),
+	//	h1engine3.GetThrustLevel(), h1engine4.GetThrustLevel(), h1engine5.GetThrustLevel(), h1engine6.GetThrustLevel(),
+	//	h1engine7.GetThrustLevel(), h1engine8.GetThrustLevel());
+	//sprintf(oapiDebugString(), "Single Fail: Liftoff %d Latch: %d Inhibit: %d", LiftoffRelay, SingleEngineCutoffEnabledLatch, SingleEngineCutoffInhibitRelay);
+	//sprintf(oapiDebugString(), "Multi Fail: Latch1 %d Latch2 %d Bus %d Relay %d Single Fail %d", MultipleEngineCutoffEnabledLatch1, MultipleEngineCutoffEnabledLatch2, MultiEngineCutoffInhibitBusPowered, MultiEngineCutoffInhibitRelay, SingleEngineFailedInhibitRelay);
+	//sprintf(oapiDebugString(), "Inboard: Latch %d Relay1 %d Relay2 %d Sensor %d Interrupt %d CutCmd %d CutRelay %d", 
+	//	PropellantLevelSensorsEnabledLatch, PropLevelSensorsEnabledAndRedundantChargingRelay, PropellantLevelSensorsEnabledRelay, 
+	//	LOXLevelSensor, LowPropellantLevelRelay, InboardEnginesCutoffLatch, InboardEnginesCutoffRelay);
+	//sprintf(oapiDebugString(), "Outboard: LOX Latch %d Relay %d Fuel Latch %d Relay %d Sensor %d Cmd %d",
+	//	LOXDepletionCutoffEnabledLatch, LOXDepletionCutoffEnabledRelay, FuelDepletionCutoffEnabledLatch, FuelDepletionCutoffEnabledRelay,
+	//	FuelDepletionSensors1, OutboardEnginesCutoffRelay);
+}
+
+void SIBSystems::SetEngineStart(int n)
+{
+	if (n < 1 || n > 8) return;
+
+	h1engines[n - 1]->SetEngineStart();
 }
 
 void SIBSystems::SetThrusterDir(int n, double beta_y, double beta_p)
 {
-	if (n < 1 || n > 4) return;
+	if (n < 0 || n > 3) return;
 
-	h1engines[n - 1]->SetThrusterDir(beta_y, beta_p);
+	h1engines[n]->SetThrusterDir(beta_y, beta_p);
+}
+
+void SIBSystems::EDSEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		h1engine1.SetEDSCutoff();
+		h1engine2.SetEDSCutoff();
+		h1engine3.SetEDSCutoff();
+		h1engine4.SetEDSCutoff();
+		h1engine5.SetEDSCutoff();
+		h1engine6.SetEDSCutoff();
+		h1engine7.SetEDSCutoff();
+		h1engine8.SetEDSCutoff();
+	}
+}
+
+bool SIBSystems::GetLowLevelSensorsDry()
+{
+	return LowPropellantLevelRelay;
+}
+
+bool SIBSystems::GetOutboardEngineOut()
+{
+	if (!h1engine1.GetThrustOK() || !h1engine2.GetThrustOK() || !h1engine3.GetThrustOK() || !h1engine4.GetThrustOK()) return true;
+
+	return false;
+}
+
+bool SIBSystems::GetInboardEngineOut()
+{
+	if (!h1engine5.GetThrustOK() || !h1engine6.GetThrustOK() || !h1engine7.GetThrustOK() || !h1engine8.GetThrustOK()) return true;
+
+	return false;
+}
+bool SIBSystems::GetOutboardEnginesCutoff()
+{
+	return OutboardEnginesCutoffSignal;
 }
 
 double SIBSystems::GetSumThrust()
@@ -542,6 +716,35 @@ double SIBSystems::GetSumThrust()
 	}
 
 	return thrust;
+}
+
+void SIBSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
+{
+	for (int i = 0;i < 8;i++)
+	{
+		EarlySICutoff[i] = SICut[i];
+		FirstStageFailureTime[i] = SICutTimes[i];
+	}
+
+	FailInit = true;
+}
+
+void SIBSystems::SetEngineFailureParameters(int n, double SICutTimes)
+{
+	if (n < 1 || n > 8) return;
+
+	EarlySICutoff[n - 1] = true;
+	FirstStageFailureTime[n - 1] = SICutTimes;
+
+	FailInit = true;
+}
+
+void SIBSystems::GetThrustOK(bool *ok)
+{
+	for (int i = 0;i < 8;i++)
+	{
+		ok[i] = h1engines[i]->GetThrustOK();
+	}
 }
 
 void SIBSystems::SwitchSelector(int channel)

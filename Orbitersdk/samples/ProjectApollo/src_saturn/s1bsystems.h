@@ -77,6 +77,11 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
+	void SetEngineFailureParameters(int n, double SICutTimes);
+	bool GetFailInit() { return FailInit; }
+
+	void SetEngineStart(int n);
 	void SwitchSelector(int channel);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 
@@ -87,11 +92,14 @@ public:
 	void SetInboardEnginesCutoff() { InboardEnginesCutoffLatch = true; }
 	void SetOutboardEnginesCutoff() { OutboardEnginesCutoffLatch = true; }
 	void SetLOXDepletionCutoffEnable() { LOXDepletionCutoffEnabledLatch = true; }
-	void SetFuelDepletionCutoffEnable() { FuelDepletionCutoffEnabled = true; }
+	void SetFuelDepletionCutoffEnable() { FuelDepletionCutoffEnabledLatch = true; }
+	void EDSEnginesCutoff(bool cut);
 
-	bool LowLevelSensorsDry();
+	bool GetLowLevelSensorsDry();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
+	bool GetOutboardEnginesCutoff();
+	void GetThrustOK(bool *ok);
 protected:
 	double GetSumThrust();
 
@@ -116,13 +124,15 @@ protected:
 
 	bool MultiEngineCutoffInhibitBusPowered;
 	//K4
-	bool Liftoff;
+	bool LiftoffRelay;
 	//K6
 	bool InboardEnginesCutoffRelay;
 	//K7
 	bool OutboardEnginesCutoffRelay;
+	//K18
+	bool LowPropellantLevelRelay;
 	//K22
-	bool PropellantLevelSensorsEnabledRelay;
+	bool PropLevelSensorsEnabledAndRedundantChargingRelay;
 	//K42
 	bool MultipleEngineCutoffEnabledLatch1;
 	//K44
@@ -138,15 +148,15 @@ protected:
 	//K53
 	bool LOXDepletionCutoffEnabledRelay;
 	//K58
-	bool FuelDepletionCutoffEnabled;
+	bool FuelDepletionCutoffEnabledLatch;
 	//K59
 	bool SingleEngineCutoffEnabledLatch;
 	//K75
-	bool K75;
+	bool PropellantLevelSensorsEnabledRelay;
 	//K76
-	bool K76;
+	bool LOXLowLevelSensorInhibitRelay;
 	//K77
-	bool K77;
+	bool FuelLowLevelSensorInhibitRelay;
 
 	//PRPULSION DISTRIBUTOR
 	//K10
@@ -157,13 +167,20 @@ protected:
 	bool MultiEngineCutoffInhibitRelay;
 	//K67
 	bool SingleEngineCutoffInhibitRelay;
+	//K70
+	bool FuelDepletionCutoffEnabledRelay;
+	//K71
+	bool FuelDepletionCutoffInhibitRelay1;
+	//K72
+	bool FuelDepletionCutoffInhibitRelay2;
 
 	//Sensors
 	bool FuelLevelSensor;
 	bool LOXLevelSensor;
-	bool FuelDepletionSensors;
+	bool FuelDepletionSensors1;
+	bool FuelDepletionSensors2;
 
-	bool ThrustOK[8];
+	bool OutboardEnginesCutoffSignal;
 
 	bool FailInit;
 	bool EarlySICutoff[8];

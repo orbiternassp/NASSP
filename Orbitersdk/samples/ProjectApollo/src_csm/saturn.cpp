@@ -4580,6 +4580,11 @@ bool Saturn::GetSIIEngineOut()
 	return false;
 }
 
+bool Saturn::GetSIBLowLevelSensorsDry()
+{
+	return false;
+}
+
 void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;

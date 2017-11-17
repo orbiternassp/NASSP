@@ -298,17 +298,6 @@ void IUToCSMCommandConnector::ClearLVGuidLight()
 	SendMessage(cm);
 }
 
-void IUToCSMCommandConnector::SetEDSAbort(int eds)
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SET_EDS_ABORT;
-	cm.val1.iValue = eds;
-
-	SendMessage(cm);
-}
-
 void IUToCSMCommandConnector::SetEngineIndicator(int eng)
 
 {
@@ -696,6 +685,14 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 			{
 				m.val2.bValue = ourIU->GetEDS()->GetLiftoffCircuitB();
 			}
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_EDS_ABORT:
+		if (ourIU)
+		{
+			m.val2.bValue = ourIU->GetEDS()->GetEDSAbort(m.val1.iValue);
 			return true;
 		}
 		break;
@@ -1275,6 +1272,21 @@ bool IUToLVCommandConnector::GetSIOutboardEngineOut()
 	return false;
 }
 
+bool IUToLVCommandConnector::GetSIBLowLevelSensorsDry()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 {
 	ConnectorMessage cm;
@@ -1423,19 +1435,17 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 bool IU1B::SIBLowLevelSensorsDry()
 {
-	if (lvCommandConnector.GetSIPropellantMass() <= 24000.0) return true;
-
-	return false;
+	return lvCommandConnector.GetSIBLowLevelSensorsDry();
 }
 
 bool IU1B::GetSIInboardEngineOut()
 {
-	return false;
+	return lvCommandConnector.GetSIInboardEngineOut();
 }
 
 bool IU1B::GetSIOutboardEngineOut()
 {
-	return false;
+	return lvCommandConnector.GetSIOutboardEngineOut();
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {

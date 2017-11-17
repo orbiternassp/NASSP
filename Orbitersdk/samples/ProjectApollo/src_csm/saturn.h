@@ -764,8 +764,6 @@ public:
 	///
 	void JettisonLET(bool AbortJettison = false);
 
-	void SetEDSAbort(int eds);
-
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
 	/// MissionTime reaches zero, setting MissionTime to (-t) tells the code when to launch.
@@ -938,6 +936,7 @@ public:
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
+	virtual bool GetSIBLowLevelSensorsDry();
 	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	void SetSIIThrusterDir(int n, double yaw, double pitch);

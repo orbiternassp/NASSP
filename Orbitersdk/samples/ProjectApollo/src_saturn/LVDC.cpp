@@ -5540,7 +5540,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// IECO
 				/*if (LVDC_TB_ETime >= 299.0)
 				{
-					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false && owner->GetApolloNo() >= 10)
+					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false)
 					{
 						S2_ENGINE_OUT = true;
 						lvCommandConnector->SwitchSelector(24);

@@ -33,7 +33,6 @@ public:
 	EDS(LVRG &rg);
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt) = 0;
-	virtual void SetEngineFailureParameters(bool *SICut, double *SICutTimes) = 0;
 	void Init(IU *i);
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 
@@ -54,6 +53,7 @@ public:
 
 	bool GetLiftoffCircuitA() { return LiftoffA; }
 	bool GetLiftoffCircuitB() { return LiftoffB; }
+	bool GetEDSAbort(int n);
 protected:
 	LVRG &lvrg;
 
@@ -93,6 +93,9 @@ protected:
 	bool SIEDSCutoff;
 	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
+	bool EDSAbortSignal1;
+	bool EDSAbortSignal2;
+	bool EDSAbortSignal3;
 
 	//Common Saturn Failures
 	bool PlatformFailure;
@@ -104,13 +107,9 @@ class EDS1B : public EDS
 public:
 	EDS1B(LVRG &rg);
 	void Timestep(double simdt);
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
 protected:
-	//Engine Failure variables
-	bool EarlySICutoff[8];
-	double FirstStageFailureTime[8];
 
 	bool SIThrustOK[8];
 };
@@ -120,7 +119,6 @@ class EDSSV : public EDS
 public:
 	EDSSV(LVRG &rg);
 	void Timestep(double simdt);
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
 	void SetSIIEngineOutIndicationA(bool set) { SIIEngineOutIndicationA = set; }

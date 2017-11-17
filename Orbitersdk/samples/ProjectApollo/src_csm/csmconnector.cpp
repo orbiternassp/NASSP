@@ -299,6 +299,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
+			return true;
+		}
+		break;
+
 	case IULV_GET_SII_ENGINE_OUT:
 		if (OurVessel)
 		{
@@ -682,14 +690,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_SET_EDS_ABORT:
-		if (OurVessel)
-		{
-			OurVessel->SetEDSAbort(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IUCSM_SET_ENGINE_INDICATORS:
 		if (OurVessel)
 		{
@@ -864,6 +864,22 @@ bool CSMToIUConnector::GetLiftOffCircuit(bool sysA)
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = CSMIU_GET_LIFTOFF_CIRCUIT;
 	cm.val1.bValue = sysA;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
+	}
+
+	return false;
+}
+
+bool CSMToIUConnector::GetEDSAbort(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_EDS_ABORT;
+	cm.val1.iValue = n;
 
 	if (SendMessage(cm))
 	{

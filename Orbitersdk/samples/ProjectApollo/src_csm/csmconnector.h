@@ -64,6 +64,7 @@ public:
 	double GetFuelMass();
 
 	bool GetLiftOffCircuit(bool sysA);
+	bool GetEDSAbort(int n);
 
 protected:
 	CSMcomputer &agc;

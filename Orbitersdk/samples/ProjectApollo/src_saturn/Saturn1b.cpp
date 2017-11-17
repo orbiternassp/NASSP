@@ -293,6 +293,11 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sib.Timestep(simdt);
+	}
+
 	if (stage < CSM_LEM_STAGE) {
 	} else {
 		GenericTimestepStage(simt, simdt);
@@ -379,35 +384,52 @@ void Saturn1b::GetSIThrustOK(bool *ok)
 	{
 		ok[i] = false;
 	}
+
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.GetThrustOK(ok);
 }
 
 void Saturn1b::SIEDSCutoff(bool cut)
 {
+	if (stage > LAUNCH_STAGE_ONE) return;
 
+	sib.EDSEnginesCutoff(cut);
 }
 
 bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
 {
-	return false;
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetOutboardEnginesCutoff();
 }
 
 bool Saturn1b::GetSIInboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return false;
+	return sib.GetInboardEngineOut();
 }
 
 bool Saturn1b::GetSIOutboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return false;
+	return sib.GetOutboardEngineOut();
+}
+
+bool Saturn1b::GetSIBLowLevelSensorsDry()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetLowLevelSensorsDry();
 }
 
 void Saturn1b::SetSIEngineStart(int n)
 {
 	if (stage >= LAUNCH_STAGE_ONE) return;
+
+	sib.SetEngineStart(n);
 }
 
 void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
@@ -466,12 +488,12 @@ void Saturn1b::LoadSIVB(FILEHANDLE scn) {
 
 void Saturn1b::SaveSI(FILEHANDLE scn)
 {
-
+	sib.SaveState(scn);
 }
 
 void Saturn1b::LoadSI(FILEHANDLE scn)
 {
-
+	sib.LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
@@ -692,7 +714,10 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
 {
-
+	if (failstage == 1)
+	{
+		sib.SetEngineFailureParameters(faileng, failtime);
+	}
 }
 
 void Saturn1b::SetRandomFailures()
@@ -702,13 +727,10 @@ void Saturn1b::SetRandomFailures()
 	// Set up launch failures.
 	//
 
-	if (!LaunchFail.Init)
+	if (stage < STAGE_ORBIT_SIVB)
 	{
-		LaunchFail.Init = 1;
-
-		if (stage < STAGE_ORBIT_SIVB)
+		if (!sib.GetFailInit())
 		{
-
 			//
 			// Engine failure times for first stage.
 			//
@@ -731,8 +753,13 @@ void Saturn1b::SetRandomFailures()
 				}
 			}
 
-			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+			sib.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 		}
+	}
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
 
 		if (!(random() & 127))
 		{

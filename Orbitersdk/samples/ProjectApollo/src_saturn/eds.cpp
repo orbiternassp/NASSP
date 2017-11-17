@@ -64,6 +64,9 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	SIEDSCutoff = false;
 	SIIEDSCutoff = false;
 	SIVBEDSCutoff = false;
+	EDSAbortSignal1 = false;
+	EDSAbortSignal2 = false;
+	EDSAbortSignal3 = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
@@ -80,6 +83,24 @@ void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
 {
 	PlatformFailure = PlatFail;
 	PlatformFailureTime = PlatFailTime;
+}
+
+bool EDS::GetEDSAbort(int n)
+{
+	if (n == 1)
+	{
+		return EDSAbortSignal1;
+	}
+	else if (n == 2)
+	{
+		return EDSAbortSignal2;
+	}
+	else if (n == 3)
+	{
+		return EDSAbortSignal3;
+	}
+
+	return false;
 }
 
 void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -111,6 +132,9 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBEDSCUTOFF", SIVBEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
+	papiWriteScenario_bool(scn, "EDSABORTSIGNAL1", EDSAbortSignal1);
+	papiWriteScenario_bool(scn, "EDSABORTSIGNAL2", EDSAbortSignal2);
+	papiWriteScenario_bool(scn, "EDSABORTSIGNAL3", EDSAbortSignal3);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -151,6 +175,9 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
 		papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
 		papiReadScenario_bool(line, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
+		papiReadScenario_bool(line, "EDSABORTSIGNAL1", EDSAbortSignal1);
+		papiReadScenario_bool(line, "EDSABORTSIGNAL2", EDSAbortSignal2);
+		papiReadScenario_bool(line, "EDSABORTSIGNAL3", EDSAbortSignal3);
 
 	}
 }
@@ -159,8 +186,6 @@ EDS1B::EDS1B(LVRG &rg) : EDS(rg)
 {
 	for (int i = 0;i < 8;i++)
 	{
-		EarlySICutoff[i] = false;
-		FirstStageFailureTime[i] = 0.0;
 		SIThrustOK[i] = false;
 	}
 }
@@ -170,15 +195,6 @@ bool EDS1B::ThrustCommitEval()
 	for (int i = 0;i < 8;i++) if (!SIThrustOK[i]) return false;
 
 	return true;
-}
-
-void EDS1B::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
-{
-	for (int i = 0;i < 8;i++)
-	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
-	}
 }
 
 void EDS1B::LVIndicatorsOff()
@@ -363,15 +379,27 @@ void EDS1B::Timestep(double simdt)
 
 	if (EDSBus1Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(1);
+		EDSAbortSignal1 = true;
+	}
+	else
+	{
+		EDSAbortSignal1 = false;
 	}
 	if (EDSBus2Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(2);
+		EDSAbortSignal2 = true;
+	}
+	else
+	{
+		EDSAbortSignal2 = false;
 	}
 	if (EDSBus3Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(3);
+		EDSAbortSignal3 = true;
+	}
+	else
+	{
+		EDSAbortSignal3 = false;
 	}
 
 	double PYLimit;
@@ -479,11 +507,6 @@ bool EDSSV::ThrustCommitEval()
 	for (int i = 0;i < 5;i++) if (!SIThrustOK[i]) return false;
 
 	return true;
-}
-
-void EDSSV::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
-{
-
 }
 
 void EDSSV::LVIndicatorsOff()
@@ -684,15 +707,27 @@ void EDSSV::Timestep(double simdt)
 
 	if (EDSBus1Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(1);
+		EDSAbortSignal1 = true;
+	}
+	else
+	{
+		EDSAbortSignal1 = false;
 	}
 	if (EDSBus2Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(2);
+		EDSAbortSignal2 = true;
+	}
+	else
+	{
+		EDSAbortSignal2 = false;
 	}
 	if (EDSBus3Powered && AutoAbortInitiate)
 	{
-		iu->GetCommandConnector()->SetEDSAbort(3);
+		EDSAbortSignal3 = true;
+	}
+	else
+	{
+		EDSAbortSignal3 = false;
 	}
 
 	double PYLimit;
