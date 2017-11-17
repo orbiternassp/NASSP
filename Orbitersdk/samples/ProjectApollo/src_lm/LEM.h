@@ -1514,6 +1514,8 @@ protected:
 #define LMPANEL_AOTVIEW			6
 #define LMPANEL_RIGHTPANEL		7
 #define LMPANEL_ECSPANEL		8
+#define LMPANEL_DOCKVIEW		9
+#define LMPANEL_AOTZOOM		    10
 
 	bool InVC;
 	bool InPanel;
