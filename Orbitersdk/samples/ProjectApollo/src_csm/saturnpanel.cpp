@@ -4829,6 +4829,15 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 		}
 		return true;
+
+	case AID_RIGHTDOCKINGTARGETSWITCH:
+		if (RightDockingTargetSwitch.IsCenter() || RightDockingTargetSwitch.IsUp()) {
+			CMdocktgt = true;
+		}
+		else {
+			CMdocktgt = false;
+		}
+		return true;
 	}
 	return false;
 }

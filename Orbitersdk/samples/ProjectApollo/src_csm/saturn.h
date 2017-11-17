@@ -682,7 +682,7 @@ public:
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
-			unsigned unused3:1;						///< Spare
+			unsigned cmdocktgt:1;                   ///< CM docking target on
 			unsigned unused4:1;						///< Spare
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
@@ -3691,6 +3691,7 @@ protected:
 	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;
+	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bRecovery;

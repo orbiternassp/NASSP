@@ -341,6 +341,8 @@ void Saturn::initSaturn()
 	//
 	NoHGA = false;
 
+	CMdocktgt = false;
+
 	//
 	// Or the S1b panel with 8 engine lights?
 	//

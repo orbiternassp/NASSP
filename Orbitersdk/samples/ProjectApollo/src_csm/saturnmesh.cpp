@@ -599,7 +599,12 @@ void Saturn::SetCSMStage ()
 	//CM docking target
 	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
 	meshidx = AddMesh(hcmdocktgt, &dt_dir);
-	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
+	if (CMdocktgt = true) {
+		SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(meshidx, MESHVIS_NEVER);
+	}
 
 	//Interior
     meshidx = AddMesh (hCMInt, &mesh_dir);
