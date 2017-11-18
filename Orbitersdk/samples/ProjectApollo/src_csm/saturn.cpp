@@ -4114,6 +4114,12 @@ void Saturn::StageSix(double simt)
 
 			ApolloExploded = true;
 
+			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
+			leakValve1->Open();  //Start O2 tank 1 leak
+
+			h_Valve *leakValve2 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:LEAK");
+			leakValve2->Open();  //Start O2 tank 2 leak
+
 			//
 			// Update the mesh.
 			//
@@ -4152,6 +4158,7 @@ void Saturn::StageSix(double simt)
 
 			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
 
+
 		}
 
 		//
@@ -4176,11 +4183,9 @@ void Saturn::StageSix(double simt)
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetO2Tank2Quantity(0);	//Tank 2 explosion, tank 2 pressure and quantity drop to zero
-
 			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);  //  Tank 1 venting, needs to be adjusted for approximately 130 minute bleed
 
-			SetO2Tank1Quantity(GetPropellantMass(ph_o2_vent));
+			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
 
 
 		}
