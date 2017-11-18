@@ -2570,7 +2570,7 @@ void Saturn::SetSwitches(int panel) {
 	RightUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20], srf[SRF_BORDER_34x31], RightUtilityPowerSwitchRow);
 
 	RightDockingTargetSwitchRow.Init(AID_RIGHTDOCKINGTARGETSWITCH, MainPanel);
-	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow);
+	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow, this);
 
 	RightModeIntercomSwitchRow.Init(AID_RIGHTMODEINTERCOMSWITCH, MainPanel);
 	RightModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], srf[SRF_BORDER_34x31], RightModeIntercomSwitchRow);
@@ -4828,16 +4828,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 				oapiBlt(surf, srf[SRF_BORDER_55x91], 0, 0, 0, 0, 55, 91, SURF_PREDEF_CK);
 			}
 		}
-		return true;
-
-	case AID_RIGHTDOCKINGTARGETSWITCH:
-		if (RightDockingTargetSwitch.IsCenter() || RightDockingTargetSwitch.IsUp()) {
-			CMdocktgt = true;
-		}
-		else {
-			CMdocktgt = false;
-		}
-		SetCMdocktgtMesh();
 		return true;
 	}
 	return false;

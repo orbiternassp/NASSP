@@ -866,3 +866,14 @@ public:
 protected:
 	Saturn *sat;
 };
+
+class DockingTargetSwitch : public SaturnThreePosSwitch
+{
+public:
+	DockingTargetSwitch() { sat = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
+	bool DockingTargetSwitch::CheckMouseClick(int event, int mx, int my);
+	bool DockingTargetSwitch::SwitchTo(int newState);
+protected:
+	Saturn *sat;
+};

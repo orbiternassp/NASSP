@@ -2362,3 +2362,39 @@ void SaturnLMDPGauge::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, dou
 	oapiReleaseDC (surf, hDC);
 }
 
+// Right Docking Target Switch
+void DockingTargetSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s) {
+	sat = s;
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+}
+
+bool DockingTargetSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		switch (state) {
+		case THREEPOSSWITCH_UP:  // BRIGHT
+			sat->CMdocktgt = true;
+			break;
+		case THREEPOSSWITCH_CENTER:  // DIM
+			sat->CMdocktgt = true;
+			break;
+		case THREEPOSSWITCH_DOWN:  // OFF
+			sat->CMdocktgt = false;
+			break;
+		}
+		sat->SetCMdocktgtMesh();
+		//sprintf(oapiDebugString(), "Flag %d, Index number %d", sat->CMdocktgt, sat->cmdocktgtidx);
+		return true;
+	}
+	return false;
+}
+
+bool DockingTargetSwitch::SwitchTo(int newState)
+{
+	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+		return true;
+	}
+	return false;
+}
+

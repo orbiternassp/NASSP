@@ -596,6 +596,11 @@ void Saturn::SetCSMStage ()
 		crewidx = -1;
 	}
 
+	//CM docking target
+	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
+	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
+	SetCMdocktgtMesh();
+
 	//Interior
     meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
@@ -622,11 +627,6 @@ void Saturn::SetCSMStage ()
 	// Optics Cover
 	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
-
-	//CM docking target
-	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
-	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
-	SetCMdocktgtMesh();
 
 	// Docking port
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
@@ -819,8 +819,8 @@ void Saturn::SetCMdocktgtMesh() {
 	if (cmdocktgtidx == -1)
 		return;
 
-	if (CMdocktgt = true) {
-		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_EXTERNAL);
+	if (CMdocktgt) {
+		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
 		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_NEVER);
@@ -1012,11 +1012,11 @@ void Saturn::SetReentryMeshes() {
 		cmpidx = -1;
 		crewidx = -1;
 	}
-
+	
 	//CM docking target
-	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
-	meshidx = AddMesh(hcmdocktgt, &dt_dir);
-	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
+	VECTOR3 dt_dir = _V(0.66, 1.07, 0);
+	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
+	SetCMdocktgtMesh();
 	
 	//Interior
 	meshidx = AddMesh (hCMInt, &mesh_dir);

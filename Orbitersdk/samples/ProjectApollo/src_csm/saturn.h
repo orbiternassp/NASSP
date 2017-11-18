@@ -2460,7 +2460,7 @@ protected:
 	ToggleSwitch RightUtilityPowerSwitch;
 
 	SwitchRow RightDockingTargetSwitchRow;
-	ThreePosSwitch RightDockingTargetSwitch;
+	DockingTargetSwitch RightDockingTargetSwitch;
 
 	//////////////////////
 	// Panel 5 switches //
@@ -4375,6 +4375,7 @@ protected:
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class DockingTargetSwitch;
 };
 
 extern void BaseInit();
