@@ -352,11 +352,10 @@ void FCCSV::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		if (StageSwitch < 1) {
 			//SIC
-			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y4c, beta_p4c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c, beta_p1c);
 			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c, beta_p2c);
-			//1 & 3 are the same on both stages
-			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y1c, beta_p1c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y3c, beta_p3c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c, beta_p3c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c, beta_p4c);
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
