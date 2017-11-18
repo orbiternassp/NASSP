@@ -2266,22 +2266,6 @@ void Saturn::ClearEngineIndicator(int i)
 	ENGIND[i - 1] = false;
 }
 
-void Saturn::SetEDSAbort(int eds)
-{
-	if (eds == 1)
-	{
-		secs.SetEDSAbort1(true);
-	}
-	else if (eds == 2)
-	{
-		secs.SetEDSAbort2(true);
-	}
-	else if (eds == 3)
-	{
-		secs.SetEDSAbort3(true);
-	}
-}
-
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
 
 	// Bypass Radiator 2 and 4

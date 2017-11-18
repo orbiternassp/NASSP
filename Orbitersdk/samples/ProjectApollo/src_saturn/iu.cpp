@@ -298,17 +298,6 @@ void IUToCSMCommandConnector::ClearLVGuidLight()
 	SendMessage(cm);
 }
 
-void IUToCSMCommandConnector::SetEDSAbort(int eds)
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SET_EDS_ABORT;
-	cm.val1.iValue = eds;
-
-	SendMessage(cm);
-}
-
 void IUToCSMCommandConnector::SetEngineIndicator(int eng)
 
 {
@@ -699,6 +688,14 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 			return true;
 		}
 		break;
+
+	case CSMIU_GET_EDS_ABORT:
+		if (ourIU)
+		{
+			m.val2.bValue = ourIU->GetEDS()->GetEDSAbort(m.val1.iValue);
+			return true;
+		}
+		break;
 	}
 
 	return false;
@@ -715,18 +712,6 @@ IUToLVCommandConnector::~IUToLVCommandConnector()
 {
 }
 
-void IUToLVCommandConnector::SetSIThrusterLevel(int n, double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SI_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-	cm.val2.dValue = level;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 {
 	ConnectorMessage cm;
@@ -735,17 +720,6 @@ void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 	cm.messageType = IULV_SET_APS_ATTITUDE_ENGINE;
 	cm.val1.iValue = n;
 	cm.val2.bValue = on;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::ClearSIThrusterResource(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_CLEAR_SI_THRUSTER_RESOURCE;
-	cm.val1.iValue = n;
 
 	SendMessage(cm);
 }
@@ -783,14 +757,15 @@ void IUToLVCommandConnector::SIVBEDSCutoff(bool cut)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIThrusterDir(int n, VECTOR3 &dir)
+void IUToLVCommandConnector::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_SI_THRUSTER_DIR;
 	cm.val1.iValue = n;
-	cm.val2.pValue = &dir;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
 
 	SendMessage(cm);
 }
@@ -826,17 +801,6 @@ void IUToLVCommandConnector::SetQBallPowerOff()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_QBALL_POWER_OFF;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetContrailLevel(double level)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_CONTRAIL_LEVEL;
-	cm.val1.dValue = level;
 
 	SendMessage(cm);
 }
@@ -1252,22 +1216,6 @@ int IUToLVCommandConnector::GetApolloNo()
 	return 0;
 }
 
-double IUToLVCommandConnector::GetSIThrusterLevel(int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_THRUSTER_LEVEL;
-	cm.val1.iValue = n;
-
-	if (SendMessage(cm))
-	{
-		return cm.val2.dValue;
-	}
-
-	return 0.0;
-}
-
 void IUToLVCommandConnector::GetSIThrustOK(bool *ok)
 {
 	ConnectorMessage cm;
@@ -1315,6 +1263,21 @@ bool IUToLVCommandConnector::GetSIOutboardEngineOut()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_SI_OUTBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToLVCommandConnector::GetSIBLowLevelSensorsDry()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY;
 
 	if (SendMessage(cm))
 	{
@@ -1472,19 +1435,17 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 bool IU1B::SIBLowLevelSensorsDry()
 {
-	if (lvCommandConnector.GetSIPropellantMass() <= 24000.0) return true;
-
-	return false;
+	return lvCommandConnector.GetSIBLowLevelSensorsDry();
 }
 
 bool IU1B::GetSIInboardEngineOut()
 {
-	return false;
+	return lvCommandConnector.GetSIInboardEngineOut();
 }
 
 bool IU1B::GetSIOutboardEngineOut()
 {
-	return false;
+	return lvCommandConnector.GetSIOutboardEngineOut();
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {

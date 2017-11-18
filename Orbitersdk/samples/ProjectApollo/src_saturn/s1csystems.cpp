@@ -416,9 +416,9 @@ void SICSystems::SetEngineStart(int n)
 
 void SICSystems::SetThrusterDir(int n, double beta_y, double beta_p)
 {
-	if (n < 1 || n > 4) return;
+	if (n < 0 || n > 3) return;
 
-	f1engines[n - 1]->SetThrusterDir(beta_y, beta_p);
+	f1engines[n]->SetThrusterDir(beta_y, beta_p);
 }
 
 void SICSystems::EDSEnginesCutoff(bool cut)

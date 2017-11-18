@@ -513,10 +513,10 @@ void SIVB200Systems::SwitchSelector(int channel)
 		FireUllageIgnitionOn();
 		break;
 	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
-		StartLOXVenting();
+		EndLOXVenting();
 		break;
 	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
-		EndLOXVenting();
+		StartLOXVenting();
 		break;
 	case 97: //Point Level Sensor Arming
 		PointLevelSensorArming();

@@ -764,8 +764,6 @@ public:
 	///
 	void JettisonLET(bool AbortJettison = false);
 
-	void SetEDSAbort(int eds);
-
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
 	/// MissionTime reaches zero, setting MissionTime to (-t) tells the code when to launch.
@@ -931,7 +929,6 @@ public:
 
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
 
-	double GetSIThrusterLevel(int n);
 	virtual void GetSIThrustOK(bool *ok) = 0;
 	virtual void GetSIIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
@@ -939,13 +936,12 @@ public:
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
+	virtual bool GetSIBLowLevelSensorsDry();
 	virtual bool GetSIIEngineOut();
-	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
-	void SetSIThrusterLevel(int n, double level);
 	void SetAPSAttitudeEngine(int n, bool on);
-	void ClearSIThrusterResource(int n);
 	virtual void SIEDSCutoff(bool cut) = 0;
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);

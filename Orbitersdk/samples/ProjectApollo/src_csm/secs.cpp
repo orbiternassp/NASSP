@@ -444,6 +444,10 @@ void MESC::Timestep(double simdt)
 		SECSLogicBus->Disconnect();
 	}
 
+	EDSAbort1Relay = Sat->iuCommandConnector.GetEDSAbort(1);
+	EDSAbort2Relay = Sat->iuCommandConnector.GetEDSAbort(2);
+	EDSAbort3Relay = Sat->iuCommandConnector.GetEDSAbort(3);
+
 	EDSAbortLogicOutput = false;
 
 	//EDS Logic
