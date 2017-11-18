@@ -2570,7 +2570,7 @@ void Saturn::SetSwitches(int panel) {
 	RightUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20], srf[SRF_BORDER_34x31], RightUtilityPowerSwitchRow);
 
 	RightDockingTargetSwitchRow.Init(AID_RIGHTDOCKINGTARGETSWITCH, MainPanel);
-	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow);
+	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow, this);
 
 	RightModeIntercomSwitchRow.Init(AID_RIGHTMODEINTERCOMSWITCH, MainPanel);
 	RightModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], srf[SRF_BORDER_34x31], RightModeIntercomSwitchRow);
