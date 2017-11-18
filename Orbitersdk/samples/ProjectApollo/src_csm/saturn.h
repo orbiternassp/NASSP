@@ -1231,6 +1231,10 @@ public:
 	///
 	void SetOpticsCoverMesh();
 
+	///
+	/// \brief Set CM docking target mesh
+	///
+	
 	void SetCMdocktgtMesh();
 
 	///
