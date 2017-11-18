@@ -45,7 +45,6 @@ enum IUCSMMessageType
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
-	IUCSM_SET_EDS_ABORT,					///< Set EDS abort signal.
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
@@ -77,6 +76,7 @@ enum IUCSMMessageType
 	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
 	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
 	CSMIU_GET_LIFTOFF_CIRCUIT,
+	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 };
 
 ///
@@ -85,9 +85,7 @@ enum IUCSMMessageType
 ///
 enum IULVMessageType
 {
-	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_APS_ATTITUDE_ENGINE,
-	IULV_CLEAR_SI_THRUSTER_RESOURCE,
 	IULV_SI_EDS_CUTOFF,
 	IULV_SII_EDS_CUTOFF,
 	IULV_SIVB_EDS_CUTOFF,
@@ -99,7 +97,6 @@ enum IULVMessageType
 	IULV_ADD_S4RCS,
 	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
 	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
-	IULV_SET_CONTRAIL_LEVEL,
 	IULV_SIVB_BOILOFF,
 	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
@@ -128,7 +125,6 @@ enum IULVMessageType
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
-	IULV_GET_SI_THRUSTER_LEVEL,
 	IULV_GET_SI_THRUST_OK,
 	IULV_GET_SII_THRUST_OK,
 	IULV_GET_SIVB_THRUST_OK,
@@ -136,6 +132,7 @@ enum IULVMessageType
 	IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
 	IULV_GET_SI_INBOARD_ENGINE_OUT,
 	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
+	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
 	IULV_GET_SII_ENGINE_OUT,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
@@ -162,7 +159,6 @@ public:
 	void ClearLVRateLight();
 	void SetLVGuidLight();
 	void ClearLVGuidLight();
-	void SetEDSAbort(int eds);
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
@@ -212,14 +208,11 @@ public:
 	IUToLVCommandConnector();
 	~IUToLVCommandConnector();
 
-	void SetSIThrusterLevel(int n, double level);
-
 	void SetAPSAttitudeEngine(int n, bool on);
-	void ClearSIThrusterResource(int n);
 	void SIEDSCutoff(bool cut);
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
-	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 
@@ -240,7 +233,6 @@ public:
 
 	void DeactivatePrelaunchVenting();
 	void ActivatePrelaunchVenting();
-	void SetContrailLevel(double level);
 	void SIVBBoiloff();
 
 	void AddForce(VECTOR3 F, VECTOR3 r);
@@ -259,11 +251,11 @@ public:
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetApolloNo();
-	double GetSIThrusterLevel(int n);
 	void GetSIThrustOK(bool *ok);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
+	bool GetSIBLowLevelSensorsDry();
 	void GetSIIThrustOK(bool *ok);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();

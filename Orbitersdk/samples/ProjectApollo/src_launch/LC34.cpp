@@ -219,6 +219,28 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_LIFTOFFSTREAM:
 		if (!hLV) break;
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -3.1)
+		{
+			sat->SetSIEngineStart(5);
+			sat->SetSIEngineStart(7);
+		}
+		if (sat->GetMissionTime() > -3.0)
+		{
+			sat->SetSIEngineStart(6);
+			sat->SetSIEngineStart(8);
+		}
+		if (sat->GetMissionTime() > -2.9)
+		{
+			sat->SetSIEngineStart(2);
+			sat->SetSIEngineStart(4);
+		}
+		if (sat->GetMissionTime() > -2.8)
+		{
+			sat->SetSIEngineStart(1);
+			sat->SetSIEngineStart(3);
+		}
+
 		// T-1s or later?
 		if (sat->GetMissionTime() > -1) {
 			state = STATE_LIFTOFF;

@@ -991,6 +991,13 @@ void SaturnV::SetSIEngineStart(int n)
 	sic.SetEngineStart(n);
 }
 
+void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sic.SetThrusterDir(n, yaw, pitch);
+}
+
 bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;

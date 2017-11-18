@@ -251,14 +251,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_SI_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			m.val2.dValue = OurVessel->GetSIThrusterLevel(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_SI_THRUST_OK:
 		if (OurVessel)
 		{
@@ -303,6 +295,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIOutboardEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
 			return true;
 		}
 		break;
@@ -396,14 +396,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_CONTRAIL_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetContrailLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SIVB_BOILOFF:
 		if (OurVessel)
 		{
@@ -412,26 +404,10 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_SI_THRUSTER_LEVEL:
-		if (OurVessel)
-		{
-			OurVessel->SetSIThrusterLevel(m.val1.iValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
 			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_CLEAR_SI_THRUSTER_RESOURCE:
-		if (OurVessel)
-		{
-			OurVessel->ClearSIThrusterResource(m.val1.iValue);
 			return true;
 		}
 		break;
@@ -463,7 +439,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_SET_SI_THRUSTER_DIR:
 		if (OurVessel)
 		{
-			OurVessel->SetSIThrusterDir(m.val1.iValue, *(VECTOR3 *)m.val2.pValue);
+			OurVessel->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
 			return true;
 		}
 		break;
@@ -714,14 +690,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_SET_EDS_ABORT:
-		if (OurVessel)
-		{
-			OurVessel->SetEDSAbort(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IUCSM_SET_ENGINE_INDICATORS:
 		if (OurVessel)
 		{
@@ -896,6 +864,22 @@ bool CSMToIUConnector::GetLiftOffCircuit(bool sysA)
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = CSMIU_GET_LIFTOFF_CIRCUIT;
 	cm.val1.bValue = sysA;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
+	}
+
+	return false;
+}
+
+bool CSMToIUConnector::GetEDSAbort(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_EDS_ABORT;
+	cm.val1.iValue = n;
 
 	if (SendMessage(cm))
 	{
