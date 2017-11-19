@@ -4075,7 +4075,7 @@ void Saturn::StageSix(double simt)
 		// Play cryo-stir audio.
 		//
 
-		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 60))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
 			if (TimeW > 1){
@@ -4119,6 +4119,12 @@ void Saturn::StageSix(double simt)
 
 			h_Valve *leakValve2 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:LEAK");
 			leakValve2->Open();  //Start O2 tank 2 leak
+
+			h_Valve *o2open1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN");
+			o2open1->Close();  //Close FC1 O2 reactant valve
+
+			h_Valve *o2open3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
+			o2open3->Close();  //Close FC3 O2 reactant valve
 
 			//
 			// Update the mesh.
@@ -4187,6 +4193,12 @@ void Saturn::StageSix(double simt)
 
 			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
 
+
+		}
+
+		if (ApolloExploded && (MissionTime >= APOLLO_13_EXPLOSION_TIME + 60)) {
+
+			//Need code to close FC3 oxygen reaction valve here
 
 		}
 	}
