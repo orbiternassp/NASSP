@@ -4196,11 +4196,6 @@ void Saturn::StageSix(double simt)
 
 		}
 
-		if (ApolloExploded && (MissionTime >= APOLLO_13_EXPLOSION_TIME + 60)) {
-
-			//Need code to close FC3 oxygen reaction valve here
-
-		}
 	}
 }
 

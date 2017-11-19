@@ -1123,7 +1123,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f H2vlv1 %d O2vlv1 %d H2vlv2 %d O2vlv2 %d H2vlv3 %d O2vlv3 %d",
 		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038,
-		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc3reacvlv, *o2fc3reacvlv, *h2fc3reacvlv, *o2fc3reacvlv);
+		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc2reacvlv, *o2fc2reacvlv, *h2fc3reacvlv, *o2fc3reacvlv);
 
 /*
 	// FC Manifold & Pipes
