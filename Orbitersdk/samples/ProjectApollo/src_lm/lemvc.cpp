@@ -64,31 +64,76 @@ void LEM::SetView() {
 			switch(PanelId)
 			{
 				case LMPANEL_MAIN:
-					SetCameraOffset (_V(0, 1.90, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(0, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(0, 1.90, 1.26));
+					}
 					break;
 				case LMPANEL_RIGHTWINDOW:
-					SetCameraOffset (_V(0.576, 1.90, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(0.576, 1.90, 1.26));
+					}
 					break;
 				case LMPANEL_LEFTWINDOW:
-					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+					}
 					break;
 				case LMPANEL_LPDWINDOW:
-					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+					}
 					break;
 				case LMPANEL_RNDZWINDOW:
-					SetCameraOffset (_V(-0.598, -1.00, 1.106));
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.598, 0.555, 1.106));
+					}
+					else {
+						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+					}
 					break;
 				case LMPANEL_LEFTPANEL:
-					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+					}
 					break;
 				case LMPANEL_AOTVIEW:
-					SetCameraOffset (_V(0, 2.88, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(0, 1.035, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(0, 2.88, 1.26));
+					}
 					break;
 				case LMPANEL_AOTZOOM:
-					SetCameraOffset (_V(0, 2.88, 1.26));
+					if (stage == 2) {
+						SetCameraOffset(_V(0, 1.035, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(0, 2.88, 1.26));
+					}
 					break;
 				case LMPANEL_DOCKVIEW:
-					SetCameraOffset (_V(-0.598, -1.00, 1.106));
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.598, 0.555, 1.106));
+					}
+					else {
+						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+					}
 					break;
 			}
 		}
@@ -105,8 +150,8 @@ void LEM::SetView() {
 			SaveFOV = oapiCameraAperture();
 			InFOV = false;
 		}
-		//set FOV to 70 degrees
-		oapiCameraSetAperture(RAD * 35.0);
+		//set FOV to 60 degrees
+		oapiCameraSetAperture(RAD * 30.0);
 	}
 	else if (PanelId == LMPANEL_AOTZOOM) {
 		// if this is the first time we've been here, save the current FOV
@@ -118,14 +163,14 @@ void LEM::SetView() {
 		oapiCameraSetAperture(RAD * 30.0);
 	}
 	else if (PanelId == LMPANEL_DOCKVIEW) {
-			// if this is the first time we've been here, save the current FOV
-			if (InFOV) {
-				SaveFOV = oapiCameraAperture();
-				InFOV = false;
-			}
-			//set FOV to 20 degrees
-			oapiCameraSetAperture(RAD * 10.0);
-		} else {
+		// if this is the first time we've been here, save the current FOV
+		if (InFOV) {
+			SaveFOV = oapiCameraAperture();
+			InFOV = false;
+		}
+		//set FOV to 40 degrees
+		oapiCameraSetAperture(RAD * 20.0);
+	} else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);
 			InFOV = true;
