@@ -1112,21 +1112,25 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
 		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064);
 */
-
-/*
-	//O2 Tanks
-	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f",
-		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
-		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038);
-*/
 	int *o2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN");
 	int *h2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN");
+	int *o2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN");
+	int *h2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN");
+	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
+	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
 
+	//O2 Tanks & reaction valves
+	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f H2vlv1 %d O2vlv1 %d H2vlv2 %d O2vlv2 %d H2vlv3 %d O2vlv3 %d",
+		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
+		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038,
+		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc3reacvlv, *o2fc3reacvlv, *h2fc3reacvlv, *o2fc3reacvlv);
+
+/*
 	// FC Manifold & Pipes
 	sprintf(oapiDebugString(), "H2FC1 %d M %.1f T %.1f p %6.1f O2FC1 %d M %.1f T %.1f p %6.1f",
 	*h2fc1reacvlv, *massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038,
 	*o2fc1reacvlv, *massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
-
+*/
 
 	// Suit O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f SUIT-T %.1f p %.1f Flow-SM %.2f MR %.2f ST %.2f", 

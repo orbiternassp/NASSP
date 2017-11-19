@@ -4104,10 +4104,10 @@ void Saturn::StageSix(double simt)
 			SExploded.play(NOLOOP,255);
 			SExploded.done();
 
-			//MasterAlarm();  Main B Undervolt should trigger this alarm
+			//MasterAlarm();  Main B Undervolt due to power transient at the explosion should trigger this alarm
 
 			//
-			// AGC restarted as the explosion occured.  Should be triggered by power transient and not agc.ForceRestart
+			// AGC restarted & lit PGNS light as the explosion occured.  Should be triggered by power transient and not agc.ForceRestart
 			//
 
 			//agc.ForceRestart();
