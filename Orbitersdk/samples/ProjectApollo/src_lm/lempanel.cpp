@@ -2883,7 +2883,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 				else							//AGS
 				{
-					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+					VECTOR3 aeaerror = aea.GetAttitudeError();
+					errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
 
 					if (DeadBandSwitch.IsUp())
 					{
@@ -2957,7 +2958,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 				else							//AGS
 				{
-					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+					VECTOR3 aeaerror = aea.GetAttitudeError();
+					errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
 
 					if (DeadBandSwitch.IsUp())
 					{
