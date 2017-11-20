@@ -50,7 +50,8 @@ static MESHHANDLE hLMAscent ;
 static MESHHANDLE hLMAscent2 ;
 static MESHHANDLE hAstro1 ;
 static MESHHANDLE hLemProbes;
-
+static MESHHANDLE hLPDgret;
+static MESHHANDLE hLPDgext;
 
 void LEM::ToggleEVA()
 
@@ -156,6 +157,7 @@ void LEM::SetLmVesselDockStage()
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	
 	if (!ph_Dsc)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -187,7 +189,7 @@ void LEM::SetLmVesselDockStage()
 
 	AddExhaust(es_hover);
 
-	SetCameraOffset (_V(-1,1.0,0.0));
+	SetCameraOffset(_V(-0.68, 1.65, 1.35));
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-1.85);
 	status = 0;
@@ -212,6 +214,11 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	CheckRCS();
+
+	//Set part of ascent stage mesh to be visible from LPD window
+	VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
+	lpdgret = AddMesh(hLPDgret, &lpd_dir);
+	SetLPDMesh();
 }
 
 void LEM::SetLmVesselHoverStage()
@@ -281,7 +288,7 @@ void LEM::SetLmVesselHoverStage()
 		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-    
+
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
@@ -312,7 +319,7 @@ void LEM::SetLmVesselHoverStage()
 
 	AddExhaust(es_hover);
 		
-	SetCameraOffset (_V(-1,1.0,0.0));
+	SetCameraOffset(_V(-0.68, 1.65, 1.35));
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
@@ -337,6 +344,11 @@ void LEM::SetLmVesselHoverStage()
 	}
 
 	CheckRCS();
+
+	//Set fwd footpad mesh to be visible from LPD window
+	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
+	lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	SetLPDMesh();
 }
 
 void LEM::SetLmAscentHoverStage()
@@ -387,7 +399,7 @@ void LEM::SetLmAscentHoverStage()
 
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
-	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	
+	VECTOR3 mesh_dir=_V(-0.191,-0.02,0.383);	
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -413,7 +425,7 @@ void LEM::SetLmAscentHoverStage()
 
 	AddExhaust(es_hover);
 	
-	SetCameraOffset (_V(-1,1.0,0.0));
+	SetCameraOffset(_V(-0.68, -0.195, 1.35));
 	status = 2;
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
@@ -444,6 +456,11 @@ void LEM::SetLmAscentHoverStage()
 	}
 
 	CheckRCS();
+
+	//Set part of ascent stage mesh to be visible from LPD window
+	VECTOR3 lpd_dir = _V(-0.191, -0.02, 0.383);
+	lpdgret = AddMesh(hLPDgret, &lpd_dir);
+	SetLPDMesh();
 }
 
 void LEM::SeparateStage (UINT stage)
@@ -455,15 +472,24 @@ void LEM::SeparateStage (UINT stage)
 	memset(&vs2, 0, sizeof(vs2));
 	vs2.version = 2;
 
+	if (stage == 0) {
+		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
+		GetStatusEx(&vs2);
+		char VName[256];
+		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
+		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC2", &vs2);
+		SetLmAscentHoverStage();
+		}
+	
 	if (stage == 1)	{
 		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
 		GetStatusEx(&vs2);
+		
 		if (vs2.status == 1) {
 			vs2.vrot.x = 2.7;
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
-
 			vs2.vrot.x = 5.8;
 			DefSetStateEx(&vs2);
 			SetLmAscentHoverStage();
@@ -473,7 +499,6 @@ void LEM::SeparateStage (UINT stage)
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
-
 			SetLmAscentHoverStage();
 		}
 	}
@@ -486,7 +511,32 @@ void LEM::SetLmLandedMesh() {
 	UINT meshidx = AddMesh (hLMLanded, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	//Set fwd footpad mesh to be visible from LPD window
+	lpdgext = AddMesh(hLPDgext, &mesh_dir);
+	SetLPDMesh();
+
 	Landed = true;
+}
+
+void LEM::SetLPDMesh() {
+	
+	if (stage == 0 || stage == 2) {
+		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
+			SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
+		}
+		else {
+			SetMeshVisibilityMode(lpdgret, MESHVIS_NEVER);
+		}
+	}
+
+	if (stage == 1) {
+		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
+			SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+		}
+		else {
+			SetMeshVisibilityMode(lpdgext, MESHVIS_NEVER);
+		}
+	}
 }
 
 void LEMLoadMeshes()
@@ -499,6 +549,8 @@ void LEMLoadMeshes()
 	hLMAscent2= oapiLoadMeshGlobal ("ProjectApollo/LM_ascent2");
 	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
+	hLPDgret = oapiLoadMeshGlobal("ProjectApollo/LPD_gret");
+	hLPDgext = oapiLoadMeshGlobal("ProjectApollo/LPD_gext");
 }
 
 //

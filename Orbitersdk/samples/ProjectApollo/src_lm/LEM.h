@@ -527,6 +527,7 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
+	void SetLPDMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -1504,6 +1505,10 @@ protected:
 	double AscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
 	double DescentEmptyMassKg;
 	double AscentEmptyMassKg;
+
+	// Mesh indexes
+	int lpdgret;
+	int lpdgext;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
