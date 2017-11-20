@@ -52,6 +52,7 @@ IU::IU()
 	LastMissionEventTime = MINUS_INFINITY;
 	TLICapable = false;
 	FirstTimeStepDone = false;
+	UmbilicalConnected = false;
 
 	Crewed = true;
 
@@ -79,6 +80,12 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		return;
 	}
 
+	//Set the launch stage here
+	if (!UmbilicalConnected && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
+	{
+		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
+	}
+
 	if (lvdc == NULL) return;
 
 	lvimu.Timestep(mjd);
@@ -100,6 +107,7 @@ void IU::SaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, IU_START_STRING);
 
 	oapiWriteScenario_int(scn, "STATE", State);
+	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
@@ -119,6 +127,7 @@ void IU::LoadState(FILEHANDLE scn)
 			return;
 
 		if (papiReadScenario_int(line, "STATE", State)); 
+		else if (papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected));
 		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime));
 		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime));
 		else if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {

@@ -54,6 +54,8 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	SIVBEngineOutIndicationB = false;
 	AutoAbortEnableRelayA = false;
 	AutoAbortEnableRelayB = false;
+	AutoAbortInhibitRelayA = false;
+	AutoAbortInhibitRelayB = false;
 	LiftoffA = false;
 	LiftoffB = false;
 	LVEnginesCutoff1 = false;
@@ -109,6 +111,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "AUTOABORTINITIATE", AutoAbortInitiate);
 	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYA", AutoAbortEnableRelayA);
 	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
+	papiWriteScenario_bool(scn, "AUTOABORTINHIBITRELAYA", AutoAbortInhibitRelayA);
+	papiWriteScenario_bool(scn, "AUTOABORTINHIBITRELAYB", AutoAbortInhibitRelayB);
 	papiWriteScenario_bool(scn, "LIFTOFFA", LiftoffA);
 	papiWriteScenario_bool(scn, "LIFTOFFB", LiftoffB);
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTDEACTIVATE", TwoEngOutAutoAbortDeactivate);
@@ -455,6 +459,17 @@ void EDS1B::Timestep(double simdt)
 		break;
 	}
 
+	if (iu->IsUmbilicalConnected())
+	{
+		AutoAbortInhibitRelayA = true;
+		AutoAbortInhibitRelayB = true;
+	}
+	else
+	{
+		AutoAbortInhibitRelayA = false;
+		AutoAbortInhibitRelayB = false;
+	}
+
 	if (Stage == PRELAUNCH_STAGE)
 	{
 		if (!AutoAbortEnableRelayA && !AutoAbortEnableRelayB)
@@ -467,7 +482,7 @@ void EDS1B::Timestep(double simdt)
 		}
 	}
 
-	if (EDSBus1Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayA)
+	if (EDSBus1Powered && !AutoAbortInhibitRelayA && AutoAbortEnableRelayA)
 	{
 		LiftoffA = true;
 	}
@@ -476,7 +491,7 @@ void EDS1B::Timestep(double simdt)
 		LiftoffA = false;
 	}
 
-	if (EDSBus3Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayB)
+	if (EDSBus3Powered && !AutoAbortInhibitRelayB && AutoAbortEnableRelayB)
 	{
 		LiftoffB = true;
 	}
@@ -811,6 +826,17 @@ void EDSSV::Timestep(double simdt)
 		iu->GetCommandConnector()->ClearSIISep();
 	}
 
+	if (iu->IsUmbilicalConnected())
+	{
+		AutoAbortInhibitRelayA = true;
+		AutoAbortInhibitRelayB = true;
+	}
+	else
+	{
+		AutoAbortInhibitRelayA = false;
+		AutoAbortInhibitRelayB = false;
+	}
+
 	if (Stage == PRELAUNCH_STAGE)
 	{
 		if (!AutoAbortEnableRelayA && !AutoAbortEnableRelayB)
@@ -823,7 +849,7 @@ void EDSSV::Timestep(double simdt)
 		}
 	}
 
-	if (EDSBus1Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayA)
+	if (EDSBus1Powered && !AutoAbortInhibitRelayA && AutoAbortEnableRelayA)
 	{
 		LiftoffA = true;
 	}
@@ -832,7 +858,7 @@ void EDSSV::Timestep(double simdt)
 		LiftoffA = false;
 	}
 
-	if (EDSBus3Powered && Stage == LAUNCH_STAGE_ONE && AutoAbortEnableRelayB)
+	if (EDSBus3Powered && !AutoAbortInhibitRelayB && AutoAbortEnableRelayB)
 	{
 		LiftoffB = true;
 	}

@@ -325,6 +325,10 @@ public:
 	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
+	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+
+	void ConnectUmbilical() { UmbilicalConnected = true; }
+	void DisconnectUmbilical() { UmbilicalConnected = false; }
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
@@ -348,6 +352,8 @@ protected:
 
 	bool Crewed;
 	bool TLICapable;
+
+	bool UmbilicalConnected;
 
 	///
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.

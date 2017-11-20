@@ -950,6 +950,8 @@ public:
 
 	virtual void ActivateStagingVent() {}
 
+	virtual void SetIUUmbilicalState(bool connect);
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///

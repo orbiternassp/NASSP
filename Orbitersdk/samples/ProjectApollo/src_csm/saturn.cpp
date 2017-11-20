@@ -4618,6 +4618,21 @@ void Saturn::SetQBallPowerOff()
 	qball.SetPowerOff();
 }
 
+void Saturn::SetIUUmbilicalState(bool connect)
+{
+	if (iu)
+	{
+		if (connect)
+		{
+			iu->ConnectUmbilical();
+		}
+		else
+		{
+			iu->DisconnectUmbilical();
+		}
+	}
+}
+
 void Saturn::SetAPSAttitudeEngine(int n, bool on)
 {
 	if (n < 0 || n > 5) return;

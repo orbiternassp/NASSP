@@ -627,7 +627,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					lvCommandConnector->AddForce(_V(0, 0, -8. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 				}
 
-				if (lvCommandConnector->GetMissionTime() >= 0) {
+				if (LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()) {
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
@@ -4792,7 +4792,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					}
 
 				// LIFTOFF
-				if(lvCommandConnector->GetMissionTime() >= 0){
+				if(LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()){
 					TB1 = TAS;
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;

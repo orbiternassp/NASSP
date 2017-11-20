@@ -164,6 +164,11 @@ bool LVDA::SIBLowLevelSensorsDry()
 	return iu->SIBLowLevelSensorsDry();
 }
 
+bool LVDA::GetLiftoff()
+{
+	return iu->IsUmbilicalConnected() == false;
+}
+
 void LVDA::TLIBegun()
 {
 	iu->GetCommandConnector()->TLIBegun();

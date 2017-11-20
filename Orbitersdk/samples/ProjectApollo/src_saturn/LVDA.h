@@ -61,6 +61,7 @@ public:
 	bool GetSIVBEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
+	bool GetLiftoff();
 
 	//Not real LVDA functions
 	void TLIBegun();
