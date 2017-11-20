@@ -4189,7 +4189,7 @@ void Saturn::StageSix(double simt)
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);  //  Tank 1 venting, needs to be adjusted for approximately 130 minute bleed
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
 
 			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
 
