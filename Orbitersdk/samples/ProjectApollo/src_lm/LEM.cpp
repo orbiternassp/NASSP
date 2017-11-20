@@ -327,6 +327,9 @@ void LEM::Init()
 	ApolloNo = 0;
 	Landed = false;
 
+	lpdgret = -1;
+	lpdgext = -1;
+
 	//
 	// VAGC Mode settings
 	//
@@ -782,6 +785,9 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
 		}
 	}
+
+	//Set visbility flag for LPD view meshes
+	SetLPDMesh();
 	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't

@@ -1698,6 +1698,9 @@ bool LEM::clbkLoadPanel (int id) {
 	//
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetView();
+	
+	//Set visbility flag for LPD view meshes
+	SetLPDMesh();
 
 	return hBmp != NULL;
 }
