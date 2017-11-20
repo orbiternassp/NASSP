@@ -41,7 +41,7 @@
 
 #include "LEM.h"
  
-#define VIEWANGLE 34
+#define VIEWANGLE 30
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
@@ -1698,6 +1698,9 @@ bool LEM::clbkLoadPanel (int id) {
 	//
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetView();
+	
+	//Set visbility flag for LPD view meshes
+	SetLPDMesh();
 
 	return hBmp != NULL;
 }

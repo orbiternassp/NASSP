@@ -682,7 +682,7 @@ public:
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
-			unsigned unused3:1;						///< Spare
+			unsigned CMdocktgt:1;                   ///< CM docking target on
 			unsigned unused4:1;						///< Spare
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
@@ -1222,6 +1222,12 @@ public:
 	/// \brief Set optics cover mesh
 	///
 	void SetOpticsCoverMesh();
+
+	///
+	/// \brief Set CM docking target mesh
+	///
+	
+	void SetCMdocktgtMesh();
 
 	///
 	/// \brief Set nosecap mesh
@@ -2446,7 +2452,7 @@ protected:
 	ToggleSwitch RightUtilityPowerSwitch;
 
 	SwitchRow RightDockingTargetSwitchRow;
-	ThreePosSwitch RightDockingTargetSwitch;
+	DockingTargetSwitch RightDockingTargetSwitch;
 
 	//////////////////////
 	// Panel 5 switches //
@@ -3679,6 +3685,7 @@ protected:
 	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;
+	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bRecovery;
@@ -3708,6 +3715,7 @@ protected:
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
 	int opticscoveridx;
+	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
 
@@ -4359,6 +4367,7 @@ protected:
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class DockingTargetSwitch;
 };
 
 extern void BaseInit();
