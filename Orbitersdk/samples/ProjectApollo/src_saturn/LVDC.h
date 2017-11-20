@@ -498,6 +498,7 @@ private:
 	bool PermanentSCControl;						// SC has permanent control of the FCC
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
+	double A_zL;									// Position I Azimuth
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2;								// IGM Exhaust Velocities

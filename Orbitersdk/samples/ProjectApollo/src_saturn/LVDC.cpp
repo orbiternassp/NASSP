@@ -99,6 +99,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	alpha_2 = 0;
 	alpha_D = 0;
 	Azimuth = 0;
+	A_zL = 0;
 	Azo = 0;
 	Azs = 0;
 	B_11 = 0;
@@ -335,6 +336,7 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	C_3 = -60139891.8062616; // Stored as twice the etc etc.
 	Inclination = 31.6050041807581;
 	DescNodeAngle = 118.998976688105;
+	A_zL = 100.0;
 	Azimuth = 72.0;
 	GATE = false;							// 'chi-freeze-gate': freezes steering commands when true
 	GATE5 = false;							// allows single pass through HSL initialization when false
@@ -595,14 +597,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (lvCommandConnector->GetMissionTime() >= -17){				
 					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
-					if (lvCommandConnector->GetApolloNo() == 5)
-					{
-						lvda.DriveLVIMUGimbals((Azimuth - 90)*RAD, 0, 0);	// Now bring to alignment
-					}
-					else
-					{
-						lvda.DriveLVIMUGimbals((Azimuth - 100)*RAD, 0, 0);	// Now bring to alignment 
-					}
+					lvda.DriveLVIMUGimbals((Azimuth - A_zL)*RAD, 0, 0);	// Now bring to alignment
 					lvda.ReleaseLVIMU();							// Release IMU
 					CountPIPA = true;								// Enable PIPA storage			
 					BOOST = true;
@@ -2066,6 +2061,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
+	papiWriteScenario_double(scn, "LVDC_A_zL", A_zL);
 	papiWriteScenario_double(scn, "LVDC_Azo", Azo);
 	papiWriteScenario_double(scn, "LVDC_Azs", Azs);
 	papiWriteScenario_double(scn, "LVDC_B_11", B_11);
@@ -2411,6 +2407,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
+		papiReadScenario_double(line, "LVDC_A_zL", A_zL);
 		papiReadScenario_double(line, "LVDC_Azo", Azo);
 		papiReadScenario_double(line, "LVDC_Azs", Azs);
 		papiReadScenario_double(line, "LVDC_B_11", B_11);
