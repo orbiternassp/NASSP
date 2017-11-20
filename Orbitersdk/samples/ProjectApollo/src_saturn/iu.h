@@ -97,7 +97,6 @@ enum IULVMessageType
 	IULV_ADD_S4RCS,
 	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
 	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
-	IULV_SIVB_BOILOFF,
 	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
@@ -111,8 +110,6 @@ enum IULVMessageType
 	IULV_GET_GLOBAL_ORIENTATION,
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
-	IULV_GET_SIVB_PROPELLANT_MASS,			///< Get the S-IVB propellant mass.
-	IULV_GET_SI_PROPELLANT_MASS,
 	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
 	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
@@ -233,15 +230,12 @@ public:
 
 	void DeactivatePrelaunchVenting();
 	void ActivatePrelaunchVenting();
-	void SIVBBoiloff();
 
 	void AddForce(VECTOR3 F, VECTOR3 r);
 
 	int GetStage();
 	double GetAltitude();
 	double GetJ2ThrustLevel();
-	double GetSIVBPropellantMass();
-	double GetSIPropellantMass();
 	double GetMass();
 	double GetMaxFuelMass();
 	double GetFuelMass();

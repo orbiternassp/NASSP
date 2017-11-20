@@ -4066,20 +4066,6 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::SIVBBoiloff()
-
-{
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
-	SetPropellantMass(ph_3rd, FuelMass);
-}
-
 void Saturn::StageSix(double simt)
 
 {
@@ -4435,27 +4421,6 @@ double Saturn::GetJ2ThrustLevel()
 		return 0.0;
 
 	return GetThrusterLevel(th_3rd[0]);
-}
-
-double Saturn::GetSIPropellantMass()
-
-{
-	if (stage > LAUNCH_STAGE_ONE || !ph_1st)
-		return 0.0;
-
-	return GetPropellantMass(ph_1st);
-}
-
-double Saturn::GetSIVbPropellantMass()
-
-{
-	if (stage > STAGE_ORBIT_SIVB)
-		return 0.0;
-
-	if (stage < LAUNCH_STAGE_SIVB)
-		return S4B_FuelMass;
-
-	return GetPropellantMass(ph_3rd);
 }
 
 void Saturn::SetSIVbPropellantMass(double mass)

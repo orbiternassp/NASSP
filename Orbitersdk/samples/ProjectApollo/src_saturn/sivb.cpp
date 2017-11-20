@@ -1901,14 +1901,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_SIVB_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
-			return true;
-		}
-		break;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{

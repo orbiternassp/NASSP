@@ -105,7 +105,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
-	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -537,7 +536,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	LVDC_Stop = false;
 	IGMCycle = 0;
 	sinceLastIGM = 0;
-	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
 
@@ -1134,12 +1132,6 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 				if(LVDC_TB_ETime > 100){
 					poweredflight = false; //powered flight nav off
-				}
-
-				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0){
-					lvCommandConnector->SIVBBoiloff();
-					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 
 				/*if (lvCommandConnector->GetApolloNo() == 5)
@@ -2080,7 +2072,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
 	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
 	papiWriteScenario_double(scn, "LVDC_B_22", B_22);
-	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
@@ -2426,7 +2417,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_B_12", B_12);
 		papiReadScenario_double(line, "LVDC_B_21", B_21);
 		papiReadScenario_double(line, "LVDC_B_22", B_22);
-		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -2750,7 +2740,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
-	BoiloffTime = 0.0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -3427,7 +3416,6 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	sinceLastCycle = 0;
 	sinceLastGuidanceCycle = 0;
 	OrbNavCycle = 0;
-	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
 	SCControlPoweredFlight = false;
@@ -3509,7 +3497,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
-	papiWriteScenario_double(scn, "LVDC_BoiloffTime", BoiloffTime);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -4155,7 +4142,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
-		papiReadScenario_double(line, "LVDC_BoiloffTime", BoiloffTime);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -6013,7 +5999,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 25:
 					//TB5+59.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
 					if (LVDC_TB_ETime > 59.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 111);
 						CommandSequence++;
+					}
 					break;
 				case 26:
 					//TB5+59.1: LH2 Tank Continuous Vent Relief Override Valve Open On
@@ -6123,12 +6112,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				if(LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
-				}
-
-				// Fuel boiloff every ten seconds.
-				if (lvCommandConnector->GetMissionTime() >= BoiloffTime && LVDC_TB_ETime > 59.0) {
-					lvCommandConnector->SIVBBoiloff();
-					BoiloffTime = lvCommandConnector->GetMissionTime() + 10.0;
 				}
 
 				//CSM separation detection
@@ -6275,7 +6258,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 20:
 					//TB6+42.2: LH2 Tank Continuous Vent Valve Close On
 					if (LVDC_TB_ETime > 42.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 84);
 						CommandSequence++;
+					}
 					break;
 				case 21:
 					//TB6+42.8: Burner LH2 Propellant Valve Open Off
@@ -6756,7 +6742,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 2:
 					//TB7+0.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
 					if (LVDC_TB_ETime > 0.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 111);
 						CommandSequence++;
+					}
 					break;
 				case 3:
 					//TB7+0.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
@@ -7334,7 +7323,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 1:
 					//TB6a+0.2: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
 					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 111);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB6a+0.4: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
@@ -7433,7 +7425,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 4:
 					//TB6c+1.0: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
 					if (LVDC_TB_ETime > 1.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 111);
 						CommandSequence++;
+					}
 					break;
 				case 5:
 					//TB6c+1.1: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On

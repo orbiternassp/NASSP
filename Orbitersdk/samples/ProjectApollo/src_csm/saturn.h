@@ -1125,16 +1125,6 @@ public:
 	///
 	double GetJ2ThrustLevel();
 
-	void SIVBBoiloff();
-
-	double GetSIPropellantMass();
-
-	///
-	/// \brief Get propellant mass in the SIVb stage.
-	/// \return Propellant mass in kg.
-	///
-	double GetSIVbPropellantMass();
-
 	///
 	/// \brief Set propellant mass in the SIVb stage.
 	/// \param mass Propellant mass in kg.

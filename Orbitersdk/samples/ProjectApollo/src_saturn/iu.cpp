@@ -814,16 +814,6 @@ void IUToLVCommandConnector::SetQBallPowerOff()
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIVBBoiloff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SIVB_BOILOFF;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::AddForce(VECTOR3 F, VECTOR3 r)
 
 {
@@ -1015,38 +1005,6 @@ double IUToLVCommandConnector::GetAltitude()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_ALTITUDE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetSIVBPropellantMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIVB_PROPELLANT_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetSIPropellantMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_PROPELLANT_MASS;
 
 	if (SendMessage(cm))
 	{

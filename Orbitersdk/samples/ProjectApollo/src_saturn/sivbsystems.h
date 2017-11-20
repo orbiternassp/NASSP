@@ -40,6 +40,7 @@ public:
 	void Timestep(double simdt);
 	bool PropellantLowLevel();
 	void SetPUValve(int state);
+	void SIVBBoiloff();
 
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
 	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
@@ -54,6 +55,8 @@ public:
 	void EDSCutoffDisable() { EDSCutoffDisabled = true; }
 	void StartLOXVenting() { LOXVentValveOpen = true; }
 	void EndLOXVenting() { LOXVentValveOpen = false; }
+	void LH2ContinuousVentValveOpenOn() { LH2ContinuousVentValveOpen = true; }
+	void LH2ContinuousVentValveCloseOn() { LH2ContinuousVentValveOpen = false; }
 	void FireUllageIgnitionOn() { FireUllageIgnition = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void PointLevelSensorArming() { PointLevelSensorArmed = true; }
@@ -93,10 +96,12 @@ protected:
 
 	double ThrustTimer;
 	double ThrustLevel;
+	double BoiloffTime;
 
 	bool LOXVentValveOpen;
 	bool FireUllageIgnition;
 	bool PointLevelSensorArmed;
+	bool LH2ContinuousVentValveOpen;
 	bool APSUllageOnRelay[2];
 
 	double J2DefaultThrust;

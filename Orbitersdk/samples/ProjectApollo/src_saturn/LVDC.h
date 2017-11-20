@@ -72,8 +72,6 @@ private:								// Saturn LV
 
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
 
-	double BoiloffTime;
-
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
 	bool CountPIPA;									// PIPA Counter Enable
@@ -449,7 +447,6 @@ private:
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
-	double BoiloffTime;
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released

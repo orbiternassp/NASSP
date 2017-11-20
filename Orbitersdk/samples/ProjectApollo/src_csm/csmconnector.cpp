@@ -110,22 +110,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_SIVB_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIPropellantMass();
-			return true;
-		}
-		break;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
@@ -392,14 +376,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->SetStage(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SIVB_BOILOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIVBBoiloff();
 			return true;
 		}
 		break;
