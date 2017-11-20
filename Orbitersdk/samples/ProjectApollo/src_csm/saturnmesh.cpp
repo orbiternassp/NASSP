@@ -658,7 +658,7 @@ void Saturn::SetCSMStage ()
 		VECTOR3 vent_pos = {0, 1.5, 30.25 - CGOffset};
 		VECTOR3 vent_dir = {0.5, 1, 0};
 
-		th_o2_vent = CreateThruster (vent_pos, vent_dir, 50.0, ph_o2_vent, 300.0);
+		th_o2_vent = CreateThruster (vent_pos, vent_dir, 30.0, ph_o2_vent, 300.0);
 		AddExhaustStream(th_o2_vent, &o2_venting_spec);
 	}
 
