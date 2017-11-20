@@ -311,6 +311,7 @@ Casper:ProjectApollo\Saturn5
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
   LVDC_BEGIN
   LVDC_hx[0][0] 72.034
+  LVDC_SCControlPoweredFlight 1
   LVDC_G_T -9.305
   LVDC_R_T 6544846.0
   LVDC_T_LO 64423.0

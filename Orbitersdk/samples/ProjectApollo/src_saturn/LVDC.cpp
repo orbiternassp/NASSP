@@ -313,6 +313,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 
 	CommandSequence = 0;
+	SCControlPoweredFlight = false;
 }
 
 void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
@@ -541,6 +542,7 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	CountPIPA = false;
 
 	CommandSequence = 0;
+	SCControlPoweredFlight = false;
 
 	if(!Initialized){ lvlog = fopen("lvlog1b.txt","w+"); } // Don't reopen the log if it's already open
 	fprintf(lvlog,"init complete\r\n");
@@ -1208,7 +1210,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 			}
 		}
 
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvCommandConnector->GetApolloNo() >= 11 && !PermanentSCControl)
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && SCControlPoweredFlight && !PermanentSCControl)
 		{
 			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
 			PermanentSCControl = true;
@@ -2049,6 +2051,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	// int
@@ -2400,6 +2403,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
+		papiReadScenario_bool(line, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 
@@ -3066,6 +3070,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	tgt_index = 0;
 	CommandSequence = 0;
 	CommandSequenceStored = 0;
+	SCControlPoweredFlight = false;
 }
 
 // Setup
@@ -3425,6 +3430,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	BoiloffTime = 0.0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
+	SCControlPoweredFlight = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -3470,6 +3476,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
@@ -4110,6 +4117,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
+		papiReadScenario_bool(line, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
@@ -7550,7 +7558,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 			}
 		}
 
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvCommandConnector->GetApolloNo() >= 11 && !PermanentSCControl)
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && SCControlPoweredFlight && !PermanentSCControl)
 		{
 			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
 			PermanentSCControl = true;

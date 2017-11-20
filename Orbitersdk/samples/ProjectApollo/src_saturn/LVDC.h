@@ -91,6 +91,7 @@ private:								// Saturn LV
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 	int CommandSequence;
 	int CommandSequenceStored;
+	bool SCControlPoweredFlight;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -459,6 +460,7 @@ private:
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
 	int CommandSequence;
+	bool SCControlPoweredFlight;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
