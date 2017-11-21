@@ -4115,7 +4115,7 @@ void Saturn::StageSix(double simt)
 			ApolloExploded = true;
 
 			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
-			o2Rupture1->in->size = 50.0 / LBH;	// Set O2 tank 1 leak size
+			o2Rupture1->in->size = (float) 50.0 / LBH;	// Set O2 tank 1 leak size
 			o2Rupture1->flowMax = 100.0 / LBH;  //Set O2 tank 1 leak rate
 
 			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
@@ -4133,6 +4133,15 @@ void Saturn::StageSix(double simt)
 
 			h_Valve *o2react3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
 			o2react3->Close();  //Close FC3 O2 reactant valve
+
+			SMQuadBRCS.GetHeliumValve1()->SetState(false);
+			SMQuadDRCS.GetHeliumValve1()->SetState(false);
+
+			SMQuadBRCS.GetHeliumValve2()->SetState(false);
+
+			SMQuadARCS.GetSecPropellantValve()->SetState(false);
+			SMQuadCRCS.GetSecPropellantValve()->SetState(false);
+				
 
 			//
 			// Update the mesh.
