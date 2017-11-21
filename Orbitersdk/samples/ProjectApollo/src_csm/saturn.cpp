@@ -4114,17 +4114,25 @@ void Saturn::StageSix(double simt)
 
 			ApolloExploded = true;
 
+			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
+			o2Rupture1->in->size = (float) 100.0;	// Set O2 tank 1 leak size
+			o2Rupture1->flowMax = 600.0 / LBH;  //Set O2 tank 1 leak rate
+
+			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
+			o2Rupture3->in->size = (float) 100.0;	// Set O2 tank 2 leak size
+			o2Rupture3->flowMax = 54000.0 / LBH;  //Set O2 tank 2 leak rate
+
 			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
 			leakValve1->Open();  //Start O2 tank 1 leak
 
 			h_Valve *leakValve2 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:LEAK");
 			leakValve2->Open();  //Start O2 tank 2 leak
 
-			h_Valve *o2open1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN");
-			o2open1->Close();  //Close FC1 O2 reactant valve
+			h_Valve *o2react1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN");
+			o2react1->Close();  //Close FC1 O2 reactant valve
 
-			h_Valve *o2open3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
-			o2open3->Close();  //Close FC3 O2 reactant valve
+			h_Valve *o2react3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
+			o2react3->Close();  //Close FC3 O2 reactant valve
 
 			//
 			// Update the mesh.
