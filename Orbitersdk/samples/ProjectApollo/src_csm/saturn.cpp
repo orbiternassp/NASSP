@@ -4590,7 +4590,7 @@ void Saturn::SetQBallPowerOff()
 
 void Saturn::SetIUUmbilicalState(bool connect)
 {
-	if (iu)
+	if (stage <= PRELAUNCH_STAGE && iu)
 	{
 		if (connect)
 		{

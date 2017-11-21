@@ -162,6 +162,16 @@ bool IU::GetSIPropellantDepletionEngineCutoff()
 	return lvCommandConnector.GetSIPropellantDepletionEngineCutoff();
 }
 
+bool IU::GetSIInboardEngineOut()
+{
+	return lvCommandConnector.GetSIInboardEngineOut();
+}
+
+bool IU::GetSIOutboardEngineOut()
+{
+	return lvCommandConnector.GetSIOutboardEngineOut();
+}
+
 bool IU::SIBLowLevelSensorsDry()
 {
 	return false;
@@ -1405,16 +1415,6 @@ bool IU1B::SIBLowLevelSensorsDry()
 	return lvCommandConnector.GetSIBLowLevelSensorsDry();
 }
 
-bool IU1B::GetSIInboardEngineOut()
-{
-	return lvCommandConnector.GetSIInboardEngineOut();
-}
-
-bool IU1B::GetSIOutboardEngineOut()
-{
-	return lvCommandConnector.GetSIOutboardEngineOut();
-}
-
 void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
@@ -1588,37 +1588,6 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 			lvimu.LoadState(scn);
 		}
 	}
-}
-
-bool IUSV::GetSIInboardEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_ONE) return false;
-
-	bool ThrustOK[5];
-
-	lvCommandConnector.GetSIThrustOK(ThrustOK);
-
-	if (!ThrustOK[4]) return true;
-
-	return false;
-}
-
-bool IUSV::GetSIOutboardEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_ONE) return false;
-
-	bool ThrustOK[5];
-
-	lvCommandConnector.GetSIThrustOK(ThrustOK);
-
-	for (int i = 0;i < 4;i++)
-	{
-		if (!ThrustOK[i]) return true;
-	}
-
-	return false;
 }
 
 bool IUSV::GetSIIPropellantDepletionEngineCutoff()

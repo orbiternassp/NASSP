@@ -562,7 +562,7 @@ bool SICSystems::GetInboardEngineOut()
 
 bool SICSystems::GetOutboardEngineOut()
 {
-	for (int i=0;i<4;i++) if (!ThrustOK[4]) return true;
+	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
 
 	return false;
 }

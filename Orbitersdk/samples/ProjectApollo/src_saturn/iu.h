@@ -315,8 +315,8 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
-	virtual bool GetSIInboardEngineOut() = 0;
-	virtual bool GetSIOutboardEngineOut() = 0;
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected() { return UmbilicalConnected; }
@@ -372,8 +372,6 @@ public:
 	~IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
@@ -393,8 +391,6 @@ public:
 	IUSV();
 	~IUSV();
 	void Timestep(double misst, double simt, double simdt, double mjd);
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SwitchSelector(int item);

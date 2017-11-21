@@ -1998,9 +1998,9 @@ minorloop: //minor loop;
 		}*/
 
 		//Engine failure code
-		if (LVDC_Timebase == 1)
+		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
 		{
-			S1B_Engine_Out = lvda.GetSIEngineOut();
+			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
 		}
 	}
 
@@ -5043,10 +5043,13 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// S1C CECO TRIGGER:
-				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO && DotS.z > 500.0){
+				if (LVDC_TB_ETime > t_S1C_CECO) {
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					S1_Engine_Out = true;
-					// Begin timebase 2
+				}
+
+				// Begin timebase 2
+				if((DotS.z > 500.0 || (GuidanceReferenceFailure && SCControlPoweredFlight)) && lvda.GetSICInboardEngineCutoff()){
 					TB2 = TAS;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
@@ -5067,7 +5070,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					//TB2+0.0: Inboard Engine Cutoff
-					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					CommandSequence++;
 					break;
 				case 1:
@@ -5191,7 +5193,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(),lvCommandConnector->GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetAltitude());
 					lvCommandConnector->SwitchSelector(17);
 					// Begin timebase 3
 					TB3 = TAS;
@@ -9181,7 +9183,7 @@ minorloop:
 		//Engine failure code
 		if (LVDC_Timebase == 1 && LVDC_TB_ETime > 38.0)
 		{
-			S1_Engine_Out = lvda.GetSIEngineOut();
+			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
 		}
 		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
 		{

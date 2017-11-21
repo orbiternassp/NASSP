@@ -91,7 +91,12 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
 }
 
-bool LVDA::GetSIEngineOut()
+bool LVDA::GetSIInboardEngineOut()
+{
+	return iu->GetSIInboardEngineOut();
+}
+
+bool LVDA::GetSIOutboardEngineOut()
 {
 	return iu->GetSIOutboardEngineOut();
 }
@@ -167,6 +172,11 @@ bool LVDA::SIBLowLevelSensorsDry()
 bool LVDA::GetLiftoff()
 {
 	return iu->IsUmbilicalConnected() == false;
+}
+
+bool LVDA::GetSICInboardEngineCutoff()
+{
+	return iu->GetSIInboardEngineOut();
 }
 
 void LVDA::TLIBegun()
