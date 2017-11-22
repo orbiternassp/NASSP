@@ -1017,7 +1017,6 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
-	void SetO2TankQuantities(double q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
@@ -3885,7 +3884,7 @@ protected:
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
+	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();

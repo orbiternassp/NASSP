@@ -294,7 +294,7 @@ void FCell::Reaction(double dt, double thrust)
 	double O2_maxflow = O2_flow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
 	double H2_maxflow = H2_flow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
 	
-	// max. consumtion
+	// max. consumption
 	if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
 	if (O2_flow > reactant * O2RATIO) O2_flow = reactant * O2RATIO;
 	

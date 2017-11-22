@@ -67,7 +67,8 @@ void Sat5LMDSC::Setup()
 
 	double tdph = -2.7;
 	double Mass = 4570.0;
-	double ro = 4;
+	double ro = 1;
+	double ro1 = 3;
 	TOUCHDOWNVTX td[7];
 	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
@@ -87,22 +88,24 @@ void Sat5LMDSC::Setup()
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = tdph;
 	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = cos(30 * RAD)*ro;
-	td[3].pos.y = tdph;
-	td[3].pos.z = sin(30 * RAD)*ro;
-	td[4].pos.x = -cos(30 * RAD)*ro;
-	td[4].pos.y = tdph;
-	td[4].pos.z = sin(30 * RAD)*ro;
+	td[3].pos.x = cos(30 * RAD)*ro1;
+	td[3].pos.y = 0;
+	td[3].pos.z = sin(30 * RAD)*ro1;
+	td[4].pos.x = -cos(30 * RAD)*ro1;
+	td[4].pos.y = 0;
+	td[4].pos.z = sin(30 * RAD)*ro1;
 	td[5].pos.x = 0;
-	td[5].pos.y = tdph;
-	td[5].pos.z = -1 * ro;
+	td[5].pos.y = 0;
+	td[5].pos.z = -1 * ro1;
 	td[6].pos.x = 0;
-	td[6].pos.y = 1.5;
+	td[6].pos.y = tdph + 5;
 	td[6].pos.z = 0;
 
 	SetTouchdownPoints(td, 7);
 
-	VECTOR3 mesh_dir = _V(0, 0, 0);
+	SetTouchdownPoints(td, 7);
+
+	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
 	AddMesh(LM_Descent, &mesh_dir);
 }
 

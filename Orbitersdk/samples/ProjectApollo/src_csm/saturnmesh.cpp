@@ -501,20 +501,9 @@ void Saturn::SetCSMStage ()
 	SetEmptyMass(CM_EmptyMass + SM_EmptyMass);
 
 	// ************************* propellant specs **********************************
+
 	if (!ph_sps) {
-		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
-	}
-
-	if (ApolloExploded && !ph_o2_vent) {
-
-		double tank_mass = CSM_O2TANK_CAPACITY / 500.0;
-
-		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //SPS stage Propellant
-
-		TankQuantities t;
-		GetTankQuantities(t);
-
-		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg + t.O2Tank2QuantityKg);
+		ph_sps = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage propellant
 	}
 
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
@@ -658,13 +647,29 @@ void Saturn::SetCSMStage ()
 	//
 	// Apollo 13 special handling
 	//
+
+	if (ApolloExploded && !ph_o2_vent) {
+
+		double tank_mass = CSM_O2TANK_CAPACITY / 1000.0;
+
+		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //"Thruster" created by O2 venting
+
+		TankQuantities t;
+
+		GetTankQuantities(t);
+
+		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+
+	}
+	
 	if (ApolloExploded) {
 		VECTOR3 vent_pos = {0, 1.5, 30.25 - CGOffset};
 		VECTOR3 vent_dir = {0.5, 1, 0};
 
-		th_o2_vent = CreateThruster (vent_pos, vent_dir, 50.0, ph_o2_vent, 300.0);
+		th_o2_vent = CreateThruster (vent_pos, vent_dir, 30.0, ph_o2_vent, 300.0);
 		AddExhaustStream(th_o2_vent, &o2_venting_spec);
 	}
+
 
 	SetView(0.4 + 1.8 - 0.35);
 
