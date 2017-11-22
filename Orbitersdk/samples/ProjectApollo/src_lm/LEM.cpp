@@ -985,6 +985,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
+		else if (!strnicmp(line, "SAVEFOV", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			SaveFOV = ftcp;
+		}
+		else if (!strnicmp(line, "INFOV", 5)) {
+			int i;
+			sscanf(line + 5, "%d", &i);
+			InFOV = (i == 1);
+		}
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
@@ -1373,6 +1382,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
 	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
+	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
