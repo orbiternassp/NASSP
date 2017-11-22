@@ -38,7 +38,6 @@
 #include "csmcomputer.h"
 
 #include "saturn.h"
-#include "sivb.h"
 #include "papi.h"
 #include "LVDC.h"
 

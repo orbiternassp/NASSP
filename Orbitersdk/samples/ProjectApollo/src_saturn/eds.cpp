@@ -29,8 +29,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 

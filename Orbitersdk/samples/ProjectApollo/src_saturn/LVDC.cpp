@@ -23,21 +23,16 @@
   **************************************************************************/
 
 #pragma once
-#include "OrbiterAPI.h"
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
-#include "nasspsound.h"
 
 #include "soundlib.h"
-#include "toggleswitch.h"
 
-#include "ioChannels.h"
 #include "papi.h"
-#include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "iu.h"
 #include "LVDC.h"
@@ -7796,7 +7791,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z)+DotS_R.y*sin(CurrentAttitude.z)-DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -7833,7 +7828,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -7870,7 +7865,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -8947,9 +8942,9 @@ restartprep:
 			N = unit(crossp(PosS, DotS));
 			PosP = crossp(N,unit(PosS));
 			Sbar = unit(PosS)*cos(beta) + PosP*sin(beta);
-			DotP = crossp(N, DotS / Mag(PosS));
+			DotP = crossp(N, DotS / length(PosS));
 
-			Sbardot = DotS / Mag(PosS)*cos(beta) + DotP*sin(beta);
+			Sbardot = DotS / length(PosS)*cos(beta) + DotP*sin(beta);
 
 			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
 			{
@@ -8993,11 +8988,11 @@ O3precalc:
 		}
 
 		//Nominal ellipse calculations go here
-		cos_psiT = Sbar*T_P;
+		cos_psiT = dotp(Sbar, T_P);
 		sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
 		Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
 		Cbar_1 = crossp(Sbar_1, Sbar);
-		Inclination = acos(_V(MX_A.m21, MX_A.m22, MX_A.m23)*Cbar_1);
+		Inclination = acos(dotp(_V(MX_A.m21, MX_A.m22, MX_A.m23),Cbar_1));
 		X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
 		X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
 		theta_N = atan2(X_1, X_2);
