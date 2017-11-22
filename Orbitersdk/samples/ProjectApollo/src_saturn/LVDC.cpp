@@ -6688,7 +6688,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBShutdown()))
+					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBCutoff()))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;

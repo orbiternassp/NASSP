@@ -4443,22 +4443,16 @@ void Saturn::SetSIVbPropellantMass(double mass)
 	SetPropellantMass(ph_3rd, mass);
 }
 
-int Saturn::GetTLIEnableSwitchState()
+bool Saturn::GetTLInjectSignal()
 
 {
-	return TLIEnableSwitch.GetState();
+	return TLIEnableSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
-int Saturn::GetSIISIVbSepSwitchState()
+bool Saturn::GetSIISIVbDirectStagingSignal()
 
 {
-	return SIISIVBSepSwitch.GetState();
-}
-
-int Saturn::GetLVGuidanceSwitchState()
-
-{
-	return LVGuidanceSwitch.GetState();
+	return SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
 int Saturn::GetEDSSwitchState()
@@ -4609,6 +4603,30 @@ void Saturn::SetAPSAttitudeEngine(int n, bool on)
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetAPSAttitudeEngine(n, on);
+}
+
+bool Saturn::GetCMCSIVBTakeover()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBIgnitionSequenceStart()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBCutoff()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
 }
 
 void Saturn::SetContrailLevel(double level)

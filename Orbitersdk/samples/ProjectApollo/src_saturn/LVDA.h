@@ -54,7 +54,7 @@ public:
 	bool GetSICInboardEngineCutoff();
 	bool GetSIIEngineOut();
 	bool GetCMCSIVBIgnitionSequenceStart();
-	bool GetCMCSIVBShutdown();
+	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();
 	bool SIVBInjectionDelay();
 	bool SCInitiationOfSIISIVBSeparation();

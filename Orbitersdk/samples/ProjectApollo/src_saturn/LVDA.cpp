@@ -26,7 +26,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
-#include "ioChannels.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "saturn.h"
@@ -108,26 +107,17 @@ bool LVDA::GetSIIEngineOut()
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBIgnitionSequenceStart();
 }
 
-bool LVDA::GetCMCSIVBShutdown()
+bool LVDA::GetCMCSIVBCutoff()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBCutoff();
 }
 
 bool LVDA::GetCMCSIVBTakeover()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, EnableSIVBTakeover))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBTakeover();
 }
 bool LVDA::GetLVIMUFailure()
 {
@@ -136,12 +126,12 @@ bool LVDA::GetLVIMUFailure()
 
 bool LVDA::SIVBInjectionDelay()
 {
-	return iu->GetCommandConnector()->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
+	return iu->GetCommandConnector()->GetTLInjectSignal() == false;
 }
 
 bool LVDA::SCInitiationOfSIISIVBSeparation()
 {
-	return iu->GetCommandConnector()->SIISIVbSwitchState() == TOGGLESWITCH_UP;
+	return iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal();
 }
 
 bool LVDA::GetSIIPropellantDepletionEngineCutoff()

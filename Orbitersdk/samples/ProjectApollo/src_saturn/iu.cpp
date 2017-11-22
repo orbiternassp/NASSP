@@ -358,6 +358,54 @@ void IUToCSMCommandConnector::ClearEngineIndicators()
 	SendMessage(cm);
 }
 
+bool IUToCSMCommandConnector::GetCMCSIVBTakeover()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_TAKEOVER;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::GetCMCSIVBIgnitionSequenceStart()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_IGNITION;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::GetCMCSIVBCutoff()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 
 {
@@ -375,52 +423,36 @@ bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 	return false;
 }
 
-int IUToCSMCommandConnector::TLIEnableSwitchState()
+bool IUToCSMCommandConnector::GetTLInjectSignal()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_TLI_ENABLE_SWITCH_STATE;
+	cm.messageType = IUCSM_GET_TL_INJECT;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.iValue;
+		return cm.val1.bValue;
 	}
 
-	return -1;
+	return false;
 }
 
-int IUToCSMCommandConnector::SIISIVbSwitchState()
+bool IUToCSMCommandConnector::GetSIISIVbDirectStagingSignal()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_SIISIVBSEP_SWITCH_STATE;
+	cm.messageType = IUCSM_GET_SIISIVB_DIRECT_STAGING;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.iValue;
+		return cm.val1.bValue;
 	}
 
-	return -1;
-}
-
-int IUToCSMCommandConnector::LVGuidanceSwitchState()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_LV_GUIDANCE_SWITCH_STATE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.iValue;
-	}
-
-	return -1;
+	return false;
 }
 
 int IUToCSMCommandConnector::EDSSwitchState()
@@ -517,23 +549,6 @@ int IUToCSMCommandConnector::GetAGCAttitudeError(int axis)
 	}
 
 	return 0;
-}
-
-bool IUToCSMCommandConnector::GetAGCInputChannelBit(int channel, int bit)
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_INPUT_CHANNEL_BIT;
-	cm.val1.iValue = channel;
-	cm.val2.iValue = bit;
-
-	if (SendMessage(cm))
-	{
-		return cm.val3.bValue;
-	}
-
-	return false;
 }
 
 void IUToCSMCommandConnector::LoadTLISounds()
