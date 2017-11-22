@@ -1972,7 +1972,7 @@ protected:
 	//
 
 	SwitchRow LVRow;
-	GuardedToggleSwitch LVGuidanceSwitch;
+	AGCIOGuardedToggleSwitch LVGuidanceSwitch;
 	GuardedToggleSwitch SIISIVBSepSwitch;
 	XLunarSwitch TLIEnableSwitch;
 

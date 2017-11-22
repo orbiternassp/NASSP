@@ -720,19 +720,6 @@ void CSMcomputer::ProcessChannel14(ChannelValue val){
 	} */
 }
 
-void CSMcomputer::LVGuidanceSwitchToggled(PanelSwitchItem *s) {
-	ChannelValue val30;
-
-	val30 = GetInputChannel(030); // Get current data
-
-	if (s->GetState() == TOGGLESWITCH_UP) {
-		val30[SCControlOfSaturn] = 0;
-	} else {
-	    val30[SCControlOfSaturn] = 1;
-	}
-	SetInputChannel(030, val30);
-}
-
 
 
 //

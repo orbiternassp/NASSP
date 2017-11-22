@@ -129,8 +129,6 @@ public:
 
 	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
 
-	void LVGuidanceSwitchToggled(PanelSwitchItem *s);
-
 protected:
 
 	void ProcessChannel5(ChannelValue val);
