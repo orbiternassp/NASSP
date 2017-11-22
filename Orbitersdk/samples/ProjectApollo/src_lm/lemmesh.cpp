@@ -127,12 +127,13 @@ void LEM::SetLmVesselDockStage()
 	ClearAttExhaustRefs();
 
 	double Mass = 15876;
-	double ro = 4;
-	TOUCHDOWNVTX td[4];
+	double ro = 1;
+	double ro1 = 4;
+	TOUCHDOWNVTX td[7];
 	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
+	for (int i = 0; i<7; i++) {
 		td[i].damping = damping;
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
@@ -147,13 +148,22 @@ void LEM::SetLmVesselDockStage()
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = -3.86;
 	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = 0;
-	td[3].pos.y = 3.86;
-	td[3].pos.z = 0;
+	td[3].pos.x = cos(30 * RAD)*ro1;
+	td[3].pos.y = 0;
+	td[3].pos.z = sin(30 * RAD)*ro1;
+	td[4].pos.x = -cos(30 * RAD)*ro1;
+	td[4].pos.y = 0;
+	td[4].pos.z = sin(30 * RAD)*ro1;
+	td[5].pos.x = 0;
+	td[5].pos.y = 0;
+	td[5].pos.z = -1 * ro1;
+	td[6].pos.x = 0;
+	td[6].pos.y = 3.86;
+	td[6].pos.z = 0;
 
-	SetTouchdownPoints(td, 4);
+	SetTouchdownPoints(td, 7);
 
-	VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
+	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
