@@ -24,6 +24,7 @@
 
 #pragma once
 class IUToLVCommandConnector;
+class LVDA;
 
 /* *******************
  * LVDC++ SV VERSION *

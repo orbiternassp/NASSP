@@ -46,6 +46,7 @@
 #include "papi.h"
 #include "mcc.h"
 #include "LVDC.h"
+#include "iu.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
@@ -130,7 +131,7 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),

@@ -25,6 +25,7 @@
 #if !defined(_PA_IU_H)
 #define _PA_IU_H
 
+#include "connector.h"
 #include "LVIMU.h"
 #include "FCC.h"
 #include "eds.h"

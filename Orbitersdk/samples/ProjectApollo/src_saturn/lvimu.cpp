@@ -35,6 +35,7 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "papi.h"
+#include "iu.h"
 #include "saturn.h"
 #include "LVIMU.h"
 

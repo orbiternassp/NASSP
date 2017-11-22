@@ -28,6 +28,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "LVIMU.h"
+#include "iu.h"
 #include "saturn.h"
 #include "papi.h"
 

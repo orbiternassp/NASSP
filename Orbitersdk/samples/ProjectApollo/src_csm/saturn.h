@@ -41,7 +41,6 @@
 #include "missiontimer.h"
 #include "FDAI.h"
 #include "dsky.h"
-#include "iu.h"
 #include "cdu.h"
 #include "IMU.h"
 #include "satswitches.h"
@@ -73,6 +72,8 @@
 //
 
 #include "IMFD/IMFD_Client.h"
+
+class IU;
 
 
 #define RCS_SM_QUAD_A		0

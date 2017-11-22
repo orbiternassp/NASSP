@@ -41,8 +41,8 @@
 #include "papi.h"
 #include "thread.h"
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
-	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2), iu(i), lv(sivb)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) :
+	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2)
 
 {
 	isLGC = false;

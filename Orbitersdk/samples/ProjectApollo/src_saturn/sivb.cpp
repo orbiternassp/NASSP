@@ -36,6 +36,7 @@
 #include "powersource.h"
 #include "connector.h"
 #include "iu.h"
+#include "SIVBSystems.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"

@@ -33,16 +33,16 @@
 #include "nasspdefs.h"
 
 #include "ioChannels.h"
-#include "toggleswitch.h"
 #include "apolloguidance.h"
 
-#include "connector.h"
 #include "csmcomputer.h"
 
 #include "saturn.h"
 #include "sivb.h"
 #include "papi.h"
 #include "LVDC.h"
+
+#include "iu.h"
 
 
 IU::IU()

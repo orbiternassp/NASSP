@@ -40,6 +40,8 @@
 
 #include "csmcomputer.h"
 
+#include "iu.h"
+
 #include "saturn.h"
 #include "sivb.h"
 

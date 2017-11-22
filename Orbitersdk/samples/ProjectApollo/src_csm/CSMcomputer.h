@@ -110,7 +110,7 @@ public:
 	/// \param i The launch vehicle Instrument Unit connector for the launch vehicle autopilot.
 	/// \param sivb The CSM to SIVb command connector (e.g. for fuel venting).
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
 	virtual ~CSMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -157,16 +157,6 @@ protected:
 	/// \brief Second DSKY in the lower equipment bay.
 	///
 	DSKY &dsky2;
-	
-	///
-	/// \brief Connection to Saturn Instrument Unit.
-	///
-	CSMToIUConnector &iu;
-
-	///
-	/// \brief Connection to Saturn launch vehicle.
-	///
-	CSMToSIVBControlConnector &lv;
 
 	Saturn *sat;
 };

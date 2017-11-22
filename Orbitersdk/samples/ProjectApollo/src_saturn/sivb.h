@@ -26,7 +26,6 @@
 #define _PA_SIVB_H
 
 #include "payload.h"
-#include "SIVBSystems.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -55,6 +54,9 @@ union SIVbSettingFlags
 	///
 	SIVbSettingFlags() { word = 0; };
 };
+
+class IU;
+class SIVBSystems;
 
 ///
 /// Data structure passed from main vessel to SIVb to configure it after staging.
