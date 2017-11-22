@@ -4080,7 +4080,7 @@ void Saturn::StageSix(double simt)
 		// Play cryo-stir audio.
 		//
 
-		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 60))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
 			if (TimeW > 1){
@@ -4089,6 +4089,7 @@ void Saturn::StageSix(double simt)
 
 			SApollo13.play(NOLOOP, 255);
 			CryoStir = true;
+
 		}
 
 		//
@@ -4108,15 +4109,44 @@ void Saturn::StageSix(double simt)
 			SExploded.play(NOLOOP,255);
 			SExploded.done();
 
-			MasterAlarm();
+			//MasterAlarm();  Main B Undervolt due to power transient at the explosion should trigger this alarm
 
 			//
-			// AGC restarted as the explosion occured.
+			// AGC restarted & lit PGNS light as the explosion occured.  Should be triggered by power transient and not agc.ForceRestart
 			//
 
-			agc.ForceRestart();
+			//agc.ForceRestart();
 
 			ApolloExploded = true;
+
+			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
+			o2Rupture1->in->size = (float) 50.0 / LBH;	// Set O2 tank 1 leak size
+			o2Rupture1->flowMax = 100.0 / LBH;  //Set O2 tank 1 leak rate
+
+			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
+			o2Rupture3->in->size = (float) 900.0 / LBH;	// Set O2 tank 2 leak size
+			o2Rupture3->flowMax = 54000.0 / LBH;  //Set O2 tank 2 leak rate
+
+			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
+			leakValve1->Open();  //Start O2 tank 1 leak
+
+			h_Valve *leakValve2 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:LEAK");
+			leakValve2->Open();  //Start O2 tank 2 leak
+
+			h_Valve *o2react1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN");
+			o2react1->Close();  //Close FC1 O2 reactant valve
+
+			h_Valve *o2react3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
+			o2react3->Close();  //Close FC3 O2 reactant valve
+
+			SMQuadBRCS.GetHeliumValve1()->SetState(false);
+			SMQuadDRCS.GetHeliumValve1()->SetState(false);
+
+			SMQuadBRCS.GetHeliumValve2()->SetState(false);
+
+			SMQuadARCS.GetSecPropellantValve()->SetState(false);
+			SMQuadCRCS.GetSecPropellantValve()->SetState(false);
+				
 
 			//
 			// Update the mesh.
@@ -4156,6 +4186,7 @@ void Saturn::StageSix(double simt)
 
 			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
 
+
 		}
 
 		//
@@ -4176,12 +4207,17 @@ void Saturn::StageSix(double simt)
 		}
 
 		if (ApolloExploded && ph_o2_vent) {
+
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
-			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
+
+			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+
+
 		}
+
 	}
 }
 

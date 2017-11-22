@@ -628,7 +628,7 @@ h_Tank::h_Tank(char *i_name,vector3 i_p,double i_vol) {
 	OUT_valve.Set(0, 2, (float) 0.001, this);
 	OUT2_valve.Set(0, 2, (float) 0.001, this);
 	LEAK_valve.Set(0, 2, (float) 0.001, this);
-	energy =0;
+	energy = 0;
 	mass = 0;
 	Temp = 290;	//290K is the default temp ...just so we don't get a /div0
 	for (int i = 0; i < MAX_SUB; i++) {
