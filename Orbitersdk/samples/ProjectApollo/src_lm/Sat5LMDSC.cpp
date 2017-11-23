@@ -51,7 +51,7 @@ void Sat5LMDSC::init()
 {
 }
 
-void Sat5LMDSC::Setup(UINT stage)
+void Sat5LMDSC::Setup(int stage)
 
 {
 	SetSize(5);
@@ -161,7 +161,7 @@ void Sat5LMDSC::Setup(UINT stage)
 	}
 }
 
-void Sat5LMDSC::SetState(UINT stage)
+void Sat5LMDSC::SetState(int stage)
 {
 	Setup(stage);
 }

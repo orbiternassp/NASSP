@@ -29,8 +29,8 @@ public:
 	Sat5LMDSC(OBJHANDLE hObj, int fmodel);
 	virtual ~Sat5LMDSC();
 	void init();
-	void Setup(UINT stage);
-	virtual void SetState(UINT stage);
+	void Setup(int stage);
+	virtual void SetState(int stage);
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 

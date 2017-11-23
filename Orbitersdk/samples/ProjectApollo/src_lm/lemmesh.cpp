@@ -491,7 +491,7 @@ void LEM::SeparateStage (UINT stage)
 		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 		
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-		dscstage->SetState(stage = 0);
+		dscstage->SetState(0);
 		
 		SetLmAscentHoverStage();
 		}
@@ -508,10 +508,10 @@ void LEM::SeparateStage (UINT stage)
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (Landed) {
-				dscstage->SetState(stage = 1);
+				dscstage->SetState(1);
 			}
 			else {
-				dscstage->SetState(stage = 11);
+				dscstage->SetState(11);
 			}
 			
 			vs2.vrot.x = 5.8;
@@ -526,10 +526,10 @@ void LEM::SeparateStage (UINT stage)
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (Landed) {
-				dscstage->SetState(stage = 1);
+				dscstage->SetState(1);
 			}
 			else {
-				dscstage->SetState(stage = 11);
+				dscstage->SetState(11);
 			}
 			
 			SetLmAscentHoverStage();
