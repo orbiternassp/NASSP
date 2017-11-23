@@ -4121,11 +4121,11 @@ void Saturn::StageSix(double simt)
 			ApolloExploded = true;
 
 			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
-			o2Rupture1->in->size = (float) 50.0 / LBH;	// Set O2 tank 1 leak size
+			o2Rupture1->in->size = (float) (50.0 / LBH);	// Set O2 tank 1 leak size
 			o2Rupture1->flowMax = 100.0 / LBH;  //Set O2 tank 1 leak rate
 
 			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
-			o2Rupture3->in->size = (float) 900.0 / LBH;	// Set O2 tank 2 leak size
+			o2Rupture3->in->size = (float) (900.0 / LBH);	// Set O2 tank 2 leak size
 			o2Rupture3->flowMax = 54000.0 / LBH;  //Set O2 tank 2 leak rate
 
 			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
@@ -4480,10 +4480,10 @@ void Saturn::SetSIVbPropellantMass(double mass)
 	SetPropellantMass(ph_3rd, mass);
 }
 
-bool Saturn::GetTLInjectSignal()
+bool Saturn::GetTLIInhibitSignal()
 
 {
-	return TLIEnableSwitch.GetState() == TOGGLESWITCH_UP;
+	return TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
 }
 
 bool Saturn::GetSIISIVbDirectStagingSignal()

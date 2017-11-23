@@ -422,13 +422,13 @@ bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 	return false;
 }
 
-bool IUToCSMCommandConnector::GetTLInjectSignal()
+bool IUToCSMCommandConnector::GetTLIInhibitSignal()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_TL_INJECT;
+	cm.messageType = IUCSM_GET_TLI_INHIBIT;
 
 	if (SendMessage(cm))
 	{

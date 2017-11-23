@@ -623,10 +623,10 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_GET_TL_INJECT:
+	case IUCSM_GET_TLI_INHIBIT:
 		if (OurVessel)
 		{
-			m.val1.bValue = OurVessel->GetTLInjectSignal();
+			m.val1.bValue = OurVessel->GetTLIInhibitSignal();
 			return true;
 		}
 		break;

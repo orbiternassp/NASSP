@@ -958,7 +958,7 @@ public:
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetSIISIVbDirectStagingSignal();
-	bool GetTLInjectSignal();
+	bool GetTLIInhibitSignal();
 
 	///
 	/// \brief Triggers Virtual AGC core dump

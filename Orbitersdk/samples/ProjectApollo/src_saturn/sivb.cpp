@@ -971,11 +971,9 @@ void SIVB::AddRCS_S4B()
 
 	sivbsys->RecalculateEngineParameters(THRUST_THIRD_VAC);
 
-	//
-	// Clear old thrusters.
-	//
+	// LOX venting thruster
 
-	th_lox_vent = CreateThruster(mainExhaustPos, _V(0, 0, 1), 1000.0, ph_main, 30.0, 30.0);
+	th_lox_vent = CreateThruster(mainExhaustPos, _V(0, 0, 1), 3300.0, ph_main, 157.0, 157.0);
 
 	AddExhaustStream(th_lox_vent, &fuel_venting_spec);
 

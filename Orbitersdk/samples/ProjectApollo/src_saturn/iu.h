@@ -49,7 +49,7 @@ enum IUCSMMessageType
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
-	IUCSM_GET_TL_INJECT,					///< Get TL inject signal.
+	IUCSM_GET_TLI_INHIBIT,					///< Get TLI inhibit signal.
 	IUCSM_GET_SIISIVB_DIRECT_STAGING,		///< Get S-II/S-IVB direct staging signal.
 	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
 	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
@@ -165,7 +165,7 @@ public:
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetSIISIVbDirectStagingSignal();
-	bool GetTLInjectSignal();
+	bool GetTLIInhibitSignal();
 
 	bool GetEngineIndicator(int eng);
 	int EDSSwitchState();

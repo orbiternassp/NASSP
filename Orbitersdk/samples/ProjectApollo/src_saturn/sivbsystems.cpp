@@ -624,8 +624,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		LVDCEngineCutoffOff();
 		break;
 	case 14: //Engine Mainstage Control Valve Open On
+		StartLOXVenting();
 		break;
 	case 15: //Engine Mainstage Control Valve Open Off
+		EndLOXVenting();
 		break;
 	case 16: //Fuel Injector Temperature OK Bypass Reset
 		break;

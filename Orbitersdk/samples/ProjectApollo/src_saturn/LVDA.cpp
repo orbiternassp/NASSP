@@ -128,7 +128,7 @@ bool LVDA::GetLVIMUFailure()
 
 bool LVDA::SIVBInjectionDelay()
 {
-	return iu->GetCommandConnector()->GetTLInjectSignal() == false;
+	return iu->GetCommandConnector()->GetTLIInhibitSignal();
 }
 
 bool LVDA::SCInitiationOfSIISIVBSeparation()
