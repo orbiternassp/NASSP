@@ -30,6 +30,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 static int refcount = 0;
 static MESHHANDLE LM_Descent;
+static MESHHANDLE LM_Descent2;
+static MESHHANDLE hLemProbes;
 
 Sat5LMDSC::Sat5LMDSC(OBJHANDLE hObj, int fmodel)
 	: VESSEL3(hObj, fmodel)
@@ -49,7 +51,7 @@ void Sat5LMDSC::init()
 {
 }
 
-void Sat5LMDSC::Setup()
+void Sat5LMDSC::Setup(UINT stage)
 
 {
 	SetSize(5);
@@ -65,48 +67,103 @@ void Sat5LMDSC::Setup()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double tdph = -2.7;
-	double Mass = 4570.0;
-	double ro = 1;
-	double ro1 = 3;
-	TOUCHDOWNVTX td[7];
-	double x_target = -0.25;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<7; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
+	if (stage == 0) {
+		
+		double tdph = -2.7;
+		double Mass = 4570.0;
+		double ro = 1;
+		double ro1 = 3;
+		TOUCHDOWNVTX td[7];
+		double x_target = -0.25;
+		double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+		double damping = 0.9*(2 * sqrt(Mass*stiffness));
+		for (int i = 0; i < 7; i++) {
+			td[i].damping = damping;
+			td[i].mu = 3;
+			td[i].mu_lng = 3;
+			td[i].stiffness = stiffness;
+		}
+		td[0].pos.x = 0;
+		td[0].pos.y = tdph;
+		td[0].pos.z = 1 * ro;
+		td[1].pos.x = -cos(30 * RAD)*ro;
+		td[1].pos.y = tdph;
+		td[1].pos.z = -sin(30 * RAD)*ro;
+		td[2].pos.x = cos(30 * RAD)*ro;
+		td[2].pos.y = tdph;
+		td[2].pos.z = -sin(30 * RAD)*ro;
+		td[3].pos.x = cos(30 * RAD)*ro1;
+		td[3].pos.y = 0;
+		td[3].pos.z = sin(30 * RAD)*ro1;
+		td[4].pos.x = -cos(30 * RAD)*ro1;
+		td[4].pos.y = 0;
+		td[4].pos.z = sin(30 * RAD)*ro1;
+		td[5].pos.x = 0;
+		td[5].pos.y = 0;
+		td[5].pos.z = -1 * ro1;
+		td[6].pos.x = 0;
+		td[6].pos.y = tdph + 3.5;
+		td[6].pos.z = 0;
+
+		SetTouchdownPoints(td, 7);
+
+		VECTOR3 mesh_dir = _V(0, 0, 0);
+		AddMesh(LM_Descent2, &mesh_dir);
 	}
-	td[0].pos.x = 0;
-	td[0].pos.y = tdph;
-	td[0].pos.z = 1 * ro;
-	td[1].pos.x = -cos(30 * RAD)*ro;
-	td[1].pos.y = tdph;
-	td[1].pos.z = -sin(30 * RAD)*ro;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = tdph;
-	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = cos(30 * RAD)*ro1;
-	td[3].pos.y = 0;
-	td[3].pos.z = sin(30 * RAD)*ro1;
-	td[4].pos.x = -cos(30 * RAD)*ro1;
-	td[4].pos.y = 0;
-	td[4].pos.z = sin(30 * RAD)*ro1;
-	td[5].pos.x = 0;
-	td[5].pos.y = 0;
-	td[5].pos.z = -1 * ro1;
-	td[6].pos.x = 0;
-	td[6].pos.y = tdph + 5;
-	td[6].pos.z = 0;
+	
+	if (stage == 1 || stage == 11) {
+		
+		double tdph = -2.7;
+		double Mass = 4570.0;
+		double ro = 4;
+		double ro1 = 3;
+		TOUCHDOWNVTX td[7];
+		double x_target = -0.25;
+		double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+		double damping = 0.9*(2 * sqrt(Mass*stiffness));
+		for (int i = 0; i < 7; i++) {
+			td[i].damping = damping;
+			td[i].mu = 3;
+			td[i].mu_lng = 3;
+			td[i].stiffness = stiffness;
+		}
+		td[0].pos.x = 0;
+		td[0].pos.y = tdph;
+		td[0].pos.z = 1 * ro;
+		td[1].pos.x = -cos(30 * RAD)*ro;
+		td[1].pos.y = tdph;
+		td[1].pos.z = -sin(30 * RAD)*ro;
+		td[2].pos.x = cos(30 * RAD)*ro;
+		td[2].pos.y = tdph;
+		td[2].pos.z = -sin(30 * RAD)*ro;
+		td[3].pos.x = cos(30 * RAD)*ro1;
+		td[3].pos.y = 0;
+		td[3].pos.z = sin(30 * RAD)*ro1;
+		td[4].pos.x = -cos(30 * RAD)*ro1;
+		td[4].pos.y = 0;
+		td[4].pos.z = sin(30 * RAD)*ro1;
+		td[5].pos.x = 0;
+		td[5].pos.y = 0;
+		td[5].pos.z = -1 * ro1;
+		td[6].pos.x = 0;
+		td[6].pos.y = tdph + 3.5;
+		td[6].pos.z = 0;
 
-	SetTouchdownPoints(td, 7);
+		SetTouchdownPoints(td, 7);
 
-	SetTouchdownPoints(td, 7);
+		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
+		VECTOR3 probe_dir = _V(-0.003, 1.125, 0.004);
+		AddMesh(LM_Descent, &mesh_dir);
+		
+		if (stage == 11) {
+			AddMesh(hLemProbes, &probe_dir);
+		}
+	}
+}
 
-	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
-	AddMesh(LM_Descent, &mesh_dir);
+void Sat5LMDSC::SetState(UINT stage)
+{
+	Setup(stage);
 }
 
 // ==============================================================
@@ -117,6 +174,8 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
 		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_Descent");
+		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_Descent2");
+		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
 	}
 	return new Sat5LMDSC(hvessel, flightmodel);
 }
@@ -129,6 +188,5 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 void Sat5LMDSC::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	init();
-	Setup();
 }
 

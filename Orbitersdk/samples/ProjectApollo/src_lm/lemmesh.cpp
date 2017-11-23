@@ -40,6 +40,7 @@
 
 #include "LEM.h"
 #include "leva.h"
+#include "Sat5LMDSC.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -487,7 +488,11 @@ void LEM::SeparateStage (UINT stage)
 		GetStatusEx(&vs2);
 		char VName[256];
 		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
-		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC2", &vs2);
+		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
+		
+		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
+		dscstage->SetState(stage = 0);
+		
 		SetLmAscentHoverStage();
 		}
 	
@@ -500,6 +505,15 @@ void LEM::SeparateStage (UINT stage)
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
+			
+			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
+			if (Landed) {
+				dscstage->SetState(stage = 1);
+			}
+			else {
+				dscstage->SetState(stage = 11);
+			}
+			
 			vs2.vrot.x = 5.8;
 			DefSetStateEx(&vs2);
 			SetLmAscentHoverStage();
@@ -509,6 +523,15 @@ void LEM::SeparateStage (UINT stage)
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
+			
+			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
+			if (Landed) {
+				dscstage->SetState(stage = 1);
+			}
+			else {
+				dscstage->SetState(stage = 11);
+			}
+			
 			SetLmAscentHoverStage();
 		}
 	}
