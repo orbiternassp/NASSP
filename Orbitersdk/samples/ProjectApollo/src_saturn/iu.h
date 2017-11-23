@@ -30,6 +30,7 @@
 #include "FCC.h"
 #include "eds.h"
 #include "LVDA.h"
+#include "dcs.h"
 
 class SoundLib;
 class IU;
@@ -50,6 +51,7 @@ enum IUCSMMessageType
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
 	IUCSM_GET_TLI_INHIBIT,					///< Get TLI inhibit signal.
+	IUCSM_GET_IU_UPTLM_ACCEPT,				///< Get IU UPTLM switch setting.
 	IUCSM_GET_SIISIVB_DIRECT_STAGING,		///< Get S-II/S-IVB direct staging signal.
 	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
 	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
@@ -166,6 +168,7 @@ public:
 	bool GetCMCSIVBCutoff();
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
+	bool GetIUUPTLMAccept();
 
 	bool GetEngineIndicator(int eng);
 	int EDSSwitchState();
@@ -337,6 +340,7 @@ public:
 	LVIMU lvimu;
 	LVRG lvrg;
 	LVDA lvda;
+	DCS dcs;
 
 protected:
 	int State;

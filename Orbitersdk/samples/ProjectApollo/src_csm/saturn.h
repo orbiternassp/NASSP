@@ -959,6 +959,7 @@ public:
 	bool GetCMCSIVBCutoff();
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
+	bool GetIUUPTLMAccept();
 
 	///
 	/// \brief Triggers Virtual AGC core dump

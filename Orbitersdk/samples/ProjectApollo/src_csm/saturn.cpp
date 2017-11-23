@@ -4486,6 +4486,12 @@ bool Saturn::GetTLIInhibitSignal()
 	return TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
 }
 
+bool Saturn::GetIUUPTLMAccept()
+
+{
+	return IUUplinkSwitch.GetState() == TOGGLESWITCH_UP;
+}
+
 bool Saturn::GetSIISIVbDirectStagingSignal()
 
 {

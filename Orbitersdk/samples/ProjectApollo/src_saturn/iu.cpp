@@ -44,7 +44,8 @@
 #include "iu.h"
 
 
-IU::IU()
+IU::IU() :
+dcs(this)
 {
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -429,6 +430,22 @@ bool IUToCSMCommandConnector::GetTLIInhibitSignal()
 
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = IUCSM_GET_TLI_INHIBIT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::GetIUUPTLMAccept()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_IU_UPTLM_ACCEPT;
 
 	if (SendMessage(cm))
 	{
@@ -1763,6 +1780,7 @@ void IUSV::SwitchSelector(int item)
 		commandConnector.ClearSIISep();
 		break;
 	case 82: //IU Command System Enable
+		dcs.EnableCommandSystem();
 		break;
 	case 83: //S-IC Outboard Engines Cant On "A"
 		break;

@@ -631,6 +631,14 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
+	case IUCSM_GET_IU_UPTLM_ACCEPT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetIUUPTLMAccept();
+			return true;
+		}
+		break;
+
 	case IUCSM_SET_SII_SEP_LIGHT:
 		if (OurVessel)
 		{
