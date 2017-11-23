@@ -25,11 +25,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 
 #include "LVIMU.h"
+#include "iu.h"
 
 #include "soundlib.h"
 
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 

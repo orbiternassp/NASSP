@@ -41,7 +41,6 @@
 #include "missiontimer.h"
 #include "FDAI.h"
 #include "dsky.h"
-#include "iu.h"
 #include "cdu.h"
 #include "IMU.h"
 #include "satswitches.h"
@@ -73,6 +72,8 @@
 //
 
 #include "IMFD/IMFD_Client.h"
+
+class IU;
 
 
 #define RCS_SM_QUAD_A		0
@@ -952,6 +953,13 @@ public:
 
 	virtual void SetIUUmbilicalState(bool connect);
 
+	//CSM to IU interface functions
+	bool GetCMCSIVBTakeover();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBCutoff();
+	bool GetSIISIVbDirectStagingSignal();
+	bool GetTLIInhibitSignal();
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -1130,18 +1138,6 @@ public:
 	///
 	void SetSIVbPropellantMass(double mass);
 
-	///
-	/// \brief Get the state of the SII/SIVb Sep switch.
-	/// \return Switch state.
-	///
-	int GetSIISIVbSepSwitchState();
-
-	///
-	/// \brief Get the state of the TLI Enable switch.
-	/// \return Switch state.
-	///
-	int GetTLIEnableSwitchState();
-	int GetLVGuidanceSwitchState();
 	int GetEDSSwitchState();
 	int GetLVRateAutoSwitchState();
 	int GetTwoEngineOutAutoSwitchState();
@@ -1975,7 +1971,7 @@ protected:
 	//
 
 	SwitchRow LVRow;
-	GuardedToggleSwitch LVGuidanceSwitch;
+	AGCIOGuardedToggleSwitch LVGuidanceSwitch;
 	GuardedToggleSwitch SIISIVBSepSwitch;
 	XLunarSwitch TLIEnableSwitch;
 

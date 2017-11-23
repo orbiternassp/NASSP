@@ -49,10 +49,12 @@ public:
 
 	//LVDC Input Discretes and Interrupts
 
-	bool GetSIEngineOut();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSICInboardEngineCutoff();
 	bool GetSIIEngineOut();
 	bool GetCMCSIVBIgnitionSequenceStart();
-	bool GetCMCSIVBShutdown();
+	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();
 	bool SIVBInjectionDelay();
 	bool SCInitiationOfSIISIVBSeparation();

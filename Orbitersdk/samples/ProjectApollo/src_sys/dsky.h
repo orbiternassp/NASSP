@@ -31,6 +31,8 @@
 ///
 
 #include "toggleswitch.h"
+#include "apolloguidance.h"
+
 class DSKY : public e_object
 
 {

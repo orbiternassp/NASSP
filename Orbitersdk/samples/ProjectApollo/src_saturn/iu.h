@@ -25,6 +25,7 @@
 #if !defined(_PA_IU_H)
 #define _PA_IU_H
 
+#include "connector.h"
 #include "LVIMU.h"
 #include "FCC.h"
 #include "eds.h"
@@ -48,16 +49,17 @@ enum IUCSMMessageType
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
-	IUCSM_GET_SIISIVBSEP_SWITCH_STATE,		///< State of SII/SIVb Sep switch.
-	IUCSM_GET_TLI_ENABLE_SWITCH_STATE,		///< State of TLI Enable switch.
-	IUCSM_GET_LV_GUIDANCE_SWITCH_STATE,		///< State of LV Guidance switch.
+	IUCSM_GET_TLI_INHIBIT,					///< Get TLI inhibit signal.
+	IUCSM_GET_SIISIVB_DIRECT_STAGING,		///< Get S-II/S-IVB direct staging signal.
+	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
+	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
+	IUCSM_GET_CMC_SIVB_CUTOFF,				///< Get CMC S-IVB cutoff signal.
 	IUCSM_GET_EDS_SWITCH_STATE,
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_COMMAND,					///< Get Boost Engine Cutoff command from SECS.
 	IUCSM_IS_EDS_BUS_POWERED,
 	IUCSM_GET_AGC_ATTITUDE_ERROR,
-	IUCSM_GET_INPUT_CHANNEL_BIT,			///< Get AGC input channel bit.
 	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
 	IUCSM_PLAY_COUNT_SOUND,					///< Play/stop countdown sound.
 	IUCSM_PLAY_SECO_SOUND,					///< Play/stop SECO sound.
@@ -159,11 +161,13 @@ public:
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	bool GetAGCInputChannelBit(int channel, int bit);
+	bool GetCMCSIVBTakeover();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBCutoff();
+	bool GetSIISIVbDirectStagingSignal();
+	bool GetTLIInhibitSignal();
+
 	bool GetEngineIndicator(int eng);
-	int SIISIVbSwitchState();
-	int TLIEnableSwitchState();
-	int LVGuidanceSwitchState();
 	int EDSSwitchState();
 	int LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitchState();
@@ -315,8 +319,8 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
-	virtual bool GetSIInboardEngineOut() = 0;
-	virtual bool GetSIOutboardEngineOut() = 0;
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected() { return UmbilicalConnected; }
@@ -372,8 +376,6 @@ public:
 	~IU1B();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 	void SaveFCC(FILEHANDLE scn);
@@ -393,8 +395,6 @@ public:
 	IUSV();
 	~IUSV();
 	void Timestep(double misst, double simt, double simdt, double mjd);
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SwitchSelector(int item);

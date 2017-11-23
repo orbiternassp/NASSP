@@ -33,16 +33,15 @@
 #include "nasspdefs.h"
 
 #include "ioChannels.h"
-#include "toggleswitch.h"
 #include "apolloguidance.h"
 
-#include "connector.h"
 #include "csmcomputer.h"
 
 #include "saturn.h"
-#include "sivb.h"
 #include "papi.h"
 #include "LVDC.h"
+
+#include "iu.h"
 
 
 IU::IU()
@@ -160,6 +159,16 @@ void IU::ConnectToLV(Connector *CommandConnector)
 bool IU::GetSIPropellantDepletionEngineCutoff()
 {
 	return lvCommandConnector.GetSIPropellantDepletionEngineCutoff();
+}
+
+bool IU::GetSIInboardEngineOut()
+{
+	return lvCommandConnector.GetSIInboardEngineOut();
+}
+
+bool IU::GetSIOutboardEngineOut()
+{
+	return lvCommandConnector.GetSIOutboardEngineOut();
 }
 
 bool IU::SIBLowLevelSensorsDry()
@@ -348,6 +357,54 @@ void IUToCSMCommandConnector::ClearEngineIndicators()
 	SendMessage(cm);
 }
 
+bool IUToCSMCommandConnector::GetCMCSIVBTakeover()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_TAKEOVER;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::GetCMCSIVBIgnitionSequenceStart()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_IGNITION;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::GetCMCSIVBCutoff()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_CMC_SIVB_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 
 {
@@ -365,52 +422,36 @@ bool IUToCSMCommandConnector::GetEngineIndicator(int eng)
 	return false;
 }
 
-int IUToCSMCommandConnector::TLIEnableSwitchState()
+bool IUToCSMCommandConnector::GetTLIInhibitSignal()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_TLI_ENABLE_SWITCH_STATE;
+	cm.messageType = IUCSM_GET_TLI_INHIBIT;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.iValue;
+		return cm.val1.bValue;
 	}
 
-	return -1;
+	return false;
 }
 
-int IUToCSMCommandConnector::SIISIVbSwitchState()
+bool IUToCSMCommandConnector::GetSIISIVbDirectStagingSignal()
 
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_SIISIVBSEP_SWITCH_STATE;
+	cm.messageType = IUCSM_GET_SIISIVB_DIRECT_STAGING;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.iValue;
+		return cm.val1.bValue;
 	}
 
-	return -1;
-}
-
-int IUToCSMCommandConnector::LVGuidanceSwitchState()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_LV_GUIDANCE_SWITCH_STATE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.iValue;
-	}
-
-	return -1;
+	return false;
 }
 
 int IUToCSMCommandConnector::EDSSwitchState()
@@ -507,23 +548,6 @@ int IUToCSMCommandConnector::GetAGCAttitudeError(int axis)
 	}
 
 	return 0;
-}
-
-bool IUToCSMCommandConnector::GetAGCInputChannelBit(int channel, int bit)
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_INPUT_CHANNEL_BIT;
-	cm.val1.iValue = channel;
-	cm.val2.iValue = bit;
-
-	if (SendMessage(cm))
-	{
-		return cm.val3.bValue;
-	}
-
-	return false;
 }
 
 void IUToCSMCommandConnector::LoadTLISounds()
@@ -1405,16 +1429,6 @@ bool IU1B::SIBLowLevelSensorsDry()
 	return lvCommandConnector.GetSIBLowLevelSensorsDry();
 }
 
-bool IU1B::GetSIInboardEngineOut()
-{
-	return lvCommandConnector.GetSIInboardEngineOut();
-}
-
-bool IU1B::GetSIOutboardEngineOut()
-{
-	return lvCommandConnector.GetSIOutboardEngineOut();
-}
-
 void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
@@ -1588,37 +1602,6 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 			lvimu.LoadState(scn);
 		}
 	}
-}
-
-bool IUSV::GetSIInboardEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_ONE) return false;
-
-	bool ThrustOK[5];
-
-	lvCommandConnector.GetSIThrustOK(ThrustOK);
-
-	if (!ThrustOK[4]) return true;
-
-	return false;
-}
-
-bool IUSV::GetSIOutboardEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_ONE) return false;
-
-	bool ThrustOK[5];
-
-	lvCommandConnector.GetSIThrustOK(ThrustOK);
-
-	for (int i = 0;i < 4;i++)
-	{
-		if (!ThrustOK[i]) return true;
-	}
-
-	return false;
 }
 
 bool IUSV::GetSIIPropellantDepletionEngineCutoff()

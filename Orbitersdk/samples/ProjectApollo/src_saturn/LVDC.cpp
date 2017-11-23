@@ -23,22 +23,13 @@
   **************************************************************************/
 
 #pragma once
-#include "OrbiterAPI.h"
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
-#include "resource.h"
 
 #include "nasspdefs.h"
-#include "nasspsound.h"
 
-#include "soundlib.h"
-#include "toggleswitch.h"
-
-#include "ioChannels.h"
 #include "papi.h"
-#include "saturn.h"
 #include "../src_rtccmfd/OrbMech.h"
+#include "iu.h"
 #include "LVDC.h"
 #include "LVDA.h"
 
@@ -1998,9 +1989,9 @@ minorloop: //minor loop;
 		}*/
 
 		//Engine failure code
-		if (LVDC_Timebase == 1)
+		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
 		{
-			S1B_Engine_Out = lvda.GetSIEngineOut();
+			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
 		}
 	}
 
@@ -5043,10 +5034,13 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// S1C CECO TRIGGER:
-				if(lvCommandConnector->GetMissionTime() > t_S1C_CECO && DotS.z > 500.0){
+				if (LVDC_TB_ETime > t_S1C_CECO) {
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					S1_Engine_Out = true;
-					// Begin timebase 2
+				}
+
+				// Begin timebase 2
+				if((DotS.z > 500.0 || (GuidanceReferenceFailure && SCControlPoweredFlight)) && lvda.GetSICInboardEngineCutoff()){
 					TB2 = TAS;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
@@ -5067,7 +5061,6 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 				case 0:
 					//TB2+0.0: Inboard Engine Cutoff
-					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 8);
 					CommandSequence++;
 					break;
 				case 1:
@@ -5191,7 +5184,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO - Thrust %f N @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(),lvCommandConnector->GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetAltitude());
 					lvCommandConnector->SwitchSelector(17);
 					// Begin timebase 3
 					TB3 = TAS;
@@ -6686,7 +6679,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				//Manual S-IVB Shutdown
 				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBShutdown()))
+					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBCutoff()))
 				{
 					S4B_REIGN = false;
 					TB7 = TAS;
@@ -6747,17 +6740,26 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 3:
 					//TB7+0.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
 					if (LVDC_TB_ETime > 0.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 107);
 						CommandSequence++;
+					}
 					break;
 				case 4:
 					//TB7+0.7: LOX Tank NPV Valve Open On
 					if (LVDC_TB_ETime > 0.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 105);
 						CommandSequence++;
+					}
 					break;
 				case 5:
 					//TB7+0.8: LH2 Tank Latching Relief Valve Open On
 					if (LVDC_TB_ETime > 0.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 99);
 						CommandSequence++;
+					}
 					break;
 				case 6:
 					//TB7+0.9: Point Level Sensor Disarming
@@ -6770,12 +6772,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 7:
 					//TB7+1.0: LOX Tank Pressurization Shutoff Valves Close
 					if (LVDC_TB_ETime > 1.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 79);
 						CommandSequence++;
+					}
 					break;
 				case 8:
 					//TB7+1.1: LOX Tank Flight Pressure System Off
 					if (LVDC_TB_ETime > 1.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 104);
 						CommandSequence++;
+					}
 					break;
 				case 9:
 					//TB7+1.2: Second Burn Relay Off
@@ -6788,22 +6796,34 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 10:
 					//TB7+2.5: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
 					if (LVDC_TB_ETime > 2.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 112);
 						CommandSequence++;
+					}
 					break;
 				case 11:
 					//TB7+2.6: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
 					if (LVDC_TB_ETime > 2.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 108);
 						CommandSequence++;
+					}
 					break;
 				case 12:
 					//TB7+2.7: LOX NPV Valve Latch Open On
 					if (LVDC_TB_ETime > 2.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 44);
 						CommandSequence++;
+					}
 					break;
 				case 13:
 					//TB7+2.8: LH2 Tank Latching Relief Valve Latch On
 					if (LVDC_TB_ETime > 2.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 64);
 						CommandSequence++;
+					}
 					break;
 				case 14:
 					//TB7+3.6: Flight Control Computer S-IVB Burn Mode Off "A"
@@ -6817,12 +6837,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 15:
 					//TB7+3.7: LOX Tank NPV Valve Open Off
 					if (LVDC_TB_ETime > 3.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 106);
 						CommandSequence++;
+					}
 					break;
 				case 16:
 					//TB7+3.8: LH2 Tank Latching Relief Valve Open Off
 					if (LVDC_TB_ETime > 3.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 100);
 						CommandSequence++;
+					}
 					break;
 				case 17:
 					//TB7+3.9: Flight Control Computer S-IVB Burn Mode Off "B"
@@ -6836,17 +6862,26 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 18:
 					//TB7+4.1: Aux Hydraulic Pump Flight Mode Off
 					if (LVDC_TB_ETime > 4.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 29);
 						CommandSequence++;
+					}
 					break;
 				case 19:
 					//TB7+4.7: LOX Tank NPV Valve Latch Open Off
 					if (LVDC_TB_ETime > 4.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 45);
 						CommandSequence++;
+					}
 					break;
 				case 20:
 					//TB7+4.8: LH2 Tank Latching Relief Valve Latch Off
 					if (LVDC_TB_ETime > 4.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 65);
 						CommandSequence++;
+					}
 					break;
 				case 21:
 					//TB7+5.0: S/C Control of Saturn Enable
@@ -6872,6 +6907,462 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'B' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
+						CommandSequence++;
+					}
+					break;
+				case 24:
+					//TB7+25.0: Single Sideband FM Transmitter Off
+					if (LVDC_TB_ETime > 25.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 47);
+						CommandSequence++;
+					}
+					break;
+				case 25:
+					//TB7+149.7: LOX Tank NPV Valve Open On
+					if (LVDC_TB_ETime > 149.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 105);
+						CommandSequence++;
+					}
+					break;
+				case 26:
+					//TB7+150.7: LOX Tank NPV Valve Open Off
+					if (LVDC_TB_ETime > 150.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 106);
+						CommandSequence++;
+					}
+					break;
+				case 27:
+					//TB7+153.7: LOX Tank Vent and NPV Valves Boost Close On
+					if (LVDC_TB_ETime > 153.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 95);
+						CommandSequence++;
+					}
+					break;
+				case 28:
+					//TB7+155.7: LOX Tank Vent and NPV Valves Boost Close Off
+					if (LVDC_TB_ETime > 155.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 96);
+						CommandSequence++;
+					}
+					break;
+				case 29:
+					//TB7+899.0: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 899.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 99);
+						CommandSequence++;
+					}
+					break;
+				case 30:
+					//TB7+899.8: LH2 Tank Continuous Vent Valve Open On
+					if (LVDC_TB_ETime > 899.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 84);
+						CommandSequence++;
+					}
+					break;
+				case 31:
+					//TB7+900.0: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 900.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 100);
+						CommandSequence++;
+					}
+					break;
+				case 32:
+					//TB7+901.8: LH2 Tank Continuous Vent Valve Open Off
+					if (LVDC_TB_ETime > 901.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 87);
+						CommandSequence++;
+					}
+					break;
+				case 33:
+					//TB7+903.0: LH2 Tank Vent and Latching Relief Valve Boost Close On
+					if (LVDC_TB_ETime > 903.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 77);
+						CommandSequence++;
+					}
+					break;
+				case 34:
+					//TB7+905.0: LH2 Tank Vent and Latching Relief Valve Boost Close Off
+					if (LVDC_TB_ETime > 905.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 78);
+						CommandSequence++;
+					}
+					break;
+				case 35:
+					//TB7+1200.0: CCS Coax Switch Low Gain Antenna
+					if (LVDC_TB_ETime > 1200.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 65);
+						CommandSequence++;
+					}
+					break;
+				case 36:
+					//TB7+1200.2: PCM Coax Switch Low Gain Antenna
+					if (LVDC_TB_ETime > 1200.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 60);
+						CommandSequence++;
+					}
+					break;
+				case 37:
+					//TB7+1200.4: IU Command System Enable
+					if (LVDC_TB_ETime > 1200.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 82);
+						CommandSequence++;
+					}
+					break;
+				case 38:
+					//TB7+3200.0: Aux Hydraulic Pump Mode On
+					if (LVDC_TB_ETime > 3200.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 28);
+						CommandSequence++;
+					}
+					break;
+				case 39:
+					//TB7+3248.0: Aux Hydraulic Pump Mode Off
+					if (LVDC_TB_ETime > 3248.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 29);
+						CommandSequence++;
+					}
+					break;
+				case 40:
+					//TB7+3600.4: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 3600.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 99);
+						CommandSequence++;
+					}
+					break;
+				case 41:
+					//TB7+3602.4: LH2 Tank Latching Relief Valve Latch On
+					if (LVDC_TB_ETime > 3602.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 64);
+						CommandSequence++;
+					}
+					break;
+				case 42:
+					//TB7+3603.4: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 3603.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 100);
+						CommandSequence++;
+					}
+					break;
+				case 43:
+					//TB7+3604.4: LH2 Tank Latching Relief Valve Latch Off
+					if (LVDC_TB_ETime > 3604.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 65);
+						CommandSequence++;
+					}
+					break;
+				case 44:
+					//TB7+4449.0: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 4449.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 99);
+						CommandSequence++;
+					}
+					break;
+				case 45:
+					//TB7+4500.0: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 4500.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 100);
+						CommandSequence++;
+					}
+					break;
+				case 46:
+					//TB7+4503.0: LH2 Tank Vent and Latching Relief Valve Boost Close On
+					if (LVDC_TB_ETime > 4503.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 77);
+						CommandSequence++;
+					}
+					break;
+				case 47:
+					//TB7+4505.0: LH2 Tank Vent and Latching Relief Valve Boost Close Off
+					if (LVDC_TB_ETime > 4505.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 78);
+						CommandSequence++;
+					}
+					break;
+				case 48:
+					//TB7+7200.2: LH2 Tank Continuous Vent Orfice Shutoff Valve Open On
+					if (LVDC_TB_ETime > 7200.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 111);
+						CommandSequence++;
+					}
+					break;
+				case 49:
+					//TB7+7200.3: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open On
+					if (LVDC_TB_ETime > 7200.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 107);
+						CommandSequence++;
+					}
+					break;
+				case 50:
+					//TB7+7200.5: S-IVB Engine EDS Cutoff No. 2 Disable
+					if (LVDC_TB_ETime > 7200.5)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 19);
+						CommandSequence++;
+					}
+					break;
+				case 51:
+					//TB7+7202.2: LH2 Tank Continuous Vent Orfice Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 7202.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 112);
+						CommandSequence++;
+					}
+					break;
+				case 52:
+					//TB7+7202.3: LH2 Tank Continuous Vent Relief Override Shutoff Valve Open Off
+					if (LVDC_TB_ETime > 7202.3)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 108);
+						CommandSequence++;
+					}
+					break;
+				case 53:
+					//TB7+7890.0: Aux Hydraulic Pump Mode On
+					if (LVDC_TB_ETime > 7890.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 28);
+						CommandSequence++;
+					}
+					break;
+				case 54:
+					//TB7+7910.0: Passivation Enable
+					if (LVDC_TB_ETime > 7910.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 1);
+						CommandSequence++;
+					}
+					break;
+				case 55:
+					//TB7+7920.0: Engine Mainstage Control Valve Open On
+					if (LVDC_TB_ETime > 7920.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 14);
+						CommandSequence++;
+					}
+					break;
+				case 56:
+					//TB7+7920.2: Engine He Control Valve Open On
+					if (LVDC_TB_ETime > 7920.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 109);
+						CommandSequence++;
+					}
+					break;
+				case 57:
+					//TB7+7950.0: Start Bottle Vent Control Valve Open On
+					if (LVDC_TB_ETime > 7950.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 30);
+						CommandSequence++;
+					}
+					break;
+				case 58:
+					//TB7+8100.0: Start Bottle Vent Control Valve Open Off
+					if (LVDC_TB_ETime > 8100.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 31);
+						CommandSequence++;
+					}
+					break;
+				case 59:
+					//TB7+8190.0: Engine Pump Purge Control Valve Enable On
+					if (LVDC_TB_ETime > 8190.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 24);
+						CommandSequence++;
+					}
+					break;
+				case 60:
+					//TB7+8220.2: Engine Mainstage Control Valve Open Off
+					if (LVDC_TB_ETime > 8220.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 15);
+						CommandSequence++;
+					}
+					break;
+				case 61:
+					//TB7+8220.4: Engine He Control Valve Open Off
+					if (LVDC_TB_ETime > 8220.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 110);
+						CommandSequence++;
+					}
+					break;
+				case 62:
+					//TB7+8223.0: Aux Hydraulic Pump Flight Mode Off
+					if (LVDC_TB_ETime > 8223.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 29);
+						CommandSequence++;
+					}
+					break;
+				case 63:
+					//TB7+8223.2: LOX Tank NPV Valve Open On
+					if (LVDC_TB_ETime > 8223.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 105);
+						CommandSequence++;
+					}
+					break;
+				case 64:
+					//TB7+8223.4: LH2 Tank Latching Relief Valve Open On
+					if (LVDC_TB_ETime > 8223.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 99);
+						CommandSequence++;
+					}
+					break;
+				case 65:
+					//TB7+8225.2: LOX NPV Valve Latch Open On
+					if (LVDC_TB_ETime > 8225.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 44);
+						CommandSequence++;
+					}
+					break;
+				case 66:
+					//TB7+8225.4: LH2 Tank Latching Relief Valve Latch On
+					if (LVDC_TB_ETime > 8225.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 64);
+						CommandSequence++;
+					}
+					break;
+				case 67:
+					//TB7+8226.2: LOX Tank NPV Valve Open Off
+					if (LVDC_TB_ETime > 8226.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 106);
+						CommandSequence++;
+					}
+					break;
+				case 68:
+					//TB7+8226.4: LH2 Tank Latching Relief Valve Open Off
+					if (LVDC_TB_ETime > 8226.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 100);
+						CommandSequence++;
+					}
+					break;
+				case 69:
+					//TB7+8227.2: LOX Tank NPV Valve Latch Open Off
+					if (LVDC_TB_ETime > 8227.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 45);
+						CommandSequence++;
+					}
+					break;
+				case 70:
+					//TB7+8227.4: LH2 Tank Latching Relief Valve Latch Off
+					if (LVDC_TB_ETime > 8227.4)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 65);
+						CommandSequence++;
+					}
+					break;
+				case 71:
+					//TB7+8227.6: Repressurization System Mode Select Off (Amb)
+					if (LVDC_TB_ETime > 8227.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 37);
+						CommandSequence++;
+					}
+					break;
+				case 72:
+					//TB7+8227.8: LH2 Tank Repressurization Control Valve Open On
+					if (LVDC_TB_ETime > 8227.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 39);
+						CommandSequence++;
+					}
+					break;
+				case 73:
+					//TB7+9080.0: CCS Coax Switch High Gain Antenna
+					if (LVDC_TB_ETime > 9080.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 63);
+						CommandSequence++;
+					}
+					break;
+				case 74:
+					//TB7+9080.2: PCM Coax Switch High Gain Antenna
+					if (LVDC_TB_ETime > 9080.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 62);
+						CommandSequence++;
+					}
+					break;
+				case 75:
+					//TB7+11227.6: Repressurization System Mode Select On (Amb)
+					if (LVDC_TB_ETime > 11227.6)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 36);
+						CommandSequence++;
+					}
+					break;
+				case 76:
+					//TB7+11427.8: LH2 Tank Repressurization Control Valve Open Off
+					if (LVDC_TB_ETime > 11427.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 81);
+						CommandSequence++;
+					}
+					break;
+				case 77:
+					//TB7+11428.0: Engine He Control Valve Open On
+					if (LVDC_TB_ETime > 11428.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 109);
+						CommandSequence++;
+					}
+					break;
+				case 78:
+					//TB7+11710.0: Engine Pump Purge Control Valve Enable On
+					if (LVDC_TB_ETime > 11710.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 25);
+						CommandSequence++;
+					}
+					break;
+				case 79:
+					//TB7+11728.0: Engine He Control Valve Open Off
+					if (LVDC_TB_ETime > 11728.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 110);
+						CommandSequence++;
+					}
+					break;
+				case 80:
+					//TB7+11729.0: Passivation Disable
+					if (LVDC_TB_ETime > 11729.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 2);
 						CommandSequence++;
 					}
 					break;
@@ -7793,7 +8284,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z)+DotS_R.y*sin(CurrentAttitude.z)-DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -7830,7 +8321,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -7867,7 +8358,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 				}
 				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
-				V_R = Mag(DotS_R);
+				V_R = length(DotS_R);
 				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
 				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
@@ -8944,9 +9435,9 @@ restartprep:
 			N = unit(crossp(PosS, DotS));
 			PosP = crossp(N,unit(PosS));
 			Sbar = unit(PosS)*cos(beta) + PosP*sin(beta);
-			DotP = crossp(N, DotS / Mag(PosS));
+			DotP = crossp(N, DotS / length(PosS));
 
-			Sbardot = DotS / Mag(PosS)*cos(beta) + DotP*sin(beta);
+			Sbardot = DotS / length(PosS)*cos(beta) + DotP*sin(beta);
 
 			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
 			{
@@ -8990,11 +9481,11 @@ O3precalc:
 		}
 
 		//Nominal ellipse calculations go here
-		cos_psiT = Sbar*T_P;
+		cos_psiT = dotp(Sbar, T_P);
 		sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
 		Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
 		Cbar_1 = crossp(Sbar_1, Sbar);
-		Inclination = acos(_V(MX_A.m21, MX_A.m22, MX_A.m23)*Cbar_1);
+		Inclination = acos(dotp(_V(MX_A.m21, MX_A.m22, MX_A.m23),Cbar_1));
 		X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
 		X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
 		theta_N = atan2(X_1, X_2);
@@ -9181,7 +9672,7 @@ minorloop:
 		//Engine failure code
 		if (LVDC_Timebase == 1 && LVDC_TB_ETime > 38.0)
 		{
-			S1_Engine_Out = lvda.GetSIEngineOut();
+			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
 		}
 		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
 		{

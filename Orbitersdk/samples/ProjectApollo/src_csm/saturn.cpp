@@ -46,6 +46,7 @@
 #include "papi.h"
 #include "mcc.h"
 #include "LVDC.h"
+#include "iu.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
@@ -130,7 +131,7 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
@@ -4120,11 +4121,11 @@ void Saturn::StageSix(double simt)
 			ApolloExploded = true;
 
 			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
-			o2Rupture1->in->size = (float) 50.0 / LBH;	// Set O2 tank 1 leak size
+			o2Rupture1->in->size = (float) (50.0 / LBH);	// Set O2 tank 1 leak size
 			o2Rupture1->flowMax = 100.0 / LBH;  //Set O2 tank 1 leak rate
 
 			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
-			o2Rupture3->in->size = (float) 900.0 / LBH;	// Set O2 tank 2 leak size
+			o2Rupture3->in->size = (float) (900.0 / LBH);	// Set O2 tank 2 leak size
 			o2Rupture3->flowMax = 54000.0 / LBH;  //Set O2 tank 2 leak rate
 
 			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
@@ -4479,22 +4480,16 @@ void Saturn::SetSIVbPropellantMass(double mass)
 	SetPropellantMass(ph_3rd, mass);
 }
 
-int Saturn::GetTLIEnableSwitchState()
+bool Saturn::GetTLIInhibitSignal()
 
 {
-	return TLIEnableSwitch.GetState();
+	return TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
 }
 
-int Saturn::GetSIISIVbSepSwitchState()
+bool Saturn::GetSIISIVbDirectStagingSignal()
 
 {
-	return SIISIVBSepSwitch.GetState();
-}
-
-int Saturn::GetLVGuidanceSwitchState()
-
-{
-	return LVGuidanceSwitch.GetState();
+	return SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
 int Saturn::GetEDSSwitchState()
@@ -4626,7 +4621,7 @@ void Saturn::SetQBallPowerOff()
 
 void Saturn::SetIUUmbilicalState(bool connect)
 {
-	if (iu)
+	if (stage <= PRELAUNCH_STAGE && iu)
 	{
 		if (connect)
 		{
@@ -4645,6 +4640,30 @@ void Saturn::SetAPSAttitudeEngine(int n, bool on)
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetAPSAttitudeEngine(n, on);
+}
+
+bool Saturn::GetCMCSIVBTakeover()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBIgnitionSequenceStart()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBCutoff()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
 }
 
 void Saturn::SetContrailLevel(double level)
