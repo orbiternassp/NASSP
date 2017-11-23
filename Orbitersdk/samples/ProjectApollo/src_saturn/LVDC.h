@@ -64,6 +64,10 @@ public:
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
+
+	//DCS Commands
+	bool TimebaseUpdate(double dt);
+	bool GeneralizedSwitchSelector(int stage, int channel);
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
@@ -440,6 +444,10 @@ public:
 	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
 	double SVCompare();
+
+	//DCS Commands
+	bool TimebaseUpdate(double dt);
+	bool GeneralizedSwitchSelector(int stage, int channel);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file

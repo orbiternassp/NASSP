@@ -2657,6 +2657,34 @@ double LVDC1B::SVCompare()
 	return length(PosS - newpos);
 }
 
+bool LVDC1B::TimebaseUpdate(double dt)
+{
+	if (LVDC_Timebase == 4)
+	{
+		LVDC_TB_ETime += dt;
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
+{
+	if (LVDC_Timebase == 4)
+	{
+		if (stage >= 0 && stage < 4)
+		{
+			if (channel > 0 && channel < 113)
+			{
+				lvda.SwitchSelector(stage, channel);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 // ***************************
 // DS20150720 LVDC++ ON WHEELS
 // ***************************
@@ -7392,8 +7420,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					poweredflight = false;
 				}
 
-				//For now, disable LVDC at TB7+10,000 seconds
-				if (LVDC_TB_ETime > 10000.0)
+				//For now, disable LVDC at TB7+11,729 seconds
+				if (LVDC_TB_ETime > 11729.0)
 				{
 					LVDC_Stop = true;
 					return;
@@ -9699,4 +9727,32 @@ double LVDCSV::SVCompare()
 double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
 {
 	return y0 + (y1 - y0)*(x - x0) / (x1 - x0);
+}
+
+bool LVDCSV::TimebaseUpdate(double dt)
+{
+	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
+	{
+		LVDC_TB_ETime += dt;
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::GeneralizedSwitchSelector(int stage, int channel)
+{
+	if (LVDC_Timebase == 5 || (LVDC_Timebase == 6 && LVDC_TB_ETime < 570.0) || LVDC_Timebase == 7)
+	{
+		if (stage >= 0 && stage < 4)
+		{
+			if (channel > 0 && channel < 113)
+			{
+				lvda.SwitchSelector(stage, channel);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
