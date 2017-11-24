@@ -318,6 +318,7 @@ public:
 
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
+	LVDC* GetLVDC() { return lvdc; }
 
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
@@ -330,6 +331,8 @@ public:
 
 	void ConnectUmbilical() { UmbilicalConnected = true; }
 	void DisconnectUmbilical() { UmbilicalConnected = false; }
+
+	virtual bool DCSUplink(int type, void *upl);
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }

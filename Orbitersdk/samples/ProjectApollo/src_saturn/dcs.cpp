@@ -23,6 +23,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "Orbitersdk.h"
+#include "papi.h"
 #include "iu.h"
 #include "dcs.h"
 
@@ -33,9 +34,48 @@ DCS::DCS(IU *i)
 	CommandSystemEnabled = false;
 }
 
-void DCS::Timestep(double simdt)
-{
+void DCS::LoadState(FILEHANDLE scn)
 
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, DCS_END_STRING, sizeof(DCS_END_STRING)))
+			return;
+
+		papiReadScenario_bool(line, "COMMANDSYSTEMENABLED", CommandSystemEnabled);
+	}
+}
+
+void DCS::SaveState(FILEHANDLE scn)
+
+{
+	oapiWriteLine(scn, DCS_START_STRING);
+
+	papiWriteScenario_bool(scn, "COMMANDSYSTEMENABLED", CommandSystemEnabled);
+
+	oapiWriteLine(scn, DCS_END_STRING);
+}
+
+bool DCS::Uplink(int type, void *upl)
+{
+	if (IsCommandSystemEnabled())
+	{
+		if (type == DCSUPLINK_SWITCH_SELECTOR)
+		{
+			DCSSWITSEL *switsel = static_cast<DCSSWITSEL*>(upl);
+
+			return iu->lvda.GeneralizedSwitchSelector(switsel->stage, switsel->channel);
+		}
+		else if (type == DCSUPLINK_TIMEBASE_UPDATE)
+		{
+			DCSTBUPDATE *tbupdate = static_cast<DCSTBUPDATE*>(upl);
+
+			return iu->lvda.TimebaseUpdate(tbupdate->dt);
+		}
+	}
+
+	return false;
 }
 
 bool DCS::IsCommandSystemEnabled()

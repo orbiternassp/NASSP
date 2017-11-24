@@ -24,14 +24,35 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#define DCSUPLINK_SWITCH_SELECTOR 0
+#define DCSUPLINK_TIMEBASE_UPDATE 1
+
+#define DCS_START_STRING	"DCS_BEGIN"
+#define DCS_END_STRING		"DCS_END"
+
+//Generalized Switch Selector uplink
+struct DCSSWITSEL
+{
+	int stage;
+	int channel;
+};
+
+//Timebase update
+struct DCSTBUPDATE
+{
+	double dt;
+};
+
 class IU;
 
 class DCS
 {
 public:
 	DCS(IU *i);
-	void Timestep(double simdt);
+	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn);
 
+	bool Uplink(int type, void *upl);
 	void EnableCommandSystem() { CommandSystemEnabled = true; }
 
 	bool IsCommandSystemEnabled();

@@ -286,6 +286,8 @@ public:
 	void SIVBEDSCutoff(bool cut);
 	void SIVBSwitchSelector(int channel);
 
+	IU *GetIU() { return iu; };
+
 	///
 	/// \brief Get main propellant mass.
 	/// \return Propellant mass in kg.

@@ -46,6 +46,8 @@ public:
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual bool GetGuidanceReferenceFailure() = 0;
+	virtual bool TimebaseUpdate(double dt) = 0;
+	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
 

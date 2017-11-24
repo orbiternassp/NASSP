@@ -47,6 +47,9 @@ public:
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetLVIMUFailure();
 
+	bool GeneralizedSwitchSelector(int stage, int channel);
+	bool TimebaseUpdate(double dt);
+
 	//LVDC Input Discretes and Interrupts
 
 	bool GetSIInboardEngineOut();

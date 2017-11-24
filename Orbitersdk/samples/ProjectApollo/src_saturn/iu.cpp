@@ -113,6 +113,7 @@ void IU::SaveState(FILEHANDLE scn)
 
 	SaveFCC(scn);
 	SaveEDS(scn);
+	dcs.SaveState(scn);
 	
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -135,6 +136,9 @@ void IU::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS1_BEGIN"))) {
 			LoadEDS(scn);
+		}
+		else if (!strnicmp(line, DCS_START_STRING, sizeof(DCS_START_STRING))) {
+			dcs.LoadState(scn);
 		}
 	}
 }
@@ -198,6 +202,11 @@ bool IU::GetSIVBEngineOut()
 	}
 
 	return false;
+}
+
+bool IU::DCSUplink(int type, void *upl)
+{
+	return dcs.Uplink(type, upl);
 }
 
 void IU::DisconnectIU()

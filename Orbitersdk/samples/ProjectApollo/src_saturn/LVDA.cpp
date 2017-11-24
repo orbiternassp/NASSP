@@ -29,6 +29,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "LVIMU.h"
+#include "LVDC.h"
 #include "iu.h"
 #include "saturn.h"
 #include "papi.h"
@@ -179,4 +180,20 @@ void LVDA::TLIBegun()
 void LVDA::TLIEnded()
 {
 	iu->GetCommandConnector()->TLIEnded();
+}
+
+bool LVDA::GeneralizedSwitchSelector(int stage, int channel)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GeneralizedSwitchSelector(stage, channel);
+
+	return false;
+}
+
+bool LVDA::TimebaseUpdate(double dt)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TimebaseUpdate(dt);
+
+	return false;
 }
