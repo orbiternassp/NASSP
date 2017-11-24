@@ -74,8 +74,8 @@
 #define CRASH_SOUND					"crash.wav"
 #define POSTLANDINGVENT_SOUND		"aircond.wav"
 #define CREWDEAD_SOUND				"crewdead.wav"
-#define RCSFIRE_SOUND				"attfire.wav"
-#define RCSSUSTAIN_SOUND			"attsustain.WAV"
+#define RCSFIRE_SOUND				"attfire40stereo_mod.wav"
+#define RCSSUSTAIN_SOUND			"attsustain40stereo1_mod.WAV"
 #define HATCHOPEN_SOUND				"hatch_open.wav"
 #define HATCHCLOSE_SOUND			"hatch_close.wav"
 
