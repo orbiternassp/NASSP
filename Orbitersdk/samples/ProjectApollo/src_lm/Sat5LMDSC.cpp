@@ -49,9 +49,10 @@ Sat5LMDSC::~Sat5LMDSC()
 void Sat5LMDSC::init()
 
 {
+	state = 0;
 }
 
-void Sat5LMDSC::Setup(int stage)
+void Sat5LMDSC::Setup()
 
 {
 	SetSize(5);
@@ -67,7 +68,7 @@ void Sat5LMDSC::Setup(int stage)
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	if (stage == 0) {
+	if (state == 0) {
 		
 		double tdph = -2.7;
 		double Mass = 4570.0;
@@ -111,7 +112,7 @@ void Sat5LMDSC::Setup(int stage)
 		AddMesh(LM_Descent2, &mesh_dir);
 	}
 	
-	if (stage == 1 || stage == 11) {
+	if (state == 1 || state == 11) {
 		
 		double tdph = -2.7;
 		double Mass = 4570.0;
@@ -155,7 +156,7 @@ void Sat5LMDSC::Setup(int stage)
 		VECTOR3 probe_dir = _V(-0.003, 1.125, 0.004);
 		AddMesh(LM_Descent, &mesh_dir);
 		
-		if (stage == 11) {
+		if (state == 11) {
 			AddMesh(hLemProbes, &probe_dir);
 		}
 	}
@@ -163,7 +164,36 @@ void Sat5LMDSC::Setup(int stage)
 
 void Sat5LMDSC::SetState(int stage)
 {
-	Setup(stage);
+	state = stage;
+	Setup();
+}
+
+void Sat5LMDSC::clbkSaveState(FILEHANDLE scn)
+
+{
+	VESSEL2::clbkSaveState(scn);
+
+	oapiWriteScenario_int(scn, "STATE", state);
+}
+
+void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
+
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line))
+	{
+		if (!strnicmp(line, "STATE", 5))
+		{
+			sscanf(line + 5, "%d", &state);
+		}
+		else
+		{
+			ParseScenarioLineEx(line, vstatus);
+		}
+	}
+
+	Setup();
 }
 
 // ==============================================================
@@ -187,6 +217,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 void Sat5LMDSC::clbkSetClassCaps(FILEHANDLE cfg)
 {
+	VESSEL2::clbkSetClassCaps(cfg);
 	init();
 }
 

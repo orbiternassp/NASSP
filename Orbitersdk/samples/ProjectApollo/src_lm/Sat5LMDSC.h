@@ -29,15 +29,14 @@ public:
 	Sat5LMDSC(OBJHANDLE hObj, int fmodel);
 	virtual ~Sat5LMDSC();
 	void init();
-	void Setup(int stage);
+	void Setup();
 	virtual void SetState(int stage);
-
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 
-	//
-	// No variables needed for now.
-	//
+	int state;
 
 };
