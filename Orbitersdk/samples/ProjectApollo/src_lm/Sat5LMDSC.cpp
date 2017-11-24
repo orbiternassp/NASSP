@@ -33,6 +33,25 @@ static MESHHANDLE LM_Descent;
 static MESHHANDLE LM_Descent2;
 static MESHHANDLE hLemProbes;
 
+//
+// Spew out particles to simulate the junk thrown out by stage
+// seperation explosives.
+//
+
+static PARTICLESTREAMSPEC seperation_junk = {
+	0,		// flag
+	0.02,	// size
+	1000,	// rate
+	10,    // velocity
+	5.0,    // velocity distribution
+	100,	// lifetime
+	0,	    // growthrate
+	0,      // atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
 Sat5LMDSC::Sat5LMDSC(OBJHANDLE hObj, int fmodel)
 	: VESSEL3(hObj, fmodel)
 
@@ -68,6 +87,32 @@ void Sat5LMDSC::Setup()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
+	//
+	// Seperation junk 'thrusters'.
+	//
+
+	int i;
+
+	VECTOR3	s_exhaust_pos1 = _V(-0.58, 0.81, 0.58);
+	VECTOR3 s_exhaust_pos2 = _V(0.58, 0.81, 0.58);
+	VECTOR3	s_exhaust_pos3 = _V(0.58, 0.81, -0.58);
+	VECTOR3 s_exhaust_pos4 = _V(-0.58, 0.81, -0.58);
+
+	PROPELLANT_HANDLE ph_sep = CreatePropellantResource(0.2);
+
+	THRUSTER_HANDLE th_sep[4];
+	th_sep[0] = CreateThruster(s_exhaust_pos1, _V(-1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[1] = CreateThruster(s_exhaust_pos2, _V(1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[2] = CreateThruster(s_exhaust_pos3, _V(1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[3] = CreateThruster(s_exhaust_pos4, _V(-1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
+
+	for (i = 0; i < 4; i++) {
+		AddExhaustStream(th_sep[i], &seperation_junk);
+	}
+	thg_sep = CreateThrusterGroup(th_sep, 4, THGROUP_USER);
+
+	SetThrusterGroupLevel(thg_sep, 1);
+	
 	if (state == 0) {
 		
 		double tdph = -2.7;
@@ -206,6 +251,7 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_Descent");
 		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_Descent2");
 		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
+		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 	}
 	return new Sat5LMDSC(hvessel, flightmodel);
 }

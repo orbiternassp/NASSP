@@ -38,5 +38,6 @@ public:
 protected:
 
 	int state;
+	THGROUP_HANDLE thg_sep;
 
 };
