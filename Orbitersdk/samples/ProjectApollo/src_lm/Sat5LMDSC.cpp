@@ -251,6 +251,7 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_Descent");
 		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_Descent2");
 		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
+		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 	}
 	return new Sat5LMDSC(hvessel, flightmodel);
 }
