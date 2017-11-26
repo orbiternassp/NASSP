@@ -847,7 +847,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 // Various debug prints
 //------------------------------------------------------------------------------------
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
@@ -1202,7 +1202,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	fflush(PanelsdkLogFile);
 */
 
-//#endif
+#endif
 }
 
 void Saturn::SystemsInternalTimestep(double simdt) 
@@ -2803,22 +2803,6 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 	}
 }
 
-//
-// Set O2 tank quantities.  May need to be deleted
-//
-
-/*void Saturn::SetO2Tank1Quantity(double q)
-
-{
-	O2Tanks[0]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
-}
-
-void Saturn::SetO2Tank2Quantity(double q)
-
-{
-	O2Tanks[1]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
-}
-*/
 
 //
 // Get fuel cell status. 
