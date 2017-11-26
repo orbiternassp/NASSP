@@ -568,7 +568,6 @@
     <None Include="..\..\Bitmaps\Thrustmeter.bmp" />
     <None Include="..\..\Thrustmeter.bmp" />
     <None Include="..\..\Bitmaps\thumbwheel_large_fonts.bmp" />
-    <None Include="..\..\src_lm\lmresource" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_lm\LEMResources.rc">

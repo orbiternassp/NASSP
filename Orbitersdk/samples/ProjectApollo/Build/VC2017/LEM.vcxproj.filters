@@ -817,7 +817,6 @@
     <None Include="..\..\Bitmaps\thumbwheel_large_fonts.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src_lm\lmresource" />
     <None Include="..\..\Bitmaps\lem_notrack.bmp">
       <Filter>Resource Files</Filter>
     </None>
@@ -826,8 +825,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src_lm\LEMResources.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <ResourceCompile Include="..\..\src_lm\LEMResources.rc" />
   </ItemGroup>
 </Project>
