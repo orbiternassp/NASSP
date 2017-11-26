@@ -30,13 +30,14 @@ public:
 	virtual ~Sat5LMDSC();
 	void init();
 	void Setup();
-
+	virtual void SetState(int stage);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 
-	//
-	// No variables needed for now.
-	//
+	int state;
+	THGROUP_HANDLE thg_sep;
 
 };

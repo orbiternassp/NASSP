@@ -41,7 +41,7 @@
 
 #include "LEM.h"
  
-#define VIEWANGLE 34
+#define VIEWANGLE 30
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
@@ -1451,7 +1451,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_RNDZWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RENDEZVOUS_WINDOW));
-		oapiSetPanelNeighbours(-1, LMPANEL_AOTVIEW, -1, LMPANEL_MAIN);
+		oapiSetPanelNeighbours(-1, LMPANEL_AOTVIEW, LMPANEL_DOCKVIEW, LMPANEL_MAIN);
 		break;
 
 	case LMPANEL_LEFTPANEL:
@@ -1461,7 +1461,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_AOTVIEW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_AOT_VIEW));
-		oapiSetPanelNeighbours(LMPANEL_RNDZWINDOW, -1, -1, LMPANEL_MAIN);
+		oapiSetPanelNeighbours(LMPANEL_RNDZWINDOW, -1, LMPANEL_AOTZOOM, LMPANEL_MAIN);
 		break;
 
 	case LMPANEL_RIGHTPANEL:
@@ -1472,6 +1472,16 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_ECSPANEL:
 		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_ECS_PANEL));
 		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, -1, -1);
+		break;
+
+	case LMPANEL_DOCKVIEW:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_DOCK_VIEW));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_RNDZWINDOW);
+		break;
+
+	case LMPANEL_AOTZOOM:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_AOT_ZOOM));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_AOTVIEW);
 		break;
 	}
 
@@ -1738,12 +1748,11 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0,  1456, 1049),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			           PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(196,  720,  271, 1047),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1607,   0, 1670,  156),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				           PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,			_R( 26,   66,   61,   96),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				           PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(1427,  694, 1502, 1021), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,			_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                    PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI/3.0)), optics.OpticsShaft*PI / 3.0);
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 
@@ -1759,6 +1768,22 @@ bool LEM::clbkLoadPanel (int id) {
     oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_DOCKVIEW: // LEM Docking View
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_AOTZOOM: // LEM Alignment Optical Telescope Zoom
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
+		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
@@ -1784,6 +1809,9 @@ bool LEM::clbkLoadPanel (int id) {
 	//
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetView();
+	
+	//Set visbility flag for LPD view meshes
+	SetLPDMesh();
 
 	return hBmp != NULL;
 }
@@ -2772,9 +2800,9 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
 		ButtonClick();
 		//Load panel to trigger change of the default camera direction
-		if (PanelId == LMPANEL_AOTVIEW)
+		if (PanelId == LMPANEL_AOTZOOM)
 		{
-			oapiSetPanel(LMPANEL_AOTVIEW);
+			oapiSetPanel(LMPANEL_AOTZOOM);
 		}
 		return true;
 
@@ -2997,7 +3025,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 				else							//AGS
 				{
-					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+					VECTOR3 aeaerror = aea.GetAttitudeError();
+					errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
 
 					if (DeadBandSwitch.IsUp())
 					{
@@ -3071,7 +3100,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 				else							//AGS
 				{
-					errors = aea.GetAttitudeError()*DEG*41.0 / 15.0;
+					VECTOR3 aeaerror = aea.GetAttitudeError();
+					errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
 
 					if (DeadBandSwitch.IsUp())
 					{

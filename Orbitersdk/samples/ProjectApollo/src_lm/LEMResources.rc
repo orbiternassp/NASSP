@@ -172,6 +172,8 @@ IDB_LEM_PRIM_C02        BITMAP                  "..\\Bitmaps\\Lem_Prim_C02.bmp"
 IDB_LEM_SEC_C02         BITMAP                  "..\\Bitmaps\\Lem_Sec_C02.bmp"
 IDB_LEM_SGD_LEVER       BITMAP                  "..\\Bitmaps\\Lem_SGD_Lever.bmp"
 IDB_LEM_ECS_PANEL       BITMAP                  "..\\Bitmaps\\lem_ecs_panel.bmp"
+IDB_LEM_DOCK_VIEW       BITMAP                  "..\\Bitmaps\\lem_dock_view.bmp"
+IDB_LEM_AOT_ZOOM        BITMAP                  "..\\Bitmaps\\lem_aot_panel_zoom.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

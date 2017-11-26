@@ -327,6 +327,9 @@ void LEM::Init()
 	ApolloNo = 0;
 	Landed = false;
 
+	lpdgret = -1;
+	lpdgext = -1;
+
 	//
 	// VAGC Mode settings
 	//
@@ -548,9 +551,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 					optics.OpticsShaft = 5; // Clobber
 				}
 				//Load panel to trigger change of the default camera direction
-				if (PanelId == LMPANEL_AOTVIEW)
+				if (PanelId == LMPANEL_AOTZOOM)
 				{
-					oapiSetPanel(LMPANEL_AOTVIEW);
+					oapiSetPanel(LMPANEL_AOTZOOM);
 				}
 				break;
 
@@ -560,9 +563,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 					optics.OpticsShaft = 0; // Clobber
 				}
 				//Load panel to trigger change of the default camera direction
-				if (PanelId == LMPANEL_AOTVIEW)
+				if (PanelId == LMPANEL_AOTZOOM)
 				{
-					oapiSetPanel(LMPANEL_AOTVIEW);
+					oapiSetPanel(LMPANEL_AOTZOOM);
 				}
 				break;
 
@@ -782,6 +785,9 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
 		}
 	}
+
+	//Set visbility flag for LPD view meshes
+	SetLPDMesh();
 	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
@@ -978,6 +984,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
+		}
+		else if (!strnicmp(line, "SAVEFOV", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			SaveFOV = ftcp;
+		}
+		else if (!strnicmp(line, "INFOV", 5)) {
+			int i;
+			sscanf(line + 5, "%d", &i);
+			InFOV = (i == 1);
 		}
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
@@ -1367,6 +1382,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
 	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
+	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);

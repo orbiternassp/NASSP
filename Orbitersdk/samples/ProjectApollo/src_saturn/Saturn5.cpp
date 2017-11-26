@@ -45,6 +45,7 @@
 #include "saturnv.h"
 #include "s1c.h"
 #include "LVDC.h"
+#include "iu.h"
 #include "tracer.h"
 
 //
@@ -989,6 +990,13 @@ void SaturnV::SetSIEngineStart(int n)
 	if (stage >= LAUNCH_STAGE_ONE) return;
 
 	sic.SetEngineStart(n);
+}
+
+void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sic.SetThrusterDir(n, yaw, pitch);
 }
 
 bool SaturnV::GetSIIPropellantDepletionEngineCutoff()

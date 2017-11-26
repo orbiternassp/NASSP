@@ -1953,8 +1953,9 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	LVRow.Init(AID_LV_SWITCHES, MainPanel);
-	LVGuidanceSwitch.Init	  ( 1, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow);
+	LVGuidanceSwitch.Init	  ( 1, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow, &agc);
 	LVGuidanceSwitch.InitGuard( 0,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69], 180);
+	LVGuidanceSwitch.SetChannelData(030, 9, false);
 
 	if (!SkylabCM) {
 		SIISIVBSepSwitch.Init     (48, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow);
@@ -1968,7 +1969,7 @@ void Saturn::SetSwitches(int panel) {
 
 	ELSRow.Init(AID_ELS_SWITCHES, MainPanel);
 	CGSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow, &agc);
-	CGSwitch.SetChannelData(32, 11, true);	// LM Attached flag.
+	CGSwitch.SetChannelData(032, 11, true);	// LM Attached flag.
 	ELSLogicSwitch.Init(44, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow);
 	ELSLogicSwitch.InitGuard(43, 0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69]);
 	ELSAutoSwitch.Init(88, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow);
@@ -2570,7 +2571,7 @@ void Saturn::SetSwitches(int panel) {
 	RightUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20], srf[SRF_BORDER_34x31], RightUtilityPowerSwitchRow);
 
 	RightDockingTargetSwitchRow.Init(AID_RIGHTDOCKINGTARGETSWITCH, MainPanel);
-	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow);
+	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow, this);
 
 	RightModeIntercomSwitchRow.Init(AID_RIGHTMODEINTERCOMSWITCH, MainPanel);
 	RightModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], srf[SRF_BORDER_34x31], RightModeIntercomSwitchRow);
@@ -3713,18 +3714,18 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		FuelCellHeaterSwitchToggled(s,
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER:PUMP"));
 
-
+		//Fuel cell reaactant valve switches now control the reactant valves themselves and not fuel cell operation directly
 	} else if (s == &FuelCellReactants1Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell1ReacsCB, &FuelCell1BusContCB,
-			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START"));
+			(int*) Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:OPEN"), (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:OPEN"));
 
 	} else if (s == &FuelCellReactants2Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell2ReacsCB, &FuelCell2BusContCB,
-			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:START"));
+			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:OPEN"));
 
 	} else if (s == &FuelCellReactants3Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell3ReacsCB, &FuelCell3BusContCB,
-			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:START"));
+			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:OPEN"));
 
 
 	} else if (s == &MainBusTieBatAcSwitch) {
@@ -3852,17 +3853,28 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 	} else if (s == &FuelCellRadiators3Indicator) {
 		FuelCellRadiators3Indicator.SetState(!FuelCellCoolingBypassed(3) && stage <= CSM_LEM_STAGE ? 1 : 0);
 
-	} else if (s == &FuelCellReactants1Indicator) {
-		if (FuelCells[0]->running != 0 && FuelCell1BusContCB.IsPowered()) FuelCellReactants1Indicator.SetState(0);
+		
+	}
+	//Reaction valves for Apollo 13 and before were wired in series with the indicators so both valves had to close before the talkback would barberpole
+	else if (s == &FuelCellReactants1Indicator) {
+		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN") == 0) &&
+			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN") == 0) &&
+			FuelCell1BusContCB.IsPowered()) FuelCellReactants1Indicator.SetState(0);
 		else FuelCellReactants1Indicator.SetState(1);
 
-	} else if (s == &FuelCellReactants2Indicator) {
-		if (FuelCells[1]->running != 0 && FuelCell2BusContCB.IsPowered()) FuelCellReactants2Indicator.SetState(0);
+	}
+	else if (s == &FuelCellReactants2Indicator) {
+		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN") == 0) &&
+			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN") == 0) &&
+			FuelCell2BusContCB.IsPowered()) FuelCellReactants2Indicator.SetState(0);
 		else FuelCellReactants2Indicator.SetState(1);
 
-	} else if (s == &FuelCellReactants3Indicator) {
-		if (FuelCells[2]->running != 0 && FuelCell3BusContCB.IsPowered()) FuelCellReactants3Indicator.SetState(0);
-        else FuelCellReactants3Indicator.SetState(1);
+	}
+	else if (s == &FuelCellReactants3Indicator) {
+		if ((*(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN") == 0) &&
+			(*(int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN") == 0) &&
+			FuelCell3BusContCB.IsPowered()) FuelCellReactants3Indicator.SetState(0);
+		else FuelCellReactants3Indicator.SetState(1);
 
 	} else if (s == &EcsRadiatorIndicator) {
 		if (EcsRadiatorsFlowContPwrSwitch.IsUp()) {
@@ -3948,19 +3960,23 @@ void Saturn::FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_OFF;
 }
 
-void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start) {
+void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open) {
 
 	// Is the reactants valve latched?
 	if (s->IsDown() && FCReacsValvesSwitch.IsDown() && cbLatch->IsPowered()) return;
 	// Switch powered?
 	if (!cb->IsPowered()) return;
 
-	if (s->IsUp())
-		*start = SP_FUELCELL_START;
-	else if (s->IsCenter())
-		*start = SP_FUELCELL_NONE;
-	else if (s->IsDown())
-		*start = SP_FUELCELL_STOP;
+	if (s->IsUp()) {
+	*h2open = SP_VALVE_OPEN, *o2open = SP_VALVE_OPEN;
+}
+	else if (s->IsCenter()) {
+		*h2open = SP_VALVE_NONE, *o2open = SP_VALVE_NONE;
+	}
+	else if (s->IsDown()) {
+		*h2open = SP_VALVE_CLOSE, 
+		*o2open = SP_VALVE_CLOSE;
+	}
 }
 
 void Saturn::PanelRefreshHatch() {
@@ -5339,7 +5355,6 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 2);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
-	LVGuidanceSwitch.SetCallback(new PanelSwitchCallback<CSMcomputer>(&agc, &CSMcomputer::LVGuidanceSwitchToggled));
 	LVGuidanceSwitch.SetGuardResetsState(false);
 
 	if (!SkylabCM) {

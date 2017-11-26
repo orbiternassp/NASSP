@@ -387,6 +387,8 @@ void* h_Tank::GetComponent(char *component_name) {
 		};
 	if (!strnicmp (component_name, "TEMP",4 ))
 		return &(space.Temp);
+	if (!strnicmp(component_name, "ENERGY", 6))
+		return &(space.Q);
 	if (!strnicmp (component_name, "MASS",4 ))
 		 return &(space.total_mass);
 	if (!strnicmp (component_name, "PRESS",5 ))
