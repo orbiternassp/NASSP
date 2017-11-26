@@ -896,13 +896,13 @@ void LEM::InitSwitches() {
 
 	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 0);
 	CDRSuitIsolValve.AddPosition(0, 0);
-	CDRSuitIsolValve.AddPosition(1, 345);
+	CDRSuitIsolValve.AddPosition(1, 90);
 
   CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
 	LMPSuitIsolValve.AddPosition(0, 0);
-	LMPSuitIsolValve.AddPosition(1, 15);
+	LMPSuitIsolValve.AddPosition(1, 90);
 
   LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
@@ -962,11 +962,11 @@ void LEM::InitSwitches() {
 
 	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 	CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 15);
+	CO2CanisterPrimValve.AddPosition(1, 165);
 
 	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 	CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 15);
+	CO2CanisterSecValve.AddPosition(1, 165);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
@@ -2500,9 +2500,9 @@ void LEM::SetSwitches(int panel) {
   ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
 
   SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
-  CDRSuitIsolValve.Init(22, 59, 169, 169, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
+  CDRSuitIsolValve.Init(22, 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
   CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
-  LMPSuitIsolValve.Init(281+22 , 59, 169, 169, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
+  LMPSuitIsolValve.Init(22+281 , 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
   LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
 
   WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
