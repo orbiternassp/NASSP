@@ -1510,6 +1510,10 @@ protected:
 	int lpdgret;
 	int lpdgext;
 
+	// Dust particles
+	THRUSTER_HANDLE th_dust[4];
+	THGROUP_HANDLE thg_dust;
+
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
 #define LMPANEL_LEFTWINDOW		2

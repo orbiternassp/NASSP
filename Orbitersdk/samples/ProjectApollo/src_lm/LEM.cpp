@@ -786,6 +786,20 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	// Simulate the dust kicked up near
+	// the lunar surface
+	double vsAlt = GetAltitude(ALTMODE_GROUND);
+	double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
+
+	if (stage == 1) {
+		if (vsAlt < 15.0) {
+			SetThrusterGroupLevel(thg_dust, dustlvl);
+		}
+		else {
+			SetThrusterGroupLevel(thg_dust, 0);
+		}
+	}
+	
 	//Set visbility flag for LPD view meshes
 	SetLPDMesh();
 	
