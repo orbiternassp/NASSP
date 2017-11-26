@@ -27,15 +27,8 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include <stdio.h>
-#include <math.h>
-#include "soundlib.h"
-
-#include "nasspdefs.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "papi.h"
-#include "saturn.h"
+#include "iu.h"
 #include "LVIMU.h"
 
 LVIMU::LVIMU()
@@ -353,17 +346,17 @@ void LVIMU::DriveGimbal(int index, int RegCDU, double angle)
 	
 	OldGimbal = Gimbals[index];
 	Gimbals[index] += angle;
-	if (Gimbals[index] >= TWO_PI) {
-		Gimbals[index] -= TWO_PI;
+	if (Gimbals[index] >= PI2) {
+		Gimbals[index] -= PI2;
 	}
 	if (Gimbals[index] < 0) {
-		Gimbals[index] += TWO_PI;
+		Gimbals[index] += PI2;
 	}
 	delta = Gimbals[index] - OldGimbal;
 	if(delta > PI)
-		delta -= TWO_PI;
+		delta -= PI2;
 	if(delta < - PI)
-		delta += TWO_PI;
+		delta += PI2;
 	
 	// Gyro pulses to CDU pulses
 	pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);
@@ -655,11 +648,11 @@ double LVIMU::radToDeg(double angle) {
 }
 
 double LVIMU::gyroPulsesToRad(int pulses) {
-	return (((double)pulses) * TWO_PI) / 2097152.0;
+	return (((double)pulses) * PI2) / 2097152.0;
 }
 
 int LVIMU::radToGyroPulses(double angle) {
-	return (int)((angle * 2097152.0) / TWO_PI);
+	return (int)((angle * 2097152.0) / PI2);
 }
 
 MATRIX3 LVIMU::getRotationMatrixX(double angle) {

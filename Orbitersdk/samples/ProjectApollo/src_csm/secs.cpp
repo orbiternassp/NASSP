@@ -32,9 +32,6 @@
 #include "nasspdefs.h"
 #include "ioChannels.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "connector.h"
-#include "csmcomputer.h"
 #include "saturn.h"
 #include "FloatBag.h"
 #include "secs.h"
@@ -443,6 +440,10 @@ void MESC::Timestep(double simdt)
 		MESCLogicArm = false;
 		SECSLogicBus->Disconnect();
 	}
+
+	EDSAbort1Relay = Sat->iuCommandConnector.GetEDSAbort(1);
+	EDSAbort2Relay = Sat->iuCommandConnector.GetEDSAbort(2);
+	EDSAbort3Relay = Sat->iuCommandConnector.GetEDSAbort(3);
 
 	EDSAbortLogicOutput = false;
 

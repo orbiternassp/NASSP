@@ -36,6 +36,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "iu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -124,11 +125,23 @@ void Saturn::SystemsInit() {
 	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
 	FuelCellHeaters[2] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER");
 
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELLINLET1", 10. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELLINLET2", 10. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET1", 10. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET2", 10. / LBH);
 
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELLINLET1", 1. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELLINLET2", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET1", 10. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET2", 10. / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET1", 10. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET2", 10. / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET1", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET2", 1. / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET1", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET2", 1. / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET1", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET2", 1. / LBH);
 
 	//
 	// O2 tanks.
@@ -857,8 +870,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 /*	sprintf(oapiDebugString(), "PyroBus A %3.1fA/%3.1fV, PyroBus B %3.1fA/%3.1fV",
 		PyroBusA.Current(), PyroBusA.Voltage(), PyroBusB.Current(), PyroBusB.Voltage());
 */
-	sprintf(oapiDebugString(), "InstrumentBus: %3.1fV/%3.1fA", InstrumentBus.Voltage(), InstrumentBus.Current());
-
+	
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
@@ -905,15 +917,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *tempO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:TEMP");
 	double *pressO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
 	double *vapormassO2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:O2_VAPORMASS");
+	double *energyO2Tank1 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:ENERGY");
 
 	double *massO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS");
 	double *tempO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:TEMP");
 	double *pressO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
+	double *vapormassO2Tank2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:O2_VAPORMASS");
+	double *energyO2Tank2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:ENERGY");
 
-/*	double *massO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
-	double *tempO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
-	double *pressO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
-*/
 	double *massO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
 	double *tempO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
 	double *pressO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
@@ -956,13 +967,29 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *pressH2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
 	double *vapormassH2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:H2_VAPORMASS");
 
-	double *massH2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELLMANIFOLD:MASS");
-	double *tempH2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELLMANIFOLD:TEMP");
-	double *pressH2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELLMANIFOLD:PRESS");
+	double *massH2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:MASS");
+	double *tempH2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:TEMP");
+	double *pressH2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:PRESS");
 
-	double *massO2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLMANIFOLD:MASS");
-	double *tempO2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLMANIFOLD:TEMP");
-	double *pressO2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLMANIFOLD:PRESS");
+	double *massH2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:MASS");
+	double *tempH2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:TEMP");
+	double *pressH2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:PRESS");
+
+	double *massH2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:MASS");
+	double *tempH2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:TEMP");
+	double *pressH2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:PRESS");
+
+	double *massO2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:MASS");
+	double *tempO2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:TEMP");
+	double *pressO2FC1M=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:PRESS");
+
+	double *massO2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:MASS");
+	double *tempO2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:TEMP");
+	double *pressO2FC2M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:PRESS");
+
+	double *massO2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:MASS");
+	double *tempO2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:TEMP");
+	double *pressO2FC3M = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:PRESS");
 
 	double *massWasteInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET:MASS");
 	double *tempWasteInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET:TEMP");
@@ -1067,7 +1094,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	double *o2mrFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATORINLET:FLOW");
 	double *o2smFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLYINLET1:FLOW");
-	double *o2fcinletFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLINLET1:FLOW");
+	double *o2fc1inletFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1INLET1:FLOW");
+	double *o2fc2inletFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2INLET1:FLOW");
+	double *o2fc3inletFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3INLET1:FLOW");
 
 	// ECS Pressures
 /*	sprintf(oapiDebugString(), "MR %.2f SCRV %.2f SR %.2f CR %.2f CRI %.2f CompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f EMER %.2f  Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SCRV-p %.2f T %.1f STV %.2f MR %.2f", 
@@ -1081,14 +1110,34 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 //	sprintf(oapiDebugString(), "Earth-m %.2f p %.2f T %.1f", *massEarth / 100., *pressEarth * PSI, *tempEarth);
 
-	// Cabin O2 supply
+	 //Cabin O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f", 
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *tempO2Tank2, *pressO2Tank2 * 0.000145038,
 		*massO2SMSupply / 1000.0, *tempO2SMSupply, *pressO2SMSupply * 0.000145038,
 		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
-		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064); 
+		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064);
 */
+	int *o2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:ISOPEN");
+	int *h2fc1reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:ISOPEN");
+	int *o2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:ISOPEN");
+	int *h2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN");
+	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
+	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
+
+	//O2 Tanks & reaction valves
+	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f H2vlv1 %d O2vlv1 %d H2vlv2 %d O2vlv2 %d H2vlv3 %d O2vlv3 %d O2FC1 M %.1f T %.1f p %6.1f",
+		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
+		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038,
+		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc2reacvlv, *o2fc2reacvlv, *h2fc3reacvlv, *o2fc3reacvlv,
+		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
+
+/*
+	// FC Manifold & Pipes
+	sprintf(oapiDebugString(), "H2FC1 M %.1f T %.1f p %6.1f O2FC1 M %.1f T %.1f p %6.1f",
+	*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038,
+	*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
+/*
 
 	// Suit O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f SUIT-T %.1f p %.1f Flow-SM %.2f MR %.2f ST %.2f", 
@@ -1118,22 +1167,22 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*massO2Tank1, *vapormassO2Tank1, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
 		*massH2Tank2, *vapormassH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
 		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
-		*massO2FCM, *tempO2FCM, *pressO2FCM * 0.000145038,
+		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038,
 		*o2fcinletFlow * LBH);
 */
 
 	// Fuel Cell with manifolds, flow in lb/h
 /*	sprintf(oapiDebugString(), "FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f O2FCM %.1f T %.1f p %6.1f", 
 		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
-		*massH2FCM, *tempH2FCM, *pressH2FCM * 0.000145038,
-		*massO2FCM, *tempO2FCM, *pressO2FCM * 0.000145038);
+		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038,
+		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
 */
 
 	// Fuel Cell H2
 /*	sprintf(oapiDebugString(), "H2T1-m %.2f T %.1f p %.1f H %.1f F %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f dpH %f Waste-m %.1f T %.1f p %4.1f", 
 		*massH2Tank1, *tempH2Tank1, *pressH2Tank1 * 0.000145038, *isonH2Tank1Heater, *isonH2Tank1Fan, 
 		*massH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
-		*massH2FCM, *tempH2FCM, *pressH2FCM * 0.000145038,
+		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038,
 		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, *dphFC, 
 		*massWaste, *tempWaste, *pressWaste * 0.000145038); 
 */
@@ -1142,14 +1191,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 /*	sprintf(oapiDebugString(), "H2T2-m %.2f vm %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM-m %.2f T %.1f p %.1f", 
 		*massH2Tank2, *vapormassH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
 		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
-		*massH2FCM, *tempH2FCM, *pressH2FCM * 0.000145038);
+		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038);
 */
 
 /*	fprintf(PanelsdkLogFile, "%f H2T1-m %.2f T %.1f p %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f O2T1-m %.2f T %.2f p %.2f O2T2-m %.2f T %.2f p %.2f O2SM-m %.2f T %.2f p %5.2f O2MAIN-m %.2f T %.2f p %5.2f Cabin-m %.2f T %.2f p %.2f CO2 PP %.2f Co2Rate %f Rad-T %.2f\n", 
 		simt, 
 		*massH2Tank1 / 1000.0, *tempH2Tank1, *pressH2Tank1 * 0.000145038,
 		*massH2Tank2 / 1000.0, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
-		*massH2FCM,			   *tempH2FCM,   *pressH2FCM   * 0.000145038,
+		*massH2FC1M,           *tempH2FC1M,  *pressH2FC1M  * 0.000145038,
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *tempO2Tank2, *pressO2Tank2 * 0.000145038,
 		*massO2SMSupply / 1000.0, *tempO2SMSupply, *pressO2SMSupply * 0.000145038,
@@ -2273,22 +2322,6 @@ void Saturn::ClearEngineIndicator(int i)
 	ENGIND[i - 1] = false;
 }
 
-void Saturn::SetEDSAbort(int eds)
-{
-	if (eds == 1)
-	{
-		secs.SetEDSAbort1(true);
-	}
-	else if (eds == 2)
-	{
-		secs.SetEDSAbort2(true);
-	}
-	else if (eds == 3)
-	{
-		secs.SetEDSAbort3(true);
-	}
-}
-
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
 
 	// Bypass Radiator 2 and 4
@@ -2760,16 +2793,6 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 	}
 }
 
-//
-// Set O2 tank quantities. For now, just use one fixed input.
-//
-
-void Saturn::SetO2TankQuantities(double q)
-
-{
-	O2Tanks[0]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
-	O2Tanks[1]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
-}
 
 //
 // Get fuel cell status. 

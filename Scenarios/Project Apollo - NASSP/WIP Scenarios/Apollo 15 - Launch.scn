@@ -303,6 +303,7 @@ Endeavour:ProjectApollo\Saturn5
   LVDC_hx[0][0] 80.088
   LVDC_G_T -9.305
   LVDC_R_T 6544846.0
+  LVDC_SCControlPoweredFlight 1
   LVDC_T_LO 48823.0
   LVDC_V_T 7804.0
   LVDC_XLunarAttitude 3.141589512 2.094395207 -0.6981317008
