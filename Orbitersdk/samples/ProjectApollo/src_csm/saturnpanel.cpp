@@ -1798,7 +1798,7 @@ void Saturn::SetSwitches(int panel) {
 	// RCS Gauges.
 	//
 
-	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel, &GaugePower);
+	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel, &Panel276CB3);
 	RCSQuantityMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch, &SMRCSIndSwitch);
 	RCSFuelPressMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch);
 	RCSHeliumPressMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch);
@@ -2329,11 +2329,11 @@ void Saturn::SetSwitches(int panel) {
 	SPSOxidUnbalMeterRow.Init(AID_SPSOXIDUNBALMETER, MainPanel);
 	SPSOxidUnbalMeter.Init(g_Param.pen[3], g_Param.pen[3], SPSOxidUnbalMeterRow, this);
 
-	SPSMetersRow.Init(AID_SPSMETERS, MainPanel, &GaugePower);
-	SPSTempMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this);
-	SPSHeliumNitrogenPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &SPSPressIndSwitch);
-	SPSFuelPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, true);
-	SPSOxidPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, false);
+	SPSMetersRow.Init(AID_SPSMETERS, MainPanel);
+	SPSTempMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &Panel276CB3);
+	SPSHeliumNitrogenPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &SPSPressIndSwitch); // Needs wiring to multiple sources
+	SPSFuelPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, true, &Panel276CB4);
+	SPSOxidPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, false, &Panel276CB3);
 
 	LVSPSPcMeterRow.Init(AID_THRUSTMETER, MainPanel, &GaugePower);
 	LVSPSPcMeter.Init(g_Param.pen[4], g_Param.pen[4], LVSPSPcMeterRow, this, &LVSPSPcIndicatorSwitch, srf[SRF_THRUSTMETER]);
@@ -3831,8 +3831,8 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	if (s == &FuelCellPhIndicator) {
-		if (stage <= CSM_LEM_STAGE)
-			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment
+    if (stage <= CSM_LEM_STAGE && FuelCell1PumpsACCB.IsPowered())
+			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment. Tb wired to pump cb.
 		else
 			FuelCellPhIndicator.SetState(0);	
 
