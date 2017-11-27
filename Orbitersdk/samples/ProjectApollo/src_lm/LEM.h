@@ -186,9 +186,11 @@ public:
 	double GetCabinPressure();
 	double GetCabinPressurePSI();
 	double GetCabinTemperature();
+	double GetCabinCO2MMHg();
 	double GetSuitPressure();
 	double GetSuitPressurePSI();
 	double GetSuitTemperature();
+	double GetSuitCO2MMHg();
 	double AscentWaterTank1QuantityLBS();
 	double AscentWaterTank2QuantityLBS();
 	double DescentWaterTankQuantityLBS();
@@ -199,10 +201,10 @@ public:
 	double *Asc_Water1,*Asc_Water2,*Des_Water;					// Water tanks
 	double *Asc_Oxygen1,*Asc_Oxygen2,*Des_Oxygen;				// Oxygen tanks
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
-	double *Primary_CL_Glycol_Press[2];							// Pressure before and after pumps
-	double *Secondary_CL_Glycol_Press[2];						// Pressure before and after pumps
-	double *Primary_CL_Glycol_Temp[2];							// Teperature before and after pumps
-	double *Secondary_CL_Glycol_Temp[2];						// Teperature before and after pumps
+	double *Primary_CL_Glycol_Press;							// Pressure before and after pumps
+	double *Secondary_CL_Glycol_Press;						// Pressure before and after pumps
+	double *Primary_CL_Glycol_Temp;							// Teperature before and after pumps
+	double *Secondary_CL_Glycol_Temp;						// Teperature before and after pumps
 	double *Primary_Glycol_Accu;								// Glycol Accumulator
 	double *Secondary_Glycol_Accu;								// Glycol Accumulator
 	double *Primary_Glycol;										// Glycol in system
@@ -219,7 +221,8 @@ public:
 	int *CO2_Can_Select;										// CO2 Canister Selection
 	int *Suit_Gas_Diverter;										// Suit Gas Diverter Valve
 	int *Suit_Circuit_Relief;									// Suit Circuit Relief Valve
-	int *Suit_Isolation[2];										// CDR and LMP suit isolation valves
+	int *Suit_IsolationCDR;										// CDR suit isolation valves
+	int *Suit_IsolationLMP;										// LMP suit isolation valves
 
 protected:
 	PanelSDK &sdk;

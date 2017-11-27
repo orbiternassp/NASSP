@@ -3411,8 +3411,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	LightStatus[1][7] = 0;
 	if(lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 99.6 || lem->ecs.AscentOxyTank2PressurePSI() < 99.6)){ LightStatus[1][7] = 1; }
 	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTank1Pressure < 99.6){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTank2Pressure < 99.6) { LightStatus[1][7] = 1; }
+	if(lem->ecs.AscentOxyTank1PressurePSI() < 99.6){ LightStatus[1][7] = 1; }
+	if(lem->ecs.DescentOxyTankPressurePSI() < 99.6) { LightStatus[1][7] = 1; }
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
@@ -3695,6 +3695,13 @@ double LEM_ECS::GetCabinPressurePSI() {
 	return GetCabinPressure() * PSI;
 }
 
+double LEM_ECS::GetCabinCO2MMHg() {
+	if (!Cabin_CO2) {
+		Cabin_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
+	}
+	return *Cabin_CO2 * MMHG;
+}
+
 double LEM_ECS::GetSuitPressure() {
 	if (!Suit_Press) {
 		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
@@ -3704,6 +3711,13 @@ double LEM_ECS::GetSuitPressure() {
 
 double LEM_ECS::GetSuitPressurePSI() {
 	return GetSuitPressure() * PSI;
+}
+
+double LEM_ECS::GetSuitCO2MMHg() {
+	if (!Suit_CO2) {
+		Suit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
+	}
+	return *Suit_CO2 * MMHG;
 }
 
 double LEM_ECS::DescentWaterTankQuantityLBS() {
