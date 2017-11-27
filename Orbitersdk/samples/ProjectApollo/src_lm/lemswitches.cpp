@@ -190,7 +190,7 @@ double LMSuitTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Suit_Temp;
+	return lem->ecs.GetSuitTemperature();
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -434,11 +434,11 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return(((lem->ecs.Des_Oxygen[0] + lem->ecs.Des_Oxygen[1])/(48.01*2))*100);
+			return lem->ecs.DescentOxyTankQuantity()/(48.01))*100));
 		case 2: // ASC 1
-			return((lem->ecs.Asc_Oxygen[0]/2.43)*100);
+			return lem->ecs.AscentOxyTank1Quantity()/(2.43))*100));
 		case 3: // ASC 2
-			return((lem->ecs.Asc_Oxygen[1]/2.43)*100);
+			return lem->ecs.AscentOxyTank2Quantity()/(2.43))*100));
 	}
 }
 

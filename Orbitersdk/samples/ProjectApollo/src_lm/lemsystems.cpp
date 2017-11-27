@@ -1324,6 +1324,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
+	sprintf(oapiDebugString(), "%f", ecs.DescentOxyTankQuantity());
 	
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -3254,10 +3255,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
 	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
 	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
-	if(lem->ecs.Cabin_Press < 4.15){
+	if(lem->ecs.GetCabinPressurePSI() < 4.15){
 		CabinLowPressLt = 1;
 	}
-	if(lem->ecs.Cabin_Press > 4.65 && CabinLowPressLt){
+	if(lem->ecs.GetCabinPressurePSI() > 4.65 && CabinLowPressLt){
 		CabinLowPressLt = 0;
 	}
 	// FIXME: Need to check valve when enabled
@@ -3271,7 +3272,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
 	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
 	// FIXME: IMPLEMENT #2 SUIT CIRC FAN TEST
-	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.Suit_Press < 3.12){
+	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.GetSuitPressurePSI() < 3.12){
 		LightStatus[1][3] = 1;
 	}
 
@@ -3408,9 +3409,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Less than 99.6 psia in ascent oxygen tank #1
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
-	if(lem->stage < 2 && (lem->ecs.Asc_Oxygen[0] < 2.43 || lem->ecs.Asc_Oxygen[1] < 2.43)){ LightStatus[1][7] = 1; }
-	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressure(0) < 135 || lem->ecs.DescentOxyTankPressure(1) < 135)){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTankPressure(0) < 99.6){ LightStatus[1][7] = 1; }
+	if(lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 99.6 || lem->ecs.AscentOxyTank2PressurePSI() < 99.6)){ LightStatus[1][7] = 1; }
+	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)){ LightStatus[1][7] = 1; }
+	if(lem->ecs.AscentOxyTank1Pressure < 99.6){ LightStatus[1][7] = 1; }
+	if(lem->ecs.AscentOxyTank2Pressure < 99.6) { LightStatus[1][7] = 1; }
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
@@ -3424,9 +3426,9 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
-		if(lem->stage < 2 && (lem->ecs.Des_Water[0] < 33 || lem->ecs.Des_Water[1] < 33)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.Asc_Water[0] < 42.5 || lem->ecs.Asc_Water[1] < 42.5)){ LightStatus[3][7] = 1; }
-		if((int)lem->ecs.Asc_Water[0] != (int)lem->ecs.Asc_Water[1]){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantityLBS() < 33)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1QuantityLBS()  < 42.5 || lem->ecs.AscentWaterTank2QuantityLBS() < 42.5)){ LightStatus[3][7] = 1; }
+		if((int)lem->ecs.AscentWaterTank1QuantityLBS() != (int)lem->ecs.AscentWaterTank2QuantityLBS()){ LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
 		WaterWarningDisabled = 1;
@@ -3557,30 +3559,36 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
 	}
 }
 
+
 // Environmental Control System
-LEM_ECS::LEM_ECS()
+LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;	
 	// Initialize
-	Asc_Oxygen[0] = 2.43; Asc_Oxygen[1] = 2.43;
-	Des_Oxygen[0] = 48.01; //Des_Oxygen[1] = 48.01; Using LM-8 Systems Handbook, only 1 DES O2 tank
-	Asc_Water[0] = 42.5; Asc_Water[1] = 42.5;
-	Des_Water[0] = 333; Des_Water[1] = 333;
+	Asc_Oxygen1 = 0; 
+	Asc_Oxygen2 = 0;
+	Des_Oxygen = 0; 
+	//Des_Oxygen2 = 0; Using LM-8 Systems Handbook, only 1 DES O2 tank
+	Asc_Water1 = 0; 
+	Asc_Water2 = 0;
+	Des_Water = 0; 
+	//Des_Water2 = 0; Using LM-8 Systems Handbook, only 1 DES H2O tank
 	Primary_CL_Glycol_Press[0] = 0; Primary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
 	Secondary_CL_Glycol_Press[0] = 0; Secondary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
-	Primary_CL_Glycol_Temp[0] = 40; Primary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
-	Secondary_CL_Glycol_Temp[0] = 40; Secondary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
-	Primary_Glycol_Accu = 46; // Cubic inches of coolant
-	Secondary_Glycol_Accu = 46; // Cubic inches of coolant
+	Primary_CL_Glycol_Temp[0] = 0; Primary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
+	Secondary_CL_Glycol_Temp[0] = 0; Secondary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
+	Primary_Glycol_Accu = 0; // Cubic inches of coolant
+	Secondary_Glycol_Accu = 0; // Cubic inches of coolant
 	Primary_Glycol = 0;
 	Secondary_Glycol = 0;
 	// Open valves as would be for IVT
-	Des_O2 = 1; 
-	Des_H2O_To_PLSS = 1;
-	Cabin_Repress = 2; // Auto
+	Des_O2 = 0; 
+	Des_H2O_To_PLSS = 0;
+	Cabin_Repress = 0; // Auto
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
-	Cabin_Press = 4.8; Cabin_Temp = 55; Cabin_CO2 = 1;
-	Suit_Press = 4.8; Suit_Temp = 55; Suit_CO2 = 1;
+	Cabin_Press = 0; Cabin_Temp = 0; Cabin_CO2 = 0;
+	Suit_Press = 0; Suit_Temp = 0; Suit_CO2 = 0;
+
 }
 
 void LEM_ECS::Init(LEM *s){
@@ -3622,18 +3630,113 @@ void LEM_ECS::LoadState(FILEHANDLE scn,char *end_str){
 
 }
 
-double LEM_ECS::AscentOxyTankPressure(int tank){
-	// 2.43 is a full tank, at 840 psia.
-	// 0.14 is an empty tank, at 50 psia.
-	// So 790 psia and 2.29 pounds of oxygen.
-	// That's 344.9781659388646 psia per pound
-	return(344.9781659388646*Asc_Oxygen[tank]);
+double LEM_ECS::DescentOxyTankPressure() {
+	if (!Des_OxygenPress) {
+		Des_OxygenPress = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:PRESS");
+	}
+	return *Des_OxygenPress;
 }
 
-double LEM_ECS::DescentOxyTankPressure(int tank){
-	// 48.01 is a full tank, at 2690 psia.
-	// 0.84 is an empty tank, at 50 psia.
-	// So 2640 psia and 47.17 pounds of oxygen.
-	// That's 55.96777612889548 psia per pound
-	return(55.96777612889548*Des_Oxygen[tank]);
+double LEM_ECS::DescentOxyTankPressurePSI() {
+	return DescentOxyTankPressure() * PSI;
+}
+
+double LEM_ECS::AscentOxyTank1Pressure(){
+	if (!Asc_Oxygen1Press) {
+		Asc_Oxygen1Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:PRESS");
+	}
+	return *Asc_Oxygen1Press;
+}
+
+double LEM_ECS::AscentOxyTank1PressurePSI() {
+	return AscentOxyTank1Pressure() * PSI;
+}
+
+double LEM_ECS::AscentOxyTank2Pressure() {
+	if (!Asc_Oxygen2Press) {
+		Asc_Oxygen2Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:PRESS");
+	}
+	return *Asc_Oxygen2Press;
+}
+
+double LEM_ECS::AscentOxyTank2PressurePSI() {
+	return AscentOxyTank2Pressure() * PSI;
+}
+
+double LEM_ECS::DescentOxyTankQuantity() {
+	if (!Des_Oxygen) {
+		Des_Oxygen = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:MASS");
+	}
+	return *Des_Oxygen;
+}
+
+double LEM_ECS::AscentOxyTank1Quantity() {
+	if (!Asc_Oxygen1) {
+		Asc_Oxygen1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:MASS");
+	}
+	return *Asc_Oxygen1;
+}
+
+double LEM_ECS::AscentOxyTank2Quantity() {
+	if (!Asc_Oxygen2) {
+		Asc_Oxygen2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:MASS");
+	}
+	return *Asc_Oxygen2;
+}
+
+double LEM_ECS::GetCabinPressure() {
+	if (!Cabin_Press) {
+		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
+	}
+	return *Cabin_Press;
+}
+
+double LEM_ECS::GetCabinPressurePSI() {
+	return GetCabinPressure() * PSI;
+}
+
+double LEM_ECS::GetSuitPressure() {
+	if (!Suit_Press) {
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
+	}
+	return *Suit_Press;
+}
+
+double LEM_ECS::GetSuitPressurePSI() {
+	return GetSuitPressure() * PSI;
+}
+
+double LEM_ECS::DescentWaterTankQuantityLBS() {
+	if (!Des_Water) {
+		Des_Water = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:MASS");
+	}
+	return *Des_Water * 0.0022046226218;  //grams to pounds
+}
+
+double LEM_ECS::AscentWaterTank1QuantityLBS() {
+	if (!Asc_Water1) {
+		Asc_Water1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK1:MASS");
+	}
+	return *Asc_Water1 * 0.0022046226218;  //grams to pounds
+}
+
+double LEM_ECS::AscentWaterTank2QuantityLBS() {
+	if (!Asc_Water2) {
+		Asc_Water2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK2:MASS");
+	}
+	return *Asc_Water2 * 0.0022046226218;  //grams to pounds
+}
+
+double LEM_ECS::GetCabinTemperature() {
+	if (!Cabin_Temp) {
+		Cabin_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
+	}
+	return *Cabin_Temp;
+}
+
+double LEM_ECS::GetSuitTemperature() {
+	if (!Suit_Temp) {
+		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
+	}
+	return *Suit_Temp;
 }

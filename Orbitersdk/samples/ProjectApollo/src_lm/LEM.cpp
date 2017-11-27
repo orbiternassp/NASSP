@@ -233,7 +233,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
-	omni_aft(_V(0.0, 0.0, -1.0))
+	omni_aft(_V(0.0, 0.0, -1.0)),
+	ecs(Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;

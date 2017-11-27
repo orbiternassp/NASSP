@@ -169,40 +169,60 @@ public:
 // ENVIRONMENTAL CONTROL SYSTEM
 class LEM_ECS{
 public:
-	LEM_ECS();
+	LEM_ECS(PanelSDK &p);
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	double AscentOxyTankPressure(int tank);
-	double DescentOxyTankPressure(int tank);
+	double AscentOxyTank1Pressure();
+	double AscentOxyTank2Pressure();
+	double DescentOxyTankPressure();
+	double AscentOxyTank1PressurePSI();
+	double AscentOxyTank2PressurePSI();
+	double DescentOxyTankPressurePSI();
+	double AscentOxyTank1Quantity();
+	double AscentOxyTank2Quantity();
+	double DescentOxyTankQuantity();
+	double GetCabinPressure();
+	double GetCabinPressurePSI();
+	double GetCabinTemperature();
+	double GetSuitPressure();
+	double GetSuitPressurePSI();
+	double GetSuitTemperature();
+	double AscentWaterTank1QuantityLBS();
+	double AscentWaterTank2QuantityLBS();
+	double DescentWaterTankQuantityLBS();
 
-	LEM *lem;					// Pointer at LEM
-	double Cabin_Press,Cabin_Temp,Cabin_CO2;	// Cabin Atmosphere
-	double Suit_Press,Suit_Temp,Suit_CO2;		// Suit Circuit Atmosphere
-	double Asc_Water[2],Des_Water[2];			// Water tanks
-	double Asc_Oxygen[2],Des_Oxygen[2];			// Oxygen tanks
-	double Primary_CL_Glycol_Press[2];			// Pressure before and after pumps
-	double Secondary_CL_Glycol_Press[2];		// Pressure before and after pumps
-	double Primary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Secondary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Primary_Glycol_Accu;					// Glycol Accumulator
-	double Secondary_Glycol_Accu;				// Glycol Accumulator
-	double Primary_Glycol;						// Glycol in system
-	double Secondary_Glycol;					// Glycol in system
-	int Asc_H2O_To_PLSS,Des_H2O_To_PLSS;		// PLSS Water Fill valves
-	int Water_Tank_Selector;					// WT selection valve
-	int Pri_Evap_Flow_1,Pri_Evap_Flow_2;		// Primary evaporator flow valves
-	int Sec_Evap_Flow;							// Secondary evaporator flow valve
-	int Water_Sep_Selector;						// WS Select Valve
-	int Asc_O2_To_PLSS,Des_O2_To_PLSS;			// PLSS Oxygen Fill Valves
-	int Des_O2;									// Descent O2 Valve
-	int Asc_O2[2];								// Ascent O2 Valves
-	int Cabin_Repress;							// Cabin Repress Valve
-	int CO2_Can_Select;
-	int Suit_Gas_Diverter;
-	int Suit_Circuit_Relief;
-	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
+	LEM *lem;													// Pointer at LEM
+	double *Cabin_Press,*Cabin_Temp,*Cabin_CO2;					// Cabin Atmosphere
+	double *Suit_Press,*Suit_Temp,*Suit_CO2;					// Suit Circuit Atmosphere
+	double *Asc_Water1,*Asc_Water2,*Des_Water;					// Water tanks
+	double *Asc_Oxygen1,*Asc_Oxygen2,*Des_Oxygen;				// Oxygen tanks
+	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
+	double *Primary_CL_Glycol_Press[2];							// Pressure before and after pumps
+	double *Secondary_CL_Glycol_Press[2];						// Pressure before and after pumps
+	double *Primary_CL_Glycol_Temp[2];							// Teperature before and after pumps
+	double *Secondary_CL_Glycol_Temp[2];						// Teperature before and after pumps
+	double *Primary_Glycol_Accu;								// Glycol Accumulator
+	double *Secondary_Glycol_Accu;								// Glycol Accumulator
+	double *Primary_Glycol;										// Glycol in system
+	double *Secondary_Glycol;									// Glycol in system
+	int *Asc_H2O_To_PLSS,*Des_H2O_To_PLSS;						// PLSS Water Fill valves
+	int *Water_Tank_Selector;									// WT selection valve
+	int *Pri_Evap_Flow_1,*Pri_Evap_Flow_2;						// Primary evaporator flow valves
+	int *Sec_Evap_Flow;											// Secondary evaporator flow valve
+	int *Water_Sep_Selector;									// WS Select Valve
+	int *Asc_O2_To_PLSS,*Des_O2_To_PLSS;						// PLSS Oxygen Fill Valves
+	int *Des_O2;												// Descent O2 Valve
+	int *Asc_O2Vlv1,*Asc_O2Vlv2;								// Ascent O2 Valves
+	int *Cabin_Repress;											// Cabin Repress Valve
+	int *CO2_Can_Select;										// CO2 Canister Selection
+	int *Suit_Gas_Diverter;										// Suit Gas Diverter Valve
+	int *Suit_Circuit_Relief;									// Suit Circuit Relief Valve
+	int *Suit_Isolation[2];										// CDR and LMP suit isolation valves
+
+protected:
+	PanelSDK &sdk;
 };
 
 // Landing Radar
