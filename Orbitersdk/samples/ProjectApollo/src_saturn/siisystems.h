@@ -52,17 +52,23 @@ public:
 	void SetThrusterGroupLevel(double level);
 	void SetPUValve(int state);
 
-	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 	void RecalculateEngineParameters();
 	void RecalculateEngineParameters(double BaseThrust);
 	void SetMixtureRatio(double ratio);
 	void SwitchSelector(int channel);
-	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
 
-	bool PropellantLowLevel();
+	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
+	void SetEngineFailureParameters(int n, double SIICutTimes);
+	bool GetFailInit() { return FailInit; }
+
 	void GetThrustOK(bool *ok);
+	bool GetPropellantDepletionEngineCutoff();
+	bool GetEngineOut();
 
 protected:
+	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
+	bool PropellantLowLevel();
+
 	bool ThrustOK[5];
 
 	int PUValveState;
@@ -90,6 +96,7 @@ protected:
 	bool EarlySIICutoff[5];
 	double SecondStageFailureTime[5];
 	double FailureTimer;
+	bool FailInit;
 
 	Saturn *vessel;
 	THRUSTER_HANDLE *j2engines;

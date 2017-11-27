@@ -46,6 +46,7 @@
 #include "papi.h"
 #include "mcc.h"
 #include "LVDC.h"
+#include "iu.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
@@ -130,7 +131,7 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
@@ -340,6 +341,8 @@ void Saturn::initSaturn()
 	// to having no HGA when the state was read from those files.
 	//
 	NoHGA = false;
+
+	CMdocktgt = false;
 
 	//
 	// Or the S1b panel with 8 engine lights?
@@ -807,6 +810,7 @@ void Saturn::initSaturn()
 	sidehatchburnedidx = -1;
 	sidehatchburnedopenidx = -1;
 	opticscoveridx = -1;
+	cmdocktgtidx = -1;
 
 	Scorrec = false;
 
@@ -1334,6 +1338,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
 	}
 
+	if (stage < LAUNCH_STAGE_TWO)
+	{
+		SaveSI(scn);
+	}
 	if (stage < LAUNCH_STAGE_SIVB && SaturnType == SAT_SATURNV)
 	{
 		sii.SaveState(scn);
@@ -1456,6 +1464,7 @@ int Saturn::GetMainState()
 	state.S1bPanel = S1bPanel;
 	state.NoHGA = NoHGA;
 	state.TLISoundsLoaded = TLISoundsLoaded;
+	state.CMdocktgt = CMdocktgt;
 
 	return state.word;
 }
@@ -1482,6 +1491,7 @@ void Saturn::SetMainState(int s)
 	S1bPanel = (state.S1bPanel != 0);
 	NoHGA = (state.NoHGA != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
+	CMdocktgt = (state.CMdocktgt != 0);
 }
 
 int Saturn::GetSLAState()
@@ -1624,6 +1634,13 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "FAILUREMULTIPLIER", 17)) {
 		sscanf(line + 17, "%lf", &FailureMultiplier);
+	}
+	else if (!strnicmp(line, "ENGINEFAIL", 10)) {
+		int st, en;
+		double tim;
+		sscanf(line + 10, "%d %d %lf", &st, &en, &tim);
+		if (GetDamageModel())
+			SetEngineFailure(st, en, tim);
 	}
 	else if (!strnicmp(line, "PLATFAIL", 8)) {
 		sscanf(line + 8, "%lf", &PlatFail);
@@ -1928,6 +1945,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
+	}
+	else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
+		LoadSI(scn);
 	}
 	else if (!strnicmp(line, SIISYSTEMS_START_STRING, sizeof(SIISYSTEMS_START_STRING))) {
 		sii.LoadState(scn);
@@ -4052,20 +4072,6 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::SIVBBoiloff()
-
-{
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
-	SetPropellantMass(ph_3rd, FuelMass);
-}
-
 void Saturn::StageSix(double simt)
 
 {
@@ -4459,27 +4465,6 @@ double Saturn::GetJ2ThrustLevel()
 	return GetThrusterLevel(th_3rd[0]);
 }
 
-double Saturn::GetSIPropellantMass()
-
-{
-	if (stage > LAUNCH_STAGE_ONE || !ph_1st)
-		return 0.0;
-
-	return GetPropellantMass(ph_1st);
-}
-
-double Saturn::GetSIVbPropellantMass()
-
-{
-	if (stage > STAGE_ORBIT_SIVB)
-		return 0.0;
-
-	if (stage < LAUNCH_STAGE_SIVB)
-		return S4B_FuelMass;
-
-	return GetPropellantMass(ph_3rd);
-}
-
 void Saturn::SetSIVbPropellantMass(double mass)
 
 {
@@ -4495,22 +4480,22 @@ void Saturn::SetSIVbPropellantMass(double mass)
 	SetPropellantMass(ph_3rd, mass);
 }
 
-int Saturn::GetTLIEnableSwitchState()
+bool Saturn::GetTLIInhibitSignal()
 
 {
-	return TLIEnableSwitch.GetState();
+	return TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
 }
 
-int Saturn::GetSIISIVbSepSwitchState()
+bool Saturn::GetIUUPTLMAccept()
 
 {
-	return SIISIVBSepSwitch.GetState();
+	return IUUplinkSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
-int Saturn::GetLVGuidanceSwitchState()
+bool Saturn::GetSIISIVbDirectStagingSignal()
 
 {
-	return LVGuidanceSwitch.GetState();
+	return SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
 int Saturn::GetEDSSwitchState()
@@ -4577,25 +4562,12 @@ int Saturn::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
-double Saturn::GetSIThrusterLevel(int n)
-{
-	if (stage > LAUNCH_STAGE_ONE) return 0.0;
-	if (n < 0 || n > 7) return 0.0;
-	if (!th_1st[n]) return 0.0;
-
-	return GetThrusterLevel(th_1st[n]);
-}
-
 void Saturn::GetSIIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
 	{
 		ok[i] = false;
 	}
-
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.GetThrustOK(ok);
 }
 
 bool Saturn::GetSIVBThrustOK()
@@ -4605,13 +4577,19 @@ bool Saturn::GetSIVBThrustOK()
 	return sivb->GetThrustOK();
 }
 
-void Saturn::SetSIThrusterDir(int n, VECTOR3 &dir)
+bool Saturn::GetSIIPropellantDepletionEngineCutoff()
 {
-	if (n < 0 || n > 7) return;
-	if (stage > LAUNCH_STAGE_ONE) return;
-	if (!th_1st[n]) return;
+	return false;
+}
 
-	SetThrusterDir(th_1st[n], dir);
+bool Saturn::GetSIIEngineOut()
+{
+	return false;
+}
+
+bool Saturn::GetSIBLowLevelSensorsDry()
+{
+	return false;
 }
 
 void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
@@ -4626,15 +4604,6 @@ void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetThrusterDir(yaw, pitch);
-}
-
-void Saturn::ClearSIThrusterResource(int n)
-{
-	if (stage != LAUNCH_STAGE_ONE) return;
-	if (n < 0 || n > 7) return;
-	if (!th_1st[n]) return;
-
-	SetThrusterResource(th_1st[n], NULL);
 }
 
 void Saturn::SIIEDSCutoff(bool cut)
@@ -4656,13 +4625,19 @@ void Saturn::SetQBallPowerOff()
 	qball.SetPowerOff();
 }
 
-void Saturn::SetSIThrusterLevel(int n, double level)
+void Saturn::SetIUUmbilicalState(bool connect)
 {
-	if (stage != PRELAUNCH_STAGE && stage != LAUNCH_STAGE_ONE) return;
-	if (n < 0 || n > 7) return;
-	if (!th_1st[n]) return;
-
-	SetThrusterLevel(th_1st[n], level);
+	if (stage <= PRELAUNCH_STAGE && iu)
+	{
+		if (connect)
+		{
+			iu->ConnectUmbilical();
+		}
+		else
+		{
+			iu->DisconnectUmbilical();
+		}
+	}
 }
 
 void Saturn::SetAPSAttitudeEngine(int n, bool on)
@@ -4671,6 +4646,30 @@ void Saturn::SetAPSAttitudeEngine(int n, bool on)
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetAPSAttitudeEngine(n, on);
+}
+
+bool Saturn::GetCMCSIVBTakeover()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBIgnitionSequenceStart()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBCutoff()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
 }
 
 void Saturn::SetContrailLevel(double level)

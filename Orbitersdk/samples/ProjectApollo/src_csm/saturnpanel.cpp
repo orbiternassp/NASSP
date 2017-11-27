@@ -1953,8 +1953,9 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	LVRow.Init(AID_LV_SWITCHES, MainPanel);
-	LVGuidanceSwitch.Init	  ( 1, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow);
+	LVGuidanceSwitch.Init	  ( 1, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow, &agc);
 	LVGuidanceSwitch.InitGuard( 0,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69], 180);
+	LVGuidanceSwitch.SetChannelData(030, 9, false);
 
 	if (!SkylabCM) {
 		SIISIVBSepSwitch.Init     (48, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LVRow);
@@ -1968,7 +1969,7 @@ void Saturn::SetSwitches(int panel) {
 
 	ELSRow.Init(AID_ELS_SWITCHES, MainPanel);
 	CGSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow, &agc);
-	CGSwitch.SetChannelData(32, 11, true);	// LM Attached flag.
+	CGSwitch.SetChannelData(032, 11, true);	// LM Attached flag.
 	ELSLogicSwitch.Init(44, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow);
 	ELSLogicSwitch.InitGuard(43, 0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69]);
 	ELSAutoSwitch.Init(88, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ELSRow);
@@ -2570,7 +2571,7 @@ void Saturn::SetSwitches(int panel) {
 	RightUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20], srf[SRF_BORDER_34x31], RightUtilityPowerSwitchRow);
 
 	RightDockingTargetSwitchRow.Init(AID_RIGHTDOCKINGTARGETSWITCH, MainPanel);
-	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow);
+	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], srf[SRF_BORDER_34x31], RightDockingTargetSwitchRow, this);
 
 	RightModeIntercomSwitchRow.Init(AID_RIGHTMODEINTERCOMSWITCH, MainPanel);
 	RightModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], srf[SRF_BORDER_34x31], RightModeIntercomSwitchRow);
@@ -5354,7 +5355,6 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 2);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
-	LVGuidanceSwitch.SetCallback(new PanelSwitchCallback<CSMcomputer>(&agc, &CSMcomputer::LVGuidanceSwitchToggled));
 	LVGuidanceSwitch.SetGuardResetsState(false);
 
 	if (!SkylabCM) {

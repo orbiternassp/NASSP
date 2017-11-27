@@ -25,10 +25,12 @@
 #if !defined(_PA_IU_H)
 #define _PA_IU_H
 
+#include "connector.h"
 #include "LVIMU.h"
 #include "FCC.h"
 #include "eds.h"
 #include "LVDA.h"
+#include "dcs.h"
 
 class SoundLib;
 class IU;
@@ -45,20 +47,21 @@ enum IUCSMMessageType
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
-	IUCSM_SET_EDS_ABORT,					///< Set EDS abort signal.
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_SET_ENGINE_INDICATORS,
 	IUCSM_GET_ENGINE_INDICATOR,
-	IUCSM_GET_SIISIVBSEP_SWITCH_STATE,		///< State of SII/SIVb Sep switch.
-	IUCSM_GET_TLI_ENABLE_SWITCH_STATE,		///< State of TLI Enable switch.
-	IUCSM_GET_LV_GUIDANCE_SWITCH_STATE,		///< State of LV Guidance switch.
+	IUCSM_GET_TLI_INHIBIT,					///< Get TLI inhibit signal.
+	IUCSM_GET_IU_UPTLM_ACCEPT,				///< Get IU UPTLM switch setting.
+	IUCSM_GET_SIISIVB_DIRECT_STAGING,		///< Get S-II/S-IVB direct staging signal.
+	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
+	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
+	IUCSM_GET_CMC_SIVB_CUTOFF,				///< Get CMC S-IVB cutoff signal.
 	IUCSM_GET_EDS_SWITCH_STATE,
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_COMMAND,					///< Get Boost Engine Cutoff command from SECS.
 	IUCSM_IS_EDS_BUS_POWERED,
 	IUCSM_GET_AGC_ATTITUDE_ERROR,
-	IUCSM_GET_INPUT_CHANNEL_BIT,			///< Get AGC input channel bit.
 	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
 	IUCSM_PLAY_COUNT_SOUND,					///< Play/stop countdown sound.
 	IUCSM_PLAY_SECO_SOUND,					///< Play/stop SECO sound.
@@ -77,6 +80,7 @@ enum IUCSMMessageType
 	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
 	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
 	CSMIU_GET_LIFTOFF_CIRCUIT,
+	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 };
 
 ///
@@ -85,9 +89,8 @@ enum IUCSMMessageType
 ///
 enum IULVMessageType
 {
-	IULV_SET_SI_THRUSTER_LEVEL,
 	IULV_SET_APS_ATTITUDE_ENGINE,
-	IULV_CLEAR_SI_THRUSTER_RESOURCE,
+	IULV_SI_EDS_CUTOFF,
 	IULV_SII_EDS_CUTOFF,
 	IULV_SIVB_EDS_CUTOFF,
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
@@ -98,8 +101,6 @@ enum IULVMessageType
 	IULV_ADD_S4RCS,
 	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
 	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
-	IULV_SET_CONTRAIL_LEVEL,
-	IULV_SIVB_BOILOFF,
 	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
@@ -113,8 +114,6 @@ enum IULVMessageType
 	IULV_GET_GLOBAL_ORIENTATION,
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
-	IULV_GET_SIVB_PROPELLANT_MASS,			///< Get the S-IVB propellant mass.
-	IULV_GET_SI_PROPELLANT_MASS,
 	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
 	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
@@ -127,9 +126,15 @@ enum IULVMessageType
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
 	IULV_GET_MISSIONTIME,
 	IULV_GET_APOLLONO,
-	IULV_GET_SI_THRUSTER_LEVEL,
+	IULV_GET_SI_THRUST_OK,
 	IULV_GET_SII_THRUST_OK,
 	IULV_GET_SIVB_THRUST_OK,
+	IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IULV_GET_SI_INBOARD_ENGINE_OUT,
+	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
+	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
+	IULV_GET_SII_ENGINE_OUT,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
 };
@@ -155,15 +160,17 @@ public:
 	void ClearLVRateLight();
 	void SetLVGuidLight();
 	void ClearLVGuidLight();
-	void SetEDSAbort(int eds);
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	bool GetAGCInputChannelBit(int channel, int bit);
+	bool GetCMCSIVBTakeover();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBCutoff();
+	bool GetSIISIVbDirectStagingSignal();
+	bool GetTLIInhibitSignal();
+	bool GetIUUPTLMAccept();
+
 	bool GetEngineIndicator(int eng);
-	int SIISIVbSwitchState();
-	int TLIEnableSwitchState();
-	int LVGuidanceSwitchState();
 	int EDSSwitchState();
 	int LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitchState();
@@ -205,13 +212,11 @@ public:
 	IUToLVCommandConnector();
 	~IUToLVCommandConnector();
 
-	void SetSIThrusterLevel(int n, double level);
-
 	void SetAPSAttitudeEngine(int n, bool on);
-	void ClearSIThrusterResource(int n);
+	void SIEDSCutoff(bool cut);
 	void SIIEDSCutoff(bool cut);
 	void SIVBEDSCutoff(bool cut);
-	void SetSIThrusterDir(int n, VECTOR3 &dir);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 
@@ -232,16 +237,12 @@ public:
 
 	void DeactivatePrelaunchVenting();
 	void ActivatePrelaunchVenting();
-	void SetContrailLevel(double level);
-	void SIVBBoiloff();
 
 	void AddForce(VECTOR3 F, VECTOR3 r);
 
 	int GetStage();
 	double GetAltitude();
 	double GetJ2ThrustLevel();
-	double GetSIVBPropellantMass();
-	double GetSIPropellantMass();
 	double GetMass();
 	double GetMaxFuelMass();
 	double GetFuelMass();
@@ -251,8 +252,14 @@ public:
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetApolloNo();
-	double GetSIThrusterLevel(int n);
+	void GetSIThrustOK(bool *ok);
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSIBLowLevelSensorsDry();
 	void GetSIIThrustOK(bool *ok);
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
 
@@ -311,12 +318,21 @@ public:
 
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
+	LVDC* GetLVDC() { return lvdc; }
 
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
+	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+
+	void ConnectUmbilical() { UmbilicalConnected = true; }
+	void DisconnectUmbilical() { UmbilicalConnected = false; }
+
+	virtual bool DCSUplink(int type, void *upl);
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
@@ -327,6 +343,7 @@ public:
 	LVIMU lvimu;
 	LVRG lvrg;
 	LVDA lvda;
+	DCS dcs;
 
 protected:
 	int State;
@@ -340,6 +357,8 @@ protected:
 
 	bool Crewed;
 	bool TLICapable;
+
+	bool UmbilicalConnected;
 
 	///
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.

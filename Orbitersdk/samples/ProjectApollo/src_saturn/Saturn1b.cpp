@@ -44,6 +44,7 @@
 
 #include "s1b.h"
 #include "LVDC.h"
+#include "iu.h"
 
 #include "tracer.h"
 
@@ -70,9 +71,8 @@ static int refcount = 0;
 static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
-Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
-: Saturn (hObj, fmodel)
-
+Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
+	sib(this, th_1st, ph_1st, LaunchS, SShutS, contrailLevel)
 {
 	hMaster = hObj;
 	initSaturn1b();
@@ -294,6 +294,11 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sib.Timestep(simdt);
+	}
+
 	if (stage < CSM_LEM_STAGE) {
 	} else {
 		GenericTimestepStage(simt, simdt);
@@ -355,25 +360,7 @@ void Saturn1b::SwitchSelector(int item){
 	case 14:
 		DeactivatePrelaunchVenting();
 		break;
-	}
-}
-
-void Saturn1b::SISwitchSelector(int channel)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	switch (channel)
-	{
-	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_1st, 1.0);				// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()) {	// And play launch sound
-			LaunchS.play(NOLOOP, 255);
-			LaunchS.done();
-		}
-		break;
-	case 18: //Outboard Engines Cutoff
+	case 17:
 		// Move hidden S1B
 		if (hstg1) {
 			VESSELSTATUS vs;
@@ -381,27 +368,76 @@ void Saturn1b::SISwitchSelector(int channel)
 			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
 			stage1->DefSetState(&vs);
 		}
-		// Engine Shutdown
-		for (int i = 0; i < 5; i++) {
-			SetThrusterResource(th_1st[i], NULL);
-		}
-		break;
-	case 23: //S-IB/S-IVB Separation On
-		SeparateStage(LAUNCH_STAGE_SIVB);
-		SetStage(LAUNCH_STAGE_SIVB);
-		AddRCS_S4B();
-		break;
-	case 98: //Inboard Engines Cutoff
-		SetThrusterResource(th_1st[4], NULL);
-		SetThrusterResource(th_1st[5], NULL);
-		SetThrusterResource(th_1st[6], NULL);
-		SetThrusterResource(th_1st[7], NULL);
-		SShutS.play(NOLOOP, 235);
-		SShutS.done();
-		break;
-	default:
 		break;
 	}
+}
+
+void Saturn1b::SISwitchSelector(int channel)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.SwitchSelector(channel);
+}
+
+void Saturn1b::GetSIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.GetThrustOK(ok);
+}
+
+void Saturn1b::SIEDSCutoff(bool cut)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.EDSEnginesCutoff(cut);
+}
+
+bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetOutboardEnginesCutoff();
+}
+
+bool Saturn1b::GetSIInboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetInboardEngineOut();
+}
+
+bool Saturn1b::GetSIOutboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetOutboardEngineOut();
+}
+
+bool Saturn1b::GetSIBLowLevelSensorsDry()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib.GetLowLevelSensorsDry();
+}
+
+void Saturn1b::SetSIEngineStart(int n)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
+
+	sib.SetEngineStart(n);
+}
+
+void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sib.SetThrusterDir(n, yaw, pitch);
 }
 
 //
@@ -449,6 +485,16 @@ void Saturn1b::LoadSIVB(FILEHANDLE scn) {
 	}
 
 	sivb->LoadState(scn);
+}
+
+void Saturn1b::SaveSI(FILEHANDLE scn)
+{
+	sib.SaveState(scn);
+}
+
+void Saturn1b::LoadSI(FILEHANDLE scn)
+{
+	sib.LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
@@ -667,6 +713,14 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
+void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
+{
+	if (failstage == 1)
+	{
+		sib.SetEngineFailureParameters(faileng, failtime);
+	}
+}
+
 void Saturn1b::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();
@@ -674,13 +728,10 @@ void Saturn1b::SetRandomFailures()
 	// Set up launch failures.
 	//
 
-	if (!LaunchFail.Init)
+	if (stage < STAGE_ORBIT_SIVB)
 	{
-		LaunchFail.Init = 1;
-
-		if (stage < STAGE_ORBIT_SIVB)
+		if (!sib.GetFailInit())
 		{
-
 			//
 			// Engine failure times for first stage.
 			//
@@ -703,8 +754,13 @@ void Saturn1b::SetRandomFailures()
 				}
 			}
 
-			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+			sib.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 		}
+	}
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
 
 		if (!(random() & 127))
 		{

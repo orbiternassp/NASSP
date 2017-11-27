@@ -24,6 +24,7 @@
 
 #pragma once
 class IUToLVCommandConnector;
+class LVDA;
 
 /* *******************
  * LVDC++ SV VERSION *
@@ -45,6 +46,8 @@ public:
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual bool GetGuidanceReferenceFailure() = 0;
+	virtual bool TimebaseUpdate(double dt) = 0;
+	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
 
@@ -63,6 +66,10 @@ public:
 
 	double SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
+
+	//DCS Commands
+	bool TimebaseUpdate(double dt);
+	bool GeneralizedSwitchSelector(int stage, int channel);
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
@@ -71,8 +78,6 @@ private:								// Saturn LV
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
 	int LVDC_Stop;									// Guidance Program: Program Stop Flag
-
-	double BoiloffTime;
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
@@ -91,6 +96,7 @@ private:								// Saturn LV
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 	int CommandSequence;
 	int CommandSequenceStored;
+	bool SCControlPoweredFlight;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -440,6 +446,10 @@ public:
 	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
 	double SVCompare();
+
+	//DCS Commands
+	bool TimebaseUpdate(double dt);
+	bool GeneralizedSwitchSelector(int stage, int channel);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
@@ -448,7 +458,6 @@ private:
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
-	double BoiloffTime;
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_GRR;                                  // Guidance Reference Released
@@ -459,6 +468,7 @@ private:
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
 	int CommandSequence;
+	bool SCControlPoweredFlight;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -499,6 +509,7 @@ private:
 	bool PermanentSCControl;						// SC has permanent control of the FCC
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
+	double A_zL;									// Position I Azimuth
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2;								// IGM Exhaust Velocities

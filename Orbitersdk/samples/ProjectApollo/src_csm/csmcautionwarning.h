@@ -68,6 +68,7 @@ typedef struct {
 } ACBusStatus;
 
 class SMRCSPropellantSource;
+class PanelSwitchItem;
 
 ///
 /// \brief The CSM-specific Caution and Warning System.

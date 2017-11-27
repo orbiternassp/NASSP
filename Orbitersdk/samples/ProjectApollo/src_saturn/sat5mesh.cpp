@@ -442,7 +442,7 @@ void SaturnV::SetFirstStage ()
 	double TCP = -101.5 + STG0O - TCPO;
 	
 	double Mass = Stage1Mass + SI_FuelMass;
-	double ro = 25;
+	double ro = 30;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
@@ -525,22 +525,15 @@ void SaturnV::SetFirstStageEngines ()
 	VECTOR3 MAIN3a_Vector={3,-3,Offset1st+0.5};
 	VECTOR3 MAIN5a_Vector={0,0,Offset1st+0.5};
 
-	PROPELLANT_HANDLE	pph;
-
-	if (MissionTime < (-20.0))
-		pph = 0;
-	else
-		pph = ph_1st;
-
 	//
 	// orbiter main thrusters
 	//
 
-	th_1st[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_1st[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_1st[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_1st[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_1st[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_1st[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_MAIN);
 	

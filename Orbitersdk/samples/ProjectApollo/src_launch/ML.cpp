@@ -352,6 +352,22 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -8.9)
+		{
+			sat->SetSIEngineStart(5);
+		}
+		if (sat->GetMissionTime() > -8.62)
+		{
+			sat->SetSIEngineStart(1);
+			sat->SetSIEngineStart(3);
+		}
+		if (sat->GetMissionTime() > -8.2)
+		{
+			sat->SetSIEngineStart(2);
+			sat->SetSIEngineStart(4);
+		}
+
 		if (sat->GetMissionTime() > -4.9) {
 			s1cforwardarmProc = 1;
 			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
@@ -389,9 +405,16 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		liftoffStreamLevel = 1;
 
-		// T+8s or later?
+		
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		// Disconnect IU Umbilical
+		if (sat->GetMissionTime() >= -0.05) {
+			sat->SetIUUmbilicalState(false);
+		}
+
+		// T+8s or later?
 		if (sat->GetMissionTime() > 8) {
 			state = STATE_POSTLIFTOFF;
 		}		
@@ -502,6 +525,8 @@ void ML::DoFirstTimestep() {
 		oapiGetObjectName(h, buffer, 256);
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
+			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+			sat->SetIUUmbilicalState(true);
 		}
 	}
 

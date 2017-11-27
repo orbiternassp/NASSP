@@ -45,6 +45,7 @@
 #include "saturnv.h"
 #include "s1c.h"
 #include "LVDC.h"
+#include "iu.h"
 #include "tracer.h"
 
 //
@@ -87,8 +88,8 @@ GDIParams g_Param;
 // SaturnV constructor, derived from basic Saturn class.
 //
 
-SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
-: Saturn (hObj, fmodel)
+SaturnV::SaturnV (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
+	sic(this, th_1st, ph_1st, LaunchS, SShutS, contrailLevel)
 
 {
 	TRACESETUP("SaturnV");
@@ -490,7 +491,11 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sic.Timestep(simdt);
+	}
+	else if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
 	{
 		sii.Timestep(simdt);
 	}
@@ -557,14 +562,6 @@ void SaturnV::SetVehicleStats(){
 				THRUST_FIRST_VAC = 8000100; 
 				THRUST_SECOND_VAC = 1017000;//1001000;
 				THRUST_THIRD_VAC = 1024009;//1001000;//901557;
-				// Masses from Apollo By The Numbers for AP8
-				SI_EmptyMass = 139641.0; // Minus retro weight, that gets added seperately
-				SI_FuelMass = 2038222.0;
-				Interstage_Mass = 5641;
-				SII_EmptyMass = 49744.0; // Includes S2/S4B interstage, does not include ullage jets; changed for testing
-				SII_FuelMass = 430936.0; 
-				S4B_EmptyMass = 16489.0;//22981.0; // Includes S4B stage, IU, LM adapter, but NOT the LTA
-				S4B_FuelMass = 107318.0;
 			}
 		}else{
 			if (!S1_ThrustLoaded)
@@ -649,6 +646,16 @@ void SaturnV::LoadSIVB(FILEHANDLE scn) {
 	}
 
 	sivb->LoadState(scn);
+}
+
+void SaturnV::SaveSI(FILEHANDLE scn)
+{
+	sic.SaveState(scn);
+}
+
+void SaturnV::LoadSI(FILEHANDLE scn)
+{
+	sic.LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -894,10 +901,6 @@ void SaturnV::SwitchSelector(int item){
 		ActivatePrelaunchVenting();
 		break;
 	case 12:
-		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
-		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_1st[i], ph_1st);
-		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
 		break;
 	case 13:
@@ -916,21 +919,7 @@ void SaturnV::SwitchSelector(int item){
 			GetStatus(vs);
 			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
 			stage1->DefSetState(&vs);
-		}				
-		// Engine Shutdown
-		for (i = 0; i < 5; i++){
-			SetThrusterResource(th_1st[i], NULL);
 		}
-		break;
-	case 18:
-		// Drop old stage
-		SeparateStage(LAUNCH_STAGE_TWO);
-		SetStage(LAUNCH_STAGE_TWO);
-		// Fire S2 ullage
-		if(SII_UllageNum){
-			SepS.play(LOOP, 130);
-		}
-		ActivateStagingVent();
 		break;
 	case 19:
 		// S2 Engine Startup
@@ -953,83 +942,7 @@ void SaturnV::SISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	switch (channel)
-	{
-	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
-		SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
-		SetThrusterGroupLevel(thg_1st, 1.0);					// Set full thrust, just in case
-		contrailLevel = 1.0;
-		if (LaunchS.isValid() && !LaunchS.isPlaying()) {			// And play launch sound			
-			LaunchS.play(NOLOOP, 255);
-			LaunchS.done();
-		}
-		break;
-	case 1: //Telemeter Calibrate Off
-		break;
-	case 2: //Telemeter Calibrate On
-		break;
-	case 3: //Multiple Engine Cutoff Enable
-		break;
-	case 4: //LOX Tank Strobe Lights Off
-		break;
-	case 5: //Fuel Pressurizing Valve No. 2 Open & Tape Recorder Record
-		break;
-	case 6: //Fuel Pressurizing Valve No. 3 Open
-		break;
-	case 7: //Fuel Pressurizing Valve No. 4 Open
-		break;
-	case 8: //Inboard Engine Cutoff
-		SetThrusterResource(th_1st[4], NULL); // Should stop the engine
-		SShutS.play(NOLOOP, 235);
-		SShutS.done();
-		break;
-	case 9: //Outboard Engines Cutoff Enable
-		break;
-	case 10: //Separation and Retro No. 1 EBW Firing Units Arm
-		break;
-	case 12: //Separation Camera On
-		break;
-	case 13: //Telemetry Measurement Switchover
-		break;
-	case 14: //Outboard Engines Cutoff Enable
-		break;
-	case 15: //S-IC/S-II Separation (No. 1)
-		if (stage == LAUNCH_STAGE_ONE)
-		{
-			// Drop old stage
-			SeparateStage(LAUNCH_STAGE_TWO);
-			SetStage(LAUNCH_STAGE_TWO);
-			ActivateStagingVent();
-			if (SII_UllageNum) {
-				SetThrusterGroupLevel(thg_ull, 1.0);
-				SepS.play(LOOP, 130);
-			}
-		}
-		break;
-		break;
-	case 16: //Inboard Engine Cutoff Backup
-		SetThrusterResource(th_1st[4], NULL);
-		break;
-	case 17: //Two Adjacent Outboard Engines Out Cutoff Enable
-		break;
-	case 19: //S-IC/S-II Separation (No. 2)
-		if (stage == LAUNCH_STAGE_ONE)
-		{
-			// Drop old stage
-			SeparateStage(LAUNCH_STAGE_TWO);
-			SetStage(LAUNCH_STAGE_TWO);
-			ActivateStagingVent();
-			if (SII_UllageNum) {
-				SetThrusterGroupLevel(thg_ull, 1.0);
-				SepS.play(LOOP, 130);
-			}
-		}
-		break;
-	case 20: //Separation and Retro No. 2 EBW Firing Units Arm
-		break;
-	default:
-		break;
-	}
+	sic.SwitchSelector(channel);
 }
 
 void SaturnV::SIISwitchSelector(int channel)
@@ -1039,21 +952,110 @@ void SaturnV::SIISwitchSelector(int channel)
 	sii.SwitchSelector(channel);
 }
 
+void SaturnV::GetSIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sic.GetThrustOK(ok);
+}
+
+bool SaturnV::GetSIPropellantDepletionEngineCutoff()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sic.GetPropellantDepletionEngineCutoff();
+}
+
+bool SaturnV::GetSIInboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sic.GetInboardEngineOut();
+}
+
+bool SaturnV::GetSIOutboardEngineOut()
+{
+	if (stage > LAUNCH_STAGE_ONE) return false;
+
+	return sic.GetOutboardEngineOut();
+}
+
+void SaturnV::SetSIEngineStart(int n)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
+
+	sic.SetEngineStart(n);
+}
+
+void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sic.SetThrusterDir(n, yaw, pitch);
+}
+
+bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+
+	return sii.GetPropellantDepletionEngineCutoff();
+}
+
+bool SaturnV::GetSIIEngineOut()
+{
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
+
+	return sii.GetEngineOut();
+}
+
+void SaturnV::SIEDSCutoff(bool cut)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+
+	sic.EDSEnginesCutoff(cut);
+}
+
+void SaturnV::GetSIIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+
+	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
+
+	sii.GetThrustOK(ok);
+}
+
+void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
+{
+	if (failstage == 1)
+	{
+		sic.SetEngineFailureParameters(faileng, failtime);
+	}
+	else if (failstage == 2)
+	{
+		sii.SetEngineFailureParameters(faileng, failtime);
+	}
+}
+
 void SaturnV::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();
+
 	//
-	// Set up launch failures.
+	// Engine failure times
 	//
 
-	if (!LaunchFail.Init)
+	if (stage < LAUNCH_STAGE_TWO)
 	{
-		LaunchFail.Init = 1;
-
-
-		if (stage < STAGE_ORBIT_SIVB)
+		if (!sic.GetFailInit())
 		{
-
 			//
 			// Engine failure times for first stage.
 			//
@@ -1061,27 +1063,10 @@ void SaturnV::SetRandomFailures()
 			bool EarlySICutoff[5];
 			double FirstStageFailureTime[5];
 
-			//
-			// Engine failure times for first stage.
-			//
-
-			bool EarlySIICutoff[5];
-			double SecondStageFailureTime[5];
-
-			//
-			// Engine failure times
-			//
-
 			for (int i = 0;i < 5;i++)
 			{
 				EarlySICutoff[i] = 0;
 				FirstStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySIICutoff[i] = 0;
-				SecondStageFailureTime[i] = 0.0;
 			}
 
 			for (int i = 0;i < 5;i++)
@@ -1093,6 +1078,27 @@ void SaturnV::SetRandomFailures()
 				}
 			}
 
+			sic.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+		}
+	}
+
+	if (stage < LAUNCH_STAGE_SIVB)
+	{
+		if (!sii.GetFailInit())
+		{
+			//
+			// Engine failure times for second stage.
+			//
+
+			bool EarlySIICutoff[5];
+			double SecondStageFailureTime[5];
+
+			for (int i = 0;i < 5;i++)
+			{
+				EarlySIICutoff[i] = 0;
+				SecondStageFailureTime[i] = 0.0;
+			}
+
 			for (int i = 0;i < 5;i++)
 			{
 				if (!(random() & (int)(127.0 / FailureMultiplier)))
@@ -1101,11 +1107,18 @@ void SaturnV::SetRandomFailures()
 					SecondStageFailureTime[i] = 10.0 + ((double)(random() & 3071) / 10.0);
 				}
 			}
-
-			iu->GetEDS()->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 			sii.SetEngineFailureParameters(EarlySIICutoff, SecondStageFailureTime);
 
 		}
+	}
+
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.Init)
+	{
+		LaunchFail.Init = 1;
 
 		if (!(random() & 127))
 		{

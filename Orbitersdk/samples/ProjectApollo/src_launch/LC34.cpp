@@ -219,6 +219,28 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_LIFTOFFSTREAM:
 		if (!hLV) break;
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -3.1)
+		{
+			sat->SetSIEngineStart(5);
+			sat->SetSIEngineStart(7);
+		}
+		if (sat->GetMissionTime() > -3.0)
+		{
+			sat->SetSIEngineStart(6);
+			sat->SetSIEngineStart(8);
+		}
+		if (sat->GetMissionTime() > -2.9)
+		{
+			sat->SetSIEngineStart(2);
+			sat->SetSIEngineStart(4);
+		}
+		if (sat->GetMissionTime() > -2.8)
+		{
+			sat->SetSIEngineStart(1);
+			sat->SetSIEngineStart(3);
+		}
+
 		// T-1s or later?
 		if (sat->GetMissionTime() > -1) {
 			state = STATE_LIFTOFF;
@@ -235,6 +257,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_LIFTOFF:
 		if (!hLV) break;
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
+
+		// Disconnect IU Umbilical
+		if (sat->GetMissionTime() >= -0.05) {
+			sat->SetIUUmbilicalState(false);
+		}
+
 		// T+4s or later?
 		if (sat->GetMissionTime() > 4) {
 			state = STATE_POSTLIFTOFF;
@@ -287,6 +315,8 @@ void LC34::DoFirstTimestep() {
 		oapiGetObjectName(h, buffer, 256);
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
+			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+			sat->SetIUUmbilicalState(true);
 		}
 	}
 

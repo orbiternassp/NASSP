@@ -38,6 +38,9 @@
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_mfd\ProjectApolloMFDButtons.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_mfd\MFDResources.rc">
@@ -61,6 +64,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_mfd\ProjectApolloMFDButtons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

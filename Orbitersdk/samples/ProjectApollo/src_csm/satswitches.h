@@ -866,3 +866,9 @@ public:
 protected:
 	Saturn *sat;
 };
+
+class DockingTargetSwitch : public SaturnThreePosSwitch
+{
+public:
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+};

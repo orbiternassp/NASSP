@@ -487,6 +487,7 @@ public:
 		SRF_THREEPOSSWITCHSMALL,
 		SRF_AOTRETICLEKNOB,
 		SRF_AOTSHAFTKNOB,
+		SRF_AOT_FONT,
 		SRF_FIVE_POS_SWITCH,
 		SRF_DEDA_KEY,
 		SRF_DEDA_LIGHTS,
@@ -510,7 +511,6 @@ public:
 		SRF_LEM_PRIM_C02,
 		SRF_LEM_SEC_C02,
 		SRF_LEM_SGD_LEVER,
-		SRF_LEM_ECS_PANEL,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -527,6 +527,7 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
+	void SetLPDMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -1391,6 +1392,52 @@ protected:
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
 
+	///////////////
+	// ECS Panel //
+	///////////////
+
+	SwitchRow ECSSuitGasDiverterSwitchRow;
+	CircuitBrakerSwitch SuitGasDiverter;
+
+	SwitchRow OxygenControlSwitchRow;
+	RotationalSwitch CabinRepressValve;
+	RotationalSwitch PLSSFillValve;
+	RotationalSwitch PressRegAValve;
+	RotationalSwitch PressRegBValve;
+	RotationalSwitch DESO2Valve;
+	RotationalSwitch ASCO2Valve1;
+	RotationalSwitch ASCO2Valve2;
+
+	SwitchRow SuitIsolSwitchRow;
+	RotationalSwitch CDRSuitIsolValve;
+	ToggleSwitch	   CDRActuatorOvrd;
+	RotationalSwitch LMPSuitIsolValve;
+	ToggleSwitch     LMPActuatorOvrd;
+
+	SwitchRow WaterControlSwitchRow;
+	RotationalSwitch SecEvapFlowValve;
+	RotationalSwitch PrimEvap2FlowValve;
+	RotationalSwitch DESH2OValve;
+	RotationalSwitch PrimEvap1FlowValve;
+	//RotationalSwitch WaterTankSelectValve;  // Needs special treatment due to assymetric shape.
+	RotationalSwitch SuitTempValve;
+
+	SwitchRow ASCH2OSwitchRow;
+	RotationalSwitch ASCH2OValve;
+
+	SwitchRow GarmentCoolingSwitchRow;
+	RotationalSwitch LiquidGarmentCoolingValve;
+
+	SwitchRow SuitCircuitAssySwitchRow;
+	RotationalSwitch SuitCircuitReliefValve;
+	RotationalSwitch CabinGasReturnValve;
+	RotationalSwitch CO2CanisterSelect;
+	RotationalSwitch CO2CanisterPrimValve;
+  PushSwitch       CO2CanisterPrimVent;
+	RotationalSwitch CO2CanisterSecValve;
+  PushSwitch       CO2CanisterSecVent;
+	CircuitBrakerSwitch WaterSepSelect;
+
 	///////////////////////////
 	// LEM Rendezvous Window //
 	///////////////////////////
@@ -1505,6 +1552,14 @@ protected:
 	double DescentEmptyMassKg;
 	double AscentEmptyMassKg;
 
+	// Mesh indexes
+	int lpdgret;
+	int lpdgext;
+
+	// Dust particles
+	THRUSTER_HANDLE th_dust[4];
+	THGROUP_HANDLE thg_dust;
+
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
 #define LMPANEL_LEFTWINDOW		2
@@ -1514,6 +1569,8 @@ protected:
 #define LMPANEL_AOTVIEW			6
 #define LMPANEL_RIGHTPANEL		7
 #define LMPANEL_ECSPANEL		8
+#define LMPANEL_DOCKVIEW		9
+#define LMPANEL_AOTZOOM		    10
 
 	bool InVC;
 	bool InPanel;
