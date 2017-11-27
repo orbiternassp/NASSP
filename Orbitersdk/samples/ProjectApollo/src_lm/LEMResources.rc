@@ -150,6 +150,7 @@ IDB_LMSIGNALSTRENGTH    BITMAP                  "..\\Bitmaps\\lem_signal_strengt
 IDB_RR_NOTRACK          BITMAP                  "..\\Bitmaps\\lem_notrack.bmp"
 IDB_AOT_RETICLE_KNOB    BITMAP                  "..\\Bitmaps\\aot_reticle_knob.bmp"
 IDB_AOT_SHAFT_KNOB      BITMAP                  "..\\Bitmaps\\aot_shaft_knob.bmp"
+IDB_AOT_FONT            BITMAP                  "..\\Bitmaps\\aot_font.bmp"
 IDB_THUMBWHEEL_LARGEFONTS BITMAP                "..\\Bitmaps\\thumbwheel_large_fonts.bmp"
 IDB_FIVE_POS_SWITCH     BITMAP                  "..\\Bitmaps\\fiveposswitch.bmp"
 IDB_LEM_STAGESWITCH     BITMAP                  "..\\Bitmaps\\lem_stage_switch.bmp"
