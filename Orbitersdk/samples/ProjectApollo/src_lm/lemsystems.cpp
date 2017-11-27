@@ -3563,7 +3563,7 @@ LEM_ECS::LEM_ECS()
 	lem = NULL;	
 	// Initialize
 	Asc_Oxygen[0] = 2.43; Asc_Oxygen[1] = 2.43;
-	Des_Oxygen[0] = 48.01; Des_Oxygen[1] = 48.01;
+	Des_Oxygen[0] = 48.01; //Des_Oxygen[1] = 48.01; Using LM-8 Systems Handbook, only 1 DES O2 tank
 	Asc_Water[0] = 42.5; Asc_Water[1] = 42.5;
 	Des_Water[0] = 333; Des_Water[1] = 333;
 	Primary_CL_Glycol_Press[0] = 0; Primary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
