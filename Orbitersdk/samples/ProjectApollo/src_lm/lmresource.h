@@ -783,6 +783,8 @@
 #define AID_LEM_SUIT_CIRCUIT_ASSY       1057
 #define IDB_LEM_DOCK_VIEW               1058
 #define IDB_LEM_AOT_ZOOM                1059
+#define AID_AOT_RETICLEDISPLAY		    1060
+#define IDB_AOT_FONT                    1061
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
