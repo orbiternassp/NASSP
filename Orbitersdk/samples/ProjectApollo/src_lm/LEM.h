@@ -194,6 +194,10 @@ public:
 	double AscentWaterTank1QuantityLBS();
 	double AscentWaterTank2QuantityLBS();
 	double DescentWaterTankQuantityLBS();
+	double GetPrimaryGlycolPressure();
+	double GetSecondaryGlycolPressure();
+	double GetPrimaryGlycolTemperature();
+	double GetSecondaryGlycolTemperature();
 
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press,*Cabin_Temp,*Cabin_CO2;					// Cabin Atmosphere

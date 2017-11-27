@@ -1325,6 +1325,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Debug tests would go here
 	sprintf(oapiDebugString(), "%f", ecs.DescentOxyTankQuantity());
+	sprintf(oapiDebugString(), "%f", ecs.GetCabinTemperature());
+	sprintf(oapiDebugString(), "%f", ecs.GetCabinPressurePSI());
 	
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -3573,10 +3575,10 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Water2 = 0;
 	Des_Water = 0; 
 	//Des_Water2 = 0; Using LM-8 Systems Handbook, only 1 DES H2O tank
-	Primary_CL_Glycol_Press[0] = 0; Primary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
-	Secondary_CL_Glycol_Press[0] = 0; Secondary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
-	Primary_CL_Glycol_Temp[0] = 0; Primary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
-	Secondary_CL_Glycol_Temp[0] = 0; Secondary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
+	Primary_CL_Glycol_Press = 0; // Zero this, system will fill from accu
+	Secondary_CL_Glycol_Press = 0;  // Zero this, system will fill from accu
+	Primary_CL_Glycol_Temp = 0;  // 40 in the accu, 0 other side of the pump
+	Secondary_CL_Glycol_Temp = 0; // 40 in the accu, 0 other side of the pump
 	Primary_Glycol_Accu = 0; // Cubic inches of coolant
 	Secondary_Glycol_Accu = 0; // Cubic inches of coolant
 	Primary_Glycol = 0;
@@ -3753,4 +3755,32 @@ double LEM_ECS::GetSuitTemperature() {
 		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
 	}
 	return *Suit_Temp;
+}
+
+double LEM_ECS::GetPrimaryGlycolPressure() {
+	if (!Primary_CL_Glycol_Press) {
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP:PRESS");
+	}
+	return *Primary_CL_Glycol_Press;
+}
+
+double LEM_ECS::GetPrimaryGlycolTemperature() {
+	if (!Primary_CL_Glycol_Temp) {
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP:TEMP");
+	}
+	return *Primary_CL_Glycol_Temp;
+}
+
+double LEM_ECS::GetSecondaryGlycolPressure() {
+	if (!Secondary_CL_Glycol_Press) {
+		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP:PRESS");
+	}
+	return *Secondary_CL_Glycol_Press;
+}
+
+double LEM_ECS::GetSecondaryGlycolTemperature() {
+	if (!Secondary_CL_Glycol_Temp) {
+		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP:TEMP");
+	}
+	return *Secondary_CL_Glycol_Temp;
 }

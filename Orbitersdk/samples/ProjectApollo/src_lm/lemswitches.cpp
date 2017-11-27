@@ -363,10 +363,10 @@ double LMGlycolTempMeter::QueryValue()
 	if(!lem){ return 0; }
 	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
+		return(lem->ecs.GetSecondaryGlycolTemperature());
 	}else{
 		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Temp[0]);
+		return(lem->ecs.GetPrimaryGlycolTemperature());
 	}
 }
 
@@ -397,10 +397,10 @@ double LMGlycolPressMeter::QueryValue()
 	if(!lem){ return 0; }
 	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetSecondaryGlycolPressure());
 	}else{
 		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetPrimaryGlycolPressure());
 	}
 }
 
@@ -434,11 +434,11 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return (lem->ecs.DescentOxyTankQuantity()/(48.01))*100;
+			return (lem->ecs.DescentOxyTankQuantity()/(21772))*100; //quantity in grams
 		case 2: // ASC 1
-			return (lem->ecs.AscentOxyTank1Quantity()/(2.43))*100;
+			return (lem->ecs.AscentOxyTank1Quantity()/(1102))*100;	//quantity in grams
 		case 3: // ASC 2
-			return (lem->ecs.AscentOxyTank2Quantity()/(2.43))*100;
+			return (lem->ecs.AscentOxyTank2Quantity()/(1102))*100;	//quantity in grams
 	}
 }
 
@@ -472,7 +472,7 @@ double LMWaterQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return((lem->ecs.DescentWaterTankQuantityLBS()/(333*2)*100));
+			return((lem->ecs.DescentWaterTankQuantityLBS()/(333)*100));
 		case 2: // ASC 1
 			return((lem->ecs.AscentWaterTank1QuantityLBS()/42.5)*100);
 		case 3: // ASC 2
