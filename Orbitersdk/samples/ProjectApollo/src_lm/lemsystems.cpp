@@ -1324,10 +1324,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
-	sprintf(oapiDebugString(), "%f", ecs.DescentOxyTankQuantity());
-	sprintf(oapiDebugString(), "%f", ecs.GetCabinTemperature());
 	sprintf(oapiDebugString(), "%f", ecs.GetCabinPressurePSI());
-	
+	sprintf(oapiDebugString(), "%f", ecs.DescentOxyTankQuantity());
+
 	/*
 	double CDRAmps=0,LMPAmps=0;
 	double CDRVolts = CDRs28VBus.Voltage(),LMPVolts = LMPs28VBus.Voltage();
