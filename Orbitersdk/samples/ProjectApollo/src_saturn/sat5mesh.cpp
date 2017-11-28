@@ -1286,9 +1286,17 @@ void SaturnV::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/sat5stg3", vs1, true);
 
 		SeparationS.play(NOLOOP,255);
-		SetCSMStage();
+		
+		if (new_stage == CSM_LEM_STAGE)
+		{
+			SetCSMStage();
+		}
+		else
+		{
+			SetReentryStage();
+		}
 
-		ShiftCentreOfMass(_V(0, 0, 13.15));
+     	ShiftCentreOfMass(_V(0, 0, 13.15));
 	}
 
 	if (stage == CSM_LEM_STAGE)
