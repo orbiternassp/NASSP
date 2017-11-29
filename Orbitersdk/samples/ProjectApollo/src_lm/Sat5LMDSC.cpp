@@ -228,7 +228,7 @@ void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 	while (oapiReadScenario_nextline(scn, line))
 	{
-		if (!strnicmp(line, "STATE", 5))
+		if (!_strnicmp(line, "STATE", 5))
 		{
 			sscanf(line + 5, "%d", &state);
 		}
