@@ -1324,8 +1324,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
-	sprintf(oapiDebugString(), "%f", ecs.GetCabinPressurePSI());
-	sprintf(oapiDebugString(), "%f", ecs.DescentOxyTankQuantity());
+	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
+	double *DESO2TankTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:TEMP");
+	double *DESO2VapMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_VAPORMASS");
+	double *DESO2Energy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:ENERGY");
+	double *DESO2PP = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_PPRESS");
+
+	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
+	sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, *DESO2PP);
 
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -3705,7 +3711,7 @@ double LEM_ECS::GetCabinCO2MMHg() {
 
 double LEM_ECS::GetSuitPressure() {
 	if (!Suit_Press) {
-		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
 	}
 	return *Suit_Press;
 }
@@ -3751,7 +3757,7 @@ double LEM_ECS::GetCabinTemperature() {
 
 double LEM_ECS::GetSuitTemperature() {
 	if (!Suit_Temp) {
-		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
+		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:TEMP");
 	}
 	return *Suit_Temp;
 }
