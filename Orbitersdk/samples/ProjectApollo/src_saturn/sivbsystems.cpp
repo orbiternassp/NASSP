@@ -52,6 +52,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	FireUllageIgnition = false;
 	PointLevelSensorArmed = false;
 	LH2ContinuousVentValveOpen = false;
+	ThrustOKCutoffInhibit = false;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -84,6 +85,7 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
+	papiWriteScenario_bool(scn, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
 	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "BOILOFFTIME", BoiloffTime);
@@ -113,6 +115,7 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
+		papiReadScenario_bool(line, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
 		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "BOILOFFTIME", BoiloffTime);
@@ -169,6 +172,11 @@ void SIVBSystems::Timestep(double simdt)
 		ThrustOKRelay = false;
 	}
 
+	if (EngineReady && EngineStart && !ThrustOKRelay)
+	{
+		ThrustOKCutoffInhibit = true;
+	}
+
 	//Engine Cutoff Bus (switch selector, range safety system no. 2, EDS no. 2, propellant depletion sensors)
 	if (LVDCEngineStopRelay || (!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop || PropellantDepletionSensors)
 	{
@@ -195,6 +203,7 @@ void SIVBSystems::Timestep(double simdt)
 			ThrustTimer = 0.0;
 			EngineStart = false;
 			EngineReady = false;
+			ThrustOKCutoffInhibit = false;
 		}
 
 		if (ThrustLevel > 0.0)
@@ -223,7 +232,7 @@ void SIVBSystems::Timestep(double simdt)
 			}
 		}
 	}
-	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0)
+	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0 || ThrustOKCutoffInhibit)
 	{
 		ThrustTimer += simdt;
 
@@ -238,6 +247,7 @@ void SIVBSystems::Timestep(double simdt)
 			{
 				ThrustLevel = 1.0;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
+				ThrustOKCutoffInhibit = false;
 			}
 		}
 		else
@@ -251,6 +261,7 @@ void SIVBSystems::Timestep(double simdt)
 			{
 				ThrustLevel = 1.0;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
+				ThrustOKCutoffInhibit = false;
 			}
 		}
 	}
@@ -293,7 +304,7 @@ void SIVBSystems::Timestep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);
+	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Cut Inhibit %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
 }
 
 void SIVBSystems::SIVBBoiloff()
