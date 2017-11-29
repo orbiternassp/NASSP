@@ -922,10 +922,7 @@ void LEM::InitSwitches() {
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
 
-	/*WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 2);
-	WaterTankSelectValve.AddPosition(0, 355);
-	WaterTankSelectValve.AddPosition(1, 230);
-	WaterTankSelectValve.AddPosition(2, 120);*/
+	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", THREEPOSSWITCH_CENTER);
 
 	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 	SuitTempValve.AddPosition(0, 0);
@@ -956,21 +953,30 @@ void LEM::InitSwitches() {
 	CabinGasReturnValve.AddPosition(1, 90);
 	CabinGasReturnValve.AddPosition(2, 180);
 
-	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", 0);
-	CO2CanisterSelect.AddPosition(0, 340);
-	CO2CanisterSelect.AddPosition(1, 20);
+	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
+	CO2CanisterSelect.SetSideways(true);
 
 	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 	CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 165);
+	CO2CanisterPrimValve.AddPosition(1, 300);
 
 	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 	CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 165);
+	CO2CanisterSecValve.AddPosition(1, 300);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
 	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
+
+	// Upper Hatch
+	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
+	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_UP);
+	UpperHatchHandle.SetSideways(true);
+
+	// Forward Hatch
+	ForwardHatchHandle.Register(PSH, "ForwardHandle", TOGGLESWITCH_DOWN);
+	ForwardHatchReliefValve.Register(PSH, "ForwardReliefValve", THREEPOSSWITCH_CENTER);
+	ForwardHatchReliefValve.SetSideways(true);
 
 	//
 	// Old stuff.
@@ -1297,8 +1303,11 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_PRIM_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_PRIM_C02));
 		srf[SRF_LEM_SEC_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_SEC_C02));
 		srf[SRF_LEM_SGD_LEVER]		= oapiCreateSurface (LOADBMP (IDB_LEM_SGD_LEVER));
-
-
+		srf[SRF_LEM_U_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_UPPER_REL_VLV));
+		srf[SRF_LEM_U_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_UPPER_HANDLE));
+		srf[SRF_LEM_F_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_HANDLE));
+		srf[SRF_LEM_F_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_REL_VLV));
+		
 		//
 		// Flashing borders.
 		//
@@ -1384,6 +1393,10 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_PRIM_C02],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SEC_C02],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SGD_LEVER],			g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_U_HATCH_REL_VLV],   g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_U_HATCH_HNDL],      g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_HNDL],      g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_REL_VLV],   g_Param.col[4]);
 
     //
 		// Borders need to set the center color to transparent so only the outline
@@ -1432,7 +1445,7 @@ bool LEM::clbkLoadPanel (int id) {
 	switch(id) {
     case LMPANEL_MAIN:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_MAIN_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, LMPANEL_RNDZWINDOW, -1);
+		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, LMPANEL_RNDZWINDOW, LMPANEL_FWDHATCH);
 		break;
 
 	case LMPANEL_RIGHTWINDOW:
@@ -1442,7 +1455,7 @@ bool LEM::clbkLoadPanel (int id) {
 
     case LMPANEL_LEFTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LEFT_WINDOW));
-		oapiSetPanelNeighbours(LMPANEL_LEFTPANEL, LMPANEL_MAIN, -1, LMPANEL_LPDWINDOW);
+		oapiSetPanelNeighbours(LMPANEL_LEFTPANEL, LMPANEL_MAIN, LMPANEL_LEFTZOOM, LMPANEL_LPDWINDOW);
 		break;
 
     case LMPANEL_LPDWINDOW:
@@ -1472,7 +1485,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_ECSPANEL:
 		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_ECS_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, LMPANEL_UPPERHATCH, -1);
 		break;
 
 	case LMPANEL_DOCKVIEW:
@@ -1483,6 +1496,21 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTZOOM:
 		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_AOT_ZOOM));
 		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_AOTVIEW);
+		break;
+	
+	case LMPANEL_LEFTZOOM:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_LEFT_ZOOM));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_LEFTWINDOW);
+		break;
+
+	case LMPANEL_UPPERHATCH:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_ECSPANEL);
+		break;
+
+	case LMPANEL_FWDHATCH:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		oapiSetPanelNeighbours(-1, -1, LMPANEL_MAIN, -1);
 		break;
 	}
 
@@ -1786,6 +1814,31 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_LEFTZOOM: // LEM Left Window COAS View
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_UPPERHATCH: // LEM Upper Hatch
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(209, 335, 1901, 931), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		
+		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_FWDHATCH: // LEM Forward Hatch
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(605, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
@@ -2540,7 +2593,7 @@ void LEM::SetSwitches(int panel) {
   PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
   PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  //WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME; Needs special class.
+  WaterTankSelectValve.Init(66, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);
   SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
 
   ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
@@ -2558,6 +2611,16 @@ void LEM::SetSwitches(int panel) {
   CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], NULL, SuitCircuitAssySwitchRow);
   CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
   WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], NULL, SuitCircuitAssySwitchRow);
+
+  // Upper Hatch
+  UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
+  UpperHatchReliefValve.Init(0, 196, 400, 400, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchSwitchRow);
+  UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchSwitchRow);
+
+  // Forward Hatch
+  ForwardHatchSwitchRow.Init(AID_LEM_FWD_HATCH, MainPanel);
+  ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], NULL, ForwardHatchSwitchRow);
+  ForwardHatchReliefValve.Init(1130, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], NULL, ForwardHatchSwitchRow);
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
