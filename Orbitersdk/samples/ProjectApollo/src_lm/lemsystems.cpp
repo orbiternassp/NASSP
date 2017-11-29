@@ -1325,13 +1325,22 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Debug tests would go here
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
+	double *DESO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:PRESS");
+	double *DESO2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:MASS");
+	double *PressRegAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:PRESS");
+
+	int *deso2outvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:ISOPEN");
+	int *deso2manifoldinvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:ISOPEN");
+
 	double *DESO2TankTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:TEMP");
 	double *DESO2VapMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_VAPORMASS");
 	double *DESO2Energy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:ENERGY");
 	double *DESO2PP = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_PPRESS");
 
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
-	sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, *DESO2PP);
+	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, *DESO2PP);
+	//sprintf(oapiDebugString(), "DO2TP %f DO2MP %f O2MP %f PREGA %f SUITP %f", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
+	sprintf(oapiDebugString(), "DO2TP %f DO2TM %f DO2MP %f DO2MM %f DO2outvlv %d DO2Minvlv %d", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, *deso2outvlv, *deso2manifoldinvlv);
 
 	/*
 	double CDRAmps=0,LMPAmps=0;
