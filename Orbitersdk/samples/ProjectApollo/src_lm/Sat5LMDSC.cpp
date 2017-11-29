@@ -40,7 +40,7 @@ static MESHHANDLE hLemProbes;
 
 static PARTICLESTREAMSPEC seperation_junk = {
 	0,		// flag
-	0.02,	// size
+	0.05,	// size
 	1000,	// rate
 	10,    // velocity
 	5.0,    // velocity distribution
@@ -101,10 +101,10 @@ void Sat5LMDSC::Setup()
 	PROPELLANT_HANDLE ph_sep = CreatePropellantResource(0.2);
 
 	THRUSTER_HANDLE th_sep[4];
-	th_sep[0] = CreateThruster(s_exhaust_pos1, _V(-1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
-	th_sep[1] = CreateThruster(s_exhaust_pos2, _V(1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
-	th_sep[2] = CreateThruster(s_exhaust_pos3, _V(1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
-	th_sep[3] = CreateThruster(s_exhaust_pos4, _V(-1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[0] = CreateThruster(s_exhaust_pos1, _V(1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[1] = CreateThruster(s_exhaust_pos2, _V(-1, 0, -1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[2] = CreateThruster(s_exhaust_pos3, _V(-1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[3] = CreateThruster(s_exhaust_pos4, _V(1, 0, 1), 1.0, ph_sep, 10.0, 10.0);
 
 	for (i = 0; i < 4; i++) {
 		AddExhaustStream(th_sep[i], &seperation_junk);

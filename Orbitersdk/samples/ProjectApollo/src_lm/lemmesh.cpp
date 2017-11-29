@@ -54,6 +54,20 @@ static MESHHANDLE hLemProbes;
 static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
 
+static PARTICLESTREAMSPEC lunar_dust = {
+	0,		// flag
+	1,	    // size
+	5,      // rate
+	20,	    // velocity
+	1,      // velocity distribution
+	2.0,    // lifetime
+	10,   	// growthrate
+	2.0,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_LIN, 0, 1,
+	PARTICLESTREAMSPEC::ATM_PLOG, -0.1, 0.1
+};
+
 void LEM::ToggleEVA()
 
 {
@@ -329,6 +343,25 @@ void LEM::SetLmVesselHoverStage()
 	};
 
 	AddExhaust(es_hover);
+
+	// Simulate the dust kicked up near
+	// the lunar surface
+	int i;
+
+	VECTOR3	s_exhaust_pos1 = _V(0, -15, 0);
+	VECTOR3 s_exhaust_pos2 = _V(0, -15, 0);
+	VECTOR3	s_exhaust_pos3 = _V(0, -15, 0);
+	VECTOR3 s_exhaust_pos4 = _V(0, -15, 0);
+
+	th_dust[0] = CreateThruster(s_exhaust_pos1, _V(-1, 0, 1), 0, ph_Dsc);
+	th_dust[1] = CreateThruster(s_exhaust_pos2, _V(1, 0, 1), 0, ph_Dsc);
+	th_dust[2] = CreateThruster(s_exhaust_pos3, _V(1, 0, -1), 0, ph_Dsc);
+	th_dust[3] = CreateThruster(s_exhaust_pos4, _V(-1, 0, -1), 0, ph_Dsc);
+
+	for (i = 0; i < 4; i++) {
+		AddExhaustStream(th_dust[i], &lunar_dust);
+	}
+	thg_dust = CreateThrusterGroup(th_dust, 4, THGROUP_USER);
 		
 	SetCameraOffset(_V(-0.68, 1.65, 1.35));
 	status = 1;
@@ -384,7 +417,7 @@ void LEM::SetLmAscentHoverStage()
     double Mass = 4495.0;
 	double ro = 3;
 	TOUCHDOWNVTX td[4];
-	double x_target = -0.25;
+	double x_target = -0.5;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
 	for (int i = 0; i<4; i++) {
@@ -584,6 +617,7 @@ void LEMLoadMeshes()
 	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 	hLPDgret = oapiLoadMeshGlobal("ProjectApollo/LPD_gret");
 	hLPDgext = oapiLoadMeshGlobal("ProjectApollo/LPD_gext");
+	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
 
 //
