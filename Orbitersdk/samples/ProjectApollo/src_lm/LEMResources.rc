@@ -175,6 +175,13 @@ IDB_LEM_SGD_LEVER       BITMAP                  "..\\Bitmaps\\Lem_SGD_Lever.bmp"
 IDB_LEM_ECS_PANEL       BITMAP                  "..\\Bitmaps\\lem_ecs_panel.bmp"
 IDB_LEM_DOCK_VIEW       BITMAP                  "..\\Bitmaps\\lem_dock_view.bmp"
 IDB_LEM_AOT_ZOOM        BITMAP                  "..\\Bitmaps\\lem_aot_panel_zoom.bmp"
+IDB_LEM_LEFT_ZOOM       BITMAP                  "..\\Bitmaps\\lem_left_zoom.bmp"
+IDB_LEM_UPPER_HATCH     BITMAP                  "..\\Bitmaps\\lem_upper_hatch.bmp"
+IDB_LEM_UPPER_REL_VLV   BITMAP                  "..\\Bitmaps\\lem_upper_rel_valve.bmp"
+IDB_LEM_UPPER_HANDLE    BITMAP                  "..\\Bitmaps\\lem_upper_handle.bmp"
+IDB_LEM_FWD_HATCH       BITMAP                  "..\\Bitmaps\\lem_forward_hatch.bmp"
+IDB_LEM_FWD_HANDLE      BITMAP                  "..\\Bitmaps\\lem_fwd_handle.bmp"
+IDB_LEM_FWD_REL_VLV     BITMAP                  "..\\Bitmaps\\lem_fwd_rel_valve.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

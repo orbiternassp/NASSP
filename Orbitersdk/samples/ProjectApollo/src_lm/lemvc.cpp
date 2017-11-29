@@ -145,6 +145,15 @@ void LEM::SetView() {
 						SetCameraOffset(_V(-0.598, 2.40, 1.106));
 					}
 					break;
+				
+				case LMPANEL_LEFTZOOM:
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+					}
+					break;
 			}
 		}
 		else

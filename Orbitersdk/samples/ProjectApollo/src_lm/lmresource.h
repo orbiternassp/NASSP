@@ -785,6 +785,15 @@
 #define IDB_LEM_AOT_ZOOM                1059
 #define AID_AOT_RETICLEDISPLAY		    1060
 #define IDB_AOT_FONT                    1061
+#define IDB_LEM_LEFT_ZOOM               1062
+#define IDB_LEM_UPPER_HATCH             1063
+#define AID_LEM_UPPER_HATCH             1064
+#define IDB_LEM_UPPER_REL_VLV           1065
+#define IDB_LEM_UPPER_HANDLE            1066
+#define IDB_LEM_FWD_HATCH               1067
+#define AID_LEM_FWD_HATCH               1068
+#define IDB_LEM_FWD_HANDLE              1069
+#define IDB_LEM_FWD_REL_VLV             1070
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

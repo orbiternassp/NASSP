@@ -511,6 +511,10 @@ public:
 		SRF_LEM_PRIM_C02,
 		SRF_LEM_SEC_C02,
 		SRF_LEM_SGD_LEVER,
+		SRF_LEM_U_HATCH_REL_VLV,
+		SRF_LEM_U_HATCH_HNDL,
+		SRF_LEM_F_HATCH_HNDL,
+		SRF_LEM_F_HATCH_REL_VLV,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1419,7 +1423,7 @@ protected:
 	RotationalSwitch PrimEvap2FlowValve;
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
-	//RotationalSwitch WaterTankSelectValve;  // Needs special treatment due to assymetric shape.
+	ThreePosSwitch WaterTankSelectValve;
 	RotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
@@ -1431,13 +1435,29 @@ protected:
 	SwitchRow SuitCircuitAssySwitchRow;
 	RotationalSwitch SuitCircuitReliefValve;
 	RotationalSwitch CabinGasReturnValve;
-	RotationalSwitch CO2CanisterSelect;
+	ToggleSwitch CO2CanisterSelect;
 	RotationalSwitch CO2CanisterPrimValve;
-  PushSwitch       CO2CanisterPrimVent;
+    PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
-  PushSwitch       CO2CanisterSecVent;
+    PushSwitch       CO2CanisterSecVent;
 	CircuitBrakerSwitch WaterSepSelect;
 
+	/////////////////////
+	// LEM Upper Hatch //
+	/////////////////////
+
+	SwitchRow UpperHatchSwitchRow;
+	ThreePosSwitch UpperHatchReliefValve;
+	ToggleSwitch UpperHatchHandle;
+
+	///////////////////////
+	// LEM Forward Hatch //
+	///////////////////////
+
+	SwitchRow ForwardHatchSwitchRow;
+	ToggleSwitch ForwardHatchHandle;
+	ThreePosSwitch ForwardHatchReliefValve;
+	
 	///////////////////////////
 	// LEM Rendezvous Window //
 	///////////////////////////
@@ -1571,6 +1591,9 @@ protected:
 #define LMPANEL_ECSPANEL		8
 #define LMPANEL_DOCKVIEW		9
 #define LMPANEL_AOTZOOM		    10
+#define LMPANEL_LEFTZOOM        11   
+#define LMPANEL_UPPERHATCH      12  
+#define LMPANEL_FWDHATCH        13 
 
 	bool InVC;
 	bool InPanel;
