@@ -91,6 +91,7 @@ protected:
 	bool EngineCutoffBus;
 	bool EngineStart;
 	bool EngineStop;
+	bool ThrustOKCutoffInhibit;
 
 	bool EDSCutoffDisabled;
 
