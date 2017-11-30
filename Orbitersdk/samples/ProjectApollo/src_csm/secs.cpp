@@ -1055,15 +1055,144 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 	}
 }
 
+LDEC::LDEC():
+	TD1(0.03)
+{
+	SECSPyroBusMotor = false;
+	LMSLASeparationInitiate = false;
+	DockingProbeRetract2 = false;
+	DockingProbeRetract1 = false;
+	DockingRingFinalSeparation = false;
+}
+
+void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
+{
+	Sat = v;
+	mesc = connectedMESC;
+	SECSArmBreaker = SECSArm;
+	DockProbeBreaker = DockProbe;
+	DockingProbeRetractSwitch = DockingProbeRetract;
+	PyroArmSwitch = PyroArmSw;
+	PyroBus = PyroB;
+	PyroBusFeeder = PyroBusFeed;
+}
+
+void LDEC::Timestep(double simdt)
+{
+	TD1.Timestep(simdt);
+
+	//Pyro Bus Motor
+
+	if (SECSArmBreaker->IsPowered()) {
+		if (PyroArmSwitch->IsUp() && !SECSPyroBusMotor) {
+			SECSPyroBusMotor = true;
+			PyroBus->WireTo(PyroBusFeeder);
+		}
+		else if (PyroArmSwitch->IsDown() && SECSPyroBusMotor) {
+			SECSPyroBusMotor = false;
+			PyroBus->Disconnect();
+		}
+	}
+
+	if (Sat->SIVBPayloadSepSwitch.IsUp() && SequentialArmBus())
+	{
+		TD1.SetRunning(true);
+	}
+
+	if (TD1.ContactClosed())
+	{
+		LMSLASeparationInitiate = true;
+	}
+
+	if (Sat->DockingProbeExtdRelSwitch.IsDown() && DockingProbeRetractSwitch->IsUp() && DockProbeBreaker->IsPowered())
+	{
+		DockingProbeRetract1 = true;
+	}
+	else
+	{
+		DockingProbeRetract1 = false;
+	}
+
+	if (Sat->DockingProbeExtdRelSwitch.IsDown() && DockingProbeRetractSwitch->IsDown() && DockProbeBreaker->IsPowered())
+	{
+		DockingProbeRetract2 = true;
+	}
+	else
+	{
+		DockingProbeRetract2 = false;
+	}
+
+	if (mesc->MESCLogicBus() && mesc->GetLESAbortRelay() && mesc->GetLETJettisonAndFrangibleNutsRelay())
+	{
+		DockingRingFinalSeparation = true;
+	}
+	else if (SequentialArmBus() && (Sat->CsmLmFinalSep1Switch.IsUp() || Sat->CsmLmFinalSep2Switch.IsUp()))
+	{
+		DockingRingFinalSeparation = true;
+	}
+	else
+	{
+		DockingRingFinalSeparation = false;
+	}
+
+	//sprintf(oapiDebugString(), "MotorSwitch %d LM/SLA Sep %d Probe Retract1 %d Probe Retract2 %d Ring Final Sep %d", SECSPyroBusMotor, LMSLASeparationInitiate, DockingProbeRetract1, DockingProbeRetract2, DockingRingFinalSeparation);
+}
+
+bool LDEC::SequentialArmBus()
+{
+	return SECSArmBreaker->IsPowered();
+}
+
+void LDEC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+
+	papiWriteScenario_bool(scn, "SECSPYROBUSMOTOR", SECSPyroBusMotor);
+	papiWriteScenario_bool(scn, "LMSLASEPARATIONINITIATE", LMSLASeparationInitiate);
+	papiWriteScenario_bool(scn, "DOCKINGPROBERETRACT1", DockingProbeRetract1);
+	papiWriteScenario_bool(scn, "DOCKINGPROBERETRACT2", DockingProbeRetract2);
+	papiWriteScenario_bool(scn, "DOCKINGRINGFINALSEPARATION", DockingRingFinalSeparation);
+	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
+
+	oapiWriteLine(scn, end_str);
+}
+
+void LDEC::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	float flt = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		papiReadScenario_bool(line, "SECSPYROBUSMOTOR", SECSPyroBusMotor);
+		papiReadScenario_bool(line, "LMSLASEPARATIONINITIATE", LMSLASeparationInitiate);
+		papiReadScenario_bool(line, "DOCKINGPROBERETRACT1", DockingProbeRetract1);
+		papiReadScenario_bool(line, "DOCKINGPROBERETRACT2", DockingProbeRetract2);
+		papiReadScenario_bool(line, "DOCKINGRINGFINALSEPARATION", DockingRingFinalSeparation);
+
+		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
+			TD1.LoadState(scn, "TD_END");
+		}
+	}
+
+	// connect pyro bus
+	if (SECSPyroBusMotor)
+		PyroBus->WireTo(PyroBusFeeder);
+	else
+		PyroBus->Disconnect();
+}
+
 SECS::SECS()
 {
 
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
-
-	PyroBusAMotor = false;
-	PyroBusBMotor = false;
 
 	Sat = 0;
 }
@@ -1080,6 +1209,8 @@ void SECS::ControlVessel(Saturn *v)
 	rcsc.ControlVessel(v);
 	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &MESCB, true);
 	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &MESCA, false);
+	LDECA.Init(v, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
+	LDECB.Init(v, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
 }
 
 void SECS::SetSaturnType(int sattype)
@@ -1095,33 +1226,11 @@ void SECS::Timestep(double simt, double simdt)
 {
 	if (!Sat) return;
 
-	//
-	// Pyro Bus Motors
-	//
-
-	if (Sat->SECSArmBatACircuitBraker.IsPowered()) {
-		if (Sat->PyroArmASwitch.IsUp()) {
-			PyroBusAMotor = true;
-			Sat->PyroBusA.WireTo(&Sat->PyroBusAFeeder);
-		} else {
-			PyroBusAMotor = false;
-			Sat->PyroBusA.Disconnect();
-		}
-	}
-
-	if (Sat->SECSArmBatBCircuitBraker.IsPowered()) {
-		if (Sat->PyroArmBSwitch.IsUp()) {
-			PyroBusBMotor = true;
-			Sat->PyroBusB.WireTo(&Sat->PyroBusBFeeder);
-		} else {
-			PyroBusBMotor = false;
-			Sat->PyroBusB.Disconnect();
-		}
-	}
-
 	MESCA.Timestep(simdt);
 	MESCB.Timestep(simdt);
 	rcsc.Timestep(simdt);
+	LDECA.Timestep(simdt);
+	LDECB.Timestep(simdt);
 
 	//
 	// CSM LV separation relays
@@ -1147,13 +1256,16 @@ void SECS::Timestep(double simt, double simdt)
 	pyroA = false, pyroB = false;
 
 	if (Sat->SIVBPayloadSepSwitch.IsUp()) {
-		if (Sat->SECSArmBatACircuitBraker.IsPowered() && Sat->SIVBLMSepPyroACircuitBraker.IsPowered()) {
-			// Blow Pyro A
-			pyroA = true;
-		}
-		if (Sat->SECSArmBatBCircuitBraker.IsPowered() && Sat->SIVBLMSepPyroBCircuitBraker.IsPowered()) {
-			// Blow Pyro B
-			pyroB = true;
+		if (LDECA.GetLMSLASeparationInitiate() && LDECB.GetLMSLASeparationInitiate())
+		{
+			if (Sat->SIVBLMSepPyroACircuitBraker.IsPowered()) {
+				// Blow Pyro A
+				pyroA = true;
+			}
+			if (Sat->SIVBLMSepPyroBCircuitBraker.IsPowered()) {
+				// Blow Pyro B
+				pyroB = true;
+			}
 		}
 	}
 	/// \todo This assumes instantaneous separation of the LM, but it avoids connector calls each time step
@@ -1167,16 +1279,15 @@ void SECS::Timestep(double simt, double simdt)
 
 	pyroA = false, pyroB = false;
 
-	if (Sat->CsmLmFinalSep1Switch.IsUp() || Sat->CsmLmFinalSep2Switch.IsUp()) {
-		if (IsLogicPoweredAndArmedA()) {
-			// Blow Pyro A
-			pyroA = true;
-		}
-		if (IsLogicPoweredAndArmedB()) {
-			// Blow Pyro B
-			pyroB = true;
-		}
+	if (LDECA.GetDockingRingFinalSeparation()) {
+		// Blow Pyro A
+		pyroA = true;
 	}
+	if (LDECB.GetDockingRingFinalSeparation()) {
+		// Blow Pyro B
+		pyroB = true;
+	}
+
 	Sat->CMDockingRingPyrosFeeder.WireToBuses((pyroA ? &Sat->PyroBusA : NULL),
 											  (pyroB ? &Sat->PyroBusB : NULL));
 
@@ -1238,7 +1349,7 @@ void SECS::Timestep(double simt, double simdt)
 	
 	if (Sat->CMDockingRingPyros.Blown() && Sat->HasProbe && Sat->dockingprobe.IsEnabled())
 	{
-		if (!Sat->dockingprobe.IsDocked()) {
+		if (!Sat->dockingprobe.IsDocked() && !Sat->LESAttached) {
 			Sat->JettisonDockingProbe();
 
 		} else if (Sat->GetDockHandle(0)) {
@@ -1307,11 +1418,11 @@ void SECS::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "STATE", State);
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
-	papiWriteScenario_bool(scn, "PYROBUSAMOTOR", PyroBusAMotor);
-	papiWriteScenario_bool(scn, "PYROBUSBMOTOR", PyroBusBMotor);
 	rcsc.SaveState(scn, "RCSC_BEGIN", "RCSC_END");
 	MESCA.SaveState(scn, "MESCA_BEGIN", "MESC_END");
 	MESCB.SaveState(scn, "MESCB_BEGIN", "MESC_END");
+	LDECA.SaveState(scn, "LDECA_BEGIN", "LDEC_END");
+	LDECB.SaveState(scn, "LDECB_BEGIN", "LDEC_END");
 	
 	oapiWriteLine(scn, SECS_END_STRING);
 }
@@ -1329,8 +1440,6 @@ void SECS::LoadState(FILEHANDLE scn)
 		papiReadScenario_int(line, "STATE", State);
 		papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
-		papiReadScenario_bool(line, "PYROBUSAMOTOR", PyroBusAMotor);
-		papiReadScenario_bool(line, "PYROBUSBMOTOR", PyroBusBMotor);
 		
 		if (!strnicmp(line, "RCSC_BEGIN", sizeof("RCSC_BEGIN"))) {
 			rcsc.LoadState(scn, "RCSC_END");
@@ -1341,18 +1450,13 @@ void SECS::LoadState(FILEHANDLE scn)
 		else if (!strnicmp(line, "MESCB_BEGIN", sizeof("MESCB_BEGIN"))) {
 			MESCB.LoadState(scn, "MESC_END");
 		}
+		else if (!strnicmp(line, "LDECA_BEGIN", sizeof("LDECA_BEGIN"))) {
+			LDECA.LoadState(scn, "LDEC_END");
+		}
+		else if (!strnicmp(line, "LDECB_BEGIN", sizeof("LDECB_BEGIN"))) {
+			LDECB.LoadState(scn, "LDEC_END");
+		}
 	}
-
-	// connect pyro buses
-	if (PyroBusAMotor)
-		Sat->PyroBusA.WireTo(&Sat->PyroBusAFeeder);
-	else
-		Sat->PyroBusA.Disconnect();
-
-	if (PyroBusBMotor)
-		Sat->PyroBusB.WireTo(&Sat->PyroBusAFeeder);
-	else
-		Sat->PyroBusB.Disconnect();
 }
 
 BaroSwitch::BaroSwitch(double open, double close)
