@@ -621,7 +621,7 @@ void LEM::SystemsInit()
 
 	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
 
-	DesO2Tank->BoilAllAndSetTemp(295);
+	//DesO2Tank->BoilAllAndSetTemp(295);
 
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
@@ -1331,7 +1331,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
 
-	DesO2Tank->BoilAllAndSetTemp(295);
+	//DesO2Tank->BoilAllAndSetTemp(295);
 
 	// Debug tests would go here
 
@@ -1346,18 +1346,19 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *DesO2pipeflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE1:FLOW");
 	double *DesO2pipeflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE1:FLOWMAX");
-	double *DesO2vlvoutsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:SIZE");
-	double *DesO2Manifoldvlvinsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:SIZE");
+	float *DesO2vlvoutsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:SIZE");
+	float *DesO2Manifoldvlvinsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:SIZE");
 
 	double *DESO2TankTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:TEMP");
 	double *DESO2VapMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_VAPORMASS");
-	double *DESO2Energy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:ENERGY");
+	double *DESO2TankEnergy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:ENERGY");
+	double *DESO2ManifoldEnergy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:ENERGY");
 	double *DESO2PP = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_PPRESS");
 
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
 	//sprintf(oapiDebugString(), "DO2TP %f DO2MP %f O2MP %f PREGA %f SUITP %f", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
-	//sprintf(oapiDebugString(), "DO2TP %f DO2TM %f DO2MP %f DO2MM %f DO2outvlv %d DO2Minvlv %d flow %f flowmax %f", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, *deso2outvlv, *deso2manifoldinvlv, (*DesO2pipeflow * LBH), (*DesO2pipeflowmax * LBH));
+	sprintf(oapiDebugString(), "DO2TP %1f DO2TM %1f DO2MP %1f DO2MM %1f flow %1f flowmax %1f outsize %f insize %f deso2energy %1f manifoldenergy %1f", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, (*DesO2pipeflow * LBH), (*DesO2pipeflowmax * LBH), *DesO2vlvoutsize, *DesO2Manifoldvlvinsize, *DESO2TankEnergy, *DESO2ManifoldEnergy);
 
 
 	/*

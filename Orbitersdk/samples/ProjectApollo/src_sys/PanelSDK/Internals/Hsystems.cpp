@@ -774,6 +774,7 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	open = 0;
 	flow = 0;
 	flowMax = 0;
+	testparam = 0;
 }
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {
@@ -789,9 +790,12 @@ void h_Pipe::refresh(double dt) {
 	}
 	*/
 
+	testparam = 1.0;
 	//volume flow bases on press difference
 	flow = 0;
 	if ((!in) || (!out)) return;
+	testparam = 2.0;
+
 	if (out->open && in->open) {
 
 		double in_p = in->GetPress();
@@ -823,7 +827,6 @@ void h_Pipe::refresh(double dt) {
 			}
 			return;
 		}
-
 		if (in_p > out_p) {
 			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
 			flow = v.GetMass() / dt; 
@@ -865,7 +868,7 @@ void h_Pipe::Save(FILEHANDLE scn) {
 	char text[100];
 
 	if (*name != '\0') {
-		sprintf(text," %s %lf %lf %lf", name, P_max, P_min, flowMax);
+		sprintf(text," %s %lf %lf %lf %1f", name, P_max, P_min, flowMax, testparam);
 		oapiWriteScenario_string(scn, "   <PIPE>", text);
 	}
 }

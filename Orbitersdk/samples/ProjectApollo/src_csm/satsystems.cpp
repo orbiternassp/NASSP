@@ -1140,7 +1140,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	float *TESTO2Manifoldinsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:TESTO2MANIFOLD:IN:SIZE");
 	float *O2Tank1outsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:OUT:SIZE");
 
-	sprintf(oapiDebugString(), "O2MP %1f O2MM %1f flow %1f flowmax %1f outsize %f insize %f", (*TESTO2ManifoldPress * PSI), *TESTO2ManifoldMass, (*TESTpipeflow * LBH), (*TESTpipeflowmax * LBH), *O2Tank1outsize, *TESTO2Manifoldinsize);
+	//sprintf(oapiDebugString(), "O2MP %1f O2MM %1f flow %1f flowmax %1f outsize %f insize %f", (*TESTO2ManifoldPress * PSI), *TESTO2ManifoldMass, (*TESTpipeflow * LBH), (*TESTpipeflowmax * LBH), *O2Tank1outsize, *TESTO2Manifoldinsize);
 
 /*
 	//O2 Tanks & reaction valves
