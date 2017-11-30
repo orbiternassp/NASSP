@@ -848,7 +848,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 // Various debug prints
 //------------------------------------------------------------------------------------
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
@@ -887,6 +887,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *cabinreliefinletflow1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET1:FLOW");
 	double *cabinreliefinletflow2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET2:FLOW");
 	double *suitcircuitreturnflow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:FLOW");
+
+	double *o2smsupplyoutsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:OUT:SIZE");
+	double *o2mainreginsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:IN:SIZE");
+	double *O2Tank1Outsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:OUT:SIZE");
+
+	sprintf(oapiDebugString(), "O2SMOutSize %f O2MNREGInSize %f O2T1Outsize %f", *o2smsupplyoutsize, *o2mainreginsize, *O2Tank1Outsize);
 
 	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
@@ -1120,13 +1126,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
 	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
 
+/*
 	//O2 Tanks & reaction valves
 	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f H2vlv1 %d O2vlv1 %d H2vlv2 %d O2vlv2 %d H2vlv3 %d O2vlv3 %d O2FC1 M %.1f T %.1f p %6.1f",
 		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038,
 		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc2reacvlv, *o2fc2reacvlv, *h2fc3reacvlv, *o2fc3reacvlv,
 		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
-
+*/
 /*
 	// FC Manifold & Pipes
 	sprintf(oapiDebugString(), "H2FC1 M %.1f T %.1f p %6.1f O2FC1 M %.1f T %.1f p %6.1f",
@@ -1203,7 +1210,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	fflush(PanelsdkLogFile);
 */
 
-#endif
+//#endif
 }
 
 void Saturn::SystemsInternalTimestep(double simdt) 
