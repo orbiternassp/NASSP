@@ -511,6 +511,63 @@ void LEM_EDS::TimeStep(double simdt) {
 	}
 	lem->CableCuttingPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
+
+
+	// Ascent Helium Tank 1 Isolation Valve
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropPressTank1Relay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropPressTank1Relay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentHeliumIsol1PyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	// Ascent Helium Tank 2 Isolation Valve
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropPressTank2Relay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropPressTank2Relay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentHeliumIsol2PyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	// Ascent Propellant Compatibility Valves
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropCompValvesRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropCompValvesRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentFuelCompValvePyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+	lem->AscentOxidCompValvePyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
 	
 	// Set TBs
 	// BP when descent stage detached

@@ -1553,12 +1553,20 @@ protected:
 	Pyro DescentEngineStartPyros;
 	Pyro DescentEngineOnPyros;
 	Pyro DescentPropIsolPyros;
+	Pyro AscentHeliumIsol1Pyros;
+	Pyro AscentHeliumIsol2Pyros;
+	Pyro AscentOxidCompValvePyros;
+	Pyro AscentFuelCompValvePyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
 	PowerMerge DescentPropVentPyrosFeeder;
 	PowerMerge DescentEngineStartPyrosFeeder;
 	PowerMerge DescentEngineOnPyrosFeeder;
 	PowerMerge DescentPropIsolPyrosFeeder;
+	PowerMerge AscentHeliumIsol1PyrosFeeder;
+	PowerMerge AscentHeliumIsol2PyrosFeeder;
+	PowerMerge AscentOxidCompValvePyrosFeeder;
+	PowerMerge AscentFuelCompValvePyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1760,6 +1768,7 @@ protected:
 	// DPS and APS
 	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
+	//APSPropellantSource APSPropellant;
 	LEM_APS APS;
 
 	// Abort Guidance System stuff

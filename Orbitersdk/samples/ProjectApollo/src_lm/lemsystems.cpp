@@ -633,6 +633,10 @@ void LEM::SystemsInit()
 	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
 	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
 	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
+	AscentHeliumIsol1Pyros.WireTo(&AscentHeliumIsol1PyrosFeeder);
+	AscentHeliumIsol2Pyros.WireTo(&AscentHeliumIsol2PyrosFeeder);
+	AscentOxidCompValvePyros.WireTo(&AscentOxidCompValvePyrosFeeder);
+	AscentFuelCompValvePyros.WireTo(&AscentFuelCompValvePyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
