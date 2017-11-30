@@ -131,6 +131,8 @@ public:
 	bool GetCMRCSPressRelay() { return CMRCSPress; }
 	bool GetAutoAbortEnableRelay() { return AutoAbortEnableRelay; }
 	bool GetAutoRCSEnableRelay() { return RCSEnableDisableRelay; }
+	bool GetLESAbortRelay() { return LESAbortRelay;	}
+	bool GetLETJettisonAndFrangibleNutsRelay() { return LETJettisonAndFrangibleNutsRelay; }
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
 	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
 	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
@@ -139,6 +141,8 @@ public:
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 	bool ELSActivateLogic();
 
+	//Source 12
+	bool MESCLogicBus();
 	//Source 23/26
 	bool EDSLiftoffCircuitPower();
 	//Source 31
@@ -169,8 +173,6 @@ protected:
 
 	//Source 11
 	bool SequentialLogicBus();
-	//Source 12
-	bool MESCLogicBus();
 	//Source 15
 	bool SequentialArmBus();
 	//Source 21
@@ -274,6 +276,59 @@ protected:
 	CircuitBrakerSwitch *EDSLogicBreaker;
 };
 
+//Lunar Docking Events Controller
+
+class LDEC
+{
+public:
+	LDEC();
+	void Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe, ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed);
+	void Timestep(double simdt);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+
+	bool GetDockingRingFinalSeparation() { return DockingRingFinalSeparation; }
+	bool GetLMSLASeparationInitiate() { return LMSLASeparationInitiate; }
+	bool GetDockingProbeRetract1() { return DockingProbeRetract1; }
+	bool GetDockingProbeRetract2() { return DockingProbeRetract2; }
+	void ResetLMSLASeparationInitiate() { LMSLASeparationInitiate = false; }
+protected:
+	//Relays
+
+	//Motor Switches
+
+	//K1
+	bool SECSPyroBusMotor;
+
+	//Relays
+
+	//Z1 (Latching)
+	bool LMSLASeparationInitiate;
+	//Z2
+	bool DockingProbeRetract2;
+	//Z3
+	bool DockingProbeRetract1;
+	//Z4
+	bool DockingRingFinalSeparation;
+
+	//Delay Timers
+
+	//LM-SLA Separation Initiate
+	DelayTimer TD1;
+
+	//Source 15
+	bool SequentialArmBus();
+
+	Saturn *Sat;
+	MESC* mesc;
+	CircuitBrakerSwitch *SECSArmBreaker;
+	CircuitBrakerSwitch *DockProbeBreaker;
+	ThreePosSwitch *DockingProbeRetractSwitch;
+	ToggleSwitch *PyroArmSwitch;
+	DCbus *PyroBus;
+	PowerMerge *PyroBusFeeder;
+};
+
 ///
 /// This class simulates the Sequential Events Control System in the CM.
 /// \ingroup InternalSystems
@@ -294,6 +349,11 @@ public:
 	bool NoAutoAbortLightPower();
 	virtual bool BECO();
 
+	bool GetDockingProbeRetractPrim1() { return LDECA.GetDockingProbeRetract1(); }
+	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
+	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
+	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
+
 	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
 	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
 	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
@@ -309,6 +369,10 @@ public:
 	MESC MESCB;
 	//Reaction Control System Controller
 	RCSC rcsc;
+	//Lunar Docking Events Controller A
+	LDEC LDECA;
+	//Lunar Docking Events Controller B
+	LDEC LDECB;
 
 protected:
 	bool IsLogicPoweredAndArmedA();
@@ -317,9 +381,6 @@ protected:
 	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
-
-	bool PyroBusAMotor;
-	bool PyroBusBMotor;
 
 	Saturn *Sat;
 };
