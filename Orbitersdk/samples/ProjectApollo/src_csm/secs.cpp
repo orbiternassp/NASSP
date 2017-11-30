@@ -1152,7 +1152,7 @@ void LDEC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "DOCKINGPROBERETRACT1", DockingProbeRetract1);
 	papiWriteScenario_bool(scn, "DOCKINGPROBERETRACT2", DockingProbeRetract2);
 	papiWriteScenario_bool(scn, "DOCKINGRINGFINALSEPARATION", DockingRingFinalSeparation);
-	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
+	TD1.SaveState(scn, "TD1_BEGIN", "TD_END");
 
 	oapiWriteLine(scn, end_str);
 }
