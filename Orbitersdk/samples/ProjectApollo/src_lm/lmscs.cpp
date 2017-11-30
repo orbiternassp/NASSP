@@ -112,6 +112,11 @@ void LEM_RGA::SystemTimestep(double simdt)
 ATCA::ATCA(){
 	lem = NULL;
 
+	lgc_err_ena = 0;
+	lgc_err_x = 0;
+	lgc_err_y = 0;
+	lgc_err_z = 0;
+
 	K1 = false;
 	K2 = false;
 	K3 = false;
@@ -900,6 +905,10 @@ void ATCA::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, ATCA_START_STRING);
 
+	oapiWriteScenario_int(scn, "FDAIERRENA", lgc_err_ena);
+	oapiWriteScenario_int(scn, "FDAIERRX", lgc_err_x);
+	oapiWriteScenario_int(scn, "FDAIERRY", lgc_err_y);
+	oapiWriteScenario_int(scn, "FDAIERRZ", lgc_err_z);
 	papiWriteScenario_bool(scn, "K1", K1);
 	papiWriteScenario_bool(scn, "K2", K2);
 	papiWriteScenario_bool(scn, "K3", K3);
@@ -928,6 +937,10 @@ void ATCA::LoadState(FILEHANDLE scn) {
 			return;
 		}
 
+		papiReadScenario_int(line, "FDAIERRENA", lgc_err_ena);
+		papiReadScenario_int(line, "FDAIERRX", lgc_err_x);
+		papiReadScenario_int(line, "FDAIERRY", lgc_err_y);
+		papiReadScenario_int(line, "FDAIERRZ", lgc_err_z);
 		papiReadScenario_bool(line, "K1", K1);
 		papiReadScenario_bool(line, "K2", K2);
 		papiReadScenario_bool(line, "K3", K3);
