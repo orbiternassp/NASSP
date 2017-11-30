@@ -619,6 +619,10 @@ void LEM::SystemsInit()
 
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 3.72 / LBH);
 
+	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
+
+	DesO2Tank->BoilAllAndSetTemp(295);
+
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
@@ -1325,6 +1329,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
+	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
+
+	DesO2Tank->BoilAllAndSetTemp(295);
+
 	// Debug tests would go here
 
 	//ECS Debug Lines
@@ -1347,9 +1355,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *DESO2PP = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_PPRESS");
 
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
-	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, *DESO2PP);
+	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
 	//sprintf(oapiDebugString(), "DO2TP %f DO2MP %f O2MP %f PREGA %f SUITP %f", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
-	//sprintf(oapiDebugString(), "DO2TP %f DO2TM %f DO2MP %f DO2MM %f DO2outvlv %d DO2Minvlv %d flow %f flowmax %f outvlvsize %f invlvsize %f", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, *deso2outvlv, *deso2manifoldinvlv, (*DesO2pipeflow/LBH), (*DesO2pipeflowmax/LBH), *DesO2vlvoutsize, *DesO2Manifoldvlvinsize);
+	//sprintf(oapiDebugString(), "DO2TP %f DO2TM %f DO2MP %f DO2MM %f DO2outvlv %d DO2Minvlv %d flow %f flowmax %f", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, *deso2outvlv, *deso2manifoldinvlv, (*DesO2pipeflow * LBH), (*DesO2pipeflowmax * LBH));
+
 
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -1402,6 +1411,8 @@ void LEM::SetPipeMaxFlow(char *pipe, double flow) {
 	h_Pipe *p = (h_Pipe *)Panelsdk.GetPointerByString(pipe);
 	p->flowMax = flow;
 }
+
+
 
 // SYSTEMS COMPONENTS
 // UMBILICAL

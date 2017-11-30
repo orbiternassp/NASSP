@@ -583,6 +583,7 @@ public:
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
 	void SetPipeMaxFlow(char *pipe, double flow);
+	h_Tank *DesO2Tank;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
