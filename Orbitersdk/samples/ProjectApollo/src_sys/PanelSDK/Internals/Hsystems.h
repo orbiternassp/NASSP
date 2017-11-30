@@ -193,7 +193,6 @@ public:
 	h_Valve *out;
 	double flow;	// in g/s
 	double flowMax;
-	double testparam;
 
 	h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two);
 	virtual	void refresh(double dt);	//this called at each timestep

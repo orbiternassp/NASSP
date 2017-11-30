@@ -144,12 +144,6 @@ void Saturn::SystemsInit() {
 	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET2", 1. / LBH);
 
 	//
-	//Test Pipes
-	//
-
-	SetPipeMaxFlow("HYDRAULIC:TESTPIPE", 10. / LBH);
-
-	//
 	// O2 tanks.
 	//
 
@@ -1132,15 +1126,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	int *h2fc2reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:ISOPEN");
 	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
 	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
-
-	double *TESTpipeflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TESTPIPE:FLOW");
-	double *TESTpipeflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TESTPIPE:FLOWMAX");
-	double *TESTO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TESTO2MANIFOLD:PRESS");
-	double *TESTO2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TESTO2MANIFOLD:MASS");
-	float *TESTO2Manifoldinsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:TESTO2MANIFOLD:IN:SIZE");
-	float *O2Tank1outsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:OUT:SIZE");
-
-	//sprintf(oapiDebugString(), "O2MP %1f O2MM %1f flow %1f flowmax %1f outsize %f insize %f", (*TESTO2ManifoldPress * PSI), *TESTO2ManifoldMass, (*TESTpipeflow * LBH), (*TESTpipeflowmax * LBH), *O2Tank1outsize, *TESTO2Manifoldinsize);
 
 /*
 	//O2 Tanks & reaction valves

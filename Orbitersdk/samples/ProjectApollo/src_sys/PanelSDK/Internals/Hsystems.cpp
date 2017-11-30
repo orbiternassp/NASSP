@@ -774,7 +774,6 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	open = 0;
 	flow = 0;
 	flowMax = 0;
-	testparam = 0;
 }
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {
@@ -790,11 +789,9 @@ void h_Pipe::refresh(double dt) {
 	}
 	*/
 
-	testparam = 1.0;
 	//volume flow bases on press difference
 	flow = 0;
 	if ((!in) || (!out)) return;
-	testparam = 2.0;
 
 	if (out->open && in->open) {
 
@@ -868,7 +865,7 @@ void h_Pipe::Save(FILEHANDLE scn) {
 	char text[100];
 
 	if (*name != '\0') {
-		sprintf(text," %s %lf %lf %lf %1f", name, P_max, P_min, flowMax, testparam);
+		sprintf(text," %s %lf %lf %lf", name, P_max, P_min, flowMax);
 		oapiWriteScenario_string(scn, "   <PIPE>", text);
 	}
 }

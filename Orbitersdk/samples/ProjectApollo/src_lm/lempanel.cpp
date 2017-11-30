@@ -886,11 +886,11 @@ void LEM::InitSwitches() {
 	DESO2Valve.AddPosition(0, 0);
 	DESO2Valve.AddPosition(1, 210);
 
-	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 1);
+	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 0);
 	ASCO2Valve1.AddPosition(0, 0);
 	ASCO2Valve1.AddPosition(1, 210);
 
-	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 1);
+	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 0);
 	ASCO2Valve2.AddPosition(0, 0);
 	ASCO2Valve2.AddPosition(1, 210);
 
@@ -906,7 +906,7 @@ void LEM::InitSwitches() {
 
   LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
-	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
+	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 0);
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
 
@@ -914,7 +914,7 @@ void LEM::InitSwitches() {
 	PrimEvap1FlowValve.AddPosition(0, 15);
 	PrimEvap1FlowValve.AddPosition(1, 300);
 
-	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 1);
+	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 0);
 	PrimEvap2FlowValve.AddPosition(0, 0);
 	PrimEvap2FlowValve.AddPosition(1, 270);
 
@@ -2632,6 +2632,111 @@ void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 
+	//Oxygen Control//
+
+		//DES O2 Tank Valve
+		if (s == &DESO2Valve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:OUT");
+				if (DESO2Valve.GetState() == 0) {
+					vlv->Open();
+				}
+				else {
+					vlv->Close();
+				}
+			}
+
+		//ASC O2 Tank 1 Valve
+		else if (s == &ASCO2Valve1) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:OUT");
+			if (ASCO2Valve1.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//ASC O2 Tank 2 Valve
+		else if (s == &ASCO2Valve2) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:OUT");
+			if (ASCO2Valve2.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//PLSS Fill Valve
+		else if (s == &PLSSFillValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:PLSSFILL:OUT");
+			if (PLSSFillValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+	//Water Control//
+
+		//DES H2O Valve
+		else if (s == &DESH2OValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OVALVE:OUT");
+			if (DESH2OValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//ASC H2O Valve
+		else if (s == &ASCH2OValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCH2OVALVE:OUT");
+			if (ASCH2OValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+
+	//Glycol Loop Control//
+
+		//Prim Evap Flow 1 Valve
+		else if (s == &PrimEvap1FlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPFLOWVALVE1:OUT");
+			if (PrimEvap1FlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//Prim Evap Flow 2 Valve
+		else if (s == &PrimEvap2FlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPFLOWVALVE2:OUT");
+			if (PrimEvap2FlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//Sec Evap Flow 1 Valve
+		else if (s == &SecEvapFlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPFLOWVALVE:OUT");
+			if (SecEvapFlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
 }
 
 void LEM::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
