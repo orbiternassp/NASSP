@@ -475,6 +475,21 @@ public:
 		SRF_BORDER_34x39,
 		SRF_BORDER_38x38,
 		SRF_BORDER_40x40,
+		SRF_BORDER_126x131,
+		SRF_BORDER_115x115,
+		SRF_BORDER_68x68,
+		SRF_BORDER_169x168,
+		SRF_BORDER_67x64,
+		SRF_BORDER_201x205,
+		SRF_BORDER_122x265,
+		SRF_BORDER_225x224,
+		SRF_BORDER_51x54,
+		SRF_BORDER_205x205,
+		SRF_BORDER_30x144,
+		SRF_BORDER_400x400,
+		SRF_BORDER_1001x240,
+		SRF_BORDER_360x316,
+		SRF_BORDER_178x187,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -515,6 +530,7 @@ public:
 		SRF_LEM_U_HATCH_HNDL,
 		SRF_LEM_F_HATCH_HNDL,
 		SRF_LEM_F_HATCH_REL_VLV,
+	    SRF_LEM_INTLK_OVRD,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1411,6 +1427,7 @@ protected:
 	RotationalSwitch DESO2Valve;
 	RotationalSwitch ASCO2Valve1;
 	RotationalSwitch ASCO2Valve2;
+	PushSwitch IntlkOvrd;
 
 	SwitchRow SuitIsolSwitchRow;
 	RotationalSwitch CDRSuitIsolValve;
@@ -1423,7 +1440,7 @@ protected:
 	RotationalSwitch PrimEvap2FlowValve;
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
-	ThreePosSwitch WaterTankSelectValve;
+	RotationalSwitch WaterTankSelectValve;
 	RotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
