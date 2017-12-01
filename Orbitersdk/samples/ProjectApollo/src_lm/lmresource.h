@@ -794,6 +794,22 @@
 #define AID_LEM_FWD_HATCH               1068
 #define IDB_LEM_FWD_HANDLE              1069
 #define IDB_LEM_FWD_REL_VLV             1070
+#define IDB_LEM_INTLK_OVRD              1071
+#define IDB_BORDER_126x131              1072
+#define IDB_BORDER_115x115              1073
+#define IDB_BORDER_68x68                1074
+#define IDB_BORDER_169x168              1075
+#define IDB_BORDER_67x64                1076
+#define IDB_BORDER_201x205              1077
+#define IDB_BORDER_122x265              1078
+#define IDB_BORDER_225x224              1079
+#define IDB_BORDER_51x54                1080
+#define IDB_BORDER_205x205              1081
+#define IDB_BORDER_30x144               1082
+#define IDB_BORDER_400x400              1083
+#define IDB_BORDER_1001x240             1084
+#define IDB_BORDER_360x316              1085
+#define IDB_BORDER_178x187              1086
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

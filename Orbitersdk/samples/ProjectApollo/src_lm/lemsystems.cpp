@@ -683,6 +683,10 @@ void LEM::SystemsInit()
 	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
 	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
 	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
+	AscentHeliumIsol1Pyros.WireTo(&AscentHeliumIsol1PyrosFeeder);
+	AscentHeliumIsol2Pyros.WireTo(&AscentHeliumIsol2PyrosFeeder);
+	AscentOxidCompValvePyros.WireTo(&AscentOxidCompValvePyrosFeeder);
+	AscentFuelCompValvePyros.WireTo(&AscentFuelCompValvePyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -749,6 +753,10 @@ void LEM::SystemsInit()
 	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
+	ASCHeReg1Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg2Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -1365,6 +1373,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
+	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
 	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
@@ -3373,7 +3382,7 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-	if(lem->APS.HePress[1] > 220){
+	if(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI() > 220.0){
 		LightStatus[0][4] = 1;
 	}else{
 		LightStatus[0][4] = 0;
