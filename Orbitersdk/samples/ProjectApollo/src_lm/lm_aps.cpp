@@ -237,6 +237,14 @@ double APSPropellantSource::GetOxidizerTankUllagePressurePSI()
 	return 0.0;
 }
 
+double APSPropellantSource::GetHeliumRegulator1OutletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return heliumRegulator1OutletPressurePSI;
+
+	return 0.0;
+}
+
 void APSPropellantSource::SaveState(FILEHANDLE scn)
 {
 	oapiWriteLine(scn, APSPROPELLANT_START_STRING);
@@ -300,7 +308,7 @@ LEM_APS::LEM_APS()
 	lem = NULL;
 	thrustOn = false;
 	armedOn = false;
-	HePress[0] = 0; HePress[1] = 0;
+	ChamberPressure = 0;
 }
 
 void LEM_APS::Init(LEM *s) {
@@ -309,6 +317,8 @@ void LEM_APS::Init(LEM *s) {
 
 void LEM_APS::TimeStep(double simdt) {
 	if (lem == NULL) { return; }
+
+	ChamberPressure = 0.0;
 
 	if (lem->stage > 1)
 	{
@@ -326,8 +336,22 @@ void LEM_APS::TimeStep(double simdt) {
 
 		if (thrustOn && armedOn)
 		{
-			lem->SetThrusterLevel(lem->th_hover[0], 1.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 1.0);
+			//Thrust decay with low pressure
+			double FuelInletPressure = lem->GetAPSPropellant()->GetFuelTrimOrificeOutletPressurePSI();
+			double OxidInletPressure = lem->GetAPSPropellant()->GetOxidTrimOrificeOutletPressurePSI();
+			if (FuelInletPressure > OxidInletPressure)
+			{
+				ChamberPressure = OxidInletPressure*120.0 / 170.0;
+			}
+			else
+			{
+				ChamberPressure = FuelInletPressure*120.0 / 170.0;
+			}
+
+			double ThrustDecay = min(1.0, ChamberPressure / 120.0);
+
+			lem->SetThrusterLevel(lem->th_hover[0], ThrustDecay);
+			lem->SetThrusterLevel(lem->th_hover[1], ThrustDecay);
 		}
 		else
 		{

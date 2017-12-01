@@ -51,6 +51,10 @@ public:
 	double GetAscentHelium2PressPSI();
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
+	double GetHeliumRegulator1OutletPressurePSI();
+
+	double GetFuelTrimOrificeOutletPressurePSI() { return FuelTrimOrificeOutletPressurePSI; }
+	double GetOxidTrimOrificeOutletPressurePSI() { return OxidTrimOrificeOutletPressurePSI; }
 
 	APSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	APSValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
@@ -89,7 +93,7 @@ public:
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;
 	bool armedOn;
-	double HePress[2];			// Helium pressure above and below the regulator
+	double ChamberPressure;
 };
 
 #define APSPROPELLANT_START_STRING   "APSPROPELLANT_BEGIN"

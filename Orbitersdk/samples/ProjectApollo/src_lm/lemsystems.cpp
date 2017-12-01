@@ -3286,7 +3286,7 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-	if(lem->APS.HePress[1] > 220){
+	if(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI() > 220.0){
 		LightStatus[0][4] = 1;
 	}else{
 		LightStatus[0][4] = 0;
