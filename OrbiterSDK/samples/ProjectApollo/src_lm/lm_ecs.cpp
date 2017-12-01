@@ -30,6 +30,112 @@
 #include "LEM.h"
 #include "lm_ecs.h"
 
+LEMOVHDCabinReliefDumpValve::LEMOVHDCabinReliefDumpValve()
+{
+	cabinOVHDHatchValve = NULL;
+	cabinOVHDHatchValveSwitch = NULL;
+}
+
+void LEMOVHDCabinReliefDumpValve::Init(h_Pipe *cohv, ThreePosSwitch *cohs)
+{
+	cabinOVHDHatchValve = cohv;
+	cabinOVHDHatchValveSwitch = cohs;
+}
+
+void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
+{
+	if (!cabinOVHDHatchValve) return;
+
+	// Valve in motion
+	if (cabinOVHDHatchValve->in->pz) return;
+
+	//DUMP
+	if (cabinOVHDHatchValveSwitch->GetState() == 0)
+	{
+		cabinOVHDHatchValve->flowMax = 660.0 / LBH;  
+		cabinOVHDHatchValve->in->Open();
+	}
+	//CLOSE
+	else if (cabinOVHDHatchValveSwitch->GetState() == 2)
+	{
+		cabinOVHDHatchValve->flowMax = 0;
+		cabinOVHDHatchValve->in->Close();
+	}
+	//AUTO
+	else if (cabinOVHDHatchValveSwitch->GetState() == 1)
+	{
+		cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+
+			double cabinpress = cabinOVHDHatchValve->out->parent->space.Press;
+			if (cabinpress < 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
+			{
+				cabinOVHDHatchValve->in->Open();
+			}
+			else if (cabinpress > 5.4 / PSI && cabinOVHDHatchValve->in->open == 1)
+			{
+				cabinOVHDHatchValve->in->Close();
+			}
+		else
+		{
+			cabinOVHDHatchValve->in->Close();
+		}
+	}
+}
+
+
+LEMFWDCabinReliefDumpValve::LEMFWDCabinReliefDumpValve()
+{
+	cabinFWDHatchValve = NULL;
+	cabinFWDHatchValveSwitch = NULL;
+}
+
+void LEMFWDCabinReliefDumpValve::Init(h_Pipe *cfv, ThreePosSwitch *cfvs)
+{
+	cabinFWDHatchValve = cfv;
+	cabinFWDHatchValveSwitch = cfvs;
+}
+
+void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
+{
+	if (!cabinFWDHatchValve) return;
+
+	// Valve in motion
+	if (cabinFWDHatchValve->in->pz) return;
+
+	//DUMP
+	if (cabinFWDHatchValveSwitch->GetState() == 0)
+	{
+		cabinFWDHatchValve->flowMax = 660.0 / LBH;
+		cabinFWDHatchValve->in->Open();
+	}
+	//CLOSE
+	else if (cabinFWDHatchValveSwitch->GetState() == 2)
+	{
+		cabinFWDHatchValve->flowMax = 0;
+		cabinFWDHatchValve->in->Close();
+	}
+	//AUTO
+	else if (cabinFWDHatchValveSwitch->GetState() == 1)
+	{
+		cabinFWDHatchValve->flowMax = 660.0 / LBH;
+
+		double cabinpress = cabinFWDHatchValve->out->parent->space.Press;
+		if (cabinpress < 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
+		{
+			cabinFWDHatchValve->in->Open();
+		}
+		else if (cabinpress > 5.4 / PSI && cabinFWDHatchValve->in->open == 1)
+		{
+			cabinFWDHatchValve->in->Close();
+		}
+		else
+		{
+			cabinFWDHatchValve->in->Close();
+		}
+	}
+}
+
+
 LEMCabinPressureRegulator::LEMCabinPressureRegulator()
 {
 	cabinRepressValve = NULL;
