@@ -37,6 +37,9 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Oxygen1 = 0;
 	Asc_Oxygen2 = 0;
 	Des_Oxygen = 0;
+	Des_OxygenPress = 0;
+	Asc_Oxygen1Press = 0;
+	Asc_Oxygen2Press = 0;
 	//Des_Oxygen2 = 0; Using LM-8 Systems Handbook, only 1 DES O2 tank
 	Asc_Water1 = 0;
 	Asc_Water2 = 0;
