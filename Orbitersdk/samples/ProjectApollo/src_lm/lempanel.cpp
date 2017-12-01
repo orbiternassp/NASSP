@@ -882,7 +882,7 @@ void LEM::InitSwitches() {
 	PressRegBValve.AddPosition(2, 0);
 	PressRegBValve.AddPosition(3, 90);
 
-	DESO2Valve.Register(PSH, "DESO2Valve", 0);
+	DESO2Valve.Register(PSH, "DESO2Valve", 1);
 	DESO2Valve.AddPosition(0, 0);
 	DESO2Valve.AddPosition(1, 210);
 
@@ -894,17 +894,17 @@ void LEM::InitSwitches() {
 	ASCO2Valve2.AddPosition(0, 0);
 	ASCO2Valve2.AddPosition(1, 210);
 
-	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 0);
+	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 1);
 	CDRSuitIsolValve.AddPosition(0, 0);
 	CDRSuitIsolValve.AddPosition(1, 90);
 
-  CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
+    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
-	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
+	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
 
-  LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
+    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
 	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 0);
 	SecEvapFlowValve.AddPosition(0, 0);
@@ -918,7 +918,7 @@ void LEM::InitSwitches() {
 	PrimEvap2FlowValve.AddPosition(0, 0);
 	PrimEvap2FlowValve.AddPosition(1, 270);
 
-	DESH2OValve.Register(PSH, "DESH2OValve", 0);
+	DESH2OValve.Register(PSH, "DESH2OValve", 1);
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
 
@@ -941,7 +941,7 @@ void LEM::InitSwitches() {
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
 	LiquidGarmentCoolingValve.AddPosition(3, 67);
 	LiquidGarmentCoolingValve.AddPosition(4, 90);
-  LiquidGarmentCoolingValve.AddPosition(5, 120);
+    LiquidGarmentCoolingValve.AddPosition(5, 120);
 
 	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
 	SuitCircuitReliefValve.AddPosition(0, 0);
@@ -966,6 +966,7 @@ void LEM::InitSwitches() {
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
+
 	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
 
 	// Upper Hatch
