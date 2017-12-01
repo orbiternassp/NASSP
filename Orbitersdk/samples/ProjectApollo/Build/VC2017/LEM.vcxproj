@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_ecs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
     <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
@@ -360,6 +361,7 @@
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
     <ClInclude Include="..\..\src_lm\lm_channels.h" />
     <ClInclude Include="..\..\src_lm\lm_dps.h" />
+    <ClInclude Include="..\..\src_lm\lm_ecs.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
     <ClInclude Include="..\..\src_lm\lm_programer.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />

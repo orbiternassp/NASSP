@@ -4081,7 +4081,7 @@ void Saturn::StageSix(double simt)
 		// Play cryo-stir audio.
 		//
 
-		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 60))
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 120))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
 			if (TimeW > 1){

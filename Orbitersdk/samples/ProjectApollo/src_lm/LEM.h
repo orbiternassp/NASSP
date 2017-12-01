@@ -44,6 +44,7 @@
 #include "lm_programer.h"
 #include "lm_aca.h"
 #include "lm_ttca.h"
+#include "lm_ecs.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -164,45 +165,6 @@ public:
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
-};
-
-// ENVIRONMENTAL CONTROL SYSTEM
-class LEM_ECS{
-public:
-	LEM_ECS();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	double AscentOxyTankPressure(int tank);
-	double DescentOxyTankPressure(int tank);
-
-	LEM *lem;					// Pointer at LEM
-	double Cabin_Press,Cabin_Temp,Cabin_CO2;	// Cabin Atmosphere
-	double Suit_Press,Suit_Temp,Suit_CO2;		// Suit Circuit Atmosphere
-	double Asc_Water[2],Des_Water[2];			// Water tanks
-	double Asc_Oxygen[2],Des_Oxygen[2];			// Oxygen tanks
-	double Primary_CL_Glycol_Press[2];			// Pressure before and after pumps
-	double Secondary_CL_Glycol_Press[2];		// Pressure before and after pumps
-	double Primary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Secondary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Primary_Glycol_Accu;					// Glycol Accumulator
-	double Secondary_Glycol_Accu;				// Glycol Accumulator
-	double Primary_Glycol;						// Glycol in system
-	double Secondary_Glycol;					// Glycol in system
-	int Asc_H2O_To_PLSS,Des_H2O_To_PLSS;		// PLSS Water Fill valves
-	int Water_Tank_Selector;					// WT selection valve
-	int Pri_Evap_Flow_1,Pri_Evap_Flow_2;		// Primary evaporator flow valves
-	int Sec_Evap_Flow;							// Secondary evaporator flow valve
-	int Water_Sep_Selector;						// WS Select Valve
-	int Asc_O2_To_PLSS,Des_O2_To_PLSS;			// PLSS Oxygen Fill Valves
-	int Des_O2;									// Descent O2 Valve
-	int Asc_O2[2];								// Ascent O2 Valves
-	int Cabin_Repress;							// Cabin Repress Valve
-	int CO2_Can_Select;
-	int Suit_Gas_Diverter;
-	int Suit_Circuit_Relief;
-	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
 
 // Landing Radar
@@ -571,6 +533,12 @@ public:
 	// Panel SDK
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
+	void SetPipeMaxFlow(char *pipe, double flow);
+	h_Tank *DesO2Tank;
+	h_Tank *AscO2Tank1;
+	h_Tank *AscO2Tank2;
+	h_Tank *DesO2Manifold;
+	h_Tank *O2Manifold;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);

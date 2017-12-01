@@ -190,7 +190,7 @@ double LMSuitTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Suit_Temp;
+	return lem->ecs.GetSuitTemperature();
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -218,7 +218,7 @@ double LMCabinTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Cabin_Temp;
+	return lem->ecs.GetCabinTemperature();
 }
 
 void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -246,7 +246,7 @@ double LMSuitPressMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Suit_Press;
+	return lem->ecs.GetSuitPressurePSI();
 }
 
 void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -274,7 +274,7 @@ double LMCabinPressMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Cabin_Press;
+	return lem->ecs.GetCabinPressurePSI();
 }
 
 void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -303,7 +303,7 @@ double LMCabinCO2Meter::QueryValue()
 {
 	if(!lem){ return 0; }
 	// FIXME: NEED TO HANDLE SUIT GAS DIVERTER HERE
-	return lem->ecs.Cabin_CO2;
+	return lem->ecs.GetCabinCO2MMHg();
 }
 
 void LMCabinCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -363,10 +363,10 @@ double LMGlycolTempMeter::QueryValue()
 	if(!lem){ return 0; }
 	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
+		return(lem->ecs.GetSecondaryGlycolTemperature());
 	}else{
 		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Temp[0]);
+		return(lem->ecs.GetPrimaryGlycolTemperature());
 	}
 }
 
@@ -397,10 +397,10 @@ double LMGlycolPressMeter::QueryValue()
 	if(!lem){ return 0; }
 	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetSecondaryGlycolPressure());
 	}else{
 		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetPrimaryGlycolPressure());
 	}
 }
 
@@ -434,11 +434,11 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return(((lem->ecs.Des_Oxygen[0] + lem->ecs.Des_Oxygen[1])/(48.01*2))*100);
+			return (lem->ecs.DescentOxyTankQuantity()/(21772))*100; //quantity in grams
 		case 2: // ASC 1
-			return((lem->ecs.Asc_Oxygen[0]/2.43)*100);
+			return (lem->ecs.AscentOxyTank1Quantity()/(1102))*100;	//quantity in grams
 		case 3: // ASC 2
-			return((lem->ecs.Asc_Oxygen[1]/2.43)*100);
+			return (lem->ecs.AscentOxyTank2Quantity()/(1102))*100;	//quantity in grams
 	}
 }
 
@@ -472,11 +472,11 @@ double LMWaterQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return(((lem->ecs.Des_Water[0] + lem->ecs.Des_Water[1])/(333*2))*100);
+			return((lem->ecs.DescentWaterTankQuantityLBS()/(333)*100));
 		case 2: // ASC 1
-			return((lem->ecs.Asc_Water[0]/42.5)*100);
+			return((lem->ecs.AscentWaterTank1QuantityLBS()/42.5)*100);
 		case 3: // ASC 2
-			return((lem->ecs.Asc_Water[1]/42.5)*100);
+			return((lem->ecs.AscentWaterTank2QuantityLBS()/42.5)*100);
 	}
 }
 

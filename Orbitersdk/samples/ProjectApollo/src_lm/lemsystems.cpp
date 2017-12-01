@@ -617,6 +617,53 @@ void LEM::SystemsInit()
 	ECS_GLYCOL_PUMP_2_CB.MaxAmps = 5.0;
 	ECS_GLYCOL_PUMP_2_CB.WireTo(&CDRs28VBus);
 
+	//Treat LM O2 as only a gas
+	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
+	AscO2Tank1 = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK1");
+	AscO2Tank2 = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK2");
+	DesO2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD");
+	O2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD");
+
+	DesO2Tank->BoilAllAndSetTemp(295);
+	AscO2Tank1->BoilAllAndSetTemp(295);
+	AscO2Tank2->BoilAllAndSetTemp(295);
+	DesO2Manifold->BoilAllAndSetTemp(295);
+	//O2Manifold->BoilAllAndSetTemp(295);
+
+	//Oxygen Pipe Initialization
+	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:ASC2O2PIPE", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2PRESSURERELIEFVALVE", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2BURSTDISK", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PLSSO2FILL", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CABINREPRESS", 396. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGAIN", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGBIN", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGAOUT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGBOUT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CDRSUITISOL", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:LMPSUITISOL", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CDRSUITHOSE", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:LMPSUITHOSE", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITOUT", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTERCABINOUT", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTEREGRESSOUT", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CABINGASRETURNINLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CABINGASRETURNOUTLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMCO2OUTLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SECCO2OUTLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITFAN1INLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITFAN2INLET", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITLOOPHEATEXCHANGERCOOLINGINLET1", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITLOOPHEATEXCHANGERCOOLINGINLET2", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITLOOPHEATEXCHANGERCOOLINGOUTLET1", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITLOOPHEATEXCHANGERCOOLINGOUTLET2", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN1", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN2", 3.72 / LBH);
+
+
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
@@ -1332,8 +1379,46 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Do this toward the end so we can see current system state
 	CWEA.TimeStep(simdt);
 
+	//Treat LM O2 as gas
+	DesO2Tank->BoilAllAndSetTemp(295);
+	AscO2Tank1->BoilAllAndSetTemp(295);
+	AscO2Tank2->BoilAllAndSetTemp(295);
+	DesO2Manifold->BoilAllAndSetTemp(295);
+	//O2Manifold->BoilAllAndSetTemp(295);
+
 	// Debug tests would go here
-	
+
+	//ECS Debug Lines
+	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
+	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
+	double *DESO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:PRESS");
+	double *DESO2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:MASS");
+	double *PressRegAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:PRESS");
+
+	int *deso2outvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:ISOPEN");
+	int *deso2manifoldinvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:ISOPEN");
+	int *deso2manifoldoutvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:OUT:ISOPEN");
+	int *asco2out1vlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:OUT:ISOPEN");
+	int *asco2out2vlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:OUT:ISOPEN");
+	int *plssfillvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PLSSFILL:OUT:ISOPEN");
+
+	double *DesO2pipeflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE1:FLOW");
+	double *DesO2pipeflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE1:FLOWMAX");
+	float *DesO2vlvoutsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:SIZE");
+	float *DesO2Manifoldvlvinsize = (float*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:SIZE");
+
+	double *DESO2TankTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:TEMP");
+	double *DESO2VapMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_VAPORMASS");
+	double *DESO2TankEnergy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:ENERGY");
+	double *DESO2ManifoldEnergy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:ENERGY");
+	double *DESO2PP = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:O2_PPRESS");
+
+	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
+	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
+	//sprintf(oapiDebugString(), "DO2TP %f DO2MP %f O2MP %f PREGA %f SUITP %f", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
+	//sprintf(oapiDebugString(), "DO2TP %1f DO2TM %1f DO2MP %1f DO2MM %1f O2MP %1f O2MM %1f DESO2 %d ASCO21 %d ASCO22 %d PLSS %d", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, (*O2ManifoldPress*PSI), *O2ManifoldMass, *deso2manifoldoutvlv, *asco2out1vlv, *asco2out2vlv, *plssfillvlv);
+
+
 	/*
 	double CDRAmps=0,LMPAmps=0;
 	double CDRVolts = CDRs28VBus.Voltage(),LMPVolts = LMPs28VBus.Voltage();
@@ -1379,6 +1464,14 @@ bool LEM::GetValveState(int valve)
 
 	return ValveState[valve];
 }
+
+void LEM::SetPipeMaxFlow(char *pipe, double flow) {
+
+	h_Pipe *p = (h_Pipe *)Panelsdk.GetPointerByString(pipe);
+	p->flowMax = flow;
+}
+
+
 
 // SYSTEMS COMPONENTS
 // UMBILICAL
@@ -3263,10 +3356,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
 	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
 	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
-	if(lem->ecs.Cabin_Press < 4.15){
+	if(lem->ecs.GetCabinPressurePSI() < 4.15){
 		CabinLowPressLt = 1;
 	}
-	if(lem->ecs.Cabin_Press > 4.65 && CabinLowPressLt){
+	if(lem->ecs.GetCabinPressurePSI() > 4.65 && CabinLowPressLt){
 		CabinLowPressLt = 0;
 	}
 	// FIXME: Need to check valve when enabled
@@ -3280,7 +3373,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
 	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
 	// FIXME: IMPLEMENT #2 SUIT CIRC FAN TEST
-	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.Suit_Press < 3.12){
+	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.GetSuitPressurePSI() < 3.12){
 		LightStatus[1][3] = 1;
 	}
 
@@ -3417,9 +3510,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Less than 99.6 psia in ascent oxygen tank #1
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
-	if(lem->stage < 2 && (lem->ecs.Asc_Oxygen[0] < 2.43 || lem->ecs.Asc_Oxygen[1] < 2.43)){ LightStatus[1][7] = 1; }
-	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressure(0) < 135 || lem->ecs.DescentOxyTankPressure(1) < 135)){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTankPressure(0) < 99.6){ LightStatus[1][7] = 1; }
+	if(lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 99.6 || lem->ecs.AscentOxyTank2PressurePSI() < 99.6)){ LightStatus[1][7] = 1; }
+	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)){ LightStatus[1][7] = 1; }
+	if(lem->ecs.AscentOxyTank1PressurePSI() < 99.6){ LightStatus[1][7] = 1; }
+	if(lem->ecs.DescentOxyTankPressurePSI() < 99.6) { LightStatus[1][7] = 1; }
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
@@ -3433,9 +3527,9 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
-		if(lem->stage < 2 && (lem->ecs.Des_Water[0] < 33 || lem->ecs.Des_Water[1] < 33)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.Asc_Water[0] < 42.5 || lem->ecs.Asc_Water[1] < 42.5)){ LightStatus[3][7] = 1; }
-		if((int)lem->ecs.Asc_Water[0] != (int)lem->ecs.Asc_Water[1]){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantityLBS() < 33)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1QuantityLBS()  < 42.5 || lem->ecs.AscentWaterTank2QuantityLBS() < 42.5)){ LightStatus[3][7] = 1; }
+		if((int)lem->ecs.AscentWaterTank1QuantityLBS() != (int)lem->ecs.AscentWaterTank2QuantityLBS()){ LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
 		WaterWarningDisabled = 1;
@@ -3564,85 +3658,4 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf){
 		}
 		row = 0; col++;
 	}
-}
-
-// Environmental Control System
-LEM_ECS::LEM_ECS()
-{
-	lem = NULL;	
-	// Initialize
-	Asc_Oxygen[0] = 2.43; Asc_Oxygen[1] = 2.43;
-	Des_Oxygen[0] = 48.01; Des_Oxygen[1] = 48.01;
-	Asc_Water[0] = 42.5; Asc_Water[1] = 42.5;
-	Des_Water[0] = 333; Des_Water[1] = 333;
-	Primary_CL_Glycol_Press[0] = 0; Primary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
-	Secondary_CL_Glycol_Press[0] = 0; Secondary_CL_Glycol_Press[1] = 0; // Zero this, system will fill from accu
-	Primary_CL_Glycol_Temp[0] = 40; Primary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
-	Secondary_CL_Glycol_Temp[0] = 40; Secondary_CL_Glycol_Temp[1] = 0; // 40 in the accu, 0 other side of the pump
-	Primary_Glycol_Accu = 46; // Cubic inches of coolant
-	Secondary_Glycol_Accu = 46; // Cubic inches of coolant
-	Primary_Glycol = 0;
-	Secondary_Glycol = 0;
-	// Open valves as would be for IVT
-	Des_O2 = 1; 
-	Des_H2O_To_PLSS = 1;
-	Cabin_Repress = 2; // Auto
-	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
-	Cabin_Press = 4.8; Cabin_Temp = 55; Cabin_CO2 = 1;
-	Suit_Press = 4.8; Suit_Temp = 55; Suit_CO2 = 1;
-}
-
-void LEM_ECS::Init(LEM *s){
-	lem = s;	
-}
-
-void LEM_ECS::TimeStep(double simdt){
-	if(lem == NULL){ return; }
-	// **** Atmosphere Revitalization Section ****
-	// First, get air from the suits and/or the cabin into the system.
-	// Second, remove oxygen for and add CO2 from the crew.
-	// Third, remove CO2 from the air and simulate the reaction in the LiOH can
-	// Fourth, use the fans to move the resulting air through the suits and/or the cabin.
-	// Fifth, use the heat exchanger to move heat from the air to the HTS if enabled (emergency ops)
-	// Sixth, use the water separators to remove water from the air and add it to the WMS and surge tank.
-	// Seventh, use the OSCPCS to add pressure if required
-	// Eighth, use the regenerative heat exchanger to add heat to the air if required
-	// Ninth and optionally, simulate the system behavior if a PGA failure is detected.
-	// Tenth, simulate the LCG water movement operation.
-
-	// **** Oxygen Supply and Cabin Pressure Control Section ****
-	// Simple, move air from tanks to the cabin as required, and move air from the cabin to space as required.
-
-	// **** Water Management Section ****
-	// Also relatively simple, move water from tanks to the HTS / crew / etc as required.
-
-	// **** Heat Transport Section ****
-	// First, operate pumps to move glycol/water through the loops.
-	// Second, move heat from the equipment to the glycol.
-	// Third, move heat from the glycol to the sublimators.
-	// Fourth, vent steam from the sublimators overboard.
-}
-
-void LEM_ECS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
-}
-
-void LEM_ECS::LoadState(FILEHANDLE scn,char *end_str){
-
-}
-
-double LEM_ECS::AscentOxyTankPressure(int tank){
-	// 2.43 is a full tank, at 840 psia.
-	// 0.14 is an empty tank, at 50 psia.
-	// So 790 psia and 2.29 pounds of oxygen.
-	// That's 344.9781659388646 psia per pound
-	return(344.9781659388646*Asc_Oxygen[tank]);
-}
-
-double LEM_ECS::DescentOxyTankPressure(int tank){
-	// 48.01 is a full tank, at 2690 psia.
-	// 0.84 is an empty tank, at 50 psia.
-	// So 2640 psia and 47.17 pounds of oxygen.
-	// That's 55.96777612889548 psia per pound
-	return(55.96777612889548*Des_Oxygen[tank]);
 }

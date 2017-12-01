@@ -792,6 +792,7 @@ void h_Pipe::refresh(double dt) {
 	//volume flow bases on press difference
 	flow = 0;
 	if ((!in) || (!out)) return;
+
 	if (out->open && in->open) {
 
 		double in_p = in->GetPress();
@@ -823,7 +824,6 @@ void h_Pipe::refresh(double dt) {
 			}
 			return;
 		}
-
 		if (in_p > out_p) {
 			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
 			flow = v.GetMass() / dt; 
