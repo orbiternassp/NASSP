@@ -900,11 +900,8 @@ void LEM::InitSwitches() {
 	CDRSuitIsolValve.AddPosition(0, 0);
 	CDRSuitIsolValve.AddPosition(1, 90);
 
-<<<<<<< HEAD
-=======
 	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
 
->>>>>>> a5d90f1b0810fb2d36ded0628ec3d04b21a5d629
     CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
