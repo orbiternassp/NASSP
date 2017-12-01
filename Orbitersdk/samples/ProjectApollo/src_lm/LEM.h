@@ -1747,6 +1747,7 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LEMCabinPressureRegulator CabinPressureRegulator;
 
 	// EDS
 	LEM_EDS eds;
