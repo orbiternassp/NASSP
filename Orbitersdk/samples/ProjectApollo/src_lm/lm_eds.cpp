@@ -43,6 +43,7 @@ LEM_EDRelayBox::LEM_EDRelayBox():
 	DescentEngineOnRelay = false;
 	AscentPropPressTank1Relay = false;
 	AscentPropPressTank2Relay = false;
+	AscentPropCompValvesRelay = false;
 	DescentPropVentRelay = false;
 	DescentPropPressRelay = false;
 	DescentTankIsolValvesRelay = false;
@@ -171,7 +172,8 @@ void LEM_EDRelayBox::Timestep(double simdt)
 
 	if (HasDCPower() && (lem->EDHePressASC.IsUp() || lem->AbortStageSwitch.IsDown()))
 	{
-		//TBD: K12
+		AscentPropCompValvesRelay = true;
+
 		if (lem->EDASCHeSel.IsUp())
 		{
 			AscentPropPressTank1Relay = true;
@@ -192,6 +194,7 @@ void LEM_EDRelayBox::Timestep(double simdt)
 	{
 		AscentPropPressTank1Relay = false;
 		AscentPropPressTank2Relay = false;
+		AscentPropCompValvesRelay = false;
 	}
 
 	if (HasDCPower() && lem->EDDesVent.IsUp())

@@ -32,6 +32,268 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "lm_aps.h"
 
+APSValve::APSValve() {
+	isOpen = false;
+}
+
+void APSValve::SetState(bool open) {
+	isOpen = open;
+}
+
+void APSValve::SwitchToggled(PanelSwitchItem *s) {
+
+	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
+		if (((ThreePosSwitch *)s)->IsUp()) {
+			SetState(true);
+		}
+		else if (((ThreePosSwitch *)s)->IsDown()) {
+			SetState(false);
+		}
+	}
+}
+
+APSPropellantSource::APSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
+	LEMPropellantSource(ph)
+{
+	helium1PressurePSI = 0;
+	helium2PressurePSI = 0;
+	heliumRegulator1OutletPressurePSI = 0;
+	heliumRegulator2OutletPressurePSI = 0;
+	heliumRegulatorManifoldPressurePSI = 0;
+	FuelTankUllagePressurePSI = 0;
+	OxidTankUllagePressurePSI = 0;
+	FuelTrimOrificeOutletPressurePSI = 0;
+	OxidTrimOrificeOutletPressurePSI = 0;
+
+	fuelLevelLow = false;
+	oxidLevelLow = false;
+
+	//Open by default
+	PrimaryHeRegulatorShutoffValve.SetState(true);
+	SecondaryHeRegulatorShutoffValve.SetState(true);
+}
+
+void APSPropellantSource::Timestep(double simt, double simdt)
+{
+	if (!our_vessel) return;
+
+	double p;
+
+	if (!source_prop)
+	{
+		p = 0;
+		helium1PressurePSI = 0;
+		helium2PressurePSI = 0;
+		heliumRegulator1OutletPressurePSI = 0;
+		heliumRegulator2OutletPressurePSI = 0;
+		heliumRegulatorManifoldPressurePSI = 0;
+		FuelTankUllagePressurePSI = 0;
+		OxidTankUllagePressurePSI = 0;
+		FuelTrimOrificeOutletPressurePSI = 0;
+		OxidTrimOrificeOutletPressurePSI = 0;
+	}
+	else
+	{
+		p = our_vessel->GetPropellantMass(source_prop);
+		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
+
+		helium1PressurePSI = 3020.0;
+		helium2PressurePSI = 3020.0;
+
+		double InletPressure1, InletPressure2;
+
+		//Primary Helium Regulator Inlet
+		if (PrimaryHeRegulatorShutoffValve.IsOpen() && PrimaryHeliumIsolationValve.IsOpen())
+		{
+			InletPressure1 = helium1PressurePSI;
+		}
+		else
+		{
+			InletPressure1 = 0.0;
+		}
+
+		//Secondary Helium Regulator Inlet
+		if (SecondaryHeRegulatorShutoffValve.IsOpen() && RedundantHeliumIsolationValve.IsOpen())
+		{
+			InletPressure2 = helium2PressurePSI;
+		}
+		else
+		{
+			InletPressure2 = 0.0;
+		}
+
+		//Helium Regulator 1 Outlet
+		if (InletPressure1 > 190.0)
+		{
+			heliumRegulator1OutletPressurePSI = 190.0;
+		}
+		else
+		{
+			heliumRegulator1OutletPressurePSI = InletPressure1;
+		}
+
+		//Helium Regulator 2 Outlet
+		if (InletPressure2 > 182.0)
+		{
+			heliumRegulator2OutletPressurePSI = 182.0;
+		}
+		else
+		{
+			heliumRegulator2OutletPressurePSI = InletPressure2;
+		}
+
+		//Helium Manifold
+		heliumRegulatorManifoldPressurePSI = (heliumRegulator1OutletPressurePSI + heliumRegulator2OutletPressurePSI) / 2.0;
+
+		//Fuel Tank
+		if (FuelCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
+		{
+			FuelTankUllagePressurePSI = heliumRegulatorManifoldPressurePSI - 2.0;
+		}
+		else
+		{
+			FuelTankUllagePressurePSI = 133.5*p / pMaxForPressures;
+		}
+
+		//Oxidizer Tank
+		if (OxidCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
+		{
+			OxidTankUllagePressurePSI = heliumRegulatorManifoldPressurePSI - 2.0;
+		}
+		else
+		{
+			OxidTankUllagePressurePSI = 133.5*p / pMaxForPressures;
+		}
+
+		FuelTrimOrificeOutletPressurePSI = FuelTankUllagePressurePSI - 14.0;
+		OxidTrimOrificeOutletPressurePSI = OxidTankUllagePressurePSI - 14.0;
+
+		//Primary Helium Isolation Valve
+		if (!PrimaryHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol1Pyros.Blown())
+		{
+			PrimaryHeliumIsolationValve.SetState(true);
+		}
+
+		//Redundant Helium Isolation Valve
+		if (!RedundantHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol2Pyros.Blown())
+		{
+			RedundantHeliumIsolationValve.SetState(true);
+		}
+
+		//Propellant Compatibility Valves
+		if (!OxidCompatibilityValve.IsOpen() && our_vessel->AscentOxidCompValvePyros.Blown())
+		{
+			OxidCompatibilityValve.SetState(true);
+		}
+
+		if (!FuelCompatibilityValve.IsOpen() && our_vessel->AscentFuelCompValvePyros.Blown())
+		{
+			FuelCompatibilityValve.SetState(true);
+		}
+
+		//Propellant Low
+		if (our_vessel->INST_SIG_SENSOR_CB.IsPowered() && p < 50.5)
+		{
+			fuelLevelLow = true;
+			oxidLevelLow = true;
+		}
+		else
+		{
+			fuelLevelLow = false;
+			oxidLevelLow = false;
+		}
+	}
+}
+
+double APSPropellantSource::GetAscentHelium1PressPSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return helium1PressurePSI;
+
+	return 0.0;
+}
+
+double APSPropellantSource::GetAscentHelium2PressPSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return helium2PressurePSI;
+
+	return 0.0;
+}
+
+double APSPropellantSource::GetFuelTankUllagePressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return FuelTankUllagePressurePSI;
+
+	return 0.0;
+}
+
+double APSPropellantSource::GetOxidizerTankUllagePressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return OxidTankUllagePressurePSI;
+
+	return 0.0;
+}
+
+void APSPropellantSource::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, APSPROPELLANT_START_STRING);
+
+	papiWriteScenario_bool(scn, "FUELLEVELLOW", fuelLevelLow);
+	papiWriteScenario_bool(scn, "OXIDLEVELLOW", oxidLevelLow);
+	papiWriteScenario_double(scn, "HELIUM1PRESSUREPSI", helium1PressurePSI);
+	papiWriteScenario_double(scn, "HELIUM2PRESSUREPSI", helium2PressurePSI);
+	papiWriteScenario_double(scn, "HELIUMREGULATOR1OUTLETPRESSUREPSI", heliumRegulator1OutletPressurePSI);
+	papiWriteScenario_double(scn, "HELIUMREGULATOR2OUTLETPRESSUREPSI", heliumRegulator2OutletPressurePSI);
+	papiWriteScenario_double(scn, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+	papiWriteScenario_double(scn, "FUELTANKULLAGEPRESSUREPSI", FuelTankUllagePressurePSI);
+	papiWriteScenario_double(scn, "OXIDTANKULLAGEPRESSUREPSI", OxidTankUllagePressurePSI);
+	papiWriteScenario_double(scn, "FUELTRIMORIFICEOUTLETPRESSUREPSI", FuelTrimOrificeOutletPressurePSI);
+	papiWriteScenario_double(scn, "OXIDTRIMORIFICEOUTLETPRESSUREPSI", OxidTrimOrificeOutletPressurePSI);
+
+	papiWriteScenario_bool(scn, "PRIMREGHELIUMVALVE_ISOPEN", PrimaryHeRegulatorShutoffValve.IsOpen());
+	papiWriteScenario_bool(scn, "SECREGHELIUMVALVE_ISOPEN", SecondaryHeRegulatorShutoffValve.IsOpen());
+	papiWriteScenario_bool(scn, "PRIMARYHELIUMISOLATIONVALVE_ISOPEN", PrimaryHeliumIsolationValve.IsOpen());
+	papiWriteScenario_bool(scn, "REDUNDANTHELIUMISOLATIONVALVE_ISOPEN", RedundantHeliumIsolationValve.IsOpen());
+	papiWriteScenario_bool(scn, "FUELCOMPATIBILITYVALVE_ISOPEN", FuelCompatibilityValve.IsOpen());
+	papiWriteScenario_bool(scn, "OXIDCOMPATIBILITYVALVE_ISOPEN", OxidCompatibilityValve.IsOpen());
+
+	oapiWriteLine(scn, APSPROPELLANT_END_STRING);
+}
+
+void APSPropellantSource::LoadState(FILEHANDLE scn)
+{
+	char *line;
+	bool isOpen;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, APSPROPELLANT_END_STRING, sizeof(APSPROPELLANT_END_STRING))) {
+			return;
+		}
+
+		papiReadScenario_bool(line, "FUELLEVELLOW", fuelLevelLow);
+		papiReadScenario_bool(line, "OXIDLEVELLOW", oxidLevelLow);
+		papiReadScenario_double(line, "HELIUM1PRESSUREPSI", helium1PressurePSI);
+		papiReadScenario_double(line, "HELIUM2PRESSUREPSI", helium2PressurePSI);
+		papiReadScenario_double(line, "HELIUMREGULATOR1OUTLETPRESSUREPSI", heliumRegulator1OutletPressurePSI);
+		papiReadScenario_double(line, "HELIUMREGULATOR2OUTLETPRESSUREPSI", heliumRegulator2OutletPressurePSI);
+		papiReadScenario_double(line, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+		papiReadScenario_double(line, "FUELTANKULLAGEPRESSUREPSI", FuelTankUllagePressurePSI);
+		papiReadScenario_double(line, "OXIDTANKULLAGEPRESSUREPSI", OxidTankUllagePressurePSI);
+		papiReadScenario_double(line, "FUELTRIMORIFICEOUTLETPRESSUREPSI", FuelTrimOrificeOutletPressurePSI);
+		papiReadScenario_double(line, "OXIDTRIMORIFICEOUTLETPRESSUREPSI", OxidTrimOrificeOutletPressurePSI);
+
+		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))			PrimaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))			SecondaryHeRegulatorShutoffValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "PRIMARYHELIUMISOLATIONVALVE_ISOPEN", isOpen))		PrimaryHeliumIsolationValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "REDUNDANTHELIUMISOLATIONVALVE_ISOPEN", isOpen))		RedundantHeliumIsolationValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "FUELCOMPATIBILITYVALVE_ISOPEN", isOpen))		FuelCompatibilityValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "OXIDCOMPATIBILITYVALVE_ISOPEN", isOpen))		OxidCompatibilityValve.SetState(isOpen);
+	}
+}
+
 // Ascent Propulsion System
 LEM_APS::LEM_APS()
 {

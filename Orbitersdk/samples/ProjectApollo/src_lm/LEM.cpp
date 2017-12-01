@@ -238,6 +238,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	deda(this,soundlib, aea),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
+	APSPropellant(ph_Asc, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
@@ -326,6 +327,7 @@ void LEM::Init()
 	ph_RCSB = 0;
 
 	DPSPropellant.SetVessel(this);
+	APSPropellant.SetVessel(this);
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
@@ -1118,6 +1120,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
 		}
+		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
+			APSPropellant.LoadState(scn);
+		}
 		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
 			APS.LoadState(scn, "APS_END");
 		}
@@ -1474,6 +1479,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);

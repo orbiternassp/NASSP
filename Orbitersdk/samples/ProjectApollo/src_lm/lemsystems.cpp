@@ -703,6 +703,10 @@ void LEM::SystemsInit()
 	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
+	ASCHeReg1Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg2Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -1319,6 +1323,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
+	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
 	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);

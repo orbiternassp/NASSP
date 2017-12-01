@@ -177,7 +177,9 @@ void LEM::InitSwitches() {
 	DESHeReg1TB.Register(PSH,"DESHeReg1TB", true);
 	DESHeReg2TB.Register(PSH,"DESHeReg2TB", false);
 	ASCHeReg1Switch.Register(PSH,"ASCHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	ASCHeReg1Switch.SetCallback(new PanelSwitchCallback<APSValve>(APSPropellant.GetHeliumValve1(), &APSValve::SwitchToggled));
 	ASCHeReg2Switch.Register(PSH,"ASCHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	ASCHeReg2Switch.SetCallback(new PanelSwitchCallback<APSValve>(APSPropellant.GetHeliumValve2(), &APSValve::SwitchToggled));
 	DESHeReg1Switch.Register(PSH,"DESHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DESHeReg1Switch.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetHeliumValve1(), &DPSValve::SwitchToggled));
 	DESHeReg2Switch.Register(PSH,"DESHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -1938,7 +1940,7 @@ void LEM::SetSwitches(int panel) {
 
 	// 354,  918,  463, 1124
 	MPSRegControlLeftSwitchRow.Init(AID_MPS_REG_CONTROLS_LEFT, MainPanel);
-	ASCHeReg1TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
+	ASCHeReg1TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, APSPropellant.GetHeliumValve1(), true);
 	DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, DPSPropellant.GetHeliumValve1(), true);
 	ASCHeReg1Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
 	ASCHeReg1Switch.SetDelayTime(1);
@@ -1946,7 +1948,7 @@ void LEM::SetSwitches(int panel) {
 	DESHeReg1Switch.SetDelayTime(1);
 
 	MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
-	ASCHeReg2TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
+	ASCHeReg2TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, APSPropellant.GetHeliumValve2(), true);
 	DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, DPSPropellant.GetHeliumValve2(), false);
 	ASCHeReg2Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
 	ASCHeReg2Switch.SetDelayTime(1);

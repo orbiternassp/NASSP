@@ -816,7 +816,7 @@ double MainFuelPressInd::QueryValue()
 {
 	if (monswitch->IsUp())
 	{
-		return 150.0;
+		return lem->GetAPSPropellant()->GetFuelTankUllagePressurePSI();
 	}
 	else if (monswitch->IsCenter() || monswitch->IsDown())
 	{
@@ -880,7 +880,7 @@ double MainOxidizerPressInd::QueryValue()
 {
 	if (monswitch->IsUp())
 	{
-		return 150.0;
+		return lem->GetAPSPropellant()->GetOxidizerTankUllagePressurePSI();
 	}
 	else if (monswitch->IsCenter() || monswitch->IsDown())
 	{
@@ -1637,6 +1637,31 @@ void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
+LEMAPSValveTalkback::LEMAPSValveTalkback()
+{
+	valve = 0;
+}
+
+
+void LEMAPSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, APSValve *v, bool failopen)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	valve = v;
+}
+
+int LEMAPSValveTalkback::GetState()
+
+{
+	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+		state = valve->IsOpen() ? 1 : 0;
+	else
+		// Should this fail open?
+		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
 LEMDPSValveTalkback::LEMDPSValveTalkback()
 {
 	valve = 0;
@@ -1726,6 +1751,14 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 	else if (source->GetState() == 2)
 	{
 		return lem->GetDPSPropellant()->GetSupercriticalHeliumPressPSI();
+	}
+	else if (source->GetState() == 5)
+	{
+		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
+	}
+	else if (source->GetState() == 6)
+	{
+		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
 	}
 
 	return 0;

@@ -24,6 +24,59 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "lm_dps.h"
+
+class APSValve {
+
+public:
+	APSValve();
+	void SetState(bool open);
+	bool IsOpen() { return isOpen; };
+	void SwitchToggled(PanelSwitchItem *s);
+
+protected:
+	bool isOpen;
+};
+
+class APSPropellantSource : public LEMPropellantSource {
+public:
+	APSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
+
+	void Timestep(double simt, double simdt);
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	double GetAscentHelium1PressPSI();
+	double GetAscentHelium2PressPSI();
+	double GetFuelTankUllagePressurePSI();
+	double GetOxidizerTankUllagePressurePSI();
+
+	APSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
+	APSValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
+protected:
+
+	double helium1PressurePSI;
+	double helium2PressurePSI;
+	double heliumRegulator1OutletPressurePSI;
+	double heliumRegulator2OutletPressurePSI;
+	double heliumRegulatorManifoldPressurePSI;
+	double FuelTankUllagePressurePSI;
+	double OxidTankUllagePressurePSI;
+	double FuelTrimOrificeOutletPressurePSI;
+	double OxidTrimOrificeOutletPressurePSI;
+
+	bool fuelLevelLow;
+	bool oxidLevelLow;
+
+	APSValve PrimaryHeliumIsolationValve;
+	APSValve RedundantHeliumIsolationValve;
+	APSValve PrimaryHeRegulatorShutoffValve;
+	APSValve SecondaryHeRegulatorShutoffValve;
+	APSValve OxidCompatibilityValve;
+	APSValve FuelCompatibilityValve;
+};
+
 // Ascent Engine
 class LEM_APS {
 public:
@@ -38,3 +91,6 @@ public:
 	bool armedOn;
 	double HePress[2];			// Helium pressure above and below the regulator
 };
+
+#define APSPROPELLANT_START_STRING   "APSPROPELLANT_BEGIN"
+#define APSPROPELLANT_END_STRING     "APSPROPELLANT_END"
