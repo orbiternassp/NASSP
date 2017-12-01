@@ -863,113 +863,113 @@ void LEM::InitSwitches() {
 	// ECS Panel
 	SuitGasDiverter.Register(PSH, "SuitGasDiverter", 1);
 
-	CabinRepressValve.Register(PSH, "CabinRepressValve", 1);
 	CabinRepressValve.AddPosition(0, 0);
 	CabinRepressValve.AddPosition(1, 90);
 	CabinRepressValve.AddPosition(2, 180);
+	CabinRepressValve.Register(PSH, "CabinRepressValve", 1);
 
-	PLSSFillValve.Register(PSH, "PLSSFillValve", 1);
 	PLSSFillValve.AddPosition(0, 0);
 	PLSSFillValve.AddPosition(1, 210);
+	PLSSFillValve.Register(PSH, "PLSSFillValve", 1);
 
-	PressRegAValve.Register(PSH, "PressRegAValve", 3);
 	PressRegAValve.AddPosition(0, 180);
 	PressRegAValve.AddPosition(1, 270);
 	PressRegAValve.AddPosition(2, 0);
 	PressRegAValve.AddPosition(3, 90);
+	PressRegAValve.Register(PSH, "PressRegAValve", 3);
 
-	PressRegBValve.Register(PSH, "PressRegBValve", 3);
 	PressRegBValve.AddPosition(0, 180);
 	PressRegBValve.AddPosition(1, 270);
 	PressRegBValve.AddPosition(2, 0);
 	PressRegBValve.AddPosition(3, 90);
+	PressRegBValve.Register(PSH, "PressRegBValve", 3);
 
-	DESO2Valve.Register(PSH, "DESO2Valve", 1);
 	DESO2Valve.AddPosition(0, 0);
 	DESO2Valve.AddPosition(1, 210);
+	DESO2Valve.Register(PSH, "DESO2Valve", 0);
 
-	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 0);
 	ASCO2Valve1.AddPosition(0, 0);
 	ASCO2Valve1.AddPosition(1, 210);
+	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 1);
 
-	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 0);
 	ASCO2Valve2.AddPosition(0, 0);
 	ASCO2Valve2.AddPosition(1, 210);
+	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 1);
 
-	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 1);
 	CDRSuitIsolValve.AddPosition(0, 0);
 	CDRSuitIsolValve.AddPosition(1, 90);
+	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 1);
 
 	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
 
     CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
-	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
+	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 
     LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
-	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 0);
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
+	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 0);
 
-	PrimEvap1FlowValve.Register(PSH, "PrimEvap1FlowValve", 1);
 	PrimEvap1FlowValve.AddPosition(0, 15);
 	PrimEvap1FlowValve.AddPosition(1, 300);
+	PrimEvap1FlowValve.Register(PSH, "PrimEvap1FlowValve", 1);
 
-	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 0);
 	PrimEvap2FlowValve.AddPosition(0, 0);
 	PrimEvap2FlowValve.AddPosition(1, 270);
+	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 0);
 
-	DESH2OValve.Register(PSH, "DESH2OValve", 1);
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
+	DESH2OValve.Register(PSH, "DESH2OValve", 1);
 
-	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 0);
 	WaterTankSelectValve.AddPosition(0, 150);
 	WaterTankSelectValve.AddPosition(1, 240);
 	WaterTankSelectValve.AddPosition(2, 330);
+	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 0);
 
-	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 	SuitTempValve.AddPosition(0, 0);
 	SuitTempValve.AddPosition(1, 22);
 	SuitTempValve.AddPosition(2, 45);
 	SuitTempValve.AddPosition(3, 67);
 	SuitTempValve.AddPosition(4, 90);
+	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 
-	ASCH2OValve.Register(PSH, "ASCH2OValve", 0);
 	ASCH2OValve.AddPosition(0, 340);
 	ASCH2OValve.AddPosition(1, 100);
+	ASCH2OValve.Register(PSH, "ASCH2OValve", 0);
 
-	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 	LiquidGarmentCoolingValve.AddPosition(0, 0);
 	LiquidGarmentCoolingValve.AddPosition(1, 22);
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
 	LiquidGarmentCoolingValve.AddPosition(3, 67);
 	LiquidGarmentCoolingValve.AddPosition(4, 90);
     LiquidGarmentCoolingValve.AddPosition(5, 120);
+	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 
-	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
 	SuitCircuitReliefValve.AddPosition(0, 0);
 	SuitCircuitReliefValve.AddPosition(1, 90);
 	SuitCircuitReliefValve.AddPosition(2, 180);
+	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
 
-	CabinGasReturnValve.Register(PSH, "CabinGasReturnValve", 1);
 	CabinGasReturnValve.AddPosition(0, 0);
 	CabinGasReturnValve.AddPosition(1, 90);
 	CabinGasReturnValve.AddPosition(2, 180);
+	CabinGasReturnValve.Register(PSH, "CabinGasReturnValve", 1);
 
 	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
 	CO2CanisterSelect.SetSideways(true);
 
-	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 	CO2CanisterPrimValve.AddPosition(0, 0);
 	CO2CanisterPrimValve.AddPosition(1, 300);
+	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 
-	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 	CO2CanisterSecValve.AddPosition(0, 0);
 	CO2CanisterSecValve.AddPosition(1, 300);
+	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);

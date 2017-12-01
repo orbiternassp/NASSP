@@ -24,6 +24,20 @@
 
 #pragma once
 
+class LEMCabinPressureRegulator
+{
+public:
+	LEMCabinPressureRegulator();
+	void Init(h_Pipe *crv, RotationalSwitch *crvs, CircuitBrakerSwitch *crcb, RotationalSwitch* pras, RotationalSwitch *prbs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *cabinRepressValve;
+	RotationalSwitch *cabinRepressValveSwitch;
+	CircuitBrakerSwitch *cabinRepressCB;
+	RotationalSwitch *pressRegulatorASwitch;
+	RotationalSwitch *pressRegulatorBSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);

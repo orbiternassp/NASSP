@@ -726,6 +726,8 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ECA_4b, false);
 
 	// ECS
+	CabinPressureRegulator.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
+		&CabinRepressValve, &ECS_CABIN_REPRESS_CB, &PressRegAValve, &PressRegBValve);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1362,6 +1364,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	VHF.SystemTimestep(simdt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
+	CabinPressureRegulator.SystemTimestep(simdt),
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);

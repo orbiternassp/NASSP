@@ -30,6 +30,67 @@
 #include "LEM.h"
 #include "lm_ecs.h"
 
+LEMCabinPressureRegulator::LEMCabinPressureRegulator()
+{
+	cabinRepressValve = NULL;
+	cabinRepressValveSwitch = NULL;
+	cabinRepressCB = NULL;
+	pressRegulatorASwitch = NULL;
+	pressRegulatorBSwitch = NULL;
+}
+
+void LEMCabinPressureRegulator::Init(h_Pipe *crv, RotationalSwitch *crvs, CircuitBrakerSwitch *crcb, RotationalSwitch* pras, RotationalSwitch *prbs)
+{
+	cabinRepressValve = crv;
+	cabinRepressValveSwitch = crvs;
+	cabinRepressCB = crcb;
+	pressRegulatorASwitch = pras;
+	pressRegulatorBSwitch = prbs;
+}
+
+void LEMCabinPressureRegulator::SystemTimestep(double simdt)
+{
+	if (!cabinRepressValve) return;
+
+	// Valve in motion
+	if (cabinRepressValve->in->pz) return;
+
+	//MANUAL
+	if (cabinRepressValveSwitch->GetState() == 0)
+	{
+		cabinRepressValve->flowMax = 480.0 / LBH;
+		cabinRepressValve->in->Open();
+	}
+	//CLOSE
+	else if (cabinRepressValveSwitch->GetState() == 2)
+	{
+		cabinRepressValve->flowMax = 0;
+		cabinRepressValve->in->Close();
+	}
+	//AUTO
+	else if (cabinRepressValveSwitch->GetState() == 1)
+	{
+		cabinRepressValve->flowMax = 396.0 / LBH;
+
+		if (cabinRepressCB->IsPowered() && !pressRegulatorASwitch->GetState() == 0 && !pressRegulatorBSwitch->GetState() == 0)
+		{
+			double cabinpress = cabinRepressValve->out->parent->space.Press;
+			if (cabinpress < 4.07 / PSI && cabinRepressValve->in->open == 0)
+			{
+				cabinRepressValve->in->Open();
+			}
+			else if(cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
+			{
+				cabinRepressValve->in->Close();
+			}
+		}
+		else
+		{
+			cabinRepressValve->in->Close();
+		}
+	}
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;
@@ -37,6 +98,9 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Oxygen1 = 0;
 	Asc_Oxygen2 = 0;
 	Des_Oxygen = 0;
+	Des_OxygenPress = 0;
+	Asc_Oxygen1Press = 0;
+	Asc_Oxygen2Press = 0;
 	//Des_Oxygen2 = 0; Using LM-8 Systems Handbook, only 1 DES O2 tank
 	Asc_Water1 = 0;
 	Asc_Water2 = 0;
