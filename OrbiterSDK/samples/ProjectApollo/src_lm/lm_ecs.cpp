@@ -71,7 +71,7 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 			{
 				cabinOVHDHatchValve->in->Open();
 			}
-			else if (cabinpress > 5.4 / PSI && cabinOVHDHatchValve->in->open == 1)
+			else if (cabinpress >= 5.4 / PSI && cabinOVHDHatchValve->in->open == 1)
 			{
 				cabinOVHDHatchValve->in->Close();
 			}
@@ -124,7 +124,7 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 		{
 			cabinFWDHatchValve->in->Open();
 		}
-		else if (cabinpress > 5.4 / PSI && cabinFWDHatchValve->in->open == 1)
+		else if (cabinpress >= 5.4 / PSI && cabinFWDHatchValve->in->open == 1)
 		{
 			cabinFWDHatchValve->in->Close();
 		}
