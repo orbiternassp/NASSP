@@ -24,6 +24,28 @@
 
 #pragma once
 
+class LEMOVHDCabinReliefDumpValve
+{
+public:
+	LEMOVHDCabinReliefDumpValve();
+	void Init(h_Pipe *cohv, ThreePosSwitch *cohs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *cabinOVHDHatchValve;
+	ThreePosSwitch *cabinOVHDHatchValveSwitch;
+};
+
+class LEMFWDCabinReliefDumpValve
+{
+public:
+	LEMFWDCabinReliefDumpValve();
+	void Init(h_Pipe *cfv, ThreePosSwitch *cfvs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *cabinFWDHatchValve;
+	ThreePosSwitch *cabinFWDHatchValveSwitch;
+};
+
 class LEMCabinPressureRegulator
 {
 public:
