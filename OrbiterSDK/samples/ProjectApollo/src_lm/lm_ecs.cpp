@@ -162,8 +162,6 @@ void LEMCabinPressureRegulator::Init(h_Pipe *crv, h_Pipe *prav, h_Pipe *prbv, h_
 
 void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 {
-	//CABIN REPRESS VALVE
-
 	if (!cabinRepressValve) return;
 	if (!pressRegulatorAValve) return;
 	if (!pressRegulatorBValve) return;
@@ -172,6 +170,8 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 	if (cabinRepressValve->in->pz) return;
 	if (pressRegulatorAValve->in->pz) return;
 	if (pressRegulatorBValve->in->pz) return;
+
+	//CABIN REPRESS VALVE
 
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
@@ -213,7 +213,7 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 	//Suit pressure
 	double suitpress = suitCircuit->space.Press;
 
-	//CABIN PRESSURE REGULATOR A
+	//PRESSURE REGULATOR A
 
 	//DIRECT O2
 	if (pressRegulatorASwitch->GetState() == 2)
@@ -251,7 +251,7 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 	}
 
 
-	//CABIN PRESSURE REGULATOR B
+	//PRESSURE REGULATOR B
 
 	//DIRECT O2
 	if (pressRegulatorBSwitch->GetState() == 2)
