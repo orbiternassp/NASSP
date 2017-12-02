@@ -64,20 +64,36 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 	//AUTO
 	else if (cabinOVHDHatchValveSwitch->GetState() == 1)
 	{
-		cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+		double cabinpress = cabinOVHDHatchValve->in->parent->space.Press;
 
-			double cabinpress = cabinOVHDHatchValve->in->parent->space.Press;
-			if (cabinpress < 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
-			{
-				cabinOVHDHatchValve->in->Open();
-			}
-			else if (cabinpress >= 5.4 / PSI && cabinOVHDHatchValve->in->open == 1)
-			{
-				cabinOVHDHatchValve->in->Close();
-			}
-		else
+		if (cabinpress > 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
+		{
+			cabinOVHDHatchValve->in->Open();
+		}
+		else if (cabinpress < 5.25 / PSI && cabinOVHDHatchValve->in->open == 1)
 		{
 			cabinOVHDHatchValve->in->Close();
+		}
+
+		if (cabinOVHDHatchValve->in->open == 1)
+		{
+			if (cabinpress > 5.8 / PSI)
+			{
+				cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+			}
+			else if (cabinpress < 5.25 / PSI)
+			{
+				cabinOVHDHatchValve->flowMax = 0;
+			}
+			else
+			{
+				//0 flow at 5.25 psi, full flow at 5.8 psi
+				cabinOVHDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+			}
+		}
+		else
+		{
+			cabinOVHDHatchValve->flowMax = 0;
 		}
 	}
 }
@@ -117,20 +133,36 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 	//AUTO
 	else if (cabinFWDHatchValveSwitch->GetState() == 1)
 	{
-		cabinFWDHatchValve->flowMax = 660.0 / LBH;
-
 		double cabinpress = cabinFWDHatchValve->in->parent->space.Press;
-		if (cabinpress < 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
+
+		if (cabinpress > 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
 		{
 			cabinFWDHatchValve->in->Open();
 		}
-		else if (cabinpress >= 5.4 / PSI && cabinFWDHatchValve->in->open == 1)
+		else if (cabinpress < 5.25 / PSI && cabinFWDHatchValve->in->open == 1)
 		{
 			cabinFWDHatchValve->in->Close();
 		}
+
+		if (cabinFWDHatchValve->in->open == 1)
+		{
+			if (cabinpress > 5.8 / PSI)
+			{
+				cabinFWDHatchValve->flowMax = 660.0 / LBH;
+			}
+			else if (cabinpress < 5.25 / PSI)
+			{
+				cabinFWDHatchValve->flowMax = 0;
+			}
+			else
+			{
+				//0 flow at 5.25 psi, full flow at 5.8 psi
+				cabinFWDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+			}
+		}
 		else
 		{
-			cabinFWDHatchValve->in->Close();
+			cabinFWDHatchValve->flowMax = 0;
 		}
 	}
 }

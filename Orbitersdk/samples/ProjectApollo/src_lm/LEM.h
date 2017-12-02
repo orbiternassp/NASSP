@@ -1748,6 +1748,8 @@ protected:
 	// ECS
 	LEM_ECS ecs;
 	LEMCabinPressureRegulator CabinPressureRegulator;
+	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
+	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
 
 	// EDS
 	LEM_EDS eds;
