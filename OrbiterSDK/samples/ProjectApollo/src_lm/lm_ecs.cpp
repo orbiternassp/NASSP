@@ -167,6 +167,74 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 	}
 }
 
+LEMSuitCircuitReliefValve::LEMSuitCircuitReliefValve()
+{
+	SuitCircuitReliefValve = NULL;
+	SuitCircuitReliefValveSwitch = NULL;
+}
+
+void LEMSuitCircuitReliefValve::Init(h_Pipe *scrv, RotationalSwitch *scrvs)
+{
+	SuitCircuitReliefValve = scrv;
+	SuitCircuitReliefValveSwitch = scrvs;
+}
+
+void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
+{
+	if (!SuitCircuitReliefValve) return;
+
+	// Valve in motion
+	if (SuitCircuitReliefValve->in->pz) return;
+
+	//OPEN
+	if (SuitCircuitReliefValveSwitch->GetState() == 0)
+	{
+		SuitCircuitReliefValve->flowMax = 7.8 / LBH;
+		SuitCircuitReliefValve->in->Open();
+	}
+	//CLOSE
+	else if (SuitCircuitReliefValveSwitch->GetState() == 2)
+	{
+		SuitCircuitReliefValve->flowMax = 0;
+		SuitCircuitReliefValve->in->Close();
+	}
+	//AUTO
+	else if (SuitCircuitReliefValveSwitch->GetState() == 1)
+	{
+		double suitcircuitpress = SuitCircuitReliefValve->in->parent->space.Press;
+
+		if (suitcircuitpress > 4.7 / PSI && SuitCircuitReliefValve->in->open == 0)
+		{
+			SuitCircuitReliefValve->in->Open();
+		}
+		else if (suitcircuitpress < 4.3 / PSI && SuitCircuitReliefValve->in->open == 1)
+		{
+			SuitCircuitReliefValve->in->Close();
+		}
+
+		if (SuitCircuitReliefValve->in->open == 1)
+		{
+			if (suitcircuitpress > 4.7 / PSI)
+			{
+				SuitCircuitReliefValve->flowMax = 7.8 / LBH;
+			}
+			else if (suitcircuitpress < 4.3 / PSI)
+			{
+				SuitCircuitReliefValve->flowMax = 0;
+			}
+			else
+			{
+				//0 flow at 4.3 psi, full flow at 4.7 psi
+				SuitCircuitReliefValve->flowMax = (7.8 / LBH) * (1.81818*(suitcircuitpress*PSI) - 9.54545); //Not sure what these numbers are, please fix me!
+			}
+		}
+		else
+		{
+			SuitCircuitReliefValve->flowMax = 0;
+		}
+	}
+}
+
 
 LEMCabinPressureRegulator::LEMCabinPressureRegulator()
 {

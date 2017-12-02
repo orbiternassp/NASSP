@@ -46,6 +46,17 @@ protected:
 	ThreePosSwitch *cabinFWDHatchValveSwitch;
 };
 
+class LEMSuitCircuitReliefValve
+{
+public:
+	LEMSuitCircuitReliefValve();
+	void Init(h_Pipe *scrv, RotationalSwitch *scrvs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *SuitCircuitReliefValve;
+	RotationalSwitch *SuitCircuitReliefValveSwitch;
+};
+
 class LEMCabinPressureRegulator
 {
 public:
