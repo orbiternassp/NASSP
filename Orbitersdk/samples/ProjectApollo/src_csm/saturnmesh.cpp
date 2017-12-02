@@ -575,6 +575,14 @@ void Saturn::SetCSMStage ()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	if (LESAttached) {
+		TowerOffset = 4.95;
+		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
+
+		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
+		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
+	}
+
 	// And the Crew
 	if (Crewed) {
 		cmpidx = AddMesh (hCMP, &mesh_dir);
@@ -824,7 +832,7 @@ void Saturn::SetCMdocktgtMesh() {
 	if (cmdocktgtidx == -1)
 		return;
 
-	if (CMdocktgt) {
+	if (CMdocktgt && ApexCoverAttached) {
 		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
@@ -859,7 +867,14 @@ void Saturn::SetReentryStage ()
 	SetSize(6.0);
 	SetEmptyMass(EmptyMass);
 
-	double Mass = CM_EmptyMass;
+	double Mass = 5430;
+	double ra;
+	if (ApexCoverAttached) {
+		ra = -1.0;
+	}
+	else {
+		ra = -2.2;
+	}
 	double ro = 2;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.5;
@@ -873,16 +888,16 @@ void Saturn::SetReentryStage ()
 	}
 	td[0].pos.x = -cos(30 * RAD)*ro;
 	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = -2.2;
+	td[0].pos.z = ra;
 	td[1].pos.x = 0;
 	td[1].pos.y = 1 * ro;
-	td[1].pos.z = -2.2;
+	td[1].pos.z = ra;
 	td[2].pos.x = cos(30 * RAD)*ro;
 	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = -2.2;
+	td[2].pos.z = ra;
 	td[3].pos.x = 0;
 	td[3].pos.y = 0;
-	td[3].pos.z = 2.2;
+	td[3].pos.z = ra + 5.0;
 
 	SetTouchdownPoints(td, 4);
 
