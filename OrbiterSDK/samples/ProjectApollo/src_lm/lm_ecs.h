@@ -50,12 +50,15 @@ class LEMCabinPressureRegulator
 {
 public:
 	LEMCabinPressureRegulator();
-	void Init(h_Pipe *crv, RotationalSwitch *crvs, CircuitBrakerSwitch *crcb, RotationalSwitch* pras, RotationalSwitch *prbs);
+	void Init(h_Pipe *crv, h_Pipe *prav, h_Pipe *prbv, h_Tank *sc, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
 	void SystemTimestep(double simdt);
 protected:
 	h_Pipe *cabinRepressValve;
-	RotationalSwitch *cabinRepressValveSwitch;
+	h_Pipe *pressRegulatorAValve;
+	h_Pipe *pressRegulatorBValve;
+	h_Tank *suitCircuit;
 	CircuitBrakerSwitch *cabinRepressCB;
+	RotationalSwitch *cabinRepressValveSwitch;
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
 };

@@ -143,23 +143,35 @@ LEMCabinPressureRegulator::LEMCabinPressureRegulator()
 	cabinRepressCB = NULL;
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
+	pressRegulatorAValve = NULL;
+	pressRegulatorBValve = NULL;
+	suitCircuit = NULL;
 }
 
-void LEMCabinPressureRegulator::Init(h_Pipe *crv, RotationalSwitch *crvs, CircuitBrakerSwitch *crcb, RotationalSwitch* pras, RotationalSwitch *prbs)
+void LEMCabinPressureRegulator::Init(h_Pipe *crv, h_Pipe *prav, h_Pipe *prbv, h_Tank *sc, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
 {
 	cabinRepressValve = crv;
 	cabinRepressValveSwitch = crvs;
 	cabinRepressCB = crcb;
 	pressRegulatorASwitch = pras;
 	pressRegulatorBSwitch = prbs;
+	pressRegulatorAValve = prav;
+	pressRegulatorBValve = prbv;
+	suitCircuit = sc;
 }
 
 void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 {
 	if (!cabinRepressValve) return;
+	if (!pressRegulatorAValve) return;
+	if (!pressRegulatorBValve) return;
 
 	// Valve in motion
 	if (cabinRepressValve->in->pz) return;
+	if (pressRegulatorAValve->in->pz) return;
+	if (pressRegulatorBValve->in->pz) return;
+
+	//CABIN REPRESS VALVE
 
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
@@ -180,7 +192,9 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 
 		if (cabinRepressCB->IsPowered() && !pressRegulatorASwitch->GetState() == 0 && !pressRegulatorBSwitch->GetState() == 0)
 		{
+			//Cabin pressure
 			double cabinpress = cabinRepressValve->out->parent->space.Press;
+
 			if (cabinpress < 4.07 / PSI && cabinRepressValve->in->open == 0)
 			{
 				cabinRepressValve->in->Open();
@@ -193,6 +207,84 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 		else
 		{
 			cabinRepressValve->in->Close();
+		}
+	}
+
+	//Suit pressure
+	double suitpress = suitCircuit->space.Press;
+
+	//PRESSURE REGULATOR A
+
+	//DIRECT O2
+	if (pressRegulatorASwitch->GetState() == 2)
+	{
+		pressRegulatorAValve->in->Open();
+	}
+	//CLOSE
+	else if (pressRegulatorASwitch->GetState() == 3)
+	{
+		pressRegulatorAValve->in->Close();
+	}
+	//EGRESS
+	else if (pressRegulatorASwitch->GetState() == 0)
+	{
+		if (suitpress < 3.8 / PSI)
+		{
+			pressRegulatorAValve->in->Open();
+		}
+		else
+		{
+			pressRegulatorAValve->in->Close();
+		}
+	}
+	//CABIN
+	else if (pressRegulatorASwitch->GetState() == 1)
+	{
+		if (suitpress < 4.8 / PSI)
+		{
+			pressRegulatorAValve->in->Open();
+		}
+		else
+		{
+			pressRegulatorAValve->in->Close();
+		}
+	}
+
+
+	//PRESSURE REGULATOR B
+
+	//DIRECT O2
+	if (pressRegulatorBSwitch->GetState() == 2)
+	{
+		pressRegulatorBValve->in->Open();
+	}
+	//CLOSE
+	else if (pressRegulatorBSwitch->GetState() == 3)
+	{
+		pressRegulatorBValve->in->Close();
+	}
+	//EGRESS
+	else if (pressRegulatorBSwitch->GetState() == 0)
+	{
+		if (suitpress < 3.8 / PSI)
+		{
+			pressRegulatorBValve->in->Open();
+		}
+		else
+		{
+			pressRegulatorBValve->in->Close();
+		}
+	}
+	//CABIN
+	else if (pressRegulatorBSwitch->GetState() == 1)
+	{
+		if (suitpress < 4.8 / PSI)
+		{
+			pressRegulatorBValve->in->Open();
+		}
+		else
+		{
+			pressRegulatorBValve->in->Close();
 		}
 	}
 }
