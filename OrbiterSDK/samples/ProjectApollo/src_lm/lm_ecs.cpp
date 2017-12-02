@@ -66,7 +66,7 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 	{
 		cabinOVHDHatchValve->flowMax = 660.0 / LBH;
 
-			double cabinpress = cabinOVHDHatchValve->out->parent->space.Press;
+			double cabinpress = cabinOVHDHatchValve->in->parent->space.Press;
 			if (cabinpress < 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
 			{
 				cabinOVHDHatchValve->in->Open();
@@ -119,7 +119,7 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 	{
 		cabinFWDHatchValve->flowMax = 660.0 / LBH;
 
-		double cabinpress = cabinFWDHatchValve->out->parent->space.Press;
+		double cabinpress = cabinFWDHatchValve->in->parent->space.Press;
 		if (cabinpress < 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
 		{
 			cabinFWDHatchValve->in->Open();
