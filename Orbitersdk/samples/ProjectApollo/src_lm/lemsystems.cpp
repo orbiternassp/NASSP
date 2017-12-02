@@ -731,6 +731,10 @@ void LEM::SystemsInit()
 		(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValve, &PressRegAValve, &PressRegBValve);
+	OVHDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"),
+		&UpperHatchReliefValve);
+	FWDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE"),
+		&ForwardHatchReliefValve);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1368,6 +1372,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
 	CabinPressureRegulator.SystemTimestep(simdt),
+	OVHDCabinReliefDumpValve.SystemTimestep(simdt),
+	FWDCabinReliefDumpValve.SystemTimestep(simdt),
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
