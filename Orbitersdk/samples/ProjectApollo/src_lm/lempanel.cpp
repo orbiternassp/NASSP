@@ -950,15 +950,15 @@ void LEM::InitSwitches() {
     LiquidGarmentCoolingValve.AddPosition(5, 120);
 	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 
-	SuitCircuitReliefValve.AddPosition(0, 0);
-	SuitCircuitReliefValve.AddPosition(1, 90);
-	SuitCircuitReliefValve.AddPosition(2, 180);
-	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
+	SuitCircuitReliefValveSwitch.AddPosition(0, 0);
+	SuitCircuitReliefValveSwitch.AddPosition(1, 90);
+	SuitCircuitReliefValveSwitch.AddPosition(2, 180);
+	SuitCircuitReliefValveSwitch.Register(PSH, "SuitCircuitReliefValveSwitch", 1);
 
-	CabinGasReturnValve.AddPosition(0, 0);
-	CabinGasReturnValve.AddPosition(1, 90);
-	CabinGasReturnValve.AddPosition(2, 180);
-	CabinGasReturnValve.Register(PSH, "CabinGasReturnValve", 1);
+	CabinGasReturnValveSwitch.AddPosition(0, 0);
+	CabinGasReturnValveSwitch.AddPosition(1, 90);
+	CabinGasReturnValveSwitch.AddPosition(2, 180);
+	CabinGasReturnValveSwitch.Register(PSH, "CabinGasReturnValveSwitch", 1);
 
 	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
 	CO2CanisterSelect.SetSideways(true);
@@ -2643,8 +2643,8 @@ void LEM::SetSwitches(int panel) {
     LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow);
 
     SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
-    SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
-    CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+    SuitCircuitReliefValveSwitch.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+    CabinGasReturnValveSwitch.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
     CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
     CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], srf[SRF_BORDER_225x224], SuitCircuitAssySwitchRow);
     CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);

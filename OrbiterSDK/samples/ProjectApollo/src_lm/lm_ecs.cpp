@@ -203,11 +203,11 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 	{
 		double suitcircuitpress = SuitCircuitReliefValve->in->parent->space.Press;
 
-		if (suitcircuitpress > 4.7 / PSI && SuitCircuitReliefValve->in->open == 0)
+		if (suitcircuitpress > 4.3 / PSI)
 		{
 			SuitCircuitReliefValve->in->Open();
 		}
-		else if (suitcircuitpress < 4.3 / PSI && SuitCircuitReliefValve->in->open == 1)
+		else
 		{
 			SuitCircuitReliefValve->in->Close();
 		}
@@ -225,7 +225,7 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 			else
 			{
 				//0 flow at 4.3 psi, full flow at 4.7 psi
-				SuitCircuitReliefValve->flowMax = (7.8 / LBH) * (1.81818*(suitcircuitpress*PSI) - 9.54545); //Not sure what these numbers are, please fix me!
+				SuitCircuitReliefValve->flowMax = (7.8 / LBH) * (2.5*(suitcircuitpress*PSI) - 10.75);
 			}
 		}
 		else

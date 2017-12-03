@@ -1419,8 +1419,8 @@ protected:
 	RotationalSwitch LiquidGarmentCoolingValve;
 
 	SwitchRow SuitCircuitAssySwitchRow;
-	RotationalSwitch SuitCircuitReliefValve;
-	RotationalSwitch CabinGasReturnValve;
+	RotationalSwitch SuitCircuitReliefValveSwitch;
+	RotationalSwitch CabinGasReturnValveSwitch;
 	ToggleSwitch CO2CanisterSelect;
 	RotationalSwitch CO2CanisterPrimValve;
     PushSwitch       CO2CanisterPrimVent;
@@ -1750,6 +1750,7 @@ protected:
 	LEMCabinPressureRegulator CabinPressureRegulator;
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
+	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
 
 	// EDS
 	LEM_EDS eds;
