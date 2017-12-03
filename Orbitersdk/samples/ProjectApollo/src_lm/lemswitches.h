@@ -580,3 +580,14 @@ class DEDAPushSwitch : public PushSwitch {
 protected:
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 };
+
+class AscentO2RotationalSwitch : public RotationalSwitch
+{
+public:
+	AscentO2RotationalSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, PushSwitch *InhibitSw, RotationalSwitch *DesO2Sw);
+	virtual bool SwitchTo(int newValue);
+protected:
+	PushSwitch *InhibitSwitch;
+	RotationalSwitch *DesO2Switch;
+};
