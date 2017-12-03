@@ -83,6 +83,21 @@ protected:
 	RotationalSwitch *pressRegulatorSwitch;
 };
 
+class LEMSuitGasDiverter
+{
+public:
+	LEMSuitGasDiverter();
+	void Init(h_Tank *sgdv, h_Tank *cab, CircuitBrakerSwitch *sgds, CircuitBrakerSwitch *dvcb, RotationalSwitch* pras, RotationalSwitch *prbs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Tank *suitGasDiverterValve;
+	h_Tank *cabin;
+	CircuitBrakerSwitch *suitGasDiverterSwitch;
+	CircuitBrakerSwitch *DivertVLVCB;
+	RotationalSwitch *pressRegulatorASwitch;
+	RotationalSwitch *pressRegulatorBSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);

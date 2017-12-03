@@ -1386,7 +1386,7 @@ protected:
 	///////////////
 
 	SwitchRow ECSSuitGasDiverterSwitchRow;
-	CircuitBrakerSwitch SuitGasDiverter;
+	CircuitBrakerSwitch SuitGasDiverterSwitch;
 
 	SwitchRow OxygenControlSwitchRow;
 	RotationalSwitch CabinRepressValveSwitch;
@@ -1753,6 +1753,7 @@ protected:
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
+	LEMSuitGasDiverter SuitGasDiverter;
 
 	// EDS
 	LEM_EDS eds;

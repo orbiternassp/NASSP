@@ -359,6 +359,60 @@ void LEMSuitCircuitPressureRegulator::SystemTimestep(double simdt)
 	}
 }
 
+LEMSuitGasDiverter::LEMSuitGasDiverter()
+{
+	suitGasDiverterValve = NULL;
+	cabin = NULL;
+	suitGasDiverterSwitch = NULL;
+	DivertVLVCB = NULL;
+	pressRegulatorASwitch = NULL;
+	pressRegulatorBSwitch = NULL;
+}
+
+void LEMSuitGasDiverter::Init(h_Tank *sgdv, h_Tank *cab, CircuitBrakerSwitch *sgds, CircuitBrakerSwitch *dvcb, RotationalSwitch* pras, RotationalSwitch *prbs)
+{
+	suitGasDiverterValve = sgdv;
+	cabin = cab;
+	suitGasDiverterSwitch = sgds;
+	DivertVLVCB = dvcb;
+	pressRegulatorASwitch = pras;
+	pressRegulatorBSwitch = prbs;
+}
+
+void LEMSuitGasDiverter::SystemTimestep(double simdt)
+{
+	if (!suitGasDiverterValve) return;
+
+	// Valve in motion
+	if (suitGasDiverterValve->OUT_valve.pz) return;
+	if (suitGasDiverterValve->OUT2_valve.pz) return;
+
+	//Solenoid
+	if (suitGasDiverterSwitch->GetState() == 1 && DivertVLVCB->IsPowered())
+	{
+		//Cabin pressure
+		double cabinpress = cabin->space.Press;
+
+		if (cabinpress < 4.0 / PSI || pressRegulatorASwitch->GetState() == 0 || pressRegulatorBSwitch->GetState() == 0)
+		{
+			suitGasDiverterSwitch->SwitchTo(0);
+		}
+	}
+
+	//EGRESS
+	if (suitGasDiverterSwitch->GetState() == 0)
+	{
+		suitGasDiverterValve->OUT_valve.Close();
+		suitGasDiverterValve->OUT2_valve.Open();
+	}
+	//CABIN
+	else
+	{
+		suitGasDiverterValve->OUT_valve.Open();
+		suitGasDiverterValve->OUT2_valve.Close();
+	}
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;
