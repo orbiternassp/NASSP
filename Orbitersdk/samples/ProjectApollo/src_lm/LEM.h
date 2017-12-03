@@ -1394,8 +1394,8 @@ protected:
 	RotationalSwitch PressRegAValve;
 	RotationalSwitch PressRegBValve;
 	RotationalSwitch DESO2Valve;
-	RotationalSwitch ASCO2Valve1;
-	RotationalSwitch ASCO2Valve2;
+	AscentO2RotationalSwitch ASCO2Valve1;
+	AscentO2RotationalSwitch ASCO2Valve2;
 	PushSwitch IntlkOvrd;
 
 	SwitchRow SuitIsolSwitchRow;

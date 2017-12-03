@@ -2618,8 +2618,8 @@ void LEM::SetSwitches(int panel) {
     PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     DESO2Valve.Init(4, 163, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
-    ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
-    ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow, &IntlkOvrd, &DESO2Valve);
+    ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow, &IntlkOvrd, &DESO2Valve);
     IntlkOvrd.Init(234, 73, 68, 68, srf[SRF_LEM_INTLK_OVRD], srf[SRF_BORDER_68x68], OxygenControlSwitchRow);
 
     SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);

@@ -1788,3 +1788,28 @@ void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 173, width, height, SURF_PREDEF_CK);
 	}
 }
+
+AscentO2RotationalSwitch::AscentO2RotationalSwitch()
+{
+	InhibitSwitch = NULL;
+	DesO2Switch = NULL;
+}
+
+void AscentO2RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, PushSwitch *InhibitSw, RotationalSwitch *DesO2Sw)
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	InhibitSwitch = InhibitSw;
+	DesO2Switch = DesO2Sw;
+}
+
+bool AscentO2RotationalSwitch::SwitchTo(int newValue)
+{
+	if (newValue == 1 || InhibitSwitch->GetState() || DesO2Switch->GetState() == 1)
+	{
+		if (RotationalSwitch::SwitchTo(newValue)) {
+			return true;
+		}
+	}
+
+	return false;
+}
