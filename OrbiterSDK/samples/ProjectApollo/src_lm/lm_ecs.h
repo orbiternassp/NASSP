@@ -98,6 +98,17 @@ protected:
 	RotationalSwitch *pressRegulatorBSwitch;
 };
 
+class LEMCabinGasReturnValve
+{
+public:
+	LEMCabinGasReturnValve();
+	void Init(h_Pipe * cgrv, RotationalSwitch *cgrvs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *cabinGasReturnValve;
+	RotationalSwitch *cabinGasReturnValveSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);
