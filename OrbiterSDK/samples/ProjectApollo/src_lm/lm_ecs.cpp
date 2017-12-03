@@ -413,6 +413,49 @@ void LEMSuitGasDiverter::SystemTimestep(double simdt)
 	}
 }
 
+LEMCabinGasReturnValve::LEMCabinGasReturnValve()
+{
+	cabinGasReturnValve = NULL;
+	cabinGasReturnValveSwitch = NULL;
+}
+
+void LEMCabinGasReturnValve::Init(h_Pipe * cgrv, RotationalSwitch *cgrvs)
+{
+	cabinGasReturnValve = cgrv;
+	cabinGasReturnValveSwitch = cgrvs;
+}
+
+void LEMCabinGasReturnValve::SystemTimestep(double simdt)
+{
+	if (!cabinGasReturnValve) return;
+
+	// Valve in motion
+	if (cabinGasReturnValve->in->pz) return;
+
+	//OPEN
+	if (cabinGasReturnValveSwitch->GetState() == 0)
+	{
+		cabinGasReturnValve->in->Open();
+	}
+	//EGRESS
+	else if (cabinGasReturnValveSwitch->GetState() == 2)
+	{
+		cabinGasReturnValve->in->Close();
+	}
+	//AUTO
+	else if (cabinGasReturnValveSwitch->GetState() == 1)
+	{
+		if (cabinGasReturnValve->out->parent->space.Press > cabinGasReturnValve->in->parent->space.Press)
+		{
+			cabinGasReturnValve->in->Open();
+		}
+		else
+		{
+			cabinGasReturnValve->in->Close();
+		}
+	}
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;

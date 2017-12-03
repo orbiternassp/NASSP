@@ -1753,6 +1753,7 @@ protected:
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
+	LEMCabinGasReturnValve CabinGasReturnValve;
 	LEMSuitGasDiverter SuitGasDiverter;
 
 	// EDS
