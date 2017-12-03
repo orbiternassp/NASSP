@@ -631,8 +631,8 @@ void LEM::SystemsInit()
 	//O2Manifold->BoilAllAndSetTemp(295);
 
 	//Oxygen Pipe Initialization
-	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 3.72 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 3.72 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:ASC2O2PIPE", 3.72 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:DESO2PRESSURERELIEFVALVE", 3.72 / LBH);
@@ -727,11 +727,12 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ECA_4b, false);
 
 	// ECS
-	CabinPressureRegulator.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
-		(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
-		(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
-		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"),
-		&ECS_CABIN_REPRESS_CB, &CabinRepressValve, &PressRegAValve, &PressRegBValve);
+	CabinRepressValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
+		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
+	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
+	SuitCircuitPressureRegulatorB.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegBValve);
 	OVHDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"),
 		&UpperHatchReliefValve);
 	FWDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE"),
@@ -1374,7 +1375,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	VHF.SystemTimestep(simdt);
 	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
-	CabinPressureRegulator.SystemTimestep(simdt),
+	CabinRepressValve.SystemTimestep(simdt),
+	SuitCircuitPressureRegulatorA.SystemTimestep(simdt),
+	SuitCircuitPressureRegulatorB.SystemTimestep(simdt),
 	OVHDCabinReliefDumpValve.SystemTimestep(simdt),
 	FWDCabinReliefDumpValve.SystemTimestep(simdt),
 	SuitCircuitReliefValve.SystemTimestep(simdt),
@@ -1434,11 +1437,17 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	int *pressRegBvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:OUT:ISOPEN");
 
 	double *cabinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
-	double *suitPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
 	int *suitReliefvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:OUT2:ISOPEN");
 	double *suitReliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE:FLOW");
-	double *suitReliefflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE:FLOWMAX");*/
+	double *suitReliefflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE:FLOWMAX");
 
+	double *deso2flow2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE2:FLOW");
+	double *deso2flowmax2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE2:FLOWMAX");
+
+	double *repressFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS:FLOW");
+	double *repressFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS:FLOWMAX");*/
+
+	//sprintf(oapiDebugString(), "CABIN %f SUIT %f DESO2MANPRESS %f", (*cabinPress)*PSI, (*suitPress)*PSI, *DESO2ManifoldPress);
 	//sprintf(oapiDebugString(), "CAB %f SUIT %f VLV %d FLOW %f FLOWMAX %f", (*cabinPress)*PSI, (*suitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
