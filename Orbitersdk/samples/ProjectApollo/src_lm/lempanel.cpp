@@ -861,7 +861,7 @@ void LEM::InitSwitches() {
 	PanelOrdeal.Register(PSH, "PanelOrdeal", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 
 	// ECS Panel
-	SuitGasDiverter.Register(PSH, "SuitGasDiverter", 1);
+	SuitGasDiverterSwitch.Register(PSH, "SuitGasDiverterSwitch", 1);
 
 	CabinRepressValveSwitch.AddPosition(0, 0);
 	CabinRepressValveSwitch.AddPosition(1, 90);
@@ -2610,7 +2610,7 @@ void LEM::SetSwitches(int panel) {
 
 	// ECS Panel
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);
-	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow); // Need borders
+	SuitGasDiverterSwitch.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow); // Need borders
 
     OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
     CabinRepressValveSwitch.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);

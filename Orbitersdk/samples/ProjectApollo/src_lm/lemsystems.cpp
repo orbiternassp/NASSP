@@ -739,6 +739,9 @@ void LEM::SystemsInit()
 		&ForwardHatchReliefValve);
 	SuitCircuitReliefValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE"),
 		&SuitCircuitReliefValveSwitch);
+	SuitGasDiverter.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"),
+		&SuitGasDiverterSwitch, &ECS_DIVERT_VLV_CB, &PressRegAValve, &PressRegBValve);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1381,6 +1384,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	OVHDCabinReliefDumpValve.SystemTimestep(simdt),
 	FWDCabinReliefDumpValve.SystemTimestep(simdt),
 	SuitCircuitReliefValve.SystemTimestep(simdt),
+	SuitGasDiverter.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
@@ -1445,9 +1449,19 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *deso2flowmax2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PIPE2:FLOWMAX");
 
 	double *repressFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS:FLOW");
-	double *repressFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS:FLOWMAX");*/
+	double *repressFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS:FLOWMAX");
+	double *pressRegAFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT:FLOW");
+	double *pressRegAFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT:FLOWMAX");
 
-	//sprintf(oapiDebugString(), "CABIN %f SUIT %f DESO2MANPRESS %f", (*cabinPress)*PSI, (*suitPress)*PSI, *DESO2ManifoldPress);
+	int *fwdHatchvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:ISOPEN");
+	int *ovhdHatchvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT2:ISOPEN");
+	double *fwdHatchFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOW");
+	double *fwdHatchFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOWMAX");
+
+	int *suitGasDiverterCabinVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT:ISOPEN");
+	int *suitGasDiverterEgressVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT2:ISOPEN");*/
+
+	//sprintf(oapiDebugString(), "CABIN %f SUIT %f CABVLV %d EGRVLV %d", (*cabinPress)*PSI, (*suitPress)*PSI, *suitGasDiverterCabinVLV, *suitGasDiverterEgressVLV);
 	//sprintf(oapiDebugString(), "CAB %f SUIT %f VLV %d FLOW %f FLOWMAX %f", (*cabinPress)*PSI, (*suitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
