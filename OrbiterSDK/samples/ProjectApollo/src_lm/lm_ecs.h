@@ -98,6 +98,17 @@ protected:
 	RotationalSwitch *pressRegulatorBSwitch;
 };
 
+class LEMCO2CanisterSelect
+{
+public:
+	LEMCO2CanisterSelect();
+	void Init(h_Tank *co2v, ToggleSwitch* co2s);
+	void SystemTimestep(double simdt);
+protected:
+	h_Tank *CO2CanisterSelectValve;
+	ToggleSwitch *CO2CanisterSelectSwitch;
+};
+
 class LEMCabinGasReturnValve
 {
 public:

@@ -413,6 +413,40 @@ void LEMSuitGasDiverter::SystemTimestep(double simdt)
 	}
 }
 
+LEMCO2CanisterSelect::LEMCO2CanisterSelect()
+{
+	CO2CanisterSelectValve = NULL;
+	CO2CanisterSelectSwitch = NULL;
+}
+
+void LEMCO2CanisterSelect::Init(h_Tank *co2v, ToggleSwitch* co2s)
+{
+	CO2CanisterSelectValve = co2v;
+	CO2CanisterSelectSwitch = co2s;
+}
+
+void LEMCO2CanisterSelect::SystemTimestep(double simdt)
+{
+	if (!CO2CanisterSelectValve) return;
+
+	// Valve in motion
+	if (CO2CanisterSelectValve->OUT_valve.pz) return;
+	if (CO2CanisterSelectValve->OUT2_valve.pz) return;
+
+	//PRIM
+	if (CO2CanisterSelectSwitch->GetState() == 0)
+	{
+		CO2CanisterSelectValve->OUT_valve.Open();
+		CO2CanisterSelectValve->OUT2_valve.Close();
+	}
+	//SEC
+	else
+	{
+		CO2CanisterSelectValve->OUT_valve.Close();
+		CO2CanisterSelectValve->OUT2_valve.Open();
+	}
+}
+
 LEMCabinGasReturnValve::LEMCabinGasReturnValve()
 {
 	cabinGasReturnValve = NULL;
