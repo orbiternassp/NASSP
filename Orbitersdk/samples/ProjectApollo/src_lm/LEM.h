@@ -1389,7 +1389,7 @@ protected:
 	CircuitBrakerSwitch SuitGasDiverter;
 
 	SwitchRow OxygenControlSwitchRow;
-	RotationalSwitch CabinRepressValve;
+	RotationalSwitch CabinRepressValveSwitch;
 	RotationalSwitch PLSSFillValve;
 	RotationalSwitch PressRegAValve;
 	RotationalSwitch PressRegBValve;
@@ -1747,7 +1747,9 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
-	LEMCabinPressureRegulator CabinPressureRegulator;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
+	LEMCabinRepressValve CabinRepressValve;
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;

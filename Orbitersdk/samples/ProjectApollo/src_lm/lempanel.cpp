@@ -863,10 +863,10 @@ void LEM::InitSwitches() {
 	// ECS Panel
 	SuitGasDiverter.Register(PSH, "SuitGasDiverter", 1);
 
-	CabinRepressValve.AddPosition(0, 0);
-	CabinRepressValve.AddPosition(1, 90);
-	CabinRepressValve.AddPosition(2, 180);
-	CabinRepressValve.Register(PSH, "CabinRepressValve", 1);
+	CabinRepressValveSwitch.AddPosition(0, 0);
+	CabinRepressValveSwitch.AddPosition(1, 90);
+	CabinRepressValveSwitch.AddPosition(2, 180);
+	CabinRepressValveSwitch.Register(PSH, "CabinRepressValveSwitch", 1);
 
 	PLSSFillValve.AddPosition(0, 0);
 	PLSSFillValve.AddPosition(1, 210);
@@ -2613,7 +2613,7 @@ void LEM::SetSwitches(int panel) {
 	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow); // Need borders
 
     OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
-    CabinRepressValve.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    CabinRepressValveSwitch.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PLSSFillValve.Init(340, 7, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);

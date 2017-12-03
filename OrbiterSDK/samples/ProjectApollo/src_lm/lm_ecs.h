@@ -57,21 +57,30 @@ protected:
 	RotationalSwitch *SuitCircuitReliefValveSwitch;
 };
 
-class LEMCabinPressureRegulator
+class LEMCabinRepressValve
 {
 public:
-	LEMCabinPressureRegulator();
-	void Init(h_Pipe *crv, h_Pipe *prav, h_Pipe *prbv, h_Tank *sc, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
+	LEMCabinRepressValve();
+	void Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
 	void SystemTimestep(double simdt);
 protected:
 	h_Pipe *cabinRepressValve;
-	h_Pipe *pressRegulatorAValve;
-	h_Pipe *pressRegulatorBValve;
-	h_Tank *suitCircuit;
 	CircuitBrakerSwitch *cabinRepressCB;
 	RotationalSwitch *cabinRepressValveSwitch;
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
+};
+
+class LEMSuitCircuitPressureRegulator
+{
+public:
+	LEMSuitCircuitPressureRegulator();
+	void Init(h_Pipe *prv, h_Tank *sc, RotationalSwitch *prs);
+	void SystemTimestep(double simdt);
+protected:
+	h_Pipe *pressRegulatorValve;
+	h_Tank *suitCircuit;
+	RotationalSwitch *pressRegulatorSwitch;
 };
 
 class LEM_ECS {

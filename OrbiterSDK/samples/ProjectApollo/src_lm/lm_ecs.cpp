@@ -235,43 +235,30 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 	}
 }
 
-
-LEMCabinPressureRegulator::LEMCabinPressureRegulator()
+LEMCabinRepressValve::LEMCabinRepressValve()
 {
 	cabinRepressValve = NULL;
 	cabinRepressValveSwitch = NULL;
 	cabinRepressCB = NULL;
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
-	pressRegulatorAValve = NULL;
-	pressRegulatorBValve = NULL;
-	suitCircuit = NULL;
 }
 
-void LEMCabinPressureRegulator::Init(h_Pipe *crv, h_Pipe *prav, h_Pipe *prbv, h_Tank *sc, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
+void LEMCabinRepressValve::Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
 {
 	cabinRepressValve = crv;
 	cabinRepressValveSwitch = crvs;
 	cabinRepressCB = crcb;
 	pressRegulatorASwitch = pras;
 	pressRegulatorBSwitch = prbs;
-	pressRegulatorAValve = prav;
-	pressRegulatorBValve = prbv;
-	suitCircuit = sc;
 }
 
-void LEMCabinPressureRegulator::SystemTimestep(double simdt)
+void LEMCabinRepressValve::SystemTimestep(double simdt)
 {
 	if (!cabinRepressValve) return;
-	if (!pressRegulatorAValve) return;
-	if (!pressRegulatorBValve) return;
 
 	// Valve in motion
 	if (cabinRepressValve->in->pz) return;
-	if (pressRegulatorAValve->in->pz) return;
-	if (pressRegulatorBValve->in->pz) return;
-
-	//CABIN REPRESS VALVE
 
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
@@ -299,7 +286,7 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 			{
 				cabinRepressValve->in->Open();
 			}
-			else if(cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
+			else if (cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
 			{
 				cabinRepressValve->in->Close();
 			}
@@ -309,82 +296,65 @@ void LEMCabinPressureRegulator::SystemTimestep(double simdt)
 			cabinRepressValve->in->Close();
 		}
 	}
+}
+
+LEMSuitCircuitPressureRegulator::LEMSuitCircuitPressureRegulator()
+{
+	pressRegulatorSwitch = NULL;
+	pressRegulatorValve = NULL;
+	suitCircuit = NULL;
+}
+
+void LEMSuitCircuitPressureRegulator::Init(h_Pipe *prv, h_Tank *sc, RotationalSwitch *prs)
+{
+	pressRegulatorSwitch = prs;
+	pressRegulatorValve = prv;
+	suitCircuit = sc;
+}
+
+void LEMSuitCircuitPressureRegulator::SystemTimestep(double simdt)
+{
+	
+	if (!pressRegulatorValve) return;
+
+	// Valve in motion
+	if (pressRegulatorValve->in->pz) return;
 
 	//Suit pressure
 	double suitpress = suitCircuit->space.Press;
 
-	//PRESSURE REGULATOR A
-
 	//DIRECT O2
-	if (pressRegulatorASwitch->GetState() == 2)
+	if (pressRegulatorSwitch->GetState() == 2)
 	{
-		pressRegulatorAValve->in->Open();
+		pressRegulatorValve->in->Open();
 	}
 	//CLOSE
-	else if (pressRegulatorASwitch->GetState() == 3)
+	else if (pressRegulatorSwitch->GetState() == 3)
 	{
-		pressRegulatorAValve->in->Close();
+		pressRegulatorValve->in->Close();
 	}
 	//EGRESS
-	else if (pressRegulatorASwitch->GetState() == 0)
+	else if (pressRegulatorSwitch->GetState() == 0)
 	{
 		if (suitpress < 3.8 / PSI)
 		{
-			pressRegulatorAValve->in->Open();
+			pressRegulatorValve->in->Open();
 		}
 		else
 		{
-			pressRegulatorAValve->in->Close();
+			pressRegulatorValve->in->Close();
 		}
 	}
 	//CABIN
-	else if (pressRegulatorASwitch->GetState() == 1)
+	else if (pressRegulatorSwitch->GetState() == 1)
 	{
 		if (suitpress < 4.8 / PSI)
 		{
-			pressRegulatorAValve->in->Open();
+			pressRegulatorValve->in->Open();
 		}
 		else
 		{
-			pressRegulatorAValve->in->Close();
-		}
-	}
-
-
-	//PRESSURE REGULATOR B
-
-	//DIRECT O2
-	if (pressRegulatorBSwitch->GetState() == 2)
-	{
-		pressRegulatorBValve->in->Open();
-	}
-	//CLOSE
-	else if (pressRegulatorBSwitch->GetState() == 3)
-	{
-		pressRegulatorBValve->in->Close();
-	}
-	//EGRESS
-	else if (pressRegulatorBSwitch->GetState() == 0)
-	{
-		if (suitpress < 3.8 / PSI)
-		{
-			pressRegulatorBValve->in->Open();
-		}
-		else
-		{
-			pressRegulatorBValve->in->Close();
-		}
-	}
-	//CABIN
-	else if (pressRegulatorBSwitch->GetState() == 1)
-	{
-		if (suitpress < 4.8 / PSI)
-		{
-			pressRegulatorBValve->in->Open();
-		}
-		else
-		{
-			pressRegulatorBValve->in->Close();
+			pressRegulatorValve->in->Close();
 		}
 	}
 }
