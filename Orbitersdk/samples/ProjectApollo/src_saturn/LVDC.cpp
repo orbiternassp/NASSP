@@ -2720,6 +2720,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	INH = false;
 	INH1 = false;
 	INH2 = false;
+	INH3 = false;
 	init = false;
 	i_op = false;
 	liftoff = false;
@@ -3108,6 +3109,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
 	INH1 = true;							// inhibits first EPO roll/pitch maneuver
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
+	INH3 = false;
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
 	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
@@ -3464,6 +3466,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
+	oapiWriteScenario_int(scn, "LVDC_INH3", INH3);
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
@@ -4105,6 +4108,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
+		papiReadScenario_bool(line, "LVDC_INH3", INH3);
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
@@ -9448,6 +9452,11 @@ restartprep:
 				}
 			}
 			
+			if (INH3) //TLI permanently disabled?
+			{
+				goto orbitalguidance;
+			}
+
 			if (TAS - TB5 - T_ST < 0) //Sufficient time before S*T_P test?
 			{
 				fprintf(lvlog, "Time until first TB6 check = %f \r\n", TAS - TB5 - T_ST);
@@ -9477,9 +9486,20 @@ restartprep:
 		INHcheck:
 			 if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
 			{
-				GATE0 = GATE1 = false;	//Select second opportunity targeting
-				first_op = false;
-				goto orbitalguidance;
+				 if (first_op == false)
+				 {
+					 //Permanent TLI inhibt
+					 GATE0 = false;
+					 INH3 = true;
+					 goto orbitalguidance;
+				 }
+				 else
+				 {
+					 //Select second opportunity targeting
+					 GATE0 = GATE1 = false;
+					 first_op = false;
+					 goto orbitalguidance;
+				 }
 			}
 			else if (!GATE0)
 			{

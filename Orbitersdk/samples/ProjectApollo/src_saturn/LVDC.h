@@ -150,6 +150,7 @@ private:								// Saturn LV
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool GATE6;										// Logic gate that ensures only one pass through separation attitude calculation
 	bool INH,INH1,INH2;								// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
+	bool INH3;										// Permanently inhibit entry to restart preparation
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
