@@ -744,7 +744,12 @@ void LEM::SystemsInit()
 	CabinGasReturnValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINGASRETURN"),
 		&CabinGasReturnValveSwitch);
 	CO2CanisterSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
 		&CO2CanisterSelectSwitch);
+	CO2CanisterVent.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
+		&CO2CanisterPrimVent, &CO2CanisterSecVent);
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
 	ecs.Init(this);

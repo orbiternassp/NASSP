@@ -416,12 +416,16 @@ void LEMSuitGasDiverter::SystemTimestep(double simdt)
 LEMCO2CanisterSelect::LEMCO2CanisterSelect()
 {
 	CO2CanisterSelectValve = NULL;
+	PrimCO2Canister = NULL;
+	SecCO2Canister = NULL;
 	CO2CanisterSelectSwitch = NULL;
 }
 
-void LEMCO2CanisterSelect::Init(h_Tank *co2v, ToggleSwitch* co2s)
+void LEMCO2CanisterSelect::Init(h_Tank *co2v, h_Tank *pco2, h_Tank *sco2, ToggleSwitch* co2s)
 {
 	CO2CanisterSelectValve = co2v;
+	PrimCO2Canister = pco2;
+	SecCO2Canister = sco2;
 	CO2CanisterSelectSwitch = co2s;
 }
 
@@ -429,21 +433,82 @@ void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 {
 	if (!CO2CanisterSelectValve) return;
 
+	if (!PrimCO2Canister) return;
+
+	if (!SecCO2Canister) return;
+
 	// Valve in motion
 	if (CO2CanisterSelectValve->OUT_valve.pz) return;
 	if (CO2CanisterSelectValve->OUT2_valve.pz) return;
+	if (PrimCO2Canister->OUT_valve.pz) return;
+	if (SecCO2Canister->OUT_valve.pz) return;
 
 	//PRIM
 	if (CO2CanisterSelectSwitch->GetState() == 1)
 	{
 		CO2CanisterSelectValve->OUT_valve.Open();
 		CO2CanisterSelectValve->OUT2_valve.Close();
+		PrimCO2Canister->OUT_valve.Open();
+		SecCO2Canister->OUT_valve.Close();
 	}
 	//SEC
 	else
 	{
 		CO2CanisterSelectValve->OUT_valve.Close();
 		CO2CanisterSelectValve->OUT2_valve.Open();
+		PrimCO2Canister->OUT_valve.Close();
+		SecCO2Canister->OUT_valve.Open();
+	}
+}
+
+LEMCO2CanisterVent::LEMCO2CanisterVent()
+{
+	PrimCO2Canister = NULL;
+	SecCO2Canister = NULL;
+	CO2CanisterPrimVentSwitch = NULL;
+	CO2CanisterSecVentSwitch = NULL;
+}
+
+void LEMCO2CanisterVent::Init(h_Tank *pco2, h_Tank *sco2, PushSwitch *pco2v, PushSwitch *sco2v)
+{
+	PrimCO2Canister = pco2;
+	SecCO2Canister = sco2;
+	CO2CanisterPrimVentSwitch = pco2v;
+	CO2CanisterSecVentSwitch = sco2v;
+}
+
+void LEMCO2CanisterVent::SystemTimestep(double simdt)
+{
+
+	if (!PrimCO2Canister) return;
+
+	if (!SecCO2Canister) return;
+
+	if (!CO2CanisterPrimVentSwitch) return;
+
+	if (!CO2CanisterSecVentSwitch) return;
+
+	// Valve in motion
+	if (PrimCO2Canister->OUT2_valve.pz) return;
+	if (SecCO2Canister->OUT2_valve.pz) return;
+
+	//PRIM VENT
+	if (CO2CanisterPrimVentSwitch->GetState() == 1)
+	{
+		PrimCO2Canister->OUT2_valve.Open();
+	}
+	else
+	{
+		PrimCO2Canister->OUT2_valve.Close();
+	}
+	//SEC
+	if (CO2CanisterSecVentSwitch->GetState() == 1)
+	{
+		SecCO2Canister->OUT2_valve.Open();
+	}
+	else
+	{
+		SecCO2Canister->OUT2_valve.Close();
 	}
 }
 
