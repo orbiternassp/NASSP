@@ -1421,7 +1421,7 @@ protected:
 	SwitchRow SuitCircuitAssySwitchRow;
 	RotationalSwitch SuitCircuitReliefValveSwitch;
 	RotationalSwitch CabinGasReturnValveSwitch;
-	ToggleSwitch CO2CanisterSelect;
+	ToggleSwitch CO2CanisterSelectSwitch;
 	RotationalSwitch CO2CanisterPrimValve;
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
@@ -1755,6 +1755,7 @@ protected:
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
 	LEMCabinGasReturnValve CabinGasReturnValve;
 	LEMSuitGasDiverter SuitGasDiverter;
+	LEMCO2CanisterSelect CO2CanisterSelect;
 
 	// EDS
 	LEM_EDS eds;

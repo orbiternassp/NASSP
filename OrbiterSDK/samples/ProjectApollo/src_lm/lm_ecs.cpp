@@ -434,7 +434,7 @@ void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 	if (CO2CanisterSelectValve->OUT2_valve.pz) return;
 
 	//PRIM
-	if (CO2CanisterSelectSwitch->GetState() == 0)
+	if (CO2CanisterSelectSwitch->GetState() == 1)
 	{
 		CO2CanisterSelectValve->OUT_valve.Open();
 		CO2CanisterSelectValve->OUT2_valve.Close();

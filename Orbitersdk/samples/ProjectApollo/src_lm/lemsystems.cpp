@@ -743,6 +743,8 @@ void LEM::SystemsInit()
 		&SuitGasDiverterSwitch, &ECS_DIVERT_VLV_CB, &PressRegAValve, &PressRegBValve);
 	CabinGasReturnValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINGASRETURN"),
 		&CabinGasReturnValveSwitch);
+	CO2CanisterSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD"),
+		&CO2CanisterSelectSwitch);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1387,6 +1389,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SuitCircuitReliefValve.SystemTimestep(simdt);
 	SuitGasDiverter.SystemTimestep(simdt);
 	CabinGasReturnValve.SystemTimestep(simdt);
+	CO2CanisterSelect.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
@@ -1464,10 +1467,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	int *suitGasDiverterEgressVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT2:ISOPEN");
 
 	int *cabinGasReturnVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:LEAK:ISOPEN");
-	double *co2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:PRESS");*
+	double *co2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:PRESS");
+	int *primCO2VLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:OUT:ISOPEN");
+	int *secCO2VLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:OUT2:ISOPEN");*/
 
-	//sprintf(oapiDebugString(), "CABIN %lf SUIT %lf MANI %lf VLV %d", (*cabinPress)*PSI, (*suitPress)*PSI, (*co2ManifoldPress)*PSI, *cabinGasReturnVLV);
 
+	//sprintf(oapiDebugString(), "CABIN %lf SUIT %lf PRIMVLV %d SECVLV %d", (*cabinPress)*PSI, (*suitPress)*PSI, *primCO2VLV, *secCO2VLV);
 	//sprintf(oapiDebugString(), "CAB %f SUIT %f VLV %d FLOW %f FLOWMAX %f", (*cabinPress)*PSI, (*suitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
 	//sprintf(oapiDebugString(), "CabinP %f CabinT %f SuitP %f SuitT %f", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	//sprintf(oapiDebugString(), "DO2Q %f DO2P %f DO2T %f DO2VM %f DO2E %f DO2PP %f", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
