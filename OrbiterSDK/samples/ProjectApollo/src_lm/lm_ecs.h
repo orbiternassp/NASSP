@@ -102,10 +102,9 @@ class LEMCO2CanisterSelect
 {
 public:
 	LEMCO2CanisterSelect();
-	void Init(h_Tank *co2v, h_Tank *pco2, h_Tank *sco2, ToggleSwitch* co2s);
+	void Init(h_Tank *pco2, h_Tank *sco2, ToggleSwitch* co2s);
 	void SystemTimestep(double simdt);
 protected:
-	h_Tank *CO2CanisterSelectValve;
 	h_Tank *PrimCO2Canister;
 	h_Tank *SecCO2Canister;
 	ToggleSwitch *CO2CanisterSelectSwitch;

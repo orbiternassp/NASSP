@@ -415,15 +415,13 @@ void LEMSuitGasDiverter::SystemTimestep(double simdt)
 
 LEMCO2CanisterSelect::LEMCO2CanisterSelect()
 {
-	CO2CanisterSelectValve = NULL;
 	PrimCO2Canister = NULL;
 	SecCO2Canister = NULL;
 	CO2CanisterSelectSwitch = NULL;
 }
 
-void LEMCO2CanisterSelect::Init(h_Tank *co2v, h_Tank *pco2, h_Tank *sco2, ToggleSwitch* co2s)
+void LEMCO2CanisterSelect::Init(h_Tank *pco2, h_Tank *sco2, ToggleSwitch* co2s)
 {
-	CO2CanisterSelectValve = co2v;
 	PrimCO2Canister = pco2;
 	SecCO2Canister = sco2;
 	CO2CanisterSelectSwitch = co2s;
@@ -431,32 +429,32 @@ void LEMCO2CanisterSelect::Init(h_Tank *co2v, h_Tank *pco2, h_Tank *sco2, Toggle
 
 void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 {
-	if (!CO2CanisterSelectValve) return;
 
 	if (!PrimCO2Canister) return;
 
 	if (!SecCO2Canister) return;
 
 	// Valve in motion
-	if (CO2CanisterSelectValve->OUT_valve.pz) return;
-	if (CO2CanisterSelectValve->OUT2_valve.pz) return;
+
+	if (PrimCO2Canister->IN_valve.pz) return;
+	if (SecCO2Canister->IN_valve.pz) return;
 	if (PrimCO2Canister->OUT_valve.pz) return;
 	if (SecCO2Canister->OUT_valve.pz) return;
 
 	//PRIM
 	if (CO2CanisterSelectSwitch->GetState() == 1)
 	{
-		CO2CanisterSelectValve->OUT_valve.Open();
-		CO2CanisterSelectValve->OUT2_valve.Close();
+		PrimCO2Canister->IN_valve.Open();
 		PrimCO2Canister->OUT_valve.Open();
+		SecCO2Canister->IN_valve.Close();
 		SecCO2Canister->OUT_valve.Close();
 	}
 	//SEC
 	else
 	{
-		CO2CanisterSelectValve->OUT_valve.Close();
-		CO2CanisterSelectValve->OUT2_valve.Open();
+		PrimCO2Canister->IN_valve.Close();
 		PrimCO2Canister->OUT_valve.Close();
+		SecCO2Canister->IN_valve.Open();
 		SecCO2Canister->OUT_valve.Open();
 	}
 }
