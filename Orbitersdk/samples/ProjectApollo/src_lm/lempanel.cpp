@@ -974,7 +974,7 @@ void LEM::InitSwitches() {
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
 
-	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
+	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 1);
 
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
@@ -2650,7 +2650,7 @@ void LEM::SetSwitches(int panel) {
     CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
     CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], srf[SRF_BORDER_205x205], SuitCircuitAssySwitchRow);
     CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
-    WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
+	WaterSepSelectSwitch.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
 
     // Upper Hatch
     UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);

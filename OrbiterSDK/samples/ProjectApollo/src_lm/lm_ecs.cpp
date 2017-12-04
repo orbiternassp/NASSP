@@ -490,6 +490,40 @@ void LEMCabinGasReturnValve::SystemTimestep(double simdt)
 	}
 }
 
+LEMWaterSeparationSelector::LEMWaterSeparationSelector()
+{
+	WaterSeparationSelectorValve = NULL;
+	WaterSeparationSelectorSwitch = NULL;
+}
+
+void LEMWaterSeparationSelector::Init(h_Tank *wssv, CircuitBrakerSwitch* wsss)
+{
+	WaterSeparationSelectorValve = wssv;
+	WaterSeparationSelectorSwitch = wsss;
+}
+
+void LEMWaterSeparationSelector::SystemTimestep(double simdt)
+{
+	if (!WaterSeparationSelectorValve) return;
+
+	// Valve in motion
+	if (WaterSeparationSelectorValve->OUT_valve.pz) return;
+	if (WaterSeparationSelectorValve->OUT2_valve.pz) return;
+
+	//SEP1
+	if (WaterSeparationSelectorSwitch->GetState())
+	{
+		WaterSeparationSelectorValve->OUT_valve.Open();
+		WaterSeparationSelectorValve->OUT2_valve.Close();
+	}
+	//SEP2
+	else
+	{
+		WaterSeparationSelectorValve->OUT_valve.Close();
+		WaterSeparationSelectorValve->OUT2_valve.Open();
+	}
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;

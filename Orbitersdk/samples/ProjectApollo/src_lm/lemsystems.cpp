@@ -745,6 +745,8 @@ void LEM::SystemsInit()
 		&CabinGasReturnValveSwitch);
 	CO2CanisterSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD"),
 		&CO2CanisterSelectSwitch);
+	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
+		&WaterSepSelectSwitch);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1390,6 +1392,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SuitGasDiverter.SystemTimestep(simdt);
 	CabinGasReturnValve.SystemTimestep(simdt);
 	CO2CanisterSelect.SystemTimestep(simdt);
+	WaterSeparationSelector.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);

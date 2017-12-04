@@ -1426,7 +1426,7 @@ protected:
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
     PushSwitch       CO2CanisterSecVent;
-	CircuitBrakerSwitch WaterSepSelect;
+	CircuitBrakerSwitch WaterSepSelectSwitch;
 
 	/////////////////////
 	// LEM Upper Hatch //
@@ -1756,6 +1756,7 @@ protected:
 	LEMCabinGasReturnValve CabinGasReturnValve;
 	LEMSuitGasDiverter SuitGasDiverter;
 	LEMCO2CanisterSelect CO2CanisterSelect;
+	LEMWaterSeparationSelector WaterSeparationSelector;
 
 	// EDS
 	LEM_EDS eds;
