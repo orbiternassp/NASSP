@@ -434,7 +434,7 @@ void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 	if (CO2CanisterSelectValve->OUT2_valve.pz) return;
 
 	//PRIM
-	if (CO2CanisterSelectSwitch->GetState() == 0)
+	if (CO2CanisterSelectSwitch->GetState() == 1)
 	{
 		CO2CanisterSelectValve->OUT_valve.Open();
 		CO2CanisterSelectValve->OUT2_valve.Close();
@@ -487,6 +487,40 @@ void LEMCabinGasReturnValve::SystemTimestep(double simdt)
 		{
 			cabinGasReturnValve->in->Close();
 		}
+	}
+}
+
+LEMWaterSeparationSelector::LEMWaterSeparationSelector()
+{
+	WaterSeparationSelectorValve = NULL;
+	WaterSeparationSelectorSwitch = NULL;
+}
+
+void LEMWaterSeparationSelector::Init(h_Tank *wssv, CircuitBrakerSwitch* wsss)
+{
+	WaterSeparationSelectorValve = wssv;
+	WaterSeparationSelectorSwitch = wsss;
+}
+
+void LEMWaterSeparationSelector::SystemTimestep(double simdt)
+{
+	if (!WaterSeparationSelectorValve) return;
+
+	// Valve in motion
+	if (WaterSeparationSelectorValve->OUT_valve.pz) return;
+	if (WaterSeparationSelectorValve->OUT2_valve.pz) return;
+
+	//SEP1
+	if (WaterSeparationSelectorSwitch->GetState())
+	{
+		WaterSeparationSelectorValve->OUT_valve.Open();
+		WaterSeparationSelectorValve->OUT2_valve.Close();
+	}
+	//SEP2
+	else
+	{
+		WaterSeparationSelectorValve->OUT_valve.Close();
+		WaterSeparationSelectorValve->OUT2_valve.Open();
 	}
 }
 

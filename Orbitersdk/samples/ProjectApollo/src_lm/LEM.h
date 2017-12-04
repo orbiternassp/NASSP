@@ -1421,12 +1421,12 @@ protected:
 	SwitchRow SuitCircuitAssySwitchRow;
 	RotationalSwitch SuitCircuitReliefValveSwitch;
 	RotationalSwitch CabinGasReturnValveSwitch;
-	ToggleSwitch CO2CanisterSelect;
+	ToggleSwitch CO2CanisterSelectSwitch;
 	RotationalSwitch CO2CanisterPrimValve;
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
     PushSwitch       CO2CanisterSecVent;
-	CircuitBrakerSwitch WaterSepSelect;
+	CircuitBrakerSwitch WaterSepSelectSwitch;
 
 	/////////////////////
 	// LEM Upper Hatch //
@@ -1755,6 +1755,8 @@ protected:
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
 	LEMCabinGasReturnValve CabinGasReturnValve;
 	LEMSuitGasDiverter SuitGasDiverter;
+	LEMCO2CanisterSelect CO2CanisterSelect;
+	LEMWaterSeparationSelector WaterSeparationSelector;
 
 	// EDS
 	LEM_EDS eds;

@@ -960,8 +960,8 @@ void LEM::InitSwitches() {
 	CabinGasReturnValveSwitch.AddPosition(2, 180);
 	CabinGasReturnValveSwitch.Register(PSH, "CabinGasReturnValveSwitch", 1);
 
-	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
-	CO2CanisterSelect.SetSideways(true);
+	CO2CanisterSelectSwitch.Register(PSH, "CO2CanisterSelectSwitch", TOGGLESWITCH_UP);
+	CO2CanisterSelectSwitch.SetSideways(true);
 
 	CO2CanisterPrimValve.AddPosition(0, 0);
 	CO2CanisterPrimValve.AddPosition(1, 300);
@@ -974,7 +974,7 @@ void LEM::InitSwitches() {
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
 
-	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
+	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 1);
 
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
@@ -2645,12 +2645,12 @@ void LEM::SetSwitches(int panel) {
     SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
     SuitCircuitReliefValveSwitch.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
     CabinGasReturnValveSwitch.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
-    CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
+	CO2CanisterSelectSwitch.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
     CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], srf[SRF_BORDER_225x224], SuitCircuitAssySwitchRow);
     CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
     CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], srf[SRF_BORDER_205x205], SuitCircuitAssySwitchRow);
     CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
-    WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
+	WaterSepSelectSwitch.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
 
     // Upper Hatch
     UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
