@@ -437,9 +437,6 @@ void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 	// Valve in motion
 
 	if (PrimCO2Canister->IN_valve.pz) return;
-	if (SecCO2Canister->IN_valve.pz) return;
-	if (PrimCO2Canister->OUT_valve.pz) return;
-	if (SecCO2Canister->OUT_valve.pz) return;
 
 	//PRIM
 	if (CO2CanisterSelectSwitch->GetState() == 1)
@@ -461,52 +458,33 @@ void LEMCO2CanisterSelect::SystemTimestep(double simdt)
 
 LEMCO2CanisterVent::LEMCO2CanisterVent()
 {
-	PrimCO2Canister = NULL;
-	SecCO2Canister = NULL;
-	CO2CanisterPrimVentSwitch = NULL;
-	CO2CanisterSecVentSwitch = NULL;
+	CO2Canister = NULL;
+	CO2CanisterVentSwitch = NULL;
 }
 
-void LEMCO2CanisterVent::Init(h_Tank *pco2, h_Tank *sco2, PushSwitch *pco2v, PushSwitch *sco2v)
+void LEMCO2CanisterVent::Init(h_Tank *co2c, PushSwitch *co2vs)
 {
-	PrimCO2Canister = pco2;
-	SecCO2Canister = sco2;
-	CO2CanisterPrimVentSwitch = pco2v;
-	CO2CanisterSecVentSwitch = sco2v;
+	CO2Canister = co2c;
+	CO2CanisterVentSwitch = co2vs;
 }
 
 void LEMCO2CanisterVent::SystemTimestep(double simdt)
 {
 
-	if (!PrimCO2Canister) return;
+	if (!CO2Canister) return;
 
-	if (!SecCO2Canister) return;
-
-	if (!CO2CanisterPrimVentSwitch) return;
-
-	if (!CO2CanisterSecVentSwitch) return;
+	if (!CO2CanisterVentSwitch) return;
 
 	// Valve in motion
-	if (PrimCO2Canister->OUT2_valve.pz) return;
-	if (SecCO2Canister->OUT2_valve.pz) return;
+	if (CO2Canister->OUT2_valve.pz) return;
 
-	//PRIM VENT
-	if (CO2CanisterPrimVentSwitch->GetState() == 1)
+	if (CO2CanisterVentSwitch->GetState() == 1)
 	{
-		PrimCO2Canister->OUT2_valve.Open();
+		CO2Canister->OUT2_valve.Open();
 	}
 	else
 	{
-		PrimCO2Canister->OUT2_valve.Close();
-	}
-	//SEC
-	if (CO2CanisterSecVentSwitch->GetState() == 1)
-	{
-		SecCO2Canister->OUT2_valve.Open();
-	}
-	else
-	{
-		SecCO2Canister->OUT2_valve.Close();
+		CO2Canister->OUT2_valve.Close();
 	}
 }
 

@@ -750,9 +750,10 @@ void LEM::SystemsInit()
 	CO2CanisterSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
 		&CO2CanisterSelectSwitch);
-	CO2CanisterVent.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER"),
-		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
-		&CO2CanisterPrimVent, &CO2CanisterSecVent);
+	PrimCO2CanisterVent.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER"),
+		&CO2CanisterPrimVent);
+	SecCO2CanisterVent.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
+		&CO2CanisterSecVent);
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
 	ecs.Init(this);
@@ -1400,6 +1401,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SuitGasDiverter.SystemTimestep(simdt);
 	CabinGasReturnValve.SystemTimestep(simdt);
 	CO2CanisterSelect.SystemTimestep(simdt);
+	PrimCO2CanisterVent.SystemTimestep(simdt);
+	SecCO2CanisterVent.SystemTimestep(simdt);
 	WaterSeparationSelector.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);

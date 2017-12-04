@@ -1756,7 +1756,8 @@ protected:
 	LEMCabinGasReturnValve CabinGasReturnValve;
 	LEMSuitGasDiverter SuitGasDiverter;
 	LEMCO2CanisterSelect CO2CanisterSelect;
-	LEMCO2CanisterVent CO2CanisterVent;
+	LEMCO2CanisterVent PrimCO2CanisterVent;
+	LEMCO2CanisterVent SecCO2CanisterVent;
 	LEMWaterSeparationSelector WaterSeparationSelector;
 
 	// EDS

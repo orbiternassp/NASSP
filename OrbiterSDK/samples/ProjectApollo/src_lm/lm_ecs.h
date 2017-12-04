@@ -114,13 +114,11 @@ class LEMCO2CanisterVent
 {
 public:
 	LEMCO2CanisterVent();
-	void Init(h_Tank *pco2, h_Tank *sco2, PushSwitch *pco2v, PushSwitch *sco2v);
+	void Init(h_Tank *co2c, PushSwitch *co2vs);
 	void SystemTimestep(double simdt);
 protected:
-	h_Tank *PrimCO2Canister;
-	h_Tank *SecCO2Canister;
-	ToggleSwitch *CO2CanisterPrimVentSwitch;
-	ToggleSwitch *CO2CanisterSecVentSwitch;
+	h_Tank *CO2Canister;
+	PushSwitch *CO2CanisterVentSwitch;
 };
 
 class LEMCabinGasReturnValve
