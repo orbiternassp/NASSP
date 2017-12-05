@@ -358,8 +358,6 @@ void Saturn::SystemsInit() {
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OVENTPIPE", 150./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OINLETVENTPIPE", 100./ LBH);
 
-	SetPipeMaxFlow("HYDRAULIC:CABINPRESSURERELIEFMANIFOLD", 200. / LBH);
-
 	CrewStatus.Init(this);
 
 	//
