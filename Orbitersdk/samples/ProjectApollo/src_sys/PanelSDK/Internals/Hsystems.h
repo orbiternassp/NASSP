@@ -118,6 +118,7 @@ class H_system:public ship_system
 	void Create_h_HeatExchanger(char *line);
 	void Create_h_Evaporator(char *line);
 	void Create_h_MixingPipe(char *line);
+	void Create_h_Valve(char *line);
 
 public:
 
@@ -129,11 +130,11 @@ public:
 
 class h_Tank;
 
-class h_Valve				//valves are not h_objects, just "sockets" for piping
+class h_Valve : public ship_object
 {
 public:
 	h_Valve();
-	h_Valve(int i_open,int i_ct,float i_size, h_Tank* i_parent);
+	h_Valve(char *i_name, int i_open,int i_ct,float i_size, h_Tank* i_parent);
 	void Set(int i_open,int i_ct,float i_size,h_Tank* i_parent);
 	h_Tank* parent;		//pointer to the tank to which they belong
 	int open;
@@ -148,7 +149,8 @@ public:
 	void thermic(double _en);
 	int Flow(h_volume block);//block of substance flowing INTO  the valve
 	h_volume GetFlow(double dPdT, double maxMass = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
-	void Refresh(double dt);	//for open/close updating
+	virtual void refresh(double dt);	//for open/close updating
+	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
 };
 

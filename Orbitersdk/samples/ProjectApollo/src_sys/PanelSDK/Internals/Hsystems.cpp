@@ -255,6 +255,14 @@ void H_system::Load(FILEHANDLE scn) {
 				mixer->h_pump = one;
 				mixer->ratio = ratio;
 			}
+		} else if (!strnicmp(line, "<VALVE>", 7)) {
+			sscanf(line + 7, "%s %i %f", string1, &one, &size1);
+			h_Valve *valve = (h_Valve*)GetSystemByName(string1);
+			if (valve)
+			{
+				valve->open = one;
+				valve->size = size1;
+			}
 		}
 		oapiReadScenario_nextline (scn, line);
 	}
@@ -536,8 +544,8 @@ h_Valve::h_Valve() {
 	pz = 0;
 }
 
-h_Valve::h_Valve(int i_open,int i_ct,float i_size,h_Tank *i_parent) {
-
+h_Valve::h_Valve(char *i_name, int i_open,int i_ct,float i_size,h_Tank *i_parent) {
+	strcpy(name, i_name);
 	open = i_open;
 	closing_time = i_ct;
 	parent = i_parent;
@@ -593,7 +601,7 @@ h_volume h_Valve::GetFlow(double dPdT, double maxMass) {
 	return parent->GetFlow(vol, maxMass);
 }
 
-void h_Valve::Refresh(double dt) {
+void h_Valve::refresh(double dt) {
 
 	if (h_open)	{	
 		pz = (float) (h_open * 0.1);
@@ -612,6 +620,16 @@ void h_Valve::Refresh(double dt) {
 			pz = 0;
 			open = 1;
 		}
+	}
+}
+
+void h_Valve::Save(FILEHANDLE scn) {
+
+	char text[100];
+
+	if (*name != '\0') {
+		sprintf(text, " %s %i %f", name, open, size);
+		oapiWriteScenario_string(scn, "   <VALVE>", text);
 	}
 }
 
@@ -681,10 +699,10 @@ void h_Tank::refresh(double dt) {
 	Temp = space.Temp;
 	energy = space.Q;
 
-	IN_valve.Refresh(dt);
-	OUT_valve.Refresh(dt);
-	OUT2_valve.Refresh(dt);
-	LEAK_valve.Refresh(dt);
+	IN_valve.refresh(dt);
+	OUT_valve.refresh(dt);
+	OUT2_valve.refresh(dt);
+	LEAK_valve.refresh(dt);
 }
 
 void h_Tank::operator +=(h_substance add) { 
@@ -1074,7 +1092,7 @@ void h_Evaporator::refresh(double dt) {
 			
 			// recalc source
 			liquidSource->parent->space.GetQ();
-			liquidSource->parent->space.GetMass(); 
+			liquidSource->parent->space.GetMass();
 			liquidSource->parent->mass -= flow;
 
 			// evaporate liquid

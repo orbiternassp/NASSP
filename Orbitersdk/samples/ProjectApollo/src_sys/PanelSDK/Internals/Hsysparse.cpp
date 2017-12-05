@@ -160,6 +160,31 @@ void H_system::Create_h_MixingPipe(char *line) {
 	AddSystem(new h_MixingPipe(name, pump, in1, in2, out, targetTemp));
 }
 
+void H_system::Create_h_Valve(char *line) {
+
+	char name[100], parentName[100];
+	int i_open = 0;
+	int i_ct = 0;
+	float i_size = 0;
+	h_Tank *parent;
+
+	if (sscanf(line + 7, " %s", name) <= 0)
+		name[0] = '\0';
+
+	line = ReadConfigLine();
+	while (strnicmp(line, "</VALVE>", 8)) {
+
+		sscanf(line, "%s %i %i %f",
+			parentName, &i_open, &i_ct, &i_size);
+
+		line = ReadConfigLine();
+	}
+
+	parent = (h_Tank*)GetPointerByString(parentName);
+
+	AddSystem(new h_Valve(name, i_open, i_ct, i_size, parent));
+}
+
 void H_system::Create_h_Vent(char *line) {
 
 	char name[100];
@@ -324,6 +349,8 @@ void H_system::Build() {
 			Create_h_Evaporator(line);
 		else if(Compare(line,"<MIXINGPIPE>"))
 			Create_h_MixingPipe(line);
+		else if (Compare(line, "<VALVE>"))
+			Create_h_Valve(line);
 
 		line = ReadConfigLine();
 	}
