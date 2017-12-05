@@ -630,7 +630,8 @@ void LEM::SystemsInit()
 	DesO2Manifold->BoilAllAndSetTemp(295);
 	//O2Manifold->BoilAllAndSetTemp(295);
 
-	//Oxygen Pipe Initialization
+	//Oxygen Pipe Initialization   
+	//****Need to go through these and remove any unnecessary ones****
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 3.72 / LBH);
