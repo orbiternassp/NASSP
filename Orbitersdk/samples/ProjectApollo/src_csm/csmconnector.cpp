@@ -1071,10 +1071,10 @@ bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 
 void CSMToLEMECSConnector::Disconnect()
 {
-	SaturnConnector::Disconnect();
-
 	OurVessel->ConnectTunnelToCabinVent();
 	ConnectLMTunnelToCabinVent();
+
+	SaturnConnector::Disconnect();
 }
 
 h_Pipe* CSMToLEMECSConnector::GetDockingTunnelPipe()
