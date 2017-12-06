@@ -243,7 +243,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
 	omni_aft(_V(0.0, 0.0, -1.0)),
-	ecs(Panelsdk)
+	ecs(Panelsdk),
+	CSMToLEMECSConnector(this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -354,8 +355,10 @@ void LEM::Init()
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
+	LEMToCSMConnector.AddTo(&CSMToLEMECSConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
 
 	//

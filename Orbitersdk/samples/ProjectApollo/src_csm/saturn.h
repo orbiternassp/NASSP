@@ -961,6 +961,9 @@ public:
 	bool GetTLIInhibitSignal();
 	bool GetIUUPTLMAccept();
 
+	//CSM to LM interface functions
+	void GetCMTunnelPipe(h_Pipe *pipe) { pipe = CMTunnel; }
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -3509,6 +3512,9 @@ protected:
 	Boiler *H2TanksHeaters[2];
 	Boiler *H2TanksFans[2];
 
+	//Tunnel Pipe
+	h_Pipe *CMTunnel;
+
 	// Main bus A and B.
 	DCbus *MainBusA;
 	DCbus *MainBusB;
@@ -4241,6 +4247,7 @@ protected:
 
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
+	CSMToLEMECSConnector lemECSConnector;
 
 	//
 	// PanelSDK pointers.

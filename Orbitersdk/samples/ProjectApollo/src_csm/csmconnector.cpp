@@ -1042,3 +1042,53 @@ void CSMToSIVBControlConnector::StopSeparationPyros()
 
 	SendMessage(cm);
 }
+
+CSMToLEMECSConnector::CSMToLEMECSConnector(Saturn *s) : SaturnConnector(s)
+{
+
+}
+
+CSMToLEMECSConnector::~CSMToLEMECSConnector()
+{
+
+}
+
+bool CSMToLEMECSConnector::ConnectTo(Connector *other)
+{
+	if (SaturnConnector::ConnectTo(other))
+	{
+		h_Pipe *cmpipe = NULL, *lmpipe = NULL;
+
+		OurVessel->GetCMTunnelPipe(cmpipe);
+		GetDockingTunnelPipe(lmpipe);
+
+		cmpipe->out = lmpipe->in;
+
+		lmpipe->in = NULL;
+
+		return true;
+	}
+
+	return false;
+}
+
+void CSMToLEMECSConnector::Disconnect()
+{
+	SaturnConnector::Disconnect();
+
+	h_Pipe *cmpipe = NULL, *lmpipe = NULL;
+
+	OurVessel->GetCMTunnelPipe(cmpipe);
+	GetDockingTunnelPipe(lmpipe);
+}
+
+void CSMToLEMECSConnector::GetDockingTunnelPipe(h_Pipe *pipe)
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = 0;
+	cm.val1.pValue = pipe;
+
+	SendMessage(cm);
+}

@@ -69,6 +69,28 @@
 #include "payload.h"
 
 // Systems things
+
+class LEM;
+
+class LEMConnector : public Connector
+{
+public:
+	LEMConnector(LEM *l);
+	~LEMConnector();
+
+	void SetLEM(LEM *lem) { OurVessel = lem; };
+
+protected:
+	LEM *OurVessel;
+};
+
+class LEMECSConnector : public LEMConnector
+{
+public:
+	LEMECSConnector(LEM *l);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
 // ELECTRICAL
 // LEM to CSM Power Connector
 class LEMPowerConnector : public Connector
@@ -534,6 +556,7 @@ public:
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
 	void SetPipeMaxFlow(char *pipe, double flow);
+	void GetLMTunnelPipe(h_Pipe *pipe);
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
@@ -1638,6 +1661,7 @@ protected:
 	MultiConnector LEMToCSMConnector;				// This carries data *FROM* CSMToLEMPowerConnector
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
+	LEMECSConnector CSMToLEMECSConnector;
 
 	char AudioLanguage[64];
 

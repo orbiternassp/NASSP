@@ -203,6 +203,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
+	lemECSConnector(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(ThumbClick),
@@ -509,6 +510,7 @@ void Saturn::initSaturn()
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	lemECSConnector.SetType(LEM_CSM_ECS);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 
 	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
@@ -3595,6 +3597,7 @@ void Saturn::GenericLoadStateSetup()
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
 	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
+	CSMToLEMConnector.AddTo(&lemECSConnector);
 
 	//
 	// Disable cabin fans.

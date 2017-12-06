@@ -1571,9 +1571,52 @@ void LEM::SetPipeMaxFlow(char *pipe, double flow) {
 	p->flowMax = flow;
 }
 
+void LEM::GetLMTunnelPipe(h_Pipe *pipe)
+{
+	pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED");
+}
 
 
 // SYSTEMS COMPONENTS
+
+LEMConnector::LEMConnector(LEM *l)
+
+{
+	OurVessel = l;
+}
+
+LEMConnector::~LEMConnector()
+
+{
+}
+
+LEMECSConnector::LEMECSConnector(LEM *l) : LEMConnector(l)
+{
+	type = NO_CONNECTION;
+	connectedTo = 0;
+}
+
+bool LEMECSConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
+	
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	if (m.messageType == 0)
+	{
+		OurVessel->GetLMTunnelPipe((h_Pipe *)m.val1.pValue);
+
+		return true;
+	}
+	
+	return false;
+}
+
 // UMBILICAL
 LEMPowerConnector::LEMPowerConnector(){
 	type = NO_CONNECTION;

@@ -340,6 +340,8 @@ void Saturn::SystemsInit() {
 					&OxygenSMSupplyRotary, &OxygenSurgeTankRotary, &OxygenRepressPackageRotary, &O2MainRegulatorASwitch, &O2MainRegulatorBSwitch,
 					&HatchEmergencyO2ValveSwitch, &HatchRepressO2ValveSwitch);
 
+	CMTunnel = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET1", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET2", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SURGETANKINLET1", 100./ LBH);
