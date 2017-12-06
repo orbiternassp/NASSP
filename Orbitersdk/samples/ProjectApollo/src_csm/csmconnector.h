@@ -122,7 +122,8 @@ public:
 	bool ConnectTo(Connector *other);
 	void Disconnect();
 
-	void GetDockingTunnelPipe(h_Pipe *pipe);
+	h_Pipe* GetDockingTunnelPipe();
+	void ConnectLMTunnelToCabinVent();
 };
 
 #endif // _PA_CSMCONNECTOR_H

@@ -263,6 +263,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
+	RegisterConnector(0, &lemECSConnector);
 }
 
 Saturn::~Saturn()
@@ -3597,7 +3598,6 @@ void Saturn::GenericLoadStateSetup()
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
 	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
-	CSMToLEMConnector.AddTo(&lemECSConnector);
 
 	//
 	// Disable cabin fans.
@@ -4673,6 +4673,14 @@ bool Saturn::GetCMCSIVBCutoff()
 		return true;
 
 	return false;
+}
+
+void Saturn::ConnectTunnelToCabinVent()
+{
+	h_Pipe *pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+	h_Vent *vent = (h_Vent *)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT");
+
+	pipe->out = &vent->IN_valve;
 }
 
 void Saturn::SetContrailLevel(double level)

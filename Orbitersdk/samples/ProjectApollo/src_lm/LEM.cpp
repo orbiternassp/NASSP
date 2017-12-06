@@ -358,7 +358,6 @@ void LEM::Init()
 	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
-	LEMToCSMConnector.AddTo(&CSMToLEMECSConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
 
 	//
@@ -390,6 +389,7 @@ void LEM::Init()
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &LEMToCSMConnector);
+	RegisterConnector(0, &CSMToLEMECSConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){

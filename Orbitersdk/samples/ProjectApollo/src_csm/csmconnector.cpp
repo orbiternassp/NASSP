@@ -1057,13 +1057,10 @@ bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 {
 	if (SaturnConnector::ConnectTo(other))
 	{
-		h_Pipe *cmpipe = NULL, *lmpipe = NULL;
-
-		OurVessel->GetCMTunnelPipe(cmpipe);
-		GetDockingTunnelPipe(lmpipe);
+		h_Pipe *cmpipe = OurVessel->GetCMTunnelPipe();
+		h_Pipe *lmpipe = GetDockingTunnelPipe();
 
 		cmpipe->out = lmpipe->in;
-
 		lmpipe->in = NULL;
 
 		return true;
@@ -1076,19 +1073,31 @@ void CSMToLEMECSConnector::Disconnect()
 {
 	SaturnConnector::Disconnect();
 
-	h_Pipe *cmpipe = NULL, *lmpipe = NULL;
-
-	OurVessel->GetCMTunnelPipe(cmpipe);
-	GetDockingTunnelPipe(lmpipe);
+	OurVessel->ConnectTunnelToCabinVent();
+	ConnectLMTunnelToCabinVent();
 }
 
-void CSMToLEMECSConnector::GetDockingTunnelPipe(h_Pipe *pipe)
+h_Pipe* CSMToLEMECSConnector::GetDockingTunnelPipe()
 {
 	ConnectorMessage cm;
 
 	cm.destination = type;
 	cm.messageType = 0;
-	cm.val1.pValue = pipe;
+
+	if (SendMessage(cm))
+	{
+		return static_cast<h_Pipe *> (cm.val1.pValue);
+	}
+
+	return NULL;
+}
+
+void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = 1;
 
 	SendMessage(cm);
 }

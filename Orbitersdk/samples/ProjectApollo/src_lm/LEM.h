@@ -45,6 +45,7 @@
 #include "lm_aca.h"
 #include "lm_ttca.h"
 #include "lm_ecs.h"
+#include "lemconnector.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -69,37 +70,6 @@
 #include "payload.h"
 
 // Systems things
-
-class LEM;
-
-class LEMConnector : public Connector
-{
-public:
-	LEMConnector(LEM *l);
-	~LEMConnector();
-
-	void SetLEM(LEM *lem) { OurVessel = lem; };
-
-protected:
-	LEM *OurVessel;
-};
-
-class LEMECSConnector : public LEMConnector
-{
-public:
-	LEMECSConnector(LEM *l);
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
-
-// ELECTRICAL
-// LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
-{
-public:
-	LEMPowerConnector();
-	int csm_power_latch;
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
 
 // XLunar Bus Controller Voltage Source
 class LEM_XLBSource : public e_object {
@@ -556,7 +526,8 @@ public:
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
 	void SetPipeMaxFlow(char *pipe, double flow);
-	void GetLMTunnelPipe(h_Pipe *pipe);
+	h_Pipe* GetLMTunnelPipe();
+	void ConnectTunnelToCabinVent();
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
