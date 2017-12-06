@@ -623,20 +623,24 @@ void LEM::SystemsInit()
 	AscO2Tank2 = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK2");
 	DesO2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD");
 	O2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD");
+	PressRegA = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA");
+	PressRegB = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB");
 
 	DesO2Tank->BoilAllAndSetTemp(295);
 	AscO2Tank1->BoilAllAndSetTemp(295);
 	AscO2Tank2->BoilAllAndSetTemp(295);
-	DesO2Manifold->BoilAllAndSetTemp(295);
+	//DesO2Manifold->BoilAllAndSetTemp(295);
 	//O2Manifold->BoilAllAndSetTemp(295);
+	//PressRegA->BoilAllAndSetTemp(295);
+	//PressRegB->BoilAllAndSetTemp(295);
 
 	//Oxygen Pipe Initialization   
 	//****Need to go through these and remove any unnecessary ones****
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 660.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:CABINREPRESS", 396. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRESSREGAIN", 6.75 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRESSREGBIN", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CABINREPRESS", 396.0 / LBH);
+	//SetPipeMaxFlow("HYDRAULIC:PRESSREGAIN", 6.75 / LBH);
+	//SetPipeMaxFlow("HYDRAULIC:PRESSREGBIN", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGAOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGBOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRELIEFVALVE", 7.8 / LBH);
@@ -1438,7 +1442,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *DESO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:PRESS");
 	double *DESO2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:MASS");
-	double *PressRegAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:PRESS");
 
 	int *deso2outvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK:OUT:ISOPEN");
 	int *deso2manifoldinvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:IN:ISOPEN");
@@ -1461,6 +1464,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *suitPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
 	int *pressRegAvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:OUT:ISOPEN");
 	int *pressRegBvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:OUT:ISOPEN");
+	double *PressRegAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:PRESS");
+	double *PressRegBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:PRESS");
+	double *PressRegAMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:MASS");
+	double *PressRegBMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:MASS");
 
 	double *cabinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	int *suitReliefvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:OUT2:ISOPEN");
@@ -1509,7 +1516,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *desO2reliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PRESSURERELIEFVALVE:FLOW");
 
 
-	sprintf(oapiDebugString(), "DO2BVF %lf DO2RVF %lf DO2Q %lf DO2P %lf DO2MP %lf RPF %lf PRAF %lf PRBF %lf", *desO2burstflow, *desO2reliefflow, ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), *repressFlow, *pressRegAFlow, *pressRegBFlow);
+	sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2MQ %lf DO2MP %lf O2MQ %lf O2MP %lf PRAP %lf PRBP %lf PRAM %lf PRBM %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2ManifoldMass, (*DESO2ManifoldPress)*PSI, *O2ManifoldMass, (*O2ManifoldPress)*PSI, (*PressRegAPress)*PSI, (*PressRegBPress)*PSI, *PressRegAMass, *PressRegBMass);
 	//sprintf(oapiDebugString(), "SMP %lf SF1P %lf SF2P %lf HXCP %lf WS1P %lf WS2P %lf HXHP %lf", (*suitfanmanifoldPress)*PSI, (*suitfan1Press)*PSI, (*suitfan2Press)*PSI, (*hxcoolingPress)*PSI, (*ws1Press)*PSI, (*ws2Press)*PSI, (*hxheatingPress)*PSI);
 	//sprintf(oapiDebugString(), "CO2 MP %lf PRIM CO2 %lf SEC CO2 %lf CAB %lf SUIT %lf PV %d PF %lf SV %d SF %lf", (*co2ManifoldPress)*PSI, (*primCo2CanisterPress)*PSI, (*secCo2CanisterPress)*PSI, (*cabinPress)*PSI, (*suitPress)*PSI, *primCO2Vent, *primCO2Flow, *secCO2Vent, *secCO2Flow);
 	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf VLV %d FLOW %lf FLOWMAX %lf", (*cabinPress)*PSI, (*suitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
