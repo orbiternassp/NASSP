@@ -148,6 +148,7 @@ typedef struct {
 	double CabinRepressFlowLBH;
 	double EmergencyCabinRegulatorFlowLBH;
 	double O2RepressPressurePSI;
+	double TunnelPressurePSI;
 } AtmosStatus;
 
 ///
@@ -960,6 +961,10 @@ public:
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
 	bool GetIUUPTLMAccept();
+
+	//CSM to LM interface functions
+	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
+	void ConnectTunnelToCabinVent();
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -3509,6 +3514,9 @@ protected:
 	Boiler *H2TanksHeaters[2];
 	Boiler *H2TanksFans[2];
 
+	//Tunnel Pipe
+	h_Pipe *CMTunnel;
+
 	// Main bus A and B.
 	DCbus *MainBusA;
 	DCbus *MainBusB;
@@ -3602,6 +3610,7 @@ protected:
 	SaturnSideHatch SideHatch;
 	SaturnWaterController WaterController;
 	SaturnGlycolCoolingController GlycolCoolingController;
+	SaturnLMTunnelVent LMTunnelVent;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -4241,6 +4250,7 @@ protected:
 
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
+	CSMToLEMECSConnector lemECSConnector;
 
 	//
 	// PanelSDK pointers.
@@ -4288,6 +4298,7 @@ protected:
 	double *pSecECSAccumulatorQuantity;
 	double *pPotableH2oTankQuantity;
 	double *pWasteH2oTankQuantity;
+	double *pCSMTunnelPressure;
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
@@ -4360,6 +4371,7 @@ protected:
 	friend class SaturnHighGainAntennaStrengthMeter;
 	friend class SaturnSystemTestAttenuator;
 	friend class SaturnLVSPSPcMeter;
+	friend class SaturnLMDPGauge;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

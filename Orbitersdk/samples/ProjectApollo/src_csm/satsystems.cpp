@@ -340,6 +340,8 @@ void Saturn::SystemsInit() {
 					&OxygenSMSupplyRotary, &OxygenSurgeTankRotary, &OxygenRepressPackageRotary, &O2MainRegulatorASwitch, &O2MainRegulatorBSwitch,
 					&HatchEmergencyO2ValveSwitch, &HatchRepressO2ValveSwitch);
 
+	CMTunnel = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET1", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET2", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SURGETANKINLET1", 100./ LBH);
@@ -485,6 +487,9 @@ void Saturn::SystemsInit() {
 						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
 	
 	GlycolCoolingController.Init(this);
+	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
+					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSUREEQUALIZATIONVALVE"),
+					  &LMTunnelVentValve);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -1264,6 +1269,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		O2SMSupply.SystemTimestep(tFactor);
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
+		LMTunnelVent.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
@@ -2402,6 +2408,7 @@ void Saturn::ClearPanelSDKPointers()
 	pSecECSAccumulatorQuantity = 0;
 	pPotableH2oTankQuantity = 0;
 	pWasteH2oTankQuantity = 0;
+	pCSMTunnelPressure = 0;
 }
 
 //
@@ -2444,6 +2451,7 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.CabinRepressFlowLBH = 0.0;
 	atm.EmergencyCabinRegulatorFlowLBH = 0.0;
 	atm.O2RepressPressurePSI = 0.0;
+	atm.TunnelPressurePSI = 0.0;
 
 	if (!pCO2Level) {
 		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -2546,6 +2554,15 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	}
 	if (pEmergencyCabinRegulatorFlow) {
 		atm.EmergencyCabinRegulatorFlowLBH = (*pEmergencyCabinRegulatorFlow) * LBH;
+	}
+
+	if (!pCSMTunnelPressure)
+	{
+		pCSMTunnelPressure = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:PRESS");
+	}
+	if (pCSMTunnelPressure)
+	{
+		atm.TunnelPressurePSI = (*pCSMTunnelPressure)*PSI;
 	}
 }
 

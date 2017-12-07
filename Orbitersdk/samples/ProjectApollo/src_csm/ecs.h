@@ -321,4 +321,16 @@ protected:
 	h_Evaporator *secEvap;
 };
 
+class SaturnLMTunnelVent
+{
+public:
+	SaturnLMTunnelVent();
+	void Init(h_Valve *tvv, h_Valve *tpv, RotationalSwitch *lmtvs);
+	void SystemTimestep(double simdt);
+protected:
+	RotationalSwitch *LMTunnelVentSwitch;
+	h_Valve *TunnelVentValve;
+	h_Valve *TunnelPressValve;
+};
+
 #endif // _PA_ECS_H
