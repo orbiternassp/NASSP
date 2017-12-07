@@ -143,6 +143,24 @@ protected:
 	CircuitBrakerSwitch *WaterSeparationSelectorSwitch;
 };
 
+class LEMCabinFan
+{
+public:
+	LEMCabinFan(Sound &cabinfanS);
+	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs);
+	void SystemTimestep(double simdt);
+protected:
+
+	void CabinFanSound();
+	void StopCabinFanSound();
+
+	CircuitBrakerSwitch *cabinFan1CB;
+	CircuitBrakerSwitch *cabinFanContCB;
+	RotationalSwitch *pressRegulatorASwitch;
+	RotationalSwitch *pressRegulatorBSwitch;
+	Sound &cabinfansound;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);

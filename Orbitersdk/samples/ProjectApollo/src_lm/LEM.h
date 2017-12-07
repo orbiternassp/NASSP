@@ -45,6 +45,7 @@
 #include "lm_aca.h"
 #include "lm_ttca.h"
 #include "lm_ecs.h"
+#include "lemconnector.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -69,15 +70,6 @@
 #include "payload.h"
 
 // Systems things
-// ELECTRICAL
-// LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
-{
-public:
-	LEMPowerConnector();
-	int csm_power_latch;
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
 
 // XLunar Bus Controller Voltage Source
 class LEM_XLBSource : public e_object {
@@ -534,6 +526,8 @@ public:
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
 	void SetPipeMaxFlow(char *pipe, double flow);
+	h_Pipe* GetLMTunnelPipe();
+	void ConnectTunnelToCabinVent();
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
@@ -649,7 +643,6 @@ protected:
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_AOTReticle (SURFHANDLE surf);
 	void SwitchClick();
-	void CabinFanSound();
 	void VoxSound();
 	void ButtonClick();
 	void GuardClick();
@@ -659,8 +652,6 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
-
-	bool CabinFansActive();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -1642,6 +1633,7 @@ protected:
 	MultiConnector LEMToCSMConnector;				// This carries data *FROM* CSMToLEMPowerConnector
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
+	LEMECSConnector CSMToLEMECSConnector;
 
 	char AudioLanguage[64];
 
@@ -1763,6 +1755,7 @@ protected:
 	LEMCO2CanisterVent PrimCO2CanisterVent;
 	LEMCO2CanisterVent SecCO2CanisterVent;
 	LEMWaterSeparationSelector WaterSeparationSelector;
+	LEMCabinFan CabinFan;
 
 	// EDS
 	LEM_EDS eds;

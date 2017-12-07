@@ -203,6 +203,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
+	lemECSConnector(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(ThumbClick),
@@ -262,6 +263,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
+	RegisterConnector(0, &lemECSConnector);
 }
 
 Saturn::~Saturn()
@@ -509,6 +511,7 @@ void Saturn::initSaturn()
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	lemECSConnector.SetType(LEM_CSM_ECS);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 
 	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
@@ -4670,6 +4673,14 @@ bool Saturn::GetCMCSIVBCutoff()
 		return true;
 
 	return false;
+}
+
+void Saturn::ConnectTunnelToCabinVent()
+{
+	h_Pipe *pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+	h_Vent *vent = (h_Vent *)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT");
+
+	pipe->out = &vent->IN_valve;
 }
 
 void Saturn::SetContrailLevel(double level)

@@ -111,4 +111,19 @@ public:
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
 
+class h_Pipe;
+
+class CSMToLEMECSConnector : public SaturnConnector
+{
+public:
+	CSMToLEMECSConnector(Saturn *s);
+	~CSMToLEMECSConnector();
+
+	bool ConnectTo(Connector *other);
+	void Disconnect();
+
+	h_Pipe* GetDockingTunnelPipe();
+	void ConnectLMTunnelToCabinVent();
+};
+
 #endif // _PA_CSMCONNECTOR_H
