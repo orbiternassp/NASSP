@@ -2835,12 +2835,6 @@ void LEM::GuardClick()
 	Gclick.play(NOLOOP,255);
 }
 
-void LEM::CabinFanSound()
-
-{
-	CabinFans.play(LOOP,255);
-}
-
 void LEM::VoxSound()
 
 {

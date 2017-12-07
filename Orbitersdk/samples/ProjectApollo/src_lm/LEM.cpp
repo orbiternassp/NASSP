@@ -243,6 +243,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
 	omni_aft(_V(0.0, 0.0, -1.0)),
+	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this)
 {
@@ -427,10 +428,6 @@ void LEM::DoFirstTimestep()
 #ifdef DIRECTSOUNDENABLED
 	NextEventTime = 0.0;
 #endif
-
-	if (CabinFansActive()) {
-		CabinFans.play(LOOP,255);
-	}
 
 	char VName10[256]="";
 

@@ -565,6 +565,60 @@ void LEMWaterSeparationSelector::SystemTimestep(double simdt)
 	}
 }
 
+LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
+{
+	cabinFan1CB = NULL;
+	cabinFanContCB = NULL;
+	pressRegulatorASwitch = NULL;
+	pressRegulatorBSwitch = NULL;
+}
+
+void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs)
+{
+	cabinFan1CB = cf1cb;
+	cabinFanContCB = cfccb;
+	pressRegulatorASwitch = pras;
+	pressRegulatorBSwitch = prbs;
+}
+
+void LEMCabinFan::SystemTimestep(double simdt)
+{
+	bool cabinFanSwitch;
+
+	if (cabinFanContCB->IsPowered() && (pressRegulatorASwitch->GetState() == 0 || pressRegulatorBSwitch->GetState() == 0))
+	{
+		cabinFanContCB->DrawPower(1.1);
+		cabinFanSwitch = true;
+	}
+	else
+	{
+		cabinFanSwitch = false;
+	}
+
+	if (cabinFan1CB->IsPowered() && !cabinFanSwitch)
+	{
+		cabinFan1CB->DrawPower(35.5);
+		CabinFanSound();
+
+		//TBD: Switching heat exchanger on I guess?
+	}
+	else
+	{
+		StopCabinFanSound();
+		//TBD: Switching heat exchanger off I guess?
+	}
+}
+
+void LEMCabinFan::CabinFanSound()
+{
+	cabinfansound.play(LOOP, 200);
+}
+
+void LEMCabinFan::StopCabinFanSound()
+{
+	cabinfansound.stop();
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;
