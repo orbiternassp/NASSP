@@ -3489,6 +3489,8 @@ protected:
 	OMNI omnib;
 	OMNI omnic;
 	OMNI omnid;
+	VHFAntenna vhfa;
+	VHFAntenna vhfb;
 	EMS  ems;
 
 	// CM Optics
