@@ -722,7 +722,7 @@ double LEM_ECS::GetSuitPressurePSI() {
 
 double LEM_ECS::GetSuitCO2MMHg() {
 	if (!Suit_CO2) {
-		Suit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
+		Suit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
 	return *Suit_CO2 * MMHG;
 }
@@ -764,28 +764,28 @@ double LEM_ECS::GetSuitTemperature() {
 
 double LEM_ECS::GetPrimaryGlycolPressure() {
 	if (!Primary_CL_Glycol_Press) {
-		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP:PRESS");
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
 	}
-	return *Primary_CL_Glycol_Press;
+	return *Primary_CL_Glycol_Press * PSI;
 }
 
 double LEM_ECS::GetPrimaryGlycolTemperature() {
 	if (!Primary_CL_Glycol_Temp) {
-		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP:TEMP");
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
 	}
-	return *Primary_CL_Glycol_Temp;
+	return *Primary_CL_Glycol_Temp * 1.8 - 459.67;
 }
 
 double LEM_ECS::GetSecondaryGlycolPressure() {
 	if (!Secondary_CL_Glycol_Press) {
-		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP:PRESS");
+		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:PRESS");
 	}
-	return *Secondary_CL_Glycol_Press;
+	return *Secondary_CL_Glycol_Press * PSI;
 }
 
 double LEM_ECS::GetSecondaryGlycolTemperature() {
 	if (!Secondary_CL_Glycol_Temp) {
-		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP:TEMP");
+		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:TEMP");
 	}
-	return *Secondary_CL_Glycol_Temp;
+	return *Secondary_CL_Glycol_Temp * 1.8 - 459.67;
 }

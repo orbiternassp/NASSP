@@ -541,6 +541,8 @@ public:
 	h_Tank *O2Manifold;
 	h_Tank *PressRegA;
 	h_Tank *PressRegB;
+	h_Tank *HXHeating;
+	h_Tank *HXCooling;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);

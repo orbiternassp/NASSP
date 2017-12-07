@@ -625,54 +625,56 @@ void LEM::SystemsInit()
 	O2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD");
 	PressRegA = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA");
 	PressRegB = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB");
+	HXHeating = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING");
+	HXCooling = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING");
 
 	DesO2Tank->BoilAllAndSetTemp(294.261);
 	AscO2Tank1->BoilAllAndSetTemp(294.261);
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
-	DesO2Manifold->BoilAllAndSetTemp(294.261);
-	O2Manifold->BoilAllAndSetTemp(294.261);
-	PressRegA->BoilAllAndSetTemp(294.261);
-	PressRegB->BoilAllAndSetTemp(294.261);
+	//DesO2Manifold->BoilAllAndSetTemp(294.261);
+	//O2Manifold->BoilAllAndSetTemp(294.261);
+	//PressRegA->BoilAllAndSetTemp(294.261);
+	//PressRegB->BoilAllAndSetTemp(294.261);
 
 	//Oxygen Pipe Initialization   
 	//****Need to go through these and remove any unnecessary ones****
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:CABINREPRESS", 396.0 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:PRESSREGAIN", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:PRESSREGBIN", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGAIN", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRESSREGBIN", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGAOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGBOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRELIEFVALVE", 7.8 / LBH);
 
-	/*
-	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:ASC2O2PIPE", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:DESO2PRESSURERELIEFVALVE", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:DESO2BURSTDISK", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PLSSO2FILL", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:CDRSUITISOL", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:LMPSUITISOL", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:CDRSUITHOSE", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:LMPSUITHOSE", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITOUT", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTERCABINOUT", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTEREGRESSOUT", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:CABINGASRETURN", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRIMCO2INLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SECCO2INLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRIMCO2VENT", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SECCO2VENT", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRIMCO2OUTLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SECCO2OUTLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITFAN1INLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITFAN2INLET", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET1", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET2", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET1", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET2", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN1", 3.72 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN2", 3.72 / LBH);*/
+	
+	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:ASC2O2PIPE", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2PRESSURERELIEFVALVE", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESO2BURSTDISK", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PLSSO2FILL", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CDRSUITISOL", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:LMPSUITISOL", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CDRSUITHOSE", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:LMPSUITHOSE", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITOUT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTERCABINOUT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITGASDIVERTEREGRESSOUT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:CABINGASRETURN", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMCO2INLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SECCO2INLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMCO2VENT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SECCO2VENT", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMCO2OUTLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SECCO2OUTLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITFAN1INLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITFAN2INLET", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET1", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET2", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET1", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET2", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN1", 6.75 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN2", 6.75 / LBH);
 
 
 	// Mission timer.
@@ -1436,6 +1438,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	O2Manifold->BoilAllAndSetTemp(294.261);
 	PressRegA->BoilAllAndSetTemp(294.261);
 	PressRegB->BoilAllAndSetTemp(294.261);
+	//HXHeating->BoilAllAndSetTemp(297.039);
+	//HXCooling->BoilAllAndSetTemp(297.039);
 
 	// Debug tests //
 
@@ -1473,6 +1477,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *PressRegBMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:MASS");
 	double *PressRegATemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:TEMP");
 	double *PressRegBTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:TEMP");
+
+	double *SuitCircuitMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:MASS");
 
 	int *suitReliefvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:OUT2:ISOPEN");
 	double *suitReliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE:FLOW");
@@ -1514,13 +1520,30 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *hxcoolingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:PRESS");
 	double *ws1Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPARATOR1:PRESS");
 	double *ws2Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPARATOR2:PRESS");
+
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
+	double *hxheatingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:MASS");
+	double *CDRIsolPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:PRESS");
+	double *CDRIsolMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:MASS");
+	double *LMPIsolPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:PRESS");
+	double *LMPIsolMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:MASS");
+	double *SGDPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
+	double *SGDMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:MASS");
+	double *hxcoolingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:MASS");
 
 	double *desO2burstflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2BURSTDISK:FLOW");
 	double *desO2reliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PRESSURERELIEFVALVE:FLOW");
 
+	double *primglycoltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+	double *primglycolpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
+	double *primglycolpump = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PUMP");
+	double *primglycolpower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:POWER");
 
-	sprintf(oapiDebugString(), "BDF %lf RVF %lf CabinP %lf CabinT %lf SuitP %lf SuitT %lf", *desO2burstflow, *desO2reliefflow, ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
+
+
+	//sprintf(oapiDebugString(), "CabinT %lf SuitT %lf GlycolT %lf GlycolPower %lf", ecs.GetCabinTemperature(), ecs.GetSuitTemperature(), ecs.GetPrimaryGlycolTemperature(), *primglycolpower);
+	//sprintf(oapiDebugString(), "SCT %lf SCM %1f SCP %lf HXHM %1f HXHP %lf CDRM %1f CDRP %lf LMPM %1f LMPP %lf SGDM %1f SGDP %lf HXCM %1f HXCP %lf", ecs.GetSuitTemperature(), *SuitCircuitMass, ecs.GetSuitPressurePSI(), *hxheatingMass, (*hxheatingPress)*PSI, *CDRIsolMass, (*CDRIsolPress)*PSI, *LMPIsolMass, (*LMPIsolPress)*PSI, *SGDMass, (*SGDPress)*PSI, *hxcoolingMass, (*hxcoolingPress)*PSI);
+	//sprintf(oapiDebugString(), "BDF %lf RVF %lf CabinP %lf CabinT %lf SuitP %lf SuitT %lf", *desO2burstflow, *desO2reliefflow, ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	//sprintf(oapiDebugString(), "PRAQ %lf PRAP %lf PRAT %lf PRBQ %lf PRBP %lf PRBT %lf", *PressRegAMass, (*PressRegAPress)*PSI, *PressRegATemp, *PressRegBMass, (*PressRegBPress)*PSI, *PressRegBTemp);
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2TT %lf DO2MQ %lf DO2MP %lf DO2MT %lf O2MQ %lf O2MP %lf O2MT %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2ManifoldMass, (*DESO2ManifoldPress)*PSI, *O2ManifoldTemp, *O2ManifoldMass, (*O2ManifoldPress)*PSI, *O2ManifoldTemp);
 	//sprintf(oapiDebugString(), "SMP %lf SF1P %lf SF2P %lf HXCP %lf WS1P %lf WS2P %lf HXHP %lf", (*suitfanmanifoldPress)*PSI, (*suitfan1Press)*PSI, (*suitfan2Press)*PSI, (*hxcoolingPress)*PSI, (*ws1Press)*PSI, (*ws2Press)*PSI, (*hxheatingPress)*PSI);
