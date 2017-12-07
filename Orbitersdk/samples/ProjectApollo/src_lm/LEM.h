@@ -643,7 +643,6 @@ protected:
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_AOTReticle (SURFHANDLE surf);
 	void SwitchClick();
-	void CabinFanSound();
 	void VoxSound();
 	void ButtonClick();
 	void GuardClick();
@@ -653,8 +652,6 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
-
-	bool CabinFansActive();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -1758,6 +1755,7 @@ protected:
 	LEMCO2CanisterVent PrimCO2CanisterVent;
 	LEMCO2CanisterVent SecCO2CanisterVent;
 	LEMWaterSeparationSelector WaterSeparationSelector;
+	LEMCabinFan CabinFan;
 
 	// EDS
 	LEM_EDS eds;
