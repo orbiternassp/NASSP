@@ -861,7 +861,7 @@ void LEM::InitSwitches() {
 	PanelOrdeal.Register(PSH, "PanelOrdeal", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 
 	// ECS Panel
-	SuitGasDiverterSwitch.Register(PSH, "SuitGasDiverterSwitch", 1);
+	SuitGasDiverterSwitch.Register(PSH, "SuitGasDiverterSwitch", 0);
 
 	CabinRepressValveSwitch.AddPosition(0, 0);
 	CabinRepressValveSwitch.AddPosition(1, 90);
@@ -912,7 +912,7 @@ void LEM::InitSwitches() {
 
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
-	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 0);
+	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
 
 	PrimEvap1FlowValve.AddPosition(0, 15);
 	PrimEvap1FlowValve.AddPosition(1, 300);
@@ -920,7 +920,7 @@ void LEM::InitSwitches() {
 
 	PrimEvap2FlowValve.AddPosition(0, 0);
 	PrimEvap2FlowValve.AddPosition(1, 270);
-	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 0);
+	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 1);
 
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
@@ -974,7 +974,7 @@ void LEM::InitSwitches() {
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
 
-	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 1);
+	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 0);
 
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
