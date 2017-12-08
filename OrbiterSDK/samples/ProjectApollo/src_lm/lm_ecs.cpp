@@ -870,14 +870,14 @@ double LEM_ECS::GetSuitTemperature() {
 
 double LEM_ECS::GetPrimaryGlycolPressure() {
 	if (!Primary_CL_Glycol_Press) {
-		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:PRESS");
 	}
 	return *Primary_CL_Glycol_Press * PSI;
 }
 
 double LEM_ECS::GetPrimaryGlycolTemperature() {
 	if (!Primary_CL_Glycol_Temp) {
-		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
 	}
 	return *Primary_CL_Glycol_Temp * 1.8 - 459.67;
 }
