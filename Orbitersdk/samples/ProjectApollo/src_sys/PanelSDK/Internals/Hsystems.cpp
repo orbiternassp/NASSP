@@ -1222,3 +1222,54 @@ void h_crew::Save(FILEHANDLE scn) {
 	sprintf(text," %s %i", name, number);
 	oapiWriteScenario_string(scn, "   <CREW>", text);
 }
+
+h_CO2Scrubber::h_CO2Scrubber(char *i_name, double i_flowmax, h_Valve* in_v, h_Valve* out_v)
+
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	flowMax = i_flowmax;
+	in = in_v;
+	out = out_v;
+
+	co2removalrate = 0;
+	flow = 0;
+}
+
+void h_CO2Scrubber::refresh(double dt) {
+
+	co2removalrate = 0;
+
+	flow = 0;
+	if ((!in) || (!out)) return;
+
+	if (out->open && in->open) {
+
+		double delta_p = in->GetPress() - out->GetPress();
+		if (delta_p < 0)
+			delta_p = 0;
+
+		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+		co2removalrate = fanned.composition[SUBSTANCE_CO2].mass / dt;
+
+		if (co2removalrate <= 0.0356) {
+			fanned.composition[SUBSTANCE_CO2].mass =
+				fanned.composition[SUBSTANCE_CO2].vapor_mass =
+				fanned.composition[SUBSTANCE_CO2].Q = 0;
+		}
+		else {
+			double removedmass = 0.0356 * dt;
+			double factor = (fanned.composition[SUBSTANCE_CO2].mass - removedmass) / fanned.composition[SUBSTANCE_CO2].mass;
+			fanned.composition[SUBSTANCE_CO2].mass -= removedmass;
+			fanned.composition[SUBSTANCE_CO2].vapor_mass -= removedmass;
+			fanned.composition[SUBSTANCE_CO2].Q = fanned.composition[SUBSTANCE_CO2].Q * factor;
+
+			co2removalrate = removedmass / dt;
+		}
+
+		// flow to output
+		flow = fanned.GetMass() / dt;
+		fanned.GetQ();
+		out->Flow(fanned);
+	}
+}
