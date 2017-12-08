@@ -119,6 +119,7 @@ class H_system:public ship_system
 	void Create_h_Evaporator(char *line);
 	void Create_h_MixingPipe(char *line);
 	void Create_h_Valve(char *line);
+	void Create_h_CO2Scrubber(char *line);
 
 public:
 
@@ -309,6 +310,22 @@ public:
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);
 	virtual void Save(FILEHANDLE scn);
+};
+
+class h_CO2Scrubber : public h_object {
+
+public:
+	h_CO2Scrubber(char *i_name, double i_flowmax, h_Valve *in_v, h_Valve *out_v);
+
+	h_Valve* in;
+	h_Valve* out;
+
+	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
+
+	double co2removalrate;
+	double flow;	// in g/s
+	double flowMax;
 };
 
 #endif
