@@ -760,6 +760,9 @@ void LEM::SystemsInit()
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
 	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve);
+	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
+		&WaterTankSelectValve);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1408,6 +1411,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	PrimCO2CanisterVent.SystemTimestep(simdt);
 	SecCO2CanisterVent.SystemTimestep(simdt);
 	WaterSeparationSelector.SystemTimestep(simdt);
+	WaterTankSelect.SystemTimestep(simdt);
 	CabinFan.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);

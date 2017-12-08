@@ -1756,6 +1756,7 @@ protected:
 	LEMCO2CanisterVent SecCO2CanisterVent;
 	LEMWaterSeparationSelector WaterSeparationSelector;
 	LEMCabinFan CabinFan;
+	LEMWaterTankSelect WaterTankSelect;
 
 	// EDS
 	LEM_EDS eds;

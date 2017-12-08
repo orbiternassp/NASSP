@@ -161,6 +161,18 @@ protected:
 	Sound &cabinfansound;
 };
 
+class LEMWaterTankSelect
+{
+public:
+	LEMWaterTankSelect();
+	void Init(h_Tank *wts, h_Tank *st, RotationalSwitch *wtss);
+	void SystemTimestep(double simdt);
+protected:
+	h_Tank *WaterTankSelect;
+	h_Tank *SurgeTank;
+	RotationalSwitch *WaterTankSelectSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);
