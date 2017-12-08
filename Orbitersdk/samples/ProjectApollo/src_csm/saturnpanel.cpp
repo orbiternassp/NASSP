@@ -1235,15 +1235,18 @@ bool Saturn::clbkLoadPanel (int id) {
 		/////////////////
 		// Panel 10/12 //
 		/////////////////
-		
-		oapiRegisterPanelArea (AID_PANEL10_LEFT_SWITCHES,			_R( 774, 476,  808, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL10_LEFT_THUMWBWHEELS,		_R( 836, 472,  853, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL10_CENTER_SWITCHES,			_R( 943, 588,  977, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL10_RIGHT_THUMBWHEELS,		_R(1067, 472, 1084, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL10_RIGHT_SWITCHES,			_R(1112, 476, 1146, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_TUNNEL_VENT_VALVE,			_R(1709, 297, 1747, 335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LM_DP_GAUGE,						_R(1681, 448, 1767, 530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
 
+		int xoffset = 320;
+		
+		oapiRegisterPanelArea (AID_PANEL10_LEFT_SWITCHES,			_R( 774 + xoffset, 1476,  808 + xoffset, 1731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL10_LEFT_THUMWBWHEELS,		_R( 836 + xoffset, 1472,  853 + xoffset, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL10_CENTER_SWITCHES,			_R( 943 + xoffset, 1588,  977 + xoffset, 1731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL10_RIGHT_THUMBWHEELS,		_R(1067 + xoffset, 1472, 1084 + xoffset, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL10_RIGHT_SWITCHES,			_R(1112 + xoffset, 1476, 1146 + xoffset, 1731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_TUNNEL_VENT_VALVE,			_R(1709 + xoffset, 1297, 1747 + xoffset, 1335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_DP_GAUGE,						_R(1681 + xoffset, 1448, 1767 + xoffset, 1530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PRESS_EQUAL_VALVE_HANDLE,		_R(1148          ,  476, 1412          ,  740), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			     	PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -3166,6 +3169,9 @@ void Saturn::SetSwitches(int panel) {
 	LMDPGaugeRow.Init(AID_LM_DP_GAUGE, MainPanel, &GaugePower);
 	LMDPGauge.Init(g_Param.pen[6], g_Param.pen[6], LMDPGaugeRow, this);
 
+	PressEqualValveRow.Init(AID_PRESS_EQUAL_VALVE_HANDLE, MainPanel);
+	PressEqualValve.Init(0, 0, 264, 264, srf[SRF_CSM_VENT_VALVE_HANDLE], NULL, PressEqualValveRow);
+	
 	////////////////////////
 	// Panel 325/326 etc. //
 	////////////////////////
@@ -5978,6 +5984,12 @@ void Saturn::InitSwitches() {
 	LMTunnelVentValve.Register(PSH, "LMTunnelVentValve", 0);
 
 	LMDPGauge.Register(PSH, "LMDPGauge", -1, 4, 5);
+
+	PressEqualValve.AddPosition(0, 120);
+	PressEqualValve.AddPosition(1, 150);
+	PressEqualValve.AddPosition(2, 180);
+	PressEqualValve.AddPosition(3, 210);
+	PressEqualValve.Register(PSH, "PressEqualValve", 3);
 
 	WasteMGMTOvbdDrainDumpRotary.AddPosition(0,   0);
 	WasteMGMTOvbdDrainDumpRotary.AddPosition(1,  90);
