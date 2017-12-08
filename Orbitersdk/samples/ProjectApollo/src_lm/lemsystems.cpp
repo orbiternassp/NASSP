@@ -659,16 +659,6 @@ void LEM::SystemsInit()
 	SetPipeMaxFlow("HYDRAULIC:SECCO2INLET", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRIMCO2VENT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SECCO2VENT", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:PRIMCO2OUTLET", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SECCO2OUTLET", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITFAN1INLET", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITFAN2INLET", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET1", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGINLET2", 6.75 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET1", 6.75 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLINGOUTLET2", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN1", 6.75 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRETURN2", 6.75 / LBH);
 
 
 	// Mission timer.
@@ -1516,11 +1506,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *secCO2VentFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2VENT:FLOW");
 
 	double *suitfanmanifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD:PRESS");
-	double *suitfan1Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN1:PRESS");
-	double *suitfan2Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN2:PRESS");
 	double *hxcoolingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:PRESS");
-	double *ws1Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPARATOR1:PRESS");
-	double *ws2Press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPARATOR2:PRESS");
 
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
 	double *hxheatingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:TEMP");
