@@ -1273,3 +1273,49 @@ void h_CO2Scrubber::refresh(double dt) {
 		out->Flow(fanned);
 	}
 }
+
+h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v, h_Valve* out_v, h_Valve *i_H2Owaste)
+
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	in = in_v;
+	out = out_v;
+	H20waste = i_H2Owaste;
+	flowMax = i_flowmax;
+
+	flow = 0;
+}
+
+void h_WaterSeparator::refresh(double dt) {
+
+	flow = 0;
+	if ((!in) || (!out)) return;
+
+	if (out->open && in->open) {
+
+		double delta_p = in->GetPress() - out->GetPress();
+		if (delta_p < 0)
+			delta_p = 0;
+
+		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+
+		// separate water
+		h_volume h2o_volume;
+		h2o_volume.Void();
+		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass;
+		h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+		h2o_volume.GetQ();
+		// ... and pump it to waste valve	
+		H20waste->Flow(h2o_volume);
+
+		fanned.composition[SUBSTANCE_H2O].mass =
+			fanned.composition[SUBSTANCE_H2O].vapor_mass =
+			fanned.composition[SUBSTANCE_H2O].Q = 0;
+
+		// flow to output
+		flow = fanned.GetMass() / dt;
+		fanned.GetQ();
+		out->Flow(fanned);
+	}
+}

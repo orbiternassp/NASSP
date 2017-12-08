@@ -120,6 +120,7 @@ class H_system:public ship_system
 	void Create_h_MixingPipe(char *line);
 	void Create_h_Valve(char *line);
 	void Create_h_CO2Scrubber(char *line);
+	void Create_h_WaterSeparator(char *line);
 
 public:
 
@@ -324,6 +325,22 @@ public:
 	virtual void* GetComponent(char *component_name);
 
 	double co2removalrate;
+	double flow;	// in g/s
+	double flowMax;
+};
+
+class h_WaterSeparator : public h_object {
+
+public:
+	h_WaterSeparator(char *i_name, double i_flowmax, h_Valve *in_v, h_Valve *out_v, h_Valve *i_H2Owaste);
+
+	h_Valve* in;
+	h_Valve* out;
+	h_Valve* H20waste;
+
+	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
+
 	double flow;	// in g/s
 	double flowMax;
 };
