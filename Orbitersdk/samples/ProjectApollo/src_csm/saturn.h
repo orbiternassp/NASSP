@@ -2878,6 +2878,9 @@ protected:
 	SwitchRow LMDPGaugeRow;
 	SaturnLMDPGauge LMDPGauge;
 
+	SwitchRow PressEqualValveRow;
+	RotationalSwitch PressEqualValve;
+
 	///////////////////
 	// Panel 225/226 //
 	///////////////////
