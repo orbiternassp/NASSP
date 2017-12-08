@@ -619,6 +619,58 @@ void LEMCabinFan::StopCabinFanSound()
 	cabinfansound.stop();
 }
 
+LEMWaterTankSelect::LEMWaterTankSelect()
+{
+	WaterTankSelect = NULL;
+	WaterTankSelectSwitch = NULL;
+	SurgeTank = NULL;
+}
+
+void LEMWaterTankSelect::Init(h_Tank* wts, h_Tank *st, RotationalSwitch *wtss)
+{
+	WaterTankSelect = wts;
+	WaterTankSelectSwitch = wtss;
+	SurgeTank = st;
+}
+
+void LEMWaterTankSelect::SystemTimestep(double simdt)
+{
+	if (!WaterTankSelect) return;
+	if (!SurgeTank) return;
+
+	// Valve in motion
+	if (WaterTankSelect->IN_valve.pz) return;
+	if (SurgeTank->OUT2_valve.pz) return;
+
+	//DES
+	if (WaterTankSelectSwitch->GetState() == 0)
+	{
+		WaterTankSelect->IN_valve.Open();
+		WaterTankSelect->OUT_valve.Open();
+		WaterTankSelect->OUT2_valve.Close();
+		SurgeTank->OUT_valve.Open();
+		SurgeTank->OUT2_valve.Close();
+	}
+	//ASC
+	else if (WaterTankSelectSwitch->GetState() == 1)
+	{
+		WaterTankSelect->IN_valve.Close();
+		WaterTankSelect->OUT_valve.Open();
+		WaterTankSelect->OUT2_valve.Open();
+		SurgeTank->OUT_valve.Open();
+		SurgeTank->OUT2_valve.Close();
+	}
+	//SEC
+	else if (WaterTankSelectSwitch->GetState() == 2)
+	{
+		WaterTankSelect->IN_valve.Open();
+		WaterTankSelect->OUT_valve.Close();
+		WaterTankSelect->OUT2_valve.Open();
+		SurgeTank->OUT_valve.Close();
+		SurgeTank->OUT2_valve.Open();
+	}
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;
