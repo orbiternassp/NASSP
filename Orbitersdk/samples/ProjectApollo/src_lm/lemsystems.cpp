@@ -760,9 +760,6 @@ void LEM::SystemsInit()
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
-
-
-
 	ecs.Init(this);
 
 	// EDS initialization
