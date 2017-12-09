@@ -2718,6 +2718,25 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 			}
 		}
 
+		//Suit Fan Control
+		else if (s == &SuitFanRotary) {
+			//OFF
+			if (SuitFanRotary.GetState() == 0) {
+				SuitFan1->SetPumpOff();
+				SuitFan2->SetPumpOff();
+			}
+			//SUIT FAN 1
+			else if (SuitFanRotary.GetState() == 1) {
+				SuitFan1->SetPumpOn();
+				SuitFan2->SetPumpOff();
+			}
+			//SUIT FAN 2
+			else {
+				SuitFan1->SetPumpOff();
+				SuitFan2->SetPumpOn();
+			}
+		}
+
 	//Water Control//
 
 		//DES H2O Valve
