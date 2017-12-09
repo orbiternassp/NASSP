@@ -69,6 +69,15 @@
 #include "checklistController.h"
 #include "payload.h"
 
+///
+/// \brief General ECS status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	int crewNumber;
+	int crewStatus;
+} LEMECSStatus;
+
 // Systems things
 
 // XLunar Bus Controller Voltage Source
@@ -528,6 +537,9 @@ public:
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
 	void ConnectTunnelToCabinVent();
+	virtual void GetECSStatus(LEMECSStatus &ecs);
+	virtual void SetCrewNumber(int number);
+
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
@@ -537,6 +549,7 @@ public:
 	h_Tank *PressRegB;
 	h_Tank *HXHeating;
 	h_Tank *HXCooling;
+	h_crew *Crew;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
