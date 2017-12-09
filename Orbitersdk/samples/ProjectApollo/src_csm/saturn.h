@@ -4344,6 +4344,7 @@ protected:
 	friend class ELS;
 	friend class ELSC;
 	friend class PCVB;
+	friend class LDEC;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;
 	friend class MinImpulseHandcontrollerSwitch;

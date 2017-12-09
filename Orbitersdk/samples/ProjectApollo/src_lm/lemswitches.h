@@ -519,6 +519,16 @@ protected:
 	SURFHANDLE FrameSurface;
 };
 
+class LEMAPSValveTalkback : public IndicatorSwitch {
+public:
+	LEMAPSValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, APSValve *v, bool failopen);
+	int GetState();
+
+protected:
+	APSValve *valve;
+};
+
 class LEMDPSValveTalkback : public IndicatorSwitch {
 public:
 	LEMDPSValveTalkback();

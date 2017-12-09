@@ -475,6 +475,21 @@ public:
 		SRF_BORDER_34x39,
 		SRF_BORDER_38x38,
 		SRF_BORDER_40x40,
+		SRF_BORDER_126x131,
+		SRF_BORDER_115x115,
+		SRF_BORDER_68x68,
+		SRF_BORDER_169x168,
+		SRF_BORDER_67x64,
+		SRF_BORDER_201x205,
+		SRF_BORDER_122x265,
+		SRF_BORDER_225x224,
+		SRF_BORDER_51x54,
+		SRF_BORDER_205x205,
+		SRF_BORDER_30x144,
+		SRF_BORDER_400x400,
+		SRF_BORDER_1001x240,
+		SRF_BORDER_360x316,
+		SRF_BORDER_178x187,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -487,6 +502,7 @@ public:
 		SRF_THREEPOSSWITCHSMALL,
 		SRF_AOTRETICLEKNOB,
 		SRF_AOTSHAFTKNOB,
+		SRF_AOT_FONT,
 		SRF_FIVE_POS_SWITCH,
 		SRF_DEDA_KEY,
 		SRF_DEDA_LIGHTS,
@@ -510,6 +526,11 @@ public:
 		SRF_LEM_PRIM_C02,
 		SRF_LEM_SEC_C02,
 		SRF_LEM_SGD_LEVER,
+		SRF_LEM_U_HATCH_REL_VLV,
+		SRF_LEM_U_HATCH_HNDL,
+		SRF_LEM_F_HATCH_HNDL,
+		SRF_LEM_F_HATCH_REL_VLV,
+	    SRF_LEM_INTLK_OVRD,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -569,6 +590,7 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
+	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
 	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 
 	///
@@ -741,13 +763,13 @@ protected:
 	ToggleSwitch AttitudeMonSwitch;
 
 	SwitchRow MPSRegControlLeftSwitchRow;
-	IndicatorSwitch ASCHeReg1TB;
+	LEMAPSValveTalkback ASCHeReg1TB;
 	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
-	IndicatorSwitch ASCHeReg2TB;
+	LEMAPSValveTalkback ASCHeReg2TB;
 	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
@@ -1406,6 +1428,7 @@ protected:
 	RotationalSwitch DESO2Valve;
 	RotationalSwitch ASCO2Valve1;
 	RotationalSwitch ASCO2Valve2;
+	PushSwitch IntlkOvrd;
 
 	SwitchRow SuitIsolSwitchRow;
 	RotationalSwitch CDRSuitIsolValve;
@@ -1418,7 +1441,7 @@ protected:
 	RotationalSwitch PrimEvap2FlowValve;
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
-	//RotationalSwitch WaterTankSelectValve;  // Needs special treatment due to assymetric shape.
+	RotationalSwitch WaterTankSelectValve;
 	RotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
@@ -1430,13 +1453,29 @@ protected:
 	SwitchRow SuitCircuitAssySwitchRow;
 	RotationalSwitch SuitCircuitReliefValve;
 	RotationalSwitch CabinGasReturnValve;
-	RotationalSwitch CO2CanisterSelect;
+	ToggleSwitch CO2CanisterSelect;
 	RotationalSwitch CO2CanisterPrimValve;
-  PushSwitch       CO2CanisterPrimVent;
+    PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
-  PushSwitch       CO2CanisterSecVent;
+    PushSwitch       CO2CanisterSecVent;
 	CircuitBrakerSwitch WaterSepSelect;
 
+	/////////////////////
+	// LEM Upper Hatch //
+	/////////////////////
+
+	SwitchRow UpperHatchSwitchRow;
+	ThreePosSwitch UpperHatchReliefValve;
+	ToggleSwitch UpperHatchHandle;
+
+	///////////////////////
+	// LEM Forward Hatch //
+	///////////////////////
+
+	SwitchRow ForwardHatchSwitchRow;
+	ToggleSwitch ForwardHatchHandle;
+	ThreePosSwitch ForwardHatchReliefValve;
+	
 	///////////////////////////
 	// LEM Rendezvous Window //
 	///////////////////////////
@@ -1532,12 +1571,20 @@ protected:
 	Pyro DescentEngineStartPyros;
 	Pyro DescentEngineOnPyros;
 	Pyro DescentPropIsolPyros;
+	Pyro AscentHeliumIsol1Pyros;
+	Pyro AscentHeliumIsol2Pyros;
+	Pyro AscentOxidCompValvePyros;
+	Pyro AscentFuelCompValvePyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
 	PowerMerge DescentPropVentPyrosFeeder;
 	PowerMerge DescentEngineStartPyrosFeeder;
 	PowerMerge DescentEngineOnPyrosFeeder;
 	PowerMerge DescentPropIsolPyrosFeeder;
+	PowerMerge AscentHeliumIsol1PyrosFeeder;
+	PowerMerge AscentHeliumIsol2PyrosFeeder;
+	PowerMerge AscentOxidCompValvePyrosFeeder;
+	PowerMerge AscentFuelCompValvePyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1570,6 +1617,9 @@ protected:
 #define LMPANEL_ECSPANEL		8
 #define LMPANEL_DOCKVIEW		9
 #define LMPANEL_AOTZOOM		    10
+#define LMPANEL_LEFTZOOM        11   
+#define LMPANEL_UPPERHATCH      12  
+#define LMPANEL_FWDHATCH        13 
 
 	bool InVC;
 	bool InPanel;
@@ -1736,6 +1786,7 @@ protected:
 	// DPS and APS
 	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
+	APSPropellantSource APSPropellant;
 	LEM_APS APS;
 
 	// Abort Guidance System stuff
@@ -1782,6 +1833,7 @@ protected:
 	friend class DPSGimbalActuator;
 	friend class DPSPropellantSource;
 	friend class LEM_DPS;
+	friend class APSPropellantSource;
 	friend class LEM_APS;
 	friend class DECA;
 	friend class SCCA1;

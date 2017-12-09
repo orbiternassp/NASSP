@@ -43,6 +43,7 @@ LEM_EDRelayBox::LEM_EDRelayBox():
 	DescentEngineOnRelay = false;
 	AscentPropPressTank1Relay = false;
 	AscentPropPressTank2Relay = false;
+	AscentPropCompValvesRelay = false;
 	DescentPropVentRelay = false;
 	DescentPropPressRelay = false;
 	DescentTankIsolValvesRelay = false;
@@ -171,7 +172,8 @@ void LEM_EDRelayBox::Timestep(double simdt)
 
 	if (HasDCPower() && (lem->EDHePressASC.IsUp() || lem->AbortStageSwitch.IsDown()))
 	{
-		//TBD: K12
+		AscentPropCompValvesRelay = true;
+
 		if (lem->EDASCHeSel.IsUp())
 		{
 			AscentPropPressTank1Relay = true;
@@ -192,6 +194,7 @@ void LEM_EDRelayBox::Timestep(double simdt)
 	{
 		AscentPropPressTank1Relay = false;
 		AscentPropPressTank2Relay = false;
+		AscentPropCompValvesRelay = false;
 	}
 
 	if (HasDCPower() && lem->EDDesVent.IsUp())
@@ -510,6 +513,63 @@ void LEM_EDS::TimeStep(double simdt) {
 		pyroB = true;
 	}
 	lem->CableCuttingPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+
+	// Ascent Helium Tank 1 Isolation Valve
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropPressTank1Relay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropPressTank1Relay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentHeliumIsol1PyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	// Ascent Helium Tank 2 Isolation Valve
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropPressTank2Relay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropPressTank2Relay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentHeliumIsol2PyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+
+	// Ascent Propellant Compatibility Valves
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetAscentPropCompValvesRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetAscentPropCompValvesRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->AscentFuelCompValvePyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+	lem->AscentOxidCompValvePyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
 	
 	// Set TBs

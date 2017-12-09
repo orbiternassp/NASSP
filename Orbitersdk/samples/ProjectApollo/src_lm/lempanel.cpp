@@ -177,7 +177,9 @@ void LEM::InitSwitches() {
 	DESHeReg1TB.Register(PSH,"DESHeReg1TB", true);
 	DESHeReg2TB.Register(PSH,"DESHeReg2TB", false);
 	ASCHeReg1Switch.Register(PSH,"ASCHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	ASCHeReg1Switch.SetCallback(new PanelSwitchCallback<APSValve>(APSPropellant.GetHeliumValve1(), &APSValve::SwitchToggled));
 	ASCHeReg2Switch.Register(PSH,"ASCHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	ASCHeReg2Switch.SetCallback(new PanelSwitchCallback<APSValve>(APSPropellant.GetHeliumValve2(), &APSValve::SwitchToggled));
 	DESHeReg1Switch.Register(PSH,"DESHeReg1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DESHeReg1Switch.SetCallback(new PanelSwitchCallback<DPSValve>(DPSPropellant.GetHeliumValve1(), &DPSValve::SwitchToggled));
 	DESHeReg2Switch.Register(PSH,"DESHeReg2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -898,13 +900,15 @@ void LEM::InitSwitches() {
 	CDRSuitIsolValve.AddPosition(0, 0);
 	CDRSuitIsolValve.AddPosition(1, 90);
 
-  CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
+	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
+
+    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
 
-  LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
+    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
 	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
 	SecEvapFlowValve.AddPosition(0, 0);
@@ -922,10 +926,10 @@ void LEM::InitSwitches() {
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
 
-	/*WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 2);
-	WaterTankSelectValve.AddPosition(0, 355);
-	WaterTankSelectValve.AddPosition(1, 230);
-	WaterTankSelectValve.AddPosition(2, 120);*/
+	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 0);
+	WaterTankSelectValve.AddPosition(0, 150);
+	WaterTankSelectValve.AddPosition(1, 240);
+	WaterTankSelectValve.AddPosition(2, 330);
 
 	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 	SuitTempValve.AddPosition(0, 0);
@@ -944,7 +948,7 @@ void LEM::InitSwitches() {
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
 	LiquidGarmentCoolingValve.AddPosition(3, 67);
 	LiquidGarmentCoolingValve.AddPosition(4, 90);
-  LiquidGarmentCoolingValve.AddPosition(5, 120);
+    LiquidGarmentCoolingValve.AddPosition(5, 120);
 
 	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
 	SuitCircuitReliefValve.AddPosition(0, 0);
@@ -956,21 +960,30 @@ void LEM::InitSwitches() {
 	CabinGasReturnValve.AddPosition(1, 90);
 	CabinGasReturnValve.AddPosition(2, 180);
 
-	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", 0);
-	CO2CanisterSelect.AddPosition(0, 340);
-	CO2CanisterSelect.AddPosition(1, 20);
+	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
+	CO2CanisterSelect.SetSideways(true);
 
 	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 	CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 165);
+	CO2CanisterPrimValve.AddPosition(1, 300);
 
 	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 	CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 165);
+	CO2CanisterSecValve.AddPosition(1, 300);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
 	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
+
+	// Upper Hatch
+	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
+	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_UP);
+	UpperHatchHandle.SetSideways(true);
+
+	// Forward Hatch
+	ForwardHatchHandle.Register(PSH, "ForwardHandle", TOGGLESWITCH_DOWN);
+	ForwardHatchReliefValve.Register(PSH, "ForwardReliefValve", THREEPOSSWITCH_CENTER);
+	ForwardHatchReliefValve.SetSideways(true);
 
 	//
 	// Old stuff.
@@ -1277,6 +1290,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMSIGNALSTRENGTH]	= oapiCreateSurface (LOADBMP (IDB_LMSIGNALSTRENGTH));
 		srf[SRF_AOTRETICLEKNOB]     = oapiCreateSurface (LOADBMP (IDB_AOT_RETICLE_KNOB));
 		srf[SRF_AOTSHAFTKNOB]       = oapiCreateSurface (LOADBMP (IDB_AOT_SHAFT_KNOB));
+		srf[SRF_AOT_FONT]           = oapiCreateSurface (LOADBMP (IDB_AOT_FONT));
 		srf[SRF_THUMBWHEEL_LARGEFONTS] = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTS));
 		srf[SRF_FIVE_POS_SWITCH]	= oapiCreateSurface (LOADBMP (IDB_FIVE_POS_SWITCH));
 		srf[SRF_RR_NOTRACK]         = oapiCreateSurface (LOADBMP (IDB_RR_NOTRACK));
@@ -1296,8 +1310,12 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_PRIM_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_PRIM_C02));
 		srf[SRF_LEM_SEC_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_SEC_C02));
 		srf[SRF_LEM_SGD_LEVER]		= oapiCreateSurface (LOADBMP (IDB_LEM_SGD_LEVER));
-
-
+		srf[SRF_LEM_U_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_UPPER_REL_VLV));
+		srf[SRF_LEM_U_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_UPPER_HANDLE));
+		srf[SRF_LEM_F_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_HANDLE));
+		srf[SRF_LEM_F_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_REL_VLV));
+		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
+		
 		//
 		// Flashing borders.
 		//
@@ -1325,6 +1343,21 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_34x39]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x39));
 		srf[SRF_BORDER_38x38]		= oapiCreateSurface (LOADBMP (IDB_BORDER_38x38));
 		srf[SRF_BORDER_40x40]		= oapiCreateSurface (LOADBMP (IDB_BORDER_40x40));
+		srf[SRF_BORDER_126x131]     = oapiCreateSurface (LOADBMP (IDB_BORDER_126x131));
+		srf[SRF_BORDER_115x115]     = oapiCreateSurface (LOADBMP (IDB_BORDER_115x115));
+		srf[SRF_BORDER_68x68]       = oapiCreateSurface (LOADBMP (IDB_BORDER_68x68));
+		srf[SRF_BORDER_169x168]     = oapiCreateSurface (LOADBMP (IDB_BORDER_169x168));
+		srf[SRF_BORDER_67x64]       = oapiCreateSurface (LOADBMP (IDB_BORDER_67x64));
+		srf[SRF_BORDER_201x205]     = oapiCreateSurface (LOADBMP (IDB_BORDER_201x205));
+		srf[SRF_BORDER_122x265]     = oapiCreateSurface (LOADBMP (IDB_BORDER_122x265));
+		srf[SRF_BORDER_225x224]     = oapiCreateSurface (LOADBMP (IDB_BORDER_225x224));
+		srf[SRF_BORDER_51x54]       = oapiCreateSurface (LOADBMP (IDB_BORDER_51x54));
+		srf[SRF_BORDER_205x205]     = oapiCreateSurface (LOADBMP (IDB_BORDER_205x205));
+		srf[SRF_BORDER_30x144]      = oapiCreateSurface (LOADBMP (IDB_BORDER_30x144));
+		srf[SRF_BORDER_400x400]     = oapiCreateSurface (LOADBMP (IDB_BORDER_400x400));
+		srf[SRF_BORDER_1001x240]    = oapiCreateSurface (LOADBMP (IDB_BORDER_1001x240));
+		srf[SRF_BORDER_360x316]     = oapiCreateSurface (LOADBMP (IDB_BORDER_360x316));
+		srf[SRF_BORDER_178x187]     = oapiCreateSurface (LOADBMP (IDB_BORDER_178x187));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
@@ -1383,8 +1416,13 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_PRIM_C02],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SEC_C02],			g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_SGD_LEVER],			g_Param.col[4]);
-
-    //
+		oapiSetSurfaceColourKey(srf[SRF_LEM_U_HATCH_REL_VLV],   g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_U_HATCH_HNDL],      g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_HNDL],      g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_REL_VLV],   g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_INTLK_OVRD],        g_Param.col[4]);
+        
+		//
 		// Borders need to set the center color to transparent so only the outline
 		// is visible.
 		//
@@ -1412,7 +1450,22 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_34x39], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_38x38], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_40x40], g_Param.col[4]);
-    
+        oapiSetSurfaceColourKey (srf[SRF_BORDER_126x131], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_115x115], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_68x68], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_169x168], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_67x64], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_201x205], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_122x265], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_225x224], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_51x54], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_205x205], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_30x144], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_400x400], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_1001x240], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_360x316], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_178x187], g_Param.col[4]);
+
     SetSwitches(panel);
 }
 
@@ -1431,7 +1484,7 @@ bool LEM::clbkLoadPanel (int id) {
 	switch(id) {
     case LMPANEL_MAIN:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_MAIN_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, LMPANEL_RNDZWINDOW, -1);
+		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, LMPANEL_RNDZWINDOW, LMPANEL_FWDHATCH);
 		break;
 
 	case LMPANEL_RIGHTWINDOW:
@@ -1441,7 +1494,7 @@ bool LEM::clbkLoadPanel (int id) {
 
     case LMPANEL_LEFTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LEFT_WINDOW));
-		oapiSetPanelNeighbours(LMPANEL_LEFTPANEL, LMPANEL_MAIN, -1, LMPANEL_LPDWINDOW);
+		oapiSetPanelNeighbours(LMPANEL_LEFTPANEL, LMPANEL_MAIN, LMPANEL_LEFTZOOM, LMPANEL_LPDWINDOW);
 		break;
 
     case LMPANEL_LPDWINDOW:
@@ -1471,7 +1524,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_ECSPANEL:
 		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_ECS_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_RIGHTPANEL, -1, LMPANEL_UPPERHATCH, -1);
 		break;
 
 	case LMPANEL_DOCKVIEW:
@@ -1482,6 +1535,21 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTZOOM:
 		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_AOT_ZOOM));
 		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_AOTVIEW);
+		break;
+	
+	case LMPANEL_LEFTZOOM:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_LEFT_ZOOM));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_LEFTWINDOW);
+		break;
+
+	case LMPANEL_UPPERHATCH:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_ECSPANEL);
+		break;
+
+	case LMPANEL_FWDHATCH:
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		oapiSetPanelNeighbours(-1, -1, LMPANEL_MAIN, -1);
 		break;
 	}
 
@@ -1702,8 +1770,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 264,  604, 1637,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 264,  777,  996,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,										PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 511,  916, 1654, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,						PANEL_MAP_BACKGROUND);				
-		oapiRegisterPanelArea (AID_SEQ_LIGHT1,						_R( 941, 1187,  974, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SEQ_LIGHT2,						_R(1015, 1187, 1048, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEQ_LIGHT1,						_R( 941, 1187,  974, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP,                     PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEQ_LIGHT2,						_R(1015, 1187, 1048, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP,                     PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R(   1, 1093,  478, 1295),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
 
@@ -1749,8 +1817,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(1427,  694, 1502, 1021), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,					_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,				_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				      PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,			_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                    PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLEDISPLAY,           _R( 341,  824,  461,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -1760,12 +1829,12 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,         _R( 204,  129,  204+126,  129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_MOUSE,  PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
-    oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_SUIT_CIRCUIT_ASSY, _R(1400,  280,     2200,     1160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -1784,6 +1853,31 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_LEFTZOOM: // LEM Left Window COAS View
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_UPPERHATCH: // LEM Upper Hatch
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(209, 335, 1901, 931), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		
+		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
+		oapiCameraSetCockpitDir(0, 0);
+		break;
+
+	case LMPANEL_FWDHATCH: // LEM Forward Hatch
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(605, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
 	}
@@ -1883,7 +1977,7 @@ void LEM::SetSwitches(int panel) {
 
 	// 354,  918,  463, 1124
 	MPSRegControlLeftSwitchRow.Init(AID_MPS_REG_CONTROLS_LEFT, MainPanel);
-	ASCHeReg1TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow);
+	ASCHeReg1TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, APSPropellant.GetHeliumValve1(), true);
 	DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, DPSPropellant.GetHeliumValve1(), true);
 	ASCHeReg1Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
 	ASCHeReg1Switch.SetDelayTime(1);
@@ -1891,7 +1985,7 @@ void LEM::SetSwitches(int panel) {
 	DESHeReg1Switch.SetDelayTime(1);
 
 	MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
-	ASCHeReg2TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow);
+	ASCHeReg2TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, APSPropellant.GetHeliumValve2(), true);
 	DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, DPSPropellant.GetHeliumValve2(), false);
 	ASCHeReg2Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
 	ASCHeReg2Switch.SetDelayTime(1);
@@ -2516,46 +2610,57 @@ void LEM::SetSwitches(int panel) {
 
 	// ECS Panel
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);
-	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], NULL, ECSSuitGasDiverterSwitchRow); // Need borders
+	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow);
 
-  OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
-  CabinRepressValve.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  PLSSFillValve.Init(340, 7, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  DESO2Valve.Init(4, 163, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
-  ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, OxygenControlSwitchRow);
+    OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
+    CabinRepressValve.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    PLSSFillValve.Init(340, 7, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    DESO2Valve.Init(4, 163, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    IntlkOvrd.Init(234, 73, 68, 68, srf[SRF_LEM_INTLK_OVRD], srf[SRF_BORDER_68x68], OxygenControlSwitchRow);
 
-  SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
-  CDRSuitIsolValve.Init(22, 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
-  CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
-  LMPSuitIsolValve.Init(22+281 , 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], NULL, SuitIsolSwitchRow);
-  LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], NULL, SuitIsolSwitchRow);
+    SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
+    CDRSuitIsolValve.Init(22, 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
+    CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
+    LMPSuitIsolValve.Init(22+281 , 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
+    LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
 
-  WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
-  SecEvapFlowValve.Init(74, 30, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
-  //WaterTankSelectValve.Init(100, 374, 257, 277, srf[SRF_LEM_H20_SEL], NULL, WaterControlSwitchRow);   // FIXME; Needs special class.
-  SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, WaterControlSwitchRow);
+    WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
+    SecEvapFlowValve.Init(74, 30, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
+    PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
+    DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
+    PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
+    WaterTankSelectValve.Init(33, 402, 201, 205, srf[SRF_LEM_H20_SEL], srf[SRF_BORDER_201x205], WaterControlSwitchRow);
+    SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
 
-  ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
-  ASCH2OValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, ASCH2OSwitchRow);
+    ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
+    ASCH2OValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], ASCH2OSwitchRow);
 
-  GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
-  LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, GarmentCoolingSwitchRow);
+    GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
+    LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow);
 
-  SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
-  SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
-  CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], NULL, SuitCircuitAssySwitchRow);
-  CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], NULL, SuitCircuitAssySwitchRow);
-  WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], NULL, SuitCircuitAssySwitchRow);
+    SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
+    SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+    CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+    CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
+    CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], srf[SRF_BORDER_225x224], SuitCircuitAssySwitchRow);
+    CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
+    CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], srf[SRF_BORDER_205x205], SuitCircuitAssySwitchRow);
+    CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
+    WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
+
+    // Upper Hatch
+    UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
+    UpperHatchReliefValve.Init(0, 196, 400, 400, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_400x400], UpperHatchSwitchRow);
+    UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow);
+
+    // Forward Hatch
+    ForwardHatchSwitchRow.Init(AID_LEM_FWD_HATCH, MainPanel);
+    ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchSwitchRow);
+    ForwardHatchReliefValve.Init(1130, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchSwitchRow);
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
@@ -3193,6 +3298,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	
 	case AID_AOT_SHAFT_KNOB:
 		oapiBlt(surf,srf[SRF_AOTSHAFTKNOB],0,0,optics.OpticsShaft*62,0,62,155);
+		return true;
+
+	case AID_AOT_RETICLEDISPLAY:
+		optics.PaintReticleAngle(surf, srf[SRF_AOT_FONT]);
 		return true;
 
 	case AID_COAS:

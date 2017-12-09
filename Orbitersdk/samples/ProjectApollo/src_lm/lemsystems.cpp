@@ -633,6 +633,10 @@ void LEM::SystemsInit()
 	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
 	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
 	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
+	AscentHeliumIsol1Pyros.WireTo(&AscentHeliumIsol1PyrosFeeder);
+	AscentHeliumIsol2Pyros.WireTo(&AscentHeliumIsol2PyrosFeeder);
+	AscentOxidCompValvePyros.WireTo(&AscentOxidCompValvePyrosFeeder);
+	AscentFuelCompValvePyros.WireTo(&AscentFuelCompValvePyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -699,6 +703,10 @@ void LEM::SystemsInit()
 	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
+	ASCHeReg1Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg2Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -1315,6 +1323,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
+	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
 	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
@@ -2496,7 +2505,7 @@ void LEM_RR::TimeStep(double simdt){
 			radarDataGood = 1;
 			range = 362066; // 195.5 nautical miles in meters
 		}
-		sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
+		//sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
 	}
 	else {
 		// Clobber test data if not already zero
@@ -3277,7 +3286,7 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-	if(lem->APS.HePress[1] > 220){
+	if(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI() > 220.0){
 		LightStatus[0][4] = 1;
 	}else{
 		LightStatus[0][4] = 0;

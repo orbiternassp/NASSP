@@ -547,11 +547,11 @@ void SaturnV::SetFirstStageEngines ()
 
 	for (i = 0; i < SI_EngineNum; i++) AddExhaust(es_1st + i);
 
-	AddExhaustStream (th_1st[0], MAIN4a_Vector+_V(0,0,-18), &srb_exhaust);
-	AddExhaustStream (th_1st[1], MAIN2a_Vector+_V(0,0,-18), &srb_exhaust);
-	AddExhaustStream (th_1st[2], MAIN1a_Vector+_V(0,0,-18), &srb_exhaust);
-	AddExhaustStream (th_1st[3], MAIN3a_Vector+_V(0,0,-18), &srb_exhaust);
-	AddExhaustStream (th_1st[4], MAIN5a_Vector+_V(0,0,-18), &srb_exhaust);
+	AddExhaustStream (th_1st[0], MAIN4a_Vector+_V(0,0,-1), &srb_exhaust);
+	AddExhaustStream (th_1st[1], MAIN2a_Vector+_V(0,0,-1), &srb_exhaust);
+	AddExhaustStream (th_1st[2], MAIN1a_Vector+_V(0,0,-1), &srb_exhaust);
+	AddExhaustStream (th_1st[3], MAIN3a_Vector+_V(0,0,-1), &srb_exhaust);
+	AddExhaustStream (th_1st[4], MAIN5a_Vector+_V(0,0,-1), &srb_exhaust);
 
 	// Contrail
 	for (i = 0; i < SI_EngineNum; i++) {
@@ -1286,9 +1286,17 @@ void SaturnV::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/sat5stg3", vs1, true);
 
 		SeparationS.play(NOLOOP,255);
-		SetCSMStage();
+		
+		if (new_stage == CSM_LEM_STAGE)
+		{
+			SetCSMStage();
+		}
+		else
+		{
+			SetReentryStage();
+		}
 
-		ShiftCentreOfMass(_V(0, 0, 13.15));
+     	ShiftCentreOfMass(_V(0, 0, 13.15));
 	}
 
 	if (stage == CSM_LEM_STAGE)
