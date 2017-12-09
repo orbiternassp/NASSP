@@ -1523,8 +1523,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *desO2burstflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2BURSTDISK:FLOW");
 	double *desO2reliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PRESSURERELIEFVALVE:FLOW");
 
-	double *primglycoltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
-	double *primglycolpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:PRESS");
+	double *primglycoltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+	double *primglycolpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
 	double *primglycolmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
 
 	int *primevapPump = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:PUMP");
@@ -1544,7 +1544,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 
 	//sprintf(oapiDebugString(), "PCO2F %lf SFMP %lf HXCP %lf HXHP %lf WSF %lf WSFM %lf", *primCO2Flow, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *hxheatingPress*PSI, *WS1Flow, *WS1FlowMax);
-	//sprintf(oapiDebugString(), "GlyTmp %lf HXHTmp %lf HXCTmp %lf StTmp %lf Pmp %d Vlv %d Throt %lf Steam %lf", *primglycoltemp, *hxheatingTemp, *hxcoolingTemp, *SuitCircuitTemp, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
+	sprintf(oapiDebugString(), "GlyTmp %lf HXHTmp %lf HXCTmp %lf StTmp %lf Pmp %d Vlv %d Throt %lf Steam %lf", *primglycoltemp, *hxheatingTemp, *hxcoolingTemp, *SuitCircuitTemp, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "PCO2P %1f PCO2M %lf SFMP %lf SFMM %lf CO2F %lf CO2FM %lf CO2REM %lf", (*primCo2CanisterPress)*PSI, *primCO2Mass, (*suitfanmanifoldPress)*PSI, *suitfanmanifoldMass, *primCO2Flow, *primCO2FlowMax, *primCO2Removal);
 	//sprintf(oapiDebugString(), "GTemp %lf GPress %lf GMass %lf EPump %d EValve %lf EThrot %lf ESteam %lf", ecs.GetPrimaryGlycolTemperature(), ecs.GetPrimaryGlycolPressure(), *primglycolmass, *primevapPump, *primevapValve, *primevapThrottle, *primevapSteam*PSI);
 	//sprintf(oapiDebugString(), "SCT %lf SCM %1f SCP %lf HXHM %1f HXHP %lf CDRM %1f CDRP %lf LMPM %1f LMPP %lf SGDM %1f SGDP %lf HXCM %1f HXCP %lf", ecs.GetSuitTemperature(), *SuitCircuitMass, ecs.GetSuitPressurePSI(), *hxheatingMass, (*hxheatingPress)*PSI, *CDRIsolMass, (*CDRIsolPress)*PSI, *LMPIsolMass, (*LMPIsolPress)*PSI, *SGDMass, (*SGDPress)*PSI, *hxcoolingMass, (*hxcoolingPress)*PSI);

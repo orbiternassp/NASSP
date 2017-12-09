@@ -2723,7 +2723,7 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//DES H2O Valve
 		else if (s == &DESH2OValve) {
 			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK:OUT2");
-			if (DESH2OValve.GetState() == 0) {
+			if (DESH2OValve.GetState() == 1) {
 				vlv->Open();
 			}
 			else {
@@ -2748,7 +2748,7 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//Prim Evap Flow 1 Valve
 		else if (s == &PrimEvap1FlowValve) {
 			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMREG:OUT");
-			if (PrimEvap1FlowValve.GetState() == 0) {
+			if (PrimEvap1FlowValve.GetState() == 1) {
 				vlv->Open();
 			}
 			else {
@@ -2759,7 +2759,7 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//Prim Evap Flow 2 Valve
 		else if (s == &PrimEvap2FlowValve) {
 			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SECREG1MANIFOLD:OUT");
-			if (PrimEvap2FlowValve.GetState() == 0) {
+			if (PrimEvap2FlowValve.GetState() == 1) {
 				vlv->Open();
 			}
 			else {
@@ -2770,7 +2770,7 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//Sec Evap Flow 1 Valve
 		else if (s == &SecEvapFlowValve) {
 			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SECREG1MANIFOLD:OUT2");
-			if (SecEvapFlowValve.GetState() == 0) {
+			if (SecEvapFlowValve.GetState() == 1) {
 				vlv->Open();
 			}
 			else {
