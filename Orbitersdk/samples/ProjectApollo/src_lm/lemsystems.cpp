@@ -611,6 +611,8 @@ void LEM::SystemsInit()
 	ECS_GLYCOL_PUMP_2_CB.MaxAmps = 5.0;
 	ECS_GLYCOL_PUMP_2_CB.WireTo(&CDRs28VBus);
 
+	Crew = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+
 	//Initialize LM O2 as only a gas
 	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
 	AscO2Tank1 = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK1");
@@ -1625,6 +1627,23 @@ void LEM::ConnectTunnelToCabinVent()
 	pipe->in = &tank->OUT_valve;
 }
 
+
+//
+// ECS state for the ProjectApolloMFD.
+//
+
+void LEM::GetECSStatus(LEMECSStatus &ecs)
+
+{
+	// Crew
+	ecs.crewNumber = Crew->number;
+	ecs.crewStatus = 0;
+}
+
+void LEM::SetCrewNumber(int number) {
+
+	Crew->number = number;
+}
 
 // SYSTEMS COMPONENTS
 
