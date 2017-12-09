@@ -3614,6 +3614,7 @@ protected:
 	SaturnWaterController WaterController;
 	SaturnGlycolCoolingController GlycolCoolingController;
 	SaturnLMTunnelVent LMTunnelVent;
+	SaturnForwardHatch ForwardHatch;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

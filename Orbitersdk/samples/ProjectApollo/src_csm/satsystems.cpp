@@ -488,8 +488,10 @@ void Saturn::SystemsInit() {
 	
 	GlycolCoolingController.Init(this);
 	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
-					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSUREEQUALIZATIONVALVE"),
+					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELPRESSURIZATIONVALVE"),
 					  &LMTunnelVentValve);
+	ForwardHatch.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCH"),
+					  &PressEqualValve);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -1270,6 +1272,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
 		LMTunnelVent.SystemTimestep(tFactor);
+		ForwardHatch.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
