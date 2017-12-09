@@ -173,6 +173,31 @@ protected:
 	RotationalSwitch *WaterTankSelectSwitch;
 };
 
+class LEMPrimGlycolPumpController
+{
+public:
+	LEMPrimGlycolPumpController();
+	void Init(h_Tank *pgat, h_Tank *pgshet, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+
+protected:
+	h_Tank *primGlycolAccumulatorTank;
+	h_Tank *primGlycolSuitHeatExchangeTank;
+	Pump *glycolPump1;
+	Pump *glycolPump2;
+	RotationalSwitch *glycolRotary;
+	CircuitBrakerSwitch *glycolPump1CB;
+	CircuitBrakerSwitch *glycolPump2CB;
+	CircuitBrakerSwitch *glycolPumpAutoTransferCB;
+
+	//7K8 (Latching)
+	bool GlycolAutoTransferRelay;
+
+	bool PressureSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);

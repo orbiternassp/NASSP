@@ -760,6 +760,11 @@ void LEM::SystemsInit()
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
+	PrimGlycolPumpController.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXCOOLING"),
+		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1"),
+		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2"),
+		&GlycolRotary, &ECS_GLYCOL_PUMP_1_CB, &ECS_GLYCOL_PUMP_2_CB, &ECS_GLYCOL_PUMP_AUTO_XFER_CB);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1410,6 +1415,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	WaterSeparationSelector.SystemTimestep(simdt);
 	WaterTankSelect.SystemTimestep(simdt);
 	CabinFan.SystemTimestep(simdt);
+	PrimGlycolPumpController.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);

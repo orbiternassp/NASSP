@@ -671,6 +671,98 @@ void LEMWaterTankSelect::SystemTimestep(double simdt)
 	}
 }
 
+LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
+{
+	primGlycolAccumulatorTank = NULL;
+	primGlycolSuitHeatExchangeTank = NULL;
+	glycolPump1CB = NULL;
+	glycolPump2CB = NULL;
+	glycolPumpAutoTransferCB = NULL;
+	glycolRotary = NULL;
+	glycolPump1 = NULL;
+	glycolPump2 = NULL;
+
+	GlycolAutoTransferRelay = false;
+	PressureSwitch = true;
+}
+
+void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgshet, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb)
+{
+	primGlycolAccumulatorTank = pgat;
+	primGlycolSuitHeatExchangeTank = pgshet;
+	glycolPump1 = gp1;
+	glycolPump2 = gp2;
+	glycolRotary = gr;
+	glycolPump1CB = gp1cb;
+	glycolPump2CB = gp2cb;
+	glycolPumpAutoTransferCB = gpatcb;
+}
+
+void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
+{
+	if (!primGlycolSuitHeatExchangeTank || !primGlycolAccumulatorTank) return;
+
+	double DPSensor = primGlycolSuitHeatExchangeTank->space.Press - primGlycolAccumulatorTank->space.Press;
+
+	if (PressureSwitch == false && DPSensor < 3.0 / PSI)
+	{
+		PressureSwitch = true;
+	}
+	else if (PressureSwitch == true && DPSensor > 7.0 / PSI)
+	{
+		PressureSwitch = false;
+	}
+
+	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
+	{
+		GlycolAutoTransferRelay = true;
+	}
+	else if (glycolRotary->GetState() == 2 && glycolPumpAutoTransferCB->IsPowered())
+	{
+		GlycolAutoTransferRelay = false;
+	}
+
+	//PUMP 1
+	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
+	{
+		glycolPump1->SetPumpOn();
+	}
+	else
+	{
+		glycolPump1->SetPumpOff();
+	}
+
+	//PUMP 2
+	if ((glycolRotary->GetState() == 2 || GlycolAutoTransferRelay) && glycolPump2CB->IsPowered())
+	{
+		glycolPump2->SetPumpOn();
+	}
+	else
+	{
+		glycolPump2->SetPumpOff();
+	}
+
+	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);
+}
+
+void LEMPrimGlycolPumpController::LoadState(char *line)
+{
+	int i, j;
+
+	sscanf(line + 21, "%i %i", &i, &j);
+
+	PressureSwitch = (i != 0);
+	GlycolAutoTransferRelay = (j != 0);
+}
+
+void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d %d", PressureSwitch, GlycolAutoTransferRelay);
+	oapiWriteScenario_string(scn, "PRIMGLYPUMPCONTROLLER", buffer);
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;
