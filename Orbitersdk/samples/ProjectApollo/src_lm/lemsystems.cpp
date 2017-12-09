@@ -623,6 +623,11 @@ void LEM::SystemsInit()
 	PressRegB = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB");
 	HXHeating = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING");
 	HXCooling = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING");
+	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
+	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
+
+	SuitFan1->WireTo(&ECS_SUIT_FAN_1_CB);
+	SuitFan2->WireTo(&ECS_SUIT_FAN_2_CB);
 
 	DesO2Tank->BoilAllAndSetTemp(294.261);
 	AscO2Tank1->BoilAllAndSetTemp(294.261);
@@ -755,6 +760,9 @@ void LEM::SystemsInit()
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
+
+
+
 	ecs.Init(this);
 
 	// EDS initialization

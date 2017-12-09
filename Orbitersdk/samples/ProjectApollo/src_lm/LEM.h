@@ -550,6 +550,8 @@ public:
 	h_Tank *HXHeating;
 	h_Tank *HXCooling;
 	h_crew *Crew;
+	Pump *SuitFan1;
+	Pump *SuitFan2;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
