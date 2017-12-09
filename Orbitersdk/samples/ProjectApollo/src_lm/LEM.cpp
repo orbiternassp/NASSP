@@ -1076,6 +1076,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
+			PrimGlycolPumpController.LoadState(line);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1457,6 +1460,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+
+	// Save ECS
+	PrimGlycolPumpController.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

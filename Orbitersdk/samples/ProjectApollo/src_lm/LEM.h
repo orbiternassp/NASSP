@@ -1772,6 +1772,7 @@ protected:
 	LEMWaterSeparationSelector WaterSeparationSelector;
 	LEMCabinFan CabinFan;
 	LEMWaterTankSelect WaterTankSelect;
+	LEMPrimGlycolPumpController PrimGlycolPumpController;
 
 	// EDS
 	LEM_EDS eds;
