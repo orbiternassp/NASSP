@@ -333,4 +333,15 @@ protected:
 	h_Valve *TunnelPressValve;
 };
 
+class SaturnForwardHatch
+{
+public:
+	SaturnForwardHatch();
+	void Init(h_Valve *pev, RotationalSwitch *pes);
+	void SystemTimestep(double simdt);
+protected:
+	RotationalSwitch *PressureEqualizationSwitch;
+	h_Valve *PressureEqualizationValve;
+};
+
 #endif // _PA_ECS_H

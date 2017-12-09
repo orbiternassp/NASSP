@@ -1264,3 +1264,38 @@ void SaturnLMTunnelVent::SystemTimestep(double simdt)
 		TunnelPressValve->Close();
 	}
 }
+
+SaturnForwardHatch::SaturnForwardHatch()
+{
+	PressureEqualizationSwitch = NULL;
+	PressureEqualizationValve = NULL;
+}
+
+void SaturnForwardHatch::Init(h_Valve *pev, RotationalSwitch *pes)
+{
+	PressureEqualizationSwitch = pes;
+	PressureEqualizationValve = pev;
+}
+
+void SaturnForwardHatch::SystemTimestep(double simdt)
+{
+	if (!PressureEqualizationValve) return;
+
+	// Valve in motion
+	if (PressureEqualizationValve->pz) return;
+
+	//PRESSURE EQUALIZATION VALVE
+
+	//CLOSED
+	if (PressureEqualizationSwitch->GetState() == 3)
+	{
+		PressureEqualizationValve->Close();
+	}
+	else
+	{
+		PressureEqualizationValve->Open();
+		PressureEqualizationValve->size = 0.01f*(float)(3 - PressureEqualizationSwitch->GetState());
+	}
+
+	//TBD: Hatch opening and closing
+}
