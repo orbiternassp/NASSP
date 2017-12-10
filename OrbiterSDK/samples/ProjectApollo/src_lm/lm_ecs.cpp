@@ -663,7 +663,7 @@ void LEMWaterTankSelect::SystemTimestep(double simdt)
 	//SEC
 	else if (WaterTankSelectSwitch->GetState() == 2)
 	{
-		WaterTankSelect->IN_valve.Open();
+		WaterTankSelect->IN_valve.Close();
 		WaterTankSelect->OUT_valve.Close();
 		WaterTankSelect->OUT2_valve.Open();
 		SurgeTank->OUT_valve.Close();
@@ -969,21 +969,21 @@ double LEM_ECS::GetPrimaryGlycolPressure() {
 
 double LEM_ECS::GetPrimaryGlycolTemperature() {
 	if (!Primary_CL_Glycol_Temp) {
-		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
 	}
-	return *Primary_CL_Glycol_Temp * 1.8 - 459.67;
+	return *Primary_CL_Glycol_Temp * 1.8 - 459.67;	//K to F
 }
 
 double LEM_ECS::GetSecondaryGlycolPressure() {
 	if (!Secondary_CL_Glycol_Press) {
-		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:PRESS");
+		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP1:PRESS");
 	}
 	return *Secondary_CL_Glycol_Press * PSI;
 }
 
 double LEM_ECS::GetSecondaryGlycolTemperature() {
 	if (!Secondary_CL_Glycol_Temp) {
-		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:TEMP");
+		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECEVAPOUTLET:TEMP");
 	}
-	return *Secondary_CL_Glycol_Temp * 1.8 - 459.67;
+	return *Secondary_CL_Glycol_Temp * 1.8 - 459.67;	//K to F
 }

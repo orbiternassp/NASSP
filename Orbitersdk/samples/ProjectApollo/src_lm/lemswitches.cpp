@@ -434,7 +434,7 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return (lem->ecs.DescentOxyTankQuantity()/(21772))*100; //quantity in grams
+			return (lem->ecs.DescentOxyTankQuantity()/(21772.5))*100; //quantity in grams
 		case 2: // ASC 1
 			return (lem->ecs.AscentOxyTank1Quantity()/(1102))*100;	//quantity in grams
 		case 3: // ASC 2
