@@ -86,13 +86,13 @@ void Sat1Abort2::Setup()
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(1.85,1.85,19.8-12.25);
+	mesh_dir=_V(2.45, 0, 19.8-12.25);
     AddMesh (hSat1stg21, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,19.8-12.25);
+	mesh_dir=_V(0, 2.45, 19.8-12.25);
     AddMesh (hSat1stg22, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,19.8-12.25);
+	mesh_dir=_V(0, -2.45, 19.8-12.25);
     AddMesh (hSat1stg23, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,19.8-12.25);
+	mesh_dir=_V(-2.45, 0, 19.8-12.25);
     AddMesh (hSat1stg24, &mesh_dir);
 	mesh_dir=_V(0,-0.14,26.6-12.25);
 	AddMesh (hSM, &mesh_dir);
