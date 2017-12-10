@@ -44,6 +44,7 @@
 #include "lm_programer.h"
 #include "lm_aca.h"
 #include "lm_ttca.h"
+#include "lm_scea.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -1855,6 +1856,8 @@ protected:
 	friend class LEM_ACA;
 	friend class LEM_RGA;
 	friend class LEM_TTCA;
+	friend class SCERA1;
+	friend class SCERA2;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
