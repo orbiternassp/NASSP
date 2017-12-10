@@ -1572,6 +1572,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *primloop1mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:MASS");
 	double *primloop1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:TEMP");
+	double *primloop2temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:TEMP");
 
 	double *primevapinmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:MASS");
 	double *primevaptempin = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
@@ -1579,8 +1580,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *primevaptempout = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
 
 
-
-	sprintf(oapiDebugString(), "Loop1Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", *primloop1temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
+	sprintf(oapiDebugString(), "Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", *primloop1temp, *primloop2temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "DH2O:M %lf WTS:M %lf ST:M %lf PR:M %lf vlv %d WB:M %lf Loop1 %lf EVAPin %lf EVAPout %lf CaseGly %lf EThrot %lf ESteam %lf", *DesH2OMass, *WTSMass, *STMass, *primregmass, *primevap1vlv, *primwbmass, *primevaptempin, *primevaptempout, *primloop1temp, *primevapThrottle, *primevapSteam*PSI);
 	//sprintf(oapiDebugString(), "PCO2F %lf SFMP %lf HXCP %lf HXHP %lf WSF %lf WSFM %lf", *primCO2Flow, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *hxheatingPress*PSI, *WS1Flow, *WS1FlowMax);
 	//sprintf(oapiDebugString(), "GlyTmp %lf HXHTmp %lf HXCTmp %lf StTmp %lf Pmp %d Vlv %d Throt %lf Steam %lf", *primglycoltemp, *hxheatingTemp, *hxcoolingTemp, *SuitCircuitTemp, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);

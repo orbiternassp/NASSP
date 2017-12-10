@@ -990,7 +990,7 @@ void h_HeatExchanger::refresh(double dt) {
 		pump = true;
 
 	} else if (h_pump == 1) {
-		//
+		
 		// Only cooling at the moment, heating causes bugs during high time accelerations
 		//if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
 		//	pump = true;
