@@ -47,6 +47,7 @@ public:
 	bool GetAscentPropPressTank1Relay() { return AscentPropPressTank1Relay; }
 	bool GetAscentPropPressTank2Relay() { return AscentPropPressTank2Relay; }
 	bool GetAscentPropCompValvesRelay() { return AscentPropCompValvesRelay; }
+	bool GetRCSPropPressRelay() { return RCSPropPressRelay; }
 	void SetStagingRelay() { StagingRelay = true; }
 
 	bool GetStageRelayMonitor();

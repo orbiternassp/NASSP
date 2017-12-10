@@ -1576,6 +1576,8 @@ protected:
 	Pyro AscentHeliumIsol2Pyros;
 	Pyro AscentOxidCompValvePyros;
 	Pyro AscentFuelCompValvePyros;
+	Pyro RCSHeliumSupplyAPyros;
+	Pyro RCSHeliumSupplyBPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
 	PowerMerge DescentPropVentPyrosFeeder;
@@ -1586,6 +1588,8 @@ protected:
 	PowerMerge AscentHeliumIsol2PyrosFeeder;
 	PowerMerge AscentOxidCompValvePyrosFeeder;
 	PowerMerge AscentFuelCompValvePyrosFeeder;
+	PowerMerge RCSHeliumSupplyAPyrosFeeder;
+	PowerMerge RCSHeliumSupplyBPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;

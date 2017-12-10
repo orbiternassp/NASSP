@@ -571,6 +571,27 @@ void LEM_EDS::TimeStep(double simdt) {
 		(pyroB ? &lem->ED28VBusB : NULL));
 	lem->AscentOxidCompValvePyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
+
+
+	// RCS Helium Supply Valves
+	pyroA = false, pyroB = false;
+	if (lem->stage < 2)
+	{
+		if (RelayBoxA.GetRCSPropPressRelay() && RelayBoxA.GetMasterArmRelay())
+		{
+			// Blow Pyro A
+			pyroA = true;
+		}
+	}
+	if (RelayBoxB.GetRCSPropPressRelay() && RelayBoxB.GetMasterArmRelay())
+	{
+		// Blow Pyro B
+		pyroB = true;
+	}
+	lem->RCSHeliumSupplyAPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
+	lem->RCSHeliumSupplyBPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
+		(pyroB ? &lem->ED28VBusB : NULL));
 	
 	// Set TBs
 	// BP when descent stage detached
