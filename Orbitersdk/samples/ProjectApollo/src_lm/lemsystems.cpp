@@ -1595,7 +1595,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *secevapmassout = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPOUTLET:MASS");
 
 
-	sprintf(oapiDebugString(), "Press %lf Loop1Mass %lf Evap Mass %lf Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", ecs.GetSecondaryGlycolPressure(), *secloop1mass, *secevapmassout, *secloop1temp, *secloop2temp, *secevaptempin, *secevaptempout, *secevapPump, *secevapValve, *secevapThrottle, (*secevapSteam)*PSI);
+	//sprintf(oapiDebugString(), "Press %lf Loop1Mass %lf Evap Mass %lf Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", ecs.GetSecondaryGlycolPressure(), *secloop1mass, *secevapmassout, *secloop1temp, *secloop2temp, *secevaptempin, *secevaptempout, *secevapPump, *secevapValve, *secevapThrottle, (*secevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", *primloop1temp, *primloop2temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "DH2O:M %lf WTS:M %lf ST:M %lf PR:M %lf vlv %d WB:M %lf Loop1 %lf EVAPin %lf EVAPout %lf CaseGly %lf EThrot %lf ESteam %lf", *DesH2OMass, *WTSMass, *STMass, *primregmass, *primevap1vlv, *primwbmass, *primevaptempin, *primevaptempout, *primloop1temp, *primevapThrottle, *primevapSteam*PSI);
 	//sprintf(oapiDebugString(), "PCO2F %lf SFMP %lf HXCP %lf HXHP %lf WSF %lf WSFM %lf", *primCO2Flow, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *hxheatingPress*PSI, *WS1Flow, *WS1FlowMax);
