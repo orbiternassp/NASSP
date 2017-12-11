@@ -892,7 +892,7 @@ double LEM_ECS::GetSuitPressurePSI() {
 
 double LEM_ECS::GetSensorCO2MMHg() {
 	if (!Sensor_CO2) {
-		Sensor_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+		Sensor_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITINLET:CO2_PPRESS");
 	}
 	return *Sensor_CO2 * MMHG;
 }
@@ -927,7 +927,7 @@ double LEM_ECS::GetCabinTemperature() {
 
 double LEM_ECS::GetSuitTemperature() {
 	if (!Suit_Temp) {
-		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:TEMP");
+		Suit_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITINLET:TEMP");
 	}
 	return *Suit_Temp * 1.8 - 459.67;   //K to F
 }
