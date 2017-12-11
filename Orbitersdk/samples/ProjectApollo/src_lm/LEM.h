@@ -547,8 +547,6 @@ public:
 	h_Tank *O2Manifold;
 	h_Tank *PressRegA;
 	h_Tank *PressRegB;
-	h_Tank *HXHeating;
-	h_Tank *HXCooling;
 	h_crew *Crew;
 	Pump *SuitFan1;
 	Pump *SuitFan2;
@@ -791,7 +789,7 @@ protected:
 	LMCabinTempMeter LMCabinTempMeter;
 	LMSuitPressMeter LMSuitPressMeter;
 	LMCabinPressMeter LMCabinPressMeter;
-	LMCabinCO2Meter LMCabinCO2Meter;
+	LMCO2Meter LMCO2Meter;
 
 	SwitchRow ECSLowerIndicatorRow;
 	LMGlycolTempMeter LMGlycolTempMeter;
@@ -1819,7 +1817,7 @@ protected:
 	friend class LMOxygenQtyMeter;
 	friend class LMGlycolPressMeter;
 	friend class LMGlycolTempMeter;
-	friend class LMCabinCO2Meter;
+	friend class LMCO2Meter;
 	friend class LMCabinPressMeter;
 	friend class LMSuitPressMeter;
 	friend class LMCabinTempMeter;

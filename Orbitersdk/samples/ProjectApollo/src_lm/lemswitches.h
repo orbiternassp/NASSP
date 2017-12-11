@@ -196,9 +196,9 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinCO2Meter : public MeterSwitch {
+class LMCO2Meter : public MeterSwitch {
 public:
-	LMCabinCO2Meter();
+	LMCO2Meter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);

@@ -236,7 +236,7 @@ void LEM::InitSwitches() {
 	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",40,100,2);
 	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,10,2);
 	LMCabinPressMeter.Register(PSH,"LMCabinPressMeter",0,10,2);
-	LMCabinCO2Meter.Register(PSH,"LMCabinCO2Meter",0,30,2);
+	LMCO2Meter.Register(PSH,"LMCO2Meter",0,30,2);
 	LMGlycolTempMeter.Register(PSH,"LMGlycolTempMeter",0,80,2);
 	LMGlycolPressMeter.Register(PSH,"LMGlycolPressMeter",0,80,2);
 	LMOxygenQtyMeter.Register(PSH,"LMOxygenQtyMeter",0,100,2);
@@ -924,7 +924,7 @@ void LEM::InitSwitches() {
 
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
-	DESH2OValve.Register(PSH, "DESH2OValve", 1);
+	DESH2OValve.Register(PSH, "DESH2OValve", 0);
 
 	WaterTankSelectValve.AddPosition(0, 150);
 	WaterTankSelectValve.AddPosition(1, 240);
@@ -938,9 +938,9 @@ void LEM::InitSwitches() {
 	SuitTempValve.AddPosition(4, 90);
 	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 
-	ASCH2OValve.AddPosition(0, 340);
-	ASCH2OValve.AddPosition(1, 100);
-	ASCH2OValve.Register(PSH, "ASCH2OValve", 0);
+	ASCH2OValve.AddPosition(0, 100);
+	ASCH2OValve.AddPosition(1, 340);
+	ASCH2OValve.Register(PSH, "ASCH2OValve", 1);
 
 	LiquidGarmentCoolingValve.AddPosition(0, 0);
 	LiquidGarmentCoolingValve.AddPosition(1, 22);
@@ -1947,7 +1947,7 @@ void LEM::SetSwitches(int panel) {
 	LMCabinTempMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 	LMSuitPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 	LMCabinPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
-	LMCabinCO2Meter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+	LMCO2Meter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 
 	ECSLowerIndicatorRow.Init(AID_LM_ECSIND_LOWER, MainPanel);
 	LMGlycolTempMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
@@ -2753,7 +2753,7 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//ASC H2O Valve
 		else if (s == &ASCH2OValve) {
 			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCH2OTANK1:OUT");
-			if (ASCH2OValve.GetState() == 1) {
+			if (ASCH2OValve.GetState() == 0) {
 				vlv->Open();
 			}
 			else {

@@ -784,15 +784,14 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Secondary_CL_Glycol_Temp = 0; // 40 in the accu, 0 other side of the pump
 	Primary_Glycol_Accu = 0; // Cubic inches of coolant
 	Secondary_Glycol_Accu = 0; // Cubic inches of coolant
-	Primary_Glycol = 0;
-	Secondary_Glycol = 0;
 	// Open valves as would be for IVT
 	Des_O2 = 0;
 	Des_H2O_To_PLSS = 0;
 	Cabin_Repress = 0; // Auto
 					   // For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
-	Cabin_Press = 0; Cabin_Temp = 0; Cabin_CO2 = 0;
-	Suit_Press = 0; Suit_Temp = 0; Suit_CO2 = 0;
+	Cabin_Press = 0; Cabin_Temp = 0;
+	Suit_Press = 0; Suit_Temp = 0;
+	Sensor_CO2 = 0;
 
 }
 
@@ -835,94 +834,67 @@ void LEM_ECS::LoadState(FILEHANDLE scn, char *end_str) {
 
 }
 
-double LEM_ECS::DescentOxyTankPressure() {
+double LEM_ECS::DescentOxyTankPressurePSI() {
 	if (!Des_OxygenPress) {
 		Des_OxygenPress = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:PRESS");
 	}
-	return *Des_OxygenPress;
-}
-
-double LEM_ECS::DescentOxyTankPressurePSI() {
-	return DescentOxyTankPressure() * PSI;
-}
-
-double LEM_ECS::AscentOxyTank1Pressure() {
-	if (!Asc_Oxygen1Press) {
-		Asc_Oxygen1Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:PRESS");
-	}
-	return *Asc_Oxygen1Press;
+	return *Des_OxygenPress * PSI;
 }
 
 double LEM_ECS::AscentOxyTank1PressurePSI() {
-	return AscentOxyTank1Pressure() * PSI;
-}
-
-double LEM_ECS::AscentOxyTank2Pressure() {
-	if (!Asc_Oxygen2Press) {
-		Asc_Oxygen2Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:PRESS");
+	if (!Asc_Oxygen1Press) {
+		Asc_Oxygen1Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:PRESS");
 	}
-	return *Asc_Oxygen2Press;
+	return *Asc_Oxygen1Press * PSI;
 }
 
 double LEM_ECS::AscentOxyTank2PressurePSI() {
-	return AscentOxyTank2Pressure() * PSI;
+	if (!Asc_Oxygen2Press) {
+		Asc_Oxygen2Press = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:PRESS");
+	}
+	return *Asc_Oxygen2Press * PSI;
 }
 
-double LEM_ECS::DescentOxyTankQuantity() {
+double LEM_ECS::DescentOxyTankQuantityLBS() {
 	if (!Des_Oxygen) {
 		Des_Oxygen = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:MASS");
 	}
-	return *Des_Oxygen;
+	return *Des_Oxygen * 0.0022046226218;
 }
 
-double LEM_ECS::AscentOxyTank1Quantity() {
+double LEM_ECS::AscentOxyTank1QuantityLBS() {
 	if (!Asc_Oxygen1) {
 		Asc_Oxygen1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:MASS");
 	}
-	return *Asc_Oxygen1;
+	return *Asc_Oxygen1 * 0.0022046226218;
 }
 
-double LEM_ECS::AscentOxyTank2Quantity() {
+double LEM_ECS::AscentOxyTank2QuantityLBS() {
 	if (!Asc_Oxygen2) {
 		Asc_Oxygen2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:MASS");
 	}
-	return *Asc_Oxygen2;
-}
-
-double LEM_ECS::GetCabinPressure() {
-	if (!Cabin_Press) {
-		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
-	}
-	return *Cabin_Press;
+	return *Asc_Oxygen2 * 0.0022046226218;
 }
 
 double LEM_ECS::GetCabinPressurePSI() {
-	return GetCabinPressure() * PSI;
-}
-
-double LEM_ECS::GetCabinCO2MMHg() {
-	if (!Cabin_CO2) {
-		Cabin_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
+	if (!Cabin_Press) {
+		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	}
-	return *Cabin_CO2 * MMHG;
-}
-
-double LEM_ECS::GetSuitPressure() {
-	if (!Suit_Press) {
-		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
-	}
-	return *Suit_Press;
+	return *Cabin_Press * PSI;
 }
 
 double LEM_ECS::GetSuitPressurePSI() {
-	return GetSuitPressure() * PSI;
+	if (!Suit_Press) {
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
+	}
+	return *Suit_Press * PSI;
 }
 
-double LEM_ECS::GetSuitCO2MMHg() {
-	if (!Suit_CO2) {
-		Suit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+double LEM_ECS::GetSensorCO2MMHg() {
+	if (!Sensor_CO2) {
+		Sensor_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	return *Suit_CO2 * MMHG;
+	return *Sensor_CO2 * MMHG;
 }
 
 double LEM_ECS::DescentWaterTankQuantityLBS() {
@@ -969,7 +941,7 @@ double LEM_ECS::GetPrimaryGlycolPressure() {
 
 double LEM_ECS::GetPrimaryGlycolTemperature() {
 	if (!Primary_CL_Glycol_Temp) {
-		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
 	}
 	return *Primary_CL_Glycol_Temp * 1.8 - 459.67;	//K to F
 }
@@ -983,7 +955,7 @@ double LEM_ECS::GetSecondaryGlycolPressure() {
 
 double LEM_ECS::GetSecondaryGlycolTemperature() {
 	if (!Secondary_CL_Glycol_Temp) {
-		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECEVAPOUTLET:TEMP");
+		Secondary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:TEMP");
 	}
 	return *Secondary_CL_Glycol_Temp * 1.8 - 459.67;	//K to F
 }

@@ -205,23 +205,17 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	double AscentOxyTank1Pressure();
-	double AscentOxyTank2Pressure();
-	double DescentOxyTankPressure();
 	double AscentOxyTank1PressurePSI();
 	double AscentOxyTank2PressurePSI();
 	double DescentOxyTankPressurePSI();
-	double AscentOxyTank1Quantity();
-	double AscentOxyTank2Quantity();
-	double DescentOxyTankQuantity();
-	double GetCabinPressure();
+	double AscentOxyTank1QuantityLBS();
+	double AscentOxyTank2QuantityLBS();
+	double DescentOxyTankQuantityLBS();
 	double GetCabinPressurePSI();
 	double GetCabinTemperature();
-	double GetCabinCO2MMHg();
-	double GetSuitPressure();
 	double GetSuitPressurePSI();
 	double GetSuitTemperature();
-	double GetSuitCO2MMHg();
+	double GetSensorCO2MMHg();
 	double AscentWaterTank1QuantityLBS();
 	double AscentWaterTank2QuantityLBS();
 	double DescentWaterTankQuantityLBS();
@@ -231,8 +225,8 @@ public:
 	double GetSecondaryGlycolTemperature();
 
 	LEM *lem;													// Pointer at LEM
-	double *Cabin_Press, *Cabin_Temp, *Cabin_CO2;					// Cabin Atmosphere
-	double *Suit_Press, *Suit_Temp, *Suit_CO2;					// Suit Circuit Atmosphere
+	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
+	double *Suit_Press, *Suit_Temp, *Sensor_CO2;					// Suit Circuit Atmosphere
 	double *Asc_Water1, *Asc_Water2, *Des_Water;					// Water tanks
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
@@ -242,8 +236,6 @@ public:
 	double *Secondary_CL_Glycol_Temp;						// Teperature before and after pumps
 	double *Primary_Glycol_Accu;								// Glycol Accumulator
 	double *Secondary_Glycol_Accu;								// Glycol Accumulator
-	double *Primary_Glycol;										// Glycol in system
-	double *Secondary_Glycol;									// Glycol in system
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve
 	int *Pri_Evap_Flow_1, *Pri_Evap_Flow_2;						// Primary evaporator flow valves

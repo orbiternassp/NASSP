@@ -284,13 +284,13 @@ void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 // ECS indicator, cabin CO2 level
-LMCabinCO2Meter::LMCabinCO2Meter()
+LMCO2Meter::LMCO2Meter()
 
 {
 	NeedleSurface = 0;
 }
 
-void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void LMCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 
 {
 	MeterSwitch::Init(row);
@@ -298,15 +298,14 @@ void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 	NeedleSurface = surf;
 }
 
-double LMCabinCO2Meter::QueryValue()
+double LMCO2Meter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	// FIXME: NEED TO HANDLE SUIT GAS DIVERTER HERE
-	return lem->ecs.GetCabinCO2MMHg();
+	return lem->ecs.GetSensorCO2MMHg();
 }
 
-void LMCabinCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
 	double cf,sf; // Correction Factor, Scale factor
@@ -434,11 +433,11 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return (lem->ecs.DescentOxyTankQuantity()/(21772.5))*100; //quantity in grams
+			return (lem->ecs.DescentOxyTankQuantityLBS()/(48.0))*100; 
 		case 2: // ASC 1
-			return (lem->ecs.AscentOxyTank1Quantity()/(1102))*100;	//quantity in grams
+			return (lem->ecs.AscentOxyTank1QuantityLBS()/(2.43))*100;	
 		case 3: // ASC 2
-			return (lem->ecs.AscentOxyTank2Quantity()/(1102))*100;	//quantity in grams
+			return (lem->ecs.AscentOxyTank2QuantityLBS()/(2.43))*100;	
 	}
 }
 
