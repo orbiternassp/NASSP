@@ -924,7 +924,7 @@ void LEM::InitSwitches() {
 
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
-	DESH2OValve.Register(PSH, "DESH2OValve", 0);
+	DESH2OValve.Register(PSH, "DESH2OValve", 1);
 
 	WaterTankSelectValve.AddPosition(0, 150);
 	WaterTankSelectValve.AddPosition(1, 240);

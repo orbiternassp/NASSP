@@ -608,8 +608,19 @@ void LEM::SystemsInit()
 	LMWaterQtyMeter.WireTo(&ECS_DISP_CB);
 	ECS_CABIN_REPRESS_CB.MaxAmps = 2.0;
 	ECS_CABIN_REPRESS_CB.WireTo(&LMPs28VBus);
+	ECS_GLYCOL_PUMP_1_CB.MaxAmps = 5.0;
+	ECS_GLYCOL_PUMP_1_CB.WireTo(&CDRs28VBus);
 	ECS_GLYCOL_PUMP_2_CB.MaxAmps = 5.0;
 	ECS_GLYCOL_PUMP_2_CB.WireTo(&CDRs28VBus);
+	ECS_GLYCOL_PUMP_AUTO_XFER_CB.MaxAmps = 2.0;
+	ECS_GLYCOL_PUMP_AUTO_XFER_CB.WireTo(&CDRs28VBus);
+	ECS_SUIT_FAN_1_CB.MaxAmps = 20.0;
+	ECS_SUIT_FAN_1_CB.WireTo(&CDRs28VBus);
+	ECS_SUIT_FAN_2_CB.MaxAmps = 20.0;
+	ECS_SUIT_FAN_2_CB.WireTo(&LMPs28VBus);
+	ECS_SUIT_FAN_DP_CB.MaxAmps = 2.0;
+	ECS_SUIT_FAN_DP_CB.WireTo(&LMPs28VBus);
+
 
 	Crew = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
 
@@ -637,7 +648,7 @@ void LEM::SystemsInit()
 	PressRegB->BoilAllAndSetTemp(294.261);
 
 	//Oxygen Pipe Initialization   
-	//****Need to go through these and remove any unnecessary ones****
+
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE2", 660.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:CABINREPRESS", 396.0 / LBH);
@@ -647,6 +658,7 @@ void LEM::SystemsInit()
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGBOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRELIEFVALVE", 7.8 / LBH);
 
+	//****Need to go through these and remove any unnecessary ones****
 /*
 	SetPipeMaxFlow("HYDRAULIC:ASC1O2PIPE", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:ASC2O2PIPE", 6.75 / LBH);
@@ -1604,12 +1616,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lcgtemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCG:TEMP"); 
 	double *glycolsuitcooltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXCOOLING:TEMP");
 
+
+
+	sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf HXHTmp %lf StTmp %lf Throt %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, *primevapThrottle);
 	//sprintf(oapiDebugString(), "LCGAM %lf LCGAP %lf LCGAT %lf LCGHXM %lf LCGHXP %lf LCGHXT %lf LCGM %lf LCGP %lf LCGT %lf", *lcgaccumass, (*lcgaccupress)*PSI, *lcgaccutemp, *lcghxmass, (*lcghxpress)*PSI, *lcghxtemp, *lcgmass, (*lcgpress)*PSI, *lcgtemp);
 	//sprintf(oapiDebugString(), "Press %lf Loop1Mass %lf Evap Mass %lf Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", ecs.GetSecondaryGlycolPressure(), *secloop1mass, *secevapmassout, *secloop1temp, *secloop2temp, *secevaptempin, *secevaptempout, *secevapPump, *secevapValve, *secevapThrottle, (*secevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "WB Press %lfLoop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", (*primwbpress)*PSI, *primloop1temp, *primloop2temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "DH2O:M %lf WTS:M %lf ST:M %lf PR:M %lf vlv %d WB:M %lf Loop1 %lf EVAPin %lf EVAPout %lf CaseGly %lf EThrot %lf ESteam %lf", *DesH2OMass, *WTSMass, *STMass, *primregmass, *primevap1vlv, *primwbmass, *primevaptempin, *primevaptempout, *primloop1temp, *primevapThrottle, *primevapSteam*PSI);
 	//sprintf(oapiDebugString(), "PCO2F %lf SFMP %lf HXCP %lf HXHP %lf WSF %lf WSFM %lf", *primCO2Flow, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *hxheatingPress*PSI, *WS1Flow, *WS1FlowMax);
-	sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf StTmp %lf Throt %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, *primevapThrottle);
 	//sprintf(oapiDebugString(), "PCO2P %1f PCO2M %lf SFMP %lf SFMM %lf CO2F %lf CO2FM %lf CO2REM %lf", (*primCo2CanisterPress)*PSI, *primCO2Mass, (*suitfanmanifoldPress)*PSI, *suitfanmanifoldMass, *primCO2Flow, *primCO2FlowMax, *primCO2Removal);
 	//sprintf(oapiDebugString(), "GTemp %lf GPress %lf GMass %lf EPump %d EValve %lf EThrot %lf ESteam %lf", ecs.GetPrimaryGlycolTemperature(), ecs.GetPrimaryGlycolPressure(), *primglycolmass, *primevapPump, *primevapValve, *primevapThrottle, *primevapSteam*PSI);
 	
