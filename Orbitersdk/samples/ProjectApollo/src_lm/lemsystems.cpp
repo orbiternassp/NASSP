@@ -1450,8 +1450,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
 	DesO2Manifold->BoilAllAndSetTemp(294.261);
 	O2Manifold->BoilAllAndSetTemp(294.261);
-	PressRegA->BoilAllAndSetTemp(294.261);
-	PressRegB->BoilAllAndSetTemp(294.261);
+	//PressRegA->BoilAllAndSetTemp(294.261);
+	//PressRegB->BoilAllAndSetTemp(294.261);
 
 	// Debug tests //
 
@@ -1618,7 +1618,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 
 
-	sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf HXHTmp %lf StTmp %lf Throt %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, *primevapThrottle);
+	//sprintf(oapiDebugString(), "PRAQ %lf PRAP %lf PRAT %lf PRBQ %lf PRBP %lf PRBT %lf", *PressRegAMass, (*PressRegAPress)*PSI, (*PressRegATemp)* 1.8 - 459.67, *PressRegBMass, (*PressRegBPress)*PSI, (*PressRegBTemp)* 1.8 - 459.67);
+	//sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf HXHTmp %lf StTmp %lf Throt %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, *primevapThrottle);
 	//sprintf(oapiDebugString(), "LCGAM %lf LCGAP %lf LCGAT %lf LCGHXM %lf LCGHXP %lf LCGHXT %lf LCGM %lf LCGP %lf LCGT %lf", *lcgaccumass, (*lcgaccupress)*PSI, *lcgaccutemp, *lcghxmass, (*lcghxpress)*PSI, *lcghxtemp, *lcgmass, (*lcgpress)*PSI, *lcgtemp);
 	//sprintf(oapiDebugString(), "Press %lf Loop1Mass %lf Evap Mass %lf Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", ecs.GetSecondaryGlycolPressure(), *secloop1mass, *secevapmassout, *secloop1temp, *secloop2temp, *secevaptempin, *secevaptempout, *secevapPump, *secevapValve, *secevapThrottle, (*secevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "WB Press %lfLoop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", (*primwbpress)*PSI, *primloop1temp, *primloop2temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
