@@ -2717,6 +2717,38 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 				vlv->Close();
 			}
 		}
+		
+		//CDR Suit Isol Valve
+		else if (s == &CDRSuitIsolValve) {
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT");
+			h_Valve * scvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT2");
+			//Suit Disconnect
+			if (CDRSuitIsolValve.GetState() == 1) {
+				sfvlv->Close();
+				scvlv->Open();
+			}
+			//Suit Flow
+			else {
+				sfvlv->Open();
+				scvlv->Close();
+			}
+		}
+		
+		//LMP Suit Isol Valve
+		else if (s == &LMPSuitIsolValve) {
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT");
+			h_Valve * scvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT2");
+			//Suit Disconnect
+			if (CDRSuitIsolValve.GetState() == 1) {
+				sfvlv->Close();
+				scvlv->Open();
+			}
+			//Suit Flow
+			else {
+				sfvlv->Open();
+				scvlv->Close();
+			}
+		}
 
 		//Suit Fan Control
 		else if (s == &SuitFanRotary) {
