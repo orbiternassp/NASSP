@@ -791,7 +791,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 					   // For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; Suit_Temp = 0;
-	Sensor_CO2 = 0;
+	SuitCircuit_CO2; HX_CO2 = 0;
 
 }
 
@@ -858,21 +858,21 @@ double LEM_ECS::DescentOxyTankQuantityLBS() {
 	if (!Des_Oxygen) {
 		Des_Oxygen = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:MASS");
 	}
-	return *Des_Oxygen * 0.0022046226218;
+	return *Des_Oxygen * LBS;	
 }
 
 double LEM_ECS::AscentOxyTank1QuantityLBS() {
 	if (!Asc_Oxygen1) {
 		Asc_Oxygen1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:MASS");
 	}
-	return *Asc_Oxygen1 * 0.0022046226218;
+	return *Asc_Oxygen1 * LBS;	
 }
 
 double LEM_ECS::AscentOxyTank2QuantityLBS() {
 	if (!Asc_Oxygen2) {
 		Asc_Oxygen2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:MASS");
 	}
-	return *Asc_Oxygen2 * 0.0022046226218;
+	return *Asc_Oxygen2 * LBS;	
 }
 
 double LEM_ECS::GetCabinPressurePSI() {
@@ -890,31 +890,34 @@ double LEM_ECS::GetSuitPressurePSI() {
 }
 
 double LEM_ECS::GetSensorCO2MMHg() {
-	if (!Sensor_CO2) {
-		Sensor_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+	if (!SuitCircuit_CO2) {
+		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	return *Sensor_CO2 * MMHG;
+	if (!HX_CO2) {
+		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	}
+	return ((*SuitCircuit_CO2+*HX_CO2)/2) * MMHG;
 }
 
 double LEM_ECS::DescentWaterTankQuantityLBS() {
 	if (!Des_Water) {
 		Des_Water = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:MASS");
 	}
-	return *Des_Water * 0.0022046226218;  //grams to pounds
+	return *Des_Water * LBS;  
 }
 
 double LEM_ECS::AscentWaterTank1QuantityLBS() {
 	if (!Asc_Water1) {
 		Asc_Water1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK1:MASS");
 	}
-	return *Asc_Water1 * 0.0022046226218;  //grams to pounds
+	return *Asc_Water1 * LBS;  
 }
 
 double LEM_ECS::AscentWaterTank2QuantityLBS() {
 	if (!Asc_Water2) {
 		Asc_Water2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK2:MASS");
 	}
-	return *Asc_Water2 * 0.0022046226218;  //grams to pounds
+	return *Asc_Water2 * LBS;  
 }
 
 double LEM_ECS::GetCabinTemperature() {
