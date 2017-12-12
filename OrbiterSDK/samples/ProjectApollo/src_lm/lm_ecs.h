@@ -232,8 +232,8 @@ public:
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
 	double *Primary_CL_Glycol_Press;							// Pressure before and after pumps
 	double *Secondary_CL_Glycol_Press;						// Pressure before and after pumps
-	double *Primary_CL_Glycol_Temp;							// Teperature before and after pumps
-	double *Secondary_CL_Glycol_Temp;						// Teperature before and after pumps
+	double *Primary_CL_Glycol_Temp;							// Temperature before and after pumps
+	double *Secondary_CL_Glycol_Temp;						// Temperature before and after pumps
 	double *Primary_Glycol_Accu;								// Glycol Accumulator
 	double *Secondary_Glycol_Accu;								// Glycol Accumulator
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves

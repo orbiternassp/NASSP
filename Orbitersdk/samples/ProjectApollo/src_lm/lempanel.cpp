@@ -2721,32 +2721,44 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		//CDR Suit Isol Valve
 		else if (s == &CDRSuitIsolValve) {
 			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT");
-			h_Valve * scvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT2");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT2");
+			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT");
+			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT2");
 			//Suit Disconnect
 			if (CDRSuitIsolValve.GetState() == 1) {
 				sfvlv->Close();
-				scvlv->Open();
+				scinvlv->Open();
+				scoutvlv->Close();
+				dcvlv->Open();
 			}
 			//Suit Flow
 			else {
 				sfvlv->Open();
-				scvlv->Close();
+				scinvlv->Close();
+				scoutvlv->Open();
+				dcvlv->Close();
 			}
 		}
 		
 		//LMP Suit Isol Valve
 		else if (s == &LMPSuitIsolValve) {
 			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT");
-			h_Valve * scvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT2");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT2");
+			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT");
+			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT2");
 			//Suit Disconnect
-			if (CDRSuitIsolValve.GetState() == 1) {
+			if (LMPSuitIsolValve.GetState() == 1) {
 				sfvlv->Close();
-				scvlv->Open();
+				scinvlv->Open();
+				scoutvlv->Close();
+				dcvlv->Open();
 			}
 			//Suit Flow
 			else {
 				sfvlv->Open();
-				scvlv->Close();
+				scinvlv->Close();
+				scoutvlv->Open();
+				dcvlv->Close();
 			}
 		}
 

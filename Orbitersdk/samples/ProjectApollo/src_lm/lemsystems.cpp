@@ -614,12 +614,16 @@ void LEM::SystemsInit()
 	ECS_GLYCOL_PUMP_2_CB.WireTo(&CDRs28VBus);
 	ECS_GLYCOL_PUMP_AUTO_XFER_CB.MaxAmps = 2.0;
 	ECS_GLYCOL_PUMP_AUTO_XFER_CB.WireTo(&CDRs28VBus);
+	ECS_GLYCOL_PUMP_SEC_CB.MaxAmps = 5.0;
+	ECS_GLYCOL_PUMP_SEC_CB.WireTo(&LMPs28VBus);
 	ECS_SUIT_FAN_1_CB.MaxAmps = 20.0;
 	ECS_SUIT_FAN_1_CB.WireTo(&CDRs28VBus);
 	ECS_SUIT_FAN_2_CB.MaxAmps = 20.0;
 	ECS_SUIT_FAN_2_CB.WireTo(&LMPs28VBus);
 	ECS_SUIT_FAN_DP_CB.MaxAmps = 2.0;
 	ECS_SUIT_FAN_DP_CB.WireTo(&LMPs28VBus);
+	ECS_LGC_PUMP_CB.MaxAmps = 5.0;
+	ECS_LGC_PUMP_CB.WireTo(&LMPs28VBus);
 
 
 	Crew = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
@@ -634,9 +638,13 @@ void LEM::SystemsInit()
 	PressRegB = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB");
 	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
 	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
+	SecGlyPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP");
+	LCGPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:LCGPUMP");
 
 	SuitFan1->WireTo(&ECS_SUIT_FAN_1_CB);
 	SuitFan2->WireTo(&ECS_SUIT_FAN_2_CB);
+	SecGlyPump->WireTo(&ECS_GLYCOL_PUMP_SEC_CB);
+	LCGPump->WireTo(&ECS_LGC_PUMP_CB);
 
 	//Initialize LM ECS
 	DesO2Tank->BoilAllAndSetTemp(294.261);
@@ -1625,8 +1633,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmpsuittemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:TEMP");
 	double *lmpsuitenergy = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:ENERGY");
 
-
-	sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
+	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
+	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
 	//sprintf(oapiDebugString(), "PRAQ %lf PRAP %lf PRAT %lf PRBQ %lf PRBP %lf PRBT %lf", *PressRegAMass, (*PressRegAPress)*PSI, (*PressRegATemp)* 1.8 - 459.67, *PressRegBMass, (*PressRegBPress)*PSI, (*PressRegBTemp)* 1.8 - 459.67);
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf CE %lf LP %lf LT %lf LE %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
 	//sprintf(oapiDebugString(), "LCGAM %lf LCGAP %lf LCGAT %lf LCGHXM %lf LCGHXP %lf LCGHXT %lf LCGM %lf LCGP %lf LCGT %lf", *lcgaccumass, (*lcgaccupress)*PSI, *lcgaccutemp, *lcghxmass, (*lcghxpress)*PSI, *lcghxtemp, *lcgmass, (*lcgpress)*PSI, *lcgtemp);

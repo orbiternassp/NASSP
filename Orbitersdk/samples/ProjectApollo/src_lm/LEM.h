@@ -550,6 +550,8 @@ public:
 	h_crew *Crew;
 	Pump *SuitFan1;
 	Pump *SuitFan2;
+	Pump *SecGlyPump;
+	Pump *LCGPump;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
