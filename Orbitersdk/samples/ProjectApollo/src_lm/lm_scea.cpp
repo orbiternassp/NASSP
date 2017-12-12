@@ -30,7 +30,27 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_scea.h"
 
+SCEA_SolidStateSwitch::SCEA_SolidStateSwitch()
+{
+	Reset();
+}
+
+void SCEA_SolidStateSwitch::Reset()
+{
+	isClosed = false;
+}
+
+void SCEA_SolidStateSwitch::SetState(bool closed)
+{
+	isClosed = closed;
+}
+
 SCEA_SA_5011::SCEA_SA_5011()
+{
+	Reset();
+}
+
+void SCEA_SA_5011::Reset()
 {
 	for (int i = 0;i < 4;i++)
 	{
@@ -40,6 +60,11 @@ SCEA_SA_5011::SCEA_SA_5011()
 
 SCEA_SA_5022::SCEA_SA_5022()
 {
+	Reset();
+}
+
+void SCEA_SA_5022::Reset()
+{
 	for (int i = 0;i < 4;i++)
 	{
 		Output[i] = 0.0;
@@ -47,6 +72,11 @@ SCEA_SA_5022::SCEA_SA_5022()
 }
 
 SCEA_SA_5032::SCEA_SA_5032()
+{
+	Reset();
+}
+
+void SCEA_SA_5032::Reset()
 {
 	for (int i = 0;i < 3;i++)
 	{
@@ -56,6 +86,11 @@ SCEA_SA_5032::SCEA_SA_5032()
 
 SCEA_SA_5041::SCEA_SA_5041()
 {
+	Reset();
+}
+
+void SCEA_SA_5041::Reset()
+{
 	for (int i = 0;i < 4;i++)
 	{
 		Output[i] = 0.0;
@@ -63,6 +98,11 @@ SCEA_SA_5041::SCEA_SA_5041()
 }
 
 SCEA_SA_5042::SCEA_SA_5042()
+{
+	Reset();
+}
+
+void SCEA_SA_5042::Reset()
 {
 	for (int i = 0;i < 10;i++)
 	{
@@ -72,6 +112,11 @@ SCEA_SA_5042::SCEA_SA_5042()
 
 SCEA_SA_5043::SCEA_SA_5043()
 {
+	Reset();
+}
+
+void SCEA_SA_5043::Reset()
+{
 	for (int i = 0;i < 12;i++)
 	{
 		Output[i] = 0.0;
@@ -80,20 +125,30 @@ SCEA_SA_5043::SCEA_SA_5043()
 
 SCEA_SA_5044::SCEA_SA_5044()
 {
+	Reset();
+}
+
+void SCEA_SA_5044::Reset()
+{
 	for (int i = 0;i < 12;i++)
 	{
 		Output[i] = 0.0;
-		SolidStateSwitch[i] = false;
+		SolidStateSwitch[i].Reset();
 	}
 }
 
 void SCEA_SA_5044::SetOutput(int n, bool val)
 {
 	Output[n - 1] = val ? 5.0 : 0.0;
-	SolidStateSwitch[n - 1] = val;
+	SolidStateSwitch[n - 1].SetState(val);
 }
 
 SCEA_SA_5045::SCEA_SA_5045()
+{
+	Reset();
+}
+
+void SCEA_SA_5045::Reset()
 {
 	for (int i = 0;i < 12;i++)
 	{
@@ -103,6 +158,11 @@ SCEA_SA_5045::SCEA_SA_5045()
 
 SCEA_SA_5051::SCEA_SA_5051()
 {
+	Reset();
+}
+
+void SCEA_SA_5051::Reset()
+{
 	for (int i = 0;i < 3;i++)
 	{
 		Output[i] = 0.0;
@@ -110,6 +170,11 @@ SCEA_SA_5051::SCEA_SA_5051()
 }
 
 SCEA_SA_5062::SCEA_SA_5062()
+{
+	Reset();
+}
+
+void SCEA_SA_5062::Reset()
 {
 	for (int i = 0;i < 4;i++)
 	{
@@ -119,15 +184,34 @@ SCEA_SA_5062::SCEA_SA_5062()
 
 SCEA_SA_5071::SCEA_SA_5071()
 {
+	Reset();
+}
+
+void SCEA_SA_5071::Reset()
+{
 	for (int i = 0;i < 4;i++)
 	{
 		Output[i] = 0.0;
 	}
 }
 
-void SCERA::Init(LEM *l)
+SCERA::SCERA()
+{
+	lem = NULL;
+	dcpower = NULL;
+	Operate = false;
+}
+
+void SCERA::Init(LEM *l, e_object *dc)
 {
 	lem = l;
+	dcpower = dc;
+}
+
+bool SCERA::IsPowered()
+{
+	if (dcpower->Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	return true;
 }
 
 double SCERA::scale_data(double data, double low, double high)
@@ -149,17 +233,73 @@ SCERA1::SCERA1()
 
 }
 
+void SCERA1::Reset()
+{
+	SA2.Reset();
+	SA3.Reset();
+	SA4.Reset();
+	SA5.Reset();
+	SA6.Reset();
+	SA7.Reset();
+	SA8.Reset();
+	SA9.Reset();
+	SA10.Reset();
+	SA11.Reset();
+	SA12.Reset();
+	SA13.Reset();
+	SA14.Reset();
+	SA15.Reset();
+	SA16.Reset();
+	SA17.Reset();
+	SA18.Reset();
+	SA19.Reset();
+	SA20.Reset();
+	SA21.Reset();
+}
+
 void SCERA1::Timestep()
 {
+	if (!Operate) {
+		if (IsPowered())
+			Operate = true;
+		else
+			return;
+	}
+	else if (!IsPowered()) {
+		Reset();
+		return;
+	}
+
 	//APS regulator outlet manifold pressure (GP0025)
 	SA8.SetOutput(3, scale_data(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI(), 0.0, 300.0));
 	//APS helium tank no. 1 pressure (GP0001)
 	SA8.SetOutput(4, scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0));
 
+	//Main shutoff valves closed, system A (GR9609)
+	SA12.SetOutput(1, !lem->RCSA.GetMainShutoffValve()->IsOpen());
+	//Main shutoff valves closed, system B (GR96010)
+	SA12.SetOutput(2, !lem->RCSB.GetMainShutoffValve()->IsOpen());
 	//APS helium primary line solenoid valve closed (GP0318)
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
 	SA12.SetOutput(7, !lem->APSPropellant.GetHeliumValve2()->IsOpen());
+
+	//Thrust chamber assembly solenoid valve A4 closed (GR9661)
+	SA13.SetOutput(1, !lem->RCSA.GetQuad4IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B4 closed (GR9662)
+	SA13.SetOutput(2, !lem->RCSB.GetQuad4IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A3 closed (GR9663)
+	SA13.SetOutput(3, !lem->RCSA.GetQuad3IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B3 closed (GR9664)
+	SA13.SetOutput(4, !lem->RCSB.GetQuad3IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A2 closed (GR9665)
+	SA13.SetOutput(5, !lem->RCSA.GetQuad2IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B2 closed (GR9666)
+	SA13.SetOutput(6, !lem->RCSB.GetQuad2IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A1 closed (GR9667)
+	SA13.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
+	SA13.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
 
 	//Automatic thrust command voltage (GH1331)
 	SA15.SetOutput(1, scale_data(lem->deca.GetAutoThrustVoltage(), 0.0, 12.0));
@@ -272,14 +412,76 @@ double SCERA1::GetVoltage(int sa, int chan)
 	return 0.0;
 }
 
+void SCERA1::SystemTimestep(double simdt)
+{
+	if (Operate)
+	{
+		dcpower->DrawPower(12.6);
+	}
+}
+
+SCEA_SolidStateSwitch* SCERA1::GetSwitch(int sa, int chan)
+{
+	if (sa == 12)
+	{
+		return SA12.GetSwitch(chan);
+	}
+	else if (sa == 13)
+	{
+		return SA13.GetSwitch(chan);
+	}
+
+	return NULL;
+}
+
 SCERA2::SCERA2()
 {
 
 }
 
+void SCERA2::Reset()
+{
+	SA2.Reset();
+	SA3.Reset();
+	SA4.Reset();
+	SA5.Reset();
+	SA6.Reset();
+	SA7.Reset();
+	SA8.Reset();
+	SA9.Reset();
+	SA10.Reset();
+	SA12.Reset();
+	SA13.Reset();
+	SA14.Reset();
+	SA15.Reset();
+	SA16.Reset();
+	SA17.Reset();
+	SA18.Reset();
+	SA19.Reset();
+	SA20.Reset();
+	SA21.Reset();
+}
+
 void SCERA2::Timestep()
 {
+	if (!Operate) {
+		if (IsPowered())
+			Operate = true;
+		else
+			return;
+	}
+	else if (!IsPowered()) {
+		Reset();
+		return;
+	}
+}
 
+void SCERA2::SystemTimestep(double simdt)
+{
+	if (Operate)
+	{
+		dcpower->DrawPower(10.36);
+	}
 }
 
 double SCERA2::GetVoltage(int sa, int chan)
@@ -362,4 +564,18 @@ double SCERA2::GetVoltage(int sa, int chan)
 	}
 
 	return 0.0;
+}
+
+SCEA_SolidStateSwitch* SCERA2::GetSwitch(int sa, int chan)
+{
+	if (sa == 4)
+	{
+		return SA4.GetSwitch(chan);
+	}
+	else if (sa == 12)
+	{
+		return SA12.GetSwitch(chan);
+	}
+
+	return NULL;
 }

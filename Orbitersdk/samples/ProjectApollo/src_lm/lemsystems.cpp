@@ -416,11 +416,28 @@ void LEM::SystemsInit()
 	// AC bus attenuator.
 	ACVoltsAttenuator.WireTo(&AC_A_BUS_VOLT_CB);
 
-	// RCS Main Shutoff valves
-	RCSMainSovASwitch.WireTo(&CDRs28VBus);
-	RCSMainSovATB.WireTo(&CDRs28VBus);
-	RCSMainSovBTB.WireTo(&LMPs28VBus);
-	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
+	// RCS valves
+	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);
+	RCSMainSovBSwitch.WireTo(&RCS_B_MAIN_SOV_CB);
+	RCSMainSovATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSMainSovBTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+
+	RCSQuad1ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad2ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad3ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad4ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad1BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad2BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad3BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad4BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad1ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad2ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad3ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad4ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad1BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad2BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad3BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad4BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
 	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
@@ -728,6 +745,10 @@ void LEM::SystemsInit()
 
 	//Mechanical Accelerometer
 	mechanicalAccelerometer.Init(this);
+
+	//Instrumentation
+	scera1.Init(this, &INST_SIG_CONDR_1_CB);
+	scera2.Init(this, &INST_SIG_CONDR_2_CB);
 
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
@@ -1332,6 +1353,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	gasta.Timestep(simt);
 	gasta.SystemTimestep(simdt);
 	// Do this toward the end so we can see current system state
+	scera1.Timestep();
+	scera1.SystemTimestep(simdt);
+	scera2.Timestep();
+	scera2.SystemTimestep(simdt);
 	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
@@ -1344,42 +1369,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A | AC-A %f V AC-B %f V",LMPVolts,LMPAmps,
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
 	*/	
-}
-
-// PANEL SDK SUPPORT
-void LEM::SetValveState(int valve, bool open)
-
-{
-	ValveState[valve] = open;
-
-	int valve_state = open ? SP_VALVE_OPEN : SP_VALVE_CLOSE;
-
-	if (pLEMValves[valve])
-		*pLEMValves[valve] = valve_state;
-
-	/*
-	CheckRCSState();
-	*/
-}
-
-bool LEM::GetValveState(int valve)
-
-{
-	//
-	// First check whether the valve still exists!
-	//
-
-	/*
-	if (valve < CM_VALVES_START) {
-		if (stage > CSM_LEM_STAGE)
-			return false;
-	}
-	*/
-
-	if (pLEMValves[valve])
-		return (*pLEMValves[valve] == SP_VALVE_OPEN);
-
-	return ValveState[valve];
 }
 
 // SYSTEMS COMPONENTS

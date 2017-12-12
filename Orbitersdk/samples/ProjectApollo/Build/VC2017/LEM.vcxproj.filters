@@ -189,6 +189,9 @@
     <ClCompile Include="..\..\src_lm\lm_scea.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_lm\lm_rcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -351,6 +354,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\lm_scea.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_lm\lm_rcs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

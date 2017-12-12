@@ -2993,6 +2993,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	theta_N = 0;
 	TI5F2 = 0;
 	T_IGM = 0;
+	T_L = 0;
 	T_LET = 0;
 	T_RG = 0;
 	T_RP = 0;
@@ -3270,6 +3271,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
 	TI5F2 = 20.0;
+	T_L = 0.0;
 
 	double day;
 	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvCommandConnector->GetMissionTime() - 17.0;

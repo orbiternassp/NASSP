@@ -243,6 +243,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
+	RCSA(ph_RCSA, Panelsdk),
+	RCSB(ph_RCSB, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
@@ -254,13 +256,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
-	// Force to NULL to avoid stupid VC++ optimization failure
-	int x;
-	for (x = 0; x < N_LEM_VALVES; x++){
-		pLEMValves[x] = NULL;
-		ValveState[x] = FALSE;
-	}
 
 	// Init further down
 	Init();
@@ -1194,9 +1189,6 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		DES_CDRs28VBusB.Disconnect();
 		DSCBattFeedTB.SetState(0);
 	}
-	// SOVs open by default
-	SetValveState(LEM_RCS_MAIN_SOV_A,true);
-	SetValveState(LEM_RCS_MAIN_SOV_B,true);
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1556,7 +1548,7 @@ void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 void LEM::CheckRCS(){
 	/* sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
 		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */	
-	if(GetValveState(LEM_RCS_MAIN_SOV_A)){
+	/*if(GetValveState(LEM_RCS_MAIN_SOV_A)){
 		SetThrusterResource(th_rcs[0],ph_RCSA);
 		SetThrusterResource(th_rcs[1],ph_RCSA);
 		SetThrusterResource(th_rcs[6],ph_RCSA);
@@ -1593,7 +1585,7 @@ void LEM::CheckRCS(){
 		SetThrusterResource(th_rcs[11],NULL);
 		SetThrusterResource(th_rcs[12],NULL);
 		SetThrusterResource(th_rcs[13],NULL);
-	}
+	}*/
 	return;
 }
 

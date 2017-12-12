@@ -616,8 +616,6 @@ void LEM_EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
 	oapiWriteScenario_int(scn, "DEADFACE", Deadface);
-	oapiWriteScenario_int(scn, "SOV_A", lem->GetValveState(LEM_RCS_MAIN_SOV_A));
-	oapiWriteScenario_int(scn, "SOV_B", lem->GetValveState(LEM_RCS_MAIN_SOV_B));
 	if (lem->stage < 2)
 		RelayBoxA.SaveState(scn, "LEM_EDS_RELAYBOXA_BEGIN", "LEM_EDS_RELAYBOX_END");
 	RelayBoxB.SaveState(scn, "LEM_EDS_RELAYBOXB_BEGIN", "LEM_EDS_RELAYBOX_END");
@@ -639,14 +637,6 @@ void LEM_EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, "DEADFACE", 8)) {
 			sscanf(line + 8, "%d", &dec);
 			Deadface = (bool)(dec != 0);
-		}
-		if (!strnicmp(line, "SOV_A", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_A, (bool)(dec != 0));
-		}
-		if (!strnicmp(line, "SOV_B", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			lem->SetValveState(LEM_RCS_MAIN_SOV_B, (bool)(dec != 0));
 		}
 		if (!strnicmp(line, "LEM_EDS_RELAYBOXA_BEGIN", sizeof("LEM_EDS_RELAYBOXA_BEGIN"))) {
 			RelayBoxA.LoadState(scn, "LEM_EDS_RELAYBOX_END");

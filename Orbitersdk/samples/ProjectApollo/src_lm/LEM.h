@@ -45,17 +45,10 @@
 #include "lm_aca.h"
 #include "lm_ttca.h"
 #include "lm_scea.h"
+#include "lm_rcs.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
-
-//
-// Valves.
-//
-#define N_LEM_VALVES	32
-
-#define LEM_RCS_MAIN_SOV_A				1
-#define LEM_RCS_MAIN_SOV_B				2
 
 //
 // Lem state settings from scenario file, passed from CSM.
@@ -569,10 +562,6 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
-	// Panel SDK
-	bool GetValveState(int valve);
-	void SetValveState(int valve, bool open);
-
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
 	void SetRCSJetLevelPrimary(int jet, double level);
@@ -842,28 +831,28 @@ protected:
 	ThreePosSwitch RCSAscFeed2BSwitch;
 
 	SwitchRow RCSQuad14TBSwitchRow;
-	IndicatorSwitch RCSQuad1ACmdEnableTB;
-	IndicatorSwitch RCSQuad4ACmdEnableTB;
-	IndicatorSwitch RCSQuad1BCmdEnableTB;
-	IndicatorSwitch RCSQuad4BCmdEnableTB;
+	LEMSCEATalkback RCSQuad1ACmdEnableTB;
+	LEMSCEATalkback RCSQuad4ACmdEnableTB;
+	LEMSCEATalkback RCSQuad1BCmdEnableTB;
+	LEMSCEATalkback RCSQuad4BCmdEnableTB;
 
 	SwitchRow RCSQuad14SwitchRow;
-	ThreePosSwitch RCSQuad1ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad4ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad1BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad4BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4BCmdEnableSwitch;
 
 	SwitchRow RCSQuad23TBSwitchRow;
-	IndicatorSwitch RCSQuad2ACmdEnableTB;
-	IndicatorSwitch RCSQuad3ACmdEnableTB;
-	IndicatorSwitch RCSQuad2BCmdEnableTB;
-	IndicatorSwitch RCSQuad3BCmdEnableTB;
+	LEMSCEATalkback RCSQuad2ACmdEnableTB;
+	LEMSCEATalkback RCSQuad3ACmdEnableTB;
+	LEMSCEATalkback RCSQuad2BCmdEnableTB;
+	LEMSCEATalkback RCSQuad3BCmdEnableTB;
 
 	SwitchRow RCSQuad23SwitchRow;
-	ThreePosSwitch RCSQuad2ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad3ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad2BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad3BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3BCmdEnableSwitch;
 
 	SwitchRow RCSXfeedTBSwitchRow;
 	IndicatorSwitch RCSXFeedTB;
@@ -873,12 +862,12 @@ protected:
 
 	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
-	LEMValveTalkback RCSMainSovATB;
-	LEMValveTalkback RCSMainSovBTB;
+	LEMSCEATalkback RCSMainSovATB;
+	LEMSCEATalkback RCSMainSovBTB;
 
 	SwitchRow RCSMainSOVSwitchRow;
-	LEMValveSwitch RCSMainSovASwitch;
-	LEMValveSwitch RCSMainSovBSwitch;
+	ThreePosSwitch RCSMainSovASwitch;
+	ThreePosSwitch RCSMainSovBSwitch;
 
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
@@ -1678,10 +1667,6 @@ protected:
 
 	char AudioLanguage[64];
 
-	// New Panel SDK stuff
-	int *pLEMValves[N_LEM_VALVES];
-	bool ValveState[N_LEM_VALVES];
-
 	// POWER AND SUCH
 
 	// Descent batteries
@@ -1794,10 +1779,17 @@ protected:
 	APSPropellantSource APSPropellant;
 	LEM_APS APS;
 
+	RCSPropellantSource RCSA;
+	RCSPropellantSource RCSB;
+
 	// Abort Guidance System stuff
 	LEM_ASA asa;
 	LEM_AEA aea;
 	LEM_DEDA deda;
+
+	// Instrumentation
+	SCERA1 scera1;
+	SCERA2 scera2;
 
 	bool isMultiThread;
 
@@ -1862,6 +1854,8 @@ protected:
 	friend class LEM_TTCA;
 	friend class SCERA1;
 	friend class SCERA2;
+	friend class RCSPropellantSource;
+	friend class LGCThrusterPairSwitch;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

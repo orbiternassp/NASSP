@@ -200,23 +200,33 @@ void LEM::InitSwitches() {
 	RCSQuad1BCmdEnableTB.Register(PSH, "RCSQuad1BCmdEnableTB", true);
 	RCSQuad4BCmdEnableTB.Register(PSH, "RCSQuad4BCmdEnableTB", true);
 	RCSQuad1ACmdEnableSwitch.Register(PSH, "RCSQuad1ACmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad1ACmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSA.GetQuad1IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad4ACmdEnableSwitch.Register(PSH, "RCSQuad4ACmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad4ACmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSA.GetQuad4IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad1BCmdEnableSwitch.Register(PSH, "RCSQuad1BCmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad1BCmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetQuad1IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad4BCmdEnableSwitch.Register(PSH, "RCSQuad4BCmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad4BCmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetQuad4IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad2ACmdEnableTB.Register(PSH, "RCSQuad2ACmdEnableTB", true);
 	RCSQuad3ACmdEnableTB.Register(PSH, "RCSQuad3ACmdEnableTB", true);
 	RCSQuad2BCmdEnableTB.Register(PSH, "RCSQuad2BCmdEnableTB", true);
 	RCSQuad3BCmdEnableTB.Register(PSH, "RCSQuad3BCmdEnableTB", true);
 	RCSQuad2ACmdEnableSwitch.Register(PSH, "RCSQuad2ACmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad2ACmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSA.GetQuad2IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad3ACmdEnableSwitch.Register(PSH, "RCSQuad3ACmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad3ACmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSA.GetQuad3IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad2BCmdEnableSwitch.Register(PSH, "RCSQuad2BCmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad2BCmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetQuad2IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSQuad3BCmdEnableSwitch.Register(PSH, "RCSQuad3BCmdEnableSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSQuad3BCmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetQuad3IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSXFeedTB.Register(PSH, "RCSXFeedTB", false);
 	RCSXFeedSwitch.Register(PSH, "RCSXFeedSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	RCSMainSovATB.Register(PSH, "RCSMainSovATB", true);
 	RCSMainSovBTB.Register(PSH, "RCSMainSovBTB", true);
 	RCSMainSovASwitch.Register(PSH, "RCSMainSOVASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSMainSovASwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSA.GetMainShutoffValve(), &LEMRCSValve::SwitchToggled));
 	RCSMainSovBSwitch.Register(PSH, "RCSMainSOVBSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSMainSovBSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetMainShutoffValve(), &LEMRCSValve::SwitchToggled));
 	THRContSwitch.Register(PSH, "THRContSwitch", true);
 	MANThrotSwitch.Register(PSH, "MANThrotSwitch", true);
 	ATTTranslSwitch.Register(PSH, "ATTTranslSwitch", TOGGLESWITCH_DOWN);
@@ -2039,35 +2049,35 @@ void LEM::SetSwitches(int panel) {
 	RCSAscFeed2BSwitch.SetDelayTime(1);
 
 	RCSQuad14TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS, MainPanel);
-	RCSQuad1ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
-	RCSQuad4ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
-	RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
-	RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow);
+	RCSQuad1ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 7), true);
+	RCSQuad4ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 1), true);
+	RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 8), true);
+	RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 2), true);
 
 	RCSQuad14SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_SWITCHES, MainPanel);
-	RCSQuad1ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+	RCSQuad1ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow, this, 5);
 	RCSQuad1ACmdEnableSwitch.SetDelayTime(1);
-	RCSQuad4ACmdEnableSwitch.Init(69, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+	RCSQuad4ACmdEnableSwitch.Init(69, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow, this, 0);
 	RCSQuad4ACmdEnableSwitch.SetDelayTime(1);
-	RCSQuad1BCmdEnableSwitch.Init(144, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+	RCSQuad1BCmdEnableSwitch.Init(144, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow, this, 4);
 	RCSQuad1BCmdEnableSwitch.SetDelayTime(1);
-	RCSQuad4BCmdEnableSwitch.Init(213, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow);
+	RCSQuad4BCmdEnableSwitch.Init(213, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow, this, 2);
 	RCSQuad4BCmdEnableSwitch.SetDelayTime(1);
 
 	RCSQuad23TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS, MainPanel);
-	RCSQuad2ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
-	RCSQuad3ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
-	RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
-	RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow);
+	RCSQuad2ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 5), true);
+	RCSQuad3ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 3), true);
+	RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 6), true);
+	RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 4), true);
 
 	RCSQuad23SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_SWITCHES, MainPanel);
-	RCSQuad2ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+	RCSQuad2ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow, this, 7);
 	RCSQuad2ACmdEnableSwitch.SetDelayTime(1);
-	RCSQuad3ACmdEnableSwitch.Init(69, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+	RCSQuad3ACmdEnableSwitch.Init(69, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow, this, 1);
 	RCSQuad3ACmdEnableSwitch.SetDelayTime(1);
-	RCSQuad2BCmdEnableSwitch.Init(144, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+	RCSQuad2BCmdEnableSwitch.Init(144, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow, this, 6);
 	RCSQuad2BCmdEnableSwitch.SetDelayTime(1);
-	RCSQuad3BCmdEnableSwitch.Init(213, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow);
+	RCSQuad3BCmdEnableSwitch.Init(213, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow, this, 3);
 	RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
 
 	RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
@@ -2079,13 +2089,13 @@ void LEM::SetSwitches(int panel) {
 
 	// DS20060406 HERE WE GO!
 	RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
-	RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, LEM_RCS_MAIN_SOV_A, this);
-	RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, LEM_RCS_MAIN_SOV_B, this);
+	RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 1), true);
+	RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 2), true);
 
 	RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
-	RCSMainSovASwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
+	RCSMainSovASwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow);
 	RCSMainSovASwitch.SetDelayTime(1);
-	RCSMainSovBSwitch.Init(71, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
+	RCSMainSovBSwitch.Init(71, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow);
 	RCSMainSovBSwitch.SetDelayTime(1);
 
 	GlycolSuitFanRotaryRow.Init(AID_GLYCOLSUITFANROTARIES, MainPanel);
