@@ -369,10 +369,10 @@ void LEM::SystemsInit()
 	// REACTION CONTROL SYSTEM
 	RCS_B_PQGS_DISP_CB.MaxAmps = 2.0;
 	RCS_B_PQGS_DISP_CB.WireTo(&LMPs28VBus);
-	LMRCSATempInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSBTempInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSAPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSBPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSATempInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSBTempInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSAPressInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSBPressInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	LMRCSAQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
 	LMRCSBQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
 	
@@ -438,6 +438,15 @@ void LEM::SystemsInit()
 	RCSQuad2BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	RCSQuad3BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	RCSQuad4BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+
+	RCSAscFeed1ASwitch.WireTo(&RCS_A_ASC_FEED_1_CB);
+	RCSAscFeed2ASwitch.WireTo(&RCS_A_ASC_FEED_2_CB);
+	RCSAscFeed1BSwitch.WireTo(&RCS_B_ASC_FEED_1_CB);
+	RCSAscFeed2BSwitch.WireTo(&RCS_B_ASC_FEED_2_CB);
+	RCSAscFeed1ATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed2ATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed1BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed2BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
 	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
@@ -726,6 +735,18 @@ void LEM::SystemsInit()
 	ASCHeReg2Switch.WireTo(&PROP_ASC_HE_REG_CB);
 	ASCHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+
+	//RCS
+	RCSA.Init(&RCSHeliumSupplyAPyros);
+	RCSB.Init(&RCSHeliumSupplyBPyros);
+	tca1A.Init(this, 7);
+	tca2A.Init(this, 5);
+	tca3A.Init(this, 3);
+	tca4A.Init(this, 1);
+	tca1B.Init(this, 8);
+	tca2B.Init(this, 6);
+	tca3B.Init(this, 4);
+	tca4B.Init(this, 2);
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -1348,6 +1369,16 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPS.SystemTimestep(simdt);
 	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
+	RCSA.Timestep(simt, simdt);
+	RCSB.Timestep(simt, simdt);
+	tca1A.Timestep();
+	tca2A.Timestep();
+	tca3A.Timestep();
+	tca4A.Timestep();
+	tca1B.Timestep();
+	tca2B.Timestep();
+	tca3B.Timestep();
+	tca4B.Timestep();
 	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
 	gasta.Timestep(simt);

@@ -245,6 +245,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	APSPropellant(ph_Asc, Panelsdk),
 	RCSA(ph_RCSA, Panelsdk),
 	RCSB(ph_RCSB, Panelsdk),
+	tca1A(2, 5, 8, 3, 5, 3, 7),
+	tca2A(2, 2, 3, 11, 10, 3, 3),
+	tca3A(4, 7, 10, 11, 5, 11, 8),
+	tca4A(4, 5, 6, 11, 2, 11, 4),
+	tca1B(2, 6, 7, 3, 6, 3, 8),
+	tca2B(2, 1, 4, 11, 9, 3, 4),
+	tca3B(4, 8, 9, 11, 6, 11, 7),
+	tca4B(4, 3, 4, 11, 1, 11, 3),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
@@ -327,6 +335,8 @@ void LEM::Init()
 
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
+	RCSA.SetVessel(this);
+	RCSB.SetVessel(this);
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
@@ -1110,13 +1120,13 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
 			deca.LoadState(scn);
 		}
-		else if (!strnicmp(line, "SCCA1_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA1_BEGIN", sizeof("SCCA1_BEGIN"))) {
 			scca1.LoadState(scn, "SCCA_END");
 		}
-		else if (!strnicmp(line, "SCCA2_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA2_BEGIN", sizeof("SCCA2_BEGIN"))) {
 			scca2.LoadState(scn, "SCCA_END");
 		}
-		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA3_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
 		}
 		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
@@ -1124,6 +1134,12 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
 			APS.LoadState(scn, "APS_END");
+		}
+		else if (!strnicmp(line, "RCSPROPELLANT_A_BEGIN", sizeof("RCSPROPELLANT_A_BEGIN"))) {
+			RCSA.LoadState(scn, "RCSPROPELLANT_END");
+		}
+		else if (!strnicmp(line, "RCSPROPELLANT_B_BEGIN", sizeof("RCSPROPELLANT_B_BEGIN"))) {
+			RCSB.LoadState(scn, "RCSPROPELLANT_END");
 		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
@@ -1477,6 +1493,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
 	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
+	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
+	RCSB.SaveState(scn, "RCSPROPELLANT_B_BEGIN", "RCSPROPELLANT_END");
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);

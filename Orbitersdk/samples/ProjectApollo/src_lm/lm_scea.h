@@ -91,7 +91,7 @@ public:
 	SCEA_SA_5042();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
-	void SetOutput(int n, double val) { Output[n - 1] = val; }
+	void SetOutput(int n, bool val);
 protected:
 	double Output[10];
 };
@@ -103,7 +103,7 @@ public:
 	SCEA_SA_5043();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
-	void SetOutput(int n, double val) { Output[n - 1] = val; }
+	void SetOutput(int n, bool val);
 protected:
 	double Output[12];
 };
@@ -129,6 +129,7 @@ public:
 	SCEA_SA_5045();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
+	void SetOutput(int n, bool val);
 protected:
 	double Output[12];
 };

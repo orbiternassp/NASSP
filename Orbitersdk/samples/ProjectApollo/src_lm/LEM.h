@@ -61,6 +61,26 @@
 #include "checklistController.h"
 #include "payload.h"
 
+enum LMRCSThrusters
+{
+	LMRCS_A1U = 0,
+	LMRCS_A1F,
+	LMRCS_B1L,
+	LMRCS_B1D,
+	LMRCS_B2U,
+	LMRCS_B2L,
+	LMRCS_A2A,
+	LMRCS_A2D,
+	LMRCS_A3U,
+	LMRCS_A3R,
+	LMRCS_B3A,
+	LMRCS_B3D,
+	LMRCS_B4U,
+	LMRCS_B4F,
+	LMRCS_A4R,
+	LMRCS_A4D
+};
+
 // Systems things
 // ELECTRICAL
 // LEM to CSM Power Connector
@@ -819,10 +839,10 @@ protected:
 	RotationalSwitch TempPressMonRotary;
 
 	SwitchRow RCSAscFeedTBSwitchRow;
-	IndicatorSwitch RCSAscFeed1ATB;
-	IndicatorSwitch RCSAscFeed2ATB;
-	IndicatorSwitch RCSAscFeed1BTB;
-	IndicatorSwitch RCSAscFeed2BTB;
+	LEMSCEATalkback RCSAscFeed1ATB;
+	LEMSCEATalkback RCSAscFeed2ATB;
+	LEMSCEATalkback RCSAscFeed1BTB;
+	LEMSCEATalkback RCSAscFeed2BTB;
 
 	SwitchRow RCSAscFeedSwitchRow;
 	ThreePosSwitch RCSAscFeed1ASwitch;
@@ -831,10 +851,10 @@ protected:
 	ThreePosSwitch RCSAscFeed2BSwitch;
 
 	SwitchRow RCSQuad14TBSwitchRow;
-	LEMSCEATalkback RCSQuad1ACmdEnableTB;
-	LEMSCEATalkback RCSQuad4ACmdEnableTB;
-	LEMSCEATalkback RCSQuad1BCmdEnableTB;
-	LEMSCEATalkback RCSQuad4BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4BCmdEnableTB;
 
 	SwitchRow RCSQuad14SwitchRow;
 	LGCThrusterPairSwitch RCSQuad1ACmdEnableSwitch;
@@ -843,10 +863,10 @@ protected:
 	LGCThrusterPairSwitch RCSQuad4BCmdEnableSwitch;
 
 	SwitchRow RCSQuad23TBSwitchRow;
-	LEMSCEATalkback RCSQuad2ACmdEnableTB;
-	LEMSCEATalkback RCSQuad3ACmdEnableTB;
-	LEMSCEATalkback RCSQuad2BCmdEnableTB;
-	LEMSCEATalkback RCSQuad3BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3BCmdEnableTB;
 
 	SwitchRow RCSQuad23SwitchRow;
 	LGCThrusterPairSwitch RCSQuad2ACmdEnableSwitch;
@@ -1779,8 +1799,17 @@ protected:
 	APSPropellantSource APSPropellant;
 	LEM_APS APS;
 
+	// RCS
 	RCSPropellantSource RCSA;
 	RCSPropellantSource RCSB;
+	RCS_TCA tca1A;
+	RCS_TCA tca2A;
+	RCS_TCA tca3A;
+	RCS_TCA tca4A;
+	RCS_TCA tca1B;
+	RCS_TCA tca2B;
+	RCS_TCA tca3B;
+	RCS_TCA tca4B;
 
 	// Abort Guidance System stuff
 	LEM_ASA asa;
@@ -1856,6 +1885,11 @@ protected:
 	friend class SCERA2;
 	friend class RCSPropellantSource;
 	friend class LGCThrusterPairSwitch;
+	friend class LMRCSAPressInd;
+	friend class LMRCSBPressInd;
+	friend class LMRCSAQtyInd;
+	friend class LMRCSBQtyInd;
+	friend class RCS_TCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

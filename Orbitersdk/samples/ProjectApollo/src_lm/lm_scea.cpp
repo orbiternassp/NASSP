@@ -110,6 +110,11 @@ void SCEA_SA_5042::Reset()
 	}
 }
 
+void SCEA_SA_5042::SetOutput(int n, bool val)
+{
+	Output[n - 1] = val ? 5.0 : 0.0;
+}
+
 SCEA_SA_5043::SCEA_SA_5043()
 {
 	Reset();
@@ -121,6 +126,11 @@ void SCEA_SA_5043::Reset()
 	{
 		Output[i] = 0.0;
 	}
+}
+
+void SCEA_SA_5043::SetOutput(int n, bool val)
+{
+	Output[n - 1] = val ? 5.0 : 0.0;
 }
 
 SCEA_SA_5044::SCEA_SA_5044()
@@ -154,6 +164,11 @@ void SCEA_SA_5045::Reset()
 	{
 		Output[i] = 0.0;
 	}
+}
+
+void SCEA_SA_5045::SetOutput(int n, bool val)
+{
+	Output[n - 1] = val ? 5.0 : 0.0;
 }
 
 SCEA_SA_5051::SCEA_SA_5051()
@@ -270,15 +285,100 @@ void SCERA1::Timestep()
 		return;
 	}
 
+	bool val = false;
+
+	//Jet Driver B2U Output (GH1426V)
+	SA2.SetOutput(1, lem->atca.jet_request[LMRCS_B2U] == 1);
+	//Jet Driver A2D Output (GH1427V)
+	SA2.SetOutput(2, lem->atca.jet_request[LMRCS_A2D] == 1);
+	//Jet Driver A2A Output (GH1428V)
+	SA2.SetOutput(3, lem->atca.jet_request[LMRCS_A2A] == 1);
+	//Jet Driver B2L Output (GH1429V)
+	SA2.SetOutput(4, lem->atca.jet_request[LMRCS_B2L] == 1);
+	//Jet Driver A1U Output (GH1430V)
+	SA2.SetOutput(5, lem->atca.jet_request[LMRCS_A1U] == 1);
+	//Jet Driver B1D Output (GH1431V)
+	SA2.SetOutput(6, lem->atca.jet_request[LMRCS_B1D] == 1);
+	//Jet Driver B1L Output (GH1433V)
+	SA2.SetOutput(7, lem->atca.jet_request[LMRCS_B1L] == 1);
+	//Jet Driver A1F Output (GH1432V)
+	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
+
+	//RCS thrust chamber pressure A2A (GR5041)
+	SA3.SetOutput(3, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A2A]) > 0.5);
+	//RCS thrust chamber pressure B2L (GR5042)
+	SA3.SetOutput(4, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B2L]) > 0.5);
+	//RCS thrust chamber pressure A1U (GR5043)
+	SA3.SetOutput(5, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A1U]) > 0.5);
+	//RCS thrust chamber pressure B1D (GR5044)
+	SA3.SetOutput(6, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B1D]) > 0.5);
+	//RCS thrust chamber pressure A1F (GR5045)
+	SA3.SetOutput(7, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A1F]) > 0.5);
+	//RCS thrust chamber pressure B1L (GR5046)
+	SA3.SetOutput(8, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B1L]) > 0.5);
+
+	//Jet Driver B4U Output (GH1418V)
+	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
+	//Jet Driver B4F Output (GH1420V)
+	SA4.SetOutput(4, lem->atca.jet_request[LMRCS_B4F] == 1);
+	//Jet Driver A4D Output (GH1419V)
+	SA4.SetOutput(5, lem->atca.jet_request[LMRCS_A4D] == 1);
+	//Jet Driver A4R Output (GH1421V)
+	SA4.SetOutput(6, lem->atca.jet_request[LMRCS_A4R] == 1);
+	//Jet Driver A3U Output (GH1422V)
+	SA4.SetOutput(7, lem->atca.jet_request[LMRCS_A3U] == 1);
+	//Jet Driver B3D Output (GH1423V)
+	SA4.SetOutput(8, lem->atca.jet_request[LMRCS_B3D] == 1);
+	//Jet Driver B3A Output (GH1424V)
+	SA4.SetOutput(9, lem->atca.jet_request[LMRCS_B3A] == 1);
+	//Jet Driver A3R Output (GH1425V)
+	SA4.SetOutput(10, lem->atca.jet_request[LMRCS_A3R] == 1);
+
+	//Helium pressure tank A (GR1101)
+	SA6.SetOutput(1, scale_data(lem->RCSA.GetRCSHeliumPressPSI(), 0.0, 3500.0));
+	//Helium pressure tank B (GR1102)
+	SA6.SetOutput(2, scale_data(lem->RCSB.GetRCSHeliumPressPSI(), 0.0, 3500.0));
+	//Helium regulator pressure system A (GR1201)
+	SA6.SetOutput(3, scale_data(lem->RCSA.GetRCSRegulatorPressPSI(), 0.0, 350.0));
+	//Helium regulator pressure system B (GR1202)
+	SA6.SetOutput(3, scale_data(lem->RCSB.GetRCSRegulatorPressPSI(), 0.0, 350.0));
+
 	//APS regulator outlet manifold pressure (GP0025)
 	SA8.SetOutput(3, scale_data(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI(), 0.0, 300.0));
 	//APS helium tank no. 1 pressure (GP0001)
 	SA8.SetOutput(4, scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0));
 
+	//RCS thrust chamber pressure B4U (GR5031)
+	SA11.SetOutput(1, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B4U]) > 0.5);
+	//RCS thrust chamber pressure A4D (GR5032)
+	SA11.SetOutput(2, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A4D]) > 0.5);
+	//RCS thrust chamber pressure B4F (GR5033)
+	SA11.SetOutput(3, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B4F]) > 0.5);
+	//RCS thrust chamber pressure A4R (GR5034)
+	SA11.SetOutput(4, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A4R]) > 0.5);
+	//RCS thrust chamber pressure A3U (GR5035)
+	SA11.SetOutput(5, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A3U]) > 0.5);
+	//RCS thrust chamber pressure B3D (GR5036)
+	SA11.SetOutput(6, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B3D]) > 0.5);
+	//RCS thrust chamber pressure B3A (GR5037)
+	SA11.SetOutput(7, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B3A]) > 0.5);
+	//RCS thrust chamber pressure A3R (GR5038)
+	SA11.SetOutput(8, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A3R]) > 0.5);
+	//RCS thrust chamber pressure B2U (GR5039)
+	SA11.SetOutput(9, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B2U]) > 0.5);
+	//RCS thrust chamber pressure A2D (GR5040)
+	SA11.SetOutput(10, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A2D]) > 0.5);
+
 	//Main shutoff valves closed, system A (GR9609)
 	SA12.SetOutput(1, !lem->RCSA.GetMainShutoffValve()->IsOpen());
 	//Main shutoff valves closed, system B (GR96010)
 	SA12.SetOutput(2, !lem->RCSB.GetMainShutoffValve()->IsOpen());
+	//System A oxidizer interconnect valves open (GR9641)
+	val = lem->RCSA.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSA.GetSecOxidInterconnectValve()->IsOpen();
+	SA12.SetOutput(3, val);
+	//System B oxidizer interconnect valves open (GR9642)
+	val = lem->RCSB.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSB.GetSecOxidInterconnectValve()->IsOpen();
+	SA12.SetOutput(4, val);
 	//APS helium primary line solenoid valve closed (GP0318)
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
@@ -300,6 +400,29 @@ void SCERA1::Timestep()
 	SA13.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
 	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
 	SA13.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
+	//RCS/ASC interconnect A not closed (GR9631)
+	val = lem->RCSA.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSA.GetSecFuelInterconnectValve()->IsOpen();
+	SA13.SetOutput(10, val);
+	//RCS/ASC interconnect B not closed (GR9632)
+	val = lem->RCSB.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSB.GetSecFuelInterconnectValve()->IsOpen();
+	SA13.SetOutput(11, val);
+
+	//Thrust chamber assembly solenoid valve A4 closed (GR9661)
+	SA14.SetOutput(1, !lem->RCSA.GetQuad4IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B4 closed (GR9662)
+	SA14.SetOutput(2, !lem->RCSB.GetQuad4IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A3 closed (GR9663)
+	SA14.SetOutput(3, !lem->RCSA.GetQuad3IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B3 closed (GR9664)
+	SA14.SetOutput(4, !lem->RCSB.GetQuad3IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A2 closed (GR9665)
+	SA14.SetOutput(5, !lem->RCSA.GetQuad2IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B2 closed (GR9666)
+	SA14.SetOutput(6, !lem->RCSB.GetQuad2IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve A1 closed (GR9667)
+	SA14.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
+	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
+	SA14.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
 
 	//Automatic thrust command voltage (GH1331)
 	SA15.SetOutput(1, scale_data(lem->deca.GetAutoThrustVoltage(), 0.0, 12.0));

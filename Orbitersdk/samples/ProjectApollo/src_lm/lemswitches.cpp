@@ -558,7 +558,19 @@ void LMRCSAPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSAPressInd::QueryValue()
 
 {
-	return 200.0;
+	if (!lem) { return 0; }
+	switch (lem->TempPressMonRotary) {
+	case 0: //HELIUM
+		return lem->scera1.GetVoltage(6, 1)*350.0 / 5.0;
+	case 1: //PRPLNT
+		return lem->scera1.GetVoltage(6, 3)*350.0 / 5.0;
+	case 2: //FUEL MANF
+		return lem->RCSA.GetRCSFuelManifoldPressPSI();
+	case 3: //OXID MANF
+		return lem->RCSA.GetRCSOxidManifoldPressPSI();
+	default:
+		return 0;
+	}
 }
 
 void LMRCSAPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -585,7 +597,19 @@ void LMRCSBPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSBPressInd::QueryValue()
 
 {
-	return 200.0;
+	if (!lem) { return 0; }
+	switch (lem->TempPressMonRotary) {
+	case 0: //HELIUM
+		return lem->scera1.GetVoltage(6, 2)*350.0 / 5.0;
+	case 1: //PRPLNT
+		return lem->scera1.GetVoltage(6, 4)*350.0 / 5.0;
+	case 2: //FUEL MANF
+		return lem->RCSB.GetRCSFuelManifoldPressPSI();
+	case 3: //OXID MANF
+		return lem->RCSB.GetRCSOxidManifoldPressPSI();
+	default:
+		return 0;
+	}
 }
 
 void LMRCSBPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -612,7 +636,7 @@ void LMRCSAQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSAQtyInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->RCSA.GetRCSPropellantQuantity()*100.0;
 }
 
 void LMRCSAQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -639,7 +663,7 @@ void LMRCSBQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSBQtyInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->RCSB.GetRCSPropellantQuantity()*100.0;
 }
 
 void LMRCSBQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -1653,11 +1677,42 @@ void LEMSCEATalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switch
 int LEMSCEATalkback::GetState()
 
 {
-	if (ssswitch && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
-		state = ssswitch->IsClosed() ? 0 : 1;
+	if (ssswitch && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE) && ssswitch->IsClosed())
+		state = (failOpen ? 0 : 1);
 	else
 		// Should this fail open?
 		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+LEMRCSQuadTalkback::LEMRCSQuadTalkback()
+{
+	ssswitch = 0;
+	tcaFailure = 0;
+}
+
+void LEMRCSQuadTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, false);
+	ssswitch = s;
+	tcaFailure = tcaf;
+}
+
+int LEMRCSQuadTalkback::GetState()
+{
+	if (ssswitch && tcaFailure && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+	{
+		if (tcaFailure->IsSet())
+			state = 2;
+		else if (ssswitch->IsClosed())
+			state = 0;
+		else
+			state = 1;
+	}
+	else
+		state = 1;
 
 	return state;
 }

@@ -533,6 +533,16 @@ protected:
 	SCEA_SolidStateSwitch * ssswitch;
 };
 
+class LEMRCSQuadTalkback : public IndicatorSwitch {
+public:
+	LEMRCSQuadTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf);
+	int GetState();
+protected:
+	SCEA_SolidStateSwitch * ssswitch;
+	TCA_FlipFlop *tcaFailure;
+};
+
 class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
