@@ -1562,51 +1562,6 @@ void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 	aea.PadLoad(address, value);
 }
 
-// *** REACTION CONTROL SYSTEM ***
-void LEM::CheckRCS(){
-	/* sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
-		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */	
-	/*if(GetValveState(LEM_RCS_MAIN_SOV_A)){
-		SetThrusterResource(th_rcs[0],ph_RCSA);
-		SetThrusterResource(th_rcs[1],ph_RCSA);
-		SetThrusterResource(th_rcs[6],ph_RCSA);
-		SetThrusterResource(th_rcs[7],ph_RCSA);
-		SetThrusterResource(th_rcs[8],ph_RCSA);
-		SetThrusterResource(th_rcs[9],ph_RCSA);
-		SetThrusterResource(th_rcs[14],ph_RCSA);
-		SetThrusterResource(th_rcs[15],ph_RCSA);
-	}else{
-		SetThrusterResource(th_rcs[0],NULL);
-		SetThrusterResource(th_rcs[1],NULL);
-		SetThrusterResource(th_rcs[6],NULL);
-		SetThrusterResource(th_rcs[7],NULL);
-		SetThrusterResource(th_rcs[8],NULL);
-		SetThrusterResource(th_rcs[9],NULL);
-		SetThrusterResource(th_rcs[14],NULL);
-		SetThrusterResource(th_rcs[15],NULL);
-	}
-	if(GetValveState(LEM_RCS_MAIN_SOV_B)){
-		SetThrusterResource(th_rcs[2],ph_RCSB);
-		SetThrusterResource(th_rcs[3],ph_RCSB);
-		SetThrusterResource(th_rcs[4],ph_RCSB);
-		SetThrusterResource(th_rcs[5],ph_RCSB);
-		SetThrusterResource(th_rcs[10],ph_RCSB);
-		SetThrusterResource(th_rcs[11],ph_RCSB);
-		SetThrusterResource(th_rcs[12],ph_RCSB);
-		SetThrusterResource(th_rcs[13],ph_RCSB);
-	}else{
-		SetThrusterResource(th_rcs[2],NULL);
-		SetThrusterResource(th_rcs[3],NULL);
-		SetThrusterResource(th_rcs[4],NULL);
-		SetThrusterResource(th_rcs[5],NULL);
-		SetThrusterResource(th_rcs[10],NULL);
-		SetThrusterResource(th_rcs[11],NULL);
-		SetThrusterResource(th_rcs[12],NULL);
-		SetThrusterResource(th_rcs[13],NULL);
-	}*/
-	return;
-}
-
 void LEM::SetRCSJet(int jet, bool fire) {
 	SetThrusterLevel(th_rcs[jet], fire);
 }

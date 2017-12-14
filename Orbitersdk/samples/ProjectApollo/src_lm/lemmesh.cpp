@@ -238,8 +238,6 @@ void LEM::SetLmVesselDockStage()
 		agc.SetInputChannelBit(030, DescendStageAttached, true);
 	}
 
-	CheckRCS();
-
 	//Set part of ascent stage mesh to be visible from LPD window
 	VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
 	lpdgret = AddMesh(hLPDgret, &lpd_dir);
@@ -387,8 +385,6 @@ void LEM::SetLmVesselHoverStage()
 		agc.SetInputChannelBit(030, DescendStageAttached, true);
 	}
 
-	CheckRCS();
-
 	//Set fwd footpad mesh to be visible from LPD window
 	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
 	lpdgext = AddMesh(hLPDgext, &lpd_dir);
@@ -498,8 +494,6 @@ void LEM::SetLmAscentHoverStage()
 	{
 		agc.SetInputChannelBit(030, DescendStageAttached, false);
 	}
-
-	CheckRCS();
 
 	//Set part of ascent stage mesh to be visible from LPD window
 	VECTOR3 lpd_dir = _V(-0.191, -0.02, 0.383);

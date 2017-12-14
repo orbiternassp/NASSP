@@ -63,14 +63,24 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : L
 
 	RCSHeliumSupplyPyros = NULL;
 
+	for (int i = 0;i < 4;i++)
+	{
+		quadThruster1ID[i] = 0;
+	}
+
 	//Open at launch
 	primOxidInterconnectValve.SetState(true);
 	primFuelInterconnectValve.SetState(true);
 }
 
-void RCSPropellantSource::Init(Pyro *rcshsp)
+void RCSPropellantSource::Init(THRUSTER_HANDLE *th, Pyro *rcshsp, int q1th1, int q2th1, int q3th1, int q4th1)
 {
+	thrusters = th;
 	RCSHeliumSupplyPyros = rcshsp;
+	quadThruster1ID[0] = q1th1;
+	quadThruster1ID[1] = q2th1;
+	quadThruster1ID[2] = q3th1;
+	quadThruster1ID[3] = q4th1;
 }
 
 void RCSPropellantSource::Timestep(double simt, double simdt)
@@ -121,11 +131,70 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 			fuelManifoldPressurePSI = 0.0;
 		}
 
+		if (oxidManifoldPressurePSI > 1.0 && fuelManifoldPressurePSI > 1.0)
+		{
+			if (quad1IsolationValve.IsOpen())
+			{
+				SetThrusters(1, source_prop);
+			}
+			else
+			{
+				SetThrusters(1, NULL);
+			}
+
+			if (quad2IsolationValve.IsOpen())
+			{
+				SetThrusters(2, source_prop);
+			}
+			else
+			{
+				SetThrusters(2, NULL);
+			}
+
+			if (quad3IsolationValve.IsOpen())
+			{
+				SetThrusters(3, source_prop);
+			}
+			else
+			{
+				SetThrusters(3, NULL);
+			}
+
+			if (quad4IsolationValve.IsOpen())
+			{
+				SetThrusters(4, source_prop);
+			}
+			else
+			{
+				SetThrusters(4, NULL);
+			}
+		}
+		else
+		{
+			SetThrusters(NULL);
+		}
+
 		//Explosive valves
 		if (!heliumSupplyValve.IsOpen() && RCSHeliumSupplyPyros->Blown())
 		{
 			heliumSupplyValve.SetState(true);
 		}
+	}
+}
+
+void RCSPropellantSource::SetThrusters(PROPELLANT_HANDLE ph) {
+
+	for (int i = 1;i <= 4;i++)
+	{
+		SetThrusters(i, ph);
+	}
+}
+
+void RCSPropellantSource::SetThrusters(int quad, PROPELLANT_HANDLE ph) {
+
+	for (int i = 0; i < 2; i++) {
+		if (thrusters[quadThruster1ID[quad - 1] + i])
+			our_vessel->SetThrusterResource(thrusters[quadThruster1ID[quad - 1] + i], ph);
 	}
 }
 
@@ -316,4 +385,14 @@ void RCS_TCA::Timestep()
 	{
 		TCAFailure.Set();
 	}
+}
+
+void RCS_TCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+
+}
+
+void RCS_TCA::LoadState(FILEHANDLE scn, char *end_str)
+{
+
 }

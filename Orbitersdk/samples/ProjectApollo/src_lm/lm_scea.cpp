@@ -341,7 +341,7 @@ void SCERA1::Timestep()
 	//Helium regulator pressure system A (GR1201)
 	SA6.SetOutput(3, scale_data(lem->RCSA.GetRCSRegulatorPressPSI(), 0.0, 350.0));
 	//Helium regulator pressure system B (GR1202)
-	SA6.SetOutput(3, scale_data(lem->RCSB.GetRCSRegulatorPressPSI(), 0.0, 350.0));
+	SA6.SetOutput(4, scale_data(lem->RCSB.GetRCSRegulatorPressPSI(), 0.0, 350.0));
 
 	//APS regulator outlet manifold pressure (GP0025)
 	SA8.SetOutput(3, scale_data(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI(), 0.0, 300.0));

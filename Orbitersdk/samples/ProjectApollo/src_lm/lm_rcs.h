@@ -42,7 +42,7 @@ class RCSPropellantSource : public LEMPropellantSource {
 public:
 	RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 
-	void Init(Pyro *rcshsp);
+	void Init(THRUSTER_HANDLE *th, Pyro *rcshsp, int q1th1, int q2th1, int q3th1, int q4th1);
 	void Timestep(double simt, double simdt);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -68,6 +68,7 @@ public:
 	LEMRCSValve *GetSecFuelInterconnectValve() { return &secFuelInterconnectValve; }
 protected:
 	void SetThrusters(PROPELLANT_HANDLE ph);
+	void SetThrusters(int quad, PROPELLANT_HANDLE ph);
 
 	double heliumPressurePSI;
 	double regulatorPressurePSI;
@@ -87,7 +88,9 @@ protected:
 	LEMRCSValve primFuelInterconnectValve;
 	LEMRCSValve secFuelInterconnectValve;
 
+	THRUSTER_HANDLE *thrusters;
 	Pyro *RCSHeliumSupplyPyros;
+	int quadThruster1ID[4];
 };
 
 //Reaction Control System Thrust Control Assembly (RCS TCA)
@@ -110,6 +113,9 @@ public:
 	RCS_TCA(int jdsa, int jdcirc1, int jdcirc2, int tcpsa1, int tcpcirc1, int tcps2, int tcpcirc2);
 	void Init(LEM *l, int rsetcirc);
 	void Timestep();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
 	TCA_FlipFlop *GetTCAFailureFlipFlop() { return &TCAFailure; }
 	bool GetTCAFailure() { return TCAFailure.IsSet(); }
 protected:
