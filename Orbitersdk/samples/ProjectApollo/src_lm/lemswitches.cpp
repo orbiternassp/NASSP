@@ -1812,3 +1812,49 @@ bool AscentO2RotationalSwitch::SwitchTo(int newValue)
 
 	return false;
 }
+
+void LMSuitTempRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	Pipe = p;
+}
+
+bool LMSuitTempRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckValve();
+		return true;
+	}
+	return false;
+}
+
+void LMSuitTempRotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 0) {
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+
+	}
+	else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 30.0 / LBH;
+
+	}
+	else if (GetState() == 2) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 60.0 / LBH;
+
+	}
+	else if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 90.0 / LBH;
+
+	}
+	else if (GetState() == 4) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 120.0 / LBH;
+	}
+}
