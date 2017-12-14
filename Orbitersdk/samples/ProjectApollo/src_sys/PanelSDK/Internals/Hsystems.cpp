@@ -992,9 +992,9 @@ void h_HeatExchanger::refresh(double dt) {
 	} else if (h_pump == 1) {
 		
 		// Only cooling at the moment, heating causes bugs during high time accelerations
-		if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
-			pump = true;
-		}
+		//if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
+		//	pump = true;
+		//}
 		if (target->GetTemp() > tempMax && source->GetTemp() < target->GetTemp()) {
 			pump = true;
 		}
@@ -1076,7 +1076,7 @@ void h_Evaporator::refresh(double dt) {
 		h_substance *h2o = &liquidSource->parent->space.composition[SUBSTANCE_H2O];
 		double flow = h2o->mass;
 	
-		// max. consumtion
+		// max. consumption
 		if (flow > targetFlow) 
 			flow = targetFlow;
 		else 
