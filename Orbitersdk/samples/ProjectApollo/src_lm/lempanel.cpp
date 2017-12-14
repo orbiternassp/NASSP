@@ -225,6 +225,7 @@ void LEM::InitSwitches() {
 	RCSQuad3BCmdEnableSwitch.SetCallback(new PanelSwitchCallback<LEMRCSValve>(RCSB.GetQuad3IsolationValve(), &LEMRCSValve::SwitchToggled));
 	RCSXFeedTB.Register(PSH, "RCSXFeedTB", false);
 	RCSXFeedSwitch.Register(PSH, "RCSXFeedSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSXFeedSwitch.SetCallback(new PanelSwitchCallback<RCSPropellantSource>(&RCSB, &RCSPropellantSource::CrossfeedToggled));
 	RCSMainSovATB.Register(PSH, "RCSMainSovATB", true);
 	RCSMainSovBTB.Register(PSH, "RCSMainSovBTB", true);
 	RCSMainSovASwitch.Register(PSH, "RCSMainSOVASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -2086,7 +2087,7 @@ void LEM::SetSwitches(int panel) {
 	RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
 
 	RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
-	RCSXFeedTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow);
+	RCSXFeedTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow, scera1.GetSwitch(13, 12), false);
 
 	RCSXfeedSwitchRow.Init(AID_RCS_XFEED_SWITCH, MainPanel);
 	RCSXFeedSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);

@@ -872,7 +872,7 @@ protected:
 	LGCThrusterPairSwitch RCSQuad3BCmdEnableSwitch;
 
 	SwitchRow RCSXfeedTBSwitchRow;
-	IndicatorSwitch RCSXFeedTB;
+	LEMSCEATalkback RCSXFeedTB;
 
 	SwitchRow RCSXfeedSwitchRow;
 	ThreePosSwitch RCSXFeedSwitch;

@@ -406,6 +406,9 @@ void SCERA1::Timestep()
 	//RCS/ASC interconnect B not closed (GR9632)
 	val = lem->RCSB.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSB.GetSecFuelInterconnectValve()->IsOpen();
 	SA13.SetOutput(11, val);
+	//RCS A/B crossfeed open
+	val = lem->RCSB.GetFuelCrossfeedValve()->IsOpen() && lem->RCSB.GetOxidCrossfeedValve()->IsOpen();
+	SA13.SetOutput(12, val);
 
 	//Thrust chamber assembly solenoid valve A4 closed (GR9661)
 	SA14.SetOutput(1, !lem->RCSA.GetQuad4IsolationValve()->IsOpen());

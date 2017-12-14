@@ -447,6 +447,8 @@ void LEM::SystemsInit()
 	RCSAscFeed2ATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	RCSAscFeed1BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	RCSAscFeed2BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSXFeedSwitch.WireTo(&RCS_B_CRSFD_CB);
+	RCSXFeedTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
 	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
@@ -737,8 +739,8 @@ void LEM::SystemsInit()
 	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	//RCS
-	RCSA.Init(th_rcs, &RCSHeliumSupplyAPyros, 0, 6, 8, 14);
-	RCSB.Init(th_rcs, &RCSHeliumSupplyBPyros, 2, 4, 10, 12);
+	RCSA.Init(th_rcs, &RCSHeliumSupplyAPyros, NULL, 0, 6, 8, 14);
+	RCSB.Init(th_rcs, &RCSHeliumSupplyBPyros, &RCSA, 2, 4, 10, 12);
 	tca1A.Init(this, 7);
 	tca2A.Init(this, 5);
 	tca3A.Init(this, 3);

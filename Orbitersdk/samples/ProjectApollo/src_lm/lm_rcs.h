@@ -42,7 +42,7 @@ class RCSPropellantSource : public LEMPropellantSource {
 public:
 	RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 
-	void Init(THRUSTER_HANDLE *th, Pyro *rcshsp, int q1th1, int q2th1, int q3th1, int q4th1);
+	void Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1);
 	void Timestep(double simt, double simdt);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -50,6 +50,7 @@ public:
 
 	void PrimInterconnectToggled(PanelSwitchItem *s);
 	void SecInterconnectToggled(PanelSwitchItem *s);
+	void CrossfeedToggled(PanelSwitchItem *s);
 
 	double GetRCSHeliumPressPSI();
 	double GetRCSRegulatorPressPSI();
@@ -66,9 +67,13 @@ public:
 	LEMRCSValve *GetSecOxidInterconnectValve() { return &secOxidInterconnectValve; }
 	LEMRCSValve *GetPrimFuelInterconnectValve() { return &primFuelInterconnectValve; }
 	LEMRCSValve *GetSecFuelInterconnectValve() { return &secFuelInterconnectValve; }
+	LEMRCSValve *GetFuelCrossfeedValve() { return &fuelCrossfeedValve; }
+	LEMRCSValve *GetOxidCrossfeedValve() { return &oxidCrossfeedValve; }
 protected:
 	void SetThrusters(PROPELLANT_HANDLE ph);
 	void SetThrusters(int quad, PROPELLANT_HANDLE ph);
+
+	double lastPropellantMass;
 
 	double heliumPressurePSI;
 	double regulatorPressurePSI;
@@ -87,7 +92,10 @@ protected:
 	LEMRCSValve secOxidInterconnectValve;
 	LEMRCSValve primFuelInterconnectValve;
 	LEMRCSValve secFuelInterconnectValve;
+	LEMRCSValve fuelCrossfeedValve;
+	LEMRCSValve oxidCrossfeedValve;
 
+	RCSPropellantSource *otherSystem;
 	THRUSTER_HANDLE *thrusters;
 	Pyro *RCSHeliumSupplyPyros;
 	int quadThruster1ID[4];

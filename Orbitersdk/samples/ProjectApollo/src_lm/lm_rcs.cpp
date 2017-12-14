@@ -61,6 +61,9 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : L
 	oxidTankPressurePSI = 0.0;
 	fuelTankPressurePSI = 0.0;
 
+	lastPropellantMass = 0.0;
+
+	otherSystem = NULL;
 	RCSHeliumSupplyPyros = NULL;
 
 	for (int i = 0;i < 4;i++)
@@ -73,10 +76,11 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : L
 	primFuelInterconnectValve.SetState(true);
 }
 
-void RCSPropellantSource::Init(THRUSTER_HANDLE *th, Pyro *rcshsp, int q1th1, int q2th1, int q3th1, int q4th1)
+void RCSPropellantSource::Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1)
 {
 	thrusters = th;
 	RCSHeliumSupplyPyros = rcshsp;
+	otherSystem = otherSys;
 	quadThruster1ID[0] = q1th1;
 	quadThruster1ID[1] = q2th1;
 	quadThruster1ID[2] = q3th1;
@@ -179,6 +183,9 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 		{
 			heliumSupplyValve.SetState(true);
 		}
+
+
+		lastPropellantMass = p;
 	}
 }
 
@@ -222,6 +229,20 @@ void RCSPropellantSource::SecInterconnectToggled(PanelSwitchItem *s) {
 		else if (((ThreePosSwitch *)s)->IsDown()) {
 			secOxidInterconnectValve.SetState(false);
 			secFuelInterconnectValve.SetState(false);
+		}
+	}
+}
+
+void RCSPropellantSource::CrossfeedToggled(PanelSwitchItem *s) {
+
+	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
+		if (((ThreePosSwitch *)s)->IsUp()) {
+			fuelCrossfeedValve.SetState(true);
+			oxidCrossfeedValve.SetState(true);
+		}
+		else if (((ThreePosSwitch *)s)->IsDown()) {
+			fuelCrossfeedValve.SetState(false);
+			oxidCrossfeedValve.SetState(false);
 		}
 	}
 }
@@ -288,6 +309,12 @@ void RCSPropellantSource::SaveState(FILEHANDLE scn, char *start_str, char *end_s
 	papiWriteScenario_bool(scn, "SECOXIDINTERCONNECTVALVE_ISOPEN", secOxidInterconnectValve.IsOpen());
 	papiWriteScenario_bool(scn, "SECFUELINTERCONNECTVALVE_ISOPEN", secFuelInterconnectValve.IsOpen());
 
+	if (otherSystem)
+	{
+		papiWriteScenario_bool(scn, "FUELCROSSFEEDVALVE_ISOPEN", fuelCrossfeedValve.IsOpen());
+		papiWriteScenario_bool(scn, "OXIDCROSSFEEDVALVE_ISOPEN", oxidCrossfeedValve.IsOpen());
+	}
+
 	oapiWriteLine(scn, end_str);
 }
 
@@ -318,6 +345,8 @@ void RCSPropellantSource::LoadState(FILEHANDLE scn, char *end_str) {
 		if (papiReadScenario_bool(line, "PRIMFUELINTERCONNECTVALVE_ISOPEN", isOpen))	primFuelInterconnectValve.SetState(isOpen);
 		if (papiReadScenario_bool(line, "SECOXIDINTERCONNECTVALVE_ISOPEN", isOpen))		secOxidInterconnectValve.SetState(isOpen);
 		if (papiReadScenario_bool(line, "SECFUELINTERCONNECTVALVE_ISOPEN", isOpen))		secFuelInterconnectValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "FUELCROSSFEEDVALVE_ISOPEN", isOpen))		fuelCrossfeedValve.SetState(isOpen);
+		if (papiReadScenario_bool(line, "OXIDCROSSFEEDVALVE_ISOPEN", isOpen))		oxidCrossfeedValve.SetState(isOpen);
 	}
 }
 
@@ -389,10 +418,24 @@ void RCS_TCA::Timestep()
 
 void RCS_TCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
+	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_bool(scn, "TCAFAILURE", TCAFailure.IsSet());
+
+	oapiWriteLine(scn, end_str);
 }
 
 void RCS_TCA::LoadState(FILEHANDLE scn, char *end_str)
 {
+	char *line;
+	bool isSet;
+	int end_len = strlen(end_str);
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		if (papiReadScenario_bool(line, "TCAFAILURE", isSet))			TCAFailure.Set();
+	}
 }
