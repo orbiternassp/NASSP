@@ -1422,7 +1422,7 @@ protected:
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
 	RotationalSwitch WaterTankSelectValve;
-	RotationalSwitch SuitTempValve;
+	LMSuitTempRotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
 	RotationalSwitch ASCH2OValve;
