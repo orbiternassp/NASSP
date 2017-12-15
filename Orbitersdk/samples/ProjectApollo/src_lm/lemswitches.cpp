@@ -1840,21 +1840,25 @@ void LMSuitTempRotationalSwitch::CheckValve()
 	}
 	else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 30.0 / LBH;
+		Pipe->flowMax = 30.0 / LBH;	
+		//Pipe->flowMax = 15.0 / LBH;
 
 	}
 	else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 60.0 / LBH;
+		//Pipe->flowMax = 30.0 / LBH;
 
 	}
 	else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 90.0 / LBH;
+		//Pipe->flowMax = 45.0 / LBH;
 
 	}
 	else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 120.0 / LBH;
+		//Pipe->flowMax = 60.0 / LBH;
 	}
 }
