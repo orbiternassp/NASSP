@@ -195,10 +195,10 @@ void LEM::SetLmVesselDockStage()
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
 	if (!ph_RCSA) {
-		ph_RCSA = CreatePropellantResource(133.084001);
+		ph_RCSA = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
 	}
 	if (!ph_RCSB) {
-		ph_RCSB = CreatePropellantResource(133.084001);
+		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
 	}
 
 	// orbiter main thrusters
@@ -323,10 +323,10 @@ void LEM::SetLmVesselHoverStage()
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	if (!ph_RCSA){
-		ph_RCSA = CreatePropellantResource(133.084001);
+		ph_RCSA = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
 	}
 	if (!ph_RCSB){
-		ph_RCSB = CreatePropellantResource(133.084001);
+		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
 	}
 	
 	// orbiter main thrusters

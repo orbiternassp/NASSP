@@ -243,8 +243,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
-	RCSA(ph_RCSA, Panelsdk),
-	RCSB(ph_RCSB, Panelsdk),
+	RCSA(ph_RCSA, Panelsdk, false),
+	RCSB(ph_RCSB, Panelsdk, true),
 	tca1A(2, 5, 8, 3, 5, 3, 7),
 	tca2A(2, 2, 3, 11, 10, 3, 3),
 	tca3A(4, 7, 10, 11, 5, 11, 8),
@@ -1141,6 +1141,30 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "RCSPROPELLANT_B_BEGIN", sizeof("RCSPROPELLANT_B_BEGIN"))) {
 			RCSB.LoadState(scn, "RCSPROPELLANT_END");
 		}
+		else if (!strnicmp(line, "RCSTCA_1A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca1A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_2A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca2A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_3A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca3A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_4A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca4A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_1B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca1B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_2B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca2B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_3B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca3B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_4B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca4B.LoadState(scn, "RCSTCA_END");
+		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		}
@@ -1495,6 +1519,14 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
 	RCSB.SaveState(scn, "RCSPROPELLANT_B_BEGIN", "RCSPROPELLANT_END");
+	tca1A.SaveState(scn, "RCSTCA_1A_BEGIN", "RCSTCA_END");
+	tca2A.SaveState(scn, "RCSTCA_2A_BEGIN", "RCSTCA_END");
+	tca3A.SaveState(scn, "RCSTCA_3A_BEGIN", "RCSTCA_END");
+	tca4A.SaveState(scn, "RCSTCA_4A_BEGIN", "RCSTCA_END");
+	tca1B.SaveState(scn, "RCSTCA_1B_BEGIN", "RCSTCA_END");
+	tca2B.SaveState(scn, "RCSTCA_2B_BEGIN", "RCSTCA_END");
+	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
+	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);

@@ -739,7 +739,7 @@ void LEM::SystemsInit()
 	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 
 	//RCS
-	RCSA.Init(th_rcs, &RCSHeliumSupplyAPyros, NULL, 0, 6, 8, 14);
+	RCSA.Init(th_rcs, &RCSHeliumSupplyAPyros, &RCSB, 0, 6, 8, 14);
 	RCSB.Init(th_rcs, &RCSHeliumSupplyBPyros, &RCSA, 2, 4, 10, 12);
 	tca1A.Init(this, 7);
 	tca2A.Init(this, 5);

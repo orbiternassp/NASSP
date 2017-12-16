@@ -52,19 +52,20 @@ void LEMRCSValve::SwitchToggled(PanelSwitchItem *s) {
 	}
 }
 
-RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : LEMPropellantSource(ph)
+RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, bool hasXFeedValve) : LEMPropellantSource(ph)
 {
-	heliumPressurePSI = 0.0;
-	regulatorPressurePSI = 0.0;
-	oxidManifoldPressurePSI = 0.0;
-	fuelManifoldPressurePSI = 0.0;
-	oxidTankPressurePSI = 0.0;
-	fuelTankPressurePSI = 0.0;
+	hasCrossFeedValve = hasXFeedValve;
+
+	heliumPressurePSI = 3050.0;
+	regulatorPressurePSI = 30.0;
+	oxidManifoldPressurePSI = 21.0;
+	fuelManifoldPressurePSI = 21.0;
 
 	lastPropellantMass = 0.0;
 
 	otherSystem = NULL;
 	RCSHeliumSupplyPyros = NULL;
+	prop = ph;
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -74,6 +75,11 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : L
 	//Open at launch
 	primOxidInterconnectValve.SetState(true);
 	primFuelInterconnectValve.SetState(true);
+}
+
+RCSPropellantSource::~RCSPropellantSource()
+{
+
 }
 
 void RCSPropellantSource::Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1)
@@ -97,14 +103,14 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 		regulatorPressurePSI = 0.0;
 		oxidManifoldPressurePSI = 0.0;
 		fuelManifoldPressurePSI = 0.0;
-		oxidTankPressurePSI = 0.0;
-		fuelTankPressurePSI = 0.0;
 	}
 	else
 	{
 		double p = our_vessel->GetPropellantMass(source_prop);
+		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
 
-		heliumPressurePSI = 3050.0;
+		//Quadratic fit: 3050 PSI at 100%, 2500 PSI at 74%, 2200 PSI at 55%
+		heliumPressurePSI = 1192.08*(p / pMaxForPressures)*(p / pMaxForPressures) + 41.1606*(p / pMaxForPressures) + 1816.76;
 
 		//Regulator
 		if (heliumSupplyValve.IsOpen())
@@ -120,26 +126,104 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 		}
 		else
 		{
-			regulatorPressurePSI = 0.0;
+			regulatorPressurePSI = 30.0 * (p / pMaxForPressures);
 		}
 
-		//Manifold
+		bool ascFeed = primOxidInterconnectValve.IsOpen() && secOxidInterconnectValve.IsOpen() &&
+			primFuelInterconnectValve.IsOpen() && secFuelInterconnectValve.IsOpen();
+
+		double APSOxidPressure, APSFuelPressure, FuelPressure, OxidPressure, XFeedOxidPressure, XFeedFuelPressure;
+
 		if (mainShutoffValve.IsOpen())
 		{
-			oxidManifoldPressurePSI = regulatorPressurePSI - 9.0;
-			fuelManifoldPressurePSI = regulatorPressurePSI - 9.0;
+			OxidPressure = FuelPressure = regulatorPressurePSI - 9.0;
 		}
 		else
 		{
-			oxidManifoldPressurePSI = 0.0;
-			fuelManifoldPressurePSI = 0.0;
+			OxidPressure = FuelPressure = 0.0;
 		}
 
-		if (oxidManifoldPressurePSI > 1.0 && fuelManifoldPressurePSI > 1.0)
+		if (ascFeed)
+		{
+			APSFuelPressure = our_vessel->APSPropellant.GetFuelTrimOrificeOutletPressurePSI();
+			APSOxidPressure = our_vessel->APSPropellant.GetOxidTrimOrificeOutletPressurePSI();
+		}
+		else
+		{
+			APSFuelPressure = 0;
+			APSOxidPressure = 0;
+		}
+
+		bool crossFeed;
+		
+		if (hasCrossFeedValve)
+		{
+			crossFeed = fuelCrossfeedValve.IsOpen() && oxidCrossfeedValve.IsOpen();
+		}
+		else
+		{
+			crossFeed = otherSystem->fuelCrossfeedValve.IsOpen() && otherSystem->oxidCrossfeedValve.IsOpen();
+		}
+
+		if (crossFeed)
+		{
+			XFeedOxidPressure = otherSystem->oxidManifoldPressurePSI;
+			XFeedFuelPressure = otherSystem->fuelManifoldPressurePSI;
+		}
+		else
+		{
+			XFeedOxidPressure = 0;
+			XFeedFuelPressure = 0;
+		}
+
+		//Manifold
+
+		//Propellant from other source
+		if ((XFeedFuelPressure > FuelPressure) && (XFeedFuelPressure > APSFuelPressure))
+		{
+			fuelManifoldPressurePSI = max((fuelManifoldPressurePSI + otherSystem->fuelManifoldPressurePSI) / 2.0 - 9.0, 21.0);
+
+			if (fuelManifoldPressurePSI > otherSystem->fuelManifoldPressurePSI)
+			{
+				prop = source_prop;
+			}
+			else
+			{
+				prop = otherSystem->prop;
+			}
+		}
+		//propellant from APS
+		else if ((APSFuelPressure > FuelPressure) && (APSFuelPressure > XFeedFuelPressure))
+		{
+			fuelManifoldPressurePSI = APSFuelPressure - 9.0;
+			prop = our_vessel->ph_Asc;
+		}
+		//propellant from own source
+		else
+		{
+			fuelManifoldPressurePSI = max(FuelPressure - 9.0, 21.0);
+			prop = source_prop;
+		}
+
+		if ((XFeedOxidPressure > OxidPressure) && (XFeedOxidPressure > APSOxidPressure))
+		{
+			oxidManifoldPressurePSI = max((oxidManifoldPressurePSI + otherSystem->oxidManifoldPressurePSI) / 2.0 - 9.0, 21.0);
+		}
+
+		else if ((APSOxidPressure > OxidPressure) && (APSOxidPressure > XFeedOxidPressure))
+		{
+			oxidManifoldPressurePSI = APSOxidPressure - 9.0;
+		}
+		else
+		{
+			oxidManifoldPressurePSI = max(OxidPressure - 9.0, 21.0);
+		}
+
+		if (oxidManifoldPressurePSI > 100.0 && fuelManifoldPressurePSI > 100.0)
 		{
 			if (quad1IsolationValve.IsOpen())
 			{
-				SetThrusters(1, source_prop);
+				SetThrusters(1, prop);
 			}
 			else
 			{
@@ -148,7 +232,7 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 
 			if (quad2IsolationValve.IsOpen())
 			{
-				SetThrusters(2, source_prop);
+				SetThrusters(2, prop);
 			}
 			else
 			{
@@ -157,7 +241,7 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 
 			if (quad3IsolationValve.IsOpen())
 			{
-				SetThrusters(3, source_prop);
+				SetThrusters(3, prop);
 			}
 			else
 			{
@@ -166,7 +250,7 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 
 			if (quad4IsolationValve.IsOpen())
 			{
-				SetThrusters(4, source_prop);
+				SetThrusters(4, prop);
 			}
 			else
 			{
@@ -235,14 +319,17 @@ void RCSPropellantSource::SecInterconnectToggled(PanelSwitchItem *s) {
 
 void RCSPropellantSource::CrossfeedToggled(PanelSwitchItem *s) {
 
-	if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
-		if (((ThreePosSwitch *)s)->IsUp()) {
-			fuelCrossfeedValve.SetState(true);
-			oxidCrossfeedValve.SetState(true);
-		}
-		else if (((ThreePosSwitch *)s)->IsDown()) {
-			fuelCrossfeedValve.SetState(false);
-			oxidCrossfeedValve.SetState(false);
+	if (hasCrossFeedValve)
+	{
+		if (s->SRC && (s->SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
+			if (((ThreePosSwitch *)s)->IsUp()) {
+				fuelCrossfeedValve.SetState(true);
+				oxidCrossfeedValve.SetState(true);
+			}
+			else if (((ThreePosSwitch *)s)->IsDown()) {
+				fuelCrossfeedValve.SetState(false);
+				oxidCrossfeedValve.SetState(false);
+			}
 		}
 	}
 }
@@ -293,8 +380,6 @@ void RCSPropellantSource::SaveState(FILEHANDLE scn, char *start_str, char *end_s
 
 	papiWriteScenario_double(scn, "HELIUMPRESSUREPSI", heliumPressurePSI);
 	papiWriteScenario_double(scn, "REGULATORPRESSUREPSI", regulatorPressurePSI);
-	papiWriteScenario_double(scn, "OXIDTANKPRESSUREPSI", oxidTankPressurePSI);
-	papiWriteScenario_double(scn, "FUELTANKPRESSUREPSI", fuelTankPressurePSI);
 	papiWriteScenario_double(scn, "OXIDMANIFOLDPRESSUREPSI", oxidManifoldPressurePSI);
 	papiWriteScenario_double(scn, "FUELMANIFOLDPRESSUREPSI", fuelManifoldPressurePSI);
 
@@ -309,7 +394,7 @@ void RCSPropellantSource::SaveState(FILEHANDLE scn, char *start_str, char *end_s
 	papiWriteScenario_bool(scn, "SECOXIDINTERCONNECTVALVE_ISOPEN", secOxidInterconnectValve.IsOpen());
 	papiWriteScenario_bool(scn, "SECFUELINTERCONNECTVALVE_ISOPEN", secFuelInterconnectValve.IsOpen());
 
-	if (otherSystem)
+	if (hasCrossFeedValve)
 	{
 		papiWriteScenario_bool(scn, "FUELCROSSFEEDVALVE_ISOPEN", fuelCrossfeedValve.IsOpen());
 		papiWriteScenario_bool(scn, "OXIDCROSSFEEDVALVE_ISOPEN", oxidCrossfeedValve.IsOpen());
@@ -330,8 +415,6 @@ void RCSPropellantSource::LoadState(FILEHANDLE scn, char *end_str) {
 
 		papiReadScenario_double(line, "HELIUMPRESSUREPSI", heliumPressurePSI);
 		papiReadScenario_double(line, "REGULATORPRESSUREPSI", regulatorPressurePSI);
-		papiReadScenario_double(line, "OXIDTANKPRESSUREPSI", oxidTankPressurePSI);
-		papiReadScenario_double(line, "FUELTANKPRESSUREPSI", fuelTankPressurePSI);
 		papiReadScenario_double(line, "OXIDMANIFOLDPRESSUREPSI", oxidManifoldPressurePSI);
 		papiReadScenario_double(line, "FUELMANIFOLDPRESSUREPSI", fuelManifoldPressurePSI);
 

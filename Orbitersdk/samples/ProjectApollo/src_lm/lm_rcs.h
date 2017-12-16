@@ -40,7 +40,8 @@ protected:
 
 class RCSPropellantSource : public LEMPropellantSource {
 public:
-	RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
+	RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, bool hasXFeedValve);
+	virtual ~RCSPropellantSource();
 
 	void Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1);
 	void Timestep(double simt, double simdt);
@@ -77,8 +78,6 @@ protected:
 
 	double heliumPressurePSI;
 	double regulatorPressurePSI;
-	double oxidTankPressurePSI;
-	double fuelTankPressurePSI;
 	double oxidManifoldPressurePSI;
 	double fuelManifoldPressurePSI;
 
@@ -99,6 +98,8 @@ protected:
 	THRUSTER_HANDLE *thrusters;
 	Pyro *RCSHeliumSupplyPyros;
 	int quadThruster1ID[4];
+	PROPELLANT_HANDLE prop;
+	bool hasCrossFeedValve;
 };
 
 //Reaction Control System Thrust Control Assembly (RCS TCA)
