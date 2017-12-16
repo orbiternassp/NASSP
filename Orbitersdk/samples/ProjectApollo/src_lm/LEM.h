@@ -1428,7 +1428,7 @@ protected:
 	RotationalSwitch ASCH2OValve;
 
 	SwitchRow GarmentCoolingSwitchRow;
-	RotationalSwitch LiquidGarmentCoolingValve;
+	LMLiquidGarmentCoolingRotationalSwitch LiquidGarmentCoolingValve;
 
 	SwitchRow SuitCircuitAssySwitchRow;
 	RotationalSwitch SuitCircuitReliefValveSwitch;
