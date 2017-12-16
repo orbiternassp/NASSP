@@ -603,3 +603,15 @@ protected:
 
 	h_Pipe *Pipe;
 };
+
+class LMLiquidGarmentCoolingRotationalSwitch : public RotationalSwitch {
+public:
+	LMLiquidGarmentCoolingRotationalSwitch() { Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p);
+	virtual bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *Pipe;
+};
