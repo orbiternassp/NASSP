@@ -672,10 +672,14 @@ void LEM::SystemsInit()
 	SetPipeMaxFlow("HYDRAULIC:SECCO2VENT", 6.75 / LBH);
 */
 
-	//Glycol Pipe Initialization   
+	//Primary Glycol Pipe Initialization   
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYFLOWREG1", 290.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYFLOWREG2", 145.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYFLOWREG3", 145.0 / LBH);
+
+	//LCG Pipe Initialization   
+	SetPipeMaxFlow("HYDRAULIC:LCGACCUMULATOROUT", 20.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:LCGFLOWCONTROLBYPASS", 20.0 / LBH);
 
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
