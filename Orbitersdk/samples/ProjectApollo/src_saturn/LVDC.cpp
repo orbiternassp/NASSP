@@ -5566,7 +5566,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}*/
 			
 				// MR Shift
-				if(LVDC_TB_ETime > 284.4 && MRS == false){
+				if(T_1 <= 0.0 && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 58);
