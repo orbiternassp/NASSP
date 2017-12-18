@@ -309,7 +309,8 @@ Casper:ProjectApollo\Saturn5
   LMPAD 3432 00000
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
-  LVDC_BEGIN
+LVDC_BEGIN
+  LVDC_SIICenterEngineCutoff 1
   LVDC_hx[0][0] 72.034
   LVDC_SCControlPoweredFlight 1
   LVDC_G_T -9.305

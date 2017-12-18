@@ -3247,7 +3247,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TSMC3 = 466;
 	// TSMC1 = 60.6 TSMC2 = 15 // AP11
 	T_c = 8; // T_c = 6.5; 					// Coast time between S2 burnout and S4B ignition
-	T_1 = 249.1; //T_1  = 237.796;			// Time left in first-stage IGM
+	T_1 = 286.2; //T_1  = 237.796;			// Time left in first-stage IGM
 	T_2 = 91.8; //T_2 = 111;					// Time left in second and fourth stage IGM
 	T_2R = 10.0;
 	T_3 = 0;								// Time left in third and fifth stage IGM
@@ -5577,7 +5577,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvCommandConnector->GetMissionTime());
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
