@@ -321,7 +321,9 @@ bool SIISystems::GetPropellantDepletionEngineCutoff()
 	{
 		if (PropellantDepletionSensors) return true;
 
-		for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return true;
+		for (int i = 0;i < 5;i++) if (ThrustOK[i]) return false;
+
+		return true;
 	}
 
 	return false;
