@@ -43,10 +43,10 @@ const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.18,		1.040,		0.858,			3.568
 const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347,			1769.195};		//J/g
 const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,		25639.45};		//Pa @ 273.00K
 const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,			52.87};			//Pa/K.. assume linear dependence of PV / K
-const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,			1040.25};		//g/L @ 103kPa ..assume constant wrt. temp
+const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,			1038.5};		//g/L @ 103kPa ..assume constant wrt. temp
 const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,			2.55e6};		//Pa .. assume constant
-const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,		3860431.65};	//Pa.. critical pressure
-const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,			672.745};		//K.. critical temperature
+const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,		3097574.75};	//Pa.. critical pressure
+const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,			256.9525};		//K.. critical temperature
 
 #include "thermal.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
