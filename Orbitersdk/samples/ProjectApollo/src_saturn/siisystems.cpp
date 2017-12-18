@@ -34,7 +34,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "siisystems.h"
 
 SIISystems::SIISystems(Saturn *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Sound &pushifts, Sound &SepS)
-	:j2engines(j2), main_propellant(j2prop), ullage(ull), puShiftSound(pushifts), sepSound(SepS)
+	:main_propellant(j2prop), ullage(ull), puShiftSound(pushifts), sepSound(SepS),
+	j2engine1(v, j2[0]),
+	j2engine2(v, j2[1]),
+	j2engine3(v, j2[2]),
+	j2engine4(v, j2[3]),
+	j2engine5(v, j2[4])
 {
 	int i;
 
@@ -49,50 +54,40 @@ SIISystems::SIISystems(Saturn *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 
 	PUValveState = PUVALVE_NULL;
 
-	LVDCStartCommand = false;
-	EngineStart = false;
-	EnginesRunning = false;
-	LVDCEnginesStopRelay = true;
-	EnginesReady = false;
-	EnginesReadyBypass = false;
 	PointLevelSensorArmed = false;
 	UllageTrigger = false;
-	EDSEnginesStop = false;
-	RSSEnginesStop = false;
-	EnginesStop = false;
 	PropellantDepletionSensors = false;
 	OrdnanceArmed = false;
 	SIISIVBOrdnanceArmed = false;
 	FailInit = false;
 
-	ThrustTimer = 0.0;
-	ThrustLevel = 0.0;
 	FailureTimer = 0.0;
+
+	j2engines[0] = &j2engine1;
+	j2engines[1] = &j2engine2;
+	j2engines[2] = &j2engine3;
+	j2engines[3] = &j2engine4;
+	j2engines[4] = &j2engine5;
 }
 
 void SIISystems::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, SIISYSTEMS_START_STRING);
 
-	papiWriteScenario_bool(scn, "ENGINESTART", EngineStart);
-	papiWriteScenario_bool(scn, "LVDCSTARTCOMMAND", LVDCStartCommand);
-	papiWriteScenario_bool(scn, "LVDCENGINESSTOPRELAY", LVDCEnginesStopRelay);
-	papiWriteScenario_bool(scn, "EDSENGINESSTOP", EDSEnginesStop);
-	papiWriteScenario_bool(scn, "RSSENGINESSTOP", RSSEnginesStop);
-	papiWriteScenario_bool(scn, "ENGINESSTOP", EnginesStop);
-	papiWriteScenario_bool(scn, "ENGINESREADY", EnginesReady);
-	papiWriteScenario_bool(scn, "ENGINESREADYBYPASS", EnginesReadyBypass);
-	papiWriteScenario_bool(scn, "ENGINESRUNNING", EnginesRunning);
 	papiWriteScenario_bool(scn, "ULLAGETRIGGER", UllageTrigger);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "ORDNANCEARMED", OrdnanceArmed);
 	papiWriteScenario_bool(scn, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
 	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
-	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
-	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
 	papiWriteScenario_boolarr(scn, "EARLYSIICUTOFF", EarlySIICutoff, 5);
 	papiWriteScenario_doublearr(scn, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
+
+	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
+	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
+	j2engine3.SaveState(scn, "ENGINE3_BEGIN", "ENGINE_END");
+	j2engine4.SaveState(scn, "ENGINE4_BEGIN", "ENGINE_END");
+	j2engine5.SaveState(scn, "ENGINE5_BEGIN", "ENGINE_END");
 
 	oapiWriteLine(scn, SIISYSTEMS_END_STRING);
 }
@@ -104,26 +99,31 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, SIISYSTEMS_END_STRING, sizeof(SIISYSTEMS_END_STRING)))
 			return;
 
-		papiReadScenario_bool(line, "ENGINESTART", EngineStart);
-		papiReadScenario_bool(line, "LVDCSTARTCOMMAND", LVDCStartCommand);
-		papiReadScenario_bool(line, "LVDCENGINESSTOPRELAY", LVDCEnginesStopRelay);
-		papiReadScenario_bool(line, "EDSENGINESSTOP", EDSEnginesStop);
-		papiReadScenario_bool(line, "RSSENGINESSTOP", RSSEnginesStop);
-		papiReadScenario_bool(line, "ENGINESSTOP", EnginesStop);
-		papiReadScenario_bool(line, "ENGINESREADY", EnginesReady);
-		papiReadScenario_bool(line, "ENGINESREADYBYPASS", EnginesReadyBypass);
-		papiReadScenario_bool(line, "ENGINESRUNNING", EnginesRunning);
 		papiReadScenario_bool(line, "ULLAGETRIGGER", UllageTrigger);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "ORDNANCEARMED", OrdnanceArmed);
 		papiReadScenario_bool(line, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
 		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
-		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
-		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
 		papiReadScenario_boolarr(line, "EARLYSIICUTOFF", EarlySIICutoff, 5);
 		papiReadScenario_doublearr(line, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
+
+		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
+			j2engine1.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE2_BEGIN", sizeof("ENGINE2_BEGIN"))) {
+			j2engine2.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE3_BEGIN", sizeof("ENGINE3_BEGIN"))) {
+			j2engine3.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE4_BEGIN", sizeof("ENGINE4_BEGIN"))) {
+			j2engine4.LoadState(scn, "ENGINE_END");
+		}
+		else if (!strnicmp(line, "ENGINE5_BEGIN", sizeof("ENGINE5_BEGIN"))) {
+			j2engine5.LoadState(scn, "ENGINE_END");
+		}
 	}
 }
 
@@ -131,10 +131,16 @@ void SIISystems::Timestep(double simdt)
 {
 	if (j2engines[0] == NULL) return;
 
+	j2engine1.Timestep(simdt);
+	j2engine2.Timestep(simdt);
+	j2engine3.Timestep(simdt);
+	j2engine4.Timestep(simdt);
+	j2engine5.Timestep(simdt);
+
 	//Thrust OK switch
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = vessel->GetThrusterLevel(j2engines[i]) > 0.65;
+		ThrustOK[i] = j2engines[i]->GetThrustOK();
 	}
 
 	//Propellant Depletion
@@ -145,85 +151,6 @@ void SIISystems::Timestep(double simdt)
 	else
 	{
 		PropellantDepletionSensors = false;
-	}
-
-	if (!EnginesRunning)
-	{
-		EnginesReady = true;
-	}
-	else
-	{
-		EnginesReady = false;
-	}
-
-	if ((EnginesReady || EnginesReadyBypass) && LVDCStartCommand)
-	{
-		EngineStart = true;
-	}
-	else
-	{
-		EngineStart = false;
-	}
-
-	if (LVDCEnginesStopRelay || EDSEnginesStop || RSSEnginesStop || PropellantDepletionSensors)
-	{
-		EnginesStop = true;
-	}
-	else
-	{
-		EnginesStop = false;
-	}
-
-	if (EnginesStop)
-	{
-		EnginesRunning = false;
-
-		if (ThrustLevel > 0.0)
-		{
-			ThrustTimer += simdt;
-
-			// Cutoff transient thrust
-			if (ThrustTimer < 2.0) {
-				if (ThrustTimer < 0.25) {
-					// 95% of thrust dies in the first .25 second
-					ThrustLevel = 1.0 - (ThrustTimer*3.3048);
-					SetThrusterGroupLevel(ThrustLevel);
-				}
-				else {
-					if (ThrustTimer < 1.5) {
-						// The remainder dies over the next 1.25 second
-						ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
-						SetThrusterGroupLevel(ThrustLevel);
-					}
-					else {
-						// Engine is completely shut down at 1.5 second
-						ThrustLevel = 0.0;
-						SetThrusterGroupLevel(ThrustLevel);
-					}
-				}
-			}
-		}
-	}
-	else if (EngineStart && !EnginesRunning)
-	{
-		ThrustTimer += simdt;
-
-		//First Burn
-		if (ThrustTimer >= 1.0 && ThrustTimer < 3.2) {
-			ThrustLevel = (ThrustTimer - 1.0)*0.45;
-			SetThrusterGroupLevel(ThrustLevel);
-		}
-		else if (ThrustTimer > 3.2 && ThrustLevel < 1.0)
-		{
-			ThrustLevel = 1.0;
-			SetThrusterGroupLevel(ThrustLevel);
-
-			EnginesRunning = true;
-		}
-	}
-	else if (ThrustTimer > 0.0)
-	{
-		ThrustTimer = 0.0;
 	}
 
 	//Ullage engines
@@ -242,9 +169,9 @@ void SIISystems::Timestep(double simdt)
 
 	for (int i = 0;i < 5;i++)
 	{
-		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && vessel->GetThrusterResource(j2engines[i]) != NULL)
+		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
 		{
-			vessel->SetThrusterResource(j2engines[i], NULL);
+			j2engines[i]->SetFailed();
 		}
 	}
 }
@@ -268,14 +195,6 @@ void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes)
 	SecondStageFailureTime[n - 1] = SIICutTimes;
 
 	FailInit = true;
-}
-
-void SIISystems::SetThrusterGroupLevel(double level)
-{
-	for (int i = 0;i < 5;i++)
-	{
-		vessel->SetThrusterLevel(j2engines[i], level);
-	}
 }
 
 #define MR_STATS 5
@@ -360,47 +279,16 @@ void SIISystems::SetMixtureRatio(double ratio)
 	thrust = J2DefaultThrust * ThrustAdjust;
 
 	for (int i = 0; i < 5; i++) {
-		vessel->SetThrusterIsp(j2engines[i], isp, isp);
-		vessel->SetThrusterMax0(j2engines[i], thrust);
+		j2engines[i]->SetThrusterIsp(isp);
+		j2engines[i]->SetThrusterMax0(thrust);
 	}
 }
 
 void SIISystems::SetThrusterDir(int n, double beta_y, double beta_p)
 {
-	if (j2engines[0] == NULL) return;
-	if (n < 0 || n>3) return;
+	if (n < 0 || n > 3) return;
 
-	VECTOR3 j2vector;
-
-	if (beta_y > 7.0*RAD)
-	{
-		j2vector.x = 7.0*RAD;
-	}
-	else if (beta_y < -7.0*RAD)
-	{
-		j2vector.x = -7.0*RAD;
-	}
-	else
-	{
-		j2vector.x = beta_y;
-	}
-
-	if (beta_p > 7.0*RAD)
-	{
-		j2vector.y = 7.0*RAD;
-	}
-	else if (beta_p < -7.0*RAD)
-	{
-		j2vector.y = -7.0*RAD;
-	}
-	else
-	{
-		j2vector.y = beta_p;
-	}
-
-	j2vector.z = 1.0;
-
-	vessel->SetThrusterDir(j2engines[n], j2vector);
+	j2engines[n]->SetThrusterDir(beta_y, beta_p);
 }
 
 bool SIISystems::PropellantLowLevel()
@@ -470,6 +358,9 @@ void SIISystems::SwitchSelector(int channel)
 	case 11: //S-II Ordnance Arm
 		SetOrdnanceArm();
 		break;
+	case 17: //S-II Center Engine Cutoff (Actual channel has to be researched!)
+		LVDCCenterEngineCutoff();
+		break;
 	case 18: //S-II Engines Cutoff
 		LVDCEnginesCutoff();
 		break;
@@ -517,5 +408,84 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	default:
 		break;
+	}
+}
+
+void SIISystems::LVDCEnginesCutoff()
+{
+	j2engine1.SetLVDCEngineCutoff();
+	j2engine2.SetLVDCEngineCutoff();
+	j2engine3.SetLVDCEngineCutoff();
+	j2engine4.SetLVDCEngineCutoff();
+	j2engine5.SetLVDCEngineCutoff();
+}
+
+void SIISystems::LVDCEnginesCutoffReset()
+{
+	j2engine1.ResetLVDCEnginesCutoff();
+	j2engine2.ResetLVDCEnginesCutoff();
+	j2engine3.ResetLVDCEnginesCutoff();
+	j2engine4.ResetLVDCEnginesCutoff();
+	j2engine5.ResetLVDCEnginesCutoff();
+}
+
+void SIISystems::LVDCCenterEngineCutoff()
+{
+	j2engine5.SetLVDCEngineCutoff();
+}
+
+void SIISystems::SetEnginesReadyBypass()
+{
+	j2engine1.SetEngineReadyBypass();
+	j2engine2.SetEngineReadyBypass();
+	j2engine3.SetEngineReadyBypass();
+	j2engine4.SetEngineReadyBypass();
+	j2engine5.SetEngineReadyBypass();
+}
+
+void SIISystems::ResetEnginesReadyBypass()
+{
+	j2engine1.ResetEngineReadyBypass();
+	j2engine2.ResetEngineReadyBypass();
+	j2engine3.ResetEngineReadyBypass();
+	j2engine4.ResetEngineReadyBypass();
+	j2engine5.ResetEngineReadyBypass();
+}
+
+void SIISystems::EngineStartOn()
+{
+	j2engine1.SetEngineStart();
+	j2engine2.SetEngineStart();
+	j2engine3.SetEngineStart();
+	j2engine4.SetEngineStart();
+	j2engine5.SetEngineStart();
+}
+
+void SIISystems::EngineStartOff()
+{
+	j2engine1.ResetEngineStart();
+	j2engine2.ResetEngineStart();
+	j2engine3.ResetEngineStart();
+	j2engine4.ResetEngineStart();
+	j2engine5.ResetEngineStart();
+}
+
+void SIISystems::EDSEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		j2engine1.SetEDSCutoff();
+		j2engine2.SetEDSCutoff();
+		j2engine3.SetEDSCutoff();
+		j2engine4.SetEDSCutoff();
+		j2engine5.SetEDSCutoff();
+	}
+	else
+	{
+		j2engine1.ResetEDSCutoff();
+		j2engine2.ResetEDSCutoff();
+		j2engine3.ResetEDSCutoff();
+		j2engine4.ResetEDSCutoff();
+		j2engine5.ResetEDSCutoff();
 	}
 }
