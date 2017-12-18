@@ -168,55 +168,55 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	double RCSISP=2840.0;
 
 	// A1U
-	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A1F
-	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1L
-	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1D
-	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B2U
-	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B2L
-	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2A
-	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2D
-	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// A3U
-	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A3R
-	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3A
-	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3D
-	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B4U
-	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B4F
-	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_RCSB, RCSISP, RCSISP);
 	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4R
-	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4D
-	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
+	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 }
 
@@ -369,10 +369,10 @@ void LEM::SystemsInit()
 	// REACTION CONTROL SYSTEM
 	RCS_B_PQGS_DISP_CB.MaxAmps = 2.0;
 	RCS_B_PQGS_DISP_CB.WireTo(&LMPs28VBus);
-	LMRCSATempInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSBTempInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSAPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
-	LMRCSBPressInd.WireTo(&RCS_B_PQGS_DISP_CB);
+	LMRCSATempInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSBTempInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSAPressInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	LMRCSBPressInd.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 	LMRCSAQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
 	LMRCSBQtyInd.WireTo(&RCS_B_PQGS_DISP_CB);
 	
@@ -416,11 +416,39 @@ void LEM::SystemsInit()
 	// AC bus attenuator.
 	ACVoltsAttenuator.WireTo(&AC_A_BUS_VOLT_CB);
 
-	// RCS Main Shutoff valves
-	RCSMainSovASwitch.WireTo(&CDRs28VBus);
-	RCSMainSovATB.WireTo(&CDRs28VBus);
-	RCSMainSovBTB.WireTo(&LMPs28VBus);
-	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
+	// RCS valves
+	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);
+	RCSMainSovBSwitch.WireTo(&RCS_B_MAIN_SOV_CB);
+	RCSMainSovATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSMainSovBTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+
+	RCSQuad1ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad2ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad3ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad4ACmdEnableSwitch.WireTo(&RCS_A_ISOL_VLV_CB);
+	RCSQuad1BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad2BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad3BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad4BCmdEnableSwitch.WireTo(&RCS_B_ISOL_VLV_CB);
+	RCSQuad1ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad2ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad3ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad4ACmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad1BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad2BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad3BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSQuad4BCmdEnableTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+
+	RCSAscFeed1ASwitch.WireTo(&RCS_A_ASC_FEED_1_CB);
+	RCSAscFeed2ASwitch.WireTo(&RCS_A_ASC_FEED_2_CB);
+	RCSAscFeed1BSwitch.WireTo(&RCS_B_ASC_FEED_1_CB);
+	RCSAscFeed2BSwitch.WireTo(&RCS_B_ASC_FEED_2_CB);
+	RCSAscFeed1ATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed2ATB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed1BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSAscFeed2BTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
+	RCSXFeedSwitch.WireTo(&RCS_B_CRSFD_CB);
+	RCSXFeedTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
 	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
@@ -633,6 +661,12 @@ void LEM::SystemsInit()
 	DescentEngineStartPyros.WireTo(&DescentEngineStartPyrosFeeder);
 	DescentEngineOnPyros.WireTo(&DescentEngineOnPyrosFeeder);
 	DescentPropIsolPyros.WireTo(&DescentPropIsolPyrosFeeder);
+	AscentHeliumIsol1Pyros.WireTo(&AscentHeliumIsol1PyrosFeeder);
+	AscentHeliumIsol2Pyros.WireTo(&AscentHeliumIsol2PyrosFeeder);
+	AscentOxidCompValvePyros.WireTo(&AscentOxidCompValvePyrosFeeder);
+	AscentFuelCompValvePyros.WireTo(&AscentFuelCompValvePyrosFeeder);
+	RCSHeliumSupplyAPyros.WireTo(&RCSHeliumSupplyAPyrosFeeder);
+	RCSHeliumSupplyBPyros.WireTo(&RCSHeliumSupplyBPyrosFeeder);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -699,6 +733,22 @@ void LEM::SystemsInit()
 	DESHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	DESHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
 	APS.Init(this);
+	ASCHeReg1Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg2Switch.WireTo(&PROP_ASC_HE_REG_CB);
+	ASCHeReg1TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+	ASCHeReg2TB.WireTo(&PROP_DISP_ENG_OVRD_LOGIC_CB);
+
+	//RCS
+	RCSA.Init(th_rcs, &RCSHeliumSupplyAPyros, &RCSB, 0, 6, 8, 14);
+	RCSB.Init(th_rcs, &RCSHeliumSupplyBPyros, &RCSA, 2, 4, 10, 12);
+	tca1A.Init(this, 7);
+	tca2A.Init(this, 5);
+	tca3A.Init(this, 3);
+	tca4A.Init(this, 1);
+	tca1B.Init(this, 8);
+	tca2B.Init(this, 6);
+	tca3B.Init(this, 4);
+	tca4B.Init(this, 2);
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -718,6 +768,10 @@ void LEM::SystemsInit()
 
 	//Mechanical Accelerometer
 	mechanicalAccelerometer.Init(this);
+
+	//Instrumentation
+	scera1.Init(this, &INST_SIG_CONDR_1_CB);
+	scera2.Init(this, &INST_SIG_CONDR_2_CB);
 
 	// DS20060413 Initialize joystick
 	js_enabled = 0;  // Disabled
@@ -1315,12 +1369,27 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
 	DPS.SystemTimestep(simdt);
+	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
+	RCSA.Timestep(simt, simdt);
+	RCSB.Timestep(simt, simdt);
+	tca1A.Timestep();
+	tca2A.Timestep();
+	tca3A.Timestep();
+	tca4A.Timestep();
+	tca1B.Timestep();
+	tca2B.Timestep();
+	tca3B.Timestep();
+	tca4B.Timestep();
 	deca.Timestep(simdt);
 	deca.SystemTimestep(simdt);
 	gasta.Timestep(simt);
 	gasta.SystemTimestep(simdt);
 	// Do this toward the end so we can see current system state
+	scera1.Timestep();
+	scera1.SystemTimestep(simdt);
+	scera2.Timestep();
+	scera2.SystemTimestep(simdt);
 	CWEA.TimeStep(simdt);
 
 	// Debug tests would go here
@@ -1333,42 +1402,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A | AC-A %f V AC-B %f V",LMPVolts,LMPAmps,
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
 	*/	
-}
-
-// PANEL SDK SUPPORT
-void LEM::SetValveState(int valve, bool open)
-
-{
-	ValveState[valve] = open;
-
-	int valve_state = open ? SP_VALVE_OPEN : SP_VALVE_CLOSE;
-
-	if (pLEMValves[valve])
-		*pLEMValves[valve] = valve_state;
-
-	/*
-	CheckRCSState();
-	*/
-}
-
-bool LEM::GetValveState(int valve)
-
-{
-	//
-	// First check whether the valve still exists!
-	//
-
-	/*
-	if (valve < CM_VALVES_START) {
-		if (stage > CSM_LEM_STAGE)
-			return false;
-	}
-	*/
-
-	if (pLEMValves[valve])
-		return (*pLEMValves[valve] == SP_VALVE_OPEN);
-
-	return ValveState[valve];
 }
 
 // SYSTEMS COMPONENTS
@@ -2496,7 +2529,7 @@ void LEM_RR::TimeStep(double simdt){
 			radarDataGood = 1;
 			range = 362066; // 195.5 nautical miles in meters
 		}
-		sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
+		//sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
 	}
 	else {
 		// Clobber test data if not already zero
@@ -3277,7 +3310,7 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-	if(lem->APS.HePress[1] > 220){
+	if(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI() > 220.0){
 		LightStatus[0][4] = 1;
 	}else{
 		LightStatus[0][4] = 0;

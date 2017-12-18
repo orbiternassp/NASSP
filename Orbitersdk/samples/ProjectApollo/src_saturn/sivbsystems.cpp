@@ -51,6 +51,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	LOXVentValveOpen = false;
 	FireUllageIgnition = false;
 	PointLevelSensorArmed = false;
+	LH2ContinuousVentValveOpen = false;
+	ThrustOKCutoffInhibit = false;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -62,6 +64,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	J2DefaultThrust = 0.0;
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
+	BoiloffTime = 0.0;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -81,8 +84,11 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+	papiWriteScenario_bool(scn, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
+	papiWriteScenario_bool(scn, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
 	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
+	papiWriteScenario_double(scn, "BOILOFFTIME", BoiloffTime);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
@@ -108,8 +114,11 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
+		papiReadScenario_bool(line, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
+		papiReadScenario_bool(line, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
 		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
+		papiReadScenario_double(line, "BOILOFFTIME", BoiloffTime);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
@@ -163,6 +172,11 @@ void SIVBSystems::Timestep(double simdt)
 		ThrustOKRelay = false;
 	}
 
+	if (EngineReady && EngineStart && !ThrustOKRelay)
+	{
+		ThrustOKCutoffInhibit = true;
+	}
+
 	//Engine Cutoff Bus (switch selector, range safety system no. 2, EDS no. 2, propellant depletion sensors)
 	if (LVDCEngineStopRelay || (!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop || PropellantDepletionSensors)
 	{
@@ -189,6 +203,7 @@ void SIVBSystems::Timestep(double simdt)
 			ThrustTimer = 0.0;
 			EngineStart = false;
 			EngineReady = false;
+			ThrustOKCutoffInhibit = false;
 		}
 
 		if (ThrustLevel > 0.0)
@@ -217,7 +232,7 @@ void SIVBSystems::Timestep(double simdt)
 			}
 		}
 	}
-	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0)
+	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0 || ThrustOKCutoffInhibit)
 	{
 		ThrustTimer += simdt;
 
@@ -232,6 +247,7 @@ void SIVBSystems::Timestep(double simdt)
 			{
 				ThrustLevel = 1.0;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
+				ThrustOKCutoffInhibit = false;
 			}
 		}
 		else
@@ -245,6 +261,7 @@ void SIVBSystems::Timestep(double simdt)
 			{
 				ThrustLevel = 1.0;
 				vessel->SetThrusterLevel(j2engine, ThrustLevel);
+				ThrustOKCutoffInhibit = false;
 			}
 		}
 	}
@@ -268,6 +285,16 @@ void SIVBSystems::Timestep(double simdt)
 
 	}
 
+	if (LH2ContinuousVentValveOpen)
+	{
+		BoiloffTime += simdt;
+
+		if (BoiloffTime > 10.0) {
+			SIVBBoiloff();
+			BoiloffTime -= 10.0;
+		}
+	}
+
 	if (vernier)
 	{
 		if (vessel->GetThrusterGroupLevel(vernier) < 1.0 && FireUllageIgnition)
@@ -277,7 +304,13 @@ void SIVBSystems::Timestep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustLevel, ThrustTimer);
+	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Cut Inhibit %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
+}
+
+void SIVBSystems::SIVBBoiloff()
+{
+	double FuelMass = vessel->GetPropellantMass(main_propellant) * 0.99998193;
+	vessel->SetPropellantMass(main_propellant, FuelMass);
 }
 
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
@@ -602,8 +635,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		LVDCEngineCutoffOff();
 		break;
 	case 14: //Engine Mainstage Control Valve Open On
+		StartLOXVenting();
 		break;
 	case 15: //Engine Mainstage Control Valve Open Off
+		EndLOXVenting();
 		break;
 	case 16: //Fuel Injector Temperature OK Bypass Reset
 		break;
@@ -729,6 +764,7 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 83: //Prevalves Close Off
 		break;
 	case 84: //LH2 Tank Continuous Vent Valve Close On
+		LH2ContinuousVentValveCloseOn();
 		break;
 	case 85: //Burner Automatic Cutoff System Arm
 		break;
@@ -779,6 +815,7 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 110: //Engine He Control Valve Open Off
 		break;
 	case 111: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open On
+		LH2ContinuousVentValveOpenOn();
 		break;
 	case 112: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open Off
 		break;

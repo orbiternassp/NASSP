@@ -405,9 +405,16 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		liftoffStreamLevel = 1;
 
-		// T+8s or later?
+		
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		// Disconnect IU Umbilical
+		if (sat->GetMissionTime() >= -0.05) {
+			sat->SetIUUmbilicalState(false);
+		}
+
+		// T+8s or later?
 		if (sat->GetMissionTime() > 8) {
 			state = STATE_POSTLIFTOFF;
 		}		
@@ -518,6 +525,8 @@ void ML::DoFirstTimestep() {
 		oapiGetObjectName(h, buffer, 256);
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
+			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+			sat->SetIUUmbilicalState(true);
 		}
 	}
 

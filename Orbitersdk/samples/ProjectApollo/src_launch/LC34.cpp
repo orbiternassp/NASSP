@@ -257,6 +257,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_LIFTOFF:
 		if (!hLV) break;
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
+
+		// Disconnect IU Umbilical
+		if (sat->GetMissionTime() >= -0.05) {
+			sat->SetIUUmbilicalState(false);
+		}
+
 		// T+4s or later?
 		if (sat->GetMissionTime() > 4) {
 			state = STATE_POSTLIFTOFF;
@@ -309,6 +315,8 @@ void LC34::DoFirstTimestep() {
 		oapiGetObjectName(h, buffer, 256);
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
+			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+			sat->SetIUUmbilicalState(true);
 		}
 	}
 

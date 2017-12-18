@@ -26,9 +26,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
-#include "ioChannels.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "LVIMU.h"
+#include "LVDC.h"
+#include "iu.h"
 #include "saturn.h"
 #include "papi.h"
 
@@ -91,7 +93,12 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
 }
 
-bool LVDA::GetSIEngineOut()
+bool LVDA::GetSIInboardEngineOut()
+{
+	return iu->GetSIInboardEngineOut();
+}
+
+bool LVDA::GetSIOutboardEngineOut()
 {
 	return iu->GetSIOutboardEngineOut();
 }
@@ -103,26 +110,17 @@ bool LVDA::GetSIIEngineOut()
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBIgnitionSequenceStart))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBIgnitionSequenceStart();
 }
 
-bool LVDA::GetCMCSIVBShutdown()
+bool LVDA::GetCMCSIVBCutoff()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, SIVBCutoff))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBCutoff();
 }
 
 bool LVDA::GetCMCSIVBTakeover()
 {
-	if (iu->GetCommandConnector()->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN && iu->GetCommandConnector()->GetAGCInputChannelBit(012, EnableSIVBTakeover))
-		return true;
-
-	return false;
+	return iu->GetCommandConnector()->GetCMCSIVBTakeover();
 }
 bool LVDA::GetLVIMUFailure()
 {
@@ -131,12 +129,12 @@ bool LVDA::GetLVIMUFailure()
 
 bool LVDA::SIVBInjectionDelay()
 {
-	return iu->GetCommandConnector()->TLIEnableSwitchState() == TOGGLESWITCH_DOWN;
+	return iu->GetCommandConnector()->GetTLIInhibitSignal();
 }
 
 bool LVDA::SCInitiationOfSIISIVBSeparation()
 {
-	return iu->GetCommandConnector()->SIISIVbSwitchState() == TOGGLESWITCH_UP;
+	return iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal();
 }
 
 bool LVDA::GetSIIPropellantDepletionEngineCutoff()
@@ -164,6 +162,16 @@ bool LVDA::SIBLowLevelSensorsDry()
 	return iu->SIBLowLevelSensorsDry();
 }
 
+bool LVDA::GetLiftoff()
+{
+	return iu->IsUmbilicalConnected() == false;
+}
+
+bool LVDA::GetSICInboardEngineCutoff()
+{
+	return iu->GetSIInboardEngineOut();
+}
+
 void LVDA::TLIBegun()
 {
 	iu->GetCommandConnector()->TLIBegun();
@@ -172,4 +180,20 @@ void LVDA::TLIBegun()
 void LVDA::TLIEnded()
 {
 	iu->GetCommandConnector()->TLIEnded();
+}
+
+bool LVDA::GeneralizedSwitchSelector(int stage, int channel)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GeneralizedSwitchSelector(stage, channel);
+
+	return false;
+}
+
+bool LVDA::TimebaseUpdate(double dt)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TimebaseUpdate(dt);
+
+	return false;
 }

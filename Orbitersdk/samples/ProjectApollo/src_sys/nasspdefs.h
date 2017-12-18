@@ -331,6 +331,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			413.7		// AOH
 
+#define LM_RCS_FUEL_PER_TANK	133.084001
+
 #define S4B_APS_FUEL_PER_TANK	143.0
 #define S4B_APS_THRUST			670.0
 #define S4B_APS_ULL_THRUST		310.0

@@ -47,13 +47,21 @@ void LEM::SetView() {
 	if (InVC) {
 		switch (viewpos) {
 		case LMVIEW_CDR:
-			SetCameraOffset (_V(-0.68, 1.65, 1.35));
-			//SetCameraOffset (_V(-0.576, 1.90, 1.26));
+			if (stage == 2) {
+				SetCameraOffset(_V(-0.68, -0.195, 1.35));
+			}
+			else {
+				SetCameraOffset(_V(-0.68, 1.65, 1.35));
+			}
 			break;
 
 		case LMVIEW_LMP:
-			SetCameraOffset (_V(0.92, 1.65, 1.23));
-			//SetCameraOffset (_V(0.576, 1.90, 1.26));
+			if (stage == 2) {
+				SetCameraOffset(_V(0.92, -0.195, 1.23));
+			}
+			else {
+				SetCameraOffset(_V(0.92, 1.65, 1.23));
+			}
 			break;
 		}
 
@@ -89,10 +97,12 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_LPDWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+						SetCameraOffset(_V(-0.68, -0.195, 1.35));
+						//SetCameraOffset(_V(-1, 0.055, 1.26));
 					}
 					else {
-						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+						SetCameraOffset (_V(-0.68, 1.65, 1.35));
+						//SetCameraOffset(_V(-1, 1.90, 1.26));
 					}
 					break;
 				case LMPANEL_RNDZWINDOW:
@@ -133,6 +143,15 @@ void LEM::SetView() {
 					}
 					else {
 						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+					}
+					break;
+				
+				case LMPANEL_LEFTZOOM:
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
 					}
 					break;
 			}

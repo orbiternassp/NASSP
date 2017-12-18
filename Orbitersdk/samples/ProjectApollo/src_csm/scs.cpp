@@ -31,10 +31,7 @@
 #include "nasspdefs.h"
 #include "nasspsound.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "saturn.h"
-#include "ioChannels.h"
 #include "tracer.h"
 #include "papi.h"
 

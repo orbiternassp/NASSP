@@ -472,7 +472,6 @@ void SICSystems::SwitchSelector(int channel)
 	switch (channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
-		vessel->SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
 		if (LaunchSound.isValid() && !LaunchSound.isPlaying()) {			// And play launch sound			
 			LaunchSound.play(NOLOOP, 255);
 			LaunchSound.done();
@@ -563,7 +562,7 @@ bool SICSystems::GetInboardEngineOut()
 
 bool SICSystems::GetOutboardEngineOut()
 {
-	for (int i=0;i<4;i++) if (!ThrustOK[4]) return true;
+	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
 
 	return false;
 }

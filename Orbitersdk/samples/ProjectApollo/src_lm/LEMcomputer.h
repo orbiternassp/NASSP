@@ -121,6 +121,7 @@ public:
 	void Init(LEM *vessel);										// Initialization
 	void TimeStep(double simdt);                                // Timestep
 	void SystemTimestep(double simdt);
+	bool PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 

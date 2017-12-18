@@ -40,6 +40,8 @@
 
 #include "csmcomputer.h"
 
+#include "iu.h"
+
 #include "saturn.h"
 #include "sivb.h"
 
@@ -106,22 +108,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetAltitude();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIVB_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_PROPELLANT_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIPropellantMass();
 			return true;
 		}
 		break;
@@ -396,14 +382,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SIVB_BOILOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIVBBoiloff();
-			return true;
-		}
-		break;
-
 	case IULV_SET_APS_ATTITUDE_ENGINE:
 		if (OurVessel)
 		{
@@ -555,28 +533,36 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
 			return true;
 		}
-		break;		
+		break;
 
-	case IUCSM_GET_INPUT_CHANNEL_BIT:
+	case IUCSM_GET_CMC_SIVB_TAKEOVER:
 		if (OurVessel)
 		{
-			m.val3.bValue = agc.GetInputChannelBit(m.val1.iValue, m.val2.iValue);
+			m.val1.bValue = OurVessel->GetCMCSIVBTakeover();
 			return true;
 		}
 		break;
 
-	case IUCSM_GET_SIISIVBSEP_SWITCH_STATE:
+	case IUCSM_GET_CMC_SIVB_IGNITION:
 		if (OurVessel)
 		{
-			m.val1.iValue = OurVessel->GetSIISIVbSepSwitchState();
+			m.val1.bValue = OurVessel->GetCMCSIVBIgnitionSequenceStart();
 			return true;
 		}
 		break;
 
-	case IUCSM_GET_LV_GUIDANCE_SWITCH_STATE:
+	case IUCSM_GET_CMC_SIVB_CUTOFF:
 		if (OurVessel)
 		{
-			m.val1.iValue = OurVessel->GetLVGuidanceSwitchState();
+			m.val1.bValue = OurVessel->GetCMCSIVBCutoff();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_SIISIVB_DIRECT_STAGING:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIISIVbDirectStagingSignal();
 			return true;
 		}
 		break;
@@ -637,10 +623,18 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_GET_TLI_ENABLE_SWITCH_STATE:
+	case IUCSM_GET_TLI_INHIBIT:
 		if (OurVessel)
 		{
-			m.val1.iValue = OurVessel->GetTLIEnableSwitchState();
+			m.val1.bValue = OurVessel->GetTLIInhibitSignal();
+			return true;
+		}
+		break;
+
+	case IUCSM_GET_IU_UPTLM_ACCEPT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetIUUPTLMAccept();
 			return true;
 		}
 		break;
