@@ -3078,6 +3078,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CommandSequence = 0;
 	CommandSequenceStored = 0;
 	SCControlPoweredFlight = false;
+	SIICenterEngineCutoff = false;
 }
 
 // Setup
@@ -3439,6 +3440,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
 	SCControlPoweredFlight = false;
+	SIICenterEngineCutoff = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -3486,6 +3488,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
 	oapiWriteScenario_int(scn, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
+	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
@@ -4127,6 +4130,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
 		papiReadScenario_bool(line, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
+		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
@@ -5556,14 +5560,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// IECO
-				/*if (LVDC_TB_ETime >= 299.0)
+				if (SIICenterEngineCutoff && S2_ENGINE_OUT == false && LVDC_TB_ETime >= 299.0)
 				{
-					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false)
-					{
-						S2_ENGINE_OUT = true;
-						lvCommandConnector->SwitchSelector(24);
-					}
-				}*/
+					S2_ENGINE_OUT = true;
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 17);
+				}
 			
 				// MR Shift
 				if(T_1 <= 0.0 && MRS == false){

@@ -97,6 +97,7 @@ private:								// Saturn LV
 	int CommandSequence;
 	int CommandSequenceStored;
 	bool SCControlPoweredFlight;
+	bool SIICenterEngineCutoff;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
