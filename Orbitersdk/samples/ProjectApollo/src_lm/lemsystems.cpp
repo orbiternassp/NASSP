@@ -1655,6 +1655,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lcgpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCG:PRESS");
 	double *lcgtemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCG:TEMP"); 
 
+	double *lcghxflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROL:FLOW");
+	double *lcghxflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROL:FLOWMAX");
+	double *lcgaccflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROLBYPASS:FLOW");
+	double *lcgaccflowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROLBYPASS:FLOWMAX");
+
 	double *glycolsuitcooltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXCOOLING:TEMP");
 	double *glycolsuitheattemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXHEATING:TEMP");
 	double *waterglycolhxtemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERGLYCOLHX:TEMP");
@@ -1693,8 +1698,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
 	//sprintf(oapiDebugString(), "PRAQ %lf PRAP %lf PRAT %lf PRBQ %lf PRBP %lf PRBT %lf", *PressRegAMass, (*PressRegAPress)*PSI, (*PressRegATemp)* 1.8 - 459.67, *PressRegBMass, (*PressRegBPress)*PSI, (*PressRegBTemp)* 1.8 - 459.67);
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlySuitCoolTmp %lf HXCTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf CE %lf LP %lf LT %lf LE %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
-	//sprintf(oapiDebugString(), "LCGHXT %lf LCGT %lf CDRT %lf LMPT %lf WGHXT %lf", *lcghxtemp* 1.8 - 459.67, *lcgtemp* 1.8 - 459.67, *cdrsuittemp* 1.8 - 459.67, *lmpsuittemp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67);
-	//sprintf(oapiDebugString(), "LCGAM %lf LCGAP %lf LCGAT %lf LCGHXM %lf LCGHXP %lf LCGHXT %lf LCGM %lf LCGP %lf LCGT %lf WGHXT %lf", *lcgaccumass, *lcgaccupress*PSI, *lcgaccutemp* 1.8 - 459.67, *lcghxmass, *lcghxpress*PSI, *lcghxtemp* 1.8 - 459.67, *lcgmass, *lcgpress*PSI, *lcgtemp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67);
+	//sprintf(oapiDebugString(), "LCGHXT %lf LCGT %lf CDRT %lf LMPT %lf WGHXT %lf HXFlow %lf BPFlow %lf HXFM %lf BPFM %lf", *lcghxtemp* 1.8 - 459.67, *lcgtemp* 1.8 - 459.67, *cdrsuittemp* 1.8 - 459.67, *lmpsuittemp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67, *lcghxflow, *lcgaccflow, *lcghxflowmax, *lcgaccflowmax);
+	//sprintf(oapiDebugString(), "LCGAM %lf LCGAP %lf LCGAT %lf LCGHXM %lf LCGHXP %lf LCGHXT %lf LCGM %lf LCGP %lf LCGT %lf WGHXT %lf HXF %lf BPF %lf", *lcgaccumass, *lcgaccupress*PSI, *lcgaccutemp* 1.8 - 459.67, *lcghxmass, *lcghxpress*PSI, *lcghxtemp* 1.8 - 459.67, *lcgmass, *lcgpress*PSI, *lcgtemp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67, *lcghxflow, *lcgaccflow);
 	//sprintf(oapiDebugString(), "Press %lf Loop1Mass %lf Evap Mass %lf Loop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", ecs.GetSecondaryGlycolPressure(), *secloop1mass, *secevapmassout, *secloop1temp, *secloop2temp, *secevaptempin, *secevaptempout, *secevapPump, *secevapValve, *secevapThrottle, (*secevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "WB Press %lfLoop1Temp %lf Loop2Temp %lf EvapInTemp %lf EvapOutTemp %lf, EPump %d EValve %d EThrot %lf ESteam %lf", (*primwbpress)*PSI, *primloop1temp, *primloop2temp, *primevaptempin, *primevaptempout, *primevapPump, *primevapValve, *primevapThrottle, (*primevapSteam)*PSI);
 	//sprintf(oapiDebugString(), "DH2O:M %lf WTS:M %lf ST:M %lf PR:M %lf vlv %d WB:M %lf Loop1 %lf EVAPin %lf EVAPout %lf CaseGly %lf EThrot %lf ESteam %lf", *DesH2OMass, *WTSMass, *STMass, *primregmass, *primevap1vlv, *primwbmass, *primevaptempin, *primevaptempout, *primloop1temp, *primevapThrottle, *primevapSteam*PSI);

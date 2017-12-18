@@ -607,11 +607,12 @@ protected:
 class LMLiquidGarmentCoolingRotationalSwitch : public RotationalSwitch {
 public:
 	LMLiquidGarmentCoolingRotationalSwitch() { Pipe = NULL; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *hx, h_Pipe *p);
 	virtual bool SwitchTo(int newValue);
 
 protected:
 	void CheckValve();
 
+	h_Pipe *HX;
 	h_Pipe *Pipe;
 };

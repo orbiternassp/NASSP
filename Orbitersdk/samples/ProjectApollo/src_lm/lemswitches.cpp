@@ -1863,10 +1863,11 @@ void LMSuitTempRotationalSwitch::CheckValve()
 	}
 }
 
-void LMLiquidGarmentCoolingRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p)
+void LMLiquidGarmentCoolingRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *hx, h_Pipe *p)
 
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	HX = hx;
 	Pipe = p;
 }
 
@@ -1884,27 +1885,39 @@ void LMLiquidGarmentCoolingRotationalSwitch::CheckValve()
 
 {
 	if (GetState() == 5) {
-		Pipe->in->h_open = SP_VALVE_CLOSE;
-		Pipe->flowMax = 0;
+		HX->in->h_open = SP_VALVE_CLOSE;
+		HX->flowMax = 0;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 240.0 / LBH;
 	}
 	else if (GetState() == 4) {
-		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 48.0 / LBH;
-	}
-	else if (GetState() == 3) {
-		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 96.0 / LBH;
-	}
-	else if (GetState() == 2) {
-		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 144.0 / LBH;
-	}
-	else if (GetState() == 1) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 48.0 / LBH;
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 192.0 / LBH;
 	}
-	else if (GetState() == 0) {
+	else if (GetState() == 3) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 96.0 / LBH;
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 240.0 / LBH;
+		Pipe->flowMax = 144.0 / LBH;
+	}
+	else if (GetState() == 2) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 144.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 96.0 / LBH;
+	}
+	else if (GetState() == 1) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 192.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 48.0 / LBH;
+	}
+	else if (GetState() == 0) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 240.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
 	}
 }

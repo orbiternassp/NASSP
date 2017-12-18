@@ -2640,7 +2640,7 @@ void LEM::SetSwitches(int panel) {
     ASCH2OValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], ASCH2OSwitchRow);
 
     GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
-    LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROL"));
+    LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROL"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROLBYPASS"));
 
     SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
     SuitCircuitReliefValveSwitch.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
