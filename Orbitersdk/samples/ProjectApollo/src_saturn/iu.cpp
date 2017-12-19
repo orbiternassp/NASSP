@@ -50,7 +50,6 @@ dcs(this)
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
-	TLICapable = false;
 	FirstTimeStepDone = false;
 	UmbilicalConnected = false;
 
@@ -60,9 +59,8 @@ dcs(this)
 	lvdc = NULL;
 }
 
-void IU::SetMissionInfo(bool tlicapable, bool crewed)
+void IU::SetMissionInfo(bool crewed)
 {
-	TLICapable = tlicapable;
 	Crewed = crewed;
 }
 

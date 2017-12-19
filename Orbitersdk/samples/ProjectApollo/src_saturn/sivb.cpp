@@ -507,7 +507,7 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu->SetMissionInfo(true, true);
+		iu->SetMissionInfo(true);
 
 		//
 		// Set up the IU connections.

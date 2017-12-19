@@ -285,9 +285,7 @@ public:
 	IU();
 	virtual ~IU() {}
 
-	void SetMissionInfo(bool tlicapable, bool crewed);
-
-	bool IsTLICapable() { return TLICapable; };
+	void SetMissionInfo(bool crewed);
 
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
@@ -356,7 +354,6 @@ protected:
 	//
 
 	bool Crewed;
-	bool TLICapable;
 
 	bool UmbilicalConnected;
 

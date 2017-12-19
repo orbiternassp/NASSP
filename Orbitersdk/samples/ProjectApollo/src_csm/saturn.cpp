@@ -2994,21 +2994,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_2 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_2 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG2;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	if (key == OAPI_KEY_3 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
 	{
 		//
 		// Key 3 switches to position 3 by default, then cycles around them.
@@ -3744,7 +3744,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(TLICapableBooster, Crewed);
+		iu->SetMissionInfo(Crewed);
 	}
 
 	//
