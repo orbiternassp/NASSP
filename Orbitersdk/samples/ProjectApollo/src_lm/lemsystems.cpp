@@ -607,7 +607,9 @@ void LEM::SystemsInit()
 	LMOxygenQtyMeter.WireTo(&ECS_DISP_CB);
 	LMWaterQtyMeter.WireTo(&ECS_DISP_CB);
 
-	Crew = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+	CrewInCabin = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+	CDRSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITED");
+	LMPSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITED");
 
 	//Initialize LM ECS
 	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
@@ -1796,13 +1798,67 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 
 {
 	// Crew
-	ecs.crewNumber = Crew->number;
+
+	if (CDRSuited->number == 1)
+	{
+		ecs.cdrInSuit = true;
+	}
+	else
+	{
+		ecs.cdrInSuit = false;
+	}
+
+	if (LMPSuited->number == 1)
+	{
+		ecs.lmpInSuit = true;
+	}
+	else
+	{
+		ecs.lmpInSuit = false;
+	}
+
+	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
 	ecs.crewStatus = 0;
+
+
 }
 
-void LEM::SetCrewNumber(int number) {
+void LEM::SetCrewNumber(int number)
+{
+	int crewsuited = CDRSuited->number + LMPSuited->number;
 
-	Crew->number = number;
+	if (number + crewsuited <= 3)
+	{
+		CrewInCabin->number = number;
+	}
+}
+
+void LEM::SetCDRInSuit()
+{
+	if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+	{
+		CrewInCabin->number--;
+		CDRSuited->number = 1;
+	}
+	else if (CDRSuited->number == 1)
+	{
+		CrewInCabin->number++;
+		CDRSuited->number = 0;
+	}
+}
+
+void LEM::SetLMPInSuit()
+{
+	if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
+	{
+		CrewInCabin->number--;
+		LMPSuited->number = 1;
+	}
+	else if (LMPSuited->number == 1)
+	{
+		CrewInCabin->number++;
+		LMPSuited->number = 0;
+	}
 }
 
 // SYSTEMS COMPONENTS
