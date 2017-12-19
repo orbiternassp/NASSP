@@ -69,13 +69,13 @@
 #include "checklistController.h"
 #include "payload.h"
 
-///
-/// \brief General ECS status.
-/// \ingroup InternalInterface
-///
+// LM ECS status
+
 typedef struct {
 	int crewNumber;
 	int crewStatus;
+	bool cdrInSuit;
+	bool lmpInSuit;
 } LEMECSStatus;
 
 // Systems things
@@ -539,6 +539,8 @@ public:
 	void ConnectTunnelToCabinVent();
 	virtual void GetECSStatus(LEMECSStatus &ecs);
 	virtual void SetCrewNumber(int number);
+	virtual void SetCDRInSuit();
+	virtual void SetLMPInSuit();
 
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
@@ -547,7 +549,9 @@ public:
 	h_Tank *O2Manifold;
 	h_Tank *PressRegA;
 	h_Tank *PressRegB;
-	h_crew *Crew;
+	h_crew *CrewInCabin;
+	h_crew *CDRSuited;
+	h_crew *LMPSuited;
 	Pump *SuitFan1;
 	Pump *SuitFan2;
 	Pump *PrimGlyPump1;

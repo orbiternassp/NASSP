@@ -747,6 +747,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_LEFT);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "CDR status:", 11);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "LMP status:", 11);
 
 			LEMECSStatus ecs;
 			lem->GetECSStatus(ecs);
@@ -768,6 +770,24 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 			sprintf(buffer, "%d", ecs.crewNumber);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+
+			if (ecs.cdrInSuit)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
+			}
+
+			if (ecs.lmpInSuit)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
+			}
 		}
 		else
 		{
@@ -1485,6 +1505,22 @@ void ProjectApolloMFD::menuSetCrewNumber()
 {
 	bool CrewNumberInput(void *id, char *str, void *data);
 	oapiOpenInputBox("Crew number [0-3]:", CrewNumberInput, 0, 20, (void*)this);
+}
+
+void ProjectApolloMFD::menuSetCDRInSuit()
+{
+	if (lem)
+	{
+		lem->SetCDRInSuit();
+	}
+}
+
+void ProjectApolloMFD::menuSetLMPInSuit()
+{
+	if (lem)
+	{
+		lem->SetLMPInSuit();
+	}
 }
 
 void ProjectApolloMFD::menuSetPrimECSTestHeaterPower()
