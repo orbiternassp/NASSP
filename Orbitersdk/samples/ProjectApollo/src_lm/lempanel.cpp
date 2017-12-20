@@ -1546,7 +1546,14 @@ bool LEM::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_FWDHATCH:
-		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		if (ForwardHatch.IsOpen())
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH_OPEN));
+		}
+		else
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		}
 		oapiSetPanelNeighbours(-1, -1, LMPANEL_MAIN, -1);
 		break;
 	}
@@ -1873,7 +1880,13 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_FWDHATCH: // LEM Forward Hatch
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(605, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(966, 401, 1734, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		if (!ForwardHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_LEM_FWD_HATCH_HANDLE, _R(605, 401, 965, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea(AID_LEM_FWD_HATCH_VALVE, _R(1735, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		}
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -2656,9 +2669,11 @@ void LEM::SetSwitches(int panel) {
     UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow);
 
     // Forward Hatch
-    ForwardHatchSwitchRow.Init(AID_LEM_FWD_HATCH, MainPanel);
-	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchSwitchRow, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), &ForwardHatch);
-    ForwardHatchReliefValve.Init(1130, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchSwitchRow);
+	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);
+	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchHandleSwitchRow, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), &ForwardHatch);
+
+	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
+	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
@@ -3476,6 +3491,19 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	}
 	return false;
 }
+
+void LEM::PanelRefreshForwardHatch() {
+
+	if (InPanel && PanelId == LMPANEL_FWDHATCH) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(LMPANEL_FWDHATCH);
+		}
+		else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
 //
 // The switch functions just pack the different switch areas from the control panel
 // into 32-bit integers and unpack them from those integers. This provides a much more

@@ -104,10 +104,12 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 {
 	open = false;
 	ForwardHatchHandle = NULL;
+	lem = NULL;
 }
 
-void LEMForwardHatch::Init(ToggleSwitch *fhh)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh)
 {
+	lem = l;
 	ForwardHatchHandle = fhh;
 }
 
@@ -119,6 +121,7 @@ void LEMForwardHatch::Toggle()
 		{
 			open = true;
 			OpenSound.play();
+			lem->PanelRefreshForwardHatch();
 			//TBD: Set hatch mesh
 		}
 	}
@@ -126,6 +129,7 @@ void LEMForwardHatch::Toggle()
 	{
 		open = false;
 		CloseSound.play();
+		lem->PanelRefreshForwardHatch();
 		//TBD: Set hatch mesh
 	}
 }

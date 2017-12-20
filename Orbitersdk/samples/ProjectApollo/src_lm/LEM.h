@@ -531,6 +531,8 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
+	void PanelRefreshForwardHatch();
+
 	// Panel SDK
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
@@ -1457,8 +1459,9 @@ protected:
 	// LEM Forward Hatch //
 	///////////////////////
 
-	SwitchRow ForwardHatchSwitchRow;
+	SwitchRow ForwardHatchHandleSwitchRow;
 	LMForwardHatchHandle ForwardHatchHandle;
+	SwitchRow ForwardHatchValveSwitchRow;
 	ThreePosSwitch ForwardHatchReliefValve;
 	
 	///////////////////////////
@@ -1610,6 +1613,7 @@ protected:
 	int  PanelId; 
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
+	bool RefreshPanelIdInTimestep;
 
 	// ChecklistController
 	ChecklistController checkControl;
