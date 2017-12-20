@@ -992,8 +992,6 @@ void LEM::InitSwitches() {
 
 	CPswitch=false;
 
-	HATCHswitch=false;
-
 	EVAswitch=false;
 
 	COASswitch=true;
@@ -2659,7 +2657,7 @@ void LEM::SetSwitches(int panel) {
 
     // Forward Hatch
     ForwardHatchSwitchRow.Init(AID_LEM_FWD_HATCH, MainPanel);
-    ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchSwitchRow);
+	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchSwitchRow, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), &ForwardHatch);
     ForwardHatchReliefValve.Init(1130, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchSwitchRow);
 }
 
@@ -2998,19 +2996,9 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_HATCH_SWITCH:
-		if (my >=0 && my <=11 ){
-			if (mx > 0 && mx < 23 && !HATCHswitch){
-				SwitchClick();
-				HATCHswitch=true;
-			}
-		}else if (my >=10 && my <=21 ){
-			if (mx > 0 && mx < 23 && HATCHswitch){
-				SwitchClick();
-				HATCHswitch=false;
-			}
+	case AID_LEM_FWD_HATCH:
+		ForwardHatch.Toggle();
 
-		}
 		return true;
 
 	case AID_EVA_SWITCH:
@@ -3535,7 +3523,6 @@ int LEM::GetCSwitchState()
 
 	state.word = 0;
 	state.u.CPswitch = CPswitch;
-	state.u.HATCHswitch = HATCHswitch;
 	state.u.EVAswitch = EVAswitch;
 	state.u.COASswitch = COASswitch;
 
@@ -3549,7 +3536,6 @@ void LEM::SetCSwitchState(int s)
 
 	state.word = s;
 	CPswitch = state.u.CPswitch;
-	HATCHswitch = state.u.HATCHswitch;
 	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
 }

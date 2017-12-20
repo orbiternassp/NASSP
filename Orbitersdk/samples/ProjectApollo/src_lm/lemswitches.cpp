@@ -1921,3 +1921,30 @@ void LMLiquidGarmentCoolingRotationalSwitch::CheckValve()
 		Pipe->flowMax = 0;
 	}
 }
+
+LMForwardHatchHandle::LMForwardHatchHandle()
+{
+	cabin = NULL;
+	forwardHatch = NULL;
+}
+
+void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	cabin = cab;
+	forwardHatch = fh;
+}
+
+bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (!forwardHatch->IsOpen())
+	{
+		if (state == 1 || cabin->space.Press < 0.08 / PSI)
+		{
+			return ToggleSwitch::SwitchTo(newState, dontspring);
+		}
+	}
+
+	return false;
+}

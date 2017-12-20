@@ -99,16 +99,65 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 }
 
 
+LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
+	OpenSound(opensound), CloseSound(closesound)
+{
+	open = false;
+	ForwardHatchHandle = NULL;
+}
+
+void LEMForwardHatch::Init(ToggleSwitch *fhh)
+{
+	ForwardHatchHandle = fhh;
+}
+
+void LEMForwardHatch::Toggle()
+{
+	if (open == false)
+	{
+		if (ForwardHatchHandle->GetState() == 1)
+		{
+			open = true;
+			OpenSound.play();
+			//TBD: Set hatch mesh
+		}
+	}
+	else
+	{
+		open = false;
+		CloseSound.play();
+		//TBD: Set hatch mesh
+	}
+}
+
+void LEMForwardHatch::LoadState(char *line) {
+
+	int i1;
+
+	sscanf(line + 12, "%d", &i1);
+	open = (i1 != 0);
+}
+
+void LEMForwardHatch::SaveState(FILEHANDLE scn) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i", (open ? 1 : 0));
+	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
+}
+
 LEMFWDCabinReliefDumpValve::LEMFWDCabinReliefDumpValve()
 {
 	cabinFWDHatchValve = NULL;
 	cabinFWDHatchValveSwitch = NULL;
+	fwdHatch = NULL;
 }
 
-void LEMFWDCabinReliefDumpValve::Init(h_Pipe *cfv, ThreePosSwitch *cfvs)
+void LEMFWDCabinReliefDumpValve::Init(h_Pipe *cfv, ThreePosSwitch *cfvs, LEMForwardHatch *fh)
 {
 	cabinFWDHatchValve = cfv;
 	cabinFWDHatchValveSwitch = cfvs;
+	fwdHatch = fh;
 }
 
 void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
@@ -118,51 +167,62 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 	// Valve in motion
 	if (cabinFWDHatchValve->in->pz) return;
 
-	//DUMP
-	if (cabinFWDHatchValveSwitch->GetState() == 0)
+	if (fwdHatch->IsOpen())
 	{
-		cabinFWDHatchValve->flowMax = 660.0 / LBH;
 		cabinFWDHatchValve->in->Open();
+		cabinFWDHatchValve->in->size = (float) 100.;	// no pressure in a few seconds
+		cabinFWDHatchValve->flowMax = 2000. / LBH;
 	}
-	//CLOSE
-	else if (cabinFWDHatchValveSwitch->GetState() == 2)
+	else
 	{
-		cabinFWDHatchValve->flowMax = 0;
-		cabinFWDHatchValve->in->Close();
-	}
-	//AUTO
-	else if (cabinFWDHatchValveSwitch->GetState() == 1)
-	{
-		double cabinpress = cabinFWDHatchValve->in->parent->space.Press;
+		cabinFWDHatchValve->in->size = (float) 10.;
 
-		if (cabinpress > 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
+		//DUMP
+		if (cabinFWDHatchValveSwitch->GetState() == 0)
 		{
+			cabinFWDHatchValve->flowMax = 660.0 / LBH;
 			cabinFWDHatchValve->in->Open();
 		}
-		else if (cabinpress < 5.25 / PSI && cabinFWDHatchValve->in->open == 1)
+		//CLOSE
+		else if (cabinFWDHatchValveSwitch->GetState() == 2)
 		{
+			cabinFWDHatchValve->flowMax = 0;
 			cabinFWDHatchValve->in->Close();
 		}
-
-		if (cabinFWDHatchValve->in->open == 1)
+		//AUTO
+		else if (cabinFWDHatchValveSwitch->GetState() == 1)
 		{
-			if (cabinpress > 5.8 / PSI)
+			double cabinpress = cabinFWDHatchValve->in->parent->space.Press;
+
+			if (cabinpress > 5.4 / PSI && cabinFWDHatchValve->in->open == 0)
 			{
-				cabinFWDHatchValve->flowMax = 660.0 / LBH;
+				cabinFWDHatchValve->in->Open();
 			}
-			else if (cabinpress < 5.25 / PSI)
+			else if (cabinpress < 5.25 / PSI && cabinFWDHatchValve->in->open == 1)
 			{
-				cabinFWDHatchValve->flowMax = 0;
+				cabinFWDHatchValve->in->Close();
+			}
+
+			if (cabinFWDHatchValve->in->open == 1)
+			{
+				if (cabinpress > 5.8 / PSI)
+				{
+					cabinFWDHatchValve->flowMax = 660.0 / LBH;
+				}
+				else if (cabinpress < 5.25 / PSI)
+				{
+					cabinFWDHatchValve->flowMax = 0;
+				}
+				else
+				{
+					//0 flow at 5.25 psi, full flow at 5.8 psi
+					cabinFWDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+				}
 			}
 			else
 			{
-				//0 flow at 5.25 psi, full flow at 5.8 psi
-				cabinFWDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+				cabinFWDHatchValve->flowMax = 0;
 			}
-		}
-		else
-		{
-			cabinFWDHatchValve->flowMax = 0;
 		}
 	}
 }
