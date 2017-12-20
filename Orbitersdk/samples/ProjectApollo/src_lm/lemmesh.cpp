@@ -568,6 +568,8 @@ void LEM::SeparateStage (UINT stage)
 			SetLmAscentHoverStage();
 		}
 	}
+
+	CheckDescentStageSystems();
 }
 
 void LEM::SetLmLandedMesh() {

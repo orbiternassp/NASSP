@@ -549,6 +549,8 @@ public:
 	h_Tank *O2Manifold;
 	h_Tank *PressRegA;
 	h_Tank *PressRegB;
+	h_Tank *DesH2OTank;
+	h_Tank *DesBatCooling;
 	h_crew *CrewInCabin;
 	h_crew *CDRSuited;
 	h_crew *LMPSuited;
@@ -654,6 +656,7 @@ protected:
 	void ReleaseSurfaces ();
 	void ResetThrusters();
 	void SeparateStage (UINT stage);
+	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANZ);
