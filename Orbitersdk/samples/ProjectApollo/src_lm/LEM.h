@@ -1184,8 +1184,6 @@ protected:
 
 	bool CPswitch;
 
-	bool HATCHswitch;
-
 	bool EVAswitch;
 
 	bool COASswitch;
@@ -1457,7 +1455,7 @@ protected:
 	///////////////////////
 
 	SwitchRow ForwardHatchSwitchRow;
-	ToggleSwitch ForwardHatchHandle;
+	LMForwardHatchHandle ForwardHatchHandle;
 	ThreePosSwitch ForwardHatchReliefValve;
 	
 	///////////////////////////
@@ -1490,10 +1488,8 @@ protected:
 	bool ABORT_IND;
 	bool ENGIND[7];
 
-	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;
-	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
@@ -1638,6 +1634,8 @@ protected:
 	Sound Slanding;
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
+	Sound HatchOpenSound;
+	Sound HatchCloseSound;
 
 	//
 	// Connectors.
@@ -1768,6 +1766,7 @@ protected:
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
 	LEMCabinRepressValve CabinRepressValve;
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
+	LEMForwardHatch ForwardHatch;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
 	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
 	LEMCabinGasReturnValve CabinGasReturnValve;

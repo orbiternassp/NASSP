@@ -243,6 +243,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
 	omni_aft(_V(0.0, 0.0, -1.0)),
+	ForwardHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this)
@@ -294,10 +295,8 @@ void LEM::Init()
 
 	ABORT_IND=false;
 
-	bToggleHatch=false;
 	bModeDocked=false;
 	bModeHover=false;
-	HatchOpen=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
@@ -460,6 +459,8 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(Afire, "des_abort.wav");
 	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -662,10 +663,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	}
 
 	switch (key) {
-
-	case OAPI_KEY_K:
-		bToggleHatch = true;
-		return 1;
 
 	case OAPI_KEY_E:
 		return 0;
@@ -871,16 +868,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		if (ToggleEva && GroundContact()){
 			ToggleEVA();
 		}
-		
-		if (bToggleHatch){
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			if (vs.status == 1){
-				//PlayVesselWave(Scontact,NOLOOP,255);
-				//SetLmVesselHoverStage2(vessel);
-			}
-			bToggleHatch=false;
-		}
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
@@ -893,7 +880,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetLmLandedMesh();
 		}
 
-		if (CPswitch && HATCHswitch && EVAswitch && GroundContact()){
+		if (CPswitch && EVAswitch && GroundContact()){
 			ToggleEva = true;
 			EVAswitch = false;
 		}
@@ -1075,6 +1062,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
+		}
+		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
+			ForwardHatch.LoadState(line);
 		}
 		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
 			PrimGlycolPumpController.LoadState(line);
@@ -1462,6 +1452,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	SBandSteerable.SaveState(scn);
 
 	// Save ECS
+	ForwardHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 
 	// Save EDS

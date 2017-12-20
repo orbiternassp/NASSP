@@ -35,15 +35,36 @@ protected:
 	ThreePosSwitch *cabinOVHDHatchValveSwitch;
 };
 
+class LEMForwardHatch
+{
+public:
+	LEMForwardHatch(Sound &opensound, Sound &closesound);
+	void Init(ToggleSwitch *fhh);
+	void Toggle();
+
+	bool IsOpen() { return open; };
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+protected:
+	bool open;
+
+	ToggleSwitch *ForwardHatchHandle;
+
+	Sound &OpenSound;
+	Sound &CloseSound;
+};
+
 class LEMFWDCabinReliefDumpValve
 {
 public:
 	LEMFWDCabinReliefDumpValve();
-	void Init(h_Pipe *cfv, ThreePosSwitch *cfvs);
+	void Init(h_Pipe *cfv, ThreePosSwitch *cfvs, LEMForwardHatch *fh);
 	void SystemTimestep(double simdt);
 protected:
 	h_Pipe *cabinFWDHatchValve;
 	ThreePosSwitch *cabinFWDHatchValveSwitch;
+	LEMForwardHatch *fwdHatch;
 };
 
 class LEMSuitCircuitReliefValve
