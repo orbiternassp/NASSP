@@ -619,6 +619,8 @@ void LEM::SystemsInit()
 	O2Manifold = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD");
 	PressRegA = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA");
 	PressRegB = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB");
+	DesH2OTank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK");
+	DesBatCooling = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESBATCOOLING");
 	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
 	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
 	PrimGlyPump1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1");
@@ -1859,6 +1861,41 @@ void LEM::SetLMPInSuit()
 	{
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
+	}
+}
+
+void LEM::CheckDescentStageSystems()
+{
+	if (stage < 2) {
+		// Descent Stage Deadface Bus Stubs wire to the ECAs
+
+		DES_LMPs28VBusA.WireTo(&ECA_1a);
+		DES_LMPs28VBusB.WireTo(&ECA_1b);
+		DES_CDRs28VBusA.WireTo(&ECA_2a);
+		DES_CDRs28VBusB.WireTo(&ECA_2b);
+		DSCBattFeedTB.SetState(1);
+	}
+	else {
+		DES_LMPs28VBusA.Disconnect();
+		DES_LMPs28VBusB.Disconnect();
+		DES_CDRs28VBusA.Disconnect();
+		DES_CDRs28VBusB.Disconnect();
+		DSCBattFeedTB.SetState(0);
+
+		//ECS
+
+		DesO2Tank->space.Void();
+		DesO2Manifold->space.Void();
+		DesO2Manifold->IN_valve.Close();
+
+		DesH2OTank->space.Void();
+		DesH2OTank->IN_valve.Close();
+		DesH2OTank->OUT_valve.Close();
+		DesH2OTank->OUT2_valve.Close();
+
+		DesBatCooling->space.Void();
+		DesBatCooling->IN_valve.Close();
+		DesBatCooling->OUT_valve.Close();
 	}
 }
 

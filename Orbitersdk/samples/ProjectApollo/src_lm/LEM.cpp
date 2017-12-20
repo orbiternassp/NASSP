@@ -1169,21 +1169,8 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		break;
 	}
 
-	// Descent Stage Deadface Bus Stubs wire to the ECAs
-	// I was doing this in SystemsInit which is wrong.
-	if(stage < 2){
-		DES_LMPs28VBusA.WireTo(&ECA_1a);
-		DES_LMPs28VBusB.WireTo(&ECA_1b);
-		DES_CDRs28VBusA.WireTo(&ECA_2a); 
-		DES_CDRs28VBusB.WireTo(&ECA_2b); 
-		DSCBattFeedTB.SetState(1);
-	}else{
-		DES_LMPs28VBusA.Disconnect();
-		DES_LMPs28VBusB.Disconnect();
-		DES_CDRs28VBusA.Disconnect();
-		DES_CDRs28VBusB.Disconnect();
-		DSCBattFeedTB.SetState(0);
-	}
+	CheckDescentStageSystems();
+
 	// SOVs open by default
 	SetValveState(LEM_RCS_MAIN_SOV_A,true);
 	SetValveState(LEM_RCS_MAIN_SOV_B,true);

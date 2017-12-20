@@ -2783,12 +2783,15 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 
 		//DES H2O Valve
 		else if (s == &DESH2OValve) {
-			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK:OUT2");
-			if (DESH2OValve.GetState() == 0) {
-				vlv->Open();
-			}
-			else {
-				vlv->Close();
+			if (stage < 2)
+			{
+				h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK:OUT2");
+				if (DESH2OValve.GetState() == 0) {
+					vlv->Open();
+				}
+				else {
+					vlv->Close();
+				}
 			}
 		}
 
