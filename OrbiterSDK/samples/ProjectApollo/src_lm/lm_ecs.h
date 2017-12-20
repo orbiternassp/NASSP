@@ -39,7 +39,7 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(ToggleSwitch *fhh);
+	void Init(LEM *l, ToggleSwitch *fhh);
 	void Toggle();
 
 	bool IsOpen() { return open; };
@@ -49,6 +49,7 @@ public:
 protected:
 	bool open;
 
+	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
 
 	Sound &OpenSound;

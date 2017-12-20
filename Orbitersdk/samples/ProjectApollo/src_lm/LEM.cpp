@@ -309,6 +309,7 @@ void LEM::Init()
 	InVC = false;
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
+	RefreshPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
 
@@ -748,6 +749,11 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
+	}
+
+	if (RefreshPanelIdInTimestep && oapiCameraInternal()) {
+		oapiSetPanel(PanelId);
+		RefreshPanelIdInTimestep = false;
 	}
 
 	// RCS propellant pressurization
