@@ -1681,8 +1681,16 @@ void IUSV::SwitchSelector(int item)
 	case 5: //Flight Control Computer Switch Point No. 6
 		fcc.SetGainSwitch(6);
 		break;
+	case 6: //Spare
+		break;
+	case 7: //Flight Control Computer Switch Point No. 7
+		break;
+	case 8: //Spare
+		break;
 	case 9: //S-IVB Engine Out Indication "A" Enable
 		eds.SetSIVBEngineOutIndicationA(true);
+		break;
+	case 10: //Spare
 		break;
 	case 11: //S-IVB Engine Out Indication "B" Enable
 		eds.SetSIVBEngineOutIndicationB(true);
@@ -1690,7 +1698,11 @@ void IUSV::SwitchSelector(int item)
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
 		fcc.SetSIVBBurnMode(false);
 		break;
-	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
+	case 13: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable Off
+		break;
+	case 14: //IU Tape Recorder Playback Off
+		break;
+	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable On
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
 		eds.ResetAutoAbortRelays();
@@ -1701,6 +1713,8 @@ void IUSV::SwitchSelector(int item)
 		eds.SetSIVBEngineOutIndicationA(false);
 		break;
 	case 19: //Tape Recorder Playback Reverse On
+		break;
+	case 20: //Excess Rate (Roll) Auto-Abort Inhibit Enable Off
 		break;
 	case 21: //Flight Control Computer Switch Pointer No. 2
 		fcc.SetGainSwitch(2);
@@ -1715,28 +1729,46 @@ void IUSV::SwitchSelector(int item)
 	case 26: //Flight Control Computer Switch Pointer No. 1
 		fcc.SetGainSwitch(1);
 		break;
+	case 27: //Flight Control Computer Switch Pointer No. 9
+		break;
 	case 28: //S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
 		eds.SetSIIEngineOutIndicationA(true);
 		break;
 	case 29: //S-IVB Engine EDS Cutoff No. 1 Disable
 		eds.SetSIVBEngineCutoffDisabled();
 		break;
+	case 30: //Spare
+		break;
 	case 31: //Flight Control Computer Burn Mode On "A"
 		fcc.SetStageSwitch(2);
 		fcc.SetSIVBBurnMode(true);
 		break;
+	case 32: //Spare
+		break;
 	case 33: //Switch Engine Control to S-II and S-IC Outboard Engine Cant Off "A"
 		fcc.SetStageSwitch(1);
 		break;
-	case 34: //Excess Rate (Roll) Auto-Abort Inhibit Enable
+	case 34: //Excess Rate (Roll) Auto-Abort Inhibit Enable On
 		break;
 	case 35: //S-IC Two Engines Out Auto-Abort Inhibit
 		eds.SetTwoEngOutAutoAbortInhibit(true);
+		break;
+	case 36: //Switch S-IVB LOX to S-II Fuel Tank Pressure Indicator On
+		break;
+	case 37: //Switch S-IVB LOX to S-II Fuel Tank Pressure Indicator Reset
 		break;
 	case 38: //Launch Vehicle Engines EDS Cutoff Enable
 		eds.SetLVEnginesCutoffEnable(true);
 		break;
 	case 39: //Tape Recorder Record On
+		break;
+	case 40: //Tape Recorder Playback On
+		break;
+	case 41: //Excess Rate (P,Y,R) Auto-Abort Inhibit Off
+		eds.SetExcessiveRatesAutoAbortInhibit(false);
+		break;
+	case 42: //Excess Rate (Roll) Auto-Abort Inhibit Off
+		eds.SetExcessiveRatesAutoAbortInhibit(false);
 		break;
 	case 43: // S-IVB Ullage Thrust Present Indication On
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, true);
@@ -1744,11 +1776,17 @@ void IUSV::SwitchSelector(int item)
 	case 44: //Flight Control Computer Switch Point No. 5
 		fcc.SetGainSwitch(5);
 		break;
+	case 45: //Spare
+		break;
 	case 46: //S-IVB Ullage Thrust Present Indication Off
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, false);
 		break;
+	case 47: //Flight Control Computer Switch Point No. 8
+		break;
 	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 		eds.SetSIIEngineOutIndicationB(true);
+		break;
+	case 49: //Spare
 		break;
 	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
 		eds.SetExcessiveRatesAutoAbortInhibit(true);
