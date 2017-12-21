@@ -2666,7 +2666,7 @@ void LEM::SetSwitches(int panel) {
     // Upper Hatch
     UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
     UpperHatchReliefValve.Init(0, 196, 400, 400, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_400x400], UpperHatchSwitchRow);
-    UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow);
+    UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
 
     // Forward Hatch
 	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);
@@ -3497,6 +3497,18 @@ void LEM::PanelRefreshForwardHatch() {
 	if (InPanel && PanelId == LMPANEL_FWDHATCH) {
 		if (oapiCameraInternal()) {
 			oapiSetPanel(LMPANEL_FWDHATCH);
+		}
+		else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
+void LEM::PanelRefreshOverheadHatch() {
+
+	if (InPanel && PanelId == LMPANEL_UPPERHATCH) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(LMPANEL_UPPERHATCH);
 		}
 		else {
 			RefreshPanelIdInTimestep = true;

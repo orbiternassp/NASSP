@@ -244,6 +244,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
 	omni_aft(_V(0.0, 0.0, -1.0)),
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
+	OverheadHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this)
@@ -1072,6 +1073,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
 			ForwardHatch.LoadState(line);
 		}
+		else if (!strnicmp(line, "OVERHEADHATCH", 13)) {
+			OverheadHatch.LoadState(line);
+		}
 		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
 			PrimGlycolPumpController.LoadState(line);
 		}
@@ -1446,6 +1450,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	// Save ECS
 	ForwardHatch.SaveState(scn);
+	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 
 	// Save EDS

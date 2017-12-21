@@ -24,15 +24,37 @@
 
 #pragma once
 
+class LEMOverheadHatch
+{
+public:
+	LEMOverheadHatch(Sound &opensound, Sound &closesound);
+	void Init(LEM *l, ToggleSwitch *ohh);
+	void Toggle();
+
+	bool IsOpen() { return open; };
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+protected:
+	bool open;
+
+	LEM *lem;
+	ToggleSwitch *ovhdHatchHandle;
+
+	Sound &OpenSound;
+	Sound &CloseSound;
+};
+
 class LEMOVHDCabinReliefDumpValve
 {
 public:
 	LEMOVHDCabinReliefDumpValve();
-	void Init(h_Pipe *cohv, ThreePosSwitch *cohs);
+	void Init(h_Pipe *cohv, ThreePosSwitch *cohs, LEMOverheadHatch *oh);
 	void SystemTimestep(double simdt);
 protected:
 	h_Pipe *cabinOVHDHatchValve;
 	ThreePosSwitch *cabinOVHDHatchValveSwitch;
+	LEMOverheadHatch *ovhdHatch;
 };
 
 class LEMForwardHatch

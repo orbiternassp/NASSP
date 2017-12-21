@@ -626,3 +626,13 @@ protected:
 	h_Tank *cabin;
 	LEMForwardHatch *forwardHatch;
 };
+
+class LMOverheadHatchHandle :public ToggleSwitch {
+public:
+	LMOverheadHatchHandle();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
+protected:
+	h_Pipe * pipe;
+	LEMOverheadHatch *ovhdHatch;
+};

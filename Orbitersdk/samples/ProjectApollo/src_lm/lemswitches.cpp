@@ -1948,3 +1948,30 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 
 	return false;
 }
+
+LMOverheadHatchHandle::LMOverheadHatchHandle()
+{
+	pipe = NULL;
+	ovhdHatch = NULL;
+}
+
+void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	pipe = p;
+	ovhdHatch = oh;
+}
+
+bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (!ovhdHatch->IsOpen())
+	{
+		if (state == 1 || pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
+		{
+			return ToggleSwitch::SwitchTo(newState, dontspring);
+		}
+	}
+
+	return false;
+}

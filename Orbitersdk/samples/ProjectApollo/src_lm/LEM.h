@@ -532,6 +532,7 @@ public:
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
 	void PanelRefreshForwardHatch();
+	void PanelRefreshOverheadHatch();
 
 	// Panel SDK
 	bool GetValveState(int valve);
@@ -1453,7 +1454,7 @@ protected:
 
 	SwitchRow UpperHatchSwitchRow;
 	ThreePosSwitch UpperHatchReliefValve;
-	ToggleSwitch UpperHatchHandle;
+	LMOverheadHatchHandle UpperHatchHandle;
 
 	///////////////////////
 	// LEM Forward Hatch //
@@ -1772,6 +1773,7 @@ protected:
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
 	LEMCabinRepressValve CabinRepressValve;
+	LEMOverheadHatch OverheadHatch;
 	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
 	LEMForwardHatch ForwardHatch;
 	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
