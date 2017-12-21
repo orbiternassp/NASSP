@@ -813,6 +813,9 @@
 #define IDB_LEM_FWD_HATCH_OPEN          1087
 #define AID_LEM_FWD_HATCH_HANDLE		1088
 #define AID_LEM_FWD_HATCH_VALVE			1089
+#define IDB_LEM_UPPER_HATCH_OPEN        1090
+#define AID_LEM_UPPER_HATCH_HANDLE		1091
+#define AID_LEM_UPPER_HATCH_VALVE	    1092
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
