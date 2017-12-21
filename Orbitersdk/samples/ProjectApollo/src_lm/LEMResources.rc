@@ -199,6 +199,7 @@ IDB_LEM_FWD_HANDLE      BITMAP                  "..\\Bitmaps\\lem_fwd_handle.bmp
 IDB_LEM_FWD_REL_VLV     BITMAP                  "..\\Bitmaps\\lem_fwd_rel_valve.bmp"
 IDB_LEM_INTLK_OVRD      BITMAP                  "..\\Bitmaps\\lem_intlk_ovrd.bmp"
 IDB_LEM_FWD_HATCH_OPEN  BITMAP                  "..\\Bitmaps\\lem_forward_hatch_open.bmp"
+IDB_LEM_UPPER_HATCH_OPEN BITMAP                 "..\\Bitmaps\\lem_upper_hatch_open.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
