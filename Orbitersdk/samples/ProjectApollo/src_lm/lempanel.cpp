@@ -1871,7 +1871,10 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_UPPERHATCH: // LEM Upper Hatch
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(209, 335, 1901, 931), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(637, 407, 1279, 962), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_HANDLE, _R(784, 52, 1070, 249), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_VALVE, _R(654, 300, 758, 406), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -2664,9 +2667,11 @@ void LEM::SetSwitches(int panel) {
 	WaterSepSelectSwitch.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
 
     // Upper Hatch
-    UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
-    UpperHatchReliefValve.Init(0, 196, 400, 400, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_400x400], UpperHatchSwitchRow);
-    UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
+    UpperHatchHandleSwitchRow.Init(AID_LEM_UPPER_HATCH_HANDLE, MainPanel);
+    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
+	
+	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
+	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchValveSwitchRow);
 
     // Forward Hatch
 	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);

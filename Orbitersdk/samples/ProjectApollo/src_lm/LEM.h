@@ -1452,10 +1452,11 @@ protected:
 	// LEM Upper Hatch //
 	/////////////////////
 
-	SwitchRow UpperHatchSwitchRow;
-	ThreePosSwitch UpperHatchReliefValve;
+	SwitchRow UpperHatchHandleSwitchRow;
 	LMOverheadHatchHandle UpperHatchHandle;
-
+	SwitchRow UpperHatchValveSwitchRow;
+	ThreePosSwitch UpperHatchReliefValve;
+	
 	///////////////////////
 	// LEM Forward Hatch //
 	///////////////////////
