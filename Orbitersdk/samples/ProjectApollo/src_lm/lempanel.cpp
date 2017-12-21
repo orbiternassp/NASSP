@@ -978,7 +978,7 @@ void LEM::InitSwitches() {
 
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
-	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_UP);
+	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
 	UpperHatchHandle.SetSideways(true);
 
 	// Forward Hatch
@@ -1541,7 +1541,14 @@ bool LEM::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_UPPERHATCH:
-		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		if (OverheadHatch.IsOpen())
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH_OPEN));
+		}
+		else
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		}
 		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_ECSPANEL);
 		break;
 
@@ -1873,9 +1880,12 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(637, 407, 1279, 962), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
-		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_HANDLE, _R(784, 52, 1070, 249), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_VALVE, _R(654, 300, 758, 406), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		
+		if (!OverheadHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_HANDLE, _R(784, 52, 1070, 249), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_VALVE, _R(654, 300, 758, 406), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		}
+
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
@@ -2668,7 +2678,7 @@ void LEM::SetSwitches(int panel) {
 
     // Upper Hatch
     UpperHatchHandleSwitchRow.Init(AID_LEM_UPPER_HATCH_HANDLE, MainPanel);
-    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchHandleSwitchRow);
+    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
 	
 	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
 	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchValveSwitchRow);
@@ -3021,6 +3031,11 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	case AID_LEM_FWD_HATCH:
 		ForwardHatch.Toggle();
+
+		return true;
+
+	case AID_LEM_UPPER_HATCH:
+		OverheadHatch.Toggle();
 
 		return true;
 
@@ -3502,6 +3517,18 @@ void LEM::PanelRefreshForwardHatch() {
 	if (InPanel && PanelId == LMPANEL_FWDHATCH) {
 		if (oapiCameraInternal()) {
 			oapiSetPanel(LMPANEL_FWDHATCH);
+		}
+		else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
+void LEM::PanelRefreshOverheadHatch() {
+
+	if (InPanel && PanelId == LMPANEL_UPPERHATCH) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(LMPANEL_UPPERHATCH);
 		}
 		else {
 			RefreshPanelIdInTimestep = true;

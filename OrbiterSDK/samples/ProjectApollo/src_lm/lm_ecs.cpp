@@ -30,16 +30,69 @@
 #include "LEM.h"
 #include "lm_ecs.h"
 
+LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
+	OpenSound(opensound), CloseSound(closesound)
+{
+	open = false;
+	ovhdHatchHandle = NULL;
+	lem = NULL;
+}
+
+void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
+{
+	lem = l;
+	ovhdHatchHandle = fhh;
+}
+
+void LEMOverheadHatch::Toggle()
+{
+	if (open == false)
+	{
+		if (ovhdHatchHandle->GetState() == 1)
+		{
+			open = true;
+			OpenSound.play();
+			lem->PanelRefreshOverheadHatch();
+			//TBD: Set hatch mesh
+		}
+	}
+	else
+	{
+		open = false;
+		CloseSound.play();
+		lem->PanelRefreshOverheadHatch();
+		//TBD: Set hatch mesh
+	}
+}
+
+void LEMOverheadHatch::LoadState(char *line) {
+
+	int i1;
+
+	sscanf(line + 13, "%d", &i1);
+	open = (i1 != 0);
+}
+
+void LEMOverheadHatch::SaveState(FILEHANDLE scn) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i", (open ? 1 : 0));
+	oapiWriteScenario_string(scn, "OVERHEADHATCH", buffer);
+}
+
 LEMOVHDCabinReliefDumpValve::LEMOVHDCabinReliefDumpValve()
 {
 	cabinOVHDHatchValve = NULL;
 	cabinOVHDHatchValveSwitch = NULL;
+	ovhdHatch = NULL;
 }
 
-void LEMOVHDCabinReliefDumpValve::Init(h_Pipe *cohv, ThreePosSwitch *cohs)
+void LEMOVHDCabinReliefDumpValve::Init(h_Pipe *cohv, ThreePosSwitch *cohs, LEMOverheadHatch *oh)
 {
 	cabinOVHDHatchValve = cohv;
 	cabinOVHDHatchValveSwitch = cohs;
+	ovhdHatch = oh;
 }
 
 void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
@@ -49,51 +102,61 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 	// Valve in motion
 	if (cabinOVHDHatchValve->in->pz) return;
 
-	//DUMP
-	if (cabinOVHDHatchValveSwitch->GetState() == 0)
+	if (ovhdHatch->IsOpen())
 	{
-		cabinOVHDHatchValve->flowMax = 660.0 / LBH;  
 		cabinOVHDHatchValve->in->Open();
+		cabinOVHDHatchValve->in->size = (float) 100.;	// no pressure in a few seconds
+		cabinOVHDHatchValve->flowMax = 2000. / LBH;
 	}
-	//CLOSE
-	else if (cabinOVHDHatchValveSwitch->GetState() == 2)
+	else
 	{
-		cabinOVHDHatchValve->flowMax = 0;
-		cabinOVHDHatchValve->in->Close();
-	}
-	//AUTO
-	else if (cabinOVHDHatchValveSwitch->GetState() == 1)
-	{
-		double cabinpress = cabinOVHDHatchValve->in->parent->space.Press;
-
-		if (cabinpress > 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
+		cabinOVHDHatchValve->in->size = (float) 10.;
+		//DUMP
+		if (cabinOVHDHatchValveSwitch->GetState() == 0)
 		{
+			cabinOVHDHatchValve->flowMax = 660.0 / LBH;
 			cabinOVHDHatchValve->in->Open();
 		}
-		else if (cabinpress < 5.25 / PSI && cabinOVHDHatchValve->in->open == 1)
+		//CLOSE
+		else if (cabinOVHDHatchValveSwitch->GetState() == 2)
 		{
+			cabinOVHDHatchValve->flowMax = 0;
 			cabinOVHDHatchValve->in->Close();
 		}
-
-		if (cabinOVHDHatchValve->in->open == 1)
+		//AUTO
+		else if (cabinOVHDHatchValveSwitch->GetState() == 1)
 		{
-			if (cabinpress > 5.8 / PSI)
+			double cabinpress = cabinOVHDHatchValve->in->parent->space.Press;
+
+			if (cabinpress > 5.4 / PSI && cabinOVHDHatchValve->in->open == 0)
 			{
-				cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+				cabinOVHDHatchValve->in->Open();
 			}
-			else if (cabinpress < 5.25 / PSI)
+			else if (cabinpress < 5.25 / PSI && cabinOVHDHatchValve->in->open == 1)
 			{
-				cabinOVHDHatchValve->flowMax = 0;
+				cabinOVHDHatchValve->in->Close();
+			}
+
+			if (cabinOVHDHatchValve->in->open == 1)
+			{
+				if (cabinpress > 5.8 / PSI)
+				{
+					cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+				}
+				else if (cabinpress < 5.25 / PSI)
+				{
+					cabinOVHDHatchValve->flowMax = 0;
+				}
+				else
+				{
+					//0 flow at 5.25 psi, full flow at 5.8 psi
+					cabinOVHDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+				}
 			}
 			else
 			{
-				//0 flow at 5.25 psi, full flow at 5.8 psi
-				cabinOVHDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+				cabinOVHDHatchValve->flowMax = 0;
 			}
-		}
-		else
-		{
-			cabinOVHDHatchValve->flowMax = 0;
 		}
 	}
 }
