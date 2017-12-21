@@ -616,6 +616,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		break;
 	case 4: //LOX Tank Repressurization Control Valve Open Off
 		break;
+	case 5: //PU Activate On
+		break;
+	case 6: //PU Activate Off
+		break;
 	case 7: //PU Inverter and DC Power On
 		break;
 	case 8: //PU Inverter and DC Power Off
@@ -651,6 +655,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable
 		EDSCutoffDisable();
 		break;
+	case 20: //LOX Chilldown Pump Purge Control Valve Enable On
+		break;
+	case 21: //LOX Chilldown Pump Purge Control Valve Enable Off
+		break;
 	case 22: //LOX Chilldown Pump On
 		break;
 	case 23: //LOX Chilldown Pump Off
@@ -678,11 +686,21 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 33: //Second Burn Relay Off
 		SecondBurnRelayOff();
 		break;
+	case 34: //PU Fuel Boil Off Bias Command On
+		break;
+	case 35: //PU Fuel Boil Off Bias Command Off
+		break;
 	case 36: //Repressurization System Mode Select On (Amb)
 		break;
 	case 37: //Repressurization System Mode Select Off (Amb)
 		break;
+	case 38: //LH2 Tank Vent Open Command On
+		break;
 	case 39: //LH2 Tank Repressurization Control Valve Open On
+		break;
+	case 40: //PCM Group System On
+		break;
+	case 41: //PCM Group System Off
 		break;
 	case 42: //S-IVB Ullage Engine No. 1 On
 		APSUllageEngineOn(1);
@@ -702,9 +720,13 @@ void SIVB500Systems::SwitchSelector(int channel)
 		break;
 	case 49: //Inflight Calibration Mode Off
 		break;
-	case 50: //Heat-Exchanger Bypass Valve Control Enable
+	case 50: //Heat-Exchanger Bypass Valve Control Enable On
+		break;
+	case 51: //Heat-Exchanger Bypass Valve Control Enable Off
 		break;
 	case 52: //Measurement Transfer Mode Position "B"
+		break;
+	case 53: //Spare
 		break;
 	case 54: //Charge Ullage Ignition On
 		break;
@@ -731,6 +753,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		break;
 	case 65: //LH2 Tank Latching Relief Valve Latch Off
 		break;
+	case 66: //RF Assembly Power Command On
+		break;
+	case 67: //RF Assembly Power Command Off
+		break;
 	case 68: //First Burn Relay On
 		FirstBurnRelayOn();
 		break;
@@ -748,6 +774,8 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 74: //Burner LOX Shutdown Valve Close On
 		break;
 	case 75: //Burner LOX Shutdown Valve Close Off
+		break;
+	case 76: //LH2 Tank Vent Open Command Off
 		break;
 	case 77: //LH2 Tank Vent and Latching Relief Valve Boost Close On
 		break;
@@ -777,6 +805,14 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 89: //Burner LOX Shutdown Valve Open On
 		break;
 	case 90: //Burner LOX Shutdown Valve Open Off
+		break;
+	case 91: //Chilldown Shut-Off Pilot On
+		break;
+	case 92: //Chilldown Shut-Off Pilot Off
+		break;
+	case 93: //LOX Vent Open Command On
+		break;
+	case 94: //LOX Vent Open Command Off
 		break;
 	case 95: //LOX Tank Vent and NPV Valv Boost Close On
 		break;
