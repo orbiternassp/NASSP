@@ -594,14 +594,15 @@ protected:
 
 class LMSuitTempRotationalSwitch : public RotationalSwitch {
 public:
-	LMSuitTempRotationalSwitch() { Pipe = NULL; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p);
+	LMSuitTempRotationalSwitch() { 	Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, h_Pipe *bp);
 	virtual bool SwitchTo(int newValue);
 
 protected:
 	void CheckValve();
 
 	h_Pipe *Pipe;
+	h_Pipe *Bypass;
 };
 
 class LMLiquidGarmentCoolingRotationalSwitch : public RotationalSwitch {

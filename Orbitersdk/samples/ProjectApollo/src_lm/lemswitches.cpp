@@ -1813,11 +1813,12 @@ bool AscentO2RotationalSwitch::SwitchTo(int newValue)
 	return false;
 }
 
-void LMSuitTempRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p)
+void LMSuitTempRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, h_Pipe *bp)
 
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	Pipe = p;
+	Bypass = bp;
 }
 
 bool LMSuitTempRotationalSwitch::SwitchTo(int newValue)
@@ -1836,30 +1837,37 @@ void LMSuitTempRotationalSwitch::CheckValve()
 	if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_CLOSE;
 		Pipe->flowMax = 0;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 290.0 / LBH;
 
 	}
 	else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 30.0 / LBH;	
-		//Pipe->flowMax = 15.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 260.0 / LBH;
 
 	}
 	else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 60.0 / LBH;
-		//Pipe->flowMax = 30.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 230.0 / LBH;
 
 	}
 	else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 90.0 / LBH;
-		//Pipe->flowMax = 45.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 200.0 / LBH;
 
 	}
 	else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 120.0 / LBH;
-		//Pipe->flowMax = 60.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 170 / LBH;
+
 	}
 }
 
