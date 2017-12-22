@@ -185,7 +185,7 @@ void LEMForwardHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshForwardHatch();
-			//TBD: Set hatch mesh
+			lem->SetFwdHatchMesh();
 		}
 	}
 	else
@@ -193,7 +193,7 @@ void LEMForwardHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshForwardHatch();
-		//TBD: Set hatch mesh
+		lem->SetFwdHatchMesh();
 	}
 }
 

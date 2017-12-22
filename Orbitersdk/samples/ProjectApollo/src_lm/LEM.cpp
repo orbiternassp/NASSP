@@ -343,6 +343,7 @@ void LEM::Init()
 
 	lpdgret = -1;
 	lpdgext = -1;
+	fwdhatch = -1;
 
 	//
 	// VAGC Mode settings
