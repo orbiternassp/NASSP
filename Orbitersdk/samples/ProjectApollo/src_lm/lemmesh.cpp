@@ -53,6 +53,7 @@ static MESHHANDLE hAstro1 ;
 static MESHHANDLE hLemProbes;
 static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
+static MESHHANDLE hFwdHatch;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -182,6 +183,11 @@ void LEM::SetLmVesselDockStage()
 
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	
+	// FWD HATCH
+	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
+	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	SetFwdHatchMesh();
 	
 	if (!ph_Dsc)
 	{
@@ -313,6 +319,11 @@ void LEM::SetLmVesselHoverStage()
 		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// FWD HATCH
+	VECTOR3 hatch_dir= _V(-0.003, -0.03, 0.004);
+	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	SetFwdHatchMesh();
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -447,6 +458,11 @@ void LEM::SetLmAscentHoverStage()
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		// FWD HATCH
+	VECTOR3 hatch_dir= _V(0, -1.88, 0);
+	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	SetFwdHatchMesh();
+	
 	if (!ph_Asc)
 	{
 		ph_Asc = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
@@ -607,6 +623,16 @@ void LEM::SetLPDMesh() {
 	}
 }
 
+void LEM::SetFwdHatchMesh() {
+	
+	if (ForwardHatch.IsOpen()) {
+		SetMeshVisibilityMode(fwdhatch, MESHVIS_NEVER);
+	}
+	else {
+		SetMeshVisibilityMode(fwdhatch, MESHVIS_VCEXTERNAL);
+	}
+}
+
 void LEMLoadMeshes()
 
 {
@@ -619,6 +645,7 @@ void LEMLoadMeshes()
 	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 	hLPDgret = oapiLoadMeshGlobal("ProjectApollo/LPD_gret");
 	hLPDgext = oapiLoadMeshGlobal("ProjectApollo/LPD_gext");
+	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_FwdHatch");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
 
