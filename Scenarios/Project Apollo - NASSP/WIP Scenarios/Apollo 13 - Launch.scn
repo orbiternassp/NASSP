@@ -37,6 +37,7 @@ Odyssey:ProjectApollo/Saturn5
   STAGESTATUS 0
   DOCKSTATE 0
   MISSNTIME -14400
+  ENGINEFAIL 2 5 166.35
   LANG English
   LEMN Aquarius
   LMPADCNT 257
@@ -300,11 +301,12 @@ Odyssey:ProjectApollo/Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
   LVDC_BEGIN
+    LVDC_SIICenterEngineCutoff 1
     LVDC_hx[0][0] 72.043
-	LVDC_SCControlPoweredFlight 1
-        LVDC_R_L 6373424.0
-	LVDC_T_LO 69163.0
-	LVDC_t_S1C_CECO 134.6
+    LVDC_SCControlPoweredFlight 1
+    LVDC_R_L 6373424.0
+    LVDC_T_LO 69163.0
+    LVDC_t_S1C_CECO 134.6
     LVDC_XLunarAttitude 3.141589512 2.094395207 -0.6981317008
   LVDC_END
   LVIMU_BEGIN

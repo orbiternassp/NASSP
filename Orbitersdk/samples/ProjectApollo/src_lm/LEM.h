@@ -44,17 +44,11 @@
 #include "lm_programer.h"
 #include "lm_aca.h"
 #include "lm_ttca.h"
+#include "lm_scea.h"
+#include "lm_rcs.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
-
-//
-// Valves.
-//
-#define N_LEM_VALVES	32
-
-#define LEM_RCS_MAIN_SOV_A				1
-#define LEM_RCS_MAIN_SOV_B				2
 
 //
 // Lem state settings from scenario file, passed from CSM.
@@ -66,6 +60,26 @@
 #include "connector.h"
 #include "checklistController.h"
 #include "payload.h"
+
+enum LMRCSThrusters
+{
+	LMRCS_A1U = 0,
+	LMRCS_A1F,
+	LMRCS_B1L,
+	LMRCS_B1D,
+	LMRCS_B2U,
+	LMRCS_B2L,
+	LMRCS_A2A,
+	LMRCS_A2D,
+	LMRCS_A3U,
+	LMRCS_A3R,
+	LMRCS_B3A,
+	LMRCS_B3D,
+	LMRCS_B4U,
+	LMRCS_B4F,
+	LMRCS_A4R,
+	LMRCS_A4D
+};
 
 // Systems things
 // ELECTRICAL
@@ -531,6 +545,7 @@ public:
 		SRF_LEM_F_HATCH_HNDL,
 		SRF_LEM_F_HATCH_REL_VLV,
 	    SRF_LEM_INTLK_OVRD,
+		SRF_RED_INDICATOR,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -568,14 +583,9 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
-	// Panel SDK
-	bool GetValveState(int valve);
-	void SetValveState(int valve, bool open);
-
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
 	void SetRCSJetLevelPrimary(int jet, double level);
-	void CheckRCS();
 
 	// DS20160916 Physical parameters updation
 	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
@@ -603,9 +613,6 @@ public:
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
-	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
-	//THRUSTER_HANDLE th_rcs_orbiter_rot[24];
-	//THRUSTER_HANDLE th_rcs_orbiter_lin[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
@@ -829,10 +836,10 @@ protected:
 	RotationalSwitch TempPressMonRotary;
 
 	SwitchRow RCSAscFeedTBSwitchRow;
-	IndicatorSwitch RCSAscFeed1ATB;
-	IndicatorSwitch RCSAscFeed2ATB;
-	IndicatorSwitch RCSAscFeed1BTB;
-	IndicatorSwitch RCSAscFeed2BTB;
+	LEMSCEATalkback RCSAscFeed1ATB;
+	LEMSCEATalkback RCSAscFeed2ATB;
+	LEMSCEATalkback RCSAscFeed1BTB;
+	LEMSCEATalkback RCSAscFeed2BTB;
 
 	SwitchRow RCSAscFeedSwitchRow;
 	ThreePosSwitch RCSAscFeed1ASwitch;
@@ -841,43 +848,43 @@ protected:
 	ThreePosSwitch RCSAscFeed2BSwitch;
 
 	SwitchRow RCSQuad14TBSwitchRow;
-	IndicatorSwitch RCSQuad1ACmdEnableTB;
-	IndicatorSwitch RCSQuad4ACmdEnableTB;
-	IndicatorSwitch RCSQuad1BCmdEnableTB;
-	IndicatorSwitch RCSQuad4BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4BCmdEnableTB;
 
 	SwitchRow RCSQuad14SwitchRow;
-	ThreePosSwitch RCSQuad1ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad4ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad1BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad4BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4BCmdEnableSwitch;
 
 	SwitchRow RCSQuad23TBSwitchRow;
-	IndicatorSwitch RCSQuad2ACmdEnableTB;
-	IndicatorSwitch RCSQuad3ACmdEnableTB;
-	IndicatorSwitch RCSQuad2BCmdEnableTB;
-	IndicatorSwitch RCSQuad3BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3BCmdEnableTB;
 
 	SwitchRow RCSQuad23SwitchRow;
-	ThreePosSwitch RCSQuad2ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad3ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad2BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad3BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3BCmdEnableSwitch;
 
 	SwitchRow RCSXfeedTBSwitchRow;
-	IndicatorSwitch RCSXFeedTB;
+	LEMSCEATalkback RCSXFeedTB;
 
 	SwitchRow RCSXfeedSwitchRow;
 	ThreePosSwitch RCSXFeedSwitch;
 
 	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
-	LEMValveTalkback RCSMainSovATB;
-	LEMValveTalkback RCSMainSovBTB;
+	LEMSCEATalkback RCSMainSovATB;
+	LEMSCEATalkback RCSMainSovBTB;
 
 	SwitchRow RCSMainSOVSwitchRow;
-	LEMValveSwitch RCSMainSovASwitch;
-	LEMValveSwitch RCSMainSovBSwitch;
+	ThreePosSwitch RCSMainSovASwitch;
+	ThreePosSwitch RCSMainSovBSwitch;
 
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
@@ -1575,6 +1582,8 @@ protected:
 	Pyro AscentHeliumIsol2Pyros;
 	Pyro AscentOxidCompValvePyros;
 	Pyro AscentFuelCompValvePyros;
+	Pyro RCSHeliumSupplyAPyros;
+	Pyro RCSHeliumSupplyBPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
 	PowerMerge DescentPropVentPyrosFeeder;
@@ -1585,6 +1594,8 @@ protected:
 	PowerMerge AscentHeliumIsol2PyrosFeeder;
 	PowerMerge AscentOxidCompValvePyrosFeeder;
 	PowerMerge AscentFuelCompValvePyrosFeeder;
+	PowerMerge RCSHeliumSupplyAPyrosFeeder;
+	PowerMerge RCSHeliumSupplyBPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1672,10 +1683,6 @@ protected:
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 
 	char AudioLanguage[64];
-
-	// New Panel SDK stuff
-	int *pLEMValves[N_LEM_VALVES];
-	bool ValveState[N_LEM_VALVES];
 
 	// POWER AND SUCH
 
@@ -1789,10 +1796,26 @@ protected:
 	APSPropellantSource APSPropellant;
 	LEM_APS APS;
 
+	// RCS
+	RCSPropellantSource RCSA;
+	RCSPropellantSource RCSB;
+	RCS_TCA tca1A;
+	RCS_TCA tca2A;
+	RCS_TCA tca3A;
+	RCS_TCA tca4A;
+	RCS_TCA tca1B;
+	RCS_TCA tca2B;
+	RCS_TCA tca3B;
+	RCS_TCA tca4B;
+
 	// Abort Guidance System stuff
 	LEM_ASA asa;
 	LEM_AEA aea;
 	LEM_DEDA deda;
+
+	// Instrumentation
+	SCERA1 scera1;
+	SCERA2 scera2;
 
 	bool isMultiThread;
 
@@ -1855,6 +1878,15 @@ protected:
 	friend class LEM_ACA;
 	friend class LEM_RGA;
 	friend class LEM_TTCA;
+	friend class SCERA1;
+	friend class SCERA2;
+	friend class RCSPropellantSource;
+	friend class LGCThrusterPairSwitch;
+	friend class LMRCSAPressInd;
+	friend class LMRCSBPressInd;
+	friend class LMRCSAQtyInd;
+	friend class LMRCSBQtyInd;
+	friend class RCS_TCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

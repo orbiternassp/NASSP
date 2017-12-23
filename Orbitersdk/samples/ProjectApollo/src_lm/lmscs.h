@@ -141,6 +141,8 @@ public:
 	bool GetK16() { return K16; }
 	bool GetK23() { return K23; }
 	bool GetThrustOn() { return engOn; }
+	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
+	double GetManualThrustVoltage() { return ManualThrust * 14.6; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

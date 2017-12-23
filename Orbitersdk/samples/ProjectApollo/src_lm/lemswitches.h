@@ -47,20 +47,6 @@ protected:
 	int sw;
 };
 
-class LEMValveSwitch: public LEMThreePosSwitch {
-public:
-	LEMValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind);
-	//bool CheckMouseClick(int event, int mx, int my);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-
-	int Valve;
-	IndicatorSwitch *Indicator;
-};
-
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; lem = NULL; srcno=0; afl=0; };
@@ -101,20 +87,18 @@ protected:
 	LEM_INV *inv2;
 };
 
+class LGCThrusterPairSwitch : public LEMThreePosSwitch {
+public:
+	LGCThrusterPairSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *l, int bit);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+protected:
+	int inputbit;
+};
+
 // This is a CB like any other, except it lies about current across itself.
 class LEMVoltCB: public CircuitBrakerSwitch {
 	double Current();
-};
-
-class LEMValveTalkback : public IndicatorSwitch {
-public:
-	LEMValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, LEM *v);
-	int GetState();
-
-protected:
-	int Valve;
-	LEM *our_vessel;
 };
 
 // Meters
@@ -537,6 +521,26 @@ public:
 
 protected:
 	DPSValve *valve;
+};
+
+class LEMSCEATalkback : public IndicatorSwitch {
+public:
+	LEMSCEATalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen);
+	int GetState();
+
+protected:
+	SCEA_SolidStateSwitch * ssswitch;
+};
+
+class LEMRCSQuadTalkback : public IndicatorSwitch {
+public:
+	LEMRCSQuadTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf);
+	int GetState();
+protected:
+	SCEA_SolidStateSwitch * ssswitch;
+	TCA_FlipFlop *tcaFailure;
 };
 
 class LEMDPSDigitalMeter : public MeterSwitch {

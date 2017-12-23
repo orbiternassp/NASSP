@@ -225,6 +225,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
+	vhfa(_V(0.0, 0.7716246, 0.63607822)),
+	vhfb(_V(0.0, -0.7716246, -0.63607822)),
 	sii(this, th_2nd, ph_2nd, thg_ull, SPUShiftS, SepS)
 
 #pragma warning ( pop ) // disable:4355
@@ -2993,21 +2995,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_2 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_2 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG2;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	if (key == OAPI_KEY_3 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
 	{
 		//
 		// Key 3 switches to position 3 by default, then cycles around them.
@@ -3743,7 +3745,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(TLICapableBooster, Crewed);
+		iu->SetMissionInfo(Crewed);
 	}
 
 	//

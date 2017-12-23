@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "j2engine.h"
+
 #define PUVALVE_CLOSED 0
 #define PUVALVE_NULL 1
 #define PUVALVE_OPEN 2
@@ -36,20 +38,20 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void LVDCEnginesCutoff() { LVDCEnginesStopRelay = true; }
-	void LVDCEnginesCutoffReset() { LVDCEnginesStopRelay = false; }
-	void SetEnginesReadyBypass() { EnginesReadyBypass = true; }
-	void ResetEnginesReadyBypass() { EnginesReadyBypass = false; }
-	void EngineStartOn() { LVDCStartCommand = true; }
-	void EngineStartOff() { LVDCStartCommand = false; }
-	void EDSEnginesCutoff(bool cut) { EDSEnginesStop = cut; }
+	void LVDCEnginesCutoff();
+	void LVDCCenterEngineCutoff();
+	void LVDCEnginesCutoffReset();
+	void SetEnginesReadyBypass();
+	void ResetEnginesReadyBypass();
+	void EngineStartOn();
+	void EngineStartOff();
+	void EDSEnginesCutoff(bool cut);
 	void SetDepletionSensorsCutoffArm() { PointLevelSensorArmed = true; }
 	void SetDepletionSensorsCutoffDisarm() { PointLevelSensorArmed = false; }
 	void FireUllageTrigger() { UllageTrigger = true; }
 	void SetOrdnanceArm() { OrdnanceArmed = true; }
 	void SetSIISIVBOrdnanceArm() { SIISIVBOrdnanceArmed = true; }
 	void SetThrusterDir(int n, double beta_y, double beta_p);
-	void SetThrusterGroupLevel(double level);
 	void SetPUValve(int state);
 
 	void RecalculateEngineParameters();
@@ -73,24 +75,12 @@ protected:
 
 	int PUValveState;
 
-	bool LVDCStartCommand;
-	bool EngineStart;
-	bool LVDCEnginesStopRelay;
-	bool EnginesReady;
-	bool EnginesReadyBypass;
-	bool EnginesRunning;
-	bool EDSEnginesStop;
-	bool RSSEnginesStop;
-	bool EnginesStop;
-
 	bool PointLevelSensorArmed;
 	bool PropellantDepletionSensors;
 	bool UllageTrigger;
 	bool OrdnanceArmed;
 	bool SIISIVBOrdnanceArmed;
 
-	double ThrustTimer;
-	double ThrustLevel;
 	double J2DefaultThrust;
 
 	bool EarlySIICutoff[5];
@@ -99,7 +89,12 @@ protected:
 	bool FailInit;
 
 	Saturn *vessel;
-	THRUSTER_HANDLE *j2engines;
+	J2Engine j2engine1;
+	J2Engine j2engine2;
+	J2Engine j2engine3;
+	J2Engine j2engine4;
+	J2Engine j2engine5;
+	J2Engine *j2engines[5];
 	THGROUP_HANDLE &ullage;
 	PROPELLANT_HANDLE &main_propellant;
 

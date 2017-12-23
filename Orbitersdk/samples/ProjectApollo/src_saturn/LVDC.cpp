@@ -2720,6 +2720,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	INH = false;
 	INH1 = false;
 	INH2 = false;
+	INH3 = false;
 	init = false;
 	i_op = false;
 	liftoff = false;
@@ -2992,6 +2993,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	theta_N = 0;
 	TI5F2 = 0;
 	T_IGM = 0;
+	T_L = 0;
 	T_LET = 0;
 	T_RG = 0;
 	T_RP = 0;
@@ -3076,6 +3078,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CommandSequence = 0;
 	CommandSequenceStored = 0;
 	SCControlPoweredFlight = false;
+	SIICenterEngineCutoff = false;
 }
 
 // Setup
@@ -3108,6 +3111,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
 	INH1 = true;							// inhibits first EPO roll/pitch maneuver
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
+	INH3 = false;
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
 	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
@@ -3243,7 +3247,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TSMC3 = 466;
 	// TSMC1 = 60.6 TSMC2 = 15 // AP11
 	T_c = 8; // T_c = 6.5; 					// Coast time between S2 burnout and S4B ignition
-	T_1 = 249.1; //T_1  = 237.796;			// Time left in first-stage IGM
+	T_1 = 286.2; //T_1  = 237.796;			// Time left in first-stage IGM
 	T_2 = 91.8; //T_2 = 111;					// Time left in second and fourth stage IGM
 	T_2R = 10.0;
 	T_3 = 0;								// Time left in third and fifth stage IGM
@@ -3268,6 +3272,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
 	TI5F2 = 20.0;
+	T_L = 0.0;
 
 	double day;
 	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvCommandConnector->GetMissionTime() - 17.0;
@@ -3435,6 +3440,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
 	SCControlPoweredFlight = false;
+	SIICenterEngineCutoff = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -3464,6 +3470,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
+	oapiWriteScenario_int(scn, "LVDC_INH3", INH3);
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
@@ -3481,6 +3488,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
 	oapiWriteScenario_int(scn, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
+	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
@@ -4105,6 +4113,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
+		papiReadScenario_bool(line, "LVDC_INH3", INH3);
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
@@ -4121,6 +4130,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
 		papiReadScenario_bool(line, "LVDC_SCControlPoweredFlight", SCControlPoweredFlight);
+		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
@@ -5550,17 +5560,14 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// IECO
-				/*if (LVDC_TB_ETime >= 299.0)
+				if (SIICenterEngineCutoff && S2_ENGINE_OUT == false && LVDC_TB_ETime >= 299.0)
 				{
-					if (oapiGetPropellantMass(owner->ph_2nd) / oapiGetPropellantMaxMass(owner->ph_2nd) < 0.15 && S2_ENGINE_OUT == false)
-					{
-						S2_ENGINE_OUT = true;
-						lvCommandConnector->SwitchSelector(24);
-					}
-				}*/
+					S2_ENGINE_OUT = true;
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 17);
+				}
 			
 				// MR Shift
-				if(LVDC_TB_ETime > 284.4 && MRS == false){
+				if(T_1 <= 0.0 && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
 					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 58);
@@ -5570,7 +5577,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvCommandConnector->GetMissionTime());
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
@@ -9448,6 +9455,11 @@ restartprep:
 				}
 			}
 			
+			if (INH3) //TLI permanently disabled?
+			{
+				goto orbitalguidance;
+			}
+
 			if (TAS - TB5 - T_ST < 0) //Sufficient time before S*T_P test?
 			{
 				fprintf(lvlog, "Time until first TB6 check = %f \r\n", TAS - TB5 - T_ST);
@@ -9477,9 +9489,20 @@ restartprep:
 		INHcheck:
 			 if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
 			{
-				GATE0 = GATE1 = false;	//Select second opportunity targeting
-				first_op = false;
-				goto orbitalguidance;
+				 if (first_op == false)
+				 {
+					 //Permanent TLI inhibt
+					 GATE0 = false;
+					 INH3 = true;
+					 goto orbitalguidance;
+				 }
+				 else
+				 {
+					 //Select second opportunity targeting
+					 GATE0 = GATE1 = false;
+					 first_op = false;
+					 goto orbitalguidance;
+				 }
 			}
 			else if (!GATE0)
 			{
