@@ -866,7 +866,7 @@ void LEM::InitSwitches() {
 	CabinRepressValveSwitch.AddPosition(0, 0);
 	CabinRepressValveSwitch.AddPosition(1, 90);
 	CabinRepressValveSwitch.AddPosition(2, 180);
-	CabinRepressValveSwitch.Register(PSH, "CabinRepressValveSwitch", 1);
+	CabinRepressValveSwitch.Register(PSH, "CabinRepressValveSwitch", 2);
 
 	PLSSFillValve.AddPosition(0, 0);
 	PLSSFillValve.AddPosition(1, 210);
@@ -886,7 +886,7 @@ void LEM::InitSwitches() {
 
 	DESO2Valve.AddPosition(0, 0);
 	DESO2Valve.AddPosition(1, 210);
-	DESO2Valve.Register(PSH, "DESO2Valve", 0);
+	DESO2Valve.Register(PSH, "DESO2Valve", 1);
 
 	ASCO2Valve1.AddPosition(0, 0);
 	ASCO2Valve1.AddPosition(1, 210);
@@ -977,7 +977,7 @@ void LEM::InitSwitches() {
 	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 0);
 
 	// Upper Hatch
-	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
+	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", 0);
 	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
 	UpperHatchHandle.SetSideways(true);
 
