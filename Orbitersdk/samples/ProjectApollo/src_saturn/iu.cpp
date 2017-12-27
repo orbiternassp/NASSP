@@ -1794,8 +1794,16 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 51: //S-IC Two Engines Out Auto-Abort Inhibit Enable
 		break;
+	case 52: //LET Jettison "A"
+		break;
 	case 53: //S-IVB Engine Out Indication "B" Enable Reset
 		eds.SetSIVBEngineOutIndicationB(false);
+		break;
+	case 54: //C-Band Transponder No. 1 & No. 2 On
+		break;
+	case 55: //Inhibit C-Band Transponder No. 1
+		break;
+	case 56: //Inhibit C-Band Transponder No. 2
 		break;
 	case 60: //PCM Coax Switch Low Gain Antenna
 		break;
@@ -1835,6 +1843,8 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 86: //S-IC Outboard Engines Cant Off "B"
 		break;
+	case 98: //AZUSA X-Ponder Power Off
+		break;
 	case 106: //S-I RF Assembly Power Off
 		break;
 	case 107: //Water Coolant Valve Open
@@ -1844,6 +1854,8 @@ void IUSV::SwitchSelector(int item)
 	case 109: //Sensor Bias On
 		break;
 	case 110: //Cooling System Electronic Assembly Power Off
+		break;
+	case 112: //Measuring Rack Power Off
 		break;
 	default:
 		break;
