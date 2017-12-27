@@ -251,7 +251,7 @@ void LEM::InitSwitches() {
 	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",40,100,2);
 	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,10,2);
 	LMCabinPressMeter.Register(PSH,"LMCabinPressMeter",0,10,2);
-	LMCabinCO2Meter.Register(PSH,"LMCabinCO2Meter",0,30,2);
+	LMCO2Meter.Register(PSH,"LMCO2Meter",0,30,2);
 	LMGlycolTempMeter.Register(PSH,"LMGlycolTempMeter",0,80,2);
 	LMGlycolPressMeter.Register(PSH,"LMGlycolPressMeter",0,80,2);
 	LMOxygenQtyMeter.Register(PSH,"LMOxygenQtyMeter",0,100,2);
@@ -876,123 +876,124 @@ void LEM::InitSwitches() {
 	PanelOrdeal.Register(PSH, "PanelOrdeal", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 
 	// ECS Panel
-	SuitGasDiverter.Register(PSH, "SuitGasDiverter", 1);
+	SuitGasDiverterSwitch.Register(PSH, "SuitGasDiverterSwitch", 0);
 
-	CabinRepressValve.Register(PSH, "CabinRepressValve", 1);
-	CabinRepressValve.AddPosition(0, 0);
-	CabinRepressValve.AddPosition(1, 90);
-	CabinRepressValve.AddPosition(2, 180);
+	CabinRepressValveSwitch.AddPosition(0, 0);
+	CabinRepressValveSwitch.AddPosition(1, 90);
+	CabinRepressValveSwitch.AddPosition(2, 180);
+	CabinRepressValveSwitch.Register(PSH, "CabinRepressValveSwitch", 2);
 
-	PLSSFillValve.Register(PSH, "PLSSFillValve", 1);
 	PLSSFillValve.AddPosition(0, 0);
 	PLSSFillValve.AddPosition(1, 210);
+	PLSSFillValve.Register(PSH, "PLSSFillValve", 1);
 
-	PressRegAValve.Register(PSH, "PressRegAValve", 3);
 	PressRegAValve.AddPosition(0, 180);
 	PressRegAValve.AddPosition(1, 270);
 	PressRegAValve.AddPosition(2, 0);
 	PressRegAValve.AddPosition(3, 90);
+	PressRegAValve.Register(PSH, "PressRegAValve", 3);
 
-	PressRegBValve.Register(PSH, "PressRegBValve", 3);
 	PressRegBValve.AddPosition(0, 180);
 	PressRegBValve.AddPosition(1, 270);
 	PressRegBValve.AddPosition(2, 0);
 	PressRegBValve.AddPosition(3, 90);
+	PressRegBValve.Register(PSH, "PressRegBValve", 3);
 
-	DESO2Valve.Register(PSH, "DESO2Valve", 0);
 	DESO2Valve.AddPosition(0, 0);
 	DESO2Valve.AddPosition(1, 210);
+	DESO2Valve.Register(PSH, "DESO2Valve", 1);
 
-	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 1);
 	ASCO2Valve1.AddPosition(0, 0);
 	ASCO2Valve1.AddPosition(1, 210);
+	ASCO2Valve1.Register(PSH, "ASCO2Valve1", 1);
 
-	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 1);
 	ASCO2Valve2.AddPosition(0, 0);
 	ASCO2Valve2.AddPosition(1, 210);
+	ASCO2Valve2.Register(PSH, "ASCO2Valve2", 1);
 
-	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 0);
 	CDRSuitIsolValve.AddPosition(0, 0);
 	CDRSuitIsolValve.AddPosition(1, 90);
+	CDRSuitIsolValve.Register(PSH, "CDRSuitIsolValve", 1);
 
 	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
 
     CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
 
-	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 0);
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
+	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 
     LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
 
-	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
+	SecEvapFlowValve.Register(PSH, "SecEvapFlowValve", 1);
 
-	PrimEvap1FlowValve.Register(PSH, "PrimEvap1FlowValve", 1);
 	PrimEvap1FlowValve.AddPosition(0, 15);
 	PrimEvap1FlowValve.AddPosition(1, 300);
+	PrimEvap1FlowValve.Register(PSH, "PrimEvap1FlowValve", 1);
 
-	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 1);
 	PrimEvap2FlowValve.AddPosition(0, 0);
 	PrimEvap2FlowValve.AddPosition(1, 270);
+	PrimEvap2FlowValve.Register(PSH, "PrimEvap2FlowValve", 1);
 
-	DESH2OValve.Register(PSH, "DESH2OValve", 0);
 	DESH2OValve.AddPosition(0, 30);
 	DESH2OValve.AddPosition(1, 270);
+	DESH2OValve.Register(PSH, "DESH2OValve", 1);
 
-	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 0);
 	WaterTankSelectValve.AddPosition(0, 150);
 	WaterTankSelectValve.AddPosition(1, 240);
 	WaterTankSelectValve.AddPosition(2, 330);
+	WaterTankSelectValve.Register(PSH, "WaterTankSelectValve", 0);
 
-	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 	SuitTempValve.AddPosition(0, 0);
 	SuitTempValve.AddPosition(1, 22);
 	SuitTempValve.AddPosition(2, 45);
 	SuitTempValve.AddPosition(3, 67);
 	SuitTempValve.AddPosition(4, 90);
+	SuitTempValve.Register(PSH, "SuitTempValve", 0);
 
-	ASCH2OValve.Register(PSH, "ASCH2OValve", 0);
-	ASCH2OValve.AddPosition(0, 340);
-	ASCH2OValve.AddPosition(1, 100);
+	ASCH2OValve.AddPosition(0, 100);
+	ASCH2OValve.AddPosition(1, 340);
+	ASCH2OValve.Register(PSH, "ASCH2OValve", 1);
 
-	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 	LiquidGarmentCoolingValve.AddPosition(0, 0);
 	LiquidGarmentCoolingValve.AddPosition(1, 22);
 	LiquidGarmentCoolingValve.AddPosition(2, 45);
 	LiquidGarmentCoolingValve.AddPosition(3, 67);
 	LiquidGarmentCoolingValve.AddPosition(4, 90);
     LiquidGarmentCoolingValve.AddPosition(5, 120);
+	LiquidGarmentCoolingValve.Register(PSH, "LiquidGarmentCoolingValve", 0);
 
-	SuitCircuitReliefValve.Register(PSH, "SuitCircuitReliefValve", 1);
-	SuitCircuitReliefValve.AddPosition(0, 0);
-	SuitCircuitReliefValve.AddPosition(1, 90);
-	SuitCircuitReliefValve.AddPosition(2, 180);
+	SuitCircuitReliefValveSwitch.AddPosition(0, 0);
+	SuitCircuitReliefValveSwitch.AddPosition(1, 90);
+	SuitCircuitReliefValveSwitch.AddPosition(2, 180);
+	SuitCircuitReliefValveSwitch.Register(PSH, "SuitCircuitReliefValveSwitch", 1);
 
-	CabinGasReturnValve.Register(PSH, "CabinGasReturnValve", 1);
-	CabinGasReturnValve.AddPosition(0, 0);
-	CabinGasReturnValve.AddPosition(1, 90);
-	CabinGasReturnValve.AddPosition(2, 180);
+	CabinGasReturnValveSwitch.AddPosition(0, 0);
+	CabinGasReturnValveSwitch.AddPosition(1, 90);
+	CabinGasReturnValveSwitch.AddPosition(2, 180);
+	CabinGasReturnValveSwitch.Register(PSH, "CabinGasReturnValveSwitch", 1);
 
-	CO2CanisterSelect.Register(PSH, "CO2CanisterSelect", TOGGLESWITCH_UP);
-	CO2CanisterSelect.SetSideways(true);
+	CO2CanisterSelectSwitch.Register(PSH, "CO2CanisterSelectSwitch", TOGGLESWITCH_UP);
+	CO2CanisterSelectSwitch.SetSideways(true);
 
-	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 	CO2CanisterPrimValve.AddPosition(0, 0);
 	CO2CanisterPrimValve.AddPosition(1, 300);
+	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
 
-	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 	CO2CanisterSecValve.AddPosition(0, 0);
 	CO2CanisterSecValve.AddPosition(1, 300);
+	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);
-	WaterSepSelect.Register(PSH, "WaterSepSelect", 1);
+
+	WaterSepSelectSwitch.Register(PSH, "WaterSepSelectSwitch", 0);
 
 	// Upper Hatch
-	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", THREEPOSSWITCH_CENTER);
-	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_UP);
+	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", 0);
+	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
 	UpperHatchHandle.SetSideways(true);
 
 	// Forward Hatch
@@ -1005,8 +1006,6 @@ void LEM::InitSwitches() {
 	//
 
 	CPswitch=false;
-
-	HATCHswitch=false;
 
 	EVAswitch=false;
 
@@ -1559,12 +1558,26 @@ bool LEM::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_UPPERHATCH:
-		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		if (OverheadHatch.IsOpen())
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH_OPEN));
+		}
+		else
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_UPPER_HATCH));
+		}
 		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_ECSPANEL);
 		break;
 
 	case LMPANEL_FWDHATCH:
-		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		if (ForwardHatch.IsOpen())
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH_OPEN));
+		}
+		else
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_LEM_FWD_HATCH));
+		}
 		oapiSetPanelNeighbours(-1, -1, LMPANEL_MAIN, -1);
 		break;
 	}
@@ -1882,8 +1895,14 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_UPPERHATCH: // LEM Upper Hatch
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(209, 335, 1901, 931), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea(AID_LEM_UPPER_HATCH, _R(637, 407, 1279, 962), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		if (!OverheadHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_HANDLE, _R(784, 52, 1070, 249), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_VALVE, _R(654, 300, 758, 406), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		}
+
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
@@ -1891,7 +1910,13 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_FWDHATCH: // LEM Forward Hatch
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(605, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_FWD_HATCH, _R(966, 401, 1734, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
+		if (!ForwardHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_LEM_FWD_HATCH_HANDLE, _R(605, 401, 965, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea(AID_LEM_FWD_HATCH_VALVE, _R(1735, 401, 1913, 852), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		}
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -1963,7 +1988,7 @@ void LEM::SetSwitches(int panel) {
 	LMCabinTempMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 	LMSuitPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 	LMCabinPressMeter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
-	LMCabinCO2Meter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
+	LMCO2Meter.Init(srf[SRF_NEEDLE], ECSUpperIndicatorRow, this);
 
 	ECSLowerIndicatorRow.Init(AID_LM_ECSIND_LOWER, MainPanel);
 	LMGlycolTempMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
@@ -2626,16 +2651,16 @@ void LEM::SetSwitches(int panel) {
 
 	// ECS Panel
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);
-	SuitGasDiverter.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow);
+	SuitGasDiverterSwitch.Init(0, 0, 126, 131, srf[SRF_LEM_SGD_LEVER], srf[SRF_BORDER_126x131], ECSSuitGasDiverterSwitchRow);
 
     OxygenControlSwitchRow.Init(AID_LEM_ECS_OCM, MainPanel);
-    CabinRepressValve.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    CabinRepressValveSwitch.Init(88, 4, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PLSSFillValve.Init(340, 7, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PressRegAValve.Init(532, 53, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     PressRegBValve.Init(531, 239, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
     DESO2Valve.Init(4, 163, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
-    ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
-    ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow);
+    ASCO2Valve1.Init(171, 161, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow, &IntlkOvrd, &DESO2Valve);
+    ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow, &IntlkOvrd, &DESO2Valve);
     IntlkOvrd.Init(234, 73, 68, 68, srf[SRF_LEM_INTLK_OVRD], srf[SRF_BORDER_68x68], OxygenControlSwitchRow);
 
     SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
@@ -2650,33 +2675,37 @@ void LEM::SetSwitches(int panel) {
     DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
     PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
     WaterTankSelectValve.Init(33, 402, 201, 205, srf[SRF_LEM_H20_SEL], srf[SRF_BORDER_201x205], WaterControlSwitchRow);
-    SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
+    SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow, (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:HXFLOWCONTROL"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:HXFLOWCONTROLBYPASS"));
 
     ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
     ASCH2OValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], ASCH2OSwitchRow);
 
     GarmentCoolingSwitchRow.Init(AID_LEM_GARMENT_COOL, MainPanel);
-    LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow);
+    LiquidGarmentCoolingValve.Init(0, 0, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], GarmentCoolingSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROL"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LCGFLOWCONTROLBYPASS"));
 
     SuitCircuitAssySwitchRow.Init(AID_LEM_SUIT_CIRCUIT_ASSY, MainPanel);
-    SuitCircuitReliefValve.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
-    CabinGasReturnValve.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
-    CO2CanisterSelect.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
+    SuitCircuitReliefValveSwitch.Init(67, 6, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+    CabinGasReturnValveSwitch.Init(652, 11, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], SuitCircuitAssySwitchRow);
+	CO2CanisterSelectSwitch.Init(376, 249, 122, 265, srf[SRF_LEM_CAN_SEL], srf[SRF_BORDER_122x265], SuitCircuitAssySwitchRow);
     CO2CanisterPrimValve.Init(101, 623, 225, 224, srf[SRF_LEM_PRIM_C02], srf[SRF_BORDER_225x224], SuitCircuitAssySwitchRow);
     CO2CanisterPrimVent.Init(13, 711, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
     CO2CanisterSecValve.Init(433, 617, 205, 205, srf[SRF_LEM_SEC_C02], srf[SRF_BORDER_205x205], SuitCircuitAssySwitchRow);
     CO2CanisterSecVent.Init(641, 599, 51, 54, srf[SRF_LEMVENT], srf[SRF_BORDER_51x54], SuitCircuitAssySwitchRow);
-    WaterSepSelect.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
+	WaterSepSelectSwitch.Init(720, 678, 30, 144, srf[SRF_LEM_H20_SEP], srf[SRF_BORDER_30x144], SuitCircuitAssySwitchRow);
 
     // Upper Hatch
-    UpperHatchSwitchRow.Init(AID_LEM_UPPER_HATCH, MainPanel);
-    UpperHatchReliefValve.Init(0, 196, 400, 400, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_400x400], UpperHatchSwitchRow);
-    UpperHatchHandle.Init(691, 0, 1001, 240, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_1001x240], UpperHatchSwitchRow);
+    UpperHatchHandleSwitchRow.Init(AID_LEM_UPPER_HATCH_HANDLE, MainPanel);
+    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
+	
+	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
+	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchValveSwitchRow);
 
     // Forward Hatch
-    ForwardHatchSwitchRow.Init(AID_LEM_FWD_HATCH, MainPanel);
-    ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchSwitchRow);
-    ForwardHatchReliefValve.Init(1130, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchSwitchRow);
+	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);
+	ForwardHatchHandle.Init(0, 135, 360, 316, srf[SRF_LEM_F_HATCH_HNDL], srf[SRF_BORDER_360x316], ForwardHatchHandleSwitchRow, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), &ForwardHatch);
+
+	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
+	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
@@ -2688,6 +2717,177 @@ void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 
+	//Oxygen Control//
+
+		//DES O2 Tank Valve
+		if (s == &DESO2Valve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:OUT");
+				if (DESO2Valve.GetState() == 0) {
+					vlv->Open();
+				}
+				else {
+					vlv->Close();
+				}
+			}
+
+		//ASC O2 Tank 1 Valve
+		else if (s == &ASCO2Valve1) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:OUT");
+			if (ASCO2Valve1.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//ASC O2 Tank 2 Valve
+		else if (s == &ASCO2Valve2) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:OUT");
+			if (ASCO2Valve2.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//PLSS Fill Valve
+		else if (s == &PLSSFillValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:OUT2");
+			if (PLSSFillValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+		
+		//CDR Suit Isol Valve
+		else if (s == &CDRSuitIsolValve) {
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT2");
+			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT");
+			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT2");
+			//Suit Disconnect
+			if (CDRSuitIsolValve.GetState() == 1) {
+				sfvlv->Close();
+				scinvlv->Open();
+				scoutvlv->Close();
+				dcvlv->Open();
+			}
+			//Suit Flow
+			else {
+				sfvlv->Open();
+				scinvlv->Close();
+				scoutvlv->Open();
+				dcvlv->Close();
+			}
+		}
+		
+		//LMP Suit Isol Valve
+		else if (s == &LMPSuitIsolValve) {
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT2");
+			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT");
+			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT2");
+			//Suit Disconnect
+			if (LMPSuitIsolValve.GetState() == 1) {
+				sfvlv->Close();
+				scinvlv->Open();
+				scoutvlv->Close();
+				dcvlv->Open();
+			}
+			//Suit Flow
+			else {
+				sfvlv->Open();
+				scinvlv->Close();
+				scoutvlv->Open();
+				dcvlv->Close();
+			}
+		}
+
+		//Suit Fan Control
+		else if (s == &SuitFanRotary) {
+			//OFF
+			if (SuitFanRotary.GetState() == 0) {
+				SuitFan1->SetPumpOff();
+				SuitFan2->SetPumpOff();
+			}
+			//SUIT FAN 1
+			else if (SuitFanRotary.GetState() == 1) {
+				SuitFan1->SetPumpOn();
+				SuitFan2->SetPumpOff();
+			}
+			//SUIT FAN 2
+			else {
+				SuitFan1->SetPumpOff();
+				SuitFan2->SetPumpOn();
+			}
+		}
+
+	//Water Control//
+
+		//DES H2O Valve
+		else if (s == &DESH2OValve) {
+			if (stage < 2)
+			{
+				h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK:OUT2");
+				if (DESH2OValve.GetState() == 0) {
+					vlv->Open();
+				}
+				else {
+					vlv->Close();
+				}
+			}
+		}
+
+		//ASC H2O Valve
+		else if (s == &ASCH2OValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:ASCH2OTANK1:OUT");
+			if (ASCH2OValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+
+	//Glycol Loop Control//
+
+		//Prim Evap Flow 1 Valve
+		else if (s == &PrimEvap1FlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMREG:OUT");
+			if (PrimEvap1FlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//Prim Evap Flow 2 Valve
+		else if (s == &PrimEvap2FlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SECREG1MANIFOLD:OUT");
+			if (PrimEvap2FlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
+
+		//Sec Evap Flow Valve
+		else if (s == &SecEvapFlowValve) {
+			h_Valve * vlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SECREG1MANIFOLD:OUT2");
+			if (SecEvapFlowValve.GetState() == 0) {
+				vlv->Open();
+			}
+			else {
+				vlv->Close();
+			}
+		}
 }
 
 void LEM::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
@@ -2744,12 +2944,6 @@ void LEM::GuardClick()
 
 {
 	Gclick.play(NOLOOP,255);
-}
-
-void LEM::CabinFanSound()
-
-{
-	CabinFans.play(LOOP,255);
 }
 
 void LEM::VoxSound()
@@ -2852,19 +3046,14 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_HATCH_SWITCH:
-		if (my >=0 && my <=11 ){
-			if (mx > 0 && mx < 23 && !HATCHswitch){
-				SwitchClick();
-				HATCHswitch=true;
-			}
-		}else if (my >=10 && my <=21 ){
-			if (mx > 0 && mx < 23 && HATCHswitch){
-				SwitchClick();
-				HATCHswitch=false;
-			}
+	case AID_LEM_FWD_HATCH:
+		ForwardHatch.Toggle();
 
-		}
+		return true;
+
+	case AID_LEM_UPPER_HATCH:
+		OverheadHatch.Toggle();
+
 		return true;
 
 	case AID_EVA_SWITCH:
@@ -3339,6 +3528,31 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	}
 	return false;
 }
+
+void LEM::PanelRefreshForwardHatch() {
+
+	if (InPanel && PanelId == LMPANEL_FWDHATCH) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(LMPANEL_FWDHATCH);
+		}
+		else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
+void LEM::PanelRefreshOverheadHatch() {
+
+	if (InPanel && PanelId == LMPANEL_UPPERHATCH) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(LMPANEL_UPPERHATCH);
+		}
+		else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
 //
 // The switch functions just pack the different switch areas from the control panel
 // into 32-bit integers and unpack them from those integers. This provides a much more
@@ -3389,7 +3603,6 @@ int LEM::GetCSwitchState()
 
 	state.word = 0;
 	state.u.CPswitch = CPswitch;
-	state.u.HATCHswitch = HATCHswitch;
 	state.u.EVAswitch = EVAswitch;
 	state.u.COASswitch = COASswitch;
 
@@ -3403,7 +3616,6 @@ void LEM::SetCSwitchState(int s)
 
 	state.word = s;
 	CPswitch = state.u.CPswitch;
-	HATCHswitch = state.u.HATCHswitch;
 	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
 }

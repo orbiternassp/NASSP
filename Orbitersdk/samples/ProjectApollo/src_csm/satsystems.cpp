@@ -340,6 +340,8 @@ void Saturn::SystemsInit() {
 					&OxygenSMSupplyRotary, &OxygenSurgeTankRotary, &OxygenRepressPackageRotary, &O2MainRegulatorASwitch, &O2MainRegulatorBSwitch,
 					&HatchEmergencyO2ValveSwitch, &HatchRepressO2ValveSwitch);
 
+	CMTunnel = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET1", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET2", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SURGETANKINLET1", 100./ LBH);
@@ -485,6 +487,11 @@ void Saturn::SystemsInit() {
 						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
 	
 	GlycolCoolingController.Init(this);
+	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
+					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELPRESSURIZATIONVALVE"),
+					  &LMTunnelVentValve);
+	ForwardHatch.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCH"),
+					  &PressEqualValve);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -887,6 +894,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *cabinreliefinletflow1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET1:FLOW");
 	double *cabinreliefinletflow2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET2:FLOW");
 	double *suitcircuitreturnflow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:FLOW");
+	double *o2tank1smsupplyflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLYINLET1:FLOW");
+
+	double *o2smsupplyinsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:IN:SIZE");
+	double *o2mainreginsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:IN:SIZE");
+	double *O2Tank1Outsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:OUT:SIZE");
+
+	//sprintf(oapiDebugString(), "O2SMINSize %f O2tank1smsupplyflow %f O2T1Outsize %f", *o2smsupplyinsize, *o2tank1smsupplyflow, *O2Tank1Outsize);
 
 	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
@@ -1120,13 +1134,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	int *o2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:ISOPEN");
 	int *h2fc3reacvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:ISOPEN");
 
+/*
 	//O2 Tanks & reaction valves
 	sprintf(oapiDebugString(), "O2T1-m %.1f vm %.2f T %.1f Q %.1f p %.1f O2T2-m %.1f vm %.2f T %.1f Q %.1f p %.1f H2vlv1 %d O2vlv1 %d H2vlv2 %d O2vlv2 %d H2vlv3 %d O2vlv3 %d O2FC1 M %.1f T %.1f p %6.1f",
 		*massO2Tank1 / 1000.0, *vapormassO2Tank1, *tempO2Tank1, *energyO2Tank1 / 1000, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *vapormassO2Tank2, *tempO2Tank2, *energyO2Tank2 / 1000, *pressO2Tank2 * 0.000145038,
 		*h2fc1reacvlv, *o2fc1reacvlv, *h2fc2reacvlv, *o2fc2reacvlv, *h2fc3reacvlv, *o2fc3reacvlv,
 		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
-
+*/
 /*
 	// FC Manifold & Pipes
 	sprintf(oapiDebugString(), "H2FC1 M %.1f T %.1f p %6.1f O2FC1 M %.1f T %.1f p %6.1f",
@@ -1256,6 +1271,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		O2SMSupply.SystemTimestep(tFactor);
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
+		LMTunnelVent.SystemTimestep(tFactor);
+		ForwardHatch.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
@@ -2394,6 +2411,7 @@ void Saturn::ClearPanelSDKPointers()
 	pSecECSAccumulatorQuantity = 0;
 	pPotableH2oTankQuantity = 0;
 	pWasteH2oTankQuantity = 0;
+	pCSMTunnelPressure = 0;
 }
 
 //
@@ -2436,6 +2454,7 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.CabinRepressFlowLBH = 0.0;
 	atm.EmergencyCabinRegulatorFlowLBH = 0.0;
 	atm.O2RepressPressurePSI = 0.0;
+	atm.TunnelPressurePSI = 0.0;
 
 	if (!pCO2Level) {
 		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -2538,6 +2557,15 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	}
 	if (pEmergencyCabinRegulatorFlow) {
 		atm.EmergencyCabinRegulatorFlowLBH = (*pEmergencyCabinRegulatorFlow) * LBH;
+	}
+
+	if (!pCSMTunnelPressure)
+	{
+		pCSMTunnelPressure = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:PRESS");
+	}
+	if (pCSMTunnelPressure)
+	{
+		atm.TunnelPressurePSI = (*pCSMTunnelPressure)*PSI;
 	}
 }
 

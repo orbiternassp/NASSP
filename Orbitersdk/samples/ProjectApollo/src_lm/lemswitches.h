@@ -180,9 +180,9 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinCO2Meter : public MeterSwitch {
+class LMCO2Meter : public MeterSwitch {
 public:
-	LMCabinCO2Meter();
+	LMCO2Meter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
@@ -573,4 +573,61 @@ protected:
 class DEDAPushSwitch : public PushSwitch {
 protected:
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
+};
+
+class AscentO2RotationalSwitch : public RotationalSwitch
+{
+public:
+	AscentO2RotationalSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, PushSwitch *InhibitSw, RotationalSwitch *DesO2Sw);
+	virtual bool SwitchTo(int newValue);
+protected:
+	PushSwitch *InhibitSwitch;
+	RotationalSwitch *DesO2Switch;
+};
+
+class LMSuitTempRotationalSwitch : public RotationalSwitch {
+public:
+	LMSuitTempRotationalSwitch() { 	Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, h_Pipe *bp);
+	virtual bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *Pipe;
+	h_Pipe *Bypass;
+};
+
+class LMLiquidGarmentCoolingRotationalSwitch : public RotationalSwitch {
+public:
+	LMLiquidGarmentCoolingRotationalSwitch() { Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *hx, h_Pipe *p);
+	virtual bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *HX;
+	h_Pipe *Pipe;
+};
+
+class LMForwardHatchHandle :public ToggleSwitch {
+public:
+	LMForwardHatchHandle();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
+protected:
+	h_Tank *cabin;
+	LEMForwardHatch *forwardHatch;
+};
+
+class LMOverheadHatchHandle :public ToggleSwitch {
+public:
+	LMOverheadHatchHandle();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
+protected:
+	h_Pipe * pipe;
+	LEMOverheadHatch *ovhdHatch;
 };

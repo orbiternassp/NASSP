@@ -1216,3 +1216,86 @@ void SaturnGlycolCoolingController::CabinTempSwitchToggled(PanelSwitchItem *s) {
 	saturn->CabinHeater->valueMin = targetTemp - 1.0;
 	saturn->CabinHeater->valueMax = targetTemp;		
 }
+
+SaturnLMTunnelVent::SaturnLMTunnelVent()
+{
+	LMTunnelVentSwitch = NULL;
+	TunnelVentValve = NULL;
+	TunnelPressValve = NULL;
+}
+
+void SaturnLMTunnelVent::Init(h_Valve *tvv, h_Valve *tpv, RotationalSwitch *lmtvs)
+{
+	TunnelVentValve = tvv;
+	TunnelPressValve = tpv;
+	LMTunnelVentSwitch = lmtvs;
+}
+
+void SaturnLMTunnelVent::SystemTimestep(double simdt)
+{
+	if (!TunnelVentValve || !TunnelPressValve) return;
+
+	// Valve in motion
+	if (TunnelVentValve->pz) return;
+	if (TunnelPressValve->pz) return;
+
+	//OFF
+	if (LMTunnelVentSwitch->GetState() == 0)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Close();
+	}
+	//LM PRESS
+	else if (LMTunnelVentSwitch->GetState() == 1)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Open();
+	}
+	//LM/CM DELTA P
+	else if (LMTunnelVentSwitch->GetState() == 2)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Close();
+	}
+	//LM TUNNEL VENT
+	else if (LMTunnelVentSwitch->GetState() == 3)
+	{
+		TunnelVentValve->Open();
+		TunnelPressValve->Close();
+	}
+}
+
+SaturnForwardHatch::SaturnForwardHatch()
+{
+	PressureEqualizationSwitch = NULL;
+	PressureEqualizationValve = NULL;
+}
+
+void SaturnForwardHatch::Init(h_Valve *pev, RotationalSwitch *pes)
+{
+	PressureEqualizationSwitch = pes;
+	PressureEqualizationValve = pev;
+}
+
+void SaturnForwardHatch::SystemTimestep(double simdt)
+{
+	if (!PressureEqualizationValve) return;
+
+	// Valve in motion
+	if (PressureEqualizationValve->pz) return;
+
+	//PRESSURE EQUALIZATION VALVE
+
+	//CLOSED
+	if (PressureEqualizationSwitch->GetState() == 3)
+	{
+		PressureEqualizationValve->Close();
+	}
+	else
+	{
+		PressureEqualizationValve->Open();
+		PressureEqualizationValve->size = 0.01f*(float)(3 - PressureEqualizationSwitch->GetState());
+	}
+
+	//TBD: Hatch opening and closing
+}

@@ -811,6 +811,12 @@
 #define IDB_BORDER_360x316              1085
 #define IDB_BORDER_178x187              1086
 #define IDB_RED_INDICATOR				1087
+#define IDB_LEM_FWD_HATCH_OPEN          1088
+#define AID_LEM_FWD_HATCH_HANDLE		1089
+#define AID_LEM_FWD_HATCH_VALVE			1090
+#define IDB_LEM_UPPER_HATCH_OPEN        1091
+#define AID_LEM_UPPER_HATCH_HANDLE		1092
+#define AID_LEM_UPPER_HATCH_VALVE	    1093
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

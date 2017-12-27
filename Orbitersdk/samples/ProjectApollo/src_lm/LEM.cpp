@@ -256,7 +256,12 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
-	omni_aft(_V(0.0, 0.0, -1.0))
+	omni_aft(_V(0.0, 0.0, -1.0)),
+	ForwardHatch(HatchOpenSound, HatchCloseSound),
+	OverheadHatch(HatchOpenSound, HatchCloseSound),
+	CabinFan(CabinFans),
+	ecs(Panelsdk),
+	CSMToLEMECSConnector(this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -298,10 +303,8 @@ void LEM::Init()
 
 	ABORT_IND=false;
 
-	bToggleHatch=false;
 	bModeDocked=false;
 	bModeHover=false;
-	HatchOpen=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
@@ -314,6 +317,7 @@ void LEM::Init()
 	InVC = false;
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
+	RefreshPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
 
@@ -348,6 +352,7 @@ void LEM::Init()
 
 	lpdgret = -1;
 	lpdgext = -1;
+	fwdhatch = -1;
 
 	//
 	// VAGC Mode settings
@@ -362,6 +367,7 @@ void LEM::Init()
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
@@ -395,6 +401,7 @@ void LEM::Init()
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &LEMToCSMConnector);
+	RegisterConnector(0, &CSMToLEMECSConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
@@ -433,10 +440,6 @@ void LEM::DoFirstTimestep()
 	NextEventTime = 0.0;
 #endif
 
-	if (CabinFansActive()) {
-		CabinFans.play(LOOP,255);
-	}
-
 	char VName10[256]="";
 
 	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
@@ -468,6 +471,8 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(Afire, "des_abort.wav");
 	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -671,10 +676,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	switch (key) {
 
-	case OAPI_KEY_K:
-		bToggleHatch = true;
-		return 1;
-
 	case OAPI_KEY_E:
 		return 0;
 
@@ -759,6 +760,11 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
+	}
+
+	if (RefreshPanelIdInTimestep && oapiCameraInternal()) {
+		oapiSetPanel(PanelId);
+		RefreshPanelIdInTimestep = false;
 	}
 
 	// RCS propellant pressurization
@@ -879,16 +885,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		if (ToggleEva && GroundContact()){
 			ToggleEVA();
 		}
-		
-		if (bToggleHatch){
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			if (vs.status == 1){
-				//PlayVesselWave(Scontact,NOLOOP,255);
-				//SetLmVesselHoverStage2(vessel);
-			}
-			bToggleHatch=false;
-		}
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
@@ -901,7 +897,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetLmLandedMesh();
 		}
 
-		if (CPswitch && HATCHswitch && EVAswitch && GroundContact()){
+		if (CPswitch && EVAswitch && GroundContact()){
 			ToggleEva = true;
 			EVAswitch = false;
 		}
@@ -1084,6 +1080,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
+			ForwardHatch.LoadState(line);
+		}
+		else if (!strnicmp(line, "OVERHEADHATCH", 13)) {
+			OverheadHatch.LoadState(line);
+		}
+		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
+			PrimGlycolPumpController.LoadState(line);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1214,21 +1219,7 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		break;
 	}
 
-	// Descent Stage Deadface Bus Stubs wire to the ECAs
-	// I was doing this in SystemsInit which is wrong.
-	if(stage < 2){
-		DES_LMPs28VBusA.WireTo(&ECA_1a);
-		DES_LMPs28VBusB.WireTo(&ECA_1b);
-		DES_CDRs28VBusA.WireTo(&ECA_2a); 
-		DES_CDRs28VBusB.WireTo(&ECA_2b); 
-		DSCBattFeedTB.SetState(1);
-	}else{
-		DES_LMPs28VBusA.Disconnect();
-		DES_LMPs28VBusB.Disconnect();
-		DES_CDRs28VBusA.Disconnect();
-		DES_CDRs28VBusB.Disconnect();
-		DSCBattFeedTB.SetState(0);
-	}
+	CheckDescentStageSystems();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1492,6 +1483,11 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+
+	// Save ECS
+	ForwardHatch.SaveState(scn);
+	OverheadHatch.SaveState(scn);
+	PrimGlycolPumpController.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
