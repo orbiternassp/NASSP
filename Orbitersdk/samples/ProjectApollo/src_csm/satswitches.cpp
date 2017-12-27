@@ -2338,7 +2338,15 @@ void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 }
 
 double SaturnLMDPGauge::QueryValue(){
-	return 4; // FIXME: Return actual data when actual data available
+	if (Sat->LMTunnelVentValve.GetState() == 2)
+	{
+		AtmosStatus atm;
+		Sat->GetAtmosStatus(atm);
+
+		return atm.CabinPressurePSI - atm.TunnelPressurePSI;
+	}
+
+	return -1.0;
 }
 
 void SaturnLMDPGauge::DoDrawSwitch(double v, SURFHANDLE drawSurface){

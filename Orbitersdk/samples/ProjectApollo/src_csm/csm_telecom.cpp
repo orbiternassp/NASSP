@@ -769,6 +769,11 @@ void OMNI::TimeStep()
 	}
 }
 
+VHFAntenna::VHFAntenna(VECTOR3 dir)
+{
+
+}
+
 // Socket registration method (registers sockets to be deinitialized
 bool PCM::registerSocket(SOCKET sock)
 {

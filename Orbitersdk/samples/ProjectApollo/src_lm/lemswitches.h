@@ -47,20 +47,6 @@ protected:
 	int sw;
 };
 
-class LEMValveSwitch: public LEMThreePosSwitch {
-public:
-	LEMValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind);
-	//bool CheckMouseClick(int event, int mx, int my);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-
-	int Valve;
-	IndicatorSwitch *Indicator;
-};
-
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; lem = NULL; srcno=0; afl=0; };
@@ -101,20 +87,18 @@ protected:
 	LEM_INV *inv2;
 };
 
+class LGCThrusterPairSwitch : public LEMThreePosSwitch {
+public:
+	LGCThrusterPairSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *l, int bit);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+protected:
+	int inputbit;
+};
+
 // This is a CB like any other, except it lies about current across itself.
 class LEMVoltCB: public CircuitBrakerSwitch {
 	double Current();
-};
-
-class LEMValveTalkback : public IndicatorSwitch {
-public:
-	LEMValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, LEM *v);
-	int GetState();
-
-protected:
-	int Valve;
-	LEM *our_vessel;
 };
 
 // Meters
@@ -196,9 +180,9 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinCO2Meter : public MeterSwitch {
+class LMCO2Meter : public MeterSwitch {
 public:
-	LMCabinCO2Meter();
+	LMCO2Meter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
@@ -529,6 +513,26 @@ protected:
 	DPSValve *valve;
 };
 
+class LEMSCEATalkback : public IndicatorSwitch {
+public:
+	LEMSCEATalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen);
+	int GetState();
+
+protected:
+	SCEA_SolidStateSwitch * ssswitch;
+};
+
+class LEMRCSQuadTalkback : public IndicatorSwitch {
+public:
+	LEMRCSQuadTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf);
+	int GetState();
+protected:
+	SCEA_SolidStateSwitch * ssswitch;
+	TCA_FlipFlop *tcaFailure;
+};
+
 class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
@@ -569,4 +573,61 @@ protected:
 class DEDAPushSwitch : public PushSwitch {
 protected:
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
+};
+
+class AscentO2RotationalSwitch : public RotationalSwitch
+{
+public:
+	AscentO2RotationalSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, PushSwitch *InhibitSw, RotationalSwitch *DesO2Sw);
+	virtual bool SwitchTo(int newValue);
+protected:
+	PushSwitch *InhibitSwitch;
+	RotationalSwitch *DesO2Switch;
+};
+
+class LMSuitTempRotationalSwitch : public RotationalSwitch {
+public:
+	LMSuitTempRotationalSwitch() { 	Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, h_Pipe *bp);
+	virtual bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *Pipe;
+	h_Pipe *Bypass;
+};
+
+class LMLiquidGarmentCoolingRotationalSwitch : public RotationalSwitch {
+public:
+	LMLiquidGarmentCoolingRotationalSwitch() { Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *hx, h_Pipe *p);
+	virtual bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *HX;
+	h_Pipe *Pipe;
+};
+
+class LMForwardHatchHandle :public ToggleSwitch {
+public:
+	LMForwardHatchHandle();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
+protected:
+	h_Tank *cabin;
+	LEMForwardHatch *forwardHatch;
+};
+
+class LMOverheadHatchHandle :public ToggleSwitch {
+public:
+	LMOverheadHatchHandle();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
+protected:
+	h_Pipe * pipe;
+	LEMOverheadHatch *ovhdHatch;
 };

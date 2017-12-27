@@ -145,6 +145,31 @@ void LEM::SetView() {
 						SetCameraOffset(_V(-0.598, 2.40, 1.106));
 					}
 					break;
+				
+				case LMPANEL_LEFTZOOM:
+					if (stage == 2) {
+						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+					}
+					break;
+				case LMPANEL_UPPERHATCH:
+					if (stage == 2) {
+						SetCameraOffset(_V(0, 0.055, 0));
+					}
+					else {
+						SetCameraOffset(_V(0, 1.90, 0));
+					}
+					break;
+				case LMPANEL_FWDHATCH:
+					if (stage == 2) {
+						SetCameraOffset(_V(0, 0.055, 1.26));
+					}
+					else {
+						SetCameraOffset(_V(0, 1.90, 1.26));
+					}
+					break;
 			}
 		}
 		else
@@ -180,6 +205,15 @@ void LEM::SetView() {
 		}
 		//set FOV to 40 degrees
 		oapiCameraSetAperture(RAD * 20.0);
+	}
+	else if (PanelId == LMPANEL_UPPERHATCH) {
+		// if this is the first time we've been here, save the current FOV
+		if (InFOV) {
+			SaveFOV = oapiCameraAperture();
+			InFOV = false;
+		}
+		//set FOV to 30 degrees so that only the tunnel is visible when docked with CSM
+		oapiCameraSetAperture(RAD * 15.0);
 	} else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);

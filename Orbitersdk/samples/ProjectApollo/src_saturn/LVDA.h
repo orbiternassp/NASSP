@@ -47,12 +47,17 @@ public:
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetLVIMUFailure();
 
+	bool GeneralizedSwitchSelector(int stage, int channel);
+	bool TimebaseUpdate(double dt);
+
 	//LVDC Input Discretes and Interrupts
 
-	bool GetSIEngineOut();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSICInboardEngineCutoff();
 	bool GetSIIEngineOut();
 	bool GetCMCSIVBIgnitionSequenceStart();
-	bool GetCMCSIVBShutdown();
+	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();
 	bool SIVBInjectionDelay();
 	bool SCInitiationOfSIISIVBSeparation();
@@ -61,6 +66,7 @@ public:
 	bool GetSIVBEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
+	bool GetLiftoff();
 
 	//Not real LVDA functions
 	void TLIBegun();

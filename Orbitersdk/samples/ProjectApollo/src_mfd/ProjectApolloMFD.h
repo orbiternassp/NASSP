@@ -25,6 +25,12 @@
 #ifndef __PROJECTAPOLLOMFD_H
 #define __PROJECTAPOLLOMFD_H
 
+#include "ProjectApolloMFDButtons.h"
+
+class Saturn;
+class LEM;
+class Crawler;
+
 ///
 /// \ingroup MFD
 ///
@@ -39,11 +45,47 @@ public:
 	void Update (HDC hDC);
 	void GetStateVector (void);
 	bool SetSource(char *rstr);
+	bool SetIUSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
+	bool SetSwitchSelectorChannel(char *rstr);
+	bool SetTimebaseUpdate(char *rstr);
 	void CalculateV42Angles(void);
+
+	void menuVoid();
+	void menuSetMainPage();
+	void menuSetGNCPage();
+	void menuSetECSPage();
+	void menuSetIUPage();
+	void menuSetTELEPage();
+	void menuSetLGCPage();
+	void menuSetSOCKPage();
+	void menuSetDebugPage();
+
+	void menuKillRot();
+	void menuSaveEMSScroll();
+	void menuVAGCCoreDump();
+	void menuSetCrewNumber();
+	void menuSetCDRInSuit();
+	void menuSetLMPInSuit();
+	void menuSetPrimECSTestHeaterPower();
+	void menuSetSecECSTestHeaterPower();
+	void menuAbortUplink();
+	void menuStateVectorUpdate();
+	void menuClockUpdate();
+	void menuSetSource();
+	void menuSetReference();
+	void menuSetSVSlot();
+	void menuClearDebugLine();
+	void menuFreezeDebugLine();
+	void menuSetIUSource();
+	void menuCycleIUUplinkType();
+	void menuCycleSwitSelStage();
+	void menuSetSwitSelChannel();
+	void menuIUUplink();
+	void menuSetTBUpdateTime();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
@@ -65,6 +107,8 @@ protected:
 	static struct ScreenData {
 		int screen;
 	} screenData;
+
+	const ProjectApolloMFDButtons m_buttonPages;
 };
 
 #endif // !__PROJECTAPOLLOMFD_H

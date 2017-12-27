@@ -754,7 +754,6 @@ void SIBSystems::SwitchSelector(int channel)
 	switch (channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
-		vessel->SetStage(LAUNCH_STAGE_ONE);					// Switch to stage one
 		if (LaunchSound.isValid() && !LaunchSound.isPlaying()) {	// And play launch sound
 			LaunchSound.play(NOLOOP, 255);
 			LaunchSound.done();

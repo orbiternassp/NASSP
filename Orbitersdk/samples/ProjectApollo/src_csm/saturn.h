@@ -41,7 +41,6 @@
 #include "missiontimer.h"
 #include "FDAI.h"
 #include "dsky.h"
-#include "iu.h"
 #include "cdu.h"
 #include "IMU.h"
 #include "satswitches.h"
@@ -73,6 +72,8 @@
 //
 
 #include "IMFD/IMFD_Client.h"
+
+class IU;
 
 
 #define RCS_SM_QUAD_A		0
@@ -147,6 +148,7 @@ typedef struct {
 	double CabinRepressFlowLBH;
 	double EmergencyCabinRegulatorFlowLBH;
 	double O2RepressPressurePSI;
+	double TunnelPressurePSI;
 } AtmosStatus;
 
 ///
@@ -950,6 +952,20 @@ public:
 
 	virtual void ActivateStagingVent() {}
 
+	virtual void SetIUUmbilicalState(bool connect);
+
+	//CSM to IU interface functions
+	bool GetCMCSIVBTakeover();
+	bool GetCMCSIVBIgnitionSequenceStart();
+	bool GetCMCSIVBCutoff();
+	bool GetSIISIVbDirectStagingSignal();
+	bool GetTLIInhibitSignal();
+	bool GetIUUPTLMAccept();
+
+	//CSM to LM interface functions
+	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
+	void ConnectTunnelToCabinVent();
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -1007,7 +1023,6 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
-	void SetO2TankQuantities(double q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
@@ -1123,34 +1138,12 @@ public:
 	///
 	double GetJ2ThrustLevel();
 
-	void SIVBBoiloff();
-
-	double GetSIPropellantMass();
-
-	///
-	/// \brief Get propellant mass in the SIVb stage.
-	/// \return Propellant mass in kg.
-	///
-	double GetSIVbPropellantMass();
-
 	///
 	/// \brief Set propellant mass in the SIVb stage.
 	/// \param mass Propellant mass in kg.
 	///
 	void SetSIVbPropellantMass(double mass);
 
-	///
-	/// \brief Get the state of the SII/SIVb Sep switch.
-	/// \return Switch state.
-	///
-	int GetSIISIVbSepSwitchState();
-
-	///
-	/// \brief Get the state of the TLI Enable switch.
-	/// \return Switch state.
-	///
-	int GetTLIEnableSwitchState();
-	int GetLVGuidanceSwitchState();
 	int GetEDSSwitchState();
 	int GetLVRateAutoSwitchState();
 	int GetTwoEngineOutAutoSwitchState();
@@ -1984,7 +1977,7 @@ protected:
 	//
 
 	SwitchRow LVRow;
-	GuardedToggleSwitch LVGuidanceSwitch;
+	AGCIOGuardedToggleSwitch LVGuidanceSwitch;
 	GuardedToggleSwitch SIISIVBSepSwitch;
 	XLunarSwitch TLIEnableSwitch;
 
@@ -2885,6 +2878,9 @@ protected:
 	SwitchRow LMDPGaugeRow;
 	SaturnLMDPGauge LMDPGauge;
 
+	SwitchRow PressEqualValveRow;
+	RotationalSwitch PressEqualValve;
+
 	///////////////////
 	// Panel 225/226 //
 	///////////////////
@@ -3501,6 +3497,8 @@ protected:
 	OMNI omnib;
 	OMNI omnic;
 	OMNI omnid;
+	VHFAntenna vhfa;
+	VHFAntenna vhfb;
 	EMS  ems;
 
 	// CM Optics
@@ -3520,6 +3518,9 @@ protected:
 	h_Tank *H2Tanks[2];
 	Boiler *H2TanksHeaters[2];
 	Boiler *H2TanksFans[2];
+
+	//Tunnel Pipe
+	h_Pipe *CMTunnel;
 
 	// Main bus A and B.
 	DCbus *MainBusA;
@@ -3614,6 +3615,8 @@ protected:
 	SaturnSideHatch SideHatch;
 	SaturnWaterController WaterController;
 	SaturnGlycolCoolingController GlycolCoolingController;
+	SaturnLMTunnelVent LMTunnelVent;
+	SaturnForwardHatch ForwardHatch;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -3897,7 +3900,7 @@ protected:
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *start);
+	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();
@@ -4253,6 +4256,7 @@ protected:
 
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
+	CSMToLEMECSConnector lemECSConnector;
 
 	//
 	// PanelSDK pointers.
@@ -4300,6 +4304,7 @@ protected:
 	double *pSecECSAccumulatorQuantity;
 	double *pPotableH2oTankQuantity;
 	double *pWasteH2oTankQuantity;
+	double *pCSMTunnelPressure;
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
@@ -4354,6 +4359,7 @@ protected:
 	friend class ELS;
 	friend class ELSC;
 	friend class PCVB;
+	friend class LDEC;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;
 	friend class MinImpulseHandcontrollerSwitch;
@@ -4371,6 +4377,7 @@ protected:
 	friend class SaturnHighGainAntennaStrengthMeter;
 	friend class SaturnSystemTestAttenuator;
 	friend class SaturnLVSPSPcMeter;
+	friend class SaturnLMDPGauge;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

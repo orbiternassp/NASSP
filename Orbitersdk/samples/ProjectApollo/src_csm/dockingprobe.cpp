@@ -231,15 +231,14 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		Extend();
 
 	} else if (OurVessel->DockingProbeExtdRelSwitch.IsDown()) {
-		if ((!OurVessel->DockingProbeRetractPrimSwitch.IsCenter() && OurVessel->DockProbeMnACircuitBraker.IsPowered() && OurVessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) ||
-			(!OurVessel->DockingProbeRetractSecSwitch.IsCenter()  && OurVessel->DockProbeMnBCircuitBraker.IsPowered() && OurVessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE)) {
+		if (!OurVessel->DockingProbeRetractPrimSwitch.IsCenter() || !OurVessel->DockingProbeRetractSecSwitch.IsCenter()) {
 
 			int ActiveCharges = 0;
 
-			if (OurVessel->DockingProbeRetractPrimSwitch.IsUp()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM1;
-			if (OurVessel->DockingProbeRetractPrimSwitch.IsDown()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM2;
-			if (OurVessel->DockingProbeRetractSecSwitch.IsUp()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC1;
-			if (OurVessel->DockingProbeRetractSecSwitch.IsDown()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC2;
+			if (OurVessel->secs.GetDockingProbeRetractPrim1() && OurVessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM1;
+			if (OurVessel->secs.GetDockingProbeRetractPrim2() && OurVessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM2;
+			if (OurVessel->secs.GetDockingProbeRetractSec1() && OurVessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC1;
+			if (OurVessel->secs.GetDockingProbeRetractSec2() && OurVessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC2;
 
 			if ((ActiveCharges & RetractChargesUsed)!= ActiveCharges) Retract();
 

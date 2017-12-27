@@ -277,6 +277,7 @@ static const double MMHG  = 0.00750064;				///< Pa to mmHg
 static const double INH2O = 0.00401474;				///< Pa to in H2O
 static const double LBH   = 7.93665;				///< g/s to lb/h
 static const double FPS   = 3.2808399;				///< m/s to ft/s
+static const double LBS = 0.0022046226218;			///< g to lbs
 
 static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 
@@ -330,6 +331,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 #define CM_RCS_ISP				(340.0 * G) // AOH, dumping takes 88s with 10 of 12 thrusters
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			413.7		// AOH
+
+#define LM_RCS_FUEL_PER_TANK	133.084001
 
 #define S4B_APS_FUEL_PER_TANK	143.0
 #define S4B_APS_THRUST			670.0

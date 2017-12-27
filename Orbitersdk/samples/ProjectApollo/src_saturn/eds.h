@@ -81,6 +81,10 @@ protected:
 	bool SIIEngineOutIndicationB;
 	bool SIVBEngineOutIndicationA;
 	bool SIVBEngineOutIndicationB;
+	//K235
+	bool AutoAbortInhibitRelayA;
+	//K236
+	bool AutoAbortInhibitRelayB;
 	bool AutoAbortEnableRelayA;
 	bool AutoAbortEnableRelayB;
 	bool LiftoffA;

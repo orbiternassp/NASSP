@@ -45,6 +45,7 @@
 #include "saturnv.h"
 #include "s1c.h"
 #include "LVDC.h"
+#include "iu.h"
 #include "tracer.h"
 
 //
@@ -927,12 +928,6 @@ void SaturnV::SwitchSelector(int item){
 	case 20:
 		// S2 Engine Startup P2
 		SepS.stop();
-		break;
-	case 24:
-		// SII IECO
-		SetThrusterResource(th_2nd[4], NULL);
-		S2ShutS.play(NOLOOP, 235);
-		S2ShutS.done();
 		break;
 	}
 }

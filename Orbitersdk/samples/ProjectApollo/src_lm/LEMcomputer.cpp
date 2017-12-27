@@ -510,13 +510,43 @@ void LMOptics::SystemTimestep(double simdt) {
 
 }
 
+bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
+	int beta, srx, sry, digit[4];
+	int x = (int)((-OpticsReticle)*100.0*DEG);
+	if (x < 0) { x += 36000; }
+	int z = 3; // Multiply by factor for the larger AOT reticle display bitmap (aot_font.bmp).
+	beta = (x % 10);
+	digit[0] = (x % 100) / 10;
+	digit[1] = (x % 1000) / 100;
+	digit[2] = (x % 10000) / 1000;
+	digit[3] = x / 10000;
+	sry = (int)((beta * 1.2) *z);
+	srx = (8 *z) + ((digit[3] * 25) *z);
+	oapiBlt(surf, digits, 0, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	srx = (8 *z) + ((digit[2] * 25) *z);
+	oapiBlt(surf, digits, 10 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	srx = (8 *z) + ((digit[1] * 25) *z);
+	oapiBlt(surf, digits, 20 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	srx = (8 *z) + ((digit[0] * 25) *z);
+	if (beta == 0) {
+		oapiBlt(surf, digits, 30 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(surf, digits, 30 *z, sry, srx, 33 *z, 9 *z, (12 *z) - sry, SURF_PREDEF_CK);
+		if (digit[0] == 9) digit[0] = 0; else digit[0]++;
+		srx = (8 *z) + ((digit[0] * 25) *z);
+		oapiBlt(surf, digits, 30 *z, 0, srx, (45 *z) - sry, 9 *z, sry, SURF_PREDEF_CK);
+	}
+	return true;
+}
+
 void LMOptics::TimeStep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
 
-	if (ReticleMoved)
+	/*if (ReticleMoved)
 	{
 		sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
-	}
+	}*/
 
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;

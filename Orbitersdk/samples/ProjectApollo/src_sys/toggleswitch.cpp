@@ -3802,6 +3802,29 @@ void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	agc = c;
 }
 
+void AGCGuardedToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c)
+
+{
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	agc = c;
+}
+
+bool AGCIOGuardedToggleSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (AGCGuardedToggleSwitch::SwitchTo(newState, dontspring)) {
+		if (agc) {
+			if (IsUp()) {
+				agc->SetInputChannelBit(Channel, Bit, UpValue);
+			}
+			else if (IsDown()) {
+				agc->SetInputChannelBit(Channel, Bit, !UpValue);
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
 
 //
 // Handcontroller Switch

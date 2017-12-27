@@ -212,6 +212,18 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DescentEngineOnPyrosFeeder("Descent-Engine-On-Pyros-Feeder", Panelsdk),
 	DescentPropIsolPyros("Descent-Prop-Isol-Pyros", Panelsdk),
 	DescentPropIsolPyrosFeeder("Descent-Prop-Isol-Pyros-Feeder", Panelsdk),
+	AscentHeliumIsol1Pyros("Ascent-Helium-Isol1-Pyros", Panelsdk),
+	AscentHeliumIsol1PyrosFeeder("Ascent-Helium-Isol1-Pyros-Feeder", Panelsdk),
+	AscentHeliumIsol2Pyros("Ascent-Helium-Isol2-Pyros", Panelsdk),
+	AscentHeliumIsol2PyrosFeeder("Ascent-Helium-Isol2-Pyros-Feeder", Panelsdk),
+	AscentOxidCompValvePyros("Ascent-Oxid-Comp-Valve-Pyros", Panelsdk),
+	AscentOxidCompValvePyrosFeeder("Ascent-Oxid-Comp-Valve-Pyros-Feeder", Panelsdk),
+	AscentFuelCompValvePyros("Ascent-Fuel-Comp-Valve-Pyros", Panelsdk),
+	AscentFuelCompValvePyrosFeeder("Ascent-Fuel-Comp-Valve-Pyros-Feeder", Panelsdk),
+	RCSHeliumSupplyAPyros("RCS-Helium-Supply-A-Pyros", Panelsdk),
+	RCSHeliumSupplyAPyrosFeeder("RCS-Helium-Supply-A-Pyros-Feeder", Panelsdk),
+	RCSHeliumSupplyBPyros("RCS-Helium-Supply-B-Pyros", Panelsdk),
+	RCSHeliumSupplyBPyrosFeeder("RCS-Helium-Supply-B-Pyros-Feeder", Panelsdk),
 	agc(soundlib, dsky, imu, scdu, tcdu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
@@ -230,10 +242,26 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	deda(this,soundlib, aea),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
+	APSPropellant(ph_Asc, Panelsdk),
+	RCSA(ph_RCSA, Panelsdk, false),
+	RCSB(ph_RCSB, Panelsdk, true),
+	tca1A(2, 5, 8, 3, 5, 3, 7),
+	tca2A(2, 2, 3, 11, 10, 3, 3),
+	tca3A(4, 7, 10, 11, 5, 11, 8),
+	tca4A(4, 5, 6, 11, 2, 11, 4),
+	tca1B(2, 6, 7, 3, 6, 3, 8),
+	tca2B(2, 1, 4, 11, 9, 3, 4),
+	tca3B(4, 8, 9, 11, 6, 11, 7),
+	tca4B(4, 3, 4, 11, 1, 11, 3),
 	MissionTimerDisplay(Panelsdk),
 	EventTimerDisplay(Panelsdk),
 	omni_fwd(_V(0.0, 0.0, 1.0)),
-	omni_aft(_V(0.0, 0.0, -1.0))
+	omni_aft(_V(0.0, 0.0, -1.0)),
+	ForwardHatch(HatchOpenSound, HatchCloseSound),
+	OverheadHatch(HatchOpenSound, HatchCloseSound),
+	CabinFan(CabinFans),
+	ecs(Panelsdk),
+	CSMToLEMECSConnector(this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -241,13 +269,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
-	// Force to NULL to avoid stupid VC++ optimization failure
-	int x;
-	for (x = 0; x < N_LEM_VALVES; x++){
-		pLEMValves[x] = NULL;
-		ValveState[x] = FALSE;
-	}
 
 	// Init further down
 	Init();
@@ -282,10 +303,8 @@ void LEM::Init()
 
 	ABORT_IND=false;
 
-	bToggleHatch=false;
 	bModeDocked=false;
 	bModeHover=false;
-	HatchOpen=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
@@ -298,6 +317,7 @@ void LEM::Init()
 	InVC = false;
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
+	RefreshPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
 
@@ -318,6 +338,9 @@ void LEM::Init()
 	ph_RCSB = 0;
 
 	DPSPropellant.SetVessel(this);
+	APSPropellant.SetVessel(this);
+	RCSA.SetVessel(this);
+	RCSB.SetVessel(this);
 
 	DescentFuelMassKg = 8375.0;
 	AscentFuelMassKg = 2345.0;
@@ -329,6 +352,7 @@ void LEM::Init()
 
 	lpdgret = -1;
 	lpdgext = -1;
+	fwdhatch = -1;
 
 	//
 	// VAGC Mode settings
@@ -343,6 +367,7 @@ void LEM::Init()
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
@@ -376,6 +401,7 @@ void LEM::Init()
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &LEMToCSMConnector);
+	RegisterConnector(0, &CSMToLEMECSConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
@@ -414,10 +440,6 @@ void LEM::DoFirstTimestep()
 	NextEventTime = 0.0;
 #endif
 
-	if (CabinFansActive()) {
-		CabinFans.play(LOOP,255);
-	}
-
 	char VName10[256]="";
 
 	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
@@ -449,6 +471,8 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(Afire, "des_abort.wav");
 	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -652,10 +676,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	switch (key) {
 
-	case OAPI_KEY_K:
-		bToggleHatch = true;
-		return 1;
-
 	case OAPI_KEY_E:
 		return 0;
 
@@ -742,6 +762,11 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		CheckPanelIdInTimestep = false;
 	}
 
+	if (RefreshPanelIdInTimestep && oapiCameraInternal()) {
+		oapiSetPanel(PanelId);
+		RefreshPanelIdInTimestep = false;
+	}
+
 	// RCS propellant pressurization
 	// Descent Propellant Tank Prepressurization (ambient helium)
 	// Descent Propellant Tank Prepressurization (supercritical helium)
@@ -786,6 +811,20 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	// Simulate the dust kicked up near
+	// the lunar surface
+	double vsAlt = GetAltitude(ALTMODE_GROUND);
+	double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
+
+	if (stage == 1) {
+		if (vsAlt < 15.0) {
+			SetThrusterGroupLevel(thg_dust, dustlvl);
+		}
+		else {
+			SetThrusterGroupLevel(thg_dust, 0);
+		}
+	}
+	
 	//Set visbility flag for LPD view meshes
 	SetLPDMesh();
 	
@@ -846,16 +885,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		if (ToggleEva && GroundContact()){
 			ToggleEVA();
 		}
-		
-		if (bToggleHatch){
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			if (vs.status == 1){
-				//PlayVesselWave(Scontact,NOLOOP,255);
-				//SetLmVesselHoverStage2(vessel);
-			}
-			bToggleHatch=false;
-		}
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
@@ -868,7 +897,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetLmLandedMesh();
 		}
 
-		if (CPswitch && HATCHswitch && EVAswitch && GroundContact()){
+		if (CPswitch && EVAswitch && GroundContact()){
 			ToggleEva = true;
 			EVAswitch = false;
 		}
@@ -985,6 +1014,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
+		else if (!strnicmp(line, "SAVEFOV", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			SaveFOV = ftcp;
+		}
+		else if (!strnicmp(line, "INFOV", 5)) {
+			int i;
+			sscanf(line + 5, "%d", &i);
+			InFOV = (i == 1);
+		}
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
@@ -1042,6 +1080,15 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
+			ForwardHatch.LoadState(line);
+		}
+		else if (!strnicmp(line, "OVERHEADHATCH", 13)) {
+			OverheadHatch.LoadState(line);
+		}
+		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
+			PrimGlycolPumpController.LoadState(line);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1078,17 +1125,50 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "DECA_BEGIN", sizeof("DECA_BEGIN"))) {
 			deca.LoadState(scn);
 		}
-		else if (!strnicmp(line, "SCCA1_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA1_BEGIN", sizeof("SCCA1_BEGIN"))) {
 			scca1.LoadState(scn, "SCCA_END");
 		}
-		else if (!strnicmp(line, "SCCA2_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA2_BEGIN", sizeof("SCCA2_BEGIN"))) {
 			scca2.LoadState(scn, "SCCA_END");
 		}
-		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA_BEGIN"))) {
+		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA3_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
+		}
+		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
+			APSPropellant.LoadState(scn);
 		}
 		else if (!strnicmp(line, "APS_BEGIN", sizeof("APS_BEGIN"))) {
 			APS.LoadState(scn, "APS_END");
+		}
+		else if (!strnicmp(line, "RCSPROPELLANT_A_BEGIN", sizeof("RCSPROPELLANT_A_BEGIN"))) {
+			RCSA.LoadState(scn, "RCSPROPELLANT_END");
+		}
+		else if (!strnicmp(line, "RCSPROPELLANT_B_BEGIN", sizeof("RCSPROPELLANT_B_BEGIN"))) {
+			RCSB.LoadState(scn, "RCSPROPELLANT_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_1A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca1A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_2A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca2A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_3A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca3A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_4A_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca4A.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_1B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca1B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_2B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca2B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_3B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca3B.LoadState(scn, "RCSTCA_END");
+		}
+		else if (!strnicmp(line, "RCSTCA_4B_BEGIN", sizeof("RCSTCA_1A_BEGIN"))) {
+			tca4B.LoadState(scn, "RCSTCA_END");
 		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
@@ -1139,24 +1219,7 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		break;
 	}
 
-	// Descent Stage Deadface Bus Stubs wire to the ECAs
-	// I was doing this in SystemsInit which is wrong.
-	if(stage < 2){
-		DES_LMPs28VBusA.WireTo(&ECA_1a);
-		DES_LMPs28VBusB.WireTo(&ECA_1b);
-		DES_CDRs28VBusA.WireTo(&ECA_2a); 
-		DES_CDRs28VBusB.WireTo(&ECA_2b); 
-		DSCBattFeedTB.SetState(1);
-	}else{
-		DES_LMPs28VBusA.Disconnect();
-		DES_LMPs28VBusB.Disconnect();
-		DES_CDRs28VBusA.Disconnect();
-		DES_CDRs28VBusB.Disconnect();
-		DSCBattFeedTB.SetState(0);
-	}
-	// SOVs open by default
-	SetValveState(LEM_RCS_MAIN_SOV_A,true);
-	SetValveState(LEM_RCS_MAIN_SOV_B,true);
+	CheckDescentStageSystems();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1373,6 +1436,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
 	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
+	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
@@ -1419,6 +1484,11 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
 
+	// Save ECS
+	ForwardHatch.SaveState(scn);
+	OverheadHatch.SaveState(scn);
+	PrimGlycolPumpController.SaveState(scn);
+
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
@@ -1441,7 +1511,18 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
+	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
+	RCSB.SaveState(scn, "RCSPROPELLANT_B_BEGIN", "RCSPROPELLANT_END");
+	tca1A.SaveState(scn, "RCSTCA_1A_BEGIN", "RCSTCA_END");
+	tca2A.SaveState(scn, "RCSTCA_2A_BEGIN", "RCSTCA_END");
+	tca3A.SaveState(scn, "RCSTCA_3A_BEGIN", "RCSTCA_END");
+	tca4A.SaveState(scn, "RCSTCA_4A_BEGIN", "RCSTCA_END");
+	tca1B.SaveState(scn, "RCSTCA_1B_BEGIN", "RCSTCA_END");
+	tca2B.SaveState(scn, "RCSTCA_2B_BEGIN", "RCSTCA_END");
+	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
+	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
@@ -1507,51 +1588,6 @@ void LEM::PadLoad(unsigned int address, unsigned int value)
 void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 {
 	aea.PadLoad(address, value);
-}
-
-// *** REACTION CONTROL SYSTEM ***
-void LEM::CheckRCS(){
-	/* sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
-		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */	
-	if(GetValveState(LEM_RCS_MAIN_SOV_A)){
-		SetThrusterResource(th_rcs[0],ph_RCSA);
-		SetThrusterResource(th_rcs[1],ph_RCSA);
-		SetThrusterResource(th_rcs[6],ph_RCSA);
-		SetThrusterResource(th_rcs[7],ph_RCSA);
-		SetThrusterResource(th_rcs[8],ph_RCSA);
-		SetThrusterResource(th_rcs[9],ph_RCSA);
-		SetThrusterResource(th_rcs[14],ph_RCSA);
-		SetThrusterResource(th_rcs[15],ph_RCSA);
-	}else{
-		SetThrusterResource(th_rcs[0],NULL);
-		SetThrusterResource(th_rcs[1],NULL);
-		SetThrusterResource(th_rcs[6],NULL);
-		SetThrusterResource(th_rcs[7],NULL);
-		SetThrusterResource(th_rcs[8],NULL);
-		SetThrusterResource(th_rcs[9],NULL);
-		SetThrusterResource(th_rcs[14],NULL);
-		SetThrusterResource(th_rcs[15],NULL);
-	}
-	if(GetValveState(LEM_RCS_MAIN_SOV_B)){
-		SetThrusterResource(th_rcs[2],ph_RCSB);
-		SetThrusterResource(th_rcs[3],ph_RCSB);
-		SetThrusterResource(th_rcs[4],ph_RCSB);
-		SetThrusterResource(th_rcs[5],ph_RCSB);
-		SetThrusterResource(th_rcs[10],ph_RCSB);
-		SetThrusterResource(th_rcs[11],ph_RCSB);
-		SetThrusterResource(th_rcs[12],ph_RCSB);
-		SetThrusterResource(th_rcs[13],ph_RCSB);
-	}else{
-		SetThrusterResource(th_rcs[2],NULL);
-		SetThrusterResource(th_rcs[3],NULL);
-		SetThrusterResource(th_rcs[4],NULL);
-		SetThrusterResource(th_rcs[5],NULL);
-		SetThrusterResource(th_rcs[10],NULL);
-		SetThrusterResource(th_rcs[11],NULL);
-		SetThrusterResource(th_rcs[12],NULL);
-		SetThrusterResource(th_rcs[13],NULL);
-	}
-	return;
 }
 
 void LEM::SetRCSJet(int jet, bool fire) {

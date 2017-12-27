@@ -44,17 +44,13 @@
 #include "lm_programer.h"
 #include "lm_aca.h"
 #include "lm_ttca.h"
+#include "lm_scea.h"
+#include "lm_rcs.h"
+#include "lm_ecs.h"
+#include "lemconnector.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
-
-//
-// Valves.
-//
-#define N_LEM_VALVES	32
-
-#define LEM_RCS_MAIN_SOV_A				1
-#define LEM_RCS_MAIN_SOV_B				2
 
 //
 // Lem state settings from scenario file, passed from CSM.
@@ -67,16 +63,37 @@
 #include "checklistController.h"
 #include "payload.h"
 
-// Systems things
-// ELECTRICAL
-// LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
+enum LMRCSThrusters
 {
-public:
-	LEMPowerConnector();
-	int csm_power_latch;
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+	LMRCS_A1U = 0,
+	LMRCS_A1F,
+	LMRCS_B1L,
+	LMRCS_B1D,
+	LMRCS_B2U,
+	LMRCS_B2L,
+	LMRCS_A2A,
+	LMRCS_A2D,
+	LMRCS_A3U,
+	LMRCS_A3R,
+	LMRCS_B3A,
+	LMRCS_B3D,
+	LMRCS_B4U,
+	LMRCS_B4F,
+	LMRCS_A4R,
+	LMRCS_A4D
 };
+
+// LM ECS status
+
+typedef struct {
+	int crewNumber;
+	int crewStatus;
+	bool cdrInSuit;
+	bool lmpInSuit;
+} LEMECSStatus;
+
+
+// Systems things
 
 // XLunar Bus Controller Voltage Source
 class LEM_XLBSource : public e_object {
@@ -164,45 +181,6 @@ public:
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
-};
-
-// ENVIRONMENTAL CONTROL SYSTEM
-class LEM_ECS{
-public:
-	LEM_ECS();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	double AscentOxyTankPressure(int tank);
-	double DescentOxyTankPressure(int tank);
-
-	LEM *lem;					// Pointer at LEM
-	double Cabin_Press,Cabin_Temp,Cabin_CO2;	// Cabin Atmosphere
-	double Suit_Press,Suit_Temp,Suit_CO2;		// Suit Circuit Atmosphere
-	double Asc_Water[2],Des_Water[2];			// Water tanks
-	double Asc_Oxygen[2],Des_Oxygen[2];			// Oxygen tanks
-	double Primary_CL_Glycol_Press[2];			// Pressure before and after pumps
-	double Secondary_CL_Glycol_Press[2];		// Pressure before and after pumps
-	double Primary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Secondary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Primary_Glycol_Accu;					// Glycol Accumulator
-	double Secondary_Glycol_Accu;				// Glycol Accumulator
-	double Primary_Glycol;						// Glycol in system
-	double Secondary_Glycol;					// Glycol in system
-	int Asc_H2O_To_PLSS,Des_H2O_To_PLSS;		// PLSS Water Fill valves
-	int Water_Tank_Selector;					// WT selection valve
-	int Pri_Evap_Flow_1,Pri_Evap_Flow_2;		// Primary evaporator flow valves
-	int Sec_Evap_Flow;							// Secondary evaporator flow valve
-	int Water_Sep_Selector;						// WS Select Valve
-	int Asc_O2_To_PLSS,Des_O2_To_PLSS;			// PLSS Oxygen Fill Valves
-	int Des_O2;									// Descent O2 Valve
-	int Asc_O2[2];								// Ascent O2 Valves
-	int Cabin_Repress;							// Cabin Repress Valve
-	int CO2_Can_Select;
-	int Suit_Gas_Diverter;
-	int Suit_Circuit_Relief;
-	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
 
 // Landing Radar
@@ -475,6 +453,21 @@ public:
 		SRF_BORDER_34x39,
 		SRF_BORDER_38x38,
 		SRF_BORDER_40x40,
+		SRF_BORDER_126x131,
+		SRF_BORDER_115x115,
+		SRF_BORDER_68x68,
+		SRF_BORDER_169x168,
+		SRF_BORDER_67x64,
+		SRF_BORDER_201x205,
+		SRF_BORDER_122x265,
+		SRF_BORDER_225x224,
+		SRF_BORDER_51x54,
+		SRF_BORDER_205x205,
+		SRF_BORDER_30x144,
+		SRF_BORDER_400x400,
+		SRF_BORDER_1001x240,
+		SRF_BORDER_360x316,
+		SRF_BORDER_178x187,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -487,6 +480,7 @@ public:
 		SRF_THREEPOSSWITCHSMALL,
 		SRF_AOTRETICLEKNOB,
 		SRF_AOTSHAFTKNOB,
+		SRF_AOT_FONT,
 		SRF_FIVE_POS_SWITCH,
 		SRF_DEDA_KEY,
 		SRF_DEDA_LIGHTS,
@@ -510,7 +504,12 @@ public:
 		SRF_LEM_PRIM_C02,
 		SRF_LEM_SEC_C02,
 		SRF_LEM_SGD_LEVER,
-		SRF_LEM_ECS_PANEL,
+		SRF_LEM_U_HATCH_REL_VLV,
+		SRF_LEM_U_HATCH_HNDL,
+		SRF_LEM_F_HATCH_HNDL,
+		SRF_LEM_F_HATCH_REL_VLV,
+	    SRF_LEM_INTLK_OVRD,
+		SRF_RED_INDICATOR,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -528,6 +527,7 @@ public:
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
 	void SetLPDMesh();
+	void SetFwdHatchMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -548,14 +548,42 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
+	void PanelRefreshForwardHatch();
+	void PanelRefreshOverheadHatch();
+
 	// Panel SDK
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
+	void SetPipeMaxFlow(char *pipe, double flow);
+	h_Pipe* GetLMTunnelPipe();
+	void ConnectTunnelToCabinVent();
+	virtual void GetECSStatus(LEMECSStatus &ecs);
+	virtual void SetCrewNumber(int number);
+	virtual void SetCDRInSuit();
+	virtual void SetLMPInSuit();
+
+	h_Tank *DesO2Tank;
+	h_Tank *AscO2Tank1;
+	h_Tank *AscO2Tank2;
+	h_Tank *DesO2Manifold;
+	h_Tank *O2Manifold;
+	h_Tank *PressRegA;
+	h_Tank *PressRegB;
+	h_Tank *DesH2OTank;
+	h_Tank *DesBatCooling;
+	h_crew *CrewInCabin;
+	h_crew *CDRSuited;
+	h_crew *LMPSuited;
+	Pump *SuitFan1;
+	Pump *SuitFan2;
+	Pump *PrimGlyPump1;
+	Pump *PrimGlyPump2;
+	Pump *SecGlyPump;
+	Pump *LCGPump; 
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
 	void SetRCSJetLevelPrimary(int jet, double level);
-	void CheckRCS();
 
 	// DS20160916 Physical parameters updation
 	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
@@ -570,6 +598,7 @@ public:
 	virtual void StopEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
+	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
 	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 
 	///
@@ -582,9 +611,6 @@ public:
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
-	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
-	//THRUSTER_HANDLE th_rcs_orbiter_rot[24];
-	//THRUSTER_HANDLE th_rcs_orbiter_lin[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 	SURFHANDLE exhaustTex;
 
@@ -646,6 +672,7 @@ protected:
 	void ReleaseSurfaces ();
 	void ResetThrusters();
 	void SeparateStage (UINT stage);
+	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANZ);
@@ -656,7 +683,6 @@ protected:
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_AOTReticle (SURFHANDLE surf);
 	void SwitchClick();
-	void CabinFanSound();
 	void VoxSound();
 	void ButtonClick();
 	void GuardClick();
@@ -666,8 +692,6 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
-
-	bool CabinFansActive();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -742,13 +766,13 @@ protected:
 	ToggleSwitch AttitudeMonSwitch;
 
 	SwitchRow MPSRegControlLeftSwitchRow;
-	IndicatorSwitch ASCHeReg1TB;
+	LEMSCEATalkback ASCHeReg1TB;
 	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
-	IndicatorSwitch ASCHeReg2TB;
+	LEMSCEATalkback ASCHeReg2TB;
 	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
@@ -792,7 +816,7 @@ protected:
 	LMCabinTempMeter LMCabinTempMeter;
 	LMSuitPressMeter LMSuitPressMeter;
 	LMCabinPressMeter LMCabinPressMeter;
-	LMCabinCO2Meter LMCabinCO2Meter;
+	LMCO2Meter LMCO2Meter;
 
 	SwitchRow ECSLowerIndicatorRow;
 	LMGlycolTempMeter LMGlycolTempMeter;
@@ -808,10 +832,10 @@ protected:
 	RotationalSwitch TempPressMonRotary;
 
 	SwitchRow RCSAscFeedTBSwitchRow;
-	IndicatorSwitch RCSAscFeed1ATB;
-	IndicatorSwitch RCSAscFeed2ATB;
-	IndicatorSwitch RCSAscFeed1BTB;
-	IndicatorSwitch RCSAscFeed2BTB;
+	LEMSCEATalkback RCSAscFeed1ATB;
+	LEMSCEATalkback RCSAscFeed2ATB;
+	LEMSCEATalkback RCSAscFeed1BTB;
+	LEMSCEATalkback RCSAscFeed2BTB;
 
 	SwitchRow RCSAscFeedSwitchRow;
 	ThreePosSwitch RCSAscFeed1ASwitch;
@@ -820,43 +844,43 @@ protected:
 	ThreePosSwitch RCSAscFeed2BSwitch;
 
 	SwitchRow RCSQuad14TBSwitchRow;
-	IndicatorSwitch RCSQuad1ACmdEnableTB;
-	IndicatorSwitch RCSQuad4ACmdEnableTB;
-	IndicatorSwitch RCSQuad1BCmdEnableTB;
-	IndicatorSwitch RCSQuad4BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad1BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad4BCmdEnableTB;
 
 	SwitchRow RCSQuad14SwitchRow;
-	ThreePosSwitch RCSQuad1ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad4ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad1BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad4BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad1BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad4BCmdEnableSwitch;
 
 	SwitchRow RCSQuad23TBSwitchRow;
-	IndicatorSwitch RCSQuad2ACmdEnableTB;
-	IndicatorSwitch RCSQuad3ACmdEnableTB;
-	IndicatorSwitch RCSQuad2BCmdEnableTB;
-	IndicatorSwitch RCSQuad3BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3ACmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad2BCmdEnableTB;
+	LEMRCSQuadTalkback RCSQuad3BCmdEnableTB;
 
 	SwitchRow RCSQuad23SwitchRow;
-	ThreePosSwitch RCSQuad2ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad3ACmdEnableSwitch;
-	ThreePosSwitch RCSQuad2BCmdEnableSwitch;
-	ThreePosSwitch RCSQuad3BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3ACmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad2BCmdEnableSwitch;
+	LGCThrusterPairSwitch RCSQuad3BCmdEnableSwitch;
 
 	SwitchRow RCSXfeedTBSwitchRow;
-	IndicatorSwitch RCSXFeedTB;
+	LEMSCEATalkback RCSXFeedTB;
 
 	SwitchRow RCSXfeedSwitchRow;
 	ThreePosSwitch RCSXFeedSwitch;
 
 	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
-	LEMValveTalkback RCSMainSovATB;
-	LEMValveTalkback RCSMainSovBTB;
+	LEMSCEATalkback RCSMainSovATB;
+	LEMSCEATalkback RCSMainSovBTB;
 
 	SwitchRow RCSMainSOVSwitchRow;
-	LEMValveSwitch RCSMainSovASwitch;
-	LEMValveSwitch RCSMainSovBSwitch;
+	ThreePosSwitch RCSMainSovASwitch;
+	ThreePosSwitch RCSMainSovBSwitch;
 
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
@@ -1179,8 +1203,6 @@ protected:
 
 	bool CPswitch;
 
-	bool HATCHswitch;
-
 	bool EVAswitch;
 
 	bool COASswitch;
@@ -1392,6 +1414,71 @@ protected:
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
 
+	///////////////
+	// ECS Panel //
+	///////////////
+
+	SwitchRow ECSSuitGasDiverterSwitchRow;
+	CircuitBrakerSwitch SuitGasDiverterSwitch;
+
+	SwitchRow OxygenControlSwitchRow;
+	RotationalSwitch CabinRepressValveSwitch;
+	RotationalSwitch PLSSFillValve;
+	RotationalSwitch PressRegAValve;
+	RotationalSwitch PressRegBValve;
+	RotationalSwitch DESO2Valve;
+	AscentO2RotationalSwitch ASCO2Valve1;
+	AscentO2RotationalSwitch ASCO2Valve2;
+	PushSwitch IntlkOvrd;
+
+	SwitchRow SuitIsolSwitchRow;
+	RotationalSwitch CDRSuitIsolValve;
+	ToggleSwitch	   CDRActuatorOvrd;
+	RotationalSwitch LMPSuitIsolValve;
+	ToggleSwitch     LMPActuatorOvrd;
+
+	SwitchRow WaterControlSwitchRow;
+	RotationalSwitch SecEvapFlowValve;
+	RotationalSwitch PrimEvap2FlowValve;
+	RotationalSwitch DESH2OValve;
+	RotationalSwitch PrimEvap1FlowValve;
+	RotationalSwitch WaterTankSelectValve;
+	LMSuitTempRotationalSwitch SuitTempValve;
+
+	SwitchRow ASCH2OSwitchRow;
+	RotationalSwitch ASCH2OValve;
+
+	SwitchRow GarmentCoolingSwitchRow;
+	LMLiquidGarmentCoolingRotationalSwitch LiquidGarmentCoolingValve;
+
+	SwitchRow SuitCircuitAssySwitchRow;
+	RotationalSwitch SuitCircuitReliefValveSwitch;
+	RotationalSwitch CabinGasReturnValveSwitch;
+	ToggleSwitch CO2CanisterSelectSwitch;
+	RotationalSwitch CO2CanisterPrimValve;
+    PushSwitch       CO2CanisterPrimVent;
+	RotationalSwitch CO2CanisterSecValve;
+    PushSwitch       CO2CanisterSecVent;
+	CircuitBrakerSwitch WaterSepSelectSwitch;
+
+	/////////////////////
+	// LEM Upper Hatch //
+	/////////////////////
+
+	SwitchRow UpperHatchHandleSwitchRow;
+	LMOverheadHatchHandle UpperHatchHandle;
+	SwitchRow UpperHatchValveSwitchRow;
+	ThreePosSwitch UpperHatchReliefValve;
+	
+	///////////////////////
+	// LEM Forward Hatch //
+	///////////////////////
+
+	SwitchRow ForwardHatchHandleSwitchRow;
+	LMForwardHatchHandle ForwardHatchHandle;
+	SwitchRow ForwardHatchValveSwitchRow;
+	ThreePosSwitch ForwardHatchReliefValve;
+	
 	///////////////////////////
 	// LEM Rendezvous Window //
 	///////////////////////////
@@ -1422,10 +1509,8 @@ protected:
 	bool ABORT_IND;
 	bool ENGIND[7];
 
-	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;
-	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
@@ -1487,12 +1572,24 @@ protected:
 	Pyro DescentEngineStartPyros;
 	Pyro DescentEngineOnPyros;
 	Pyro DescentPropIsolPyros;
+	Pyro AscentHeliumIsol1Pyros;
+	Pyro AscentHeliumIsol2Pyros;
+	Pyro AscentOxidCompValvePyros;
+	Pyro AscentFuelCompValvePyros;
+	Pyro RCSHeliumSupplyAPyros;
+	Pyro RCSHeliumSupplyBPyros;
 	PowerMerge LandingGearPyrosFeeder;
 	PowerMerge CableCuttingPyrosFeeder;
 	PowerMerge DescentPropVentPyrosFeeder;
 	PowerMerge DescentEngineStartPyrosFeeder;
 	PowerMerge DescentEngineOnPyrosFeeder;
 	PowerMerge DescentPropIsolPyrosFeeder;
+	PowerMerge AscentHeliumIsol1PyrosFeeder;
+	PowerMerge AscentHeliumIsol2PyrosFeeder;
+	PowerMerge AscentOxidCompValvePyrosFeeder;
+	PowerMerge AscentFuelCompValvePyrosFeeder;
+	PowerMerge RCSHeliumSupplyAPyrosFeeder;
+	PowerMerge RCSHeliumSupplyBPyrosFeeder;
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
@@ -1509,6 +1606,11 @@ protected:
 	// Mesh indexes
 	int lpdgret;
 	int lpdgext;
+	int fwdhatch;
+
+	// Dust particles
+	THRUSTER_HANDLE th_dust[4];
+	THGROUP_HANDLE thg_dust;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1521,6 +1623,9 @@ protected:
 #define LMPANEL_ECSPANEL		8
 #define LMPANEL_DOCKVIEW		9
 #define LMPANEL_AOTZOOM		    10
+#define LMPANEL_LEFTZOOM        11   
+#define LMPANEL_UPPERHATCH      12  
+#define LMPANEL_FWDHATCH        13 
 
 	bool InVC;
 	bool InPanel;
@@ -1528,6 +1633,7 @@ protected:
 	int  PanelId; 
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
+	bool RefreshPanelIdInTimestep;
 
 	// ChecklistController
 	ChecklistController checkControl;
@@ -1555,6 +1661,8 @@ protected:
 	Sound Slanding;
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
+	Sound HatchOpenSound;
+	Sound HatchCloseSound;
 
 	//
 	// Connectors.
@@ -1571,12 +1679,9 @@ protected:
 	MultiConnector LEMToCSMConnector;				// This carries data *FROM* CSMToLEMPowerConnector
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
+	LEMECSConnector CSMToLEMECSConnector;
 
 	char AudioLanguage[64];
-
-	// New Panel SDK stuff
-	int *pLEMValves[N_LEM_VALVES];
-	bool ValveState[N_LEM_VALVES];
 
 	// POWER AND SUCH
 
@@ -1680,6 +1785,23 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
+	LEMCabinRepressValve CabinRepressValve;
+	LEMOverheadHatch OverheadHatch;
+	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
+	LEMForwardHatch ForwardHatch;
+	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
+	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
+	LEMCabinGasReturnValve CabinGasReturnValve;
+	LEMSuitGasDiverter SuitGasDiverter;
+	LEMCO2CanisterSelect CO2CanisterSelect;
+	LEMCO2CanisterVent PrimCO2CanisterVent;
+	LEMCO2CanisterVent SecCO2CanisterVent;
+	LEMWaterSeparationSelector WaterSeparationSelector;
+	LEMCabinFan CabinFan;
+	LEMWaterTankSelect WaterTankSelect;
+	LEMPrimGlycolPumpController PrimGlycolPumpController;
 
 	// EDS
 	LEM_EDS eds;
@@ -1687,12 +1809,29 @@ protected:
 	// DPS and APS
 	DPSPropellantSource DPSPropellant;
 	LEM_DPS DPS;
+	APSPropellantSource APSPropellant;
 	LEM_APS APS;
+
+	// RCS
+	RCSPropellantSource RCSA;
+	RCSPropellantSource RCSB;
+	RCS_TCA tca1A;
+	RCS_TCA tca2A;
+	RCS_TCA tca3A;
+	RCS_TCA tca4A;
+	RCS_TCA tca1B;
+	RCS_TCA tca2B;
+	RCS_TCA tca3B;
+	RCS_TCA tca4B;
 
 	// Abort Guidance System stuff
 	LEM_ASA asa;
 	LEM_AEA aea;
 	LEM_DEDA deda;
+
+	// Instrumentation
+	SCERA1 scera1;
+	SCERA2 scera2;
 
 	bool isMultiThread;
 
@@ -1725,7 +1864,7 @@ protected:
 	friend class LMOxygenQtyMeter;
 	friend class LMGlycolPressMeter;
 	friend class LMGlycolTempMeter;
-	friend class LMCabinCO2Meter;
+	friend class LMCO2Meter;
 	friend class LMCabinPressMeter;
 	friend class LMSuitPressMeter;
 	friend class LMCabinTempMeter;
@@ -1733,6 +1872,7 @@ protected:
 	friend class DPSGimbalActuator;
 	friend class DPSPropellantSource;
 	friend class LEM_DPS;
+	friend class APSPropellantSource;
 	friend class LEM_APS;
 	friend class DECA;
 	friend class SCCA1;
@@ -1754,6 +1894,15 @@ protected:
 	friend class LEM_ACA;
 	friend class LEM_RGA;
 	friend class LEM_TTCA;
+	friend class SCERA1;
+	friend class SCERA2;
+	friend class RCSPropellantSource;
+	friend class LGCThrusterPairSwitch;
+	friend class LMRCSAPressInd;
+	friend class LMRCSBPressInd;
+	friend class LMRCSAQtyInd;
+	friend class LMRCSBQtyInd;
+	friend class RCS_TCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

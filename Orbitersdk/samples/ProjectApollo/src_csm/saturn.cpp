@@ -46,6 +46,7 @@
 #include "papi.h"
 #include "mcc.h"
 #include "LVDC.h"
+#include "iu.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
@@ -130,7 +131,7 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk, iuCommandConnector, sivbControlConnector),
+	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
@@ -202,6 +203,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
+	lemECSConnector(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(ThumbClick),
@@ -223,6 +225,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
+	vhfa(_V(0.0, 0.7716246, 0.63607822)),
+	vhfb(_V(0.0, -0.7716246, -0.63607822)),
 	sii(this, th_2nd, ph_2nd, thg_ull, SPUShiftS, SepS)
 
 #pragma warning ( pop ) // disable:4355
@@ -261,6 +265,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
+	RegisterConnector(0, &lemECSConnector);
 }
 
 Saturn::~Saturn()
@@ -508,6 +513,7 @@ void Saturn::initSaturn()
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	lemECSConnector.SetType(LEM_CSM_ECS);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 
 	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
@@ -2991,21 +2997,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_2 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_2 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG2;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	if (key == OAPI_KEY_3 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
 	{
 		//
 		// Key 3 switches to position 3 by default, then cycles around them.
@@ -3741,7 +3747,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(TLICapableBooster, Crewed);
+		iu->SetMissionInfo(Crewed);
 	}
 
 	//
@@ -4071,20 +4077,6 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::SIVBBoiloff()
-
-{
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
-	SetPropellantMass(ph_3rd, FuelMass);
-}
-
 void Saturn::StageSix(double simt)
 
 {
@@ -4094,7 +4086,7 @@ void Saturn::StageSix(double simt)
 		// Play cryo-stir audio.
 		//
 
-		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 120))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
 			if (TimeW > 1){
@@ -4103,6 +4095,7 @@ void Saturn::StageSix(double simt)
 
 			SApollo13.play(NOLOOP, 255);
 			CryoStir = true;
+
 		}
 
 		//
@@ -4122,15 +4115,44 @@ void Saturn::StageSix(double simt)
 			SExploded.play(NOLOOP,255);
 			SExploded.done();
 
-			MasterAlarm();
+			//MasterAlarm();  Main B Undervolt due to power transient at the explosion should trigger this alarm
 
 			//
-			// AGC restarted as the explosion occured.
+			// AGC restarted & lit PGNS light as the explosion occured.  Should be triggered by power transient and not agc.ForceRestart
 			//
 
-			agc.ForceRestart();
+			//agc.ForceRestart();
 
 			ApolloExploded = true;
+
+			h_Pipe *o2Rupture1 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1RUPTURE");
+			o2Rupture1->in->size = (float) (50.0 / LBH);	// Set O2 tank 1 leak size
+			o2Rupture1->flowMax = 100.0 / LBH;  //Set O2 tank 1 leak rate
+
+			h_Pipe *o2Rupture3 = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2RUPTURE");
+			o2Rupture3->in->size = (float) (900.0 / LBH);	// Set O2 tank 2 leak size
+			o2Rupture3->flowMax = 54000.0 / LBH;  //Set O2 tank 2 leak rate
+
+			h_Valve *leakValve1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:LEAK");
+			leakValve1->Open();  //Start O2 tank 1 leak
+
+			h_Valve *leakValve2 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:LEAK");
+			leakValve2->Open();  //Start O2 tank 2 leak
+
+			h_Valve *o2react1 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN");
+			o2react1->Close();  //Close FC1 O2 reactant valve
+
+			h_Valve *o2react3 = (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN");
+			o2react3->Close();  //Close FC3 O2 reactant valve
+
+			SMQuadBRCS.GetHeliumValve1()->SetState(false);
+			SMQuadDRCS.GetHeliumValve1()->SetState(false);
+
+			SMQuadBRCS.GetHeliumValve2()->SetState(false);
+
+			SMQuadARCS.GetSecPropellantValve()->SetState(false);
+			SMQuadCRCS.GetSecPropellantValve()->SetState(false);
+				
 
 			//
 			// Update the mesh.
@@ -4170,6 +4192,7 @@ void Saturn::StageSix(double simt)
 
 			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
 
+
 		}
 
 		//
@@ -4190,12 +4213,17 @@ void Saturn::StageSix(double simt)
 		}
 
 		if (ApolloExploded && ph_o2_vent) {
+
 			TankQuantities t;
 			GetTankQuantities(t);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
-			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
+
+			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+
+
 		}
+
 	}
 }
 
@@ -4442,27 +4470,6 @@ double Saturn::GetJ2ThrustLevel()
 	return GetThrusterLevel(th_3rd[0]);
 }
 
-double Saturn::GetSIPropellantMass()
-
-{
-	if (stage > LAUNCH_STAGE_ONE || !ph_1st)
-		return 0.0;
-
-	return GetPropellantMass(ph_1st);
-}
-
-double Saturn::GetSIVbPropellantMass()
-
-{
-	if (stage > STAGE_ORBIT_SIVB)
-		return 0.0;
-
-	if (stage < LAUNCH_STAGE_SIVB)
-		return S4B_FuelMass;
-
-	return GetPropellantMass(ph_3rd);
-}
-
 void Saturn::SetSIVbPropellantMass(double mass)
 
 {
@@ -4478,22 +4485,22 @@ void Saturn::SetSIVbPropellantMass(double mass)
 	SetPropellantMass(ph_3rd, mass);
 }
 
-int Saturn::GetTLIEnableSwitchState()
+bool Saturn::GetTLIInhibitSignal()
 
 {
-	return TLIEnableSwitch.GetState();
+	return TLIEnableSwitch.GetState() == TOGGLESWITCH_DOWN;
 }
 
-int Saturn::GetSIISIVbSepSwitchState()
+bool Saturn::GetIUUPTLMAccept()
 
 {
-	return SIISIVBSepSwitch.GetState();
+	return IUUplinkSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
-int Saturn::GetLVGuidanceSwitchState()
+bool Saturn::GetSIISIVbDirectStagingSignal()
 
 {
-	return LVGuidanceSwitch.GetState();
+	return SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
 int Saturn::GetEDSSwitchState()
@@ -4623,12 +4630,59 @@ void Saturn::SetQBallPowerOff()
 	qball.SetPowerOff();
 }
 
+void Saturn::SetIUUmbilicalState(bool connect)
+{
+	if (stage <= PRELAUNCH_STAGE && iu)
+	{
+		if (connect)
+		{
+			iu->ConnectUmbilical();
+		}
+		else
+		{
+			iu->DisconnectUmbilical();
+		}
+	}
+}
+
 void Saturn::SetAPSAttitudeEngine(int n, bool on)
 {
 	if (n < 0 || n > 5) return;
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetAPSAttitudeEngine(n, on);
+}
+
+bool Saturn::GetCMCSIVBTakeover()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, EnableSIVBTakeover))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBIgnitionSequenceStart()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBIgnitionSequenceStart))
+		return true;
+
+	return false;
+}
+
+bool Saturn::GetCMCSIVBCutoff()
+{
+	if (LVGuidanceSwitch.GetState() == THREEPOSSWITCH_DOWN && agc.GetInputChannelBit(012, SIVBCutoff))
+		return true;
+
+	return false;
+}
+
+void Saturn::ConnectTunnelToCabinVent()
+{
+	h_Pipe *pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+	h_Vent *vent = (h_Vent *)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT");
+
+	pipe->out = &vent->IN_valve;
 }
 
 void Saturn::SetContrailLevel(double level)

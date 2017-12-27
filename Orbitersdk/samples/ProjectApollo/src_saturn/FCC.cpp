@@ -26,13 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "LVIMU.h"
 
-#include "soundlib.h"
-
-#include "ioChannels.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
-#include "saturn.h"
 #include "papi.h"
+#include "iu.h"
 
 #include "FCC.h"
 

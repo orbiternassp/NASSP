@@ -160,6 +160,31 @@ void H_system::Create_h_MixingPipe(char *line) {
 	AddSystem(new h_MixingPipe(name, pump, in1, in2, out, targetTemp));
 }
 
+void H_system::Create_h_Valve(char *line) {
+
+	char name[100], parentName[100];
+	int i_open = 0;
+	int i_ct = 0;
+	float i_size = 0;
+	h_Tank *parent;
+
+	if (sscanf(line + 7, " %s", name) <= 0)
+		name[0] = '\0';
+
+	line = ReadConfigLine();
+	while (strnicmp(line, "</VALVE>", 8)) {
+
+		sscanf(line, "%s %i %i %f",
+			parentName, &i_open, &i_ct, &i_size);
+
+		line = ReadConfigLine();
+	}
+
+	parent = (h_Tank*)GetPointerByString(parentName);
+
+	AddSystem(new h_Valve(name, i_open, i_ct, i_size, parent));
+}
+
 void H_system::Create_h_Vent(char *line) {
 
 	char name[100];
@@ -302,6 +327,57 @@ void H_system::Create_h_Pipe(char *line) {
 	}
 }
 
+void H_system::Create_h_CO2Scrubber(char *line) {
+
+	h_Valve *in;
+	h_Valve *out;
+	char name[100];
+	char in_valve[100];
+	char out_valve[100];
+	double flowMax = 0;
+
+	sscanf(line + 13, " %s %lf", name, &flowMax);
+
+	line = ReadConfigLine();
+	while (!Compare(line, "</CO2SCRUBBER>")) {
+		sscanf(line, "%s %s", in_valve, out_valve);
+
+		in = (h_Valve*)GetPointerByString(in_valve);
+		out = (h_Valve*)GetPointerByString(out_valve);
+
+		AddSystem(new h_CO2Scrubber(name, flowMax, in, out));
+
+		line = ReadConfigLine();
+	}
+}
+
+void H_system::Create_h_WaterSeparator(char *line) {
+
+	h_Valve *in;
+	h_Valve *out;
+	h_Valve *h2o;
+	char name[100];
+	char in_valve[100];
+	char out_valve[100];
+	char h2o_valve[100];
+	double flowMax = 0;
+
+	sscanf(line + 8, " %s %lf", name, &flowMax);
+
+	line = ReadConfigLine();
+	while (!Compare(line, "</H2OSEP>")) {
+		sscanf(line, "%s %s %s", in_valve, out_valve, h2o_valve);
+
+		in = (h_Valve*)GetPointerByString(in_valve);
+		out = (h_Valve*)GetPointerByString(out_valve);
+		h2o = (h_Valve*)GetPointerByString(h2o_valve);
+
+		AddSystem(new h_WaterSeparator(name, flowMax, in, out, h2o));
+
+		line = ReadConfigLine();
+	}
+}
+
 void H_system::Build() {
 	
 	char *line;
@@ -324,6 +400,12 @@ void H_system::Build() {
 			Create_h_Evaporator(line);
 		else if(Compare(line,"<MIXINGPIPE>"))
 			Create_h_MixingPipe(line);
+		else if (Compare(line, "<VALVE>"))
+			Create_h_Valve(line);
+		else if (Compare(line, "<CO2SCRUBBER>"))
+			Create_h_CO2Scrubber(line);
+		else if (Compare(line, "<H2OSEP>"))
+			Create_h_WaterSeparator(line);
 
 		line = ReadConfigLine();
 	}
@@ -387,6 +469,8 @@ void* h_Tank::GetComponent(char *component_name) {
 		};
 	if (!strnicmp (component_name, "TEMP",4 ))
 		return &(space.Temp);
+	if (!strnicmp(component_name, "ENERGY", 6))
+		return &(space.Q);
 	if (!strnicmp (component_name, "MASS",4 ))
 		 return &(space.total_mass);
 	if (!strnicmp (component_name, "PRESS",5 ))
@@ -472,6 +556,30 @@ void* h_crew::GetComponent(char *component_name) {
 
 	if (!strnicmp (component_name, "NUMBER", 6))
 		return (void*)&number;
+
+	BuildError(2);	//no such component
+	return NULL;
+}
+
+void* h_CO2Scrubber::GetComponent(char *component_name) {
+
+	if (Compare(component_name, "FLOWMAX"))
+		return (void*)&flowMax;
+	if (Compare(component_name, "FLOW"))
+		return (void*)&flow;
+	if (Compare(component_name, "CO2REMOVALRATE"))
+		return (void*)&co2removalrate;
+
+	BuildError(2);	//no such component
+	return NULL;
+}
+
+void* h_WaterSeparator::GetComponent(char *component_name) {
+
+	if (Compare(component_name, "FLOWMAX"))
+		return (void*)&flowMax;
+	if (Compare(component_name, "FLOW"))
+		return (void*)&flow;
 
 	BuildError(2);	//no such component
 	return NULL;
