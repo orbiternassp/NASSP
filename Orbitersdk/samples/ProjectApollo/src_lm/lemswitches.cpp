@@ -1612,31 +1612,6 @@ void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-LEMAPSValveTalkback::LEMAPSValveTalkback()
-{
-	valve = 0;
-}
-
-
-void LEMAPSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, APSValve *v, bool failopen)
-
-{
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
-	valve = v;
-}
-
-int LEMAPSValveTalkback::GetState()
-
-{
-	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
-		state = valve->IsOpen() ? 1 : 0;
-	else
-		// Should this fail open?
-		state = (failOpen ? 1 : 0);
-
-	return state;
-}
-
 LEMDPSValveTalkback::LEMDPSValveTalkback()
 {
 	valve = 0;

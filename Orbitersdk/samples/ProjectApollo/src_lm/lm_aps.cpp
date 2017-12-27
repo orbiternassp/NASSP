@@ -91,6 +91,9 @@ void APSPropellantSource::Timestep(double simt, double simdt)
 		OxidTankUllagePressurePSI = 0;
 		FuelTrimOrificeOutletPressurePSI = 0;
 		OxidTrimOrificeOutletPressurePSI = 0;
+
+		fuelLevelLow = false;
+		oxidLevelLow = false;
 	}
 	else
 	{
@@ -243,6 +246,16 @@ double APSPropellantSource::GetHeliumRegulator1OutletPressurePSI()
 		return heliumRegulator1OutletPressurePSI;
 
 	return 0.0;
+}
+
+double APSPropellantSource::GetFuelTankBulkTempF()
+{
+	return 70.0;
+}
+
+double APSPropellantSource::GetOxidizerTankBulkTempF()
+{
+	return 70.0;
 }
 
 void APSPropellantSource::SaveState(FILEHANDLE scn)

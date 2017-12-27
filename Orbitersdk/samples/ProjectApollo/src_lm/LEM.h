@@ -770,13 +770,13 @@ protected:
 	ToggleSwitch AttitudeMonSwitch;
 
 	SwitchRow MPSRegControlLeftSwitchRow;
-	LEMAPSValveTalkback ASCHeReg1TB;
+	LEMSCEATalkback ASCHeReg1TB;
 	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
-	LEMAPSValveTalkback ASCHeReg2TB;
+	LEMSCEATalkback ASCHeReg2TB;
 	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;

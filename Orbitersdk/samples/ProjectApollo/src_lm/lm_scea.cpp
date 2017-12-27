@@ -348,6 +348,20 @@ void SCERA1::Timestep()
 	//APS helium tank no. 1 pressure (GP0001)
 	SA8.SetOutput(4, scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0));
 
+	//DPS fuel tank no. 1 fuel bulk temperature (GQ3718)
+	SA9.SetOutput(1, scale_data(lem->DPSPropellant.GetFuelTank1BulkTempF(), 20.0, 120.0));
+	//DPS fuel tank no. 2 fuel bulk temperature (GQ3718)
+	SA9.SetOutput(2, scale_data(lem->DPSPropellant.GetFuelTank2BulkTempF(), 20.0, 120.0));
+	//APS fuel tank, fuel bulk temperature (GP0718)
+	SA9.SetOutput(3, scale_data(lem->APSPropellant.GetFuelTankBulkTempF(), 20.0, 120.0));
+	//APS oxidizer tank, oxidizer bulk temperature (GP1218)
+	SA9.SetOutput(4, scale_data(lem->APSPropellant.GetOxidizerTankBulkTempF(), 20.0, 120.0));
+
+	//DPS oxidizer tank no. 1 fuel bulk temperature (GQ4218)
+	SA10.SetOutput(3, scale_data(lem->DPSPropellant.GetOxidizerTank1BulkTempF(), 20.0, 120.0));
+	//DPS oxidizer tank no. 2 fuel bulk temperature (GQ4219)
+	SA10.SetOutput(4, scale_data(lem->DPSPropellant.GetOxidizerTank2BulkTempF(), 20.0, 120.0));
+
 	//RCS thrust chamber pressure B4U (GR5031)
 	SA11.SetOutput(1, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B4U]) > 0.5);
 	//RCS thrust chamber pressure A4D (GR5032)
@@ -600,6 +614,19 @@ void SCERA2::Timestep()
 		Reset();
 		return;
 	}
+
+	//APS fuel tank low level (GP0908)
+	SA2.SetOutput(6, lem->APSPropellant.GetFuelLowLevel());
+	//APS oxidizer tank low level (GP1408)
+	SA2.SetOutput(7, lem->APSPropellant.GetOxidLowLevel());
+
+	//Descent propellant tanks (liquid level low) (GQ4455)
+	SA12.SetOutput(3, lem->DPSPropellant.PropellantLevelLow());
+
+	//RCS Fuel tank A temperature (GR2121)
+	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));
+	//RCS Fuel tank B temperature (GR2122)
+	SA20.SetOutput(3, scale_data(lem->RCSB.GetFuelTankTempF(), 20.0, 120.0));
 }
 
 void SCERA2::SystemTimestep(double simdt)
