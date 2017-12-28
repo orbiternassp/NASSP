@@ -822,6 +822,9 @@ void LEM::SystemsInit()
 		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1"),
 		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2"),
 		&GlycolRotary, &ECS_GLYCOL_PUMP_1_CB, &ECS_GLYCOL_PUMP_2_CB, &ECS_GLYCOL_PUMP_AUTO_XFER_CB);
+	SuitFanDPSensor.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD"),
+		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
+		&ECS_SUIT_FAN_DP_CB);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1489,6 +1492,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	WaterTankSelect.SystemTimestep(simdt);
 	CabinFan.SystemTimestep(simdt);
 	PrimGlycolPumpController.SystemTimestep(simdt);
+	SuitFanDPSensor.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);

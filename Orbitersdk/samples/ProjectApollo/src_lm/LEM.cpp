@@ -1089,6 +1089,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "PRIMGLYPUMPCONTROLLER", 21)) {
 			PrimGlycolPumpController.LoadState(line);
 		}
+		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
+			SuitFanDPSensor.LoadState(line);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1488,6 +1491,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ForwardHatch.SaveState(scn);
 	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
+	SuitFanDPSensor.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

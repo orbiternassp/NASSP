@@ -890,6 +890,65 @@ void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_string(scn, "PRIMGLYPUMPCONTROLLER", buffer);
 }
 
+LEMSuitFanDPSensor::LEMSuitFanDPSensor()
+{
+	suitFanManifoldTank = NULL;
+	suitCircuitHeatExchangerCoolingTank = NULL;
+	suitFanDPCB = NULL;
+	SuitFanFailRelay = false;
+	PressureSwitch = false;
+}
+
+void LEMSuitFanDPSensor::Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb)
+{
+	suitFanManifoldTank = sfmt;
+	suitCircuitHeatExchangerCoolingTank = schect;
+	suitFanDPCB = sfdpcb;
+}
+
+void LEMSuitFanDPSensor::SystemTimestep(double simdt)
+{
+	if (!suitFanManifoldTank || !suitCircuitHeatExchangerCoolingTank) return;
+
+	double DPSensor = suitCircuitHeatExchangerCoolingTank->space.Press - suitFanManifoldTank->space.Press;
+
+	if (PressureSwitch == false && DPSensor < 1.0 / PSI)
+	{
+		PressureSwitch = true;
+	}
+	else if (PressureSwitch == true && DPSensor > 1.33 / PSI)
+	{
+		PressureSwitch = false;
+	}
+
+	if (PressureSwitch && suitFanDPCB->IsPowered())
+	{
+		SuitFanFailRelay = true;
+	}
+	else
+	{
+		SuitFanFailRelay = false;
+	}
+}
+
+void LEMSuitFanDPSensor::LoadState(char *line)
+{
+	int i, j;
+
+	sscanf(line + 15, "%i %i", &i, &j);
+
+	PressureSwitch = (i != 0);
+	SuitFanFailRelay = (j != 0);
+}
+
+void LEMSuitFanDPSensor::SaveState(FILEHANDLE scn)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d %d", PressureSwitch, SuitFanFailRelay);
+	oapiWriteScenario_string(scn, "SUITFANDPSENSOR", buffer);
+}
+
 LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 {
 	lem = NULL;

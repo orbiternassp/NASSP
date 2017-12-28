@@ -242,6 +242,27 @@ protected:
 	bool PressureSwitch;
 };
 
+class LEMSuitFanDPSensor
+{
+public:
+	LEMSuitFanDPSensor();
+	void Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+
+	bool GetSuitFanFail() { return SuitFanFailRelay; }
+protected:
+	h_Tank *suitFanManifoldTank;
+	h_Tank *suitCircuitHeatExchangerCoolingTank;
+	CircuitBrakerSwitch *suitFanDPCB;
+
+	//K12
+	bool SuitFanFailRelay;
+
+	bool PressureSwitch;
+};
+
 class LEM_ECS {
 public:
 	LEM_ECS(PanelSDK &p);

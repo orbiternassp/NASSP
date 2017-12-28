@@ -1800,6 +1800,7 @@ protected:
 	LEMCabinFan CabinFan;
 	LEMWaterTankSelect WaterTankSelect;
 	LEMPrimGlycolPumpController PrimGlycolPumpController;
+	LEMSuitFanDPSensor SuitFanDPSensor;
 
 	// EDS
 	LEM_EDS eds;
