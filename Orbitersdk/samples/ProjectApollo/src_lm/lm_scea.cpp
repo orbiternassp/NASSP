@@ -646,13 +646,55 @@ void SCERA2::Timestep()
 	//APS oxidizer tank low level (GP1408)
 	SA2.SetOutput(7, lem->APSPropellant.GetOxidLowLevel());
 
+	//Suit fan 1 fail (GF1083X)
+	SA3.SetOutput(2, lem->ecs.GetSuitFan1Failure());
+	//Suit fan 2 fail (GF1084X)
+	SA3.SetOutput(6, lem->ecs.GetSuitFan2Failure());
+	//Emergency oxygen valve electrically open (GF3572)
+	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
+
+	//CO2 secondary cartridge (GF1241)
+	SA5.SetOutput(1, lem->CO2CanisterSelectSwitch.GetState() == 0);
+	//Suit diverter valve position indicator closed (GF1221)
+	SA5.SetOutput(2, lem->SuitGasDiverterSwitch.GetState() == 0);
+	//Suit pressure relief valve position indicator closed (GF1211)
+	SA5.SetOutput(3, !lem->ecs.IsSuitCircuitReliefValveOpen());
+	//Suit pressure relief valve position indicator open (GF1212)
+	SA5.SetOutput(4, lem->ecs.IsSuitCircuitReliefValveOpen());
+	//Oxygen regulator valve A locked closed (GF3071)
+	SA5.SetOutput(5, lem->PressRegAValve.GetState() == 3);
+	//Oxygen regulator valve B locked closed (GF3073)
+	SA5.SetOutput(7, lem->PressRegBValve.GetState() == 3);
+	//Cabin gas return valve position indicator closed (GF1231)
+	SA5.SetOutput(9, !lem->ecs.IsCabinGasReturnValveOpen());
+	//Cabin gas return valve position indicator open (GF1232)
+	SA5.SetOutput(10, lem->ecs.IsCabinGasReturnValveOpen());
+	//Suit inlet valve position indicator no. 1 closed (GF1201)
+	SA5.SetOutput(11, lem->CDRSuitIsolValve.GetState() == 1);
+	//Suit inlet valve position indicator no. 2 closed (GF1202)
+	SA5.SetOutput(12, lem->LMPSuitIsolValve.GetState() == 1);
+
+	//Descent oxygen tank pressure (GF3584)
+	SA8.SetOutput(1, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 304.0));
+	SA8.SetOutput(2, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 3000.0));
+
+	//Cooling pump no. 1 failure (GF2936)
+	SA12.SetOutput(2, lem->PrimGlycolPumpController.GetGlycolPumpFailRelay());
 	//Descent propellant tanks (liquid level low) (GQ4455)
 	SA12.SetOutput(3, lem->DPSPropellant.PropellantLevelLow());
+
+	//Coolant pump no. 2 failure (GF2935)
+	SA13.SetOutput(3, lem->ecs.GetGlycolPump2Failure());
 
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));
 	//RCS Fuel tank B temperature (GR2122)
 	SA20.SetOutput(3, scale_data(lem->RCSB.GetFuelTankTempF(), 20.0, 120.0));
+
+	//Ascent water line no. 1 temperature (GF4585T)
+	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
+	//Ascent water line no. 2 temperature (GF4586T)
+	SA21.SetOutput(4, scale_data(lem->ecs.GetAscWaterTank2TempF(), -200.0, 200.0));
 }
 
 void SCERA2::SystemTimestep(double simdt)

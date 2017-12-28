@@ -107,12 +107,17 @@ public:
 	LEMCabinRepressValve();
 	void Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
 	void SystemTimestep(double simdt);
+
+	bool GetEmergencyCabinRepressRelay() { return EmergencyCabinRepressRelay; }
 protected:
 	h_Pipe *cabinRepressValve;
 	CircuitBrakerSwitch *cabinRepressCB;
 	RotationalSwitch *cabinRepressValveSwitch;
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
+
+	//7K6
+	bool EmergencyCabinRepressRelay;
 };
 
 class LEMSuitCircuitPressureRegulator
@@ -226,6 +231,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 
+	bool GetPressureSwitch() { return PressureSwitch; }
+	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
 protected:
 	h_Tank *primGlycolAccumulatorTank;
 	h_Tank *primGlycolPumpManifoldTank;
@@ -238,6 +245,8 @@ protected:
 
 	//7K8 (Latching)
 	bool GlycolAutoTransferRelay;
+	//7K9
+	bool GlycolPumpFailRelay;
 
 	bool PressureSwitch;
 };
@@ -290,11 +299,19 @@ public:
 	double GetSecondaryGlycolTempF();
 	double GetSelectedGlycolTempF();
 	double GetWaterSeparatorRPM();
+	double GetAscWaterTank1TempF();
+	double GetAscWaterTank2TempF();
+	bool GetSuitFan1Failure();
+	bool GetSuitFan2Failure();
+	bool IsSuitCircuitReliefValveOpen();
+	bool IsCabinGasReturnValveOpen();
+	bool GetGlycolPump2Failure();
 
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
 	double *Suit_Press, *Suit_Temp, *SuitCircuit_CO2, *HX_CO2;					// Suit Circuit Atmosphere
 	double *Asc_Water1, *Asc_Water2, *Des_Water;					// Water tanks
+	double *Asc_Water1Temp, *Asc_Water2Temp;						// Water tank temperatures
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
 	double *Primary_CL_Glycol_Press;							// Pressure before and after pumps
@@ -318,6 +335,7 @@ public:
 	int *Suit_Circuit_Relief;									// Suit Circuit Relief Valve
 	int *Suit_IsolationCDR;										// CDR suit isolation valves
 	int *Suit_IsolationLMP;										// LMP suit isolation valves
+	int *Cabin_Gas_Return;										// Cabin gas return valve
 
 protected:
 	PanelSDK &sdk;

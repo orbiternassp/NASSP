@@ -369,6 +369,7 @@ LEMCabinRepressValve::LEMCabinRepressValve()
 	cabinRepressCB = NULL;
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
+	EmergencyCabinRepressRelay = false;
 }
 
 void LEMCabinRepressValve::Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
@@ -386,6 +387,8 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 
 	// Valve in motion
 	if (cabinRepressValve->in->pz) return;
+
+	EmergencyCabinRepressRelay = false;
 
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
@@ -412,6 +415,7 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 			if (cabinpress < 4.07 / PSI && cabinRepressValve->in->open == 0)
 			{
 				cabinRepressValve->in->Open();
+				EmergencyCabinRepressRelay = true;
 			}
 			else if (cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
 			{
@@ -810,6 +814,7 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 	glycolPump2 = NULL;
 
 	GlycolAutoTransferRelay = false;
+	GlycolPumpFailRelay = false;
 	PressureSwitch = true;
 }
 
@@ -849,6 +854,15 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 		GlycolAutoTransferRelay = false;
 	}
 
+	if (GlycolAutoTransferRelay && glycolRotary->GetState() == 1 && glycolPump1CB->IsPowered())
+	{
+		GlycolPumpFailRelay = true;
+	}
+	else
+	{
+		GlycolPumpFailRelay = false;
+	}
+
 	//PUMP 1
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
@@ -874,19 +888,20 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 
 void LEMPrimGlycolPumpController::LoadState(char *line)
 {
-	int i, j;
+	int i, j, k;
 
-	sscanf(line + 21, "%i %i", &i, &j);
+	sscanf(line + 21, "%i %i %i", &i, &j, &k);
 
 	PressureSwitch = (i != 0);
 	GlycolAutoTransferRelay = (j != 0);
+	GlycolPumpFailRelay = (j != 0);
 }
 
 void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
 {
 	char buffer[100];
 
-	sprintf(buffer, "%d %d", PressureSwitch, GlycolAutoTransferRelay);
+	sprintf(buffer, "%d %d %d", PressureSwitch, GlycolAutoTransferRelay, GlycolPumpFailRelay);
 	oapiWriteScenario_string(scn, "PRIMGLYPUMPCONTROLLER", buffer);
 }
 
@@ -979,6 +994,9 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Suit_Press = 0; Suit_Temp = 0;
 	SuitCircuit_CO2; HX_CO2 = 0;
 	Water_Sep1_Flow = 0; Water_Sep2_Flow = 0;
+	Suit_Circuit_Relief = 0;
+	Cabin_Gas_Return = 0;
+	Asc_Water1Temp = 0; Asc_Water2Temp = 0;
 }
 
 void LEM_ECS::Init(LEM *s) {
@@ -1020,6 +1038,8 @@ void LEM_ECS::LoadState(FILEHANDLE scn, char *end_str) {
 }
 
 double LEM_ECS::DescentOxyTankPressurePSI() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+	
 	if (!Des_OxygenPress) {
 		Des_OxygenPress = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:PRESS");
 	}
@@ -1191,8 +1211,84 @@ double LEM_ECS::GetWaterSeparatorRPM()
 	{
 		return (*Water_Sep1_Flow)*100.0;
 	}
-	else
-	{
-		return (*Water_Sep2_Flow)*100.0;
+	
+	return (*Water_Sep2_Flow)*100.0;
+}
+
+double LEM_ECS::GetAscWaterTank1TempF()
+{
+	if (!Asc_Water1Temp) {
+		Asc_Water1Temp = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK1:TEMP");
 	}
+	return KelvinToFahrenheit(*Asc_Water1Temp);
+}
+
+double LEM_ECS::GetAscWaterTank2TempF()
+{
+	if (!Asc_Water2Temp) {
+		Asc_Water2Temp = (double*)sdk.GetPointerByString("HYDRAULIC:ASCH2OTANK2:TEMP");
+	}
+	return KelvinToFahrenheit(*Asc_Water2Temp);
+}
+
+bool LEM_ECS::GetSuitFan1Failure()
+{
+	if (lem->SuitFanRotary.GetState() == 1)
+	{
+		if (lem->SuitFanDPSensor.GetSuitFanFail())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool LEM_ECS::GetSuitFan2Failure()
+{
+	if (lem->SuitFanRotary.GetState() == 2)
+	{
+		if (lem->SuitFanDPSensor.GetSuitFanFail())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool LEM_ECS::IsSuitCircuitReliefValveOpen()
+{
+	if (!Suit_Circuit_Relief) {
+		Suit_Circuit_Relief = (int*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:OUT2:ISOPEN");
+	}
+	if (Suit_Circuit_Relief)
+	{
+		return (*Suit_Circuit_Relief);
+	}
+
+	return false;
+}
+
+bool LEM_ECS::IsCabinGasReturnValveOpen()
+{
+	if (!Cabin_Gas_Return) {
+		Cabin_Gas_Return = (int*)sdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:LEAK:ISOPEN");
+	}
+	if (Cabin_Gas_Return)
+	{
+		return (*Cabin_Gas_Return);
+	}
+
+	return false;
+}
+
+bool LEM_ECS::GetGlycolPump2Failure()
+{
+	if (lem->GlycolRotary.GetState() != 0 && lem->PrimGlycolPumpController.GetPressureSwitch())
+	{
+		return true;
+	}
+
+	return false;
 }
