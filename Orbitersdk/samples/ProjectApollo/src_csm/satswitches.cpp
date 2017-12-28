@@ -990,27 +990,27 @@ void DirectO2RotationalSwitch::CheckValve()
 	
 	} else if (GetState() == 5) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.1 / LBH;
+		Pipe->flowMax = 6.0 / LBH;		//0.1 lb/min
 
 	} else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.2 / LBH;
+		Pipe->flowMax = 12.0 / LBH;		//0.2 lb/min
 
 	} else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.31 / LBH;
+		Pipe->flowMax = 18.6 / LBH;		//0.31 lb/min
 
 	} else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.41 / LBH;
+		Pipe->flowMax = 24.6 / LBH;		//0.41 lb/min
 
 	} else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.53 / LBH;
+		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
 
 	} else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.67 / LBH;
+		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
 	}
 }
 
