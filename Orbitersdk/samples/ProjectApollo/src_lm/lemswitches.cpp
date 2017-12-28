@@ -190,7 +190,7 @@ double LMSuitTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetSuitTempF();
+	return lem->scera1.GetVoltage(21, 1)*20.0 + 20.0;
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -218,7 +218,7 @@ double LMCabinTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetCabinTempF();
+	return lem->scera1.GetVoltage(21, 2)*20.0 + 20.0;
 }
 
 void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -245,7 +245,7 @@ void LMSuitPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMSuitPressMeter::QueryValue()
 {
 	if(!lem){ return 0; }
-	return lem->scera1.GetVoltage(5, 1);
+	return lem->scera1.GetVoltage(5, 1)*2.0;
 }
 
 void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
