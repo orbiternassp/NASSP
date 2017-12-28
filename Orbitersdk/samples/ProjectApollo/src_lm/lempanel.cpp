@@ -247,9 +247,9 @@ void LEM::InitSwitches() {
 	RadarSignalStrengthMeter.Register(PSH, "RadarSignalStrengthMeter", 0.0, 5.0, 3);
 	SlewRateSwitch.Register(PSH, "SlewRateSwitch", true);
 	DeadBandSwitch.Register(PSH, "DeadBandSwitch", false);
-	LMSuitTempMeter.Register(PSH,"LMSuitTempMeter",40,100,2);
-	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",40,100,2);
-	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,10,2);
+	LMSuitTempMeter.Register(PSH,"LMSuitTempMeter",1,4,2);
+	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",1,4,2);
+	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,5,2);
 	LMCabinPressMeter.Register(PSH,"LMCabinPressMeter",0,10,2);
 	LMCO2Meter.Register(PSH,"LMCO2Meter",0,30,2);
 	LMGlycolTempMeter.Register(PSH,"LMGlycolTempMeter",0,80,2);

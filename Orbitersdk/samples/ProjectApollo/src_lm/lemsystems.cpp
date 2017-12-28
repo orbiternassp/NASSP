@@ -1566,6 +1566,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *PressRegATemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGA:TEMP");
 	double *PressRegBTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGB:TEMP");
 
+	double *SuitCircuitPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
 	double *SuitCircuitMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:MASS");
 	double *SuitCircuitTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:TEMP");
 
@@ -1768,7 +1769,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *CDRSuitCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:CO2_PPRESS");
 	double *LMPSuitCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");*/
 
-	//sprintf(oapiDebugString(), "Co2PP: SC %lf HX %lf Cabin %lf CDR %lf LMP %lf Sensor %lf", *SuitCircuitCO2*MMHG, *SuitHXHCO2*MMHG, *CabinCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, (ecs.GetSensorCO2MMHg())*MMHG);
+	//sprintf(oapiDebugString(), "Co2PP: SC %lf HX %lf Cabin %lf CDR %lf LMP %lf Sensor %lf", *SuitCircuitCO2*MMHG, *SuitHXHCO2*MMHG, *CabinCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, ecs.GetSensorCO2MMHg());
 
 	//sprintf(oapiDebugString(), "AcM %lf L1M %lf ABCM %lf L2M %lf EIM %lf EOM %lf Flow %lf", *secglycolmass, *secloop1mass, *secascbatmass, *secloop2mass, *secevapinmass, *secevapoutmass, *secGlyReg1Flow);
 	//sprintf(oapiDebugString(), "AcP %lf L1P %lf ABCP %lf L2P %lf EIP %lf EOP %lf Flow %lf", *secglycolpress*PSI, *secloop1press*PSI, *secascbatpress*PSI, *secloop2press*PSI, *secevapinpress*PSI, *secevapoutpress*PSI, *secGlyReg1Flow);
@@ -1797,7 +1798,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2TT %lf DO2MQ %lf DO2MP %lf DO2MT %lf O2MQ %lf O2MP %lf O2MT %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2ManifoldMass, (*DESO2ManifoldPress)*PSI, *O2ManifoldTemp, *O2ManifoldMass, (*O2ManifoldPress)*PSI, *O2ManifoldTemp);
 	//sprintf(oapiDebugString(), "SMP %lf SF1P %lf SF2P %lf HXCP %lf WS1P %lf WS2P %lf HXHP %lf", (*suitfanmanifoldPress)*PSI, (*suitfan1Press)*PSI, (*suitfan2Press)*PSI, (*hxcoolingPress)*PSI, (*ws1Press)*PSI, (*ws2Press)*PSI, (*hxheatingPress)*PSI);
 	//sprintf(oapiDebugString(), "CO2 MP %lf PRIM CO2 %lf SEC CO2 %lf CAB %lf SUIT %lf PV %d PF %lf SV %d SF %lf", (*co2ManifoldPress)*PSI, (*primCo2CanisterPress)*PSI, (*secCo2CanisterPress)*PSI, (*cabinPress)*PSI, (*suitPress)*PSI, *primCO2Vent, *primCO2Flow, *secCO2Vent, *secCO2Flow);
-	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf VLV %d FLOW %lf FLOWMAX %lf", ecs.GetCabinPressurePSI(), ecs.GetSuitPressurePSI(), *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
+	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf VLV %d FLOW %lf FLOWMAX %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf SuitP %lf SuitT %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2T %lf DO2VM %lf DO2E %lf DO2PP %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
@@ -3956,9 +3957,9 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
-		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantityLBS() < 33)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1QuantityLBS()  < 42.5 || lem->ecs.AscentWaterTank2QuantityLBS() < 42.5)){ LightStatus[3][7] = 1; }
-		if((int)lem->ecs.AscentWaterTank1QuantityLBS() != (int)lem->ecs.AscentWaterTank2QuantityLBS()){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.99 || lem->ecs.AscentWaterTank2Quantity() < 0.99)){ LightStatus[3][7] = 1; }
+		if(abs(lem->ecs.AscentWaterTank1Quantity() - lem->ecs.AscentWaterTank2Quantity()) > 0.01) { LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
 		WaterWarningDisabled = 1;

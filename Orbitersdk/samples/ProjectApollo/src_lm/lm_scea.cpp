@@ -285,7 +285,8 @@ void SCERA1::Timestep()
 		return;
 	}
 
-	bool val = false;
+	bool bval = false;
+	double dval = 0.0;
 
 	//Jet Driver B2U Output (GH1426V)
 	SA2.SetOutput(1, lem->atca.jet_request[LMRCS_B2U] == 1);
@@ -334,6 +335,13 @@ void SCERA1::Timestep()
 	//Jet Driver A3R Output (GH1425V)
 	SA4.SetOutput(10, lem->atca.jet_request[LMRCS_A3R] == 1);
 
+	//Suit outlet pressure (GF1301)
+	SA5.SetOutput(1, scale_data(lem->ecs.GetSuitPressurePSI(), 0.0, 10.0));
+	//CO2 partial pressure (GF1521)
+	SA5.SetOutput(2, scale_data(lem->ecs.GetSensorCO2MMHg(), 0.0, 30.0));
+	//Water separator no. 1 and 2 (GF9999)
+	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 500.0, 3600.0));
+
 	//Helium pressure tank A (GR1101)
 	SA6.SetOutput(1, scale_data(lem->RCSA.GetRCSHeliumPressPSI(), 0.0, 3500.0));
 	//Helium pressure tank B (GR1102)
@@ -343,6 +351,17 @@ void SCERA1::Timestep()
 	//Helium regulator pressure system B (GR1202)
 	SA6.SetOutput(4, scale_data(lem->RCSB.GetRCSRegulatorPressPSI(), 0.0, 350.0));
 
+	//Ascent oxygen tank no. 1 pressure (GF3582)
+	SA7.SetOutput(1, scale_data(lem->ecs.AscentOxyTank1PressurePSI(), 0.0, 1000.0));
+	//Ascent oxygen tank no. 2 pressure (GF3583)
+	SA7.SetOutput(2, scale_data(lem->ecs.AscentOxyTank2PressurePSI(), 0.0, 1000.0));
+	//Descent tank water quantity (GF4500)
+	SA7.SetOutput(3, scale_data(lem->ecs.DescentWaterTankQuantity(), 0.0, 1.0));
+
+	//Ascent tank no. 1 water quantity (GF4582)
+	SA8.SetOutput(1, scale_data(lem->ecs.AscentWaterTank1Quantity(), 0.0, 1.0));
+	//Ascent tank no. 2 water quantity (GF4583)
+	SA8.SetOutput(2, scale_data(lem->ecs.AscentWaterTank2Quantity(), 0.0, 1.0));
 	//APS regulator outlet manifold pressure (GP0025)
 	SA8.SetOutput(3, scale_data(lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI(), 0.0, 300.0));
 	//APS helium tank no. 1 pressure (GP0001)
@@ -357,6 +376,8 @@ void SCERA1::Timestep()
 	//APS oxidizer tank, oxidizer bulk temperature (GP1218)
 	SA9.SetOutput(4, scale_data(lem->APSPropellant.GetOxidizerTankBulkTempF(), 20.0, 120.0));
 
+	//Water sublimator coolant outlet temperature (GF9998)
+	SA10.SetOutput(1, scale_data(lem->ecs.GetSelectedGlycolTempF(), 20.0, 120.0));
 	//DPS oxidizer tank no. 1 fuel bulk temperature (GQ4218)
 	SA10.SetOutput(3, scale_data(lem->DPSPropellant.GetOxidizerTank1BulkTempF(), 20.0, 120.0));
 	//DPS oxidizer tank no. 2 fuel bulk temperature (GQ4219)
@@ -388,11 +409,11 @@ void SCERA1::Timestep()
 	//Main shutoff valves closed, system B (GR96010)
 	SA12.SetOutput(2, !lem->RCSB.GetMainShutoffValve()->IsOpen());
 	//System A oxidizer interconnect valves open (GR9641)
-	val = lem->RCSA.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSA.GetSecOxidInterconnectValve()->IsOpen();
-	SA12.SetOutput(3, val);
+	bval = lem->RCSA.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSA.GetSecOxidInterconnectValve()->IsOpen();
+	SA12.SetOutput(3, bval);
 	//System B oxidizer interconnect valves open (GR9642)
-	val = lem->RCSB.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSB.GetSecOxidInterconnectValve()->IsOpen();
-	SA12.SetOutput(4, val);
+	bval = lem->RCSB.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSB.GetSecOxidInterconnectValve()->IsOpen();
+	SA12.SetOutput(4, bval);
 	//APS helium primary line solenoid valve closed (GP0318)
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
@@ -415,14 +436,14 @@ void SCERA1::Timestep()
 	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
 	SA13.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
 	//RCS/ASC interconnect A not closed (GR9631)
-	val = lem->RCSA.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSA.GetSecFuelInterconnectValve()->IsOpen();
-	SA13.SetOutput(10, val);
+	bval = lem->RCSA.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSA.GetSecFuelInterconnectValve()->IsOpen();
+	SA13.SetOutput(10, bval);
 	//RCS/ASC interconnect B not closed (GR9632)
-	val = lem->RCSB.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSB.GetSecFuelInterconnectValve()->IsOpen();
-	SA13.SetOutput(11, val);
+	bval = lem->RCSB.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSB.GetSecFuelInterconnectValve()->IsOpen();
+	SA13.SetOutput(11, bval);
 	//RCS A/B crossfeed open
-	val = lem->RCSB.GetFuelCrossfeedValve()->IsOpen() && lem->RCSB.GetOxidCrossfeedValve()->IsOpen();
-	SA13.SetOutput(12, val);
+	bval = lem->RCSB.GetFuelCrossfeedValve()->IsOpen() && lem->RCSB.GetOxidCrossfeedValve()->IsOpen();
+	SA13.SetOutput(12, bval);
 
 	//Thrust chamber assembly solenoid valve A4 closed (GR9661)
 	SA14.SetOutput(1, !lem->RCSA.GetQuad4IsolationValve()->IsOpen());
@@ -464,6 +485,11 @@ void SCERA1::Timestep()
 	SA19.SetOutput(3, scale_data(lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI(), 0.0, 250.0));
 	//APS oxidizer bipropellant valve inlet pressure (GP1503)
 	SA19.SetOutput(4, scale_data(lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI(), 0.0, 250.0));
+
+	//Suit inlet temperature (GF1281)
+	SA21.SetOutput(1, scale_data(lem->ecs.GetSuitTempF(), 20.0, 120.0));
+	//Cabin temperature (GF1651)
+	SA21.SetOutput(2, scale_data(lem->ecs.GetCabinTempF(), 20.0, 120.0));
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

@@ -256,17 +256,19 @@ public:
 	double AscentOxyTank2QuantityLBS();
 	double DescentOxyTankQuantityLBS();
 	double GetCabinPressurePSI();
-	double GetCabinTemperature();
+	double GetCabinTempF();
 	double GetSuitPressurePSI();
-	double GetSuitTemperature();
+	double GetSuitTempF();
 	double GetSensorCO2MMHg();
-	double AscentWaterTank1QuantityLBS();
-	double AscentWaterTank2QuantityLBS();
-	double DescentWaterTankQuantityLBS();
+	double AscentWaterTank1Quantity();
+	double AscentWaterTank2Quantity();
+	double DescentWaterTankQuantity();
 	double GetPrimaryGlycolPressure();
 	double GetSecondaryGlycolPressure();
-	double GetPrimaryGlycolTemperature();
-	double GetSecondaryGlycolTemperature();
+	double GetPrimaryGlycolTempF();
+	double GetSecondaryGlycolTempF();
+	double GetSelectedGlycolTempF();
+	double GetWaterSeparatorRPM();
 
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
@@ -280,6 +282,7 @@ public:
 	double *Secondary_CL_Glycol_Temp;						// Temperature before and after pumps
 	double *Primary_Glycol_Accu;								// Glycol Accumulator
 	double *Secondary_Glycol_Accu;								// Glycol Accumulator
+	double *Water_Sep1_Flow, *Water_Sep2_Flow;					// Water separators RPM
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve
 	int *Pri_Evap_Flow_1, *Pri_Evap_Flow_2;						// Primary evaporator flow valves

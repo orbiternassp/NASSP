@@ -552,8 +552,6 @@ public:
 	void PanelRefreshOverheadHatch();
 
 	// Panel SDK
-	bool GetValveState(int valve);
-	void SetValveState(int valve, bool open);
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
 	void ConnectTunnelToCabinVent();
@@ -1903,6 +1901,7 @@ protected:
 	friend class LMRCSAQtyInd;
 	friend class LMRCSBQtyInd;
 	friend class RCS_TCA;
+	friend class LEM_ECS;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

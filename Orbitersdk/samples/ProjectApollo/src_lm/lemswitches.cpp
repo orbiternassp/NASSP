@@ -190,7 +190,7 @@ double LMSuitTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetSuitTemperature();
+	return lem->ecs.GetSuitTempF();
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -218,7 +218,7 @@ double LMCabinTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetCabinTemperature();
+	return lem->ecs.GetCabinTempF();
 }
 
 void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -243,10 +243,9 @@ void LMSuitPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double LMSuitPressMeter::QueryValue()
-
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetSuitPressurePSI();
+	return lem->scera1.GetVoltage(5, 1);
 }
 
 void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -360,13 +359,7 @@ double LMGlycolTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->GlycolRotary.GetState() == 0){
-		// Secondary
-		return(lem->ecs.GetSecondaryGlycolTemperature());
-	}else{
-		// Primary
-		return(lem->ecs.GetPrimaryGlycolTemperature());
-	}
+	return lem->scera1.GetVoltage(10, 1)*20.0 + 20.0;
 }
 
 void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -471,11 +464,11 @@ double LMWaterQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return((lem->ecs.DescentWaterTankQuantityLBS()/(333)*100));
+			return lem->scera1.GetVoltage(7, 3)*20.0;
 		case 2: // ASC 1
-			return((lem->ecs.AscentWaterTank1QuantityLBS()/42.5)*100);
+			return lem->scera1.GetVoltage(8, 1)*20.0;
 		case 3: // ASC 2
-			return((lem->ecs.AscentWaterTank2QuantityLBS()/42.5)*100);
+			return lem->scera1.GetVoltage(8, 2)*20.0;
 	}
 }
 
