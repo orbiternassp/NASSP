@@ -528,6 +528,7 @@ public:
 	void SetLmLandedMesh();
 	void SetLPDMesh();
 	void SetFwdHatchMesh();
+	void SetOvhdHatchMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -1605,6 +1606,7 @@ protected:
 	int lpdgret;
 	int lpdgext;
 	int fwdhatch;
+	int ovhdhatch;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
