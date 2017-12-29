@@ -53,7 +53,7 @@ void LEMOverheadHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshOverheadHatch();
-			//TBD: Set hatch mesh
+			lem->SetOvhdHatchMesh();
 		}
 	}
 	else
@@ -61,7 +61,7 @@ void LEMOverheadHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshOverheadHatch();
-		//TBD: Set hatch mesh
+		lem->SetOvhdHatchMesh();
 	}
 }
 
