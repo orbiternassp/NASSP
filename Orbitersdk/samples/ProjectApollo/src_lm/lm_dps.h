@@ -69,6 +69,10 @@ public:
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
 	double GetFuelEngineInletPressurePSI() { return FuelEngineInletPressurePSI; }
+	double GetOxidizerTank1BulkTempF();
+	double GetOxidizerTank2BulkTempF();
+	double GetFuelTank1BulkTempF();
+	double GetFuelTank2BulkTempF();
 	bool PropellantLevelLow();
 
 	DPSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }

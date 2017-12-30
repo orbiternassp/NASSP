@@ -510,6 +510,9 @@ public:
 	virtual void Save(FILEHANDLE scn);
 	void *GetComponent(char *component_name);
 	virtual void BroadcastDemision(ship_object * gonner){if (SRC == gonner) {SRC = NULL; loaded = 0;};};
+
+	void SetPumpOn() { h_pump = 1; };
+	void SetPumpOff() { h_pump = 0; };
 };
 
 ///

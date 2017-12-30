@@ -763,6 +763,7 @@
 #define IDB_DIGITAL90									   1048
 #define AID_EVENT_TIMER306                                 1049
 #define AID_MISSION_CLOCK306							   1050
+#define AID_PRESS_EQUAL_VALVE_HANDLE                       1051
 
 // Next default values for new objects
 //

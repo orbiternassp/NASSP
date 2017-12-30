@@ -352,6 +352,10 @@ void SIISystems::SwitchSelector(int channel)
 			vessel->AddRCS_S4B();
 		}
 		break;
+	case 6: //Start Phase Limiter Cutoff Reset
+		break;
+	case 7: //LH2 Step Pressurization
+		break;
 	case 8: //S-II/S-IVB Ordnance Arm
 		SetSIISIVBOrdnanceArm();
 		break;
@@ -360,11 +364,17 @@ void SIISystems::SwitchSelector(int channel)
 	case 11: //S-II Ordnance Arm
 		SetOrdnanceArm();
 		break;
+	case 12: //Hydraulic Accumulators Unlock
+		break;
+	case 14: //LOX Step Pressurization
+		break;
 	case 17: //S-II Center Engine Cutoff (Actual channel has to be researched!)
 		LVDCCenterEngineCutoff();
 		break;
 	case 18: //S-II Engines Cutoff
 		LVDCEnginesCutoff();
+		break;
+	case 19: //Prevalves Lockout Reset
 		break;
 	case 20: //Engines Ready Bypass
 		SetEnginesReadyBypass();
@@ -379,10 +389,14 @@ void SIISystems::SwitchSelector(int channel)
 	case 24: //S-II Ullage Trigger
 		FireUllageTrigger();
 		break;
+	case 25: //Start Phase Limiter Cutoff Arm
+		break;
 	case 30: //Start First PAM - FM/FM Relays Reset
 		break;
 	case 31: //S-II Engines Cutoff Reset
 		LVDCEnginesCutoffReset();
+		break;
+	case 32: //PU System Activate
 		break;
 	case 33: //S-II Engine Start
 		EngineStartOn();
@@ -391,6 +405,8 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	case 42: //S-II LH2 Depletion Sensors Cutoff Arm
 		SetDepletionSensorsCutoffArm();
+		break;
+	case 48: //LH2 Recirculation Pumps Off
 		break;
 	case 49: //Engines Ready Bypass Reset
 		ResetEnginesReadyBypass();
@@ -406,7 +422,19 @@ void SIISystems::SwitchSelector(int channel)
 	case 59: //High (5.5 Engine Mixture Ratio On
 		SetPUValve(PUVALVE_CLOSED);
 		break;
+	case 60: //PU System Open Loop Arm
+		break;
+	case 66: //Start Recorder Times
+		break;
 	case 71: //Start Data Recorders
+		break;
+	case 88: //Chilldown Valves Close
+		break;
+	case 90: //Measurement Control Switch No. 2 Activate
+		break;
+	case 99: //Prevalves Close Arm
+		break;
+	case 104: //Stop Data Recorders
 		break;
 	default:
 		break;
