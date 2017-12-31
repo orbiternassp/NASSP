@@ -378,6 +378,19 @@ void H_system::Create_h_WaterSeparator(char *line) {
 	}
 }
 
+void H_system::Create_h_HeatLoad(char *line) {
+
+	char name[100], targetName[100];
+
+	sscanf(line + 10, " %s %s",
+		name, targetName);
+
+	ship_object* so = (ship_object*)GetPointerByString(targetName);
+	therm_obj *target = so->GetThermalInterface();
+
+	AddSystem(new h_HeatLoad(name,target));
+}
+
 void H_system::Build() {
 	
 	char *line;
@@ -406,6 +419,8 @@ void H_system::Build() {
 			Create_h_CO2Scrubber(line);
 		else if (Compare(line, "<H2OSEP>"))
 			Create_h_WaterSeparator(line);
+		else if (Compare(line, "<HEATLOAD>"))
+			Create_h_HeatLoad(line);
 
 		line = ReadConfigLine();
 	}

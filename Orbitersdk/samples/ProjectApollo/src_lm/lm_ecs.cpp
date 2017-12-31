@@ -992,7 +992,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; Suit_Temp = 0;
-	SuitCircuit_CO2; HX_CO2 = 0;
+	SuitCircuit_CO2 = 0; HX_CO2 = 0;
 	Water_Sep1_Flow = 0; Water_Sep2_Flow = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
