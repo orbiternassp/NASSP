@@ -478,6 +478,7 @@ void Saturn::SystemsInit() {
 	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
+	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"));
 
 	WaterController.Init(this, (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
 		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
@@ -490,8 +491,8 @@ void Saturn::SystemsInit() {
 	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
 					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELPRESSURIZATIONVALVE"),
 					  &LMTunnelVentValve);
-	ForwardHatch.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCH"),
-					  &PressEqualValve);
+	PressureEqualizationValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"),
+					  &PressEqualValve, &ForwardHatch);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -594,6 +595,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS1.Timestep(MissionTime, simdt);	// Must be after JoystickTimestep
 		CMRCS2.Timestep(MissionTime, simdt);
 		SideHatch.Timestep(simdt);
+		ForwardHatch.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		pmp.TimeStep(MissionTime);
@@ -1272,7 +1274,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
 		LMTunnelVent.SystemTimestep(tFactor);
-		ForwardHatch.SystemTimestep(tFactor);
+		PressureEqualizationValve.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);

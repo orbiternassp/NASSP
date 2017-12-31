@@ -1210,7 +1210,14 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 
 	if (id == SATPANEL_LOWER_MAIN) { 
-		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_MAIN_PANEL));
+		if (ForwardHatch.IsOpen())
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_CSM_LOWER_MAIN_PANEL_OPEN));
+		}
+		else
+		{
+			hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_CSM_LOWER_MAIN_PANEL));
+		}
 
 		if ( !hBmp )
 		{
@@ -1245,8 +1252,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL10_RIGHT_SWITCHES,			_R(1112 + xoffset, 1476, 1146 + xoffset, 1731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_TUNNEL_VENT_VALVE,			_R(1709 + xoffset, 1297, 1747 + xoffset, 1335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_DP_GAUGE,						_R(1681 + xoffset, 1448, 1767 + xoffset, 1530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PRESS_EQUAL_VALVE_HANDLE,		_R(1148          ,  476, 1412          ,  740), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			     	PANEL_MAP_BACKGROUND);
 		
+		if (!ForwardHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_PRESS_EQUAL_VALVE_HANDLE,		_R(1148, 476, 1412, 740), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		}
+
+		oapiRegisterPanelArea (AID_FORWARD_HATCH,					_R(960, 168, 1147, 1000), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -3507,6 +3520,11 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	case AID_EMSDVSETSWITCH:
 		return EMSDvSetSwitch.CheckMouseClick(event, mx, my);			
 
+	// Forward Hatch
+	case AID_FORWARD_HATCH:
+		ForwardHatch.Toggle();
+		return true;
+
 	// CWS
 	case AID_MASTER_ALARM:
 	case AID_MASTER_ALARM2:
@@ -3985,12 +4003,24 @@ void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch
 	}
 }
 
-void Saturn::PanelRefreshHatch() {
+void Saturn::PanelRefreshForwardHatch() {
+
+	if (InPanel && PanelId == SATPANEL_LOWER_MAIN) {
+		if (oapiCameraInternal()) {
+			oapiSetPanel(SATPANEL_LOWER_MAIN);
+		} else {
+			RefreshPanelIdInTimestep = true;
+		}
+	}
+}
+
+void Saturn::PanelRefreshSideHatch() {
 
 	if (InPanel && PanelId == SATPANEL_HATCH_WINDOW) {
 		if (oapiCameraInternal()) {
 			oapiSetPanel(SATPANEL_HATCH_WINDOW);
-		} else {
+		}
+		else {
 			RefreshPanelIdInTimestep = true;
 		}
 	}

@@ -336,12 +336,38 @@ protected:
 class SaturnForwardHatch
 {
 public:
-	SaturnForwardHatch();
-	void Init(h_Valve *pev, RotationalSwitch *pes);
+	SaturnForwardHatch(Sound &opensound, Sound &closesound);
+	virtual ~SaturnForwardHatch();
+
+	void Init(Saturn *s, h_Pipe *p);
+	void Timestep(double simdt);
+	void Toggle();
+
+	bool IsOpen() { return open; };
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+protected:
+	bool open;
+	int toggle;
+
+	Saturn *saturn;
+	h_Pipe *pipe;
+
+	Sound &OpenSound;
+	Sound &CloseSound;
+};
+
+class SaturnPressureEqualizationValve
+{
+public:
+	SaturnPressureEqualizationValve();
+	void Init(h_Pipe *pev, RotationalSwitch *pes, SaturnForwardHatch *h);
 	void SystemTimestep(double simdt);
 protected:
 	RotationalSwitch *PressureEqualizationSwitch;
-	h_Valve *PressureEqualizationValve;
+	h_Pipe *PressureEqualizationValve;
+	SaturnForwardHatch *ForwardHatch;
 };
 
 #endif // _PA_ECS_H

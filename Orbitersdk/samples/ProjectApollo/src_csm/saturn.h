@@ -895,7 +895,8 @@ public:
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
-	void PanelRefreshHatch();
+	void PanelRefreshForwardHatch();
+	void PanelRefreshSideHatch();
 
 	// Called by Crawler/ML
 	virtual void LaunchVehicleRolloutEnd() {};	// after arrival on launch pad
@@ -3617,6 +3618,7 @@ protected:
 	SaturnGlycolCoolingController GlycolCoolingController;
 	SaturnLMTunnelVent LMTunnelVent;
 	SaturnForwardHatch ForwardHatch;
+	SaturnPressureEqualizationValve PressureEqualizationValve;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
