@@ -350,9 +350,12 @@ void LEM::Init()
 	ApolloNo = 0;
 	Landed = false;
 
+	// Mesh Indexes
+	
 	lpdgret = -1;
 	lpdgext = -1;
 	fwdhatch = -1;
+	ovhdhatch = -1;
 
 	//
 	// VAGC Mode settings

@@ -54,6 +54,7 @@ static MESHHANDLE hLemProbes;
 static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
 static MESHHANDLE hFwdHatch;
+static MESHHANDLE hOvhdHatch;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -184,10 +185,14 @@ void LEM::SetLmVesselDockStage()
 	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	
-	// FWD HATCH
+	// Forward Hatch
 	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
 	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
 	SetFwdHatchMesh();
+
+	// Drogue & Overhead hatch
+	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	SetOvhdHatchMesh();
 	
 	if (!ph_Dsc)
 	{
@@ -318,10 +323,14 @@ void LEM::SetLmVesselHoverStage()
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	// FWD HATCH
+	// Forward Hatch
 	VECTOR3 hatch_dir= _V(-0.003, -0.03, 0.004);
 	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
 	SetFwdHatchMesh();
+
+	// Drogue & Overhead hatch
+	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	SetOvhdHatchMesh();
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -454,10 +463,14 @@ void LEM::SetLmAscentHoverStage()
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		// FWD HATCH
+	// Forward Hatch
 	VECTOR3 hatch_dir= _V(0, -1.88, 0);
 	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
 	SetFwdHatchMesh();
+
+	// Drogue & Overhead hatch
+	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	SetOvhdHatchMesh();
 	
 	if (!ph_Asc)
 	{
@@ -627,6 +640,16 @@ void LEM::SetFwdHatchMesh() {
 	}
 }
 
+void LEM::SetOvhdHatchMesh() {
+
+	if (OverheadHatch.IsOpen()) {
+		SetMeshVisibilityMode(ovhdhatch, MESHVIS_NEVER);
+	}
+	else {
+		SetMeshVisibilityMode(ovhdhatch, MESHVIS_VCEXTERNAL);
+	}
+}
+
 void LEMLoadMeshes()
 
 {
@@ -640,6 +663,7 @@ void LEMLoadMeshes()
 	hLPDgret = oapiLoadMeshGlobal("ProjectApollo/LPD_gret");
 	hLPDgext = oapiLoadMeshGlobal("ProjectApollo/LPD_gext");
 	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_FwdHatch");
+	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_Drogue");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
 
