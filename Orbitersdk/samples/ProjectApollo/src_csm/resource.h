@@ -763,12 +763,15 @@
 #define IDB_DIGITAL90									   1048
 #define AID_EVENT_TIMER306                                 1049
 #define AID_MISSION_CLOCK306							   1050
+#define AID_PRESS_EQUAL_VALVE_HANDLE                       1051
+#define IDB_CSM_LOWER_MAIN_PANEL_OPEN					   1052
+#define AID_FORWARD_HATCH								   1053
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1051
+#define _APS_NEXT_RESOURCE_VALUE                            1053
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

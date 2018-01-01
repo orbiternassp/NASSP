@@ -26,13 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "LVIMU.h"
 
-#include "soundlib.h"
-
-#include "ioChannels.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
-#include "saturn.h"
 #include "papi.h"
+#include "iu.h"
 
 #include "FCC.h"
 
@@ -52,13 +47,12 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 
 	LVDCAttitudeError = _V(0.0, 0.0, 0.0);
 
-	lvCommandConnector = NULL;
+	iu = NULL;
 }
 
-void FCC::Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector* commandConn)
+void FCC::Init(IU *i)
 {
-	lvCommandConnector = lvCommandConn;
-	commandConnector = commandConn;
+	iu = i;
 }
 
 void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -99,20 +93,19 @@ FCC1B::FCC1B(LVRG &rg) : FCC(rg)
 void FCC1B::Timestep(double simdt)
 {
 	if (GainSwitch < 0) return;
-	if (lvCommandConnector == NULL) return;
-	if (lvCommandConnector->connectedTo == NULL) return;
+	if (iu == NULL) return;
 
 	VECTOR3 AttRate, AttitudeError;
 
 	AttRate = lvrg.GetRates();
 
 	// S/C takeover function
-	if (SCControlEnableRelay == true && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))) {
+	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-		AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
-		AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
-		AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
+		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
+		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 31.6;
+		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -31.6;
 	}
 	else
 	{
@@ -138,19 +131,19 @@ void FCC1B::Timestep(double simdt)
 		a_1p = a_1y = 1.6;
 		a_1r = 0.25;
 	}
-	else if (GainSwitch == 3) {
+	else if (GainSwitch == 3 && StageSwitch == 0) {
 		a_0p = a_0y = 0.7;
 		a_0r = 0.2;
 		a_1p = a_1y = 0.75;
 		a_1r = 0.15;
 	}
-	else if (GainSwitch == 4 && SIVBBurnMode == true) {
+	else if (StageSwitch == 2 && SIVBBurnMode == true) {
 		a_0p = a_0y = 0.6;
 		a_0r = 1;
 		a_1p = a_1y = 0.5;
 		a_1r = 5;
 	}
-	else if (GainSwitch == 4 && SIVBBurnMode == false) {
+	else if (StageSwitch == 2 && SIVBBurnMode == false) {
 		a_0p = a_0y = 1;
 		a_0r = 1;
 		a_1p = a_1y = 5;
@@ -171,16 +164,16 @@ void FCC1B::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		beta_p4c = beta_pc + beta_rc / pow(2, 0.5);
 
-		lvCommandConnector->SetSIThrusterDir(0, _V(beta_y1c, beta_p1c, 1));
-		lvCommandConnector->SetSIThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
-		lvCommandConnector->SetSIThrusterDir(2, _V(beta_y3c, beta_p3c, 1));
-		lvCommandConnector->SetSIThrusterDir(3, _V(beta_y4c, beta_p4c, 1));
+		iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c, beta_p1c);
+		iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c, beta_p2c);
+		iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c, beta_p3c);
+		iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c, beta_p4c);
 	}
 	else if (SIVBBurnMode == true) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		lvCommandConnector->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
+		iu->GetLVCommandConnector()->SetSIVBThrusterDir(beta_y1c, beta_p1c);
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
@@ -196,51 +189,57 @@ void FCC1B::Timestep(double simdt)
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
-			if (eps_p >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(1, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(1, (eps_p - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, true);
+			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, (eps_p - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(1, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, false);
 		}
 		if (eps_p < -1) {
 			//fire-pitch
-			if (eps_p <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(0, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(0, (-eps_p - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, true);
+			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, (-eps_p - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(0, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, false);
 		}
 		if (eps_ymr > 1) {
 			//fire+yaw-roll;
-			if (eps_ymr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(3, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(3, (eps_ymr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, true);
+			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, (eps_ymr - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(3, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, false);
 		}
 		if (eps_ymr < -1) {
 			//fire-yaw+roll;
-			if (eps_ymr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(5, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(5, (-eps_ymr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, true);
+			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, (-eps_ymr - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(5, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, false);
 		}
 		if (eps_ypr > 1) {
 			//fire+yaw+roll;
-			if (eps_ypr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(4, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(4, (eps_ypr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, true);
+			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, (eps_ypr - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(4, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, false);
 		}
 		if (eps_ypr < -1) {
 			//fire-yaw-roll;
-			if (eps_ypr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(2, 1); }
-			else { lvCommandConnector->SetAPSThrusterLevel(2, (-eps_ypr - 1) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, true);
+			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, 1); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, (-eps_ypr - 1) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(2, 0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, false);
 		}
 	}
 }
@@ -253,19 +252,18 @@ FCCSV::FCCSV(LVRG &rg) : FCC(rg)
 void FCCSV::Timestep(double simdt)
 {
 	if (GainSwitch < 0) return;
-	if (lvCommandConnector == NULL) return;
-	if (lvCommandConnector->connectedTo == NULL) return;
+	if (iu == NULL) return;
 
 	VECTOR3 AttRate, AttitudeError;
 
 	AttRate = lvrg.GetRates();
 
-	if ((SCControlEnableRelay == true || lvCommandConnector->GetApolloNo() >= 11) && ((commandConnector->LVGuidanceSwitchState() == THREEPOSSWITCH_DOWN) && commandConnector->GetAGCInputChannelBit(012, EnableSIVBTakeover))) {
+	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-		AttitudeError.x = commandConnector->GetAGCAttitudeError(0) * RAD / 31.6;
-		AttitudeError.y = commandConnector->GetAGCAttitudeError(1) * RAD / 31.6;
-		AttitudeError.z = commandConnector->GetAGCAttitudeError(2) * RAD / -31.6;
+		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
+		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 31.6;
+		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -31.6;
 	}
 	else
 	{
@@ -349,26 +347,25 @@ void FCCSV::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		if (StageSwitch < 1) {
 			//SIC
-			lvCommandConnector->SetSIThrusterDir(0, _V(beta_y4c, beta_p4c, 1));
-			lvCommandConnector->SetSIThrusterDir(1, _V(beta_y2c, beta_p2c, 1));
-			//1 & 3 are the same on both stages
-			lvCommandConnector->SetSIThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
-			lvCommandConnector->SetSIThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c, beta_p1c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c, beta_p2c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c, beta_p3c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c, beta_p4c);
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
-			lvCommandConnector->SetSIIThrusterDir(0, _V(beta_y2c, beta_p2c, 1));
-			lvCommandConnector->SetSIIThrusterDir(1, _V(beta_y4c, beta_p4c, 1));
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(0, beta_y2c, beta_p2c);
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(1, beta_y4c, beta_p4c);
 			//1 & 3 are the same on both stages
-			lvCommandConnector->SetSIIThrusterDir(2, _V(beta_y1c, beta_p1c, 1));
-			lvCommandConnector->SetSIIThrusterDir(3, _V(beta_y3c, beta_p3c, 1));
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(2, beta_y1c, beta_p1c);
+			iu->GetLVCommandConnector()->SetSIIThrusterDir(3, beta_y3c, beta_p3c);
 		}
 	}
 	else if (SIVBBurnMode == true && StageSwitch == 2) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
-		lvCommandConnector->SetSIVBThrusterDir(_V(beta_y1c, beta_p1c, 1));
+		iu->GetLVCommandConnector()->SetSIVBThrusterDir(beta_y1c, beta_p1c);
 		eps_p = 0; //we want neither the APS pitch thrusters to fire
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
@@ -384,53 +381,60 @@ void FCCSV::Timestep(double simdt)
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
-			if (eps_p >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(1, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(1, (eps_p - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, true);
+			//if (eps_p >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, (eps_p - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(1, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(1, false);
 		}
 		if (eps_p < -1) {
 			//fire-pitch
-			if (eps_p <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(0, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(0, (-eps_p - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, true);
+			//if (eps_p <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, (-eps_p - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(0, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(0, false);
 		}
 		if (eps_ymr > 1) {
 			//fire+yaw-roll;
-			if (eps_ymr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(3, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(3, (eps_ymr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, true);
+			//if (eps_ymr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, (eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(3, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(3, false);
 		}
 		if (eps_ymr < -1) {
 			//fire-yaw+roll;
-			if (eps_ymr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(5, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(5, (-eps_ymr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, true);
+			//if (eps_ymr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, (-eps_ymr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(5, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(5, false);
 		}
 		if (eps_ypr > 1) {
 			//fire+yaw+roll;
-			if (eps_ypr >= 1.6) { lvCommandConnector->SetAPSThrusterLevel(4, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(4, (eps_ypr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, true);
+			//if (eps_ypr >= 1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, (eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(4, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(4, false);
 		}
 		if (eps_ypr < -1) {
 			//fire-yaw-roll;
-			if (eps_ypr <= -1.6) { lvCommandConnector->SetAPSThrusterLevel(2, 1.0); }
-			else { lvCommandConnector->SetAPSThrusterLevel(2, (-eps_ypr - 1.0) / 0.6); }
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, true);
+			//if (eps_ypr <= -1.6) { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, 1.0); }
+			//else { iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, (-eps_ypr - 1.0) / 0.6); }
 		}
 		else {
-			lvCommandConnector->SetAPSThrusterLevel(2, 0.0);
+			iu->GetLVCommandConnector()->SetAPSAttitudeEngine(2, false);
 		}
 	}
 
 	//sprintf(oapiDebugString(), "%d %d %d %f %f %f", GainSwitch, StageSwitch, SIVBBurnMode, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
+	//sprintf(oapiDebugString(), "%f %f %f", eps_p, eps_ymr, eps_ypr);
 }

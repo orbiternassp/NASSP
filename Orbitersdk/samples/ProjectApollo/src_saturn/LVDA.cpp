@@ -28,6 +28,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "LVIMU.h"
+#include "LVDC.h"
+#include "iu.h"
 #include "saturn.h"
 #include "papi.h"
 
@@ -90,12 +93,107 @@ VECTOR3 LVDA::GetLVIMUPIPARegisters()
 	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
 }
 
-bool LVDA::GetSIEngineOut()
+bool LVDA::GetSIInboardEngineOut()
 {
-	return iu->GetEDS()->GetSIEngineOut();
+	return iu->GetSIInboardEngineOut();
+}
+
+bool LVDA::GetSIOutboardEngineOut()
+{
+	return iu->GetSIOutboardEngineOut();
 }
 
 bool LVDA::GetSIIEngineOut()
 {
-	return iu->GetEDS()->GetSIIEngineOut();
+	return iu->GetSIIEngineOut();
+}
+
+bool LVDA::GetCMCSIVBIgnitionSequenceStart()
+{
+	return iu->GetCommandConnector()->GetCMCSIVBIgnitionSequenceStart();
+}
+
+bool LVDA::GetCMCSIVBCutoff()
+{
+	return iu->GetCommandConnector()->GetCMCSIVBCutoff();
+}
+
+bool LVDA::GetCMCSIVBTakeover()
+{
+	return iu->GetCommandConnector()->GetCMCSIVBTakeover();
+}
+bool LVDA::GetLVIMUFailure()
+{
+	return iu->lvimu.IsFailed();
+}
+
+bool LVDA::SIVBInjectionDelay()
+{
+	return iu->GetCommandConnector()->GetTLIInhibitSignal();
+}
+
+bool LVDA::SCInitiationOfSIISIVBSeparation()
+{
+	return iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal();
+}
+
+bool LVDA::GetSIIPropellantDepletionEngineCutoff()
+{
+	return iu->GetSIIPropellantDepletionEngineCutoff();
+}
+
+bool LVDA::SpacecraftSeparationIndication()
+{
+	return iu->GetLVCommandConnector()->CSMSeparationSensed();
+}
+
+bool LVDA::GetSIVBEngineOut()
+{
+	return iu->GetSIVBEngineOut();
+}
+
+bool LVDA::GetSIPropellantDepletionEngineCutoff()
+{
+	return iu->GetSIPropellantDepletionEngineCutoff();
+}
+
+bool LVDA::SIBLowLevelSensorsDry()
+{
+	return iu->SIBLowLevelSensorsDry();
+}
+
+bool LVDA::GetLiftoff()
+{
+	return iu->IsUmbilicalConnected() == false;
+}
+
+bool LVDA::GetSICInboardEngineCutoff()
+{
+	return iu->GetSIInboardEngineOut();
+}
+
+void LVDA::TLIBegun()
+{
+	iu->GetCommandConnector()->TLIBegun();
+}
+
+void LVDA::TLIEnded()
+{
+	iu->GetCommandConnector()->TLIEnded();
+}
+
+bool LVDA::GeneralizedSwitchSelector(int stage, int channel)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GeneralizedSwitchSelector(stage, channel);
+
+	return false;
+}
+
+bool LVDA::TimebaseUpdate(double dt)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TimebaseUpdate(dt);
+
+	return false;
 }

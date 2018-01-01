@@ -25,15 +25,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 class LVRG;
-class IUToLVCommandConnector;
-class IUToCSMCommandConnector;
+class IU;
 
 class FCC
 {
 public:
 	FCC(LVRG &rg);
+	virtual ~FCC() {}
 	virtual void Timestep(double simdt) = 0;
-	void Configure(IUToLVCommandConnector *lvCommandConn, IUToCSMCommandConnector* commandConn);
+	void Init(IU *i);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
@@ -59,9 +59,7 @@ protected:
 	VECTOR3 LVDCAttitudeError;
 
 	LVRG &lvrg;
-
-	IUToLVCommandConnector *lvCommandConnector;
-	IUToCSMCommandConnector* commandConnector;
+	IU *iu;
 };
 
 class FCC1B : public FCC

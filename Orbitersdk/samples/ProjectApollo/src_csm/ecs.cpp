@@ -897,7 +897,7 @@ void SaturnSideHatch::Timestep(double simdt) {
 	if (toggle > 0) {
 		toggle--;
 		if (toggle == 0) {
-			saturn->PanelRefreshHatch();
+			saturn->PanelRefreshSideHatch();
 		}
 	}
 }
@@ -1215,4 +1215,174 @@ void SaturnGlycolCoolingController::CabinTempSwitchToggled(PanelSwitchItem *s) {
 
 	saturn->CabinHeater->valueMin = targetTemp - 1.0;
 	saturn->CabinHeater->valueMax = targetTemp;		
+}
+
+SaturnLMTunnelVent::SaturnLMTunnelVent()
+{
+	LMTunnelVentSwitch = NULL;
+	TunnelVentValve = NULL;
+	TunnelPressValve = NULL;
+}
+
+void SaturnLMTunnelVent::Init(h_Valve *tvv, h_Valve *tpv, RotationalSwitch *lmtvs)
+{
+	TunnelVentValve = tvv;
+	TunnelPressValve = tpv;
+	LMTunnelVentSwitch = lmtvs;
+}
+
+void SaturnLMTunnelVent::SystemTimestep(double simdt)
+{
+	if (!TunnelVentValve || !TunnelPressValve) return;
+
+	// Valve in motion
+	if (TunnelVentValve->pz) return;
+	if (TunnelPressValve->pz) return;
+
+	//OFF
+	if (LMTunnelVentSwitch->GetState() == 0)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Close();
+	}
+	//LM PRESS
+	else if (LMTunnelVentSwitch->GetState() == 1)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Open();
+	}
+	//LM/CM DELTA P
+	else if (LMTunnelVentSwitch->GetState() == 2)
+	{
+		TunnelVentValve->Close();
+		TunnelPressValve->Close();
+	}
+	//LM TUNNEL VENT
+	else if (LMTunnelVentSwitch->GetState() == 3)
+	{
+		TunnelVentValve->Open();
+		TunnelPressValve->Close();
+	}
+}
+
+SaturnForwardHatch::SaturnForwardHatch(Sound &opensound, Sound &closesound) :
+	OpenSound(opensound), CloseSound(closesound)
+{
+	open = false;
+	toggle = 0;
+	pipe = NULL;
+	saturn = NULL;
+}
+
+SaturnForwardHatch::~SaturnForwardHatch()
+{
+
+}
+
+void SaturnForwardHatch::Init(Saturn *s, h_Pipe *p)
+{
+	saturn = s;
+	pipe = p;
+}
+
+void SaturnForwardHatch::Toggle()
+{
+	if (!pipe) return;
+
+	if (toggle == 0)
+	{
+		if (open == false)
+		{
+			if (pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
+			{
+				open = true;
+				toggle = 2;
+				OpenSound.play();
+				//TBD: Mesh?
+			}
+		}
+		else
+		{
+			open = false;
+			toggle = 2;
+			CloseSound.play();
+			//TBD: Mesh?
+		}
+	}
+}
+
+void SaturnForwardHatch::Timestep(double simdt) {
+
+	if (toggle > 0) {
+		toggle--;
+		if (toggle == 0) {
+			saturn->PanelRefreshForwardHatch();
+		}
+	}
+}
+
+void SaturnForwardHatch::LoadState(char *line) {
+
+	int i1;
+
+	sscanf(line + 12, "%d %d", &i1, &toggle);
+	open = (i1 != 0);
+}
+
+void SaturnForwardHatch::SaveState(FILEHANDLE scn) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i %i", (open ? 1 : 0), toggle);
+	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
+}
+
+SaturnPressureEqualizationValve::SaturnPressureEqualizationValve()
+{
+	PressureEqualizationSwitch = NULL;
+	PressureEqualizationValve = NULL;
+	ForwardHatch = NULL;
+}
+
+void SaturnPressureEqualizationValve::Init(h_Pipe *pev, RotationalSwitch *pes, SaturnForwardHatch *h)
+{
+	PressureEqualizationSwitch = pes;
+	PressureEqualizationValve = pev;
+	ForwardHatch = h;
+}
+
+void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
+{
+	if (!PressureEqualizationValve) return;
+
+	// Valve in motion
+	if (PressureEqualizationValve->in->pz) return;
+
+	if (ForwardHatch->IsOpen())
+	{
+		//FORWARD HATCH
+
+		PressureEqualizationValve->in->Open();
+		PressureEqualizationValve->in->size = (float) 100.;
+		PressureEqualizationValve->flowMax = 2000. / LBH;
+	}
+	else
+	{
+		//PRESSURE EQUALIZATION VALVE
+
+		//CLOSED
+		if (PressureEqualizationSwitch->GetState() == 3)
+		{
+			PressureEqualizationValve->in->Close();
+			PressureEqualizationValve->flowMax = 0.0;
+		}
+		else
+		{
+			double f = (double)(3 - PressureEqualizationSwitch->GetState());
+
+			PressureEqualizationValve->in->Open();
+			PressureEqualizationValve->in->size = (float)(0.01*f);
+			PressureEqualizationValve->flowMax = 250. / LBH * f;
+		}
+	}
 }

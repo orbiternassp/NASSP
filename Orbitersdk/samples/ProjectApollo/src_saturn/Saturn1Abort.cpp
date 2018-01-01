@@ -57,7 +57,7 @@ void Sat1Abort1::init()
 {
 }
 
-void Sat1Abort1::Setup()
+void Sat1Abort1::Setup(bool sm)
 {
 	SetSize (25);
 	SetCOG_elev (21.2);
@@ -89,16 +89,19 @@ void Sat1Abort1::Setup()
 	AddMesh (hSat1intstg, &mesh_dir);
     mesh_dir=_V(0,0,9.25);
 	AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(1.85,1.85,19.8);
+	mesh_dir=_V(2.45, 0, 19.8);
     AddMesh (hSat1stg21, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,19.8);
+	mesh_dir=_V(0, 2.45, 19.8);
     AddMesh (hSat1stg22, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,19.8);
+	mesh_dir=_V(0, -2.45, 19.8);
     AddMesh (hSat1stg23, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,19.8);
+	mesh_dir=_V(-2.45, 0, 19.8);
     AddMesh (hSat1stg24, &mesh_dir);
-	mesh_dir=_V(0,-0.14,26.6);
-	AddMesh (hSM, &mesh_dir);
+	if (sm)
+	{
+		mesh_dir = _V(0, -0.14, 26.6);
+		AddMesh(hSM, &mesh_dir);
+	}
 	VECTOR3 m_exhaust_pos1= {2,0,-23.5};
     VECTOR3 m_exhaust_pos2= {-2,0,-23.5};
 	VECTOR3 m_exhaust_pos3= {0,2,-23.5};
@@ -112,7 +115,10 @@ void Sat1Abort1::Setup()
 	SetEngineLevel(ENGINE_MAIN,0);
 }
 
-
+void Sat1Abort1::SetState(bool sm)
+{
+	Setup(sm);
+}
 
 // ==============================================================
 // API interface
@@ -142,6 +148,6 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 void Sat1Abort1::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	Setup();
+
 }
 

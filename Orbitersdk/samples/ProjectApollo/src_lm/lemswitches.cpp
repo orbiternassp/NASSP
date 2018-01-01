@@ -190,7 +190,7 @@ double LMSuitTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Suit_Temp;
+	return lem->scera1.GetVoltage(21, 1)*20.0 + 20.0;
 }
 
 void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -218,7 +218,7 @@ double LMCabinTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Cabin_Temp;
+	return lem->scera1.GetVoltage(21, 2)*20.0 + 20.0;
 }
 
 void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -243,10 +243,9 @@ void LMSuitPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double LMSuitPressMeter::QueryValue()
-
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Suit_Press;
+	return lem->scera1.GetVoltage(5, 1)*2.0;
 }
 
 void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -274,7 +273,7 @@ double LMCabinPressMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.Cabin_Press;
+	return lem->ecs.GetCabinPressurePSI();
 }
 
 void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -284,13 +283,13 @@ void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 // ECS indicator, cabin CO2 level
-LMCabinCO2Meter::LMCabinCO2Meter()
+LMCO2Meter::LMCO2Meter()
 
 {
 	NeedleSurface = 0;
 }
 
-void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void LMCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 
 {
 	MeterSwitch::Init(row);
@@ -298,15 +297,14 @@ void LMCabinCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 	NeedleSurface = surf;
 }
 
-double LMCabinCO2Meter::QueryValue()
+double LMCO2Meter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	// FIXME: NEED TO HANDLE SUIT GAS DIVERTER HERE
-	return lem->ecs.Cabin_CO2;
+	return lem->ecs.GetSensorCO2MMHg();
 }
 
-void LMCabinCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
 	double cf,sf; // Correction Factor, Scale factor
@@ -361,13 +359,7 @@ double LMGlycolTempMeter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	if(lem->GlycolRotary.GetState() == 0){
-		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Temp[0]);
-	}else{
-		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Temp[0]);
-	}
+	return lem->scera1.GetVoltage(10, 1)*20.0 + 20.0;
 }
 
 void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -397,10 +389,10 @@ double LMGlycolPressMeter::QueryValue()
 	if(!lem){ return 0; }
 	if(lem->GlycolRotary.GetState() == 0){
 		// Secondary
-		return(lem->ecs.Secondary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetSecondaryGlycolPressure());
 	}else{
 		// Primary
-		return(lem->ecs.Primary_CL_Glycol_Press[1]);
+		return(lem->ecs.GetPrimaryGlycolPressure());
 	}
 }
 
@@ -434,11 +426,11 @@ double LMOxygenQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return(((lem->ecs.Des_Oxygen[0] + lem->ecs.Des_Oxygen[1])/(48.01*2))*100);
+			return (lem->ecs.DescentOxyTankQuantityLBS()/(48.0))*100; 
 		case 2: // ASC 1
-			return((lem->ecs.Asc_Oxygen[0]/2.43)*100);
+			return (lem->ecs.AscentOxyTank1QuantityLBS()/(2.43))*100;	
 		case 3: // ASC 2
-			return((lem->ecs.Asc_Oxygen[1]/2.43)*100);
+			return (lem->ecs.AscentOxyTank2QuantityLBS()/(2.43))*100;	
 	}
 }
 
@@ -472,11 +464,11 @@ double LMWaterQtyMeter::QueryValue()
 		default:
 			return 0;
 		case 1: // DES
-			return(((lem->ecs.Des_Water[0] + lem->ecs.Des_Water[1])/(333*2))*100);
+			return lem->scera1.GetVoltage(7, 3)*20.0;
 		case 2: // ASC 1
-			return((lem->ecs.Asc_Water[0]/42.5)*100);
+			return lem->scera1.GetVoltage(8, 1)*20.0;
 		case 3: // ASC 2
-			return((lem->ecs.Asc_Water[1]/42.5)*100);
+			return lem->scera1.GetVoltage(8, 2)*20.0;
 	}
 }
 
@@ -558,7 +550,19 @@ void LMRCSAPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSAPressInd::QueryValue()
 
 {
-	return 200.0;
+	if (!lem) { return 0; }
+	switch (lem->TempPressMonRotary) {
+	case 0: //HELIUM
+		return lem->scera1.GetVoltage(6, 1)*350.0 / 5.0;
+	case 1: //PRPLNT
+		return lem->scera1.GetVoltage(6, 3)*350.0 / 5.0;
+	case 2: //FUEL MANF
+		return lem->RCSA.GetRCSFuelManifoldPressPSI();
+	case 3: //OXID MANF
+		return lem->RCSA.GetRCSOxidManifoldPressPSI();
+	default:
+		return 0;
+	}
 }
 
 void LMRCSAPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -585,7 +589,19 @@ void LMRCSBPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSBPressInd::QueryValue()
 
 {
-	return 200.0;
+	if (!lem) { return 0; }
+	switch (lem->TempPressMonRotary) {
+	case 0: //HELIUM
+		return lem->scera1.GetVoltage(6, 2)*350.0 / 5.0;
+	case 1: //PRPLNT
+		return lem->scera1.GetVoltage(6, 4)*350.0 / 5.0;
+	case 2: //FUEL MANF
+		return lem->RCSB.GetRCSFuelManifoldPressPSI();
+	case 3: //OXID MANF
+		return lem->RCSB.GetRCSOxidManifoldPressPSI();
+	default:
+		return 0;
+	}
 }
 
 void LMRCSBPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -612,7 +628,7 @@ void LMRCSAQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSAQtyInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->RCSA.GetRCSPropellantQuantity()*100.0;
 }
 
 void LMRCSAQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -639,7 +655,7 @@ void LMRCSBQtyInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSBQtyInd::QueryValue()
 
 {
-	return 50.0;
+	return lem->RCSB.GetRCSPropellantQuantity()*100.0;
 }
 
 void LMRCSBQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -816,7 +832,7 @@ double MainFuelPressInd::QueryValue()
 {
 	if (monswitch->IsUp())
 	{
-		return 150.0;
+		return lem->GetAPSPropellant()->GetFuelTankUllagePressurePSI();
 	}
 	else if (monswitch->IsCenter() || monswitch->IsDown())
 	{
@@ -880,7 +896,7 @@ double MainOxidizerPressInd::QueryValue()
 {
 	if (monswitch->IsUp())
 	{
-		return 150.0;
+		return lem->GetAPSPropellant()->GetOxidizerTankUllagePressurePSI();
 	}
 	else if (monswitch->IsCenter() || monswitch->IsDown())
 	{
@@ -894,85 +910,6 @@ void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {	
 	oapiBlt(drawSurface, NeedleSurface,  240, 115-((int)(v*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
-}
-
-LEMValveTalkback::LEMValveTalkback()
-
-{
-	Valve = 0;
-	our_vessel = 0;
-}
-
-void LEMValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, LEM *s)
-
-{
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
-
-	Valve = vlv;
-	our_vessel = s;
-}
-
-int LEMValveTalkback::GetState()
-
-{
-	//sprintf(oapiDebugString(),"SRCV %f STATE %d",SRC->Voltage(),our_vessel->GetValveState(Valve));
-	if (our_vessel && (SRC->Voltage() > 20))
-		return our_vessel->GetValveState(Valve) ? 1 : 0;
-
-	return 0;
-}
-
-void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind)
-
-{
-	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-
-	Valve = valve;
-	Indicator = ind;
-}
-
-/*bool LEMValveSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		CheckValve(GetState());
-		return true;
-	}
-
-	return false;
-}*/
-
-bool LEMValveSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		CheckValve(newState);
-		return true;
-	}
-
-	return false;
-}
-
-void LEMValveSwitch::CheckValve(int s) 
-
-{
-	//sprintf(oapiDebugString(),"Switching %d",SRC->Voltage());	
-	if (lem && (SRC->Voltage() > 20)) {
-		if (s == THREEPOSSWITCH_UP) {
-			lem->SetValveState(Valve, true);
-			lem->CheckRCS();
-			if (Indicator)
-				Indicator->SetState(1);
-		}
-		else if (s == THREEPOSSWITCH_DOWN) {
-			lem->SetValveState(Valve, false);
-			lem->CheckRCS();
-			if (Indicator)
-				Indicator->SetState(0);
-		}
-	}
 }
 
 void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
@@ -1210,6 +1147,36 @@ bool LEMInverterSwitch::SwitchTo(int newState, bool dontspring)
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		return ChangeState(newState);
+	}
+	return false;
+}
+
+LGCThrusterPairSwitch::LGCThrusterPairSwitch()
+{
+	inputbit = 0;
+}
+
+void LGCThrusterPairSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *l, int bit)
+{
+	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, l);
+
+	inputbit = bit;
+}
+
+bool LGCThrusterPairSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+
+		if (newState == THREEPOSSWITCH_UP)
+		{
+			lem->agc.SetInputChannelBit(032, inputbit, false);
+		}
+		else if (newState == THREEPOSSWITCH_DOWN)
+		{
+			lem->agc.SetInputChannelBit(032, inputbit, true);
+		}
+
+		return true;
 	}
 	return false;
 }
@@ -1662,6 +1629,61 @@ int LEMDPSValveTalkback::GetState()
 	return state;
 }
 
+LEMSCEATalkback::LEMSCEATalkback()
+{
+	ssswitch = 0;
+}
+
+void LEMSCEATalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	ssswitch = s;
+}
+
+int LEMSCEATalkback::GetState()
+
+{
+	if (ssswitch && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE) && ssswitch->IsClosed())
+		state = (failOpen ? 0 : 1);
+	else
+		// Should this fail open?
+		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+LEMRCSQuadTalkback::LEMRCSQuadTalkback()
+{
+	ssswitch = 0;
+	tcaFailure = 0;
+}
+
+void LEMRCSQuadTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, false);
+	ssswitch = s;
+	tcaFailure = tcaf;
+}
+
+int LEMRCSQuadTalkback::GetState()
+{
+	if (ssswitch && tcaFailure && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+	{
+		if (tcaFailure->IsSet())
+			state = 2;
+		else if (ssswitch->IsClosed())
+			state = 0;
+		else
+			state = 1;
+	}
+	else
+		state = 1;
+
+	return state;
+}
+
 void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
 {
 	MeterSwitch::Init(row);
@@ -1727,6 +1749,14 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 	{
 		return lem->GetDPSPropellant()->GetSupercriticalHeliumPressPSI();
 	}
+	else if (source->GetState() == 5)
+	{
+		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
+	}
+	else if (source->GetState() == 6)
+	{
+		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
+	}
 
 	return 0;
 }
@@ -1754,4 +1784,200 @@ void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	else {
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 173, width, height, SURF_PREDEF_CK);
 	}
+}
+
+AscentO2RotationalSwitch::AscentO2RotationalSwitch()
+{
+	InhibitSwitch = NULL;
+	DesO2Switch = NULL;
+}
+
+void AscentO2RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, PushSwitch *InhibitSw, RotationalSwitch *DesO2Sw)
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	InhibitSwitch = InhibitSw;
+	DesO2Switch = DesO2Sw;
+}
+
+bool AscentO2RotationalSwitch::SwitchTo(int newValue)
+{
+	if (newValue == 1 || InhibitSwitch->GetState() || DesO2Switch->GetState() == 1)
+	{
+		if (RotationalSwitch::SwitchTo(newValue)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void LMSuitTempRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, h_Pipe *bp)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	Pipe = p;
+	Bypass = bp;
+}
+
+bool LMSuitTempRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckValve();
+		return true;
+	}
+	return false;
+}
+
+void LMSuitTempRotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 0) {
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 290.0 / LBH;
+
+	}
+	else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 30.0 / LBH;	
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 260.0 / LBH;
+
+	}
+	else if (GetState() == 2) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 60.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 230.0 / LBH;
+
+	}
+	else if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 90.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 200.0 / LBH;
+
+	}
+	else if (GetState() == 4) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 120.0 / LBH;
+		Bypass->in->h_open = SP_VALVE_OPEN;
+		Bypass->flowMax = 170 / LBH;
+
+	}
+}
+
+void LMLiquidGarmentCoolingRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *hx, h_Pipe *p)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	HX = hx;
+	Pipe = p;
+}
+
+bool LMLiquidGarmentCoolingRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckValve();
+		return true;
+	}
+	return false;
+}
+
+void LMLiquidGarmentCoolingRotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 5) {
+		HX->in->h_open = SP_VALVE_CLOSE;
+		HX->flowMax = 0;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 240.0 / LBH;
+	}
+	else if (GetState() == 4) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 48.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 192.0 / LBH;
+	}
+	else if (GetState() == 3) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 96.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 144.0 / LBH;
+	}
+	else if (GetState() == 2) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 144.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 96.0 / LBH;
+	}
+	else if (GetState() == 1) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 192.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 48.0 / LBH;
+	}
+	else if (GetState() == 0) {
+		HX->in->h_open = SP_VALVE_OPEN;
+		HX->flowMax = 240.0 / LBH;
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+	}
+}
+
+LMForwardHatchHandle::LMForwardHatchHandle()
+{
+	cabin = NULL;
+	forwardHatch = NULL;
+}
+
+void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	cabin = cab;
+	forwardHatch = fh;
+}
+
+bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (!forwardHatch->IsOpen())
+	{
+		if (state == 1 || cabin->space.Press < 0.08 / PSI)
+		{
+			return ToggleSwitch::SwitchTo(newState, dontspring);
+		}
+	}
+
+	return false;
+}
+
+LMOverheadHatchHandle::LMOverheadHatchHandle()
+{
+	pipe = NULL;
+	ovhdHatch = NULL;
+}
+
+void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	pipe = p;
+	ovhdHatch = oh;
+}
+
+bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (!ovhdHatch->IsOpen())
+	{
+		if (state == 1 || pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
+		{
+			return ToggleSwitch::SwitchTo(newState, dontspring);
+		}
+	}
+
+	return false;
 }

@@ -92,8 +92,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	out_file = fopen("ProjectApollo AGC.log", "wt");
 	vagc.out_file = out_file;
 #endif
-
-	PowerConnected = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -593,14 +591,6 @@ bool ApolloGuidance::IsPowered()
 
 {
 	if (DCPower.Voltage() > SP_MIN_DCVOLTAGE)
-		return true;
-
-	//
-	// Quick hack for now: if no power connected, pretend we
-	// have power.
-	//
-
-	if (!PowerConnected)
 		return true;
 
 	return false;

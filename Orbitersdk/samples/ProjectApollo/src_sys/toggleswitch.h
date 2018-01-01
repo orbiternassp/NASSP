@@ -847,6 +847,28 @@ protected:
 	Sound guardClick;
 };
 
+class AGCGuardedToggleSwitch : public GuardedToggleSwitch {
+
+public:
+	AGCGuardedToggleSwitch() { agc = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
+
+protected:
+	ApolloGuidance *agc;
+};
+
+class AGCIOGuardedToggleSwitch : public AGCGuardedToggleSwitch {
+public:
+	AGCIOGuardedToggleSwitch() { Channel = 0; Bit = 0; UpValue = false; };
+	void SetChannelData(int chan, int bit, bool value) { Channel = chan; Bit = bit; UpValue = value; };
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+
+protected:
+	bool UpValue;
+	int Channel;
+	int Bit;
+};
+
 class GuardedTwoOutputSwitch : public GuardedToggleSwitch {
 public:
 	GuardedTwoOutputSwitch() { output1 = output2 = 0; };

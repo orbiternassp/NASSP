@@ -409,3 +409,9 @@ protected:
 	OBJHANDLE hMoon;
 	OBJHANDLE hEarth;
 };
+
+class VHFAntenna
+{
+public:
+	VHFAntenna(VECTOR3 dir);
+};

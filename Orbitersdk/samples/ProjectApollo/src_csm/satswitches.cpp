@@ -233,7 +233,7 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 			#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
 
-			if (Sat->GetApolloNo() == 13) {
+			if (Sat->GetApolloNo() == 1301) {
 				if (Sat->GetMissionTime() >= (O2FAILURETIME + 5.0)) {
 					v = 1.05;
 				}
@@ -990,27 +990,27 @@ void DirectO2RotationalSwitch::CheckValve()
 	
 	} else if (GetState() == 5) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.1 / LBH;
+		Pipe->flowMax = 6.0 / LBH;		//0.1 lb/min
 
 	} else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.2 / LBH;
+		Pipe->flowMax = 12.0 / LBH;		//0.2 lb/min
 
 	} else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.31 / LBH;
+		Pipe->flowMax = 18.6 / LBH;		//0.31 lb/min
 
 	} else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.41 / LBH;
+		Pipe->flowMax = 24.6 / LBH;		//0.41 lb/min
 
 	} else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.53 / LBH;
+		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
 
 	} else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.67 / LBH;
+		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
 	}
 }
 
@@ -1326,8 +1326,8 @@ double SaturnLVSPSPcMeter::QueryValue()
 		return Sat->GetSPSEngine()->GetChamberPressurePSI();
 
 	} else {
-		if (Sat->LETAttached() && Sat->GetDynPressure() > 100.0) {
-			return fabs((10.0 / RAD) * Sat->GetAOA());
+		if (Sat->stage < CSM_LEM_STAGE) {
+			return fabs((10.0 / RAD) * Sat->qball.GetAOA());
 		} else {
 			return 0;
 		}
@@ -2338,7 +2338,15 @@ void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 }
 
 double SaturnLMDPGauge::QueryValue(){
-	return 4; // FIXME: Return actual data when actual data available
+	if (Sat->LMTunnelVentValve.GetState() == 2)
+	{
+		AtmosStatus atm;
+		Sat->GetAtmosStatus(atm);
+
+		return atm.CabinPressurePSI - atm.TunnelPressurePSI;
+	}
+
+	return -1.0;
 }
 
 void SaturnLMDPGauge::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2360,5 +2368,27 @@ void SaturnLMDPGauge::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, dou
 	LineTo (hDC, x + (int)(3*dx+0.5), y - (int)(3*dy+0.5));
 	SelectObject (hDC, oldObj);
 	oapiReleaseDC (surf, hDC);
+}
+
+// Right Docking Target Switch
+bool DockingTargetSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
+		switch (state) {
+		case THREEPOSSWITCH_UP:  // BRIGHT
+			sat->CMdocktgt = true;
+			break;
+		case THREEPOSSWITCH_CENTER:  // DIM
+			sat->CMdocktgt = true;
+			break;
+		case THREEPOSSWITCH_DOWN:  // OFF
+			sat->CMdocktgt = false;
+			break;
+		}
+		sat->SetCMdocktgtMesh();
+		//sprintf(oapiDebugString(), "Flag %d, Index number %d", sat->CMdocktgt, sat->cmdocktgtidx);
+		return true;
+	}
+	return false;
 }
 

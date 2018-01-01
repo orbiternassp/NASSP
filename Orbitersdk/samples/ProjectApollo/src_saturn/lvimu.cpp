@@ -27,15 +27,8 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include <stdio.h>
-#include <math.h>
-#include "soundlib.h"
-
-#include "nasspdefs.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "papi.h"
-#include "saturn.h"
+#include "iu.h"
 #include "LVIMU.h"
 
 LVIMU::LVIMU()
@@ -58,6 +51,7 @@ void LVIMU::Init()
 	Caged = false;
 	ZeroIMUCDUFlag = false;
 	CoarseAlignEnableFlag = false;
+	Failed = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -117,6 +111,17 @@ void LVIMU::SetCaged(bool val)
 			ZeroIMUCDUs();
 		}
 	}
+}
+
+bool LVIMU::IsFailed()
+
+{
+	return Failed;
+}
+
+void LVIMU::SetFailed()
+{
+	Failed = true;
 }
 
 //
@@ -255,6 +260,12 @@ void LVIMU::Timestep(double mjd)
 		  	DriveGimbalY(-newAngles.y - Gimbal.Y);
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
 
+			/*if (Failed)
+			{
+				double failang = 20.0*RAD*deltaTime;
+				Orbiter.AttitudeReference = mul(Orbiter.AttitudeReference, _M(1.0, 0.0, 0.0, 0.0, cos(failang), -sin(failang), 0.0, sin(failang), cos(failang)));
+			}*/
+
 			// PIPAs
 			accel = tmul(Orbiter.AttitudeReference, accel);
 			// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
@@ -335,17 +346,17 @@ void LVIMU::DriveGimbal(int index, int RegCDU, double angle)
 	
 	OldGimbal = Gimbals[index];
 	Gimbals[index] += angle;
-	if (Gimbals[index] >= TWO_PI) {
-		Gimbals[index] -= TWO_PI;
+	if (Gimbals[index] >= PI2) {
+		Gimbals[index] -= PI2;
 	}
 	if (Gimbals[index] < 0) {
-		Gimbals[index] += TWO_PI;
+		Gimbals[index] += PI2;
 	}
 	delta = Gimbals[index] - OldGimbal;
 	if(delta > PI)
-		delta -= TWO_PI;
+		delta -= PI2;
 	if(delta < - PI)
-		delta += TWO_PI;
+		delta += PI2;
 	
 	// Gyro pulses to CDU pulses
 	pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);
@@ -432,6 +443,7 @@ typedef union
 		unsigned TurnedOn:1;
 		unsigned Initialized:1;
 		unsigned Caged:1;
+		unsigned Failed:1;
 	} u;
 	unsigned long word;
 } IMUState;
@@ -565,6 +577,7 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			Initialized = (state.u.Initialized != 0);
 			TurnedOn = (state.u.TurnedOn != 0);
 			Caged = (state.u.Caged != 0);
+			Failed = (state.u.Failed != 0);
 		}
 	}
 }
@@ -614,6 +627,7 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	state.u.TurnedOn = TurnedOn;
 	state.u.Initialized = Initialized;
 	state.u.Caged = Caged;
+	state.u.Failed = Failed;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -634,11 +648,11 @@ double LVIMU::radToDeg(double angle) {
 }
 
 double LVIMU::gyroPulsesToRad(int pulses) {
-	return (((double)pulses) * TWO_PI) / 2097152.0;
+	return (((double)pulses) * PI2) / 2097152.0;
 }
 
 int LVIMU::radToGyroPulses(double angle) {
-	return (int)((angle * 2097152.0) / TWO_PI);
+	return (int)((angle * 2097152.0) / PI2);
 }
 
 MATRIX3 LVIMU::getRotationMatrixX(double angle) {

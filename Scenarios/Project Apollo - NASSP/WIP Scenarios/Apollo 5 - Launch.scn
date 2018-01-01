@@ -49,6 +49,7 @@ AS-204:ProjectApollo/Saturn1B
   PLSEP 1198.5
   ATTACHSTATE 93
   LVDC_BEGIN
+    LVDC_A_zL 90.0
     LVDC_dV_B 0.0
 	LVDC_G_T -9.332
 	LVDC_gamma_T 0.0

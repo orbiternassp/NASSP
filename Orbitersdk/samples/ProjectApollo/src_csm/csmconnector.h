@@ -63,6 +63,9 @@ public:
 	double GetMass();
 	double GetFuelMass();
 
+	bool GetLiftOffCircuit(bool sysA);
+	bool GetEDSAbort(int n);
+
 protected:
 	CSMcomputer &agc;
 };
@@ -82,14 +85,10 @@ public:
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 	bool IsVentable();
-	bool IsVenting();
 
 	double GetFuelMass();
 	void GetMainBatteryPower(double &capacity, double &drain);
 	void GetMainBatteryElectrics(double &volts, double &current);
-
-	void StartVenting();
-	void StopVenting();
 
 	void StartSeparationPyros();
 	void StopSeparationPyros();
@@ -110,6 +109,21 @@ public:
 	~SaturnToIUCommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+class h_Pipe;
+
+class CSMToLEMECSConnector : public SaturnConnector
+{
+public:
+	CSMToLEMECSConnector(Saturn *s);
+	~CSMToLEMECSConnector();
+
+	bool ConnectTo(Connector *other);
+	void Disconnect();
+
+	h_Pipe* GetDockingTunnelPipe();
+	void ConnectLMTunnelToCabinVent();
 };
 
 #endif // _PA_CSMCONNECTOR_H

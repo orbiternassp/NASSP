@@ -181,6 +181,41 @@ static inline double papiCameraAperture() {
 	return *pfov;
 }
 
+static inline void papiWriteScenario_boolarr(FILEHANDLE scn, char *item, bool *v, int len) {
+
+	char buffer[256], buffer2[256];
+	int s;
+	sprintf(buffer, "  %s ", item);
+	s = strlen(item) + 3;
+	for (int i = 0; i < len; i++)
+	{
+		sprintf(buffer + s, "%d ", v[i]);
+		sprintf(buffer2, "%d", v[i]);
+		s += strlen(buffer2) + 1;
+	}
+	oapiWriteLine(scn, buffer);
+}
+
+static inline bool papiReadScenario_boolarr(char *line, char *item, bool *v, int len) {
+
+	char buffer[256];
+	int in = 0;
+	int pos, cur;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			sscanf(line, "%s %n", buffer, &pos);
+			for (int i = 0; i < len; i++)
+			{
+				sscanf(line + pos, "%d %n", &in, &cur);
+				v[i] = (in != 0);
+				pos += cur;
+			}
+		}
+	}
+	return false;
+}
+
 static inline void papiWriteScenario_intarr(FILEHANDLE scn, char *item, int *v, int len) {
 
 	char buffer[256], buffer2[256];
@@ -214,13 +249,46 @@ static inline bool papiReadScenario_intarr(char *line, char *item, int *v, int l
 	return false;
 }
 
+static inline void papiWriteScenario_doublearr(FILEHANDLE scn, char *item, double *v, int len) {
+
+	char buffer[256], buffer2[256];
+	int s;
+	sprintf(buffer, "  %s ", item);
+	s = strlen(item) + 3;
+	for (int i = 0; i < len; i++)
+	{
+		sprintf(buffer + s, "%lf ", v[i]);
+		sprintf(buffer2, "%lf", v[i]);
+		s += strlen(buffer2) + 1;
+	}
+	oapiWriteLine(scn, buffer);
+}
+
+static inline bool papiReadScenario_doublearr(char *line, char *item, double *v, int len) {
+
+	char buffer[256];
+	int pos, cur;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			sscanf(line, "%s %n", buffer, &pos);
+			for (int i = 0; i < len; i++)
+			{
+				sscanf(line + pos, "%lf %n", &v[i], &cur);
+				pos += cur;
+			}
+		}
+	}
+	return false;
+}
+
 static inline bool papiReadScenario_string(char *line, char *item, char *i) {
 
 	char buffer[256];
 
 	if (sscanf(line, "%s", buffer) == 1) {
 		if (!strcmp(buffer, item)) {
-			if (sscanf(line, "%s %s", buffer, i) == 2) {
+			if (sscanf(line, "%s %[^\t\n]", buffer, i) == 2) {
 				return true;
 			}
 		}

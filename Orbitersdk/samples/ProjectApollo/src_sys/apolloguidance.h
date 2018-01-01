@@ -306,7 +306,7 @@ public:
 	/// \param a Power bus 1.
 	/// \param b Power bus 2.
 	///
-	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
+	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 
 	///
 	/// \brief Is the AGC supplied with power.
@@ -417,7 +417,6 @@ protected:
 	//
 
 	PowerMerge DCPower;
-	bool PowerConnected;
 
 	///
 	/// \brief The Vessel we're controlling.

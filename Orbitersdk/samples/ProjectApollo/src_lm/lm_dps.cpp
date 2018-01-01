@@ -341,6 +341,26 @@ bool DPSPropellantSource::IsGaugingPowered() {
 	return true;
 }
 
+double DPSPropellantSource::GetOxidizerTank1BulkTempF()
+{
+	return 70.0;
+}
+
+double DPSPropellantSource::GetOxidizerTank2BulkTempF()
+{
+	return 70.0;
+}
+
+double DPSPropellantSource::GetFuelTank1BulkTempF()
+{
+	return 70.0;
+}
+
+double DPSPropellantSource::GetFuelTank2BulkTempF()
+{
+	return 70.0;
+}
+
 bool DPSPropellantSource::PropellantLevelLow()
 {
 	if (IsGaugingPowered() && (fuel1LevelLow || fuel2LevelLow || oxid1LevelLow || oxid2LevelLow))
