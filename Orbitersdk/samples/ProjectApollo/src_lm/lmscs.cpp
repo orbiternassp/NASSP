@@ -1496,13 +1496,16 @@ GASTA::GASTA()
 {
 	imu_att = _V(0, 0, 0);
 	gasta_att = _V(0, 0, 0);
+
+	heat_load = NULL;
 }
 
-void GASTA::Init(LEM *v, e_object *dcsource, e_object *acsource, IMU* imu) {
+void GASTA::Init(LEM *v, e_object *dcsource, e_object *acsource, h_HeatLoad *hl, IMU* imu) {
 	// Initialize
 	lem = v;
 	dc_source = dcsource;
 	ac_source = acsource;
+	heat_load = hl;
 	this->imu = imu;
 }
 
@@ -1570,6 +1573,8 @@ void GASTA::SystemTimestep(double simdt)
 		{
 			dc_source->DrawPower(7.8); //7.8 Watts from CDR DC BUS
 		}
+		if (heat_load)
+			heat_load->GenerateHeat(25.9 + 12.5);
 	}
 }
 

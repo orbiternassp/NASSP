@@ -211,7 +211,7 @@ class GASTA {
 	//GIMBAL ANGLE SEQUENCING TRANSFORMATION ASSEMBLY
 public:
 	GASTA();
-	void Init(LEM *s, e_object *dcsource, e_object *acsource, IMU* imu);
+	void Init(LEM *s, e_object *dcsource, e_object *acsource, h_HeatLoad *hl, IMU* imu);
 	void Timestep(double simt);				// Timestep
 	void SystemTimestep(double simdt);		// System Timestep
 	bool IsPowered();
@@ -224,6 +224,7 @@ protected:
 	LEM *lem;
 	e_object *dc_source;			     // DC source to use when powered
 	e_object *ac_source;			     // AC source to use when powered
+	h_HeatLoad *heat_load;
 	IMU *imu;							 //Connected IMU
 	VECTOR3 imu_att;
 	VECTOR3 gasta_att;
