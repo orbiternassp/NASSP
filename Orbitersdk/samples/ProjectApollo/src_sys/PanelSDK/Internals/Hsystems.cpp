@@ -255,6 +255,14 @@ void H_system::Load(FILEHANDLE scn) {
 				mixer->h_pump = one;
 				mixer->ratio = ratio;
 			}
+		} else if (!strnicmp(line, "<VALVE>", 7)) {
+			sscanf(line + 7, "%s %i %f", string1, &one, &size1);
+			h_Valve *valve = (h_Valve*)GetSystemByName(string1);
+			if (valve)
+			{
+				valve->open = one;
+				valve->size = size1;
+			}
 		}
 		oapiReadScenario_nextline (scn, line);
 	}
@@ -472,12 +480,12 @@ void h_volume::ThermalComps(double dt) {
 		// temperature dependency of the density is assumed 1 to 2 g/l
 		double density = L_DENSITY[composition[i].subst_type];
 		if (composition[i].subst_type == SUBSTANCE_O2) {
-			// Liquid density is temperature dependend because of cryo tank pressurization with a heater
+			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
 			// Correction term is 0 at O2 initial tank temperature (75K), the other factors are "empirical"
 			density += 0.56 * Temp * Temp - 134.0 * Temp + 6900.0;
 
 		} else if (composition[i].subst_type == SUBSTANCE_H2) {
-			// Liquid density is temperature dependend because of cryo tank pressurization with a heater
+			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
 			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
 			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
 		}
@@ -536,8 +544,8 @@ h_Valve::h_Valve() {
 	pz = 0;
 }
 
-h_Valve::h_Valve(int i_open,int i_ct,float i_size,h_Tank *i_parent) {
-
+h_Valve::h_Valve(char *i_name, int i_open,int i_ct,float i_size,h_Tank *i_parent) {
+	strcpy(name, i_name);
 	open = i_open;
 	closing_time = i_ct;
 	parent = i_parent;
@@ -593,7 +601,7 @@ h_volume h_Valve::GetFlow(double dPdT, double maxMass) {
 	return parent->GetFlow(vol, maxMass);
 }
 
-void h_Valve::Refresh(double dt) {
+void h_Valve::refresh(double dt) {
 
 	if (h_open)	{	
 		pz = (float) (h_open * 0.1);
@@ -612,6 +620,16 @@ void h_Valve::Refresh(double dt) {
 			pz = 0;
 			open = 1;
 		}
+	}
+}
+
+void h_Valve::Save(FILEHANDLE scn) {
+
+	char text[100];
+
+	if (*name != '\0') {
+		sprintf(text, " %s %i %f", name, open, size);
+		oapiWriteScenario_string(scn, "   <VALVE>", text);
 	}
 }
 
@@ -681,10 +699,10 @@ void h_Tank::refresh(double dt) {
 	Temp = space.Temp;
 	energy = space.Q;
 
-	IN_valve.Refresh(dt);
-	OUT_valve.Refresh(dt);
-	OUT2_valve.Refresh(dt);
-	LEAK_valve.Refresh(dt);
+	IN_valve.refresh(dt);
+	OUT_valve.refresh(dt);
+	OUT2_valve.refresh(dt);
+	LEAK_valve.refresh(dt);
 }
 
 void h_Tank::operator +=(h_substance add) { 
@@ -792,6 +810,7 @@ void h_Pipe::refresh(double dt) {
 	//volume flow bases on press difference
 	flow = 0;
 	if ((!in) || (!out)) return;
+
 	if (out->open && in->open) {
 
 		double in_p = in->GetPress();
@@ -823,7 +842,6 @@ void h_Pipe::refresh(double dt) {
 			}
 			return;
 		}
-
 		if (in_p > out_p) {
 			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
 			flow = v.GetMass() / dt; 
@@ -972,7 +990,7 @@ void h_HeatExchanger::refresh(double dt) {
 		pump = true;
 
 	} else if (h_pump == 1) {
-		//
+		
 		// Only cooling at the moment, heating causes bugs during high time accelerations
 		//if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
 		//	pump = true;
@@ -1058,7 +1076,7 @@ void h_Evaporator::refresh(double dt) {
 		h_substance *h2o = &liquidSource->parent->space.composition[SUBSTANCE_H2O];
 		double flow = h2o->mass;
 	
-		// max. consumtion
+		// max. consumption
 		if (flow > targetFlow) 
 			flow = targetFlow;
 		else 
@@ -1074,7 +1092,7 @@ void h_Evaporator::refresh(double dt) {
 			
 			// recalc source
 			liquidSource->parent->space.GetQ();
-			liquidSource->parent->space.GetMass(); 
+			liquidSource->parent->space.GetMass();
 			liquidSource->parent->mass -= flow;
 
 			// evaporate liquid
@@ -1203,4 +1221,124 @@ void h_crew::Save(FILEHANDLE scn) {
 
 	sprintf(text," %s %i", name, number);
 	oapiWriteScenario_string(scn, "   <CREW>", text);
+}
+
+h_CO2Scrubber::h_CO2Scrubber(char *i_name, double i_flowmax, h_Valve* in_v, h_Valve* out_v)
+
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	flowMax = i_flowmax;
+	in = in_v;
+	out = out_v;
+
+	co2removalrate = 0;
+	flow = 0;
+}
+
+void h_CO2Scrubber::refresh(double dt) {
+
+	co2removalrate = 0;
+
+	flow = 0;
+	if ((!in) || (!out)) return;
+
+	if (out->open && in->open) {
+
+		double delta_p = in->GetPress() - out->GetPress();
+		if (delta_p < 0)
+			delta_p = 0;
+
+		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+		co2removalrate = fanned.composition[SUBSTANCE_CO2].mass / dt;
+
+		if (co2removalrate <= 0.0356) {
+			fanned.composition[SUBSTANCE_CO2].mass =
+				fanned.composition[SUBSTANCE_CO2].vapor_mass =
+				fanned.composition[SUBSTANCE_CO2].Q = 0;
+		}
+		else {
+			double removedmass = 0.0356 * dt;
+			double factor = (fanned.composition[SUBSTANCE_CO2].mass - removedmass) / fanned.composition[SUBSTANCE_CO2].mass;
+			fanned.composition[SUBSTANCE_CO2].mass -= removedmass;
+			fanned.composition[SUBSTANCE_CO2].vapor_mass -= removedmass;
+			fanned.composition[SUBSTANCE_CO2].Q = fanned.composition[SUBSTANCE_CO2].Q * factor;
+
+			co2removalrate = removedmass / dt;
+		}
+
+		// flow to output
+		flow = fanned.GetMass() / dt;
+		fanned.GetQ();
+		out->Flow(fanned);
+	}
+}
+
+h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v, h_Valve* out_v, h_Valve *i_H2Owaste)
+
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	in = in_v;
+	out = out_v;
+	H20waste = i_H2Owaste;
+	flowMax = i_flowmax;
+
+	flow = 0;
+}
+
+void h_WaterSeparator::refresh(double dt) {
+
+	flow = 0;
+	if ((!in) || (!out)) return;
+
+	if (out->open && in->open) {
+
+		double delta_p = in->GetPress() - out->GetPress();
+		if (delta_p < 0)
+			delta_p = 0;
+
+		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+
+		// separate water
+		h_volume h2o_volume;
+		h2o_volume.Void();
+		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass;
+		h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+		h2o_volume.GetQ();
+		// ... and pump it to waste valve	
+		H20waste->Flow(h2o_volume);
+
+		fanned.composition[SUBSTANCE_H2O].mass =
+			fanned.composition[SUBSTANCE_H2O].vapor_mass =
+			fanned.composition[SUBSTANCE_H2O].Q = 0;
+
+		// flow to output
+		flow = fanned.GetMass() / dt;
+		fanned.GetQ();
+		out->Flow(fanned);
+	}
+}
+
+h_HeatLoad::h_HeatLoad(char *i_name, therm_obj *i_target)
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	heat_load = 0;
+	target = i_target;
+}
+
+void h_HeatLoad::GenerateHeat(double watts)
+{
+	heat_load += watts;
+}
+
+void h_HeatLoad::refresh(double dt)
+{
+	if (heat_load > 0)
+	{
+		target->thermic(heat_load * dt); //1 joule = 1 watt * dt
+
+		heat_load = 0.0;
+	}
 }

@@ -3247,7 +3247,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TSMC3 = 466;
 	// TSMC1 = 60.6 TSMC2 = 15 // AP11
 	T_c = 8; // T_c = 6.5; 					// Coast time between S2 burnout and S4B ignition
-	T_1 = 249.1; //T_1  = 237.796;			// Time left in first-stage IGM
+	T_1 = 286.2; //T_1  = 237.796;			// Time left in first-stage IGM
 	T_2 = 91.8; //T_2 = 111;					// Time left in second and fourth stage IGM
 	T_2R = 10.0;
 	T_3 = 0;								// Time left in third and fifth stage IGM
@@ -5247,12 +5247,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 1:
 					//TB3+0.1: LH2 Tank High Pressure Vent Mode (S-II)
 					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 38);
 						CommandSequence++;
+					}
 					break;
 				case 2:
 					//TB3+0.2: S-II LH2 Recirculation Pumps Off
 					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 48);
 						CommandSequence++;
+					}
 					break;
 				case 3:
 					//TB3+0.5: S-II Ullage Trigger
@@ -5297,7 +5303,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 8:
 					//TB3+1.1: Prevalves Lockout Reset
 					if (LVDC_TB_ETime > 1.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 19);
 						CommandSequence++;
+					}
 					break;
 				case 9:
 					//TB3+1.2: Switch Engine Control to S-II and S-IC Outboard Engine Cant Off "A"
@@ -5355,22 +5364,31 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 16:
 					//TB3+3.0: S-II Hydraulic Accumulators Unlock
 					if (LVDC_TB_ETime > 3.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 12);
 						CommandSequence++;
+					}
 					break;
 				case 17:
 					//TB3+6.2: PU System Open Loop Arm
 					if (LVDC_TB_ETime > 6.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 60);
 						CommandSequence++;
+					}
 					break;
 				case 18:
-					//TB3+6.7: Chilldown Valves Close (S-II)
-					if (LVDC_TB_ETime > 6.7)
+					//TB3+6.4: Chilldown Valves Close (S-II)
+					if (LVDC_TB_ETime > 6.4)
 						CommandSequence++;
 					break;
 				case 19:
-					//TB3+6.8: S-II Start Phase Limiter Cutoff Arm
-					if (LVDC_TB_ETime > 6.8)
+					//TB3+6.7: S-II Start Phase Limiter Cutoff Arm
+					if (LVDC_TB_ETime > 6.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 25);
 						CommandSequence++;
+					}
 					break;
 				case 20:
 					//TB3+6.9: High (5.5) Engine Mixture Ratio On
@@ -5383,12 +5401,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 21:
 					//TB3+7.7: S-II Start Phase Limiter Cutoff Arm Reset
 					if (LVDC_TB_ETime > 7.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 6);
 						CommandSequence++;
+					}
 					break;
 				case 22:
 					//TB3+7.8: Prevalves Close Arm (S-II)
 					if (LVDC_TB_ETime > 7.8)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 99);
 						CommandSequence++;
+					}
 					break;
 				case 23:
 					//TB3+11.7: Tape Recorder Record Off (IU)
@@ -5401,7 +5425,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 24:
 					//TB3+11.9: Stop Data Recorders (S-II)
 					if (LVDC_TB_ETime > 11.9)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 104);
 						CommandSequence++;
+					}
 					break;
 				case 25:
 					//TB3+30.7: S-II Aft Interstage Separation
@@ -5431,12 +5458,18 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 28:
 					//TB3+125.0: Start Second PAM-FM/FM Calibration (S-II)
 					if (LVDC_TB_ETime > 125.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 30);
 						CommandSequence++;
+					}
 					break;
 				case 29:
 					//TB3+130.0: Stop Second PAM-FM/FM Calibration (S-II)
 					if (LVDC_TB_ETime > 130.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 9);
 						CommandSequence++;
+					}
 					break;
 				case 30:
 					//TB3+191.4: Flight Control Computer Switch Pointer No. 4
@@ -5466,17 +5499,26 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 33:
 					//TB3+212.7: Measurement Control Switch No. 2 Activate
 					if (LVDC_TB_ETime > 212.7)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 90);
 						CommandSequence++;
+					}
 					break;
 				case 34:
 					//TB3+225.0: Start Third PAM-FM/FM Calibration (S-II)
 					if (LVDC_TB_ETime > 225.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 30);
 						CommandSequence++;
+					}
 					break;
 				case 35:
 					//TB3+230.0: Stop Second PAM-FM/FM Calibration (S-II)
 					if (LVDC_TB_ETime > 230.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 9);
 						CommandSequence++;
+					}
 					break;
 				case 36:
 					//TB3+290.9: Telemetry Calibrator In-Flight Calibrate On
@@ -5497,7 +5539,10 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				case 38:
 					//TB3+300.0: S-II LH2 Step Pressurization
 					if (LVDC_TB_ETime > 300.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 7);
 						CommandSequence++;
+					}
 					break;
 				case 39:
 					//TB3+331.2: Charge Ullage Ignition On
@@ -5577,7 +5622,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n",simt);
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvCommandConnector->GetMissionTime());
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;

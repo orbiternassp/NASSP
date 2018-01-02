@@ -46,6 +46,8 @@
 #include "lm_ttca.h"
 #include "lm_scea.h"
 #include "lm_rcs.h"
+#include "lm_ecs.h"
+#include "lemconnector.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -81,16 +83,17 @@ enum LMRCSThrusters
 	LMRCS_A4D
 };
 
+// LM ECS status
+
+typedef struct {
+	int crewNumber;
+	int crewStatus;
+	bool cdrInSuit;
+	bool lmpInSuit;
+} LEMECSStatus;
+
+
 // Systems things
-// ELECTRICAL
-// LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
-{
-public:
-	LEMPowerConnector();
-	int csm_power_latch;
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
 
 // XLunar Bus Controller Voltage Source
 class LEM_XLBSource : public e_object {
@@ -178,45 +181,6 @@ public:
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
-};
-
-// ENVIRONMENTAL CONTROL SYSTEM
-class LEM_ECS{
-public:
-	LEM_ECS();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	double AscentOxyTankPressure(int tank);
-	double DescentOxyTankPressure(int tank);
-
-	LEM *lem;					// Pointer at LEM
-	double Cabin_Press,Cabin_Temp,Cabin_CO2;	// Cabin Atmosphere
-	double Suit_Press,Suit_Temp,Suit_CO2;		// Suit Circuit Atmosphere
-	double Asc_Water[2],Des_Water[2];			// Water tanks
-	double Asc_Oxygen[2],Des_Oxygen[2];			// Oxygen tanks
-	double Primary_CL_Glycol_Press[2];			// Pressure before and after pumps
-	double Secondary_CL_Glycol_Press[2];		// Pressure before and after pumps
-	double Primary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Secondary_CL_Glycol_Temp[2];			// Teperature before and after pumps
-	double Primary_Glycol_Accu;					// Glycol Accumulator
-	double Secondary_Glycol_Accu;				// Glycol Accumulator
-	double Primary_Glycol;						// Glycol in system
-	double Secondary_Glycol;					// Glycol in system
-	int Asc_H2O_To_PLSS,Des_H2O_To_PLSS;		// PLSS Water Fill valves
-	int Water_Tank_Selector;					// WT selection valve
-	int Pri_Evap_Flow_1,Pri_Evap_Flow_2;		// Primary evaporator flow valves
-	int Sec_Evap_Flow;							// Secondary evaporator flow valve
-	int Water_Sep_Selector;						// WS Select Valve
-	int Asc_O2_To_PLSS,Des_O2_To_PLSS;			// PLSS Oxygen Fill Valves
-	int Des_O2;									// Descent O2 Valve
-	int Asc_O2[2];								// Ascent O2 Valves
-	int Cabin_Repress;							// Cabin Repress Valve
-	int CO2_Can_Select;
-	int Suit_Gas_Diverter;
-	int Suit_Circuit_Relief;
-	int Suit_Isolation[2];						// CDR and LMP suit isolation valves
 };
 
 // Landing Radar
@@ -563,6 +527,8 @@ public:
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
 	void SetLPDMesh();
+	void SetFwdHatchMesh();
+	void SetOvhdHatchMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	bool clbkLoadPanel (int id);
@@ -582,6 +548,37 @@ public:
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
+
+	void PanelRefreshForwardHatch();
+	void PanelRefreshOverheadHatch();
+
+	// Panel SDK
+	void SetPipeMaxFlow(char *pipe, double flow);
+	h_Pipe* GetLMTunnelPipe();
+	void ConnectTunnelToCabinVent();
+	virtual void GetECSStatus(LEMECSStatus &ecs);
+	virtual void SetCrewNumber(int number);
+	virtual void SetCDRInSuit();
+	virtual void SetLMPInSuit();
+
+	h_Tank *DesO2Tank;
+	h_Tank *AscO2Tank1;
+	h_Tank *AscO2Tank2;
+	h_Tank *DesO2Manifold;
+	h_Tank *O2Manifold;
+	h_Tank *PressRegA;
+	h_Tank *PressRegB;
+	h_Tank *DesH2OTank;
+	h_Tank *DesBatCooling;
+	h_crew *CrewInCabin;
+	h_crew *CDRSuited;
+	h_crew *LMPSuited;
+	Pump *SuitFan1;
+	Pump *SuitFan2;
+	Pump *PrimGlyPump1;
+	Pump *PrimGlyPump2;
+	Pump *SecGlyPump;
+	Pump *LCGPump; 
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
@@ -674,6 +671,7 @@ protected:
 	void ReleaseSurfaces ();
 	void ResetThrusters();
 	void SeparateStage (UINT stage);
+	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANZ);
@@ -684,7 +682,6 @@ protected:
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_AOTReticle (SURFHANDLE surf);
 	void SwitchClick();
-	void CabinFanSound();
 	void VoxSound();
 	void ButtonClick();
 	void GuardClick();
@@ -694,8 +691,6 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
-
-	bool CabinFansActive();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -770,13 +765,13 @@ protected:
 	ToggleSwitch AttitudeMonSwitch;
 
 	SwitchRow MPSRegControlLeftSwitchRow;
-	LEMAPSValveTalkback ASCHeReg1TB;
+	LEMSCEATalkback ASCHeReg1TB;
 	LEMDPSValveTalkback DESHeReg1TB;
 	ThreePosSwitch ASCHeReg1Switch;	
 	ThreePosSwitch DESHeReg1Switch;
 	
 	SwitchRow MPSRegControlRightSwitchRow;
-	LEMAPSValveTalkback ASCHeReg2TB;
+	LEMSCEATalkback ASCHeReg2TB;
 	LEMDPSValveTalkback DESHeReg2TB;
 	ThreePosSwitch ASCHeReg2Switch;
 	ThreePosSwitch DESHeReg2Switch;
@@ -820,7 +815,7 @@ protected:
 	LMCabinTempMeter LMCabinTempMeter;
 	LMSuitPressMeter LMSuitPressMeter;
 	LMCabinPressMeter LMCabinPressMeter;
-	LMCabinCO2Meter LMCabinCO2Meter;
+	LMCO2Meter LMCO2Meter;
 
 	SwitchRow ECSLowerIndicatorRow;
 	LMGlycolTempMeter LMGlycolTempMeter;
@@ -1207,8 +1202,6 @@ protected:
 
 	bool CPswitch;
 
-	bool HATCHswitch;
-
 	bool EVAswitch;
 
 	bool COASswitch;
@@ -1425,16 +1418,16 @@ protected:
 	///////////////
 
 	SwitchRow ECSSuitGasDiverterSwitchRow;
-	CircuitBrakerSwitch SuitGasDiverter;
+	CircuitBrakerSwitch SuitGasDiverterSwitch;
 
 	SwitchRow OxygenControlSwitchRow;
-	RotationalSwitch CabinRepressValve;
+	RotationalSwitch CabinRepressValveSwitch;
 	RotationalSwitch PLSSFillValve;
 	RotationalSwitch PressRegAValve;
 	RotationalSwitch PressRegBValve;
 	RotationalSwitch DESO2Valve;
-	RotationalSwitch ASCO2Valve1;
-	RotationalSwitch ASCO2Valve2;
+	AscentO2RotationalSwitch ASCO2Valve1;
+	AscentO2RotationalSwitch ASCO2Valve2;
 	PushSwitch IntlkOvrd;
 
 	SwitchRow SuitIsolSwitchRow;
@@ -1449,38 +1442,40 @@ protected:
 	RotationalSwitch DESH2OValve;
 	RotationalSwitch PrimEvap1FlowValve;
 	RotationalSwitch WaterTankSelectValve;
-	RotationalSwitch SuitTempValve;
+	LMSuitTempRotationalSwitch SuitTempValve;
 
 	SwitchRow ASCH2OSwitchRow;
 	RotationalSwitch ASCH2OValve;
 
 	SwitchRow GarmentCoolingSwitchRow;
-	RotationalSwitch LiquidGarmentCoolingValve;
+	LMLiquidGarmentCoolingRotationalSwitch LiquidGarmentCoolingValve;
 
 	SwitchRow SuitCircuitAssySwitchRow;
-	RotationalSwitch SuitCircuitReliefValve;
-	RotationalSwitch CabinGasReturnValve;
-	ToggleSwitch CO2CanisterSelect;
+	RotationalSwitch SuitCircuitReliefValveSwitch;
+	RotationalSwitch CabinGasReturnValveSwitch;
+	ToggleSwitch CO2CanisterSelectSwitch;
 	RotationalSwitch CO2CanisterPrimValve;
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
     PushSwitch       CO2CanisterSecVent;
-	CircuitBrakerSwitch WaterSepSelect;
+	CircuitBrakerSwitch WaterSepSelectSwitch;
 
 	/////////////////////
 	// LEM Upper Hatch //
 	/////////////////////
 
-	SwitchRow UpperHatchSwitchRow;
+	SwitchRow UpperHatchHandleSwitchRow;
+	LMOverheadHatchHandle UpperHatchHandle;
+	SwitchRow UpperHatchValveSwitchRow;
 	ThreePosSwitch UpperHatchReliefValve;
-	ToggleSwitch UpperHatchHandle;
-
+	
 	///////////////////////
 	// LEM Forward Hatch //
 	///////////////////////
 
-	SwitchRow ForwardHatchSwitchRow;
-	ToggleSwitch ForwardHatchHandle;
+	SwitchRow ForwardHatchHandleSwitchRow;
+	LMForwardHatchHandle ForwardHatchHandle;
+	SwitchRow ForwardHatchValveSwitchRow;
 	ThreePosSwitch ForwardHatchReliefValve;
 	
 	///////////////////////////
@@ -1513,10 +1508,8 @@ protected:
 	bool ABORT_IND;
 	bool ENGIND[7];
 
-	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;
-	bool HatchOpen;
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
@@ -1612,6 +1605,8 @@ protected:
 	// Mesh indexes
 	int lpdgret;
 	int lpdgext;
+	int fwdhatch;
+	int ovhdhatch;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
@@ -1638,6 +1633,7 @@ protected:
 	int  PanelId; 
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
+	bool RefreshPanelIdInTimestep;
 
 	// ChecklistController
 	ChecklistController checkControl;
@@ -1665,6 +1661,8 @@ protected:
 	Sound Slanding;
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
+	Sound HatchOpenSound;
+	Sound HatchCloseSound;
 
 	//
 	// Connectors.
@@ -1681,6 +1679,7 @@ protected:
 	MultiConnector LEMToCSMConnector;				// This carries data *FROM* CSMToLEMPowerConnector
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
+	LEMECSConnector CSMToLEMECSConnector;
 
 	char AudioLanguage[64];
 
@@ -1786,6 +1785,24 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
+	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
+	LEMCabinRepressValve CabinRepressValve;
+	LEMOverheadHatch OverheadHatch;
+	LEMOVHDCabinReliefDumpValve OVHDCabinReliefDumpValve;
+	LEMForwardHatch ForwardHatch;
+	LEMFWDCabinReliefDumpValve FWDCabinReliefDumpValve;
+	LEMSuitCircuitReliefValve SuitCircuitReliefValve;
+	LEMCabinGasReturnValve CabinGasReturnValve;
+	LEMSuitGasDiverter SuitGasDiverter;
+	LEMCO2CanisterSelect CO2CanisterSelect;
+	LEMCO2CanisterVent PrimCO2CanisterVent;
+	LEMCO2CanisterVent SecCO2CanisterVent;
+	LEMWaterSeparationSelector WaterSeparationSelector;
+	LEMCabinFan CabinFan;
+	LEMWaterTankSelect WaterTankSelect;
+	LEMPrimGlycolPumpController PrimGlycolPumpController;
+	LEMSuitFanDPSensor SuitFanDPSensor;
 
 	// EDS
 	LEM_EDS eds;
@@ -1848,7 +1865,7 @@ protected:
 	friend class LMOxygenQtyMeter;
 	friend class LMGlycolPressMeter;
 	friend class LMGlycolTempMeter;
-	friend class LMCabinCO2Meter;
+	friend class LMCO2Meter;
 	friend class LMCabinPressMeter;
 	friend class LMSuitPressMeter;
 	friend class LMCabinTempMeter;
@@ -1887,6 +1904,7 @@ protected:
 	friend class LMRCSAQtyInd;
 	friend class LMRCSBQtyInd;
 	friend class RCS_TCA;
+	friend class LEM_ECS;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

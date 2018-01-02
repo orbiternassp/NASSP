@@ -68,6 +68,8 @@ public:
 	void menuSaveEMSScroll();
 	void menuVAGCCoreDump();
 	void menuSetCrewNumber();
+	void menuSetCDRInSuit();
+	void menuSetLMPInSuit();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();

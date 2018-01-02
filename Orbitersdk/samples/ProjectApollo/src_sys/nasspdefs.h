@@ -277,6 +277,7 @@ static const double MMHG  = 0.00750064;				///< Pa to mmHg
 static const double INH2O = 0.00401474;				///< Pa to in H2O
 static const double LBH   = 7.93665;				///< g/s to lb/h
 static const double FPS   = 3.2808399;				///< m/s to ft/s
+static const double LBS = 0.0022046226218;			///< g to lbs
 
 static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 
@@ -385,5 +386,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 
 #define CSM_H2TANK_CAPACITY  12700.0		///< in g, 28 lb
 #define CSM_O2TANK_CAPACITY 145149.0		///< in g, 320 lb
+
+#define LM_DES_H2O_CAPACITY 151046.0		///< in g, 333 lb
+#define LM_ASC_H2O_CAPACITY 19228.0			///< in g, 42.5 lb
 
 #endif

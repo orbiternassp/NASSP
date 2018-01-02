@@ -309,7 +309,8 @@ America:ProjectApollo\Saturn5
   LMPAD 3432 00000
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
-  LVDC_BEGIN
+LVDC_BEGIN
+  LVDC_SIICenterEngineCutoff 1
   LVDC_hx[0][0] 72.141393
   LVDC_hx[0][1] 18.495999
   LVDC_hx[0][2] 10.877374

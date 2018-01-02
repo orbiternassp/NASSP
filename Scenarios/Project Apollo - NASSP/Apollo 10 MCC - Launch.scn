@@ -249,6 +249,7 @@ AS-505:ProjectApollo\Saturn5
   AUTOSLOW 1  
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 10 LM Checklists.xls
 LVDC_BEGIN
+  LVDC_SIICenterEngineCutoff 1
   LVDC_ALFTSA 10.1346
   LVDC_ALFTSB 9.89055
   LVDC_BETAA 58.2101

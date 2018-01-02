@@ -52,9 +52,12 @@ public:
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
 	double GetHeliumRegulator1OutletPressurePSI();
-
 	double GetFuelTrimOrificeOutletPressurePSI() { return FuelTrimOrificeOutletPressurePSI; }
 	double GetOxidTrimOrificeOutletPressurePSI() { return OxidTrimOrificeOutletPressurePSI; }
+	bool GetFuelLowLevel() { return fuelLevelLow; }
+	bool GetOxidLowLevel() { return oxidLevelLow; }
+	double GetFuelTankBulkTempF();
+	double GetOxidizerTankBulkTempF();
 
 	APSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	APSValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }

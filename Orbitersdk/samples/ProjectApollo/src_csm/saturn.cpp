@@ -203,6 +203,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
+	lemECSConnector(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(ThumbClick),
@@ -220,6 +221,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
+	ForwardHatch(HatchOpenSound, HatchCloseSound),
 	omnia(_V(0.0, 0.707108, 0.707108)),
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
@@ -264,6 +266,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
+	RegisterConnector(0, &lemECSConnector);
 }
 
 Saturn::~Saturn()
@@ -511,6 +514,7 @@ void Saturn::initSaturn()
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	lemECSConnector.SetType(LEM_CSM_ECS);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 
 	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
@@ -2994,21 +2998,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_2 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_2 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG2;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu->IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	if (key == OAPI_KEY_3 && down == true && InVC && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
 	{
 		//
 		// Key 3 switches to position 3 by default, then cycles around them.
@@ -3744,7 +3748,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(TLICapableBooster, Crewed);
+		iu->SetMissionInfo(Crewed);
 	}
 
 	//
@@ -4083,7 +4087,7 @@ void Saturn::StageSix(double simt)
 		// Play cryo-stir audio.
 		//
 
-		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 60))
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 120))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
 			if (TimeW > 1){
@@ -4672,6 +4676,14 @@ bool Saturn::GetCMCSIVBCutoff()
 		return true;
 
 	return false;
+}
+
+void Saturn::ConnectTunnelToCabinVent()
+{
+	h_Pipe *pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
+	h_Vent *vent = (h_Vent *)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT");
+
+	pipe->out = &vent->IN_valve;
 }
 
 void Saturn::SetContrailLevel(double level)

@@ -374,6 +374,11 @@ double RCSPropellantSource::GetRCSPropellantQuantity()
 	return 0.0;
 }
 
+double RCSPropellantSource::GetFuelTankTempF()
+{
+	return 70.0;
+}
+
 void RCSPropellantSource::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);

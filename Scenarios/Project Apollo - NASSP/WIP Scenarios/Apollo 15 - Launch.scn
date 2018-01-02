@@ -297,7 +297,8 @@ Endeavour:ProjectApollo\Saturn5
   ASCP_BEGIN
     OPX 170.100
   ASCP_END
-  LVDC_BEGIN
+LVDC_BEGIN
+  LVDC_SIICenterEngineCutoff 1
   LVDC_fx[0][0] 29.685
   LVDC_gx[0][0] 109.330
   LVDC_hx[0][0] 80.088

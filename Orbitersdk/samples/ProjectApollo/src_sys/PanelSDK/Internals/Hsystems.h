@@ -26,26 +26,27 @@
 #define __HSYSTEMS_H
 
 //this is quite commonly used, so better name them
-#define MAX_SUB					5
+#define MAX_SUB					6
 
 #define SUBSTANCE_O2			0
 #define SUBSTANCE_H2			1
 #define SUBSTANCE_H2O			2
 #define SUBSTANCE_N2			3
 #define SUBSTANCE_CO2			4
+#define SUBSTANCE_GLYCOL		5
 
 #define R_CONST					8309.280615
-							//		O2			H2			H20			N2			CO2
-const double MMASS		[MAX_SUB]=	{32,		2,			18,			28,			44};
-//const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.18,		1.040,		0.858};		//J/g-K .. assume constant
-const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.18,		1.040,		0.858};		//J/g-K .. assume constant
-const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260,		198.83,		347};		//J/g
-const double VAPPRESS	[MAX_SUB]=	{1314841,	4925221,	39441,		1528361,	493284};	//Pa @ 273.00K
-const double VAPGRAD	[MAX_SUB]=	{6556,		19045,		680,		7228,		4800};		//Pa/K.. assume linear dependence of PV / K
-const double L_DENSITY	[MAX_SUB]=	{1141,		70,			1000,		807,		1014};		//g/L @ 103kPa ..assume constant wrt. temp
-const double BULK_MOD	[MAX_SUB]=	{32e6,		23e6,		2.18e6,		32e6,		32e6};		//Pa .. assume constant
-const double CRITICAL_P [MAX_SUB]=  {350115,	89631,		1523741,	234421,		508833};	//Pa.. critical pressure
-const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4};		//K
+							//		O2			H2			H20			N2			CO2				GLYCOL
+const double MMASS		[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,			33.434432};
+//const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.18,		1.040,		0.858,		3.568952};		//J/g-K .. assume constant
+const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.18,		1.040,		0.858,			2.014316};		//J/g-K .. assume constant
+const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347,			1769.195};		//J/g
+const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,		25639.45};		//Pa @ 273.00K
+const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,			52.87};			//Pa/K.. assume linear dependence of PV / K
+const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,			1038.5};		//g/L @ 103kPa ..assume constant wrt. temp
+const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,			2.55e6};		//Pa .. assume constant
+const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,		3097574.75};	//Pa.. critical pressure
+const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,			256.9525};		//K.. critical temperature
 
 #include "thermal.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
@@ -118,6 +119,10 @@ class H_system:public ship_system
 	void Create_h_HeatExchanger(char *line);
 	void Create_h_Evaporator(char *line);
 	void Create_h_MixingPipe(char *line);
+	void Create_h_Valve(char *line);
+	void Create_h_CO2Scrubber(char *line);
+	void Create_h_WaterSeparator(char *line);
+	void Create_h_HeatLoad(char *line);
 
 public:
 
@@ -129,11 +134,11 @@ public:
 
 class h_Tank;
 
-class h_Valve				//valves are not h_objects, just "sockets" for piping
+class h_Valve : public ship_object
 {
 public:
 	h_Valve();
-	h_Valve(int i_open,int i_ct,float i_size, h_Tank* i_parent);
+	h_Valve(char *i_name, int i_open,int i_ct,float i_size, h_Tank* i_parent);
 	void Set(int i_open,int i_ct,float i_size,h_Tank* i_parent);
 	h_Tank* parent;		//pointer to the tank to which they belong
 	int open;
@@ -148,7 +153,8 @@ public:
 	void thermic(double _en);
 	int Flow(h_volume block);//block of substance flowing INTO  the valve
 	h_volume GetFlow(double dPdT, double maxMass = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
-	void Refresh(double dt);	//for open/close updating
+	virtual void refresh(double dt);	//for open/close updating
+	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
 };
 
@@ -307,6 +313,51 @@ public:
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);
 	virtual void Save(FILEHANDLE scn);
+};
+
+class h_CO2Scrubber : public h_object {
+
+public:
+	h_CO2Scrubber(char *i_name, double i_flowmax, h_Valve *in_v, h_Valve *out_v);
+
+	h_Valve* in;
+	h_Valve* out;
+
+	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
+
+	double co2removalrate;
+	double flow;	// in g/s
+	double flowMax;
+};
+
+class h_WaterSeparator : public h_object {
+
+public:
+	h_WaterSeparator(char *i_name, double i_flowmax, h_Valve *in_v, h_Valve *out_v, h_Valve *i_H2Owaste);
+
+	h_Valve* in;
+	h_Valve* out;
+	h_Valve* H20waste;
+
+	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
+
+	double flow;	// in g/s
+	double flowMax;
+};
+
+class h_HeatLoad : public h_object {
+
+public:
+	h_HeatLoad(char *i_name, therm_obj *i_target);
+
+	therm_obj *target;
+
+	double heat_load;
+
+	void GenerateHeat(double watts);
+	virtual void refresh(double dt);
 };
 
 #endif

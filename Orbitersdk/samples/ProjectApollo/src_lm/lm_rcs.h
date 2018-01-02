@@ -58,6 +58,7 @@ public:
 	double GetRCSFuelManifoldPressPSI();
 	double GetRCSOxidManifoldPressPSI();
 	double GetRCSPropellantQuantity();
+	double GetFuelTankTempF();
 
 	LEMRCSValve *GetMainShutoffValve() { return &mainShutoffValve; }
 	LEMRCSValve *GetQuad1IsolationValve() { return &quad1IsolationValve; }

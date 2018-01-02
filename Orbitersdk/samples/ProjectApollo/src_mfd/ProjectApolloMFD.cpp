@@ -742,9 +742,56 @@ void ProjectApolloMFD::Update (HDC hDC)
 			LineTo(hDC, (int)(width * 0.9), (int)(height * 0.775));
 
 		}
+		else if (lem)
+		{
+			SetTextAlign(hDC, TA_LEFT);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "CDR status:", 11);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "LMP status:", 11);
+
+			LEMECSStatus ecs;
+			lem->GetECSStatus(ecs);
+
+			SetTextAlign(hDC, TA_CENTER);
+			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+			}
+			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
+				SetTextColor(hDC, RGB(255, 255, 0));
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				SetTextColor(hDC, RGB(0, 255, 0));
+			}
+			else {
+				SetTextColor(hDC, RGB(255, 0, 0));
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				SetTextColor(hDC, RGB(0, 255, 0));
+			}
+
+			sprintf(buffer, "%d", ecs.crewNumber);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+
+			if (ecs.cdrInSuit)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
+			}
+
+			if (ecs.lmpInSuit)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
+			}
+		}
 		else
 		{
-			TextOut(hDC, width / 2, (int)(height * 0.4), "LM ECS not implemented yet", 26);
+			TextOut(hDC, width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
 		}
 	// Draw IMFD
 	} else if (screen == PROG_IU) {
@@ -1253,6 +1300,8 @@ bool ProjectApolloMFD::SetCrewNumber (char *rstr)
 	if (sscanf (rstr, "%d", &n) == 1 && n >= 0 && n <= 3) {
 		if (saturn)
 			saturn->SetCrewNumber(n);
+		else if (lem)
+			lem->SetCrewNumber(n);
 		InvalidateDisplay();
 		return true;
 	}
@@ -1393,8 +1442,7 @@ void ProjectApolloMFD::menuSetGNCPage()
 
 void ProjectApolloMFD::menuSetECSPage()
 {
-	// ECS is not supported for the LEM yet.
-	if (saturn != NULL)
+	if (saturn != NULL || lem != NULL)
 	{
 		screen = PROG_ECS;
 		m_buttonPages.SelectPage(this, screen);
@@ -1459,17 +1507,38 @@ void ProjectApolloMFD::menuSetCrewNumber()
 	oapiOpenInputBox("Crew number [0-3]:", CrewNumberInput, 0, 20, (void*)this);
 }
 
+void ProjectApolloMFD::menuSetCDRInSuit()
+{
+	if (lem)
+	{
+		lem->SetCDRInSuit();
+	}
+}
+
+void ProjectApolloMFD::menuSetLMPInSuit()
+{
+	if (lem)
+	{
+		lem->SetLMPInSuit();
+	}
+}
+
 void ProjectApolloMFD::menuSetPrimECSTestHeaterPower()
 {
-	bool PrimECSTestHeaterPowerInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Primary coolant loop test heater power [-3000 to 3000 Watt]:", PrimECSTestHeaterPowerInput, 0, 20, (void*)this);
-
+	if (saturn != NULL)
+	{
+		bool PrimECSTestHeaterPowerInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Primary coolant loop test heater power [-3000 to 3000 Watt]:", PrimECSTestHeaterPowerInput, 0, 20, (void*)this);
+	}
 }
 
 void ProjectApolloMFD::menuSetSecECSTestHeaterPower()
 {
-	bool SecECSTestHeaterPowerInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Secondary coolant loop test heater power [-3000 to 3000 Watt]:", SecECSTestHeaterPowerInput, 0, 20, (void*)this);
+	if (saturn != NULL)
+	{
+		bool SecECSTestHeaterPowerInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Secondary coolant loop test heater power [-3000 to 3000 Watt]:", SecECSTestHeaterPowerInput, 0, 20, (void*)this);
+	}
 }
 
 void ProjectApolloMFD::menuAbortUplink()

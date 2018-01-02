@@ -293,6 +293,7 @@ Kitty Hawk:ProjectApollo/Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
 LVDC_BEGIN
+  LVDC_SIICenterEngineCutoff 1
   LVDC_ALFTSA 14.2691472
   LVDC_ALFTSB 14.2651188
   LVDC_BETAA 61.89975
