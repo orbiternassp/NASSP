@@ -1864,7 +1864,7 @@ void LMSuitTempRotationalSwitch::CheckValve()
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 120.0 / LBH;
 		Bypass->in->h_open = SP_VALVE_OPEN;
-		Bypass->flowMax = 170 / LBH;
+		Bypass->flowMax = 170.0 / LBH;
 
 	}
 }
