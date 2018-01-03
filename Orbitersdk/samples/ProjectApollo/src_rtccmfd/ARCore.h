@@ -218,7 +218,7 @@ public:
 	//Initial guess and corrected TIG
 	double TLCC_GET, TLCC_TIG;
 	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
-	double TLCCEMPLat, TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
+	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat, TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;

@@ -874,7 +874,7 @@ void LEM::SystemsInit()
 	deca.Init(this, &SCS_DECA_PWR_CB);
 
 	//GASTA
-	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, &imu);
+	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GASTAHEAT"), &imu);
 
 	//ORDEAL
 	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);

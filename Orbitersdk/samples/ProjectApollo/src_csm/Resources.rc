@@ -241,6 +241,7 @@ IDB_CSM_RIGHT_RNDZ_WINDOW_16_9              BITMAP  "..\\Bitmaps\\csm_right_rndz
 IDB_CSM_HATCH_WINDOW_OPEN_16_9              BITMAP  "..\\Bitmaps\\csm_hatch_window_open_16_9.bmp"
 IDB_EVENT_TIMER90                           BITMAP  "..\\Bitmaps\\event_timer90.bmp"
 IDB_DIGITAL90                               BITMAP  "..\\Bitmaps\\digitaldisp90.bmp"
+IDB_CSM_LOWER_MAIN_PANEL_OPEN               BITMAP  "..\\Bitmaps\\csm_lower_main_panel_open.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

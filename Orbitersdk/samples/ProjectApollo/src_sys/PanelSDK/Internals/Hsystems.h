@@ -122,6 +122,7 @@ class H_system:public ship_system
 	void Create_h_Valve(char *line);
 	void Create_h_CO2Scrubber(char *line);
 	void Create_h_WaterSeparator(char *line);
+	void Create_h_HeatLoad(char *line);
 
 public:
 
@@ -344,6 +345,19 @@ public:
 
 	double flow;	// in g/s
 	double flowMax;
+};
+
+class h_HeatLoad : public h_object {
+
+public:
+	h_HeatLoad(char *i_name, therm_obj *i_target);
+
+	therm_obj *target;
+
+	double heat_load;
+
+	void GenerateHeat(double watts);
+	virtual void refresh(double dt);
 };
 
 #endif

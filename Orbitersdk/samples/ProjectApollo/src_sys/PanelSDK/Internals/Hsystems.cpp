@@ -1319,3 +1319,26 @@ void h_WaterSeparator::refresh(double dt) {
 		out->Flow(fanned);
 	}
 }
+
+h_HeatLoad::h_HeatLoad(char *i_name, therm_obj *i_target)
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	heat_load = 0;
+	target = i_target;
+}
+
+void h_HeatLoad::GenerateHeat(double watts)
+{
+	heat_load += watts;
+}
+
+void h_HeatLoad::refresh(double dt)
+{
+	if (heat_load > 0)
+	{
+		target->thermic(heat_load * dt); //1 joule = 1 watt * dt
+
+		heat_load = 0.0;
+	}
+}

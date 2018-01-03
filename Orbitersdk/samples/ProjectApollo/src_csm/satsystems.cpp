@@ -483,6 +483,7 @@ void Saturn::SystemsInit() {
 	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
+	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"));
 
 	WaterController.Init(this, (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
 		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
@@ -495,8 +496,8 @@ void Saturn::SystemsInit() {
 	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
 					  (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELPRESSURIZATIONVALVE"),
 					  &LMTunnelVentValve);
-	ForwardHatch.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCH"),
-					  &PressEqualValve);
+	PressureEqualizationValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"),
+					  &PressEqualValve, &ForwardHatch);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -599,6 +600,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS1.Timestep(MissionTime, simdt);	// Must be after JoystickTimestep
 		CMRCS2.Timestep(MissionTime, simdt);
 		SideHatch.Timestep(simdt);
+		ForwardHatch.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		pmp.TimeStep(MissionTime);
@@ -1113,17 +1115,23 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *o2fc3inletFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3INLET1:FLOW");
 
 	// ECS Pressures
-/*	sprintf(oapiDebugString(), "MR %.2f SCRV %.2f SR %.2f CR %.2f CRI %.2f CompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f EMER %.2f  Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SCRV-p %.2f T %.1f STV %.2f MR %.2f", 
+
+/*sprintf(oapiDebugString(), "MR %.2f SCRV %.2f SR %.2f CR %.2f CRI %.2f CompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f EMER %.2f  Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SCRV-p %.2f T %.1f STV %.2f MR %.2f", 
 		*pressO2MainReg * 0.000145038, *suitcircuitreturnflow * LBH, *suitreliefflow * LBH, *cabinreliefflow2 * LBH, *cabinreliefinletflow2 * LBH,
 		(*pressSuit - *pressSuitCRV) * 0.000145038, (*pressSuitCRV - *pressCabin) * INH2O,
 		*O2flowCabin * LBH, *O2flowDemand * LBH, *O2flowDirect * LBH, *O2flowCabinEmer * LBH,
 		*pressCabin * 0.000145038, *tempCabin,
 		*pressSuit * 0.000145038, *tempSuit, *pressSuitCO2 * 0.00750064,
 		*pressSuitCRV * 0.000145038, *tempSuitCRV, *suittestflow * LBH, *o2mrFlow * LBH);
+
+
+	sprintf(oapiDebugString(), "SCRVF %.2f SRF %.2f CRF %.2f CRIF %.2f CabO2F %.2f, DemO2F %.2f DirO2F %.2f EMERF %.2f STVF %.2f MRF %.2f",
+		*suitcircuitreturnflow * LBH, *suitreliefflow * LBH, *cabinreliefflow2 * LBH, *cabinreliefinletflow2 * LBH, *O2flowCabin * LBH, *O2flowDemand * LBH, *O2flowDirect * LBH, *O2flowCabinEmer * LBH, *suittestflow * LBH, *o2mrFlow * LBH);
+
+
+		sprintf(oapiDebugString(), "Earth-m %.2f p %.2f T %.1f", *massEarth / 100., *pressEarth * PSI, *tempEarth);
+
 */
-
-//	sprintf(oapiDebugString(), "Earth-m %.2f p %.2f T %.1f", *massEarth / 100., *pressEarth * PSI, *tempEarth);
-
 	 //Cabin O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f", 
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
@@ -1277,7 +1285,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		WaterController.SystemTimestep(tFactor);
 		GlycolCoolingController.SystemTimestep(tFactor);
 		LMTunnelVent.SystemTimestep(tFactor);
-		ForwardHatch.SystemTimestep(tFactor);
+		PressureEqualizationValve.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
