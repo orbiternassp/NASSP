@@ -1397,6 +1397,62 @@ void LEM::JoystickTimestep(double simdt)
 	}
 }
 
+void LEM::SystemsInternalTimestep(double simdt)
+{
+	double mintFactor = __max(simdt / 100.0, 0.5);
+	double tFactor = __min(mintFactor, simdt);
+	while (simdt > 0) {
+
+		// Each timestep is passed to the SPSDK
+		// to perform internal computations on the 
+		// systems.
+
+		Panelsdk.SimpleTimestep(tFactor);
+
+		agc.SystemTimestep(tFactor);								// Draw power
+		dsky.SystemTimestep(tFactor);								// This can draw power now.
+		deda.SystemTimestep(tFactor);
+		imu.SystemTimestep(tFactor);								// Draw power
+		rga.SystemTimestep(tFactor);
+		ordeal.SystemTimestep(tFactor);
+		fdaiLeft.SystemTimestep(tFactor);							// Draw Power
+		fdaiRight.SystemTimestep(tFactor);
+		RadarTape.SystemTimeStep(tFactor);
+		crossPointerLeft.SystemTimeStep(tFactor);
+		crossPointerRight.SystemTimeStep(tFactor);
+		SBandSteerable.SystemTimestep(tFactor);
+		VHF.SystemTimestep(tFactor);
+		SBand.SystemTimestep(tFactor);
+		CabinRepressValve.SystemTimestep(tFactor);
+		SuitCircuitPressureRegulatorA.SystemTimestep(tFactor);
+		SuitCircuitPressureRegulatorB.SystemTimestep(tFactor);
+		OVHDCabinReliefDumpValve.SystemTimestep(tFactor);
+		FWDCabinReliefDumpValve.SystemTimestep(tFactor);
+		SuitCircuitReliefValve.SystemTimestep(tFactor);
+		SuitGasDiverter.SystemTimestep(tFactor);
+		CabinGasReturnValve.SystemTimestep(tFactor);
+		CO2CanisterSelect.SystemTimestep(tFactor);
+		PrimCO2CanisterVent.SystemTimestep(tFactor);
+		SecCO2CanisterVent.SystemTimestep(tFactor);
+		WaterSeparationSelector.SystemTimestep(tFactor);
+		WaterTankSelect.SystemTimestep(tFactor);
+		CabinFan.SystemTimestep(tFactor);
+		PrimGlycolPumpController.SystemTimestep(tFactor);
+		SuitFanDPSensor.SystemTimestep(tFactor);
+		DPSPropellant.SystemTimestep(tFactor);
+		DPS.SystemTimestep(tFactor);
+		deca.SystemTimestep(tFactor);
+		gasta.SystemTimestep(tFactor);
+		scera1.SystemTimestep(tFactor);
+		scera2.SystemTimestep(tFactor);
+		MissionTimerDisplay.SystemTimestep(tFactor);
+		EventTimerDisplay.SystemTimestep(tFactor);
+
+		simdt -= tFactor;
+		tFactor = __min(mintFactor, simdt);
+	}
+}
+
 void LEM::SystemsTimestep(double simt, double simdt) 
 
 {
@@ -1409,26 +1465,20 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		}
 	}
 
-	// Each timestep is passed to the SPSDK
-	// to perform internal computations on the 
-	// systems.
-	Panelsdk.Timestep(simt);
+	SystemsInternalTimestep(simdt);
 
 	// Wait for systems init.
 	// This takes 4 timesteps.
 	if(SystemsInitialized < 4){ SystemsInitialized++; return; }
 
-	// After that come all other systems simesteps	
+	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
-	agc.SystemTimestep(simdt);								// Draw power
 	dsky.Timestep(MissionTime);								// Do work
-	dsky.SystemTimestep(simdt);								// This can draw power now.
+
 	asa.TimeStep(simdt);									// Do work
 	aea.TimeStep(MissionTime, simdt);
-	deda.SystemTimestep(simdt);
 	deda.TimeStep(simdt);
 	imu.Timestep(simdt);								// Do work
-	imu.SystemTimestep(simdt);								// Draw power
 	tcdu.Timestep(simdt);
 	scdu.Timestep(simdt);
 	// Manage IMU standby heater and temperature
@@ -1449,14 +1499,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
 	atca.Timestep(simt, simdt);
 	rga.Timestep(simdt);
-	rga.SystemTimestep(simdt);
 	ordeal.Timestep(simdt);
-	ordeal.SystemTimestep(simdt);
 	mechanicalAccelerometer.TimeStep(simdt);
 	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
-	fdaiLeft.SystemTimestep(simdt);							// Draw Power
-	fdaiRight.SystemTimestep(simdt);
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
@@ -1465,42 +1511,18 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	LR.TimeStep(simdt);
 	RR.TimeStep(simdt);
 	RadarTape.TimeStep(MissionTime);
-	RadarTape.SystemTimeStep(simdt);
 	crossPointerLeft.TimeStep(simdt);
-	crossPointerLeft.SystemTimeStep(simdt);
 	crossPointerRight.TimeStep(simdt);
-	crossPointerRight.SystemTimeStep(simdt);
-	SBandSteerable.SystemTimestep(simdt);
 	SBandSteerable.TimeStep(simdt);
 	omni_fwd.TimeStep();
 	omni_aft.TimeStep();
-	VHF.SystemTimestep(simdt);
-	SBand.SystemTimestep(simdt);
 	SBand.TimeStep(simt);
-	CabinRepressValve.SystemTimestep(simdt);
-	SuitCircuitPressureRegulatorA.SystemTimestep(simdt);
-	SuitCircuitPressureRegulatorB.SystemTimestep(simdt);
-	OVHDCabinReliefDumpValve.SystemTimestep(simdt);
-	FWDCabinReliefDumpValve.SystemTimestep(simdt);
-	SuitCircuitReliefValve.SystemTimestep(simdt);
-	SuitGasDiverter.SystemTimestep(simdt);
-	CabinGasReturnValve.SystemTimestep(simdt);
-	CO2CanisterSelect.SystemTimestep(simdt);
-	PrimCO2CanisterVent.SystemTimestep(simdt);
-	SecCO2CanisterVent.SystemTimestep(simdt);
-	WaterSeparationSelector.SystemTimestep(simdt);
-	WaterTankSelect.SystemTimestep(simdt);
-	CabinFan.SystemTimestep(simdt);
-	PrimGlycolPumpController.SystemTimestep(simdt);
-	SuitFanDPSensor.SystemTimestep(simdt);
 	ecs.TimeStep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
 	DPSPropellant.Timestep(simt, simdt);
-	DPSPropellant.SystemTimestep(simdt);
 	DPS.TimeStep(simt, simdt);
-	DPS.SystemTimestep(simdt);
 	APSPropellant.Timestep(simt, simdt);
 	APS.TimeStep(simdt);
 	RCSA.Timestep(simt, simdt);
@@ -1514,14 +1536,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca3B.Timestep();
 	tca4B.Timestep();
 	deca.Timestep(simdt);
-	deca.SystemTimestep(simdt);
 	gasta.Timestep(simt);
-	gasta.SystemTimestep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
-	scera1.SystemTimestep(simdt);
 	scera2.Timestep();
-	scera2.SystemTimestep(simdt);
 	CWEA.TimeStep(simdt);
 
 	//Treat LM O2 as gas every timestep

@@ -2548,7 +2548,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Update mission time and mission timer.
+	// Update mission time.
 	//
 
 	MissionTime += simdt;

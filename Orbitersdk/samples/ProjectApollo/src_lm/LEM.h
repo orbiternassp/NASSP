@@ -694,6 +694,7 @@ protected:
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
+	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep(double simdt);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
