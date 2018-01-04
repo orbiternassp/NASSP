@@ -145,14 +145,12 @@ void MissionTimer::UpdateSeconds(int n)
 }
 
 bool MissionTimer::IsPowered()
-
 {
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; } // DC
 	return true;
 }
 
 bool MissionTimer::IsDisplayPowered()
-
 {
 	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
 		return false;
@@ -161,27 +159,33 @@ bool MissionTimer::IsDisplayPowered()
 }
 
 void MissionTimer::SystemTimestep(double simdt)
-
 {
-	DCPower.DrawPower(11.2);
-	DrawPower(7 * 7 * 0.022);
+	if (IsPowered())
+		DCPower.DrawPower(11.2);
+
+	if (IsDisplayPowered())
+		DrawPower(7.0 * 7.0 * 0.022);
 }
 
 void EventTimer::SystemTimestep(double simdt)
-
 {
-	if (Running)
-		DCPower.DrawPower(5.0);
-	else
-		DCPower.DrawPower(1.0);
+	if (IsPowered())
+	{
+		if (Running)
+			DCPower.DrawPower(5.0);
+		else
+			DCPower.DrawPower(1.0);
+	}
 }
 
 
 void LEMEventTimer::SystemTimestep(double simdt)
-
 {
-	DCPower.DrawPower(11.2);
-	DrawPower(4 * 7 * 0.022);
+	if (IsPowered())
+		DCPower.DrawPower(11.2);
+
+	if (IsDisplayPowered())
+		DrawPower(4.0 * 7.0 * 0.022);
 }
 
 //
