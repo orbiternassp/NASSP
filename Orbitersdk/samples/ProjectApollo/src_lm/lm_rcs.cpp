@@ -524,6 +524,6 @@ void RCS_TCA::LoadState(FILEHANDLE scn, char *end_str)
 			break;
 		}
 
-		if (papiReadScenario_bool(line, "TCAFAILURE", isSet))			TCAFailure.Set();
+		if (papiReadScenario_bool(line, "TCAFAILURE", isSet))			if (isSet) TCAFailure.Set();
 	}
 }
