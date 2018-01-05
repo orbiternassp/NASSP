@@ -93,6 +93,7 @@ void IMU::Init()
 
 	OurVessel = 0;
 	IMUHeater = 0;
+	IMUHeat = 0;
 	PowerSwitch = 0;
 
 	DoZeroIMUGimbals();
@@ -290,12 +291,14 @@ void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s)
 }
 
 
-void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
+void IMU::WireHeaterToBuses(Boiler *heater, h_HeatLoad *heat, e_object *a, e_object *b)
 
 { 
 	IMUHeater = heater;
+	IMUHeat = heat;
 	DCHeaterPower.WireToBuses(a, b);
-	IMUHeater->WireTo(&DCHeaterPower);
+	if (IMUHeater)
+		IMUHeater->WireTo(&DCHeaterPower);
 }
 
 void IMU::Timestep(double simdt) 
@@ -434,9 +437,17 @@ void IMU::SystemTimestep(double simdt)
 {
 	if (Operate) {
 		if (Caged)
+		{
 			DCPower.DrawPower(61.7);
+			if (IMUHeat)
+				IMUHeat->GenerateHeat(14.9);
+		}
 		else
+		{
 			DCPower.DrawPower(325.0);
+			if (IMUHeat)
+				IMUHeat->GenerateHeat(78.6);
+		}
 	}
 }
 

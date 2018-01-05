@@ -265,7 +265,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
-	SystemsInitialized = 0;
 
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
@@ -843,9 +842,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			oapiSetFocusObject(hLEVA);
 		}
 	}
-	
-	VECTOR3 RVEL = _V(0.0,0.0,0.0);
-	GetRelativeVel(GetGravityRef(),RVEL);
 
 	double deltat = oapiGetSimStep();
 
@@ -914,11 +910,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
     // x15 landing sound management
 #ifdef DIRECTSOUNDENABLED
 
-    double     simtime       ;
-	int        mode          ;
-	double     timeremaining ;
-	double     timeafterpdi  ;
-	double     timetoapproach;
 	char names [255]         ;
 	int        todo          ;
 	double     offset        ;
@@ -928,18 +919,17 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	if(simt >NextEventTime)
 	{
         NextEventTime=simt+0.1;
-	    agc.GetStatus(&simtime,&mode,&timeremaining,&timeafterpdi,&timetoapproach);
     	todo = sevent.play(soundlib,
 			    this,
 				names,
 				&offset,
 				&newbuffer,
-		        simtime,
+		        -1.0,
 				MissionTime,
-				mode,
-				timeremaining,
-				timeafterpdi,
-				timetoapproach,
+				-1,
+				99999.0,
+				-1.0,
+				-1.0,
 				NOLOOP,
 				255);
         if (todo)

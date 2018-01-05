@@ -55,18 +55,6 @@ public:
 	void Run() ;
 	void agcTimestep(double simt, double simdt);
 
-
-    int  GetStatus(double *simtime,
-		                 int    *mode,
-						 double *timeremaining,
-						 double *timeafterpdi,
-						 double *timetoapproach);
-	int  SetStatus(double simtime,
-                         int    mode,
-				         double timeremaining,
-					     double timeafterpdi,
-						 double timetoapproach);
-
 	//
 	// I/O channels.
 	//
@@ -96,14 +84,6 @@ protected:
 	FILE *outstr;
 
 	Sound LunarAscent;
-
-// Modif x15 status variable used for landing sound management	
-	double simcomputert;
-    int    mode;
-	double timeremaining;
-	double timeafterpdi;
-	double timetoapproach;
-	int    flags;
 
 	LEM *lem;
 };

@@ -47,15 +47,6 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 
 	isLGC = true;
 
-	//
-	// Default ascent parameters.
-	//
-
-    mode = -1;
-	simcomputert = -1.0;
-    timeremaining = 99999.0;
-	timeafterpdi = -1.0;
-
 	/* FIXME LOAD FILE SHOULD BE SET IN SCENARIO */
 	//InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
 
@@ -257,36 +248,6 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
-}
-
-int LEMcomputer::GetStatus(double *simcomputert,
-                    int    *mode,
-				    double *timeremaining,
-					double *timeafterpdi,
-					double *timetoapproach)
-				
-{
-	*simcomputert = this->simcomputert;
-	*mode = this->mode;
-	*timeremaining = this->timeremaining;
-	*timeafterpdi = this->timeafterpdi;
-	*timetoapproach = this->timetoapproach;
-	return true;
-}
-
-int LEMcomputer::SetStatus(double simcomputert,
-                       int    mode,
-				       double timeremaining,
-					   double timeafterpdi,
-					   double timetoapproach)
-					   
-{
-	this->simcomputert = simcomputert;
-	this->mode = mode;
-	this->timeremaining = timeremaining;
-	this->timeafterpdi = timeafterpdi;
-	this->timetoapproach = timetoapproach;
-	return true;
 }
 
 void LEMcomputer::ProcessChannel10(ChannelValue val) {

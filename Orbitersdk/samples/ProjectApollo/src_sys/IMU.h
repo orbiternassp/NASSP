@@ -48,7 +48,7 @@ public:
 	VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
-	void WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b);
+	void WireHeaterToBuses(Boiler *heater, h_HeatLoad *heat, e_object *a, e_object *b);
 
 	bool IsCaged();
 	bool IsPowered();
@@ -141,6 +141,7 @@ protected:
 	PowerMerge DCPower;
 	PowerMerge DCHeaterPower;
 	Boiler *IMUHeater;
+	h_HeatLoad *IMUHeat;
 	GuardedToggleSwitch *PowerSwitch;
 
 	double pipaRate;	// PIPA pulse representation of speed change

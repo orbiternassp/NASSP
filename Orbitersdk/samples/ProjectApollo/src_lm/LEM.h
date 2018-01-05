@@ -694,6 +694,7 @@ protected:
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
+	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep(double simdt);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
@@ -1556,6 +1557,7 @@ protected:
 	LEMcomputer agc;
 	Boiler *imuheater; // IMU Standby Heater
 	h_Radiator *imucase; // IMU Case
+	h_HeatExchanger *imublower; // IMU Blower
 	IMU imu;
 	CDU tcdu;
 	CDU scdu;
@@ -1592,7 +1594,6 @@ protected:
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
-	int SystemsInitialized;
 
 	MissionTimer MissionTimerDisplay;
 	LEMEventTimer EventTimerDisplay;
