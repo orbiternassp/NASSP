@@ -475,6 +475,7 @@ void LEM::SystemsInit()
 	IMU_OPR_CB.MaxAmps = 20.0;
 	IMU_OPR_CB.WireTo(&CDRs28VBus);	
 	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
+	imu.WireHeaterToBuses(NULL, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), NULL, NULL);
 	// IMU STANDBY power (Heater DC power when not operating)
 	IMU_SBY_CB.MaxAmps = 5.0;
 	IMU_SBY_CB.WireTo(&CDRs28VBus);	
@@ -490,6 +491,7 @@ void LEM::SystemsInit()
 	//Panelsdk.AddElectrical(&imuheater,false);
 	imuheater->Enable();
 	imuheater->SetPumpAuto();
+	imublower = (h_HeatExchanger *)Panelsdk.GetPointerByString("HYDRAULIC:IMUBLOWER");
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
@@ -1487,11 +1489,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
-		if(imuheater->h_pump != 0){ imuheater->SetPumpOff(); } // Disable standby heater if enabled
-		// FIXME: IMU Enabled-Mode Heat Generation Goes Here
+		if(imublower->h_pump != 1){ imuheater->SetPumpAuto(); }
 	}else{
 		// IMU is not operating.
-		if(imuheater->h_pump != 1){ imuheater->SetPumpAuto(); } // Enable standby heater if disabled.
+		if(imublower->h_pump != 0){ imuheater->SetPumpOff(); }
 	}
 	// FIXME: Maintenance of IMU temperature channel bit should go here when ECS is complete
 

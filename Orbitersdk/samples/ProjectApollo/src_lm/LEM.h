@@ -1557,6 +1557,7 @@ protected:
 	LEMcomputer agc;
 	Boiler *imuheater; // IMU Standby Heater
 	h_Radiator *imucase; // IMU Case
+	h_HeatExchanger *imublower; // IMU Blower
 	IMU imu;
 	CDU tcdu;
 	CDU scdu;
