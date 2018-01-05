@@ -1489,11 +1489,22 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
-		if(imublower->h_pump != 1){ imuheater->SetPumpAuto(); }
+		if(imublower->h_pump != 1){ imuheater->SetPumpOn(); }
 	}else{
 		// IMU is not operating.
 		if(imublower->h_pump != 0){ imuheater->SetPumpOff(); }
 	}
+
+	double *IMUTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case:TEMP");
+	double *IMURad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case:RAD");
+	int *IMUBlowerPump = (int*)Panelsdk.GetPointerByString("HYDRAULIC:IMUBLOWER:PUMP");
+	double *IMUBlowerPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:IMUBLOWER:POWER");
+	int *IMUHeaterPump = (int*)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater:PUMP");
+	int *IMUHeaterOn = (int*)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater:ISON");
+	double *primloop1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:TEMP");
+
+	sprintf(oapiDebugString(), "CB %lf, Gly Temp %lf, IMU Temp %lf, IMU Rad %lf, Blower Pump %d, Blower Power %lf, Heater Pump %d, Heater On %d", IMU_OPR_CB.Voltage(), *primloop1temp, *IMUTemp, *IMURad, *IMUBlowerPump, *IMUBlowerPower, *IMUHeaterPump, *IMUHeaterOn);
+
 	// FIXME: Maintenance of IMU temperature channel bit should go here when ECS is complete
 
 	// FIXME: Draw power for lighting system.
@@ -1558,7 +1569,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Debug tests //
 
 	//ECS Debug Lines
-	/*double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
+/*	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
 	double *DESO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2MANIFOLD:PRESS");
@@ -1793,7 +1804,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *SuitHXHCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
 	double *CabinCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
 	double *CDRSuitCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:CO2_PPRESS");
-	double *LMPSuitCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");*/
+	double *LMPSuitCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");
+*/
 
 	//sprintf(oapiDebugString(), "Co2PP: SC %lf HX %lf Cabin %lf CDR %lf LMP %lf Sensor %lf", *SuitCircuitCO2*MMHG, *SuitHXHCO2*MMHG, *CabinCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, ecs.GetSensorCO2MMHg());
 
