@@ -1593,7 +1593,6 @@ protected:
 
 	// Some stuff on init should be done only once
 	bool InitLEMCalled;
-	int SystemsInitialized;
 
 	MissionTimer MissionTimerDisplay;
 	LEMEventTimer EventTimerDisplay;

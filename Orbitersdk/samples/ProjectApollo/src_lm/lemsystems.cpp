@@ -744,30 +744,6 @@ void LEM::SystemsInit()
 	RCSHeliumSupplyAPyros.WireTo(&RCSHeliumSupplyAPyrosFeeder);
 	RCSHeliumSupplyBPyros.WireTo(&RCSHeliumSupplyBPyrosFeeder);
 
-	// Arrange for updates of main busses, AC inverters, and the bus balancer
-	Panelsdk.AddElectrical(&ACBusA, false);
-	Panelsdk.AddElectrical(&ACBusB, false);
-	Panelsdk.AddElectrical(&ACVoltsAttenuator, false);
-	Panelsdk.AddElectrical(&INV_1, false);
-	Panelsdk.AddElectrical(&INV_2, false);
-	// The multiplexer will update the main 28V busses
-	Panelsdk.AddElectrical(&BTC_MPX,false);
-	
-	// Arrange for updates of tie points and bus balancer
-	Panelsdk.AddElectrical(&BTB_LMP_E, false); // Sum of BTB-A and bus cross-tie-balancer
-	Panelsdk.AddElectrical(&BTB_LMP_A, false); // Sum of BTB-D and XLUNAR power
-	Panelsdk.AddElectrical(&BTB_LMP_D, false); // Sum of battery feed ties
-	Panelsdk.AddElectrical(&BTB_LMP_B, false); // Sum of ascent and descent feed lines
-	Panelsdk.AddElectrical(&BTB_LMP_C, false); // Sum of ascent and descent feed lines
-	Panelsdk.AddElectrical(&BTB_CDR_E, false);
-	Panelsdk.AddElectrical(&BTB_CDR_A, false);
-	Panelsdk.AddElectrical(&BTB_CDR_D, false);
-	Panelsdk.AddElectrical(&BTB_CDR_B, false);
-	Panelsdk.AddElectrical(&BTB_CDR_C, false);
-
-	// XLUNAR source
-	Panelsdk.AddElectrical(&BTC_XLunar, false);
-
 	// Update ECA ties
 	Panelsdk.AddElectrical(&DES_CDRs28VBusA, false);
 	Panelsdk.AddElectrical(&DES_CDRs28VBusB, false);
@@ -783,6 +759,37 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ECA_3b, false);
 	Panelsdk.AddElectrical(&ECA_4a, false);
 	Panelsdk.AddElectrical(&ECA_4b, false);
+
+	// Arrange for updates of tie points and bus balancer
+
+	// Sum of ascent and descent feed lines
+	Panelsdk.AddElectrical(&BTB_CDR_B, false);
+	Panelsdk.AddElectrical(&BTB_CDR_C, false);
+	Panelsdk.AddElectrical(&BTB_LMP_B, false);
+	Panelsdk.AddElectrical(&BTB_LMP_C, false);
+
+	// XLUNAR source
+	Panelsdk.AddElectrical(&BTC_XLunar, false);
+	// Sum of battery feed ties
+	Panelsdk.AddElectrical(&BTB_CDR_D, false);
+	Panelsdk.AddElectrical(&BTB_LMP_D, false);
+
+	// Sum of BTB-D and XLUNAR power
+	Panelsdk.AddElectrical(&BTB_CDR_A, false);
+	Panelsdk.AddElectrical(&BTB_LMP_A, false);
+	// The multiplexer will update the main 28V busses
+	Panelsdk.AddElectrical(&BTC_MPX, false);
+
+	// Sum of BTB-A and bus cross-tie-balancer
+	Panelsdk.AddElectrical(&BTB_CDR_E, false);
+	Panelsdk.AddElectrical(&BTB_LMP_E, false);
+
+	// Arrange for updates of main busses, AC inverters, and the bus balancer
+	Panelsdk.AddElectrical(&ACBusA, false);
+	Panelsdk.AddElectrical(&ACBusB, false);
+	Panelsdk.AddElectrical(&ACVoltsAttenuator, false);
+	Panelsdk.AddElectrical(&INV_1, false);
+	Panelsdk.AddElectrical(&INV_2, false);
 
 	// ECS
 	CabinRepressValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
@@ -1466,10 +1473,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 
 	SystemsInternalTimestep(simdt);
-
-	// Wait for systems init.
-	// This takes 4 timesteps.
-	if(SystemsInitialized < 4){ SystemsInitialized++; return; }
 
 	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
