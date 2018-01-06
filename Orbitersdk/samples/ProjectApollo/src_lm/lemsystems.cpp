@@ -475,10 +475,7 @@ void LEM::SystemsInit()
 	imucase = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case");
 	imucase->isolation = 0.0000001;
 	imucase->Area = 3165.31625; // Surface area of 12.5 inch diameter sphere in cm
-
 	imuheater = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater");
-	imuheater->Enable();
-	imuheater->SetPumpAuto();
 	imublower = (h_HeatExchanger *)Panelsdk.GetPointerByString("HYDRAULIC:IMUBLOWER");
 
 	//IMU
@@ -1472,7 +1469,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
 	dsky.Timestep(MissionTime);								// Do work
-
 	asa.TimeStep(simdt);									// Do work
 	aea.TimeStep(MissionTime, simdt);
 	deda.TimeStep(simdt);
