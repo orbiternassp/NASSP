@@ -471,27 +471,20 @@ void LEM::SystemsInit()
 	deda.Init(&SCS_AEA_CB);
 	rga.Init(this, &SCS_ATCA_CB);
 
-	// IMU OPERATE power (Logic DC power)
-	IMU_OPR_CB.MaxAmps = 20.0;
-	IMU_OPR_CB.WireTo(&CDRs28VBus);	
-	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
-	imu.WireHeaterToBuses(NULL, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), NULL, NULL);
-	// IMU STANDBY power (Heater DC power when not operating)
-	IMU_SBY_CB.MaxAmps = 5.0;
-	IMU_SBY_CB.WireTo(&CDRs28VBus);	
 	// Set up IMU heater stuff
 	imucase = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case");
-	imucase->isolation = 1.0; 
+	imucase->isolation = 0.0000001;
 	imucase->Area = 3165.31625; // Surface area of 12.5 inch diameter sphere in cm
-	//imucase.mass = 19050;
-	//imucase.SetTemp(327); 
+
 	imuheater = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater");
-	imuheater->WireTo(&IMU_SBY_CB);
-	//Panelsdk.AddHydraulic(&imucase);
-	//Panelsdk.AddElectrical(&imuheater,false);
 	imuheater->Enable();
 	imuheater->SetPumpAuto();
 	imublower = (h_HeatExchanger *)Panelsdk.GetPointerByString("HYDRAULIC:IMUBLOWER");
+
+	//IMU
+	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
+	imu.WireHeaterToBuses(imuheater, &IMU_SBY_CB, NULL);
+	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase);
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
@@ -1489,12 +1482,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
-		if(imublower->h_pump != 1){ imuheater->SetPumpAuto(); }
+		if(imublower->h_pump != 1){ imublower->SetPumpAuto(); }
 	}else{
 		// IMU is not operating.
-		if(imublower->h_pump != 0){ imuheater->SetPumpOff(); }
+		if(imublower->h_pump != 0){ imublower->SetPumpOff(); }
 	}
-	// FIXME: Maintenance of IMU temperature channel bit should go here when ECS is complete
 
 	// FIXME: Draw power for lighting system.
 	// I can't find the actual power draw anywhere.
