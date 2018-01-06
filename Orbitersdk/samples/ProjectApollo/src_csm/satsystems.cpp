@@ -370,7 +370,7 @@ void Saturn::SystemsInit() {
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
 	agc.SetDSKY2(&dsky2);
 	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNPowerIMUSwitch);
-	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), NULL, &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
+	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
 	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
 
 	// SCS initialization

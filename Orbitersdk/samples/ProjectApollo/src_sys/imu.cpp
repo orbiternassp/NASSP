@@ -98,6 +98,7 @@ void IMU::Init()
 
 	DoZeroIMUGimbals();
 	LastSimDT = -1;
+	IMUTempF = 0.0;
 	
 	LogInit();
 }
@@ -276,7 +277,8 @@ bool IMU::IsPowered()
 
 {
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
-	if (IMUHeater && !IMUHeater->pumping) { return false; }
+	//TBD: Implement IMU failure logic for very off nominal temperatures
+	//if (IMUHeater && !IMUHeater->pumping) { return false; }
 	if (PowerSwitch) {
 		if (PowerSwitch->IsDown()) { return false; }
 	}
@@ -291,14 +293,19 @@ void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s)
 }
 
 
-void IMU::WireHeaterToBuses(Boiler *heater, h_HeatLoad *heat, e_object *a, e_object *b)
+void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
 
 { 
 	IMUHeater = heater;
-	IMUHeat = heat;
 	DCHeaterPower.WireToBuses(a, b);
 	if (IMUHeater)
 		IMUHeater->WireTo(&DCHeaterPower);
+}
+
+void IMU::InitThermals(h_HeatLoad *heat, h_Radiator *cas)
+{
+	IMUHeat = heat;
+	IMUCase = cas;
 }
 
 void IMU::Timestep(double simdt) 
@@ -308,6 +315,35 @@ void IMU::Timestep(double simdt)
 
 	double pulses;
 	ChannelValue val12;
+
+	//ISS Temperature Alarm Module
+
+	bool tempBit = agc.GetInputChannelBit(030, TempInLimits);
+
+	if (DCHeaterPower.Voltage() < SP_MIN_DCVOLTAGE)
+	{
+		if (tempBit) agc.SetInputChannelBit(030, TempInLimits, false);
+	}
+	else
+	{
+		if (IMUCase)
+		{
+			IMUTempF = KelvinToFahrenheit(IMUCase->GetTemp());
+		}
+		else
+		{
+			IMUTempF = 130.0;
+		}
+
+		if (IMUTempF > 126.0 && IMUTempF < 134.0)
+		{
+			if (!tempBit) agc.SetInputChannelBit(030, TempInLimits, true);
+		}
+		else
+		{
+			if (tempBit) agc.SetInputChannelBit(030, TempInLimits, false);
+		}
+	}
 
 	if (!Operate) {
 		if (IsPowered())
@@ -429,7 +465,7 @@ void IMU::Timestep(double simdt)
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
 		LastSimDT = simdt;
-	}	
+	}
 }
 
 void IMU::SystemTimestep(double simdt) 

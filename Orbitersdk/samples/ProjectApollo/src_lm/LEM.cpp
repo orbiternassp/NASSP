@@ -422,7 +422,6 @@ void LEM::Init()
 		// Default channel setup.
 		//
 		agc.SetInputChannelBit(030, DescendStageAttached, true);	// Descent stage attached.
-		agc.SetInputChannelBit(030, TempInLimits, true);	// Temperature in limits.
 
 
 		InitLEMCalled = true;
