@@ -465,7 +465,7 @@ void LEM::SystemsInit()
 	dsky.Init(&LGC_DSKY_CB, &LtgAnunNumKnob);
 
 	// AGS stuff
-	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-Heater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));
+	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"));
 	aea.Init(this);
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
 	deda.Init(&SCS_AEA_CB);

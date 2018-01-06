@@ -69,22 +69,22 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	LastSimDT = -1.0;
 }
 
-void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
+void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr) {
 	lem = l;
 	PowerSwitch = s;
-	heater = hb;
+	fastheater = fastht;
+	fineheater = fineht;
 	hsink = hr;
 	// Therm setup
-	hsink->isolation = 1.0;
+	hsink->isolation = 0.0000001;
 	hsink->Area = 975.0425;
 	//hsink.mass = 9389.36206;
 	//hsink.SetTemp(270);
 	if (lem != NULL) {
-		heater->WireTo(&lem->SCS_ASA_CB);
+		fastheater->WireTo(&lem->SCS_ASA_CB);
+		fineheater->WireTo(&lem->SCS_ASA_CB);
 		//lem->Panelsdk.AddHydraulic(&hsink);
 		//lem->Panelsdk.AddElectrical(&heater, false);
-		heater->Enable();
-		heater->SetPumpAuto();
 	}
 }
 
