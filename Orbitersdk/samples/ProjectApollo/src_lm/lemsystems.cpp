@@ -473,7 +473,7 @@ void LEM::SystemsInit()
 	aea.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:AEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECAEAHEAT"));
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
 	deda.Init(&SCS_AEA_CB);
-	rga.Init(this, &SCS_ATCA_CB);
+	rga.Init(this, &SCS_ATCA_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RGAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRGAHEAT"));
 
 	// Set up IMU heater stuff
 	imucase = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case");
