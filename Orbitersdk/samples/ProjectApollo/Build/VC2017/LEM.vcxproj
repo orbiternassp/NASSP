@@ -154,6 +154,7 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
+    <ClCompile Include="..\..\src_lm\LEMSaturn.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
@@ -360,6 +361,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
+    <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
