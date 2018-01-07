@@ -30,7 +30,7 @@ class LEM_RGA {
 	// RATE GYRO ASSEMBLY
 public:
 	LEM_RGA();
-	void Init(LEM *v, e_object *dcsource);
+	void Init(LEM *v, e_object *dcsource, h_HeatLoad *hl, h_HeatLoad *sechl);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
@@ -41,6 +41,8 @@ protected:
 
 	e_object *dc_source;
 	LEM *lem;
+	h_HeatLoad *RGAHeat;
+	h_HeatLoad *SecRGAHeat;
 };
 
 #define ATCA_START_STRING	"ATCA_BEGIN"

@@ -51,10 +51,12 @@ LEM_RGA::LEM_RGA()
 	rates = _V(0, 0, 0);
 }
 
-void LEM_RGA::Init(LEM *v, e_object *dcsource)
+void LEM_RGA::Init(LEM *v, e_object *dcsource, h_HeatLoad *hl, h_HeatLoad *sechl)
 {
 	dc_source = dcsource;
 	lem = v;
+	RGAHeat = hl;
+	SecRGAHeat = sechl;
 }
 
 void LEM_RGA::Timestep(double simdt)
@@ -104,8 +106,12 @@ void LEM_RGA::Timestep(double simdt)
 
 void LEM_RGA::SystemTimestep(double simdt)
 {
-	if (powered && dc_source)
+	if (powered && dc_source) 
+	{
 		dc_source->DrawPower(8.7);	//TBD: Actual value
+		RGAHeat->GenerateHeat(8.7);	//TBD: This is the entire heat load from the ATCA breaker
+		SecRGAHeat->GenerateHeat(8.7);	//TBD: This is the entire heat load from the ATCA breaker
+	}
 }
 
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY

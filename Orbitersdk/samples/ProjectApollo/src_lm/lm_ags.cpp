@@ -333,6 +333,8 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	AEAInitialized = false;
 	FlightProgram = 0;
 	PowerSwitch = 0;
+	aeaHeat = 0;
+	secaeaHeat = 0;
 
 	ASACycleCounter = 0;
 	LastCycled = 0.0;
@@ -357,8 +359,10 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
 	lem = s;
+	aeaHeat = aeah;
+	secaeaHeat = secaeah;
 }
 
 void LEM_AEA::TimeStep(double simt, double simdt){
@@ -412,6 +416,23 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	}
 
 	LastCycled += (0.0000009765625 * CycleCount);
+}
+
+void LEM_AEA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		DCPower.DrawPower(47.0);
+		aeaHeat->GenerateHeat(42.5);
+		secaeaHeat->GenerateHeat(42.5);
+	}
+
+	if (IsACPowered())
+	{
+		lem->AGS_AC_CB.DrawPower(3.45);
+		aeaHeat->GenerateHeat(3.45);
+		secaeaHeat->GenerateHeat(3.45);
+	}
 }
 
 void LEM_AEA::ResetDEDAShiftIn()
@@ -754,6 +775,12 @@ bool LEM_AEA::IsPowered()
 		if (!PowerSwitch->IsUp()) { return false; }
 	}
 
+	return true;
+}
+
+bool LEM_AEA::IsACPowered()
+{
+	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE) {	return false; }
 	return true;
 }
 
