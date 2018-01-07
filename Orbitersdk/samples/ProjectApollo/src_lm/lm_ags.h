@@ -70,7 +70,7 @@ typedef std::bitset<11> AGSChannelValue40;
 class LEM_ASA{
 public:
 	LEM_ASA();							// Cons
-	void Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr); // Init
+	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -85,7 +85,8 @@ protected:
 	void TurnOff();
 
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
-	Boiler *heater;				// Heater
+	Boiler *fastheater;				// Fast Warmup Heater
+	Boiler *fineheater;				// Fine Control Heater
 	ThreePosSwitch *PowerSwitch;
 
 	bool PulsesSent;
