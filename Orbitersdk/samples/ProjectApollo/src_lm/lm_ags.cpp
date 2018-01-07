@@ -57,6 +57,10 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	lem = NULL;
 
 	PowerSwitch = 0;
+	fastheater = 0;
+	fineheater = 0;
+	hsink = 0;
+	asaHeat = 0;
 
 	Initialized = false;
 	Operate = false;
@@ -69,12 +73,13 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	LastSimDT = -1.0;
 }
 
-void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr) {
+void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah) {
 	lem = l;
 	PowerSwitch = s;
 	fastheater = fastht;
 	fineheater = fineht;
 	hsink = hr;
+	asaHeat = asah;
 	// Therm setup
 	hsink->isolation = 0.0000001;
 	hsink->Area = 975.0425;
@@ -117,6 +122,18 @@ void LEM_ASA::TimeStep(double simdt){
 	// There is no information on what the "OFF" mode does other than run the ASA heaters.
 	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
+
+	if (IsHeaterPowered())
+	{
+		if (fastheater->pumping)
+		{
+			fineheater->SetPumpOff();
+		}
+		else
+		{
+			fineheater->SetPumpAuto();
+		}
+	}
 
 	if (!Operate) {
 		if (IsPowered())
@@ -195,6 +212,15 @@ void LEM_ASA::TimeStep(double simdt){
 	}
 }
 
+void LEM_ASA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		lem->SCS_ASA_CB.DrawPower(41.1);
+		asaHeat->GenerateHeat(41.1);
+	}
+}
+
 void LEM_ASA::PulseTimestep(int* ASAPulses)
 {
 	int i;
@@ -245,6 +271,13 @@ MATRIX3 LEM_ASA::transpose_matrix(MATRIX3 a)
 VECTOR3 LEM_ASA::MatrixToEuler(MATRIX3 mat)
 {
 	return _V(atan2(mat.m23, mat.m33), -asin(mat.m13), atan2(mat.m12, mat.m11));
+}
+
+bool LEM_ASA::IsHeaterPowered()
+{
+	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+
+	return true;
 }
 
 bool LEM_ASA::IsPowered()

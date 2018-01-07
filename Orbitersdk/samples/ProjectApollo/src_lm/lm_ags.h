@@ -70,16 +70,18 @@ typedef std::bitset<11> AGSChannelValue40;
 class LEM_ASA{
 public:
 	LEM_ASA();							// Cons
-	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr); // Init
+	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void PulseTimestep(int* AttPulses);
 	MATRIX3 transpose_matrix(MATRIX3 a);
 	VECTOR3 MatrixToEuler(MATRIX3 mat);
 	LEM *lem;					// Pointer at LEM
 protected:
 
+	bool IsHeaterPowered();
 	bool IsPowered();
 	void TurnOn();
 	void TurnOff();
@@ -87,6 +89,7 @@ protected:
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *fastheater;				// Fast Warmup Heater
 	Boiler *fineheater;				// Fine Control Heater
+	h_HeatLoad *asaHeat;
 	ThreePosSwitch *PowerSwitch;
 
 	bool PulsesSent;
@@ -112,6 +115,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simt, double simdt);
+	void SystemTimestep(double simdt);
 	void InitVirtualAGS(char *binfile);
 	void SetInputPortBit(int port, int bit, bool val);
 	void SetInputPort(int port, int val);
