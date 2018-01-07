@@ -914,7 +914,7 @@ void LEM::SystemsInit()
 	ttca_throttle_pos_dig = 0;
 	
 	// Initialize other systems
-	atca.Init(this);
+	atca.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:ATCAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECATCAHEAT"));
 }
 
 void LEM::JoystickTimestep(double simdt)
@@ -1418,6 +1418,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		aea.SystemTimestep(tFactor);
 		deda.SystemTimestep(tFactor);
 		imu.SystemTimestep(tFactor);								// Draw power
+		atca.SystemTimestep(tFactor);
 		rga.SystemTimestep(tFactor);
 		ordeal.SystemTimestep(tFactor);
 		fdaiLeft.SystemTimestep(tFactor);							// Draw Power
