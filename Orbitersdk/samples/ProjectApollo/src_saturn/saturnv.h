@@ -88,14 +88,17 @@ public:
 
 	void GetSIThrustOK(bool *ok);
 	void SIEDSCutoff(bool cut);
-	void GetSIIThrustOK(bool *ok);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
-	bool GetSIIPropellantDepletionEngineCutoff();
-	bool GetSIIEngineOut();
 	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
+
+	void GetSIIThrustOK(bool *ok);
+	void SIIEDSCutoff(bool cut);
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIIEngineOut();
+	void SetSIIThrusterDir(int n, double yaw, double pitch);
 
 	//
 	// Functions that external code shouldn't need to access.
@@ -148,6 +151,8 @@ protected:
 	void LoadSIVB(FILEHANDLE scn);
 	void SaveSI(FILEHANDLE scn);
 	void LoadSI(FILEHANDLE scn);
+	void SaveSII(FILEHANDLE scn);
+	void LoadSII(FILEHANDLE scn);
 
 	//
 	// Odds and ends.
@@ -197,6 +202,11 @@ protected:
 	Sound SecoSound;
 
 	SICSystems sic;
+	SIISystems sii;
+
+	Pyro SICSIISepPyros;
+	Pyro SIIInterstagePyros;
+	Pyro SIISIVBSepPyros;
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;

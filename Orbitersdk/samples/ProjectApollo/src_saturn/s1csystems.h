@@ -64,8 +64,8 @@ protected:
 class SICSystems
 {
 public:
-	SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl);
-	void Timestep(double simdt);
+	SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
+	void Timestep(double simdt, bool liftoff);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -93,8 +93,10 @@ protected:
 
 	double GetSumThrust();
 
-	Saturn *vessel;
+	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
+
+	Pyro &SIC_SII_Separation_Pyros;
 
 	Sound &SShutSound;
 	Sound &LaunchSound;
@@ -117,4 +119,5 @@ protected:
 	bool FailInit;
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
+	double FailureTimer;
 };

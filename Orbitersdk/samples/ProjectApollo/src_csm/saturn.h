@@ -942,11 +942,11 @@ public:
 	virtual bool GetSIBLowLevelSensorsDry();
 	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
-	void SetSIIThrusterDir(int n, double yaw, double pitch);
+	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSAttitudeEngine(int n, bool on);
 	virtual void SIEDSCutoff(bool cut) = 0;
-	void SIIEDSCutoff(bool cut);
+	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 	virtual void SetSIEngineStart(int n) = 0;
@@ -3634,7 +3634,6 @@ protected:
 	CDU tcdu;
 	CDU scdu;
 	IU* iu;
-	SIISystems sii;
 	SIVBSystems *sivb;
 	CSMCautionWarningSystem cws;
 
@@ -3997,6 +3996,8 @@ protected:
 	virtual void LoadSIVB(FILEHANDLE scn) = 0;
 	virtual void SaveSI(FILEHANDLE scn) = 0;
 	virtual void LoadSI(FILEHANDLE scn) = 0;
+	virtual void SaveSII(FILEHANDLE scn) {};
+	virtual void LoadSII(FILEHANDLE scn) {};
 	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
