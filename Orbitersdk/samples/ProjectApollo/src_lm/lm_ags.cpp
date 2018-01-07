@@ -333,6 +333,8 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	AEAInitialized = false;
 	FlightProgram = 0;
 	PowerSwitch = 0;
+	aeaHeat = 0;
+	secaeaHeat = 0;
 
 	ASACycleCounter = 0;
 	LastCycled = 0.0;
@@ -357,8 +359,10 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *asah, h_HeatLoad *secasah){
 	lem = s;
+	aeaHeat = asah;
+	secaeaHeat = secasah;
 }
 
 void LEM_AEA::TimeStep(double simt, double simdt){
@@ -412,6 +416,17 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	}
 
 	LastCycled += (0.0000009765625 * CycleCount);
+}
+
+void LEM_AEA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		lem->SCS_AEA_CB.DrawPower(41.1);
+		lem->AGS_AC_CB.DrawPower(3.45);
+		aeaHeat->GenerateHeat(44.55);
+		secaeaHeat->GenerateHeat(44.55);
+	}
 }
 
 void LEM_AEA::ResetDEDAShiftIn()

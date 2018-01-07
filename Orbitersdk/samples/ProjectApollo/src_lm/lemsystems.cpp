@@ -470,7 +470,7 @@ void LEM::SystemsInit()
 									  (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink"),
 									  (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:ASAHEAT"));
 
-	aea.Init(this);
+	aea.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:AEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECAEAHEAT"));
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
 	deda.Init(&SCS_AEA_CB);
 	rga.Init(this, &SCS_ATCA_CB);

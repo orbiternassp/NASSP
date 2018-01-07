@@ -111,7 +111,7 @@ protected:
 class LEM_AEA{
 public:
 	LEM_AEA(PanelSDK &p, LEM_DEDA &display);							// Cons
-	void Init(LEM *s); // Init
+	void Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simt, double simdt);
@@ -145,6 +145,8 @@ public:
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
 	LEM *lem;					// Pointer at LEM
+	h_HeatLoad *aeaHeat;
+	h_HeatLoad *secaeaHeat;
 
 protected:
 	ags_t vags;
