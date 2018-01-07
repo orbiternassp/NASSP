@@ -359,10 +359,10 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s, h_HeatLoad *asah, h_HeatLoad *secasah){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
 	lem = s;
-	aeaHeat = asah;
-	secaeaHeat = secasah;
+	aeaHeat = aeah;
+	secaeaHeat = secaeah;
 }
 
 void LEM_AEA::TimeStep(double simt, double simdt){
