@@ -1947,10 +1947,18 @@ LM_SBAND::LM_SBAND(){
 	tc_mode_1 = 0; tc_timer_1 = 0;
 	tc_mode_2 = 0; tc_timer_2 = 0;
 	rcvr_agc_voltage = 0.0;
+	SBXHeat = 0;
+	SBXSECHeat = 0;
+	SBPHeat = 0;
+	SBPSECHeat = 0;
 }
 
-void LM_SBAND::Init(LEM *vessel){
+void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph){
 	lem = vessel;
+	SBXHeat = sbxh;
+	SBXSECHeat = secsbxh;
+	SBPHeat = sbph;
+	SBPSECHeat = secsbph;
 	ant = &lem->omni_aft;
 	rcvr_agc_voltage = 0.0;
 }
@@ -1962,28 +1970,52 @@ void LM_SBAND::SystemTimestep(double simdt) {
 	// SBand Primary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(tc_mode_1 == 0){ tc_mode_1 = 2; } // Start warming up
+		if (tc_mode_1 == 0) {
+			tc_mode_1 = 2;  // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_1 > 1){ tc_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(tc_mode_2 == 0){ tc_mode_2 = 2; } // Start warming up
+		if (tc_mode_2 == 0) {
+			tc_mode_2 = 2;  // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_2 > 1){ tc_mode_2 = 1; } // Start cooling off
 	}	
 	// SBand Primary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(pa_mode_1 == 0){ pa_mode_1 = 2; } // Start warming up
+		if (pa_mode_1 == 0) {
+			pa_mode_1 = 2; // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_1 > 1){ pa_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(pa_mode_2 == 0){ pa_mode_2 = 2; } // Start warming up
+		if (pa_mode_2 == 0) {
+			pa_mode_2 = 2;  // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_2 > 1){ pa_mode_2 = 1; } // Start cooling off
 	}
@@ -2024,7 +2056,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_1 = simt; break;
@@ -2067,7 +2099,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_2 = simt; break;
@@ -2111,7 +2143,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_1 = simt; break;
@@ -2154,7 +2186,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_2 = simt; break;

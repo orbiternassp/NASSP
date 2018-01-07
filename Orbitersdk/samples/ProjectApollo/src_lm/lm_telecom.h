@@ -223,13 +223,17 @@ protected:
 class LM_SBAND {
 public:
 	LM_SBAND();
-	void Init(LEM *vessel);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 
 	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *SBXHeat;			//XCVR Heat
+	h_HeatLoad *SBXSECHeat;			//XCVR Heat
+	h_HeatLoad *SBPHeat;			//PMP Heat
+	h_HeatLoad *SBPSECHeat;			//PMP Heat
 	int pa_mode_1,pa_mode_2;       // Power amplifier state
 	double pa_timer_1,pa_timer_2;  // Tube heater timer
 	int tc_mode_1,tc_mode_2;	   // Transciever state
