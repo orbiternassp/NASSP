@@ -423,15 +423,15 @@ void LEM_AEA::SystemTimestep(double simdt)
 	if (IsPowered())
 	{
 		DCPower.DrawPower(47.0);
-		aeaHeat->GenerateHeat(42.5);
-		secaeaHeat->GenerateHeat(42.5);
+		aeaHeat->GenerateHeat(21.25);
+		secaeaHeat->GenerateHeat(21.25);
 	}
 
 	if (IsACPowered())
 	{
 		lem->AGS_AC_CB.DrawPower(3.45);
-		aeaHeat->GenerateHeat(3.45);
-		secaeaHeat->GenerateHeat(3.45);
+		aeaHeat->GenerateHeat(1.725);
+		secaeaHeat->GenerateHeat(1.725);
 	}
 }
 
