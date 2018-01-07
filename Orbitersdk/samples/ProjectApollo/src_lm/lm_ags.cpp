@@ -422,10 +422,16 @@ void LEM_AEA::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		lem->SCS_AEA_CB.DrawPower(41.1);
+		DCPower.DrawPower(41.1);
+		aeaHeat->GenerateHeat(41.1);
+		secaeaHeat->GenerateHeat(41.1);
+	}
+
+	if (IsACPowered())
+	{
 		lem->AGS_AC_CB.DrawPower(3.45);
-		aeaHeat->GenerateHeat(44.55);
-		secaeaHeat->GenerateHeat(44.55);
+		aeaHeat->GenerateHeat(3.45);
+		secaeaHeat->GenerateHeat(3.45);
 	}
 }
 
@@ -769,6 +775,12 @@ bool LEM_AEA::IsPowered()
 		if (!PowerSwitch->IsUp()) { return false; }
 	}
 
+	return true;
+}
+
+bool LEM_AEA::IsACPowered()
+{
+	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE) {	return false; }
 	return true;
 }
 

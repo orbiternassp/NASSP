@@ -144,6 +144,7 @@ public:
 
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
+	bool IsACPowered();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
 	h_HeatLoad *secaeaHeat;
