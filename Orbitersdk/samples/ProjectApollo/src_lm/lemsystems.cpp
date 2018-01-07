@@ -1415,6 +1415,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		agc.SystemTimestep(tFactor);								// Draw power
 		dsky.SystemTimestep(tFactor);								// This can draw power now.
 		asa.SystemTimestep(tFactor);
+		aea.SystemTimestep(tFactor);
 		deda.SystemTimestep(tFactor);
 		imu.SystemTimestep(tFactor);								// Draw power
 		rga.SystemTimestep(tFactor);
