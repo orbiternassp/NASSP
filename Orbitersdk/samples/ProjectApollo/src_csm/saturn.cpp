@@ -227,8 +227,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
 	vhfa(_V(0.0, 0.7716246, 0.63607822)),
-	vhfb(_V(0.0, -0.7716246, -0.63607822)),
-	sii(this, th_2nd, ph_2nd, thg_ull, SPUShiftS, SepS)
+	vhfb(_V(0.0, -0.7716246, -0.63607822))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -1350,7 +1349,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 	if (stage < LAUNCH_STAGE_SIVB && SaturnType == SAT_SATURNV)
 	{
-		sii.SaveState(scn);
+		SaveSII(scn);
 	}
 	//
 	// If we've seperated from the SIVb, the IU is history.
@@ -1956,7 +1955,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		LoadSI(scn);
 	}
 	else if (!strnicmp(line, SIISYSTEMS_START_STRING, sizeof(SIISYSTEMS_START_STRING))) {
-		sii.LoadState(scn);
+		LoadSII(scn);
 	}
 	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
 		LoadSIVB(scn);
@@ -4598,25 +4597,11 @@ bool Saturn::GetSIBLowLevelSensorsDry()
 	return false;
 }
 
-void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.SetThrusterDir(n, yaw, pitch);
-}
-
 void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetThrusterDir(yaw, pitch);
-}
-
-void Saturn::SIIEDSCutoff(bool cut)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.EDSEnginesCutoff(cut);
 }
 
 void Saturn::SIVBEDSCutoff(bool cut)

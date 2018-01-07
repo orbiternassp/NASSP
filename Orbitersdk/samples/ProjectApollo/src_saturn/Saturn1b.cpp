@@ -72,7 +72,8 @@ static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
-	sib(this, th_1st, ph_1st, LaunchS, SShutS, contrailLevel)
+	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
+	sib(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel)
 {
 	hMaster = hObj;
 	initSaturn1b();
@@ -296,12 +297,21 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sib.Timestep(simdt);
+		sib.Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
 	} else {
 		GenericTimestepStage(simt, simdt);
+	}
+
+	//S-IB/S-IVB separation
+
+	if (SIBSIVBSepPyros.Blown() && stage <= LAUNCH_STAGE_ONE)
+	{
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
 	}
 
 	//

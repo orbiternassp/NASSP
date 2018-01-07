@@ -33,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SIISystems
 {
 public:
-	SIISystems(Saturn *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Sound &pushifts, Sound &SepS);
+	SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Pyro &SII_Inter, Pyro &SII_SIVB_Sep, Sound &pushifts, Sound &SepS);
 	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -88,7 +88,7 @@ protected:
 	double FailureTimer;
 	bool FailInit;
 
-	Saturn *vessel;
+	VESSEL *vessel;
 	J2Engine j2engine1;
 	J2Engine j2engine2;
 	J2Engine j2engine3;
@@ -97,6 +97,9 @@ protected:
 	J2Engine *j2engines[5];
 	THGROUP_HANDLE &ullage;
 	PROPELLANT_HANDLE &main_propellant;
+
+	Pyro &SII_Interstage_Pyros;
+	Pyro &SII_SIVB_Separation_Pyros;
 
 	Sound &puShiftSound;
 	Sound &sepSound;

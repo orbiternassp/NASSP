@@ -116,6 +116,8 @@ protected:
 	void SetEngineFailure(int failstage, int faileng, double failtime);
 
 	SIBSystems sib;
+
+	Pyro SIBSIVBSepPyros;
 };
 
 

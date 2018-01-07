@@ -229,7 +229,7 @@ void F1Engine::SetThrusterDir(double beta_y, double beta_p)
 	vessel->SetThrusterDir(th_f1, f1vector);
 }
 
-SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
+SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
 	main_propellant(f1prop),
 	f1engine1(v, f1[2]),
 	f1engine2(v, f1[1]),
@@ -238,7 +238,8 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	f1engine5(v, f1[4]),
 	SShutSound(SShutS),
 	LaunchSound(LaunchS),
-	contrailLevel(contraillvl)
+	contrailLevel(contraillvl),
+	SIC_SII_Separation_Pyros(SIC_SII_Sep)
 {
 	vessel = v;
 
@@ -254,6 +255,8 @@ SICSystems::SICSystems(Saturn *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	PointLevelSensorArmed = false;
 	TwoAdjacentOutboardEnginesOutCutoff = false;
 	FailInit = false;
+
+	FailureTimer = 0.0;
 
 	f1engines[0] = &f1engine1;
 	f1engines[1] = &f1engine2;
@@ -317,11 +320,8 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SICSystems::Timestep(double simdt)
+void SICSystems::Timestep(double simdt, bool liftoff)
 {
-	//Sanity check
-	if (vessel->GetStage() >= LAUNCH_STAGE_TWO) return;
-
 	f1engine1.Timestep(simdt);
 	f1engine2.Timestep(simdt);
 	f1engine3.Timestep(simdt);
@@ -362,9 +362,12 @@ void SICSystems::Timestep(double simdt)
 
 	//Failure code
 
+	if (liftoff)
+		FailureTimer += simdt;
+
 	for (int i = 0;i < 5;i++)
 	{
-		if (EarlySICutoff[i] && (vessel->GetMissionTime() > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
+		if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
 		{
 			f1engines[i]->SetFailed();
 		}
@@ -510,14 +513,7 @@ void SICSystems::SwitchSelector(int channel)
 		OutboardEnginesCutoffEnable();
 		break;
 	case 15: //S-IC/S-II Separation (No. 1)
-		if (vessel->GetStage() == LAUNCH_STAGE_ONE)
-		{
-			// Drop old stage
-			vessel->SeparateStage(LAUNCH_STAGE_TWO);
-			vessel->SetStage(LAUNCH_STAGE_TWO);
-			vessel->ActivateStagingVent();
-		}
-		break;
+		SIC_SII_Separation_Pyros.SetBlown(true);
 		break;
 	case 16: //Inboard Engine Cutoff Backup
 		InboardEngineCutoff();
@@ -526,13 +522,7 @@ void SICSystems::SwitchSelector(int channel)
 		TwoAdjacentOutboardEnginesOutCutoffEnable();
 		break;
 	case 19: //S-IC/S-II Separation (No. 2)
-		if (vessel->GetStage() == LAUNCH_STAGE_ONE)
-		{
-			// Drop old stage
-			vessel->SeparateStage(LAUNCH_STAGE_TWO);
-			vessel->SetStage(LAUNCH_STAGE_TWO);
-			vessel->ActivateStagingVent();
-		}
+		SIC_SII_Separation_Pyros.SetBlown(true);
 		break;
 	case 20: //Separation and Retro No. 2 EBW Firing Units Arm
 		break;
