@@ -29,13 +29,60 @@ class LEMSaturn : public LEM {
 public:
 	LEMSaturn(OBJHANDLE hObj, int fmodel);
 	virtual ~LEMSaturn();
+
 protected:
+
+	void ClearThrusters();
+	void CalculateStageMass();
+	void SetFirstStage();
+	void SetFirstStageMeshes(double offset);
+	void SetFirstStageEngines();
+	void SetSecondStage();
+	void SetSecondStageMeshes(double offset);
+	void SetSecondStageEngines();
+
+	void SetNosecapMesh();
 
 	int lemsat_stage;
 
-	double THRUST_FIRST_VAC;
+	bool NosecapAttached;
+
+	double ISP_FIRST_VAC, ISP_FIRST_SL, ISP_SECOND_VAC, ISP_SECOND_SL;
+	double THRUST_FIRST_VAC, THRUST_SECOND_VAC;
+
+	double SI_EmptyMass, SI_FuelMass;
+	double SIVB_EmptyMass, SIVB_FuelMass;
+	double LM_EmptyMass, LM_FuelMass;
+	double SI_Mass, SIVB_Mass, LM_Mass;
+	double Stage1Mass, Stage2Mass;
+
+	double Offset1st;
+	double TCPO;
+	double STG1O;
+
+	MESHHANDLE hStage1Mesh;
+	MESHHANDLE hStage2Mesh;
+	MESHHANDLE hInterstageMesh;
+	MESHHANDLE hStageSLA1Mesh;
+	MESHHANDLE hStageSLA2Mesh;
+	MESHHANDLE hStageSLA3Mesh;
+	MESHHANDLE hStageSLA4Mesh;
+
+	// Mesh indexes
+	int nosecapidx;
+	int meshLM_1;
+
+	//
+	// Surfaces.
+	//
+	SURFHANDLE J2Tex;
+
+	THRUSTER_HANDLE th_1st[8], th_3rd[1], th_3rd_lox, th_ver[3];
+	THGROUP_HANDLE thg_1st, thg_3rd, thg_ver;
+
+	PROPELLANT_HANDLE ph_1st, ph_3rd, ph_ullage3;
 
 	IU* iu;
 	SIBSystems *sib;
-	SIVB200Systems *sivb;
+	SIVBSystems *sivb;
 };
