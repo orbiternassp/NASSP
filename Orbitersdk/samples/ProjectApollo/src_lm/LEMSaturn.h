@@ -34,7 +34,9 @@ public:
 	LEMSaturn(OBJHANDLE hObj, int fmodel);
 	virtual ~LEMSaturn();
 
+	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
+
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
 
@@ -56,10 +58,19 @@ protected:
 	void CreateStageOne();
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1);
 
+	void CreateSIBSystems();
+	void CreateSIVBSystems();
+	void CreateIUSystems();
+
 	void SetNosecapMesh();
 	void SetupMeshes();
 	void Saturn1bLoadMeshes();
 	void AddRCS_S4B();
+
+	void SaveLEMSaturn(FILEHANDLE scn);
+	void LoadLEMSaturn(FILEHANDLE scn);
+	void LoadIU(FILEHANDLE scn);
+	void LoadLVDC(FILEHANDLE scn);
 
 	int lemsat_stage;
 
@@ -75,6 +86,8 @@ protected:
 
 	double Offset1st;
 	double TCPO;
+
+	double contrailLevel;
 
 	MESHHANDLE hStage1Mesh;
 	MESHHANDLE hStage2Mesh;
@@ -102,6 +115,13 @@ protected:
 	OBJHANDLE habort;
 	OBJHANDLE hs4bM;
 
+	//
+	// Sounds
+	//
+
+	Sound LaunchS;
+	Sound SShutS;
+
 	THRUSTER_HANDLE th_1st[8], th_3rd[1], th_3rd_lox, th_ver[3];
 	THRUSTER_HANDLE th_aps_rot[6];
 	THGROUP_HANDLE thg_1st, thg_3rd, thg_ver;
@@ -114,8 +134,17 @@ protected:
 	SIVBSystems *sivb;
 
 	Pyro SIBSIVBSepPyros;
+
+	///
+	/// \brief Connector from LM to IU.
+	///
+	LMToIUConnector iuCommandConnector;
+	LEMSaturnToIUCommandConnector sivbCommandConnector;
 };
 
 const double STG1O = 10.25;
 const double STG2O = 8;
 const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };
+
+#define SISYSTEMS_START_STRING		"SISYSTEMS_BEGIN"
+#define SISYSTEMS_END_STRING		"SISYSTEMS_END"

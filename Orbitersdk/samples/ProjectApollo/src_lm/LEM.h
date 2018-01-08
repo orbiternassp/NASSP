@@ -705,6 +705,8 @@ protected:
 	// Save/Load support functions.
 	//
 
+	virtual void SaveLEMSaturn(FILEHANDLE scn) {};
+	virtual void LoadLEMSaturn(FILEHANDLE scn) {};
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
 

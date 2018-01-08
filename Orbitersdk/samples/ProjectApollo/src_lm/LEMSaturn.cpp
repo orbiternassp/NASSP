@@ -32,6 +32,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "iu.h"
 #include "sivbsystems.h"
+#include "LVDC.h"
 
 #include "LEM.h"
 #include "s1b.h"
@@ -227,7 +228,58 @@ LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 
 LEMSaturn::~LEMSaturn()
 {
+	if (sib)
+	{
+		delete sib;
+		sib = 0;
+	}
 
+	if (sivb)
+	{
+		delete sivb;
+		sivb = 0;
+	}
+
+	if (iu)
+	{
+		delete iu;
+		iu = 0;
+	}
+}
+
+void LEMSaturn::initSaturn1b()
+{
+	J2Tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_j2");
+	SIVBRCSTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
+
+	lemsat_stage = CSM_LEM_STAGE;
+	NosecapAttached = true;
+
+	ISP_FIRST_SL = 262 * G;
+	ISP_FIRST_VAC = 294 * G;
+	THRUST_FIRST_VAC = 1008000;
+
+	ISP_SECOND_SL = 424 * G;
+	ISP_SECOND_VAC = 424 * G;
+
+	THRUST_SECOND_VAC = 1009902;
+
+	SIVB_EmptyMass = 12495;
+	SIVB_FuelMass = 105795;
+
+	SI_EmptyMass = 41874;
+	SI_FuelMass = 411953;
+
+	LM_Mass = 14360;
+
+	TCPO = 0.0;
+	contrailLevel = 0.0;
+
+	CalculateStageMass();
+
+	sib = NULL;
+	sivb = NULL;
+	iu = NULL;
 }
 
 void LEMSaturn::SetStage(int s)
@@ -384,6 +436,10 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		SetupMeshes();
 		SetFirstStage();
 		SetFirstStageEngines();
+
+		CreateSIBSystems();
+		CreateSIVBSystems();
+		CreateIUSystems();
 		break;
 
 	case LAUNCH_STAGE_SIVB:
@@ -393,6 +449,10 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		SetSecondStage();
 		SetSecondStageEngines();
 		AddRCS_S4B();
+
+		CreateSIVBSystems();
+		CreateIUSystems();
+		
 		break;
 	default:
 		SetGenericStageState(status);
@@ -402,34 +462,119 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 	PostLoadSetup();
 }
 
-void LEMSaturn::initSaturn1b()
+void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
 {
-	J2Tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_j2");
-	SIVBRCSTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
+	if (lemsat_stage < CSM_LEM_STAGE)
+	{
+		oapiWriteLine(scn, "LEMSATURN_BEGIN");
 
-	lemsat_stage = 5;
-	NosecapAttached = true;
+		oapiWriteScenario_int(scn, "LEMSATURN_STAGE", lemsat_stage);
+		if (sib)
+			sib->SaveState(scn);
+		if (sivb)
+			sivb->SaveState(scn);
+		if (iu)
+		{
+			iu->SaveState(scn);
+			iu->SaveLVDC(scn);
+		}
 
-	ISP_FIRST_SL = 262 * G;
-	ISP_FIRST_VAC = 294 * G;
-	THRUST_FIRST_VAC = 1008000;
+		oapiWriteLine(scn, "LEMSATURN_END");
+	}
+}
 
-	ISP_SECOND_SL = 424 * G;
-	ISP_SECOND_VAC = 424 * G;
 
-	THRUST_SECOND_VAC = 1009902;
+void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 
-	SIVB_EmptyMass = 12495;
-	SIVB_FuelMass = 105795;
+	char *line;
 
-	SI_EmptyMass = 41874;
-	SI_FuelMass = 411953;
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, "LEMSATURN_END", sizeof("LEMSATURN_END"))) {
+			return;
+		}
 
-	LM_Mass = 14360;
+		if (!strnicmp(line, "LEMSATURN_STAGE", 15)) {
+			sscanf(line + 15, "%d", &lemsat_stage);
+		}
+		else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
+			sib->LoadState(scn);
+		}
+		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
+			sivb->LoadState(scn);
+		}
+		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
+			LoadIU(scn);
+		}
+		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
+			LoadLVDC(scn);
+		}
+	}
+}
 
-	TCPO = 0.0;
+void LEMSaturn::LoadIU(FILEHANDLE scn)
+{
+	// If the IU does not yet exist, create it.
+	CreateIUSystems();
+	iu->LoadState(scn);
+}
 
-	CalculateStageMass();
+void LEMSaturn::LoadLVDC(FILEHANDLE scn) {
+
+	// If the IU does not yet exist, create it.
+	CreateIUSystems();
+	iu->LoadLVDC(scn);
+}
+
+void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
+{
+	LEM::clbkPreStep(simt, simdt, mjd);
+
+	if (lemsat_stage <= LAUNCH_STAGE_ONE)
+	{
+		if (sib)
+			sib->Timestep(simdt, lemsat_stage >= LAUNCH_STAGE_ONE);
+	}
+
+	if (lemsat_stage == LAUNCH_STAGE_SIVB || lemsat_stage == STAGE_ORBIT_SIVB)
+	{
+		if (sivb)
+			sivb->Timestep(simdt);
+		if (iu)
+			iu->Timestep(MissionTime, simt, simdt, mjd);
+	}
+
+	//S-IB/S-IVB separation
+
+	if (SIBSIVBSepPyros.Blown() && lemsat_stage <= LAUNCH_STAGE_ONE)
+	{
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
+		AddRCS_S4B();
+	}
+}
+
+void LEMSaturn::CreateSIBSystems()
+{
+	if (sib == NULL)
+	{
+		sib = new SIBSystems(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel);
+	}
+}
+
+void LEMSaturn::CreateSIVBSystems()
+{
+	if (sivb == NULL)
+	{
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, NULL, th_3rd_lox, thg_ver);
+	}
+}
+
+void LEMSaturn::CreateIUSystems()
+{
+	if (iu == NULL)
+	{
+		iu = new IU1B();
+	}
 }
 
 void LEMSaturn::CalculateStageMass()
