@@ -208,7 +208,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
 		lem->INST_PCMTEA_CB.DrawPower(11); 
 		PCMHeat->GenerateHeat(5.15);  
-		SECPCMHeat->GenerateHeat(5.15);
+		PCMSECHeat->GenerateHeat(5.15);
 	}
 }
 
