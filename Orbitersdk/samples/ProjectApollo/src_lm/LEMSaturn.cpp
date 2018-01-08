@@ -577,6 +577,25 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 	}
 }
 
+void LEMSaturn::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	// Switch to compatible dock mode 
+	SetDockMode(0);
+
+	//
+	// Scan the launchpad config file.
+	//
+	char *line, buffer[1000];
+
+	sprintf(buffer, "ProjectApollo/LEM.launchpad.cfg");
+	FILEHANDLE hFile = oapiOpenFile(buffer, FILE_IN, CONFIG);
+
+	while (oapiReadScenario_nextline(hFile, line)) {
+		ProcessConfigFileLine(hFile, line);
+	}
+	oapiCloseFile(hFile, FILE_IN);
+}
+
 void LEMSaturn::CreateSIBSystems()
 {
 	if (sib == NULL)

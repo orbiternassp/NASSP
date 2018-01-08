@@ -302,6 +302,16 @@ void LEM::Init()
 	ph_RCSA = 0;
 	ph_RCSB = 0;
 
+	for (int i = 0;i < 16;i++)
+	{
+		th_rcs[i] = 0;
+	}
+
+	for (int i = 0;i < 2;i++)
+	{
+		th_hover[i] = 0;
+	}
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -781,14 +791,17 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	// Simulate the dust kicked up near
 	// the lunar surface
 	double vsAlt = GetAltitude(ALTMODE_GROUND);
-	double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
+	if (th_hover[0])
+	{
+		double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
 
-	if (stage == 1) {
-		if (vsAlt < 15.0) {
-			SetThrusterGroupLevel(thg_dust, dustlvl);
-		}
-		else {
-			SetThrusterGroupLevel(thg_dust, 0);
+		if (stage == 1 && thg_dust) {
+			if (vsAlt < 15.0) {
+				SetThrusterGroupLevel(thg_dust, dustlvl);
+			}
+			else {
+				SetThrusterGroupLevel(thg_dust, 0);
+			}
 		}
 	}
 	
@@ -1572,6 +1585,7 @@ void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 }
 
 void LEM::SetRCSJet(int jet, bool fire) {
+	if (th_rcs[jet] == NULL) return;  // Sanity check
 	SetThrusterLevel(th_rcs[jet], fire);
 }
 

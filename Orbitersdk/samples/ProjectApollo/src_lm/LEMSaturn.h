@@ -58,6 +58,7 @@ public:
 	virtual ~LEMSaturn();
 
 	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
 
 	void SeparateStage(UINT stage);
