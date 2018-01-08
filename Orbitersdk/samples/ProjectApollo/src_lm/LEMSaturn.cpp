@@ -380,12 +380,16 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 	case ONPAD_STAGE:
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
+		Saturn1bLoadMeshes();
+		SetupMeshes();
 		SetFirstStage();
 		SetFirstStageEngines();
 		break;
 
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
+		Saturn1bLoadMeshes();
+		SetupMeshes();
 		SetSecondStage();
 		SetSecondStageEngines();
 		AddRCS_S4B();
@@ -403,7 +407,7 @@ void LEMSaturn::initSaturn1b()
 	J2Tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_j2");
 	SIVBRCSTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 
-	lemsat_stage = 0;
+	lemsat_stage = 5;
 	NosecapAttached = true;
 
 	ISP_FIRST_SL = 262 * G;
@@ -802,7 +806,7 @@ void LEMSaturn::SetNosecapMesh() {
 	}
 }
 
-void Saturn1bLoadMeshes()
+void LEMSaturn::Saturn1bLoadMeshes()
 
 {
 	hSat1stg1 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg1");
@@ -957,4 +961,24 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);
+}
+
+void LEMSaturn::SetSIEngineStart(int n)
+{
+	sib->SetEngineStart(n);
+}
+
+void LEMSaturn::SetIUUmbilicalState(bool connect)
+{
+	if (lemsat_stage <= PRELAUNCH_STAGE && iu)
+	{
+		if (connect)
+		{
+			iu->ConnectUmbilical();
+		}
+		else
+		{
+			iu->DisconnectUmbilical();
+		}
+	}
 }

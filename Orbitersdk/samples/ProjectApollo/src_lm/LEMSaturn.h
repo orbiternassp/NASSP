@@ -24,6 +24,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+class IU;
+class SIBSystems;
+class SIVBSystems;
+
 class LEMSaturn : public LEM {
 	friend class LVDC1B;
 public:
@@ -33,6 +37,9 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
+
+	virtual void SetSIEngineStart(int eng);
+	virtual void SetIUUmbilicalState(bool connect);
 
 protected:
 
@@ -51,6 +58,7 @@ protected:
 
 	void SetNosecapMesh();
 	void SetupMeshes();
+	void Saturn1bLoadMeshes();
 	void AddRCS_S4B();
 
 	int lemsat_stage;

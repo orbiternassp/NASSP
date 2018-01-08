@@ -61,7 +61,7 @@ AS-204:ProjectApollo/LEMSaturn
   LVIMU_END
  ; Apollo 5 had no CSM, so there's no checklist
 END
-LC34:ProjectApollo\LC34
+LC37:ProjectApollo\LC37
   STATUS Landed Earth
   POS -80.5643399 28.5150804
   HEADING 180.05
