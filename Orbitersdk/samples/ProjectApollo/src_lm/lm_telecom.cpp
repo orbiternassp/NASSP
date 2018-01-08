@@ -50,6 +50,8 @@ LM_VHF::LM_VHF(){
 	lem = NULL;
 	VHFHeat = 0;
 	VHFSECHeat = 0;
+	PCMHeat = 0;
+	PCMSECHeat = 0;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
@@ -73,10 +75,12 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	}
 	return true;
 }
-void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh){
+void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
 	lem = vessel;
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
+	PCMHeat = pcmh;
+	PCMSECHeat = secpcmh;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
@@ -203,6 +207,8 @@ void LM_VHF::SystemTimestep(double simdt) {
 	// PCMTEA
 	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
 		lem->INST_PCMTEA_CB.DrawPower(11); 
+		PCMHeat->GenerateHeat(5.15);  
+		SECPCMHeat->GenerateHeat(5.15);
 	}
 }
 
