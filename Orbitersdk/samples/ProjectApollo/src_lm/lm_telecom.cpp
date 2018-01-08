@@ -196,13 +196,6 @@ void LM_VHF::SystemTimestep(double simdt) {
 	if(lem->COMM_PMP_CB.Voltage() > 0){	
 		lem->COMM_PMP_CB.DrawPower(4.3); 
 	}
-	// ERAs
-	if(lem->INST_SIG_CONDR_1_CB.Voltage() > 0){ 
-		lem->INST_SIG_CONDR_1_CB.DrawPower(12.6); 
-	}
-	if(lem->INST_SIG_CONDR_2_CB.Voltage() > 0){ 
-		lem->INST_SIG_CONDR_2_CB.DrawPower(10.36); 
-	}
 	// Current drain amount for INST_SIG_SENSOR_CB
 	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
 		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
@@ -2027,7 +2020,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 		if (tc_mode_2 == 0) {
 			tc_mode_2 = 2;  // Start warming up
 		}
-		else if (tc_mode_1 == 3) {
+		else if (tc_mode_2 == 3) {
 			SBXHeat->GenerateHeat(17.65);
 			SBXSECHeat->GenerateHeat(17.65);
 		}
@@ -2040,7 +2033,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 		if (pa_mode_1 == 0) {
 			pa_mode_1 = 2; // Start warming up
 		}
-		else if (tc_mode_1 == 3) {
+		else if (pa_mode_1 == 3) {
 			SBPHeat->GenerateHeat(28.4);
 			SBPSECHeat->GenerateHeat(28.4);
 		}
@@ -2053,7 +2046,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 		if (pa_mode_2 == 0) {
 			pa_mode_2 = 2;  // Start warming up
 		}
-		else if (tc_mode_1 == 3) {
+		else if (pa_mode_2 == 3) {
 			SBPHeat->GenerateHeat(28.4);
 			SBPSECHeat->GenerateHeat(28.4);
 		}
