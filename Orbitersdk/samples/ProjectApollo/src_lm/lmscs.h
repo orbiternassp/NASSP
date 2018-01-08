@@ -52,8 +52,9 @@ class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
 	ATCA();								// Cons
-	void Init(LEM *vessel);				// Init
+	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
 	void Timestep(double simt, double simdt);			// Timestep
+	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands
 
 	void SaveState(FILEHANDLE scn);
@@ -63,6 +64,8 @@ public:
 	double GetDPSRollGimbalError();
 
 	LEM *lem;
+	h_HeatLoad *ATCAHeat;
+	h_HeatLoad *SECATCAHeat;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
 	int jet_request[16];				// Jet request list

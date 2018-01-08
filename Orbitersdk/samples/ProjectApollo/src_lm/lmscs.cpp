@@ -163,8 +163,10 @@ ATCA::ATCA(){
 	rollGimbalError = 0.0;
 }
 
-void ATCA::Init(LEM *vessel){
+void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 	lem = vessel;
+	ATCAHeat = hl;
+	SECATCAHeat = sechl;
 	int x=0; while(x < 16){ jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
 // GuidContSwitch is the Guidance Control switch
@@ -809,6 +811,24 @@ void ATCA::Timestep(double simt, double simdt){
 	}
 }
 
+void ATCA::SystemTimestep(double simdt)
+{
+	if (lem->SCS_ATCA_CB.IsPowered() && lem->CDR_SCS_ATCA_CB.IsPowered() && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
+	{
+		lem->SCS_ATCA_CB.DrawPower(55.0);	//ATCA cb under PGNS
+		lem->CDR_SCS_ATCA_CB.DrawPower(2.0);
+		ATCAHeat->GenerateHeat(22.0);		//ATCA & ATCA PGNS Heat
+		SECATCAHeat->GenerateHeat(22.0);
+	}
+
+	else if (lem->SCS_ATCA_CB.IsPowered() && lem->SCS_ATCA_AGS_CB.IsPowered() && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
+	{
+		lem->SCS_ATCA_CB.DrawPower(65.0);	//ATCA cb under AGS
+		lem->SCS_ATCA_AGS_CB.DrawPower(2.0);
+		ATCAHeat->GenerateHeat(22.0);		//ATCA & ATCA AGS Heat
+		SECATCAHeat->GenerateHeat(22.0);
+	}
+}
 
 // Process thruster commands from LGC
 void ATCA::ProcessLGC(int ch, int val){		

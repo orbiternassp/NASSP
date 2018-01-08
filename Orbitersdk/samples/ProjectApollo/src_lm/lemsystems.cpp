@@ -556,9 +556,9 @@ void LEM::SystemsInit()
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"));
 	// SBand System
-	SBand.Init(this);
+	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
-	VHF.Init(this);
+	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"));
 	// CBs
 	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
 	INST_SIG_CONDR_1_CB.WireTo(&CDRs28VBus);
@@ -914,7 +914,7 @@ void LEM::SystemsInit()
 	ttca_throttle_pos_dig = 0;
 	
 	// Initialize other systems
-	atca.Init(this);
+	atca.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:ATCAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECATCAHEAT"));
 }
 
 void LEM::JoystickTimestep(double simdt)
@@ -1418,6 +1418,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		aea.SystemTimestep(tFactor);
 		deda.SystemTimestep(tFactor);
 		imu.SystemTimestep(tFactor);								// Draw power
+		atca.SystemTimestep(tFactor);
 		rga.SystemTimestep(tFactor);
 		ordeal.SystemTimestep(tFactor);
 		fdaiLeft.SystemTimestep(tFactor);							// Draw Power

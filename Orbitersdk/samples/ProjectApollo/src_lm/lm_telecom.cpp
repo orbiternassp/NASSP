@@ -48,6 +48,8 @@
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){
 	lem = NULL;
+	VHFHeat = 0;
+	VHFSECHeat = 0;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
@@ -71,8 +73,10 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	}
 	return true;
 }
-void LM_VHF::Init(LEM *vessel){
+void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh){
 	lem = vessel;
+	VHFHeat = vhfh;
+	VHFSECHeat = secvhfh;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
@@ -139,41 +143,67 @@ void LM_VHF::SystemTimestep(double simdt) {
 		// For now, we'll just draw idle.
 		if(lem->VHFAVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER){
 			lem->COMM_VHF_XMTR_A_CB.DrawPower(3.5);
+			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
+			VHFSECHeat->GenerateHeat(1.75);
+		}
+		if (lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+			lem->COMM_VHF_XMTR_B_CB.DrawPower(35.0); // Range Mode
+			VHFHeat->GenerateHeat(14.8);  //Range heat load is 29.6W
+			VHFSECHeat->GenerateHeat(14.8);
 		}
 	}
 	// VHF RCVR A
 	// Draws 1.2 watts of DC when on
 	if(lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwtich.GetState() == TOGGLESWITCH_UP){
-		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);	
+		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);
+		//Not sure if RCVR goes to cold rails
+		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
+		VHFSECHeat->GenerateHeat(0.6);
 	}
 	// VHF XMTR B
-	// Draws 28.9 watts of DC when transmitting voice and 31.7 watts when transmitting data.
+	// Draws 28.9 watts of DC when transmitting voice and 31.6 watts when transmitting data.
 	// Draws 3.5 watts when not transmitting.
 	if(lem->COMM_VHF_XMTR_B_CB.Voltage() > 24){
 		// For now, we'll just draw idle or data.
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_UP){
 			lem->COMM_VHF_XMTR_B_CB.DrawPower(3.5); // Voice Mode
+			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
+			VHFSECHeat->GenerateHeat(1.75);
 		}
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN){
-			lem->COMM_VHF_XMTR_B_CB.DrawPower(31.7); // Data Mode
+			lem->COMM_VHF_XMTR_B_CB.DrawPower(31.6); // Data Mode
+			VHFHeat->GenerateHeat(15.8);  //Data heat load is 31.6W
+			VHFSECHeat->GenerateHeat(15.8);
 		}
 	}
 	// VHF RCVR B
 	// Draws 1.2 watts of DC when on
 	if(lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwtich.GetState() == TOGGLESWITCH_UP){
 		lem->COMM_VHF_RCVR_B_CB.DrawPower(1.2);	
+		//Not sure if RCVR goes to cold rails
+		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
+		VHFSECHeat->GenerateHeat(0.6);
 	}
+
 	// CDR and LMP Audio Centers
-	if(lem->COMM_CDR_AUDIO_CB.Voltage() > 0){ lem->COMM_CDR_AUDIO_CB.DrawPower(4.8); }
-	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ lem->COMM_SE_AUDIO_CB.DrawPower(4.8); }
+	if(lem->COMM_CDR_AUDIO_CB.Voltage() > 0){ 
+		lem->COMM_CDR_AUDIO_CB.DrawPower(4.2); 
+	}
+	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ 
+		lem->COMM_SE_AUDIO_CB.DrawPower(4.2); 
+	}
 	// PMP
-	if(lem->COMM_PMP_CB.Voltage() > 0){	lem->COMM_PMP_CB.DrawPower(4.3); }
-	// ERAs
-	if(lem->INST_SIG_CONDR_1_CB.Voltage() > 0){ lem->INST_SIG_CONDR_1_CB.DrawPower(16.04); }
-	if(lem->INST_SIG_CONDR_2_CB.Voltage() > 0){ lem->INST_SIG_CONDR_2_CB.DrawPower(14.23); }
-	// FIXME: Need current drain amount for INST_SIG_SENSOR_CB
+	if(lem->COMM_PMP_CB.Voltage() > 0){	
+		lem->COMM_PMP_CB.DrawPower(4.3); 
+	}
+	// Current drain amount for INST_SIG_SENSOR_CB
+	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
+		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
+	}
 	// PCMTEA
-	if(lem->INST_PCMTEA_CB.Voltage() > 0){ lem->INST_PCMTEA_CB.DrawPower(11); }
+	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
+		lem->INST_PCMTEA_CB.DrawPower(11); 
+	}
 }
 
 void LM_VHF::TimeStep(double simt){
@@ -1941,6 +1971,10 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 // S-Band System
 LM_SBAND::LM_SBAND(){
 	lem = NULL;
+	SBXHeat = 0;
+	SBXSECHeat = 0;
+	SBPHeat = 0;
+	SBPSECHeat = 0;
 	ant = NULL;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
@@ -1949,8 +1983,12 @@ LM_SBAND::LM_SBAND(){
 	rcvr_agc_voltage = 0.0;
 }
 
-void LM_SBAND::Init(LEM *vessel){
+void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph){
 	lem = vessel;
+	SBXHeat = sbxh;
+	SBXSECHeat = secsbxh;
+	SBPHeat = sbph;
+	SBPSECHeat = secsbph;
 	ant = &lem->omni_aft;
 	rcvr_agc_voltage = 0.0;
 }
@@ -1962,28 +2000,52 @@ void LM_SBAND::SystemTimestep(double simdt) {
 	// SBand Primary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(tc_mode_1 == 0){ tc_mode_1 = 2; } // Start warming up
+		if (tc_mode_1 == 0) {
+			tc_mode_1 = 2;  // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_1 > 1){ tc_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(tc_mode_2 == 0){ tc_mode_2 = 2; } // Start warming up
+		if (tc_mode_2 == 0) {
+			tc_mode_2 = 2;  // Start warming up
+		}
+		else if (tc_mode_2 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_2 > 1){ tc_mode_2 = 1; } // Start cooling off
 	}	
 	// SBand Primary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(pa_mode_1 == 0){ pa_mode_1 = 2; } // Start warming up
+		if (pa_mode_1 == 0) {
+			pa_mode_1 = 2; // Start warming up
+		}
+		else if (pa_mode_1 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_1 > 1){ pa_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(pa_mode_2 == 0){ pa_mode_2 = 2; } // Start warming up
+		if (pa_mode_2 == 0) {
+			pa_mode_2 = 2;  // Start warming up
+		}
+		else if (pa_mode_2 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_2 > 1){ pa_mode_2 = 1; } // Start cooling off
 	}
@@ -2024,7 +2086,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_1 = simt; break;
@@ -2067,7 +2129,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_2 = simt; break;
@@ -2111,7 +2173,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_1 = simt; break;
@@ -2154,7 +2216,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_2 = simt; break;
