@@ -544,6 +544,10 @@ public:
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
 
+	void GetScenarioState(FILEHANDLE scn, void *vs);
+	void SetGenericStageState(int stat);
+	void PostLoadSetup();
+
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
@@ -670,7 +674,7 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	void SeparateStage (UINT stage);
+	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);

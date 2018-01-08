@@ -100,40 +100,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	return TRUE;
 }
 
-DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
-
-{
-	LEM *lem;
-
-	if (!refcount++) {
-		LEMLoadMeshes();
-	}
-	
-	// VESSELSOUND 
-
-	lem = new LEM(hvessel, flightmodel);
-	return static_cast<VESSEL *> (lem);
-}
-
-DLLCLBK void ovcExit (VESSEL *vessel)
-
-{
-	TRACESETUP("ovcExit LMPARKED");
-
-	--refcount;
-
-	if (!refcount) {
-		TRACE("refcount == 0");
-
-		//
-		// This code could tidy up allocations when refcount == 0
-		//
-
-	}
-
-	if (vessel) delete static_cast<LEM *> (vessel);
-}
-
 // DS20060302 DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
 {
@@ -946,26 +912,148 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 //
 
 void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
+{
+	GetScenarioState(scn, vs);
 
+	SetGenericStageState(status);
+
+	PostLoadSetup();
+}
+
+void LEM::SetGenericStageState(int stat)
+{
+	switch (stat) {
+	case 0:
+		stage = 0;
+		SetLmVesselDockStage();
+		break;
+
+	case 1:
+		stage = 1;
+		SetLmVesselHoverStage();
+
+		if (CDREVA_IP) {
+			SetupEVA();
+		}
+		break;
+
+	case 2:
+		stage = 2;
+		SetLmAscentHoverStage();
+		break;
+	}
+}
+
+void LEM::PostLoadSetup()
+{
+	CheckDescentStageSystems();
+
+	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
+
+	agc.SetMissionInfo(ApolloNo);
+	aea.SetMissionInfo(ApolloNo);
+
+	///
+	// Realism Mode Settings
+	//
+
+	// Enable Orbiter's attitude control for unmanned missions
+	// as long as they rely on Orbiter's navmodes (killrot etc.)
+
+	if (!Crewed) {
+		checkControl.autoExecute(true);
+		checkControl.autoExecuteSlow(false);
+		checkControl.autoExecuteAllItemsAutomatic(true);
+	}
+
+	// Disable it and do some other settings when not in
+	// Quickstart mode
+
+	else {
+		checkControl.autoExecute(VAGCChecklistAutoEnabled);
+		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
+		checkControl.autoExecuteAllItemsAutomatic(false);
+
+	}
+
+	//
+	// Load sounds, this is mandatory if loading in cockpit view, 
+	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
+	//
+	LoadDefaultSounds();
+
+	// Also cause the AC busses to wire up
+	switch (EPSInverterSwitch.GetState()) {
+	case THREEPOSSWITCH_UP:      // INV 2
+		INV_1.active = 0;
+		INV_2.active = 1;
+		ACBusA.WireTo(&AC_A_INV_2_FEED_CB);
+		ACBusB.WireTo(&AC_B_INV_2_FEED_CB);
+		break;
+	case THREEPOSSWITCH_CENTER:  // INV 1
+		INV_1.active = 1;
+		INV_2.active = 0;
+		ACBusA.WireTo(&AC_A_INV_1_FEED_CB);
+		ACBusB.WireTo(&AC_B_INV_1_FEED_CB);
+		break;
+	case THREEPOSSWITCH_DOWN:    // OFF	
+		break;                   // Handled later
+	}
+	HRESULT         hr;
+
+	// Having read the configuration file, set up DirectX...	
+	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+	if (!FAILED(hr)) {
+		int x = 0;
+		// Enumerate attached joysticks until we find 2 or run out.
+		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+		if (js_enabled == 0) {   // Did we get anything?			
+			dx8ppv->Release(); // No. Close down DirectInput
+			dx8ppv = NULL;     // otherwise it won't get closed later
+			sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+		}
+		else {
+			while (x < js_enabled) {                                // For each joystick
+				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+																  // Z-axis detection
+				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+					js_current = x;
+					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+				}
+				x++;                                              // Next!
+			}
+		}
+	}
+	else {
+		// We can't print an error message this early in initialization, so save this reason for later investigation.
+		dx8_failure = hr;
+	}
+}
+
+void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 {
 	char *line;
 	int	SwitchState;
 	float ftcp;
-	
-	while (oapiReadScenario_nextline (scn, line)) {
-        if (!strnicmp (line, "CONFIGURATION", 13)) {
-            sscanf (line+13, "%d", &status);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, "CONFIGURATION", 13)) {
+			sscanf(line + 13, "%d", &status);
 		}
-		else if (!strnicmp (line, "EVA", 3)) {
+		else if (!strnicmp(line, "EVA", 3)) {
 			CDREVA_IP = true;
-		} 
-		else if (!strnicmp (line, "CSWITCH", 7)) {
-            SwitchState = 0;
-			sscanf (line+7, "%d", &SwitchState);
+		}
+		else if (!strnicmp(line, "CSWITCH", 7)) {
+			SwitchState = 0;
+			sscanf(line + 7, "%d", &SwitchState);
 			SetCSwitchState(SwitchState);
-		} 
+		}
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
-            sscanf (line+9, "%f", &ftcp);
+			sscanf(line + 9, "%f", &ftcp);
 			MissionTime = ftcp;
 		}
 		else if (!strnicmp(line, "UNMANNED", 8)) {
@@ -973,14 +1061,14 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf(line + 8, "%d", &i);
 			Crewed = (i == 0);
 		}
-		else if (!strnicmp (line, "LANG", 4)) {
-			strncpy (AudioLanguage, line + 5, 64);
+		else if (!strnicmp(line, "LANG", 4)) {
+			strncpy(AudioLanguage, line + 5, 64);
 		}
-		else if (!strnicmp (line, "APOLLONO", 8)) {
-			sscanf (line+8, "%d", &ApolloNo);
+		else if (!strnicmp(line, "APOLLONO", 8)) {
+			sscanf(line + 8, "%d", &ApolloNo);
 		}
-		else if (!strnicmp (line, "LANDED", 6)) {
-			sscanf (line+6, "%d", &Landed);
+		else if (!strnicmp(line, "LANDED", 6)) {
+			sscanf(line + 6, "%d", &Landed);
 		}
 		else if (!strnicmp(line, "HASPROGRAMER", 12)) {
 			int i;
@@ -1003,8 +1091,8 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf(line + 12, "%f", &ftcp);
 			AscentEmptyMassKg = ftcp;
 		}
-		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
-			sscanf (line + 12, "%i", &fdaiDisabled);
+		else if (!strnicmp(line, "FDAIDISABLED", 12)) {
+			sscanf(line + 12, "%i", &fdaiDisabled);
 		}
 		else if (!strnicmp(line, "SAVEFOV", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
@@ -1042,29 +1130,29 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ASA_START", sizeof("ASA_START"))) {
 			asa.LoadState(scn, "ASA_END");
 		}
-		else if (!strnicmp (line, "ECA_1A_START",sizeof("ECA_1A_START"))) {
-			ECA_1a.LoadState(scn,"ECA_1A_END");
+		else if (!strnicmp(line, "ECA_1A_START", sizeof("ECA_1A_START"))) {
+			ECA_1a.LoadState(scn, "ECA_1A_END");
 		}
-		else if (!strnicmp (line, "ECA_2A_START",sizeof("ECA_2A_START"))) {
-			ECA_2a.LoadState(scn,"ECA_2A_END");
+		else if (!strnicmp(line, "ECA_2A_START", sizeof("ECA_2A_START"))) {
+			ECA_2a.LoadState(scn, "ECA_2A_END");
 		}
-		else if (!strnicmp (line, "ECA_1B_START",sizeof("ECA_1B_START"))) {
-			ECA_1b.LoadState(scn,"ECA_1B_END");
+		else if (!strnicmp(line, "ECA_1B_START", sizeof("ECA_1B_START"))) {
+			ECA_1b.LoadState(scn, "ECA_1B_END");
 		}
-		else if (!strnicmp (line, "ECA_2B_START",sizeof("ECA_2B_START"))) {
-			ECA_2b.LoadState(scn,"ECA_2B_END");
+		else if (!strnicmp(line, "ECA_2B_START", sizeof("ECA_2B_START"))) {
+			ECA_2b.LoadState(scn, "ECA_2B_END");
 		}
-		else if (!strnicmp (line, "ECA_3A_START",sizeof("ECA_3A_START"))) {
-			ECA_3a.LoadState(scn,"ECA_3A_END");
+		else if (!strnicmp(line, "ECA_3A_START", sizeof("ECA_3A_START"))) {
+			ECA_3a.LoadState(scn, "ECA_3A_END");
 		}
-		else if (!strnicmp (line, "ECA_4A_START",sizeof("ECA_4A_START"))) {
-			ECA_4a.LoadState(scn,"ECA_4A_END");
+		else if (!strnicmp(line, "ECA_4A_START", sizeof("ECA_4A_START"))) {
+			ECA_4a.LoadState(scn, "ECA_4A_END");
 		}
-		else if (!strnicmp (line, "ECA_3B_START",sizeof("ECA_3B_START"))) {
-			ECA_3b.LoadState(scn,"ECA_3B_END");
+		else if (!strnicmp(line, "ECA_3B_START", sizeof("ECA_3B_START"))) {
+			ECA_3b.LoadState(scn, "ECA_3B_END");
 		}
-		else if (!strnicmp (line, "ECA_4B_START",sizeof("ECA_4B_START"))) {
-			ECA_4b.LoadState(scn,"ECA_4B_END");
+		else if (!strnicmp(line, "ECA_4B_START", sizeof("ECA_4B_START"))) {
+			ECA_4b.LoadState(scn, "ECA_4B_END");
 		}
 		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
 			SBand.LoadState(line);
@@ -1084,17 +1172,17 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
 			SuitFanDPSensor.LoadState(line);
 		}
-		else if (!strnicmp (line, "PANEL_ID", 8)) { 
-			sscanf (line+8, "%d", &PanelId);
+		else if (!strnicmp(line, "PANEL_ID", 8)) {
+			sscanf(line + 8, "%d", &PanelId);
 		}
-        else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
-			PSH.LoadState(scn);	
+		else if (!strnicmp(line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) {
+			PSH.LoadState(scn);
 		}
-		else if (!strnicmp (line, "LEM_EDS_START",sizeof("LEM_EDS_START"))) {
-			eds.LoadState(scn,"LEM_EDS_END");
+		else if (!strnicmp(line, "LEM_EDS_START", sizeof("LEM_EDS_START"))) {
+			eds.LoadState(scn, "LEM_EDS_END");
 		}
-		else if (!strnicmp (line, "LEM_RR_START",sizeof("LEM_RR_START"))) {
-			RR.LoadState(scn,"LEM_RR_END");
+		else if (!strnicmp(line, "LEM_RR_START", sizeof("LEM_RR_START"))) {
+			RR.LoadState(scn, "LEM_RR_END");
 		}
 		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
 			LR.LoadState(scn, "LEM_LR_END");
@@ -1180,125 +1268,18 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
-        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
-		else if (!strnicmp (line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
+		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
 			checkControl.load(scn);
 		}
-		else 
+		else
 		{
-            ParseScenarioLineEx (line, vs);
-        }
-    }
-
-	switch (status) {
-	case 0:
-		stage=0;
-		SetLmVesselDockStage();
-		break;
-
-	case 1:
-		stage=1;
-		SetLmVesselHoverStage();
-
-		if (CDREVA_IP){
-			SetupEVA();
+			ParseScenarioLineEx(line, vs);
 		}
-		break;
-
-	case 2:
-		stage=2;
-		SetLmAscentHoverStage();
-		break;
 	}
-
-	CheckDescentStageSystems();
-
-	//
-	// Pass on the mission number and realism setting to the AGC.
-	//
-
-	agc.SetMissionInfo(ApolloNo);
-	aea.SetMissionInfo(ApolloNo);
-
-	///
-	// Realism Mode Settings
-	//
-
-	// Enable Orbiter's attitude control for unmanned missions
-	// as long as they rely on Orbiter's navmodes (killrot etc.)
-
-	if (!Crewed) {
-		checkControl.autoExecute(true);
-		checkControl.autoExecuteSlow(false);
-		checkControl.autoExecuteAllItemsAutomatic(true);
-	}
-
-	// Disable it and do some other settings when not in
-	// Quickstart mode
-
-	else {
-		checkControl.autoExecute(VAGCChecklistAutoEnabled);
-		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(false);
-
-	}
-
-	//
-	// Load sounds, this is mandatory if loading in cockpit view, 
-	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
-	//
-	LoadDefaultSounds();
-
-	// Also cause the AC busses to wire up
-	switch(EPSInverterSwitch.GetState()){
-		case THREEPOSSWITCH_UP:      // INV 2
-			INV_1.active = 0;
-			INV_2.active = 1; 
-			ACBusA.WireTo(&AC_A_INV_2_FEED_CB);
-			ACBusB.WireTo(&AC_B_INV_2_FEED_CB);
-			break;
-		case THREEPOSSWITCH_CENTER:  // INV 1
-			INV_1.active = 1;
-			INV_2.active = 0; 
-			ACBusA.WireTo(&AC_A_INV_1_FEED_CB);
-			ACBusB.WireTo(&AC_B_INV_1_FEED_CB);
-			break;
-		case THREEPOSSWITCH_DOWN:    // OFF	
-			break;                   // Handled later
-	}
-	HRESULT         hr;
-
-	// Having read the configuration file, set up DirectX...	
-	hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
-	if(!FAILED(hr)){
-		int x=0;
-		// Enumerate attached joysticks until we find 2 or run out.
-		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-		if(js_enabled == 0){   // Did we get anything?			
-			dx8ppv->Release(); // No. Close down DirectInput
-			dx8ppv = NULL;     // otherwise it won't get closed later
-			sprintf(oapiDebugString(),"DX8JS: No joysticks found");
-		}else{
-			while(x < js_enabled){                                // For each joystick
-				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-				// Z-axis detection
-				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-					js_current = x;
-					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
-				}
-				x++;                                              // Next!
-			}
-		}
-	}else{
-		// We can't print an error message this early in initialization, so save this reason for later investigation.
-		dx8_failure = hr;
-	}
-
 }
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {

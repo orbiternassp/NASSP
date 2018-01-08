@@ -164,6 +164,7 @@
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
+    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -373,6 +374,7 @@
     <ClInclude Include="..\..\src_lm\lm_rcs.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
+    <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

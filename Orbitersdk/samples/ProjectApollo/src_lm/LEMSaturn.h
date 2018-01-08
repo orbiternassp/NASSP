@@ -30,8 +30,13 @@ public:
 	LEMSaturn(OBJHANDLE hObj, int fmodel);
 	virtual ~LEMSaturn();
 
+	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
+	void SeparateStage(UINT stage);
+	void SetStage(int s);
+
 protected:
 
+	void initSaturn1b();
 	void ClearThrusters();
 	void CalculateStageMass();
 	void SetFirstStage();
@@ -41,7 +46,12 @@ protected:
 	void SetSecondStageMeshes(double offset);
 	void SetSecondStageEngines();
 
+	void CreateStageOne();
+	void CreateSIVBStage(char *config, VESSELSTATUS &vs1);
+
 	void SetNosecapMesh();
+	void SetupMeshes();
+	void AddRCS_S4B();
 
 	int lemsat_stage;
 
@@ -52,13 +62,11 @@ protected:
 
 	double SI_EmptyMass, SI_FuelMass;
 	double SIVB_EmptyMass, SIVB_FuelMass;
-	double LM_EmptyMass, LM_FuelMass;
 	double SI_Mass, SIVB_Mass, LM_Mass;
 	double Stage1Mass, Stage2Mass;
 
 	double Offset1st;
 	double TCPO;
-	double STG1O;
 
 	MESHHANDLE hStage1Mesh;
 	MESHHANDLE hStage2Mesh;
@@ -76,13 +84,30 @@ protected:
 	// Surfaces.
 	//
 	SURFHANDLE J2Tex;
+	SURFHANDLE SIVBRCSTex;
+
+	//
+	// Vessel handles.
+	//
+
+	OBJHANDLE hstg1;
+	OBJHANDLE habort;
+	OBJHANDLE hs4bM;
 
 	THRUSTER_HANDLE th_1st[8], th_3rd[1], th_3rd_lox, th_ver[3];
+	THRUSTER_HANDLE th_aps_rot[6];
 	THGROUP_HANDLE thg_1st, thg_3rd, thg_ver;
 
 	PROPELLANT_HANDLE ph_1st, ph_3rd, ph_ullage3;
+	PROPELLANT_HANDLE ph_aps1, ph_aps2;
 
 	IU* iu;
 	SIBSystems *sib;
 	SIVBSystems *sivb;
+
+	Pyro SIBSIVBSepPyros;
 };
+
+const double STG1O = 10.25;
+const double STG2O = 8;
+const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };

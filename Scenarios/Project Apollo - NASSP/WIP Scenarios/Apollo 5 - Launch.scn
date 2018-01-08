@@ -30,7 +30,7 @@ BEGIN_MFD Right
 END_MFD
 
 BEGIN_SHIPS
-AS-204:ProjectApollo/Saturn1B
+AS-204:ProjectApollo/LEMSaturn
   STATUS Landed Earth
   BASE Cape Canaveral:3
   POS -80.5643392 28.5150791
