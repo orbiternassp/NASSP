@@ -185,7 +185,9 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 }
 
 LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
-	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
+	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
+	iuCommandConnector(agc, this),
+	sivbCommandConnector(this)
 {
 	refcount = 0;
 
@@ -222,6 +224,10 @@ LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 	hstg1 = 0;
 	habort = 0;
 	hs4bM = 0;
+
+	for (i = 0; i < 3; i++) {
+		prelaunchvent[i] = NULL;
+	}
 
 	initSaturn1b();
 }
@@ -265,7 +271,7 @@ void LEMSaturn::initSaturn1b()
 	THRUST_SECOND_VAC = 1009902;
 
 	SIVB_EmptyMass = 12495;
-	SIVB_FuelMass = 105795;
+	SIVB_FuelMass = 102047;
 
 	SI_EmptyMass = 41874;
 	SI_FuelMass = 411953;
@@ -280,11 +286,22 @@ void LEMSaturn::initSaturn1b()
 	sib = NULL;
 	sivb = NULL;
 	iu = NULL;
+
+	iuCommandConnector.SetLEM(this);
+	sivbCommandConnector.SetLEM(this);
 }
 
 void LEMSaturn::SetStage(int s)
 {
 	lemsat_stage = s;
+
+	if (lemsat_stage == CSM_LEM_STAGE) {
+
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+
+		iuCommandConnector.Disconnect();
+		sivbCommandConnector.Disconnect();
+	}
 }
 
 void LEMSaturn::SeparateStage(UINT new_stage)
@@ -294,8 +311,6 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		LEM::SeparateStage(new_stage);
 		return;
 	}
-
-	lemsat_stage = new_stage;
 
 	VESSELSTATUS vs1;
 	VESSELSTATUS vs2;
@@ -460,6 +475,12 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 	}
 
 	PostLoadSetup();
+
+	if (lemsat_stage < CSM_LEM_STAGE)
+	{
+		iu->ConnectToCSM(&iuCommandConnector);
+		iu->ConnectToLV(&sivbCommandConnector);
+	}
 }
 
 void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
@@ -535,12 +556,15 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 			sib->Timestep(simdt, lemsat_stage >= LAUNCH_STAGE_ONE);
 	}
 
+	if (lemsat_stage < CSM_LEM_STAGE)
+	{
+		if (iu)
+			iu->Timestep(MissionTime, simt, simdt, mjd);
+	}
 	if (lemsat_stage == LAUNCH_STAGE_SIVB || lemsat_stage == STAGE_ORBIT_SIVB)
 	{
 		if (sivb)
 			sivb->Timestep(simdt);
-		if (iu)
-			iu->Timestep(MissionTime, simt, simdt, mjd);
 	}
 
 	//S-IB/S-IVB separation
@@ -1126,4 +1150,585 @@ void LEMSaturn::SetIUUmbilicalState(bool connect)
 			iu->DisconnectUmbilical();
 		}
 	}
+}
+
+void LEMSaturn::PlayCountSound(bool StartStop)
+
+{
+	if (StartStop)
+	{
+		Scount.play(NOLOOP, 245);
+	}
+	else
+	{
+		Scount.stop();
+	}
+}
+
+void LEMSaturn::PlaySepsSound(bool StartStop)
+
+{
+	if (StartStop)
+	{
+		SepS.play(LOOP, 130);
+	}
+	else
+	{
+		SepS.stop();
+	}
+}
+
+double LEMSaturn::GetJ2ThrustLevel()
+
+{
+	if (lemsat_stage != STAGE_ORBIT_SIVB || !th_3rd[0])
+		return 0.0;
+
+	return GetThrusterLevel(th_3rd[0]);
+}
+
+void LEMSaturn::GetSIThrustOK(bool *ok)
+{
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
+
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return;
+
+	sib->GetThrustOK(ok);
+}
+
+bool LEMSaturn::GetSIVBThrustOK()
+{
+	if (lemsat_stage != LAUNCH_STAGE_SIVB && lemsat_stage != STAGE_ORBIT_SIVB) return false;
+
+	return sivb->GetThrustOK();
+}
+
+bool LEMSaturn::GetSIPropellantDepletionEngineCutoff()
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib->GetOutboardEnginesCutoff();
+}
+
+bool LEMSaturn::GetSIInboardEngineOut()
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib->GetInboardEngineOut();
+}
+
+bool LEMSaturn::GetSIOutboardEngineOut()
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib->GetOutboardEngineOut();
+}
+
+bool LEMSaturn::GetSIBLowLevelSensorsDry()
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return false;
+
+	return sib->GetLowLevelSensorsDry();
+}
+
+void LEMSaturn::SISwitchSelector(int channel)
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return;
+
+	sib->SwitchSelector(channel);
+}
+
+void LEMSaturn::SIVBSwitchSelector(int channel)
+{
+	sivb->SwitchSelector(channel);
+}
+
+void LEMSaturn::SetAPSAttitudeEngine(int n, bool on)
+{
+	if (n < 0 || n > 5) return;
+	if (lemsat_stage != LAUNCH_STAGE_SIVB && lemsat_stage != STAGE_ORBIT_SIVB) return;
+
+	sivb->SetAPSAttitudeEngine(n, on);
+}
+
+void LEMSaturn::SIEDSCutoff(bool cut)
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return;
+
+	sib->EDSEnginesCutoff(cut);
+}
+
+void LEMSaturn::SIVBEDSCutoff(bool cut)
+{
+	if (lemsat_stage != LAUNCH_STAGE_SIVB && lemsat_stage != STAGE_ORBIT_SIVB) return;
+
+	sivb->EDSEngineCutoff(cut);
+}
+
+void LEMSaturn::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	if (lemsat_stage > LAUNCH_STAGE_ONE) return;
+
+	sib->SetThrusterDir(n, yaw, pitch);
+}
+
+void LEMSaturn::SetSIVBThrusterDir(double yaw, double pitch)
+{
+	if (lemsat_stage != LAUNCH_STAGE_SIVB && lemsat_stage != STAGE_ORBIT_SIVB) return;
+
+	sivb->SetThrusterDir(yaw, pitch);
+}
+
+void LEMSaturn::ActivatePrelaunchVenting()
+
+{
+	//
+	// "tank venting" particle streams
+	//
+	static double lvl = 1.0;
+
+	if (!prelaunchvent[0]) prelaunchvent[0] = AddParticleStream(&prelaunchvent_spec, _V(2, 1.5, 20 + STG0O), _V(1, 1, 0), &lvl);
+	if (!prelaunchvent[1]) prelaunchvent[1] = AddParticleStream(&prelaunchvent_spec, _V(2, 2, 8 + STG0O), _V(1, 1, 0), &lvl);
+	if (!prelaunchvent[2]) prelaunchvent[2] = AddParticleStream(&prelaunchvent_spec, _V(2, 2, 0.5 + STG0O), _V(1, 1, 0), &lvl);
+}
+
+void LEMSaturn::DeactivatePrelaunchVenting()
+
+{
+	// "tank venting" particle streams
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		if (prelaunchvent[i]) {
+			DelExhaustStream(prelaunchvent[i]);
+			prelaunchvent[i] = NULL;
+		}
+	}
+}
+
+void LEMSaturn::SwitchSelector(int item) {
+	int i = 0;
+
+	switch (item) {
+	case 10:
+		DeactivatePrelaunchVenting();
+		break;
+	case 11:
+		ActivatePrelaunchVenting();
+		break;
+	case 12:
+		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
+		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
+			SetThrusterResource(th_1st[i], ph_1st);
+		}
+		CreateStageOne();								// Create hidden stage one, for later use in staging
+		break;
+	case 13:
+		if (Scount.isValid()) {
+			Scount.play();
+			Scount.done();
+		}
+		break;
+	case 14:
+		DeactivatePrelaunchVenting();
+		break;
+	case 17:
+		// Move hidden S1B
+		if (hstg1) {
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs);
+		}
+		break;
+	}
+}
+
+LEMSaturnConnector::LEMSaturnConnector(LEMSaturn *l)
+
+{
+	OurVessel = l;
+}
+
+LEMSaturnConnector::~LEMSaturnConnector()
+
+{
+}
+
+LEMSaturnToIUCommandConnector::LEMSaturnToIUCommandConnector(LEMSaturn *l) : LEMSaturnConnector(l)
+
+{
+	type = LV_IU_COMMAND;
+}
+
+LEMSaturnToIUCommandConnector::~LEMSaturnToIUCommandConnector()
+
+{
+}
+
+bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IULVMessageType messageType;
+
+	messageType = (IULVMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case IULV_GET_J2_THRUST_LEVEL:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
+			return true;
+		}
+		break;
+
+	case IULV_GET_STAGE:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetStage();
+			return true;
+		}
+		break;
+
+	case IULV_GET_ALTITUDE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetAltitude();
+			return true;
+		}
+		break;
+
+	case IULV_GET_GLOBAL_ORIENTATION:
+		if (OurVessel)
+		{
+			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
+			VECTOR3 ar;
+
+			OurVessel->GetGlobalOrientation(ar);
+
+			*arot = ar;
+			return true;
+		}
+		break;
+
+	case IULV_GET_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_GRAVITY_REF:
+		if (OurVessel)
+		{
+			m.val1.hValue = OurVessel->GetGravityRef();
+			return true;
+		}
+		break;
+
+	case IULV_GET_FUEL_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetFuelMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAX_FUEL_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMaxFuelMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_RELATIVE_POS:
+		if (OurVessel)
+		{
+			VECTOR3 pos;
+			VECTOR3 *v = static_cast<VECTOR3 *> (m.val2.pValue);
+
+			OurVessel->GetRelativePos(m.val1.hValue, pos);
+
+			v->data[0] = pos.data[0];
+			v->data[1] = pos.data[1];
+			v->data[2] = pos.data[2];
+
+			return true;
+		}
+		break;
+
+	case IULV_GET_RELATIVE_VEL:
+		if (OurVessel)
+		{
+			VECTOR3 vel;
+			VECTOR3 *v = static_cast<VECTOR3 *> (m.val2.pValue);
+
+			OurVessel->GetRelativeVel(m.val1.hValue, vel);
+
+			v->data[0] = vel.data[0];
+			v->data[1] = vel.data[1];
+			v->data[2] = vel.data[2];
+
+			return true;
+		}
+		break;
+
+	case IULV_GET_GLOBAL_VEL:
+		if (OurVessel)
+		{
+			OurVessel->GetGlobalVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_WEIGHTVECTOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_ROTATIONMATRIX:
+		if (OurVessel)
+		{
+			OurVessel->GetRotationMatrix(*(MATRIX3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_ANGULARVEL:
+		if (OurVessel)
+		{
+			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MISSIONTIME:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
+			return true;
+		}
+		break;
+
+	case IULV_GET_APOLLONO:
+		if (OurVessel)
+		{
+			m.val1.iValue = 5;
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_THRUST_OK:
+		if (OurVessel)
+		{
+			OurVessel->GetSIThrustOK((bool *)m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIVB_THRUST_OK:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIVBThrustOK();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_INBOARD_ENGINE_OUT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIInboardEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SI_OUTBOARD_ENGINE_OUT:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIOutboardEngineOut();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
+			return true;
+		}
+		break;
+
+	case IULV_GET_FIRST_STAGE_THRUST:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetFirstStageThrust();
+			return true;
+		}
+		break;
+
+
+	case IULV_ACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->ActivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_DEACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->DeactivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SI_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SISwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SIVB_SWITCH_SELECTOR:
+		if (OurVessel)
+		{
+			OurVessel->SIVBSwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SEPARATE_STAGE:
+		if (OurVessel)
+		{
+			OurVessel->SeparateStage(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_STAGE:
+		if (OurVessel)
+		{
+			OurVessel->SetStage(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_ATTITUDE_ENGINE:
+		if (OurVessel)
+		{
+			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
+			return true;
+		}
+		break;
+
+	case IULV_SI_EDS_CUTOFF:
+		if (OurVessel)
+		{
+			OurVessel->SIEDSCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	case IULV_SIVB_EDS_CUTOFF:
+		if (OurVessel)
+		{
+			OurVessel->SIVBEDSCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_SI_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_SIVB_THRUSTER_DIR:
+		if (OurVessel)
+		{
+			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_ADD_FORCE:
+		if (OurVessel)
+		{
+			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
+			return true;
+		}
+		break;
+
+	case IULV_ADD_S4RCS:
+		if (OurVessel)
+		{
+			OurVessel->AddRCS_S4B();
+			return true;
+		}
+		break;
+
+	case IULV_ACTIVATE_PRELAUNCH_VENTING:
+		if (OurVessel)
+		{
+			OurVessel->ActivatePrelaunchVenting();
+			return true;
+		}
+		break;
+
+	case IULV_DEACTIVATE_PRELAUNCH_VENTING:
+		if (OurVessel)
+		{
+			OurVessel->DeactivatePrelaunchVenting();
+			return true;
+		}
+		break;
+
+	case IULV_CSM_SEPARATION_SENSED:
+		if (OurVessel)
+		{
+			m.val1.bValue = false;
+			return true;
+		}
+		break;
+	}
+
+	return false;
 }

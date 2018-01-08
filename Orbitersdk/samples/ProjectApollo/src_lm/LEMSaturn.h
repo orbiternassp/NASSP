@@ -28,6 +28,29 @@ class IU;
 class SIBSystems;
 class SIVBSystems;
 
+class LEMSaturn;
+
+class LEMSaturnConnector : public Connector
+{
+public:
+	LEMSaturnConnector(LEMSaturn *l);
+	~LEMSaturnConnector();
+
+	void SetLEM(LEMSaturn *lem) { OurVessel = lem; };
+
+protected:
+	LEMSaturn * OurVessel;
+};
+
+class LEMSaturnToIUCommandConnector : public LEMSaturnConnector
+{
+public:
+	LEMSaturnToIUCommandConnector(LEMSaturn *l);
+	~LEMSaturnToIUCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
 class LEMSaturn : public LEM {
 	friend class LVDC1B;
 public:
@@ -42,6 +65,30 @@ public:
 
 	virtual void SetSIEngineStart(int eng);
 	virtual void SetIUUmbilicalState(bool connect);
+
+	void PlayCountSound(bool StartStop);
+	void PlaySepsSound(bool StartStop);
+
+	double GetJ2ThrustLevel();
+	int GetStage() { return lemsat_stage; };
+	void GetSIThrustOK(bool *ok);
+	bool GetSIVBThrustOK();
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSIBLowLevelSensorsDry();
+	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	void SwitchSelector(int item);
+	void SISwitchSelector(int channel);
+	void SIVBSwitchSelector(int channel);
+	void SetAPSAttitudeEngine(int n, bool on);
+	void SIEDSCutoff(bool cut);
+	void SIVBEDSCutoff(bool cut);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
+	void SetSIVBThrusterDir(double yaw, double pitch);
+	void AddRCS_S4B();
+	void ActivatePrelaunchVenting();
+	void DeactivatePrelaunchVenting();
 
 protected:
 
@@ -65,7 +112,6 @@ protected:
 	void SetNosecapMesh();
 	void SetupMeshes();
 	void Saturn1bLoadMeshes();
-	void AddRCS_S4B();
 
 	void SaveLEMSaturn(FILEHANDLE scn);
 	void LoadLEMSaturn(FILEHANDLE scn);
@@ -121,6 +167,8 @@ protected:
 
 	Sound LaunchS;
 	Sound SShutS;
+	Sound Scount;
+	Sound SepS;
 
 	THRUSTER_HANDLE th_1st[8], th_3rd[1], th_3rd_lox, th_ver[3];
 	THRUSTER_HANDLE th_aps_rot[6];
@@ -128,6 +176,8 @@ protected:
 
 	PROPELLANT_HANDLE ph_1st, ph_3rd, ph_ullage3;
 	PROPELLANT_HANDLE ph_aps1, ph_aps2;
+
+	PSTREAM_HANDLE prelaunchvent[3];
 
 	IU* iu;
 	SIBSystems *sib;
@@ -142,6 +192,7 @@ protected:
 	LEMSaturnToIUCommandConnector sivbCommandConnector;
 };
 
+const double STG0O = 0;
 const double STG1O = 10.25;
 const double STG2O = 8;
 const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };

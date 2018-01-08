@@ -531,6 +531,9 @@ public:
 	void SetOvhdHatchMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
+	virtual void PlayCountSound(bool StartStop) {};
+	virtual void PlaySepsSound(bool StartStop) {};
+
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
