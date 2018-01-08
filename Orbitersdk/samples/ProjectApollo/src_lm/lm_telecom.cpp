@@ -1981,10 +1981,6 @@ LM_SBAND::LM_SBAND(){
 	tc_mode_1 = 0; tc_timer_1 = 0;
 	tc_mode_2 = 0; tc_timer_2 = 0;
 	rcvr_agc_voltage = 0.0;
-	SBXHeat = 0;
-	SBXSECHeat = 0;
-	SBPHeat = 0;
-	SBPSECHeat = 0;
 }
 
 void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph){
