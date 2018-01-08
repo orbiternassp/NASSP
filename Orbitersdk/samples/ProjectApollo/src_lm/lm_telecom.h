@@ -175,10 +175,12 @@
 class LM_VHF {
 public:
 	LM_VHF();
-	void Init(LEM *vessel);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
 	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *VHFHeat;			//Heat load
+	h_HeatLoad *VHFSECHeat;			//Heat Load
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
 	SOCKET m_socket;				// TCP socket
