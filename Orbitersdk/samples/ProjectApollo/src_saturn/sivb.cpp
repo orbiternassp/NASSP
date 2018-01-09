@@ -1453,6 +1453,7 @@ void SIVB::SetState(SIVBSettings &state)
 		MissionTime = state.MissionTime;
 		SaturnVStage = state.SaturnVStage;
 		PanelsHinged = state.PanelsHinged;
+		panelProc = state.PanelProcess;
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 

@@ -722,6 +722,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.THRUST_VAC = THRUST_THIRD_VAC;
 	S4Config.PanelsHinged = !SLAWillSeparate;
 	S4Config.SLARotationLimit = (double) SLARotationLimit;
+	S4Config.PanelProcess = 0.0;
 
 	GetPayloadName(S4Config.PayloadName);
 

@@ -368,7 +368,7 @@ double RCSPropellantSource::GetRCSOxidManifoldPressPSI()
 
 double RCSPropellantSource::GetRCSPropellantQuantity()
 {
-	if (our_vessel->RCS_B_PQGS_DISP_CB.IsPowered())
+	if (our_vessel->RCS_B_PQGS_DISP_CB.IsPowered() && source_prop)
 		return our_vessel->GetPropellantMass(source_prop)/ our_vessel->GetPropellantMaxMass(source_prop);
 
 	return 0.0;

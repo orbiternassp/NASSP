@@ -1664,6 +1664,8 @@ void LEM::SetRCSJetLevelPrimary(int jet, double level) {
 			break;
 	}
 
+	if (th_rcs[jet] == NULL) return;  // Sanity check
+
 	SetThrusterLevel(th_rcs[jet], level);
 }
 

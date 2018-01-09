@@ -432,6 +432,8 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		//SeparationS.play();
 		SetLmVesselDockStage();
 
+		imu.SetVesselFlag(true);
+
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 	}
 
@@ -493,8 +495,12 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{
+		SetAnimation(panelAnim, panelProc);
+
 		iu->ConnectToCSM(&iuCommandConnector);
 		iu->ConnectToLV(&sivbCommandConnector);
+
+		imu.SetVesselFlag(false);
 	}
 }
 
@@ -1217,8 +1223,9 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	S4Config.LowRes = false;
 	S4Config.ISP_VAC = ISP_SECOND_VAC;
 	S4Config.THRUST_VAC = THRUST_SECOND_VAC;
-	S4Config.PanelsHinged = false;
-	//S4Config.SLARotationLimit = (double)SLARotationLimit;
+	S4Config.PanelsHinged = true;
+	S4Config.PanelProcess = panelProc;
+	S4Config.SLARotationLimit = 45.0;
 
 	//GetPayloadName(S4Config.PayloadName);
 

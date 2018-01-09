@@ -113,6 +113,11 @@ void IMU::SetVessel(VESSEL *v, bool LEMFlag)
 		pipaRate = 0.0585; // CSM: 1 pulse = 5.85 cm/s
 };
 
+void IMU::SetVesselFlag(bool LEMFlag)
+{
+	LEM = LEMFlag;
+}
+
 bool IMU::IsCaged()
 
 {
