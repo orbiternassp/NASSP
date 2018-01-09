@@ -277,6 +277,7 @@ void LEM::Init()
 	stage = 0;
 	status = 0;
 	HasProgramer = false;
+	NoAEA = false;
 	InvertStageBit = false;
 
 	InVC = false;
@@ -1088,6 +1089,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 			sscanf(line + 12, "%d", &i);
 			HasProgramer = (i == 1);
 		}
+		else if (!strnicmp(line, "NOAEA", 5)) {
+			int i;
+			sscanf(line + 5, "%d", &i);
+			NoAEA = (i == 1);
+		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			DescentFuelMassKg = ftcp;
@@ -1427,6 +1433,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	{
 		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
 	}
+	if (NoAEA)
+	{
+		papiWriteScenario_bool(scn, "NOAEA", NoAEA);
+	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
@@ -1447,8 +1457,11 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scdu.SaveState(scn, "SCDU_START", "CDU_END");
 	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	deda.SaveState(scn, "DEDA_START", "DEDA_END");
-	aea.SaveState(scn, "AEA_START", "AEA_END");
-	asa.SaveState(scn, "ASA_START", "ASA_END");
+	if (!NoAEA)
+	{
+		aea.SaveState(scn, "AEA_START", "AEA_END");
+		asa.SaveState(scn, "ASA_START", "ASA_END");
+	}
 
 	//
 	// Save the Panel SDK state.

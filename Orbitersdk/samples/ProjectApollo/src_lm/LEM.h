@@ -1523,6 +1523,7 @@ protected:
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
+	bool NoAEA;
 	bool InvertStageBit;
 
 #define LMVIEW_CDR		0

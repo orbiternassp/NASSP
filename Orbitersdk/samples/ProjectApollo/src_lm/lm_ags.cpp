@@ -123,6 +123,9 @@ void LEM_ASA::TimeStep(double simdt){
 	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
+	// Do we have an ASA?
+	if (lem->NoAEA) return;
+
 	if (IsHeaterPowered())
 	{
 		if (fastheater->pumping)
@@ -282,6 +285,9 @@ bool LEM_ASA::IsHeaterPowered()
 
 bool LEM_ASA::IsPowered()
 {
+	// Do we have an ASA?
+	if (lem->NoAEA) return false;
+
 	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
 		if (PowerSwitch->IsDown()) { return false; }
@@ -749,6 +755,9 @@ void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 
 bool LEM_AEA::IsPowered()
 {
+	// Do we have an AEA?
+	if (lem->NoAEA) return false;
+
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
 		if (!PowerSwitch->IsUp()) { return false; }
