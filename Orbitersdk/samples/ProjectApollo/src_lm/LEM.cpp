@@ -1602,6 +1602,11 @@ void LEM::SetRCSJet(int jet, bool fire) {
 	SetThrusterLevel(th_rcs[jet], fire);
 }
 
+double LEM::GetRCSThrusterLevel(int jet)
+{
+	if (th_rcs[jet] == NULL) return 0.0;  // Sanity check
+	return GetThrusterLevel(th_rcs[jet]);
+}
 
 // Set level of RCS thruster, using primary coils
 void LEM::SetRCSJetLevelPrimary(int jet, double level) {

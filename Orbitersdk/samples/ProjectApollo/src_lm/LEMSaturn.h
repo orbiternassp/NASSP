@@ -200,6 +200,7 @@ protected:
 	SIVBSystems *sivb;
 
 	Pyro SIBSIVBSepPyros;
+	Pyro LMLVSeparationPyros;
 
 	///
 	/// \brief Connector from LM to IU.

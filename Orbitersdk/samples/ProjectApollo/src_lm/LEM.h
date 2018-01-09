@@ -590,6 +590,7 @@ public:
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
 	void SetRCSJetLevelPrimary(int jet, double level);
+	double GetRCSThrusterLevel(int jet);
 
 	// DS20160916 Physical parameters updation
 	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update

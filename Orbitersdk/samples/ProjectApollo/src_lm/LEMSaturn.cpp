@@ -184,6 +184,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
+	LMLVSeparationPyros("LM-LV-Separation-Pyros", Panelsdk),
 	iuCommandConnector(agc, this),
 	sivbCommandConnector(this)
 {
