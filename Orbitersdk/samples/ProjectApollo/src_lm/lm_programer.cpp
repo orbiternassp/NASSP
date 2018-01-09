@@ -51,53 +51,101 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 
 	if (out_val.Bits.a == 15)
 	{
-		if (out_val.Bits.b == 4)	//4: Pyro Master Arm On
+		switch (out_val.Bits.b)
 		{
+		case 4: //Pyro Master Arm On
 			lem->EDMasterArm.SetState(1);
-		}
-		else if (out_val.Bits.b == 5)	//5: Pyro Master Arm Off
-		{
+			break;
+		case 5:	//Pyro Master Arm Off
 			lem->EDMasterArm.SetState(0);
-		}
-		else if (out_val.Bits.b == 6)	//6: RCS Press Fire
-		{
+			break;
+		case 6:	//RCS Press Fire
 			lem->EDHePressRCS.SetState(1);
-		}
-		else if (out_val.Bits.b == 7)	//7: RCS Press Fire Reset
-		{
+			break;
+		case 7:	//RCS Press Fire Reset
 			lem->EDHePressRCS.SetState(0);
-		}
-		else if (out_val.Bits.b == 22)	//22: Abort Stage Fire
-		{
+			break;
+		case 22: //Abort Stage Fire
 			lem->AbortStageSwitch.SetState(0);
-		}
-		else if (out_val.Bits.b == 23)	//134: Abort Stage Fire Reset
-		{
+			break;
+		case 23: //Abort Stage Fire Reset
 			lem->AbortStageSwitch.SetState(1);
-		}
-		else if (out_val.Bits.b == 90)	//90: LM/SLA Sep Fire
-		{
+			break;
+		case 60: //RCS ASC Feed A Open
+			lem->RCSAscFeed1ASwitch.SetState(THREEPOSSWITCH_UP);
+			lem->RCSAscFeed2ASwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 61:	//RCS ASC Feed A Open Reset
+			lem->RCSAscFeed1ASwitch.SetState(THREEPOSSWITCH_CENTER);
+			lem->RCSAscFeed2ASwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 62:	//RCS ASC Feed B Open
+			lem->RCSAscFeed1BSwitch.SetState(THREEPOSSWITCH_UP);
+			lem->RCSAscFeed2BSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 63: //RCS ASC Feed B Open Reset
+			lem->RCSAscFeed1BSwitch.SetState(THREEPOSSWITCH_CENTER);
+			lem->RCSAscFeed2BSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 76: //RCS ASC Feed A Closed
+			lem->RCSAscFeed1ASwitch.SetState(THREEPOSSWITCH_DOWN);
+			lem->RCSAscFeed2ASwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 77: //RCS ASC Feed A Closed Reset
+			lem->RCSAscFeed1ASwitch.SetState(THREEPOSSWITCH_CENTER);
+			lem->RCSAscFeed2ASwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 78: //RCS ASC Feed B Closed
+			lem->RCSAscFeed1BSwitch.SetState(THREEPOSSWITCH_DOWN);
+			lem->RCSAscFeed2BSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 79: //RCS ASC Feed B Closed Reset
+			lem->RCSAscFeed1BSwitch.SetState(THREEPOSSWITCH_CENTER);
+			lem->RCSAscFeed2BSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 90: //LM/SLA Sep Fire
 			lem->LMSLASeparationFire();
-		}
-		else if (out_val.Bits.b == 91)	//91: LM/SLA Sep Fire Reset
-		{
-
-		}
-		else if (out_val.Bits.b == 134)	//134: APS Arm
-		{
+			break;
+		case 91: //LM/SLA Sep Fire Reset
+			break;
+		case 134: //APS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_UP);
-		}
-		else if (out_val.Bits.b == 135)	//135: APS Arm Reset
-		{
+			break;
+		case 135: //APS Arm Reset
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_CENTER);
-		}
-		else if (out_val.Bits.b == 150)	//150: DPS Arm
-		{
+			break;
+		case 150: //DPS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_DOWN);
-		}
-		else if (out_val.Bits.b == 151)	//151: DPS Reset
-		{
+			break;
+		case 151: //DPS Reset
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 172: //RCS Main A Closed
+			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 173: //RCS Main A Closed Reset
+			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 174: //RCS Main B Closed
+			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 175: //RCS Main B Closed Reset
+			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 188: //RCS Main A Open
+			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 189: //RCS Main A Open Reset
+			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 190: //RCS Main B Open
+			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 191: //RCS Main B Open Reset
+			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		default:
+			break;
 		}
 	}
 }
