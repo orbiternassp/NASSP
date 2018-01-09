@@ -975,6 +975,16 @@ void IUToLVCommandConnector::JettisonNosecap()
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::DeploySLAPanel()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEPLOY_SLA_PANEL;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::AddRCS_S4B()
 
 {

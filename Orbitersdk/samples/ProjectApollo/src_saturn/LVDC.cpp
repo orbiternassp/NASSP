@@ -1102,11 +1102,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						}
 					}
 					else
-					{
 						CommandSequence++;
-					}
 					break;
 				case 9:
+					//TB4+600.0: SLA Panel Deployment (Apollo 5)
+					if (lvCommandConnector->GetApolloNo() == 5)
+					{
+						if (LVDC_TB_ETime > 600.0)
+						{
+							lvCommandConnector->DeploySLAPanel();
+							CommandSequence++;
+						}
+					}
+					else
+						CommandSequence++;
+					break;
+				case 10:
 					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
 					if (LVDC_TB_ETime > 5052.0)
 					{
@@ -1114,7 +1125,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 10:
+				case 11:
 					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
 					if (LVDC_TB_ETime > 5773.0)
 					{

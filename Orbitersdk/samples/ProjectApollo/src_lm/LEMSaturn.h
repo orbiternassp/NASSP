@@ -91,6 +91,7 @@ public:
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
 	void JettisonNosecap();
+	void SetSLADeployCommand() { DeploySLACommand = true; }
 
 protected:
 
@@ -119,6 +120,8 @@ protected:
 
 	void SaveLEMSaturn(FILEHANDLE scn);
 	void LoadLEMSaturn(FILEHANDLE scn);
+	void LoadSIB(FILEHANDLE scn);
+	void LoadSIVB(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
 
@@ -151,6 +154,13 @@ protected:
 	int nosecapidx;
 	int meshLM_1;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
+
+	// Animation
+	UINT panelAnim;
+	double panelProc;
+	double RotationLimit;
+	bool DeploySLACommand;
+	bool SLADeployed;
 
 	//
 	// Surfaces.

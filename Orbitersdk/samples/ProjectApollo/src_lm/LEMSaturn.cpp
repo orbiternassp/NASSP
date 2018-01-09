@@ -40,7 +40,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 
 #include "s1bsystems.h"
-
+#include "papi.h"
 #include "LEMSaturn.h"
 
 static MESHHANDLE hSat1stg1;
@@ -224,6 +224,12 @@ LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 	hs4bM = 0;
 	hNosecapVessel = 0;
 
+	panelAnim = 0;
+	panelProc = 0;
+
+	SLADeployed = false;
+	DeploySLACommand = false;
+
 	for (i = 0; i < 3; i++) {
 		prelaunchvent[i] = NULL;
 	}
@@ -290,6 +296,10 @@ void LEMSaturn::initSaturn1b()
 	panelMesh2Saturn1b = -1;
 	panelMesh3Saturn1b = -1;
 	panelMesh4Saturn1b = -1;
+
+	RotationLimit = 0.25;
+
+	SetAnimation(panelAnim, panelProc);
 
 	iuCommandConnector.SetLEM(this);
 	sivbCommandConnector.SetLEM(this);
@@ -495,7 +505,10 @@ void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
 
 		oapiWriteScenario_int(scn, "LEMSATURN_STAGE", lemsat_stage);
 		oapiWriteScenario_int(scn, "NOSECAPATTACHED", NosecapAttached);
-		if (sib)
+		oapiWriteScenario_int(scn, "SLADEPLOYED", SLADeployed);
+		oapiWriteScenario_int(scn, "DEPLOYSLACOMMAND", DeploySLACommand);
+		papiWriteScenario_double(scn, "PANELPROC", panelProc);
+		if (lemsat_stage <= LAUNCH_STAGE_ONE && sib)
 			sib->SaveState(scn);
 		if (sivb)
 			sivb->SaveState(scn);
@@ -514,6 +527,7 @@ void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 
 	char *line;
 	int i;
+	float flt;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "LEMSATURN_END", sizeof("LEMSATURN_END"))) {
@@ -527,11 +541,24 @@ void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 			sscanf(line + 15, "%d", &i);
 			NosecapAttached = (i != 0);
 		}
+		else if (!strnicmp(line, "SLADEPLOYED", 11)) {
+			sscanf(line + 11, "%d", &i);
+			SLADeployed = (i != 0);
+		}
+		else if (!strnicmp(line, "DEPLOYSLACOMMAND", 16)) {
+			sscanf(line + 16, "%d", &i);
+			DeploySLACommand = (i != 0);
+		}
+		else if (!strnicmp(line, "PANELPROC", 9))
+		{
+			sscanf(line + 9, "%f", &flt);
+			panelProc = flt;
+		}
 		else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
-			sib->LoadState(scn);
+			LoadSIB(scn);
 		}
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
-			sivb->LoadState(scn);
+			LoadSIVB(scn);
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			LoadIU(scn);
@@ -540,6 +567,18 @@ void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 			LoadLVDC(scn);
 		}
 	}
+}
+
+void LEMSaturn::LoadSIB(FILEHANDLE scn)
+{
+	CreateSIBSystems();
+	sib->LoadState(scn);
+}
+
+void LEMSaturn::LoadSIVB(FILEHANDLE scn)
+{
+	CreateSIVBSystems();
+	sivb->LoadState(scn);
 }
 
 void LEMSaturn::LoadIU(FILEHANDLE scn)
@@ -584,6 +623,25 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
+	}
+
+	if (!SLADeployed)
+	{
+		if (DeploySLACommand)
+		{
+			if (panelProc < RotationLimit) {
+				// Activate separation junk
+				//if (thg_sep)
+				//	SetThrusterGroupLevel(thg_sep, 1);
+
+				panelProc = min(RotationLimit, panelProc + simdt / 40.0);
+				SetAnimation(panelAnim, panelProc);
+			}
+			else
+			{
+				SLADeployed = true;
+			}
+		}
 	}
 }
 
@@ -852,6 +910,8 @@ void LEMSaturn::SetSecondStage()
 
 void LEMSaturn::SetSecondStageMeshes(double offset)
 {
+	panelAnim = CreateAnimation(0.0);
+
 	VECTOR3 mesh_dir = _V(0, 0, offset);
 	AddMesh(hStage2Mesh, &mesh_dir);
 
@@ -863,6 +923,16 @@ void LEMSaturn::SetSecondStageMeshes(double offset)
 	panelMesh3Saturn1b = AddMesh(hStageSLA3Mesh, &mesh_dir);
 	mesh_dir = _V(-2.45, 0, 10.55 + offset);
 	panelMesh4Saturn1b = AddMesh(hStageSLA4Mesh, &mesh_dir);
+
+	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V(0.37, 0, -1.2), _V(0, 1, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(0, 0.37, -1.2), _V(-1, 0, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V(0, -0.37, -1.2), _V(1, 0, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.37, 0, -1.2), _V(0, -1, 0), (float)(1.0 * PI));
+
+	AddAnimationComponent(panelAnim, 0, 1, &panel1Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel3Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
 
 	nosecapidx = -1;
 	meshLM_1 = -1;
@@ -1800,6 +1870,14 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			OurVessel->JettisonNosecap();
+			return true;
+		}
+		break;
+
+	case IULV_DEPLOY_SLA_PANEL:
+		if (OurVessel)
+		{
+			OurVessel->SetSLADeployCommand();
 			return true;
 		}
 		break;
