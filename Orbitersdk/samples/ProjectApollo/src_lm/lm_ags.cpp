@@ -996,7 +996,6 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer) :  lem(lm), soundlib(s), ags(computer)
 {
 	Reset();
-	ResetKeyDown();
 }
 
 LEM_DEDA::~LEM_DEDA()
@@ -1011,6 +1010,7 @@ void LEM_DEDA::Init(e_object *powered)
 {
 	WireTo(powered);
 	Reset();
+	ResetKeyDown();
 	FirstTimeStep = true;
 }
 

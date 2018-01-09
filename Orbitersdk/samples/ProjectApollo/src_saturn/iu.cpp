@@ -965,6 +965,16 @@ void IUToLVCommandConnector::SetStage(int stage)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::JettisonNosecap()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_NOSECAP_JETTISON;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::AddRCS_S4B()
 
 {

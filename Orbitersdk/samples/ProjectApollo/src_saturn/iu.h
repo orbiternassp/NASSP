@@ -108,6 +108,7 @@ enum IULVMessageType
 	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
+	IULV_NOSECAP_JETTISON,
 	IULV_ADD_FORCE,							///< Add force.
 
 	IULV_GET_STAGE,							///< Get mission stage.
@@ -229,6 +230,7 @@ public:
 
 	void SeparateStage(int stage);
 	void SetStage(int stage);
+	void JettisonNosecap();
 
 	void DeactivateNavmode(int mode);
 	void ActivateNavmode(int mode);

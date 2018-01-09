@@ -90,6 +90,7 @@ public:
 	void AddRCS_S4B();
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
+	void JettisonNosecap();
 
 protected:
 
@@ -113,6 +114,8 @@ protected:
 	void SetNosecapMesh();
 	void SetupMeshes();
 	void Saturn1bLoadMeshes();
+
+	void GetApolloName(char *s);
 
 	void SaveLEMSaturn(FILEHANDLE scn);
 	void LoadLEMSaturn(FILEHANDLE scn);
@@ -147,6 +150,7 @@ protected:
 	// Mesh indexes
 	int nosecapidx;
 	int meshLM_1;
+	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
 
 	//
 	// Surfaces.
@@ -161,6 +165,7 @@ protected:
 	OBJHANDLE hstg1;
 	OBJHANDLE habort;
 	OBJHANDLE hs4bM;
+	OBJHANDLE hNosecapVessel;
 
 	//
 	// Sounds
@@ -192,6 +197,8 @@ protected:
 	LMToIUConnector iuCommandConnector;
 	LEMSaturnToIUCommandConnector sivbCommandConnector;
 };
+
+extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel);
 
 const double STG0O = 0;
 const double STG1O = 10.25;

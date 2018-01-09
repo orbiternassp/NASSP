@@ -1092,6 +1092,21 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					break;
 				case 8:
+					//TB4+45.0: Nose Cone Jettison (Apollo 5)
+					if (lvCommandConnector->GetApolloNo() == 5)
+					{
+						if (LVDC_TB_ETime > 45.0)
+						{
+							lvCommandConnector->JettisonNosecap();
+							CommandSequence++;
+						}
+					}
+					else
+					{
+						CommandSequence++;
+					}
+					break;
+				case 9:
 					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
 					if (LVDC_TB_ETime > 5052.0)
 					{
@@ -1099,7 +1114,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 9:
+				case 10:
 					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
 					if (LVDC_TB_ETime > 5773.0)
 					{

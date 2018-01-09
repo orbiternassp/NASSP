@@ -51,8 +51,6 @@ static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
 static MESHHANDLE hNosecap;
-static MESHHANDLE hastp;
-static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
 static MESHHANDLE hlm_1;
 
@@ -224,6 +222,7 @@ LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 	hstg1 = 0;
 	habort = 0;
 	hs4bM = 0;
+	hNosecapVessel = 0;
 
 	for (i = 0; i < 3; i++) {
 		prelaunchvent[i] = NULL;
@@ -278,7 +277,7 @@ void LEMSaturn::initSaturn1b()
 
 	LM_Mass = 14360;
 
-	TCPO = 0.0;
+	TCPO = -19.53;
 	contrailLevel = 0.0;
 
 	CalculateStageMass();
@@ -286,6 +285,11 @@ void LEMSaturn::initSaturn1b()
 	sib = NULL;
 	sivb = NULL;
 	iu = NULL;
+
+	panelMesh1Saturn1b = -1;
+	panelMesh2Saturn1b = -1;
+	panelMesh3Saturn1b = -1;
+	panelMesh4Saturn1b = -1;
 
 	iuCommandConnector.SetLEM(this);
 	sivbCommandConnector.SetLEM(this);
@@ -490,6 +494,7 @@ void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
 		oapiWriteLine(scn, "LEMSATURN_BEGIN");
 
 		oapiWriteScenario_int(scn, "LEMSATURN_STAGE", lemsat_stage);
+		oapiWriteScenario_int(scn, "NOSECAPATTACHED", NosecapAttached);
 		if (sib)
 			sib->SaveState(scn);
 		if (sivb)
@@ -508,6 +513,7 @@ void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
 void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 
 	char *line;
+	int i;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "LEMSATURN_END", sizeof("LEMSATURN_END"))) {
@@ -516,6 +522,10 @@ void LEMSaturn::LoadLEMSaturn(FILEHANDLE scn) {
 
 		if (!strnicmp(line, "LEMSATURN_STAGE", 15)) {
 			sscanf(line + 15, "%d", &lemsat_stage);
+		}
+		else if (!strnicmp(line, "NOSECAPATTACHED", 15)) {
+			sscanf(line + 15, "%d", &i);
+			NosecapAttached = (i != 0);
 		}
 		else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
 			sib->LoadState(scn);
@@ -846,13 +856,13 @@ void LEMSaturn::SetSecondStageMeshes(double offset)
 	AddMesh(hStage2Mesh, &mesh_dir);
 
 	mesh_dir = _V(2.45, 0, 10.55 + offset);
-	AddMesh(hStageSLA1Mesh, &mesh_dir);
+	panelMesh1Saturn1b = AddMesh(hStageSLA1Mesh, &mesh_dir);
 	mesh_dir = _V(0, 2.45, 10.55 + offset);
-	AddMesh(hStageSLA2Mesh, &mesh_dir);
+	panelMesh2Saturn1b = AddMesh(hStageSLA2Mesh, &mesh_dir);
 	mesh_dir = _V(0, -2.45, 10.55 + offset);
-	AddMesh(hStageSLA3Mesh, &mesh_dir);
+	panelMesh3Saturn1b = AddMesh(hStageSLA3Mesh, &mesh_dir);
 	mesh_dir = _V(-2.45, 0, 10.55 + offset);
-	AddMesh(hStageSLA4Mesh, &mesh_dir);
+	panelMesh4Saturn1b = AddMesh(hStageSLA4Mesh, &mesh_dir);
 
 	nosecapidx = -1;
 	meshLM_1 = -1;
@@ -1005,8 +1015,6 @@ void LEMSaturn::Saturn1bLoadMeshes()
 	hSat1stg22 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg22");
 	hSat1stg23 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg23");
 	hSat1stg24 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg24");
-	hastp = oapiLoadMeshGlobal("ProjectApollo/nASTP3");
-	hastp2 = oapiLoadMeshGlobal("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal("ProjectApollo/sat_target");
 	hNosecap = oapiLoadMeshGlobal("ProjectApollo/nsat1aerocap");
 	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
@@ -1171,6 +1179,12 @@ void LEMSaturn::SetIUUmbilicalState(bool connect)
 	}
 }
 
+void LEMSaturn::GetApolloName(char *s)
+
+{
+	sprintf(s, "AS-204");
+}
+
 void LEMSaturn::PlayCountSound(bool StartStop)
 
 {
@@ -1325,6 +1339,48 @@ void LEMSaturn::DeactivatePrelaunchVenting()
 			DelExhaustStream(prelaunchvent[i]);
 			prelaunchvent[i] = NULL;
 		}
+	}
+}
+
+void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
+{
+	VECTOR3 rofs, rvel = { vs->rvel.x, vs->rvel.y, vs->rvel.z };
+
+	rofs.x = 0;
+	rofs.y = 0;
+	rofs.z = 0;
+
+	// Staging Velocity represents
+	// Need to do some transforms to get the correct vector to eject the stage
+
+	vessel->Local2Rel(ofs, vs->rpos);
+	vessel->GlobalRot(vel, rofs);
+	vs->rvel.x = rvel.x + rofs.x;
+	vs->rvel.y = rvel.y + rofs.y;
+	vs->rvel.z = rvel.z + rofs.z;
+}
+
+void LEMSaturn::JettisonNosecap()
+{
+	if (NosecapAttached && !hNosecapVessel)
+	{
+		NosecapAttached = false;
+		SetNosecapMesh();
+
+		char VName[256];
+
+		// Use VC offset to calculate the optics cover offset
+		VECTOR3 ofs = _V(0, 0, 22.7 + 0.25);
+		VECTOR3 vel = { 0.0, 0.0, 2.5 };
+		VESSELSTATUS vs4b;
+		GetStatus(vs4b);
+		StageTransform(this, &vs4b, ofs, vel);
+		vs4b.vrot.x = 0.0;
+		vs4b.vrot.y = 0.0;
+		vs4b.vrot.z = 0.0;
+		GetApolloName(VName);
+		strcat(VName, "-NOSECAP");
+		hNosecapVessel = oapiCreateVessel(VName, "ProjectApollo/Sat1Aerocap", vs4b);
 	}
 }
 
@@ -1736,6 +1792,14 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			OurVessel->DeactivatePrelaunchVenting();
+			return true;
+		}
+		break;
+
+	case IULV_NOSECAP_JETTISON:
+		if (OurVessel)
+		{
+			OurVessel->JettisonNosecap();
 			return true;
 		}
 		break;
