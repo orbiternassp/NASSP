@@ -2193,6 +2193,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_P", K_P);
 	papiWriteScenario_double(scn, "LVDC_D_P", D_P);
 	papiWriteScenario_double(scn, "LVDC_D_Y", D_Y);
+	papiWriteScenario_double(scn, "LVDC_KSCLNG", KSCLNG);
 	papiWriteScenario_double(scn, "LVDC_L_1", L_1);
 	papiWriteScenario_double(scn, "LVDC_L_2", L_2);
 	papiWriteScenario_double(scn, "LVDC_dL_2", dL_2);
@@ -2538,6 +2539,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_P", K_P);
 		papiReadScenario_double(line, "LVDC_D_P", D_P);
 		papiReadScenario_double(line, "LVDC_D_Y", D_Y);
+		papiReadScenario_double(line, "LVDC_KSCLNG", KSCLNG);
 		papiReadScenario_double(line, "LVDC_L_1", L_1);
 		papiReadScenario_double(line, "LVDC_L_2", L_2);
 		papiReadScenario_double(line, "LVDC_dL_2", dL_2);
@@ -2552,7 +2554,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
 		papiReadScenario_double(line, "LVDC_P_2", P_2);
 		papiReadScenario_double(line, "LVDC_PHI", PHI);
-		papiReadScenario_double(line, "LVDC_PHIP", PHI);
+		papiReadScenario_double(line, "LVDC_PHIP", PHIP);
 		papiReadScenario_double(line, "LVDC_phi_T", phi_T);
 		papiReadScenario_double(line, "LVDC_Q_1", Q_1);
 		papiReadScenario_double(line, "LVDC_Q_2", Q_2);

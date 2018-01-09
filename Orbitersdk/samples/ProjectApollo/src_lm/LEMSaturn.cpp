@@ -284,7 +284,7 @@ void LEMSaturn::initSaturn1b()
 
 	LM_Mass = 14360;
 
-	TCPO = -19.53;
+	TCPO = -19.53 + 5.0;
 	contrailLevel = 0.0;
 
 	CalculateStageMass();
