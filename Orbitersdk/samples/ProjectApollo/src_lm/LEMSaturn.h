@@ -92,6 +92,7 @@ public:
 	void DeactivatePrelaunchVenting();
 	void JettisonNosecap();
 	void SetSLADeployCommand() { DeploySLACommand = true; }
+	void LMSLASeparationFire();
 
 protected:
 

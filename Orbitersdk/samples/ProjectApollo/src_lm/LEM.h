@@ -533,6 +533,7 @@ public:
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};
+	virtual void LMSLASeparationFire() {};
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);

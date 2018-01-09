@@ -75,6 +75,14 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 		{
 			lem->AbortStageSwitch.SetState(1);
 		}
+		else if (out_val.Bits.b == 90)	//90: LM/SLA Sep Fire
+		{
+			lem->LMSLASeparationFire();
+		}
+		else if (out_val.Bits.b == 91)	//91: LM/SLA Sep Fire Reset
+		{
+
+		}
 		else if (out_val.Bits.b == 134)	//134: APS Arm
 		{
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_UP);

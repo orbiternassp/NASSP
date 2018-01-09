@@ -617,13 +617,21 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 			sivb->Timestep(simdt);
 	}
 
-	//S-IB/S-IVB separation
+	// S-IB/S-IVB separation
 
 	if (SIBSIVBSepPyros.Blown() && lemsat_stage <= LAUNCH_STAGE_ONE)
 	{
 		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
 		AddRCS_S4B();
+	}
+
+	// LM/SLA separation
+
+	if (LMLVSeparationPyros.Blown() && lemsat_stage < CSM_LEM_STAGE)
+	{
+		SeparateStage(CSM_LEM_STAGE);
+		SetStage(CSM_LEM_STAGE);
 	}
 
 	if (!SLADeployed)
@@ -1452,6 +1460,14 @@ void LEMSaturn::JettisonNosecap()
 		GetApolloName(VName);
 		strcat(VName, "-NOSECAP");
 		hNosecapVessel = oapiCreateVessel(VName, "ProjectApollo/Sat1Aerocap", vs4b);
+	}
+}
+
+void LEMSaturn::LMSLASeparationFire()
+{
+	if (!LMLVSeparationPyros.Blown())
+	{
+		LMLVSeparationPyros.SetBlown(true);
 	}
 }
 
