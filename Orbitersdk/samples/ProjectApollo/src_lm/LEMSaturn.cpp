@@ -963,13 +963,6 @@ void LEMSaturn::SetSecondStageMeshes(double offset)
 	mesh_dir = _V(0, 0, 9.8 + offset);
 	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
 
-	// Dummy docking port so the auto burn feature of IMFD 4.2 is working
-	// Remove it when a newer release of IMFD don't need that anymore
-	VECTOR3 dockpos = { 0,0,24.8 + offset };
-	VECTOR3 dockdir = { 0,0,1 };
-	VECTOR3 dockrot = { 0,1,0 };
-	SetDockParams(dockpos, dockdir, dockrot);
-
 	SetCameraOffset(_V(-1, 1.0, 31.15 - STG1O));
 	//SetView(22.7, false);
 }
@@ -1213,6 +1206,7 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 	S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
 	S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
+	S4Config.Payload = PAYLOAD_EMPTY;
 	S4Config.VehicleNo = 204;
 	S4Config.EmptyMass = SIVB_EmptyMass;
 	S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
