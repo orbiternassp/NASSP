@@ -431,7 +431,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 
 		TransformToLM();
 
-		ShiftCentreOfMass(_V(0, 20.8 - 4.0, 0));
+		ShiftCentreOfMass(_V(0, 20.8 - 6.0, 0));
 	}
 
 	if ((lemsat_stage == PRELAUNCH_STAGE || lemsat_stage == LAUNCH_STAGE_ONE) && new_stage >= CSM_LEM_STAGE)
@@ -447,7 +447,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 
 		TransformToLM();
 
-		ShiftCentreOfMass(_V(0, 35.15 - 4.0, 0));
+		ShiftCentreOfMass(_V(0, 35.15 - 6.0, 0));
 	}
 }
 
@@ -492,7 +492,7 @@ void LEMSaturn::PerformLMRotation()
 	GetRotationMatrix(rv);
 	GetRotMatrixX(-PI05, rx);
 	GetRotMatrixY(0, ry);
-	GetRotMatrixZ(-30.0*RAD, rz);
+	GetRotMatrixZ(0, rz);
 
 	SetRotationMatrix(mul(rv, mul(rz, mul(ry, rx))));
 }
@@ -1138,7 +1138,7 @@ void LEMSaturn::Saturn1bLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg24");
 	hCOAStarget = oapiLoadMeshGlobal("ProjectApollo/sat_target");
 	hNosecap = oapiLoadMeshGlobal("ProjectApollo/nsat1aerocap");
-	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
+	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_Parked");
 
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 	solid_exhaust.tex = oapiRegisterParticleTexture("Contrail3");
@@ -1265,7 +1265,7 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	S4Config.PanelProcess = panelProc;
 	S4Config.SLARotationLimit = 45.0;
 
-	//GetPayloadName(S4Config.PayloadName);
+	sprintf(S4Config.PayloadName, "");
 
 	S4Config.LMAscentFuelMassKg = 0.0;
 	S4Config.LMDescentFuelMassKg = 0.0;
