@@ -521,6 +521,8 @@ void LEM::SystemsInit()
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
 	HTR_RR_STBY_CB.WireTo(&CDRs28VBus);
+	HTR_RR_OPR_CB.MaxAmps = 7.5;
+	HTR_RR_OPR_CB.WireTo(&CDRs28VBus);
 	HTR_LR_CB.MaxAmps = 5.0;
 	HTR_LR_CB.WireTo(&CDRs28VBus);
 	HTR_DISP_CB.MaxAmps = 2.0;
@@ -542,7 +544,7 @@ void LEM::SystemsInit()
 
 	RDZ_RDR_AC_CB.MaxAmps = 2.0; // Primary AC power
 	RDZ_RDR_AC_CB.WireTo(&ACBusA);
-	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater")); // This goes to the CB instead.
+	RR.Init(this,&PGNS_RNDZ_RDR_CB,&RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT")); // This goes to the CB instead.
 
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
@@ -2907,32 +2909,32 @@ LEM_RR::LEM_RR()// : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.
 	lem = NULL;	
 }
 
-void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat) {
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *stbyanheat, Boiler *anheat, h_HeatLoad *rreh, h_HeatLoad *secrreh) {
 	lem = s;
 	// Set up antenna.
-	// RR antenna is designed to operate between ??F and 75F
-	// The heater switches on if the temperature gets below ??F and turns it off again when the temperature reaches ??F
+	// RR antenna is designed to operate between 10F and 75F
+	// The standby heater switches on below -40F and turns it off again at 0F
+	// The oprational heater switches on below 0F and turns it off again at 20F
+	//The RR assembly has multiple heater systems within, we will only concern ourselves with the antenna itself
 	// The CWEA complains if the temperature is outside of -54F to +148F
 	// Values in the constructor are name, pos, vol, isol
 	// The DC side of the RR is most of it, the AC provides the transmit source.
 	antenna = ant;
+	stbyantheater = stbyanheat;
 	antheater = anheat;
+	RREHeat = rreh;
+	RRESECHeat = secrreh;
 	antenna->isolation = 1.0; 
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
-	//antenna.mass = 10000;
-	//antenna.SetTemp(255.1); 
 	trunnionAngle = -180.0 * RAD;
 	shaftAngle = 0.0 * RAD; // Stow
-	if(lem != NULL){
-		antheater->WireTo(&lem->HTR_RR_STBY_CB);
-		//lem->Panelsdk.AddHydraulic(&antenna);
-		//lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater->Enable();
-		antheater->SetPumpAuto();
-	}
 	dc_source = dc_src;
 	ac_source = ac_src;
 	mode = 2;
+	if (lem != NULL) {
+		stbyantheater->WireTo(&lem->HTR_RR_STBY_CB);
+		antheater->WireTo(&lem->HTR_RR_OPR_CB);
+	}
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (3.5*RAD / 4.0);	//3.5° beamwidth
 	SignalStrength = 0.0;
@@ -3413,6 +3415,14 @@ void LEM_RR::TimeStep(double simdt){
 
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
+}
+
+void LEM_RR::SystemTimeStep(double simdt) {
+	if (IsPowered())
+	{
+		RREHeat->GenerateHeat(65.4);
+		RRESECHeat->GenerateHeat(65.4);
+	}
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
