@@ -1799,6 +1799,55 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *SuitFanCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD:CO2_PPRESS");
 	double *SuitHXCCO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:CO2_PPRESS");
 
+	//Prim Loop 1 Heat
+	double *LGCHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT:HEAT");
+	double *CDUHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDUHEAT:HEAT");
+	double *PSAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PSAHEAT:HEAT");
+	double *TLEHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT:HEAT");
+	double *GASTAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GASTAHEAT:HEAT");
+	double *LCAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT:HEAT");
+	double *DSEHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT:HEAT");
+	double *ASAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASAHEAT:HEAT");
+	double *PTAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PTAHEAT:HEAT");
+	double *IMUHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT:HEAT");
+	double *RGAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:RGAHEAT:HEAT");
+	
+	//Prim Loop 2 Heat
+	double *SBPHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT:HEAT");
+	double *AEAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:AEAHEAT:HEAT");
+	double *ATCAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ATCAHEAT:HEAT");
+	double *SCERAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SCERAHEAT:HEAT");
+	double *CWEAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT:HEAT");
+	double *RREHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT:HEAT");
+	double *SBXHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT:HEAT");
+	double *VHFHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT:HEAT");
+	double *INVHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:INVHEAT:HEAT");
+	double *ECAHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ECAHEAT:HEAT");
+	double *PCMHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT:HEAT");
+
+	//Sec Loop 2 Heat
+	double *SBPHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT:HEAT");
+	double *AEAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECAEAHEAT:HEAT");
+	double *ATCAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECATCAHEAT:HEAT");
+	double *SCERAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECSCERAHEAT:HEAT");
+	double *CWEAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT:HEAT");
+	double *RREHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT:HEAT");
+	double *SBXHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT:HEAT");
+	double *VHFHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT:HEAT");
+	double *INVHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECINVHEAT:HEAT");
+	double *ECAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECECAHEAT:HEAT");
+	double *PCMHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT:HEAT");
+
+	double *TLEHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT:HEAT");
+	double *ASAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECASAHEAT:HEAT");
+	double *RGAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECRGAHEAT:HEAT");
+
+	sprintf(oapiDebugString(), "Prim Loop 1 Heat: %lf, Prim Loop 2 Heat: %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat
+		+ *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *SBXHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat));
+
+	//sprintf(oapiDebugString(), "Sec Loop 1 Heat: %lf, Sec Loop 2 Heat: %lf", (*SBPHeatSec + *AEAHeatSec + *ATCAHeatSec + *SCERAHeatSec + *CWEAHeatSec + *RREHeatSec + *SBXHeatSec + *VHFHeatSec + *INVHeatSec + *ECAHeatSec + *PCMHeatSec), (*TLEHeatSec + *ASAHeatSec + *RGAHeatSec));
+
+
 	//sprintf(oapiDebugString(), "Sen %lf RM %lf HXH %lf CIV %lf LIV %lf CDR %lf LMP %lf SGD %lf SC %lf CAB %lf CAN %lf PRIM %lf SEC %lf SF %lf HXC %lf", ecs.GetSensorCO2MMHg(), *primCO2Removal, *SuitHXHCO2*MMHG, *CDRSuitIsolCO2*MMHG, *LMPSuitIsolCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, *SuitGasDiverterCO2*MMHG, *SuitCircuitCO2*MMHG, *CabinCO2*MMHG, *CanisterMFCO2*MMHG, *PrimCO2*MMHG, *SecCO2*MMHG, *SuitFanCO2*MMHG, *SuitHXCCO2*MMHG);
 	//sprintf(oapiDebugString(), "GRV %d CO2MP %lf PCO2P %1f SFMP %lf SHXCP %lf SHXHP %lf CO2F %lf CO2REM %lf WS1F %lf H2OTM %lf H2OTOF %lf", *gasreturnvlv, (*CO2ManifoldPress)*PSI, (*primCo2CanisterPress)*PSI, (*suitfanmanifoldPress)*PSI, (*hxcoolingPress)*PSI, (*hxheatingPress)*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, (*STMass)*LBS, (*STPress)*PSI, *SToutflow);
 
