@@ -1453,7 +1453,6 @@ void SIVB::SetState(SIVBSettings &state)
 		MissionTime = state.MissionTime;
 		SaturnVStage = state.SaturnVStage;
 		PanelsHinged = state.PanelsHinged;
-		panelProc = state.PanelProcess;
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 
@@ -1471,8 +1470,9 @@ void SIVB::SetState(SIVBSettings &state)
 			RotationLimit = 0.25;
 		}
 
-		if (panelProc)
+		if (state.PanelProcess)
 		{
+			panelProc = panelProcPlusX = state.PanelProcess;
 			SetAnimation(panelAnim, panelProc);
 		}
 

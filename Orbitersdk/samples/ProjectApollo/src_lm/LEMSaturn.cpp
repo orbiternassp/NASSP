@@ -429,12 +429,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 
 		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1);
 
-		PerformLMRotation();
-
-		//SeparationS.play();
-		SetLmVesselDockStage();
-
-		imu.SetVesselFlag(true);
+		TransformToLM();
 
 		ShiftCentreOfMass(_V(0, 20.8 - 4.0, 0));
 	}
@@ -450,10 +445,44 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
 		stage1->SetState(new_stage == CM_STAGE);
 
-		SetLmVesselDockStage();
+		TransformToLM();
 
 		ShiftCentreOfMass(_V(0, 35.15 - 4.0, 0));
 	}
+}
+
+void LEMSaturn::TransformToLM()
+{
+	PerformLMRotation();
+	DelAnimation(panelAnim);
+
+	if (ph_3rd)
+	{
+		DelPropellantResource(ph_3rd);
+		ph_3rd = 0;
+	}
+
+	if (ph_ullage3)
+	{
+		DelPropellantResource(ph_ullage3);
+		ph_ullage3 = 0;
+	}
+
+	if (ph_aps1)
+	{
+		DelPropellantResource(ph_aps1);
+		ph_aps1 = 0;
+	}
+
+	if (ph_aps2)
+	{
+		DelPropellantResource(ph_aps2);
+		ph_aps2 = 0;
+	}
+
+	SetLmVesselDockStage();
+
+	imu.SetVesselFlag(true);
 }
 
 void LEMSaturn::PerformLMRotation()

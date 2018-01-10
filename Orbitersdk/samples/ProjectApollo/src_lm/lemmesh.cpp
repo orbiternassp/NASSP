@@ -628,6 +628,9 @@ void LEM::SetLmLandedMesh() {
 
 void LEM::SetLPDMesh() {
 	
+	if (lpdgret == -1)
+		return;
+
 	if (stage == 0 || stage == 2) {
 		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 			SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
@@ -649,6 +652,9 @@ void LEM::SetLPDMesh() {
 
 void LEM::SetFwdHatchMesh() {
 	
+	if (fwdhatch == -1)
+		return;
+
 	if (ForwardHatch.IsOpen()) {
 		SetMeshVisibilityMode(fwdhatch, MESHVIS_NEVER);
 	}
@@ -658,6 +664,9 @@ void LEM::SetFwdHatchMesh() {
 }
 
 void LEM::SetOvhdHatchMesh() {
+
+	if (ovhdhatch == -1)
+		return;
 
 	if (OverheadHatch.IsOpen()) {
 		SetMeshVisibilityMode(ovhdhatch, MESHVIS_NEVER);
