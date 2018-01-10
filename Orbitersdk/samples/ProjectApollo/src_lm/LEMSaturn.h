@@ -105,6 +105,7 @@ protected:
 	void SetSecondStage();
 	void SetSecondStageMeshes(double offset);
 	void SetSecondStageEngines();
+	void PerformLMRotation();
 
 	void CreateStageOne();
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1);

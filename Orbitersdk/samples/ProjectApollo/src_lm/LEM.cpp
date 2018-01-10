@@ -325,6 +325,7 @@ void LEM::Init()
 
 	ApolloNo = 0;
 	Landed = false;
+	NoLegs = false;
 
 	// Mesh Indexes
 	
@@ -1094,6 +1095,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 			sscanf(line + 5, "%d", &i);
 			NoAEA = (i == 1);
 		}
+		else if (!strnicmp(line, "NOLEGS", 6)) {
+			int i;
+			sscanf(line + 6, "%d", &i);
+			NoLegs = (i == 1);
+		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			DescentFuelMassKg = ftcp;
@@ -1436,6 +1442,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	if (NoAEA)
 	{
 		papiWriteScenario_bool(scn, "NOAEA", NoAEA);
+	}
+	if (NoLegs)
+	{
+		papiWriteScenario_bool(scn, "NOLEGS", NoLegs);
 	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);

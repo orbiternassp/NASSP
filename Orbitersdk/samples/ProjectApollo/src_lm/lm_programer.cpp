@@ -33,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 LEM_Programer::LEM_Programer()
 {
-
+	lem = NULL;
 }
 
 void LEM_Programer::Init(LEM *l)

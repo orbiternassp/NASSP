@@ -1555,6 +1555,7 @@ protected:
 
 	int ApolloNo;
 	int Landed;
+	bool NoLegs;
 
 	//
 	// VAGC Mode settings

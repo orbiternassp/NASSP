@@ -55,6 +55,7 @@ static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
 static MESHHANDLE hFwdHatch;
 static MESHHANDLE hOvhdHatch;
+static MESHHANDLE hLM1;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -182,7 +183,15 @@ void LEM::SetLmVesselDockStage()
 
 	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
 
-	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
+	UINT meshidx;
+	if (NoLegs)
+	{
+		meshidx = AddMesh(hLMPKD, &mesh_dir);
+	}
+	else
+	{
+		meshidx = AddMesh(hLMPKD, &mesh_dir);
+	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	
 	// Forward Hatch
@@ -313,13 +322,21 @@ void LEM::SetLmVesselHoverStage()
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx;
-	if (Landed) {
-		meshidx = AddMesh (hLMLanded, &mesh_dir);
-	}else{
-		UINT probeidx;
-		meshidx = AddMesh (hLMLanded, &mesh_dir);
-		probeidx = AddMesh (hLemProbes, &mesh_dir);
-		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
+	if (NoLegs)
+	{
+		meshidx = AddMesh(hLMLanded, &mesh_dir);
+	}
+	else
+	{
+		if (Landed) {
+			meshidx = AddMesh(hLMLanded, &mesh_dir);
+		}
+		else {
+			UINT probeidx;
+			meshidx = AddMesh(hLMLanded, &mesh_dir);
+			probeidx = AddMesh(hLemProbes, &mesh_dir);
+			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
+		}
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -665,6 +682,7 @@ void LEMLoadMeshes()
 	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_FwdHatch");
 	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_Drogue");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	hLM1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 }
 
 //

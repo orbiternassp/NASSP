@@ -429,12 +429,14 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 
 		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1);
 
+		PerformLMRotation();
+
 		//SeparationS.play();
 		SetLmVesselDockStage();
 
 		imu.SetVesselFlag(true);
 
-		ShiftCentreOfMass(_V(0, 0, 20.8));
+		ShiftCentreOfMass(_V(0, 20.8 - 4.0, 0));
 	}
 
 	if ((lemsat_stage == PRELAUNCH_STAGE || lemsat_stage == LAUNCH_STAGE_ONE) && new_stage >= CSM_LEM_STAGE)
@@ -450,8 +452,20 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 
 		SetLmVesselDockStage();
 
-		ShiftCentreOfMass(_V(0, 0, 35.15));
+		ShiftCentreOfMass(_V(0, 35.15 - 4.0, 0));
 	}
+}
+
+void LEMSaturn::PerformLMRotation()
+{
+	MATRIX3 rv, rx, ry, rz;
+
+	GetRotationMatrix(rv);
+	GetRotMatrixX(-PI05, rx);
+	GetRotMatrixY(0, ry);
+	GetRotMatrixZ(-30.0*RAD, rz);
+
+	SetRotationMatrix(mul(rv, mul(rz, mul(ry, rx))));
 }
 
 void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
@@ -1212,6 +1226,7 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
 	S4Config.ApsFuel1Kg = GetPropellantMass(ph_aps1);
 	S4Config.ApsFuel2Kg = GetPropellantMass(ph_aps2);
+	S4Config.PayloadMass = 0.0;
 	S4Config.SaturnVStage = false;
 	S4Config.MissionTime = MissionTime;
 	S4Config.LowRes = false;
@@ -1223,11 +1238,11 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 
 	//GetPayloadName(S4Config.PayloadName);
 
-	/*S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
-	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
-	S4Config.LMAscentEmptyMassKg = LMAscentEmptyMassKg;
-	S4Config.LMDescentEmptyMassKg = LMDescentEmptyMassKg;
-	S4Config.LMPad = LMPad;
+	S4Config.LMAscentFuelMassKg = 0.0;
+	S4Config.LMDescentFuelMassKg = 0.0;
+	S4Config.LMAscentEmptyMassKg = 0.0;
+	S4Config.LMDescentEmptyMassKg = 0.0;
+	/*S4Config.LMPad = LMPad;
 	S4Config.LMPadCount = LMPadCount;
 	S4Config.AEAPad = AEAPad;
 	S4Config.AEAPadCount = AEAPadCount;

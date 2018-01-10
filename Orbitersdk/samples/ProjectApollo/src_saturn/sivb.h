@@ -82,7 +82,7 @@ struct SIVBSettings
 	double MainFuelKg;				///< Remaining fuel in kg.
 
 	bool PanelsHinged;				///< Are SLA panels hinged?
-	bool PanelProcess;				///< SLA Panels opening progress
+	double PanelProcess;			///< SLA Panels opening progress
 	bool SaturnVStage;				///< Saturn V stage or Saturn 1b stage?
 	bool LowRes;					///< Low-res meshes?
 

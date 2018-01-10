@@ -1471,6 +1471,11 @@ void SIVB::SetState(SIVBSettings &state)
 			RotationLimit = 0.25;
 		}
 
+		if (panelProc)
+		{
+			SetAnimation(panelAnim, panelProc);
+		}
+
 		if (SaturnVStage)
 		{
 			iu = new IUSV;
