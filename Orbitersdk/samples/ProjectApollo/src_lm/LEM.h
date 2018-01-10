@@ -242,10 +242,11 @@ private:
 	h_Radiator *antenna;		// Antenna (loses heat into space)
 	Boiler *antheater;			// Antenna Standby Heater (puts heat back into antenna)
 	Boiler *stbyantheater;		// Antenna Standby Heater (puts heat back into antenna)
-	h_HeatLoad *RREHeat;
-	h_HeatLoad *RRESECHeat;
+	h_HeatLoad *RREHeat;		// RRE Heat Load
+	h_HeatLoad *RRESECHeat;		// RRE Heat Load
     e_object *dc_source;
 	e_object *ac_source;
+	double *RRAntennaTemp;
 	double tstime;
 	int	   tstate[2];
 	double tsangle[2];

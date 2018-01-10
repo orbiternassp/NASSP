@@ -2903,10 +2903,12 @@ double LEM_LR::GetAntennaTempF(){
 
 // Rendezvous Radar
 // Position and draw numbers are just guesses!
-LEM_RR::LEM_RR()// : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	//antheater("LEM-RR-Antenna-Heater",1,NULL,15,20,0,255,288,&antenna)
+LEM_RR::LEM_RR()
 {
 	lem = NULL;	
+	RRAntennaTemp = 0;
+	RREHeat = 0;
+	RRESECHeat = 0;
 }
 
 void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *stbyanheat, Boiler *anheat, h_HeatLoad *rreh, h_HeatLoad *secrreh) {
@@ -3615,7 +3617,10 @@ void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
 
 double LEM_RR::GetAntennaTempF(){
 
-	return(0);
+	if (!RRAntennaTemp) {
+		RRAntennaTemp = (double*)lem->Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna:TEMP");
+	}
+	return KelvinToFahrenheit(*RRAntennaTemp);
 }
 
 //Cross Pointer
