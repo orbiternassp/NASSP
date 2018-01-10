@@ -216,7 +216,7 @@ public:
 class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s,e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat);
+	void Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *stbyanheat, Boiler *anheat, h_HeatLoad *rreh, h_HeatLoad *secrreh);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -239,10 +239,14 @@ public:
 private:
 
 	LEM *lem;					// Pointer at LEM
-	h_Radiator *antenna;			// Antenna (loses heat into space)
-	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
+	h_Radiator *antenna;		// Antenna (loses heat into space)
+	Boiler *antheater;			// Antenna Standby Heater (puts heat back into antenna)
+	Boiler *stbyantheater;		// Antenna Standby Heater (puts heat back into antenna)
+	h_HeatLoad *RREHeat;		// RRE Heat Load
+	h_HeatLoad *RRESECHeat;		// RRE Heat Load
     e_object *dc_source;
 	e_object *ac_source;
+	double *RRAntennaTemp;
 	double tstime;
 	int	   tstate[2];
 	double tsangle[2];
