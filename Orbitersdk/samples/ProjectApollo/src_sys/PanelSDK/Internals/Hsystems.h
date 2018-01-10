@@ -358,6 +358,7 @@ public:
 
 	void GenerateHeat(double watts);
 	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
 };
 
 #endif

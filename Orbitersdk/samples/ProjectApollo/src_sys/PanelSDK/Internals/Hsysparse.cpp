@@ -599,3 +599,12 @@ void* h_WaterSeparator::GetComponent(char *component_name) {
 	BuildError(2);	//no such component
 	return NULL;
 }
+
+void* h_HeatLoad::GetComponent(char *component_name) {
+
+	if (Compare(component_name, "HEAT"))
+		return (void*)&heat_load;
+
+	BuildError(2);	//no such component
+	return NULL;
+}
