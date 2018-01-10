@@ -519,10 +519,6 @@ void LEM::SystemsInit()
 	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// HEATERS
-	HTR_RR_STBY_CB.MaxAmps = 7.5;
-	HTR_RR_STBY_CB.WireTo(&CDRs28VBus);
-	HTR_RR_OPR_CB.MaxAmps = 7.5;
-	HTR_RR_OPR_CB.WireTo(&CDRs28VBus);
 	HTR_LR_CB.MaxAmps = 5.0;
 	HTR_LR_CB.WireTo(&CDRs28VBus);
 	HTR_DISP_CB.MaxAmps = 2.0;
