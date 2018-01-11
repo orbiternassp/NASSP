@@ -172,7 +172,6 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 // GuidContSwitch is the Guidance Control switch
 
 void ATCA::Timestep(double simt, double simdt){
-	double now = oapiGetSimTime(); // Get time
 	hasPrimPower = false, hasAbortPower = false;
 	bool balcpl = false;
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
@@ -778,10 +777,10 @@ void ATCA::Timestep(double simt, double simdt){
 		// Process jet request list to generate start and stop times.
 		if(jet_request[x] == 1 && jet_last_request[x] == 0){
 			// New fire request
-			jet_start[x] = now;
+			jet_start[x] = simt;
 		}else if(jet_request[x] == 0 && jet_last_request[x] == 1){
 			// New stop request
-			jet_stop[x] = now;
+			jet_stop[x] = simt;
 		}
 		jet_last_request[x] = jet_request[x]; // Keep track of changes
 
