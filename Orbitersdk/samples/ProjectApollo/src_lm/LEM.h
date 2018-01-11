@@ -197,7 +197,6 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
-	double *LRAntennaTemp;
 
 	bool IsPowered(); 
 
@@ -249,7 +248,6 @@ private:
 	h_HeatLoad *RRESECHeat;		// RRE Heat Load Sec Loop
     e_object *dc_source;
 	e_object *ac_source;
-	double *RRAntennaTemp;
 	double tstime;
 	int	   tstate[2];
 	double tsangle[2];
