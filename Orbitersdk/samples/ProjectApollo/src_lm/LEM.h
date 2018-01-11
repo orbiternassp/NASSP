@@ -197,7 +197,6 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
-	double *LRAntennaTemp;
 
 	bool IsPowered(); 
 
@@ -222,7 +221,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;
@@ -249,7 +248,6 @@ private:
 	h_HeatLoad *RRESECHeat;		// RRE Heat Load Sec Loop
     e_object *dc_source;
 	e_object *ac_source;
-	double *RRAntennaTemp;
 	double tstime;
 	int	   tstate[2];
 	double tsangle[2];
