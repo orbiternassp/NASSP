@@ -2508,7 +2508,6 @@ LEM_LR::LEM_LR()
 {
 	lem = NULL;
 	lrheat = 0;
-	LRAntennaTemp = 0;
 	antennaAngle = 24; // Position 1
 }
 
@@ -2894,7 +2893,6 @@ double LEM_LR::GetAntennaTempF(){
 LEM_RR::LEM_RR()
 {
 	lem = NULL;	
-	RRAntennaTemp = 0;
 	RREHeat = 0;
 	RRESECHeat = 0;
 }
