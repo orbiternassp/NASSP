@@ -2882,10 +2882,7 @@ void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
 
 double LEM_LR::GetAntennaTempF(){
 
-	if (!LRAntennaTemp) {
-		LRAntennaTemp = (double*)lem->Panelsdk.GetPointerByString("HYDRAULIC:LEM-LR-Antenna:TEMP");
-	}
-	return KelvinToFahrenheit(*LRAntennaTemp);
+	return KelvinToFahrenheit(antenna->GetTemp);
 }
 
 // Rendezvous Radar
@@ -3621,10 +3618,7 @@ void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
 
 double LEM_RR::GetAntennaTempF(){
 
-	if (!RRAntennaTemp) {
-		RRAntennaTemp = (double*)lem->Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna:TEMP");
-	}
-	return KelvinToFahrenheit(*RRAntennaTemp);
+	return KelvinToFahrenheit(antenna->GetTemp);
 }
 
 //Cross Pointer
