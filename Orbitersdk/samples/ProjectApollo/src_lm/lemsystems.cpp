@@ -2955,7 +2955,7 @@ bool LEM_RR::IsACPowered()
 	if (ac_source->Voltage() > 100) {
 		return true;
 	}
-	return true;
+	return false;
 }
 
 bool LEM_RR::IsPowered()
