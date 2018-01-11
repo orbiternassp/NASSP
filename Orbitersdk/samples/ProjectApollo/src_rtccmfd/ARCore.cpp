@@ -1287,6 +1287,14 @@ void ARCore::send_agc_key(char key)	{
 		cmdbuf[1] = 0301;
 		cmdbuf[2] = 0360;
 		break;
+	case 'S': // 11-001-101 10-010-011 (code 23)
+		cmdbuf[1] = 0315;
+		cmdbuf[2] = 0223;
+		break;
+	case 'T': // 11-010-001 01-110-100 (code 24)
+		cmdbuf[1] = 0321;
+		cmdbuf[2] = 0164;
+		break;
 	}
 	for (int i = 0; i < 3; i++) {
 		g_Data.uplinkBuffer.push(cmdbuf[i]);
