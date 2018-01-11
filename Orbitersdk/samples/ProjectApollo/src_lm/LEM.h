@@ -222,7 +222,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
 	double GetRadarShaftVel() { return shaftVel ; } ;

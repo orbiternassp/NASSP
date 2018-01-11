@@ -2437,8 +2437,8 @@ void LEM_SteerableAnt::SystemTimestep(double simdt)
 	// Do we have power?
 	if (IsPowered()) {
 
-		lem->SBD_ANT_AC_CB.DrawPower(4); 	//Need a source on this moving draw
-		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  //Need a source on this moving draw
+		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  
 
 	}
 
