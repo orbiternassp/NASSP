@@ -637,6 +637,8 @@ struct AP11AGSSVPAD
 	double DEDA272; //CSM Epoch Time
 };
 
+class LEM;
+
 
 // Mission Control Center class
 class MCC : public VESSEL4 {
@@ -676,7 +678,7 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
-	Saturn *lm;												// Pointer to LM
+	LEM *lm;												// Pointer to LM
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
 

@@ -27,9 +27,11 @@
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "csmcomputer.h"
+#include "LEMcomputer.h"
 #include "papi.h"
 #include "saturn.h"
 #include "saturnv.h"
+#include "LEM.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -785,7 +787,11 @@ void MCC::TimeStep(double simdt){
 			AbortMode = 0;
 			// Determine mission type.
 			switch(cm->ApolloNo){
-				case 7:
+			case 5:
+					MissionType = MTP_B;
+					setState(MST_1B_PRELAUNCH);
+					break;
+			case 7:
 					MissionType = MTP_C;
 					setState(MST_1B_PRELAUNCH);
 					break;
