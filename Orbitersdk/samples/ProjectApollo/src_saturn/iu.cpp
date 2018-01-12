@@ -1587,6 +1587,12 @@ void IU1B::SwitchSelector(int item)
 		fcc.SetStageSwitch(2);
 		fcc.SetSIVBBurnMode(true);
 		break;
+	case 110: //Nose Cone Jettison (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.JettisonNosecap();
+		break;
+	case 111: //SLA Panel Deployment (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.DeploySLAPanel();
+		break;
 	default:
 		break;
 	}

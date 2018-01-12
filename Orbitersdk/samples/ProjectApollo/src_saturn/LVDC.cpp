@@ -1097,7 +1097,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					{
 						if (LVDC_TB_ETime > 45.0)
 						{
-							lvCommandConnector->JettisonNosecap();
+							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
 							CommandSequence++;
 						}
 					}
@@ -1110,7 +1110,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					{
 						if (LVDC_TB_ETime > 600.0)
 						{
-							lvCommandConnector->DeploySLAPanel();
+							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 111);
 							CommandSequence++;
 						}
 					}
@@ -2698,7 +2698,7 @@ bool LVDC1B::TimebaseUpdate(double dt)
 
 bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 {
-	if (LVDC_Timebase == 4)
+	if (LVDC_Timebase == 3 || LVDC_Timebase == 4)
 	{
 		if (stage >= 0 && stage < 4)
 		{
