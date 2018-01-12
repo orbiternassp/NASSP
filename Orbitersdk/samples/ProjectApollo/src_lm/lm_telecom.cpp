@@ -2284,8 +2284,7 @@ void LM_SBAND::SaveState(FILEHANDLE scn) {
 }
 
 // S-Band Steerable Antenna
-LEM_SteerableAnt::LEM_SteerableAnt()// : antenna("LEM-SBand-Steerable-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	//antheater("LEM-SBand-Steerable-Antenna-Heater",1,NULL,40,51.7,0,233.15,255,&antenna)
+LEM_SteerableAnt::LEM_SteerableAnt()
 {
 	lem = NULL;
 	pitch = 0.0;
@@ -2301,16 +2300,10 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 	// SBand antenna 51.7 watts to stay between -40F and 0F
 	antenna = an;
 	antheater = anheat;
-	antenna->isolation = 1.0; 
+	antenna->isolation = 0.0001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
-	//antenna.mass = 10000;      // Probably the same as the RR antenna
-	//antenna.SetTemp(233); 
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
-		//lem->Panelsdk.AddHydraulic(&antenna);
-		//lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater->Enable();
-		antheater->SetPumpAuto();
 	}
 
 	pitch = -75.0*RAD;
@@ -2442,12 +2435,17 @@ void LEM_SteerableAnt::TimeStep(double simdt){
 void LEM_SteerableAnt::SystemTimestep(double simdt)
 {
 	// Do we have power?
-	if (!IsPowered()) return;
+	if (IsPowered()) {
+
+		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  
+
+	}
 
 	if (moving)
 	{
-		lem->SBD_ANT_AC_CB.DrawPower(27.9);
-		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);
+		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
 	}
 }
 
