@@ -217,7 +217,7 @@ public:
 class LEM_RR : public e_object {
 public:
 	LEM_RR();
-	void Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *stbyanheat, Boiler *anheat, h_HeatLoad *rreh, h_HeatLoad *secrreh);
+	void Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
@@ -1909,6 +1909,7 @@ protected:
 	friend class LMRCSBPressInd;
 	friend class LMRCSAQtyInd;
 	friend class LMRCSBQtyInd;
+	friend class TempMonitorInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
 

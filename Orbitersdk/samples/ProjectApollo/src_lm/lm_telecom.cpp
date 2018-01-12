@@ -2474,7 +2474,7 @@ void LEM_SteerableAnt::SaveState(FILEHANDLE scn) {
 
 double LEM_SteerableAnt::GetAntennaTempF(){
 
-	return(0);
+	return KelvinToFahrenheit(antenna->GetTemp());
 }
 
 LM_OMNI::LM_OMNI(VECTOR3 dir)

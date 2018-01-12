@@ -530,7 +530,6 @@ void LEM::SystemsInit()
 
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"));
-
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
@@ -1832,11 +1831,22 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *ASAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECASAHEAT:HEAT");
 	double *RGAHeatSec = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECRGAHEAT:HEAT");
 */
+/*
+	double *ASATemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink:TEMP");
+	double *SBDTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna:TEMP");
+	double *RRTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna:TEMP");
+	double *LRTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-LR-Antenna:TEMP");
+	double *IMUTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case:TEMP");
+	double *SBDHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater:ISON");
+	double *RRStbyHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater:ISON");
+	double *RRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater:ISON");
+	double *LRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater:ISON");
+*/
+
+	//sprintf(oapiDebugString(), "SBD: T %lf H %lf RR: T %lf SH %lf H %lf LR: T %lf H %lf", *SBDTemp* 1.8 - 459.67, *SBDHtr, *RRTemp* 1.8 - 459.67, *RRStbyHtr, *RRHtr, *LRTemp* 1.8 - 459.67, *LRHtr);
 
 	//sprintf(oapiDebugString(), "Prim Loop 1 Heat: %lf, Prim Loop 2 Heat: %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *SBXHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat));
-
 	//sprintf(oapiDebugString(), "Sec Loop 1 Heat: %lf, Sec Loop 2 Heat: %lf", (*SBPHeatSec + *AEAHeatSec + *ATCAHeatSec + *SCERAHeatSec + *CWEAHeatSec + *RREHeatSec + *SBXHeatSec + *VHFHeatSec + *INVHeatSec + *ECAHeatSec + *PCMHeatSec), (*TLEHeatSec + *ASAHeatSec + *RGAHeatSec));
-
 
 	//sprintf(oapiDebugString(), "Sen %lf RM %lf HXH %lf CIV %lf LIV %lf CDR %lf LMP %lf SGD %lf SC %lf CAB %lf CAN %lf PRIM %lf SEC %lf SF %lf HXC %lf", ecs.GetSensorCO2MMHg(), *primCO2Removal, *SuitHXHCO2*MMHG, *CDRSuitIsolCO2*MMHG, *LMPSuitIsolCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, *SuitGasDiverterCO2*MMHG, *SuitCircuitCO2*MMHG, *CabinCO2*MMHG, *CanisterMFCO2*MMHG, *PrimCO2*MMHG, *SecCO2*MMHG, *SuitFanCO2*MMHG, *SuitHXCCO2*MMHG);
 	//sprintf(oapiDebugString(), "GRV %d CO2MP %lf PCO2P %1f SFMP %lf SHXCP %lf SHXHP %lf CO2F %lf CO2REM %lf WS1F %lf H2OTM %lf H2OTOF %lf", *gasreturnvlv, (*CO2ManifoldPress)*PSI, (*primCo2CanisterPress)*PSI, (*suitfanmanifoldPress)*PSI, (*hxcoolingPress)*PSI, (*hxheatingPress)*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, (*STMass)*LBS, (*STPress)*PSI, *SToutflow);
@@ -2897,7 +2907,7 @@ LEM_RR::LEM_RR()
 	RRESECHeat = 0;
 }
 
-void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *stbyanheat, Boiler *anheat, h_HeatLoad *rreh, h_HeatLoad *secrreh) {
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh) {
 	lem = s;
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
