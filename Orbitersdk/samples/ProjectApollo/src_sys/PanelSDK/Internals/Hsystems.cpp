@@ -949,8 +949,8 @@ void h_Radiator::refresh(double dt) {
 
 	double Q = rad * size * 5.67e-8 * dt * pow(Temp - 3.0, 4);	//aditional cooling from the radiator??
 
-	// if (!strcmp(name, "SPSPROPELLANTLINE")) 
-	//	sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
+	// if (!strcmp(name, "LEM-LR-Antenna")) 
+		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
 	thermic(-Q);
 }
