@@ -2846,7 +2846,6 @@ void LEM_LR::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		dc_source->DrawPower(118);
 		lrheat->GenerateHeat(118);
 	}
 }
@@ -3030,10 +3029,7 @@ void LEM_RR::TimeStep(double simdt){
 		SignalStrength = 0.0;
 		return;
 	}
-	// Max power used based on LM GNCStudyGuide. Is this good?
-	dc_source->DrawPower(130);
-	// FIXME: Do you have a number for the AC side?
-	
+
 	// Determine slew rate
 	switch(lem->SlewRateSwitch.GetState()) {
 		case TOGGLESWITCH_UP:       // HI
@@ -3427,7 +3423,7 @@ void LEM_RR::TimeStep(double simdt){
 void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
-		dc_source->DrawPower(150);
+		dc_source->DrawPower(117);
 		RREHeat->GenerateHeat(58.5);
 		RRESECHeat->GenerateHeat(58.5);
 	}
@@ -3438,6 +3434,17 @@ void LEM_RR::SystemTimestep(double simdt) {
 		RREHeat->GenerateHeat(6.9);
 		RRESECHeat->GenerateHeat(6.9);
 	}
+
+	if (abs(shaftVel) > 0.01*RAD)
+	{
+			dc_source->DrawPower(16.5);
+	}
+
+	if (abs(trunnionVel) > 0.01*RAD)
+	{
+		dc_source->DrawPower(16.5);
+	}
+
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
