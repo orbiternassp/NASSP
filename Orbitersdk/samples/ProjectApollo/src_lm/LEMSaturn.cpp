@@ -257,6 +257,8 @@ LEMSaturn::~LEMSaturn()
 		delete iu;
 		iu = 0;
 	}
+
+	DeleteManagedAnimationComponents();
 }
 
 void LEMSaturn::initSaturn1b()
@@ -269,7 +271,7 @@ void LEMSaturn::initSaturn1b()
 
 	ISP_FIRST_SL = 262 * G;
 	ISP_FIRST_VAC = 294 * G;
-	THRUST_FIRST_VAC = 1008000;
+	THRUST_FIRST_VAC = 965000.0;
 
 	ISP_SECOND_SL = 424 * G;
 	ISP_SECOND_VAC = 424 * G;
@@ -277,7 +279,7 @@ void LEMSaturn::initSaturn1b()
 	THRUST_SECOND_VAC = 1009902;
 
 	SIVB_EmptyMass = 12495;
-	SIVB_FuelMass = 102047;
+	SIVB_FuelMass = 104694.5;
 
 	SI_EmptyMass = 41874;
 	SI_FuelMass = 411953;
@@ -416,6 +418,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 			stage1->SetState(S1Config);
 		}
 
+		DeleteManagedAnimationComponents();
 		SetSecondStage();
 		SetSecondStageEngines();
 		ShiftCentreOfMass(_V(0, 0, 12.25));
@@ -538,13 +541,16 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{
-		SetAnimation(panelAnim, panelProc);
-
 		iu->ConnectToCSM(&iuCommandConnector);
 		iu->ConnectToLV(&sivbCommandConnector);
 
 		imu.SetVesselFlag(false);
 	}
+}
+
+void LEMSaturn::clbkPostCreation()
+{
+	SetAnimation(panelAnim, panelProc);
 }
 
 void LEMSaturn::SaveLEMSaturn(FILEHANDLE scn)
@@ -780,7 +786,7 @@ void LEMSaturn::SetFirstStage()
 	SetPitchMomentScale(0);
 	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0);
-	ClearMeshes();
+	ClearMeshes(false);
 
 	SetFirstStageMeshes(-14.0);
 	SetSecondStageMeshes(13.95);
@@ -962,7 +968,7 @@ void LEMSaturn::SetSecondStage()
 	SetYawMomentScale(0);
 	SetLiftCoeffFunc(0);
 
-	ClearMeshes();
+	ClearMeshes(false);
 	SetSecondStageMeshes(13.95 - 12.25);
 }
 
@@ -982,15 +988,15 @@ void LEMSaturn::SetSecondStageMeshes(double offset)
 	mesh_dir = _V(-2.45, 0, 10.55 + offset);
 	panelMesh4Saturn1b = AddMesh(hStageSLA4Mesh, &mesh_dir);
 
-	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V(0.37, 0, -1.2), _V(0, 1, 0), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(0, 0.37, -1.2), _V(-1, 0, 0), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V(0, -0.37, -1.2), _V(1, 0, 0), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.37, 0, -1.2), _V(0, -1, 0), (float)(1.0 * PI));
+	MGROUP_ROTATE* panel1Saturn1b = new MGROUP_ROTATE(panelMesh1Saturn1b, NULL, 0, _V(0.37, 0, -1.2), _V(0, 1, 0), (float)(1.0 * PI));
+	MGROUP_ROTATE* panel2Saturn1b = new MGROUP_ROTATE(panelMesh2Saturn1b, NULL, 0, _V(0, 0.37, -1.2), _V(-1, 0, 0), (float)(1.0 * PI));
+	MGROUP_ROTATE* panel3Saturn1b = new MGROUP_ROTATE(panelMesh3Saturn1b, NULL, 0, _V(0, -0.37, -1.2), _V(1, 0, 0), (float)(1.0 * PI));
+	MGROUP_ROTATE* panel4Saturn1b = new MGROUP_ROTATE(panelMesh4Saturn1b, NULL, 0, _V(-0.37, 0, -1.2), _V(0, -1, 0), (float)(1.0 * PI));
 
-	AddAnimationComponent(panelAnim, 0, 1, &panel1Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel3Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
+	AddManagedAnimationComponent(panelAnim, 0, 1, panel1Saturn1b);
+	AddManagedAnimationComponent(panelAnim, 0, 1, panel2Saturn1b);
+	AddManagedAnimationComponent(panelAnim, 0, 1, panel3Saturn1b);
+	AddManagedAnimationComponent(panelAnim, 0, 1, panel4Saturn1b);
 
 	nosecapidx = -1;
 	meshLM_1 = -1;
@@ -1159,6 +1165,18 @@ void LEMSaturn::SetupMeshes()
 	hStageSLA4Mesh = hSat1stg24;
 }
 
+ANIMATIONCOMPONENT_HANDLE LEMSaturn::AddManagedAnimationComponent(UINT anim, double state0, double state1,
+	MGROUP_TRANSFORM *trans)
+{
+	vpAnimations.push_back(trans);
+	return AddAnimationComponent(anim, state0, state1, trans);
+}
+
+void LEMSaturn::DeleteManagedAnimationComponents()
+{
+	for (unsigned int i = 0; i < vpAnimations.size(); i++) delete vpAnimations.at(i);
+}
+
 void LEMSaturn::AddRCS_S4B()
 
 {
@@ -1166,7 +1184,7 @@ void LEMSaturn::AddRCS_S4B()
 	const double ATTCOOR2 = 3.61;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double TRANZ = -3.2 - STG2O;
+	const double TRANZ = -3.2 - 8.0;
 	const double ATTWIDTH = .2;
 	const double ATTHEIGHT = .5;
 	const double TRANWIDTH = .2;
@@ -1514,6 +1532,14 @@ void LEMSaturn::LMSLASeparationFire()
 	{
 		LMLVSeparationPyros.SetBlown(true);
 	}
+}
+
+IU *LEMSaturn::GetIU()
+{
+	if (iu && lemsat_stage < CSM_LEM_STAGE)
+		return iu;
+
+	return NULL;
 }
 
 void LEMSaturn::SwitchSelector(int item) {

@@ -60,6 +60,7 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
+	void clbkPostCreation();
 
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
@@ -94,6 +95,8 @@ public:
 	void SetSLADeployCommand() { DeploySLACommand = true; }
 	void LMSLASeparationFire();
 
+	virtual IU *GetIU();
+
 protected:
 
 	void initSaturn1b();
@@ -118,6 +121,9 @@ protected:
 	void SetNosecapMesh();
 	void SetupMeshes();
 	void Saturn1bLoadMeshes();
+
+	ANIMATIONCOMPONENT_HANDLE AddManagedAnimationComponent(UINT anim, double state0, double state1, MGROUP_TRANSFORM *trans);
+	void DeleteManagedAnimationComponents();
 
 	void GetApolloName(char *s);
 
@@ -198,6 +204,8 @@ protected:
 
 	PSTREAM_HANDLE prelaunchvent[3];
 
+	std::vector<MGROUP_TRANSFORM*> vpAnimations;
+
 	IU* iu;
 	SIBSystems *sib;
 	SIVBSystems *sivb;
@@ -216,7 +224,6 @@ extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR
 
 const double STG0O = 0;
 const double STG1O = 10.25;
-const double STG2O = 8;
 const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };
 
 #define SISYSTEMS_START_STRING		"SISYSTEMS_BEGIN"
