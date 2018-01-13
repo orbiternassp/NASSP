@@ -156,6 +156,9 @@
 #define MST_LAUNCH_ABORT	901
 // Abort from orbit is handled by mission-specific abort state and goes to entry.
 
+// MISSION STATES: MISSION B
+#define MST_B_PRELAUNCH		10
+
 // MISSION STATES: MISSION C
 #define MST_C_INSERTION		10
 // Ends at specified time, goes to
@@ -656,10 +659,13 @@ public:
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
 	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
-	void pushCMCUplinkKey(char key);                        // Send key to CMC
+	void pushAGCUplinkKey(char key, bool cm);               // Send key to AGC
 	void pushUplinkData(unsigned char data);				// Add uplink data word to queue
 	int CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
 	int CM_uplink_buffer();									// Send uplink buffer to CM
+	void pushLGCUplinkString(const char *str);              // Send sequence to LM
+	int LM_uplink(const unsigned char *data, int len);		// Uplink string to LM
+	int LM_uplink_buffer();									// Send uplink buffer to LM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
 	void drawPad();											// Draw PAD display

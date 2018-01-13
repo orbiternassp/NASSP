@@ -122,8 +122,10 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 				v = oapiGetVesselInterface(hLEM);
 
 				if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-					//lem = (LEM *)v;
+					!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
+					!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+					!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")){
+					lm = (LEM *)v;
 				}
 			}
 		}
@@ -173,6 +175,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	// Reset data
 	rtcc = NULL;
 	cm = NULL;
+	lm = NULL;
 	Earth = NULL;
 	Moon = NULL;
 	CM_DeepSpace = false;
@@ -684,6 +687,8 @@ void MCC::TimeStep(double simdt){
 			// Bail out if we failed to find either major body
 			if(Earth == NULL){ addMessage("Can't find Earth"); GT_Enabled = false; return; }
 			if(Moon == NULL){ addMessage("Can't find Moon"); GT_Enabled = false; return; }
+			//Or the CSM
+			if (cm == NULL) { return; }
 
 			R_E = oapiGetSize(Earth);
 			R_M = oapiGetSize(Moon);
@@ -786,12 +791,11 @@ void MCC::TimeStep(double simdt){
 			// INITIALIZATION STATE
 			AbortMode = 0;
 			// Determine mission type.
-			switch(cm->ApolloNo){
-			case 5:
-					MissionType = MTP_B;
-					setState(MST_1B_PRELAUNCH);
-					break;
-			case 7:
+
+			if (cm)
+			{
+				switch (cm->ApolloNo) {
+				case 7:
 					MissionType = MTP_C;
 					setState(MST_1B_PRELAUNCH);
 					break;
@@ -821,14 +825,24 @@ void MCC::TimeStep(double simdt){
 					break;
 				default:
 					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
-					if(cm->SaturnType == SAT_SATURNV){
+					if (cm->SaturnType == SAT_SATURNV) {
 						MissionType = MTP_H;
 					}
-					if(cm->SaturnType == SAT_SATURN1B){
+					if (cm->SaturnType == SAT_SATURN1B) {
 						MissionType = MTP_C;
 					}
 					break;
 
+				}
+			}
+			else if (lm)
+			{
+				switch (lm->ApolloNo) {
+				case 5:
+					MissionType = MTP_B;
+					setState(MST_B_PRELAUNCH);
+					break;
+				}
 			}
 			if(MissionType == 0){
 				sprintf(buf,"Unsupported Mission %d",cm->ApolloNo);
@@ -966,6 +980,43 @@ void MCC::TimeStep(double simdt){
 		}
 		// Now handle mission-specific states
 		switch (MissionType) {
+		case MTP_B:
+			switch (MissionState)
+			{
+			case MST_B_PRELAUNCH:
+				switch (SubState) {
+				case 0:
+					if (lm->GetMissionTime() > -5.0)
+					{
+						setSubState(1);
+					}
+					break;
+				case 1:
+					char uplinkdata[1000];
+					sprintf(uplinkdata, "V65ER");
+					strncpy(upString, uplinkdata, 1024 * 3);
+					if (upString[0] != 0) {
+						this->pushLGCUplinkString(upString);
+					}
+					this->LM_uplink_buffer();
+					setSubState(2);
+					break;
+				case 2:
+					if (lm->VHF.mcc_size == 0)
+					{
+						setSubState(3);
+					}
+					break;
+				case 3:
+					if (lm->GetMissionTime() > 0.0)
+					{
+						setSubState(4);
+					}
+					break;
+				}
+				break;
+			}
+			break;
 		case MTP_C:
 			/* *********************
 			 * MISSION C: APOLLO 7 *
@@ -1869,14 +1920,33 @@ void MCC::pushCMCUplinkString(const char *str) {
 	int x = 0;
 	while (x < len) {
 		if (str[x] == '\n' || str[x] == '\r') { x++; continue; } // Ignore CR and LF if they are present (they should not be)
-		this->pushCMCUplinkKey(str[x]);
+		this->pushAGCUplinkKey(str[x], true);
+		x++;
+	}
+}
+
+// Push CM uplink sequence
+void MCC::pushLGCUplinkString(const char *str) {
+	if (str == NULL) { return; } // Bail
+	int len = strlen(str);
+	int x = 0;
+	while (x < len) {
+		if (str[x] == '\n' || str[x] == '\r') { x++; continue; } // Ignore CR and LF if they are present (they should not be)
+		this->pushAGCUplinkKey(str[x], false);
 		x++;
 	}
 }
 
 // Push CM uplink keystroke
-void MCC::pushCMCUplinkKey(char key) {
-	this->pushUplinkData(043); // VA, SA for CMC
+void MCC::pushAGCUplinkKey(char key, bool cm) {
+	if (cm)
+	{
+		this->pushUplinkData(043); // VA, SA for CMC
+	}
+	else
+	{
+		this->pushUplinkData(031); // VA, SA for LGC
+	}
 	switch (key) {
 	case 'V': // VERB
 		// 11-000-101 11-010-001
@@ -1991,9 +2061,29 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 	return len;
 }
 
+// Uplink string to LM
+int MCC::LM_uplink(const unsigned char *data, int len) {
+	int remsize = 1024;
+	remsize -= lm->VHF.mcc_size;
+	// if (lm->pcm.mcc_size > 0) { return -1; } // If busy, bail
+	if (len > remsize) { return -2; } // Too long!
+	memcpy((lm->VHF.mcc_data + lm->VHF.mcc_size), data, len);
+	lm->VHF.mcc_size += len;
+	return len;
+}
+
 // Send uplink buffer to CMC
 int MCC::CM_uplink_buffer() {
 	int rv = this->CM_uplink(uplink_data, uplink_size);
+	if (rv > 0) {
+		uplink_size = 0; // Reset
+	}
+	return(rv);
+}
+
+// Send uplink buffer to LGC
+int MCC::LM_uplink_buffer() {
+	int rv = this->LM_uplink(uplink_data, uplink_size);
 	if (rv > 0) {
 		uplink_size = 0; // Reset
 	}

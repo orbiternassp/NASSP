@@ -1927,6 +1927,7 @@ protected:
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
+	friend class MCC;
 };
 
 extern void LEMLoadMeshes();
