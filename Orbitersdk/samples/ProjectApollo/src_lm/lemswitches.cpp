@@ -682,7 +682,26 @@ void TempMonitorInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double TempMonitorInd::QueryValue()
 
 {
-	return 50.0;
+	if (!lem) { return 0; }
+	switch (lem->TempMonitorRotary) {
+	case 0: // RR
+		return (lem->RR.GetAntennaTempF());
+	case 1: // LR
+		return (lem->LR.GetAntennaTempF());
+	case 2: // Quad 1
+		return (50);
+	case 3: // Quad 2
+		return (50);
+	case 4: // Quad 3
+		return (50);
+	case 5: // Quad 4
+		return (50);
+	case 6: // S-Band Ant
+		return (lem->SBandSteerable.GetAntennaTempF()); //FIXME: Needs to be rescaled
+	default:
+		return 0;
+	}
+	//return 40;
 }
 
 void TempMonitorInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
