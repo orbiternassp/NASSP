@@ -162,6 +162,12 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 		case 121: //RCS Thruster Isol Valve 2B Close Reset
 			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
+		case 128: //X-Trans On
+			lem->agc.SetInputChannelBit(031, 6, true);
+			break;
+		case 129: //X-Trans Off
+			lem->agc.SetInputChannelBit(031, 6, false);
+			break;
 		case 134: //APS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_UP);
 			break;
@@ -185,6 +191,12 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 			break;
 		case 153: //RCS Thruster Isol Valve 2A Open Reset
 			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 166: //Engine Stop On
+			lem->CDRManualEngineStop.SetState(1);
+			break;
+		case 167: //Engine Stop Reset
+			lem->CDRManualEngineStop.SetState(0);
 			break;
 		case 168: //RCS Thruster Isol Valve 2A Close
 			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
