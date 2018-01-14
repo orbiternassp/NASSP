@@ -138,6 +138,10 @@ static PARTICLESTREAMSPEC prelaunchvent_spec = {
 
 static int refcount;
 
+const double STG0O = 0;
+const double STG1O = 10.25;
+const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };
+
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {

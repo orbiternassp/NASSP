@@ -222,9 +222,5 @@ protected:
 
 extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel);
 
-const double STG0O = 0;
-const double STG1O = 10.25;
-const VECTOR3 OFS_STAGE1 = { 0, 0, -14 };
-
 #define SISYSTEMS_START_STRING		"SISYSTEMS_BEGIN"
 #define SISYSTEMS_END_STRING		"SISYSTEMS_END"

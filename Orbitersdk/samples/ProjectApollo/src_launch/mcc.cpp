@@ -32,6 +32,7 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
+#include "LEMSaturn.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -988,12 +989,14 @@ void MCC::TimeStep(double simdt){
 				case 0:
 					if (lm->GetMissionTime() > -5.0)
 					{
+						LEMSaturn *lmsat = (LEMSaturn *)lm;
+						lmsat->GetIU()->dcs.EnableCommandSystem();
 						setSubState(1);
 					}
 					break;
 				case 1:
 					char uplinkdata[1000];
-					sprintf(uplinkdata, "V65ER");
+					sprintf(uplinkdata, "V65E");
 					strncpy(upString, uplinkdata, 1024 * 3);
 					if (upString[0] != 0) {
 						this->pushLGCUplinkString(upString);

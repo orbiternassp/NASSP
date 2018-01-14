@@ -186,7 +186,7 @@ void LEM::SetLmVesselDockStage()
 	UINT meshidx;
 	if (NoLegs)
 	{
-		meshidx = AddMesh(hLMPKD, &mesh_dir);
+		meshidx = AddMesh(hLM1, &mesh_dir);
 	}
 	else
 	{
@@ -324,7 +324,7 @@ void LEM::SetLmVesselHoverStage()
 	UINT meshidx;
 	if (NoLegs)
 	{
-		meshidx = AddMesh(hLMLanded, &mesh_dir);
+		meshidx = AddMesh(hLM1, &mesh_dir);
 	}
 	else
 	{
@@ -498,6 +498,15 @@ void LEM::SetLmAscentHoverStage()
 		SetPropellantMaxMass(ph_Asc, AscentFuelMassKg);
 	}
 	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
+
+													// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
+	if (!ph_RCSA) {
+		ph_RCSA = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
+	}
+	if (!ph_RCSB) {
+		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
+	}
+
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
 	th_hover[1] = CreateThruster (_V( 0.01, -2.0, 0.0), _V( 0,1,0), 0,          ph_Asc, 0);		// this is a "virtual engine",no thrust and no fuel
