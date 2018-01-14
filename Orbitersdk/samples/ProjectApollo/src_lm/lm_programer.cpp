@@ -65,11 +65,35 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 		case 7:	//RCS Press Fire Reset
 			lem->EDHePressRCS.SetState(0);
 			break;
+		case 12: //RCS Thruster Isol Valve 1A Open
+			lem->RCSQuad1ACmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 13: //RCS Thruster Isol Valve 1A Open Reset
+			lem->RCSQuad1ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 14: //RCS Thruster Isol Valve 3A Open
+			lem->RCSQuad3ACmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 15: //RCS Thruster Isol Valve 3A Open Reset
+			lem->RCSQuad3ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
 		case 22: //Abort Stage Fire
 			lem->AbortStageSwitch.SetState(0);
 			break;
 		case 23: //Abort Stage Fire Reset
 			lem->AbortStageSwitch.SetState(1);
+			break;
+		case 28: //RCS Thruster Isol Valve 1B Open
+			lem->RCSQuad1BCmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 29: //RCS Thruster Isol Valve 1B Open Reset
+			lem->RCSQuad1BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 30: //RCS Thruster Isol Valve 3B Open
+			lem->RCSQuad3BCmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 31: //RCS Thruster Isol Valve 3B Open Reset
+			lem->RCSQuad3BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
 		case 60: //RCS ASC Feed A Open
 			lem->RCSAscFeed1ASwitch.SetState(THREEPOSSWITCH_UP);
@@ -108,17 +132,65 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 			break;
 		case 91: //LM/SLA Sep Fire Reset
 			break;
+		case 92: //RCS Thruster Isol Valve 1A Close
+			lem->RCSQuad1ACmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 93: //RCS Thruster Isol Valve 1A Close Reset
+			lem->RCSQuad1ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 94: //RCS Thruster Isol Valve 3A Close
+			lem->RCSQuad3ACmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 95: //RCS Thruster Isol Valve 3A Close Reset
+			lem->RCSQuad3ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 108: //RCS Thruster Isol Valve 1B Close
+			lem->RCSQuad1BCmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 109: //RCS Thruster Isol Valve 1B Close Reset
+			lem->RCSQuad1BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 110: //RCS Thruster Isol Valve 3B Close
+			lem->RCSQuad3BCmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 111: //RCS Thruster Isol Valve 3B Close Reset
+			lem->RCSQuad3BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 120: //RCS Thruster Isol Valve 2B Close
+			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 121: //RCS Thruster Isol Valve 2B Close Reset
+			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
 		case 134: //APS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_UP);
 			break;
 		case 135: //APS Arm Reset
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
+		case 136: //RCS Thruster Isol Valve 2B Open
+			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 137: //RCS Thruster Isol Valve 2B Open Reset
+			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
 		case 150: //DPS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_DOWN);
 			break;
 		case 151: //DPS Reset
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 152: //RCS Thruster Isol Valve 2A Open
+			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 153: //RCS Thruster Isol Valve 2A Open Reset
+			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 168: //RCS Thruster Isol Valve 2A Close
+			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 169: //RCS Thruster Isol Valve 2A Close Reset
+			lem->RCSQuad2ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
 		case 172: //RCS Main A Closed
 			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_DOWN);
@@ -132,6 +204,12 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 		case 175: //RCS Main B Closed Reset
 			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
+		case 184: //RCS Thruster Isol Valve 4B Open
+			lem->RCSQuad4BCmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 185: //RCS Thruster Isol Valve 4B Open Reset
+			lem->RCSQuad4BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
 		case 188: //RCS Main A Open
 			lem->RCSMainSovASwitch.SetState(THREEPOSSWITCH_UP);
 			break;
@@ -143,6 +221,36 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 			break;
 		case 191: //RCS Main B Open Reset
 			lem->RCSMainSovBSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 200: //RCS Thruster Isol Valve 4B Close
+			lem->RCSQuad4BCmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 201: //RCS Thruster Isol Valve 4B Close Reset
+			lem->RCSQuad4BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 216: //RCS Thruster Isol Valve 4A Open
+			lem->RCSQuad4ACmdEnableSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 217: //RCS Thruster Isol Valve 4A Open Reset
+			lem->RCSQuad4ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 232: //RCS Thruster Isol Valve 4A Close
+			lem->RCSQuad4ACmdEnableSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 233: //RCS Thruster Isol Valve 4A Close Reset
+			lem->RCSQuad4ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 252: //RCS X-Feed Open
+			lem->RCSXFeedSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 253: //RCS X-Feed Open Reset
+			lem->RCSXFeedSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 254: //RCS X-Feed Close
+			lem->RCSXFeedSwitch.SetState(THREEPOSSWITCH_DOWN);
+			break;
+		case 255: //RCS X-Feed Close Reset
+			lem->RCSXFeedSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
 		default:
 			break;
