@@ -51,7 +51,6 @@
 #include "scs.h"
 #include "csm_telecom.h"
 #include "sps.h"
-#include "mcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
 #include "ORDEAL.h"

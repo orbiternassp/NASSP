@@ -37,6 +37,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "lm_channels.h"
+#include "mcc.h"
 
 #include "LEM.h"
 #include "tracer.h"
@@ -333,6 +334,8 @@ void LEM::Init()
 	lpdgext = -1;
 	fwdhatch = -1;
 	ovhdhatch = -1;
+
+	pMCC = NULL;
 
 	//
 	// VAGC Mode settings
@@ -651,6 +654,26 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
+	}
+
+	// MCC CAPCOM interface key handling                                                                                                
+	if (down && !KEYMOD_SHIFT(keystate)) {
+		switch (key) {
+		case OAPI_KEY_TAB:
+		case OAPI_KEY_1:
+		case OAPI_KEY_2:
+		case OAPI_KEY_3:
+		case OAPI_KEY_4:
+		case OAPI_KEY_5:
+		case OAPI_KEY_6:
+		case OAPI_KEY_7:
+		case OAPI_KEY_8:
+		case OAPI_KEY_9:
+		case OAPI_KEY_0:
+			if (pMCC != NULL)
+				pMCC->keyDown(key);
+			break;
+		}
 	}
 
 	switch (key) {
@@ -1332,6 +1355,19 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 	oapiCloseFile(hFile, FILE_IN);
 }
 
+void LEM::clbkPostCreation()
+{
+	//Find MCC, if it exists
+	hMCC = oapiGetVesselByName("MCC");
+	if (hMCC != NULL) {
+		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
+		if (pVessel) {
+			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17)
+				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
+		}
+		else pMCC = NULL;
+	}
+}
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 

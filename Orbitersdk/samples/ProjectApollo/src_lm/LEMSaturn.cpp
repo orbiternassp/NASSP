@@ -554,6 +554,8 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 void LEMSaturn::clbkPostCreation()
 {
+	LEM::clbkPostCreation();
+
 	SetAnimation(panelAnim, panelProc);
 }
 

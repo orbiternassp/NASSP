@@ -552,6 +552,7 @@ public:
 	void clbkSaveState (FILEHANDLE scn);
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
+	void clbkPostCreation();
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
@@ -1653,6 +1654,12 @@ protected:
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
+
+	//
+	// Ground Systems
+	//
+	MCC *pMCC;
+	OBJHANDLE hMCC;
 
 	// ChecklistController
 	ChecklistController checkControl;
