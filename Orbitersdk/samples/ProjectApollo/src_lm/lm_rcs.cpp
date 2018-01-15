@@ -134,7 +134,7 @@ void RCSPropellantSource::Timestep(double simt, double simdt)
 
 		double APSOxidPressure, APSFuelPressure, FuelPressure, OxidPressure, XFeedOxidPressure, XFeedFuelPressure;
 
-		if (mainShutoffValve.IsOpen())
+		if (mainShutoffValve.IsOpen() && p > 0)
 		{
 			OxidPressure = FuelPressure = regulatorPressurePSI - 9.0;
 		}

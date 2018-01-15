@@ -6878,6 +6878,19 @@ char* RTCC::SunburstAttitudeManeuver(VECTOR3 imuangles)
 	int emem[3];
 	char* list = new char[1000];
 
+	if (imuangles.x > PI)
+	{
+		imuangles.x -= PI2;
+	}
+	if (imuangles.y > PI)
+	{
+		imuangles.y -= PI2;
+	}
+	if (imuangles.z > PI)
+	{
+		imuangles.z -= PI2;
+	}
+
 	emem[0] = OrbMech::DoubleToBuffer(imuangles.x / PI, 0, 1);
 	emem[1] = OrbMech::DoubleToBuffer(imuangles.y / PI, 0, 1);
 	emem[2] = OrbMech::DoubleToBuffer(imuangles.z / PI, 0, 1);
