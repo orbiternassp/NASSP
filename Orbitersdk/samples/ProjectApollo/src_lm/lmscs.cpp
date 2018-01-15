@@ -778,6 +778,7 @@ void ATCA::Timestep(double simt, double simdt){
 		if(jet_request[x] == 1 && jet_last_request[x] == 0){
 			// New fire request
 			jet_start[x] = simt;
+			jet_stop[x] = 0;
 		}else if(jet_request[x] == 0 && jet_last_request[x] == 1){
 			// New stop request
 			jet_stop[x] = simt;
