@@ -1381,6 +1381,15 @@ void LEM::JoystickTimestep(double simdt)
 			ttca_throttle_pos_dig = 0;
 		}
 
+		//LM Programer
+		if (HasProgramer)
+		{
+			if (lmp.GetPlusXTrans())
+			{
+				val31[PlusX] = 1;
+			}
+		}
+
 		// Write back channel data
 		agc.SetInputChannel(031, val31);
 	}

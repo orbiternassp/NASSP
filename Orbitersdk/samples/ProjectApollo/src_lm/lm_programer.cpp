@@ -34,6 +34,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 LEM_Programer::LEM_Programer()
 {
 	lem = NULL;
+
+	for (int i = 0; i < 128;i++)
+	{
+		Relays[i] = false;
+	}
 }
 
 void LEM_Programer::Init(LEM *l)
@@ -163,10 +168,10 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
 		case 128: //X-Trans On
-			lem->agc.SetInputChannelBit(031, 6, true);
+			Relays[64] = true;
 			break;
 		case 129: //X-Trans Off
-			lem->agc.SetInputChannelBit(031, 6, false);
+			Relays[64] = false;
 			break;
 		case 134: //APS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_UP);
