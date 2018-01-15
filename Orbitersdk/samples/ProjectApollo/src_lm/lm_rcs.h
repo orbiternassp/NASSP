@@ -132,6 +132,7 @@ protected:
 	bool voltageDiscreteDetector[2];
 	bool thrusterTCP[2];
 	int pulseCounter[2];
+	bool pulseFlag[2];
 	bool resetSignal;
 
 	//Flip-Flop
