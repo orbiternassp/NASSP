@@ -1013,10 +1013,28 @@ void MCC::TimeStep(double simdt){
 				case 3:
 					if (lm->GetMissionTime() > 0.0)
 					{
-						setSubState(4);
+						setState(MST_B_COASTING);
 					}
 					break;
 				}
+				break;
+			case MST_B_COASTING:
+				if (lm->GetMissionTime() > 8.0*3600.0 + 52.0*60.0 + 10.0)
+				{
+					setState(MST_B_RCS_TESTS1);
+				}
+				break;
+			case MST_B_RCS_TESTS1:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 8.0 * 3600.0 + 52.0 * 60.0 + 30.0, 1, MST_B_RCS_TESTS2);
+				break;
+			case MST_B_RCS_TESTS2:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 8.0 * 3600.0 + 52.0 * 60.0 + 40.0, 2, MST_B_RCS_TESTS3);
+				break;
+			case MST_B_RCS_TESTS3:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 8.0 * 3600.0 + 58.0 * 60.0, 3, MST_B_RCS_TESTS4);
+				break;
+			case MST_B_RCS_TESTS4:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 46.0 * 60.0 + 10.0, 4, MST_B_RCS_TESTS5);
 				break;
 			}
 			break;
@@ -2102,6 +2120,11 @@ int MCC::subThread(){
 	{
 		Sleep(5000); // Waste 5 seconds
 		Result = 0;  // Success (negative = error)
+	}
+	else if (MissionType == MTP_B)
+	{
+		subThreadMacro(subThreadType, subThreadMode);
+		Result = 0;
 	}
 	else if (MissionType == MTP_D)
 	{
@@ -3772,6 +3795,45 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			break;
 		}
 	}
+	else if (type == UTP_LGCUPLINKDIRECT)//Uplink for unmanned mission
+	{
+		switch (SubState) {
+		case 0:
+			startSubthread(updatenumber, type); // Start subthread to fill PAD
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1) {
+				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+				setSubState(2);
+			}
+			break;
+		case 2: // Ready for uplink
+			if (SubStateTime > 1) {
+				// The uplink should also be ready, so flush the uplink buffer to the LGC
+				this->LM_uplink_buffer();
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
+				setSubState(3);
+			}
+			break;
+		case 3: // Await uplink completion
+			if (lm->VHF.mcc_size == 0) {
+				addMessage("Uplink completed!");
+				setSubState(4);
+			}
+			break;
+		case 4: // Await next update
+			if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -3916,6 +3978,16 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm);
 		// Done filling form, OK to show
 		padState = 0;
+	}
+	else if (type == UTP_LGCUPLINKDIRECT)
+	{
+		// Ask RTCC for numbers
+		// Do math
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushLGCUplinkString(upString);
+		}
 	}
 	else if (type == UTP_NONE)
 	{

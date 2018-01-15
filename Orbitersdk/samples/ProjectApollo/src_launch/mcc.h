@@ -158,6 +158,14 @@
 
 // MISSION STATES: MISSION B
 #define MST_B_PRELAUNCH		10
+//Ends at launch, goes to
+#define MST_B_COASTING		11
+//Ends at post-APS-2, goes to
+#define MST_B_RCS_TESTS1		12
+#define MST_B_RCS_TESTS2		13
+#define MST_B_RCS_TESTS3		14
+#define MST_B_RCS_TESTS4		15
+#define MST_B_RCS_TESTS5		16
 
 // MISSION STATES: MISSION C
 #define MST_C_INSERTION		10
@@ -253,6 +261,7 @@
 #define UTP_LUNARENTRY		9
 #define UTP_FINALLUNARENTRY 10
 #define UTP_STARCHKPAD		11
+#define UTP_LGCUPLINKDIRECT	12
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -641,7 +650,7 @@ struct AP11AGSSVPAD
 };
 
 class LEM;
-
+class Saturn;
 
 // Mission Control Center class
 class MCC : public VESSEL4 {

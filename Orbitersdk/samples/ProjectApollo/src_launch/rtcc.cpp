@@ -75,7 +75,11 @@ void RTCC::Init(MCC *ptr)
 bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	bool scrubbed = false;
-	if (mission == MTP_C)
+	if (mission == MTP_B)
+	{
+		scrubbed = CalculationMTP_B(fcn, pad, upString, upDesc);
+	}
+	else if (mission == MTP_C)
 	{
 		scrubbed = CalculationMTP_C(fcn, pad, upString, upDesc);
 	}
@@ -89,6 +93,50 @@ bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char 
 	}
 	return scrubbed;
 }
+
+bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc)
+{
+	char* uplinkdata = new char[1000];
+
+	switch (fcn)
+	{
+	case 1: //RCS BURN 1 ATTITUDE
+		sprintf(uplinkdata, "%s", SunburstAttitudeManeuver(_V(0, 0, 0)));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Attitude for RCS Burn #1");
+		}
+		break;
+	case 2: //CONFIGURE FOR SYSTEM B DEPLETION
+		sprintf(uplinkdata, "%s", SunburstLMPCommand(168));//, SunburstLMPCommand(232));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Configure for RCS system B depletion");
+		}
+		break;
+	case 3: //PLUS X TRANSLATION ON
+		sprintf(uplinkdata, "%s", SunburstLMPCommand(128));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "RCS +X translation on");
+		}
+		break;
+	case 4: //PLUS X TRANSLATION OFF
+		sprintf(uplinkdata, "%s", SunburstLMPCommand(129));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "RCS +X translation off");
+		}
+		break;
+	}
+
+	return false;
+}
+
 
 bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
@@ -6703,6 +6751,33 @@ char* RTCC::V71Update(int *emem, int n)
 		sprintf(list, "%s%dE", list, emem[i]);
 	}
 	sprintf(list, "%sV33E", list);
+	return list;
+}
+
+char* RTCC::SunburstAttitudeManeuver(VECTOR3 imuangles)
+{
+	int emem[3];
+	char* list = new char[1000];
+
+	emem[0] = OrbMech::DoubleToBuffer(imuangles.x / PI2, 1, 0);
+	emem[1] = OrbMech::DoubleToBuffer(imuangles.y / PI2, 1, 0);
+	emem[2] = OrbMech::DoubleToBuffer(imuangles.z / PI2, 1, 0);
+
+	sprintf(oapiDebugString(), "%d %d %d", emem[0], emem[1], emem[2]);
+
+	sprintf(list, "V21N1E372E0EV25N1E1631E%dE%dE%dEV25N26E20001E2067E70063EV30ER", emem[0], emem[1], emem[2]);
+
+	return list;
+}
+
+char* RTCC::SunburstLMPCommand(int code)
+{
+	char* list = new char[1000];
+
+	sprintf(list, "V67E%oEV33ER", code);
+
+	sprintf(oapiDebugString(), "%s", list);
+
 	return list;
 }
 
