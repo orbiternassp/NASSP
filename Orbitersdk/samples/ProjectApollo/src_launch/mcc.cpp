@@ -1031,10 +1031,46 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 8.0 * 3600.0 + 52.0 * 60.0 + 40.0, 2, MST_B_RCS_TESTS3);
 				break;
 			case MST_B_RCS_TESTS3:
-				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 8.0 * 3600.0 + 58.0 * 60.0, 3, MST_B_RCS_TESTS4);
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0, 3, MST_B_RCS_TESTS4);
 				break;
 			case MST_B_RCS_TESTS4:
-				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 46.0 * 60.0 + 10.0, 4, MST_B_RCS_TESTS5);
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 20.0, 4, MST_B_RCS_TESTS5);
+				break;
+			case MST_B_RCS_TESTS5:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 46.0 * 60.0 + 5.0, 5, MST_B_RCS_TESTS6);
+				break;
+			case MST_B_RCS_TESTS6:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 46.0 * 60.0 + 35.0, 6, MST_B_RCS_TESTS7);
+				break;
+			case MST_B_RCS_TESTS7:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 9.0 * 3600.0 + 47.0 * 60.0 + 20.0, 3, MST_B_RCS_TESTS8);
+				break;
+			case MST_B_RCS_TESTS8:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 11.0 * 3600.0 + 27.0 * 60.0 + 35.0, 4, MST_B_RCS_TESTS9);
+				break;
+			case MST_B_RCS_TESTS9:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 11.0 * 3600.0 + 28.0 * 60.0 + 20.0, 3, MST_B_RCS_TESTS10);
+				break;
+			case MST_B_RCS_TESTS10:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 11.0 * 3600.0 + 31.0 * 60.0 + 20.0, 4, MST_B_RCS_TESTS11);
+				break;
+			case MST_B_RCS_TESTS11:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 11.0 * 3600.0 + 31.0 * 60.0 + 30.0, 3, MST_B_RCS_TESTS12);
+				break;
+			case MST_B_RCS_TESTS12:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 12.0 * 3600.0 + 51.0 * 60.0, 4, MST_B_RCS_TESTS13);
+				break;
+			case MST_B_RCS_TESTS13:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 12.0 * 3600.0 + 51.0 * 60.0 + 20.0, 7, MST_B_RCS_TESTS14);
+				break;
+			case MST_B_RCS_TESTS14:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 12.0 * 3600.0 + 51.0 * 60.0 + 50.0, 8, MST_B_RCS_TESTS15);
+				break;
+			case MST_B_RCS_TESTS15:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, lm->GetMissionTime() > 12.0 * 3600.0 + 52.0 * 60.0 + 15.0, 9, MST_B_RCS_TESTS16);
+				break;
+			case MST_B_RCS_TESTS16:
+				UpdateMacro(UTP_LGCUPLINKDIRECT, false, 3, MST_B_RCS_TESTS17);
 				break;
 			}
 			break;

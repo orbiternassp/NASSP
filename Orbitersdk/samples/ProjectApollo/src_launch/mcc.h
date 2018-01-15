@@ -161,11 +161,23 @@
 //Ends at launch, goes to
 #define MST_B_COASTING		11
 //Ends at post-APS-2, goes to
-#define MST_B_RCS_TESTS1		12
-#define MST_B_RCS_TESTS2		13
-#define MST_B_RCS_TESTS3		14
-#define MST_B_RCS_TESTS4		15
-#define MST_B_RCS_TESTS5		16
+#define MST_B_RCS_TESTS1		100
+#define MST_B_RCS_TESTS2		101
+#define MST_B_RCS_TESTS3		102
+#define MST_B_RCS_TESTS4		103
+#define MST_B_RCS_TESTS5		104
+#define MST_B_RCS_TESTS6		105
+#define MST_B_RCS_TESTS7		106
+#define MST_B_RCS_TESTS8		107
+#define MST_B_RCS_TESTS9		108
+#define MST_B_RCS_TESTS10		109
+#define MST_B_RCS_TESTS11		110
+#define MST_B_RCS_TESTS12		111
+#define MST_B_RCS_TESTS13		112
+#define MST_B_RCS_TESTS14		113
+#define MST_B_RCS_TESTS15		114
+#define MST_B_RCS_TESTS16		115
+#define MST_B_RCS_TESTS17		116
 
 // MISSION STATES: MISSION C
 #define MST_C_INSERTION		10
@@ -619,6 +631,9 @@ struct AP11LMMNV {
 	char remarks[128];	// remarks
 	double LMWeight;	// Vehicle weight
 	double CSMWeight;	// CSM weight
+
+	//Not part of the PAD
+	VECTOR3 IMUAtt;		// Inertial Attitude at TIG
 };
 
 // APOLLO 11 PDI PAD

@@ -751,6 +751,7 @@ private:
 	char* V71Update(int* emem, int n);
 	char* SunburstAttitudeManeuver(VECTOR3 imuangles);
 	char* SunburstLMPCommand(int code);
+	char* SunburstMassUpdate(double masskg);
 	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
