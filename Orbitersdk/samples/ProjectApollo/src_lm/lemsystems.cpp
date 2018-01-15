@@ -1523,14 +1523,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	APS.TimeStep(simdt);
 	RCSA.Timestep(simt, simdt);
 	RCSB.Timestep(simt, simdt);
-	tca1A.Timestep();
-	tca2A.Timestep();
-	tca3A.Timestep();
-	tca4A.Timestep();
-	tca1B.Timestep();
-	tca2B.Timestep();
-	tca3B.Timestep();
-	tca4B.Timestep();
+	tca1A.Timestep(simdt);
+	tca2A.Timestep(simdt);
+	tca3A.Timestep(simdt);
+	tca4A.Timestep(simdt);
+	tca1B.Timestep(simdt);
+	tca2B.Timestep(simdt);
+	tca3B.Timestep(simdt);
+	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
 	// Do this toward the end so we can see current system state

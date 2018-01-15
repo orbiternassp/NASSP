@@ -447,10 +447,11 @@ RCS_TCA::RCS_TCA(int jdsa, int jdcirc1, int jdcirc2, int tcpsa1, int tcpcirc1, i
 {
 	for (int i = 0;i < 2;i++)
 	{
-		voltageDiscreteDetector[i] = false;
+		jetDriverSignal[i] = false;
 		thrusterTCP[i] = false;
 		pulseCounter[i] = 0;
 		pulseFlag[i] = false;
+		failTimer[i] = 0.0;
 	}
 
 	jetDriverSA = jdsa;
@@ -472,7 +473,7 @@ void RCS_TCA::Init(LEM *l, int rsetcirc)
 	resetChannel = rsetcirc;
 }
 
-void RCS_TCA::Timestep()
+void RCS_TCA::Timestep(double simdt)
 {
 	if (lem == NULL) return;
 
@@ -481,12 +482,12 @@ void RCS_TCA::Timestep()
 	for (int i = 0;i < 2;i++)
 	{
 		//Is there a thruster demand?
-		voltageDiscreteDetector[i] = lem->scera1.GetVoltage(jetDriverSA, jetDriverCircuit[i]) > 2.5;
+		jetDriverSignal[i] = lem->scera1.GetVoltage(jetDriverSA, jetDriverCircuit[i]) > 2.5;
 		//Is the thruster on?
 		thrusterTCP[i] = lem->scera1.GetVoltage(thrustChamberPressureSA[i], thrustChamberPressureCircuit[i]) > 2.5;
 
 		//Only allow individual thruster commands to count as a pulse
-		if (pulseFlag[i] && !voltageDiscreteDetector[i])
+		if (pulseFlag[i] && !jetDriverSignal[i])
 		{
 			pulseFlag[i] = false;
 		}
@@ -496,10 +497,19 @@ void RCS_TCA::Timestep()
 			pulseCounter[i] = 0;
 			pulseFlag[i] = false;
 		}
-		else if (voltageDiscreteDetector[i] && !pulseFlag[i])
+		else if (jetDriverSignal[i] && !pulseFlag[i])
 		{
 			pulseCounter[i]++;
 			pulseFlag[i] = true;
+		}
+
+		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i])
+		{
+			failTimer[i] += simdt;
+		}
+		else
+		{
+			failTimer[i] = 0.0;
 		}
 	}
 
@@ -509,7 +519,7 @@ void RCS_TCA::Timestep()
 	{
 		TCAFailure.Reset();
 	}
-	else if (pulseCounter[0] >= 6 || pulseCounter[1] >= 6)
+	else if (pulseCounter[0] >= 6 || pulseCounter[1] >= 6 || failTimer[0] > 0.08 || failTimer[1] > 0.08)
 	{
 		TCAFailure.Set();
 	}

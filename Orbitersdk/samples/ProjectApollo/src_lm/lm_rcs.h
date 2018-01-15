@@ -122,17 +122,18 @@ class RCS_TCA
 public:
 	RCS_TCA(int jdsa, int jdcirc1, int jdcirc2, int tcpsa1, int tcpcirc1, int tcps2, int tcpcirc2);
 	void Init(LEM *l, int rsetcirc);
-	void Timestep();
+	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	TCA_FlipFlop *GetTCAFailureFlipFlop() { return &TCAFailure; }
 	bool GetTCAFailure() { return TCAFailure.IsSet(); }
 protected:
-	bool voltageDiscreteDetector[2];
+	bool jetDriverSignal[2];
 	bool thrusterTCP[2];
 	int pulseCounter[2];
 	bool pulseFlag[2];
+	double failTimer[2];
 	bool resetSignal;
 
 	//Flip-Flop
