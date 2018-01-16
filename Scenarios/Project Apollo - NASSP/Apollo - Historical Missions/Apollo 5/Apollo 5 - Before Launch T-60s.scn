@@ -954,9 +954,9 @@ DEDA_END
       <PYRO>  Staging-Nuts-Pyros 0 0.0000
       <PYRO>  Cable-Cutting-Pyros 0 0.0000
       <PYRO>  Descent-Prop-Vent-Pyros 0 0.0000
-      <PYRO>  Descent-Engine-Start-Pyros 0 0.0000
+      <PYRO>  Descent-Engine-Start-Pyros 1 100.1677
       <PYRO>  Descent-Engine-On-Pyros 0 0.0000
-      <PYRO>  Descent-Prop-Isol-Pyros 0 0.0000
+      <PYRO>  Descent-Prop-Isol-Pyros 1 106.3954
       <PYRO>  Ascent-Helium-Isol1-Pyros 0 0.0000
       <PYRO>  Ascent-Helium-Isol2-Pyros 0 0.0000
       <PYRO>  Ascent-Oxid-Comp-Valve-Pyros 0 0.0000
