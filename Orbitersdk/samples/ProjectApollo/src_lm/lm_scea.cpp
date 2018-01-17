@@ -310,17 +310,17 @@ void SCERA1::Timestep()
 	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
 
 	//RCS thrust chamber pressure A2A (GR5041)
-	SA3.SetOutput(3, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A2A]) > 0.5);
+	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.5);
 	//RCS thrust chamber pressure B2L (GR5042)
-	SA3.SetOutput(4, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B2L]) > 0.5);
+	SA3.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_B2L) > 0.5);
 	//RCS thrust chamber pressure A1U (GR5043)
-	SA3.SetOutput(5, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A1U]) > 0.5);
+	SA3.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A1U) > 0.5);
 	//RCS thrust chamber pressure B1D (GR5044)
-	SA3.SetOutput(6, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B1D]) > 0.5);
+	SA3.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B1D) > 0.5);
 	//RCS thrust chamber pressure A1F (GR5045)
-	SA3.SetOutput(7, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A1F]) > 0.5);
+	SA3.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_A1F) > 0.5);
 	//RCS thrust chamber pressure B1L (GR5046)
-	SA3.SetOutput(8, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B1L]) > 0.5);
+	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.5);
 
 	//Jet Driver B4U Output (GH1418V)
 	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
@@ -388,25 +388,25 @@ void SCERA1::Timestep()
 	SA10.SetOutput(4, scale_data(lem->DPSPropellant.GetOxidizerTank2BulkTempF(), 20.0, 120.0));
 
 	//RCS thrust chamber pressure B4U (GR5031)
-	SA11.SetOutput(1, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B4U]) > 0.5);
+	SA11.SetOutput(1, lem->GetRCSThrusterLevel(LMRCS_B4U) > 0.5);
 	//RCS thrust chamber pressure A4D (GR5032)
-	SA11.SetOutput(2, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A4D]) > 0.5);
+	SA11.SetOutput(2, lem->GetRCSThrusterLevel(LMRCS_A4D) > 0.5);
 	//RCS thrust chamber pressure B4F (GR5033)
-	SA11.SetOutput(3, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B4F]) > 0.5);
+	SA11.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_B4F) > 0.5);
 	//RCS thrust chamber pressure A4R (GR5034)
-	SA11.SetOutput(4, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A4R]) > 0.5);
+	SA11.SetOutput(4, lem->GetRCSThrusterLevel(LMRCS_A4R) > 0.5);
 	//RCS thrust chamber pressure A3U (GR5035)
-	SA11.SetOutput(5, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A3U]) > 0.5);
+	SA11.SetOutput(5, lem->GetRCSThrusterLevel(LMRCS_A3U) > 0.5);
 	//RCS thrust chamber pressure B3D (GR5036)
-	SA11.SetOutput(6, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B3D]) > 0.5);
+	SA11.SetOutput(6, lem->GetRCSThrusterLevel(LMRCS_B3D) > 0.5);
 	//RCS thrust chamber pressure B3A (GR5037)
-	SA11.SetOutput(7, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B3A]) > 0.5);
+	SA11.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_B3A) > 0.5);
 	//RCS thrust chamber pressure A3R (GR5038)
-	SA11.SetOutput(8, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A3R]) > 0.5);
+	SA11.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_A3R) > 0.5);
 	//RCS thrust chamber pressure B2U (GR5039)
-	SA11.SetOutput(9, lem->GetThrusterLevel(lem->th_rcs[LMRCS_B2U]) > 0.5);
+	SA11.SetOutput(9, lem->GetRCSThrusterLevel(LMRCS_B2U) > 0.5);
 	//RCS thrust chamber pressure A2D (GR5040)
-	SA11.SetOutput(10, lem->GetThrusterLevel(lem->th_rcs[LMRCS_A2D]) > 0.5);
+	SA11.SetOutput(10, lem->GetRCSThrusterLevel(LMRCS_A2D) > 0.5);
 
 	//Main shutoff valves closed, system A (GR9609)
 	SA12.SetOutput(1, !lem->RCSA.GetMainShutoffValve()->IsOpen());

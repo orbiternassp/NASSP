@@ -965,6 +965,26 @@ void IUToLVCommandConnector::SetStage(int stage)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::JettisonNosecap()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_NOSECAP_JETTISON;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::DeploySLAPanel()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEPLOY_SLA_PANEL;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::AddRCS_S4B()
 
 {
@@ -1566,6 +1586,12 @@ void IU1B::SwitchSelector(int item)
 	case 53: //Flight Control Computer S-IVB Burn Mode On "A"
 		fcc.SetStageSwitch(2);
 		fcc.SetSIVBBurnMode(true);
+		break;
+	case 110: //Nose Cone Jettison (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.JettisonNosecap();
+		break;
+	case 111: //SLA Panel Deployment (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.DeploySLAPanel();
 		break;
 	default:
 		break;

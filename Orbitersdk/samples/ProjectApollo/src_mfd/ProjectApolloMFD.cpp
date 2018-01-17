@@ -39,6 +39,7 @@
 #include "IMU.h"
 #include "saturn.h"
 #include "LEM.h"
+#include "LEMSaturn.h"
 #include "Crawler.h"
 #include "sivb.h"
 #include "iu.h"
@@ -267,6 +268,14 @@ void send_agc_key(char key)	{
 			cmdbuf[1] = 0301;
 			cmdbuf[2] = 0360;
 			break;
+		case 'S': // 11-001-101 10-010-011 (code 23)
+			cmdbuf[1] = 0315;
+			cmdbuf[2] = 0223;
+			break;
+		case 'T': // 11-010-001 01-110-100 (code 24)
+			cmdbuf[1] = 0321;
+			cmdbuf[2] = 0164;
+			break;
 	}
 	for (int i = 0; i < 3; i++) {
 		g_Data.uplinkBuffer.push(cmdbuf[i]);
@@ -422,6 +431,76 @@ void UpdateClock()
 	}
 }
 
+void UplinkSunburstSuborbitalAbort()
+{
+	g_Data.uplinkDataReady = 2;
+
+	if (g_Data.connStatus == 0)
+	{
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+
+		send_agc_key('S');
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+	}
+}
+
+void UplinkSunburstCOI()
+{
+	g_Data.uplinkDataReady = 2;
+
+	if (g_Data.connStatus == 0)
+	{
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+
+		send_agc_key('T');
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+	}
+}
+
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
@@ -491,7 +570,9 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			g_Data.planet = crawler->GetGravityRef();
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
@@ -1451,7 +1532,7 @@ void ProjectApolloMFD::menuSetECSPage()
 
 void ProjectApolloMFD::menuSetIUPage()
 {
-	if (saturn != NULL)
+	if (saturn != NULL || lem != NULL)
 	{
 		screen = PROG_IU;
 		m_buttonPages.SelectPage(this, screen);
@@ -1585,6 +1666,22 @@ void ProjectApolloMFD::menuClockUpdate()
 	}
 }
 
+void ProjectApolloMFD::menuSunburstSuborbitalAbort()
+{
+	if (lem && lem->ApolloNo == 5) {
+		g_Data.uplinkLEM = 1;
+		UplinkSunburstSuborbitalAbort();
+	}
+}
+
+void ProjectApolloMFD::menuSunburstCOI()
+{
+	if (lem && lem->ApolloNo == 5) {
+		g_Data.uplinkLEM = 1;
+		UplinkSunburstCOI();
+	}
+}
+
 void ProjectApolloMFD::menuSetSource()
 {
 	if (g_Data.uplinkDataReady == 0) {
@@ -1694,6 +1791,13 @@ void ProjectApolloMFD::menuIUUplink()
 		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
 		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 		Saturn *iuv = (Saturn *)g_Data.iuVessel;
+
+		iu = iuv->GetIU();
+	}
+	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/LEMSaturn"))
+	{
+		LEMSaturn *iuv = (LEMSaturn *)g_Data.iuVessel;
 
 		iu = iuv->GetIU();
 	}

@@ -55,6 +55,7 @@ static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
 static MESHHANDLE hFwdHatch;
 static MESHHANDLE hOvhdHatch;
+static MESHHANDLE hLM1;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -182,7 +183,15 @@ void LEM::SetLmVesselDockStage()
 
 	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
 
-	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
+	UINT meshidx;
+	if (NoLegs)
+	{
+		meshidx = AddMesh(hLM1, &mesh_dir);
+	}
+	else
+	{
+		meshidx = AddMesh(hLMPKD, &mesh_dir);
+	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	
 	// Forward Hatch
@@ -313,13 +322,21 @@ void LEM::SetLmVesselHoverStage()
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx;
-	if (Landed) {
-		meshidx = AddMesh (hLMLanded, &mesh_dir);
-	}else{
-		UINT probeidx;
-		meshidx = AddMesh (hLMLanded, &mesh_dir);
-		probeidx = AddMesh (hLemProbes, &mesh_dir);
-		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
+	if (NoLegs)
+	{
+		meshidx = AddMesh(hLM1, &mesh_dir);
+	}
+	else
+	{
+		if (Landed) {
+			meshidx = AddMesh(hLMLanded, &mesh_dir);
+		}
+		else {
+			UINT probeidx;
+			meshidx = AddMesh(hLMLanded, &mesh_dir);
+			probeidx = AddMesh(hLemProbes, &mesh_dir);
+			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
+		}
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -481,6 +498,15 @@ void LEM::SetLmAscentHoverStage()
 		SetPropellantMaxMass(ph_Asc, AscentFuelMassKg);
 	}
 	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
+
+													// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
+	if (!ph_RCSA) {
+		ph_RCSA = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
+	}
+	if (!ph_RCSB) {
+		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
+	}
+
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
 	th_hover[1] = CreateThruster (_V( 0.01, -2.0, 0.0), _V( 0,1,0), 0,          ph_Asc, 0);		// this is a "virtual engine",no thrust and no fuel
@@ -611,6 +637,9 @@ void LEM::SetLmLandedMesh() {
 
 void LEM::SetLPDMesh() {
 	
+	if (lpdgret == -1)
+		return;
+
 	if (stage == 0 || stage == 2) {
 		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 			SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
@@ -632,6 +661,9 @@ void LEM::SetLPDMesh() {
 
 void LEM::SetFwdHatchMesh() {
 	
+	if (fwdhatch == -1)
+		return;
+
 	if (ForwardHatch.IsOpen()) {
 		SetMeshVisibilityMode(fwdhatch, MESHVIS_NEVER);
 	}
@@ -641,6 +673,9 @@ void LEM::SetFwdHatchMesh() {
 }
 
 void LEM::SetOvhdHatchMesh() {
+
+	if (ovhdhatch == -1)
+		return;
 
 	if (OverheadHatch.IsOpen()) {
 		SetMeshVisibilityMode(ovhdhatch, MESHVIS_NEVER);
@@ -665,6 +700,7 @@ void LEMLoadMeshes()
 	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_FwdHatch");
 	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_Drogue");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	hLM1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 }
 
 //

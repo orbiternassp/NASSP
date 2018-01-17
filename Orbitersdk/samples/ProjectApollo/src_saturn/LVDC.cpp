@@ -1092,6 +1092,32 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					}
 					break;
 				case 8:
+					//TB4+45.0: Nose Cone Jettison (Apollo 5)
+					if (lvCommandConnector->GetApolloNo() == 5)
+					{
+						if (LVDC_TB_ETime > 45.0)
+						{
+							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
+							CommandSequence++;
+						}
+					}
+					else
+						CommandSequence++;
+					break;
+				case 9:
+					//TB4+600.0: SLA Panel Deployment (Apollo 5)
+					if (lvCommandConnector->GetApolloNo() == 5)
+					{
+						if (LVDC_TB_ETime > 600.0)
+						{
+							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 111);
+							CommandSequence++;
+						}
+					}
+					else
+						CommandSequence++;
+					break;
+				case 10:
 					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
 					if (LVDC_TB_ETime > 5052.0)
 					{
@@ -1099,7 +1125,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 						CommandSequence++;
 					}
 					break;
-				case 9:
+				case 11:
 					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
 					if (LVDC_TB_ETime > 5773.0)
 					{
@@ -2167,6 +2193,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_P", K_P);
 	papiWriteScenario_double(scn, "LVDC_D_P", D_P);
 	papiWriteScenario_double(scn, "LVDC_D_Y", D_Y);
+	papiWriteScenario_double(scn, "LVDC_KSCLNG", KSCLNG);
 	papiWriteScenario_double(scn, "LVDC_L_1", L_1);
 	papiWriteScenario_double(scn, "LVDC_L_2", L_2);
 	papiWriteScenario_double(scn, "LVDC_dL_2", dL_2);
@@ -2512,6 +2539,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_P", K_P);
 		papiReadScenario_double(line, "LVDC_D_P", D_P);
 		papiReadScenario_double(line, "LVDC_D_Y", D_Y);
+		papiReadScenario_double(line, "LVDC_KSCLNG", KSCLNG);
 		papiReadScenario_double(line, "LVDC_L_1", L_1);
 		papiReadScenario_double(line, "LVDC_L_2", L_2);
 		papiReadScenario_double(line, "LVDC_dL_2", dL_2);
@@ -2526,7 +2554,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
 		papiReadScenario_double(line, "LVDC_P_2", P_2);
 		papiReadScenario_double(line, "LVDC_PHI", PHI);
-		papiReadScenario_double(line, "LVDC_PHIP", PHI);
+		papiReadScenario_double(line, "LVDC_PHIP", PHIP);
 		papiReadScenario_double(line, "LVDC_phi_T", phi_T);
 		papiReadScenario_double(line, "LVDC_Q_1", Q_1);
 		papiReadScenario_double(line, "LVDC_Q_2", Q_2);
@@ -2670,7 +2698,7 @@ bool LVDC1B::TimebaseUpdate(double dt)
 
 bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 {
-	if (LVDC_Timebase == 4)
+	if (LVDC_Timebase == 3 || LVDC_Timebase == 4)
 	{
 		if (stage >= 0 && stage < 4)
 		{

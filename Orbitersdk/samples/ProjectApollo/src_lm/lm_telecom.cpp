@@ -54,6 +54,7 @@ LM_VHF::LM_VHF(){
 	PCMSECHeat = 0;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
@@ -83,6 +84,7 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 	PCMSECHeat = secpcmh;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
@@ -288,11 +290,35 @@ void LM_VHF::perform_io(double simt){
 		case 0: // UNINITIALIZED
 			break;
 		case 1: // INITALIZED, LISTENING
-			// Try to accept
-			AcceptSocket = accept( m_socket, NULL, NULL );
-			if(AcceptSocket != INVALID_SOCKET){
-				conn_state = 2; // Accept this!
-				wsk_error = 0; // For now
+				// Do we have data from MCC?
+			if (mcc_size > 0) {
+				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
+				// Should we recieve?
+				if ((fabs(simt - last_rx) / 0.05) < 1 || lem->agc.IsUpruptActive()) {
+					return; // No
+				}
+				last_rx = simt;
+				// Yes. Take a byte
+				rx_data[rx_offset] = mcc_data[mcc_offset];
+				mcc_offset++;
+				// If uplink isn't blocked
+				if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+					// Handle it
+					handle_uplink();
+				}
+				// Are we done?
+				if (mcc_offset >= mcc_size) {
+					// We reached the end of the MCC buffer.
+					mcc_offset = mcc_size = 0;
+				}
+			}
+			else {
+				// Try to accept
+				AcceptSocket = accept(m_socket, NULL, NULL);
+				if (AcceptSocket != INVALID_SOCKET) {
+					conn_state = 2; // Accept this!
+					wsk_error = 0; // For now
+				}
 			}
 			// Otherwise loop and try again.
 			break;
@@ -355,6 +381,22 @@ void LM_VHF::perform_io(double simt){
 						uplink_state = 0; rx_offset = 0;
 						break;					
 				}
+				// Do we have data from MCC instead?
+				if (mcc_size > 0) {
+					// Yes. Take a byte
+					rx_data[rx_offset] = mcc_data[mcc_offset];
+					mcc_offset++;
+					// If the telemetry data-path is disconnected, discard the data
+					if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+						// otherwise handle it
+						handle_uplink();
+					}
+					// Are we done?
+					if (mcc_offset >= mcc_size) {
+						// We reached the end of the MCC buffer.
+						mcc_offset = mcc_size = 0;
+					}
+				}
 			}else{
 				// FIXME: Check to make sure the up-data equipment is powered
 				// Reject uplink if switch is not down.
@@ -362,50 +404,71 @@ void LM_VHF::perform_io(double simt){
 					return; // Discard the data
 				}
 				if(bytesRecv > 0){
-					// Have Data
-					switch(uplink_state){
-						case 0: // NEW COMMAND START
-							int va,sa;
-							va = ((rx_data[rx_offset]&070)>>3);
-							sa = rx_data[rx_offset]&07;
-							// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
-							if(va != 03){ break; }
-							switch(sa){
-								case 0: // TEST
-									rx_offset++; uplink_state=10;
-									break;
-								case 1: // LGC-UPDATA
-									rx_offset++; uplink_state=20;
-									break;
-								default:
-									sprintf(oapiDebugString(),"LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o",sa);
-									break;
-							}
-							break;
-						case 10: // TEST CMD
-							rx_offset = 0; uplink_state = 0; break;
-
-						case 20: // LGC UPLINK CMD
-							// Expect another byte
-							rx_offset++; uplink_state++; break;
-						case 21: // LGC UPLINK
-							{
-								int lgc_uplink_wd = rx_data[rx_offset-1];
-								lgc_uplink_wd <<= 8;
-								lgc_uplink_wd |= rx_data[rx_offset];
-								// Move to INLINK
-								lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
-								// Cause UPRUPT
-								lem->agc.GenerateUprupt();
-
-								//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
-								rx_offset = 0; uplink_state = 0;
-							}
-							break;
+					handle_uplink();
+				}
+				else
+				{
+					// Do we have data from MCC instead?
+					if (mcc_size > 0) {
+						// Yes. Take a byte
+						rx_data[rx_offset] = mcc_data[mcc_offset];
+						mcc_offset++;
+						// Handle it
+						handle_uplink();
+						// Are we done?
+						if (mcc_offset >= mcc_size) {
+							// We reached the end of the MCC buffer.
+							mcc_offset = mcc_size = 0;
+						}
 					}
 				}
 			}
 			break;			
+	}
+}
+
+// Handle data moved to buffer from either the socket or mcc buffer
+void LM_VHF::handle_uplink()
+{
+	switch (uplink_state) {
+	case 0: // NEW COMMAND START
+		int va, sa;
+		va = ((rx_data[rx_offset] & 070) >> 3);
+		sa = rx_data[rx_offset] & 07;
+		// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
+		if (va != 03) { break; }
+		switch (sa) {
+		case 0: // TEST
+			rx_offset++; uplink_state = 10;
+			break;
+		case 1: // LGC-UPDATA
+			rx_offset++; uplink_state = 20;
+			break;
+		default:
+			sprintf(oapiDebugString(), "LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o", sa);
+			break;
+		}
+		break;
+	case 10: // TEST CMD
+		rx_offset = 0; uplink_state = 0; break;
+
+	case 20: // LGC UPLINK CMD
+			 // Expect another byte
+		rx_offset++; uplink_state++; break;
+	case 21: // LGC UPLINK
+	{
+		int lgc_uplink_wd = rx_data[rx_offset - 1];
+		lgc_uplink_wd <<= 8;
+		lgc_uplink_wd |= rx_data[rx_offset];
+		// Move to INLINK
+		lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
+		// Cause UPRUPT
+		lem->agc.GenerateUprupt();
+
+		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
+		rx_offset = 0; uplink_state = 0;
+	}
+	break;
 	}
 }
 

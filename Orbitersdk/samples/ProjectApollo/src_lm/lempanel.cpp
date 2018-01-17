@@ -2604,12 +2604,18 @@ void LEM::SetSwitches(int panel) {
 	Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
 	EDMasterArm.Init(861 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesVent.Init(935 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesVent.SetDelayTime(2);
 	EDASCHeSel.Init(571, 62, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesPrpIsol.Init(643 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesPrpIsol.SetDelayTime(2);
 	EDLGDeploy.Init(784 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesPrpIsol.SetDelayTime(2);
 	EDHePressRCS.Init(861 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressRCS.SetDelayTime(2);
 	EDHePressDesStart.Init(935 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressDesStart.SetDelayTime(2);
 	EDHePressASC.Init(1002 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressASC.SetDelayTime(2);
 	EDStage.Init(783 - 431, 1175 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDStage.InitGuard(304, 252, 102, 59, srf[SRF_LEM_STAGESWITCH], srf[SRF_BORDER_34x39]);
 	EDStageRelay.Init(1002 - 431, 1182 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);

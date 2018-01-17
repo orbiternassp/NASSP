@@ -75,6 +75,8 @@ public:
 	void menuAbortUplink();
 	void menuStateVectorUpdate();
 	void menuClockUpdate();
+	void menuSunburstSuborbitalAbort();
+	void menuSunburstCOI();
 	void menuSetSource();
 	void menuSetReference();
 	void menuSetSVSlot();

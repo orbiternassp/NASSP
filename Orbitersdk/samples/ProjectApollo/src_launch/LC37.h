@@ -1,8 +1,8 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005
+  Copyright 2018
 
-  LC34 vessel
+  LC37 vessel
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,11 +27,11 @@
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2 {
+class LC37: public VESSEL2 {
 
 public:
-	LC34(OBJHANDLE hObj, int fmodel);
-	virtual ~LC34();
+	LC37(OBJHANDLE hObj, int fmodel);
+	virtual ~LC37();
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkPostCreation();
@@ -45,20 +45,11 @@ public:
 protected:
 	bool firstTimestepDone;
 	bool abort;
-	int meshindexLUT;
-	int meshindexMSS;
 	double touchdownPointHeight;
 	char LVName[256];
 	SoundLib soundlib;
 	OBJHANDLE hLV;
 	int state;
-
-	UINT mssAnim;
-	UINT cmarmAnim;
-	UINT swingarmAnim;
-	double mssProc;
-	double cmarmProc;
-	double swingarmProc;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
@@ -66,6 +57,4 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
-
-	//VECTOR3 meshoffsetMSS;
 };

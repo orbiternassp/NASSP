@@ -1473,7 +1473,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 46:		// SM HE MANF C PRESS
 							return(scale_data(0,0,400));
 						case 47:		// LM HEATER CURRENT
-							return(scale_data(0,0,10));
+							return(scale_data(sat->LMUmbilicalFeeder.Current(),0,10));
 						case 48:		// PCM HI LEVEL 85 PCT REF
 							return(scale_data(0,0,5));
 						case 49:		// PCM LO LEVEL 15 PCT REF

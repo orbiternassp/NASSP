@@ -156,6 +156,29 @@
 #define MST_LAUNCH_ABORT	901
 // Abort from orbit is handled by mission-specific abort state and goes to entry.
 
+// MISSION STATES: MISSION B
+#define MST_B_PRELAUNCH		10
+//Ends at launch, goes to
+#define MST_B_COASTING		11
+//Ends at post-APS-2, goes to
+#define MST_B_RCS_TESTS1		100
+#define MST_B_RCS_TESTS2		101
+#define MST_B_RCS_TESTS3		102
+#define MST_B_RCS_TESTS4		103
+#define MST_B_RCS_TESTS5		104
+#define MST_B_RCS_TESTS6		105
+#define MST_B_RCS_TESTS7		106
+#define MST_B_RCS_TESTS8		107
+#define MST_B_RCS_TESTS9		108
+#define MST_B_RCS_TESTS10		109
+#define MST_B_RCS_TESTS11		110
+#define MST_B_RCS_TESTS12		111
+#define MST_B_RCS_TESTS13		112
+#define MST_B_RCS_TESTS14		113
+#define MST_B_RCS_TESTS15		114
+#define MST_B_RCS_TESTS16		115
+#define MST_B_RCS_TESTS17		116
+
 // MISSION STATES: MISSION C
 #define MST_C_INSERTION		10
 // Ends at specified time, goes to
@@ -250,6 +273,7 @@
 #define UTP_LUNARENTRY		9
 #define UTP_FINALLUNARENTRY 10
 #define UTP_STARCHKPAD		11
+#define UTP_LGCUPLINKDIRECT	12
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -607,6 +631,9 @@ struct AP11LMMNV {
 	char remarks[128];	// remarks
 	double LMWeight;	// Vehicle weight
 	double CSMWeight;	// CSM weight
+
+	//Not part of the PAD
+	VECTOR3 IMUAtt;		// Inertial Attitude at TIG
 };
 
 // APOLLO 11 PDI PAD
@@ -637,6 +664,8 @@ struct AP11AGSSVPAD
 	double DEDA272; //CSM Epoch Time
 };
 
+class LEM;
+class Saturn;
 
 // Mission Control Center class
 class MCC : public VESSEL4 {
@@ -654,10 +683,13 @@ public:
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
 	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
-	void pushCMCUplinkKey(char key);                        // Send key to CMC
+	void pushAGCUplinkKey(char key, bool cm);               // Send key to AGC
 	void pushUplinkData(unsigned char data);				// Add uplink data word to queue
 	int CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
 	int CM_uplink_buffer();									// Send uplink buffer to CM
+	void pushLGCUplinkString(const char *str);              // Send sequence to LM
+	int LM_uplink(const unsigned char *data, int len);		// Uplink string to LM
+	int LM_uplink_buffer();									// Send uplink buffer to LM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
 	void drawPad();											// Draw PAD display
@@ -676,7 +708,7 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
-	Saturn *lm;												// Pointer to LM
+	LEM *lm;												// Pointer to LM
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
 

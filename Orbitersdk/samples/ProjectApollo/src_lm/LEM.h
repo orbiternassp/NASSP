@@ -536,6 +536,10 @@ public:
 	void SetOvhdHatchMesh();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
+	virtual void PlayCountSound(bool StartStop) {};
+	virtual void PlaySepsSound(bool StartStop) {};
+	virtual void LMSLASeparationFire() {};
+
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
@@ -548,6 +552,11 @@ public:
 	void clbkSaveState (FILEHANDLE scn);
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
+	void clbkPostCreation();
+
+	void GetScenarioState(FILEHANDLE scn, void *vs);
+	void SetGenericStageState(int stat);
+	void PostLoadSetup();
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -588,6 +597,7 @@ public:
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
 	void SetRCSJetLevelPrimary(int jet, double level);
+	double GetRCSThrusterLevel(int jet);
 
 	// DS20160916 Physical parameters updation
 	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
@@ -675,7 +685,7 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	void SeparateStage (UINT stage);
+	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
@@ -706,6 +716,8 @@ protected:
 	// Save/Load support functions.
 	//
 
+	virtual void SaveLEMSaturn(FILEHANDLE scn) {};
+	virtual void LoadLEMSaturn(FILEHANDLE scn) {};
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
 
@@ -1519,6 +1531,7 @@ protected:
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
+	bool NoAEA;
 	bool InvertStageBit;
 
 #define LMVIEW_CDR		0
@@ -1548,6 +1561,7 @@ protected:
 
 	int ApolloNo;
 	int Landed;
+	bool NoLegs;
 
 	//
 	// VAGC Mode settings
@@ -1640,6 +1654,12 @@ protected:
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
+
+	//
+	// Ground Systems
+	//
+	MCC *pMCC;
+	OBJHANDLE hMCC;
 
 	// ChecklistController
 	ChecklistController checkControl;
@@ -1915,6 +1935,7 @@ protected:
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
+	friend class MCC;
 };
 
 extern void LEMLoadMeshes();

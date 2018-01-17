@@ -154,6 +154,7 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
+    <ClCompile Include="..\..\src_lm\LEMSaturn.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
@@ -163,6 +164,16 @@
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_saturn\dcs.cpp" />
+    <ClCompile Include="..\..\src_saturn\eds.cpp" />
+    <ClCompile Include="..\..\src_saturn\FCC.cpp" />
+    <ClCompile Include="..\..\src_saturn\iu.cpp" />
+    <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
+    <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
+    <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
+    <ClCompile Include="..\..\src_saturn\s1bsystems.cpp" />
+    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -360,6 +371,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
+    <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
@@ -371,6 +383,15 @@
     <ClInclude Include="..\..\src_lm\lm_rcs.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
+    <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_saturn\dcs.h" />
+    <ClInclude Include="..\..\src_saturn\eds.h" />
+    <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\LVDA.h" />
+    <ClInclude Include="..\..\src_saturn\LVDC.h" />
+    <ClInclude Include="..\..\src_saturn\LVIMU.h" />
+    <ClInclude Include="..\..\src_saturn\s1bsystems.h" />
+    <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

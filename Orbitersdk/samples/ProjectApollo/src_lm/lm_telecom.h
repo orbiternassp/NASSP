@@ -191,6 +191,7 @@ public:
 	int conn_state;                 // Connection State
 	int uplink_state;               // Uplink State
 	void perform_io(double simt);   // Get data from here to there
+	void handle_uplink();			// Handle incoming data
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
@@ -207,10 +208,16 @@ public:
 	int tx_size;                    // Number of words to send
 	int tx_offset;                  // Offset to use
 	int rx_offset;					// RX offset to use
+	int mcc_offset;					// RX offset into MCC data block
+	int mcc_size;					// Size of MCC data block
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
+	unsigned char mcc_data[1024];	// MCC-provided incoming data
+
 	bool registerSocket(SOCKET sock);
+
+	friend class MCC;				// Allow MCC to write directly to buffer
 };
 
 // Generic S-Band Antenna

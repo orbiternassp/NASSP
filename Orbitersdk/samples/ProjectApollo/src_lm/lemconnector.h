@@ -56,3 +56,26 @@ public:
 	int csm_power_latch;
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
+
+enum IULMMessageType
+{
+	IULM_SET_INPUT_CHANNEL_BIT,			///< Set an AGC input channel bit value.
+	IULM_PLAY_COUNT_SOUND,				///< Play/stop countdown sound.
+	IULM_PLAY_SEPS_SOUND,				///< Play/stop Seperation sound.
+};
+
+///
+/// \ingroup Connectors
+/// \brief CSM to IU connector type.
+///
+class LMToIUConnector : public LEMConnector
+{
+public:
+	LMToIUConnector(LEMcomputer &c, LEM *l);
+	~LMToIUConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+protected:
+	LEMcomputer & agc;
+};

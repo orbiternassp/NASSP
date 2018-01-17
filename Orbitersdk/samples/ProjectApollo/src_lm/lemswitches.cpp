@@ -729,7 +729,7 @@ void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double EngineThrustInd::QueryValue()
 
 {
-	if (lem->stage < 2)
+	if (lem->stage < 2 && lem->th_hover[0])
 	{
 		return lem->GetThrusterLevel(lem->th_hover[0])*100.0;
 	}
