@@ -688,8 +688,9 @@ double TempMonitorInd::QueryValue()
 		return (lem->RR.GetAntennaTempF());
 	case 1: // LR
 		return (lem->LR.GetAntennaTempF());
+		//FIXME: Quads need to be added and scaled
 	case 2: // Quad 1
-		return (50);
+		return (50);  
 	case 3: // Quad 2
 		return (50);
 	case 4: // Quad 3
@@ -697,7 +698,7 @@ double TempMonitorInd::QueryValue()
 	case 5: // Quad 4
 		return (50);
 	case 6: // S-Band Ant
-		return (lem->SBandSteerable.GetAntennaTempF()); //FIXME: Needs to be rescaled
+		return (lem->SBandSteerable.GetAntennaTempF()); 
 	default:
 		return 0;
 	}
