@@ -2363,7 +2363,7 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 	// SBand antenna 51.7 watts to stay between -40F and 0F
 	antenna = an;
 	antheater = anheat;
-	antenna->isolation = 0.0001; 
+	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);

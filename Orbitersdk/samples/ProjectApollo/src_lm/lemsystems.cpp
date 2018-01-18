@@ -2539,7 +2539,7 @@ void LEM_LR::Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_He
 	antenna = ant;
 	antheater = anheat;
 	lrheat = hl;
-	antenna->isolation = 0.0001; 
+	antenna->isolation = 0.00001;
 	antenna->Area = 1250; // 1250 cm
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_LR_CB);
@@ -2573,6 +2573,16 @@ void LEM_LR::TimeStep(double simdt){
 	val12 = lem->agc.GetInputChannel(012);
 	val13 = lem->agc.GetInputChannel(013);
 	val33 = lem->agc.GetInputChannel(033);
+
+	if (IsPowered())
+	{
+		antheater->SetPumpOff();
+	}
+
+	else
+	{
+		antheater->SetPumpAuto();
+	}
 
 	if (!IsPowered() ) { 
 		// Clobber data.
@@ -2930,7 +2940,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antheater = anheat;
 	RREHeat = rreh;
 	RRESECHeat = secrreh;
-	antenna->isolation = 0.0001; 
+	antenna->isolation = 0.000001; 
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	trunnionAngle = -180.0 * RAD;
 	shaftAngle = 0.0 * RAD; // Stow
