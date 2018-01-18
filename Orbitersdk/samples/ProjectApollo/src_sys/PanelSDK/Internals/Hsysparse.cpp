@@ -91,9 +91,9 @@ void H_system::Create_h_Radiator(char *line) {
 	new_one = (h_Radiator*)AddSystem(new h_Radiator(name, pos, volume, isol));
 
 	// Debugging thermal management
-	if (!strcmp(name, "LEM-LR-Antenna"))
-		P_thermal->AddThermalObject(new_one, true);
-	else 
+	//if (!strcmp(name, "LEM-LR-Antenna"))
+	//	P_thermal->AddThermalObject(new_one, true);
+	//else 
 	P_thermal->AddThermalObject(new_one);
 
 	new_one->isolation = 1.0;
