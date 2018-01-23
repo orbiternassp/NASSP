@@ -4029,13 +4029,13 @@ void LEM_CWEA::TimeStep(double simdt){
 	// LR Assembly < -15.6F or > 148.9F
 	// Disabled when Temperature Monitor switch selects affected assembly.
 	LightStatus[2][6] = 0;
-	if(lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 152.63)){
-		LightStatus[2][6] = 1;
-	}
 	if(lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -54.07 || lem->RR.GetAntennaTempF() > 147.69)){
 		LightStatus[2][6] = 1;
 	}
 	if(lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -15.6 || lem->LR.GetAntennaTempF() > 148.9)){
+		LightStatus[2][6] = 1; //Needs to not be looked at after staging as the LR is no loger attached.
+	}
+	if (lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 152.63)) {
 		LightStatus[2][6] = 1;
 	}
 
