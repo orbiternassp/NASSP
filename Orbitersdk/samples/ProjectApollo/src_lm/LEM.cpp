@@ -803,16 +803,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		NextFlashUpdate = MissionTime + 0.25;
 	}
 
-	// Orbiter 2016 fix
-	// Force GetWeightVector() to the correct value
-	VESSELSTATUS vs;
-	GetStatus(vs);
-	if (vs.status == 1) {
-		if (simt < 0.5) {
-			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
-		}
-	}
-
 	// Simulate the dust kicked up near
 	// the lunar surface
 	double vsAlt = GetAltitude(ALTMODE_GROUND);

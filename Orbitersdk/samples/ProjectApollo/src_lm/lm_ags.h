@@ -86,6 +86,8 @@ protected:
 	void TurnOn();
 	void TurnOff();
 
+	VECTOR3 GetGravityVector();
+
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *fastheater;				// Fast Warmup Heater
 	Boiler *fineheater;				// Fine Control Heater

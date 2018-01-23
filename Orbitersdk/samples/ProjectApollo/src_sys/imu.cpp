@@ -390,6 +390,13 @@ void IMU::Timestep(double simdt)
 		OurVessel->GetWeightVector(w);
 		// Transform to Orbiter global and calculate weight acceleration
 		w = mul(tinv, w) / OurVessel->GetMass();
+
+		//Orbiter 2016 hack
+		if (length(w) == 0.0)
+		{
+			w = GetGravityVector();
+		}
+
 		LastWeightAcceleration = w;
 
 		OurVessel->GetGlobalVel(LastGlobalVel);
@@ -403,6 +410,12 @@ void IMU::Timestep(double simdt)
 		OurVessel->GetWeightVector(w);
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(tinv, w) / OurVessel->GetMass();
+
+		//Orbiter 2016 hack
+		if (length(w) == 0.0)
+		{
+			w = GetGravityVector();
+		}
 		OurVessel->GetGlobalVel(vel);
 		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
 
@@ -641,6 +654,78 @@ VECTOR3 IMU::GetTotalAttitude()
 	v.y = Gimbal.Y;
 	v.z = Gimbal.Z;
 	return v;
+}
+
+VECTOR3 IMU::GetGravityVector()
+{
+	OBJHANDLE gravref = OurVessel->GetGravityRef();
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+	VECTOR3 R, U_R;
+	OurVessel->GetRelativePos(gravref, R);
+	U_R = unit(R);
+	double r = length(R);
+	VECTOR3 R_S, U_R_S;
+	OurVessel->GetRelativePos(hSun, R_S);
+	U_R_S = unit(R_S);
+	double r_S = length(R_S);
+	double mu = GGRAV * oapiGetMass(gravref);
+	double mu_S = GGRAV * oapiGetMass(hSun);
+	int jcount = oapiGetPlanetJCoeffCount(gravref);
+	double JCoeff[5];
+	for (int i = 0; i < jcount; i++)
+	{
+		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
+	}
+	double R_E = oapiGetSize(gravref);
+
+	VECTOR3 a_dP;
+
+	a_dP = -U_R;
+
+	if (jcount > 0)
+	{
+		MATRIX3 mat;
+		VECTOR3 U_Z;
+		double costheta, P2, P3;
+
+		oapiGetPlanetObliquityMatrix(gravref, &mat);
+		U_Z = mul(mat, _V(0, 1, 0));
+
+		costheta = dotp(U_R, U_Z);
+
+		P2 = 3.0 * costheta;
+		P3 = 0.5*(15.0*costheta*costheta - 3.0);
+		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
+		if (jcount > 1)
+		{
+			double P4;
+			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
+			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
+			if (jcount > 2)
+			{
+				double P5;
+				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
+			}
+		}
+	}
+	a_dP *= mu / pow(r, 2.0);
+	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
+
+	if (gravref == oapiGetObjectByName("Moon"))
+	{
+		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+
+		VECTOR3 R_Ea, U_R_E;
+		OurVessel->GetRelativePos(hEarth, R_Ea);
+		U_R_E = unit(R_Ea);
+		double r_E = length(R_Ea);
+		double mu_E = GGRAV * oapiGetMass(hEarth);
+
+		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
+	}
+
+	return a_dP;
 }
 
 typedef union

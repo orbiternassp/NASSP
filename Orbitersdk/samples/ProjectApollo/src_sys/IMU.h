@@ -74,6 +74,7 @@ protected:
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
+	VECTOR3 GetGravityVector();
 
 	//
 	// Logging.
