@@ -119,8 +119,6 @@ void LEM_ASA::TimeStep(double simdt){
 	// Fast Warmup is active below 116F.
 	// At 116F the Fine Warmup circuit takes over and gets to 120F and maintains it to within 0.2 degree F
 
-	// There is no information on what the "OFF" mode does other than run the ASA heaters.
-	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
 	// Do we have an ASA?
