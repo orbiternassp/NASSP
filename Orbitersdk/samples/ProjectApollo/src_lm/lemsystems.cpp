@@ -519,10 +519,6 @@ void LEM::SystemsInit()
 	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
 
 	// HEATERS
-	HTR_DISP_CB.MaxAmps = 2.0;
-	HTR_DISP_CB.WireTo(&LMPs28VBus);
-	HTR_SBD_ANT_CB.MaxAmps = 5.0;
-	HTR_SBD_ANT_CB.WireTo(&LMPs28VBus);
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
 
 	// Landing Radar
@@ -605,8 +601,6 @@ void LEM::SystemsInit()
 	SCS_ATCA_AGS_CB.WireTo(&LMPs28VBus);
 
 	// ENVIRONMENTAL CONTROL SYSTEM
-	ECS_DISP_CB.MaxAmps = 2.0;
-	ECS_DISP_CB.WireTo(&LMPs28VBus);
 	LMSuitTempMeter.WireTo(&ECS_DISP_CB);
 	LMCabinTempMeter.WireTo(&ECS_DISP_CB);
 	LMSuitPressMeter.WireTo(&ECS_DISP_CB);
@@ -4030,18 +4024,18 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS33 HEATER FAILURE CAUTION
 	// On when:
-	// S-Band Antenna Electronic Drive Assembly < -64.08F or > 153.63F
-	// RR Assembly < -57.07F or > 147.69F
-	// LR Assembly < -19.26F or > 147.69F
+	// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
+	// RR Assembly < -54.07F or > 147.69F
+	// LR Assembly < -15.6F or > 148.9F
 	// Disabled when Temperature Monitor switch selects affected assembly.
 	LightStatus[2][6] = 0;
-	if(lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 153.63)){
+	if(lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -54.07 || lem->RR.GetAntennaTempF() > 147.69)){
 		LightStatus[2][6] = 1;
 	}
-	if(lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -57.07 || lem->RR.GetAntennaTempF() > 147.60)){
-		LightStatus[2][6] = 1;
+	if(lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -15.6 || lem->LR.GetAntennaTempF() > 148.9)){
+		LightStatus[2][6] = 1; //Needs to not be looked at after staging as the LR is no loger attached.
 	}
-	if(lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -19.27 || lem->LR.GetAntennaTempF() > 147.60)){
+	if (lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 152.63)) {
 		LightStatus[2][6] = 1;
 	}
 
