@@ -524,7 +524,7 @@ private:
 	double eps_2;									// Guidance option selection time
 	double eps_3;									// Terminal condition freeze time
 	double eps_4;									// Time for cutoff logic entry
-	double ROV,ROVs;								// Constant for biasing terminal-range-angle
+	double ROV;										// Constant for biasing terminal-range-angle
 	double mu;										// Product of G and Earth's mass
 	double PHI;										// Geodetic latitude of launch site
 	double PHIP;									// Geocentric latitude of launch site

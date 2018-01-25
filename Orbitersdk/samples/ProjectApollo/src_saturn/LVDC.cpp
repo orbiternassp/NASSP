@@ -199,7 +199,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	Q_P = 0;
 	R = 0;
 	ROV = 0;
-	ROVs = 0;
 	R_T = 0;
 	S_1 = 0;
 	S_2 = 0;
@@ -401,7 +400,6 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	dotM_2 = 183.3909139;						// Mass flowrate of SIVB after second MRS
 	dV_B = 6.22; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	ROV = 1.11706196363037;
-	ROVs = 1.5;
 	PHI = 28.5217969*RAD;
 	PHIP = 28.5217969*RAD;
 	R_L = 6373407.3;
@@ -414,12 +412,12 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 	T_2 = 0;								// Time left in second and fourth stage IGM
 	Tt_2 = 150;								// Estimated third or fifth stage burn time
 	Tt_T = T_1 + Tt_2;						// Time-To-Go computed using Tt_3
-	t = 0;									// Time from accelerometer reading to next steering command
+	t = 1.7;									// Time from accelerometer reading to next steering command
 	t_B1 = 2;								// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
 	t_B3 = 0;								// Time from second S2 MRS signal
 	//dt: not set; dependend on cycle time
-	V_ex1 = 4145.76977;
-	V_ex2 = 4178.68462;
+	V_ex1 = 4159.44;
+	V_ex2 = 4198.68;
 	V_TC = 300;
 	
 	eps_2 = 35;								// Time to begin chi bar steering
@@ -1640,8 +1638,8 @@ gtupdate:	// Target of jump from further down
 			J_2 = Jt_2 + (dL_2*T_2);
 			S_2 = (L_2*T_2)-J_2;
 			Q_2 = (S_2*tau2)-((V_ex2*pow(T_2,2))/2);
-			P_2 = (J_2*(tau2+(2*T_2)))-((V_ex2*pow(T_2,2))/2);
-			U_2 = (Q_2*(tau2+(2*T_2)))-((V_ex2*pow(T_2,3))/6);
+			P_2 = (J_2*(tau2+(2*T_1)))-((V_ex2*pow(T_2,2))/2);
+			U_2 = (Q_2*(tau2+(2*T_1)))-((V_ex2*pow(T_2,3))/6);
 			fprintf(lvlog,"L_2 = %f, J_2 = %f, S_2 = %f, Q_2 = %f, P_2 = %f, U_2 = %f\r\n",L_2,J_2,S_2,Q_2,P_2,U_2);
 
 			// This is where velocity-to-be-gained is generated.
@@ -1678,9 +1676,9 @@ gtupdate:	// Target of jump from further down
 				// YAW STEERING PARAMETERS
 				fprintf(lvlog,"--- YAW STEERING PARAMETERS ---\r\n");
 
-				J_Y = J_1 + J_2 + (L_2*T_2);
+				J_Y = J_1 + J_2 + (L_2*T_1);
 				S_Y = S_1 - J_2 + (L_Y*T_2);
-				Q_Y = Q_1 + Q_2 + (S_2*T_2) + ((T_2)*J_1);
+				Q_Y = Q_1 + Q_2 + (S_2*T_1) + ((T_2)*J_1);
 				K_Y = L_Y/J_Y;
 				D_Y = S_Y - (K_Y*Q_Y);
 				fprintf(lvlog,"J_Y = %f, S_Y = %f, Q_Y = %f, K_Y = %f, D_Y = %f\r\n",J_Y,S_Y,Q_Y,K_Y,D_Y);
@@ -1696,11 +1694,11 @@ gtupdate:	// Target of jump from further down
 				L_P = L_Y*cos(tchi_y);
 				C_2 = cos(tchi_y)+(K_3*sin(tchi_y));
 				C_4 = K_4*sin(tchi_y);
-				J_P = (J_Y*C_2) - (C_4*(P_1+P_2+(pow(T_2,2)*L_2)));
+				J_P = (J_Y*C_2) - (C_4*(P_1+P_2+(pow(T_1,2)*L_2)));
 				fprintf(lvlog,"L_P = %f, C_2 = %f, C_4 = %f, J_P = %f\r\n",L_P,C_2,C_4,J_P);
 
 				S_P = (S_Y*C_2) - (C_4*Q_Y);
-				Q_P = (Q_Y*C_2) - (C_4*(U_1+U_2+(pow(T_2,2)*S_2)+((T_2)*P_1)));
+				Q_P = (Q_Y*C_2) - (C_4*(U_1+U_2+(pow(T_1,2)*S_2)+((T_2)*P_1)));
 				K_P = L_P/J_P;
 				D_P = S_P - (K_P*Q_P);
 				fprintf(lvlog,"S_P = %f, Q_P = %f, K_P = %f, D_P = %f\r\n",S_P,Q_P,K_P,D_P);
@@ -2217,7 +2215,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_R", R);
 	papiWriteScenario_double(scn, "LVDC_R_L", R_L);
 	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
-	papiWriteScenario_double(scn, "LVDC_ROVs", ROVs);
 	papiWriteScenario_double(scn, "LVDC_R_T", R_T);
 	papiWriteScenario_double(scn, "LVDC_S_1", S_1);
 	papiWriteScenario_double(scn, "LVDC_S_2", S_2);
@@ -2563,7 +2560,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_R", R);
 		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_ROV", ROV);
-		papiReadScenario_double(line, "LVDC_ROVs", ROVs);
 		papiReadScenario_double(line, "LVDC_R_T", R_T);
 		papiReadScenario_double(line, "LVDC_S_1", S_1);
 		papiReadScenario_double(line, "LVDC_S_2", S_2);
@@ -3284,7 +3280,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	Tt_3 = T_4N;//188; //Tt_3 = 135.6;				// Estimated third or fifth stage burn time
 	Tt_3R = 315.0;//340.0;
 	Tt_T = T_1c + Tt_3;						// Time-To-Go computed using Tt_3
-	t = 0;									// Time from accelerometer reading to next steering command
+	t = 1.7;								// Time from accelerometer reading to next steering command
 	t_B1 = 4;								// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
 	t_B2 = 0;
 	t_B3 = 0;								// Time from second S2 MRS signal
