@@ -49,6 +49,7 @@ public:
 
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);
+	bool LMAbort();
 
 	//LVDC Input Discretes and Interrupts
 

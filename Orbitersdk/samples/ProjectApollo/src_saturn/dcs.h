@@ -24,8 +24,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-#define DCSUPLINK_SWITCH_SELECTOR 0
-#define DCSUPLINK_TIMEBASE_UPDATE 1
+#define DCSUPLINK_SWITCH_SELECTOR	0
+#define DCSUPLINK_TIMEBASE_UPDATE	1
+#define DCSUPLINK_LM_ABORT			2
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"

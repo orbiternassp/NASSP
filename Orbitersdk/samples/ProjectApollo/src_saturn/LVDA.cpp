@@ -197,3 +197,11 @@ bool LVDA::TimebaseUpdate(double dt)
 
 	return false;
 }
+
+bool LVDA::LMAbort()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->LMAbort();
+
+	return false;
+}

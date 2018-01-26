@@ -923,6 +923,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "%+.1f s", g_Data.iuUplinkTimebaseUpdateTime);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_LM_ABORT)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
+		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
@@ -1731,7 +1736,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 1)
+	if (g_Data.iuUplinkType < 2)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1815,7 +1820,7 @@ void ProjectApolloMFD::menuIUUplink()
 		return;
 	}
 
-	void *uplink;
+	void *uplink = NULL;
 
 	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 	{
@@ -1834,6 +1839,10 @@ void ProjectApolloMFD::menuIUUplink()
 		upl.dt = g_Data.iuUplinkTimebaseUpdateTime;
 
 		uplink = &upl;
+		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_LM_ABORT)
+	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
 

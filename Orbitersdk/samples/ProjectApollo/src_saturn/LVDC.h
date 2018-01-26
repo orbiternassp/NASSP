@@ -48,6 +48,7 @@ public:
 	virtual bool GetGuidanceReferenceFailure() = 0;
 	virtual bool TimebaseUpdate(double dt) = 0;
 	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
+	virtual bool LMAbort() { return false; }
 protected:
 	IUToLVCommandConnector* lvCommandConnector;
 
@@ -452,6 +453,7 @@ public:
 	//DCS Commands
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
+	bool LMAbort();
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file

@@ -73,6 +73,10 @@ bool DCS::Uplink(int type, void *upl)
 
 			return iu->lvda.TimebaseUpdate(tbupdate->dt);
 		}
+		else if (type == DCSUPLINK_LM_ABORT)
+		{
+			return iu->lvda.LMAbort();
+		}
 	}
 
 	return false;

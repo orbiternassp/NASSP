@@ -1144,56 +1144,67 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					poweredflight = false; //powered flight nav off
 				}
 
-				/*if (lvCommandConnector->GetApolloNo() == 5)
-				{
-					//
-					// Separate nosecap
-					//
-
-					if (!owner->Crewed && owner->NosecapAttached && !owner->hNosecapVessel && LVDC_TB_ETime >= 45.0)
-					{
-						commandConnector->SlowIfDesired();
-						owner->NosecapAttached = false;
-						owner->SetNosecapMesh();
-						owner->JettisonNosecap();
-					}
-
-					//
-					// For unmanned launches, seperate the payload on timer.
-					//
-
-					bool PayloadDeployed = false;
-
-					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0 - 20.))
-					{
-						commandConnector->SlowIfDesired();
-					}
-
-					if (!owner->Crewed && (LVDC_TB_ETime >= 600.0))
-					{
-						commandConnector->SlowIfDesired();
-						PayloadDeployed = true;
-						// Payload deploy
-						lvCommandConnector->SeparateStage(CSM_LEM_STAGE);
-						lvCommandConnector->SetStage(CSM_LEM_STAGE);
-					}
-
-					//
-					// If the payload was deployed, delete us. Note that this just means that the SLA panels have
-					// been blown off of the SIVB; the SIVB will have to do the actual payload deployment.
-					//
-					if (PayloadDeployed && owner->hs4bM)
-					{
-						oapiSetFocusObject(owner->hs4bM);
-						oapiDeleteVessel(owner->GetHandle(), owner->hs4bM);
-					}
-				}*/
-
 				//For now, disable LVDC at TB4+16,800 seconds
 				if (LVDC_TB_ETime > 16800.0)
 				{
 					LVDC_Stop = true;
 					return;
+				}
+
+				break;
+
+			case 10:
+				//LM Abort Sequence
+
+				switch (CommandSequence)
+				{
+				case 0:
+					S4B_IGN = false;
+
+					//HSL Exit settings
+					GATE = false;
+					GATE5 = false;
+					Tt_T = 1000;
+					HSL = false;
+					BOOST = false;
+
+					fprintf(lvlog, "ALT SEQUENCE: LM ABORT\r\n");
+					CommandSequence++;
+					break;
+				case 1:
+					//Seq+0.1: S-IVB Engine Cutoff No. 1 On
+					if (LVDC_TB_ETime > 0.1)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+						CommandSequence++;
+					}
+					break;
+				case 2:
+					//Seq+0.2: S-IVB Engine Cutoff No. 2 On
+					if (LVDC_TB_ETime > 0.2)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
+						CommandSequence++;
+					}
+					break;
+				case 3:
+					//Seq+10.0: Nose Cone Jettison
+					if (LVDC_TB_ETime > 10.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
+						CommandSequence++;
+					}
+					break;
+				case 4:
+					//Seq+15.0: SLA Panel Deployment
+					if (LVDC_TB_ETime > 15.0)
+					{
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 111);
+						CommandSequence++;
+					}
+					break;
+				default:
+					break;
 				}
 
 				break;
@@ -2703,6 +2714,22 @@ bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 				lvda.SwitchSelector(stage, channel);
 				return true;
 			}
+		}
+	}
+
+	return false;
+}
+
+bool LVDC1B::LMAbort()
+{
+	if (lvCommandConnector->GetApolloNo() == 5)
+	{
+		if (LVDC_Timebase >= 3 && LVDC_TB_ETime > 10.0)
+		{
+			LVDC_Timebase = 10;
+			LVDC_TB_ETime = 0;
+			CommandSequence = 0;
+			return true;
 		}
 	}
 
