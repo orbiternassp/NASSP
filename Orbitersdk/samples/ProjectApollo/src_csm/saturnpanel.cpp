@@ -4947,6 +4947,7 @@ void Saturn::InitSwitches() {
 
 	if (!SkylabCM) {
 		SIVBPayloadSepSwitch.Register(PSH, "SIVBPayloadSepSwitch", TOGGLESWITCH_DOWN, 0, SPRINGLOADEDSWITCH_DOWN);
+		SIVBPayloadSepSwitch.SetDelayTime(2);
 	}
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
