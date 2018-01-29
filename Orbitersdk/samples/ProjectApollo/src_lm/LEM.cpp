@@ -769,6 +769,30 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		RefreshPanelIdInTimestep = false;
 	}
 
+	if (FirstTimestep)
+	{
+		DoFirstTimestep();
+		FirstTimestep = false;
+		return;
+	}
+
+	//
+	// Update mission time.
+	//
+
+	MissionTime += simdt;
+
+	//
+	// Panel flash counter.
+	//
+
+	if (MissionTime >= NextFlashUpdate) {
+		PanelFlashOn = !PanelFlashOn;
+		NextFlashUpdate = MissionTime + 0.25;
+	}
+
+	SystemsTimestep(MissionTime, simdt);
+
 	// RCS propellant pressurization
 	// Descent Propellant Tank Prepressurization (ambient helium)
 	// Descent Propellant Tank Prepressurization (supercritical helium)
@@ -785,24 +809,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 
 void LEM::clbkPostStep(double simt, double simdt, double mjd)
-
 {
-	if (FirstTimestep)
-	{
-		DoFirstTimestep();
-		FirstTimestep = false;
-		return;
-	}
-
-	//
-	// Panel flash counter.
-	//
-
-	if (MissionTime >= NextFlashUpdate) {
-		PanelFlashOn = !PanelFlashOn;
-		NextFlashUpdate = MissionTime + 0.25;
-	}
-
 	// Simulate the dust kicked up near
 	// the lunar surface
 	double vsAlt = GetAltitude(ALTMODE_GROUND);
@@ -835,11 +842,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			oapiSetFocusObject(hLEVA);
 		}
 	}
-
-	double deltat = oapiGetSimStep();
-
-	MissionTime = MissionTime + deltat;
-	SystemsTimestep(MissionTime, deltat);
 
 	// DS20160916 Physical parameters updation
 	CurrentFuelWeight = 0;
