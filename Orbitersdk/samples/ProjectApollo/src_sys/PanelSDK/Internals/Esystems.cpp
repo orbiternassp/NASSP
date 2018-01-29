@@ -1436,22 +1436,21 @@ void Pump::refresh(double dt)
 {
 	if (h_pump == 0) {
 		pumping = 0;
-		return;
 	} //off
-
-	pumping = 1;
-	if (SRC) {
-		if (SRC->Voltage() < SP_MIN_DCVOLTAGE) {
+	else
+	{
+		pumping = 1;
+		if (SRC) {
+			if (SRC->Voltage() < SP_MIN_DCVOLTAGE)
+				pumping = 0;
+			else
+				SRC->DrawPower(power);
+		}
+		else
 			pumping = 0;
-			return;
-		} //no no
-		SRC->DrawPower(power);
-	} else {
-		pumping = 0;
-		return;
 	}
 
-	double delta_p = in->GetPress() - out->GetPress() + fan_cap;
+	double delta_p = in->GetPress() - out->GetPress() + (pumping > 0 ? fan_cap : 0.0);
 	if (delta_p < 0)
 		delta_p = 0;
 
