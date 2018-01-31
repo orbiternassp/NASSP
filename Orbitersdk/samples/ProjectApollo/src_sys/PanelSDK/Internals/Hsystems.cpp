@@ -1005,8 +1005,12 @@ void h_HeatExchanger::refresh(double dt) {
 	if (pump) {	
 		double Q = (source->GetTemp() - target->GetTemp()) * length * dt;
 	
+		if (source->energy < Q || target->energy < -Q)
+			Q = 0;
+
 		source->thermic(-Q);
 		target->thermic(Q);
+
 		power = Q / dt;
 	}
 }
@@ -1099,7 +1103,14 @@ void h_Evaporator::refresh(double dt) {
 
 			// evaporate liquid
 			if (flow - vapor_flow > 0)
-				target->thermic(-VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow));
+			{
+				double Q = VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow);
+
+				if (target->energy < Q)
+					Q = 0;
+
+				target->thermic(-Q);
+			}
 		}
 	}
 	//steam pressure is not simulated physically at the moment
