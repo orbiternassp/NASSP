@@ -3166,7 +3166,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
 	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
-	T_LET = 40.671;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
+	T_LET = 40.6;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
 	UP = 0;									// switching variable for Tt_t parameter update
@@ -3298,13 +3298,13 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TSMC3 = 466;
 	// TSMC1 = 60.6 TSMC2 = 15 // AP11
 	T_c = 8; // T_c = 6.5; 					// Coast time between S2 burnout and S4B ignition
-	T_1 = 286.2; //T_1  = 237.796;			// Time left in first-stage IGM
-	T_2 = 91.8; //T_2 = 111;					// Time left in second and fourth stage IGM
+	T_1 = 286.2;							// Time left in first-stage IGM
+	T_2 = 53.5;								// Time left in second and fourth stage IGM
 	T_2R = 10.0;
 	T_3 = 0;								// Time left in third and fifth stage IGM
 	T_1c = T_1 + T_2 + T_c;					// Sum of the burn times of IGM first, second, and coast guidance stages
-	T_4N = 165.0;//120.565; //T_4N = 120.565;		// Nominal time of S4B first burn
-	Tt_3 = T_4N;//188; //Tt_3 = 135.6;				// Estimated third or fifth stage burn time
+	T_4N = 135.6;							// Nominal time of S4B first burn
+	Tt_3 = T_4N;							// Estimated third or fifth stage burn time
 	Tt_3R = 315.0;//340.0;
 	Tt_T = T_1c + Tt_3;						// Time-To-Go computed using Tt_3
 	t = 1.7;								// Time from accelerometer reading to next steering command
