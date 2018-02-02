@@ -632,6 +632,15 @@ void LEM::SetLmLandedMesh() {
 	lpdgext = AddMesh(hLPDgext, &mesh_dir);
 	SetLPDMesh();
 
+	// Forward Hatch
+	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
+	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	SetFwdHatchMesh();
+
+	// Drogue & Overhead hatch
+	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	SetOvhdHatchMesh();
+
 	Landed = true;
 }
 
