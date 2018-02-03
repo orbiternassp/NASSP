@@ -1381,7 +1381,7 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 			double f = (double)(3 - PressureEqualizationSwitch->GetState());
 
 			PressureEqualizationValve->in->Open();
-			PressureEqualizationValve->in->size = (float)(0.045*f);
+			PressureEqualizationValve->in->size = (float)(0.055*f);
 			PressureEqualizationValve->flowMax = 250. / LBH * f;
 		}
 	}
