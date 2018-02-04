@@ -587,6 +587,7 @@ public:
 	h_crew *CrewInCabin;
 	h_crew *CDRSuited;
 	h_crew *LMPSuited;
+	Pump *CabinFan1;
 	Pump *SuitFan1;
 	Pump *SuitFan2;
 	Pump *PrimGlyPump1;
