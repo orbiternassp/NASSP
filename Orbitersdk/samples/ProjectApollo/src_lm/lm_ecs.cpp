@@ -704,12 +704,13 @@ LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
 	pressRegulatorBSwitch = NULL;
 }
 
-void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs)
+void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf)
 {
 	cabinFan1CB = cf1cb;
 	cabinFanContCB = cfccb;
 	pressRegulatorASwitch = pras;
 	pressRegulatorBSwitch = prbs;
+	cabinFan = cf;
 }
 
 void LEMCabinFan::SystemTimestep(double simdt)
@@ -728,13 +729,14 @@ void LEMCabinFan::SystemTimestep(double simdt)
 
 	if (cabinFan1CB->IsPowered() && !cabinFanSwitch)
 	{
-		cabinFan1CB->DrawPower(35.5);
+		cabinFan->SetPumpOn();
 		CabinFanSound();
 
 		//TBD: Switching heat exchanger on I guess?
 	}
 	else
 	{
+		cabinFan->SetPumpOff();
 		StopCabinFanSound();
 		//TBD: Switching heat exchanger off I guess?
 	}
