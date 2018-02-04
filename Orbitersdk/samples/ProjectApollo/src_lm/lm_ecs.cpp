@@ -1174,7 +1174,7 @@ double LEM_ECS::GetPrimaryGlycolTempF() {
 
 double LEM_ECS::GetSecondaryGlycolPressure() {
 	if (!Secondary_CL_Glycol_Press) {
-		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP1:PRESS");
+		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLPUMPFANMANIFOLD:PRESS");
 	}
 	return *Secondary_CL_Glycol_Press * PSI;
 }
