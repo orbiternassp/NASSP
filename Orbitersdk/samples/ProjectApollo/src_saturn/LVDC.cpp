@@ -29,7 +29,6 @@
 
 #include "papi.h"
 #include "../src_rtccmfd/OrbMech.h"
-#include "iu.h"
 #include "LVDC.h"
 #include "LVDA.h"
 
@@ -43,7 +42,6 @@ LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 // Constructor
 LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 {
-	lvCommandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
@@ -306,18 +304,12 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	SCControlPoweredFlight = false;
 }
 
-void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
+void LVDC1B::Init(){
 	if(Initialized == true){ 
-		if(lvCommandConnector == lvCommandConn){
-			fprintf(lvlog,"init called after init, ignored\r\n");
-			fflush(lvlog);
-			return;
-		}else{
-			fprintf(lvlog,"init called after init with new owner, proceeding\r\n");
-			fflush(lvlog);
-		}
+		fprintf(lvlog,"init called after init, ignored\r\n");
+		fflush(lvlog);
+		return;
 	}
-	lvCommandConnector = lvCommandConn;
 	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -540,9 +532,9 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 }
 	
 // DS20070205 LVDC++ EXECUTION
-void LVDC1B::TimeStep(double simt, double simdt) {
+void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
-	if (lvCommandConnector->connectedTo == NULL) { return; }
+	if (Initialized == false) { return; }
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 	
@@ -556,20 +548,20 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if (lvCommandConnector->GetMissionTime() < -10800){
-					lvCommandConnector->SwitchSelector(10);
+				if (lvda.GetMissionTime() < -10800){
+					lvda.SwitchSelectorOld(10);
 				}else{
-					lvCommandConnector->SwitchSelector(11);
+					lvda.SwitchSelectorOld(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
-					double Source  = fabs(lvCommandConnector->GetMissionTime());
+					double Source  = fabs(lvda.GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					if (lvCommandConnector->GetMissionTime() < -1200){
+					if (lvda.GetMissionTime() < -1200){
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvda.ZeroLVIMUCDUs();					// Zero IMU CDUs
 						break;
@@ -584,7 +576,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvCommandConnector->GetMissionTime() >= -17){				
+				if (lvda.GetMissionTime() >= -17){
 					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
 					lvda.DriveLVIMUGimbals((Azimuth - A_zL)*RAD, 0, 0);	// Now bring to alignment
 					lvda.ReleaseLVIMU();							// Release IMU
@@ -593,22 +585,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-					lvCommandConnector->SwitchSelector(12);
+					lvda.SwitchSelectorOld(12);
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
 				}
 				break;
 			case 0: // MORE TB0
 				// At 10 seconds, play the countdown sound.
-				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
-					lvCommandConnector->SwitchSelector(13);
+				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
+					lvda.SwitchSelectorOld(13);
 				}
 
 				// Shut down venting at T - 9
-				if (lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
+				if (lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
-				if (lvCommandConnector->GetMissionTime() > -4.0) {
-					lvCommandConnector->AddForce(_V(0, 0, -8. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+				if (lvda.GetMissionTime() > -4.0) {
+					lvda.AddForce(_V(0, 0, -8. * lvda.GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 				}
 
 				if (LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()) {
@@ -738,9 +730,9 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 
 				// Soft-Release Pin Dragging
-				if(lvCommandConnector->GetMissionTime() < 0.5){
-					double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
-					lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+				if(lvda.GetMissionTime() < 0.5){
+					double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
+					lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
@@ -836,8 +828,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(), lvCommandConnector->GetAltitude());
-					lvCommandConnector->SwitchSelector(17);
+						lvda.GetMissionTime(), lvda.GetFirstStageThrust(), lvda.GetAltitude());
+					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -994,7 +986,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				}
 
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvda.GetStage() == LAUNCH_STAGE_SIVB){
 					S4B_IGN=true;
 				}
 
@@ -1084,14 +1076,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 10.0)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
-						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						lvda.SetStage(STAGE_ORBIT_SIVB);
 						fprintf(lvlog, "[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n", LVDC_Timebase, LVDC_TB_ETime);
 						CommandSequence++;
 					}
 					break;
 				case 8:
 					//TB4+45.0: Nose Cone Jettison (Apollo 5)
-					if (lvCommandConnector->GetApolloNo() == 5)
+					if (lvda.GetApolloNo() == 5)
 					{
 						if (LVDC_TB_ETime > 45.0)
 						{
@@ -1104,7 +1096,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				case 9:
 					//TB4+600.0: SLA Panel Deployment (Apollo 5)
-					if (lvCommandConnector->GetApolloNo() == 5)
+					if (lvda.GetApolloNo() == 5)
 					{
 						if (LVDC_TB_ETime > 600.0)
 						{
@@ -1239,7 +1231,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
-			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
+			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
 
 			// Initial Position & Velocity
 			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth*RAD), -sin(PHI - PHIP)*cos(Azimuth*RAD))*R_L;
@@ -2684,9 +2676,9 @@ double LVDC1B::SVCompare()
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
 	double MJD_L;
-	MJD_L = oapiGetSimMJD() - (lvCommandConnector->GetMissionTime() + 17.0) / 3600.0 / 24.0;
+	MJD_L = oapiGetSimMJD() - TAS / 3600.0 / 24.0;
 	mat = OrbMech::Orbiter2PACSS13(MJD_L, PHI, KSCLNG, Azimuth);
-	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
+	lvda.GetRelativePos(pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);
@@ -2722,7 +2714,7 @@ bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 
 bool LVDC1B::LMAbort()
 {
-	if (lvCommandConnector->GetApolloNo() == 5)
+	if (lvda.GetApolloNo() == 5)
 	{
 		if (LVDC_Timebase >= 3 && LVDC_TB_ETime > 10.0)
 		{
@@ -2743,7 +2735,6 @@ bool LVDC1B::LMAbort()
 // Constructor
 LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 {
-	lvCommandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 
@@ -3133,18 +3124,12 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 }
 
 // Setup
-void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
+void LVDCSV::Init(){
 	if(Initialized == true){ 
-		if(lvCommandConnector == lvCommandConn){
-			fprintf(lvlog,"init called after init, ignored\r\n");
-			fflush(lvlog);
-			return;
-		}else{
-			fprintf(lvlog,"init called after init with new owner, proceeding\r\n");
-			fflush(lvlog);
-		}
+		fprintf(lvlog,"init called after init, ignored\r\n");
+		fflush(lvlog);
+		return;
 	}
-	lvCommandConnector = lvCommandConn;
 
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -3326,7 +3311,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	T_L = 0.0;
 
 	double day;
-	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvCommandConnector->GetMissionTime() - 17.0;
+	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvda.GetMissionTime() - 17.0;
 	t_SD1 = 10984.2;
 	t_SD2 = 5518.9;
 	t_SD3 = 1233.6;
@@ -4780,9 +4765,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 	return;
 }
 
-void LVDCSV::TimeStep(double simt, double simdt) {
-	if (lvCommandConnector->connectedTo == NULL) { return; }
-	if (lvCommandConnector->GetStage() < PRELAUNCH_STAGE) { return; }
+void LVDCSV::TimeStep(double simdt) {
+	if (Initialized == false) { return; }
+	if (lvda.GetStage() < PRELAUNCH_STAGE) { return; }
 
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
@@ -4808,15 +4793,15 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if(lvCommandConnector->GetMissionTime() < -10800){
-					lvCommandConnector->SwitchSelector(10);
+				if(lvda.GetMissionTime() < -10800){
+					lvda.SwitchSelectorOld(10);
 				}else{
-					lvCommandConnector->SwitchSelector(11);
+					lvda.SwitchSelectorOld(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				if(lvCommandConnector->GetMissionTime() < -1200){
-					double Source  = fabs(lvCommandConnector->GetMissionTime());
+				if(lvda.GetMissionTime() < -1200){
+					double Source  = fabs(lvda.GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
@@ -4830,7 +4815,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvCommandConnector->GetMissionTime() < -17){
+				if (lvda.GetMissionTime() < -17){
 					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
@@ -4847,19 +4832,19 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
-					lvCommandConnector->SwitchSelector(12);
+					lvda.SwitchSelectorOld(12);
 				}
 
 				// At 10 seconds, play the countdown sound.
-				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
-					lvCommandConnector->SwitchSelector(13);
+				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
+					lvda.SwitchSelectorOld(13);
 				}
 				// Shut down venting at T - 9
-				if(lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
+				if(lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
 				//Hold-down force
-				if(lvCommandConnector->GetMissionTime() > -4.0){
-					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
+				if(lvda.GetMissionTime() > -4.0){
+					lvda.AddForce(_V(0, 0, -5. * lvda.GetFirstStageThrust()), _V(0, 0, 0));
 					}
 
 				// LIFTOFF
@@ -5117,9 +5102,9 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// Soft-Release Pin Dragging
-				if(lvCommandConnector->GetMissionTime() < 0.5){
-				  double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
-				  lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+				if(lvda.GetMissionTime() < 0.5){
+				  double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
+				  lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
 				// S1C CECO TRIGGER:
@@ -5273,8 +5258,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetAltitude());
-					lvCommandConnector->SwitchSelector(17);
+					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n", lvda.GetMissionTime(), lvda.GetAltitude());
+					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					TB3 = TAS;
 					LVDC_Timebase = 3;
@@ -5637,11 +5622,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// S2 ENGINE STARTUP
-				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
-					lvCommandConnector->SwitchSelector(19);
+				if(lvda.GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
+					lvda.SwitchSelectorOld(19);
 				}
 				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
-					lvCommandConnector->SwitchSelector(20);
+					lvda.SwitchSelectorOld(20);
 					S2_IGNITION = true;
 				}
 
@@ -5673,7 +5658,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvCommandConnector->GetMissionTime());
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvda.GetMissionTime());
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
@@ -5686,7 +5671,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				
 				if (LVDC_TB_ETime >= 1.4 && lvda.SCInitiationOfSIISIVBSeparation())
 				{
-					lvCommandConnector->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+					lvda.SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 					directstageint = true;
 					directstagereset = false;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
@@ -6072,7 +6057,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 10.0)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						lvda.SetStage(STAGE_ORBIT_SIVB);
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
 						CommandSequence++;
 					}
@@ -8181,7 +8166,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
-			fprintf(lvlog,"[T%f] GRR received!\r\n", lvCommandConnector->GetMissionTime());
+			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
 
 			// Ground launch targeting
 
@@ -8508,8 +8493,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					double day;
 					modf(oapiGetSimMJD(), &day);
 					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-					lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
-					lvCommandConnector->GetRelativeVel(lvCommandConnector->GetGravityRef(), vel);
+					lvda.GetRelativePos(pos);
+					lvda.GetRelativeVel(vel);
 					PosS = mul(mat, pos);
 					DotS = mul(mat, vel);
 				}
@@ -9837,7 +9822,7 @@ double LVDCSV::SVCompare()
 	double day;
 	modf(oapiGetSimMJD(), &day);
 	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
-	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
+	lvda.GetRelativePos(pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);

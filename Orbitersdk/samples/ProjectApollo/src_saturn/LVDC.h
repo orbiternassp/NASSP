@@ -23,7 +23,6 @@
   **************************************************************************/
 
 #pragma once
-class IUToLVCommandConnector;
 class LVDA;
 
 /* *******************
@@ -41,8 +40,8 @@ class LVDC
 public:
 	LVDC(LVDA &lvd);
 	virtual ~LVDC() {}
-	virtual void TimeStep(double simt, double simdt) = 0;
-	virtual void Init(IUToLVCommandConnector* lvCommandConn) = 0;
+	virtual void TimeStep(double simdt) = 0;
+	virtual void Init() = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual bool GetGuidanceReferenceFailure() = 0;
@@ -50,7 +49,6 @@ public:
 	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 	virtual bool LMAbort() { return false; }
 protected:
-	IUToLVCommandConnector* lvCommandConnector;
 
 	LVDA &lvda;
 };
@@ -58,8 +56,8 @@ protected:
 class LVDCSV: public LVDC {
 public:
 	LVDCSV(LVDA &lvd);											// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn);
-	void TimeStep(double simt, double simdt);
+	void Init();
+	void TimeStep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -441,8 +439,8 @@ private:								// Saturn LV
 class LVDC1B: public LVDC {
 public:
 	LVDC1B(LVDA &lvd);										// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn);
-	void TimeStep(double simt, double simdt);
+	void Init();
+	void TimeStep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 

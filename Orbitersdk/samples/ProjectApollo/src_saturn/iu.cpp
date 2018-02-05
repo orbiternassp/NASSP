@@ -1456,7 +1456,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
-		lvdc->TimeStep(simt, simdt);
+		lvdc->TimeStep(simdt);
 	}
 	fcc.Timestep(simdt);
 
@@ -1484,7 +1484,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector);
+		lvdc->Init();
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
@@ -1619,7 +1619,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
-		lvdc->TimeStep(simt, simdt);
+		lvdc->TimeStep(simdt);
 	}
 	fcc.Timestep(simdt);
 
@@ -1642,7 +1642,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector);
+		lvdc->Init();
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
