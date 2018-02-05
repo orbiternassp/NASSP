@@ -1451,12 +1451,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+06.0f VI", G->tlipad.VI);
 				skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
 
-				sprintf(Buffer, "XXX%03.0f R SEP", G->tlipad.SepATT.x);
+				sprintf(Buffer, "XXX%03.0f R", G->tlipad.SepATT.x);
 				skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
 				sprintf(Buffer, "XXX%03.0f P SEP", G->tlipad.SepATT.y);
 				skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
-				sprintf(Buffer, "XXX%03.0f Y SEP", G->tlipad.SepATT.z);
+				sprintf(Buffer, "XXX%03.0f Y", G->tlipad.SepATT.z);
 				skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "XXX%03.0f R", G->tlipad.ExtATT.x);
+				skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P EXTRACTION", G->tlipad.ExtATT.y);
+				skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f Y", G->tlipad.ExtATT.z);
+				skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 			}
 			else
 			{

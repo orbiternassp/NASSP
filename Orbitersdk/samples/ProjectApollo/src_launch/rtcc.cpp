@@ -6439,7 +6439,7 @@ void RTCC::OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, V
 void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 {
 	MATRIX3 M_R, M, M_RTM;
-	VECTOR3 R_A, V_A, R0, V0, UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, IgnAtt, SepATT;
+	VECTOR3 R_A, V_A, R0, V0, UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, IgnAtt, SepATT, ExtATT;
 	double boil, SVMJD, m0, mass, dt, t_go, F, v_e, theta_T, dVC;
 	SV sv0, sv1, sv2, sv3;
 
@@ -6535,6 +6535,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	M_RTM = mul(M, M_R);
 
 	SepATT = OrbMech::CALCGAR(opt->REFSMMAT, M_RTM);
+	ExtATT = _V(300.0*RAD - SepATT.x, SepATT.y + PI, PI2 - SepATT.z);
 
 	dVC = length(opt->dV_LVLH);
 
@@ -6542,6 +6543,7 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	pad.dVC = dVC / 0.3048;
 	pad.IgnATT = _V(OrbMech::imulimit(IgnAtt.x*DEG), OrbMech::imulimit(IgnAtt.y*DEG), OrbMech::imulimit(IgnAtt.z*DEG));
 	pad.SepATT = _V(OrbMech::imulimit(SepATT.x*DEG), OrbMech::imulimit(SepATT.y*DEG), OrbMech::imulimit(SepATT.z*DEG));
+	pad.ExtATT = _V(OrbMech::imulimit(ExtATT.x*DEG), OrbMech::imulimit(ExtATT.y*DEG), OrbMech::imulimit(ExtATT.z*DEG));
 	pad.TB6P = opt->TIG - 577.6;
 	pad.VI = length(sv2.V) / 0.3048;
 }
