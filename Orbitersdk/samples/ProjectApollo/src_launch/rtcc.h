@@ -641,6 +641,7 @@ struct LVDCTLIparam
 	double f;
 	double mu;
 	double omega_E;
+	double phi_L;
 	double R_N;
 	double theta_EO;
 	double TB5;

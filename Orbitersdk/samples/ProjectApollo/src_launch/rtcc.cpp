@@ -623,7 +623,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.TIG = TimeofIgnition;
 		opt.TLI = calcParams.TLI;
 		opt.vessel = calcParams.src;
-		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+		opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
 		opt.uselvdc = true;
 
 		TLI_PAD(&opt, *form);
@@ -6531,8 +6531,8 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	UZ = unit(-sv3.R);
 	UX = crossp(UY, UZ);
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	M = OrbMech::CALCSMSC(opt->SeparationAttitude);
-	M_RTM = mul(OrbMech::transpose_matrix(M), M_R);
+	M = OrbMech::CALCSMSC(_V(PI - opt->SeparationAttitude.x, opt->SeparationAttitude.y, opt->SeparationAttitude.z));
+	M_RTM = mul(M, M_R);
 
 	SepATT = OrbMech::CALCGAR(opt->REFSMMAT, M_RTM);
 
@@ -7706,7 +7706,7 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	//State Vector
 	modf(oapiGetSimMJD(), &day);
 	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
-	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, 28.6082888*RAD, -80.6041140*RAD, lvdc.Azimuth);
+	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, lvdc.phi_L, -80.6041140*RAD, lvdc.Azimuth);
 	vessel->GetRelativePos(gravref, R_A);
 	vessel->GetRelativeVel(gravref, V_A);
 	SVMJD = oapiGetSimMJD();
@@ -7863,10 +7863,12 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	coe.TA = f;
 	coe.w = alpha_D;
 
-	OrbMech::PACSS4_from_coe(coe, mu_E, R_TLI, V_TLI);
+	OrbMech::PACSS13_from_coe(coe, lvdc.phi_L, lvdc.Azimuth, mu_E, R_TLI, V_TLI);
 
-	R_TLI = tmul(OrbMech::J2000EclToBRCS(40221.525), R_TLI);	//Temporary fix
-	V_TLI = tmul(OrbMech::J2000EclToBRCS(40221.525), V_TLI);
+	R_TLI = tmul(mat, R_TLI);
+	V_TLI = tmul(mat, V_TLI);
+	R_TLI = _V(R_TLI.x, R_TLI.z, R_TLI.y);
+	V_TLI = _V(V_TLI.x, V_TLI.z, V_TLI.y);
 
 	T_TLI = P30TIG + t_go;
 	dV_LVLH = _V(1.0, 0.0, 0.0)*L;

@@ -1412,6 +1412,7 @@ void MCC::TimeStep(double simdt){
 						tliparam.mu = lvdc->mu;
 						tliparam.MX_A = lvdc->MX_A;
 						tliparam.omega_E = lvdc->omega_E;
+						tliparam.phi_L = lvdc->PHI;
 						tliparam.R_N = lvdc->R_N;
 						tliparam.TargetVector = lvdc->TargetVector;
 						tliparam.TB5 = lvdc->TB5;
