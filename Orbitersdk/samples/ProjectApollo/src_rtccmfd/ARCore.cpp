@@ -2085,7 +2085,7 @@ int ARCore::subThread()
 		opt.TIG = P30TIG;
 		opt.vessel = vessel;
 		opt.uselvdc = false;
-		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+		opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
 		rtcc->TLI_PAD(&opt, tlipad);
 		Result = 0;
 	}
