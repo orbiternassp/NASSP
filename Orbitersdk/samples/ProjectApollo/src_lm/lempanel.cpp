@@ -2780,7 +2780,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 				sfvlv->Close();
 				scinvlv->Open();
 				scoutvlv->Close();
-				dcvlv->Open();
+				dcvlv->Close();
+				//dcvlv->Open();   //Use this for when it can connect to a PLSS
 			}
 			//Suit Flow
 			else {
@@ -2802,7 +2803,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 				sfvlv->Close();
 				scinvlv->Open();
 				scoutvlv->Close();
-				dcvlv->Open();
+				dcvlv->Close();
+				//dcvlv->Open();   //Use this for when it can connect to a PLSS
 			}
 			//Suit Flow
 			else {

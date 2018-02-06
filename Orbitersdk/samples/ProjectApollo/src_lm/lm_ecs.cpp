@@ -345,7 +345,7 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 			{
 				SuitCircuitReliefValve->flowMax = 7.8 / LBH;
 			}
-			else if (suitcircuitpress < 4.3 / PSI)
+			else if (suitcircuitpress <= 4.3 / PSI)
 			{
 				SuitCircuitReliefValve->flowMax = 0;
 			}
@@ -702,6 +702,7 @@ LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
 	cabinFanContCB = NULL;
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
+	cabinFan = NULL;
 }
 
 void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf)
