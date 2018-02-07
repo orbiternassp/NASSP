@@ -587,6 +587,8 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	}
 
 	// Surge tank
+	o2SurgeTank->BoilAllAndSetTemp(285);
+
 	if (surgeTankValve->GetState() == 0) {
 		o2SurgeTank->OUT_valve.Close();
 		o2SurgeTank->IN_valve.Close();
@@ -662,6 +664,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	}
 
 	// Repress package outlet
+	o2RepressPackage->BoilAllAndSetTemp(285);
 	o2RepressPackageOutlet->BoilAllAndSetTemp(285);
 	if (repressO2Valve->GetState() == THREEPOSSWITCH_UP) {
 		o2RepressPackageOutlet->OUT_valve.Open();
@@ -1381,7 +1384,7 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 			double f = (double)(3 - PressureEqualizationSwitch->GetState());
 
 			PressureEqualizationValve->in->Open();
-			PressureEqualizationValve->in->size = (float)(0.055*f);
+			PressureEqualizationValve->in->size = (float)(0.05*f);
 			PressureEqualizationValve->flowMax = 250. / LBH * f;
 		}
 	}
