@@ -206,6 +206,22 @@ bool LVDA::LMAbort()
 	return false;
 }
 
+bool LVDA::RestartManeuverEnable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->RestartManeuverEnable();
+
+	return false;
+}
+
+bool LVDA::InhibitAttitudeManeuver()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->InhibitAttitudeManeuver();
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);

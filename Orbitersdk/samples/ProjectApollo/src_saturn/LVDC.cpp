@@ -2728,6 +2728,19 @@ bool LVDC1B::LMAbort()
 	return false;
 }
 
+bool LVDC1B::InhibitAttitudeManeuver()
+{
+	if (LVDC_Timebase == 4)
+	{
+		INH1 = true;
+		INH2 = true;
+
+		return true;
+	}
+
+	return false;
+}
+
 // ***************************
 // DS20150720 LVDC++ ON WHEELS
 // ***************************
@@ -2799,6 +2812,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
+	BN4 = 0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -2923,6 +2937,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_D = 0;
 	K_P1 = 0;
 	K_P2 = 0;
+	K_T3 = 0;
 	K_Y1 = 0;
 	K_Y2 = 0;
 	K_Y = 0;
@@ -2941,6 +2956,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Lt_Y = 0;
 	LVDC_TB_ETime = 0;
 	mu = 0;
+	omega_E = 0;
 	p = 0;
 	P_1 = 0;
 	P_2 = 0;
@@ -3034,6 +3050,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_GO = 0;
 	theta_N = 0;
 	TI5F2 = 0;
+	TI7AF2 = 0;
+	TI7F10 = 0;
+	TI7F11 = 0;
 	T_IGM = 0;
 	T_L = 0;
 	T_LET = 0;
@@ -3051,6 +3070,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Tt_3 = 0;
 	Tt_3R = 0;
 	Tt_T = 0;
+	TVRATE = 0;
 	U_1 = 0;
 	U_2 = 0;
 	U_3 = 0;
@@ -3121,6 +3141,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CommandSequenceStored = 0;
 	SCControlPoweredFlight = false;
 	SIICenterEngineCutoff = false;
+	FixedAttitudeBurn = false;
 }
 
 // Setup
@@ -3308,6 +3329,9 @@ void LVDCSV::Init(){
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
 	TI5F2 = 20.0;
+	TI7AF2 = 6540.0;
+	TI7F10 = 20.0;
+	TI7F11 = 900.0;
 	T_L = 0.0;
 
 	double day;
@@ -3339,7 +3363,7 @@ void LVDCSV::Init(){
 	tau3 = 709.7853;//748.7;							// Time to consume all fuel of SIVB
 	tau3R = tau3 - T_4N;//576;
 	tau3N = tau3;							// artificial tau3
-	omega_E = 2.32115e-5*PI;
+	omega_E = TVRATE = 2.32115e-5*PI;
 	//rate limits: set in pre-igm
 	alpha_1 = 0;							// orbital guidance pitch
 	alpha_2 = 0;							// orbital guidance yaw
@@ -3442,6 +3466,7 @@ void LVDCSV::Init(){
 	h = 0;
 	h_1 = 1.5e5;
 	h_2 = 3.0e5;
+	BN4 = 20.0;
 	
 	tchi_y=0; tchi_p=0;						// Angles to null velocity deficiencies without regard to terminal data
 	dot_zeta_T=0; dot_xi_T=0; dot_eta_T=0;	// I don't know.
@@ -3477,6 +3502,7 @@ void LVDCSV::Init(){
 	CountPIPA = false;
 	SCControlPoweredFlight = false;
 	SIICenterEngineCutoff = false;
+	FixedAttitudeBurn = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -3493,6 +3519,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_directstageint", directstageint);
 	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
+	oapiWriteScenario_int(scn, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
 	oapiWriteScenario_int(scn, "LVDC_GATE0", GATE0);
 	oapiWriteScenario_int(scn, "LVDC_GATE1", GATE1);
@@ -3557,6 +3584,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
+	papiWriteScenario_double(scn, "LVDC_BN4", BN4);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -3837,6 +3865,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
 	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
+	papiWriteScenario_double(scn, "LVDC_K_T3", K_T3);
 	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
 	papiWriteScenario_double(scn, "LVDC_K_Y2", K_Y2);
 	papiWriteScenario_double(scn, "LVDC_K_Y", K_Y);
@@ -4000,6 +4029,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
+	papiWriteScenario_double(scn, "LVDC_TI7AF2", TI7AF2);
+	papiWriteScenario_double(scn, "LVDC_TI7F10", TI7F10);
+	papiWriteScenario_double(scn, "LVDC_TI7F11", TI7F11);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -4051,7 +4083,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TSTB", TABLE15[1].T_ST);
 	papiWriteScenario_double(scn, "LVDC_T_T", T_T);
 	papiWriteScenario_double(scn, "LVDC_Tt_3", Tt_3);
+	papiWriteScenario_double(scn, "LVDC_Tt_3R", Tt_3R);
 	papiWriteScenario_double(scn, "LVDC_Tt_T", Tt_T);
+	papiWriteScenario_double(scn, "LVDC_TVRATE", TVRATE);
 	papiWriteScenario_double(scn, "LVDC_U_1", U_1);
 	papiWriteScenario_double(scn, "LVDC_U_2", U_2);
 	papiWriteScenario_double(scn, "LVDC_U_3", U_3);
@@ -4136,6 +4170,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_directstageint", directstageint);
 		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
+		papiReadScenario_bool(line, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
 		papiReadScenario_bool(line, "LVDC_GATE0", GATE0);
 		papiReadScenario_bool(line, "LVDC_GATE1", GATE1);
@@ -4204,6 +4239,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
+		papiReadScenario_double(line, "LVDC_BN4", BN4);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -4484,6 +4520,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_P1", K_P1);
 		papiReadScenario_double(line, "LVDC_K_P2", K_P2);
+		papiReadScenario_double(line, "LVDC_K_T3", K_T3);
 		papiReadScenario_double(line, "LVDC_K_Y1", K_Y1);
 		papiReadScenario_double(line, "LVDC_K_Y2", K_Y2);
 		papiReadScenario_double(line, "LVDC_K_P", K_P);
@@ -4647,6 +4684,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
+		papiReadScenario_double(line, "LVDC_TI7AF2", TI7AF2);
+		papiReadScenario_double(line, "LVDC_TI7F10", TI7F10);
+		papiReadScenario_double(line, "LVDC_TI7F11", TI7F11);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -4698,7 +4738,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TSTB", TABLE15[1].T_ST);
 		papiReadScenario_double(line, "LVDC_T_T", T_T);
 		papiReadScenario_double(line, "LVDC_Tt_3", Tt_3);
+		papiReadScenario_double(line, "LVDC_Tt_3R", Tt_3R);
 		papiReadScenario_double(line, "LVDC_Tt_T", Tt_T);
+		papiReadScenario_double(line, "LVDC_TVRATE", TVRATE);
 		papiReadScenario_double(line, "LVDC_U_1", U_1);
 		papiReadScenario_double(line, "LVDC_U_2", U_2);
 		papiReadScenario_double(line, "LVDC_U_3", U_3);
@@ -6754,7 +6796,7 @@ void LVDCSV::TimeStep(double simdt) {
 				{
 					S4B_REIGN = true;
 				}
-				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
+				if (S4B_REIGN && MRS == false && T_2 <= 0.0)
 				{
 					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 18);
 					MRS = true;
@@ -7491,7 +7533,7 @@ void LVDCSV::TimeStep(double simdt) {
 					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 
-				if (LVDC_TB_ETime > 20 && poweredflight) {
+				if (LVDC_TB_ETime > BN4 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
 				}
@@ -8552,7 +8594,7 @@ GuidanceLoop:
 					}
 				};
 			}else{
-				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
+				if (TAS - TB7 < TI7F10) { goto minorloop; }else{goto orbitalguidance;}
 			}
 		} //TBD: 
 		if(directstageint == true){//direct stage interrupt update
@@ -8788,11 +8830,42 @@ IGM:	if(HSL == false){
 					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f\r\n",tau1,Fm);
 				}
 			}
-			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");
 
 			// CHI-TILDE LOGIC
 			// STAGE INTEGRAL CALCULATIONS				
-chitilde:	Pos4 = mul(MX_G,PosS);
+		chitilde:	
+			
+			//Special Apollo 9 logic
+
+			if (FixedAttitudeBurn && LVDC_Timebase == 6)
+			{
+				if (MRS == false)
+				{
+					T_2 = T_2 - dt_c;
+				}
+				else
+				{
+					Tt_3 = Tt_3 - dt_c;
+				}
+
+				fprintf(lvlog, "FIXED ATT BURN: T_2 = %f, Tt_3 = %f \r\n", T_2, Tt_3);
+
+				if (Tt_3 <= 0 && S4B_REIGN == true) {
+					//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
+					S4B_REIGN = false;
+					TB7 = TAS;
+					LVDC_Timebase = 7;
+					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
+					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					lvda.TLIEnded();
+				}
+
+				goto minorloop;
+			}
+			
+			fprintf(lvlog, "--- STAGE INTEGRAL LOGIC ---\r\n");
+			Pos4 = mul(MX_G,PosS);
 			fprintf(lvlog,"Pos4 = %f, %f, %f\r\n",Pos4.x,Pos4.y,Pos4.z);
 			fprintf(lvlog,"T_1 = %f,T_2 = %f\r\n",T_1,T_2);
 			L_1 = V_ex1 * log(tau1 / (tau1-T_1));
@@ -9262,6 +9335,7 @@ orbitalguidance:
 					if(TAS-TB5-TA2 >= 0){
 						if(INH2){
 							alpha_1 = 0 * RAD;
+							alpha_2 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
 							fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
 							goto orbatt;
@@ -9273,6 +9347,7 @@ orbitalguidance:
 					}else{
 						if(INH1){
 							alpha_1 = 0 * RAD;
+							alpha_2 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
 							fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
 							goto orbatt;
@@ -9286,6 +9361,7 @@ orbitalguidance:
 					}
 				}else{
 					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
 					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
@@ -9298,21 +9374,23 @@ orbitalguidance:
 					goto orbatt;
 				}else{
 					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
 					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
 				}
 			}
 		}else{
-			if (TAS - TB7 - 900 < 0) {
+			if (TAS - TB7 - TI7F11 < 0) {
 				alpha_1 = 0 * RAD;
+				alpha_2 = 0 * RAD;
 				CommandedAttitude.x = 360 * RAD;
 				fprintf(lvlog, "Maintain orbrate\r\n");
 				goto orbatt;
 			}
 			else
 			{
-				if (TAS - TB7 - 6540.0 < 0) {
+				if (TAS - TB7 - TI7AF2 < 0) {
 					if (GATE6)
 					{
 						//attitude hold for T&D
@@ -9548,7 +9626,7 @@ restartprep:
 			}
 
 			//Determination of S-bar and S-bar-dot
-			theta_E = theta_EO + omega_E*t_D;
+			theta_E = theta_EO + TVRATE * t_D;
 
 			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
@@ -9856,6 +9934,31 @@ bool LVDCSV::GeneralizedSwitchSelector(int stage, int channel)
 				return true;
 			}
 		}
+	}
+
+	return false;
+}
+
+bool LVDCSV::RestartManeuverEnable()
+{
+	if (LVDC_Timebase == 5)
+	{
+		INH3 = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::InhibitAttitudeManeuver()
+{
+	if (LVDC_Timebase == 5)
+	{
+		INH1 = true;
+		INH2 = true;
+
+		return true;
 	}
 
 	return false;

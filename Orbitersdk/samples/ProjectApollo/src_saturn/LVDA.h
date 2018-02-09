@@ -50,6 +50,8 @@ public:
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);
 	bool LMAbort();
+	bool RestartManeuverEnable();
+	bool InhibitAttitudeManeuver();
 
 	//LVDC Input Discretes and Interrupts
 

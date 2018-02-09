@@ -48,6 +48,8 @@ public:
 	virtual bool TimebaseUpdate(double dt) = 0;
 	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 	virtual bool LMAbort() { return false; }
+	virtual bool RestartManeuverEnable() { return false; }
+	virtual bool InhibitAttitudeManeuver() = 0;
 protected:
 
 	LVDA &lvda;
@@ -69,6 +71,8 @@ public:
 	//DCS Commands
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
+	bool RestartManeuverEnable();
+	bool InhibitAttitudeManeuver();
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
@@ -97,6 +101,7 @@ private:								// Saturn LV
 	int CommandSequenceStored;
 	bool SCControlPoweredFlight;
 	bool SIICenterEngineCutoff;
+	bool FixedAttitudeBurn;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -239,13 +244,18 @@ private:								// Saturn LV
 	double K_P1, K_P2, K_Y1, K_Y2;					// restart attitude coefficients
 	double K_T3;									// Slope of dT_3 vs. dT_4 curve
 	double omega_E;									// Rotational rate of the Earth
+	double TVRATE;									// Earth rotation rate (0 is used for fixed azimuth missions)
 	double K_pc;									// Constant time used to force MRS in out-of-orbit mode
 	double R_N;										// Nominal radius at SIVB reignition
 	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
+	double TI7AF2;									// Time in Timebase 7 or 8 to begin maneuver to slingshot/communications attitude
+	double TI7F10;									// Time in Timebase 7 to begin maneuver to local horizontal attitude
+	double TI7F11;									// Time in Timebase 7 to compute inertial attitude corresponding to locally referenced separation attitude
 	double K_D;										// Orbital drag model constant
 	double rho_c;									// Constant rho for use when altitude is less than h_1
 	double h_1;										// Lower limit of h for atmospheric density polynomial
 	double h_2;										// Upper limit of h for atmospheric density polynomial
+	double BN4;										// Time in Timebase 7 to enter orbit initialize and resume orbit navigation
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -452,6 +462,7 @@ public:
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool LMAbort();
+	bool InhibitAttitudeManeuver();
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
