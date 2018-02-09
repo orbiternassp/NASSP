@@ -417,6 +417,7 @@ private:								// Saturn LV
 		double T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
 		double f;					// True anomaly at cutoff of transfer ellipse
 		double R_N;					// Restart radius
+		double T2IR;				// Nominal Duration of fourth stage of IGM
 		double T3PR;				// IGM phase 5 time-to-go
 		double TAU3R;				// Time to deplete S-IVB mass from S-IVB EMR
 		double dV_BR;				// Thrust decay velocity bias

@@ -2900,6 +2900,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 		TABLE15[x].f = 0;
 		TABLE15[x].T_ST = 0;
 		TABLE15[x].R_N = 0;
+		TABLE15[x].T2IR = 0;
 		TABLE15[x].T3PR = 0;
 		TABLE15[x].TAU3R = 0;
 		TABLE15[x].dV_BR = 0;
@@ -3271,6 +3272,8 @@ void LVDCSV::Init(){
 	TABLE15[0].target[1].RAS = -114.382494;
 	TABLE15[0].target[0].t_D = 0.0;
 	TABLE15[0].target[1].t_D = 1000.0;
+	TABLE15[0].T2IR = 10.0;
+	TABLE15[1].T2IR = 10.0;
 	TABLE15[0].T3PR = 310.8243;
 	TABLE15[1].T3PR = 308.6854;
 	TABLE15[0].TAU3R = 684.5038;
@@ -3978,6 +3981,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_4N", T_4N);
 	papiWriteScenario_double(scn, "LVDC_t_5", t_5);
 	papiWriteScenario_double(scn, "LVDC_t_6", t_6);
+	papiWriteScenario_double(scn, "LVDC_T2IR", TABLE15[0].T2IR);
+	papiWriteScenario_double(scn, "LVDC_T2IRB", TABLE15[1].T2IR);
 	papiWriteScenario_double(scn, "LVDC_T3PRA", TABLE15[0].T3PR);
 	papiWriteScenario_double(scn, "LVDC_T3PRB", TABLE15[1].T3PR);
 	papiWriteScenario_double(scn, "LVDC_TA1", TA1);
@@ -4138,6 +4143,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
 	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
+	papiWriteScenario_vec(scn, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
 	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
 	papiWriteScenario_mx(scn, "LVDC_MX_G", MX_G);
@@ -4633,6 +4639,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_4N", T_4N);
 		papiReadScenario_double(line, "LVDC_t_5", t_5);
 		papiReadScenario_double(line, "LVDC_t_6", t_6);
+		papiReadScenario_double(line, "LVDC_T2IR", TABLE15[0].T2IR);
+		papiReadScenario_double(line, "LVDC_T2IRB", TABLE15[1].T2IR);
 		papiReadScenario_double(line, "LVDC_T3PRA", TABLE15[0].T3PR);
 		papiReadScenario_double(line, "LVDC_T3PRB", TABLE15[1].T3PR);
 		papiReadScenario_double(line, "LVDC_TA1", TA1);
@@ -4795,6 +4803,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
 		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);
+		papiReadScenario_vec(line, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 
 		// MATRIX3
 		papiReadScenario_mat(line, "LVDC_MX_A", MX_A);
@@ -9516,6 +9525,7 @@ restartprep:
 					R_N = TABLE15[1].R_N;
 					tau3R = TABLE15[1].TAU3R;
 					Tt_3R = TABLE15[1].T3PR;
+					T_2R = TABLE15[1].T2IR;
 					dV_BR = TABLE15[1].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = true;
@@ -9551,6 +9561,7 @@ restartprep:
 					T_ST = TABLE15[0].T_ST;
 					R_N = TABLE15[0].R_N;
 					tau3R = TABLE15[0].TAU3R;
+					T_2R = TABLE15[0].T2IR;
 					Tt_3R = TABLE15[0].T3PR;
 					dV_BR = TABLE15[0].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
