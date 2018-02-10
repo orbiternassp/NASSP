@@ -5433,6 +5433,10 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 
 double imulimit(double a)
 {
+	if (a < 0)
+	{
+		a += 360.0;
+	}
 	if (a > 359.5)
 	{
 		return a - 359.5;

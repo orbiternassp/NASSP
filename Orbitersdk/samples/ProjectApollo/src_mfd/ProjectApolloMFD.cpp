@@ -928,6 +928,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
 		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_INHIBIT_MANEUVER)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Inhibit Maneuver", 16);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_RESTART_MANEUVER_ENABLE)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Restart Maneuver Enable", 23);
+		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
@@ -1736,7 +1746,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 2)
+	if (g_Data.iuUplinkType < 4)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1744,6 +1754,8 @@ void ProjectApolloMFD::menuCycleIUUplinkType()
 	{
 		g_Data.iuUplinkType = 0;
 	}
+
+	g_Data.iuUplinkResult = 0;
 }
 
 void ProjectApolloMFD::menuCycleSwitSelStage()
@@ -1758,6 +1770,8 @@ void ProjectApolloMFD::menuCycleSwitSelStage()
 		{
 			g_Data.iuUplinkSwitSelStage = 0;
 		}
+
+		g_Data.iuUplinkResult = 0;
 	}
 }
 
@@ -1765,6 +1779,8 @@ void ProjectApolloMFD::menuSetSwitSelChannel()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 	{
+		g_Data.iuUplinkResult = 0;
+
 		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
 	}
@@ -1774,6 +1790,8 @@ void ProjectApolloMFD::menuSetTBUpdateTime()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
 	{
+		g_Data.iuUplinkResult = 0;
+
 		bool TimebaseUpdateInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Increment the current LVDC timebase time [4-124 seconds]:", TimebaseUpdateInput, 0, 20, (void*)this);
 	}
@@ -1822,7 +1840,9 @@ void ProjectApolloMFD::menuIUUplink()
 
 	void *uplink = NULL;
 
-	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	switch (g_Data.iuUplinkType)
+	{
+	case DCSUPLINK_SWITCH_SELECTOR:
 	{
 		DCSSWITSEL upl;
 
@@ -1832,7 +1852,8 @@ void ProjectApolloMFD::menuIUUplink()
 		uplink = &upl;
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
-	else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
+	break;
+	case DCSUPLINK_TIMEBASE_UPDATE:
 	{
 		DCSTBUPDATE upl;
 
@@ -1841,9 +1862,14 @@ void ProjectApolloMFD::menuIUUplink()
 		uplink = &upl;
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
-	else if (g_Data.iuUplinkType == DCSUPLINK_LM_ABORT)
+	break;
+	case DCSUPLINK_LM_ABORT:
+	case DCSUPLINK_INHIBIT_MANEUVER:
+	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
 	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
 	}
 
 	if (uplinkaccepted)

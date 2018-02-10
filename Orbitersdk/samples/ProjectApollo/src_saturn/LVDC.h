@@ -23,7 +23,6 @@
   **************************************************************************/
 
 #pragma once
-class IUToLVCommandConnector;
 class LVDA;
 
 /* *******************
@@ -41,16 +40,17 @@ class LVDC
 public:
 	LVDC(LVDA &lvd);
 	virtual ~LVDC() {}
-	virtual void TimeStep(double simt, double simdt) = 0;
-	virtual void Init(IUToLVCommandConnector* lvCommandConn) = 0;
+	virtual void TimeStep(double simdt) = 0;
+	virtual void Init() = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
 	virtual bool GetGuidanceReferenceFailure() = 0;
 	virtual bool TimebaseUpdate(double dt) = 0;
 	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 	virtual bool LMAbort() { return false; }
+	virtual bool RestartManeuverEnable() { return false; }
+	virtual bool InhibitAttitudeManeuver() = 0;
 protected:
-	IUToLVCommandConnector* lvCommandConnector;
 
 	LVDA &lvda;
 };
@@ -58,8 +58,8 @@ protected:
 class LVDCSV: public LVDC {
 public:
 	LVDCSV(LVDA &lvd);											// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn);
-	void TimeStep(double simt, double simdt);
+	void Init();
+	void TimeStep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -71,6 +71,8 @@ public:
 	//DCS Commands
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
+	bool RestartManeuverEnable();
+	bool InhibitAttitudeManeuver();
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	bool Initialized;								// Clobberness flag
@@ -99,6 +101,7 @@ private:								// Saturn LV
 	int CommandSequenceStored;
 	bool SCControlPoweredFlight;
 	bool SIICenterEngineCutoff;
+	bool FixedAttitudeBurn;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -241,13 +244,18 @@ private:								// Saturn LV
 	double K_P1, K_P2, K_Y1, K_Y2;					// restart attitude coefficients
 	double K_T3;									// Slope of dT_3 vs. dT_4 curve
 	double omega_E;									// Rotational rate of the Earth
+	double TVRATE;									// Earth rotation rate (0 is used for fixed azimuth missions)
 	double K_pc;									// Constant time used to force MRS in out-of-orbit mode
 	double R_N;										// Nominal radius at SIVB reignition
 	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
+	double TI7AF2;									// Time in Timebase 7 or 8 to begin maneuver to slingshot/communications attitude
+	double TI7F10;									// Time in Timebase 7 to begin maneuver to local horizontal attitude
+	double TI7F11;									// Time in Timebase 7 to compute inertial attitude corresponding to locally referenced separation attitude
 	double K_D;										// Orbital drag model constant
 	double rho_c;									// Constant rho for use when altitude is less than h_1
 	double h_1;										// Lower limit of h for atmospheric density polynomial
 	double h_2;										// Upper limit of h for atmospheric density polynomial
+	double BN4;										// Time in Timebase 7 to enter orbit initialize and resume orbit navigation
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -409,6 +417,7 @@ private:								// Saturn LV
 		double T_ST;				// Time after launch for the out-of-orbit targeting to perform the S*T_P test (determine injection validity and restart time)
 		double f;					// True anomaly at cutoff of transfer ellipse
 		double R_N;					// Restart radius
+		double T2IR;				// Nominal Duration of fourth stage of IGM
 		double T3PR;				// IGM phase 5 time-to-go
 		double TAU3R;				// Time to deplete S-IVB mass from S-IVB EMR
 		double dV_BR;				// Thrust decay velocity bias
@@ -441,8 +450,8 @@ private:								// Saturn LV
 class LVDC1B: public LVDC {
 public:
 	LVDC1B(LVDA &lvd);										// Constructor
-	void Init(IUToLVCommandConnector* lvCommandConn);
-	void TimeStep(double simt, double simdt);
+	void Init();
+	void TimeStep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -454,6 +463,7 @@ public:
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool LMAbort();
+	bool InhibitAttitudeManeuver();
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file

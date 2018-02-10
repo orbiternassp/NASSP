@@ -205,3 +205,69 @@ bool LVDA::LMAbort()
 
 	return false;
 }
+
+bool LVDA::RestartManeuverEnable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->RestartManeuverEnable();
+
+	return false;
+}
+
+bool LVDA::InhibitAttitudeManeuver()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->InhibitAttitudeManeuver();
+
+	return false;
+}
+
+void LVDA::SwitchSelectorOld(int chan)
+{
+	iu->GetLVCommandConnector()->SwitchSelector(chan);
+}
+
+double LVDA::GetMissionTime()
+{
+	return iu->GetLVCommandConnector()->GetMissionTime();
+}
+
+void LVDA::AddForce(VECTOR3 F, VECTOR3 r)
+{
+	iu->GetLVCommandConnector()->AddForce(F, r);
+}
+
+double LVDA::GetFirstStageThrust()
+{
+	return iu->GetLVCommandConnector()->GetFirstStageThrust();
+}
+
+double LVDA::GetAltitude()
+{
+	return iu->GetLVCommandConnector()->GetAltitude();
+}
+
+int LVDA::GetStage()
+{
+	return iu->GetLVCommandConnector()->GetStage();
+}
+
+void LVDA::SetStage(int stage)
+{
+	iu->GetLVCommandConnector()->SetStage(stage);
+}
+
+int LVDA::GetApolloNo()
+{
+	return iu->GetLVCommandConnector()->GetApolloNo();
+}
+
+void LVDA::GetRelativePos(VECTOR3 &v)
+{
+	iu->GetLVCommandConnector()->GetRelativePos(oapiGetObjectByName("Earth"), v);
+}
+
+void LVDA::GetRelativeVel(VECTOR3 &v)
+{
+	iu->GetLVCommandConnector()->GetRelativeVel(oapiGetObjectByName("Earth"), v);
+}

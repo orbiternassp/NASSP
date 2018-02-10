@@ -29,7 +29,6 @@
 
 #include "papi.h"
 #include "../src_rtccmfd/OrbMech.h"
-#include "iu.h"
 #include "LVDC.h"
 #include "LVDA.h"
 
@@ -43,7 +42,6 @@ LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 // Constructor
 LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 {
-	lvCommandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
@@ -306,18 +304,12 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	SCControlPoweredFlight = false;
 }
 
-void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
+void LVDC1B::Init(){
 	if(Initialized == true){ 
-		if(lvCommandConnector == lvCommandConn){
-			fprintf(lvlog,"init called after init, ignored\r\n");
-			fflush(lvlog);
-			return;
-		}else{
-			fprintf(lvlog,"init called after init with new owner, proceeding\r\n");
-			fflush(lvlog);
-		}
+		fprintf(lvlog,"init called after init, ignored\r\n");
+		fflush(lvlog);
+		return;
 	}
-	lvCommandConnector = lvCommandConn;
 	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -540,9 +532,9 @@ void LVDC1B::Init(IUToLVCommandConnector* lvCommandConn){
 }
 	
 // DS20070205 LVDC++ EXECUTION
-void LVDC1B::TimeStep(double simt, double simdt) {
+void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
-	if (lvCommandConnector->connectedTo == NULL) { return; }
+	if (Initialized == false) { return; }
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 	
@@ -556,20 +548,20 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if (lvCommandConnector->GetMissionTime() < -10800){
-					lvCommandConnector->SwitchSelector(10);
+				if (lvda.GetMissionTime() < -10800){
+					lvda.SwitchSelectorOld(10);
 				}else{
-					lvCommandConnector->SwitchSelector(11);
+					lvda.SwitchSelectorOld(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
-					double Source  = fabs(lvCommandConnector->GetMissionTime());
+					double Source  = fabs(lvda.GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
 					Minutes       -= Hours*60;
-					if (lvCommandConnector->GetMissionTime() < -1200){
+					if (lvda.GetMissionTime() < -1200){
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvda.ZeroLVIMUCDUs();					// Zero IMU CDUs
 						break;
@@ -584,7 +576,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvCommandConnector->GetMissionTime() >= -17){				
+				if (lvda.GetMissionTime() >= -17){
 					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
 					lvda.DriveLVIMUGimbals((Azimuth - A_zL)*RAD, 0, 0);	// Now bring to alignment
 					lvda.ReleaseLVIMU();							// Release IMU
@@ -593,22 +585,22 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-					lvCommandConnector->SwitchSelector(12);
+					lvda.SwitchSelectorOld(12);
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
 				}
 				break;
 			case 0: // MORE TB0
 				// At 10 seconds, play the countdown sound.
-				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
-					lvCommandConnector->SwitchSelector(13);
+				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
+					lvda.SwitchSelectorOld(13);
 				}
 
 				// Shut down venting at T - 9
-				if (lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
+				if (lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
-				if (lvCommandConnector->GetMissionTime() > -4.0) {
-					lvCommandConnector->AddForce(_V(0, 0, -8. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+				if (lvda.GetMissionTime() > -4.0) {
+					lvda.AddForce(_V(0, 0, -8. * lvda.GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
 				}
 
 				if (LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()) {
@@ -738,9 +730,9 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				}
 
 				// Soft-Release Pin Dragging
-				if(lvCommandConnector->GetMissionTime() < 0.5){
-					double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
-					lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+				if(lvda.GetMissionTime() < 0.5){
+					double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
+					lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
@@ -836,8 +828,8 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						lvCommandConnector->GetMissionTime(), lvCommandConnector->GetFirstStageThrust(), lvCommandConnector->GetAltitude());
-					lvCommandConnector->SwitchSelector(17);
+						lvda.GetMissionTime(), lvda.GetFirstStageThrust(), lvda.GetAltitude());
+					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -994,7 +986,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				}
 
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvCommandConnector->GetStage() == LAUNCH_STAGE_SIVB){
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvda.GetStage() == LAUNCH_STAGE_SIVB){
 					S4B_IGN=true;
 				}
 
@@ -1084,14 +1076,14 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 10.0)
 					{
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
-						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						lvda.SetStage(STAGE_ORBIT_SIVB);
 						fprintf(lvlog, "[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n", LVDC_Timebase, LVDC_TB_ETime);
 						CommandSequence++;
 					}
 					break;
 				case 8:
 					//TB4+45.0: Nose Cone Jettison (Apollo 5)
-					if (lvCommandConnector->GetApolloNo() == 5)
+					if (lvda.GetApolloNo() == 5)
 					{
 						if (LVDC_TB_ETime > 45.0)
 						{
@@ -1104,7 +1096,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 					break;
 				case 9:
 					//TB4+600.0: SLA Panel Deployment (Apollo 5)
-					if (lvCommandConnector->GetApolloNo() == 5)
+					if (lvda.GetApolloNo() == 5)
 					{
 						if (LVDC_TB_ETime > 600.0)
 						{
@@ -1239,7 +1231,7 @@ void LVDC1B::TimeStep(double simt, double simdt) {
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
-			fprintf(lvlog,"[T%f] GRR received!\r\n",lvCommandConnector->GetMissionTime());
+			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
 
 			// Initial Position & Velocity
 			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth*RAD), -sin(PHI - PHIP)*cos(Azimuth*RAD))*R_L;
@@ -2684,9 +2676,9 @@ double LVDC1B::SVCompare()
 	VECTOR3 pos, newpos;
 	MATRIX3 mat;
 	double MJD_L;
-	MJD_L = oapiGetSimMJD() - (lvCommandConnector->GetMissionTime() + 17.0) / 3600.0 / 24.0;
+	MJD_L = oapiGetSimMJD() - TAS / 3600.0 / 24.0;
 	mat = OrbMech::Orbiter2PACSS13(MJD_L, PHI, KSCLNG, Azimuth);
-	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
+	lvda.GetRelativePos(pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);
@@ -2722,7 +2714,7 @@ bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 
 bool LVDC1B::LMAbort()
 {
-	if (lvCommandConnector->GetApolloNo() == 5)
+	if (lvda.GetApolloNo() == 5)
 	{
 		if (LVDC_Timebase >= 3 && LVDC_TB_ETime > 10.0)
 		{
@@ -2736,6 +2728,19 @@ bool LVDC1B::LMAbort()
 	return false;
 }
 
+bool LVDC1B::InhibitAttitudeManeuver()
+{
+	if (LVDC_Timebase == 4)
+	{
+		INH1 = true;
+		INH2 = true;
+
+		return true;
+	}
+
+	return false;
+}
+
 // ***************************
 // DS20150720 LVDC++ ON WHEELS
 // ***************************
@@ -2743,7 +2748,6 @@ bool LVDC1B::LMAbort()
 // Constructor
 LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 {
-	lvCommandConnector = NULL;
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 
@@ -2808,6 +2812,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
+	BN4 = 0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
@@ -2895,6 +2900,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 		TABLE15[x].f = 0;
 		TABLE15[x].T_ST = 0;
 		TABLE15[x].R_N = 0;
+		TABLE15[x].T2IR = 0;
 		TABLE15[x].T3PR = 0;
 		TABLE15[x].TAU3R = 0;
 		TABLE15[x].dV_BR = 0;
@@ -2932,6 +2938,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_D = 0;
 	K_P1 = 0;
 	K_P2 = 0;
+	K_T3 = 0;
 	K_Y1 = 0;
 	K_Y2 = 0;
 	K_Y = 0;
@@ -2950,6 +2957,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Lt_Y = 0;
 	LVDC_TB_ETime = 0;
 	mu = 0;
+	omega_E = 0;
 	p = 0;
 	P_1 = 0;
 	P_2 = 0;
@@ -3043,6 +3051,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_GO = 0;
 	theta_N = 0;
 	TI5F2 = 0;
+	TI7AF2 = 0;
+	TI7F10 = 0;
+	TI7F11 = 0;
 	T_IGM = 0;
 	T_L = 0;
 	T_LET = 0;
@@ -3060,6 +3071,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Tt_3 = 0;
 	Tt_3R = 0;
 	Tt_T = 0;
+	TVRATE = 0;
 	U_1 = 0;
 	U_2 = 0;
 	U_3 = 0;
@@ -3130,21 +3142,16 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CommandSequenceStored = 0;
 	SCControlPoweredFlight = false;
 	SIICenterEngineCutoff = false;
+	FixedAttitudeBurn = false;
 }
 
 // Setup
-void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
+void LVDCSV::Init(){
 	if(Initialized == true){ 
-		if(lvCommandConnector == lvCommandConn){
-			fprintf(lvlog,"init called after init, ignored\r\n");
-			fflush(lvlog);
-			return;
-		}else{
-			fprintf(lvlog,"init called after init with new owner, proceeding\r\n");
-			fflush(lvlog);
-		}
+		fprintf(lvlog,"init called after init, ignored\r\n");
+		fflush(lvlog);
+		return;
 	}
-	lvCommandConnector = lvCommandConn;
 
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -3265,6 +3272,8 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	TABLE15[0].target[1].RAS = -114.382494;
 	TABLE15[0].target[0].t_D = 0.0;
 	TABLE15[0].target[1].t_D = 1000.0;
+	TABLE15[0].T2IR = 10.0;
+	TABLE15[1].T2IR = 10.0;
 	TABLE15[0].T3PR = 310.8243;
 	TABLE15[1].T3PR = 308.6854;
 	TABLE15[0].TAU3R = 684.5038;
@@ -3323,10 +3332,13 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
 	TI5F2 = 20.0;
+	TI7AF2 = 6540.0;
+	TI7F10 = 20.0;
+	TI7F11 = 900.0;
 	T_L = 0.0;
 
 	double day;
-	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvCommandConnector->GetMissionTime() - 17.0;
+	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvda.GetMissionTime() - 17.0;
 	t_SD1 = 10984.2;
 	t_SD2 = 5518.9;
 	t_SD3 = 1233.6;
@@ -3354,7 +3366,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	tau3 = 709.7853;//748.7;							// Time to consume all fuel of SIVB
 	tau3R = tau3 - T_4N;//576;
 	tau3N = tau3;							// artificial tau3
-	omega_E = 2.32115e-5*PI;
+	omega_E = TVRATE = 2.32115e-5*PI;
 	//rate limits: set in pre-igm
 	alpha_1 = 0;							// orbital guidance pitch
 	alpha_2 = 0;							// orbital guidance yaw
@@ -3457,6 +3469,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	h = 0;
 	h_1 = 1.5e5;
 	h_2 = 3.0e5;
+	BN4 = 20.0;
 	
 	tchi_y=0; tchi_p=0;						// Angles to null velocity deficiencies without regard to terminal data
 	dot_zeta_T=0; dot_xi_T=0; dot_eta_T=0;	// I don't know.
@@ -3492,6 +3505,7 @@ void LVDCSV::Init(IUToLVCommandConnector* lvCommandConn){
 	CountPIPA = false;
 	SCControlPoweredFlight = false;
 	SIICenterEngineCutoff = false;
+	FixedAttitudeBurn = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -3508,6 +3522,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_directstageint", directstageint);
 	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
+	oapiWriteScenario_int(scn, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
 	oapiWriteScenario_int(scn, "LVDC_GATE0", GATE0);
 	oapiWriteScenario_int(scn, "LVDC_GATE1", GATE1);
@@ -3572,6 +3587,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
+	papiWriteScenario_double(scn, "LVDC_BN4", BN4);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -3852,6 +3868,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
 	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
+	papiWriteScenario_double(scn, "LVDC_K_T3", K_T3);
 	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
 	papiWriteScenario_double(scn, "LVDC_K_Y2", K_Y2);
 	papiWriteScenario_double(scn, "LVDC_K_Y", K_Y);
@@ -3964,6 +3981,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_4N", T_4N);
 	papiWriteScenario_double(scn, "LVDC_t_5", t_5);
 	papiWriteScenario_double(scn, "LVDC_t_6", t_6);
+	papiWriteScenario_double(scn, "LVDC_T2IR", TABLE15[0].T2IR);
+	papiWriteScenario_double(scn, "LVDC_T2IRB", TABLE15[1].T2IR);
 	papiWriteScenario_double(scn, "LVDC_T3PRA", TABLE15[0].T3PR);
 	papiWriteScenario_double(scn, "LVDC_T3PRB", TABLE15[1].T3PR);
 	papiWriteScenario_double(scn, "LVDC_TA1", TA1);
@@ -4015,6 +4034,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
+	papiWriteScenario_double(scn, "LVDC_TI7AF2", TI7AF2);
+	papiWriteScenario_double(scn, "LVDC_TI7F10", TI7F10);
+	papiWriteScenario_double(scn, "LVDC_TI7F11", TI7F11);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -4066,7 +4088,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TSTB", TABLE15[1].T_ST);
 	papiWriteScenario_double(scn, "LVDC_T_T", T_T);
 	papiWriteScenario_double(scn, "LVDC_Tt_3", Tt_3);
+	papiWriteScenario_double(scn, "LVDC_Tt_3R", Tt_3R);
 	papiWriteScenario_double(scn, "LVDC_Tt_T", Tt_T);
+	papiWriteScenario_double(scn, "LVDC_TVRATE", TVRATE);
 	papiWriteScenario_double(scn, "LVDC_U_1", U_1);
 	papiWriteScenario_double(scn, "LVDC_U_2", U_2);
 	papiWriteScenario_double(scn, "LVDC_U_3", U_3);
@@ -4119,6 +4143,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
 	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
+	papiWriteScenario_vec(scn, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
 	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
 	papiWriteScenario_mx(scn, "LVDC_MX_G", MX_G);
@@ -4151,6 +4176,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_directstageint", directstageint);
 		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
+		papiReadScenario_bool(line, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
 		papiReadScenario_bool(line, "LVDC_GATE0", GATE0);
 		papiReadScenario_bool(line, "LVDC_GATE1", GATE1);
@@ -4219,6 +4245,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
+		papiReadScenario_double(line, "LVDC_BN4", BN4);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -4499,6 +4526,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_P1", K_P1);
 		papiReadScenario_double(line, "LVDC_K_P2", K_P2);
+		papiReadScenario_double(line, "LVDC_K_T3", K_T3);
 		papiReadScenario_double(line, "LVDC_K_Y1", K_Y1);
 		papiReadScenario_double(line, "LVDC_K_Y2", K_Y2);
 		papiReadScenario_double(line, "LVDC_K_P", K_P);
@@ -4611,6 +4639,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_4N", T_4N);
 		papiReadScenario_double(line, "LVDC_t_5", t_5);
 		papiReadScenario_double(line, "LVDC_t_6", t_6);
+		papiReadScenario_double(line, "LVDC_T2IR", TABLE15[0].T2IR);
+		papiReadScenario_double(line, "LVDC_T2IRB", TABLE15[1].T2IR);
 		papiReadScenario_double(line, "LVDC_T3PRA", TABLE15[0].T3PR);
 		papiReadScenario_double(line, "LVDC_T3PRB", TABLE15[1].T3PR);
 		papiReadScenario_double(line, "LVDC_TA1", TA1);
@@ -4662,6 +4692,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
+		papiReadScenario_double(line, "LVDC_TI7AF2", TI7AF2);
+		papiReadScenario_double(line, "LVDC_TI7F10", TI7F10);
+		papiReadScenario_double(line, "LVDC_TI7F11", TI7F11);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -4713,7 +4746,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TSTB", TABLE15[1].T_ST);
 		papiReadScenario_double(line, "LVDC_T_T", T_T);
 		papiReadScenario_double(line, "LVDC_Tt_3", Tt_3);
+		papiReadScenario_double(line, "LVDC_Tt_3R", Tt_3R);
 		papiReadScenario_double(line, "LVDC_Tt_T", Tt_T);
+		papiReadScenario_double(line, "LVDC_TVRATE", TVRATE);
 		papiReadScenario_double(line, "LVDC_U_1", U_1);
 		papiReadScenario_double(line, "LVDC_U_2", U_2);
 		papiReadScenario_double(line, "LVDC_U_3", U_3);
@@ -4768,6 +4803,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
 		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);
+		papiReadScenario_vec(line, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 
 		// MATRIX3
 		papiReadScenario_mat(line, "LVDC_MX_A", MX_A);
@@ -4780,9 +4816,9 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 	return;
 }
 
-void LVDCSV::TimeStep(double simt, double simdt) {
-	if (lvCommandConnector->connectedTo == NULL) { return; }
-	if (lvCommandConnector->GetStage() < PRELAUNCH_STAGE) { return; }
+void LVDCSV::TimeStep(double simdt) {
+	if (Initialized == false) { return; }
+	if (lvda.GetStage() < PRELAUNCH_STAGE) { return; }
 
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
@@ -4808,15 +4844,15 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Prelaunch tank venting between -3:00h and engine ignition
 				// No clue if the venting start time is correct
-				if(lvCommandConnector->GetMissionTime() < -10800){
-					lvCommandConnector->SwitchSelector(10);
+				if(lvda.GetMissionTime() < -10800){
+					lvda.SwitchSelectorOld(10);
 				}else{
-					lvCommandConnector->SwitchSelector(11);
+					lvda.SwitchSelectorOld(11);
 				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				if(lvCommandConnector->GetMissionTime() < -1200){
-					double Source  = fabs(lvCommandConnector->GetMissionTime());
+				if(lvda.GetMissionTime() < -1200){
+					double Source  = fabs(lvda.GetMissionTime());
 					double Minutes = Source/60;
 					double Hours   = (int)Minutes/60;				
 					double Seconds = Source - ((int)Minutes*60);
@@ -4830,7 +4866,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvCommandConnector->GetMissionTime() < -17){
+				if (lvda.GetMissionTime() < -17){
 					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
@@ -4847,19 +4883,19 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
-					lvCommandConnector->SwitchSelector(12);
+					lvda.SwitchSelectorOld(12);
 				}
 
 				// At 10 seconds, play the countdown sound.
-				if (lvCommandConnector->GetMissionTime() >= -10.3) { // Was -10.9
-					lvCommandConnector->SwitchSelector(13);
+				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
+					lvda.SwitchSelectorOld(13);
 				}
 				// Shut down venting at T - 9
-				if(lvCommandConnector->GetMissionTime() > -9) { lvCommandConnector->SwitchSelector(14); }
+				if(lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
 				//Hold-down force
-				if(lvCommandConnector->GetMissionTime() > -4.0){
-					lvCommandConnector->AddForce(_V(0, 0, -5. * lvCommandConnector->GetFirstStageThrust()), _V(0, 0, 0));
+				if(lvda.GetMissionTime() > -4.0){
+					lvda.AddForce(_V(0, 0, -5. * lvda.GetFirstStageThrust()), _V(0, 0, 0));
 					}
 
 				// LIFTOFF
@@ -5117,9 +5153,9 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// Soft-Release Pin Dragging
-				if(lvCommandConnector->GetMissionTime() < 0.5){
-				  double PinDragFactor = 1 - (lvCommandConnector->GetMissionTime()*2);
-				  lvCommandConnector->AddForce(_V(0, 0, -(lvCommandConnector->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+				if(lvda.GetMissionTime() < 0.5){
+				  double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
+				  lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 				}
 
 				// S1C CECO TRIGGER:
@@ -5273,8 +5309,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n",lvCommandConnector->GetMissionTime(), lvCommandConnector->GetAltitude());
-					lvCommandConnector->SwitchSelector(17);
+					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n", lvda.GetMissionTime(), lvda.GetAltitude());
+					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					TB3 = TAS;
 					LVDC_Timebase = 3;
@@ -5637,11 +5673,11 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				}
 
 				// S2 ENGINE STARTUP
-				if(lvCommandConnector->GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
-					lvCommandConnector->SwitchSelector(19);
+				if(lvda.GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
+					lvda.SwitchSelectorOld(19);
 				}
 				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
-					lvCommandConnector->SwitchSelector(20);
+					lvda.SwitchSelectorOld(20);
 					S2_IGNITION = true;
 				}
 
@@ -5673,7 +5709,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvCommandConnector->GetMissionTime());
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvda.GetMissionTime());
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
@@ -5686,7 +5722,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				
 				if (LVDC_TB_ETime >= 1.4 && lvda.SCInitiationOfSIISIVBSeparation())
 				{
-					lvCommandConnector->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+					lvda.SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 					directstageint = true;
 					directstagereset = false;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
@@ -6072,7 +6108,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					if (LVDC_TB_ETime > 10.0)
 					{
 						fprintf(lvlog, "[TB%d+%f] S-IVB Engine Out Indication 'A' Enable Reset\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						lvCommandConnector->SetStage(STAGE_ORBIT_SIVB);
+						lvda.SetStage(STAGE_ORBIT_SIVB);
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
 						CommandSequence++;
 					}
@@ -6769,7 +6805,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 				{
 					S4B_REIGN = true;
 				}
-				if (LVDC_TB_ETime >= T_IGM + 10.0 && MRS == false)
+				if (S4B_REIGN && MRS == false && T_2 <= 0.0)
 				{
 					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 18);
 					MRS = true;
@@ -7506,7 +7542,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 
-				if (LVDC_TB_ETime > 20 && poweredflight) {
+				if (LVDC_TB_ETime > BN4 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
 				}
@@ -8181,7 +8217,7 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
-			fprintf(lvlog,"[T%f] GRR received!\r\n", lvCommandConnector->GetMissionTime());
+			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
 
 			// Ground launch targeting
 
@@ -8508,8 +8544,8 @@ void LVDCSV::TimeStep(double simt, double simdt) {
 					double day;
 					modf(oapiGetSimMJD(), &day);
 					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
-					lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
-					lvCommandConnector->GetRelativeVel(lvCommandConnector->GetGravityRef(), vel);
+					lvda.GetRelativePos(pos);
+					lvda.GetRelativeVel(vel);
 					PosS = mul(mat, pos);
 					DotS = mul(mat, vel);
 				}
@@ -8567,7 +8603,7 @@ GuidanceLoop:
 					}
 				};
 			}else{
-				if (TAS - TB7 < 20) { goto minorloop; }else{goto orbitalguidance;}
+				if (TAS - TB7 < TI7F10) { goto minorloop; }else{goto orbitalguidance;}
 			}
 		} //TBD: 
 		if(directstageint == true){//direct stage interrupt update
@@ -8803,11 +8839,42 @@ IGM:	if(HSL == false){
 					fprintf(lvlog,"Normal Tau: tau1 = %f, F/m = %f\r\n",tau1,Fm);
 				}
 			}
-			fprintf(lvlog,"--- STAGE INTEGRAL LOGIC ---\r\n");
 
 			// CHI-TILDE LOGIC
 			// STAGE INTEGRAL CALCULATIONS				
-chitilde:	Pos4 = mul(MX_G,PosS);
+		chitilde:	
+			
+			//Special Apollo 9 logic
+
+			if (FixedAttitudeBurn && LVDC_Timebase == 6)
+			{
+				if (MRS == false)
+				{
+					T_2 = T_2 - dt_c;
+				}
+				else
+				{
+					Tt_3 = Tt_3 - dt_c;
+				}
+
+				fprintf(lvlog, "FIXED ATT BURN: T_2 = %f, Tt_3 = %f \r\n", T_2, Tt_3);
+
+				if (Tt_3 <= 0 && S4B_REIGN == true) {
+					//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
+					S4B_REIGN = false;
+					TB7 = TAS;
+					LVDC_Timebase = 7;
+					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
+					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					lvda.TLIEnded();
+				}
+
+				goto minorloop;
+			}
+			
+			fprintf(lvlog, "--- STAGE INTEGRAL LOGIC ---\r\n");
+			Pos4 = mul(MX_G,PosS);
 			fprintf(lvlog,"Pos4 = %f, %f, %f\r\n",Pos4.x,Pos4.y,Pos4.z);
 			fprintf(lvlog,"T_1 = %f,T_2 = %f\r\n",T_1,T_2);
 			L_1 = V_ex1 * log(tau1 / (tau1-T_1));
@@ -9277,6 +9344,7 @@ orbitalguidance:
 					if(TAS-TB5-TA2 >= 0){
 						if(INH2){
 							alpha_1 = 0 * RAD;
+							alpha_2 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
 							fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
 							goto orbatt;
@@ -9288,6 +9356,7 @@ orbitalguidance:
 					}else{
 						if(INH1){
 							alpha_1 = 0 * RAD;
+							alpha_2 = 0 * RAD;
 							CommandedAttitude.x = 360 * RAD;
 							fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
 							goto orbatt;
@@ -9301,6 +9370,7 @@ orbitalguidance:
 					}
 				}else{
 					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
 					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
@@ -9313,21 +9383,23 @@ orbitalguidance:
 					goto orbatt;
 				}else{
 					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
 					CommandedAttitude.x = 360 * RAD;
 					fprintf(lvlog, "Maintain orbrate\r\n");
 					goto orbatt;
 				}
 			}
 		}else{
-			if (TAS - TB7 - 900 < 0) {
+			if (TAS - TB7 - TI7F11 < 0) {
 				alpha_1 = 0 * RAD;
+				alpha_2 = 0 * RAD;
 				CommandedAttitude.x = 360 * RAD;
 				fprintf(lvlog, "Maintain orbrate\r\n");
 				goto orbatt;
 			}
 			else
 			{
-				if (TAS - TB7 - 6540.0 < 0) {
+				if (TAS - TB7 - TI7AF2 < 0) {
 					if (GATE6)
 					{
 						//attitude hold for T&D
@@ -9453,6 +9525,7 @@ restartprep:
 					R_N = TABLE15[1].R_N;
 					tau3R = TABLE15[1].TAU3R;
 					Tt_3R = TABLE15[1].T3PR;
+					T_2R = TABLE15[1].T2IR;
 					dV_BR = TABLE15[1].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
 					GATE1 = true;
@@ -9488,6 +9561,7 @@ restartprep:
 					T_ST = TABLE15[0].T_ST;
 					R_N = TABLE15[0].R_N;
 					tau3R = TABLE15[0].TAU3R;
+					T_2R = TABLE15[0].T2IR;
 					Tt_3R = TABLE15[0].T3PR;
 					dV_BR = TABLE15[0].dV_BR;
 					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
@@ -9563,7 +9637,7 @@ restartprep:
 			}
 
 			//Determination of S-bar and S-bar-dot
-			theta_E = theta_EO + omega_E*t_D;
+			theta_E = theta_EO + TVRATE * t_D;
 
 			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
@@ -9837,7 +9911,7 @@ double LVDCSV::SVCompare()
 	double day;
 	modf(oapiGetSimMJD(), &day);
 	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
-	lvCommandConnector->GetRelativePos(lvCommandConnector->GetGravityRef(), pos);
+	lvda.GetRelativePos(pos);
 	newpos = mul(mat, pos);
 
 	return length(PosS - newpos);
@@ -9871,6 +9945,31 @@ bool LVDCSV::GeneralizedSwitchSelector(int stage, int channel)
 				return true;
 			}
 		}
+	}
+
+	return false;
+}
+
+bool LVDCSV::RestartManeuverEnable()
+{
+	if (LVDC_Timebase == 5)
+	{
+		INH3 = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::InhibitAttitudeManeuver()
+{
+	if (LVDC_Timebase == 5)
+	{
+		INH1 = true;
+		INH2 = true;
+
+		return true;
 	}
 
 	return false;

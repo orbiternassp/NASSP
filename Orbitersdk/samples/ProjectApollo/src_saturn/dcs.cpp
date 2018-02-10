@@ -77,6 +77,14 @@ bool DCS::Uplink(int type, void *upl)
 		{
 			return iu->lvda.LMAbort();
 		}
+		else if (type == DCSUPLINK_RESTART_MANEUVER_ENABLE)
+		{
+			return iu->lvda.RestartManeuverEnable();
+		}
+		else if (type == DCSUPLINK_INHIBIT_MANEUVER)
+		{
+			return iu->lvda.InhibitAttitudeManeuver();
+		}
 	}
 
 	return false;
