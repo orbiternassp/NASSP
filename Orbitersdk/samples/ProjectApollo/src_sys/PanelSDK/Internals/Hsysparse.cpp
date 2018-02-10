@@ -594,6 +594,8 @@ void* h_WaterSeparator::GetComponent(char *component_name) {
 		return (void*)&flowMax;
 	if (Compare(component_name, "FLOW"))
 		return (void*)&flow;
+	if (Compare(component_name, "H2OREMOVALRATE"))
+		return (void*)&h2oremovalrate;
 
 	BuildError(2);	//no such component
 	return NULL;
