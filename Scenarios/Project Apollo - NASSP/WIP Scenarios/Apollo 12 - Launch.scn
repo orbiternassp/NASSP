@@ -321,7 +321,6 @@ Yankee Clipper:ProjectApollo\Saturn5
   LVDC_BEGIN
   LVDC_SIICenterEngineCutoff 1
     LVDC_hx[0][0] 72.029
-	LVDC_SCControlPoweredFlight 1
     LVDC_R_L 6373424.0
 	LVDC_T_LO 58903.0
 	LVDC_t_S1C_CECO 134.6

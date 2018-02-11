@@ -84,6 +84,7 @@ public:
 	int GetApolloNo();
 	void GetRelativePos(VECTOR3 &v);
 	void GetRelativeVel(VECTOR3 &v);
+	bool GetSCControlPoweredFlight();
 protected:
 	IU *iu;
 };

@@ -332,6 +332,7 @@ void Saturn::initSaturn()
 
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
+	IUSCContPermanentEnabled = true;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -1443,6 +1444,7 @@ int Saturn::GetMainState()
 {
 	MainState state;
 
+	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
 	state.SIISepState = SIISepState;
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
@@ -1470,6 +1472,7 @@ void Saturn::SetMainState(int s)
 	MainState state;
 
 	state.word = s;
+	IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
 	SIISepState = state.SIISepState;
 	Scorrec = state.Scorrec;
 	Burned = state.Burned;
@@ -2028,6 +2031,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			//
 			sscanf(line + 5, "%d", &i);
 			NoHGA = (i != 0);
+		}
+		else if (!strnicmp(line, "NOMANUALTLI", 11)) {
+			//
+			// NOMANUALTLI isn't saved in the scenario, this is solely to allow you
+			// to override the default NOMANUALTLI state in startup scenarios.
+			//
+			sscanf(line + 11, "%d", &i);
+			IUSCContPermanentEnabled = (i != 1);
 		}
 		else if (!strnicmp(line, SPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(SPSGIMBALACTUATOR_PITCH_START_STRING))) {
 			SPSEngine.pitchGimbalActuator.LoadState(scn);
@@ -3737,7 +3748,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(Crewed);
+		iu->SetMissionInfo(Crewed, IUSCContPermanentEnabled);
 	}
 
 	//

@@ -23,7 +23,17 @@
   **************************************************************************/
 
 #pragma once
+
+#include <vector>
+
 class LVDA;
+
+struct SwitchSelectorSet
+{
+	double time;
+	int stage;
+	int channel;
+};
 
 /* *******************
  * LVDC++ SV VERSION *
@@ -62,6 +72,10 @@ public:
 	void TimeStep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	void ReadFlightSequenceProgram(char *fspfile);
+
+	void SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table);
+	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table);
 
 	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
@@ -75,6 +89,7 @@ public:
 	bool InhibitAttitudeManeuver();
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
+	char FSPFileName[256];
 	bool Initialized;								// Clobberness flag
 
 	int LVDC_Timebase;								// Time Base
@@ -99,7 +114,6 @@ private:								// Saturn LV
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 	int CommandSequence;
 	int CommandSequenceStored;
-	bool SCControlPoweredFlight;
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
 
@@ -402,6 +416,15 @@ private:								// Saturn LV
 	double sin_chi_Zit;
 	double cos_chi_Zit;
 	double h;										// Altitude of the vehicle above the oblate spheroid of the earth
+
+	//Switch Selector Tables
+	std::vector<SwitchSelectorSet> SSTTB[9];
+	std::vector<SwitchSelectorSet> SSTTB4A;
+	std::vector<SwitchSelectorSet> SSTTB5A;
+	std::vector<SwitchSelectorSet> SSTTB6A;
+	std::vector<SwitchSelectorSet> SSTTB6B;
+	std::vector<SwitchSelectorSet> SSTTB6C;
+
 	// TABLE15
 	/*
 		These tables store the precomputed out-of-orbit targeting data for the Saturn V launches.
@@ -482,7 +505,6 @@ private:
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
 	int CommandSequence;
-	bool SCControlPoweredFlight;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time

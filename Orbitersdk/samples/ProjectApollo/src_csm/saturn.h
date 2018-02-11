@@ -669,7 +669,7 @@ public:
 	///
 	union MainState {
 		struct {
-			unsigned unused2:1;						///< Spare
+			unsigned IUSCContPermanentEnabled:1;	///< Can the IU FCC SC control be permanently enabled?
 			unsigned SIISepState:1;					///< State of the SII Sep light.
 			unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
 			unsigned Scorrec:1;						///< Have we played the course correction sound?
@@ -3693,6 +3693,7 @@ protected:
 	//
 
 	bool TLICapableBooster;
+	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;

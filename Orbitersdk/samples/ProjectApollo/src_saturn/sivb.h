@@ -85,6 +85,7 @@ struct SIVBSettings
 	double PanelProcess;			///< SLA Panels opening progress
 	bool SaturnVStage;				///< Saturn V stage or Saturn 1b stage?
 	bool LowRes;					///< Low-res meshes?
+	bool IUSCContPermanentEnabled;
 
 	double SLARotationLimit;		///< SLA rotation limit in degrees (usually 45.0).
 
@@ -213,7 +214,7 @@ public:
 			unsigned PanelsOpened:1;
 			unsigned SaturnVStage:1;
 			unsigned LowRes:1;
-			unsigned spare1:1;
+			unsigned IUSCContPermanentEnabled:1;
 			unsigned spare2:1;
 			unsigned Payloaddatatransfer:1;
 		};
@@ -403,6 +404,7 @@ protected:
 	bool PanelsOpened;				///< SLA Panels are open.
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool LowRes;					///< Using low-res meshes.
+	bool IUSCContPermanentEnabled;
 
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).

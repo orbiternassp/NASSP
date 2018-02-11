@@ -289,7 +289,7 @@ public:
 	IU();
 	virtual ~IU() {}
 
-	void SetMissionInfo(bool crewed);
+	void SetMissionInfo(bool crewed, bool sccontpowered);
 
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
@@ -330,6 +330,7 @@ public:
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 
 	void ConnectUmbilical() { UmbilicalConnected = true; }
 	void DisconnectUmbilical() { UmbilicalConnected = false; }
@@ -358,6 +359,7 @@ protected:
 	//
 
 	bool Crewed;
+	bool SCControlPoweredFlight;
 
 	bool UmbilicalConnected;
 

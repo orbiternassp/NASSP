@@ -271,3 +271,8 @@ void LVDA::GetRelativeVel(VECTOR3 &v)
 {
 	iu->GetLVCommandConnector()->GetRelativeVel(oapiGetObjectByName("Earth"), v);
 }
+
+bool LVDA::GetSCControlPoweredFlight()
+{
+	return iu->GetSCControlPoweredFlight();
+}

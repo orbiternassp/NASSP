@@ -37,6 +37,7 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 	StageSwitch = 0;
 	SIVBBurnMode = false;
 	SCControlEnableRelay = false;
+	PermanentSCControlEnabled = false;
 
 	a_0p = a_0y = a_0r = 0.0;
 	a_1p = a_1y = a_1r = 0.0;
@@ -62,6 +63,7 @@ void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteScenario_int(scn, "STAGESWITCH", StageSwitch);
 	papiWriteScenario_bool(scn, "SIVBBURNMODE", SIVBBurnMode);
 	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+	papiWriteScenario_bool(scn, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 	papiWriteScenario_vec(scn, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	oapiWriteLine(scn, end_str);
@@ -80,6 +82,7 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_int(line, "STAGESWITCH", StageSwitch);
 		papiReadScenario_bool(line, "SIVBBURNMODE", SIVBBurnMode);
 		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+		papiReadScenario_bool(line, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 		papiReadScenario_vec(line, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	}

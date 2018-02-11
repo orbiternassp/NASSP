@@ -316,7 +316,6 @@ LVDC_BEGIN
   LVDC_hx[0][2] 10.877374
   LVDC_hx[0][3] 3.486472
   LVDC_hx[0][4] -5.001238
-  LVDC_SCControlPoweredFlight 1
   LVDC_t_D0 0.0
   LVDC_t_D1 0.0
   LVDC_t_D2 13080.00

@@ -54,14 +54,16 @@ dcs(this)
 	UmbilicalConnected = false;
 
 	Crewed = true;
+	SCControlPoweredFlight = false;
 
 	commandConnector.SetIU(this);
 	lvdc = NULL;
 }
 
-void IU::SetMissionInfo(bool crewed)
+void IU::SetMissionInfo(bool crewed, bool sccontpowered)
 {
 	Crewed = crewed;
+	SCControlPoweredFlight = sccontpowered;
 }
 
 void IU::Timestep(double misst, double simt, double simdt, double mjd)
@@ -1466,6 +1468,11 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 		eds.SetSIEngineOutIndicationA(true);
 		eds.SetSIEngineOutIndicationB(true);
 	}
+
+	if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+	{
+		fcc.SetPermanentSCControlEnabled();
+	}
 }
 
 bool IU1B::SIBLowLevelSensorsDry()
@@ -1628,6 +1635,11 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	{
 		eds.SetSIEngineOutIndicationA(true);
 		eds.SetSIEngineOutIndicationB(true);
+	}
+
+	if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+	{
+		fcc.SetPermanentSCControlEnabled();
 	}
 }
 
