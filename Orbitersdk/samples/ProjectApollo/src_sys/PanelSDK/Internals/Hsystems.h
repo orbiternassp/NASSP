@@ -343,6 +343,7 @@ public:
 	virtual void refresh(double dt);
 	virtual void* GetComponent(char *component_name);
 
+	double h2oremovalrate;
 	double flow;	// in g/s
 	double flowMax;
 };

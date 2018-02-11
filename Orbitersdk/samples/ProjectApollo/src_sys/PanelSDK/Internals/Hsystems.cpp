@@ -1297,11 +1297,13 @@ h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v
 	H20waste = i_H2Owaste;
 	flowMax = i_flowmax;
 
+	h2oremovalrate = 0;
 	flow = 0;
 }
 
 void h_WaterSeparator::refresh(double dt) {
 
+	h2oremovalrate = 0;
 	flow = 0;
 	if ((!in) || (!out)) return;
 
@@ -1312,6 +1314,7 @@ void h_WaterSeparator::refresh(double dt) {
 			delta_p = 0;
 
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
 
 		// separate water
 		h_volume h2o_volume;
