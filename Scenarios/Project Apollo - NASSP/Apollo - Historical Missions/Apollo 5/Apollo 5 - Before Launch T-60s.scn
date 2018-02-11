@@ -2079,6 +2079,7 @@ DCS_BEGIN
 DCS_END
 IU_END
 LVDC_BEGIN
+  LVDC_FSPFileName Config\ProjectApollo\AS-204 Flight Sequence Program.txt
   LVDC_alpha_D_op 1
   LVDC_BOOST 0
   LVDC_CountPIPA 0

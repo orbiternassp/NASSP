@@ -49,6 +49,8 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	int x=0;
 	Initialized = false;					// Reset cloberness flag
 	// Zeroize
+	// chars
+	FSPFileName[0] = '\0';
 	// bool
 	alpha_D_op = false;
 	BOOST = false;
@@ -313,6 +315,8 @@ void LVDC1B::Init(){
 		fflush(lvlog);
 		return;
 	}
+
+	sprintf(FSPFileName, "Config\\ProjectApollo\\Saturn IB Default Flight Sequence Program.txt");
 	
 	//presettings in order of boeing listing for easier maintainece
 	//GENERAL
@@ -533,6 +537,27 @@ void LVDC1B::Init(){
 	Initialized = true;
 }
 	
+void LVDC1B::SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table)
+{
+	if (CommandSequence < (int)table.size())
+	{
+		if (LVDC_TB_ETime > table[CommandSequence].time)
+		{
+			lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
+			fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
+			CommandSequence++;
+		}
+	}
+}
+
+bool LVDC1B::SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table)
+{
+	if (CommandSequence >= (int)table.size())
+		return true;
+
+	return false;
+}
+
 // DS20070205 LVDC++ EXECUTION
 void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
@@ -609,127 +634,16 @@ void LVDC1B::TimeStep(double simdt) {
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+					liftoff = true;
+					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
+					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
 				}
 				break;
 
 			case 1: // LIFTOFF TIME
 				
-				switch (CommandSequence)
-				{
-				case 0:
-					liftoff = true;
-					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
-					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
-					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
-					CommandSequence++;
-					break;
-				case 1:
-					//TB1+5.8: Single Engine Cutoff Enable
-					if (LVDC_TB_ETime > 5.8)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 100);
-						CommandSequence++;
-					}
-					break;
-				case 2:
-					//TB1+6.0: LOX Tank Pressurization Shutoff Valves Close On
-					if (LVDC_TB_ETime > 6.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 79);
-						CommandSequence++;
-					}
-					break;
-				case 3:
-					//TB1+10.0: Multiple Engine Cutoff Enable No. 1
-					if (LVDC_TB_ETime > 10.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 16);
-						CommandSequence++;
-					}
-					break;
-				case 4:
-					//TB1+10.1: Multiple Engine Cutoff Enable No. 2
-					if (LVDC_TB_ETime > 10.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 15);
-						CommandSequence++;
-					}
-					break;
-				case 5:
-					//TB1+40.0: Launch Vehicle Engines EDS Cutoff Enable
-					if (LVDC_TB_ETime > 40.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 38);
-						CommandSequence++;
-					}
-					break;
-				case 6:
-					//TB1+60.0: Flight Control Computer Switch Point No. 1
-					if (LVDC_TB_ETime > 60.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 43);
-						CommandSequence++;
-					}
-					break;
-				case 7:
-					//TB1+90.0: Flight Control Computer Switch Point No. 2
-					if (LVDC_TB_ETime > 90.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 21);
-						CommandSequence++;
-					}
-					break;
-				case 8:
-					//TB1+120.0: Flight Control Computer Switch Point No. 3
-					if (LVDC_TB_ETime > 120.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 22);
-						CommandSequence++;
-					}
-					break;
-				case 9:
-					//TB1+131.2: Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
-					if (LVDC_TB_ETime > 131.2)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 15);
-						CommandSequence++;
-					}
-					break;
-				case 10:
-					//TB1+131.4: Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
-					if (LVDC_TB_ETime > 131.4)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 2);
-						CommandSequence++;
-					}
-					break;
-				case 11:
-					//TB1+131.6: S-IB Two Engines Out Auto-Abort Inhibit Enable
-					if (LVDC_TB_ETime > 131.6)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 51);
-						CommandSequence++;
-					}
-					break;
-				case 12:
-					//TB1+131.8: S-IB Two Engines Out Auto-Abort Inhibit
-					if (LVDC_TB_ETime > 131.8)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 35);
-						CommandSequence++;
-					}
-					break;
-				case 13:
-					//TB1+132.0: Propellant Level Sensors Enable
-					if (LVDC_TB_ETime > 132.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 104);
-						CommandSequence++;
-					}
-					break;
-				default:
-					break;
-				}
+				SwitchSelectorProcessing(SSTTB[1]);
 
 				// Soft-Release Pin Dragging
 				if(lvda.GetMissionTime() < 0.5){
@@ -758,71 +672,12 @@ void LVDC1B::TimeStep(double simdt) {
 
 			case 2:
 
-				switch (CommandSequence)
+				SwitchSelectorProcessing(SSTTB[2]);
+
+				if (S1B_CECO_Commanded == false && LVDC_TB_ETime > 3.1)
 				{
-				case 0:
-					CommandSequence++;
-					break;
-				case 1:
-					//TB2+0.2: Excess Rate (Roll) Auto-Abort Inhibit Enable
-					if (LVDC_TB_ETime > 0.2)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 34);
-						CommandSequence++;
-					}
-					break;
-				case 2:
-					//TB2+0.4: Excess Rate (Roll) Auto-Abort Inhibit And Switch Rate Gyros SC Indication "B"
-					if (LVDC_TB_ETime > 0.4)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 50);
-						CommandSequence++;
-					}
-					break;
-				case 3:
-					//TB2+3.1: Inboard Engines Cutoff
-					if (LVDC_TB_ETime > 3.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 98);
-						S1B_Engine_Out = true;
-						S1B_CECO_Commanded = true;
-						CommandSequence++;
-					}
-					break;
-				case 4:
-					//TB2+3.4: Auto Abort Enable Relays Reset
-					if (LVDC_TB_ETime > 3.4)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 16);
-						CommandSequence++;
-					}
-					break;
-				case 5:
-					//TB2+4.0: Q-Ball Power Off
-					if (LVDC_TB_ETime > 4.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 1);
-						CommandSequence++;
-					}
-					break;
-				case 6:
-					//TB2+4.6: LOX Depletion Cutoff Enable
-					if (LVDC_TB_ETime > 4.6)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 97);
-						CommandSequence++;
-					}
-					break;
-				case 7:
-					//TB2+5.6: Fuel Depletion Cutoff Enable
-					if (LVDC_TB_ETime > 5.6)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 79);
-						CommandSequence++;
-					}
-					break;
-				default:
-					break;
+					S1B_Engine_Out = true;
+					S1B_CECO_Commanded = true;
 				}
 				
 				// S1B OECO TRIGGER
@@ -847,149 +702,15 @@ void LVDC1B::TimeStep(double simdt) {
 
 			case 3:
 
-				switch (CommandSequence)
-				{
-				case 0:
-					CommandSequence++;
-					break;
-				case 1:
-					//TB3+0.1: S-IB Outboard Engines Cutoff
-					if (LVDC_TB_ETime > 0.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 18);
-						CommandSequence++;
-					}
-					break;
-				case 2:
-					//TB3+0.2: LOX Tank Pressurization Shutoff Valves Open
-					if (LVDC_TB_ETime > 0.2)
-						CommandSequence++;
-					break;
-				case 3:
-					//TB3+0.3: LOX Tank Flight Pressurization System On
-					if (LVDC_TB_ETime > 0.3)
-						CommandSequence++;
-					break;
-				case 4:
-					//TB3+0.4: S-IVB Engine Cutoff No. 1 Off
-					if (LVDC_TB_ETime > 0.4)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 13);
-						CommandSequence++;
-					}
-					break;
-				case 5:
-					//TB3+0.5: S-IVB Engine Cutoff No. 2 Off
-					if (LVDC_TB_ETime > 0.5)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 49);
-						CommandSequence++;
-					}
-					break;
-				case 6:
-					//TB3+1.1: Ullage Rockets Ignition
-					if (LVDC_TB_ETime > 1.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 56);
-						CommandSequence++;
-					}
-					break;
-				case 7:
-					//TB3+1.3: S-IB/S-IVB Separation On
-					if (LVDC_TB_ETime > 1.3)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SI, 23);
-						CommandSequence++;
-					}
-					break;
-				case 8:
-					//TB3+1.5: Flight Control Computer S-IVB Burn Mode On "A"
-					if (LVDC_TB_ETime > 1.5)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 53);
-						CommandSequence++;
-					}
-					break;
-				case 9:
-					//TB3+1.7: Flight Control Computer S-IVB Burn Mode On "B"
-					if (LVDC_TB_ETime > 1.7)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 6);
-						CommandSequence++;
-					}
-					break;
-				case 10:
-					//TB3+1.9: Engine Ready Bypass On
-					if (LVDC_TB_ETime > 1.9)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 10);
-						CommandSequence++;
-					}
-					break;
-				case 11:
-					//TB3+2.4: S-IVB Engine Out Indication A Enable
-					if (LVDC_TB_ETime > 2.4)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 9);
-						CommandSequence++;
-					}
-					break;
-				case 12:
-					//TB3+2.6: S-IVB Engine Out Indication B Enable
-					if (LVDC_TB_ETime > 2.6)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 29);
-						CommandSequence++;
-					}
-					break;
-				case 13:
-					//TB3+2.7: Engine Ignition Sequence Start
-					if (LVDC_TB_ETime > 1.9)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 9);
-						CommandSequence++;
-					}
-					break;
-				case 14:
-					//TB3+8.7: P.U. Mixture Ratio 5.5 On
-					if (LVDC_TB_ETime > 8.7)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 34);
-						CommandSequence++;
-					}
-					break;
-				case 15:
-					//TB3+311.3: P.U. Mixture Ratio 5.5 Off
-					if (LVDC_TB_ETime > 311.3)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 35);
-						CommandSequence++;
-					}
-					break;
-				case 16:
-					//TB3+311.5: P.U. Mixture Ratio 4.5 On
-					if (LVDC_TB_ETime > 311.5)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 32);
-						fprintf(lvlog, "[TB%d+%f] MR Shift\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						MRS = true;
-						CommandSequence++;
-					}
-					break;
-				case 17:
-					//TB3+437.2: Propellant Depletion Cutoff Aarm
-					if (LVDC_TB_ETime > 437.2)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 97);
-						CommandSequence++;
-					}
-					break;
-				default:
-					break;
-				}
+				SwitchSelectorProcessing(SSTTB[3]);
 
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvda.GetStage() == LAUNCH_STAGE_SIVB){
 					S4B_IGN=true;
+				}
+
+				if (LVDC_TB_ETime > 311.5 && MRS == false)
+				{
+					MRS = true;
 				}
 
 				//Manual S-IVB Shutdown
@@ -1019,121 +740,18 @@ void LVDC1B::TimeStep(double simdt) {
 
 			case 4:
 				// TB4 timed events
-
-				switch (CommandSequence)
-				{
-				case 0:
-					CommandSequence++;
-					break;
-				case 1:
-					//TB4+0.1: S-IVB Engine Cutoff No. 1 On
-					if (LVDC_TB_ETime > 0.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
-						CommandSequence++;
-					}
-					break;
-				case 2:
-					//TB4+0.2: S-IVB Engine Cutoff No. 2 On
-					if (LVDC_TB_ETime > 0.2)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
-						CommandSequence++;
-					}
-					break;
-				case 3:
-					//TB4+1.8: Propellant Depletion Cutoff Disarm
-					if (LVDC_TB_ETime > 1.8)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 98);
-						CommandSequence++;
-					}
-					break;
-				case 4:
-					//TB4+3.5: Flight Control Computer S-IVB Burn Mode Off "A"
-					if (LVDC_TB_ETime > 3.5)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 12);
-						CommandSequence++;
-					}
-					break;
-				case 5:
-					//TB4+3.7: Flight Control Computer S-IVB Burn Mode On "B"
-					if (LVDC_TB_ETime > 3.7)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 5);
-						CommandSequence++;
-					}
-					break;
-				case 6:
-					//TB4+5.0: S/C Control Of Saturn Enable
-					if (LVDC_TB_ETime > 5.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-						CommandSequence++;
-					}
-					break;
-				case 7:
-					//TB4+10.0: S-IVB Engine EDS Cutoffs Disable
-					if (LVDC_TB_ETime > 10.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 3);
-						lvda.SetStage(STAGE_ORBIT_SIVB);
-						fprintf(lvlog, "[TB%d+%f] Set STAGE_ORBIT_SIVB\r\n", LVDC_Timebase, LVDC_TB_ETime);
-						CommandSequence++;
-					}
-					break;
-				case 8:
-					//TB4+45.0: Nose Cone Jettison (Apollo 5)
-					if (lvda.GetApolloNo() == 5)
-					{
-						if (LVDC_TB_ETime > 45.0)
-						{
-							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
-							CommandSequence++;
-						}
-					}
-					else
-						CommandSequence++;
-					break;
-				case 9:
-					//TB4+600.0: SLA Panel Deployment (Apollo 5)
-					if (lvda.GetApolloNo() == 5)
-					{
-						if (LVDC_TB_ETime > 600.0)
-						{
-							lvda.SwitchSelector(SWITCH_SELECTOR_IU, 111);
-							CommandSequence++;
-						}
-					}
-					else
-						CommandSequence++;
-					break;
-				case 10:
-					//TB4+5052.0: LOX Tank Flight Pressurization Shutoff Valves Close Off
-					if (LVDC_TB_ETime > 5052.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 80);
-						CommandSequence++;
-					}
-					break;
-				case 11:
-					//TB4+5773.0: LOX Tank Flight Pressurization Shutoff Valves Close On
-					if (LVDC_TB_ETime > 5773.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 79);
-						CommandSequence++;
-					}
-					break;
-				default:
-					break;
-				}
-
+				SwitchSelectorProcessing(SSTTB[4]);
 
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
 				}
+
+				if (LVDC_TB_ETime > 10.0 && lvda.GetStage() == LAUNCH_STAGE_SIVB)
+				{
+					lvda.SetStage(STAGE_ORBIT_SIVB);
+				}
+
 				if(LVDC_TB_ETime > 100){
 					poweredflight = false; //powered flight nav off
 				}
@@ -1150,9 +768,10 @@ void LVDC1B::TimeStep(double simdt) {
 			case 10:
 				//LM Abort Sequence
 
-				switch (CommandSequence)
+				SwitchSelectorProcessing(SSTALT1);
+
+				if (BOOST == true)
 				{
-				case 0:
 					S4B_IGN = false;
 
 					//HSL Exit settings
@@ -1163,42 +782,6 @@ void LVDC1B::TimeStep(double simdt) {
 					BOOST = false;
 
 					fprintf(lvlog, "ALT SEQUENCE: LM ABORT\r\n");
-					CommandSequence++;
-					break;
-				case 1:
-					//Seq+0.1: S-IVB Engine Cutoff No. 1 On
-					if (LVDC_TB_ETime > 0.1)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
-						CommandSequence++;
-					}
-					break;
-				case 2:
-					//Seq+0.2: S-IVB Engine Cutoff No. 2 On
-					if (LVDC_TB_ETime > 0.2)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
-						CommandSequence++;
-					}
-					break;
-				case 3:
-					//Seq+10.0: Nose Cone Jettison
-					if (LVDC_TB_ETime > 10.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 110);
-						CommandSequence++;
-					}
-					break;
-				case 4:
-					//Seq+15.0: SLA Panel Deployment
-					if (LVDC_TB_ETime > 15.0)
-					{
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 111);
-						CommandSequence++;
-					}
-					break;
-				default:
-					break;
 				}
 
 				break;
@@ -2036,6 +1619,7 @@ minorloop: //minor loop;
 void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_START_STRING);
 	// Thank heaven for text processing.
+	oapiWriteScenario_string(scn, "LVDC_FSPFileName", FSPFileName);
 	// bool
 	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
@@ -2380,6 +1964,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		// Doing all this in one go makes the MS compiler barf.
 		// Doing it in long chains makes the MS compiler silently optimize away the tail of the chain.
 		// So we do it in small groups.
+		papiReadScenario_string(line, "LVDC_FSPFileName", FSPFileName);
 		// INT
 		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
@@ -2668,7 +2253,55 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_mat(line, "LVDC_MX_K", MX_K);
 		papiReadScenario_mat(line, "LVDC_MX_phi_T", MX_phi_T);
 	}
+
+	ReadFlightSequenceProgram(FSPFileName);
+
 	return;
+}
+
+void LVDC1B::ReadFlightSequenceProgram(char *fspfile)
+{
+	using namespace std;
+
+	std::vector<SwitchSelectorSet> v;
+
+	SwitchSelectorSet ssset;
+
+	bool first = true;
+	int tb, tbtemp;
+
+	string line;
+	ifstream file(fspfile);
+	if (file.is_open())
+	{
+		while (getline(file, line))
+		{
+			if (sscanf(line.c_str(), "TB%d", &tbtemp) == 1 || line.compare("END") == 0)
+			{
+				if (first == false)
+				{
+					if (tb >= 1 && tb <= 4)
+					{
+						SSTTB[tb] = v;
+					}
+					else if (tb == 10)
+					{
+						SSTALT1 = v;
+					}
+				}
+
+				v.clear();
+				tb = tbtemp;
+				first = false;
+			}
+			else if (sscanf(line.c_str(), "%lf,%d,%d", &ssset.time, &ssset.stage, &ssset.channel) == 3)
+			{
+				v.push_back(ssset);
+			}
+		}
+	}
+
+	file.close();
 }
 
 double LVDC1B::SVCompare()

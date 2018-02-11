@@ -165,6 +165,7 @@ AS-204:ProjectApollo/LEMSaturn
   LEMSATURN_BEGIN
 	LEMSATURN_STAGE 5
 	LVDC_BEGIN
+		LVDC_FSPFileName Config\ProjectApollo\AS-204 Flight Sequence Program.txt
 		LVDC_A_zL 90.0
 		LVDC_dV_B 0.0
 		LVDC_Fx[1][0] -0.375703896100

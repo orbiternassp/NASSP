@@ -478,6 +478,11 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	void ReadFlightSequenceProgram(char *fspfile);
+
+	void SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table);
+	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table);
+
 	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
 	double SVCompare();
@@ -490,6 +495,7 @@ public:
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
+	char FSPFileName[256];
 
 	bool LVDC_Stop;									// Program Stop Flag
 	int LVDC_Timebase;								// Time Base
@@ -681,6 +687,10 @@ private:
 	double cos_chi_Yit;
 	double sin_chi_Zit;
 	double cos_chi_Zit;
+
+	//Switch Selector Tables
+	std::vector<SwitchSelectorSet> SSTTB[4];
+	std::vector<SwitchSelectorSet> SSTALT1;
 
 	// TABLE25 is apparently only used on direct-ascent
 };
