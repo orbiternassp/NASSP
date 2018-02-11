@@ -1377,7 +1377,6 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 		if (PressureEqualizationSwitch->GetState() == 3)
 		{
 			PressureEqualizationValve->in->Close();
-			PressureEqualizationValve->flowMax = 0.0;
 		}
 		else
 		{
