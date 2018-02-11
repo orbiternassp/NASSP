@@ -1429,11 +1429,13 @@ Pump::Pump(char *i_name, int i_pump, e_object *i_SRC, double i_fan_cap, double i
 	in = in_v;
 	out = out_v;
 	loaded = 0;
+	flow = 0;
 }
 
 void Pump::refresh(double dt) 
-
 {
+	flow = 0;
+
 	if (h_pump == 0) {
 		pumping = 0;
 	} //off
@@ -1455,6 +1457,7 @@ void Pump::refresh(double dt)
 		delta_p = 0;
 
 	h_volume fanned = in->GetFlow(dt * delta_p);
+	flow = fanned.GetMass() / dt;
 	out->Flow(fanned);
 }
 

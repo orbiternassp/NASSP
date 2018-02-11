@@ -334,6 +334,8 @@ void* Pump::GetComponent(char *component_name) {
 		return (void*)&pumping;
 	if (Compare(component_name,"FANCAP"))
 		return (void*)&fan_cap;
+	if (Compare(component_name, "FLOW"))
+		return (void*)&flow;
 
 	BuildError(2);
 	return NULL;

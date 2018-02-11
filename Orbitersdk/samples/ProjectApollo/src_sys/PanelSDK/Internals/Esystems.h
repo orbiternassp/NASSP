@@ -503,6 +503,7 @@ public:
 	int loaded;
 	double fan_cap;
 	double power;
+	double flow;	// in g/s
 	h_Valve* in;
 	h_Valve* out;
 	virtual void refresh(double dt);
