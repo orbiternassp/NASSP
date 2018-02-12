@@ -52,6 +52,7 @@ public:
 	bool LMAbort();
 	bool RestartManeuverEnable();
 	bool InhibitAttitudeManeuver();
+	bool Timebase8Enable();
 
 	//LVDC Input Discretes and Interrupts
 

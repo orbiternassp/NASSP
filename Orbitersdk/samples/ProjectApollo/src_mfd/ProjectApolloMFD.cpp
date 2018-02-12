@@ -938,6 +938,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Restart Maneuver Enable", 23);
 		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_8_ENABLE)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Timebase 8 Enable", 17);
+		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
@@ -1746,7 +1751,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 4)
+	if (g_Data.iuUplinkType < 5)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1866,6 +1871,7 @@ void ProjectApolloMFD::menuIUUplink()
 	case DCSUPLINK_LM_ABORT:
 	case DCSUPLINK_INHIBIT_MANEUVER:
 	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
+	case DCSUPLINK_TIMEBASE_8_ENABLE:
 	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}

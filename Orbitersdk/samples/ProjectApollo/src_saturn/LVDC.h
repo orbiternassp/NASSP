@@ -60,6 +60,7 @@ public:
 	virtual bool LMAbort() { return false; }
 	virtual bool RestartManeuverEnable() { return false; }
 	virtual bool InhibitAttitudeManeuver() = 0;
+	virtual bool TimeBase8Enable() { return false; }
 protected:
 
 	LVDA &lvda;
@@ -87,6 +88,10 @@ public:
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool RestartManeuverEnable();
 	bool InhibitAttitudeManeuver();
+	bool InhibitSeparationManeuver();
+	bool SeparationManeuverUpdate(double time);
+	bool EvasiveManeuverEnable();
+	bool TimeBase8Enable();
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -170,15 +175,19 @@ private:								// Saturn LV
 	bool GATE6;										// Logic gate that ensures only one pass through separation attitude calculation
 	bool INH,INH1,INH2;								// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
 	bool INH3;										// Permanently inhibit entry to restart preparation
+	bool INH4;										// Inhibit maneuver to separation attitude
+	bool INH5;										// Inhibit maneuver to slingshot attitude in TB7
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 	bool PermanentSCControl;						// SC has permanent control of the FCC
+	bool Timebase8Enabled;							// Timebase 8 has been enabled
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
 	VECTOR3 XLunarSlingshotAttitude;				// Attitude the SIVB enters for slingshot maneuver.
+	VECTOR3 XLunarCommAttitude;						// Attitude the SIVB enters for communication.
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2,V_ex3;						// IGM Exhaust Velocities
@@ -209,6 +218,7 @@ private:								// Saturn LV
 	double TB6b;									// Time of TB6b
 	double TB6c;									// Time of TB6c
 	double TB7;										// Time of TB7
+	double TB8;										// Time of TB8
 	double T_IGM;									// Time from start of TB6 to IGM start during second SIVB burn
 	double T_RG;									// Time from TB6 start to reignition for second SIVB burn
 	double T_RP;									// Time for restart preparation (TB6 start)
@@ -262,7 +272,8 @@ private:								// Saturn LV
 	double K_pc;									// Constant time used to force MRS in out-of-orbit mode
 	double R_N;										// Nominal radius at SIVB reignition
 	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
-	double TI7AF2;									// Time in Timebase 7 or 8 to begin maneuver to slingshot/communications attitude
+	double TI7AF1;									// Time in Timebase 7 to begin maneuver to slingshot attitude
+	double TI7AF2;									// Time in Timebase 8 to begin maneuver to communications attitude
 	double TI7F10;									// Time in Timebase 7 to begin maneuver to local horizontal attitude
 	double TI7F11;									// Time in Timebase 7 to compute inertial attitude corresponding to locally referenced separation attitude
 	double K_D;										// Orbital drag model constant
