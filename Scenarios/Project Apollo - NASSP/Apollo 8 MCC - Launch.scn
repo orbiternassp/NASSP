@@ -56,6 +56,8 @@ AS-503:ProjectApollo\Saturn5
   LANG English
   AUTOSLOW 1  
 LVDC_BEGIN
+  LVDC_FSPFileName Config\ProjectApollo\AS-503 Flight Sequence Program.txt
+  LVDC_INH5 0
   LVDC_ALFTSA 15.015
   LVDC_ALFTSB 15.997
   LVDC_BETAA 56.497

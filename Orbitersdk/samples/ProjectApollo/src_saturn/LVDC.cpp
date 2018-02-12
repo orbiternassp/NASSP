@@ -2398,6 +2398,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	first_op = false;
 	TerminalConditions = false;
 	PermanentSCControl = false;
+	Timebase8Enabled = false;
 	GATE = false;
 	GATE0 = false;
 	GATE1 = false;
@@ -2411,6 +2412,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	INH1 = false;
 	INH2 = false;
 	INH3 = false;
+	INH4 = false;
+	INH5 = false;
 	init = false;
 	i_op = false;
 	liftoff = false;
@@ -2675,6 +2678,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TB6b = 0;
 	TB6c = 0;
 	TB7 = 0;
+	TB8 = 0;
 	T_c = 0;
 	tchi_y_last = 0;
 	tchi_p_last = 0;
@@ -2686,6 +2690,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_GO = 0;
 	theta_N = 0;
 	TI5F2 = 0;
+	TI7AF1 = 0;
 	TI7AF2 = 0;
 	TI7F10 = 0;
 	TI7F11 = 0;
@@ -2763,6 +2768,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
 	XLunarSlingshotAttitude = _V(0, 0, 0);
+	XLunarCommAttitude = _V(0, 0, 0);
 	// MATRIX3
 	MX_A = _M(0,0,0,0,0,0,0,0,0);
 	MX_B = _M(0,0,0,0,0,0,0,0,0);
@@ -2806,9 +2812,11 @@ void LVDCSV::Init(){
 	INH1 = true;							// inhibits first EPO roll/pitch maneuver
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
 	INH3 = false;
+	INH4 = false;
+	INH5 = true;
 	TA1 = 2700;								//time for TB5 start to first maneuver
 	TA2 = 5160;								//time for TB5 start to second maneuver
-	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
+	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = TB8 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	T_LET = 40.6;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
@@ -2818,6 +2826,7 @@ void LVDCSV::Init(){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	PermanentSCControl = false;
+	Timebase8Enabled = false;
 	directstagereset = true;
 	GuidanceReferenceFailure = false;
 	CommandSequence = 0;
@@ -2968,7 +2977,8 @@ void LVDCSV::Init(){
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
 	TI5F2 = 20.0;
-	TI7AF2 = 6540.0;
+	TI7AF1 = 6540.0;
+	TI7AF2 = 3705.0;
 	TI7F10 = 20.0;
 	TI7F11 = 900.0;
 	T_L = 0.0;
@@ -3128,6 +3138,7 @@ void LVDCSV::Init(){
 	t_clock = 0;
 
 	XLunarSlingshotAttitude = _V(PI, PI, 0.0);
+	XLunarCommAttitude = _V(PI, PI, 0);
 
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
@@ -3173,6 +3184,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
 	oapiWriteScenario_int(scn, "LVDC_INH3", INH3);
+	oapiWriteScenario_int(scn, "LVDC_INH4", INH4);
+	oapiWriteScenario_int(scn, "LVDC_INH5", INH5);
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
@@ -3192,6 +3205,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
+	oapiWriteScenario_int(scn, "LVDC_Timebase8Enabled", Timebase8Enabled);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
@@ -3648,6 +3662,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TB6b", TB6b);
 	papiWriteScenario_double(scn, "LVDC_TB6c", TB6c);
 	papiWriteScenario_double(scn, "LVDC_TB7", TB7);
+	papiWriteScenario_double(scn, "LVDC_TB8", TB8);
 	papiWriteScenario_double(scn, "LVDC_T_c", T_c);
 	papiWriteScenario_double(scn, "LVDC_tchi_y_last", tchi_y_last);
 	papiWriteScenario_double(scn, "LVDC_tchi_p_last", tchi_p_last);
@@ -3669,6 +3684,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
+	papiWriteScenario_double(scn, "LVDC_TI7AF1", TI7AF1);
 	papiWriteScenario_double(scn, "LVDC_TI7AF2", TI7AF2);
 	papiWriteScenario_double(scn, "LVDC_TI7F10", TI7F10);
 	papiWriteScenario_double(scn, "LVDC_TI7F11", TI7F11);
@@ -3778,6 +3794,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
 	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
+	papiWriteScenario_vec(scn, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
 	papiWriteScenario_vec(scn, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
 	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
@@ -3828,6 +3845,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
 		papiReadScenario_bool(line, "LVDC_INH3", INH3);
+		papiReadScenario_bool(line, "LVDC_INH4", INH4);
+		papiReadScenario_bool(line, "LVDC_INH5", INH5);
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
@@ -3846,6 +3865,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
+		papiReadScenario_bool(line, "LVDC_Timebase8Enabled", Timebase8Enabled);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
 
@@ -4307,6 +4327,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TB6b", TB6b);
 		papiReadScenario_double(line, "LVDC_TB6c", TB6c);
 		papiReadScenario_double(line, "LVDC_TB7", TB7);
+		papiReadScenario_double(line, "LVDC_TB8", TB8);
 		papiReadScenario_double(line, "LVDC_T_c", T_c);
 		papiReadScenario_double(line, "LVDC_tchi_p_last", tchi_p_last);
 		papiReadScenario_double(line, "LVDC_tchi_y_last", tchi_y_last);
@@ -4328,6 +4349,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
+		papiReadScenario_double(line, "LVDC_TI7AF1", TI7AF1);
 		papiReadScenario_double(line, "LVDC_TI7AF2", TI7AF2);
 		papiReadScenario_double(line, "LVDC_TI7F10", TI7F10);
 		papiReadScenario_double(line, "LVDC_TI7F11", TI7F11);
@@ -4439,6 +4461,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
 		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);
+		papiReadScenario_vec(line, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
 		papiReadScenario_vec(line, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
 
 		// MATRIX3
@@ -4938,12 +4961,26 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = false;
 				}
 
+				if (Timebase8Enabled && LVDC_TB_ETime > 7200.0)
+				{
+					TB8 = TAS;
+					LVDC_Timebase = 8;
+					LVDC_TB_ETime = 0;
+					CommandSequence = 0;
+				}
+
 				//For now, disable LVDC at TB7+11,729 seconds
 				if (LVDC_TB_ETime > 11729.0)
 				{
 					LVDC_Stop = true;
 					return;
 				}
+				break;
+
+			case 8:
+				// T8B timed events
+				SwitchSelectorProcessing(SSTTB[8]);
+
 				break;
 			case 40:
 
@@ -6179,69 +6216,88 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 orbitalguidance: 
 		//orbital guidance logic
 		fprintf(lvlog,"*** ORBITAL GUIDANCE ***\r\n");
-		if(TAS-TB7<0){
-			if(TAS-TB6<0){
-				if(TAS-TB5-TA1 >= 0){
-					// presettings for orbital maneuver; don't know if we ever need them, but at least it's there...for Apollo 9!
-					if(TAS-TB5-TA2 >= 0){
-						if(INH2){
-							alpha_1 = 0 * RAD;
-							alpha_2 = 0 * RAD;
-							CommandedAttitude.x = 360 * RAD;
-							fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
-							goto orbatt;
-						}else{
-							CommandedAttitude = ACommandedAttitude;
-							fprintf(lvlog, "Attitude hold\r\n");
-							goto minorloop;
-						}
-					}else{
-						if(INH1){
-							alpha_1 = 0 * RAD;
-							alpha_2 = 0 * RAD;
-							CommandedAttitude.x = 360 * RAD;
-							fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
-							goto orbatt;
-						}else{
-							alpha_1 = XLunarAttitude.y;
-							alpha_2 = XLunarAttitude.z;
-							CommandedAttitude.x = XLunarAttitude.x;
-							fprintf(lvlog, "Pitch down\r\n");
-							goto orbatt;
-						}
-					}
-				}else{
-					alpha_1 = 0 * RAD;
-					alpha_2 = 0 * RAD;
-					CommandedAttitude.x = 360 * RAD;
-					fprintf(lvlog, "Maintain orbrate\r\n");
-					goto orbatt;
-				}
-			}else{
-				if(first_op){
-					alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
-					alpha_2 = K_Y1 + K_Y2 * dTt_4;
-					fprintf(lvlog, "Orient for restart\r\n");
-					goto orbatt;
-				}else{
-					alpha_1 = 0 * RAD;
-					alpha_2 = 0 * RAD;
-					CommandedAttitude.x = 360 * RAD;
-					fprintf(lvlog, "Maintain orbrate\r\n");
-					goto orbatt;
-				}
-			}
-		}else{
-			if (TAS - TB7 - TI7F11 < 0) {
+
+		if (LVDC_Timebase == 5)
+		{
+			if (LVDC_TB_ETime < TA1)
+			{
 				alpha_1 = 0 * RAD;
 				alpha_2 = 0 * RAD;
 				CommandedAttitude.x = 360 * RAD;
 				fprintf(lvlog, "Maintain orbrate\r\n");
 				goto orbatt;
 			}
+			else if (LVDC_TB_ETime < TA2)
+			{
+				if (INH1) {
+					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
+					CommandedAttitude.x = 360 * RAD;
+					fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
+					goto orbatt;
+				}
+				else {
+					alpha_1 = XLunarAttitude.y;
+					alpha_2 = XLunarAttitude.z;
+					CommandedAttitude.x = XLunarAttitude.x;
+					fprintf(lvlog, "Pitch down\r\n");
+					goto orbatt;
+				}
+			}
 			else
 			{
-				if (TAS - TB7 - TI7AF2 < 0) {
+				if (INH2) {
+					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
+					CommandedAttitude.x = 360 * RAD;
+					fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
+					goto orbatt;
+				}
+				else {
+					CommandedAttitude = ACommandedAttitude;
+					fprintf(lvlog, "Attitude hold\r\n");
+					goto minorloop;
+				}
+			}
+		}
+		else if (LVDC_Timebase == 6)
+		{
+			if (first_op) {
+				alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
+				alpha_2 = K_Y1 + K_Y2 * dTt_4;
+				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Orient for restart\r\n");
+				goto orbatt;
+			}
+			else {
+				alpha_1 = 0 * RAD;
+				alpha_2 = 0 * RAD;
+				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Maintain orbrate\r\n");
+				goto orbatt;
+			}
+		}
+		else if (LVDC_Timebase == 7)
+		{
+			if (LVDC_TB_ETime < TI7F11)
+			{
+				alpha_1 = 0 * RAD;
+				alpha_2 = 0 * RAD;
+				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Maintain orbrate\r\n");
+				goto orbatt;
+			}
+			else if (LVDC_TB_ETime < TI7AF1 || INH5)
+			{
+				if (INH4) {
+					alpha_1 = 0 * RAD;
+					alpha_2 = 0 * RAD;
+					CommandedAttitude.x = 360 * RAD;
+					fprintf(lvlog, "No maneuver to sep attitude, maintain orbrate\r\n");
+					goto orbatt;
+				}
+				else
+				{
 					if (GATE6)
 					{
 						//attitude hold for T&D
@@ -6260,16 +6316,41 @@ orbitalguidance:
 						goto orbatt;
 					}
 				}
-				else
-				{
-					alpha_1 = XLunarSlingshotAttitude.y;
-					alpha_2 = XLunarSlingshotAttitude.z;
-					CommandedAttitude.x = XLunarSlingshotAttitude.x;
-					fprintf(lvlog, "Slingshot attitude\r\n");
-					goto orbatt;
-				}
 			}
-		} 
+			else
+			{
+				alpha_1 = XLunarSlingshotAttitude.y;
+				alpha_2 = XLunarSlingshotAttitude.z;
+				CommandedAttitude.x = XLunarSlingshotAttitude.x;
+				fprintf(lvlog, "Slingshot attitude\r\n");
+				goto orbatt;
+			}
+		}
+		else if (LVDC_Timebase == 8)
+		{
+			if (LVDC_TB_ETime < TI7AF1)
+			{
+				CommandedAttitude = ACommandedAttitude;
+				fprintf(lvlog, "Evasive maneuver attitude hold\r\n");
+				goto minorloop;
+			}
+			else if (LVDC_TB_ETime < TI7AF2)
+			{
+				alpha_1 = XLunarSlingshotAttitude.y;
+				alpha_2 = XLunarSlingshotAttitude.z;
+				CommandedAttitude.x = XLunarSlingshotAttitude.x;
+				fprintf(lvlog, "Slingshot attitude\r\n");
+				goto orbatt;
+			}
+			else
+			{
+				alpha_1 = XLunarCommAttitude.y;
+				alpha_2 = XLunarCommAttitude.z;
+				CommandedAttitude.x = XLunarCommAttitude.x;
+				fprintf(lvlog, "Communications attitude\r\n");
+				goto orbatt;
+			}
+		}
 		goto minorloop;
 
 orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
@@ -6704,8 +6785,6 @@ minorloop:
 
 		lvda.SetFCCAttitudeError(AttitudeError);
 
-		sprintf(oapiDebugString(), "%f %f %f", AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
-
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 5 || (LVDC_Timebase == 6 && S4B_REIGN)){
@@ -6770,7 +6849,7 @@ double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
 
 bool LVDCSV::TimebaseUpdate(double dt)
 {
-	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
+	if (LVDC_Timebase == 5 || LVDC_Timebase == 7 || LVDC_Timebase == 8)
 	{
 		LVDC_TB_ETime += dt;
 		return true;
@@ -6781,7 +6860,7 @@ bool LVDCSV::TimebaseUpdate(double dt)
 
 bool LVDCSV::GeneralizedSwitchSelector(int stage, int channel)
 {
-	if (LVDC_Timebase == 5 || (LVDC_Timebase == 6 && LVDC_TB_ETime < 570.0) || LVDC_Timebase == 7)
+	if (LVDC_Timebase == 5 || (LVDC_Timebase == 6 && LVDC_TB_ETime < 570.0) || LVDC_Timebase == 7 || LVDC_Timebase == 8)
 	{
 		if (stage >= 0 && stage < 4)
 		{
@@ -6818,5 +6897,56 @@ bool LVDCSV::InhibitAttitudeManeuver()
 		return true;
 	}
 
+	return false;
+}
+
+bool LVDCSV::InhibitSeparationManeuver()
+{
+	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
+	{
+		INH4 = true;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::SeparationManeuverUpdate(double time)
+{
+	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
+	{
+		TI7F11 = time;
+		INH4 = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::EvasiveManeuverEnable()
+{
+	if (LVDC_Timebase == 7)
+	{
+		GATE6 = false;
+		XLunarAttitude.z = -XLunarAttitude.z;
+
+		return true;
+	}
+	return false;
+}
+
+bool LVDCSV::TimeBase8Enable()
+{
+	if (LVDC_Timebase == 7)
+	{
+		if (SSTTB[8].size() > 0)
+		{
+			Timebase8Enabled = true;
+
+			return true;
+		}
+	}
 	return false;
 }

@@ -85,6 +85,10 @@ bool DCS::Uplink(int type, void *upl)
 		{
 			return iu->lvda.InhibitAttitudeManeuver();
 		}
+		else if (type == DCSUPLINK_TIMEBASE_8_ENABLE)
+		{
+			return iu->lvda.Timebase8Enable();
+		}
 	}
 
 	return false;

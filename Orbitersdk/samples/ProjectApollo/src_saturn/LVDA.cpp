@@ -222,6 +222,14 @@ bool LVDA::InhibitAttitudeManeuver()
 	return false;
 }
 
+bool LVDA::Timebase8Enable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TimeBase8Enable();
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);
