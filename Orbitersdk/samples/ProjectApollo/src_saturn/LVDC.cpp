@@ -6704,7 +6704,7 @@ minorloop:
 
 		lvda.SetFCCAttitudeError(AttitudeError);
 
-		//sprintf(oapiDebugString(), "%f %f %f", AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
+		sprintf(oapiDebugString(), "%f %f %f", AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
 
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
