@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_INHIBIT_MANEUVER			3
 #define DCSUPLINK_RESTART_MANEUVER_ENABLE	4
 #define DCSUPLINK_TIMEBASE_8_ENABLE			5
+#define DCSUPLINK_EVASIVE_MANEUVER_ENABLE	6
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"

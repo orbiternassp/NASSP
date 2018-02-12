@@ -6929,10 +6929,12 @@ bool LVDCSV::EvasiveManeuverEnable()
 {
 	if (LVDC_Timebase == 7)
 	{
-		GATE6 = false;
-		XLunarAttitude.z = -XLunarAttitude.z;
+		if (ACommandedAttitude.z*XLunarAttitude.z >= 0.0)
+		{
+			ACommandedAttitude.z = -ACommandedAttitude.z;
 
-		return true;
+			return true;
+		}
 	}
 	return false;
 }

@@ -319,12 +319,16 @@ Yankee Clipper:ProjectApollo\Saturn5
     OPX 152.000
   ASCP_END
   LVDC_BEGIN
-  LVDC_SIICenterEngineCutoff 1
+    LVDC_FSPFileName Config\ProjectApollo\AS-507 Flight Sequence Program.txt
+    LVDC_SIICenterEngineCutoff 1
     LVDC_hx[0][0] 72.029
     LVDC_R_L 6373424.0
+	LVDC_TI7AF1 580.0
+	LVDC_TI7AF2 4200.0
 	LVDC_T_LO 58903.0
 	LVDC_t_S1C_CECO 134.6
     LVDC_XLunarAttitude 3.141589512 2.094395207 -0.5235987756
+	LVDC_XLunarSlingshotAttitude 3.141589512 3.333578871 0.0
   LVDC_END
   LVIMU_BEGIN
   LVIMU_END
