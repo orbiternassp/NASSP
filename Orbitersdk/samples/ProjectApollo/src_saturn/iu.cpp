@@ -1459,6 +1459,11 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simdt);
+
+		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+		{
+			fcc.SetPermanentSCControlEnabled();
+		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1467,11 +1472,6 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	{
 		eds.SetSIEngineOutIndicationA(true);
 		eds.SetSIEngineOutIndicationB(true);
-	}
-
-	if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
-	{
-		fcc.SetPermanentSCControlEnabled();
 	}
 }
 
@@ -1627,6 +1627,11 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simdt);
+
+		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+		{
+			fcc.SetPermanentSCControlEnabled();
+		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1635,11 +1640,6 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	{
 		eds.SetSIEngineOutIndicationA(true);
 		eds.SetSIEngineOutIndicationB(true);
-	}
-
-	if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
-	{
-		fcc.SetPermanentSCControlEnabled();
 	}
 }
 

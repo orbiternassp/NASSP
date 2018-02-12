@@ -418,8 +418,6 @@ h_volume h_volume::Break(double vol,int * mask, double maxMass) {
 		}
 	}
 
-	GetQ();
-
 	for (int i=0; i<MAX_SUB; i++) {
 		temp += composition[i] * (float) ratio * (float) mask[i];
 		composition[i] -= temp.composition[i];
