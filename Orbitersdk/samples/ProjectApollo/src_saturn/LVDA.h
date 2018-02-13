@@ -53,6 +53,7 @@ public:
 	bool RestartManeuverEnable();
 	bool InhibitAttitudeManeuver();
 	bool Timebase8Enable();
+	bool EvasiveManeuverEnable();
 
 	//LVDC Input Discretes and Interrupts
 

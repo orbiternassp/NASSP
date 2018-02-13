@@ -61,6 +61,7 @@ public:
 	virtual bool RestartManeuverEnable() { return false; }
 	virtual bool InhibitAttitudeManeuver() = 0;
 	virtual bool TimeBase8Enable() { return false; }
+	virtual bool EvasiveManeuverEnable() { return false; }
 protected:
 
 	LVDA &lvda;

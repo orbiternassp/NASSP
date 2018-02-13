@@ -230,6 +230,14 @@ bool LVDA::Timebase8Enable()
 	return false;
 }
 
+bool LVDA::EvasiveManeuverEnable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->EvasiveManeuverEnable();
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);
