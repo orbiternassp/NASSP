@@ -374,6 +374,7 @@ ARCore::ARCore(VESSEL* v)
 	tlipad.VI = 0.0;
 	tlipad.SepATT = _V(0.0, 0.0, 0.0);
 	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
+	tlipad.ExtATT = _V(0.0, 0.0, 0.0);
 	R_TLI = _V(0, 0, 0);
 	V_TLI = _V(0, 0, 0);
 

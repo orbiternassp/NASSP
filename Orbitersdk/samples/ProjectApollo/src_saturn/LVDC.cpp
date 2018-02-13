@@ -2708,6 +2708,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TSMC2 = 0;
 	T_ST = 0;
 	T_T = 0;
+	t_TB8Start = 0;
 	Tt_3 = 0;
 	Tt_3R = 0;
 	Tt_T = 0;
@@ -2881,6 +2882,7 @@ void LVDCSV::Init(){
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
 	t_S1C_CECO = 125.9;
+	t_TB8Start = 3600.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	Ct = 0;
@@ -3517,6 +3519,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
 	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
+	papiWriteScenario_double(scn, "LVDC_KSCLNG", KSCLNG);
 	papiWriteScenario_double(scn, "LVDC_K_T3", K_T3);
 	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
 	papiWriteScenario_double(scn, "LVDC_K_Y2", K_Y2);
@@ -3738,6 +3741,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TSTA", TABLE15[0].T_ST);
 	papiWriteScenario_double(scn, "LVDC_TSTB", TABLE15[1].T_ST);
 	papiWriteScenario_double(scn, "LVDC_T_T", T_T);
+	papiWriteScenario_double(scn, "LVDC_t_TB8Start", t_TB8Start);
 	papiWriteScenario_double(scn, "LVDC_Tt_3", Tt_3);
 	papiWriteScenario_double(scn, "LVDC_Tt_3R", Tt_3R);
 	papiWriteScenario_double(scn, "LVDC_Tt_T", Tt_T);
@@ -4182,6 +4186,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_P1", K_P1);
 		papiReadScenario_double(line, "LVDC_K_P2", K_P2);
+		papiReadScenario_double(line, "LVDC_KSCLNG", KSCLNG);
 		papiReadScenario_double(line, "LVDC_K_T3", K_T3);
 		papiReadScenario_double(line, "LVDC_K_Y1", K_Y1);
 		papiReadScenario_double(line, "LVDC_K_Y2", K_Y2);
@@ -4403,6 +4408,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TSTA", TABLE15[0].T_ST);
 		papiReadScenario_double(line, "LVDC_TSTB", TABLE15[1].T_ST);
 		papiReadScenario_double(line, "LVDC_T_T", T_T);
+		papiReadScenario_double(line, "LVDC_t_TB8Start", t_TB8Start);
 		papiReadScenario_double(line, "LVDC_Tt_3", Tt_3);
 		papiReadScenario_double(line, "LVDC_Tt_3R", Tt_3R);
 		papiReadScenario_double(line, "LVDC_Tt_T", Tt_T);
@@ -4961,7 +4967,7 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = false;
 				}
 
-				if (Timebase8Enabled && LVDC_TB_ETime > 7200.0)
+				if (Timebase8Enabled && LVDC_TB_ETime > t_TB8Start)
 				{
 					TB8 = TAS;
 					LVDC_Timebase = 8;
@@ -5422,7 +5428,7 @@ void LVDCSV::TimeStep(double simdt) {
 					MATRIX3 mat;
 					double day;
 					modf(oapiGetSimMJD(), &day);
-					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
+					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
 					lvda.GetRelativePos(pos);
 					lvda.GetRelativeVel(vel);
 					PosS = mul(mat, pos);

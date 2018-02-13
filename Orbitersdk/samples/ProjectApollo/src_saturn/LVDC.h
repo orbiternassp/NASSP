@@ -122,6 +122,7 @@ private:								// Saturn LV
 	int CommandSequenceStored;
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
+	double t_TB8Start;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
