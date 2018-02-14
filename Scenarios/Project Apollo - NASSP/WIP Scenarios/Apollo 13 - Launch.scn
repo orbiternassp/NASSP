@@ -301,12 +301,18 @@ Odyssey:ProjectApollo/Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
   LVDC_BEGIN
+    LVDC_FSPFileName Config\ProjectApollo\H-Mission Flight Sequence Program.txt
     LVDC_SIICenterEngineCutoff 1
+	LVDC_BN4 150.9
     LVDC_hx[0][0] 72.043
     LVDC_R_L 6373424.0
+	LVDC_TI7AF1 580.0
+	LVDC_TI7F10 150.9
     LVDC_T_LO 69163.0
     LVDC_t_S1C_CECO 134.6
     LVDC_XLunarAttitude 3.141589512 2.094395207 -0.6981317008
+	LVDC_XLunarSlingshotAttitude 3.141589512 3.193952531 -0.0872664626
+	LVDC_XLunarCommAttitude 3.141589512 3.193952531 -0.0872664626
   LVDC_END
   LVIMU_BEGIN
   LVIMU_END

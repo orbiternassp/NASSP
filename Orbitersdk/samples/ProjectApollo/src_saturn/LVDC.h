@@ -122,6 +122,7 @@ private:								// Saturn LV
 	int CommandSequenceStored;
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
+	double t_TB8Start;
 
 	// Event Times
 	double t_fail;									// S1C Engine Failure time
@@ -184,6 +185,7 @@ private:								// Saturn LV
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 	bool PermanentSCControl;						// SC has permanent control of the FCC
 	bool Timebase8Enabled;							// Timebase 8 has been enabled
+	bool SCControlOfSaturn;							// SC has taken control of the Saturn
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -561,6 +563,7 @@ private:
 	bool INH,INH1,INH2;								// Dunno yet
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 	bool PermanentSCControl;						// SC has permanent control of the FCC
+	bool SCControlOfSaturn;							// SC has taken control of the Saturn
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	double A_zL;									// Position I Azimuth

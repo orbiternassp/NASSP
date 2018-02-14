@@ -75,6 +75,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	TerminalConditions = false;
 	GuidanceReferenceFailure = false;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	// int
 	IGMCycle = 0;
 	LVDC_Timebase = 0;
@@ -342,6 +343,7 @@ void LVDC1B::Init(){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -742,6 +744,8 @@ void LVDC1B::TimeStep(double simdt) {
 				// TB4 timed events
 				SwitchSelectorProcessing(SSTTB[4]);
 
+				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
@@ -798,12 +802,6 @@ void LVDC1B::TimeStep(double simdt) {
 			{
 				CurrentAttitude = lvda.GetLVIMUAttitude();
 			}
-		}
-
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
-		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-			PermanentSCControl = true;
 		}
 
 		/*
@@ -972,6 +970,33 @@ void LVDC1B::TimeStep(double simdt) {
 			fprintf(lvlog,"P: %f \r\n",P);
 			lvda.ZeroLVIMUPIPACounters();
 		}
+
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
+		{
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+			PermanentSCControl = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
+		if (!SCControlOfSaturn && lvda.GetCMCSIVBTakeover())
+		{
+			if (LVDC_Timebase == 4 && LVDC_TB_ETime > 5.0)
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+		}
+		else if (SCControlOfSaturn && !PermanentSCControl && !lvda.GetCMCSIVBTakeover())
+		{
+			SCControlOfSaturn = false;
+			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
 			CommandedAttitude.y =  0;
@@ -1369,36 +1394,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 		fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
 
-		// -- COMPUTE INVERSE OF [K] --
-		// Get Determinate
-		double det = MX_K.m11 * ((MX_K.m22*MX_K.m33) - (MX_K.m32*MX_K.m23))
-					- MX_K.m12 * ((MX_K.m21*MX_K.m33) - (MX_K.m31*MX_K.m23))
-					+ MX_K.m13 * ((MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		fprintf(lvlog,"det = %f (LESS THAN 0.0005 IS INVALID)\r\n",det);
-
-		MATRIX3 MX_Ki; // TEMPORARY: Inverse of [K]
-		MX_Ki.m11 =   ((MX_K.m22*MX_K.m33) - (MX_K.m23*MX_K.m32))  / det;
-		MX_Ki.m12 =   ((MX_K.m13*MX_K.m32) - (MX_K.m12*MX_K.m33))  / det;
-		MX_Ki.m13 =   ((MX_K.m12*MX_K.m23) - (MX_K.m13*MX_K.m22))  / det;
-		MX_Ki.m21 =   ((MX_K.m23*MX_K.m31) - (MX_K.m21*MX_K.m33))  / det;
-		MX_Ki.m22 =   ((MX_K.m11*MX_K.m33) - (MX_K.m13*MX_K.m31))  / det;
-		MX_Ki.m23 =   ((MX_K.m13*MX_K.m21) - (MX_K.m11*MX_K.m23))  / det;
-		MX_Ki.m31 =   ((MX_K.m21*MX_K.m32) - (MX_K.m22*MX_K.m31))  / det;
-		MX_Ki.m32 =   ((MX_K.m12*MX_K.m31) - (MX_K.m11*MX_K.m32))  / det;
-		MX_Ki.m33 =   ((MX_K.m11*MX_K.m22) - (MX_K.m12*MX_K.m21))  / det;
-		fprintf(lvlog,"MX_Ki R1 = %f %f %f\r\n",MX_Ki.m11,MX_Ki.m12,MX_Ki.m13);
-		fprintf(lvlog,"MX_Ki R2 = %f %f %f\r\n",MX_Ki.m21,MX_Ki.m22,MX_Ki.m23);
-		fprintf(lvlog,"MX_Ki R3 = %f %f %f\r\n",MX_Ki.m31,MX_Ki.m32,MX_Ki.m33);
-
-		// Done
 		VECTOR3 VT; 
 		VT.x = (sin(Xtt_p)*cos(Xtt_y));
 		VT.y = (sin(Xtt_y));
 		VT.z = (cos(Xtt_p)*cos(Xtt_y));
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-		VT = mul(MX_Ki,VT);
+		VT = tmul(MX_K,VT);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 		X_S1 = VT.x;
@@ -1465,29 +1467,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 		cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1))/(-R);
 		sin_chi_Zit = sin(alpha_2);
 		cos_chi_Zit = cos(alpha_2);
-		// -- COMPUTE INVERSE OF [G] -what an effort for those stupid angles!
-		// Get Determinate
-		double det1 = MX_G.m11 * ((MX_G.m22*MX_G.m33) - (MX_G.m32*MX_G.m23))
-					- MX_G.m12 * ((MX_G.m21*MX_G.m33) - (MX_G.m31*MX_G.m23))
-					+ MX_G.m13 * ((MX_G.m21*MX_G.m32) - (MX_G.m31*MX_G.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		MATRIX3 MX_Gi; // TEMPORARY: Inverse of [K]
-		MX_Gi.m11 =   ((MX_G.m22*MX_G.m33) - (MX_G.m23*MX_G.m32))  / det1;
-		MX_Gi.m12 =   ((MX_G.m13*MX_G.m32) - (MX_G.m12*MX_G.m33))  / det1;
-		MX_Gi.m13 =   ((MX_G.m12*MX_G.m23) - (MX_G.m13*MX_G.m22))  / det1;
-		MX_Gi.m21 =   ((MX_G.m23*MX_G.m31) - (MX_G.m21*MX_G.m33))  / det1;
-		MX_Gi.m22 =   ((MX_G.m11*MX_G.m33) - (MX_G.m13*MX_G.m31))  / det1;
-		MX_Gi.m23 =   ((MX_G.m13*MX_G.m21) - (MX_G.m11*MX_G.m23))  / det1;
-		MX_Gi.m31 =   ((MX_G.m21*MX_G.m32) - (MX_G.m22*MX_G.m31))  / det1;
-		MX_Gi.m32 =   ((MX_G.m12*MX_G.m31) - (MX_G.m11*MX_G.m32))  / det1;
-		MX_Gi.m33 =   ((MX_G.m11*MX_G.m22) - (MX_G.m12*MX_G.m21))  / det1;
+
 		VECTOR3 VT1; 
 		VT1.x = (cos_chi_Yit * cos_chi_Zit);
 		VT1.y = (sin_chi_Zit);
 		VT1.z = (-sin_chi_Yit * cos_chi_Zit);
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT1.x,VT1.y,VT1.z);
 
-		VT1 = mul(MX_Gi,VT1);
+		VT1 = tmul(MX_G,VT1);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT1.x,VT1.y,VT1.z);
 
 		X_S1 = VT1.x;
@@ -1564,8 +1551,9 @@ minorloop: //minor loop;
 		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
 		A5 = cos(CurrentAttitude.x);
 
-		if (PermanentSCControl)
+		if (SCControlOfSaturn || PermanentSCControl)
 		{
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -1642,6 +1630,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	// int
@@ -1994,6 +1983,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
+		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 
@@ -2398,6 +2388,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	first_op = false;
 	TerminalConditions = false;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	Timebase8Enabled = false;
 	GATE = false;
 	GATE0 = false;
@@ -2708,6 +2699,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TSMC2 = 0;
 	T_ST = 0;
 	T_T = 0;
+	t_TB8Start = 0;
 	Tt_3 = 0;
 	Tt_3R = 0;
 	Tt_T = 0;
@@ -2829,6 +2821,7 @@ void LVDCSV::Init(){
 	Timebase8Enabled = false;
 	directstagereset = true;
 	GuidanceReferenceFailure = false;
+	SCControlOfSaturn = false;
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
@@ -2881,6 +2874,7 @@ void LVDCSV::Init(){
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
 	t_S1C_CECO = 125.9;
+	t_TB8Start = 3600.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	Ct = 0;
@@ -3202,6 +3196,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
@@ -3517,6 +3512,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_P1", K_P1);
 	papiWriteScenario_double(scn, "LVDC_K_P2", K_P2);
+	papiWriteScenario_double(scn, "LVDC_KSCLNG", KSCLNG);
 	papiWriteScenario_double(scn, "LVDC_K_T3", K_T3);
 	papiWriteScenario_double(scn, "LVDC_K_Y1", K_Y1);
 	papiWriteScenario_double(scn, "LVDC_K_Y2", K_Y2);
@@ -3738,6 +3734,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TSTA", TABLE15[0].T_ST);
 	papiWriteScenario_double(scn, "LVDC_TSTB", TABLE15[1].T_ST);
 	papiWriteScenario_double(scn, "LVDC_T_T", T_T);
+	papiWriteScenario_double(scn, "LVDC_t_TB8Start", t_TB8Start);
 	papiWriteScenario_double(scn, "LVDC_Tt_3", Tt_3);
 	papiWriteScenario_double(scn, "LVDC_Tt_3R", Tt_3R);
 	papiWriteScenario_double(scn, "LVDC_Tt_T", Tt_T);
@@ -3862,6 +3859,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
+		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
@@ -4182,6 +4180,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_P1", K_P1);
 		papiReadScenario_double(line, "LVDC_K_P2", K_P2);
+		papiReadScenario_double(line, "LVDC_KSCLNG", KSCLNG);
 		papiReadScenario_double(line, "LVDC_K_T3", K_T3);
 		papiReadScenario_double(line, "LVDC_K_Y1", K_Y1);
 		papiReadScenario_double(line, "LVDC_K_Y2", K_Y2);
@@ -4403,6 +4402,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TSTA", TABLE15[0].T_ST);
 		papiReadScenario_double(line, "LVDC_TSTB", TABLE15[1].T_ST);
 		papiReadScenario_double(line, "LVDC_T_T", T_T);
+		papiReadScenario_double(line, "LVDC_t_TB8Start", t_TB8Start);
 		papiReadScenario_double(line, "LVDC_Tt_3", Tt_3);
 		papiReadScenario_double(line, "LVDC_Tt_3R", Tt_3R);
 		papiReadScenario_double(line, "LVDC_Tt_T", Tt_T);
@@ -4817,6 +4817,8 @@ void LVDCSV::TimeStep(double simdt) {
 
 				SwitchSelectorProcessing(SSTTB[5]);
 
+				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
@@ -4949,6 +4951,15 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = false;
 				}
 
+				if (LVDC_TB_ETime > TI7F11 && LVDC_TB_ETime < TI7F11 + 300.0)
+				{
+					CommandRateLimits = _V(1.0*RAD, 1.0*RAD, 1.0*RAD);
+				}
+				else
+				{
+					CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
+				}
+
 				//CSM separation detection
 				if (lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
 				{
@@ -4961,7 +4972,7 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = false;
 				}
 
-				if (Timebase8Enabled && LVDC_TB_ETime > 7200.0)
+				if (Timebase8Enabled && LVDC_TB_ETime > t_TB8Start)
 				{
 					TB8 = TAS;
 					LVDC_Timebase = 8;
@@ -5085,12 +5096,6 @@ void LVDCSV::TimeStep(double simdt) {
 			{
 				CurrentAttitude = lvda.GetLVIMUAttitude();
 			}
-		}
-
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
-		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
-			PermanentSCControl = true;
 		}
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
@@ -5422,7 +5427,7 @@ void LVDCSV::TimeStep(double simdt) {
 					MATRIX3 mat;
 					double day;
 					modf(oapiGetSimMJD(), &day);
-					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, 28.6082888*RAD, -80.6041140*RAD, Azimuth);
+					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
 					lvda.GetRelativePos(pos);
 					lvda.GetRelativeVel(vel);
 					PosS = mul(mat, pos);
@@ -5455,6 +5460,33 @@ void LVDCSV::TimeStep(double simdt) {
 			
 		}
 GuidanceLoop:
+
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
+		{
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+			PermanentSCControl = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n",LVDC_Timebase, LVDC_TB_ETime);
+		}
+
+		if (!SCControlOfSaturn && lvda.GetCMCSIVBTakeover())
+		{
+			if ((LVDC_Timebase == 5 || LVDC_Timebase == 7) && LVDC_TB_ETime > 5.0)
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+		}
+		else if (SCControlOfSaturn && !PermanentSCControl && (!lvda.GetCMCSIVBTakeover() || LVDC_Timebase == 6))
+		{
+			SCControlOfSaturn = false;
+			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (1.5* PI) + Azimuth;
 			CommandedAttitude.y =  0;
@@ -6164,36 +6196,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 			Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 			fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
 
-			// -- COMPUTE INVERSE OF [K] --
-			// Get Determinate
-			double det = MX_K.m11 * ((MX_K.m22*MX_K.m33) - (MX_K.m32*MX_K.m23))
-						- MX_K.m12 * ((MX_K.m21*MX_K.m33) - (MX_K.m31*MX_K.m23))
-						+ MX_K.m13 * ((MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22));
-			// If the determinate is less than 0.0005, this is invalid.
-			fprintf(lvlog,"det = %f (LESS THAN 0.0005 IS INVALID)\r\n",det);
-
-			MATRIX3 MX_Ki; // TEMPORARY: Inverse of [K]
-			MX_Ki.m11 =   ((MX_K.m22*MX_K.m33) - (MX_K.m23*MX_K.m32))  / det;
-			MX_Ki.m12 =   ((MX_K.m13*MX_K.m32) - (MX_K.m12*MX_K.m33))  / det;
-			MX_Ki.m13 =   ((MX_K.m12*MX_K.m23) - (MX_K.m13*MX_K.m22))  / det;
-			MX_Ki.m21 =   ((MX_K.m23*MX_K.m31) - (MX_K.m21*MX_K.m33))  / det;
-			MX_Ki.m22 =   ((MX_K.m11*MX_K.m33) - (MX_K.m13*MX_K.m31))  / det;
-			MX_Ki.m23 =   ((MX_K.m13*MX_K.m21) - (MX_K.m11*MX_K.m23))  / det;
-			MX_Ki.m31 =   ((MX_K.m21*MX_K.m32) - (MX_K.m22*MX_K.m31))  / det;
-			MX_Ki.m32 =   ((MX_K.m12*MX_K.m31) - (MX_K.m11*MX_K.m32))  / det;
-			MX_Ki.m33 =   ((MX_K.m11*MX_K.m22) - (MX_K.m12*MX_K.m21))  / det;
-			fprintf(lvlog,"MX_Ki R1 = %f %f %f\r\n",MX_Ki.m11,MX_Ki.m12,MX_Ki.m13);
-			fprintf(lvlog,"MX_Ki R2 = %f %f %f\r\n",MX_Ki.m21,MX_Ki.m22,MX_Ki.m23);
-			fprintf(lvlog,"MX_Ki R3 = %f %f %f\r\n",MX_Ki.m31,MX_Ki.m32,MX_Ki.m33);
-
-			// Done
 			VECTOR3 VT; 
 			VT.x = (sin(Xtt_p)*cos(Xtt_y));
 			VT.y = (sin(Xtt_y));
 			VT.z = (cos(Xtt_p)*cos(Xtt_y));
 			fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-			VT = mul(MX_Ki,VT);
+			VT = tmul(MX_K,VT);
 			fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 			X_S1 = VT.x;
@@ -6358,29 +6367,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 		cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1))/(-R);
 		sin_chi_Zit = sin(alpha_2);
 		cos_chi_Zit = cos(alpha_2);
-		// -- COMPUTE INVERSE OF [G] -what an effort for those stupid angles!
-		// Get Determinate
-		double det = MX_G.m11 * ((MX_G.m22*MX_G.m33) - (MX_G.m32*MX_G.m23))
-					- MX_G.m12 * ((MX_G.m21*MX_G.m33) - (MX_G.m31*MX_G.m23))
-					+ MX_G.m13 * ((MX_G.m21*MX_G.m32) - (MX_G.m31*MX_G.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		MATRIX3 MX_Gi; // TEMPORARY: Inverse of [K]
-		MX_Gi.m11 =   ((MX_G.m22*MX_G.m33) - (MX_G.m23*MX_G.m32))  / det;
-		MX_Gi.m12 =   ((MX_G.m13*MX_G.m32) - (MX_G.m12*MX_G.m33))  / det;
-		MX_Gi.m13 =   ((MX_G.m12*MX_G.m23) - (MX_G.m13*MX_G.m22))  / det;
-		MX_Gi.m21 =   ((MX_G.m23*MX_G.m31) - (MX_G.m21*MX_G.m33))  / det;
-		MX_Gi.m22 =   ((MX_G.m11*MX_G.m33) - (MX_G.m13*MX_G.m31))  / det;
-		MX_Gi.m23 =   ((MX_G.m13*MX_G.m21) - (MX_G.m11*MX_G.m23))  / det;
-		MX_Gi.m31 =   ((MX_G.m21*MX_G.m32) - (MX_G.m22*MX_G.m31))  / det;
-		MX_Gi.m32 =   ((MX_G.m12*MX_G.m31) - (MX_G.m11*MX_G.m32))  / det;
-		MX_Gi.m33 =   ((MX_G.m11*MX_G.m22) - (MX_G.m12*MX_G.m21))  / det;
+
 		VECTOR3 VT; 
 		VT.x = (cos_chi_Yit * cos_chi_Zit);
 		VT.y = (sin_chi_Zit);
 		VT.z = (-sin_chi_Yit * cos_chi_Zit);
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-		VT = mul(MX_Gi,VT);
+		VT = tmul(MX_G,VT);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 		X_S1 = VT.x;
@@ -6769,8 +6763,9 @@ minorloop:
 		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
 		A5 = cos(CurrentAttitude.x);
 
-		if (PermanentSCControl)
+		if (SCControlOfSaturn || PermanentSCControl)
 		{
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -6800,11 +6795,11 @@ minorloop:
 					AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG,
 					V, R / 1000);
 			} else{
-				sprintf(oapiDebugString(),"TB%d+%f |CMD %f %f %f | ERR %f %f %f | eps %f %f %f | V = %f R= %f",
+				sprintf(oapiDebugString(),"TB%d+%f |CMD %f %f %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-					eps_p, eps_ymr, eps_ypr,V,R/1000);
+					V,R/1000);
 			}
 		}*/
 		/*
