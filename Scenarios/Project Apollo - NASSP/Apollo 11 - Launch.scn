@@ -331,6 +331,7 @@ Columbia:ProjectApollo\Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 11 LM Checklists.xls
   LVDC_BEGIN
+    LVDC_FSPFileName Config\ProjectApollo\AS-506 Flight Sequence Program.txt
     LVDC_SIICenterEngineCutoff 1
 	LVDC_ALFTSA 14.569704
 	LVDC_ALFTSB 15.7563036
