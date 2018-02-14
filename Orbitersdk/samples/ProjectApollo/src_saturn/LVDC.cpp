@@ -730,7 +730,7 @@ void LVDC1B::TimeStep(double simdt) {
 					HSL = false;
 					BOOST = false;
 
-					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
 				}
 
 				if (lvda.SpacecraftSeparationIndication())
@@ -1533,7 +1533,7 @@ minorloop: //minor loop;
 			LVDC_Timebase = 4;
 			LVDC_TB_ETime = 0;
 			CommandSequence = 0;
-			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
+			fprintf(lvlog,"SIVB VELOCITY CUTOFF! TAS = %f \r\n",TAS);
 		};
 		//calculate delta attitude
 		DeltaAtt.x = fmod((CurrentAttitude.x - CommandedAttitude.x + TWO_PI),TWO_PI);
@@ -4805,7 +4805,7 @@ void LVDCSV::TimeStep(double simdt) {
 					HSL = false;
 					BOOST = false;
 
-					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
 				}
 
 				if (lvda.SpacecraftSeparationIndication())
@@ -4920,7 +4920,7 @@ void LVDCSV::TimeStep(double simdt) {
 					HSL = false;
 					BOOST = false;
 
-					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
 					lvda.TLIEnded();
 				}
 
@@ -5017,7 +5017,7 @@ void LVDCSV::TimeStep(double simdt) {
 					HSL = false;
 					BOOST = false;
 
-					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
 				}
 				break;
 			case 50:
@@ -5777,7 +5777,7 @@ IGM:	if(HSL == false){
 					LVDC_Timebase = 7;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
-					fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+					fprintf(lvlog, "SIVB SCHEDULED CUTOFF! TAS = %f \r\n", TAS);
 					lvda.TLIEnded();
 				}
 
@@ -6695,7 +6695,7 @@ minorloop:
 			LVDC_TB_ETime = 0;
 			CommandSequence = 0;
 			lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
-			fprintf(lvlog,"SIVB CUTOFF! TAS = %f \r\n",TAS);
+			fprintf(lvlog,"SIVB VELOCITY CUTOFF! TAS = %f \r\n",TAS);
 		}
 		if (T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true) {
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
@@ -6705,7 +6705,7 @@ minorloop:
 			LVDC_TB_ETime = 0;
 			CommandSequence = 0;
 			lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
-			fprintf(lvlog, "SIVB CUTOFF! TAS = %f \r\n", TAS);
+			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TAS = %f \r\n", TAS);
 			lvda.TLIEnded();
 		}
 
