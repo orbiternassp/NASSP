@@ -1369,36 +1369,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 		Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 		fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
 
-		// -- COMPUTE INVERSE OF [K] --
-		// Get Determinate
-		double det = MX_K.m11 * ((MX_K.m22*MX_K.m33) - (MX_K.m32*MX_K.m23))
-					- MX_K.m12 * ((MX_K.m21*MX_K.m33) - (MX_K.m31*MX_K.m23))
-					+ MX_K.m13 * ((MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		fprintf(lvlog,"det = %f (LESS THAN 0.0005 IS INVALID)\r\n",det);
-
-		MATRIX3 MX_Ki; // TEMPORARY: Inverse of [K]
-		MX_Ki.m11 =   ((MX_K.m22*MX_K.m33) - (MX_K.m23*MX_K.m32))  / det;
-		MX_Ki.m12 =   ((MX_K.m13*MX_K.m32) - (MX_K.m12*MX_K.m33))  / det;
-		MX_Ki.m13 =   ((MX_K.m12*MX_K.m23) - (MX_K.m13*MX_K.m22))  / det;
-		MX_Ki.m21 =   ((MX_K.m23*MX_K.m31) - (MX_K.m21*MX_K.m33))  / det;
-		MX_Ki.m22 =   ((MX_K.m11*MX_K.m33) - (MX_K.m13*MX_K.m31))  / det;
-		MX_Ki.m23 =   ((MX_K.m13*MX_K.m21) - (MX_K.m11*MX_K.m23))  / det;
-		MX_Ki.m31 =   ((MX_K.m21*MX_K.m32) - (MX_K.m22*MX_K.m31))  / det;
-		MX_Ki.m32 =   ((MX_K.m12*MX_K.m31) - (MX_K.m11*MX_K.m32))  / det;
-		MX_Ki.m33 =   ((MX_K.m11*MX_K.m22) - (MX_K.m12*MX_K.m21))  / det;
-		fprintf(lvlog,"MX_Ki R1 = %f %f %f\r\n",MX_Ki.m11,MX_Ki.m12,MX_Ki.m13);
-		fprintf(lvlog,"MX_Ki R2 = %f %f %f\r\n",MX_Ki.m21,MX_Ki.m22,MX_Ki.m23);
-		fprintf(lvlog,"MX_Ki R3 = %f %f %f\r\n",MX_Ki.m31,MX_Ki.m32,MX_Ki.m33);
-
-		// Done
 		VECTOR3 VT; 
 		VT.x = (sin(Xtt_p)*cos(Xtt_y));
 		VT.y = (sin(Xtt_y));
 		VT.z = (cos(Xtt_p)*cos(Xtt_y));
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-		VT = mul(MX_Ki,VT);
+		VT = tmul(MX_K,VT);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 		X_S1 = VT.x;
@@ -1465,29 +1442,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 		cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1))/(-R);
 		sin_chi_Zit = sin(alpha_2);
 		cos_chi_Zit = cos(alpha_2);
-		// -- COMPUTE INVERSE OF [G] -what an effort for those stupid angles!
-		// Get Determinate
-		double det1 = MX_G.m11 * ((MX_G.m22*MX_G.m33) - (MX_G.m32*MX_G.m23))
-					- MX_G.m12 * ((MX_G.m21*MX_G.m33) - (MX_G.m31*MX_G.m23))
-					+ MX_G.m13 * ((MX_G.m21*MX_G.m32) - (MX_G.m31*MX_G.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		MATRIX3 MX_Gi; // TEMPORARY: Inverse of [K]
-		MX_Gi.m11 =   ((MX_G.m22*MX_G.m33) - (MX_G.m23*MX_G.m32))  / det1;
-		MX_Gi.m12 =   ((MX_G.m13*MX_G.m32) - (MX_G.m12*MX_G.m33))  / det1;
-		MX_Gi.m13 =   ((MX_G.m12*MX_G.m23) - (MX_G.m13*MX_G.m22))  / det1;
-		MX_Gi.m21 =   ((MX_G.m23*MX_G.m31) - (MX_G.m21*MX_G.m33))  / det1;
-		MX_Gi.m22 =   ((MX_G.m11*MX_G.m33) - (MX_G.m13*MX_G.m31))  / det1;
-		MX_Gi.m23 =   ((MX_G.m13*MX_G.m21) - (MX_G.m11*MX_G.m23))  / det1;
-		MX_Gi.m31 =   ((MX_G.m21*MX_G.m32) - (MX_G.m22*MX_G.m31))  / det1;
-		MX_Gi.m32 =   ((MX_G.m12*MX_G.m31) - (MX_G.m11*MX_G.m32))  / det1;
-		MX_Gi.m33 =   ((MX_G.m11*MX_G.m22) - (MX_G.m12*MX_G.m21))  / det1;
+
 		VECTOR3 VT1; 
 		VT1.x = (cos_chi_Yit * cos_chi_Zit);
 		VT1.y = (sin_chi_Zit);
 		VT1.z = (-sin_chi_Yit * cos_chi_Zit);
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT1.x,VT1.y,VT1.z);
 
-		VT1 = mul(MX_Gi,VT1);
+		VT1 = tmul(MX_G,VT1);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT1.x,VT1.y,VT1.z);
 
 		X_S1 = VT1.x;
@@ -6170,36 +6132,13 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 			Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
 			fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
 
-			// -- COMPUTE INVERSE OF [K] --
-			// Get Determinate
-			double det = MX_K.m11 * ((MX_K.m22*MX_K.m33) - (MX_K.m32*MX_K.m23))
-						- MX_K.m12 * ((MX_K.m21*MX_K.m33) - (MX_K.m31*MX_K.m23))
-						+ MX_K.m13 * ((MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22));
-			// If the determinate is less than 0.0005, this is invalid.
-			fprintf(lvlog,"det = %f (LESS THAN 0.0005 IS INVALID)\r\n",det);
-
-			MATRIX3 MX_Ki; // TEMPORARY: Inverse of [K]
-			MX_Ki.m11 =   ((MX_K.m22*MX_K.m33) - (MX_K.m23*MX_K.m32))  / det;
-			MX_Ki.m12 =   ((MX_K.m13*MX_K.m32) - (MX_K.m12*MX_K.m33))  / det;
-			MX_Ki.m13 =   ((MX_K.m12*MX_K.m23) - (MX_K.m13*MX_K.m22))  / det;
-			MX_Ki.m21 =   ((MX_K.m23*MX_K.m31) - (MX_K.m21*MX_K.m33))  / det;
-			MX_Ki.m22 =   ((MX_K.m11*MX_K.m33) - (MX_K.m13*MX_K.m31))  / det;
-			MX_Ki.m23 =   ((MX_K.m13*MX_K.m21) - (MX_K.m11*MX_K.m23))  / det;
-			MX_Ki.m31 =   ((MX_K.m21*MX_K.m32) - (MX_K.m22*MX_K.m31))  / det;
-			MX_Ki.m32 =   ((MX_K.m12*MX_K.m31) - (MX_K.m11*MX_K.m32))  / det;
-			MX_Ki.m33 =   ((MX_K.m11*MX_K.m22) - (MX_K.m12*MX_K.m21))  / det;
-			fprintf(lvlog,"MX_Ki R1 = %f %f %f\r\n",MX_Ki.m11,MX_Ki.m12,MX_Ki.m13);
-			fprintf(lvlog,"MX_Ki R2 = %f %f %f\r\n",MX_Ki.m21,MX_Ki.m22,MX_Ki.m23);
-			fprintf(lvlog,"MX_Ki R3 = %f %f %f\r\n",MX_Ki.m31,MX_Ki.m32,MX_Ki.m33);
-
-			// Done
 			VECTOR3 VT; 
 			VT.x = (sin(Xtt_p)*cos(Xtt_y));
 			VT.y = (sin(Xtt_y));
 			VT.z = (cos(Xtt_p)*cos(Xtt_y));
 			fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-			VT = mul(MX_Ki,VT);
+			VT = tmul(MX_K,VT);
 			fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 			X_S1 = VT.x;
@@ -6364,29 +6303,14 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 		cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1))/(-R);
 		sin_chi_Zit = sin(alpha_2);
 		cos_chi_Zit = cos(alpha_2);
-		// -- COMPUTE INVERSE OF [G] -what an effort for those stupid angles!
-		// Get Determinate
-		double det = MX_G.m11 * ((MX_G.m22*MX_G.m33) - (MX_G.m32*MX_G.m23))
-					- MX_G.m12 * ((MX_G.m21*MX_G.m33) - (MX_G.m31*MX_G.m23))
-					+ MX_G.m13 * ((MX_G.m21*MX_G.m32) - (MX_G.m31*MX_G.m22));
-		// If the determinate is less than 0.0005, this is invalid.
-		MATRIX3 MX_Gi; // TEMPORARY: Inverse of [K]
-		MX_Gi.m11 =   ((MX_G.m22*MX_G.m33) - (MX_G.m23*MX_G.m32))  / det;
-		MX_Gi.m12 =   ((MX_G.m13*MX_G.m32) - (MX_G.m12*MX_G.m33))  / det;
-		MX_Gi.m13 =   ((MX_G.m12*MX_G.m23) - (MX_G.m13*MX_G.m22))  / det;
-		MX_Gi.m21 =   ((MX_G.m23*MX_G.m31) - (MX_G.m21*MX_G.m33))  / det;
-		MX_Gi.m22 =   ((MX_G.m11*MX_G.m33) - (MX_G.m13*MX_G.m31))  / det;
-		MX_Gi.m23 =   ((MX_G.m13*MX_G.m21) - (MX_G.m11*MX_G.m23))  / det;
-		MX_Gi.m31 =   ((MX_G.m21*MX_G.m32) - (MX_G.m22*MX_G.m31))  / det;
-		MX_Gi.m32 =   ((MX_G.m12*MX_G.m31) - (MX_G.m11*MX_G.m32))  / det;
-		MX_Gi.m33 =   ((MX_G.m11*MX_G.m22) - (MX_G.m12*MX_G.m21))  / det;
+
 		VECTOR3 VT; 
 		VT.x = (cos_chi_Yit * cos_chi_Zit);
 		VT.y = (sin_chi_Zit);
 		VT.z = (-sin_chi_Yit * cos_chi_Zit);
 		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
-		VT = mul(MX_Gi,VT);
+		VT = tmul(MX_G,VT);
 		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
 
 		X_S1 = VT.x;
