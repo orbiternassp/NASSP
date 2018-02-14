@@ -690,7 +690,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Landmark Tracking", 0, 'L' },
 		{ "Map Update", 0, 'U' },
 		{ "Nav Check PAD", 0, 'N' },
-		{ "", 0, ' ' },
+		{ "P37 PAD", 0, 'P' },
 
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -707,7 +707,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LMK", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLandmarkTrkPage);
 	RegisterFunction("MAP", OAPI_KEY_U, &ApolloRTCCMFD::menuSetMapUpdatePage);
 	RegisterFunction("NAV", OAPI_KEY_N, &ApolloRTCCMFD::menuSetNavCheckPADPage);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("P37", OAPI_KEY_P, &ApolloRTCCMFD::menuSetP37PADPage);
 
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
@@ -1055,6 +1055,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("RAN", OAPI_KEY_R, &ApolloRTCCMFD::EntryRangeDialogue);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEntryUpdateUpload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+
+
+	static const MFDBUTTONMENU mnu31[] =
+	{
+		{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "", 0, ' ' },
+	{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu31, sizeof(mnu31) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPADMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
