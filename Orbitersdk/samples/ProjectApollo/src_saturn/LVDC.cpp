@@ -75,6 +75,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	TerminalConditions = false;
 	GuidanceReferenceFailure = false;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	// int
 	IGMCycle = 0;
 	LVDC_Timebase = 0;
@@ -342,6 +343,7 @@ void LVDC1B::Init(){
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	//PRE_IGM GUIDANCE
 	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
 	B_12 = 40.9;							// dto.
@@ -742,6 +744,8 @@ void LVDC1B::TimeStep(double simdt) {
 				// TB4 timed events
 				SwitchSelectorProcessing(SSTTB[4]);
 
+				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
@@ -798,12 +802,6 @@ void LVDC1B::TimeStep(double simdt) {
 			{
 				CurrentAttitude = lvda.GetLVIMUAttitude();
 			}
-		}
-
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
-		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-			PermanentSCControl = true;
 		}
 
 		/*
@@ -972,6 +970,33 @@ void LVDC1B::TimeStep(double simdt) {
 			fprintf(lvlog,"P: %f \r\n",P);
 			lvda.ZeroLVIMUPIPACounters();
 		}
+
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
+		{
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+			PermanentSCControl = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
+		if (!SCControlOfSaturn && lvda.GetCMCSIVBTakeover())
+		{
+			if (LVDC_Timebase == 4 && LVDC_TB_ETime > 5.0)
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+		}
+		else if (SCControlOfSaturn && !PermanentSCControl && !lvda.GetCMCSIVBTakeover())
+		{
+			SCControlOfSaturn = false;
+			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
 			CommandedAttitude.y =  0;
@@ -1526,8 +1551,9 @@ minorloop: //minor loop;
 		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
 		A5 = cos(CurrentAttitude.x);
 
-		if (PermanentSCControl)
+		if (SCControlOfSaturn || PermanentSCControl)
 		{
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -1604,6 +1630,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 	oapiWriteScenario_int(scn, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	// int
@@ -1956,6 +1983,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S1B_CECO_Commanded", S1B_CECO_Commanded);
 		papiReadScenario_bool(line, "LVDC_S1B_Engine_Out", S1B_Engine_Out);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
+		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 
@@ -2360,6 +2388,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	first_op = false;
 	TerminalConditions = false;
 	PermanentSCControl = false;
+	SCControlOfSaturn = false;
 	Timebase8Enabled = false;
 	GATE = false;
 	GATE0 = false;
@@ -2792,6 +2821,7 @@ void LVDCSV::Init(){
 	Timebase8Enabled = false;
 	directstagereset = true;
 	GuidanceReferenceFailure = false;
+	SCControlOfSaturn = false;
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
@@ -3166,6 +3196,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
+	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
@@ -3828,6 +3859,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
+		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
@@ -4785,6 +4817,8 @@ void LVDCSV::TimeStep(double simdt) {
 
 				SwitchSelectorProcessing(SSTTB[5]);
 
+				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
+
 				// Cutoff transient thrust
 				if(LVDC_TB_ETime < 2){
 					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
@@ -4915,6 +4949,15 @@ void LVDCSV::TimeStep(double simdt) {
 				if (LVDC_TB_ETime > BN4 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
+				}
+
+				if (LVDC_TB_ETime > TI7F11 && LVDC_TB_ETime < TI7F11 + 300.0)
+				{
+					CommandRateLimits = _V(1.0*RAD, 1.0*RAD, 1.0*RAD);
+				}
+				else
+				{
+					CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
 				}
 
 				//CSM separation detection
@@ -5053,12 +5096,6 @@ void LVDCSV::TimeStep(double simdt) {
 			{
 				CurrentAttitude = lvda.GetLVIMUAttitude();
 			}
-		}
-
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
-		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
-			PermanentSCControl = true;
 		}
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
@@ -5423,6 +5460,33 @@ void LVDCSV::TimeStep(double simdt) {
 			
 		}
 GuidanceLoop:
+
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
+		{
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+			PermanentSCControl = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n",LVDC_Timebase, LVDC_TB_ETime);
+		}
+
+		if (!SCControlOfSaturn && lvda.GetCMCSIVBTakeover())
+		{
+			if ((LVDC_Timebase == 5 || LVDC_Timebase == 7) && LVDC_TB_ETime > 5.0)
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
+			{
+				SCControlOfSaturn = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+		}
+		else if (SCControlOfSaturn && !PermanentSCControl && (!lvda.GetCMCSIVBTakeover() || LVDC_Timebase == 6))
+		{
+			SCControlOfSaturn = false;
+			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
 			CommandedAttitude.x =  (1.5* PI) + Azimuth;
 			CommandedAttitude.y =  0;
@@ -6699,8 +6763,9 @@ minorloop:
 		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
 		A5 = cos(CurrentAttitude.x);
 
-		if (PermanentSCControl)
+		if (SCControlOfSaturn || PermanentSCControl)
 		{
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -6730,11 +6795,11 @@ minorloop:
 					AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG,
 					V, R / 1000);
 			} else{
-				sprintf(oapiDebugString(),"TB%d+%f |CMD %f %f %f | ERR %f %f %f | eps %f %f %f | V = %f R= %f",
+				sprintf(oapiDebugString(),"TB%d+%f |CMD %f %f %f | ERR %f %f %f | V = %f R= %f",
 					LVDC_Timebase,LVDC_TB_ETime,
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-					eps_p, eps_ymr, eps_ypr,V,R/1000);
+					V,R/1000);
 			}
 		}*/
 		/*
