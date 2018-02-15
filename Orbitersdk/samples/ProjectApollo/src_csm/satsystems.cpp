@@ -125,23 +125,33 @@ void Saturn::SystemsInit() {
 	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
 	FuelCellHeaters[2] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER");
 
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET1", 10. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET2", 10. / LBH);
+	FuelCellO2Manifold[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD");
+	FuelCellO2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
+	FuelCellO2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD");
 
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET1", 10. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET2", 10. / LBH);
+	FuelCellH2Manifold[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD");
+	FuelCellH2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
+	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET1", 10. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET2", 10. / LBH);
+	//**Need to look and see if these are necessary for stability**
 
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET1", 1. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET2", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET1", 2.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET2", 2.0 / LBH);
 
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET1", 1. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET2", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET1", 2.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET2", 2.0 / LBH);
 
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET1", 1. / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET2", 1. / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET1", 2.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET2", 2.0 / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET1", 1.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET2", 1.0 / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET1", 1.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET2", 1.0 / LBH);
+
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET1", 1.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET2", 1.0 / LBH);
 
 	//
 	// O2 tanks.
@@ -864,7 +874,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
 
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
@@ -1028,15 +1038,24 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	if (*flowPotableInlet > maxflow)
 		maxflow = *flowPotableInlet;
 
-	double *voltFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:VOLTS");
-	double *ampFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:AMPS");
-	double *tempFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP");
-	double *dphFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:DPH");
-	double *h2flowFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:H2FLOW");
-	double *o2flowFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:O2FLOW");
-
-	double *tempFC2=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
-	double *tempFC3=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
+	double *voltFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:VOLTS");
+	double *ampFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:AMPS");
+	double *tempFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP");
+	double *dphFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:DPH");
+	double *voltFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:VOLTS");
+	double *ampFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:AMPS");
+	double *tempFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
+	double *dphFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:DPH");
+	double *voltFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:VOLTS");
+	double *ampFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:AMPS");
+	double *tempFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
+	double *dphFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:DPH");
+	double *h2flowFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:H2FLOW");
+	double *o2flowFC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:O2FLOW");
+	double *h2flowFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:H2FLOW");
+	double *o2flowFC2 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:O2FLOW");
+	double *h2flowFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:H2FLOW");
+	double *o2flowFC3 = (double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:O2FLOW");
 	//double *ison=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:ISON");
 
 
@@ -1112,9 +1131,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	double *o2mrFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATORINLET:FLOW");
 	double *o2smFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLYINLET1:FLOW");
-	double *o2fc1inletFlow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1INLET1:FLOW");
-	double *o2fc2inletFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2INLET1:FLOW");
-	double *o2fc3inletFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3INLET1:FLOW");
+	double *o2fc1inlet1Flow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1INLET1:FLOW");
+	double *o2fc2inlet1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2INLET1:FLOW");
+	double *o2fc3inlet1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3INLET1:FLOW");
+	double *h2fc1inlet1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1INLET1:FLOW");
+	double *h2fc2inlet1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2INLET1:FLOW");
+	double *h2fc3inlet1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3INLET1:FLOW");
 
 	// ECS Pressures
 
@@ -1188,21 +1210,36 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 */		
 
 	// Fuel Cell with tanks, flow in lb/h
-/*	sprintf(oapiDebugString(), "O2T1-m %.2f vm %.2f T %.1f p %.1f H2T2-m %.2f vm %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f O2FCM %.1f T %.1f p %6.1f O2IN1 %.2f", 
-		*massO2Tank1, *vapormassO2Tank1, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
-		*massH2Tank2, *vapormassH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
-		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
-		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038,
-		*o2fcinletFlow * LBH);
-*/
+///*
+	sprintf(oapiDebugString(), "O2T1-m %.2f vm %.2f T %.1f p %.1f H2T2-m %.2f vm %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f H2IN1 %.2f", 
+		*massO2Tank1, *vapormassO2Tank1, KelvinToFahrenheit(*tempO2Tank1), *pressO2Tank1 * PSI,
+		*massH2Tank2, *vapormassH2Tank2, KelvinToFahrenheit(*tempH2Tank2), *pressH2Tank2 * PSI,
+		*voltFC1, *ampFC1, *tempFC1, *h2flowFC1 * 7.93665, *o2flowFC1 * 7.93665, 
+		*massH2FC1M, KelvinToFahrenheit(*tempH2FC1M), *pressH2FC1M * PSI,
+		*h2fc1inlet1Flow * LBH);
+//*/
 
-	// Fuel Cell with manifolds, flow in lb/h
-/*	sprintf(oapiDebugString(), "FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f O2FCM %.1f T %.1f p %6.1f", 
-		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
+	// Fuel Cell 1 with manifolds, flow in lb/h
+/*	
+		sprintf(oapiDebugString(), "FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f O2FCM %.1f T %.1f p %6.1f", 
+		*voltFC1, *ampFC1, *tempFC1, *h2flowFC1 * 7.93665, *o2flowFC1 * 7.93665, 
 		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038,
 		*massO2FC1M, *tempO2FC1M, *pressO2FC1M * 0.000145038);
 */
 
+	// Fuel Cell 2 with manifolds, flow in lb/h
+/*	
+		sprintf(oapiDebugString(), "FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f O2FCM %.1f T %.1f p %6.1f",
+			*voltFC2, *ampFC2, *tempFC2, *h2flowFC2 * 7.93665, *o2flowFC2 * 7.93665,
+			*massH2FC2M, *tempH2FC2M, *pressH2FC2M * 0.000145038,
+			*massO2FC2M, *tempO2FC2M, *pressO2FC2M * 0.000145038);
+*/
+
+	// Fuel Cell Comparison
+/*
+		sprintf(oapiDebugString(), "FC1-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f FC2-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f",
+			*voltFC1, *ampFC1, KelvinToFahrenheit(*tempFC1), *h2flowFC1*LBH, *o2flowFC1*LBH, *voltFC2, *ampFC2, KelvinToFahrenheit(*tempFC2), *h2flowFC2*LBH, *o2flowFC2*LBH);
+*/
 	// Fuel Cell H2
 /*	sprintf(oapiDebugString(), "H2T1-m %.2f T %.1f p %.1f H %.1f F %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f dpH %f Waste-m %.1f T %.1f p %4.1f", 
 		*massH2Tank1, *tempH2Tank1, *pressH2Tank1 * 0.000145038, *isonH2Tank1Heater, *isonH2Tank1Fan, 
@@ -1233,7 +1270,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	fflush(PanelsdkLogFile);
 */
 
-#endif
+//#endif
 }
 
 void Saturn::SystemsInternalTimestep(double simdt) 
@@ -1298,6 +1335,16 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		tFactor = __min(mintFactor, simdt);
 		TRACE("Internal timestep done");
 	}
+
+	//Fuel Cell Reactant Heating
+
+	//FuelCellO2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+	//FuelCellO2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+	//FuelCellO2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+	
+	//FuelCellH2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+	//FuelCellH2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+	//FuelCellH2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 }
 
 void Saturn::JoystickTimestep()
