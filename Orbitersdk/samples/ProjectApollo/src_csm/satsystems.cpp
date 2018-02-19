@@ -679,6 +679,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 3.0;
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 3.0;
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 3.0;
+				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 3.0;
 
 				// 
 				// Event handling.
@@ -776,6 +777,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 6.8;
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 6.8;
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 6.8;
+					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 6.8;
 
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_2;
