@@ -238,6 +238,22 @@ bool LVDA::EvasiveManeuverEnable()
 	return false;
 }
 
+bool LVDA::ExecuteCommManeuver()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->ExecuteCommManeuver();
+
+	return false;
+}
+
+bool LVDA::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->SIVBIULunarImpact(tig, dt, pitch, yaw);
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);

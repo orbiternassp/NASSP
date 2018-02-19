@@ -54,6 +54,8 @@ public:
 	bool InhibitAttitudeManeuver();
 	bool Timebase8Enable();
 	bool EvasiveManeuverEnable();
+	bool ExecuteCommManeuver();
+	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 
 	//LVDC Input Discretes and Interrupts
 

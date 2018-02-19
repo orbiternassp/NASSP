@@ -948,6 +948,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
 		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Execute Comm Maneuver", 21);
+		}
 
 		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
@@ -1756,7 +1761,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 6)
+	if (g_Data.iuUplinkType < 7)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1878,6 +1883,7 @@ void ProjectApolloMFD::menuIUUplink()
 	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
 	case DCSUPLINK_TIMEBASE_8_ENABLE:
 	case DCSUPLINK_EVASIVE_MANEUVER_ENABLE:
+	case DCSUPLINK_EXECUTE_COMM_MANEUVER:
 	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}

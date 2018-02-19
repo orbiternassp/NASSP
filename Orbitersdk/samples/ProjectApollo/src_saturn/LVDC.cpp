@@ -2390,6 +2390,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	PermanentSCControl = false;
 	SCControlOfSaturn = false;
 	Timebase8Enabled = false;
+	ImpactBurnEnabled = false;
+	ImpactBurnInProgress = false;
 	GATE = false;
 	GATE0 = false;
 	GATE1 = false;
@@ -2686,6 +2688,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TI7F10 = 0;
 	TI7F11 = 0;
 	T_IGM = 0;
+	T_ImpactBurn = 0;
+	dT_ImpactBurn = 0;
 	T_L = 0;
 	T_LET = 0;
 	T_RG = 0;
@@ -2822,6 +2826,8 @@ void LVDCSV::Init(){
 	directstagereset = true;
 	GuidanceReferenceFailure = false;
 	SCControlOfSaturn = false;
+	ImpactBurnEnabled = false;
+	ImpactBurnInProgress = false;
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
@@ -2975,6 +2981,8 @@ void LVDCSV::Init(){
 	TI7AF2 = 3705.0;
 	TI7F10 = 20.0;
 	TI7F11 = 900.0;
+	T_ImpactBurn = 0;
+	dT_ImpactBurn = 0;
 	T_L = 0.0;
 
 	double day;
@@ -3174,6 +3182,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
 	oapiWriteScenario_int(scn, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
+	oapiWriteScenario_int(scn, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
+	oapiWriteScenario_int(scn, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
@@ -3367,6 +3377,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dT_cost", dT_cost);
 	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
 	papiWriteScenario_double(scn, "LVDC_dt_g", dt_g);
+	papiWriteScenario_double(scn, "LVDC_dT_ImpactBurn", dT_ImpactBurn);
 	papiWriteScenario_double(scn, "LVDC_dt_LET", dt_LET);
 	papiWriteScenario_double(scn, "LVDC_dT_LIM", dT_LIM);
 	papiWriteScenario_double(scn, "LVDC_dtt_1", dtt_1);
@@ -3684,6 +3695,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TI7AF2", TI7AF2);
 	papiWriteScenario_double(scn, "LVDC_TI7F10", TI7F10);
 	papiWriteScenario_double(scn, "LVDC_TI7F11", TI7F11);
+	papiWriteScenario_double(scn, "LVDC_T_ImpactBurn", T_ImpactBurn);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -3838,6 +3850,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
 		papiReadScenario_bool(line, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
+		papiReadScenario_bool(line, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
+		papiReadScenario_bool(line, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
@@ -4035,6 +4049,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dT_cost", dT_cost);
 		papiReadScenario_double(line, "LVDC_dT_F", dT_F);
 		papiReadScenario_double(line, "LVDC_dt_g", dt_g);
+		papiReadScenario_double(line, "LVDC_dT_ImpactBurn", dT_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_dt_LET", dt_LET);
 		papiReadScenario_double(line, "LVDC_dT_LIM", dT_LIM);
 		papiReadScenario_double(line, "LVDC_dtt_1", dtt_1);
@@ -4353,6 +4368,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TI7F10", TI7F10);
 		papiReadScenario_double(line, "LVDC_TI7F11", TI7F11);
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
+		papiReadScenario_double(line, "LVDC_T_ImpactBurn", T_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_LO", T_LO);
@@ -4991,6 +5007,24 @@ void LVDCSV::TimeStep(double simdt) {
 			case 8:
 				// T8B timed events
 				SwitchSelectorProcessing(SSTTB[8]);
+
+				//Lunar Impact Burn
+				if (ImpactBurnEnabled && !ImpactBurnInProgress && LVDC_TB_ETime > T_ImpactBurn)
+				{
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 42);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 101);
+					ImpactBurnInProgress = true;
+					fprintf(lvlog, "[TB%d+%f] Lunar impact burn started\r\n", LVDC_Timebase, LVDC_TB_ETime);
+				}
+
+				if (ImpactBurnEnabled && ImpactBurnInProgress && LVDC_TB_ETime > T_ImpactBurn + dT_ImpactBurn)
+				{
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 43);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 102);
+					ImpactBurnEnabled = false;
+					ImpactBurnInProgress = false;
+					fprintf(lvlog, "[TB%d+%f] Lunar impact burn stopped\r\n", LVDC_Timebase, LVDC_TB_ETime);
+				}
 
 				break;
 			case 40:
@@ -6945,5 +6979,44 @@ bool LVDCSV::TimeBase8Enable()
 			return true;
 		}
 	}
+	return false;
+}
+
+bool LVDCSV::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
+{
+	if (LVDC_Timebase == 8)
+	{
+		if (tig > LVDC_TB_ETime + 10.0)
+		{
+			if (!ImpactBurnInProgress)
+			{
+				XLunarSlingshotAttitude.y = pitch;
+				XLunarSlingshotAttitude.z = yaw;
+				T_ImpactBurn = tig;
+				dT_ImpactBurn = dt;
+				TI7AF2 = 999999.9;
+				ImpactBurnEnabled = true;
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool LVDCSV::ExecuteCommManeuver()
+{
+	if (LVDC_Timebase == 8)
+	{
+		if (!ImpactBurnInProgress)
+		{
+			TI7AF2 = 0.0;
+			ImpactBurnEnabled = false;
+
+			return true;
+		}
+	}
+
 	return false;
 }

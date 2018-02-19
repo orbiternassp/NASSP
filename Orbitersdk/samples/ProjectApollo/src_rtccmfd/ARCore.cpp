@@ -1036,7 +1036,7 @@ void ARCore::LandingSiteUplink()
 	double r_0;
 
 	R_P = unit(_V(cos(LSLng)*cos(LSLat), sin(LSLng)*cos(LSLat), sin(LSLat)));
-	r_0 = oapiGetSize(svtarget->GetGravityRef());
+	r_0 = oapiGetSize(oapiGetObjectByName("Moon"));
 
 	R = R_P*(r_0 + LSAlt);
 

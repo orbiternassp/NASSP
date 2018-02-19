@@ -62,6 +62,8 @@ public:
 	virtual bool InhibitAttitudeManeuver() = 0;
 	virtual bool TimeBase8Enable() { return false; }
 	virtual bool EvasiveManeuverEnable() { return false; }
+	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
+	virtual bool ExecuteCommManeuver() { return false; }
 protected:
 
 	LVDA &lvda;
@@ -93,6 +95,8 @@ public:
 	bool SeparationManeuverUpdate(double time);
 	bool EvasiveManeuverEnable();
 	bool TimeBase8Enable();
+	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
+	bool ExecuteCommManeuver();
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -186,6 +190,8 @@ private:								// Saturn LV
 	bool PermanentSCControl;						// SC has permanent control of the FCC
 	bool Timebase8Enabled;							// Timebase 8 has been enabled
 	bool SCControlOfSaturn;							// SC has taken control of the Saturn
+	bool ImpactBurnEnabled;							// Lunar impact burn has been enabled
+	bool ImpactBurnInProgress;						// Lunar impact burn is in progress
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -284,6 +290,8 @@ private:								// Saturn LV
 	double h_1;										// Lower limit of h for atmospheric density polynomial
 	double h_2;										// Upper limit of h for atmospheric density polynomial
 	double BN4;										// Time in Timebase 7 to enter orbit initialize and resume orbit navigation
+	double T_ImpactBurn;							// Time of ignition of lunar impact burn
+	double dT_ImpactBurn;							// Burn duration of lunar impact burn
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
