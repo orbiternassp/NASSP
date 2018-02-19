@@ -377,9 +377,9 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
-	//Small idle power load to prevent the fuel cells from stopping
-	if (power_load < 1.0)
-		power_load += 1.0;
+	//Idle power load to prevent the fuel cells from stopping and cooling too much (has to be fixed at some point)
+	if (power_load < 160.0)
+		power_load = 160.0;
 
 	//first we check the start_handle;
 	double thrust = 0.0;
