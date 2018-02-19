@@ -4248,10 +4248,7 @@ void ApolloRTCCMFD::menuSVUpload()
 		}
 		else if (G->svmode == 1)
 		{
-			if (G->svtarget != NULL)
-			{
-				G->LandingSiteUplink();
-			}
+			G->LandingSiteUplink();
 		}
 	}
 }
