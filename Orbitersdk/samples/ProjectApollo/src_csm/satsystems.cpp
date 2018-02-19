@@ -133,26 +133,6 @@ void Saturn::SystemsInit() {
 	FuelCellH2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
 	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
-	//**Need to look and see if these are necessary for stability**
-
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET1", 2.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL1INLET2", 2.0 / LBH);
-
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET1", 2.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL2INLET2", 2.0 / LBH);
-
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET1", 2.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:O2FUELCELL3INLET2", 2.0 / LBH);
-
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET1", 1.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL1INLET2", 1.0 / LBH);
-
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET1", 1.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL2INLET2", 1.0 / LBH);
-
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET1", 1.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:H2FUELCELL3INLET2", 1.0 / LBH);
-
 	//
 	// O2 tanks.
 	//
@@ -1211,12 +1191,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	// Fuel Cell with tanks, flow in lb/h
 ///*
-	sprintf(oapiDebugString(), "O2T1-m %.2f vm %.2f T %.1f p %.1f H2T2-m %.2f vm %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f H2IN1 %.2f", 
-		*massO2Tank1, *vapormassO2Tank1, KelvinToFahrenheit(*tempO2Tank1), *pressO2Tank1 * PSI,
-		*massH2Tank2, *vapormassH2Tank2, KelvinToFahrenheit(*tempH2Tank2), *pressH2Tank2 * PSI,
-		*voltFC1, *ampFC1, *tempFC1, *h2flowFC1 * 7.93665, *o2flowFC1 * 7.93665, 
-		*massH2FC1M, KelvinToFahrenheit(*tempH2FC1M), *pressH2FC1M * PSI,
-		*h2fc1inlet1Flow * LBH);
+	sprintf(oapiDebugString(), "O21m %.2f T %.1f p %.1f H21m %.2f T %.1f p %.1f FC3-V %.2f A %.2f T %.1f H2Flow %.3f(%.3f) O2Flow %.3f(%.3f) H2FCM %.5f T %.1f p %.1f H2IN1 %.2f", 
+		*massO2Tank1*LBS, KelvinToFahrenheit(*tempO2Tank1), *pressO2Tank1*PSI,
+		*massH2Tank1*LBS, KelvinToFahrenheit(*tempH2Tank1), *pressH2Tank1*PSI,
+		*voltFC3, *ampFC3, KelvinToFahrenheit(*tempFC3), *h2flowFC3*LBH, 0.00257*(*ampFC3), *o2flowFC3*LBH, 0.0204*(*ampFC3),
+		*massH2FC1M*LBS, KelvinToFahrenheit(*tempH2FC1M), *pressH2FC3M*PSI,
+		*h2fc3inlet1Flow*LBH);
 //*/
 
 	// Fuel Cell 1 with manifolds, flow in lb/h
@@ -1336,7 +1316,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		TRACE("Internal timestep done");
 	}
 
-	//Fuel Cell Reactant Heating
+	//Fuel Cell Reactant Heating  TBD heaters and regulators to feed reactant
 
 	//FuelCellO2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 	//FuelCellO2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
