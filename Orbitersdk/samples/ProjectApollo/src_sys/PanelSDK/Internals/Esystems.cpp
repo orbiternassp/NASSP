@@ -377,8 +377,9 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
-	//In-line heater power, moreover this prevents the fuel cells from stopping
-	power_load += 160.0;
+	//Small idle power load to prevent the fuel cells from stopping
+	if (power_load < 1.0)
+		power_load += 1.0;
 
 	//first we check the start_handle;
 	double thrust = 0.0;
