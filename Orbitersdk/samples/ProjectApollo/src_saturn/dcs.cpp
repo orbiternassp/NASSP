@@ -93,6 +93,16 @@ bool DCS::Uplink(int type, void *upl)
 		{
 			return iu->lvda.EvasiveManeuverEnable();
 		}
+		else if (type == DCSUPLINK_EXECUTE_COMM_MANEUVER)
+		{
+			return iu->lvda.ExecuteCommManeuver();
+		}
+		else if (type == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+		{
+			DCSLUNARIMPACT *lunarimpact = static_cast<DCSLUNARIMPACT*>(upl);
+
+			return iu->lvda.SIVBIULunarImpact(lunarimpact->tig, lunarimpact->dt, lunarimpact->pitch, lunarimpact->yaw);
+		}
 	}
 
 	return false;

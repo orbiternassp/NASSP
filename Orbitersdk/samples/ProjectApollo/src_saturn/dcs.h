@@ -31,6 +31,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_RESTART_MANEUVER_ENABLE	4
 #define DCSUPLINK_TIMEBASE_8_ENABLE			5
 #define DCSUPLINK_EVASIVE_MANEUVER_ENABLE	6
+#define DCSUPLINK_EXECUTE_COMM_MANEUVER		7
+#define DCSUPLINK_SIVBIU_LUNAR_IMPACT		8
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -46,6 +48,15 @@ struct DCSSWITSEL
 struct DCSTBUPDATE
 {
 	double dt;
+};
+
+//SIVB/IU Lunar Impact
+struct DCSLUNARIMPACT
+{
+	double tig;
+	double dt;
+	double pitch;
+	double yaw;
 };
 
 class IU;
