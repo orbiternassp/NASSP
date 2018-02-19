@@ -1412,6 +1412,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	CabinPressureReliefValve2.SaveState(2, scn);
 	O2SMSupply.SaveState(scn);
 	CrewStatus.SaveState(scn);
+	ForwardHatch.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
 	hga.SaveState(scn);
@@ -2085,6 +2086,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "CREWSTATUS", 10)) {
 		    CrewStatus.LoadState(line);
 	    }
+		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
+			ForwardHatch.LoadState(line);
+		}
 	    else if (!strnicmp (line, "SIDEHATCH", 9)) {
 		    SideHatch.LoadState(line);
 	    }
