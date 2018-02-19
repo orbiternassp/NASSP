@@ -384,8 +384,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 // Internal systems.
 //
 
-#define CSM_H2TANK_CAPACITY  12700.0		///< in g, 28 lb
-#define CSM_O2TANK_CAPACITY 145149.0		///< in g, 320 lb
+#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
+#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
 
 #define LM_DES_H2O_CAPACITY 151046.0		///< in g, 333 lb
 #define LM_ASC_H2O_CAPACITY 19228.0			///< in g, 42.5 lb

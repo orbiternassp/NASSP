@@ -587,7 +587,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	}
 
 	// Surge tank
-	o2SurgeTank->BoilAllAndSetTemp(285);
+	o2SurgeTank->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
 
 	if (surgeTankValve->GetState() == 0) {
 		o2SurgeTank->OUT_valve.Close();
@@ -640,7 +640,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 			*o2SMSupply += o2SMSupplyO2;
 			o2SMSupplyVoid = false;
 		}
-		o2SMSupply->BoilAllAndSetTemp(285);
+		o2SMSupply->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
 		// O2 main regulator
 		if (mainRegulatorASwitch->GetState() && mainRegulatorBSwitch->GetState()) {
 			o2MainRegulator->IN_valve.Close();
@@ -664,8 +664,8 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	}
 
 	// Repress package outlet
-	o2RepressPackage->BoilAllAndSetTemp(285);
-	o2RepressPackageOutlet->BoilAllAndSetTemp(285);
+	o2RepressPackage->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
+	o2RepressPackageOutlet->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
 	if (repressO2Valve->GetState() == THREEPOSSWITCH_UP) {
 		o2RepressPackageOutlet->OUT_valve.Open();
 		o2RepressPackageOutletPipe->flowMax = 300. / LBH;	// cabin pressure 0 to 3 psi in about one minute
