@@ -4959,15 +4959,15 @@ void Saturn::InitSwitches() {
 
 	CabinFan1Switch.Register(PSH, "CabinFan1Switch", false);
 	CabinFan2Switch.Register(PSH, "CabinFan2Switch", false);
-	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_UP);
-	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_UP);
-	O2Heater1Switch.Register(PSH, "O2Heater1Switch", THREEPOSSWITCH_UP);
-	O2Heater2Switch.Register(PSH, "O2Heater2Switch", THREEPOSSWITCH_UP);
+	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_CENTER);
+	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_CENTER);
+	O2Heater1Switch.Register(PSH, "O2Heater1Switch", THREEPOSSWITCH_CENTER);
+	O2Heater2Switch.Register(PSH, "O2Heater2Switch", THREEPOSSWITCH_CENTER);
 	O2PressIndSwitch.Register(PSH, "O2PressIndSwitch", true);
-	H2Fan1Switch.Register(PSH, "H2Fan1Switch", THREEPOSSWITCH_UP);
-	H2Fan2Switch.Register(PSH, "H2Fan2Switch", THREEPOSSWITCH_UP);
-	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_UP);
-	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_UP);
+	H2Fan1Switch.Register(PSH, "H2Fan1Switch", THREEPOSSWITCH_CENTER);
+	H2Fan2Switch.Register(PSH, "H2Fan2Switch", THREEPOSSWITCH_CENTER);
+	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_CENTER);
+	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_CENTER);
 
 	SCContSwitch.Register(PSH, "SCContSwitch", false);
 	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_DOWN);
