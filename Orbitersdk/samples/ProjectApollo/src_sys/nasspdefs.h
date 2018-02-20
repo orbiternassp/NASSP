@@ -384,8 +384,8 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 // Internal systems.
 //
 
-#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
-#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
+#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb /// Extended stay tank config: 19050.87954
+#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb /// Extended stay tank config:: 217724.3386
 
 #define LM_DES_H2O_CAPACITY 151046.0		///< in g, 333 lb
 #define LM_ASC_H2O_CAPACITY 19228.0			///< in g, 42.5 lb
