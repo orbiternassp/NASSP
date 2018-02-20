@@ -1,5 +1,7 @@
 BEGIN_DESC
 Jim McDivitt, Dave Scott and Rusty Schwiekart take LM-3 for the first LM manned flight and the first docking of two manned spacecraft. March 3, 1969. (AS-504)
+
+Enabled features: MCC
 END_DESC
 
 BEGIN_ENVIRONMENT
