@@ -33,6 +33,7 @@
 #include "saturnv.h"
 #include "LEM.h"
 #include "LEMSaturn.h"
+#include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -110,7 +111,19 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else if (!strnicmp(line, "LVNAME", 6))
 		{
+			VESSEL *v;
+			OBJHANDLE hLV;
 			strncpy(LVName, line + 7, 64);
+			hLV = oapiGetObjectByName(LVName);
+			if (hLV != NULL)
+			{
+				v = oapiGetVesselInterface(hLV);
+
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+					!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+					sivb = (SIVB *)v;
+				}
+			}
 		}
 		else if (!strnicmp(line, "LEMNAME", 7))
 		{
@@ -177,6 +190,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	rtcc = NULL;
 	cm = NULL;
 	lm = NULL;
+	sivb = NULL;
 	Earth = NULL;
 	Moon = NULL;
 	CM_DeepSpace = false;
@@ -1875,13 +1889,65 @@ void MCC::TimeStep(double simdt){
 				}
 			}
 			break;
-			case MTP_D:
+		case MTP_D:
 			switch (MissionState)
 			{
-			case MST_D_INSERTION:	//SV Update to SPS-1
+			case MST_D_INSERTION:	//SV Update to Separation
 				if (cm->MissionTime > 3 * 60 * 60 + 15 * 60)
 				{
-					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 50 * 60, 2, MST_D_DAY1STATE1);
+					UpdateMacro(UTP_SVNAVCHECK, cm->MissionTime > 4 * 60 * 60 + 6 * 60, 2, MST_D_SEPARATION);
+				}
+				break;
+			case MST_D_SEPARATION:	//Separation to SPS-1
+
+				switch (SubState) {
+				case 0:
+					if (cm->stage >= CSM_LEM_STAGE)
+					{
+						setSubState(1);
+					}
+					break;
+				case 1:
+
+					if (SubStateTime > 5.0*60.0 && cm->MissionTime > 4 * 60 * 60 + 25 * 60)
+					{
+						if (sivb == NULL)
+						{
+							VESSEL *v;
+							OBJHANDLE hLV;
+							hLV = oapiGetObjectByName(LVName);
+							if (hLV != NULL)
+							{
+								v = oapiGetVesselInterface(hLV);
+
+								if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+									!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+									sivb = (SIVB *)v;
+								}
+							}
+						}
+
+						sivb->GetIU()->dcs.Uplink(DCSUPLINK_INHIBIT_MANEUVER, NULL);
+
+						setSubState(2);
+					}
+
+					break;
+				case 2:
+					if (SubStateTime > 5.0*60.0)
+					{
+						sivb->GetIU()->dcs.Uplink(DCSUPLINK_RESTART_MANEUVER_ENABLE, NULL);
+
+						setSubState(3);
+					}
+					break;
+				case 3:
+					if (cm->MissionTime > 4 * 60 * 60 + 50 * 60)
+					{
+						SlowIfDesired();
+						setState(MST_D_DAY1STATE1);
+					}
+					break;
 				}
 				break;
 			case MST_D_DAY1STATE1:	//SPS-1 to Daylight Star Check

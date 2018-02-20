@@ -378,10 +378,11 @@
 // MISSION STATES: MISSION D
 
 #define MST_D_INSERTION		10
-#define MST_D_DAY1STATE1	11
-#define MST_D_DAY1STATE2	12
-#define MST_D_DAY1STATE3	13
-#define MST_D_DAY1STATE4	14
+#define MST_D_SEPARATION	11
+#define MST_D_DAY1STATE1	12
+#define MST_D_DAY1STATE2	13
+#define MST_D_DAY1STATE3	14
+#define MST_D_DAY1STATE4	15
 #define MST_D_DAY2STATE1	20
 #define MST_D_DAY2STATE2	21
 #define MST_D_DAY2STATE3	22
@@ -666,6 +667,7 @@ struct AP11AGSSVPAD
 
 class LEM;
 class Saturn;
+class SIVB;
 
 // Mission Control Center class
 class MCC : public VESSEL4 {
@@ -709,6 +711,7 @@ public:
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM
+	SIVB *sivb;												// Pointer to SIVB
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
 
