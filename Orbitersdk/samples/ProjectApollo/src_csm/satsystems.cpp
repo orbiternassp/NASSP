@@ -794,9 +794,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					CabinPressureRegulator.SetPressurePSI(4.7);
 					CabinPressureRegulator.ResetMaxFlow();
 
-					// Reset (i.e. open) O2 demand regulator
-					O2DemandRegulator.Reset();
-
 					// Cabin leak
 					CabinPressureReliefValve1.SetLeakSize(0.001);
 
@@ -819,6 +816,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			case SATSYSTEMS_CABINVENTING:
 
 				if (SuitCircuitReturnValve.IsOpen() && GetAtmPressure() < 3. / PSI) {
+					// Reset (i.e. open) O2 demand regulator
+					O2DemandRegulator.Reset();
+
 					// Cabin regulator and relief pressure to flight configuration
 					CabinPressureRegulator.SetPressurePSI(5.0);
 					CabinPressureReliefValve1.SetReliefPressurePSI(6.0); 
