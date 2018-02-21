@@ -68,7 +68,7 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
-	bool Uplink(int type, void *upl);
+	virtual bool Uplink(int type, void *upl);
 	void EnableCommandSystem() { CommandSystemEnabled = true; }
 
 	bool IsCommandSystemEnabled();

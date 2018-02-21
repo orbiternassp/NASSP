@@ -472,6 +472,190 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 14: //SPS-3
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		GMPOpt gmpopt;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
+		VECTOR3 dV_LVLH;
+		MATRIX3 REFSMMAT;
+		SV sv0, sv1;
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GETbase = getGETBase();
+		NomTIG = OrbMech::HHMMSSToSS(25.0, 18.0, 30.0);
+		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
+		dt1 = NomTIG - sv0GET;
+		sv1 = coast(sv0, dt1 - 10.0*60.0);
+
+		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -70.0*RAD);	//find 70.0°W
+		TIG = (TIGMJD - GETbase)*24.0*3600.0;
+
+		gmpopt.csmlmdocked = true;
+		gmpopt.GETbase = GETbase;
+		gmpopt.h_apo = 272.0*1852.0;
+		gmpopt.impulsive = RTCC_NONIMPULSIVE;
+		gmpopt.rot_ang = 5.7*RAD;
+		gmpopt.TIG_GET = TIG;
+		gmpopt.type = 5;
+		gmpopt.vessel = calcParams.src;
+
+		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+
+		refsopt.csmlmdocked = true;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-3");
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv0, true, AGCEpoch, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+		}
+	}
+	break;
+	case 15: //SPS-4
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		GMPOpt gmpopt;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
+		VECTOR3 dV_LVLH;
+		MATRIX3 REFSMMAT;
+		SV sv0, sv1;
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GETbase = getGETBase();
+		NomTIG = OrbMech::HHMMSSToSS(28.0, 28.0, 20.0);
+		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
+		dt1 = NomTIG - sv0GET;
+		sv1 = coast(sv0, dt1 - 10.0*60.0);
+
+		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -110.0*RAD);	//find 110.0°W
+		TIG = (TIGMJD - GETbase)*24.0*3600.0;
+
+		gmpopt.csmlmdocked = true;
+		gmpopt.GETbase = GETbase;
+		gmpopt.h_apo = 272.0*1852.0;
+		gmpopt.impulsive = RTCC_NONIMPULSIVE;
+		gmpopt.rot_ang = 0.67*RAD;
+		gmpopt.TIG_GET = TIG;
+		gmpopt.type = 5;
+		gmpopt.vessel = calcParams.src;
+
+		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+
+		refsopt.csmlmdocked = true;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-4");
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv0, true, AGCEpoch, true), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+		}
+	}
+	break;
+	case 16: //BLOCK DATA 4
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		const int n = 6;
+		double lng[n] = { -161.0*RAD, -161.0*RAD, -162.5*RAD, -7.0*RAD, -162.0*RAD, -26.0*RAD };
+		double GETI[n] = { OrbMech::HHMMSSToSS(32,44,34),OrbMech::HHMMSSToSS(34,19,1),OrbMech::HHMMSSToSS(35,56,3),OrbMech::HHMMSSToSS(36,24,11),OrbMech::HHMMSSToSS(39,13,13),OrbMech::HHMMSSToSS(39,33,59) };
+		char area[n][10] = { "021-4A", "022-4C", "023-4C", "024-AC", "025-4C", "026-AC" };
+		char **test;
+		test = new char*[n];
+		for (int i = 0;i < n;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 17: //BLOCK DATA 5
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		const int n = 6;
+		double lng[n] = { -31.0*RAD, -26.4*RAD, -28.5*RAD, -29.0*RAD, -32.0*RAD, -33.0*RAD };
+		double GETI[n] = { OrbMech::HHMMSSToSS(41,16,3),OrbMech::HHMMSSToSS(43,2,57),OrbMech::HHMMSSToSS(44,46,10),OrbMech::HHMMSSToSS(46,24,14),OrbMech::HHMMSSToSS(47,58,31),OrbMech::HHMMSSToSS(49,34,33) };
+		char area[n][10] = { "027-AC", "028-2A", "029-AC", "030-2C", "031-2C", "032-2B" };
+		char **test;
+		test = new char*[n];
+		for (int i = 0;i < n;i++)
+		{
+			test[i] = new char[10];
+			test[i] = &area[i][0];
+		}
+
+		opt.area = test;
+		opt.GETI = GETI;
+		opt.lng = lng;
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;
