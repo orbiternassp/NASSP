@@ -678,9 +678,7 @@ void LEM::SystemsInit()
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1", 120.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2", 170.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROL", 120.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROLBYPASS", 290.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:HXHOUTFLOW", 120.0 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:PRIMGLYFLOWREG1", 290.0 / LBH);
 	//SetPipeMaxFlow("HYDRAULIC:ASCBATINLET", 116.0 / LBH);	//Needs to be 40% of flow until staging
 	//SetPipeMaxFlow("HYDRAULIC:DESBATINLET", 174.0 / LBH);	//Needs to be 60% of flow then removed at staging
 
