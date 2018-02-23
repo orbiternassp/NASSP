@@ -274,6 +274,7 @@
 #define UTP_FINALLUNARENTRY 10
 #define UTP_STARCHKPAD		11
 #define UTP_LGCUPLINKDIRECT	12
+#define UTP_P37PAD			13
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -391,6 +392,21 @@
 #define MST_D_DAY2STATE6	25
 #define MST_D_DAY3STATE1	30
 #define MST_D_DAY3STATE2	31
+
+// MISSION STATES: MISSION F
+#define MST_F_INSERTION		10
+// Ends at TLI Update
+#define MST_F_EPO1			11
+// Ends at TLI BURN
+#define MST_F_TRANSLUNAR1	21
+// Ends at separation
+#define MST_F_TRANSLUNAR2	22
+// Ends at evasive maneuver update
+#define MST_F_TRANSLUNAR3	23
+// Ends at TB8 enable
+#define MST_F_TRANSLUNAR4	24
+// Ends at Block Data 1 update
+#define MST_F_TRANSLUNAR5	25
 
 // Ground Station Information Structure
 struct GroundStation {

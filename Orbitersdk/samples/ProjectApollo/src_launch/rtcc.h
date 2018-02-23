@@ -267,6 +267,8 @@ struct AP11BLKOpt
 	int n; //number of PAD entries
 	double *lng; //pointer to splashdown longitudes
 	double *GETI; //pointer to ignition times
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 struct EarthEntryPADOpt
@@ -764,11 +766,13 @@ private:
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
+	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 
 protected:
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
+	int REFSMMATType;
 };
 
 
