@@ -677,8 +677,12 @@ void LEM::SystemsInit()
 	//Primary Glycol Pipe Initialization   
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1", 120.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2", 170.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMGLYCOLCOOLINGOUT", 120.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROL", 120.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROLBYPASS", 290.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:HXHOUTFLOW", 120.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:ASCBATINLET", 116.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESBATINLET", 174.0 / LBH); 
 
 	//Secondary Glycol Pipe Initialization  
 	SetPipeMaxFlow("HYDRAULIC:SECGLYFLOWREG2", 300.0 / LBH);
@@ -2041,6 +2045,7 @@ void LEM::CheckDescentStageSystems()
 		DesH2OTank->OUT_valve.Close();
 		DesH2OTank->OUT2_valve.Close();
 
+		SetPipeMaxFlow("HYDRAULIC:ASCBATINLET", 290.0 / LBH);
 		DesBatCooling->space.Void();
 		DesBatCooling->IN_valve.Close();
 		DesBatCooling->OUT_valve.Close();
