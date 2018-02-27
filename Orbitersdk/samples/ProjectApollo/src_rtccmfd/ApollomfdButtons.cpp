@@ -149,8 +149,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Desired Inclination", 0, 'I' },
 		{ "Altitude reference", 0, 'R' },
 
-		{ "", 0, ' ' },
 		{ "Calculate", 0, 'C' },
+		{ "Number of Revolutions", 0, 'N' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Upload to AGC", 0, 'L' },
@@ -167,7 +167,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("ALT", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::OrbAdjCalc);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REV", OAPI_KEY_N, &ApolloRTCCMFD::OrbAdjRevDialogue);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_L, &ApolloRTCCMFD::menuP30Upload);

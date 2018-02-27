@@ -214,6 +214,10 @@ ARCore::ARCore(VESSEL* v)
 	apo_desnm = 0;
 	peri_desnm = 0;
 	incdeg = 0;
+	GMPRotationAngle = 0.0;
+	GMPLongitude = 0.0;
+	GMPTOA = 0.0;
+	GMPRevs = 0;
 
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
@@ -1820,6 +1824,9 @@ int ARCore::subThread()
 		opt.useSV = false;
 		opt.AltRef = OrbAdjAltRef;
 		opt.LSAlt = LSAlt;
+		opt.rot_ang = GMPRotationAngle;
+		opt.lng = GMPLongitude;
+		opt.N = GMPRevs;
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -1830,7 +1837,7 @@ int ARCore::subThread()
 			opt.csmlmdocked = true;
 		}
 
-		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG);
+		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG, GMPTOA);
 
 		dV_LVLH = OrbAdjDVX;
 

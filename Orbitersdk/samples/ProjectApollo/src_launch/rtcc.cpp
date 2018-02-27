@@ -6679,6 +6679,12 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 
 void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
+	double TOA;
+	GeneralManeuverProcessor(opt, dV_LVLH, P30TIG, TOA);
+}
+
+void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &TOA)
+{
 	SV sv0, sv1, sv_tig_imp;
 	VECTOR3 DV;
 	double dt1, LMmass, mass, R_E, mu;
@@ -6793,6 +6799,22 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 		V_apo = U_hor*v_circ;
 
 		DV = V_apo - sv_tig_imp.V;
+	}
+	else if (opt->type == 6)
+	{
+		double dt2, dt3, dv, dTIG;
+		SV sv2;
+
+		dt2 = OrbMech::timetoperi_integ(sv1.R, sv1.V,sv1.MJD, sv1.gravref, sv1.gravref);
+		sv2 = coast(sv1, dt2);
+
+		OrbMech::RotatePerigeeToSpecifiedLongitude(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->lng, opt->N, mu, dv, dTIG, dt3);
+
+		TOA = (sv2.MJD - opt->GETbase)*24.0*3600.0 + dTIG + dt3;
+
+		sv_tig_imp = coast(sv2, dTIG);
+
+		DV = unit(sv_tig_imp.R)*dv;
 	}
 
 	MATRIX3 Q_Xx;

@@ -129,11 +129,17 @@ public:
 	//2 = Fixed TIG, specify periapsis altitude
 	//3 = Fixed TIG, circularize orbit
 	//4 = Circularize orbit at specified altitude
+	//5 = Rotate velocity vector, specify apoapsis altitude
+	//6 = Rotate line of apsides, perigee at specific longitude, TIG at perigee
 	int GMPType;
 	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double apo_desnm;	//Desired apoapsis altitude in NM
 	double peri_desnm;	//Desired periapsis altitude in NM
 	double incdeg;		//Desired inclination in degrees
+	double GMPRotationAngle;
+	double GMPLongitude;
+	double GMPTOA;		//Time of Arrival
+	int GMPRevs;
 	double SPSGET;		//Maneuver GET
 	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 

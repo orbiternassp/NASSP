@@ -477,6 +477,7 @@ struct GMPOpt
 	//3 = Fixed TIG, circularize orbit
 	//4 = Circularize orbit at specified altitude
 	//5 = Rotate velocity vector, specify apoapsis altitude
+	//6 = Rotate line of apsides, perigee at specific longitude
 	int type = 0;
 	double GETbase; //usually MJD at launch
 	VESSEL* vessel;
@@ -494,6 +495,8 @@ struct GMPOpt
 	double h_peri;	//periapsis altitude, used for option 0
 	double inc;		//orbital inclination, used for option 0
 	double rot_ang;	//rotate velocity vector, used for option 5
+	double lng;		//Longitude, used for option 6
+	int N;			//Number of orbits, used for option 6
 };
 
 struct TLIPADOpt
@@ -688,6 +691,7 @@ public:
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &TOA);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
