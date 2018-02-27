@@ -6431,7 +6431,7 @@ restartprep:
 			// TLI restart & targeting logic;
 
 			//Manual TB6 Initiation
-			if (lvda.GetCMCSIVBIgnitionSequenceStart())
+			if (lvda.GetCMCSIVBIgnitionSequenceStart() && GuidanceReferenceFailure && LVDC_Timebase == 5 && LVDC_TB_ETime > 100.0)
 			{
 				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
 				goto INHcheck;
