@@ -407,6 +407,14 @@
 #define MST_F_TRANSLUNAR4	24
 // Ends at Block Data 1 update
 #define MST_F_TRANSLUNAR5	25
+// Ends at PTC REFSMMAT update
+#define MST_F_TRANSLUNAR6	26
+// Ends at MCC-1 update
+#define MST_F_TRANSLUNAR7	27
+// Ends at Block Data 2 update
+#define MST_F_TRANSLUNAR8	28
+// Ends at MCC-2 update
+#define MST_F_TRANSLUNAR9	29
 
 // Ground Station Information Structure
 struct GroundStation {

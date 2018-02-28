@@ -2103,7 +2103,7 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 				case 10:
-					allocPad(8);// Allocate AP11 MNV PAD
+					allocPad(7);// Allocate P37 PAD
 					if (padForm != NULL) {
 						// If success
 						startSubthread(2, UTP_P37PAD); // Start subthread to fill PAD
@@ -2178,11 +2178,27 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_F_TRANSLUNAR3: //Evasive Maneuver to TB8 enable
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 2.0*3600.0, 4, MST_F_TRANSLUNAR4);
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 3600.0 + 30.0*60.0, 4, MST_F_TRANSLUNAR4);
 				break;
 			case MST_F_TRANSLUNAR4:  //TB8 enable to Block Data 1
 				switch (SubState) {
 				case 0:
+				{
+					if (cm->GetStage() >= CSM_LEM_STAGE)
+					{
+						setSubState(1);
+					}
+				}
+				break;
+				case 1:
+				{
+					if (SubStateTime > 2.0*60.0)
+					{
+						setSubState(2);
+					}
+				}
+				break;
+				case 2:
 				{
 					if (sivb == NULL)
 					{
@@ -2201,10 +2217,10 @@ void MCC::TimeStep(double simdt){
 					}
 
 					sivb->GetIU()->dcs.Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
-					setSubState(1);
+					setSubState(3);
 				}
 				break;
-				case 1:
+				case 3:
 					if (cm->MissionTime > rtcc->calcParams.TLI + 2.0*3600.0 + 30.0*60.0)
 					{
 						setState(MST_F_TRANSLUNAR5);
@@ -2213,7 +2229,16 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			case MST_F_TRANSLUNAR5: //Block Data 1 to PTC REFSMMAT
-				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0, 5, MST_F_TRANSLUNAR5);
+				UpdateMacro(UTP_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0, 5, MST_F_TRANSLUNAR6);
+				break;
+			case MST_F_TRANSLUNAR6: //PTC REFSMMAT to MCC-1
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.TLI + 7.0*3600.0 + 30.0*60.0, 7, MST_F_TRANSLUNAR7);
+				break;
+			case MST_F_TRANSLUNAR7: //MCC-1 to Block Data 2
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0 + 30.0*60.0, 10, MST_F_TRANSLUNAR8);
+				break;
+			case MST_F_TRANSLUNAR8: //Block Data 2 to MCC-2
+				UpdateMacro(UTP_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 22.0*3600.0 + 30.0*60.0, 6, MST_F_TRANSLUNAR9);
 				break;
 			}
 			break;
@@ -3198,7 +3223,7 @@ void MCC::drawPad(){
 
 			format_time(tmpbuf, form->GET05G);
 
-			sprintf(buffer, "%s\n%s PURPOSE\n%s PROP/GUID\n%+05.0f WT N47\n%+07.1f PTRIM N48\n%+07.1f YTRIM\n%+06d HRS GETI\n%+06d MIN N33\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY\n%+07.1f DVZ\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\n%+07.1f HA N44\n%+07.1f HP\n%+07.1f DVT\nXXX%d:%02.0f BT\nX%06.1f DVC\nXXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n%+07.2f LAT N61\n%+07.2f LONG\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s GET 0.05G\n",\
+			sprintf(buffer, "%s\n%s PURPOSE\n%s PROP/GUID\n%+05.0f WT N47\n%+07.2f PTRIM N48\n%+07.2f YTRIM\n%+06d HRS GETI\n%+06d MIN N33\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY\n%+07.1f DVZ\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\n%+07.1f HA N44\n%+07.1f HP\n%+07.1f DVT\nXXX%d:%02.0f BT\nX%06.1f DVC\nXXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n%+07.2f LAT N61\n%+07.2f LONG\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s GET 0.05G\n",\
 				buffer, form->purpose, form->PropGuid, form->Weight, form->pTrim, form->yTrim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->HA, form->HP, form->Vt,\
 				mm2, ss2, form->Vc, form->Star, form->Shaft, form->Trun, form->BSSStar, form->SPA, form->SXP, form->lat, form->lng, form->RTGO, form->VI0, tmpbuf);
 			sprintf(buffer, "%sSET STARS: %s\nRALIGN %03.0f\nPALIGN %03.0f\nYALIGN %03.0f\nRemarks:\n%s", buffer,form->SetStars, form->GDCangles.x, form->GDCangles.y, form->GDCangles.z, form->remarks);
@@ -3236,7 +3261,7 @@ void MCC::drawPad(){
 			format_time(tmpbuf, form->TB6P);
 			SStoHHMMSS(form->BurnTime, hh, mm, ss);
 
-			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P	TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P	SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P	EXTRACTION\nXXX%03.0f Y\n", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
+			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P	TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P	SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\n", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
