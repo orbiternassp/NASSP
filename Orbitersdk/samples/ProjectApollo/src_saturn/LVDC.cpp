@@ -4691,7 +4691,7 @@ void LVDCSV::TimeStep(double simdt) {
 				}
 
 				// Begin timebase 2
-				if((DotS.z > 500.0 || (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())) && lvda.GetSICInboardEngineCutoff()){
+				if(((!GuidanceReferenceFailure && DotS.z > 500.0) || (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())) && lvda.GetSICInboardEngineCutoff()){
 					TB2 = TAS;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
