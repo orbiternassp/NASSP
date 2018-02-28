@@ -675,16 +675,16 @@ void LEM::SystemsInit()
 */
 
 	//Primary Glycol Pipe Initialization   
-	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1", 145.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2", 145.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:PRIMGLYFLOWREG1", 290.0 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROL", 120.0 / LBH);
-	//SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROLBYPASS", 290.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1", 120.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2", 170.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:PRIMGLYCOLCOOLINGOUT", 120.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROL", 120.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:HXFLOWCONTROLBYPASS", 290.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:HXHOUTFLOW", 120.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:ASCBATINLET", 116.0 / LBH);
-	SetPipeMaxFlow("HYDRAULIC:DESBATINLET", 174.0 / LBH);
+	SetPipeMaxFlow("HYDRAULIC:DESBATINLET", 174.0 / LBH); 
 
 	//Secondary Glycol Pipe Initialization  
-	//SetPipeMaxFlow("HYDRAULIC:SECGLYFLOWREG1", 300.0 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SECGLYFLOWREG2", 300.0 / LBH);
 
 	//LCG Pipe Initialization   
@@ -1693,6 +1693,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *primevaptempout = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
 	double *primevapoutpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:PRESS");
 
+	double *Pump1Flow = (double*)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1:FLOW");
+	double *Pump2Flow = (double*)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2:FLOW");
 	double *Pump1OutFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1:FLOW");
 	double *Pump2OutFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2:FLOW");
 	double *primGlyReg1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYFLOWREG1:FLOW");
@@ -1766,7 +1768,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *glycolsuitheatmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXHEATING:MASS");
 	double *glycolsuitheatpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXHEATING:PRESS");
 	double *glycolpumpmanifoldmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:MASS");
-	double *glycolpumpmanifoldtpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:PRESS");
+	double *glycolpumpmanifoldpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:PRESS");
 
 	double *waterglycolhxmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERGLYCOLHX:MASS");
 	double *waterglycolhxpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERGLYCOLHX:PRESS");
@@ -1872,7 +1874,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	
 	//sprintf(oapiDebugString(), "SBD: T %lf H %lf RR: T %lf SH %lf H %lf LR: T %lf H %lf", *SBDTemp* 1.8 - 459.67, *SBDHtr, *RRTemp* 1.8 - 459.67, *RRStbyHtr, *RRHtr, *LRTemp* 1.8 - 459.67, *LRHtr);
 
-	//sprintf(oapiDebugString(), "Prim Loop 1 Heat: %lf, Prim Loop 2 Heat: %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *SBXHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat));
+	//sprintf(oapiDebugString(), "ASA %lf GL1 %lf Prim Loop 1 Heat: %lf Prim Loop 2 Heat: %lf", KelvinToFahrenheit(*ASATemp), KelvinToFahrenheit(*primglycoltemp), (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *SBXHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat));
+	//sprintf(oapiDebugString(), "ASA %lf PL1 %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", *ASATemp, *primglycoltemp, *SBPHeat, *AEAHeat, *ATCAHeat, *SCERAHeat, *CWEAHeat, *RREHeat, *SBXHeat, *VHFHeat, *INVHeat, *ECAHeat, *PCMHeat);
 	//sprintf(oapiDebugString(), "Sec Loop 1 Heat: %lf, Sec Loop 2 Heat: %lf", (*SBPHeatSec + *AEAHeatSec + *ATCAHeatSec + *SCERAHeatSec + *CWEAHeatSec + *RREHeatSec + *SBXHeatSec + *VHFHeatSec + *INVHeatSec + *ECAHeatSec + *PCMHeatSec), (*TLEHeatSec + *ASAHeatSec + *RGAHeatSec));
 
 	//sprintf(oapiDebugString(), "Sen %lf RM %lf HXH %lf CDR %lf LMP %lf SGD %lf SC %lf CAB %lf CAN %lf PRIM %lf SEC %lf SF %lf HXC %lf", ecs.GetSensorCO2MMHg(), *primCO2Removal, *SuitHXHCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, *SuitGasDiverterCO2*MMHG, *SuitCircuitCO2*MMHG, *CabinCO2*MMHG, *CanisterMFCO2*MMHG, *PrimCO2*MMHG, *SecCO2*MMHG, *SuitFanCO2*MMHG, *SuitHXCCO2*MMHG);
@@ -1882,10 +1885,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "AcP %lf FMP %lf L1P %lf ABCP %lf L2P %lf EIP %lf EOP %lf Flow1 %lf Flow2 %lf", *secglycolpress*PSI, *secpumpmanifoldpress*PSI, *secloop1press*PSI, *secascbatpress*PSI, *secloop2press*PSI, *secevapinpress*PSI, *secevapoutpress*PSI, *secGlyReg1Flow*LBH, *secGlyReg2Flow*LBH);
 	//sprintf(oapiDebugString(), "AcT %lf FMT %lf L1T %lf ABCT %lf L2T %lf ETI %lf ETO %lf SCT %lf SETh %lf SCTh %lf", *secglycoltemp* 1.8 - 459.67, *secpumpmanifoldtemp* 1.8 - 459.67, *secloop1temp* 1.8 - 459.67, *secascbattemp* 1.8 - 459.67, *secloop2temp* 1.8 - 459.67, *secevaptempin* 1.8 - 459.67, *secevaptempout* 1.8 - 459.67, *hxcoolingTemp* 1.8 - 459.67, *secevapThrottle, *slevapThrottle);
 	
-	//sprintf(oapiDebugString(), "AP %lf PMP %lf HXCP %lf L1P %lf HXLP %lf L2P %lf HXHP %lf EIP %lf EOP %lf ACP %lf DBP %lf 1 %lf 2 %lf Reg %lf", *primglycolpress*PSI, *glycolpumpmanifoldtpress*PSI, *glycolsuitcoolpress*PSI, *primloop1press*PSI, *waterglycolhxpress*PSI, *primloop2press*PSI, *glycolsuitheatpress*PSI, *primevapinpress*PSI, *primevapoutpress*PSI, *ascbatglycolpress*PSI, *desbatglycolpress*PSI, *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow);
+	//sprintf(oapiDebugString(), "AP %lf PMP %lf HXCP %lf L1P %lf HXLP %lf L2P %lf HXHP %lf EIP %lf EOP %lf ACP %lf DBP %lf Flow1 %lf HXFlow %lf", *primglycolpress*PSI, *glycolpumpmanifoldpress*PSI, *glycolsuitcoolpress*PSI, *primloop1press*PSI, *waterglycolhxpress*PSI, *primloop2press*PSI, *glycolsuitheatpress*PSI, *primevapinpress*PSI, *primevapoutpress*PSI, *ascbatglycolpress*PSI, *desbatglycolpress*PSI, *Pump1Flow*LBH, *suitHXGlyFlow*LBH);
 	//sprintf(oapiDebugString(), "AM %lf HXCM %lf L1M %lf HXLM %lf L2M %lf HXHM %lf EIM %lf EOM %lf ACM %lf DBM %lf", *primglycolmass, *glycolsuitcoolmass, *primloop1mass, *waterglycolhxmass, *primloop2mass, *glycolsuitheatmass, *primevapinmass, *primevapoutmass, *ascbatglycolmass, *desbatglycolmass);
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
-	//sprintf(oapiDebugString(), "AcT %lf GCT %lf SCT %lf L1T %lf HXT %lf L2T %lf GHT %lf SHT %lf ETI %lf ETO %lf ABC %lf DBC %lf IMUT %lf", *primglycoltemp* 1.8 - 459.67, *glycolsuitcooltemp* 1.8 - 459.67, *hxcoolingTemp* 1.8 - 459.67, *primloop1temp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67, *primloop2temp* 1.8 - 459.67, *glycolsuitheattemp* 1.8 - 459.67, *hxheatingTemp* 1.8 - 459.67, *primevaptempin* 1.8 - 459.67, *primevaptempout* 1.8 - 459.67, *ascbatglycoltemp* 1.8 - 459.67, *desbatglycoltemp* 1.8 - 459.67, *IMUTemp* 1.8 - 459.67);
+	//sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf L1T %lf HXT %lf L2T %lf GHT %lf SHT %lf ETI %lf ETO %lf ABC %lf DBC %lf IMUT %lf", *primglycoltemp* 1.8 - 459.67, *glycolpumpmanifoldtemp* 1.8 - 459.67, *glycolsuitcooltemp* 1.8 - 459.67, *hxcoolingTemp* 1.8 - 459.67, *primloop1temp* 1.8 - 459.67, *waterglycolhxtemp* 1.8 - 459.67, *primloop2temp* 1.8 - 459.67, *glycolsuitheattemp* 1.8 - 459.67, *hxheatingTemp* 1.8 - 459.67, *primevaptempin* 1.8 - 459.67, *primevaptempout* 1.8 - 459.67, *ascbatglycoltemp* 1.8 - 459.67, *desbatglycoltemp* 1.8 - 459.67, *IMUTemp* 1.8 - 459.67);
 	
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
@@ -2043,6 +2046,7 @@ void LEM::CheckDescentStageSystems()
 		DesH2OTank->OUT_valve.Close();
 		DesH2OTank->OUT2_valve.Close();
 
+		SetPipeMaxFlow("HYDRAULIC:ASCBATINLET", 290.0 / LBH);
 		DesBatCooling->space.Void();
 		DesBatCooling->IN_valve.Close();
 		DesBatCooling->OUT_valve.Close();
