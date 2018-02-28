@@ -1104,6 +1104,7 @@ bool Saturn::clbkLoadPanel (int id) {
 				hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW_OPEN));
 			}
 		} else {
+			xoffset = 360;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		}
 		if (!hBmp) {
@@ -1124,13 +1125,13 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea (AID_CSM_HATCH_600_LEFT,				_R(  0          ,  54,  150          , 768), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_HATCH_600_RIGHT,				_R(875 + xoffset, 466, 1024 + xoffset, 768), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		} else {
-			oapiRegisterPanelArea (AID_CSM_GEAR_BOX_ROTARY,				_R(1405,  50, 1649,  290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
-			oapiRegisterPanelArea (AID_CSM_PUMP_HANDLE_ROTARY,			_R(1275, 534, 1515,  774), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CSM_VENT_VALVE_HANDLE,			_R(  64, 703,  328,  967), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CSM_HATCH_TOGGLE,				_R(1340, 790, 1540, 1090), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_GEAR_BOX_ROTARY,				_R(1405 + xoffset,  50, 1649 + xoffset,  290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_PUMP_HANDLE_ROTARY,			_R(1275 + xoffset, 534, 1515 + xoffset,  774), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_VENT_VALVE_HANDLE,			_R(  64 + xoffset, 703,  328 + xoffset,  967), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_HATCH_TOGGLE,				_R(1340 + xoffset, 790, 1540 + xoffset, 1090), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-			oapiRegisterPanelArea (AID_CSM_HATCH_600_LEFT,				_R(   0,  636,   150, 1350), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-			oapiRegisterPanelArea (AID_CSM_HATCH_600_RIGHT,				_R(1530, 1047,  1679, 1349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_HATCH_600_LEFT,				_R(   0 + xoffset,  636,   150 + xoffset, 1350), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_HATCH_600_RIGHT,				_R(1530 + xoffset, 1047,  1679 + xoffset, 1349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 		}
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
@@ -1258,7 +1259,7 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea(AID_PRESS_EQUAL_VALVE_HANDLE,		_R(1148, 476, 1412, 740), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 		}
 
-		oapiRegisterPanelArea (AID_FORWARD_HATCH,					_R(960, 168, 1147, 1000), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FORWARD_HATCH,					_R(896, 168, 1101, 1000), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -4947,6 +4948,7 @@ void Saturn::InitSwitches() {
 
 	if (!SkylabCM) {
 		SIVBPayloadSepSwitch.Register(PSH, "SIVBPayloadSepSwitch", TOGGLESWITCH_DOWN, 0, SPRINGLOADEDSWITCH_DOWN);
+		SIVBPayloadSepSwitch.SetDelayTime(2);
 	}
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
@@ -4957,15 +4959,15 @@ void Saturn::InitSwitches() {
 
 	CabinFan1Switch.Register(PSH, "CabinFan1Switch", false);
 	CabinFan2Switch.Register(PSH, "CabinFan2Switch", false);
-	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_UP);
-	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_UP);
-	O2Heater1Switch.Register(PSH, "O2Heater1Switch", THREEPOSSWITCH_UP);
-	O2Heater2Switch.Register(PSH, "O2Heater2Switch", THREEPOSSWITCH_UP);
+	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_CENTER);
+	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_CENTER);
+	O2Heater1Switch.Register(PSH, "O2Heater1Switch", THREEPOSSWITCH_CENTER);
+	O2Heater2Switch.Register(PSH, "O2Heater2Switch", THREEPOSSWITCH_CENTER);
 	O2PressIndSwitch.Register(PSH, "O2PressIndSwitch", true);
-	H2Fan1Switch.Register(PSH, "H2Fan1Switch", THREEPOSSWITCH_UP);
-	H2Fan2Switch.Register(PSH, "H2Fan2Switch", THREEPOSSWITCH_UP);
-	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_UP);
-	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_UP);
+	H2Fan1Switch.Register(PSH, "H2Fan1Switch", THREEPOSSWITCH_CENTER);
+	H2Fan2Switch.Register(PSH, "H2Fan2Switch", THREEPOSSWITCH_CENTER);
+	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_CENTER);
+	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_CENTER);
 
 	SCContSwitch.Register(PSH, "SCContSwitch", false);
 	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_DOWN);

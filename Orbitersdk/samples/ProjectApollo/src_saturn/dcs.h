@@ -24,8 +24,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-#define DCSUPLINK_SWITCH_SELECTOR 0
-#define DCSUPLINK_TIMEBASE_UPDATE 1
+#define DCSUPLINK_SWITCH_SELECTOR			0
+#define DCSUPLINK_TIMEBASE_UPDATE			1
+#define DCSUPLINK_LM_ABORT					2
+#define DCSUPLINK_INHIBIT_MANEUVER			3
+#define DCSUPLINK_RESTART_MANEUVER_ENABLE	4
+#define DCSUPLINK_TIMEBASE_8_ENABLE			5
+#define DCSUPLINK_EVASIVE_MANEUVER_ENABLE	6
+#define DCSUPLINK_EXECUTE_COMM_MANEUVER		7
+#define DCSUPLINK_SIVBIU_LUNAR_IMPACT		8
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -43,6 +50,15 @@ struct DCSTBUPDATE
 	double dt;
 };
 
+//SIVB/IU Lunar Impact
+struct DCSLUNARIMPACT
+{
+	double tig;
+	double dt;
+	double pitch;
+	double yaw;
+};
+
 class IU;
 
 class DCS
@@ -52,7 +68,7 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
-	bool Uplink(int type, void *upl);
+	virtual bool Uplink(int type, void *upl);
 	void EnableCommandSystem() { CommandSystemEnabled = true; }
 
 	bool IsCommandSystemEnabled();

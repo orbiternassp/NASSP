@@ -42,6 +42,9 @@ public:
 	LEM_Programer();
 	void Init(LEM *l);
 	void ProcessChannel10(ChannelValue val);
+
+	bool GetPlusXTrans() { return Relays[64]; }
 protected:
 	LEM* lem;
+	bool Relays[128];
 };

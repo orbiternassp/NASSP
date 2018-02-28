@@ -57,6 +57,10 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	lem = NULL;
 
 	PowerSwitch = 0;
+	fastheater = 0;
+	fineheater = 0;
+	hsink = 0;
+	asaHeat = 0;
 
 	Initialized = false;
 	Operate = false;
@@ -69,22 +73,23 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	LastSimDT = -1.0;
 }
 
-void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *hb, h_Radiator *hr) {
+void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah) {
 	lem = l;
 	PowerSwitch = s;
-	heater = hb;
+	fastheater = fastht;
+	fineheater = fineht;
 	hsink = hr;
+	asaHeat = asah;
 	// Therm setup
-	hsink->isolation = 1.0;
+	hsink->isolation = 0.0000001;
 	hsink->Area = 975.0425;
 	//hsink.mass = 9389.36206;
 	//hsink.SetTemp(270);
 	if (lem != NULL) {
-		heater->WireTo(&lem->SCS_ASA_CB);
+		fastheater->WireTo(&lem->SCS_ASA_CB);
+		fineheater->WireTo(&lem->SCS_ASA_CB);
 		//lem->Panelsdk.AddHydraulic(&hsink);
 		//lem->Panelsdk.AddElectrical(&heater, false);
-		heater->Enable();
-		heater->SetPumpAuto();
 	}
 }
 
@@ -114,9 +119,22 @@ void LEM_ASA::TimeStep(double simdt){
 	// Fast Warmup is active below 116F.
 	// At 116F the Fine Warmup circuit takes over and gets to 120F and maintains it to within 0.2 degree F
 
-	// There is no information on what the "OFF" mode does other than run the ASA heaters.
-	// My guess is that some small heater keeps the ASA at 30F until standby happens.
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
+
+	// Do we have an ASA?
+	if (lem->NoAEA) return;
+
+	if (IsHeaterPowered())
+	{
+		if (fastheater->pumping)
+		{
+			fineheater->SetPumpOff();
+		}
+		else
+		{
+			fineheater->SetPumpAuto();
+		}
+	}
 
 	if (!Operate) {
 		if (IsPowered())
@@ -156,6 +174,13 @@ void LEM_ASA::TimeStep(double simdt){
 		lem->GetWeightVector(w);
 		// Transform to Orbiter global and calculate weight acceleration
 		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+
+		//Orbiter 2016 hack
+		if (length(w) == 0.0)
+		{
+			w = GetGravityVector();
+		}
+
 		LastWeightAcceleration = w;
 
 		lem->GetGlobalVel(LastGlobalVel);
@@ -172,6 +197,13 @@ void LEM_ASA::TimeStep(double simdt){
 		lem->GetWeightVector(w);
 		// Transform to Orbiter global and calculate accelerations
 		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+
+		//Orbiter 2016 hack
+		if (length(w) == 0.0)
+		{
+			w = GetGravityVector();
+		}
+
 		lem->GetGlobalVel(vel);
 		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
 
@@ -192,6 +224,87 @@ void LEM_ASA::TimeStep(double simdt){
 		RemainingDeltaVel.z += accel.z * LastSimDT;
 
 		LastSimDT = simdt;
+	}
+}
+
+VECTOR3 LEM_ASA::GetGravityVector()
+{
+	OBJHANDLE gravref = lem->GetGravityRef();
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+	VECTOR3 R, U_R;
+	lem->GetRelativePos(gravref, R);
+	U_R = unit(R);
+	double r = length(R);
+	VECTOR3 R_S, U_R_S;
+	lem->GetRelativePos(hSun, R_S);
+	U_R_S = unit(R_S);
+	double r_S = length(R_S);
+	double mu = GGRAV * oapiGetMass(gravref);
+	double mu_S = GGRAV * oapiGetMass(hSun);
+	int jcount = oapiGetPlanetJCoeffCount(gravref);
+	double JCoeff[5];
+	for (int i = 0; i < jcount; i++)
+	{
+		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
+	}
+	double R_E = oapiGetSize(gravref);
+
+	VECTOR3 a_dP;
+
+	a_dP = -U_R;
+
+	if (jcount > 0)
+	{
+		MATRIX3 mat;
+		VECTOR3 U_Z;
+		double costheta, P2, P3;
+
+		oapiGetPlanetObliquityMatrix(gravref, &mat);
+		U_Z = mul(mat, _V(0, 1, 0));
+
+		costheta = dotp(U_R, U_Z);
+
+		P2 = 3.0 * costheta;
+		P3 = 0.5*(15.0*costheta*costheta - 3.0);
+		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
+		if (jcount > 1)
+		{
+			double P4;
+			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
+			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
+			if (jcount > 2)
+			{
+				double P5;
+				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
+			}
+		}
+	}
+	a_dP *= mu / pow(r, 2.0);
+	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
+
+	if (gravref == oapiGetObjectByName("Moon"))
+	{
+		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+
+		VECTOR3 R_Ea, U_R_E;
+		lem->GetRelativePos(hEarth, R_Ea);
+		U_R_E = unit(R_Ea);
+		double r_E = length(R_Ea);
+		double mu_E = GGRAV * oapiGetMass(hEarth);
+
+		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
+	}
+
+	return a_dP;
+}
+
+void LEM_ASA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		lem->SCS_ASA_CB.DrawPower(41.1);
+		asaHeat->GenerateHeat(41.1);
 	}
 }
 
@@ -247,8 +360,18 @@ VECTOR3 LEM_ASA::MatrixToEuler(MATRIX3 mat)
 	return _V(atan2(mat.m23, mat.m33), -asin(mat.m13), atan2(mat.m12, mat.m11));
 }
 
+bool LEM_ASA::IsHeaterPowered()
+{
+	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+
+	return true;
+}
+
 bool LEM_ASA::IsPowered()
 {
+	// Do we have an ASA?
+	if (lem->NoAEA) return false;
+
 	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
 		if (PowerSwitch->IsDown()) { return false; }
@@ -300,6 +423,8 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	AEAInitialized = false;
 	FlightProgram = 0;
 	PowerSwitch = 0;
+	aeaHeat = 0;
+	secaeaHeat = 0;
 
 	ASACycleCounter = 0;
 	LastCycled = 0.0;
@@ -324,8 +449,10 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
 	lem = s;
+	aeaHeat = aeah;
+	secaeaHeat = secaeah;
 }
 
 void LEM_AEA::TimeStep(double simt, double simdt){
@@ -379,6 +506,23 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 	}
 
 	LastCycled += (0.0000009765625 * CycleCount);
+}
+
+void LEM_AEA::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		DCPower.DrawPower(47.0);
+		aeaHeat->GenerateHeat(21.25);
+		secaeaHeat->GenerateHeat(21.25);
+	}
+
+	if (IsACPowered())
+	{
+		lem->AGS_AC_CB.DrawPower(3.45);
+		aeaHeat->GenerateHeat(1.725);
+		secaeaHeat->GenerateHeat(1.725);
+	}
 }
 
 void LEM_AEA::ResetDEDAShiftIn()
@@ -716,11 +860,20 @@ void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 
 bool LEM_AEA::IsPowered()
 {
+	// Do we have an AEA?
+	if (lem->NoAEA) return false;
+
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
 		if (!PowerSwitch->IsUp()) { return false; }
 	}
 
+	return true;
+}
+
+bool LEM_AEA::IsACPowered()
+{
+	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE) {	return false; }
 	return true;
 }
 
@@ -927,7 +1080,6 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer) :  lem(lm), soundlib(s), ags(computer)
 {
 	Reset();
-	ResetKeyDown();
 }
 
 LEM_DEDA::~LEM_DEDA()
@@ -942,6 +1094,7 @@ void LEM_DEDA::Init(e_object *powered)
 {
 	WireTo(powered);
 	Reset();
+	ResetKeyDown();
 	FirstTimeStep = true;
 }
 

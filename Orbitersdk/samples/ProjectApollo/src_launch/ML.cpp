@@ -526,7 +526,10 @@ void ML::DoFirstTimestep() {
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
 			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
-			sat->SetIUUmbilicalState(true);
+			if (sat->GetMissionTime() < 0)
+			{
+				sat->SetIUUmbilicalState(true);
+			}
 		}
 	}
 

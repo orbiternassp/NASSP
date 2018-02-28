@@ -322,6 +322,7 @@ protected:
 	bool IsDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
+	VECTOR3 GetGravityVector();
 	double xacc, xaccG, constG;
 	double vinert;
 

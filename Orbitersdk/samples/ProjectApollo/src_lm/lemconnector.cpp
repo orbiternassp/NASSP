@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LEM.h"
+#include "iu.h"
 #include "lemconnector.h"
 
 LEMConnector::LEMConnector(LEM *l)
@@ -111,5 +112,62 @@ bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 	}
 	// Debug: Complain if we got garbage
 	sprintf(oapiDebugString(), "LM/CSM Conn: Bad message: Type %d parameter %d", m.messageType, m.val1.iValue);
+	return false;
+}
+
+LMToIUConnector::LMToIUConnector(LEMcomputer &c, LEM *l) : agc(c), LEMConnector(l)
+
+{
+	type = CSM_IU_COMMAND;
+}
+
+LMToIUConnector::~LMToIUConnector()
+
+{
+}
+
+bool LMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IULMMessageType messageType;
+
+	messageType = (IULMMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case IULM_SET_INPUT_CHANNEL_BIT:
+		if (OurVessel)
+		{
+			agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
+			return true;
+		}
+		break;
+
+	case IULM_PLAY_COUNT_SOUND:
+		if (OurVessel)
+		{
+			OurVessel->PlayCountSound(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	case IULM_PLAY_SEPS_SOUND:
+		if (OurVessel)
+		{
+			OurVessel->PlaySepsSound(m.val1.bValue);
+			return true;
+		}
+		break;
+	}
+
 	return false;
 }

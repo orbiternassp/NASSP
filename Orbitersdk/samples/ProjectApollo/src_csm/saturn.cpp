@@ -228,8 +228,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
 	vhfa(_V(0.0, 0.7716246, 0.63607822)),
-	vhfb(_V(0.0, -0.7716246, -0.63607822)),
-	sii(this, th_2nd, ph_2nd, thg_ull, SPUShiftS, SepS)
+	vhfb(_V(0.0, -0.7716246, -0.63607822))
 
 #pragma warning ( pop ) // disable:4355
 
@@ -334,6 +333,7 @@ void Saturn::initSaturn()
 
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
+	IUSCContPermanentEnabled = true;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -1144,16 +1144,6 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		debugConnected = true;
 	}
 
-	// Orbiter 2016 fix
-	// Force GetWeightVector() to the correct value
-	VESSELSTATUS vs;
-	GetStatus(vs);
-	if (vs.status == 1) {
-		if (simt < 0.5) {
-			AddForce(_V(0, 0, -0.1), _V(0, 0, 0));
-		}
-	}
-
 	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 
 		//
@@ -1351,7 +1341,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 	if (stage < LAUNCH_STAGE_SIVB && SaturnType == SAT_SATURNV)
 	{
-		sii.SaveState(scn);
+		SaveSII(scn);
 	}
 	//
 	// If we've seperated from the SIVb, the IU is history.
@@ -1423,6 +1413,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	CabinPressureReliefValve2.SaveState(2, scn);
 	O2SMSupply.SaveState(scn);
 	CrewStatus.SaveState(scn);
+	ForwardHatch.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
 	hga.SaveState(scn);
@@ -1455,6 +1446,7 @@ int Saturn::GetMainState()
 {
 	MainState state;
 
+	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
 	state.SIISepState = SIISepState;
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
@@ -1482,6 +1474,7 @@ void Saturn::SetMainState(int s)
 	MainState state;
 
 	state.word = s;
+	IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
 	SIISepState = state.SIISepState;
 	Scorrec = state.Scorrec;
 	Burned = state.Burned;
@@ -1957,7 +1950,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		LoadSI(scn);
 	}
 	else if (!strnicmp(line, SIISYSTEMS_START_STRING, sizeof(SIISYSTEMS_START_STRING))) {
-		sii.LoadState(scn);
+		LoadSII(scn);
 	}
 	else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
 		LoadSIVB(scn);
@@ -2041,6 +2034,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf(line + 5, "%d", &i);
 			NoHGA = (i != 0);
 		}
+		else if (!strnicmp(line, "NOMANUALTLI", 11)) {
+			//
+			// NOMANUALTLI isn't saved in the scenario, this is solely to allow you
+			// to override the default NOMANUALTLI state in startup scenarios.
+			//
+			sscanf(line + 11, "%d", &i);
+			IUSCContPermanentEnabled = (i != 1);
+		}
 		else if (!strnicmp(line, SPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(SPSGIMBALACTUATOR_PITCH_START_STRING))) {
 			SPSEngine.pitchGimbalActuator.LoadState(scn);
 		}
@@ -2086,6 +2087,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "CREWSTATUS", 10)) {
 		    CrewStatus.LoadState(line);
 	    }
+		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
+			ForwardHatch.LoadState(line);
+		}
 	    else if (!strnicmp (line, "SIDEHATCH", 9)) {
 		    SideHatch.LoadState(line);
 	    }
@@ -3749,7 +3753,7 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->SetMissionInfo(Crewed);
+		iu->SetMissionInfo(Crewed, IUSCContPermanentEnabled);
 	}
 
 	//
@@ -4599,25 +4603,11 @@ bool Saturn::GetSIBLowLevelSensorsDry()
 	return false;
 }
 
-void Saturn::SetSIIThrusterDir(int n, double yaw, double pitch)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage!= LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.SetThrusterDir(n, yaw, pitch);
-}
-
 void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
 
 	sivb->SetThrusterDir(yaw, pitch);
-}
-
-void Saturn::SIIEDSCutoff(bool cut)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii.EDSEnginesCutoff(cut);
 }
 
 void Saturn::SIVBEDSCutoff(bool cut)

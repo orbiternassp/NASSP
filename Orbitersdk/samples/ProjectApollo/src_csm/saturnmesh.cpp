@@ -716,12 +716,14 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.ApsFuel2Kg = GetPropellantMass(ph_aps2);
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
+	S4Config.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
 	S4Config.MissionTime = MissionTime;
 	S4Config.LowRes = LowRes;
 	S4Config.ISP_VAC = ISP_THIRD_VAC;
 	S4Config.THRUST_VAC = THRUST_THIRD_VAC;
 	S4Config.PanelsHinged = !SLAWillSeparate;
 	S4Config.SLARotationLimit = (double) SLARotationLimit;
+	S4Config.PanelProcess = 0.0;
 
 	GetPayloadName(S4Config.PayloadName);
 

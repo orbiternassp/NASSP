@@ -1,7 +1,5 @@
 BEGIN_DESC
-Join Frank Borman, James Lovell and Bill Anders on Mankind's first trek a quarter of a million miles to the moon at December 21, 1968. The scenario starts at T-4h00min, crew ingress is at T-2h40min, launch azimuth is +72.12°. (AS-503)
-
-Enabled features: Virtual AGC and LVDC++
+Join Frank Borman, James Lovell and Bill Anders on Mankind's first trek a quarter of a million miles to the moon on December 21, 1968. The scenario starts at T-4h00min, crew ingress is at T-2h40min, launch azimuth is +72.12°. (AS-503)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -37,6 +35,7 @@ AS-503:ProjectApollo\Saturn5
   VECHNO 503
   STAGE 5
   STAGESTATUS 0
+  NOMANUALTLI 1
   DOCKSTATE 0
   MISSNTIME -14400 
   ATTACHSTATE 59
@@ -55,6 +54,8 @@ AS-503:ProjectApollo\Saturn5
   LANG English
   AUTOSLOW 1  
 LVDC_BEGIN
+  LVDC_FSPFileName Config\ProjectApollo\AS-503 Flight Sequence Program.txt
+  LVDC_INH5 0
   LVDC_ALFTSA 15.015
   LVDC_ALFTSB 15.997
   LVDC_BETAA 56.497
@@ -293,6 +294,7 @@ LVDC_BEGIN
   LVDC_tau2 321.95309
   LVDC_tau3 661.53577
   LVDC_tau3N 661.53577
+  LVDC_t_B2 1.0
   LVDC_T_c 6.5
   LVDC_t_D0 0.0
   LVDC_t_D1 0.0

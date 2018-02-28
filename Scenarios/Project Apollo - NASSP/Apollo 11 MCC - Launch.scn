@@ -1,6 +1,8 @@
 BEGIN_DESC
 Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar
 Landing on July 16, 1969. The scenario starts at T-4h00min, launch azimuth is +72.06°.
+
+Enabled features: MCC
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -331,6 +333,7 @@ Columbia:ProjectApollo\Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 11 LM Checklists.xls
   LVDC_BEGIN
+    LVDC_FSPFileName Config\ProjectApollo\AS-506 Flight Sequence Program.txt
     LVDC_SIICenterEngineCutoff 1
 	LVDC_ALFTSA 14.569704
 	LVDC_ALFTSB 15.7563036
@@ -432,7 +435,8 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_Drag_Area[3] 0.0
 	LVDC_Drag_Area[4] 0.0
 	LVDC_dV_B 1.638
-	LVDC_dV_BR 2.35
+	LVDC_DVBRA 2.35
+	LVDC_DVBRB 2.5
 	LVDC_ENA0 0.9762203
 	LVDC_ENA1 0.9762098
 	LVDC_ENA2 0.9761908
@@ -563,16 +567,20 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_RNA 6.569733e6
 	LVDC_RNB 6.573009e6
 	LVDC_ROV 1.5
-	LVDC_SCControlPoweredFlight 1
 	LVDC_TETEO 0.9856278853
 	LVDC_T_2 53.5
-	LVDC_Tt_3 135.6
+	LVDC_T2IR 111.0
+	LVDC_T2IRB 1.0
+	LVDC_T3PRA 234.5642
+	LVDC_T3PRB 330.0071
 	LVDC_T_4N 143.3647
 	LVDC_T_ar 160.0
 	LVDC_tau2 279.564
 	LVDC_tau2N 769.4
 	LVDC_tau3 769.4
 	LVDC_tau3N 769.4
+	LVDC_TAU3RA 533.0518
+	LVDC_TAU3RB 627.8661
 	LVDC_t_D0 0.0
 	LVDC_t_D1 0.0
 	LVDC_t_D2 1.277213e4
@@ -581,6 +589,8 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_t_DS1 1.277213e4
 	LVDC_t_DS2 1.578403e4
 	LVDC_t_DS3 0.0
+	LVDC_TI7AF1 0.0
+	LVDC_TI7AF2 3705.0
 	LVDC_T_LO 4.868768e4
 	LVDC_TPA0 0.0
 	LVDC_TPA1 3.787330e3
@@ -622,10 +632,12 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_TSTA 7.682469e3
 	LVDC_TSTB 1.299079e4
 	LVDC_Tt_3 135.6
+	LVDC_t_TB8Start 7200.0
 	LVDC_V_ex1 4175.4524
 	LVDC_V_ex2 4248.2287
 	LVDC_V_ex3 4201.3400
 	LVDC_XLunarAttitude 3.141589512 2.094395207 0.6981317008
+	LVDC_XLunarSlingshotAttitude 3.141589512 -2.478367538 0.0
   LVDC_END
   LVIMU_BEGIN
   LVIMU_END

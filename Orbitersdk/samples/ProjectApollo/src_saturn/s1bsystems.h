@@ -72,8 +72,8 @@ protected:
 class SIBSystems
 {
 public:
-	SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl);
-	void Timestep(double simdt);
+	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
+	void Timestep(double simdt, bool liftoff);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -103,9 +103,10 @@ public:
 protected:
 	double GetSumThrust();
 
-	Saturn *vessel;
+	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
 
+	Pyro &SIB_SIVB_Separation_Pyros;
 	Sound &SShutSound;
 	Sound &LaunchSound;
 	double &contrailLevel;
@@ -185,4 +186,5 @@ protected:
 	bool FailInit;
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
+	double FailureTimer;
 };

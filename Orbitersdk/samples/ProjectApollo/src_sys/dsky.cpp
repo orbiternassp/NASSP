@@ -956,7 +956,7 @@ void DSKY::ProcessChannel11(ChannelValue val)
 	val11 = val;
 	SetCompActy(val11[LightComputerActivity]);
 	SetUplink(val11[LightUplink]);
-	SetTemp(val11[LightTempCaution]);
+	//SetTemp(val11[LightTempCaution]);
 	//SetKbRel(val11[LightKbRel]);
 	//SetOprErr(val11[LightOprErr]);
 
@@ -976,6 +976,7 @@ void DSKY::ProcessChannel163(ChannelValue val)
 	ChannelValue val163;
 
 	val163 = val;
+	SetTemp(val163[Ch163LightTemp]);
 	SetKbRel(val163[Ch163LightKbRel]);
 	SetOprErr(val163[Ch163LightOprErr]);
 	SetStby(val163[Ch163LightStandby]);

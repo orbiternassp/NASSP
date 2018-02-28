@@ -80,6 +80,7 @@ protected:
 	void PulsePIPA(int RegPIPA, double pulses);
 	void SetOrbiterAttitudeReference();
 	void ZeroIMUCDUs();
+	VECTOR3 GetGravityVector();
 
 	// Flags to replace IO channel discretes
 public: bool ZeroIMUCDUFlag;

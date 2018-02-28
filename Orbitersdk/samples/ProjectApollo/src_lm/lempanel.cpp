@@ -2527,7 +2527,7 @@ void LEM::SetSwitches(int panel) {
 
 	Panel11CB3SwitchRow.Init(AID_LEM_P11_CB_ROW3, MainPanel); // 184,431 to 1433,459
 	PROP_DES_HE_REG_VENT_CB.Init(3, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 5.0);
-	HTR_RR_STBY_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 5.0);
+	HTR_RR_STBY_CB.Init(67, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 7.5);
 	HTR_RR_OPR_CB.Init(131, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 7.5);
 	HTR_LR_CB.Init(195, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 5.0);
 	HTR_DOCK_WINDOW_CB.Init(318, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
@@ -2604,12 +2604,18 @@ void LEM::SetSwitches(int panel) {
 	Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
 	EDMasterArm.Init(861 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesVent.Init(935 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesVent.SetDelayTime(2);
 	EDASCHeSel.Init(571, 62, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesPrpIsol.Init(643 - 431, 978 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesPrpIsol.SetDelayTime(2);
 	EDLGDeploy.Init(784 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDDesPrpIsol.SetDelayTime(2);
 	EDHePressRCS.Init(861 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressRCS.SetDelayTime(2);
 	EDHePressDesStart.Init(935 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressDesStart.SetDelayTime(2);
 	EDHePressASC.Init(1002 - 431, 1078 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+	EDHePressASC.SetDelayTime(2);
 	EDStage.Init(783 - 431, 1175 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDStage.InitGuard(304, 252, 102, 59, srf[SRF_LEM_STAGESWITCH], srf[SRF_BORDER_34x39]);
 	EDStageRelay.Init(1002 - 431, 1182 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
@@ -2765,8 +2771,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		
 		//CDR Suit Isol Valve
 		else if (s == &CDRSuitIsolValve) {
-			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT");
-			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOLVALVE:OUT2");
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:OUT");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:LEAK");
 			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT");
 			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:OUT2");
 			//Suit Disconnect
@@ -2774,7 +2780,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 				sfvlv->Close();
 				scinvlv->Open();
 				scoutvlv->Close();
-				dcvlv->Open();
+				dcvlv->Close();
+				//dcvlv->Open();   //Use this for when it can connect to a PLSS
 			}
 			//Suit Flow
 			else {
@@ -2787,8 +2794,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		
 		//LMP Suit Isol Valve
 		else if (s == &LMPSuitIsolValve) {
-			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT");
-			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOLVALVE:OUT2");
+			h_Valve * sfvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:OUT2");
+			h_Valve * scinvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITDISCONNECTVALVE");
 			h_Valve * scoutvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT");
 			h_Valve * dcvlv = (h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:OUT2");
 			//Suit Disconnect
@@ -2796,7 +2803,8 @@ void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 				sfvlv->Close();
 				scinvlv->Open();
 				scoutvlv->Close();
-				dcvlv->Open();
+				dcvlv->Close();
+				//dcvlv->Open();   //Use this for when it can connect to a PLSS
 			}
 			//Suit Flow
 			else {

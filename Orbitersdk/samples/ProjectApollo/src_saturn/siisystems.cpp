@@ -33,13 +33,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "siisystems.h"
 
-SIISystems::SIISystems(Saturn *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Sound &pushifts, Sound &SepS)
+SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Pyro &SII_Inter, Pyro &SII_SIVB_Sep, Sound &pushifts, Sound &SepS)
 	:main_propellant(j2prop), ullage(ull), puShiftSound(pushifts), sepSound(SepS),
 	j2engine1(v, j2[0]),
 	j2engine2(v, j2[1]),
 	j2engine3(v, j2[2]),
 	j2engine4(v, j2[3]),
-	j2engine5(v, j2[4])
+	j2engine5(v, j2[4]),
+	SII_Interstage_Pyros(SII_Inter),
+	SII_SIVB_Separation_Pyros(SII_SIVB_Sep)
 {
 	int i;
 
@@ -344,12 +346,9 @@ void SIISystems::SwitchSelector(int channel)
 		SetDepletionSensorsCutoffArm();
 		break;
 	case 5: //S-II/S-IVB Separation
-		if (SIISIVBOrdnanceArmed && vessel->GetStage() < LAUNCH_STAGE_SIVB)
+		if (SIISIVBOrdnanceArmed)
 		{
-			puShiftSound.done(); // Make sure it's done
-			vessel->SeparateStage(LAUNCH_STAGE_SIVB);
-			vessel->SetStage(LAUNCH_STAGE_SIVB);
-			vessel->AddRCS_S4B();
+			SII_SIVB_Separation_Pyros.SetBlown(true);
 		}
 		break;
 	case 6: //Start Phase Limiter Cutoff Reset
@@ -380,10 +379,9 @@ void SIISystems::SwitchSelector(int channel)
 		SetEnginesReadyBypass();
 		break;
 	case 23: //S-II Aft Interstage Separation
-		if (OrdnanceArmed && vessel->GetStage() == LAUNCH_STAGE_TWO)
+		if (OrdnanceArmed)
 		{
-			vessel->SeparateStage(LAUNCH_STAGE_TWO_ISTG_JET);
-			vessel->SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+			SII_Interstage_Pyros.SetBlown(true);
 		}
 		break;
 	case 24: //S-II Ullage Trigger

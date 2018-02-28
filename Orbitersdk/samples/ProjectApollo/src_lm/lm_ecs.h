@@ -196,7 +196,7 @@ class LEMCabinFan
 {
 public:
 	LEMCabinFan(Sound &cabinfanS);
-	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs);
+	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf);
 	void SystemTimestep(double simdt);
 protected:
 
@@ -207,6 +207,7 @@ protected:
 	CircuitBrakerSwitch *cabinFanContCB;
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
+	Pump *cabinFan;
 	Sound &cabinfansound;
 };
 

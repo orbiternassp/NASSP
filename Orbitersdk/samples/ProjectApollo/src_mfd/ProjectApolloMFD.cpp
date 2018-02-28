@@ -39,6 +39,7 @@
 #include "IMU.h"
 #include "saturn.h"
 #include "LEM.h"
+#include "LEMSaturn.h"
 #include "Crawler.h"
 #include "sivb.h"
 #include "iu.h"
@@ -267,6 +268,14 @@ void send_agc_key(char key)	{
 			cmdbuf[1] = 0301;
 			cmdbuf[2] = 0360;
 			break;
+		case 'S': // 11-001-101 10-010-011 (code 23)
+			cmdbuf[1] = 0315;
+			cmdbuf[2] = 0223;
+			break;
+		case 'T': // 11-010-001 01-110-100 (code 24)
+			cmdbuf[1] = 0321;
+			cmdbuf[2] = 0164;
+			break;
 	}
 	for (int i = 0; i < 3; i++) {
 		g_Data.uplinkBuffer.push(cmdbuf[i]);
@@ -422,6 +431,76 @@ void UpdateClock()
 	}
 }
 
+void UplinkSunburstSuborbitalAbort()
+{
+	g_Data.uplinkDataReady = 2;
+
+	if (g_Data.connStatus == 0)
+	{
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+
+		send_agc_key('S');
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+	}
+}
+
+void UplinkSunburstCOI()
+{
+	g_Data.uplinkDataReady = 2;
+
+	if (g_Data.connStatus == 0)
+	{
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+
+		send_agc_key('T');
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+	}
+}
+
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
@@ -491,7 +570,9 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			g_Data.planet = crawler->GetGravityRef();
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
@@ -841,6 +922,36 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 			sprintf(buffer, "%+.1f s", g_Data.iuUplinkTimebaseUpdateTime);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_LM_ABORT)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_INHIBIT_MANEUVER)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Inhibit Maneuver", 16);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_RESTART_MANEUVER_ENABLE)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Restart Maneuver Enable", 23);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_8_ENABLE)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Timebase 8 Enable", 17);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Execute Comm Maneuver", 21);
 		}
 
 		SetTextAlign (hDC, TA_CENTER);
@@ -1451,7 +1562,7 @@ void ProjectApolloMFD::menuSetECSPage()
 
 void ProjectApolloMFD::menuSetIUPage()
 {
-	if (saturn != NULL)
+	if (saturn != NULL || lem != NULL)
 	{
 		screen = PROG_IU;
 		m_buttonPages.SelectPage(this, screen);
@@ -1585,6 +1696,22 @@ void ProjectApolloMFD::menuClockUpdate()
 	}
 }
 
+void ProjectApolloMFD::menuSunburstSuborbitalAbort()
+{
+	if (lem && lem->ApolloNo == 5) {
+		g_Data.uplinkLEM = 1;
+		UplinkSunburstSuborbitalAbort();
+	}
+}
+
+void ProjectApolloMFD::menuSunburstCOI()
+{
+	if (lem && lem->ApolloNo == 5) {
+		g_Data.uplinkLEM = 1;
+		UplinkSunburstCOI();
+	}
+}
+
 void ProjectApolloMFD::menuSetSource()
 {
 	if (g_Data.uplinkDataReady == 0) {
@@ -1634,7 +1761,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 1)
+	if (g_Data.iuUplinkType < 7)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1642,6 +1769,8 @@ void ProjectApolloMFD::menuCycleIUUplinkType()
 	{
 		g_Data.iuUplinkType = 0;
 	}
+
+	g_Data.iuUplinkResult = 0;
 }
 
 void ProjectApolloMFD::menuCycleSwitSelStage()
@@ -1656,6 +1785,8 @@ void ProjectApolloMFD::menuCycleSwitSelStage()
 		{
 			g_Data.iuUplinkSwitSelStage = 0;
 		}
+
+		g_Data.iuUplinkResult = 0;
 	}
 }
 
@@ -1663,6 +1794,8 @@ void ProjectApolloMFD::menuSetSwitSelChannel()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 	{
+		g_Data.iuUplinkResult = 0;
+
 		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
 	}
@@ -1672,6 +1805,8 @@ void ProjectApolloMFD::menuSetTBUpdateTime()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
 	{
+		g_Data.iuUplinkResult = 0;
+
 		bool TimebaseUpdateInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Increment the current LVDC timebase time [4-124 seconds]:", TimebaseUpdateInput, 0, 20, (void*)this);
 	}
@@ -1697,6 +1832,13 @@ void ProjectApolloMFD::menuIUUplink()
 
 		iu = iuv->GetIU();
 	}
+	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/LEMSaturn"))
+	{
+		LEMSaturn *iuv = (LEMSaturn *)g_Data.iuVessel;
+
+		iu = iuv->GetIU();
+	}
 	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
 		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/sat5stg3"))
 	{
@@ -1711,9 +1853,11 @@ void ProjectApolloMFD::menuIUUplink()
 		return;
 	}
 
-	void *uplink;
+	void *uplink = NULL;
 
-	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	switch (g_Data.iuUplinkType)
+	{
+	case DCSUPLINK_SWITCH_SELECTOR:
 	{
 		DCSSWITSEL upl;
 
@@ -1723,7 +1867,8 @@ void ProjectApolloMFD::menuIUUplink()
 		uplink = &upl;
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
-	else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
+	break;
+	case DCSUPLINK_TIMEBASE_UPDATE:
 	{
 		DCSTBUPDATE upl;
 
@@ -1731,6 +1876,18 @@ void ProjectApolloMFD::menuIUUplink()
 
 		uplink = &upl;
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
+	case DCSUPLINK_LM_ABORT:
+	case DCSUPLINK_INHIBIT_MANEUVER:
+	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
+	case DCSUPLINK_TIMEBASE_8_ENABLE:
+	case DCSUPLINK_EVASIVE_MANEUVER_ENABLE:
+	case DCSUPLINK_EXECUTE_COMM_MANEUVER:
+	{
+		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
 	}
 
 	if (uplinkaccepted)

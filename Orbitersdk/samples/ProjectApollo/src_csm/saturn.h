@@ -51,7 +51,6 @@
 #include "scs.h"
 #include "csm_telecom.h"
 #include "sps.h"
-#include "mcc.h"
 #include "ecs.h"
 #include "csmrcs.h"
 #include "ORDEAL.h"
@@ -670,7 +669,7 @@ public:
 	///
 	union MainState {
 		struct {
-			unsigned unused2:1;						///< Spare
+			unsigned IUSCContPermanentEnabled:1;	///< Can the IU FCC SC control be permanently enabled?
 			unsigned SIISepState:1;					///< State of the SII Sep light.
 			unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
 			unsigned Scorrec:1;						///< Have we played the course correction sound?
@@ -942,11 +941,11 @@ public:
 	virtual bool GetSIBLowLevelSensorsDry();
 	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
-	void SetSIIThrusterDir(int n, double yaw, double pitch);
+	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSAttitudeEngine(int n, bool on);
 	virtual void SIEDSCutoff(bool cut) = 0;
-	void SIIEDSCutoff(bool cut);
+	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 	virtual void SetSIEngineStart(int n) = 0;
@@ -3509,6 +3508,8 @@ protected:
 	FCell *FuelCells[3];
 	Boiler *FuelCellHeaters[3];
 	Cooling *FuelCellCooling[3];
+	h_Tank *FuelCellO2Manifold[3];
+	h_Tank *FuelCellH2Manifold[3];
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
@@ -3636,7 +3637,6 @@ protected:
 	CDU tcdu;
 	CDU scdu;
 	IU* iu;
-	SIISystems sii;
 	SIVBSystems *sivb;
 	CSMCautionWarningSystem cws;
 
@@ -3697,6 +3697,7 @@ protected:
 	//
 
 	bool TLICapableBooster;
+	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;
@@ -3999,6 +4000,8 @@ protected:
 	virtual void LoadSIVB(FILEHANDLE scn) = 0;
 	virtual void SaveSI(FILEHANDLE scn) = 0;
 	virtual void LoadSI(FILEHANDLE scn) = 0;
+	virtual void SaveSII(FILEHANDLE scn) {};
+	virtual void LoadSII(FILEHANDLE scn) {};
 	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);

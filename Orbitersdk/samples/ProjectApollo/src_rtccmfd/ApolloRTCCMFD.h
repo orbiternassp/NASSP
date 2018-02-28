@@ -218,6 +218,7 @@ public:
 	void menuSetMoonEntryPage();
 	void menuSetTEIPage();
 	void menuSetEntryUpdatePage();
+	void menuSetP37PADPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);

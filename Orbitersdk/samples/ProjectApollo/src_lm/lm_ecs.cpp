@@ -120,7 +120,6 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 		//CLOSE
 		else if (cabinOVHDHatchValveSwitch->GetState() == 2)
 		{
-			cabinOVHDHatchValve->flowMax = 0;
 			cabinOVHDHatchValve->in->Close();
 		}
 		//AUTO
@@ -143,19 +142,11 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 				{
 					cabinOVHDHatchValve->flowMax = 660.0 / LBH;
 				}
-				else if (cabinpress < 5.25 / PSI)
-				{
-					cabinOVHDHatchValve->flowMax = 0;
-				}
 				else
 				{
 					//0 flow at 5.25 psi, full flow at 5.8 psi
-					cabinOVHDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+					cabinOVHDHatchValve->flowMax = max(0.0001, (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545));
 				}
-			}
-			else
-			{
-				cabinOVHDHatchValve->flowMax = 0;
 			}
 		}
 	}
@@ -253,7 +244,6 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 		//CLOSE
 		else if (cabinFWDHatchValveSwitch->GetState() == 2)
 		{
-			cabinFWDHatchValve->flowMax = 0;
 			cabinFWDHatchValve->in->Close();
 		}
 		//AUTO
@@ -276,19 +266,11 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 				{
 					cabinFWDHatchValve->flowMax = 660.0 / LBH;
 				}
-				else if (cabinpress < 5.25 / PSI)
-				{
-					cabinFWDHatchValve->flowMax = 0;
-				}
 				else
 				{
 					//0 flow at 5.25 psi, full flow at 5.8 psi
-					cabinFWDHatchValve->flowMax = (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545);
+					cabinFWDHatchValve->flowMax = max(0.0001, (660.0 / LBH) * (1.81818*(cabinpress*PSI) - 9.54545));
 				}
-			}
-			else
-			{
-				cabinFWDHatchValve->flowMax = 0;
 			}
 		}
 	}
@@ -322,7 +304,6 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 	//CLOSE
 	else if (SuitCircuitReliefValveSwitch->GetState() == 2)
 	{
-		SuitCircuitReliefValve->flowMax = 0;
 		SuitCircuitReliefValve->in->Close();
 	}
 	//AUTO
@@ -345,19 +326,11 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 			{
 				SuitCircuitReliefValve->flowMax = 7.8 / LBH;
 			}
-			else if (suitcircuitpress < 4.3 / PSI)
-			{
-				SuitCircuitReliefValve->flowMax = 0;
-			}
 			else
 			{
 				//0 flow at 4.3 psi, full flow at 4.7 psi
-				SuitCircuitReliefValve->flowMax = (7.8 / LBH) * (2.5*(suitcircuitpress*PSI) - 10.75);
+				SuitCircuitReliefValve->flowMax = max(0.0001, (7.8 / LBH) * (2.5*(suitcircuitpress*PSI) - 10.75));
 			}
-		}
-		else
-		{
-			SuitCircuitReliefValve->flowMax = 0;
 		}
 	}
 }
@@ -399,7 +372,6 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	//CLOSE
 	else if (cabinRepressValveSwitch->GetState() == 2)
 	{
-		cabinRepressValve->flowMax = 0;
 		cabinRepressValve->in->Close();
 	}
 	//AUTO
@@ -702,14 +674,16 @@ LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
 	cabinFanContCB = NULL;
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
+	cabinFan = NULL;
 }
 
-void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs)
+void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf)
 {
 	cabinFan1CB = cf1cb;
 	cabinFanContCB = cfccb;
 	pressRegulatorASwitch = pras;
 	pressRegulatorBSwitch = prbs;
+	cabinFan = cf;
 }
 
 void LEMCabinFan::SystemTimestep(double simdt)
@@ -728,13 +702,14 @@ void LEMCabinFan::SystemTimestep(double simdt)
 
 	if (cabinFan1CB->IsPowered() && !cabinFanSwitch)
 	{
-		cabinFan1CB->DrawPower(35.5);
+		cabinFan->SetPumpOn();
 		CabinFanSound();
 
 		//TBD: Switching heat exchanger on I guess?
 	}
 	else
 	{
+		cabinFan->SetPumpOff();
 		StopCabinFanSound();
 		//TBD: Switching heat exchanger off I guess?
 	}
@@ -1174,7 +1149,7 @@ double LEM_ECS::GetPrimaryGlycolTempF() {
 
 double LEM_ECS::GetSecondaryGlycolPressure() {
 	if (!Secondary_CL_Glycol_Press) {
-		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP1:PRESS");
+		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLPUMPFANMANIFOLD:PRESS");
 	}
 	return *Secondary_CL_Glycol_Press * PSI;
 }

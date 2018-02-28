@@ -175,10 +175,14 @@
 class LM_VHF {
 public:
 	LM_VHF();
-	void Init(LEM *vessel);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
 	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *VHFHeat;			//VHF Heat Load
+	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
+	h_HeatLoad *PCMHeat;			//PCM Heat Load
+	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
 	SOCKET m_socket;				// TCP socket
@@ -187,6 +191,7 @@ public:
 	int conn_state;                 // Connection State
 	int uplink_state;               // Uplink State
 	void perform_io(double simt);   // Get data from here to there
+	void handle_uplink();			// Handle incoming data
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
@@ -203,10 +208,16 @@ public:
 	int tx_size;                    // Number of words to send
 	int tx_offset;                  // Offset to use
 	int rx_offset;					// RX offset to use
+	int mcc_offset;					// RX offset into MCC data block
+	int mcc_size;					// Size of MCC data block
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
+	unsigned char mcc_data[1024];	// MCC-provided incoming data
+
 	bool registerSocket(SOCKET sock);
+
+	friend class MCC;				// Allow MCC to write directly to buffer
 };
 
 // Generic S-Band Antenna
@@ -223,13 +234,17 @@ protected:
 class LM_SBAND {
 public:
 	LM_SBAND();
-	void Init(LEM *vessel);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
 	void TimeStep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 
 	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *SBXHeat;			//XCVR Heat
+	h_HeatLoad *SBXSECHeat;			//XCVR Heat
+	h_HeatLoad *SBPHeat;			//PMP Heat
+	h_HeatLoad *SBPSECHeat;			//PMP Heat
 	int pa_mode_1,pa_mode_2;       // Power amplifier state
 	double pa_timer_1,pa_timer_2;  // Tube heater timer
 	int tc_mode_1,tc_mode_2;	   // Transciever state

@@ -374,6 +374,7 @@ ARCore::ARCore(VESSEL* v)
 	tlipad.VI = 0.0;
 	tlipad.SepATT = _V(0.0, 0.0, 0.0);
 	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
+	tlipad.ExtATT = _V(0.0, 0.0, 0.0);
 	R_TLI = _V(0, 0, 0);
 	V_TLI = _V(0, 0, 0);
 
@@ -456,12 +457,11 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 168.9*1852.0;
 		LOIperi = 58.7*1852.0;
 		TLCCFreeReturnEMPLat = -1.962929*RAD;
-		TLCCNonFreeReturnEMPLat = 3.618457*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(83.0, 25.0, 50.8);
+		TLCCNonFreeReturnEMPLat = 3.800381*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 32.0, 15.0);
 		TLCCFlybyPeriAlt = 1851.7*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 48.0);
-		TLCCNodeLat = 6.5*RAD;
-		TLCCNodeLng = 177.4*RAD;
+		TLCCNodeLat = 1.23*RAD;
+		TLCCNodeLng = 165.23*RAD;
 		TLCCNodeAlt = 59.9*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
@@ -474,13 +474,13 @@ ARCore::ARCore(VESSEL* v)
 		LSAlt = -0.76*1852.0;
 		LOIazi = -93.9*RAD;
 		LOIapo = 168.3*1852.0;
-		LOIperi = 57.0*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -2.219239*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(77.0, 56.0, 22.0);
-		TLCCFlybyPeriAlt = 136.3*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 26.0, 05.3);
-		TLCCNodeLat = 2.4*RAD;
-		TLCCNodeLng = -169.9*RAD;
+		LOIperi = 57.0*1852.0;		
+		TLCCFreeReturnEMPLat = 0.108105*RAD;
+		TLCCNonFreeReturnEMPLat = -0.203331*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 29.0, 30.0);
+		TLCCFlybyPeriAlt = 210*1852.0;
+		TLCCNodeLat = 3.69*RAD;
+		TLCCNodeLng = 176.76*RAD;
 		TLCCNodeAlt = 58.0*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
@@ -493,12 +493,12 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -76.31*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 57.1*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -0.048722*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(82.0, 39.0, 52.2);
+		TLCCFreeReturnEMPLat = -0.048722*RAD;
+		TLCCNonFreeReturnEMPLat = -3.672093*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 41.0, 14.0);
 		TLCCFlybyPeriAlt = 2030.9*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 38.0, 14.0);
-		TLCCNodeLat = 2.2*RAD;
-		TLCCNodeLng = -178.2*RAD;
+		TLCCNodeLat = 3.15*RAD;
+		TLCCNodeLng = 174.82*RAD;
 		TLCCNodeAlt = 57.1*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
@@ -513,12 +513,10 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 170.0*1852.0;
 		LOIperi = 58.3*1852.0;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -16.904842*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
-		TLCCFlybyPeriAlt = 68.1*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCFlybyPeriAlt = TLCCNodeAlt = 68.1*1852.0;
 		TLCCNodeLat = -23.3*RAD;
 		TLCCNodeLng = 171.7*RAD;
-		TLCCNodeAlt = 68.1*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		AGSKFactor = 100.0*3600.0;
@@ -533,12 +531,10 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 170.6*1852.0;
 		LOIperi = 58.5*1852.0;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.529042*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
-		TLCCFlybyPeriAlt = 71.4*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
+		TLCCFlybyPeriAlt = TLCCNodeAlt = 71.4*1852.0;
 		TLCCNodeLat = 7.8*RAD;
 		TLCCNodeLng = 176.8*RAD;
-		TLCCNodeAlt = 71.4*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		DOI_PeriAng = 16.0*RAD;
@@ -551,13 +547,11 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -90.0*RAD;
 		LOIapo = 170.8*1852.0;
 		LOIperi = 51.4*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -13.411797*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);
-		TLCCFlybyPeriAlt = 51.3*1852.0;
-		TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 55.0, 37.5);
-		TLCCNodeLat = -10.4*RAD;
-		TLCCNodeLng = 174.1*RAD;
-		TLCCNodeAlt = 51.3*1852.0;
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -12.695335*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 59.0, 25.0);
+		TLCCFlybyPeriAlt = TLCCNodeAlt = 51.3*1852.0;
+		TLCCNodeLat = -10.68*RAD;
+		TLCCNodeLng = 165.01*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		AGSKFactor = 110.0*3600.0;
@@ -1033,7 +1027,7 @@ void ARCore::LandingSiteUplink()
 	double r_0;
 
 	R_P = unit(_V(cos(LSLng)*cos(LSLat), sin(LSLng)*cos(LSLat), sin(LSLat)));
-	r_0 = oapiGetSize(svtarget->GetGravityRef());
+	r_0 = oapiGetSize(oapiGetObjectByName("Moon"));
 
 	R = R_P*(r_0 + LSAlt);
 
@@ -1286,6 +1280,14 @@ void ARCore::send_agc_key(char key)	{
 	case '0': // 11-000-001 11-110-000
 		cmdbuf[1] = 0301;
 		cmdbuf[2] = 0360;
+		break;
+	case 'S': // 11-001-101 10-010-011 (code 23)
+		cmdbuf[1] = 0315;
+		cmdbuf[2] = 0223;
+		break;
+	case 'T': // 11-010-001 01-110-100 (code 24)
+		cmdbuf[1] = 0321;
+		cmdbuf[2] = 0164;
 		break;
 	}
 	for (int i = 0; i < 3; i++) {
@@ -2077,7 +2079,7 @@ int ARCore::subThread()
 		opt.TIG = P30TIG;
 		opt.vessel = vessel;
 		opt.uselvdc = false;
-		opt.SeparationAttitude = _V(0.0*RAD, -120.0*RAD, 0.0);
+		opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
 		rtcc->TLI_PAD(&opt, tlipad);
 		Result = 0;
 	}

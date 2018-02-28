@@ -91,10 +91,9 @@ void H_system::Create_h_Radiator(char *line) {
 	new_one = (h_Radiator*)AddSystem(new h_Radiator(name, pos, volume, isol));
 
 	// Debugging thermal management
-	//if (!strcmp(name, "ECSRADIATOR1"))
+	//if (!strcmp(name, "LEM-LR-Antenna"))
 	//	P_thermal->AddThermalObject(new_one, true);
 	//else 
-
 	P_thermal->AddThermalObject(new_one);
 
 	new_one->isolation = 1.0;
@@ -595,6 +594,17 @@ void* h_WaterSeparator::GetComponent(char *component_name) {
 		return (void*)&flowMax;
 	if (Compare(component_name, "FLOW"))
 		return (void*)&flow;
+	if (Compare(component_name, "H2OREMOVALRATE"))
+		return (void*)&h2oremovalrate;
+
+	BuildError(2);	//no such component
+	return NULL;
+}
+
+void* h_HeatLoad::GetComponent(char *component_name) {
+
+	if (Compare(component_name, "HEAT"))
+		return (void*)&heat_load;
 
 	BuildError(2);	//no such component
 	return NULL;

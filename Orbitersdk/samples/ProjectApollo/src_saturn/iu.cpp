@@ -54,14 +54,16 @@ dcs(this)
 	UmbilicalConnected = false;
 
 	Crewed = true;
+	SCControlPoweredFlight = false;
 
 	commandConnector.SetIU(this);
 	lvdc = NULL;
 }
 
-void IU::SetMissionInfo(bool crewed)
+void IU::SetMissionInfo(bool crewed, bool sccontpowered)
 {
 	Crewed = crewed;
+	SCControlPoweredFlight = sccontpowered;
 }
 
 void IU::Timestep(double misst, double simt, double simdt, double mjd)
@@ -965,6 +967,26 @@ void IUToLVCommandConnector::SetStage(int stage)
 	SendMessage(cm);
 }
 
+void IUToLVCommandConnector::JettisonNosecap()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_NOSECAP_JETTISON;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::DeploySLAPanel()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEPLOY_SLA_PANEL;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::AddRCS_S4B()
 
 {
@@ -1436,7 +1458,12 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
-		lvdc->TimeStep(simt, simdt);
+		lvdc->TimeStep(simdt);
+
+		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+		{
+			fcc.SetPermanentSCControlEnabled();
+		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1464,7 +1491,7 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector);
+		lvdc->Init();
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);
@@ -1567,6 +1594,12 @@ void IU1B::SwitchSelector(int item)
 		fcc.SetStageSwitch(2);
 		fcc.SetSIVBBurnMode(true);
 		break;
+	case 110: //Nose Cone Jettison (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.JettisonNosecap();
+		break;
+	case 111: //SLA Panel Deployment (Apollo 5, not a real switch selector event!)
+		lvCommandConnector.DeploySLAPanel();
+		break;
 	default:
 		break;
 	}
@@ -1593,7 +1626,12 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
-		lvdc->TimeStep(simt, simdt);
+		lvdc->TimeStep(simdt);
+
+		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
+		{
+			fcc.SetPermanentSCControlEnabled();
+		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1616,7 +1654,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
 		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init(&lvCommandConnector);
+		lvdc->Init();
 		fcc.Init(this);
 	}
 	lvdc->LoadState(scn);

@@ -207,6 +207,7 @@ void SIVB::InitS4b()
 	PanelsOpened = false;
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
+	IUSCContPermanentEnabled = true;
 
 	hDock = 0;
 	ph_aps1 = 0;
@@ -507,7 +508,7 @@ void SIVB::SetS4b()
 
 	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
-		iu->SetMissionInfo(true);
+		iu->SetMissionInfo(true, IUSCContPermanentEnabled);
 
 		//
 		// Set up the IU connections.
@@ -871,6 +872,7 @@ int SIVB::GetMainState()
 	state.SaturnVStage = SaturnVStage;
 	state.LowRes = LowRes;
 	state.Payloaddatatransfer = Payloaddatatransfer;
+	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
 
 	return state.word;
 }
@@ -1079,6 +1081,7 @@ void SIVB::SetMainState(int s)
 	PanelsOpened = (state.PanelsOpened != 0);
 	LowRes = (state.LowRes != 0);
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
+	IUSCContPermanentEnabled = (state.IUSCContPermanentEnabled != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1455,6 +1458,7 @@ void SIVB::SetState(SIVBSettings &state)
 		PanelsHinged = state.PanelsHinged;
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
+		IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
 
 		//
 		// Limit rotation angle to 0-150 degrees.
@@ -1468,6 +1472,12 @@ void SIVB::SetState(SIVBSettings &state)
 		if (!PanelsHinged)
 		{
 			RotationLimit = 0.25;
+		}
+
+		if (state.PanelProcess)
+		{
+			panelProc = panelProcPlusX = state.PanelProcess;
+			SetAnimation(panelAnim, panelProc);
 		}
 
 		if (SaturnVStage)

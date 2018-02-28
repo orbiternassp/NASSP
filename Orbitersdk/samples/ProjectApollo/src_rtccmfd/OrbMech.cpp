@@ -762,6 +762,54 @@ void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V)
 	sv_from_coe(coe2, mu, R, V);
 }
 
+void PACSS13_from_coe(OELEMENTS coe, double lat, double A_Z, double mu, VECTOR3 &R_S, VECTOR3 &V_S)
+{
+	MATRIX3 MSG, MEG;
+	VECTOR3 R_G, R_E, V_G, V_E;
+	double C3, inc, theta_N, e, f, a, h, alpha_D;
+	OELEMENTS coe2;
+
+	C3 = coe.h;
+	inc = coe.i;
+	theta_N = coe.RA;
+	e = coe.e;
+	alpha_D = coe.w;
+	f = coe.TA;
+	a = -mu / C3;
+	h = sqrt(mu*a*(1.0 - e * e));
+	//coe2 = [h e pi - theta_N - lng inc pi - alpha_D f];
+	coe2.e = e;
+	coe2.h = h;
+	coe2.i = inc;
+	coe2.RA = theta_N + PI;
+	coe2.TA = f;
+	coe2.w = PI - alpha_D;
+
+	sv_from_coe(coe2, mu, R_E, V_E);
+
+	MSG = MSGMatrix(lat, A_Z);
+	MEG = MEGMatrix(0.0);
+
+	R_G = mul(MEG, R_E);
+	V_G = mul(MEG, V_E);
+	R_S = tmul(MSG, R_G);
+	V_S = tmul(MSG, V_G);
+}
+
+MATRIX3 MSGMatrix(double phi_L, double A_Z)
+{
+	//Transformation matrix from S-system to G-system
+
+	return _M(cos(phi_L), sin(phi_L)*sin(A_Z), -sin(phi_L)*cos(A_Z), -sin(phi_L), cos(phi_L)*sin(A_Z), -cos(phi_L)*cos(A_Z), 0, cos(A_Z), sin(A_Z));
+}
+
+MATRIX3 MEGMatrix(double theta_E)
+{
+	//Transformation matrix from E-system to G-system
+
+	return _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0);
+}
+
 VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu)
 {
 	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_new, A, root;
@@ -5385,6 +5433,10 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 
 double imulimit(double a)
 {
+	if (a < 0)
+	{
+		a += 360.0;
+	}
 	if (a > 359.5)
 	{
 		return a - 359.5;

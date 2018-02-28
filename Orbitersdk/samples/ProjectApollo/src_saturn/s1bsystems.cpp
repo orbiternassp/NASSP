@@ -243,7 +243,7 @@ void H1Engine::SetThrusterDir(double beta_y, double beta_p)
 	vessel->SetThrusterDir(th_h1, f1vector);
 }
 
-SIBSystems::SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
+SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
 	main_propellant(h1prop),
 	h1engine1(v, h1[0], true, 2.45*RAD, 2.45*RAD),
 	h1engine2(v, h1[1], true, 2.45*RAD, -2.45*RAD),
@@ -253,6 +253,7 @@ SIBSystems::SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 	h1engine6(v, h1[5], false, 0, 0),
 	h1engine7(v, h1[6], false, 0, 0),
 	h1engine8(v, h1[7], false, 0, 0),
+	SIB_SIVB_Separation_Pyros(SIB_SIVB_Sep),
 	SShutSound(SShutS),
 	LaunchSound(LaunchS),
 	contrailLevel(contraillvl)
@@ -296,6 +297,8 @@ SIBSystems::SIBSystems(Saturn *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 
 	FailInit = false;
 	OutboardEnginesCutoffSignal = false;
+
+	FailureTimer = 0.0;
 
 	h1engines[0] = &h1engine1;
 	h1engines[1] = &h1engine2;
@@ -420,11 +423,8 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SIBSystems::Timestep(double simdt)
+void SIBSystems::Timestep(double simdt, bool liftoff)
 {
-	//Sanity check
-	if (vessel->GetStage() >= LAUNCH_STAGE_TWO) return;
-
 	h1engine1.Timestep(simdt);
 	h1engine2.Timestep(simdt);
 	h1engine3.Timestep(simdt);
@@ -434,7 +434,7 @@ void SIBSystems::Timestep(double simdt)
 	h1engine7.Timestep(simdt);
 	h1engine8.Timestep(simdt);
 
-	if (vessel->GetStage() == LAUNCH_STAGE_ONE)
+	if (liftoff)
 	{
 		LiftoffRelay = false;
 	}
@@ -629,9 +629,14 @@ void SIBSystems::Timestep(double simdt)
 
 	//Failure code
 
+	if (LiftoffRelay)
+	{
+		FailureTimer += simdt;
+	}
+
 	for (int i = 0;i < 8;i++)
 	{
-		if (EarlySICutoff[i] && (vessel->GetMissionTime() > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
+		if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
 		{
 			h1engines[i]->SetFailed();
 		}
@@ -749,8 +754,6 @@ void SIBSystems::GetThrustOK(bool *ok)
 
 void SIBSystems::SwitchSelector(int channel)
 {
-	if (vessel->GetStage() > LAUNCH_STAGE_ONE) return;
-
 	switch (channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
@@ -771,12 +774,7 @@ void SIBSystems::SwitchSelector(int channel)
 		SetOutboardEnginesCutoff();
 		break;
 	case 23: //S-IB/S-IVB Separation On
-		if (vessel->GetStage() == LAUNCH_STAGE_ONE)
-		{
-			vessel->SeparateStage(LAUNCH_STAGE_SIVB);
-			vessel->SetStage(LAUNCH_STAGE_SIVB);
-			vessel->AddRCS_S4B();
-		}
+		SIB_SIVB_Separation_Pyros.SetBlown(true);
 		break;
 	case 39: //Telemeter Calibration Off
 		break;

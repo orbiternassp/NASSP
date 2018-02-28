@@ -246,7 +246,8 @@ enum ChannelValue33_Bits {
 enum ChannelValue163_Bits {
 
 	Ch163DSKYWarn = 0,				///< Turn on the CMC/LGC light.
-	Ch163LightKbRel = 4,			///< Turn on the Keyboard Release light.
+	Ch163LightTemp = 3,				///< Turn on the Temperature light.
+	Ch163LightKbRel,				///< Turn on the Keyboard Release light.
 	Ch163FlashVerbNoun,				///< Flash the Verb and Noun displays.			
 	Ch163LightOprErr,				///< Light the Operator Error light
 	Ch163LightRestart,				///< Light the Restart light

@@ -42,12 +42,14 @@ public:
 	void SetStageSwitch(int n) { StageSwitch = n; }
 	void SetSIVBBurnMode(bool n) { SIVBBurnMode = n; }
 	void EnableSCControl() { SCControlEnableRelay = true; }
-	void DisableSCControl() { SCControlEnableRelay = false; }
+	void DisableSCControl() { if (PermanentSCControlEnabled == false) SCControlEnableRelay = false; }
+	void SetPermanentSCControlEnabled() { PermanentSCControlEnabled = true; }
 protected:
 	int GainSwitch;
 	int StageSwitch;
 	bool SIVBBurnMode;
 	bool SCControlEnableRelay;
+	bool PermanentSCControlEnabled;
 
 	double a_0p, a_0y, a_0r;
 	double a_1p, a_1y, a_1r;

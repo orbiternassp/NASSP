@@ -36,11 +36,11 @@ class therm_obj			//thermal object.an object that can receive thermal energy
   therm_obj();
   therm_obj *next_t;			//the objects are linked..
   int external;				//1/0 is this object radiating heat into outerspace
-  double energy;			//Q ,or termic energy in Joules ??
+  double energy;			//Q ,or thermic energy in Joules ??
   double c;					//c - material constant in J/gr*K
   double isolation;			//0..1 isolation factor
   double Area;
-  vector3 pos;				//position in ship (in centimeters.. 0,0,0 is offset from GC
+  vector3 pos;				//position in ship (in centimeters.. 0,0,0 is offset from CG
   double  mass;				//total mass , in grams
   double Temp;				//duh!, in K (default constrctor =273+ 12
   virtual void thermic( double _en);//thermic function.. negative values, if this looses energy

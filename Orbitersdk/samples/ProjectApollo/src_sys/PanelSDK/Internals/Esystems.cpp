@@ -377,8 +377,9 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
-	//In-line heater power, moreover this prevents the fuel cells from stopping
-	power_load += 160.0;
+	//Idle power load to prevent the fuel cells from stopping and cooling too much (has to be fixed at some point)
+	if (power_load < 160.0)
+		power_load = 160.0;
 
 	//first we check the start_handle;
 	double thrust = 0.0;
@@ -1429,33 +1430,35 @@ Pump::Pump(char *i_name, int i_pump, e_object *i_SRC, double i_fan_cap, double i
 	in = in_v;
 	out = out_v;
 	loaded = 0;
+	flow = 0;
 }
 
 void Pump::refresh(double dt) 
-
 {
+	flow = 0;
+
 	if (h_pump == 0) {
 		pumping = 0;
-		return;
 	} //off
-
-	pumping = 1;
-	if (SRC) {
-		if (SRC->Voltage() < SP_MIN_DCVOLTAGE) {
+	else
+	{
+		pumping = 1;
+		if (SRC) {
+			if (SRC->Voltage() < SP_MIN_DCVOLTAGE)
+				pumping = 0;
+			else
+				SRC->DrawPower(power);
+		}
+		else
 			pumping = 0;
-			return;
-		} //no no
-		SRC->DrawPower(power);
-	} else {
-		pumping = 0;
-		return;
 	}
 
-	double delta_p = in->GetPress() - out->GetPress() + fan_cap;
+	double delta_p = in->GetPress() - out->GetPress() + (pumping > 0 ? fan_cap : 0.0);
 	if (delta_p < 0)
 		delta_p = 0;
 
 	h_volume fanned = in->GetFlow(dt * delta_p);
+	flow = fanned.GetMass() / dt;
 	out->Flow(fanned);
 }
 

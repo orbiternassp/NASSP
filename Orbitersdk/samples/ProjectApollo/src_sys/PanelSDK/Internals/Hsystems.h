@@ -39,7 +39,7 @@
 							//		O2			H2			H20			N2			CO2				GLYCOL
 const double MMASS		[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,			33.434432};
 //const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.18,		1.040,		0.858,		3.568952};		//J/g-K .. assume constant
-const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.18,		1.040,		0.858,			2.014316};		//J/g-K .. assume constant
+const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,			2.014316};		//J/g-K .. assume constant
 const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347,			1769.195};		//J/g
 const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,		25639.45};		//Pa @ 273.00K
 const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,			52.87};			//Pa/K.. assume linear dependence of PV / K
@@ -343,6 +343,7 @@ public:
 	virtual void refresh(double dt);
 	virtual void* GetComponent(char *component_name);
 
+	double h2oremovalrate;
 	double flow;	// in g/s
 	double flowMax;
 };
@@ -358,6 +359,7 @@ public:
 
 	void GenerateHeat(double watts);
 	virtual void refresh(double dt);
+	virtual void* GetComponent(char *component_name);
 };
 
 #endif

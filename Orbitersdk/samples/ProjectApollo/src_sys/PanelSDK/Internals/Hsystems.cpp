@@ -949,8 +949,8 @@ void h_Radiator::refresh(double dt) {
 
 	double Q = rad * size * 5.67e-8 * dt * pow(Temp - 3.0, 4);	//aditional cooling from the radiator??
 
-	// if (!strcmp(name, "SPSPROPELLANTLINE")) 
-	//	sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
+	// if (!strcmp(name, "LEM-LR-Antenna")) 
+		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
 	thermic(-Q);
 }
@@ -1003,8 +1003,12 @@ void h_HeatExchanger::refresh(double dt) {
 	if (pump) {	
 		double Q = (source->GetTemp() - target->GetTemp()) * length * dt;
 	
+		if (source->energy < Q || target->energy < -Q)
+			Q = 0;
+
 		source->thermic(-Q);
 		target->thermic(Q);
+
 		power = Q / dt;
 	}
 }
@@ -1097,7 +1101,14 @@ void h_Evaporator::refresh(double dt) {
 
 			// evaporate liquid
 			if (flow - vapor_flow > 0)
-				target->thermic(-VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow));
+			{
+				double Q = VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow);
+
+				if (target->energy < Q)
+					Q = 0;
+
+				target->thermic(-Q);
+			}
 		}
 	}
 	//steam pressure is not simulated physically at the moment
@@ -1284,11 +1295,13 @@ h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v
 	H20waste = i_H2Owaste;
 	flowMax = i_flowmax;
 
+	h2oremovalrate = 0;
 	flow = 0;
 }
 
 void h_WaterSeparator::refresh(double dt) {
 
+	h2oremovalrate = 0;
 	flow = 0;
 	if ((!in) || (!out)) return;
 
@@ -1299,6 +1312,7 @@ void h_WaterSeparator::refresh(double dt) {
 			delta_p = 0;
 
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
 
 		// separate water
 		h_volume h2o_volume;

@@ -197,3 +197,114 @@ bool LVDA::TimebaseUpdate(double dt)
 
 	return false;
 }
+
+bool LVDA::LMAbort()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->LMAbort();
+
+	return false;
+}
+
+bool LVDA::RestartManeuverEnable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->RestartManeuverEnable();
+
+	return false;
+}
+
+bool LVDA::InhibitAttitudeManeuver()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->InhibitAttitudeManeuver();
+
+	return false;
+}
+
+bool LVDA::Timebase8Enable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TimeBase8Enable();
+
+	return false;
+}
+
+bool LVDA::EvasiveManeuverEnable()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->EvasiveManeuverEnable();
+
+	return false;
+}
+
+bool LVDA::ExecuteCommManeuver()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->ExecuteCommManeuver();
+
+	return false;
+}
+
+bool LVDA::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->SIVBIULunarImpact(tig, dt, pitch, yaw);
+
+	return false;
+}
+
+void LVDA::SwitchSelectorOld(int chan)
+{
+	iu->GetLVCommandConnector()->SwitchSelector(chan);
+}
+
+double LVDA::GetMissionTime()
+{
+	return iu->GetLVCommandConnector()->GetMissionTime();
+}
+
+void LVDA::AddForce(VECTOR3 F, VECTOR3 r)
+{
+	iu->GetLVCommandConnector()->AddForce(F, r);
+}
+
+double LVDA::GetFirstStageThrust()
+{
+	return iu->GetLVCommandConnector()->GetFirstStageThrust();
+}
+
+double LVDA::GetAltitude()
+{
+	return iu->GetLVCommandConnector()->GetAltitude();
+}
+
+int LVDA::GetStage()
+{
+	return iu->GetLVCommandConnector()->GetStage();
+}
+
+void LVDA::SetStage(int stage)
+{
+	iu->GetLVCommandConnector()->SetStage(stage);
+}
+
+int LVDA::GetApolloNo()
+{
+	return iu->GetLVCommandConnector()->GetApolloNo();
+}
+
+void LVDA::GetRelativePos(VECTOR3 &v)
+{
+	iu->GetLVCommandConnector()->GetRelativePos(oapiGetObjectByName("Earth"), v);
+}
+
+void LVDA::GetRelativeVel(VECTOR3 &v)
+{
+	iu->GetLVCommandConnector()->GetRelativeVel(oapiGetObjectByName("Earth"), v);
+}
+
+bool LVDA::GetSCControlPoweredFlight()
+{
+	return iu->GetSCControlPoweredFlight();
+}

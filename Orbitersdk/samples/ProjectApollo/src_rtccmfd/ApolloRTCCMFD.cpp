@@ -816,67 +816,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "Return to Earth (Moon-centered)", 31);
 		skp->Text(1 * W / 8, 8 * H / 14, "Transearth Injection", 20);
 		skp->Text(1 * W / 8, 10 * H / 14, "Splashdown Update", 17);
-
-		/*if (G->entrycalcmode == 2)
-		{
-			skp->Text(6 * W / 8,(int)(0.5 * H / 14), "P37 Block Data", 14);
-
-			GET_Display(Buffer, G->EntryTIG);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-
-			if (G->entrylongmanual)
-			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
-				sprintf(Buffer, "%f °", G->EntryLng*DEG);
-				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
-				if (G->landingzone == 0)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
-				}
-				else if (G->landingzone == 1)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
-				}
-				else if (G->landingzone == 2)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
-				}
-				else if (G->landingzone == 3)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
-				}
-				else if (G->landingzone == 4)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
-				}
-			}
-
-			//sprintf(Buffer, "%f °", G->EntryLat*DEG);
-			//skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-			//sprintf(Buffer, "%f °", G->EntryLng*DEG);
-			//skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f °", G->EntryAng*DEG);
-			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-
-			if (G->subThreadStatus > 0)
-			{
-				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
-			}
-
-			GET_Display(Buffer, G->EntryTIG);
-			skp->Text(4 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%04.0f dVT", length(G->Entry_DV)/0.3048);
-			skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%+04.0f LONG", G->EntryLngcor*DEG);
-			skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-			GET_Display(Buffer, G->P37GET400K);
-			sprintf(Buffer, "%s 400K", Buffer);
-			skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}*/
 	}
 	else if (screen == 7)
 	{
@@ -1451,12 +1390,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+06.0f VI", G->tlipad.VI);
 				skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
 
-				sprintf(Buffer, "XXX%03.0f R SEP", G->tlipad.SepATT.x);
+				sprintf(Buffer, "XXX%03.0f R", G->tlipad.SepATT.x);
 				skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
 				sprintf(Buffer, "XXX%03.0f P SEP", G->tlipad.SepATT.y);
 				skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
-				sprintf(Buffer, "XXX%03.0f Y SEP", G->tlipad.SepATT.z);
+				sprintf(Buffer, "XXX%03.0f Y", G->tlipad.SepATT.z);
 				skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "XXX%03.0f R", G->tlipad.ExtATT.x);
+				skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f P EXTRACTION", G->tlipad.ExtATT.y);
+				skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
+				sprintf(Buffer, "XXX%03.0f Y", G->tlipad.ExtATT.z);
+				skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 			}
 			else
 			{
@@ -2273,6 +2219,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "Landmark Tracking", 17);
 		skp->Text(1 * W / 8, 8 * H / 14, "Map Update", 10);
 		skp->Text(1 * W / 8, 10 * H / 14, "Nav Check PAD", 13);
+		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
@@ -2948,6 +2895,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "Actual Range:  %.1f NM", G->EntryRTGO);
 		skp->Text(4 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 31)
+	{
+		skp->Text(6 * W / 8,(int)(0.5 * H / 14), "P37 Block Data", 14);
+
+		GET_Display(Buffer, G->EntryTIG);
+		skp->Text(4 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "X%04.0f dVT", length(G->Entry_DV)/0.3048);
+		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "X%+04.0f LONG", G->EntryLngcor*DEG);
+		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->P37GET400K);
+		sprintf(Buffer, "%s 400K", Buffer);
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -3275,6 +3236,12 @@ void ApolloRTCCMFD::menuSetTEIPage()
 void ApolloRTCCMFD::menuSetEntryUpdatePage()
 {
 	screen = 30;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetP37PADPage()
+{
+	screen = 31;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4281,10 +4248,7 @@ void ApolloRTCCMFD::menuSVUpload()
 		}
 		else if (G->svmode == 1)
 		{
-			if (G->svtarget != NULL)
-			{
-				G->LandingSiteUplink();
-			}
+			G->LandingSiteUplink();
 		}
 	}
 }
@@ -4364,6 +4328,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 				tliparam.mu = lvdc->mu;
 				tliparam.MX_A = lvdc->MX_A;
 				tliparam.omega_E = lvdc->omega_E;
+				tliparam.phi_L = lvdc->PHI;
 				tliparam.R_N = lvdc->R_N;
 				tliparam.TargetVector = lvdc->TargetVector;
 				tliparam.TB5 = lvdc->TB5;

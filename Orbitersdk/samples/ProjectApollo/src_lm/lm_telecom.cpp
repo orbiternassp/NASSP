@@ -48,8 +48,13 @@
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){
 	lem = NULL;
+	VHFHeat = 0;
+	VHFSECHeat = 0;
+	PCMHeat = 0;
+	PCMSECHeat = 0;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
@@ -71,10 +76,15 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	}
 	return true;
 }
-void LM_VHF::Init(LEM *vessel){
+void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
 	lem = vessel;
+	VHFHeat = vhfh;
+	VHFSECHeat = secvhfh;
+	PCMHeat = pcmh;
+	PCMSECHeat = secpcmh;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
@@ -139,41 +149,69 @@ void LM_VHF::SystemTimestep(double simdt) {
 		// For now, we'll just draw idle.
 		if(lem->VHFAVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER){
 			lem->COMM_VHF_XMTR_A_CB.DrawPower(3.5);
+			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
+			VHFSECHeat->GenerateHeat(1.75);
+		}
+		if (lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+			lem->COMM_VHF_XMTR_B_CB.DrawPower(35.0); // Range Mode
+			VHFHeat->GenerateHeat(14.8);  //Range heat load is 29.6W
+			VHFSECHeat->GenerateHeat(14.8);
 		}
 	}
 	// VHF RCVR A
 	// Draws 1.2 watts of DC when on
 	if(lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwtich.GetState() == TOGGLESWITCH_UP){
-		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);	
+		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);
+		//Not sure if RCVR goes to cold rails
+		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
+		VHFSECHeat->GenerateHeat(0.6);
 	}
 	// VHF XMTR B
-	// Draws 28.9 watts of DC when transmitting voice and 31.7 watts when transmitting data.
+	// Draws 28.9 watts of DC when transmitting voice and 31.6 watts when transmitting data.
 	// Draws 3.5 watts when not transmitting.
 	if(lem->COMM_VHF_XMTR_B_CB.Voltage() > 24){
 		// For now, we'll just draw idle or data.
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_UP){
 			lem->COMM_VHF_XMTR_B_CB.DrawPower(3.5); // Voice Mode
+			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
+			VHFSECHeat->GenerateHeat(1.75);
 		}
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN){
-			lem->COMM_VHF_XMTR_B_CB.DrawPower(31.7); // Data Mode
+			lem->COMM_VHF_XMTR_B_CB.DrawPower(31.6); // Data Mode
+			VHFHeat->GenerateHeat(15.8);  //Data heat load is 31.6W
+			VHFSECHeat->GenerateHeat(15.8);
 		}
 	}
 	// VHF RCVR B
 	// Draws 1.2 watts of DC when on
 	if(lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwtich.GetState() == TOGGLESWITCH_UP){
 		lem->COMM_VHF_RCVR_B_CB.DrawPower(1.2);	
+		//Not sure if RCVR goes to cold rails
+		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
+		VHFSECHeat->GenerateHeat(0.6);
 	}
+
 	// CDR and LMP Audio Centers
-	if(lem->COMM_CDR_AUDIO_CB.Voltage() > 0){ lem->COMM_CDR_AUDIO_CB.DrawPower(4.8); }
-	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ lem->COMM_SE_AUDIO_CB.DrawPower(4.8); }
+	if(lem->COMM_CDR_AUDIO_CB.Voltage() > 0){ 
+		lem->COMM_CDR_AUDIO_CB.DrawPower(4.2); 
+	}
+	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ 
+		lem->COMM_SE_AUDIO_CB.DrawPower(4.2); 
+	}
 	// PMP
-	if(lem->COMM_PMP_CB.Voltage() > 0){	lem->COMM_PMP_CB.DrawPower(4.3); }
-	// ERAs
-	if(lem->INST_SIG_CONDR_1_CB.Voltage() > 0){ lem->INST_SIG_CONDR_1_CB.DrawPower(16.04); }
-	if(lem->INST_SIG_CONDR_2_CB.Voltage() > 0){ lem->INST_SIG_CONDR_2_CB.DrawPower(14.23); }
-	// FIXME: Need current drain amount for INST_SIG_SENSOR_CB
+	if(lem->COMM_PMP_CB.Voltage() > 0){	
+		lem->COMM_PMP_CB.DrawPower(4.3); 
+	}
+	// Current drain amount for INST_SIG_SENSOR_CB
+	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
+		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
+	}
 	// PCMTEA
-	if(lem->INST_PCMTEA_CB.Voltage() > 0){ lem->INST_PCMTEA_CB.DrawPower(11); }
+	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
+		lem->INST_PCMTEA_CB.DrawPower(11); 
+		PCMHeat->GenerateHeat(5.15);  
+		PCMSECHeat->GenerateHeat(5.15);
+	}
 }
 
 void LM_VHF::TimeStep(double simt){
@@ -252,11 +290,35 @@ void LM_VHF::perform_io(double simt){
 		case 0: // UNINITIALIZED
 			break;
 		case 1: // INITALIZED, LISTENING
-			// Try to accept
-			AcceptSocket = accept( m_socket, NULL, NULL );
-			if(AcceptSocket != INVALID_SOCKET){
-				conn_state = 2; // Accept this!
-				wsk_error = 0; // For now
+				// Do we have data from MCC?
+			if (mcc_size > 0) {
+				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
+				// Should we recieve?
+				if ((fabs(simt - last_rx) / 0.05) < 1 || lem->agc.IsUpruptActive()) {
+					return; // No
+				}
+				last_rx = simt;
+				// Yes. Take a byte
+				rx_data[rx_offset] = mcc_data[mcc_offset];
+				mcc_offset++;
+				// If uplink isn't blocked
+				if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+					// Handle it
+					handle_uplink();
+				}
+				// Are we done?
+				if (mcc_offset >= mcc_size) {
+					// We reached the end of the MCC buffer.
+					mcc_offset = mcc_size = 0;
+				}
+			}
+			else {
+				// Try to accept
+				AcceptSocket = accept(m_socket, NULL, NULL);
+				if (AcceptSocket != INVALID_SOCKET) {
+					conn_state = 2; // Accept this!
+					wsk_error = 0; // For now
+				}
 			}
 			// Otherwise loop and try again.
 			break;
@@ -319,6 +381,22 @@ void LM_VHF::perform_io(double simt){
 						uplink_state = 0; rx_offset = 0;
 						break;					
 				}
+				// Do we have data from MCC instead?
+				if (mcc_size > 0) {
+					// Yes. Take a byte
+					rx_data[rx_offset] = mcc_data[mcc_offset];
+					mcc_offset++;
+					// If the telemetry data-path is disconnected, discard the data
+					if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+						// otherwise handle it
+						handle_uplink();
+					}
+					// Are we done?
+					if (mcc_offset >= mcc_size) {
+						// We reached the end of the MCC buffer.
+						mcc_offset = mcc_size = 0;
+					}
+				}
 			}else{
 				// FIXME: Check to make sure the up-data equipment is powered
 				// Reject uplink if switch is not down.
@@ -326,50 +404,71 @@ void LM_VHF::perform_io(double simt){
 					return; // Discard the data
 				}
 				if(bytesRecv > 0){
-					// Have Data
-					switch(uplink_state){
-						case 0: // NEW COMMAND START
-							int va,sa;
-							va = ((rx_data[rx_offset]&070)>>3);
-							sa = rx_data[rx_offset]&07;
-							// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
-							if(va != 03){ break; }
-							switch(sa){
-								case 0: // TEST
-									rx_offset++; uplink_state=10;
-									break;
-								case 1: // LGC-UPDATA
-									rx_offset++; uplink_state=20;
-									break;
-								default:
-									sprintf(oapiDebugString(),"LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o",sa);
-									break;
-							}
-							break;
-						case 10: // TEST CMD
-							rx_offset = 0; uplink_state = 0; break;
-
-						case 20: // LGC UPLINK CMD
-							// Expect another byte
-							rx_offset++; uplink_state++; break;
-						case 21: // LGC UPLINK
-							{
-								int lgc_uplink_wd = rx_data[rx_offset-1];
-								lgc_uplink_wd <<= 8;
-								lgc_uplink_wd |= rx_data[rx_offset];
-								// Move to INLINK
-								lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
-								// Cause UPRUPT
-								lem->agc.GenerateUprupt();
-
-								//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
-								rx_offset = 0; uplink_state = 0;
-							}
-							break;
+					handle_uplink();
+				}
+				else
+				{
+					// Do we have data from MCC instead?
+					if (mcc_size > 0) {
+						// Yes. Take a byte
+						rx_data[rx_offset] = mcc_data[mcc_offset];
+						mcc_offset++;
+						// Handle it
+						handle_uplink();
+						// Are we done?
+						if (mcc_offset >= mcc_size) {
+							// We reached the end of the MCC buffer.
+							mcc_offset = mcc_size = 0;
+						}
 					}
 				}
 			}
 			break;			
+	}
+}
+
+// Handle data moved to buffer from either the socket or mcc buffer
+void LM_VHF::handle_uplink()
+{
+	switch (uplink_state) {
+	case 0: // NEW COMMAND START
+		int va, sa;
+		va = ((rx_data[rx_offset] & 070) >> 3);
+		sa = rx_data[rx_offset] & 07;
+		// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
+		if (va != 03) { break; }
+		switch (sa) {
+		case 0: // TEST
+			rx_offset++; uplink_state = 10;
+			break;
+		case 1: // LGC-UPDATA
+			rx_offset++; uplink_state = 20;
+			break;
+		default:
+			sprintf(oapiDebugString(), "LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o", sa);
+			break;
+		}
+		break;
+	case 10: // TEST CMD
+		rx_offset = 0; uplink_state = 0; break;
+
+	case 20: // LGC UPLINK CMD
+			 // Expect another byte
+		rx_offset++; uplink_state++; break;
+	case 21: // LGC UPLINK
+	{
+		int lgc_uplink_wd = rx_data[rx_offset - 1];
+		lgc_uplink_wd <<= 8;
+		lgc_uplink_wd |= rx_data[rx_offset];
+		// Move to INLINK
+		lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
+		// Cause UPRUPT
+		lem->agc.GenerateUprupt();
+
+		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
+		rx_offset = 0; uplink_state = 0;
+	}
+	break;
 	}
 }
 
@@ -1941,6 +2040,10 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 // S-Band System
 LM_SBAND::LM_SBAND(){
 	lem = NULL;
+	SBXHeat = 0;
+	SBXSECHeat = 0;
+	SBPHeat = 0;
+	SBPSECHeat = 0;
 	ant = NULL;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
@@ -1949,8 +2052,12 @@ LM_SBAND::LM_SBAND(){
 	rcvr_agc_voltage = 0.0;
 }
 
-void LM_SBAND::Init(LEM *vessel){
+void LM_SBAND::Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph){
 	lem = vessel;
+	SBXHeat = sbxh;
+	SBXSECHeat = secsbxh;
+	SBPHeat = sbph;
+	SBPSECHeat = secsbph;
 	ant = &lem->omni_aft;
 	rcvr_agc_voltage = 0.0;
 }
@@ -1962,28 +2069,52 @@ void LM_SBAND::SystemTimestep(double simdt) {
 	// SBand Primary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(tc_mode_1 == 0){ tc_mode_1 = 2; } // Start warming up
+		if (tc_mode_1 == 0) {
+			tc_mode_1 = 2;  // Start warming up
+		}
+		else if (tc_mode_1 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_1 > 1){ tc_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary Transciever
 	// Pulls 36 watts operating.
 	if(lem->SBandXCvrSelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(tc_mode_2 == 0){ tc_mode_2 = 2; } // Start warming up
+		if (tc_mode_2 == 0) {
+			tc_mode_2 = 2;  // Start warming up
+		}
+		else if (tc_mode_2 == 3) {
+			SBXHeat->GenerateHeat(17.65);
+			SBXSECHeat->GenerateHeat(17.65);
+		}
 	}else{
 		if(tc_mode_2 > 1){ tc_mode_2 = 1; } // Start cooling off
 	}	
 	// SBand Primary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_UP){
-		if(pa_mode_1 == 0){ pa_mode_1 = 2; } // Start warming up
+		if (pa_mode_1 == 0) {
+			pa_mode_1 = 2; // Start warming up
+		}
+		else if (pa_mode_1 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_1 > 1){ pa_mode_1 = 1; } // Start cooling off
 	}
 	// SBand Secondary PA
 	// Pulls 72 watts operating
 	if(lem->SBandPASelSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(pa_mode_2 == 0){ pa_mode_2 = 2; } // Start warming up
+		if (pa_mode_2 == 0) {
+			pa_mode_2 = 2;  // Start warming up
+		}
+		else if (pa_mode_2 == 3) {
+			SBPHeat->GenerateHeat(28.4);
+			SBPSECHeat->GenerateHeat(28.4);
+		}
 	}else{
 		if(pa_mode_2 > 1){ pa_mode_2 = 1; } // Start cooling off
 	}
@@ -2024,7 +2155,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_1 = simt; break;
@@ -2067,7 +2198,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 30 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_XCVR_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_XCVR_CB.DrawPower(36); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				tc_timer_2 = simt; break;
@@ -2111,7 +2242,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_PRIM_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_PRIM_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_1 = simt; break;
@@ -2154,7 +2285,7 @@ void LM_SBAND::TimeStep(double simt){
 			}
 			// Taking 60 seconds, warm up the tubes
 			if(lem->COMM_SEC_SBAND_PA_CB.Voltage() > 24){
-				lem->COMM_SEC_SBAND_PA_CB.DrawPower(12); // FIXME: I guessed at this number
+				lem->COMM_SEC_SBAND_PA_CB.DrawPower(72); // Technically draws more during warmup as resistance is lower at colder temperatures, set at the normal load wattage
 			}else{
 				// Power failed - Start over
 				pa_timer_2 = simt; break;
@@ -2216,8 +2347,7 @@ void LM_SBAND::SaveState(FILEHANDLE scn) {
 }
 
 // S-Band Steerable Antenna
-LEM_SteerableAnt::LEM_SteerableAnt()// : antenna("LEM-SBand-Steerable-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	//antheater("LEM-SBand-Steerable-Antenna-Heater",1,NULL,40,51.7,0,233.15,255,&antenna)
+LEM_SteerableAnt::LEM_SteerableAnt()
 {
 	lem = NULL;
 	pitch = 0.0;
@@ -2233,16 +2363,10 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 	// SBand antenna 51.7 watts to stay between -40F and 0F
 	antenna = an;
 	antheater = anheat;
-	antenna->isolation = 1.0; 
+	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
-	//antenna.mass = 10000;      // Probably the same as the RR antenna
-	//antenna.SetTemp(233); 
 	if(lem != NULL){
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
-		//lem->Panelsdk.AddHydraulic(&antenna);
-		//lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater->Enable();
-		antheater->SetPumpAuto();
 	}
 
 	pitch = -75.0*RAD;
@@ -2374,12 +2498,17 @@ void LEM_SteerableAnt::TimeStep(double simdt){
 void LEM_SteerableAnt::SystemTimestep(double simdt)
 {
 	// Do we have power?
-	if (!IsPowered()) return;
+	if (IsPowered()) {
+
+		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  
+
+	}
 
 	if (moving)
 	{
-		lem->SBD_ANT_AC_CB.DrawPower(27.9);
-		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);
+		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
 	}
 }
 
@@ -2408,7 +2537,7 @@ void LEM_SteerableAnt::SaveState(FILEHANDLE scn) {
 
 double LEM_SteerableAnt::GetAntennaTempF(){
 
-	return(0);
+	return KelvinToFahrenheit(antenna->GetTemp());
 }
 
 LM_OMNI::LM_OMNI(VECTOR3 dir)

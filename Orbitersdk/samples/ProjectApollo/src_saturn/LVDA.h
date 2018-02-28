@@ -49,6 +49,13 @@ public:
 
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);
+	bool LMAbort();
+	bool RestartManeuverEnable();
+	bool InhibitAttitudeManeuver();
+	bool Timebase8Enable();
+	bool EvasiveManeuverEnable();
+	bool ExecuteCommManeuver();
+	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 
 	//LVDC Input Discretes and Interrupts
 
@@ -71,6 +78,17 @@ public:
 	//Not real LVDA functions
 	void TLIBegun();
 	void TLIEnded();
+	void SwitchSelectorOld(int chan);
+	double GetMissionTime();
+	void AddForce(VECTOR3 F, VECTOR3 r);
+	double GetFirstStageThrust();
+	double GetAltitude();
+	int GetStage();
+	void SetStage(int stage);
+	int GetApolloNo();
+	void GetRelativePos(VECTOR3 &v);
+	void GetRelativeVel(VECTOR3 &v);
+	bool GetSCControlPoweredFlight();
 protected:
 	IU *iu;
 };

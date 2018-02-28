@@ -153,7 +153,7 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		VECTOR3 mesh_dir = _V(0, 0, 0);
+		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
 		AddMesh(LM_Descent2, &mesh_dir);
 	}
 	

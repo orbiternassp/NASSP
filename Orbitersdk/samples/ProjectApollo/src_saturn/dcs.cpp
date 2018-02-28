@@ -73,6 +73,36 @@ bool DCS::Uplink(int type, void *upl)
 
 			return iu->lvda.TimebaseUpdate(tbupdate->dt);
 		}
+		else if (type == DCSUPLINK_LM_ABORT)
+		{
+			return iu->lvda.LMAbort();
+		}
+		else if (type == DCSUPLINK_RESTART_MANEUVER_ENABLE)
+		{
+			return iu->lvda.RestartManeuverEnable();
+		}
+		else if (type == DCSUPLINK_INHIBIT_MANEUVER)
+		{
+			return iu->lvda.InhibitAttitudeManeuver();
+		}
+		else if (type == DCSUPLINK_TIMEBASE_8_ENABLE)
+		{
+			return iu->lvda.Timebase8Enable();
+		}
+		else if (type == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
+		{
+			return iu->lvda.EvasiveManeuverEnable();
+		}
+		else if (type == DCSUPLINK_EXECUTE_COMM_MANEUVER)
+		{
+			return iu->lvda.ExecuteCommManeuver();
+		}
+		else if (type == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+		{
+			DCSLUNARIMPACT *lunarimpact = static_cast<DCSLUNARIMPACT*>(upl);
+
+			return iu->lvda.SIVBIULunarImpact(lunarimpact->tig, lunarimpact->dt, lunarimpact->pitch, lunarimpact->yaw);
+		}
 	}
 
 	return false;

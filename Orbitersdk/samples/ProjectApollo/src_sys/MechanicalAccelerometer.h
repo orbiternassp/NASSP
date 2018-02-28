@@ -43,6 +43,7 @@ private:
 	MATRIX3 GetRotationMatrixX(double angle);
 	MATRIX3 GetRotationMatrixY(double angle);
 	MATRIX3 GetRotationMatrixZ(double angle);
+	VECTOR3 GetGravityVector();
 
 	VESSEL *vessel;
 	bool dVInitialized;
