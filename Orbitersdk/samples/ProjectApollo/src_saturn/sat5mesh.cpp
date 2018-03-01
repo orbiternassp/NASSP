@@ -1070,14 +1070,14 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
 	{
-		ofs1 = OFS_ABORT2;
-		vel1 = _V(0, 0, -4.0);
+		ofs1 = _V(0.0, 0.0, S4Offset - 2.0499);
+		vel1 = _V(0, 0, -2.0);
 	}
 
 	if (stage == STAGE_ORBIT_SIVB && new_stage == CM_STAGE)
 	{
-		ofs1 = OFS_ABORT2;
-		vel1 = _V(0, 0, 0.0);
+		ofs1 = _V(0.0, 0.0, S4Offset - 2.0499);
+		vel1 = _V(0, 0, -0.2);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1451,7 +1451,7 @@ void SaturnV::SeparateStage (int new_stage)
 		habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort3", vs1);
 		
 		SetReentryStage();
-		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
+		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
 	}
 }
 
