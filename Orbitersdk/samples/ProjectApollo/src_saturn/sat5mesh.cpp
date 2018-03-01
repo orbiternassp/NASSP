@@ -1062,10 +1062,22 @@ void SaturnV::SeparateStage (int new_stage)
 		vel1 = _V(0,0,-6.0);
 	}
 
-	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
 	{
 	 	ofs1 = _V(0.0, 0.0, S4Offset); // OFS_STAGE3;
 		vel1 = _V(0.0 ,0.0, 0.0);
+	}
+
+	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
+	{
+		ofs1 = _V(0.0, 0.0, S4Offset - 2.0499);
+		vel1 = _V(0, 0, -2.0);
+	}
+
+	if (stage == STAGE_ORBIT_SIVB && new_stage == CM_STAGE)
+	{
+		ofs1 = _V(0.0, 0.0, S4Offset - 2.0499);
+		vel1 = _V(0, 0, -0.2);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1277,7 +1289,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ShiftCentreOfMass(_V(0, 0, STG2O - STG1O));
 	}
 
-	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1286,15 +1298,7 @@ void SaturnV::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/sat5stg3", vs1, true);
 
 		SeparationS.play(NOLOOP,255);
-		
-		if (new_stage == CSM_LEM_STAGE)
-		{
-			SetCSMStage();
-		}
-		else
-		{
-			SetReentryStage();
-		}
+		SetCSMStage();
 
      	ShiftCentreOfMass(_V(0, 0, 13.15));
 	}
@@ -1432,6 +1436,22 @@ void SaturnV::SeparateStage (int new_stage)
 		}
 
 		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
+	}
+
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage == CM_STAGE)
+	{
+		vs1.vrot.x = 0.0;
+		vs1.vrot.y = 0.0;
+		vs1.vrot.z = 0.0;
+		
+		StageS.play();
+		
+		char VName[256];
+		GetApolloName(VName); strcat(VName, "-ABORT");
+		habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort3", vs1);
+		
+		SetReentryStage();
+		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
 	}
 }
 
