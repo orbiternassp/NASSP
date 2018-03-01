@@ -650,6 +650,10 @@ void LEM::SystemsInit()
 	PressRegA->BoilAllAndSetTemp(285.928);
 	PressRegB->BoilAllAndSetTemp(285.928);
 
+	//Tunnel Connection Initialization   
+
+	SetPipeMaxFlow("HYDRAULIC:LMTUNNELUNDOCKED", 1000.0 / LBH);
+
 	//Oxygen Pipe Initialization   
 
 	SetPipeMaxFlow("HYDRAULIC:DESO2PIPE1", 660.0 / LBH);
@@ -1540,7 +1544,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-/*
+///*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1594,8 +1598,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	int *fwdHatchvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:ISOPEN");
 	int *ovhdHatchvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT2:ISOPEN");
-	double *fwdHatchFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOW");
-	double *fwdHatchFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOWMAX");
+	double *ovhdHatchFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOW");
+	double *ovhdHatchFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE:FLOWMAX");
+	double *fwdHatchFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE:FLOW");
+	double *fwdHatchFlowmax = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE:FLOWMAX");
+
+	double *cabinventpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT:PRESS");
 
 	double *CabinMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *CabinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
@@ -1857,7 +1865,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//CSM LM Connection
 	double *lmcabinpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
-*/
+	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
+//*/
 
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*glycolsuitheattemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67);
 
@@ -1866,6 +1875,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "Total: %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf RV %d RVF %lf", (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass), *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2CanisterMass, *suitfanmanifoldMass, *hxcoolingMass, *suitReliefvlv, *suitReliefflow*LBH);
 	
 	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf WSM %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *WSMPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
+	
+	sprintf(oapiDebugString(), "CAB %lf SUIT %lf OVHDFLOW %lf OVHDFLOWMAX %lf TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);
 	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf GRV %d", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *gasreturnvlv);
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf RVFM %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *suitReliefflowmax, *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2Mass, *suitfanmanifoldMass, *hxcoolingMass);
@@ -1908,7 +1919,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2TT %lf DO2MQ %lf DO2MP %lf DO2MT %lf O2MQ %lf O2MP %lf O2MT %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2ManifoldMass, (*DESO2ManifoldPress)*PSI, *O2ManifoldTemp, *O2ManifoldMass, (*O2ManifoldPress)*PSI, *O2ManifoldTemp);
 
 	//sprintf(oapiDebugString(), "CO2 MP %lf PRIM CO2 %lf SEC CO2 %lf CAB %lf SUIT %lf PV %d PF %lf SV %d SF %lf", (*CO2ManifoldPress)*PSI, (*primCO2CanisterPress)*PSI, (*secCO2CanisterPress)*PSI, (*cabinPress)*PSI, (*suitPress)*PSI, *primCO2Vent, *primCO2Flow, *secCO2Vent, *secCO2Flow);
-	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf VLV %d FLOW %lf FLOWMAX %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *suitReliefvlv, *suitReliefflow, *suitReliefflowmax);
+	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf VLV %d SRFLOW %lf SRFLOWMAX %lf FWDFLOW %lf FWDFLOWMAX %lf OVHDFLOW %lf OVHDFLOWMAX %lf TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *suitReliefvlv, *suitReliefflow*LBH, *suitReliefflowmax*LBH, *fwdHatchFlow*LBH, *fwdHatchFlowmax*LBH, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf SuitP %lf SuitT %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTemperature(), ecs.GetSuitPressurePSI(), ecs.GetSuitTemperature());
 	
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2T %lf DO2VM %lf DO2E %lf DO2PP %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
