@@ -99,9 +99,36 @@ void Sat5Abort1::Setup(bool sm)
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
+	
+	double TCP = -102.5 + STG0O - TCPO;
 
-	double TCP=-107.0+STG0O-TCPO;
-	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	double Mass = 3100000;
+	double ro = 30;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.05;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = TCP;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = TCP;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = TCP;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = TCP + 105;
+
+	SetTouchdownPoints(td, 4);
+	
 	VECTOR3 mesh_dir=_V(0,0,-54+STG0O);
 	AddMesh (hsat5stg1, &mesh_dir);
 	mesh_dir=_V(0,0,-30.5+STG0O);

@@ -1386,29 +1386,60 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage >= CSM_LEM_STAGE)
 	{
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
+		VESSELSTATUS2 vs3;
+		memset(&vs3, 0, sizeof(vs3));
+		vs3.version = 2;
 
+		GetStatusEx(&vs3);
 		StageS.play();
 
-		char VName[256];
-		GetApolloName(VName); strcat (VName, "-ABORT");
-		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
+		if (vs3.status == 1) {
+			vs3.vrot.x = 102.5;
 
-		Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
-		stage1->SetState(new_stage == CM_STAGE);
+			char VName[256];
+			GetApolloName(VName); strcat(VName, "-ABORT");
+			habort = oapiCreateVesselEx(VName, "ProjectApollo/Saturn5Abort1", &vs3);
 
-		if (new_stage == CSM_LEM_STAGE)
-		{
-			SetCSMStage();
+			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
+			stage1->SetState(new_stage == CM_STAGE);
+
+			if (new_stage == CSM_LEM_STAGE)
+			{
+				vs3.vrot.x = 102.5 + 21;
+				DefSetStateEx(&vs3);
+				SetCSMStage();
+			}
+			else
+			{
+				vs3.vrot.x = 102.5 + 23.25;
+				DefSetStateEx(&vs3);
+				SetReentryStage();
+			}
 		}
 		else
 		{
-			SetReentryStage();
-		}
+			vs1.vrot.x = 0.0;
+			vs1.vrot.y = 0.0;
+			vs1.vrot.z = 0.0;
 
-		ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
+			char VName[256];
+			GetApolloName(VName); strcat(VName, "-ABORT");
+			habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort1", vs1);
+
+			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
+			stage1->SetState(new_stage == CM_STAGE);
+
+			if (new_stage == CSM_LEM_STAGE)
+			{
+				SetCSMStage();
+				ShiftCentreOfMass(_V(0, 0, STG0O + 21));
+			}
+			else
+			{
+				SetReentryStage();
+				ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
+			}
+		}
 	}
 
 	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage >= CSM_LEM_STAGE)
@@ -1429,13 +1460,13 @@ void SaturnV::SeparateStage (int new_stage)
 		if (new_stage == CSM_LEM_STAGE)
 		{
 			SetCSMStage();
+			ShiftCentreOfMass(_V(0, 0, -STG1O + 21));
 		}
 		else
 		{
 			SetReentryStage();
+			ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 		}
-
-		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage == CM_STAGE)
