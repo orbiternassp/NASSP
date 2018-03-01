@@ -1432,13 +1432,13 @@ void SaturnV::SeparateStage (int new_stage)
 			if (new_stage == CSM_LEM_STAGE)
 			{
 				SetCSMStage();
+				ShiftCentreOfMass(_V(0, 0, STG0O + 21));
 			}
 			else
 			{
 				SetReentryStage();
+				ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
 			}
-
-			ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
 		}
 	}
 
@@ -1460,13 +1460,13 @@ void SaturnV::SeparateStage (int new_stage)
 		if (new_stage == CSM_LEM_STAGE)
 		{
 			SetCSMStage();
+			ShiftCentreOfMass(_V(0, 0, -STG1O + 21));
 		}
 		else
 		{
 			SetReentryStage();
+			ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 		}
-
-		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage == CM_STAGE)
