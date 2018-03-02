@@ -849,7 +849,7 @@ void h_Pipe::refresh(double dt) {
 		}
 
 		if ((two_ways) && (out_p > in->GetPress())) {
-			h_volume v = out->GetFlow(dt * (out_p - in_p));
+			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
 			flow -= v.GetMass() / dt; 
 			in->Flow(v);
 		}
