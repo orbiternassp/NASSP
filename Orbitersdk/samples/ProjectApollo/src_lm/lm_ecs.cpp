@@ -114,7 +114,7 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 		//DUMP
 		if (cabinOVHDHatchValveSwitch->GetState() == 0)
 		{
-			cabinOVHDHatchValve->in->size = (float) 50.0;
+			cabinOVHDHatchValve->in->size = (float) 10.0;
 			cabinOVHDHatchValve->flowMax = 666.0 / LBH;
 			cabinOVHDHatchValve->in->Open();
 		}

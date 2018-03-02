@@ -102,7 +102,7 @@ void CabinPressureRegulator::SystemTimestep(double simdt) {
 		if (emergencyCabinPressureTestSwitch->GetState() != 0) 
 			emergencyCabinPressureRegulator->P_max = 1000. / PSI; // i.e. disabled
 		else
-			emergencyCabinPressureRegulator->P_max = 4.6 / PSI;
+			emergencyCabinPressureRegulator->P_max = 4.6 / PSI;	
 		emergencyCabinPressureRegulator->flowMax = 40.2 / LBH; // 0.67 lb/min max, see AOH
 	}
 }
@@ -1383,7 +1383,7 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 			double f = (double)(3 - PressureEqualizationSwitch->GetState());
 
 			PressureEqualizationValve->in->Open();
-			PressureEqualizationValve->in->size = (float)(0.50*f);
+			PressureEqualizationValve->in->size = (float)(0.2*f);
 			PressureEqualizationValve->flowMax = 220.0 / LBH * f;
 		}
 	}
