@@ -111,6 +111,8 @@ public:
 	void Init(LEM *s);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	LEM *lem;					// Pointer at LEM
 	LEM_XLBSource dc_output;	// DC output
