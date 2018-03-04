@@ -2180,35 +2180,41 @@ void LEM_BusFeed::UpdateFlow(double dt){
 
 	int csrc=0;                             // Current Sources Operational
 	double PowerDrawPerSource;              // Current to draw, per source
-	double power_load_src=power_load;		// Power load when we came in
-	int cba_ok=0,cbb_ok=0;					// Circuit breaker OK flags
-	
-	// Find active sources
-	if(dc_source_a != NULL && dc_source_a->Voltage() > 0){
-		csrc++;
-	}
-	if(dc_source_b != NULL && dc_source_b->Voltage() > 0){
-		csrc++;
-	}
-	// Compute draw
-	if(csrc > 1){
-		PowerDrawPerSource = power_load_src/2;
-	}else{
-		PowerDrawPerSource = power_load_src;
-	}
-
-	// Now take power
-	if(dc_source_a != NULL){
-		dc_source_a->DrawPower(PowerDrawPerSource); 
-	}
-	if(dc_source_b != NULL){
-		dc_source_b->DrawPower(PowerDrawPerSource); 
-	}
-	
 	double A_Volts = 0;
 	double A_Amperes = 0;
 	double B_Volts = 0;
 	double B_Amperes = 0;
+
+	if (dc_source_a != NULL)
+	{
+		A_Volts = dc_source_a->Voltage();
+	}
+	if (dc_source_b != NULL)
+	{
+		B_Volts = dc_source_b->Voltage();
+	}
+	
+	// Find active sources
+	if(A_Volts > 0){
+		csrc++;
+	}
+	if(B_Volts > 0){
+		csrc++;
+	}
+	// Compute draw
+	if(csrc > 1){
+		PowerDrawPerSource = power_load/2;
+	}else{
+		PowerDrawPerSource = power_load;
+	}
+
+	// Now take power
+	if(dc_source_a != NULL && A_Volts > 0){
+		dc_source_a->DrawPower(PowerDrawPerSource); 
+	}
+	if(dc_source_b != NULL && B_Volts > 0){
+		dc_source_b->DrawPower(PowerDrawPerSource); 
+	}
 
 	// Resupply from source
 	if(dc_source_a != NULL){
@@ -2243,7 +2249,7 @@ void LEM_BusFeed::UpdateFlow(double dt){
 	// if(this == &lem->BTB_CDR_D){ sprintf(oapiDebugString(),"LM_BTO: = Voltages %f %f | Load %f PS %f Output %f V",A_Volts,B_Volts,power_load,PowerDrawPerSource,Volts); }
 
 	// Reset for next pass.
-	power_load -= power_load_src;	
+	power_load = 0;
 }
 
 // XLUNAR BUS MANAGER OUTPUT SOURCE
@@ -2259,7 +2265,7 @@ void LEM_XLBSource::SetVoltage(double v){
 void LEM_XLBSource::DrawPower(double watts)
 { 
 	power_load += watts;
-};
+}
 
 // XLUNAR BUS MANAGER
 LEM_XLBControl::LEM_XLBControl(){
