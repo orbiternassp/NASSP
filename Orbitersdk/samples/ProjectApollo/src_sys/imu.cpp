@@ -94,6 +94,7 @@ void IMU::Init()
 	OurVessel = 0;
 	IMUHeater = 0;
 	IMUHeat = 0;
+	IMUCase = 0;
 	PowerSwitch = 0;
 
 	DoZeroIMUGimbals();
