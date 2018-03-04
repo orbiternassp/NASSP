@@ -769,8 +769,8 @@ private:
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
 	char* CMCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, bool v66 = false);
-	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch);
-	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0);
+	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
+	char* CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	char* V71Update(int* emem, int n);

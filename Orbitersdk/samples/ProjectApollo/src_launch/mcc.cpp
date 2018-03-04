@@ -2688,12 +2688,20 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 7)
 		{
+			char tmpbuf[36];
 			P37PAD * form = (P37PAD *)padForm;
 
-			SAVE_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
-			SAVE_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
-			SAVE_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
-			SAVE_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+			for (int i = 0;i < 3;i++)
+			{
+				sprintf(tmpbuf, "MCC_P37PAD_dVT[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->dVT[i]);
+				sprintf(tmpbuf, "MCC_P37PAD_GET400K[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GET400K[i]);
+				sprintf(tmpbuf, "MCC_P37PAD_GETI[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GETI[i]);
+				sprintf(tmpbuf, "MCC_P37PAD_lng[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->lng[i]);
+			}
 		}
 		else if (padNumber == 8)
 		{
@@ -2952,12 +2960,20 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 7)
 		{
+			char tmpbuf[36];
 			P37PAD * form = (P37PAD *)padForm;
 
-			LOAD_DOUBLE("MCC_P37PAD_dVT", form->dVT[0]);
-			LOAD_DOUBLE("MCC_P37PAD_GET400K", form->GET400K[0]);
-			LOAD_DOUBLE("MCC_P37PAD_GETI", form->GETI[0]);
-			LOAD_DOUBLE("MCC_P37PAD_lng", form->lng[0]);
+			for (int i = 0;i < 3;i++)
+			{
+				sprintf(tmpbuf, "MCC_P37PAD_dVT[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->dVT[0]);
+				sprintf(tmpbuf, "MCC_P37PAD_GET400K[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GET400K[0]);
+				sprintf(tmpbuf, "MCC_P37PAD_GETI[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GETI[0]);
+				sprintf(tmpbuf, "MCC_P37PAD_lng[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->lng[0]);
+			}
 		}
 		else if (padNumber == 8)
 		{
@@ -3201,7 +3217,7 @@ void MCC::drawPad(){
 			P37PAD * form = (P37PAD *)padForm;
 			sprintf(buffer, "P37 BLOCK DATA\n");
 
-			for (int i = 0;i < 2;i++)
+			for (int i = 0;i < 3;i++)
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GET400K[i]);

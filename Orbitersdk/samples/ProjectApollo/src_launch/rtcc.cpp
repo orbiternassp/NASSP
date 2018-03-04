@@ -3441,16 +3441,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 7: //PTC REFSMMAT
 	{
-		REFSMMATOpt opt;
-		MATRIX3 REFSMMAT;
+		 MATRIX3 REFSMMAT = _M(-0.5, -0.8660254, 0.0, -0.79453912, 0.45872741, 0.39784005, -0.34453959, 0.19892003, -0.91745479);
 
-		opt.GETbase = getGETBase();
-		opt.REFSMMATopt = 6;
-		opt.REFSMMATTime = 100.0*3600.0;
-
-		REFSMMAT = REFSMMATCalc(&opt);
-
-		sprintf(uplinkdata, "%s", CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+		sprintf(uplinkdata, "%s", CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch, true));
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -3477,8 +3470,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "MCC2");
 		}
 
-		MCC1GET= calcParams.TLI + 6.0*3600.0;
-		MCC2GET = calcParams.TLI + 25.0*3600.0;
+		if (calcParams.LOI == 0)
+		{
+			calcParams.LOI = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
+		}
+
+		double TLIbase = floor((TimeofIgnition / 60.0) + 0.5)*60.0; //Round TLI ignition time to next minute
+
+		MCC1GET= TLIbase + 9.0*3600.0;
+		MCC2GET = TLIbase + 25.0*3600.0;
 		MCC3GET = calcParams.LOI - 22.0*3600.0;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -3510,7 +3510,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.MCCGET = MCC3GET;
 		TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
 
-		if (length(res.dV_LVLH) < 35.0*0.3048)
+		if (length(res.dV_LVLH) < 25.0*0.3048)
 		{
 			scrubbed = true;
 		}
@@ -3548,7 +3548,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			manopt.engopt = engopt;
 			manopt.GETbase = GETbase;
 			manopt.HeadsUp = false;
-			manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
 			manopt.TIG = P30TIG;
 			manopt.vessel = calcParams.src;
 			manopt.vesseltype = 1;
@@ -5170,7 +5170,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		//UX = mul(Rot, _V(UX.x, UX.z, UX.y));
 		UX = _V(UX.x, UX.z, UX.y);
 
-		//UZ = unit(mul(Rot, _V(0.0, 0.0, -1.0)));
 		UZ = _V(0.0, 0.0, -1.0);
 		UY = crossp(UZ, UX);
 		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
@@ -7461,13 +7460,20 @@ char* RTCC::SunburstMassUpdate(double masskg)
 	return list;
 }
 
-char* RTCC::CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch)
+char* RTCC::CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem)
 {
 	MATRIX3 a;
 	int emem[24];
 	char* str = new char[1000];
 
-	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	if (AGCCoordSystem)
+	{
+		a = REFSMMAT;
+	}
+	else
+	{
+		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	}
 
 	emem[0] = 24;
 	emem[1] = 306;
@@ -7494,13 +7500,20 @@ char* RTCC::CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch)
 	return str;
 }
 
-char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset)
+char* RTCC::CMCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset, bool AGCCoordSystem)
 {
 	MATRIX3 a;
 	int emem[24];
 	char* str = new char[1000];
 
-	a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	if (AGCCoordSystem)
+	{
+		a = REFSMMAT;
+	}
+	else
+	{
+		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	}
 
 	emem[0] = 24;
 	emem[1] = 1735 + offset;
