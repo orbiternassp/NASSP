@@ -105,16 +105,17 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 	if (ovhdHatch->IsOpen())
 	{
 		cabinOVHDHatchValve->in->Open();
-		cabinOVHDHatchValve->in->size = (float) 100.;	// no pressure in a few seconds
-		cabinOVHDHatchValve->flowMax = 2000. / LBH;
+		cabinOVHDHatchValve->in->size = (float) 1000.0;	// no pressure in a few seconds
+		cabinOVHDHatchValve->flowMax = 2000.0 / LBH;
 	}
 	else
 	{
-		cabinOVHDHatchValve->in->size = (float) 10.;
+		cabinOVHDHatchValve->in->size = (float) 10.0;
 		//DUMP
 		if (cabinOVHDHatchValveSwitch->GetState() == 0)
 		{
-			cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+			cabinOVHDHatchValve->in->size = (float) 10.0;
+			cabinOVHDHatchValve->flowMax = 666.0 / LBH;
 			cabinOVHDHatchValve->in->Open();
 		}
 		//CLOSE
@@ -140,7 +141,7 @@ void LEMOVHDCabinReliefDumpValve::SystemTimestep(double simdt)
 			{
 				if (cabinpress > 5.8 / PSI)
 				{
-					cabinOVHDHatchValve->flowMax = 660.0 / LBH;
+					cabinOVHDHatchValve->flowMax = 666.0 / LBH;
 				}
 				else
 				{
@@ -228,8 +229,8 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 	if (fwdHatch->IsOpen())
 	{
 		cabinFWDHatchValve->in->Open();
-		cabinFWDHatchValve->in->size = (float) 100.;	// no pressure in a few seconds
-		cabinFWDHatchValve->flowMax = 2000. / LBH;
+		cabinFWDHatchValve->in->size = (float) 1000.0;	// no pressure in a few seconds
+		cabinFWDHatchValve->flowMax = 2000.0 / LBH;
 	}
 	else
 	{
@@ -238,7 +239,8 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 		//DUMP
 		if (cabinFWDHatchValveSwitch->GetState() == 0)
 		{
-			cabinFWDHatchValve->flowMax = 660.0 / LBH;
+			cabinFWDHatchValve->in->size = (float) 35.0;
+			cabinFWDHatchValve->flowMax = 666.0 / LBH;
 			cabinFWDHatchValve->in->Open();
 		}
 		//CLOSE
@@ -264,7 +266,7 @@ void LEMFWDCabinReliefDumpValve::SystemTimestep(double simdt)
 			{
 				if (cabinpress > 5.8 / PSI)
 				{
-					cabinFWDHatchValve->flowMax = 660.0 / LBH;
+					cabinFWDHatchValve->flowMax = 666.0 / LBH;
 				}
 				else
 				{
