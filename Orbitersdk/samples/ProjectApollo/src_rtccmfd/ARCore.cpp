@@ -214,6 +214,10 @@ ARCore::ARCore(VESSEL* v)
 	apo_desnm = 0;
 	peri_desnm = 0;
 	incdeg = 0;
+	GMPRotationAngle = 0.0;
+	GMPLongitude = 0.0;
+	GMPTOA = 0.0;
+	GMPRevs = 0;
 
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
@@ -1758,6 +1762,16 @@ int ARCore::subThread()
 		opt.T2 = T2;
 		opt.target = target;
 		opt.vessel = vessel;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
+
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			opt.csmlmdocked = false;
@@ -1776,6 +1790,24 @@ int ARCore::subThread()
 	{
 		double dH_CDH;
 		CDHOpt opt;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			opt.csmlmdocked = false;
+		}
+		else
+		{
+			opt.csmlmdocked = true;
+		}
 
 		opt.CDHtimemode = CDHtimemode;
 		opt.DH = DH*1852.0;
@@ -1811,6 +1843,18 @@ int ARCore::subThread()
 		opt.useSV = false;
 		opt.AltRef = OrbAdjAltRef;
 		opt.LSAlt = LSAlt;
+		opt.rot_ang = GMPRotationAngle;
+		opt.lng = GMPLongitude;
+		opt.N = GMPRevs;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -1821,7 +1865,7 @@ int ARCore::subThread()
 			opt.csmlmdocked = true;
 		}
 
-		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG);
+		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG, GMPTOA);
 
 		dV_LVLH = OrbAdjDVX;
 
@@ -1945,6 +1989,15 @@ int ARCore::subThread()
 			loiopt.vessel = vessel;
 			loiopt.type = LOIOption;
 
+			if (vesseltype < 2)
+			{
+				loiopt.vesseltype = 0;
+			}
+			else
+			{
+				loiopt.vesseltype = 1;
+			}
+
 			if (vesseltype == 0 || vesseltype == 2)
 			{
 				loiopt.csmlmdocked = false;
@@ -1979,6 +2032,15 @@ int ARCore::subThread()
 			opt.h_circ = LOI2Alt;
 			opt.vessel = vessel;
 			opt.useSV = false;
+
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2027,6 +2089,15 @@ int ARCore::subThread()
 	{
 		EntryResults res;
 		EntryOpt opt;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2115,7 +2186,14 @@ int ARCore::subThread()
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
-			opt.vesseltype = vesseltype;
+			if (vesseltype == 2)
+			{
+				opt.csmlmdocked = false;
+			}
+			else
+			{
+				opt.csmlmdocked = true;
+			}
 			opt.alt = LSAlt;
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
@@ -2127,6 +2205,15 @@ int ARCore::subThread()
 	case 10:	//DOI Targeting
 	{
 		DOIMan opt;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2160,6 +2247,15 @@ int ARCore::subThread()
 		EntryResults res;
 
 		entryprecision = 1;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2303,6 +2399,15 @@ int ARCore::subThread()
 	{
 		PCMan opt;
 
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
+
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			opt.csmlmdocked = false;
@@ -2379,6 +2484,15 @@ int ARCore::subThread()
 		{
 			MCCNodeMan opt;
 
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
+
 			if (vesseltype == 0 || vesseltype == 2)
 			{
 				opt.csmlmdocked = false;
@@ -2419,6 +2533,15 @@ int ARCore::subThread()
 			opt.PeriGET = TLCCPeriGET;
 			opt.MCCGET = TLCC_GET;
 			opt.vessel = vessel;
+
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2479,6 +2602,15 @@ int ARCore::subThread()
 			opt.MCCGET = TLCC_GET;
 			opt.vessel = vessel;
 
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
+
 			if (vesseltype == 0 || vesseltype == 2)
 			{
 				opt.csmlmdocked = false;
@@ -2525,6 +2657,15 @@ int ARCore::subThread()
 			opt.vessel = vessel;
 			opt.h_peri = TLCCFlybyPeriAlt;
 
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
+
 			if (vesseltype == 0 || vesseltype == 2)
 			{
 				opt.csmlmdocked = false;
@@ -2563,6 +2704,15 @@ int ARCore::subThread()
 			opt.h_peri = TLCCFlybyPeriAlt;
 			opt.AscendingNode = TLCCAscendingNode;
 			opt.FRInclination = TLCCFRDesiredInclination;
+
+			if (vesseltype < 2)
+			{
+				opt.vesseltype = 0;
+			}
+			else
+			{
+				opt.vesseltype = 1;
+			}
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2691,6 +2841,15 @@ int ARCore::subThread()
 		SVMJD = oapiGetSimMJD();
 
 		entryprecision = 1;
+
+		if (vesseltype < 2)
+		{
+			opt.vesseltype = 0;
+		}
+		else
+		{
+			opt.vesseltype = 1;
+		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{

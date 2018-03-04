@@ -1194,6 +1194,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ECA_4B_START", sizeof("ECA_4B_START"))) {
 			ECA_4b.LoadState(scn, "ECA_4B_END");
 		}
+		else if (!strnicmp(line, "BTC_XLUNAR_START", sizeof("BTC_XLUNAR_START"))) {
+			BTC_XLunar.LoadState(scn, "BTC_XLUNAR_END");
+		}
 		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
 			SBand.LoadState(line);
 		}
@@ -1522,6 +1525,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ECA_3b.SaveState(scn,"ECA_3B_START","ECA_3B_END");
 	ECA_4a.SaveState(scn,"ECA_4A_START","ECA_4A_END");
 	ECA_4b.SaveState(scn,"ECA_4B_START","ECA_4B_END");
+	BTC_XLunar.SaveState(scn, "BTC_XLUNAR_START", "BTC_XLUNAR_END");
 
 	// Save COMM
 	SBand.SaveState(scn);

@@ -1784,6 +1784,11 @@ void SIVB::StopSeparationPyros()
 	//
 }
 
+double SIVB::GetPayloadMass()
+{
+	return PayloadMass;
+}
+
 void SIVB::HideAllMeshes()
 
 {

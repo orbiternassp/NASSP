@@ -82,6 +82,8 @@ public:
 	void set_OrbAdjInc(double inc);
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
+	void OrbAdjRevDialogue();
+	void set_OrbAdjRevs(int N);
 	void OrbAdjCalc();
 	void menuCycleOrbAdjOptions();
 	void menuCycleOrbAdjAltRef();

@@ -199,6 +199,7 @@ namespace OrbMech {
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
+	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoapo(VECTOR3 R, VECTOR3 V, double mu);
 	double timetonode_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2);
@@ -276,6 +277,7 @@ namespace OrbMech {
 	void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius);
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
 	void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP);
+	void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt);
 	//private:
 		//VESSEL* vessel;
 		//double mu;
@@ -297,6 +299,7 @@ namespace OrbMech {
 	void fabs_vektor(double* vektor, int n);
 	double vektor_max(double* vektor, int n);
 	double power(double b, double e);
+	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t);
 	MATRIX3 J2000EclToBRCS(double mjd);

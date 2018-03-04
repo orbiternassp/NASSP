@@ -2256,6 +2256,24 @@ void CSMLMPowerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 }
 
+void CSMLMPowerSwitch::LoadState(char *line)
+{
+	ToggleSwitch::LoadState(line);
+
+	switch (state)
+	{
+	case THREEPOSSWITCH_UP:
+		sat->CSMToLEMPowerDrain.Enable();
+		sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);
+		break;
+	default:
+		sat->CSMToLEMPowerDrain.Disable();
+		sat->CSMToLEMPowerDrain.WireTo(NULL);
+		break;
+	}
+
+}
+
 bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
 
 {

@@ -1109,7 +1109,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(11, 1);
 				SetRCSJet(15, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(200); // Four thrusters worth
+				SCS_ATT_DIR_CONT_CB.DrawPower(184); // Four thrusters worth
 			}
 			if (CDR_ACA.GetPlusRollHardover()) {
 				// PLUS ROLL
@@ -1118,7 +1118,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(8, 1);
 				SetRCSJet(12, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(200);
+				SCS_ATT_DIR_CONT_CB.DrawPower(184);
 			}
 			if (CDR_ACA.GetMinusPitchHardover()) {
 				// MINUS PITCH
@@ -1127,7 +1127,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(11, 1);
 				SetRCSJet(12, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+				SCS_ATT_DIR_CONT_CB.DrawPower(184);
 			}
 			if (CDR_ACA.GetPlusPitchHardover()) {
 				// PLUS PITCH
@@ -1136,7 +1136,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(8, 1);
 				SetRCSJet(15, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+				SCS_ATT_DIR_CONT_CB.DrawPower(184);
 			}
 			if (CDR_ACA.GetMinusYawHardover()) {
 				// MINUS YAW
@@ -1145,7 +1145,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(9, 1);
 				SetRCSJet(13, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+				SCS_ATT_DIR_CONT_CB.DrawPower(184);
 			}
 			if (CDR_ACA.GetPlusYawHardover()) {
 				// PLUS YAW
@@ -1154,7 +1154,7 @@ void LEM::JoystickTimestep(double simdt)
 				SetRCSJet(10, 1);
 				SetRCSJet(14, 1);
 
-				SCS_ATT_DIR_CONT_CB.DrawPower(100);
+				SCS_ATT_DIR_CONT_CB.DrawPower(184);
 			}
 		}
 
@@ -1171,14 +1171,14 @@ void LEM::JoystickTimestep(double simdt)
 					SetRCSJet(4, 1);
 					SetRCSJet(11, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 				if (CDR_ACA.GetPlusRollBreakout()) {
 					// PLUS ROLL
 					SetRCSJet(3, 1);
 					SetRCSJet(12, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 			}
 
@@ -1189,14 +1189,14 @@ void LEM::JoystickTimestep(double simdt)
 					SetRCSJet(11, 1);
 					SetRCSJet(12, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 				if (CDR_ACA.GetPlusPitchBreakout()) {
 					// PLUS PITCH
 					SetRCSJet(3, 1);
 					SetRCSJet(4, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 			}
 
@@ -1207,14 +1207,14 @@ void LEM::JoystickTimestep(double simdt)
 					SetRCSJet(2, 1);
 					SetRCSJet(9, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 				if (CDR_ACA.GetPlusYawBreakout()) {
 					// PLUS YAW
 					SetRCSJet(1, 1);
 					SetRCSJet(10, 1);
 
-					SCS_ATT_DIR_CONT_CB.DrawPower(100);
+					SCS_ATT_DIR_CONT_CB.DrawPower(92);
 				}
 			}
 		}
@@ -2180,35 +2180,41 @@ void LEM_BusFeed::UpdateFlow(double dt){
 
 	int csrc=0;                             // Current Sources Operational
 	double PowerDrawPerSource;              // Current to draw, per source
-	double power_load_src=power_load;		// Power load when we came in
-	int cba_ok=0,cbb_ok=0;					// Circuit breaker OK flags
-	
-	// Find active sources
-	if(dc_source_a != NULL && dc_source_a->Voltage() > 0){
-		csrc++;
-	}
-	if(dc_source_b != NULL && dc_source_b->Voltage() > 0){
-		csrc++;
-	}
-	// Compute draw
-	if(csrc > 1){
-		PowerDrawPerSource = power_load_src/2;
-	}else{
-		PowerDrawPerSource = power_load_src;
-	}
-
-	// Now take power
-	if(dc_source_a != NULL){
-		dc_source_a->DrawPower(PowerDrawPerSource); 
-	}
-	if(dc_source_b != NULL){
-		dc_source_b->DrawPower(PowerDrawPerSource); 
-	}
-	
 	double A_Volts = 0;
 	double A_Amperes = 0;
 	double B_Volts = 0;
 	double B_Amperes = 0;
+
+	if (dc_source_a != NULL)
+	{
+		A_Volts = dc_source_a->Voltage();
+	}
+	if (dc_source_b != NULL)
+	{
+		B_Volts = dc_source_b->Voltage();
+	}
+	
+	// Find active sources
+	if(A_Volts > 0){
+		csrc++;
+	}
+	if(B_Volts > 0){
+		csrc++;
+	}
+	// Compute draw
+	if(csrc > 1){
+		PowerDrawPerSource = power_load/2;
+	}else{
+		PowerDrawPerSource = power_load;
+	}
+
+	// Now take power
+	if(dc_source_a != NULL && A_Volts > 0){
+		dc_source_a->DrawPower(PowerDrawPerSource); 
+	}
+	if(dc_source_b != NULL && B_Volts > 0){
+		dc_source_b->DrawPower(PowerDrawPerSource); 
+	}
 
 	// Resupply from source
 	if(dc_source_a != NULL){
@@ -2243,7 +2249,7 @@ void LEM_BusFeed::UpdateFlow(double dt){
 	// if(this == &lem->BTB_CDR_D){ sprintf(oapiDebugString(),"LM_BTO: = Voltages %f %f | Load %f PS %f Output %f V",A_Volts,B_Volts,power_load,PowerDrawPerSource,Volts); }
 
 	// Reset for next pass.
-	power_load -= power_load_src;	
+	power_load = 0;
 }
 
 // XLUNAR BUS MANAGER OUTPUT SOURCE
@@ -2259,7 +2265,7 @@ void LEM_XLBSource::SetVoltage(double v){
 void LEM_XLBSource::DrawPower(double watts)
 { 
 	power_load += watts;
-};
+}
 
 // XLUNAR BUS MANAGER
 LEM_XLBControl::LEM_XLBControl(){
@@ -2322,6 +2328,31 @@ void LEM_XLBControl::UpdateFlow(double dt){
 	}
 	
 };
+
+void LEM_XLBControl::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+
+{
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_int(scn, "CSMPOWERLATCH", lem->CSMToLEMPowerConnector.csm_power_latch);
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_XLBControl::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "CSMPOWERLATCH", 13)) {
+			sscanf(line + 14, "%d", &dec);
+			lem->CSMToLEMPowerConnector.csm_power_latch = dec;
+		}
+	}
+}
 
 // CROSS-TIE BALANCER OUTPUT SOURCE
 LEM_BCTSource::LEM_BCTSource(){
